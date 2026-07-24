@@ -20,9 +20,10 @@
  */
 
 import { useCallback, useRef, useState } from 'react';
-import type { UiMessages } from '@shared/i18n';
-import { toMessage } from '@shared/errors';
 import { api } from '@/api/agentSkinClient';
+
+import { toMessage } from '@shared/errors';
+import type { UiMessages } from '@shared/i18n';
 
 export type InstallStepStatus = 'pending' | 'active' | 'done' | 'error' | 'cancelled';
 
@@ -35,7 +36,13 @@ export interface InstallStep {
   elapsed?: number;
 }
 
-export type InstallFlowState = 'idle' | 'selecting' | 'installing' | 'completed' | 'failed' | 'cancelled';
+export type InstallFlowState =
+  | 'idle'
+  | 'selecting'
+  | 'installing'
+  | 'completed'
+  | 'failed'
+  | 'cancelled';
 
 export interface UseThemeInstallFlowDeps {
   refreshThemes: () => Promise<void>;
@@ -61,13 +68,20 @@ function makeSteps(t: UiMessages, activeId: StepId = 'read'): InstallStep[] {
   return STEP_ORDER.map((id, i) => ({
     id,
     label: map[id],
-    status: i < activeIdx ? 'done' as const : i === activeIdx ? 'active' as const : 'pending' as const,
+    status:
+      i < activeIdx
+        ? ('done' as const)
+        : i === activeIdx
+          ? ('active' as const)
+          : ('pending' as const),
     timestamp: i <= activeIdx ? Date.now() : 0,
   }));
 }
 
 function patchStep(steps: InstallStep[], id: string, partial: Partial<InstallStep>): InstallStep[] {
-  return steps.map((s) => (s.id === id ? { ...s, ...partial, timestamp: partial.timestamp ?? s.timestamp } : s));
+  return steps.map((s) =>
+    s.id === id ? { ...s, ...partial, timestamp: partial.timestamp ?? s.timestamp } : s,
+  );
 }
 
 function getProgress(steps: InstallStep[]): number {
@@ -118,35 +132,42 @@ export function useThemeInstallFlow(deps: UseThemeInstallFlowDeps) {
   }, []);
 
   const cancelInstall = useCallback(() => {
-    setSteps((cur) => cur.map((s) => (s.status === 'active' || s.status === 'pending'
-      ? { ...s, status: 'cancelled' as const }
-      : s)));
+    setSteps((cur) =>
+      cur.map((s) =>
+        s.status === 'active' || s.status === 'pending'
+          ? { ...s, status: 'cancelled' as const }
+          : s,
+      ),
+    );
     setFlowState('cancelled');
   }, []);
 
-  const retryInstall = useCallback(async (sourcePath: string) => {
-    setFlowState('installing');
-    setLastError(null);
-    const list = makeSteps(t, 'read');
-    list[0] = { ...list[0], status: 'done' as const, timestamp: Date.now() - 100 };
-    setSteps(list);
-    try {
-      const result = await api.importThemeFromPath(sourcePath);
-      setCurrentTheme(result.theme.displayName);
-      markAllDone();
-      await refreshThemes();
-      showToast(t.importedTheme(result.theme.displayName));
-      setFlowState('completed');
-    } catch (error) {
-      const message = toMessage(error);
-      markFailed(message);
-      setLastError(message);
-      setFlowState('failed');
-      fail(error);
-    } finally {
-      scheduleClear();
-    }
-  }, [t, refreshThemes, showToast, fail, markAllDone, markFailed, scheduleClear]);
+  const retryInstall = useCallback(
+    async (sourcePath: string) => {
+      setFlowState('installing');
+      setLastError(null);
+      const list = makeSteps(t, 'read');
+      list[0] = { ...list[0], status: 'done' as const, timestamp: Date.now() - 100 };
+      setSteps(list);
+      try {
+        const result = await api.importThemeFromPath(sourcePath);
+        setCurrentTheme(result.theme.displayName);
+        markAllDone();
+        await refreshThemes();
+        showToast(t.importedTheme(result.theme.displayName));
+        setFlowState('completed');
+      } catch (error) {
+        const message = toMessage(error);
+        markFailed(message);
+        setLastError(message);
+        setFlowState('failed');
+        fail(error);
+      } finally {
+        scheduleClear();
+      }
+    },
+    [t, refreshThemes, showToast, fail, markAllDone, markFailed, scheduleClear],
+  );
 
   /** User-driven import through the OS file dialog. */
   const runImport = useCallback(async () => {
@@ -186,7 +207,11 @@ export function useThemeInstallFlow(deps: UseThemeInstallFlowDeps) {
     setFlowState,
     currentTheme,
     lastError,
-    isInstalling: flowState !== 'idle' && flowState !== 'completed' && flowState !== 'failed' && flowState !== 'cancelled',
+    isInstalling:
+      flowState !== 'idle' &&
+      flowState !== 'completed' &&
+      flowState !== 'failed' &&
+      flowState !== 'cancelled',
     isComplete: flowState === 'completed',
     isFailed: flowState === 'failed',
     isCancelled: flowState === 'cancelled',

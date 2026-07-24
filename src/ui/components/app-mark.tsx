@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
+
 import type { AgentId } from '@shared/types';
 import { AGENT_META } from '@shared/types';
-import { cn } from '@/lib/utils';
-import traeworkIcon from '../assets/apps/traework.png';
-import qoderworkIcon from '../assets/apps/qoderwork.png';
-import workbuddyIcon from '../assets/apps/workbuddy.png';
 import doubaoIcon from '../assets/apps/doubao.png';
+import qoderworkIcon from '../assets/apps/qoderwork.png';
+import traeworkIcon from '../assets/apps/traework.png';
+import workbuddyIcon from '../assets/apps/workbuddy.png';
 
 /** Icon registry — display names come from AGENT_META (single source of truth). */
 export const APP_META: Record<AgentId, { name: string; icon: string }> = {
   workbuddy: { name: AGENT_META.workbuddy.displayName, icon: workbuddyIcon },
   qoderwork: { name: AGENT_META.qoderwork.displayName, icon: qoderworkIcon },
-  traework:  { name: AGENT_META.traework.displayName,  icon: traeworkIcon },
-  doubao:    { name: AGENT_META.doubao.displayName,     icon: doubaoIcon },
+  traework: { name: AGENT_META.traework.displayName, icon: traeworkIcon },
+  doubao: { name: AGENT_META.doubao.displayName, icon: doubaoIcon },
 };
 
 /** App icon mark (mirrors the website's AppMark; rounded-square app icon). */

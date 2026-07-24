@@ -17,8 +17,8 @@
  */
 
 import { ipcMain } from 'electron';
-import type { MainContext } from '../main-context';
 import { IpcChannel } from '../../shared/ipc-channels';
+import type { MainContext } from '../main-context';
 
 export function registerWindowIpc(deps: MainContext): void {
   ipcMain.on(IpcChannel.WINDOW_MINIMIZE, () => deps.mainWindow?.minimize());

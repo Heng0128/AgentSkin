@@ -18,28 +18,30 @@
  */
 
 import { useCallback, useState } from 'react';
-import { DEFAULT_LOCALE, uiMessages, type AppLocale, type UiMessages } from '@shared/i18n';
-import type {
-  AgentId,
-  SystemStatus,
-} from '@shared/types';
-import { AGENT_META } from '@shared/types';
 import { api } from '@/api/agentSkinClient';
-import { useAgents } from './useAgents';
-import { useBoot } from './useBoot';
-import { useBootProgress, type ProgressMap, type StructuredEvent } from './useBootProgress';
-import { useDialogs } from './useDialogs';
-import { useNotifications, type Toast } from './useNotifications';
-import { useSettings, type SettingsSection } from './useSettings';
-import { useThemes, type BusyKey, type Selection } from './useThemes';
-import { useThemeInstallFlow, type InstallStep, type InstallFlowState } from './useThemeInstallFlow';
-import { useWallpaper } from './useWallpaper';
 import type { Route } from '@/types/navigation';
 
-export type { Selection, SettingsSection, Route, InstallStep, InstallFlowState, BusyKey };
-export type { RestartPrompt } from './useThemes';
+import { type AppLocale, DEFAULT_LOCALE, type UiMessages, uiMessages } from '@shared/i18n';
+import type { AgentId, SystemStatus } from '@shared/types';
+import { AGENT_META } from '@shared/types';
+import { useAgents } from './useAgents';
+import { useBoot } from './useBoot';
+import { type ProgressMap, type StructuredEvent, useBootProgress } from './useBootProgress';
+import { useDialogs } from './useDialogs';
+import { type Toast, useNotifications } from './useNotifications';
+import { type SettingsSection, useSettings } from './useSettings';
+import {
+  type InstallFlowState,
+  type InstallStep,
+  useThemeInstallFlow,
+} from './useThemeInstallFlow';
+import { type BusyKey, type Selection, useThemes } from './useThemes';
+import { useWallpaper } from './useWallpaper';
+
+export type { AgentProgress, BootPhase, ProgressMap } from './useBootProgress';
 export type { Toast } from './useNotifications';
-export type { ProgressMap, AgentProgress, BootPhase } from './useBootProgress';
+export type { RestartPrompt } from './useThemes';
+export type { BusyKey, InstallFlowState, InstallStep, Route, Selection, SettingsSection };
 
 export function useAppController() {
   // --- Shared state ---
@@ -65,16 +67,20 @@ export function useAppController() {
     try {
       setStatus(await api.refreshStatus());
       setLastStatusAt(Date.now());
-    } catch { /* transient */ }
-    finally {
+    } catch {
+      /* transient */
+    } finally {
       setIsRefreshing(false);
     }
   }, []);
 
   const setLocale = useCallback(async (next: AppLocale) => {
     setLocaleState(next);
-    try { await api.setLocale(next); }
-    catch { /* toast handled by caller */ }
+    try {
+      await api.setLocale(next);
+    } catch {
+      /* toast handled by caller */
+    }
   }, []);
 
   const setRoute = useCallback((next: Route) => setRouteState(next), []);
@@ -84,30 +90,37 @@ export function useAppController() {
 
   // --- Boot: bootstrap + log subscription + status polling ---
   useBoot({
-    fail, setLocaleState, setAppVersion, setBooting, setLogs, refreshStatus,
+    fail,
+    setLocaleState,
+    setAppVersion,
+    setBooting,
+    setLogs,
+    refreshStatus,
   });
 
   // --- Boot progress: parse structured log events into per-agent phases ---
   // onBootEvent fires toasts for the boot-restore lifecycle so the user
   // gets explicit feedback when themes are being restored after a reboot,
   // even if the workspace view isn't visible.
-  const onBootEvent = useCallback((event: StructuredEvent) => {
-    const displayName = (id: string): string =>
-      AGENT_META[id as AgentId]?.displayName ?? id;
-    switch (event.type) {
-      case 'boot_start':
-        if (event.agentCount && event.agentCount > 0) {
-          showToast(t.bootRestoringToast(event.agentCount));
-        }
-        break;
-      case 'boot_agent_done':
-        showToast(t.bootAgentRestoredToast(displayName(event.agentId)));
-        break;
-      case 'boot_agent_failed':
-        showToast(t.bootAgentFailedToast(displayName(event.agentId)), 'destructive');
-        break;
-    }
-  }, [showToast, t]);
+  const onBootEvent = useCallback(
+    (event: StructuredEvent) => {
+      const displayName = (id: string): string => AGENT_META[id as AgentId]?.displayName ?? id;
+      switch (event.type) {
+        case 'boot_start':
+          if (event.agentCount && event.agentCount > 0) {
+            showToast(t.bootRestoringToast(event.agentCount));
+          }
+          break;
+        case 'boot_agent_done':
+          showToast(t.bootAgentRestoredToast(displayName(event.agentId)));
+          break;
+        case 'boot_agent_failed':
+          showToast(t.bootAgentFailedToast(displayName(event.agentId)), 'destructive');
+          break;
+      }
+    },
+    [showToast, t],
+  );
   const bootProgress = useBootProgress(api.onRuntimeLog, onBootEvent);
 
   // --- Compose domain hooks ---
@@ -117,9 +130,18 @@ export function useAppController() {
   // activate the theme's bundled video wallpaper after a successful apply.
   const wallpaper = useWallpaper();
   const themesHook = useThemes({
-    showToast, fail, busy, setBusy, t, status, setStatus, refreshStatus,
-    deletePrompt: dialogs.deletePrompt, setDeletePrompt: dialogs.setDeletePrompt,
-    fileImportPrompt: dialogs.fileImportPrompt, setFileImportPrompt: dialogs.setFileImportPrompt,
+    showToast,
+    fail,
+    busy,
+    setBusy,
+    t,
+    status,
+    setStatus,
+    refreshStatus,
+    deletePrompt: dialogs.deletePrompt,
+    setDeletePrompt: dialogs.setDeletePrompt,
+    fileImportPrompt: dialogs.fileImportPrompt,
+    setFileImportPrompt: dialogs.setFileImportPrompt,
     setRestartPrompt: dialogs.setRestartPrompt,
     activateThemeWallpaper: wallpaper.activateThemeWallpaper,
   });
@@ -128,15 +150,31 @@ export function useAppController() {
   // Install flow (real step sequence)
   const installFlow = useThemeInstallFlow({
     refreshThemes: themesHook.refreshThemes,
-    showToast, fail, t,
+    showToast,
+    fail,
+    t,
   });
 
   return {
     // Shared
-    t, locale, setLocale, appVersion, booting, route, setRoute,
-    activeAgentId, setActiveAgentId,
-    status, statusStale: status === null, lastStatusAt, isRefreshing,
-    busy, toasts: controllerToasts, logs, logsOpen, setLogsOpen,
+    t,
+    locale,
+    setLocale,
+    appVersion,
+    booting,
+    route,
+    setRoute,
+    activeAgentId,
+    setActiveAgentId,
+    status,
+    statusStale: status === null,
+    lastStatusAt,
+    isRefreshing,
+    busy,
+    toasts: controllerToasts,
+    logs,
+    logsOpen,
+    setLogsOpen,
     refreshStatus,
     bootProgress,
 

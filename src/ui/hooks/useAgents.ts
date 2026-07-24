@@ -15,10 +15,17 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { AGENT_IDS, AGENT_META } from '@shared/types';
-import type { AgentCapabilities, AgentCatalogItem, AgentId, AppStatus, SystemStatus } from '@shared/types';
 import { api } from '@/api/agentSkinClient';
 import { findAppStatus } from '@/lib/status-utils';
+
+import type {
+  AgentCapabilities,
+  AgentCatalogItem,
+  AgentId,
+  AppStatus,
+  SystemStatus,
+} from '@shared/types';
+import { AGENT_IDS, AGENT_META } from '@shared/types';
 
 const ACTIVE_CAPS: AgentCapabilities = { theme: true, hotReload: true, extension: false };
 
@@ -50,7 +57,10 @@ export function useAgents(status: SystemStatus | null) {
   const [agents, setAgents] = useState<AgentCatalogItem[]>(FALLBACK_AGENTS);
 
   useEffect(() => {
-    void api.catalog.agents.list().then((r) => setAgents(r.items)).catch(() => undefined);
+    void api.catalog.agents
+      .list()
+      .then((r) => setAgents(r.items))
+      .catch(() => undefined);
   }, []);
 
   const appStatusFor = useCallback(

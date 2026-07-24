@@ -3,6 +3,7 @@
 /** Owns all dialog/prompt state — centralized so any hook can set a prompt. */
 
 import { useState } from 'react';
+
 import type { FileImportConfirmRequest, ThemeCatalogItem } from '@shared/types';
 import type { RestartPrompt } from './useThemes';
 

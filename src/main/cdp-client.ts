@@ -51,7 +51,10 @@ export function connectCdp(
 ): Promise<CdpSession> {
   const ws = new WebSocket(webSocketDebuggerUrl);
   let seq = 0;
-  const pending = new Map<number, { resolve: (value: unknown) => void; reject: (error: Error) => void }>();
+  const pending = new Map<
+    number,
+    { resolve: (value: unknown) => void; reject: (error: Error) => void }
+  >();
 
   ws.onmessage = (event: MessageEvent) => {
     let message: CdpResponse;
@@ -81,8 +84,14 @@ export function connectCdp(
         }
       }, commandTimeoutMs);
       pending.set(id, {
-        resolve: (value) => { clearTimeout(timer); resolve(value as T); },
-        reject: (error) => { clearTimeout(timer); reject(error); },
+        resolve: (value) => {
+          clearTimeout(timer);
+          resolve(value as T);
+        },
+        reject: (error) => {
+          clearTimeout(timer);
+          reject(error);
+        },
       });
       try {
         ws.send(JSON.stringify({ id, method, params }));
@@ -97,10 +106,12 @@ export function connectCdp(
   const session: CdpSession = {
     send,
     async evaluate(expression: string): Promise<string> {
-      const result = await send<{ result?: { value?: unknown; exceptionDetails?: { exception?: { description?: string }; text?: string } } }>(
-        'Runtime.evaluate',
-        { expression, returnByValue: true, awaitPromise: true },
-      );
+      const result = await send<{
+        result?: {
+          value?: unknown;
+          exceptionDetails?: { exception?: { description?: string }; text?: string };
+        };
+      }>('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
       const details = result?.result?.exceptionDetails;
       if (details) {
         const detail = details.exception?.description ?? details.text ?? 'unknown renderer error';

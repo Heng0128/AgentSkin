@@ -30,8 +30,14 @@
  * `shared/types.ts`).
  */
 
-import type { AgentId, DesktopSettings, InstalledTheme, WallpaperAgentSetting, WallpaperSettings } from '../../shared/types';
-import type { ThemeEntry, PackageInspection } from '../theme-library';
+import type {
+  AgentId,
+  DesktopSettings,
+  InstalledTheme,
+  WallpaperAgentSetting,
+  WallpaperSettings,
+} from '../../shared/types';
+import type { PackageInspection, ThemeEntry } from '../theme-library';
 
 /**
  * Theme installation / persistence surface. Mirrors the public methods of
@@ -123,13 +129,25 @@ export type LogCallback = (line: string) => void;
  */
 export interface StructuredLogEvent {
   type:
-    | 'theme_apply' | 'theme_restore'
-    | 'boot_start' | 'boot_done'
-    | 'boot_agent_start' | 'boot_agent_done' | 'boot_agent_failed'
-    | 'cdp_resolving' | 'cdp_killing' | 'cdp_spawning'
-    | 'cdp_ready' | 'cdp_timeout' | 'cdp_spawn_failed'
-    | 'inject_start' | 'inject_done' | 'inject_failed'
-    | 'scheme_sync' | 'apply_failed' | 'restore_failed';
+    | 'theme_apply'
+    | 'theme_restore'
+    | 'boot_start'
+    | 'boot_done'
+    | 'boot_agent_start'
+    | 'boot_agent_done'
+    | 'boot_agent_failed'
+    | 'cdp_resolving'
+    | 'cdp_killing'
+    | 'cdp_spawning'
+    | 'cdp_ready'
+    | 'cdp_timeout'
+    | 'cdp_spawn_failed'
+    | 'inject_start'
+    | 'inject_done'
+    | 'inject_failed'
+    | 'scheme_sync'
+    | 'apply_failed'
+    | 'restore_failed';
   agentId: string;
   themeId?: string;
   timestamp: string;

@@ -30,18 +30,13 @@
 
 import { execFile, spawn } from 'node:child_process';
 import path from 'node:path';
-
 import type { ApplicationAdapter } from '../adapters/base';
-import { detectInstallation } from './install-detection';
-import { resolveLivePort as resolveLivePortShared } from '../shared/cdp-discovery';
 import { probePortLive } from '../legacy/agentskin-core-runtime';
+import { resolveLivePort as resolveLivePortShared } from '../shared/cdp-discovery';
 import { toMessage } from '../shared/errors';
+import type { AgentId, ApplyResponse, AppStatus } from '../shared/types';
+import { detectInstallation } from './install-detection';
 import type { LogCallback } from './services/contracts';
-import type {
-  AgentId,
-  AppStatus,
-  ApplyResponse,
-} from '../shared/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -171,7 +166,9 @@ export async function reconcileZombiePorts(
     if (appState?.port != null) {
       const live = await probePortLive(appState.port, 1500);
       if (!live) {
-        deps.log(`[state] ${appId}: port ${appState.port} is dead — clearing stale port (activeThemeId preserved for re-injection)`);
+        deps.log(
+          `[state] ${appId}: port ${appState.port} is dead — clearing stale port (activeThemeId preserved for re-injection)`,
+        );
         deps.clearAppPort(appId);
         dirty = true;
       }
@@ -270,7 +267,9 @@ export async function ensureCdpReady(
   } catch {
     killedPids = [];
   }
-  deps.log(`[ensure-cdp] ${appId}: CDP off -> restarting ${exePath} with random debug port (killing ${killedPids.length} PID(s))`);
+  deps.log(
+    `[ensure-cdp] ${appId}: CDP off -> restarting ${exePath} with random debug port (killing ${killedPids.length} PID(s))`,
+  );
   if (killedPids.length > 0) {
     deps.logStructured({
       type: 'cdp_killing',
@@ -282,7 +281,12 @@ export async function ensureCdpReady(
   for (const pid of killedPids) {
     try {
       await new Promise<void>((resolve) => {
-        execFile('taskkill', ['/F', '/T', '/PID', String(pid)], { windowsHide: true, timeout: 5000 }, () => resolve());
+        execFile(
+          'taskkill',
+          ['/F', '/T', '/PID', String(pid)],
+          { windowsHide: true, timeout: 5000 },
+          () => resolve(),
+        );
       });
     } catch {
       // Not running or already gone — fine.
@@ -302,14 +306,15 @@ export async function ensureCdpReady(
   // when launched normally.
   let childPid = -1;
   try {
-    const child = spawn(exePath, [
-      '--remote-debugging-port=0',
-      '--remote-debugging-address=127.0.0.1',
-    ], {
-      detached: true,
-      stdio: 'ignore',
-      cwd: path.dirname(exePath),
-    });
+    const child = spawn(
+      exePath,
+      ['--remote-debugging-port=0', '--remote-debugging-address=127.0.0.1'],
+      {
+        detached: true,
+        stdio: 'ignore',
+        cwd: path.dirname(exePath),
+      },
+    );
     child.unref();
     childPid = child.pid ?? -1;
     deps.logStructured({
@@ -348,7 +353,9 @@ export async function ensureCdpReady(
         // CDP — otherwise give up.
         const lastChance = await resolveLivePort(appId, deps);
         if (lastChance != null) {
-          deps.log(`[ensure-cdp] ${appId}: CDP up on random port ${lastChance} (via forwarded singleton)`);
+          deps.log(
+            `[ensure-cdp] ${appId}: CDP up on random port ${lastChance} (via forwarded singleton)`,
+          );
           deps.logStructured({
             type: 'cdp_ready',
             agentId: appId,
@@ -357,7 +364,9 @@ export async function ensureCdpReady(
           });
           return { port: lastChance, reason: null };
         }
-        deps.log(`[ensure-cdp] ${appId}: spawned process exited immediately (singleton lock or launch failure)`);
+        deps.log(
+          `[ensure-cdp] ${appId}: spawned process exited immediately (singleton lock or launch failure)`,
+        );
         deps.logStructured({
           type: 'cdp_spawn_failed',
           agentId: appId,
@@ -438,7 +447,9 @@ export async function probeAppStatus(
 
   if (installed) {
     try {
-      running = (await adapter.findRunningPids(process.platform, discovered?.executable ?? null)).length > 0;
+      running =
+        (await adapter.findRunningPids(process.platform, discovered?.executable ?? null)).length >
+        0;
     } catch {
       running = false;
     }
@@ -495,10 +506,14 @@ export async function inferRestartReason(
   // ensureCdpReady gave us a precise cause — map it directly.
   if (cdpFailureReason) {
     switch (cdpFailureReason) {
-      case 'not-installed':   return 'not-installed';
-      case 'singleton-lock':  return 'singleton-lock';
-      case 'spawn-error':     return 'spawn-failed';
-      case 'timeout':         return 'cdp-timeout';
+      case 'not-installed':
+        return 'not-installed';
+      case 'singleton-lock':
+        return 'singleton-lock';
+      case 'spawn-error':
+        return 'spawn-failed';
+      case 'timeout':
+        return 'cdp-timeout';
     }
   }
   try {
@@ -522,7 +537,9 @@ export async function inferRestartReason(
 
     let running = false;
     try {
-      running = (await adapter.findRunningPids(process.platform, discovered?.executable ?? null)).length > 0;
+      running =
+        (await adapter.findRunningPids(process.platform, discovered?.executable ?? null)).length >
+        0;
     } catch {
       running = false;
     }

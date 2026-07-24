@@ -27,8 +27,7 @@
  * and runs on a separate lifecycle.
  */
 
-import { readFileSync, existsSync } from 'node:fs';
-import type { CdpSession } from './cdp-client';
+import { existsSync, readFileSync } from 'node:fs';
 import {
   DEFAULT_VERIFY_DELAY_MS,
   RENDERER_CONFIG_GLOBAL,
@@ -37,11 +36,12 @@ import {
 } from '../shared/injection-constants';
 import {
   ADOPT_LAYER_BODY,
-  CLEAR_ADAPTERS_BODY,
   buildAdoptLayerExpression,
   buildAdoptOwnedSheetExpression,
   buildClearEngineInjectionExpression,
+  CLEAR_ADAPTERS_BODY,
 } from '../shared/injection-runtime';
+import type { CdpSession } from './cdp-client';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -109,9 +109,7 @@ export async function injectThemeViaCdp(
   // --- Step 1: Host class ---
   if (hostClass) {
     try {
-      await session.evaluate(
-        `document.documentElement.classList.add('${hostClass}'); 'ok'`,
-      );
+      await session.evaluate(`document.documentElement.classList.add('${hostClass}'); 'ok'`);
     } catch {
       // Non-fatal — host class is a progressive enhancement hook.
     }
@@ -148,7 +146,8 @@ export async function injectThemeViaCdp(
     }
   }
 
-  const success = cssInjected && (!hasHero || heroInjected) && (verification?.heroBlobActive ?? !hasHero);
+  const success =
+    cssInjected && (!hasHero || heroInjected) && (verification?.heroBlobActive ?? !hasHero);
 
   return { cssInjected, heroInjected, verification, success };
 }
@@ -216,12 +215,29 @@ export async function injectThemeViaEngine(
   session: CdpSession,
   options: InjectEngineOptions,
 ): Promise<InjectEngineResult> {
-  const { paletteCss, tokensCss, cosmeticCss, themeCss, adapterJs, heroDataUrl, heroPath, agent, themeId, verifyDelayMs = 500 } = options;
+  const {
+    paletteCss,
+    tokensCss,
+    cosmeticCss,
+    themeCss,
+    adapterJs,
+    heroDataUrl,
+    heroPath,
+    agent,
+    themeId,
+    verifyDelayMs = 500,
+  } = options;
 
   try {
     await session.send('Runtime.enable');
   } catch {
-    return { layersInjected: 0, adapterApplied: false, heroInjected: false, verification: null, success: false };
+    return {
+      layersInjected: 0,
+      adapterApplied: false,
+      heroInjected: false,
+      verification: null,
+      success: false,
+    };
   }
 
   // --- Step 1: Cleanup previous adapter instance ---
@@ -237,16 +253,18 @@ export async function injectThemeViaEngine(
   if (heroDataUrl) {
     heroInjected = await injectHeroFromDataUrl(session, heroDataUrl);
     if (heroInjected) {
-      heroBlobUrl = await session.evaluate(
-        `getComputedStyle(document.documentElement).getPropertyValue('--codedrobe-art').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '')`,
-      ) || '';
+      heroBlobUrl =
+        (await session.evaluate(
+          `getComputedStyle(document.documentElement).getPropertyValue('--codedrobe-art').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '')`,
+        )) || '';
     }
   } else if (heroPath && existsSync(heroPath)) {
     heroInjected = await injectHeroBlob(session, heroPath);
     if (heroInjected) {
-      heroBlobUrl = await session.evaluate(
-        `getComputedStyle(document.documentElement).getPropertyValue('--codedrobe-art').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '')`,
-      ) || '';
+      heroBlobUrl =
+        (await session.evaluate(
+          `getComputedStyle(document.documentElement).getPropertyValue('--codedrobe-art').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '')`,
+        )) || '';
     }
   }
 
@@ -321,7 +339,17 @@ async function registerEnginePersistence(
   session: CdpSession,
   options: InjectEngineOptions,
 ): Promise<void> {
-  const { paletteCss, tokensCss, cosmeticCss, themeCss, adapterJs, heroDataUrl, heroPath, agent, themeId } = options;
+  const {
+    paletteCss,
+    tokensCss,
+    cosmeticCss,
+    themeCss,
+    adapterJs,
+    heroDataUrl,
+    heroPath,
+    agent,
+    themeId,
+  } = options;
 
   // Resolve the hero data URL up front so the persisted script can set
   // --codedrobe-art without re-reading the file (which it can't do from a
@@ -330,9 +358,11 @@ async function registerEnginePersistence(
   if (!resolvedHeroDataUrl && heroPath && existsSync(heroPath)) {
     try {
       const data = readFileSync(heroPath);
-      const mime = heroPath.endsWith('.png') ? 'image/png'
-        : heroPath.endsWith('.jpg') || heroPath.endsWith('.jpeg') ? 'image/jpeg'
-        : 'image/webp';
+      const mime = heroPath.endsWith('.png')
+        ? 'image/png'
+        : heroPath.endsWith('.jpg') || heroPath.endsWith('.jpeg')
+          ? 'image/jpeg'
+          : 'image/webp';
       resolvedHeroDataUrl = `data:${mime};base64,${data.toString('base64')}`;
     } catch {
       resolvedHeroDataUrl = null;
@@ -348,7 +378,11 @@ async function registerEnginePersistence(
     ['cosmetic', cosmeticCss],
     ...(themeCss ? [['theme', themeCss] as [string, string]] : []),
   ]);
-  const configJson = JSON.stringify({ heroBlobUrl: '', agent: agent || '', themeId: themeId || '' });
+  const configJson = JSON.stringify({
+    heroBlobUrl: '',
+    agent: agent || '',
+    themeId: themeId || '',
+  });
   const heroDataUrlJson = JSON.stringify(resolvedHeroDataUrl);
   // The adapter.mjs is an IIFE that returns 'applied' / 'already-applied'.
   // Wrap it so we can invoke it from the persistence script.
@@ -462,7 +496,9 @@ async function registerEnginePersistence(
     // future navigations. This must happen BEFORE registering the script
     // so the script's first execution (on the next navigation) sees no flag.
     try {
-      await session.evaluate(`(() => { try { sessionStorage.removeItem('${SESSION_DISABLED_KEY}'); } catch (e) {} return 'ok'; })()`);
+      await session.evaluate(
+        `(() => { try { sessionStorage.removeItem('${SESSION_DISABLED_KEY}'); } catch (e) {} return 'ok'; })()`,
+      );
     } catch {
       // sessionStorage may not be available yet — non-fatal, the script
       // itself has a try/catch around the flag check.
@@ -523,7 +559,11 @@ export async function removeEngineInjection(session: CdpSession): Promise<void> 
  * Delegates to {@link buildAdoptLayerExpression} in the shared injection kernel
  * so the adoption logic is defined exactly once across the codebase.
  */
-async function injectCssLayer(session: CdpSession, layerName: string, css: string): Promise<boolean> {
+async function injectCssLayer(
+  session: CdpSession,
+  layerName: string,
+  css: string,
+): Promise<boolean> {
   try {
     const result = await session.evaluate(buildAdoptLayerExpression(layerName, css));
     return result.startsWith('ok:');
@@ -540,9 +580,11 @@ async function injectHeroBlob(session: CdpSession, heroPath: string): Promise<bo
   try {
     const data = readFileSync(heroPath);
     const base64 = data.toString('base64');
-    const mime = heroPath.endsWith('.png') ? 'image/png'
-      : heroPath.endsWith('.jpg') || heroPath.endsWith('.jpeg') ? 'image/jpeg'
-      : 'image/webp';
+    const mime = heroPath.endsWith('.png')
+      ? 'image/png'
+      : heroPath.endsWith('.jpg') || heroPath.endsWith('.jpeg')
+        ? 'image/jpeg'
+        : 'image/webp';
 
     const result = await session.evaluate(`(async () => {
       try {

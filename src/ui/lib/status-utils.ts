@@ -11,9 +11,6 @@ import type { AgentId, AppStatus, SystemStatus } from '@shared/types';
  * `status` itself, so callers can use it directly inside useMemo/useCallback
  * without adding extra deps.
  */
-export function findAppStatus(
-  status: SystemStatus | null,
-  appId: AgentId,
-): AppStatus | null {
+export function findAppStatus(status: SystemStatus | null, appId: AgentId): AppStatus | null {
   return status?.apps.find((app) => app.appId === appId) ?? null;
 }

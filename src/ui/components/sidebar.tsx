@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import {
-  Home02Icon,
-  PaintBoardIcon,
-  Settings01Icon,
-  File01Icon,
-  Image02Icon,
-} from '@hugeicons/core-free-icons';
-import type { AppController } from '@/hooks/useAppController';
-import type { Route } from '@/types/navigation';
+import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
-import { Logo } from '@/components/logo';
+import type { AppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
+import type { Route } from '@/types/navigation';
+
+import {
+  File01Icon,
+  Home02Icon,
+  Image02Icon,
+  PaintBoardIcon,
+  Settings01Icon,
+} from '@hugeicons/core-free-icons';
 
 interface NavEntry {
   route: Route;
@@ -69,7 +70,9 @@ export function Sidebar({ controller }: { controller: AppController }) {
       <div className="flex items-center gap-2.5 px-4 py-3">
         <Logo variant="color" className="size-7" />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold tracking-tight text-sidebar-foreground">AgentSkin</p>
+          <p className="truncate text-sm font-semibold tracking-tight text-sidebar-foreground">
+            AgentSkin
+          </p>
         </div>
       </div>
 

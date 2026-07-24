@@ -5,8 +5,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  ThemePackageLoader,
   type InstalledThemePackage,
+  ThemePackageLoader,
   ThemePackageValidationError,
 } from './theme-package-loader';
 
@@ -73,12 +73,15 @@ describe('ThemePackageLoader', () => {
       await fs.mkdir(themeDir, { recursive: true });
       await fs.mkdir(path.join(themeDir, 'assets'), { recursive: true });
 
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), createMinimalManifest(themeId));
       await fs.writeFile(
-        path.join(themeDir, 'manifest.json'),
-        createMinimalManifest(themeId),
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
       );
-      await fs.writeFile(path.join(themeDir, 'icon.png'), Buffer.from(createPlaceholderPng(), 'base64'));
-      await fs.writeFile(path.join(themeDir, 'preview.png'), Buffer.from(createPlaceholderPng(), 'base64'));
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
       await fs.writeFile(
         path.join(themeDir, 'assets', 'background.png'),
         Buffer.from(createPlaceholderPng(), 'base64'),
@@ -113,10 +116,24 @@ describe('ThemePackageLoader', () => {
       await fs.mkdir(themeDir, { recursive: true });
       await fs.writeFile(
         path.join(themeDir, 'manifest.json'),
-        JSON.stringify({ id: 'different-id', name: 'X', version: '1.0.0', icon: 'icon.png', preview: 'preview.png', mode: 'dark' as const, colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' } }),
+        JSON.stringify({
+          id: 'different-id',
+          name: 'X',
+          version: '1.0.0',
+          icon: 'icon.png',
+          preview: 'preview.png',
+          mode: 'dark' as const,
+          colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
+        }),
       );
-      await fs.writeFile(path.join(themeDir, 'icon.png'), Buffer.from(createPlaceholderPng(), 'base64'));
-      await fs.writeFile(path.join(themeDir, 'preview.png'), Buffer.from(createPlaceholderPng(), 'base64'));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
 
       await expect(loader.load('mismatch')).rejects.toThrow('manifest id mismatch');
     });
@@ -126,9 +143,20 @@ describe('ThemePackageLoader', () => {
       await fs.mkdir(themeDir, { recursive: true });
       await fs.writeFile(
         path.join(themeDir, 'manifest.json'),
-        JSON.stringify({ id: 'no-icon', name: 'X', version: '1.0.0', icon: 'icon.png', preview: 'preview.png', mode: 'dark' as const, colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' } }),
+        JSON.stringify({
+          id: 'no-icon',
+          name: 'X',
+          version: '1.0.0',
+          icon: 'icon.png',
+          preview: 'preview.png',
+          mode: 'dark' as const,
+          colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
+        }),
       );
-      await fs.writeFile(path.join(themeDir, 'preview.png'), Buffer.from(createPlaceholderPng(), 'base64'));
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
 
       await expect(loader.load('no-icon')).rejects.toThrow('icon file not found');
     });
@@ -138,9 +166,20 @@ describe('ThemePackageLoader', () => {
       await fs.mkdir(themeDir, { recursive: true });
       await fs.writeFile(
         path.join(themeDir, 'manifest.json'),
-        JSON.stringify({ id: 'no-preview', name: 'X', version: '1.0.0', icon: 'icon.png', preview: 'preview.png', mode: 'dark' as const, colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' } }),
+        JSON.stringify({
+          id: 'no-preview',
+          name: 'X',
+          version: '1.0.0',
+          icon: 'icon.png',
+          preview: 'preview.png',
+          mode: 'dark' as const,
+          colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
+        }),
       );
-      await fs.writeFile(path.join(themeDir, 'icon.png'), Buffer.from(createPlaceholderPng(), 'base64'));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
 
       await expect(loader.load('no-preview')).rejects.toThrow('preview file not found');
     });
@@ -151,13 +190,23 @@ describe('ThemePackageLoader', () => {
       await fs.writeFile(
         path.join(themeDir, 'manifest.json'),
         JSON.stringify({
-          id: 'bad-mode', name: 'X', version: '1.0.0', icon: 'icon.png', preview: 'preview.png',
+          id: 'bad-mode',
+          name: 'X',
+          version: '1.0.0',
+          icon: 'icon.png',
+          preview: 'preview.png',
           mode: 'sepia' as never,
           colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
         }),
       );
-      await fs.writeFile(path.join(themeDir, 'icon.png'), Buffer.from(createPlaceholderPng(), 'base64'));
-      await fs.writeFile(path.join(themeDir, 'preview.png'), Buffer.from(createPlaceholderPng(), 'base64'));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
 
       await expect(loader.load('bad-mode')).rejects.toThrow('invalid mode');
     });
@@ -168,13 +217,23 @@ describe('ThemePackageLoader', () => {
       await fs.writeFile(
         path.join(themeDir, 'manifest.json'),
         JSON.stringify({
-          id: 'no-bg-asset', name: 'X', version: '1.0.0', icon: 'icon.png', preview: 'preview.png',
+          id: 'no-bg-asset',
+          name: 'X',
+          version: '1.0.0',
+          icon: 'icon.png',
+          preview: 'preview.png',
           colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
           assets: { background: 'assets/background.png' },
         }),
       );
-      await fs.writeFile(path.join(themeDir, 'icon.png'), Buffer.from(createPlaceholderPng(), 'base64'));
-      await fs.writeFile(path.join(themeDir, 'preview.png'), Buffer.from(createPlaceholderPng(), 'base64'));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
 
       // Should succeed — missing optional asset is only a warning
       const pkg = await loader.load('no-bg-asset');
@@ -187,13 +246,23 @@ describe('ThemePackageLoader', () => {
       await fs.writeFile(
         path.join(themeDir, 'manifest.json'),
         JSON.stringify({
-          id: 'escape', name: 'X', version: '1.0.0', icon: 'icon.png', preview: 'preview.png',
+          id: 'escape',
+          name: 'X',
+          version: '1.0.0',
+          icon: 'icon.png',
+          preview: 'preview.png',
           colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
           assets: { background: '../../etc/passwd' },
         }),
       );
-      await fs.writeFile(path.join(themeDir, 'icon.png'), Buffer.from(createPlaceholderPng(), 'base64'));
-      await fs.writeFile(path.join(themeDir, 'preview.png'), Buffer.from(createPlaceholderPng(), 'base64'));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
 
       await expect(loader.load('escape')).rejects.toThrow('escapes package root');
     });
@@ -211,9 +280,18 @@ describe('ThemePackageLoader', () => {
         await fs.mkdir(themeDir, { recursive: true });
         await fs.mkdir(path.join(themeDir, 'assets'), { recursive: true });
         await fs.writeFile(path.join(themeDir, 'manifest.json'), createMinimalManifest(id));
-        await fs.writeFile(path.join(themeDir, 'icon.png'), Buffer.from(createPlaceholderPng(), 'base64'));
-        await fs.writeFile(path.join(themeDir, 'preview.png'), Buffer.from(createPlaceholderPng(), 'base64'));
-        await fs.writeFile(path.join(themeDir, 'assets', 'bg.png'), Buffer.from(createPlaceholderPng(), 'base64'));
+        await fs.writeFile(
+          path.join(themeDir, 'icon.png'),
+          Buffer.from(createPlaceholderPng(), 'base64'),
+        );
+        await fs.writeFile(
+          path.join(themeDir, 'preview.png'),
+          Buffer.from(createPlaceholderPng(), 'base64'),
+        );
+        await fs.writeFile(
+          path.join(themeDir, 'assets', 'bg.png'),
+          Buffer.from(createPlaceholderPng(), 'base64'),
+        );
       }
 
       // Create one invalid theme (missing manifest)
@@ -236,8 +314,14 @@ describe('ThemePackageLoader', () => {
         await fs.mkdir(themeDir, { recursive: true });
         await fs.mkdir(path.join(themeDir, 'assets'), { recursive: true });
         await fs.writeFile(path.join(themeDir, 'manifest.json'), createMinimalManifest(id));
-        await fs.writeFile(path.join(themeDir, 'icon.png'), Buffer.from(createPlaceholderPng(), 'base64'));
-        await fs.writeFile(path.join(themeDir, 'preview.png'), Buffer.from(createPlaceholderPng(), 'base64'));
+        await fs.writeFile(
+          path.join(themeDir, 'icon.png'),
+          Buffer.from(createPlaceholderPng(), 'base64'),
+        );
+        await fs.writeFile(
+          path.join(themeDir, 'preview.png'),
+          Buffer.from(createPlaceholderPng(), 'base64'),
+        );
       }
 
       const packages = await loader.scan();

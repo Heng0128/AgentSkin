@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { PackageIcon, Search01Icon } from '@hugeicons/core-free-icons';
-import type { AgentId } from '@shared/types';
-import type { AppController } from '@/hooks/useAppController';
-import { useThemeCenter } from '@/hooks/useThemeCenter';
-import type { ThemeSortKey } from '@/hooks/useThemeCenter';
 import { ThemeCard } from '@/components/themes/ThemeCard';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
+import type { AppController } from '@/hooks/useAppController';
+import type { ThemeSortKey } from '@/hooks/useThemeCenter';
+import { useThemeCenter } from '@/hooks/useThemeCenter';
 import { cn } from '@/lib/utils';
+
+import { PackageIcon, Search01Icon } from '@hugeicons/core-free-icons';
+import type { AgentId } from '@shared/types';
 
 /** Adaptive grid columns based on item count (user preference: content-driven layout). */
 function gridColsClass(count: number): string {
@@ -86,9 +87,11 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           disabled={controller.isInstalling}
           onClick={() => void controller.importTheme()}
         >
-          {controller.isInstalling
-            ? <Spinner data-icon="inline-start" />
-            : <HugeIcon icon={PackageIcon} data-icon="inline-start" />}
+          {controller.isInstalling ? (
+            <Spinner data-icon="inline-start" />
+          ) : (
+            <HugeIcon icon={PackageIcon} data-icon="inline-start" />
+          )}
           {controller.isInstalling ? t.importing : t.importTheme}
         </Button>
       </div>
@@ -161,8 +164,20 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             )}
           >
             <span className="relative flex size-1.5">
-              <span className={cn('absolute inline-flex size-full rounded-full', tc.dynamicFilter === 'dynamic' ? 'animate-ping bg-primary/60' : 'bg-muted-foreground/40')} />
-              <span className={cn('relative inline-flex size-1.5 rounded-full', tc.dynamicFilter === 'dynamic' ? 'bg-primary' : 'bg-muted-foreground/50')} />
+              <span
+                className={cn(
+                  'absolute inline-flex size-full rounded-full',
+                  tc.dynamicFilter === 'dynamic'
+                    ? 'animate-ping bg-primary/60'
+                    : 'bg-muted-foreground/40',
+                )}
+              />
+              <span
+                className={cn(
+                  'relative inline-flex size-1.5 rounded-full',
+                  tc.dynamicFilter === 'dynamic' ? 'bg-primary' : 'bg-muted-foreground/50',
+                )}
+              />
             </span>
             {t.themeDynamicFilter}
           </button>
@@ -220,7 +235,10 @@ export function ThemesPage({ controller }: { controller: AppController }) {
               >
                 <ThemeCard
                   theme={theme}
-                  selected={controller.selection?.kind === 'installed' && controller.selection.theme.id === theme.id}
+                  selected={
+                    controller.selection?.kind === 'installed' &&
+                    controller.selection.theme.id === theme.id
+                  }
                   activeAgentIds={activeAgentsByTheme.get(theme.id) ?? []}
                   onSelect={() => handleSelect(theme.id)}
                   t={t}

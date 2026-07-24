@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useState } from 'react';
+import { api } from '@/api/agentSkinClient';
+import { HugeIcon } from '@/components/ui/huge-icon';
+import type { ThemeMode } from '@/design/theme-mode';
+import type { AppController } from '@/hooks/useAppController';
+import { useThemeMode } from '@/hooks/useThemeMode';
+import { cn } from '@/lib/utils';
+
 import {
   Cancel01Icon,
-  Minimize01Icon,
-  Maximize02Icon,
-  Copy01Icon,
-  Refresh01Icon,
-  Upload04Icon,
-  Sun03Icon,
-  Moon02Icon,
   ComputerIcon,
+  Copy01Icon,
+  Maximize02Icon,
+  Minimize01Icon,
+  Moon02Icon,
+  Refresh01Icon,
+  Sun03Icon,
+  Upload04Icon,
 } from '@hugeicons/core-free-icons';
-import type { AppController } from '@/hooks/useAppController';
-import { HugeIcon } from '@/components/ui/huge-icon';
-import { cn } from '@/lib/utils';
-import { useThemeMode } from '@/hooks/useThemeMode';
-import type { ThemeMode } from '@/design/theme-mode';
-import { api } from '@/api/agentSkinClient';
 
 /**
  * # TitleBar
@@ -55,9 +56,12 @@ export function TitleBar({ controller }: { controller: AppController }) {
   const restoreAll = () => controller.restoreAll();
 
   const routeLabel =
-    route === 'workspace' ? t.navWorkspace
-      : route === 'themes' ? t.navThemes
-        : route === 'settings' ? t.navSettings
+    route === 'workspace'
+      ? t.navWorkspace
+      : route === 'themes'
+        ? t.navThemes
+        : route === 'settings'
+          ? t.navSettings
           : 'AgentSkin';
 
   const themeModes: Array<{ value: ThemeMode; icon: typeof Sun03Icon; label: string }> = [

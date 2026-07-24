@@ -47,5 +47,15 @@
  * reaching into the execution domain.
  */
 
-export type { AgentCatalogItem, AgentCapabilities, AgentCatalogStatus, ThemeCatalogItem, ThemeSource, CatalogResult, AgentId, AgentSkinApi } from '@shared/types';
 export type { AgentSkinClient } from '@/api/agentSkinClient';
+
+export type {
+  AgentCapabilities,
+  AgentCatalogItem,
+  AgentCatalogStatus,
+  AgentId,
+  AgentSkinApi,
+  CatalogResult,
+  ThemeCatalogItem,
+  ThemeSource,
+} from '@shared/types';

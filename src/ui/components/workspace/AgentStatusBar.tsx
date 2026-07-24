@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { UiMessages } from '@shared/i18n';
-import type { EnvironmentModel } from '@/types/environment';
 import { AppMark } from '@/components/app-mark';
-import { AgentStatusDot, type AgentDotVariant } from './AgentStatusDot';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { cn } from '@/lib/utils';
+import type { EnvironmentModel } from '@/types/environment';
+
+import type { UiMessages } from '@shared/i18n';
+import { type AgentDotVariant, AgentStatusDot } from './AgentStatusDot';
 
 /**
  * # LiveBadge
@@ -31,9 +32,7 @@ function LiveBadge({
       <span className="text-[9px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
         {t.statusLive}
       </span>
-      <span className="text-[9px] tabular-nums text-muted-foreground">
-        {relative}
-      </span>
+      <span className="text-[9px] tabular-nums text-muted-foreground">{relative}</span>
     </span>
   );
 }
@@ -109,17 +108,16 @@ export function AgentStatusBar({
               )}
             >
               {/* App icon */}
-              <div className={cn(
-                'relative flex size-8 shrink-0 items-center justify-center rounded-md',
-                'bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10',
-                'transition-transform duration-200 group-hover/pill:scale-105',
-              )}>
+              <div
+                className={cn(
+                  'relative flex size-8 shrink-0 items-center justify-center rounded-md',
+                  'bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10',
+                  'transition-transform duration-200 group-hover/pill:scale-105',
+                )}
+              >
                 <AppMark appId={env.agent.id} size={20} />
                 {/* Status dot overlay */}
-                <span
-                  className="absolute -right-0.5 -top-0.5 ring-2 ring-card"
-                  aria-hidden
-                >
+                <span className="absolute -right-0.5 -top-0.5 ring-2 ring-card" aria-hidden>
                   <AgentStatusDot variant={envToDotVariant(env)} size="xs" />
                 </span>
               </div>
@@ -129,10 +127,12 @@ export function AgentStatusBar({
                 <p className="truncate text-[11px] font-semibold leading-tight">
                   {env.agent.displayName}
                 </p>
-                <p className={cn(
-                  'mt-0.5 truncate text-[10px] leading-tight',
-                  env.theme ? 'text-muted-foreground' : 'text-muted-foreground/50',
-                )}>
+                <p
+                  className={cn(
+                    'mt-0.5 truncate text-[10px] leading-tight',
+                    env.theme ? 'text-muted-foreground' : 'text-muted-foreground/50',
+                  )}
+                >
                   {env.theme ? env.theme.name : t.statusNoTheme}
                 </p>
               </div>

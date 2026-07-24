@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { app, type BrowserWindow, type Tray } from 'electron';
 import path from 'node:path';
-import type { AgentCatalog } from './catalog/agent-catalog';
-import type { ThemeCatalog } from './catalog/theme-catalog';
-import type { AgentEngineService } from './agent-engine-service';
-import { FileOpenQueue } from './file-open';
-import type { SettingsServiceApi, ThemeLibraryApi, WallpaperServiceApi } from './services/contracts';
-import { DEFAULT_LOCALE, type AppLocale } from '../shared/i18n';
+import { app, type BrowserWindow, type Tray } from 'electron';
+import { toMessage } from '../shared/errors';
+import { type AppLocale, DEFAULT_LOCALE } from '../shared/i18n';
 import { IpcChannel } from '../shared/ipc-channels';
 import { AGENT_IDS, type AgentId } from '../shared/types';
-import { toMessage } from '../shared/errors';
+import type { AgentEngineService } from './agent-engine-service';
+import type { AgentCatalog } from './catalog/agent-catalog';
+import type { ThemeCatalog } from './catalog/theme-catalog';
+import { FileOpenQueue } from './file-open';
+import type {
+  SettingsServiceApi,
+  ThemeLibraryApi,
+  WallpaperServiceApi,
+} from './services/contracts';
 
 /**
  * # Main Context
@@ -86,9 +90,10 @@ export function wrapCatalog<T>(items: T[]): { version: number; updatedAt: string
  * The port field is reserved for an explicit user override only.
  */
 export function settingsDto(context: MainContext) {
-  const defaultPorts = Object.fromEntries(
-    AGENT_IDS.map((appId) => [appId, 0]),
-  ) as Record<AgentId, number>;
+  const defaultPorts = Object.fromEntries(AGENT_IDS.map((appId) => [appId, 0])) as Record<
+    AgentId,
+    number
+  >;
   return context.settings.toDto(defaultPorts);
 }
 
@@ -117,7 +122,10 @@ export async function handleThemeFileOpen(
     }
     const theme = await context.library.importPackage(filePath);
     void updateTrayMenu();
-    context.mainWindow?.webContents.send(IpcChannel.FILE_IMPORTED, { theme, themes: await context.library.summaries() });
+    context.mainWindow?.webContents.send(IpcChannel.FILE_IMPORTED, {
+      theme,
+      themes: await context.library.summaries(),
+    });
   } catch (error) {
     context.mainWindow?.webContents.send(IpcChannel.FILE_IMPORT_FAILED, toMessage(error));
   }

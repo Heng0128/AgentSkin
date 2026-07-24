@@ -15,8 +15,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { InstallHints } from '../adapters/base';
-import { appendLogLine } from './fs-utils';
 import { execFileAsync } from '../shared/exec-async';
+import { appendLogLine } from './fs-utils';
 
 export interface InstallDetection {
   installed: boolean;
@@ -57,7 +57,12 @@ async function readExeInfo(
     '$v = (Get-Item -LiteralPath ' + "'" + literal + "'" + ').VersionInfo',
     '"$($v.FileVersion)|$($v.ProductVersion)|$($v.ProductName)|$($v.FileDescription)"',
   ].join('\n');
-  const out = await execFileAsync('powershell', ['-NoProfile', '-NonInteractive', '-Command', script]);
+  const out = await execFileAsync('powershell', [
+    '-NoProfile',
+    '-NonInteractive',
+    '-Command',
+    script,
+  ]);
   const line = out.trim();
   if (!line) return null;
   const [fileVersion, productVersion, productName, fileDescription] = line.split('|');
@@ -98,7 +103,9 @@ async function scanDirForExe(
     try {
       const stat = await fs.stat(candidate);
       if (stat.isFile()) {
-        const version = await readExeInfo(candidate).then((i) => i?.version ?? null).catch(() => null);
+        const version = await readExeInfo(candidate)
+          .then((i) => i?.version ?? null)
+          .catch(() => null);
         return { version };
       }
     } catch {
@@ -207,7 +214,9 @@ async function appendLog(logFile: string, content: string): Promise<void> {
  * On non-Windows platforms (or when the adapter provides no hints) this
  * returns a non-installed result without touching the OS.
  */
-export async function detectInstallation(opts: DetectInstallationOptions): Promise<InstallDetection> {
+export async function detectInstallation(
+  opts: DetectInstallationOptions,
+): Promise<InstallDetection> {
   const { platform, appPath, hints, displayName, logFile } = opts;
   const stamp = new Date().toISOString();
   const empty: InstallDetection = { installed: false, path: null, version: null, source: null };
@@ -240,7 +249,10 @@ export async function detectInstallation(opts: DetectInstallationOptions): Promi
       source: 'path',
     };
     if (logFile) {
-      await appendLog(logFile, formatLogEntry(stamp, displayName, [normalized], 'manual override', 'FOUND', result));
+      await appendLog(
+        logFile,
+        formatLogEntry(stamp, displayName, [normalized], 'manual override', 'FOUND', result),
+      );
     }
     return result;
   }
@@ -308,7 +320,12 @@ export async function detectInstallation(opts: DetectInstallationOptions): Promi
   // is the fallback for version / InstallLocation.
   let result: InstallDetection;
   if (pathResult) {
-    result = { installed: true, path: pathResult.path, version: pathResult.version, source: 'path' };
+    result = {
+      installed: true,
+      path: pathResult.path,
+      version: pathResult.version,
+      source: 'path',
+    };
   } else if (registryResult) {
     result = {
       installed: true,
@@ -323,7 +340,14 @@ export async function detectInstallation(opts: DetectInstallationOptions): Promi
   if (logFile) {
     await appendLog(
       logFile,
-      formatLogEntry(stamp, displayName, scanPaths, registryInfo.join('; ') || 'none', result.installed ? 'FOUND' : 'NOT FOUND', result),
+      formatLogEntry(
+        stamp,
+        displayName,
+        scanPaths,
+        registryInfo.join('; ') || 'none',
+        result.installed ? 'FOUND' : 'NOT FOUND',
+        result,
+      ),
     );
   }
   return result;

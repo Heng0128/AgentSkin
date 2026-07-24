@@ -40,13 +40,13 @@ import type {
   ThemeBundle,
 } from '../legacy/agentskin-core-runtime';
 import {
-  applyTheme as runtimeApplyTheme,
   discoverApplication,
   findDebugTargets,
   findRunningProcesses,
   getCoreAdapter,
   resolveDebugPortsFor,
   resolveThemeTargetFor,
+  applyTheme as runtimeApplyTheme,
   restoreTheme as runtimeRestoreTheme,
 } from '../legacy/agentskin-core-runtime';
 
@@ -178,10 +178,7 @@ export abstract class BaseApplicationAdapter implements ApplicationAdapter {
     return found?.executable ?? found?.appPath ?? null;
   }
 
-  async applyTheme(
-    bundle: ThemeBundle,
-    options?: ApplyThemeOptions,
-  ): Promise<ApplyThemeResult> {
+  async applyTheme(bundle: ThemeBundle, options?: ApplyThemeOptions): Promise<ApplyThemeResult> {
     const coreId = this.requireCore();
     const targetTheme: ResolvedThemeTarget = resolveThemeTargetFor(bundle, coreId);
     return runtimeApplyTheme({

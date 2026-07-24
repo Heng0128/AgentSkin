@@ -3,6 +3,7 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import type { ThemeBundle } from '../legacy/agentskin-core-runtime';
 import {
   agentThemeExtension,
   convertLegacyTheme,
@@ -11,11 +12,10 @@ import {
   themeExtension,
   validateTheme,
 } from '../legacy/agentskin-core-runtime';
-import type { ThemeBundle } from '../legacy/agentskin-core-runtime';
 import { getMainLocale, getMainMessages } from '../shared/i18n';
-import { isAgentId, type AgentId, type InstalledTheme } from '../shared/types';
 import { isSafeThemeId } from '../shared/theme-id';
-import { mainWarn, mainInfo, mainWarnFromCatch } from './logger';
+import { type AgentId, type InstalledTheme, isAgentId } from '../shared/types';
+import { mainInfo, mainWarn, mainWarnFromCatch } from './logger';
 import type { ThemeLibraryApi } from './services/contracts';
 
 export interface ThemeEntry {
@@ -59,7 +59,7 @@ function legacyTargets(bundle: ThemeBundle): string[] {
  */
 function extractColors(bundle: ThemeBundle): Record<string, string> | undefined {
   const cssEntries = Object.values(bundle.targets);
-  const allCss = cssEntries.map((t) => typeof t.css === 'string' ? t.css : '').join('\n');
+  const allCss = cssEntries.map((t) => (typeof t.css === 'string' ? t.css : '')).join('\n');
   if (!allCss) return undefined;
   const colorMap: Record<string, string> = {};
   const tokenRegex = /--agentskin-(\w[\w-]*):\s*([^;]+);/g;
@@ -88,7 +88,9 @@ export function inferModeFromColors(colors?: Record<string, string>): 'dark' | '
   if (!bg || typeof bg !== 'string') return null;
   // Parse hex (#rgb / #rrggbb) or rgb()/rgba().
   const hex = bg.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
-  let r = 0, g = 0, b = 0;
+  let r = 0,
+    g = 0,
+    b = 0;
   if (hex) {
     const h = hex[1];
     if (h.length === 3) {
@@ -145,10 +147,10 @@ export function toInstalledTheme(entry: ThemeEntry): InstalledTheme {
   const category = typeof pick('category') === 'string' ? (pick('category') as string) : undefined;
   const tags = Array.isArray(pick('tags')) ? (pick('tags') as string[]) : undefined;
   const license = typeof pick('license') === 'string' ? (pick('license') as string) : undefined;
-  const unofficial = typeof pick('unofficial') === 'boolean' ? (pick('unofficial') as boolean) : undefined;
-  const mode = typeof pick('mode') === 'string'
-    ? (pick('mode') as 'dark' | 'light' | 'auto')
-    : undefined;
+  const unofficial =
+    typeof pick('unofficial') === 'boolean' ? (pick('unofficial') as boolean) : undefined;
+  const mode =
+    typeof pick('mode') === 'string' ? (pick('mode') as 'dark' | 'light' | 'auto') : undefined;
 
   // Prefer an explicit supportedAgents list (the agent ids this theme
   // targets); else derive from target keys.
@@ -160,8 +162,11 @@ export function toInstalledTheme(entry: ThemeEntry): InstalledTheme {
   const supported = copySupported && copySupported.length ? copySupported : supportedAgents(bundle);
 
   // Prefer colors extracted from embedded CSS; fall back to manifest colors.
-  const colors = extractColors(bundle)
-    ?? (copy?.colors && typeof copy.colors === 'object' ? (copy.colors as Record<string, string>) : undefined);
+  const colors =
+    extractColors(bundle) ??
+    (copy?.colors && typeof copy.colors === 'object'
+      ? (copy.colors as Record<string, string>)
+      : undefined);
 
   return {
     id: bundle.theme.id,
@@ -180,7 +185,8 @@ export function toInstalledTheme(entry: ThemeEntry): InstalledTheme {
     icon: iconDataUrl(bundle),
     colors,
     mode: mode ?? detectMode(bundle),
-    contentHash: typeof pick('contentHash') === 'string' ? (pick('contentHash') as string) : undefined,
+    contentHash:
+      typeof pick('contentHash') === 'string' ? (pick('contentHash') as string) : undefined,
     wallpaper: extractWallpaper(pick('wallpaper')),
   };
 }
@@ -229,7 +235,9 @@ export class ThemeLibrary implements ThemeLibraryApi {
       try {
         const manifestRaw = await fs.readFile(path.join(directory, 'manifest.json'), 'utf8');
         const manifest = JSON.parse(manifestRaw) as {
-          id?: string; css?: string; art?: string | null;
+          id?: string;
+          css?: string;
+          art?: string | null;
         };
         if (!manifest.id || !manifest.css) continue;
         const css = await fs.readFile(path.join(directory, manifest.css), 'utf8');
@@ -245,9 +253,14 @@ export class ThemeLibrary implements ThemeLibraryApi {
           const ext = path.extname(artPath).toLowerCase();
           legacyBundle.art = {
             filename: path.basename(artPath),
-            mimeType: ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg'
-              : ext === '.webp' ? 'image/webp'
-                : ext === '.gif' ? 'image/gif' : 'image/png',
+            mimeType:
+              ext === '.jpg' || ext === '.jpeg'
+                ? 'image/jpeg'
+                : ext === '.webp'
+                  ? 'image/webp'
+                  : ext === '.gif'
+                    ? 'image/gif'
+                    : 'image/png',
             base64: bytes.toString('base64'),
           };
         }
@@ -288,7 +301,8 @@ export class ThemeLibrary implements ThemeLibraryApi {
       }
     }
     return result.sort((a, b) =>
-      a.bundle.theme.displayName.localeCompare(b.bundle.theme.displayName, sortLocale));
+      a.bundle.theme.displayName.localeCompare(b.bundle.theme.displayName, sortLocale),
+    );
   }
 
   async summaries(): Promise<InstalledTheme[]> {

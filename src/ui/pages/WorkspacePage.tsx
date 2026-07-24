@@ -20,25 +20,26 @@
  *   - No direct controller calls from JSX
  */
 import { useCallback, useState } from 'react';
+import { RenameDialog } from '@/components/rename-dialog';
+import { AgentStatusBar } from '@/components/workspace/AgentStatusBar';
+import { EnvironmentGrid } from '@/components/workspace/EnvironmentGrid';
+import { EnvironmentHero } from '@/components/workspace/EnvironmentHero';
+import { WorkspaceQuickActions } from '@/components/workspace/WorkspaceQuickActions';
+import { type WorkspaceStatItem, WorkspaceStats } from '@/components/workspace/WorkspaceStats';
+import type { AppController } from '@/hooks/useAppController';
+import { useEnvironmentActions } from '@/hooks/useEnvironmentActions';
+import { useEnvironments } from '@/hooks/useEnvironments';
+
 import {
-  PackageIcon,
-  Search01Icon,
-  Image02Icon,
-  Copy01Icon,
-  PaintBoardIcon,
   BotIcon,
   CheckmarkCircle02Icon,
+  Copy01Icon,
+  Image02Icon,
+  PackageIcon,
+  PaintBoardIcon,
+  Search01Icon,
 } from '@hugeicons/core-free-icons';
 import type { AgentId } from '@shared/types';
-import type { AppController } from '@/hooks/useAppController';
-import { useEnvironments } from '@/hooks/useEnvironments';
-import { useEnvironmentActions } from '@/hooks/useEnvironmentActions';
-import { EnvironmentHero } from '@/components/workspace/EnvironmentHero';
-import { EnvironmentGrid } from '@/components/workspace/EnvironmentGrid';
-import { WorkspaceQuickActions } from '@/components/workspace/WorkspaceQuickActions';
-import { AgentStatusBar } from '@/components/workspace/AgentStatusBar';
-import { WorkspaceStats, type WorkspaceStatItem } from '@/components/workspace/WorkspaceStats';
-import { RenameDialog } from '@/components/rename-dialog';
 
 export function WorkspacePage({ controller }: { controller: AppController }) {
   const { activeEnvironment, environments } = useEnvironments(controller);
@@ -47,9 +48,12 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
 
   // --- Lifecycle handlers ---
 
-  const handleSwitchEnv = useCallback((env: typeof environments[number]) => {
-    void envActions.switchEnvironment(env);
-  }, [envActions]);
+  const handleSwitchEnv = useCallback(
+    (env: (typeof environments)[number]) => {
+      void envActions.switchEnvironment(env);
+    },
+    [envActions],
+  );
 
   const handleContinue = useCallback(() => {
     if (activeEnvironment) {
@@ -74,13 +78,16 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
   const [renamePresetId, setRenamePresetId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
-  const handleRenameOpen = useCallback((presetId: string) => {
-    const preset = environments.find((e) => e.presetId === presetId);
-    if (preset) {
-      setRenameValue(preset.name);
-    }
-    setRenamePresetId(presetId);
-  }, [environments]);
+  const handleRenameOpen = useCallback(
+    (presetId: string) => {
+      const preset = environments.find((e) => e.presetId === presetId);
+      if (preset) {
+        setRenameValue(preset.name);
+      }
+      setRenamePresetId(presetId);
+    },
+    [environments],
+  );
 
   const handleRenameSubmit = useCallback(() => {
     if (renamePresetId && renameValue.trim()) {
@@ -91,18 +98,24 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
   }, [renamePresetId, renameValue, envActions]);
 
   // --- Duplicate handler ---
-  const handleDuplicate = useCallback((presetId: string) => {
-    const preset = environments.find((e) => e.presetId === presetId);
-    if (preset) {
-      const newName = `${preset.name} 副本`;
-      envActions.duplicateEnvironment(presetId, newName);
-    }
-  }, [environments, envActions]);
+  const handleDuplicate = useCallback(
+    (presetId: string) => {
+      const preset = environments.find((e) => e.presetId === presetId);
+      if (preset) {
+        const newName = `${preset.name} 副本`;
+        envActions.duplicateEnvironment(presetId, newName);
+      }
+    },
+    [environments, envActions],
+  );
 
   // --- Delete handler ---
-  const handleDelete = useCallback((presetId: string) => {
-    envActions.deleteEnvironment(presetId);
-  }, [envActions]);
+  const handleDelete = useCallback(
+    (presetId: string) => {
+      envActions.deleteEnvironment(presetId);
+    },
+    [envActions],
+  );
 
   // --- Summary stats ---
   // Derived from controller + environments so the cards update live with
@@ -184,11 +197,7 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
 
       <div className="relative mx-auto flex max-w-5xl flex-col px-6 py-6">
         {/* 1. Hero */}
-        <EnvironmentHero
-          activeEnv={activeEnvironment}
-          t={t}
-          onContinue={handleContinue}
-        />
+        <EnvironmentHero activeEnv={activeEnvironment} t={t} onContinue={handleContinue} />
 
         {/* 2. Stats — quick-glance summary cards */}
         <WorkspaceStats items={statsItems} />

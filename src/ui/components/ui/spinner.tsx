@@ -1,12 +1,19 @@
-import { Loading03Icon } from "@hugeicons/core-free-icons"
+import { HugeIcon, type HugeIconProps } from '@/components/ui/huge-icon';
+import { cn } from '@/lib/utils';
 
-import { HugeIcon, type HugeIconProps } from "@/components/ui/huge-icon"
-import { cn } from "@/lib/utils"
+import { Loading03Icon } from '@hugeicons/core-free-icons';
 
-function Spinner({ className, ...props }: Omit<HugeIconProps, "icon">) {
+function Spinner({ className, ...props }: Omit<HugeIconProps, 'icon'>) {
   return (
-    <HugeIcon icon={Loading03Icon} data-slot="spinner" role="status" aria-label="加载中" className={cn("size-4 animate-spin", className)} {...props} />
-  )
+    <HugeIcon
+      icon={Loading03Icon}
+      data-slot="spinner"
+      role="status"
+      aria-label="加载中"
+      className={cn('size-4 animate-spin', className)}
+      {...props}
+    />
+  );
 }
 
-export { Spinner }
+export { Spinner };

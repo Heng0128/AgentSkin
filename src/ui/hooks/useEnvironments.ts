@@ -33,12 +33,13 @@
  */
 
 import { useMemo } from 'react';
+import { findAppStatus } from '@/lib/status-utils';
+import { loadPresets } from '@/storage/environment-store';
+import type { EnvironmentModel, EnvironmentPreset } from '@/types/environment';
+
 import type { AgentId } from '@shared/types';
 import type { AppController } from './useAppController';
-import type { EnvironmentModel, EnvironmentPreset } from '@/types/environment';
-import { loadPresets } from '@/storage/environment-store';
 import { getRefreshCounter } from './useEnvironmentActions';
-import { findAppStatus } from '@/lib/status-utils';
 
 /** Build an environment id from agent + theme. */
 function envId(agentId: string, themeId: string | null): string {
@@ -82,20 +83,20 @@ export function useEnvironments(controller: AppController): UseEnvironmentsResul
 
   // --- Lookups ---
   const agentById = useMemo(() => {
-    const map = new Map<string, typeof allAgents[number]>();
+    const map = new Map<string, (typeof allAgents)[number]>();
     for (const a of allAgents) map.set(a.id, a);
     return map;
   }, [allAgents]);
 
   const themeById = useMemo(() => {
-    const map = new Map<string, typeof installed[number]>();
+    const map = new Map<string, (typeof installed)[number]>();
     for (const th of installed) map.set(th.id, th);
     return map;
   }, [installed]);
 
   const activeThemeByAgent = useMemo(() => {
     const map = new Map<string, string>();
-    for (const app of (status?.apps ?? [])) {
+    for (const app of status?.apps ?? []) {
       if (app.activeThemeId) map.set(app.appId, app.activeThemeId);
     }
     return map;
@@ -118,7 +119,7 @@ export function useEnvironments(controller: AppController): UseEnvironmentsResul
       const preset = presetByAgent.get(agent.id) ?? null;
       const appStatus = findAppStatus(status, agent.id as AgentId);
       const activeThemeId = activeThemeByAgent.get(agent.id) ?? null;
-      const activeTheme = activeThemeId ? themeById.get(activeThemeId) ?? null : null;
+      const activeTheme = activeThemeId ? (themeById.get(activeThemeId) ?? null) : null;
 
       const isRunning = !!appStatus?.running || !!appStatus?.debugReady;
       const isInstalled = !!appStatus?.installed;
@@ -142,17 +143,17 @@ export function useEnvironments(controller: AppController): UseEnvironmentsResul
       }
 
       // Determine theme info
-      const theme = activeTheme ? {
-        id: activeTheme.id,
-        name: activeTheme.name,
-        preview: activeTheme.preview,
-        icon: activeTheme.icon ?? null,
-      } : null;
+      const theme = activeTheme
+        ? {
+            id: activeTheme.id,
+            name: activeTheme.name,
+            preview: activeTheme.preview,
+            icon: activeTheme.icon ?? null,
+          }
+        : null;
 
       // Link to preset if one exists for this agent+theme combo
-      const presetId = preset && preset.themeId === activeThemeId
-        ? preset.id
-        : null;
+      const presetId = preset && preset.themeId === activeThemeId ? preset.id : null;
 
       result.push({
         id: envId(agent.id, activeThemeId),
@@ -197,12 +198,15 @@ export function useEnvironments(controller: AppController): UseEnvironmentsResul
   );
 
   // Stats
-  const stats = useMemo(() => ({
-    total: environments.length,
-    active: environments.filter((e) => e.status === 'active').length,
-    running: environments.filter((e) => e.agentRunning).length,
-    installed: environments.filter((e) => e.agentInstalled).length,
-  }), [environments]);
+  const stats = useMemo(
+    () => ({
+      total: environments.length,
+      active: environments.filter((e) => e.status === 'active').length,
+      running: environments.filter((e) => e.agentRunning).length,
+      installed: environments.filter((e) => e.agentInstalled).length,
+    }),
+    [environments],
+  );
 
   return {
     environments,

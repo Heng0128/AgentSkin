@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useState } from 'react';
+
 import type { UiMessages } from '@shared/i18n';
 
 /**
@@ -29,7 +30,5 @@ export function useRelativeTime(
   if (isRefreshing) return t.statusRefreshing;
   if (lastStatusAt == null) return t.statusDetecting;
   const seconds = Math.max(0, Math.floor((Date.now() - lastStatusAt) / 1000));
-  return seconds < 1
-    ? t.statusUpdatedJustNow
-    : t.statusUpdatedSecondsAgo(seconds);
+  return seconds < 1 ? t.statusUpdatedJustNow : t.statusUpdatedSecondsAgo(seconds);
 }

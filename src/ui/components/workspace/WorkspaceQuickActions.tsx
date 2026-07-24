@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { HugeiconsIconProps } from '@hugeicons/react';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
+
+import type { HugeiconsIconProps } from '@hugeicons/react';
 
 export interface WorkspaceQuickActionItem {
   id: string;
@@ -20,11 +21,7 @@ export interface WorkspaceQuickActionItem {
  * Visual action cards with icon, label, and optional description.
  * Replaces the old plain button row with richer, more inviting cards.
  */
-export function WorkspaceQuickActions({
-  items,
-}: {
-  items: WorkspaceQuickActionItem[];
-}) {
+export function WorkspaceQuickActions({ items }: { items: WorkspaceQuickActionItem[] }) {
   return (
     <div className="mt-5">
       <div className="grid gap-2.5 sm:grid-cols-2">
@@ -45,21 +42,25 @@ export function WorkspaceQuickActions({
             )}
           >
             {/* Icon container */}
-            <div className={cn(
-              'flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover/action:scale-105',
-              item.primary
-                ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
-                : 'bg-secondary text-muted-foreground ring-1 ring-border/50 group-hover/action:text-foreground',
-            )}>
+            <div
+              className={cn(
+                'flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover/action:scale-105',
+                item.primary
+                  ? 'bg-primary/15 text-primary ring-1 ring-primary/20'
+                  : 'bg-secondary text-muted-foreground ring-1 ring-border/50 group-hover/action:text-foreground',
+              )}
+            >
               <HugeIcon icon={item.icon} size={16} />
             </div>
 
             {/* Text */}
             <div className="min-w-0">
-              <p className={cn(
-                'text-sm font-semibold tracking-tight',
-                item.primary ? 'text-primary' : 'text-foreground',
-              )}>
+              <p
+                className={cn(
+                  'text-sm font-semibold tracking-tight',
+                  item.primary ? 'text-primary' : 'text-foreground',
+                )}
+              >
                 {item.label}
               </p>
               {item.description && (

@@ -23,13 +23,10 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type {
-  ThemeManifest,
-  ThemeTargetConfig,
-} from './theme-manifest';
-import { isV2Manifest } from './theme-manifest';
 import { isSafeThemeId } from '../../shared/theme-id';
-import { mainWarn, mainWarnFromCatch, mainErrorFromCatch } from '../logger';
+import { mainErrorFromCatch, mainWarn, mainWarnFromCatch } from '../logger';
+import type { ThemeManifest, ThemeTargetConfig } from './theme-manifest';
+import { isV2Manifest } from './theme-manifest';
 
 /** A validated, ready-to-install theme package. */
 export interface InstalledThemePackage {
@@ -115,7 +112,10 @@ async function validateBackgroundAssets(
       try {
         await fs.access(p);
       } catch {
-        mainWarn('ThemePackageLoader', `optional background asset not found for ${themeId}: ${assetPath}`);
+        mainWarn(
+          'ThemePackageLoader',
+          `optional background asset not found for ${themeId}: ${assetPath}`,
+        );
       }
     }
   }
@@ -130,7 +130,10 @@ export class ThemePackageLoader {
    */
   async load(themeId: string): Promise<InstalledThemePackage> {
     if (!isSafeThemeId(themeId)) {
-      throw new ThemePackageValidationError(themeId, 'invalid theme id (must be alphanumeric + hyphens)');
+      throw new ThemePackageValidationError(
+        themeId,
+        'invalid theme id (must be alphanumeric + hyphens)',
+      );
     }
 
     const packagePath = path.join(this.themesDir, themeId);
@@ -168,7 +171,10 @@ export class ThemePackageLoader {
       throw new ThemePackageValidationError(themeId, 'missing or invalid preview');
     }
     if (manifest.mode && !['dark', 'light', 'auto'].includes(manifest.mode)) {
-      throw new ThemePackageValidationError(themeId, 'invalid mode (must be "dark", "light", or "auto")');
+      throw new ThemePackageValidationError(
+        themeId,
+        'invalid mode (must be "dark", "light", or "auto")',
+      );
     }
     if (!manifest.colors?.background) {
       throw new ThemePackageValidationError(themeId, 'missing or invalid colors.background');
@@ -227,7 +233,10 @@ export class ThemePackageLoader {
       // Validate author if present
       if (manifest.author) {
         if (!manifest.author.name || typeof manifest.author.name !== 'string') {
-          throw new ThemePackageValidationError(themeId, 'author.name is required when author is present');
+          throw new ThemePackageValidationError(
+            themeId,
+            'author.name is required when author is present',
+          );
         }
         if (manifest.author.url && typeof manifest.author.url !== 'string') {
           throw new ThemePackageValidationError(themeId, 'author.url must be a string');
@@ -240,7 +249,10 @@ export class ThemePackageLoader {
       }
 
       // Validate tags if present
-      if (manifest.tags && (!Array.isArray(manifest.tags) || !manifest.tags.every((t) => typeof t === 'string'))) {
+      if (
+        manifest.tags &&
+        (!Array.isArray(manifest.tags) || !manifest.tags.every((t) => typeof t === 'string'))
+      ) {
         throw new ThemePackageValidationError(themeId, 'tags must be an array of strings');
       }
 
@@ -263,10 +275,16 @@ export class ThemePackageLoader {
         const hasWorkshopId = typeof wp.workshopId === 'string' && wp.workshopId.length > 0;
         const hasVideo = typeof wp.video === 'string' && wp.video.length > 0;
         if (!hasWorkshopId && !hasVideo) {
-          throw new ThemePackageValidationError(themeId, 'wallpaper requires either workshopId or video');
+          throw new ThemePackageValidationError(
+            themeId,
+            'wallpaper requires either workshopId or video',
+          );
         }
         if (hasWorkshopId && !/^\d+$/.test(wp.workshopId!)) {
-          throw new ThemePackageValidationError(themeId, 'wallpaper.workshopId must be a numeric string (Steam workshop item id)');
+          throw new ThemePackageValidationError(
+            themeId,
+            'wallpaper.workshopId must be a numeric string (Steam workshop item id)',
+          );
         }
         if (hasVideo) {
           resolveWithin(themeId, packagePath, wp.video!, 'wallpaper.video');
@@ -274,11 +292,23 @@ export class ThemePackageLoader {
         if (wp.poster) {
           resolveWithin(themeId, packagePath, wp.poster, 'wallpaper.poster');
         }
-        if (wp.speed !== undefined && (typeof wp.speed !== 'number' || wp.speed < 0.1 || wp.speed > 3.0)) {
-          throw new ThemePackageValidationError(themeId, 'wallpaper.speed must be a number between 0.1 and 3.0');
+        if (
+          wp.speed !== undefined &&
+          (typeof wp.speed !== 'number' || wp.speed < 0.1 || wp.speed > 3.0)
+        ) {
+          throw new ThemePackageValidationError(
+            themeId,
+            'wallpaper.speed must be a number between 0.1 and 3.0',
+          );
         }
-        if (wp.scrimOpacity !== undefined && (typeof wp.scrimOpacity !== 'number' || wp.scrimOpacity < 0 || wp.scrimOpacity > 100)) {
-          throw new ThemePackageValidationError(themeId, 'wallpaper.scrimOpacity must be between 0 and 100');
+        if (
+          wp.scrimOpacity !== undefined &&
+          (typeof wp.scrimOpacity !== 'number' || wp.scrimOpacity < 0 || wp.scrimOpacity > 100)
+        ) {
+          throw new ThemePackageValidationError(
+            themeId,
+            'wallpaper.scrimOpacity must be between 0 and 100',
+          );
         }
       }
 
@@ -288,26 +318,41 @@ export class ThemePackageLoader {
           throw new ThemePackageValidationError(themeId, 'fonts must be an array');
         }
         if (manifest.fonts.length > 5) {
-          throw new ThemePackageValidationError(themeId, 'fonts array exceeds maximum of 5 entries');
+          throw new ThemePackageValidationError(
+            themeId,
+            'fonts array exceeds maximum of 5 entries',
+          );
         }
         for (const font of manifest.fonts) {
           if (!font.family || typeof font.family !== 'string') {
             throw new ThemePackageValidationError(themeId, 'each font must have a family string');
           }
           if (!font.src || typeof font.src !== 'string') {
-            throw new ThemePackageValidationError(themeId, `font "${font.family}" must have a src string`);
+            throw new ThemePackageValidationError(
+              themeId,
+              `font "${font.family}" must have a src string`,
+            );
           }
           resolveWithin(themeId, packagePath, font.src, `font "${font.family}" src`);
           if (font.style && !['normal', 'italic', 'oblique'].includes(font.style)) {
-            throw new ThemePackageValidationError(themeId, `font "${font.family}" has invalid style`);
+            throw new ThemePackageValidationError(
+              themeId,
+              `font "${font.family}" has invalid style`,
+            );
           }
         }
       }
 
       // Validate minAppVersion
       if (manifest.minAppVersion !== undefined) {
-        if (typeof manifest.minAppVersion !== 'string' || !/^\d+\.\d+\.\d+$/.test(manifest.minAppVersion)) {
-          throw new ThemePackageValidationError(themeId, 'minAppVersion must be a semver string (e.g. "2.1.0")');
+        if (
+          typeof manifest.minAppVersion !== 'string' ||
+          !/^\d+\.\d+\.\d+$/.test(manifest.minAppVersion)
+        ) {
+          throw new ThemePackageValidationError(
+            themeId,
+            'minAppVersion must be a semver string (e.g. "2.1.0")',
+          );
         }
       }
 

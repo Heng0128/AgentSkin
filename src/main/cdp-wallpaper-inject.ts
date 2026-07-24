@@ -36,7 +36,6 @@
  */
 
 import { readFileSync } from 'node:fs';
-import type { CdpSession } from './cdp-client';
 import {
   IMAGE_SCRIM_ID,
   IMAGE_WALLPAPER_ID,
@@ -52,6 +51,7 @@ import {
   WALLPAPER_PUNCH_STYLE_ID,
   WALLPAPER_STYLE_ID,
 } from '../shared/injection-constants';
+import type { CdpSession } from './cdp-client';
 
 /** Derive a video MIME type from a file path's extension. */
 export function videoMimeForPath(filePath: string): string {

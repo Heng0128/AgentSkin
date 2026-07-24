@@ -12,9 +12,10 @@
  * boot lifecycle is testable in isolation.
  */
 
-import { useEffect, type Dispatch, type SetStateAction } from 'react';
-import type { AppLocale } from '@shared/i18n';
+import { type Dispatch, type SetStateAction, useEffect } from 'react';
 import { api } from '@/api/agentSkinClient';
+
+import type { AppLocale } from '@shared/i18n';
 
 interface UseBootDeps {
   fail: (error: unknown) => void;
@@ -32,17 +33,11 @@ export function useBoot(deps: UseBootDeps): void {
     let disposed = false;
     let bootTimeout: ReturnType<typeof setTimeout> | undefined;
     const bootTimeoutPromise = new Promise<never>((_, reject) => {
-      bootTimeout = setTimeout(
-        () => reject(new Error('Bootstrap timeout after 15s')),
-        15000,
-      );
+      bootTimeout = setTimeout(() => reject(new Error('Bootstrap timeout after 15s')), 15000);
     });
     void (async () => {
       try {
-        const boot = await Promise.race([
-          api.getBootstrap(),
-          bootTimeoutPromise,
-        ]);
+        const boot = await Promise.race([api.getBootstrap(), bootTimeoutPromise]);
         if (disposed) return;
         setLocaleState(boot.locale);
         setAppVersion(boot.appVersion);
@@ -56,7 +51,10 @@ export function useBoot(deps: UseBootDeps): void {
       }
     })();
     const offLog = api.onRuntimeLog((line) => {
-      setLogs((cur) => [...cur.slice(-399), `[${new Date().toLocaleTimeString('zh-CN', { hour12: false })}] [Renderer] [INFO] ${line}`]);
+      setLogs((cur) => [
+        ...cur.slice(-399),
+        `[${new Date().toLocaleTimeString('zh-CN', { hour12: false })}] [Renderer] [INFO] ${line}`,
+      ]);
     });
     // Immediately execute status refresh, then poll every 3s. The poll is
     // gated on document visibility so a backgrounded window doesn't burn
@@ -69,7 +67,9 @@ export function useBoot(deps: UseBootDeps): void {
       if (document.hidden) return;
       void refreshStatus();
     }, 3000);
-    const onFocus = () => { if (!disposed) void refreshStatus(); };
+    const onFocus = () => {
+      if (!disposed) void refreshStatus();
+    };
     window.addEventListener('focus', onFocus);
     return () => {
       disposed = true;

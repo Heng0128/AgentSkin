@@ -150,19 +150,25 @@ export const uiMessages = {
     nativeRestored: (app: string) => `已恢复 ${app} 原生界面`,
     themeApplied: (name: string) => `${name} 已应用`,
     actionFailed: '操作失败',
-    portOccupied: '调试端口被占用，无法连接应用。请在设置中更换端口，或关闭占用该端口的程序后重试。',
+    portOccupied:
+      '调试端口被占用，无法连接应用。请在设置中更换端口，或关闭占用该端口的程序后重试。',
     cancel: '取消',
     close: '关闭',
     restartTitle: '需要重启一次',
-    restartDescription: (app: string) => `需要由 AgentSkin 重启 ${app} 才能加载完整主题：点击"重启并应用"即可自动完成。注意：自己手动重启 ${app} 不会使主题生效。`,
+    restartDescription: (app: string) =>
+      `需要由 AgentSkin 重启 ${app} 才能加载完整主题：点击"重启并应用"即可自动完成。注意：自己手动重启 ${app} 不会使主题生效。`,
     restartLater: '暂不重启',
     restartAndApply: '重启并应用',
     deleteTitle: '确定删除这个主题吗？',
-    deleteDescription: (name: string) => `「${name}」的本地主题包将被删除。如果正在使用，会先恢复应用原生界面。`,
+    deleteDescription: (name: string) =>
+      `「${name}」的本地主题包将被删除。如果正在使用，会先恢复应用原生界面。`,
     confirmDelete: '删除主题',
     fileImportReplaceTitle: '替换已安装的主题？',
-    fileImportReplaceDescription: (name: string, installedVersion: string, incomingVersion: string) =>
-      `已安装「${name}」v${installedVersion}。要用这个文件中的 v${incomingVersion} 替换它吗？`,
+    fileImportReplaceDescription: (
+      name: string,
+      installedVersion: string,
+      incomingVersion: string,
+    ) => `已安装「${name}」v${installedVersion}。要用这个文件中的 v${incomingVersion} 替换它吗？`,
     fileImportReplace: '替换',
     runtimeLog: '日志',
     noLogs: '暂无日志。',
@@ -433,7 +439,8 @@ export const uiMessages = {
     environmentDelete: 'Delete',
     environmentCreate: 'Create Environment',
     environmentCreated: 'Environment created',
-    environmentDeleteConfirm: 'Are you sure you want to delete this environment? This will not affect running apps.',
+    environmentDeleteConfirm:
+      'Are you sure you want to delete this environment? This will not affect running apps.',
     environmentDeleteConfirmTitle: 'Delete Environment',
     environmentAlreadyActive: 'This environment is already active',
     environmentActive: 'Currently Active',
@@ -474,7 +481,8 @@ export const uiMessages = {
     restartReasonNotRunning: 'This app is not running. Please start it manually and retry.',
     restartReasonNoCdp: 'This app has no debug port enabled. A restart is required to enable it.',
     restartReasonSpawnFailed: 'App failed to launch. Try starting it manually.',
-    restartReasonSingletonLock: 'App is held by a singleton lock. Please close the running instance first.',
+    restartReasonSingletonLock:
+      'App is held by a singleton lock. Please close the running instance first.',
     statusActiveTheme: (name: string) => `Active: ${name}`,
     statusNoTheme: 'No theme applied',
     cdpPortLabel: 'Launch port',
@@ -515,18 +523,25 @@ export const uiMessages = {
     nativeRestored: (app: string) => `Restored the original ${app} interface`,
     themeApplied: (name: string) => `${name} applied`,
     actionFailed: 'The action failed',
-    portOccupied: 'The debug port is occupied. Change the app\'s port in Settings, or close the process using it, then retry.',
+    portOccupied:
+      "The debug port is occupied. Change the app's port in Settings, or close the process using it, then retry.",
     cancel: 'Cancel',
     close: 'Close',
     restartTitle: 'One restart needed',
-    restartDescription: (app: string) => `AgentSkin needs to restart ${app} to load the full theme — click "Restart & apply" and it happens automatically. Note: restarting ${app} yourself will not apply the theme.`,
+    restartDescription: (app: string) =>
+      `AgentSkin needs to restart ${app} to load the full theme — click "Restart & apply" and it happens automatically. Note: restarting ${app} yourself will not apply the theme.`,
     restartLater: 'Not now',
     restartAndApply: 'Restart & apply',
     deleteTitle: 'Delete this theme?',
-    deleteDescription: (name: string) => `The local package for "${name}" will be removed. If it is active, the original interface is restored first.`,
+    deleteDescription: (name: string) =>
+      `The local package for "${name}" will be removed. If it is active, the original interface is restored first.`,
     confirmDelete: 'Delete theme',
     fileImportReplaceTitle: 'Replace the installed theme?',
-    fileImportReplaceDescription: (name: string, installedVersion: string, incomingVersion: string) =>
+    fileImportReplaceDescription: (
+      name: string,
+      installedVersion: string,
+      incomingVersion: string,
+    ) =>
       `"${name}" v${installedVersion} is already installed. Replace it with v${incomingVersion} from this file?`,
     fileImportReplace: 'Replace',
     runtimeLog: 'Logs',
@@ -563,7 +578,8 @@ export const uiMessages = {
     settingsLanguageDesc: 'Choose the display language of the app interface.',
     settingsCurrentVersion: 'Current version',
     settingsAppsTitle: 'App detection',
-    settingsAppsHint: 'Set the install location manually when an app is not detected; change the debug port if the default is occupied.',
+    settingsAppsHint:
+      'Set the install location manually when an app is not detected; change the debug port if the default is occupied.',
     settingsPathLabel: 'Install location',
     settingsPathAuto: 'Auto-detected',
     settingsChoosePath: 'Choose…',
@@ -576,7 +592,8 @@ export const uiMessages = {
     wallpaperDesc: 'Pick a video from Wallpaper Engine as the animated background for AgentSkin',
     wallpaperEnable: 'Enable animated background',
     wallpaperEmpty: 'No wallpapers found',
-    wallpaperEmptyHint: 'Subscribe to wallpapers in Wallpaper Engine, or click below to import local images/videos',
+    wallpaperEmptyHint:
+      'Subscribe to wallpapers in Wallpaper Engine, or click below to import local images/videos',
     wallpaperNone: 'Off',
     wallpaperSelected: 'Applied',
     wallpaperImport: 'Import Image/Video',
@@ -586,7 +603,8 @@ export const uiMessages = {
     wallpaperDeleted: 'Wallpaper deleted',
     wallpaperDeleteFailed: 'Failed to delete wallpaper',
     wallpaperAgentSection: 'Apply to Agents',
-    wallpaperAgentDesc: 'Choose a different dynamic wallpaper for each agent, injected into its page background',
+    wallpaperAgentDesc:
+      'Choose a different dynamic wallpaper for each agent, injected into its page background',
     wallpaperAgentFollowTheme: 'Follow theme',
     wallpaperAgentApply: 'Apply',
     wallpaperAgentApplied: 'Applied',
@@ -597,7 +615,8 @@ export const uiMessages = {
     wePageDesc: 'Browse Wallpaper Engine library and apply wallpapers to any Agent',
     weDetecting: 'Detecting Wallpaper Engine…',
     weNotInstalled: 'Wallpaper Engine not detected',
-    weNotInstalledHint: 'Install Wallpaper Engine via Steam and subscribe to wallpapers, then retry',
+    weNotInstalledHint:
+      'Install Wallpaper Engine via Steam and subscribe to wallpapers, then retry',
     weSearchPlaceholder: 'Search wallpaper name or tags…',
     weFilterAll: 'All',
     weFilterVideo: 'Dynamic',
@@ -731,9 +750,12 @@ export const mainMessages = {
     invalidPackage: '不是有效的 AgentSkin 主题包。',
     unsupportedPlatform: '当前只支持 macOS 和 Windows。',
     invalidCdpPort: 'CDP 端口必须是 1024 至 65535 的整数。',
-    restartRequiredMessage: '应用正在运行，需要由 AgentSkin 重启一次才能启用主题。请在弹窗中点击"重启并应用"。',
-    cdpNotDetectedMessage: '该应用当前未开启调试端口，无法直接注入主题。需要重启该应用以启用调试端口后才能应用主题。',
-    portOccupiedMessage: (port: number) => `端口 ${port} 被其他进程占用，AgentSkin 无法连接或重启该应用。请关闭占用端口的程序，或在设置中为该应用更换端口后重试。`,
+    restartRequiredMessage:
+      '应用正在运行，需要由 AgentSkin 重启一次才能启用主题。请在弹窗中点击"重启并应用"。',
+    cdpNotDetectedMessage:
+      '该应用当前未开启调试端口，无法直接注入主题。需要重启该应用以启用调试端口后才能应用主题。',
+    portOccupiedMessage: (port: number) =>
+      `端口 ${port} 被其他进程占用，AgentSkin 无法连接或重启该应用。请关闭占用端口的程序，或在设置中为该应用更换端口后重试。`,
     themeApplied: (name: string, app: string) => `${name} 已应用到 ${app}。`,
   },
   en: {
@@ -741,7 +763,8 @@ export const mainMessages = {
     trayOpen: 'Open AgentSkin',
     trayRestore: 'Restore all',
     trayQuit: 'Quit AgentSkin',
-    trayTooltipActive: (count: number) => `AgentSkin · ${count} app${count === 1 ? '' : 's'} themed`,
+    trayTooltipActive: (count: number) =>
+      `AgentSkin · ${count} app${count === 1 ? '' : 's'} themed`,
     trayAppRunning: 'Running',
     trayAppNotRunning: 'Not running',
     trayAppNotInstalled: 'Not installed',
@@ -762,9 +785,12 @@ export const mainMessages = {
     invalidPackage: 'This is not a valid AgentSkin theme package.',
     unsupportedPlatform: 'Only macOS and Windows are currently supported.',
     invalidCdpPort: 'The CDP port must be an integer from 1024 to 65535.',
-    restartRequiredMessage: 'The app is running and AgentSkin must restart it once before the theme can be enabled. Click "Restart & apply" in the dialog.',
-    cdpNotDetectedMessage: 'The app has no debug port open, so the theme cannot be injected directly. The app needs to be restarted with a debug port before the theme can be applied.',
-    portOccupiedMessage: (port: number) => `Port ${port} is occupied by another process, so AgentSkin cannot attach to or restart the app. Close whatever is using the port, or change the app's port in Settings, then retry.`,
+    restartRequiredMessage:
+      'The app is running and AgentSkin must restart it once before the theme can be enabled. Click "Restart & apply" in the dialog.',
+    cdpNotDetectedMessage:
+      'The app has no debug port open, so the theme cannot be injected directly. The app needs to be restarted with a debug port before the theme can be applied.',
+    portOccupiedMessage: (port: number) =>
+      `Port ${port} is occupied by another process, so AgentSkin cannot attach to or restart the app. Close whatever is using the port, or change the app's port in Settings, then retry.`,
     themeApplied: (name: string, app: string) => `${name} has been applied to ${app}.`,
   },
 };

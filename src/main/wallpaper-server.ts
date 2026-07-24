@@ -28,10 +28,10 @@
  * Lifecycle: lazily started on first registration, stopped on app quit.
  */
 
+import { randomBytes } from 'node:crypto';
+import { createReadStream, statSync } from 'node:fs';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { createReadStream, statSync } from 'node:fs';
-import { randomBytes } from 'node:crypto';
 
 interface MediaEntry {
   filePath: string;

@@ -17,8 +17,8 @@
 
 import type { MainContext } from '../main-context';
 import { registerCoreIpc } from './core-ipc';
-import { registerThemeIpc } from './theme-ipc';
 import { registerSettingsIpc } from './settings-ipc';
+import { registerThemeIpc } from './theme-ipc';
 import { registerWallpaperIpc } from './wallpaper-ipc';
 import { registerWindowIpc } from './window-ipc';
 

@@ -51,14 +51,32 @@ function candidateWorkshopRoots(): string[] {
     roots.push(path.join(pf, 'Steam', 'steamapps', 'workshop', 'content', WE_APP_ID));
   } else if (process.platform === 'darwin') {
     roots.push(
-      path.join(os.homedir(), 'Library', 'Application Support', 'Steam', 'steamapps', 'workshop', 'content', WE_APP_ID),
+      path.join(
+        os.homedir(),
+        'Library',
+        'Application Support',
+        'Steam',
+        'steamapps',
+        'workshop',
+        'content',
+        WE_APP_ID,
+      ),
     );
   } else {
     roots.push(
       path.join(os.homedir(), '.steam', 'steam', 'steamapps', 'workshop', 'content', WE_APP_ID),
     );
     roots.push(
-      path.join(os.homedir(), '.local', 'share', 'Steam', 'steamapps', 'workshop', 'content', WE_APP_ID),
+      path.join(
+        os.homedir(),
+        '.local',
+        'share',
+        'Steam',
+        'steamapps',
+        'workshop',
+        'content',
+        WE_APP_ID,
+      ),
     );
   }
   return roots;
@@ -221,7 +239,12 @@ export class WallpaperService implements WallpaperServiceApi {
           // For scene / web / unrecognized types (or when project.file is
           // missing/invalid): scan the directory for video files. Many "scene"
           // wallpapers ship .mp4/.webm assets that ARE the animated content.
-          if (!type || (type === 'video' && mediaPath && !(await fs.stat(mediaPath).catch(() => null))?.isFile())) {
+          if (
+            !type ||
+            (type === 'video' &&
+              mediaPath &&
+              !(await fs.stat(mediaPath).catch(() => null))?.isFile())
+          ) {
             type = null;
             mediaPath = null;
             try {
@@ -276,14 +299,18 @@ export class WallpaperService implements WallpaperServiceApi {
             mediaPath,
             previewPath,
             sizeBytes,
-            tags: Array.isArray(project.tags) ? project.tags.filter((t) => typeof t === 'string') : [],
+            tags: Array.isArray(project.tags)
+              ? project.tags.filter((t) => typeof t === 'string')
+              : [],
             source: 'workshop',
           });
         } catch {
           // No project.json or malformed — try bare image files in the folder.
           try {
             const files = await fs.readdir(dir);
-            const imageFile = files.find((f) => IMAGE_EXTENSIONS.has(path.extname(f).toLowerCase()));
+            const imageFile = files.find((f) =>
+              IMAGE_EXTENSIONS.has(path.extname(f).toLowerCase()),
+            );
             if (imageFile) {
               const mediaPath = path.join(dir, imageFile);
               const mediaStat = await fs.stat(mediaPath).catch(() => null);

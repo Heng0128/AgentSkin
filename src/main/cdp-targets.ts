@@ -16,8 +16,8 @@
  * and type drift from the authoritative `CdpTarget` interface.
  */
 
-import { listCdpTargets } from '@agentskin/core';
 import type { CdpTarget } from '@agentskin/core';
+import { listCdpTargets } from '@agentskin/core';
 
 export type { CdpTarget };
 

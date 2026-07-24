@@ -26,7 +26,8 @@
  *   AgentEngineService.restore → restoreOriginalScheme
  */
 
-import type { CdpSession } from './cdp-client';
+import { toMessage } from '../shared/errors';
+import type { AgentId } from '../shared/types';
 import {
   applyScheme,
   captureScheme,
@@ -34,9 +35,8 @@ import {
   type SchemeMode,
   type SchemeSnapshot,
 } from './agent-scheme';
-import { toMessage } from '../shared/errors';
+import type { CdpSession } from './cdp-client';
 import type { LogCallback } from './services/contracts';
-import type { AgentId } from '../shared/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -149,7 +149,9 @@ export async function syncSchemeToTheme(
         }
       }
       const ok = await applyScheme(session, appId, mode);
-      deps.log(`[scheme] ${appId}: ${ok ? `scheme matched to theme (${mode})` : 'scheme sync skipped'}`);
+      deps.log(
+        `[scheme] ${appId}: ${ok ? `scheme matched to theme (${mode})` : 'scheme sync skipped'}`,
+      );
     });
     if (captured) await deps.persist();
   } catch (error) {
@@ -204,14 +206,19 @@ export async function syncSchemeWithStability(
       const livePort = await deps.resolveLivePort(appId);
       if (livePort == null) return; // app closed / CDP gone — stop checking
       let stillOk = false;
-      await deps.withPageSession(appId, livePort, async (session) => {
-        // Re-check inside the session callback in case epoch flipped while
-        // we were resolving the port / connecting.
-        if (!deps.isEpochCurrent(appId, epoch)) return;
-        // Re-apply unconditionally — applyScheme's read-back verification
-        // will no-op if the mode is already correct (returns quickly).
-        stillOk = await applyScheme(session, appId, mode);
-      }, 3);
+      await deps.withPageSession(
+        appId,
+        livePort,
+        async (session) => {
+          // Re-check inside the session callback in case epoch flipped while
+          // we were resolving the port / connecting.
+          if (!deps.isEpochCurrent(appId, epoch)) return;
+          // Re-apply unconditionally — applyScheme's read-back verification
+          // will no-op if the mode is already correct (returns quickly).
+          stillOk = await applyScheme(session, appId, mode);
+        },
+        3,
+      );
       if (stillOk) {
         stableCount++;
         // Two consecutive stable checks → mode has stuck, stop polling.

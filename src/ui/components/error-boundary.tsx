@@ -2,9 +2,10 @@
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertCircleIcon } from '@hugeicons/core-free-icons';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { rError } from '@/utils/renderer-log';
+
+import { AlertCircleIcon } from '@hugeicons/core-free-icons';
 
 interface Props {
   children: ReactNode;

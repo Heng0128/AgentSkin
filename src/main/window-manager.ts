@@ -17,10 +17,10 @@
  * `before-quit` in `main.ts`).
  */
 
-import { BrowserWindow } from 'electron';
 import path from 'node:path';
-import { brandingRoot, ctx } from './main-context';
+import { BrowserWindow } from 'electron';
 import { IpcChannel } from '../shared/ipc-channels';
+import { brandingRoot, ctx } from './main-context';
 
 export interface WindowCreateOptions {
   /** Renderer dev server URL (vite dev), or null to load the built file. */
@@ -76,8 +76,12 @@ export async function createMainWindow(options: WindowCreateOptions = {}): Promi
   ctx.mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
   // Broadcast maximize/unmaximize so the title bar button can update its icon.
-  ctx.mainWindow.on('maximize', () => ctx.mainWindow?.webContents.send(IpcChannel.WINDOW_MAXIMIZE_CHANGE, true));
-  ctx.mainWindow.on('unmaximize', () => ctx.mainWindow?.webContents.send(IpcChannel.WINDOW_MAXIMIZE_CHANGE, false));
+  ctx.mainWindow.on('maximize', () =>
+    ctx.mainWindow?.webContents.send(IpcChannel.WINDOW_MAXIMIZE_CHANGE, true),
+  );
+  ctx.mainWindow.on('unmaximize', () =>
+    ctx.mainWindow?.webContents.send(IpcChannel.WINDOW_MAXIMIZE_CHANGE, false),
+  );
 
   if (options.rendererUrl) {
     await ctx.mainWindow.loadURL(options.rendererUrl);

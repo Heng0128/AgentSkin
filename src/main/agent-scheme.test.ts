@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { describe, expect, it } from 'vitest';
-import type { CdpSession } from './cdp-client';
 import {
   applyScheme,
   captureScheme,
@@ -9,6 +8,7 @@ import {
   restoreScheme,
   type SchemeSnapshot,
 } from './agent-scheme';
+import type { CdpSession } from './cdp-client';
 
 /**
  * A CdpSession whose evaluate() drives a tiny in-memory model of the agent
@@ -41,9 +41,7 @@ function scriptedSession(script: string[]): { calls: string[]; session: CdpSessi
       if (expression.includes("return 'ok'")) {
         const response = script[cursor++] ?? 'null';
         if (response === 'ok') {
-          const dtMatch = expression.match(
-            /setAttribute\('data-theme',\s*"((?:[^"\\]|\\.)*)"\)/,
-          );
+          const dtMatch = expression.match(/setAttribute\('data-theme',\s*"((?:[^"\\]|\\.)*)"\)/);
           if (dtMatch) dataTheme = dtMatch[1];
           if (/removeAttribute\('data-theme'\)/.test(expression)) dataTheme = null;
           for (const m of expression.matchAll(
@@ -202,7 +200,7 @@ describe('applyScheme', () => {
     // The fix: Trae keys its mode off <html> too, so the root element must be
     // toggled, not only <body>.
     expect(write).toContain("documentElement.classList.add('light', 'vs-light')");
-    expect(write).toContain("documentElement.style.colorScheme = \"light\"");
+    expect(write).toContain('documentElement.style.colorScheme = "light"');
     expect(write).toContain('trae-foundation-theme');
     // The app stores the key as a JSON string like {"value":"light"}.
     expect(write).toContain('value');

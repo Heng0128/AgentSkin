@@ -14,8 +14,7 @@
  */
 
 /** Base surface: elevated panel with the standard radius + hairline border. */
-export const card =
-  'rounded-2xl border border-border bg-card text-card-foreground shadow-xs';
+export const card = 'rounded-2xl border border-border bg-card text-card-foreground shadow-xs';
 
 /** Padding preset for a comfortable card interior. */
 export const cardPadding = 'p-4';

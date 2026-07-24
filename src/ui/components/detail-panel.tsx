@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useState } from 'react';
-import {
-  Delete02Icon,
-  PaintBoardIcon,
-  Share05Icon,
-} from '@hugeicons/core-free-icons';
-import type { AppController, Selection } from '@/hooks/useAppController';
-import { AppMark, APP_META } from '@/components/app-mark';
-import { AGENT_IDS, type AgentId } from '@shared/types';
+import { APP_META, AppMark } from '@/components/app-mark';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
+import type { AppController, Selection } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
+
+import { Delete02Icon, PaintBoardIcon, Share05Icon } from '@hugeicons/core-free-icons';
+import { AGENT_IDS, type AgentId } from '@shared/types';
 
 /** Per-app apply rows: the drawer chooses the target app, not a global picker. */
 function AppActionList({
@@ -42,8 +39,10 @@ function AppActionList({
   };
 
   /** Agents this theme supports that are actually installed on this machine. */
-  const eligibleApps = AGENT_IDS.filter((appId) =>
-    supportedAgents.includes(appId) && Boolean(controller.appStatusFor(appId)?.installed));
+  const eligibleApps = AGENT_IDS.filter(
+    (appId) =>
+      supportedAgents.includes(appId) && Boolean(controller.appStatusFor(appId)?.installed),
+  );
 
   /** When the first detection round has not returned yet, every apply button
    *  is replaced by a single "detecting" state instead of greyed-out rows. */
@@ -88,8 +87,8 @@ function AppActionList({
           const appStatus = controller.appStatusFor(appId);
           const detected = Boolean(appStatus?.installed);
           const live = Boolean(appStatus?.running || appStatus?.debugReady);
-          const isActive = installedThemeId !== null
-            && appStatus?.activeThemeId === installedThemeId;
+          const isActive =
+            installedThemeId !== null && appStatus?.activeThemeId === installedThemeId;
           const stateText = !supported
             ? t.notSupported
             : detecting
@@ -102,7 +101,10 @@ function AppActionList({
                     ? t.statusRunning
                     : t.statusInstalled;
           const busyHere = pendingApp === appId && controller.busy !== null;
-          const displayName = controller.agents.find((a) => a.id === appId)?.displayName ?? APP_META[appId]?.name ?? appId;
+          const displayName =
+            controller.agents.find((a) => a.id === appId)?.displayName ??
+            APP_META[appId]?.name ??
+            appId;
           return (
             <div
               key={appId}
@@ -124,7 +126,15 @@ function AppActionList({
                 size="sm"
                 variant={live ? 'default' : 'outline'}
                 disabled={!supported || detecting || !detected || controller.busy !== null}
-                title={detecting ? t.applyDetectingHint : !supported ? t.notSupported : !detected ? t.statusNotInstalled : undefined}
+                title={
+                  detecting
+                    ? t.applyDetectingHint
+                    : !supported
+                      ? t.notSupported
+                      : !detected
+                        ? t.statusNotInstalled
+                        : undefined
+                }
                 onClick={() => void run(appId)}
               >
                 {busyHere && <Spinner data-icon="inline-start" />}
@@ -207,20 +217,28 @@ export function DetailPanel({
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold tracking-[-0.015em]">{theme.name}</h2>
             {isDynamic && (
-              <Badge className="bg-violet-500/15 text-violet-600 dark:text-violet-400 px-1.5 py-0 text-[10px]">{t.themeDynamicBadge}</Badge>
+              <Badge className="bg-violet-500/15 text-violet-600 dark:text-violet-400 px-1.5 py-0 text-[10px]">
+                {t.themeDynamicBadge}
+              </Badge>
             )}
             {theme.unofficial && (
-              <Badge variant="outline" className="text-[10px]">{t.themeUnofficial}</Badge>
+              <Badge variant="outline" className="text-[10px]">
+                {t.themeUnofficial}
+              </Badge>
             )}
           </div>
-          <p className="mt-1 text-[11px] tabular-nums text-muted-foreground">{t.versionLabel(theme.version)}</p>
+          <p className="mt-1 text-[11px] tabular-nums text-muted-foreground">
+            {t.versionLabel(theme.version)}
+          </p>
         </div>
 
         {/* Metadata grid */}
         {(theme.author || theme.category || theme.license) && (
           <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl bg-muted/40 px-3 py-2.5">
             {theme.author && <MetaRow label={t.themeAuthor} value={theme.author} />}
-            {theme.category && <MetaRow label={t.themeCategory} value={t.categoryLabel(theme.category)} />}
+            {theme.category && (
+              <MetaRow label={t.themeCategory} value={t.categoryLabel(theme.category)} />
+            )}
             {theme.license && <MetaRow label={t.themeLicense} value={theme.license} />}
           </div>
         )}
@@ -234,7 +252,9 @@ export function DetailPanel({
         {theme.tags.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-1">
             {theme.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="rounded-md text-[10px] font-normal">{tag}</Badge>
+              <Badge key={tag} variant="secondary" className="rounded-md text-[10px] font-normal">
+                {tag}
+              </Badge>
             ))}
           </div>
         )}

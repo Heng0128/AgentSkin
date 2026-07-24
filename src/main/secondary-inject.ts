@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { ResolvedThemeTarget } from '../legacy/agentskin-core-runtime';
-import { hostClassFor, HOST_CLASS_PREFIX } from '../shared/injection-constants';
+import { HOST_CLASS_PREFIX, hostClassFor } from '../shared/injection-constants';
 
 /**
  * Build a lightweight CSS-only injection expression for secondary targets
@@ -21,7 +21,10 @@ import { hostClassFor, HOST_CLASS_PREFIX } from '../shared/injection-constants';
  * and must not be renamed to `agentskin-*` without a coordinated engine
  * release plus a migration for every existing theme package.
  */
-export function buildSecondaryInjectExpression(appId: string, targetTheme: ResolvedThemeTarget): string {
+export function buildSecondaryInjectExpression(
+  appId: string,
+  targetTheme: ResolvedThemeTarget,
+): string {
   const host = JSON.stringify({ id: appId, className: hostClassFor(appId) });
   const theme = JSON.stringify(targetTheme.theme);
   const css = JSON.stringify(targetTheme.css);

@@ -12,8 +12,9 @@
  */
 
 import { useMemo, useState } from 'react';
-import type { AppController } from './useAppController';
 import type { ThemeCenterCardModel } from '@/types/theme-center';
+
+import type { AppController } from './useAppController';
 
 function toCard(theme: AppController['installed'][number]): ThemeCenterCardModel {
   return {
@@ -46,10 +47,7 @@ export function useThemeCenter(controller: AppController) {
   const [sortBy, setSortBy] = useState<ThemeSortKey>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
-  const allThemes = useMemo(
-    () => controller.installed.map(toCard),
-    [controller.installed],
-  );
+  const allThemes = useMemo(() => controller.installed.map(toCard), [controller.installed]);
 
   const categories = useMemo(() => {
     const set = new Set(allThemes.map((t) => t.category).filter(Boolean));
@@ -59,7 +57,12 @@ export function useThemeCenter(controller: AppController) {
   const themes = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filtered = allThemes.filter((theme) => {
-      if (q && !theme.name.toLowerCase().includes(q) && !theme.tags.some((t) => t.toLowerCase().includes(q)) && !(theme.category && theme.category.toLowerCase().includes(q))) {
+      if (
+        q &&
+        !theme.name.toLowerCase().includes(q) &&
+        !theme.tags.some((t) => t.toLowerCase().includes(q)) &&
+        !(theme.category && theme.category.toLowerCase().includes(q))
+      ) {
         return false;
       }
       if (selectedCategory && theme.category !== selectedCategory) {

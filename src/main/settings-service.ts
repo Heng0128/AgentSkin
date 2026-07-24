@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import fs from 'node:fs/promises';
-import { AGENT_IDS, type AgentId, type AppOverride, type DesktopSettings, type WallpaperAgentSetting, type WallpaperSettings } from '../shared/types';
+import {
+  AGENT_IDS,
+  type AgentId,
+  type AppOverride,
+  type DesktopSettings,
+  type WallpaperAgentSetting,
+  type WallpaperSettings,
+} from '../shared/types';
 import { writeJsonAtomic } from './fs-utils';
 import type { SettingsServiceApi } from './services/contracts';
 
@@ -25,7 +32,9 @@ function isValidPort(value: unknown): value is number {
 
 /** Build a full WallpaperAgentSetting from a raw persisted fragment, filling
  *  defaults for missing fields so callers always see a complete object. */
-function normalizeAgentWallpaper(raw: { enabled?: boolean; id?: string | null } | undefined): WallpaperAgentSetting {
+function normalizeAgentWallpaper(
+  raw: { enabled?: boolean; id?: string | null } | undefined,
+): WallpaperAgentSetting {
   return {
     enabled: raw?.enabled === true,
     id: typeof raw?.id === 'string' && raw.id ? raw.id : null,
@@ -40,7 +49,11 @@ export class SettingsService implements SettingsServiceApi {
 
   async initialize(): Promise<void> {
     try {
-      const parsed = JSON.parse(await fs.readFile(this.file, 'utf8')) as { version?: number; apps?: unknown; wallpaper?: { enabled?: boolean; id?: string | null } };
+      const parsed = JSON.parse(await fs.readFile(this.file, 'utf8')) as {
+        version?: number;
+        apps?: unknown;
+        wallpaper?: { enabled?: boolean; id?: string | null };
+      };
       if (parsed && parsed.apps && typeof parsed.apps === 'object') {
         // Migration v1 -> v2: drop all port overrides. The previous version
         // let users (and auto-fill) set ports like 9336/9337/9338, which were

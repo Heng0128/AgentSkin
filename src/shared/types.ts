@@ -28,10 +28,34 @@ export interface AgentMeta {
 }
 
 export const AGENT_META: Readonly<Record<AgentId, AgentMeta>> = Object.freeze({
-  traework:  Object.freeze({ id: 'traework',  displayName: 'TRAE Work CN',  officialName: 'TRAE',      region: 'CN',            tier: 'active' }),
-  qoderwork: Object.freeze({ id: 'qoderwork', displayName: 'QoderWork CN',  officialName: 'Qoder',     region: 'CN',            tier: 'active' }),
-  workbuddy: Object.freeze({ id: 'workbuddy', displayName: 'WorkBuddy',     officialName: 'WorkBuddy', region: 'Global',        tier: 'active' }),
-  doubao:    Object.freeze({ id: 'doubao',    displayName: '豆包',          officialName: 'Doubao',    region: 'CN',            tier: 'active' }),
+  traework: Object.freeze({
+    id: 'traework',
+    displayName: 'TRAE Work CN',
+    officialName: 'TRAE',
+    region: 'CN',
+    tier: 'active',
+  }),
+  qoderwork: Object.freeze({
+    id: 'qoderwork',
+    displayName: 'QoderWork CN',
+    officialName: 'Qoder',
+    region: 'CN',
+    tier: 'active',
+  }),
+  workbuddy: Object.freeze({
+    id: 'workbuddy',
+    displayName: 'WorkBuddy',
+    officialName: 'WorkBuddy',
+    region: 'Global',
+    tier: 'active',
+  }),
+  doubao: Object.freeze({
+    id: 'doubao',
+    displayName: '豆包',
+    officialName: 'Doubao',
+    region: 'CN',
+    tier: 'active',
+  }),
 });
 
 /** Formal product agents — shown in the main UI, checked for status, listed in settings. */
@@ -41,11 +65,16 @@ export const AGENT_IDS: readonly AgentId[] = Object.freeze(
 
 /** Experimental / non-formal agents — isolated from the main UI but still recognized by the theme system. */
 export const EXPERIMENTAL_AGENT_IDS: readonly AgentId[] = Object.freeze(
-  (Object.values(AGENT_META) as AgentMeta[]).filter((m) => m.tier === 'experimental').map((m) => m.id),
+  (Object.values(AGENT_META) as AgentMeta[])
+    .filter((m) => m.tier === 'experimental')
+    .map((m) => m.id),
 );
 
 /** All recognized agent ids (formal + experimental). Used by the theme system and validation. */
-export const ALL_AGENT_IDS: readonly AgentId[] = Object.freeze([...AGENT_IDS, ...EXPERIMENTAL_AGENT_IDS]);
+export const ALL_AGENT_IDS: readonly AgentId[] = Object.freeze([
+  ...AGENT_IDS,
+  ...EXPERIMENTAL_AGENT_IDS,
+]);
 
 export function isAgentId(value: unknown): value is AgentId {
   return typeof value === 'string' && (ALL_AGENT_IDS as readonly string[]).includes(value);
@@ -163,7 +192,14 @@ export interface SystemStatus {
   apps: AppStatus[];
 }
 
-export type InstallState = 'IDLE' | 'DETECTING' | 'APPLYING' | 'SUCCESS' | 'FAILED' | 'REQUIRES_RESTART' | 'RESTORE_FAILED';
+export type InstallState =
+  | 'IDLE'
+  | 'DETECTING'
+  | 'APPLYING'
+  | 'SUCCESS'
+  | 'FAILED'
+  | 'REQUIRES_RESTART'
+  | 'RESTORE_FAILED';
 
 export interface ApplyResult {
   state: InstallState;
@@ -430,7 +466,10 @@ export interface AgentSkinApi {
    *  wallpapers are read-only. Returns the updated wallpaper list. */
   deleteWallpaper(id: string): Promise<WallpaperInfo[]>;
   /** Apply a wallpaper (video or image) to a specific agent via CDP injection. */
-  applyWallpaperToAgent(wallpaperId: string, agentId: AgentId): Promise<{ ok: boolean; reason?: string }>;
+  applyWallpaperToAgent(
+    wallpaperId: string,
+    agentId: AgentId,
+  ): Promise<{ ok: boolean; reason?: string }>;
   /** Remove the injected wallpaper from a specific agent. */
   removeWallpaperFromAgent(agentId: AgentId): Promise<{ ok: boolean }>;
   /** Detect whether Wallpaper Engine is installed on this machine. */

@@ -13,8 +13,8 @@
  * to detect app updates that introduce new opaque containers.
  */
 
-import type { CdpSession } from './cdp-client';
 import { SHEET_OWNED_FLAG } from '../shared/injection-constants';
+import type { CdpSession } from './cdp-client';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -189,17 +189,12 @@ export async function checkThemeHealth(
  */
 export function generatePunchThroughCss(report: HealthCheckReport): string {
   const targets = report.opaqueLayers.filter(
-    (l) =>
-      l.visible &&
-      !l.backdropFilter &&
-      !l.backgroundColor.includes('0.') === false, // skip already semi-transparent
+    (l) => l.visible && !l.backdropFilter && !l.backgroundColor.includes('0.') === false, // skip already semi-transparent
   );
 
   if (targets.length === 0) return '';
 
-  const rules: string[] = [
-    '/* Auto-generated punch-through rules from theme-health-check */',
-  ];
+  const rules: string[] = ['/* Auto-generated punch-through rules from theme-health-check */'];
 
   for (const layer of targets) {
     const selector = buildSelector(layer);
@@ -241,9 +236,12 @@ function computeScore(layers: OpaqueLayer[], heroActive: boolean): number {
     // Parse size
     const [w, h] = layer.size.split('x').map(Number);
     const area = (w || 0) * (h || 0);
-    if (area > 500_000) score -= 20; // Large blocker (>~700x700)
-    else if (area > 100_000) score -= 10; // Medium
-    else if (area > 10_000) score -= 5; // Small
+    if (area > 500_000)
+      score -= 20; // Large blocker (>~700x700)
+    else if (area > 100_000)
+      score -= 10; // Medium
+    else if (area > 10_000)
+      score -= 5; // Small
     else score -= 2; // Tiny
   }
   return Math.max(0, score);

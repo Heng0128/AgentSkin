@@ -7,5 +7,3 @@ declare global {
     agentSkin: AgentSkinApi;
   }
 }
-
-export {};

@@ -21,15 +21,15 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { ThemeLibrary } from './theme-library';
-import { ThemePackageLoader } from './catalog/theme-package-loader';
-import { ThemeInstaller } from './catalog/theme-installer';
 import { registerBuiltinAdapters } from '../adapters/registry';
 import {
   resolveThemeTargetFor,
-  validateTheme,
   type ThemeBundle,
+  validateTheme,
 } from '../legacy/agentskin-core-runtime';
+import { ThemeInstaller } from './catalog/theme-installer';
+import { ThemePackageLoader } from './catalog/theme-package-loader';
+import { ThemeLibrary } from './theme-library';
 
 const THEMES_DIR = path.resolve(__dirname, '..', '..', 'themes');
 const ACTIVE_AGENTS = ['traework', 'qoderwork', 'workbuddy'] as const;
@@ -42,21 +42,34 @@ const ACTIVE_AGENTS = ['traework', 'qoderwork', 'workbuddy'] as const;
  */
 const KNOWN_DOM_SELECTORS: Record<string, Set<string>> = {
   traework: new Set([
-    '#root .panel-container', '#root .solo-lite-layout', '#root',
-    '.panel-container', '.solo-lite-layout',
-    '.task-list-base', '.task-list-panel',
+    '#root .panel-container',
+    '#root .solo-lite-layout',
+    '#root',
+    '.panel-container',
+    '.solo-lite-layout',
+    '.task-list-base',
+    '.task-list-panel',
     ".chat-input-v2-input-box-editable[contenteditable='true']",
   ]),
   qoderwork: new Set([
-    '#root .agents-layout-root', '.agents-layout-root', '#root',
-    '.agents-sidebar', '[data-resizable-sidebar]',
-    '.agents-content-area', '.agents-layout-body',
+    '#root .agents-layout-root',
+    '.agents-layout-root',
+    '#root',
+    '.agents-sidebar',
+    '[data-resizable-sidebar]',
+    '.agents-content-area',
+    '.agents-layout-body',
     ".chat-input-editor-text[contenteditable='true']",
   ]),
   workbuddy: new Set([
-    '#root > .teams-container', '.teams-container', '#root',
-    '.conversation-sidebar', '.conversation-list',
-    '.teams-main-content', '.main-content', '.chat-container',
+    '#root > .teams-container',
+    '.teams-container',
+    '#root',
+    '.conversation-sidebar',
+    '.conversation-list',
+    '.teams-main-content',
+    '.main-content',
+    '.chat-container',
     "[role='textbox'][contenteditable='true']",
     ".wb-home-composer [contenteditable='true']",
   ]),
@@ -126,7 +139,7 @@ interface TargetVerification {
 
 let library: ThemeLibrary;
 let libraryRoot: string;
-let bundles: Map<string, ThemeBundle> = new Map();
+const bundles: Map<string, ThemeBundle> = new Map();
 
 beforeAll(async () => {
   registerBuiltinAdapters();
@@ -234,10 +247,7 @@ describe('built-in theme packages', () => {
     for (const [id, bundle] of bundles) {
       const css = bundle.targets.workbuddy.css;
       for (const variable of WORKBUDDY_DESIGN_VARS) {
-        expect(
-          css,
-          `${id}/workbuddy: missing override for ${variable}`,
-        ).toContain(`${variable}:`);
+        expect(css, `${id}/workbuddy: missing override for ${variable}`).toContain(`${variable}:`);
       }
       // The --wb-* base tokens feed every color-mix() above.
       for (const base of ['--wb-accent', '--wb-secondary', '--wb-surface', '--wb-text']) {

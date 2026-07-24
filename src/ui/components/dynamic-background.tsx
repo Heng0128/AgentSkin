@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useRef } from 'react';
+
 import type { WallpaperInfo } from '@shared/types';
 
 /**
@@ -53,7 +54,10 @@ export function DynamicBackground({ wallpaper }: { wallpaper: WallpaperInfo | nu
   const isImage = wallpaper.type === 'image';
 
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-background">
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-background"
+    >
       {isImage ? (
         <img
           key={wallpaper.id}

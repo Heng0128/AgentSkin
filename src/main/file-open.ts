@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import fs from 'node:fs';
-import { agentThemeExtension, legacyThemeExtension, themeExtension } from '../legacy/agentskin-core-runtime';
+import {
+  agentThemeExtension,
+  legacyThemeExtension,
+  themeExtension,
+} from '../legacy/agentskin-core-runtime';
 
 export function isThemePackagePath(value: string): boolean {
   return (

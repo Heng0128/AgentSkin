@@ -26,6 +26,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+
 import type { AgentId } from '@shared/types';
 
 /** Current phase of an agent's boot/apply lifecycle. */
@@ -86,16 +87,26 @@ function parseStructured(line: string): StructuredEvent | null {
 /** Map a raw event type to a UI-facing BootPhase. */
 function phaseFor(event: StructuredEvent): BootPhase | null {
   switch (event.type) {
-    case 'boot_agent_start': return 'boot_start';
-    case 'cdp_resolving': return 'cdp_resolving';
-    case 'cdp_killing': return 'cdp_killing';
-    case 'cdp_spawning': return 'cdp_spawning';
-    case 'cdp_ready': return 'cdp_ready';
-    case 'cdp_timeout': return 'cdp_timeout';
-    case 'cdp_spawn_failed': return 'cdp_spawn_failed';
-    case 'inject_start': return 'inject_start';
-    case 'inject_done': return 'inject_done';
-    case 'inject_failed': return 'inject_failed';
+    case 'boot_agent_start':
+      return 'boot_start';
+    case 'cdp_resolving':
+      return 'cdp_resolving';
+    case 'cdp_killing':
+      return 'cdp_killing';
+    case 'cdp_spawning':
+      return 'cdp_spawning';
+    case 'cdp_ready':
+      return 'cdp_ready';
+    case 'cdp_timeout':
+      return 'cdp_timeout';
+    case 'cdp_spawn_failed':
+      return 'cdp_spawn_failed';
+    case 'inject_start':
+      return 'inject_start';
+    case 'inject_done':
+      return 'inject_done';
+    case 'inject_failed':
+      return 'inject_failed';
     case 'apply_failed':
     case 'restore_failed':
     case 'boot_agent_failed':
@@ -112,7 +123,8 @@ function phaseFor(event: StructuredEvent): BootPhase | null {
     case 'theme_restore':
     case 'boot_agent_done':
       return 'done';
-    default: return null;
+    default:
+      return null;
   }
 }
 
@@ -122,63 +134,70 @@ export function useBootProgress(
 ) {
   const [progress, setProgress] = useState<ProgressMap>(new Map());
 
-  const listener = useCallback((line: string) => {
-    const event = parseStructured(line);
-    if (!event) return;
+  const listener = useCallback(
+    (line: string) => {
+      const event = parseStructured(line);
+      if (!event) return;
 
-    // Fire the event callback before phase filtering so boot-lifecycle
-    // toasts (boot_start / boot_agent_done / boot_agent_failed) are emitted
-    // even for events that don't map to a progress phase.
-    onEvent?.(event);
+      // Fire the event callback before phase filtering so boot-lifecycle
+      // toasts (boot_start / boot_agent_done / boot_agent_failed) are emitted
+      // even for events that don't map to a progress phase.
+      onEvent?.(event);
 
-    const phase = phaseFor(event);
-    if (!phase) return;
+      const phase = phaseFor(event);
+      if (!phase) return;
 
-    const appId = event.agentId as AgentId;
-    const updatedAt = Date.now();
+      const appId = event.agentId as AgentId;
+      const updatedAt = Date.now();
 
-    setProgress((prev) => {
-      const existing = prev.get(appId);
+      setProgress((prev) => {
+        const existing = prev.get(appId);
 
-      // scheme_sync is a non-blocking background task that fires AFTER the
-      // apply response has already returned. Its events must NEVER create
-      // new progress entries or regress an agent that already reached a
-      // terminal state (done/failed). Without this guard, late stability-
-      // check events (2s/5s/10s after apply) would overwrite the 'done'
-      // phase and show "同步外观模式…" forever — exactly the bug where
-      // environments were stuck on this label.
-      if (event.type === 'scheme_sync') {
-        if (!existing) return prev; // stale echo, no in-flight entry
-        if (existing.phase === 'done' || existing.phase === 'failed') return prev;
-      }
+        // scheme_sync is a non-blocking background task that fires AFTER the
+        // apply response has already returned. Its events must NEVER create
+        // new progress entries or regress an agent that already reached a
+        // terminal state (done/failed). Without this guard, late stability-
+        // check events (2s/5s/10s after apply) would overwrite the 'done'
+        // phase and show "同步外观模式…" forever — exactly the bug where
+        // environments were stuck on this label.
+        if (event.type === 'scheme_sync') {
+          if (!existing) return prev; // stale echo, no in-flight entry
+          if (existing.phase === 'done' || existing.phase === 'failed') return prev;
+        }
 
-      const next = new Map(prev);
-      next.set(appId, {
-        phase,
-        progress: event.progress ?? prev.get(appId)?.progress ?? 0,
-        reason: event.reason,
-        subPhase: event.phase,
-        updatedAt,
-      });
-      return next;
-    });
-
-    // Clean up finished agents after a short visibility window. Previously
-    // only boot_done triggered cleanup, but boot_done is no longer emitted
-    // (boot-time auto-restore was removed). theme_apply / theme_restore now
-    // serve as the completion signal for user-initiated operations.
-    if (event.type === 'boot_done' || event.type === 'theme_apply' || event.type === 'theme_restore') {
-      setTimeout(() => {
-        setProgress((prev) => {
-          const next = new Map(prev);
-          for (const [id, p] of next) {
-            if (p.phase === 'done' || p.phase === 'failed') next.delete(id);
-          }
-          return next;
+        const next = new Map(prev);
+        next.set(appId, {
+          phase,
+          progress: event.progress ?? prev.get(appId)?.progress ?? 0,
+          reason: event.reason,
+          subPhase: event.phase,
+          updatedAt,
         });
-      }, 1500);
-    }
-  }, [onEvent]);
+        return next;
+      });
+
+      // Clean up finished agents after a short visibility window. Previously
+      // only boot_done triggered cleanup, but boot_done is no longer emitted
+      // (boot-time auto-restore was removed). theme_apply / theme_restore now
+      // serve as the completion signal for user-initiated operations.
+      if (
+        event.type === 'boot_done' ||
+        event.type === 'theme_apply' ||
+        event.type === 'theme_restore'
+      ) {
+        setTimeout(() => {
+          setProgress((prev) => {
+            const next = new Map(prev);
+            for (const [id, p] of next) {
+              if (p.phase === 'done' || p.phase === 'failed') next.delete(id);
+            }
+            return next;
+          });
+        }, 1500);
+      }
+    },
+    [onEvent],
+  );
 
   useEffect(() => onLog(listener), [onLog, listener]);
 

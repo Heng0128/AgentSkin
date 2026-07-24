@@ -1,8 +1,9 @@
 /** Owns toast notification state and the shared showToast/fail utilities. */
 
 import { useCallback, useRef, useState } from 'react';
-import type { UiMessages } from '@shared/i18n';
+
 import { toMessage } from '@shared/errors';
+import type { UiMessages } from '@shared/i18n';
 
 export interface Toast {
   id: number;
@@ -47,21 +48,27 @@ export function useNotifications(t: UiMessages) {
     }
   }, []);
 
-  const showToast = useCallback<ShowToast>((message, tone = 'default') => {
-    const id = Date.now() + Math.random();
-    clearTimer(id);
-    setToasts((prev) => [...prev.slice(-4), { id, message, tone }]);
-    const timer = window.setTimeout(() => {
+  const showToast = useCallback<ShowToast>(
+    (message, tone = 'default') => {
+      const id = Date.now() + Math.random();
       clearTimer(id);
-      setToasts((prev) => prev.filter((tt) => tt.id !== id));
-    }, 3600);
-    toastTimerRef.current.set(id, timer);
-  }, [clearTimer]);
+      setToasts((prev) => [...prev.slice(-4), { id, message, tone }]);
+      const timer = window.setTimeout(() => {
+        clearTimer(id);
+        setToasts((prev) => prev.filter((tt) => tt.id !== id));
+      }, 3600);
+      toastTimerRef.current.set(id, timer);
+    },
+    [clearTimer],
+  );
 
-  const fail = useCallback((error: unknown) => {
-    const message = friendlyMessage(toMessage(error), t);
-    showToast(message || t.actionFailed, 'destructive');
-  }, [showToast, t.actionFailed]);
+  const fail = useCallback(
+    (error: unknown) => {
+      const message = friendlyMessage(toMessage(error), t);
+      showToast(message || t.actionFailed, 'destructive');
+    },
+    [showToast, t.actionFailed],
+  );
 
   return { toasts, showToast, fail };
 }

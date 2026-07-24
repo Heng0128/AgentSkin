@@ -35,19 +35,19 @@
  */
 
 import type { ApplicationAdapter } from '../adapters/base';
-import { connectCdp, type CdpSession } from './cdp-client';
-import { buildSecondaryInjectExpression, buildSecondaryRemoveExpression } from './secondary-inject';
-import { toMessage } from '../shared/errors';
-import { injectThemeViaCdp, removeEngineInjection, type InjectEngineResult } from './cdp-inject';
-import { checkThemeHealth } from './theme-health-check';
-import { findDomTargets, findSecondaryTargets } from './cdp-targets';
-import { hostClassFor, DEFAULT_VERIFY_DELAY_MS } from '../shared/injection-constants';
 import {
-  resolveThemeTargetFor,
   type ResolvedThemeTarget,
+  resolveThemeTargetFor,
   type ThemeBundle,
 } from '../legacy/agentskin-core-runtime';
+import { toMessage } from '../shared/errors';
+import { DEFAULT_VERIFY_DELAY_MS, hostClassFor } from '../shared/injection-constants';
 import type { AgentId } from '../shared/types';
+import { type CdpSession, connectCdp } from './cdp-client';
+import { type InjectEngineResult, injectThemeViaCdp, removeEngineInjection } from './cdp-inject';
+import { findDomTargets, findSecondaryTargets } from './cdp-targets';
+import { buildSecondaryInjectExpression, buildSecondaryRemoveExpression } from './secondary-inject';
+import { checkThemeHealth } from './theme-health-check';
 
 // ---------------------------------------------------------------------------
 // Deps slice
@@ -138,7 +138,9 @@ export async function injectSecondaryTargets(
   for (const target of secondary) {
     // Abort if a newer apply/restore superseded this one mid-loop.
     if (!deps.isEpochCurrent(appId, epoch)) {
-      deps.log(`[secondary] ${appId}: epoch changed, aborting after ${injected}/${secondary.length}`);
+      deps.log(
+        `[secondary] ${appId}: epoch changed, aborting after ${injected}/${secondary.length}`,
+      );
       return;
     }
     try {
@@ -149,20 +151,24 @@ export async function injectSecondaryTargets(
           injected++;
         } else {
           failed++;
-          deps.log(`[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" returned: ${result}`);
+          deps.log(
+            `[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" returned: ${result}`,
+          );
         }
       } finally {
         session.close();
       }
     } catch (error) {
       failed++;
-      deps.log(`[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" connect failed: ${toMessage(error)}`);
+      deps.log(
+        `[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" connect failed: ${toMessage(error)}`,
+      );
     }
   }
   deps.log(
     `[secondary] ${appId}: injected CSS into ${injected}/${secondary.length} secondary target(s)` +
-    (failed ? ` (${failed} failed)` : '') +
-    ` — webviews/iframes on port ${port}`,
+      (failed ? ` (${failed} failed)` : '') +
+      ` — webviews/iframes on port ${port}`,
   );
 }
 
@@ -186,7 +192,9 @@ export async function removeSecondaryTargets(
   let removed = 0;
   for (const target of secondary) {
     if (!deps.isEpochCurrent(appId, epoch)) {
-      deps.log(`[secondary] ${appId}: epoch changed, aborting remove after ${removed}/${secondary.length}`);
+      deps.log(
+        `[secondary] ${appId}: epoch changed, aborting remove after ${removed}/${secondary.length}`,
+      );
       return;
     }
     try {
@@ -201,7 +209,9 @@ export async function removeSecondaryTargets(
       // Best-effort — embedded content may have navigated away.
     }
   }
-  deps.log(`[secondary] ${appId}: removed CSS from ${removed}/${secondary.length} secondary target(s)`);
+  deps.log(
+    `[secondary] ${appId}: removed CSS from ${removed}/${secondary.length} secondary target(s)`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -265,7 +275,9 @@ export async function hardeningPass(
   for (const target of domTargets) {
     // Abort if a newer apply/restore superseded this one mid-loop.
     if (!deps.isEpochCurrent(appId, epoch)) {
-      deps.log(`[hardening] ${appId}: epoch changed, aborting after ${engineInjected + legacyInjected}/${domTargets.length}`);
+      deps.log(
+        `[hardening] ${appId}: epoch changed, aborting after ${engineInjected + legacyInjected}/${domTargets.length}`,
+      );
       if (firstSession) firstSession.close();
       return;
     }
@@ -275,7 +287,9 @@ export async function hardeningPass(
       session = await connectCdp(target.webSocketDebuggerUrl!, 4000);
     } catch {
       failed++;
-      deps.log(`[hardening] ${appId}: ${target.type} "${target.title?.slice(0, 40)}" connect failed`);
+      deps.log(
+        `[hardening] ${appId}: ${target.type} "${target.title?.slice(0, 40)}" connect failed`,
+      );
       continue;
     }
 
@@ -283,15 +297,21 @@ export async function hardeningPass(
       // Try engine architecture first (palette + tokens + cosmetic + theme + adapter.mjs).
       // This also registers persistence via Page.addScriptToEvaluateOnNewDocument
       // so the engine re-applies itself on every navigation/reload.
-      const engineResult = await deps.tryEngineInjection(session, appId, bundle, targetTheme, heroDataUrl);
+      const engineResult = await deps.tryEngineInjection(
+        session,
+        appId,
+        bundle,
+        targetTheme,
+        heroDataUrl,
+      );
 
       if (engineResult) {
         engineInjected++;
         if (!firstSession) {
           deps.log(
             `[hardening] ${appId}: ENGINE [page] layers=${engineResult.layersInjected} ` +
-            `adapter=${engineResult.adapterApplied} hero=${engineResult.heroInjected} ` +
-            `accent=${engineResult.verification?.accent || '?'}`,
+              `adapter=${engineResult.adapterApplied} hero=${engineResult.heroInjected} ` +
+              `accent=${engineResult.verification?.accent || '?'}`,
           );
         }
       } else {
@@ -310,8 +330,8 @@ export async function hardeningPass(
           if (!firstSession) {
             deps.log(
               `[hardening] ${appId}: LEGACY [page] css=${result.cssInjected} hero=${result.heroInjected} ` +
-              `verified=${result.verification?.heroBlobActive ?? 'n/a'} ` +
-              `accent=${result.verification?.accent || '?'}`,
+                `verified=${result.verification?.heroBlobActive ?? 'n/a'} ` +
+                `accent=${result.verification?.accent || '?'}`,
             );
           }
         }
@@ -320,8 +340,6 @@ export async function hardeningPass(
       // Keep the first successful page session for the health check below.
       if (!firstSession && target.type === 'page') {
         firstSession = session;
-        // Don't close — we'll use it for the health check.
-        continue;
       }
     } catch (error) {
       failed++;
@@ -336,7 +354,7 @@ export async function hardeningPass(
 
   deps.log(
     `[hardening] ${appId}: applied to ${engineInjected + legacyInjected}/${domTargets.length} targets ` +
-    `(engine=${engineInjected} legacy=${legacyInjected}${failed ? ` failed=${failed}` : ''})`,
+      `(engine=${engineInjected} legacy=${legacyInjected}${failed ? ` failed=${failed}` : ''})`,
   );
 
   // Health check: detect opaque layers blocking the hero art. Run on the
@@ -346,8 +364,8 @@ export async function hardeningPass(
       const health = await checkThemeHealth(firstSession, appId);
       deps.log(
         `[hardening] ${appId}: health score=${health.score}/100 ` +
-        `blocking=${health.blockingCount} layers ` +
-        `art=${health.heroArtActive} sheet=${health.themeSheetPresent}`,
+          `blocking=${health.blockingCount} layers ` +
+          `art=${health.heroArtActive} sheet=${health.themeSheetPresent}`,
       );
       if (health.blockingCount > 0 && health.score < 80) {
         const top = health.opaqueLayers
@@ -390,7 +408,9 @@ export async function hardeningRemove(
   let removed = 0;
   for (const target of domTargets) {
     if (!deps.isEpochCurrent(appId, epoch)) {
-      deps.log(`[hardening-remove] ${appId}: epoch changed, aborting after ${removed}/${domTargets.length}`);
+      deps.log(
+        `[hardening-remove] ${appId}: epoch changed, aborting after ${removed}/${domTargets.length}`,
+      );
       return;
     }
     try {
@@ -405,5 +425,7 @@ export async function hardeningRemove(
       // Best-effort — target may have navigated away or closed.
     }
   }
-  deps.log(`[hardening-remove] ${appId}: removed engine from ${removed}/${domTargets.length} target(s)`);
+  deps.log(
+    `[hardening-remove] ${appId}: removed engine from ${removed}/${domTargets.length} target(s)`,
+  );
 }

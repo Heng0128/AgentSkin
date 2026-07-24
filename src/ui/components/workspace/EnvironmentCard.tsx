@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { UiMessages } from '@shared/i18n';
-import type { EnvironmentModel } from '@/types/environment';
-import type { AgentProgress, BootPhase } from '@/hooks/useBootProgress';
 import { AppMark } from '@/components/app-mark';
-import { AgentStatusDot } from './AgentStatusDot';
-import { envToDotVariant } from './AgentStatusBar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,15 +9,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
-import {
-  Copy01Icon,
-  Delete02Icon,
-  Edit02Icon,
-  MoreVerticalIcon,
-} from '@hugeicons/core-free-icons';
+import type { AgentProgress, BootPhase } from '@/hooks/useBootProgress';
 import { cn } from '@/lib/utils';
+import type { EnvironmentModel } from '@/types/environment';
+
+import { Copy01Icon, Delete02Icon, Edit02Icon, MoreVerticalIcon } from '@hugeicons/core-free-icons';
+import type { UiMessages } from '@shared/i18n';
+import { envToDotVariant } from './AgentStatusBar';
+import { AgentStatusDot } from './AgentStatusDot';
 
 /**
  * # EnvironmentCard
@@ -54,30 +50,45 @@ const statusAccent: Record<EnvironmentModel['status'], { ring: string }> = {
 
 /** True for phases that represent ongoing work (progress bar should show). */
 function isPhaseActive(phase: BootPhase): boolean {
-  return phase !== 'done'
-    && phase !== 'failed'
-    && phase !== 'cdp_timeout'
-    && phase !== 'cdp_spawn_failed'
-    && phase !== 'inject_failed'
-    && phase !== 'inject_done';
+  return (
+    phase !== 'done' &&
+    phase !== 'failed' &&
+    phase !== 'cdp_timeout' &&
+    phase !== 'cdp_spawn_failed' &&
+    phase !== 'inject_failed' &&
+    phase !== 'inject_done'
+  );
 }
 
 /** Map a boot phase to its localized label. */
 function phaseLabel(phase: BootPhase, t: UiMessages): string {
   switch (phase) {
-    case 'boot_start':        return t.phaseBootStart;
-    case 'cdp_resolving':     return t.phaseCdpResolving;
-    case 'cdp_killing':       return t.phaseCdpKilling;
-    case 'cdp_spawning':      return t.phaseCdpSpawning;
-    case 'cdp_ready':         return t.phaseCdpReady;
-    case 'cdp_timeout':       return t.phaseCdpTimeout;
-    case 'cdp_spawn_failed':  return t.phaseCdpSpawnFailed;
-    case 'inject_start':      return t.phaseInjectStart;
-    case 'inject_done':       return t.phaseInjectDone;
-    case 'inject_failed':     return t.phaseInjectFailed;
-    case 'scheme_sync':       return t.phaseSchemeSync;
-    case 'done':              return t.phaseDone;
-    case 'failed':            return t.phaseFailed;
+    case 'boot_start':
+      return t.phaseBootStart;
+    case 'cdp_resolving':
+      return t.phaseCdpResolving;
+    case 'cdp_killing':
+      return t.phaseCdpKilling;
+    case 'cdp_spawning':
+      return t.phaseCdpSpawning;
+    case 'cdp_ready':
+      return t.phaseCdpReady;
+    case 'cdp_timeout':
+      return t.phaseCdpTimeout;
+    case 'cdp_spawn_failed':
+      return t.phaseCdpSpawnFailed;
+    case 'inject_start':
+      return t.phaseInjectStart;
+    case 'inject_done':
+      return t.phaseInjectDone;
+    case 'inject_failed':
+      return t.phaseInjectFailed;
+    case 'scheme_sync':
+      return t.phaseSchemeSync;
+    case 'done':
+      return t.phaseDone;
+    case 'failed':
+      return t.phaseFailed;
   }
 }
 
@@ -158,19 +169,19 @@ export function EnvironmentCard({
         {/* Top row: icon + title + menu */}
         <div className="flex items-start gap-2.5">
           {/* Agent icon with gradient backdrop */}
-          <div className={cn(
-            'flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover/card:scale-105',
-            'bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10',
-          )}>
+          <div
+            className={cn(
+              'flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover/card:scale-105',
+              'bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10',
+            )}
+          >
             <AppMark appId={env.agent.id} size={28} />
           </div>
 
           {/* Name + info */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <p className="truncate text-sm font-semibold tracking-tight">
-                {env.name}
-              </p>
+              <p className="truncate text-sm font-semibold tracking-tight">{env.name}</p>
               {isActive && (
                 <span className="shrink-0 rounded-full bg-emerald-500/15 px-1.5 py-px text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                   {t.activeBadge}
@@ -202,17 +213,13 @@ export function EnvironmentCard({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-32">
                   {onRename && env.presetId && (
-                    <DropdownMenuItem
-                      onClick={() => onRename(env.presetId!)}
-                    >
+                    <DropdownMenuItem onClick={() => onRename(env.presetId!)}>
                       <HugeIcon icon={Edit02Icon} className="size-4" />
                       {t.environmentRename}
                     </DropdownMenuItem>
                   )}
                   {onDuplicate && env.presetId && (
-                    <DropdownMenuItem
-                      onClick={() => onDuplicate(env.presetId!)}
-                    >
+                    <DropdownMenuItem onClick={() => onDuplicate(env.presetId!)}>
                       <HugeIcon icon={Copy01Icon} className="size-4" />
                       {t.environmentDuplicate}
                     </DropdownMenuItem>
@@ -240,10 +247,17 @@ export function EnvironmentCard({
           <AgentStatusDot
             size="xs"
             variant={
-              progress && isPhaseActive(progress.phase) ? 'detecting'
-              : progress && (progress.phase === 'failed' || progress.phase === 'cdp_timeout' || progress.phase === 'cdp_spawn_failed' || progress.phase === 'inject_failed') ? 'error'
-              : progress?.phase === 'done' ? 'active'
-              : envToDotVariant(env)
+              progress && isPhaseActive(progress.phase)
+                ? 'detecting'
+                : progress &&
+                    (progress.phase === 'failed' ||
+                      progress.phase === 'cdp_timeout' ||
+                      progress.phase === 'cdp_spawn_failed' ||
+                      progress.phase === 'inject_failed')
+                  ? 'error'
+                  : progress?.phase === 'done'
+                    ? 'active'
+                    : envToDotVariant(env)
             }
           />
           <span className="text-[11px] font-medium text-muted-foreground">

@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useEffect, useState, type ReactNode } from 'react';
-import {
-  DashboardSquare01Icon,
-  Folder01Icon,
-  Settings01Icon,
-} from '@hugeicons/core-free-icons';
-import type { AppController, SettingsSection } from '@/hooks/useAppController';
-import { AppMark, APP_META } from '@/components/app-mark';
-import { AGENT_IDS, type AgentId } from '@shared/types';
+import { type ReactNode, useEffect, useState } from 'react';
+import { APP_META, AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { Input } from '@/components/ui/input';
-import { useThemeMode } from '@/hooks/useThemeMode';
 import type { ThemeMode } from '@/design/theme-mode';
+import type { AppController, SettingsSection } from '@/hooks/useAppController';
+import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
+
+import { DashboardSquare01Icon, Folder01Icon, Settings01Icon } from '@hugeicons/core-free-icons';
+import { AGENT_IDS, type AgentId } from '@shared/types';
 
 function SettingRow({
   title,
@@ -29,7 +26,9 @@ function SettingRow({
     <div className="flex items-center justify-between gap-4 rounded-xl border bg-background/60 px-4 py-3.5">
       <div className="min-w-0">
         <p className="text-sm font-medium">{title}</p>
-        {description && <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{description}</p>}
+        {description && (
+          <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{description}</p>
+        )}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
     </div>
@@ -63,7 +62,10 @@ function AppOverrideCard({ controller, appId }: { controller: AppController; app
       <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
         <div className="min-w-0">
           <p className="text-sm">{t.settingsPathLabel}</p>
-          <p className="mt-0.5 truncate text-xs text-muted-foreground" title={override.appPath ?? undefined}>
+          <p
+            className="mt-0.5 truncate text-xs text-muted-foreground"
+            title={override.appPath ?? undefined}
+          >
             {override.appPath ?? t.settingsPathAuto}
           </p>
         </div>
@@ -180,9 +182,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                   </div>
                 </SettingRow>
                 <SettingRow title={t.settingsAbout} description={t.settingsAboutDesc}>
-                  <span className="text-xs text-muted-foreground">
-                    v{appVersion}
-                  </span>
+                  <span className="text-xs text-muted-foreground">v{appVersion}</span>
                 </SettingRow>
               </>
             )}

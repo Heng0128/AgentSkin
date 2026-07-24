@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useRef, useState } from 'react';
-import type { HugeiconsIconProps } from '@hugeicons/react';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
+
+import type { HugeiconsIconProps } from '@hugeicons/react';
 
 export interface WorkspaceStatItem {
   id: string;
@@ -41,10 +42,12 @@ function StatValue({ value, accent }: { value: number; accent: WorkspaceStatItem
   };
 
   return (
-    <p className={cn(
-      'text-base font-bold leading-none tabular-nums transition-all duration-500',
-      flash && cn('scale-110', flashColor[accent]),
-    )}>
+    <p
+      className={cn(
+        'text-base font-bold leading-none tabular-nums transition-all duration-500',
+        flash && cn('scale-110', flashColor[accent]),
+      )}
+    >
       {value}
     </p>
   );
@@ -88,18 +91,18 @@ export function WorkspaceStats({ items }: { items: WorkspaceStatItem[] }) {
               'transition-all duration-200 ease-out hover:shadow-sm',
             )}
           >
-            <div className={cn(
-              'flex size-8 shrink-0 items-center justify-center rounded-md ring-1',
-              a.icon,
-              a.ring,
-            )}>
+            <div
+              className={cn(
+                'flex size-8 shrink-0 items-center justify-center rounded-md ring-1',
+                a.icon,
+                a.ring,
+              )}
+            >
               <HugeIcon icon={item.icon} size={15} />
             </div>
             <div className="min-w-0">
               <StatValue value={item.value} accent={item.accent} />
-              <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-                {item.label}
-              </p>
+              <p className="mt-0.5 truncate text-[10px] text-muted-foreground">{item.label}</p>
             </div>
           </div>
         );

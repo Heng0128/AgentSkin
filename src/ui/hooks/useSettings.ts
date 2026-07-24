@@ -8,10 +8,11 @@
  */
 
 import { useCallback, useState } from 'react';
+import { api } from '@/api/agentSkinClient';
+
+import { toMessage } from '@shared/errors';
 import type { UiMessages } from '@shared/i18n';
 import type { AgentId, DesktopSettings, SystemStatus } from '@shared/types';
-import { toMessage } from '@shared/errors';
-import { api } from '@/api/agentSkinClient';
 
 export type SettingsSection = 'general' | 'apps' | 'wallpaper';
 
@@ -34,45 +35,57 @@ export function useSettings(deps: UseSettingsDeps) {
   // route switches. The dialog open flag is no longer used for rendering.
   const openSettings = useCallback((section: SettingsSection = 'general') => {
     setSettingsSection(section);
-    void api.getSettings().then(setSettings).catch(() => undefined);
+    void api
+      .getSettings()
+      .then(setSettings)
+      .catch(() => undefined);
   }, []);
 
-  const chooseAppPath = useCallback(async (appId: AgentId) => {
-    try {
-      const result = await api.pickAppPath(appId);
-      setSettings(result.settings);
-      setStatus(result.status);
-      if (!result.canceled) showToast(t.settingsSaved);
-    } catch (error) {
-      fail(error);
-    }
-  }, [fail, showToast, t, setStatus]);
+  const chooseAppPath = useCallback(
+    async (appId: AgentId) => {
+      try {
+        const result = await api.pickAppPath(appId);
+        setSettings(result.settings);
+        setStatus(result.status);
+        if (!result.canceled) showToast(t.settingsSaved);
+      } catch (error) {
+        fail(error);
+      }
+    },
+    [fail, showToast, t, setStatus],
+  );
 
-  const clearAppPath = useCallback(async (appId: AgentId) => {
-    try {
-      const result = await api.clearAppPath(appId);
-      setSettings(result.settings);
-      setStatus(result.status);
-      showToast(t.settingsSaved);
-    } catch (error) {
-      fail(error);
-    }
-  }, [fail, showToast, t, setStatus]);
+  const clearAppPath = useCallback(
+    async (appId: AgentId) => {
+      try {
+        const result = await api.clearAppPath(appId);
+        setSettings(result.settings);
+        setStatus(result.status);
+        showToast(t.settingsSaved);
+      } catch (error) {
+        fail(error);
+      }
+    },
+    [fail, showToast, t, setStatus],
+  );
 
-  const saveAppPort = useCallback(async (appId: AgentId, port: number | null) => {
-    try {
-      const result = await api.setAppPort(appId, port);
-      setSettings(result.settings);
-      setStatus(result.status);
-      showToast(t.settingsSaved);
-      return true;
-    } catch (error) {
-      const message = toMessage(error);
-      if (message.includes('INVALID_PORT')) showToast(t.settingsPortInvalid, 'destructive');
-      else fail(error);
-      return false;
-    }
-  }, [fail, showToast, t, setStatus]);
+  const saveAppPort = useCallback(
+    async (appId: AgentId, port: number | null) => {
+      try {
+        const result = await api.setAppPort(appId, port);
+        setSettings(result.settings);
+        setStatus(result.status);
+        showToast(t.settingsSaved);
+        return true;
+      } catch (error) {
+        const message = toMessage(error);
+        if (message.includes('INVALID_PORT')) showToast(t.settingsPortInvalid, 'destructive');
+        else fail(error);
+        return false;
+      }
+    },
+    [fail, showToast, t, setStatus],
+  );
 
   return {
     settingsOpen,

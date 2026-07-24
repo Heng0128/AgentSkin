@@ -12,11 +12,17 @@
  * branch is unit-testable in isolation.
  */
 
-import type { ApplyResponse, AgentId } from '@shared/types';
+import type { AgentId, ApplyResponse } from '@shared/types';
 
 export type ApplyOutcome =
   | { kind: 'success' }
-  | { kind: 'requires-restart'; themeId: string; themeName: string; appId: AgentId; restartReason?: ApplyResponse['restartReason'] }
+  | {
+      kind: 'requires-restart';
+      themeId: string;
+      themeName: string;
+      appId: AgentId;
+      restartReason?: ApplyResponse['restartReason'];
+    }
   | { kind: 'port-occupied'; message: string };
 
 /**

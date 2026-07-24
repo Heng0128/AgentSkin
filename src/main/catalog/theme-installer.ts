@@ -20,19 +20,19 @@
  * the same InstalledTheme objects the rest of the app already understands.
  */
 
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { app } from 'electron';
-import type { ThemeLibraryApi } from '../services/contracts';
+import { activeAdapterIds, getAdapter } from '../../adapters/registry';
+import { engineThemeExtension } from '../../legacy/agentskin-core-runtime';
 import type { InstalledTheme } from '../../shared/types';
 import { AGENT_IDS } from '../../shared/types';
-import type { InstalledThemePackage } from './theme-package-loader';
-import { isV2Manifest, getSupportedAgents, type ThemeManifest } from './theme-manifest';
-import { getAdapter, activeAdapterIds } from '../../adapters/registry';
-import { engineThemeExtension } from '../../legacy/agentskin-core-runtime';
 import { mainErrorFromCatch } from '../logger';
+import type { ThemeLibraryApi } from '../services/contracts';
+import { getSupportedAgents, isV2Manifest, type ThemeManifest } from './theme-manifest';
+import type { InstalledThemePackage } from './theme-package-loader';
 
 /**
  * Fallback agent id list when neither the manifest nor active adapters
@@ -133,7 +133,9 @@ export async function computeThemeContentHash(
   const agentIds = getSupportedAgents(manifest);
   const effectiveAgentIds = agentIds.length
     ? agentIds
-    : (activeAdapterIds().length ? activeAdapterIds() : FALLBACK_AGENT_IDS);
+    : activeAdapterIds().length
+      ? activeAdapterIds()
+      : FALLBACK_AGENT_IDS;
 
   const cssChunks: string[] = [];
   for (const agentId of effectiveAgentIds) {
@@ -157,11 +159,7 @@ export async function computeThemeContentHash(
       }
     }
   }
-  return crypto
-    .createHash('sha1')
-    .update(cssChunks.join('\n\n'))
-    .digest('hex')
-    .slice(0, 16);
+  return crypto.createHash('sha1').update(cssChunks.join('\n\n')).digest('hex').slice(0, 16);
 }
 
 /**
@@ -213,7 +211,7 @@ export class ThemeInstaller {
     if (manifest.minAppVersion && !semverGte(appVersion, manifest.minAppVersion)) {
       throw new Error(
         `Theme "${manifest.id}" requires AgentSkin >= ${manifest.minAppVersion}, ` +
-        `but current version is ${appVersion}`,
+          `but current version is ${appVersion}`,
       );
     }
 
@@ -224,9 +222,7 @@ export class ThemeInstaller {
     // Hero artwork: the applied desktop background (exposed to the injected
     // CSS as --agentskin-art) and the catalog cover. Packages that ship no
     // dedicated artwork fall back to the preview screenshot.
-    const hero = manifest.hero
-      ? await readImageAsset(packagePath, manifest.hero)
-      : preview;
+    const hero = manifest.hero ? await readImageAsset(packagePath, manifest.hero) : preview;
 
     // Build bundle (v1 or v2) — async because per-agent CSS is read from disk.
     const bundle = await this.buildBundle(manifest, { icon, preview, hero }, packagePath);
@@ -262,7 +258,9 @@ export class ThemeInstaller {
     const agentIds = getSupportedAgents(manifest);
     const effectiveAgentIds = agentIds.length
       ? agentIds
-      : (activeAdapterIds().length ? activeAdapterIds() : FALLBACK_AGENT_IDS);
+      : activeAdapterIds().length
+        ? activeAdapterIds()
+        : FALLBACK_AGENT_IDS;
 
     for (const agentId of effectiveAgentIds) {
       // Map AgentId → @agentskin/core adapter id (coreId). Experimental
@@ -273,7 +271,7 @@ export class ThemeInstaller {
 
       // Determine the CSS source for this agent.
       let cssPath: string | null = null;
-      let verification: unknown = undefined;
+      let verification: unknown;
       if (isV2Manifest(manifest) && manifest.targets && manifest.targets[agentId]) {
         cssPath = path.join(packagePath, manifest.targets[agentId].css);
         verification = manifest.targets[agentId].verification;
@@ -287,9 +285,7 @@ export class ThemeInstaller {
         }
       }
 
-      const css = cssPath
-        ? await readCssWithImports(cssPath)
-        : this.generateFallbackCSS(manifest);
+      const css = cssPath ? await readCssWithImports(cssPath) : this.generateFallbackCSS(manifest);
 
       targets[coreId] = { css, verification };
     }
@@ -299,13 +295,19 @@ export class ThemeInstaller {
     // so the seeder can decide whether a reseed is necessary.
     const contentHash = crypto
       .createHash('sha1')
-      .update(Object.values(targets).map((t) => t.css).join('\n\n'))
+      .update(
+        Object.values(targets)
+          .map((t) => t.css)
+          .join('\n\n'),
+      )
       .digest('hex')
       .slice(0, 16);
 
     // Collect v2 metadata into the engine-safe free-form `theme.copy` record.
     const author = manifest.author
-      ? (typeof manifest.author === 'string' ? manifest.author : manifest.author.name)
+      ? typeof manifest.author === 'string'
+        ? manifest.author
+        : manifest.author.name
       : undefined;
 
     const copy: Record<string, unknown> = {

@@ -2,7 +2,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { isAppLocale, localeFromSystem, type AppLocale } from '../shared/i18n';
+import { type AppLocale, isAppLocale, localeFromSystem } from '../shared/i18n';
 import { writeJsonAtomic } from './fs-utils';
 
 interface Preferences {
@@ -17,9 +17,14 @@ export async function saveLocalePreference(userDataRoot: string, locale: AppLoca
   await writeJsonAtomic(preferencesPath(userDataRoot), { locale });
 }
 
-export async function loadLocalePreference(userDataRoot: string, systemLocale: string): Promise<AppLocale> {
+export async function loadLocalePreference(
+  userDataRoot: string,
+  systemLocale: string,
+): Promise<AppLocale> {
   try {
-    const preferences = JSON.parse(await fs.readFile(preferencesPath(userDataRoot), 'utf8')) as Preferences;
+    const preferences = JSON.parse(
+      await fs.readFile(preferencesPath(userDataRoot), 'utf8'),
+    ) as Preferences;
     if (isAppLocale(preferences.locale)) return preferences.locale;
   } catch {
     // First launch or an unreadable preference file: initialize from the system locale.

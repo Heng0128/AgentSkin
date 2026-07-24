@@ -22,14 +22,10 @@
 
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-
-import type { CdpSession } from './cdp-client';
-import {
-  type InjectEngineResult,
-  injectThemeViaEngine,
-} from './cdp-inject';
 import type { ResolvedThemeTarget, ThemeBundle } from '../legacy/agentskin-core-runtime';
 import { toMessage } from '../shared/errors';
+import type { CdpSession } from './cdp-client';
+import { type InjectEngineResult, injectThemeViaEngine } from './cdp-inject';
 
 // ---------------------------------------------------------------------------
 // Hex → RGB triplet conversion (for engine tokens.css var(--agentskin-*-raw))
@@ -89,7 +85,16 @@ export function buildPaletteCss(agentCss: string): string | null {
   // Derive -raw RGB triplets from hex colors when missing. Engine tokens.css
   // references var(--agentskin-accent-raw) etc. for rgba(var(--...-raw), alpha)
   // patterns; without these, native token overrides using -raw variants break.
-  const rawBases = ['accent', 'secondary', 'text', 'muted', 'surface', 'surface-elevated', 'bg', 'border'];
+  const rawBases = [
+    'accent',
+    'secondary',
+    'text',
+    'muted',
+    'surface',
+    'surface-elevated',
+    'bg',
+    'border',
+  ];
   for (const base of rawBases) {
     const rawKey = `${base}-raw`;
     if (tokens.has(rawKey)) continue;
@@ -163,9 +168,18 @@ export async function tryEngineInjection(
 
     // Check all engine files exist
     const [tokensExists, adapterExists, cosmeticExists] = await Promise.all([
-      fs.access(tokensPath).then(() => true).catch(() => false),
-      fs.access(adapterPath).then(() => true).catch(() => false),
-      fs.access(cosmeticPath).then(() => true).catch(() => false),
+      fs
+        .access(tokensPath)
+        .then(() => true)
+        .catch(() => false),
+      fs
+        .access(adapterPath)
+        .then(() => true)
+        .catch(() => false),
+      fs
+        .access(cosmeticPath)
+        .then(() => true)
+        .catch(() => false),
     ]);
     if (!tokensExists || !adapterExists || !cosmeticExists) {
       return null; // Engine files not available → legacy fallback

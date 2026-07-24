@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { EnvironmentModel } from '@/types/environment';
-import type { UiMessages } from '@shared/i18n';
-import type { ProgressMap } from '@/hooks/useBootProgress';
-import { EnvironmentCard } from './EnvironmentCard';
-import { BotIcon } from '@hugeicons/core-free-icons';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Button } from '@/components/ui/button';
+import { HugeIcon } from '@/components/ui/huge-icon';
+import type { ProgressMap } from '@/hooks/useBootProgress';
+import type { EnvironmentModel } from '@/types/environment';
+
+import { BotIcon } from '@hugeicons/core-free-icons';
+import type { UiMessages } from '@shared/i18n';
+import { EnvironmentCard } from './EnvironmentCard';
 
 /**
  * # EnvironmentGrid

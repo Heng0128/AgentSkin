@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { File01Icon } from '@hugeicons/core-free-icons';
-import type { AppController } from '@/hooks/useAppController';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import {
   Sheet,
@@ -10,6 +8,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import type { AppController } from '@/hooks/useAppController';
+
+import { File01Icon } from '@hugeicons/core-free-icons';
 
 export function LogDrawer({ controller }: { controller: AppController }) {
   const { t, logs, logsOpen } = controller;
@@ -18,9 +19,7 @@ export function LogDrawer({ controller }: { controller: AppController }) {
       <SheetContent side="right" className="w-full sm:max-w-lg">
         <SheetHeader>
           <SheetTitle>{t.runtimeLog}</SheetTitle>
-          <SheetDescription>
-            {logs.length > 0 ? `${logs.length} 条` : null}
-          </SheetDescription>
+          <SheetDescription>{logs.length > 0 ? `${logs.length} 条` : null}</SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
           {logs.length === 0 ? (

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { AppController } from '@/hooks/useAppController';
 import { APP_META } from '@/components/app-mark';
-import { AGENT_IDS, type AgentId } from '@shared/types';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,6 +11,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import type { AppController } from '@/hooks/useAppController';
+
+import { AGENT_IDS, type AgentId } from '@shared/types';
 
 export function DialogsHost({ controller }: { controller: AppController }) {
   const { t, restartPrompt, deletePrompt, fileImportPrompt } = controller;
@@ -26,11 +27,16 @@ export function DialogsHost({ controller }: { controller: AppController }) {
     if (!restartPrompt) return null;
     const name = appName(restartPrompt.appId);
     switch (restartPrompt.restartReason) {
-      case 'not-installed': return t.restartReasonNotInstalled;
-      case 'not-running': return t.restartReasonNotRunning;
-      case 'spawn-failed': return t.restartReasonSpawnFailed;
-      case 'singleton-lock': return t.restartReasonSingletonLock;
-      case 'cdp-timeout': return t.restartDescription(name);
+      case 'not-installed':
+        return t.restartReasonNotInstalled;
+      case 'not-running':
+        return t.restartReasonNotRunning;
+      case 'spawn-failed':
+        return t.restartReasonSpawnFailed;
+      case 'singleton-lock':
+        return t.restartReasonSingletonLock;
+      case 'cdp-timeout':
+        return t.restartDescription(name);
       case 'no-cdp':
       default:
         return t.restartDescription(name);
@@ -40,23 +46,24 @@ export function DialogsHost({ controller }: { controller: AppController }) {
   // When the app is not installed or already running fine, the "Restart &
   // apply" button is misleading — hide it for reasons where a restart won't
   // help. The user needs to install / start / close the app manually first.
-  const showRestartButton = !restartPrompt?.restartReason
-    || restartPrompt.restartReason === 'no-cdp'
-    || restartPrompt.restartReason === 'cdp-timeout';
+  const showRestartButton =
+    !restartPrompt?.restartReason ||
+    restartPrompt.restartReason === 'no-cdp' ||
+    restartPrompt.restartReason === 'cdp-timeout';
 
   return (
     <>
       {/* Restart dialog */}
       <Dialog
         open={restartPrompt !== null}
-        onOpenChange={(open) => { if (!open) controller.setRestartPrompt(null); }}
+        onOpenChange={(open) => {
+          if (!open) controller.setRestartPrompt(null);
+        }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{t.restartTitle}</DialogTitle>
-            <DialogDescription>
-              {restartDescription}
-            </DialogDescription>
+            <DialogDescription>{restartDescription}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => controller.setRestartPrompt(null)}>
@@ -75,7 +82,9 @@ export function DialogsHost({ controller }: { controller: AppController }) {
                   }
                 }}
               >
-                {controller.busy?.startsWith('apply:') ? <Spinner data-icon="inline-start" /> : null}
+                {controller.busy?.startsWith('apply:') ? (
+                  <Spinner data-icon="inline-start" />
+                ) : null}
                 {t.restartAndApply}
               </Button>
             ) : null}
@@ -86,7 +95,9 @@ export function DialogsHost({ controller }: { controller: AppController }) {
       {/* Delete theme dialog */}
       <Dialog
         open={deletePrompt !== null}
-        onOpenChange={(open) => { if (!open) controller.setDeletePrompt(null); }}
+        onOpenChange={(open) => {
+          if (!open) controller.setDeletePrompt(null);
+        }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -114,7 +125,9 @@ export function DialogsHost({ controller }: { controller: AppController }) {
       {/* File import dialog */}
       <Dialog
         open={fileImportPrompt !== null}
-        onOpenChange={(open) => { if (!open) controller.setFileImportPrompt(null); }}
+        onOpenChange={(open) => {
+          if (!open) controller.setFileImportPrompt(null);
+        }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>

@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { UiMessages } from '@shared/i18n';
-import type { EnvironmentModel } from '@/types/environment';
 import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { BotIcon, Rocket01Icon, SparklesIcon } from '@hugeicons/core-free-icons';
 import { HugeIcon } from '@/components/ui/huge-icon';
+import { cn } from '@/lib/utils';
+import type { EnvironmentModel } from '@/types/environment';
+
+import { BotIcon, Rocket01Icon, SparklesIcon } from '@hugeicons/core-free-icons';
+import type { UiMessages } from '@shared/i18n';
 
 /**
  * # EnvironmentHero
@@ -40,7 +41,10 @@ export function EnvironmentHero({
   return (
     <div className="relative overflow-hidden rounded-2xl border border-border/60">
       {/* === Animated aurora mesh gradient background === */}
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-card to-card dark:from-primary/[0.12] dark:via-card dark:to-card">
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-br from-primary/[0.08] via-card to-card dark:from-primary/[0.12] dark:via-card dark:to-card"
+      >
         {/* Aurora blob A — top-left, warm */}
         <div className="absolute -left-16 -top-16 size-52 rounded-full bg-primary/20 blur-3xl animate-aurora-a dark:bg-primary/25" />
         {/* Aurora blob B — center-right, cool */}
@@ -83,19 +87,23 @@ export function EnvironmentHero({
 
         {/* Active environment hero */}
         {activeEnv ? (
-          <div className={cn(
-            'mt-4 rounded-xl border backdrop-blur-sm transition-all duration-300',
-            'border-white/20 bg-white/[0.06] shadow-lg shadow-primary/5',
-            'dark:border-white/10 dark:bg-white/[0.04]',
-            'group/hero',
-          )}>
+          <div
+            className={cn(
+              'mt-4 rounded-xl border backdrop-blur-sm transition-all duration-300',
+              'border-white/20 bg-white/[0.06] shadow-lg shadow-primary/5',
+              'dark:border-white/10 dark:bg-white/[0.04]',
+              'group/hero',
+            )}
+          >
             <div className="flex items-center gap-3.5 p-3.5">
               {/* Agent icon — prominent with glow */}
-              <div className={cn(
-                'relative flex size-13 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover/hero:scale-105',
-                'bg-gradient-to-br from-primary/25 to-primary/10 ring-1 ring-primary/20',
-                'shadow-md shadow-primary/10',
-              )}>
+              <div
+                className={cn(
+                  'relative flex size-13 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover/hero:scale-105',
+                  'bg-gradient-to-br from-primary/25 to-primary/10 ring-1 ring-primary/20',
+                  'shadow-md shadow-primary/10',
+                )}
+              >
                 <AppMark appId={activeEnv.agent.id} size={36} />
                 {/* Glow ring */}
                 <div className="absolute -inset-1 rounded-xl bg-primary/10 blur-md -z-10" />
@@ -105,10 +113,12 @@ export function EnvironmentHero({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="text-base font-bold tracking-tight">{activeEnv.name}</p>
-                  <span className={cn(
-                    'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium',
-                    'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-                  )}>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                      'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+                    )}
+                  >
                     <span className="relative flex size-1.5">
                       <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                       <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />

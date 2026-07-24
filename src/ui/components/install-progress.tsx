@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useCallback, useEffect, useRef } from 'react';
-import type { UiMessages } from '@shared/i18n';
-import type { InstallStep, InstallStepStatus } from '@/hooks/useThemeInstallFlow';
-import { HugeIcon } from '@/components/ui/huge-icon';
-import {
-  CheckIcon,
-  AlertCircleIcon,
-  LoadingIcon,
-  X,
-  RotateIcon,
-  File01Icon,
-} from '@hugeicons/core-free-icons';
 import { Button } from '@/components/ui/button';
+import { HugeIcon } from '@/components/ui/huge-icon';
 import { Progress } from '@/components/ui/progress';
+import type { InstallStep, InstallStepStatus } from '@/hooks/useThemeInstallFlow';
 import { cn } from '@/lib/utils';
+
+import {
+  AlertCircleIcon,
+  CheckIcon,
+  File01Icon,
+  LoadingIcon,
+  RotateIcon,
+  X,
+} from '@hugeicons/core-free-icons';
+import type { UiMessages } from '@shared/i18n';
 import appIcon from '../../../assets/branding/app-icon.png';
 
 // ---------------------------------------------------------------------------
@@ -23,7 +24,12 @@ import appIcon from '../../../assets/branding/app-icon.png';
 
 function formatTime(epochMs: number): string {
   const d = new Date(epochMs);
-  return d.toLocaleTimeString('zh-CN', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return d.toLocaleTimeString('zh-CN', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 }
 
 function formatElapsed(ms: number): string {
@@ -39,11 +45,16 @@ function formatElapsed(ms: number): string {
 function StepRow({ step }: { step: InstallStep }) {
   const statusIcon = (() => {
     switch (step.status) {
-      case 'done': return <HugeIcon icon={CheckIcon} className="size-3.5 text-emerald-500" />;
-      case 'active': return <HugeIcon icon={LoadingIcon} className="size-3.5 animate-spin text-primary" />;
-      case 'error': return <HugeIcon icon={AlertCircleIcon} className="size-3.5 text-destructive" />;
-      case 'cancelled': return <HugeIcon icon={X} className="size-3.5 text-muted-foreground" />;
-      default: return <span className="size-3.5 rounded-full border border-muted-foreground/30" />;
+      case 'done':
+        return <HugeIcon icon={CheckIcon} className="size-3.5 text-emerald-500" />;
+      case 'active':
+        return <HugeIcon icon={LoadingIcon} className="size-3.5 animate-spin text-primary" />;
+      case 'error':
+        return <HugeIcon icon={AlertCircleIcon} className="size-3.5 text-destructive" />;
+      case 'cancelled':
+        return <HugeIcon icon={X} className="size-3.5 text-muted-foreground" />;
+      default:
+        return <span className="size-3.5 rounded-full border border-muted-foreground/30" />;
     }
   })();
 
@@ -51,14 +62,24 @@ function StepRow({ step }: { step: InstallStep }) {
     <li className="flex items-start gap-2 text-xs">
       <span className="mt-0.5 shrink-0">{statusIcon}</span>
       <div className="min-w-0 flex-1">
-        <span className={step.status === 'error' ? 'text-destructive' : step.status === 'cancelled' ? 'text-muted-foreground/50' : 'text-foreground'}>
+        <span
+          className={
+            step.status === 'error'
+              ? 'text-destructive'
+              : step.status === 'cancelled'
+                ? 'text-muted-foreground/50'
+                : 'text-foreground'
+          }
+        >
           {step.label}
         </span>
         {step.message && step.status === 'error' && (
           <p className="truncate text-[11px] text-destructive/80">{step.message}</p>
         )}
         {step.elapsed !== undefined && step.elapsed > 0 && (
-          <span className="ml-1.5 text-[10px] text-muted-foreground/50">{formatElapsed(step.elapsed)}</span>
+          <span className="ml-1.5 text-[10px] text-muted-foreground/50">
+            {formatElapsed(step.elapsed)}
+          </span>
         )}
       </div>
     </li>
@@ -86,9 +107,12 @@ function parseLogLine(line: string): LogEntry | null {
 function LogEntryRow({ entry }: { entry: LogEntry }) {
   const levelColor = (() => {
     switch (entry.level) {
-      case 'ERROR': return 'text-destructive';
-      case 'WARN': return 'text-amber-500';
-      default: return 'text-muted-foreground';
+      case 'ERROR':
+        return 'text-destructive';
+      case 'WARN':
+        return 'text-amber-500';
+      default:
+        return 'text-muted-foreground';
     }
   })();
 
@@ -173,12 +197,7 @@ export function InstallWizard({
           )}
         </div>
         {(isComplete || isFailed || isCancelled) && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="size-6 p-0"
-            onClick={onClose}
-          >
+          <Button size="sm" variant="ghost" className="size-6 p-0" onClick={onClose}>
             <HugeIcon icon={X} className="size-3.5" />
           </Button>
         )}
@@ -208,7 +227,10 @@ export function InstallWizard({
 
       {/* Live log */}
       {logEntries.length > 0 && (
-        <div ref={logRef} className="mx-4 mt-2 max-h-24 overflow-y-auto rounded-lg border bg-muted/20 p-2">
+        <div
+          ref={logRef}
+          className="mx-4 mt-2 max-h-24 overflow-y-auto rounded-lg border bg-muted/20 p-2"
+        >
           {logEntries.map((entry, i) => (
             <LogEntryRow key={i} entry={entry} />
           ))}
@@ -245,5 +267,3 @@ export function InstallWizard({
     </div>
   );
 }
-
-

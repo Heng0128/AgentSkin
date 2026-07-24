@@ -22,18 +22,19 @@
  */
 
 import { useCallback, useState } from 'react';
-import type { AppController } from './useAppController';
-import type { EnvironmentPreset, EnvironmentModel } from '@/types/environment';
 import {
-  loadPresets,
-  savePresets,
   createPreset,
-  updatePreset,
+  loadPresets,
   removePreset,
+  savePresets,
+  updatePreset,
   upsertPreset,
 } from '@/storage/environment-store';
-import { useNotifications } from './useNotifications';
+import type { EnvironmentModel, EnvironmentPreset } from '@/types/environment';
+
 import { toMessage } from '@shared/errors';
+import type { AppController } from './useAppController';
+import { useNotifications } from './useNotifications';
 
 export interface EnvironmentActionsResult {
   /** Currently switching environment (shows busy state). */
@@ -85,9 +86,7 @@ export interface EnvironmentActionsResult {
 /** Mutable counter shared between useEnvironmentActions and useEnvironments. */
 let refreshCounter = 0;
 
-export function useEnvironmentActions(
-  controller: AppController,
-): EnvironmentActionsResult {
+export function useEnvironmentActions(controller: AppController): EnvironmentActionsResult {
   const { applyToApp, restoreApp, installed, t } = controller;
   const { showToast, fail } = useNotifications(t);
   const [switching, setSwitching] = useState(false);
@@ -100,144 +99,159 @@ export function useEnvironmentActions(
 
   // --- switchEnvironment ---
 
-  const switchEnvironment = useCallback(async (env: EnvironmentModel): Promise<boolean> => {
-    setSwitching(true);
-    setError(null);
+  const switchEnvironment = useCallback(
+    async (env: EnvironmentModel): Promise<boolean> => {
+      setSwitching(true);
+      setError(null);
 
-    try {
-      // Auto-create preset if none exists for this agent+theme combo
-      const presets = loadPresets();
-      const hasPreset = presets.some(
-        (p) => p.agentId === env.agent.id && p.themeId === env.theme?.id,
-      );
-      if (!hasPreset) {
-        const newPreset = createPreset(env.agent.id, env.theme?.id ?? null, env.name);
-        savePresets([...presets, newPreset]);
+      try {
+        // Auto-create preset if none exists for this agent+theme combo
+        const presets = loadPresets();
+        const hasPreset = presets.some(
+          (p) => p.agentId === env.agent.id && p.themeId === env.theme?.id,
+        );
+        if (!hasPreset) {
+          const newPreset = createPreset(env.agent.id, env.theme?.id ?? null, env.name);
+          savePresets([...presets, newPreset]);
+        }
+
+        // Apply the theme via controller
+        if (env.theme) {
+          const ok = await applyToApp(env.theme.id, env.theme.name, env.agent.id);
+          if (ok) {
+            showToast(t.switchSuccess(env.name));
+            refresh();
+            return true;
+          }
+          return false;
+        } else {
+          // No theme = restore default
+          await restoreApp(env.agent.id as never);
+          showToast(t.nativeRestored(env.agent.displayName));
+          refresh();
+          return true;
+        }
+      } catch (err) {
+        const msg = toMessage(err) || t.switchFailure;
+        setError(msg);
+        fail(err);
+        return false;
+      } finally {
+        setSwitching(false);
       }
+    },
+    [applyToApp, restoreApp, installed, showToast, fail, refresh, t],
+  );
 
-      // Apply the theme via controller
-      if (env.theme) {
-        const ok = await applyToApp(env.theme.id, env.theme.name, env.agent.id);
-        if (ok) {
-          showToast(t.switchSuccess(env.name));
+  // --- createEnvironment ---
+
+  const createEnvironment = useCallback(
+    async (
+      agentId: EnvironmentPreset['agentId'],
+      themeId: EnvironmentPreset['themeId'],
+      name?: string,
+      applyNow = false,
+    ): Promise<{ preset: EnvironmentPreset | null; success: boolean }> => {
+      try {
+        const presets = loadPresets();
+        const preset = createPreset(agentId, themeId, name);
+        const updated = upsertPreset(presets, agentId, themeId, name);
+        const saved = savePresets(updated);
+        if (!saved) {
+          setError(t.environmentCreationFailed);
+          return { preset: null, success: false };
+        }
+
+        // Optionally apply the theme immediately
+        if (applyNow && themeId) {
+          const theme = installed.find((th) => th.id === themeId);
+          if (theme) {
+            const ok = await applyToApp(themeId, theme.name, agentId);
+            if (!ok) return { preset, success: false };
+          }
+        }
+
+        showToast(name ? `${t.environmentCreated} ${name}` : t.environmentCreated);
+        refresh();
+        return { preset, success: true };
+      } catch (err) {
+        const msg = toMessage(err) || t.environmentCreationFailed;
+        setError(msg);
+        fail(err);
+        return { preset: null, success: false };
+      }
+    },
+    [applyToApp, installed, showToast, fail, refresh, t],
+  );
+
+  // --- deleteEnvironment ---
+
+  const deleteEnvironment = useCallback(
+    (presetId: string): boolean => {
+      try {
+        const presets = loadPresets();
+        const updated = removePreset(presets, presetId);
+        const saved = savePresets(updated);
+        if (saved) {
+          showToast(t.environmentDeleted);
           refresh();
           return true;
         }
         return false;
-      } else {
-        // No theme = restore default
-        await restoreApp(env.agent.id as never);
-        showToast(t.nativeRestored(env.agent.displayName));
-        refresh();
-        return true;
+      } catch {
+        setError(t.environmentDeletionFailed);
+        return false;
       }
-    } catch (err) {
-      const msg = toMessage(err) || t.switchFailure;
-      setError(msg);
-      fail(err);
-      return false;
-    } finally {
-      setSwitching(false);
-    }
-  }, [applyToApp, restoreApp, installed, showToast, fail, refresh, t]);
-
-  // --- createEnvironment ---
-
-  const createEnvironment = useCallback(async (
-    agentId: EnvironmentPreset['agentId'],
-    themeId: EnvironmentPreset['themeId'],
-    name?: string,
-    applyNow = false,
-  ): Promise<{ preset: EnvironmentPreset | null; success: boolean }> => {
-    try {
-      const presets = loadPresets();
-      const preset = createPreset(agentId, themeId, name);
-      const updated = upsertPreset(presets, agentId, themeId, name);
-      const saved = savePresets(updated);
-      if (!saved) {
-        setError(t.environmentCreationFailed);
-        return { preset: null, success: false };
-      }
-
-      // Optionally apply the theme immediately
-      if (applyNow && themeId) {
-        const theme = installed.find((th) => th.id === themeId);
-        if (theme) {
-          const ok = await applyToApp(themeId, theme.name, agentId);
-          if (!ok) return { preset, success: false };
-        }
-      }
-
-      showToast(name ? `${t.environmentCreated} ${name}` : t.environmentCreated);
-      refresh();
-      return { preset, success: true };
-    } catch (err) {
-      const msg = toMessage(err) || t.environmentCreationFailed;
-      setError(msg);
-      fail(err);
-      return { preset: null, success: false };
-    }
-  }, [applyToApp, installed, showToast, fail, refresh, t]);
-
-  // --- deleteEnvironment ---
-
-  const deleteEnvironment = useCallback((presetId: string): boolean => {
-    try {
-      const presets = loadPresets();
-      const updated = removePreset(presets, presetId);
-      const saved = savePresets(updated);
-      if (saved) {
-        showToast(t.environmentDeleted);
-        refresh();
-        return true;
-      }
-      return false;
-    } catch {
-      setError(t.environmentDeletionFailed);
-      return false;
-    }
-  }, [showToast, refresh, t]);
+    },
+    [showToast, refresh, t],
+  );
 
   // --- duplicateEnvironment ---
 
-  const duplicateEnvironment = useCallback((presetId: string, newName: string): EnvironmentPreset | null => {
-    try {
-      const presets = loadPresets();
-      const source = presets.find((p) => p.id === presetId);
-      if (!source) {
-        setError(t.environmentNotFound);
+  const duplicateEnvironment = useCallback(
+    (presetId: string, newName: string): EnvironmentPreset | null => {
+      try {
+        const presets = loadPresets();
+        const source = presets.find((p) => p.id === presetId);
+        if (!source) {
+          setError(t.environmentNotFound);
+          return null;
+        }
+        const newPreset = createPreset(source.agentId, source.themeId, newName);
+        const updated = [...presets, newPreset];
+        savePresets(updated);
+        showToast(`${t.environmentDuplicated} ${newName}`);
+        refresh();
+        return newPreset;
+      } catch {
+        setError(t.environmentDuplicationFailed);
         return null;
       }
-      const newPreset = createPreset(source.agentId, source.themeId, newName);
-      const updated = [...presets, newPreset];
-      savePresets(updated);
-      showToast(`${t.environmentDuplicated} ${newName}`);
-      refresh();
-      return newPreset;
-    } catch {
-      setError(t.environmentDuplicationFailed);
-      return null;
-    }
-  }, [showToast, refresh, t]);
+    },
+    [showToast, refresh, t],
+  );
 
   // --- renameEnvironment ---
 
-  const renameEnvironment = useCallback((presetId: string, newName: string): boolean => {
-    try {
-      const presets = loadPresets();
-      const updated = updatePreset(presets, presetId, { name: newName });
-      const saved = savePresets(updated);
-      if (saved) {
-        showToast(t.environmentRenamed);
-        refresh();
-        return true;
+  const renameEnvironment = useCallback(
+    (presetId: string, newName: string): boolean => {
+      try {
+        const presets = loadPresets();
+        const updated = updatePreset(presets, presetId, { name: newName });
+        const saved = savePresets(updated);
+        if (saved) {
+          showToast(t.environmentRenamed);
+          refresh();
+          return true;
+        }
+        return false;
+      } catch {
+        setError(t.environmentRenameFailed);
+        return false;
       }
-      return false;
-    } catch {
-      setError(t.environmentRenameFailed);
-      return false;
-    }
-  }, [showToast, refresh, t]);
+    },
+    [showToast, refresh, t],
+  );
 
   return {
     switching,

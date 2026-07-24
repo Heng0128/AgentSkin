@@ -1,0 +1,66 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.5/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules/**",
+      "!**/out/**",
+      "!**/dist/**",
+      "!**/.vite/**",
+      "!**/coverage/**",
+      "!**/engines/**/*.mjs",
+      "!**/src/engine/**",
+      "!**/src/legacy/agentskin-core-runtime.ts",
+      "!**/themes/**",
+      "!**/build/**",
+      "!**/assets/**",
+      "!**/.build-tmp/**",
+      "!**/out_make_trash_*/**"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "all",
+      "bracketSpacing": true,
+      "arrowParentheses": "always"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        "noNonNullAssertion": "off"
+      },
+      "complexity": {
+        "useOptionalChain": "off"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": ["react", "node", ":ALIAS:", ":BLANK_LINE:"]
+          }
+        }
+      }
+    }
+  }
+}

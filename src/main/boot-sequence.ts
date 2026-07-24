@@ -16,25 +16,25 @@
  * `app.quit()` and renderer-forwarding concerns.
  */
 
-import { app, nativeImage, net, protocol } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { app, nativeImage, net, protocol } from 'electron';
 import { listAdapters, registerBuiltinAdapters } from '../adapters/registry';
+import { setMainLocale } from '../shared/i18n';
+import type { AgentId } from '../shared/types';
+import { AgentEngineService } from './agent-engine-service';
 import { AgentCatalog } from './catalog/agent-catalog';
 import { ThemeCatalog } from './catalog/theme-catalog';
 import { getThemesDir, pruneRemovedBuiltInThemes, seedBuiltInThemes } from './catalog/theme-seeder';
-import { AgentEngineService } from './agent-engine-service';
 import { extractThemeFilesFromArgv } from './file-open';
+import { registerIpc } from './ipc';
 import { loadLocalePreference } from './locale-preferences';
+import { setMainLogListener } from './logger';
+import { brandingRoot, ctx, sendLog } from './main-context';
 import { SettingsService } from './settings-service';
 import { ThemeLibrary } from './theme-library';
-import { WALLPAPER_SCHEME, WallpaperService } from './wallpaper-service';
-import { setMainLogListener } from './logger';
-import { setMainLocale } from '../shared/i18n';
-import type { AgentId } from '../shared/types';
-import { brandingRoot, ctx, sendLog } from './main-context';
 import { createTrayManager, type TrayManager } from './tray-manager';
-import { registerIpc } from './ipc';
+import { WALLPAPER_SCHEME, WallpaperService } from './wallpaper-service';
 
 export interface BootDeps {
   /** Create and show the main browser window. Injected from `main.ts`. */
@@ -80,7 +80,11 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
     return net.fetch(pathToFileURL(videoPath).toString());
   });
 
-  ctx.core = new AgentEngineService(ctx.library, path.join(ctx.userDataRoot, 'manager-state.json'), ctx.settings);
+  ctx.core = new AgentEngineService(
+    ctx.library,
+    path.join(ctx.userDataRoot, 'manager-state.json'),
+    ctx.settings,
+  );
   ctx.core.setWallpaperService(ctx.wallpapers);
   ctx.core.setLogListener(sendLog);
   await ctx.core.initialize();
@@ -126,7 +130,8 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
   registerIpc(ctx, trayManager.updateTrayMenu);
 
   // Windows cold-start theme files arrive in argv.
-  for (const filePath of extractThemeFilesFromArgv(process.argv)) ctx.fileOpens.handlePath(filePath);
+  for (const filePath of extractThemeFilesFromArgv(process.argv))
+    ctx.fileOpens.handlePath(filePath);
 
   await deps.createWindow();
 

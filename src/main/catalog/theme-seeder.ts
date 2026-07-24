@@ -15,14 +15,14 @@
  * into the library, the normal ThemeLibrary lifecycle handles them.
  */
 
-import fs from 'node:fs/promises';
 import { existsSync } from 'node:fs';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { app } from 'electron';
-import type { ThemeLibraryApi } from '../services/contracts';
 import type { InstalledTheme } from '../../shared/types';
+import type { ThemeLibraryApi } from '../services/contracts';
+import { computeThemeContentHash, ThemeInstaller } from './theme-installer';
 import { ThemePackageLoader } from './theme-package-loader';
-import { ThemeInstaller, computeThemeContentHash } from './theme-installer';
 
 /**
  * Seed built-in themes from the themes/ directory into the ThemeLibrary.
@@ -90,12 +90,20 @@ export async function seedBuiltInThemes(
  * Pruning them on boot keeps the catalog in sync with the themes we ship.
  */
 export const REMOVED_BUILTIN_THEME_IDS = [
-  'arctic-white', 'cyber-neon', 'sakura',
+  'arctic-white',
+  'cyber-neon',
+  'sakura',
   // Terminal color themes removed in v2.2 (replaced by IP-specific anime themes)
-  'blue', 'yellow', 'purple', 'red', 'pink', 'green',
+  'blue',
+  'yellow',
+  'purple',
+  'red',
+  'pink',
+  'green',
   // IP themes removed in v2.2 (consolidation: arina was the only auto-mode
   // theme with no light/dark pair; miku-light overlapped with other light anime)
-  'arina-hashimoto', 'miku-light',
+  'arina-hashimoto',
+  'miku-light',
 ];
 
 /**

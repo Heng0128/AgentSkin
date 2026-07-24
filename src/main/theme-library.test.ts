@@ -45,7 +45,11 @@ describe('inspectPackage', () => {
   it('reports a fresh install without touching the library', async () => {
     const source = await writePackage('neon.codedrobe-theme', themePackage());
     const inspection = await library.inspectPackage(source);
-    expect(inspection.incoming).toMatchObject({ id: 'neon', displayName: 'Neon', version: '1.0.0' });
+    expect(inspection.incoming).toMatchObject({
+      id: 'neon',
+      displayName: 'Neon',
+      version: '1.0.0',
+    });
     expect(inspection.existing).toBeNull();
     await expect(library.summaries()).resolves.toEqual([]);
   });
@@ -62,11 +66,22 @@ describe('inspectPackage', () => {
     const legacy = await writePackage('retro.codex-theme', {
       format: 'codex-theme',
       schemaVersion: 1,
-      manifest: { schemaVersion: 1, id: 'retro', displayName: 'Retro', version: '0.3.0', css: 'theme.css' },
+      manifest: {
+        schemaVersion: 1,
+        id: 'retro',
+        displayName: 'Retro',
+        version: '0.3.0',
+        css: 'theme.css',
+      },
       css: 'body { color: blue; }',
     });
     const inspection = await library.inspectPackage(legacy);
-    expect(inspection.incoming).toMatchObject({ id: 'retro', version: '0.3.0', supportedAgents: [], legacyTargets: ['codex'] });
+    expect(inspection.incoming).toMatchObject({
+      id: 'retro',
+      version: '0.3.0',
+      supportedAgents: [],
+      legacyTargets: ['codex'],
+    });
     expect(inspection.existing).toBeNull();
   });
 
@@ -93,7 +108,13 @@ describe('importPackage', () => {
     const legacy = await writePackage('retro.codex-theme', {
       format: 'codex-theme',
       schemaVersion: 1,
-      manifest: { schemaVersion: 1, id: 'retro', displayName: 'Retro', version: '0.3.0', css: 'theme.css' },
+      manifest: {
+        schemaVersion: 1,
+        id: 'retro',
+        displayName: 'Retro',
+        version: '0.3.0',
+        css: 'theme.css',
+      },
       css: 'body { color: blue; }',
     });
     const installed = await library.importPackage(legacy);
@@ -106,8 +127,15 @@ describe('importPackage', () => {
 
 describe('installBytes (general capability)', () => {
   it('installs a theme from in-memory bytes', async () => {
-    const bundle = themePackage({ id: 'bytes-theme', displayName: 'Bytes Theme', version: '1.2.0' });
-    const installed = await library.installBytes(Buffer.from(JSON.stringify(bundle)), 'fallback-id');
+    const bundle = themePackage({
+      id: 'bytes-theme',
+      displayName: 'Bytes Theme',
+      version: '1.2.0',
+    });
+    const installed = await library.installBytes(
+      Buffer.from(JSON.stringify(bundle)),
+      'fallback-id',
+    );
     expect(installed.id).toBe('bytes-theme');
     expect(installed.version).toBe('1.2.0');
     await expect(library.summaries()).resolves.toContainEqual(
@@ -192,14 +220,18 @@ describe('catalog metadata propagation', () => {
         workbuddy: { css: 'body{}' },
       },
     };
-    const installed = await library.importPackage(await writePackage('meta.codedrobe-theme', bundle));
+    const installed = await library.importPackage(
+      await writePackage('meta.codedrobe-theme', bundle),
+    );
     expect(installed.author).toBe('Jane Doe');
     expect(installed.category).toBe('cyberpunk');
     expect(installed.tags).toEqual(['dark', 'neon']);
     expect(installed.license).toBe('MIT');
     expect(installed.mode).toBe('dark');
     expect(installed.unofficial).toBe(false);
-    expect(installed.supportedAgents).toEqual(expect.arrayContaining(['traework', 'qoderwork', 'workbuddy']));
+    expect(installed.supportedAgents).toEqual(
+      expect.arrayContaining(['traework', 'qoderwork', 'workbuddy']),
+    );
   });
 
   it('flattens an object author and falls back to target-derived agents', async () => {
@@ -216,7 +248,9 @@ describe('catalog metadata propagation', () => {
       },
       targets: { traework: { css: 'body{}' } },
     };
-    const installed = await library.importPackage(await writePackage('obj.codedrobe-theme', bundle));
+    const installed = await library.importPackage(
+      await writePackage('obj.codedrobe-theme', bundle),
+    );
     expect(installed.author).toBe('Team X');
     expect(installed.supportedAgents).toEqual(['traework']);
   });

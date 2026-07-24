@@ -54,7 +54,10 @@ export function loadPresets(): EnvironmentPreset[] {
     // Schema migration: if version doesn't match, try to adapt
     if (envelope.v !== PRESET_SCHEMA_VERSION) {
       // v1 migration: just accept the data as-is
-      rWarn('EnvironmentStore', `Schema version ${envelope.v} != expected ${PRESET_SCHEMA_VERSION}, accepting anyway`);
+      rWarn(
+        'EnvironmentStore',
+        `Schema version ${envelope.v} != expected ${PRESET_SCHEMA_VERSION}, accepting anyway`,
+      );
     }
 
     return Array.isArray(envelope.presets) ? envelope.presets : [];
@@ -102,11 +105,7 @@ export function updatePreset(
   presetId: string,
   updates: Partial<Pick<EnvironmentPreset, 'name' | 'agentId' | 'themeId'>>,
 ): EnvironmentPreset[] {
-  return presets.map((p) =>
-    p.id === presetId
-      ? { ...p, ...updates, updatedAt: now() }
-      : p,
-  );
+  return presets.map((p) => (p.id === presetId ? { ...p, ...updates, updatedAt: now() } : p));
 }
 
 /** Remove a preset by id. Returns the filtered list. */
@@ -127,9 +126,7 @@ export function upsertPreset(
   name?: string,
 ): EnvironmentPreset[] {
   // Check if a preset for this agent+theme already exists
-  const existing = presets.find(
-    (p) => p.agentId === agentId && p.themeId === themeId,
-  );
+  const existing = presets.find((p) => p.agentId === agentId && p.themeId === themeId);
 
   if (existing) {
     return updatePreset(presets, existing.id, { name });

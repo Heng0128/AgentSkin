@@ -176,7 +176,9 @@ export async function resolveLivePort(
 
     // (a) Explicit port from argv — fast path.
     const explicitPorts = explicitDebugPortsFromPids(pids);
-    log(`[port] ${appId}: layer 2 (PID auto-detect) — ${pids.length} PID(s), ${explicitPorts.length} explicit port(s)`);
+    log(
+      `[port] ${appId}: layer 2 (PID auto-detect) — ${pids.length} PID(s), ${explicitPorts.length} explicit port(s)`,
+    );
     for (const livePort of explicitPorts) {
       if (livePort === knownDeadPort) continue;
       try {

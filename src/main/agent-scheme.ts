@@ -38,8 +38,8 @@
  * and persisted to manager-state.json so it can be put back on restore.
  */
 
-import type { CdpSession } from './cdp-client';
 import type { AgentId } from '../shared/types';
+import type { CdpSession } from './cdp-client';
 
 /** A concrete light/dark choice ('auto' is resolved by the caller). */
 export type SchemeMode = 'light' | 'dark';
@@ -156,10 +156,7 @@ function storageEventLines(writes: Record<string, string>): string {
  *
  * Best-effort: never throws. Returns true on success.
  */
-export async function emulateColorScheme(
-  session: CdpSession,
-  mode: SchemeMode,
-): Promise<boolean> {
+export async function emulateColorScheme(session: CdpSession, mode: SchemeMode): Promise<boolean> {
   try {
     await session.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-color-scheme', value: mode }],
@@ -244,10 +241,7 @@ export async function captureScheme(
  * Used by `applyScheme` to verify the switch actually stuck — apps that
  * re-apply their own theme on render can silently overwrite our writes.
  */
-async function readBackMode(
-  session: CdpSession,
-  agentId: AgentId,
-): Promise<SchemeMode | null> {
+async function readBackMode(session: CdpSession, agentId: AgentId): Promise<SchemeMode | null> {
   const strategy = STRATEGIES[agentId];
   if (!strategy) return null;
   const state = await readSchemeState(session, strategy);
@@ -291,7 +285,9 @@ export async function applyScheme(
     const target = strategy.targetDataTheme(current?.dataTheme ?? null, mode);
     const writes = strategy.storageWrites(mode, target);
     const writeLines = Object.entries(writes)
-      .map(([key, value]) => `localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});`)
+      .map(
+        ([key, value]) => `localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});`,
+      )
       .join('\n      ');
     const expression = `(() => {
       try {
@@ -349,25 +345,28 @@ export async function restoreScheme(
     return true;
   }
   const { dataTheme } = snapshot;
-  const attrLine = dataTheme == null
-    ? "document.documentElement.removeAttribute('data-theme');"
-    : `document.documentElement.setAttribute('data-theme', ${JSON.stringify(dataTheme)});`;
+  const attrLine =
+    dataTheme == null
+      ? "document.documentElement.removeAttribute('data-theme');"
+      : `document.documentElement.setAttribute('data-theme', ${JSON.stringify(dataTheme)});`;
   const storageLines = Object.entries(snapshot.storage)
-    .map(([key, value]) => (value == null
-      ? `localStorage.removeItem(${JSON.stringify(key)});`
-      : `localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});`))
+    .map(([key, value]) =>
+      value == null
+        ? `localStorage.removeItem(${JSON.stringify(key)});`
+        : `localStorage.setItem(${JSON.stringify(key)}, ${JSON.stringify(value)});`,
+    )
     .join('\n      ');
   // Re-sync body classes to the restored mode for agents that need it.
-  const restoredMode: SchemeMode | null = dataTheme == null
-    ? null
-    : dataTheme.includes('dark')
-      ? 'dark'
-      : dataTheme.includes('light')
-        ? 'light'
-        : null;
-  const classLines = strategy.syncBodyClasses && restoredMode
-    ? `${modeClassLines(restoredMode)}\n      `
-    : '';
+  const restoredMode: SchemeMode | null =
+    dataTheme == null
+      ? null
+      : dataTheme.includes('dark')
+        ? 'dark'
+        : dataTheme.includes('light')
+          ? 'light'
+          : null;
+  const classLines =
+    strategy.syncBodyClasses && restoredMode ? `${modeClassLines(restoredMode)}\n      ` : '';
   const storageEventRestore = storageEventLines(
     Object.fromEntries(
       Object.entries(snapshot.storage).filter(([, v]) => v != null) as [string, string][],

@@ -19,7 +19,9 @@ afterEach(async () => {
 describe('locale preferences', () => {
   it('uses Chinese on first launch regardless of system locale and persists it', async () => {
     await expect(loadLocalePreference(root, 'en-US')).resolves.toBe('zh-CN');
-    await expect(fs.readFile(path.join(root, 'preferences.json'), 'utf8')).resolves.toContain('"locale": "zh-CN"');
+    await expect(fs.readFile(path.join(root, 'preferences.json'), 'utf8')).resolves.toContain(
+      '"locale": "zh-CN"',
+    );
   });
 
   it('falls back to Chinese for unsupported system languages', async () => {

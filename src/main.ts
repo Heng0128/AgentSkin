@@ -14,22 +14,28 @@
  */
 
 import { app, dialog, protocol } from 'electron';
+import { runBootSequence } from './main/boot-sequence';
+import { extractThemeFilesFromArgv } from './main/file-open';
+import { ctx } from './main/main-context';
 import { WALLPAPER_SCHEME } from './main/wallpaper-service';
+import { createMainWindow } from './main/window-manager';
+import { toMessage } from './shared/errors';
 import { getMainMessages } from './shared/i18n';
 import { IpcChannel } from './shared/ipc-channels';
-import { toMessage } from './shared/errors';
 import type { AgentId } from './shared/types';
-import { ctx } from './main/main-context';
-import { runBootSequence } from './main/boot-sequence';
-import { createMainWindow } from './main/window-manager';
-import { extractThemeFilesFromArgv } from './main/file-open';
 
 // Register the wallpaper streaming scheme before the app is ready so the
 // sandboxed renderer can load <video> sources via agentskin-wallpaper://.
 protocol.registerSchemesAsPrivileged([
   {
     scheme: WALLPAPER_SCHEME,
-    privileges: { standard: true, secure: true, stream: true, supportFetchAPI: true, bypassCSP: false },
+    privileges: {
+      standard: true,
+      secure: true,
+      stream: true,
+      supportFetchAPI: true,
+      bypassCSP: false,
+    },
   },
 ]);
 
@@ -48,12 +54,15 @@ app.on('open-file', (event, filePath) => {
   ctx.fileOpens.handlePath(filePath);
 });
 
-app.whenReady()
-  .then(() => runBootSequence({
-    createWindow: () => createMainWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL }),
-    onQuit,
-    onApplyRequest: requestTrayApply,
-  }))
+app
+  .whenReady()
+  .then(() =>
+    runBootSequence({
+      createWindow: () => createMainWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL }),
+      onQuit,
+      onApplyRequest: requestTrayApply,
+    }),
+  )
   .catch((error) => {
     dialog.showErrorBox(getMainMessages().startupErrorTitle, toMessage(error));
     app.quit();

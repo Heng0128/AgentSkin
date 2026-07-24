@@ -19,13 +19,7 @@ import { cn } from '@/lib/utils';
  * It is rendered as a `fixed inset-0` overlay (not a `<main>`) so App.tsx can
  * keep it mounted while the real UI settles underneath and cross-fade it out.
  */
-export function BootScreen({
-  hint,
-  leaving = false,
-}: {
-  hint: string;
-  leaving?: boolean;
-}) {
+export function BootScreen({ hint, leaving = false }: { hint: string; leaving?: boolean }) {
   return (
     <div
       className={cn(

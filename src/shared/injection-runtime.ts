@@ -31,10 +31,10 @@
 
 import {
   ADAPTER_MARKERS,
+  hostClassFor,
   RENDERER_CONFIG_GLOBAL,
   SHEET_LAYER_FLAG,
   SHEET_OWNED_FLAG,
-  hostClassFor,
 } from './injection-constants';
 import { AGENT_IDS } from './types';
 
@@ -47,10 +47,7 @@ import { AGENT_IDS } from './types';
  * (backtick string). Applied before injecting CSS via `session.evaluate()`.
  */
 export function escapeCssForTemplateLiteral(css: string): string {
-  return css
-    .replace(/\\/g, '\\\\')
-    .replace(/`/g, '\\`')
-    .replace(/\$/g, '\\$');
+  return css.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
 }
 
 // ---------------------------------------------------------------------------

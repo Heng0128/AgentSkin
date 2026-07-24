@@ -16,13 +16,19 @@
  * sequence) wires those in.
  */
 
-import { Menu, nativeImage, Tray, type MenuItemConstructorOptions, type NativeImage } from 'electron';
 import path from 'node:path';
-import type { MainContext, } from './main-context';
-import { brandingRoot, sendLog } from './main-context';
-import { getMainMessages } from '../shared/i18n';
+import {
+  Menu,
+  type MenuItemConstructorOptions,
+  type NativeImage,
+  nativeImage,
+  Tray,
+} from 'electron';
 import { toMessage } from '../shared/errors';
+import { getMainMessages } from '../shared/i18n';
 import type { AgentId, InstalledTheme, SystemStatus } from '../shared/types';
+import type { MainContext } from './main-context';
+import { brandingRoot, sendLog } from './main-context';
 
 export interface TrayDeps {
   /** Called when the user picks "Quit" from the tray menu. */
@@ -88,14 +94,15 @@ export function createTrayManager(ctx: MainContext, deps: TrayDeps): TrayManager
       const themeLabel = activeName ? copy.trayAppThemed(activeName) : copy.trayAppNoTheme;
 
       const applyable = themes.filter((t) => t.supportedAgents.includes(appStatus.appId));
-      const applySubmenu: MenuItemConstructorOptions[] = applyable.length > 0
-        ? applyable.map((t) => ({
-            label: t.displayName,
-            type: 'checkbox' as const,
-            checked: t.id === appStatus.activeThemeId,
-            click: () => deps.onApplyRequest(t.id, t.displayName, appStatus.appId),
-          }))
-        : [{ label: copy.trayNoThemes, enabled: false }];
+      const applySubmenu: MenuItemConstructorOptions[] =
+        applyable.length > 0
+          ? applyable.map((t) => ({
+              label: t.displayName,
+              type: 'checkbox' as const,
+              checked: t.id === appStatus.activeThemeId,
+              click: () => deps.onApplyRequest(t.id, t.displayName, appStatus.appId),
+            }))
+          : [{ label: copy.trayNoThemes, enabled: false }];
 
       return {
         label: appStatus.displayName,
@@ -104,29 +111,41 @@ export function createTrayManager(ctx: MainContext, deps: TrayDeps): TrayManager
           {
             label: copy.trayRestoreApp(appStatus.displayName),
             enabled: Boolean(appStatus.activeThemeId),
-            click: () => void ctx.core.restore(appStatus.appId)
-              .then(() => updateTrayMenu())
-              .catch((error) => sendLog(toMessage(error))),
+            click: () =>
+              void ctx.core
+                .restore(appStatus.appId)
+                .then(() => updateTrayMenu())
+                .catch((error) => sendLog(toMessage(error))),
           },
           { label: copy.trayApplyTheme, submenu: applySubmenu },
         ],
       };
     });
 
-    ctx.tray.setContextMenu(Menu.buildFromTemplate([
-      { label: copy.trayOpen, click: () => { ctx.mainWindow?.show(); ctx.mainWindow?.focus(); } },
-      { type: 'separator' },
-      ...appItems,
-      { type: 'separator' },
-      {
-        label: copy.trayRestore,
-        click: () => void ctx.core.restoreAll()
-          .then(() => updateTrayMenu())
-          .catch((error) => sendLog(toMessage(error))),
-      },
-      { type: 'separator' },
-      { label: copy.trayQuit, click: () => deps.onQuit() },
-    ]));
+    ctx.tray.setContextMenu(
+      Menu.buildFromTemplate([
+        {
+          label: copy.trayOpen,
+          click: () => {
+            ctx.mainWindow?.show();
+            ctx.mainWindow?.focus();
+          },
+        },
+        { type: 'separator' },
+        ...appItems,
+        { type: 'separator' },
+        {
+          label: copy.trayRestore,
+          click: () =>
+            void ctx.core
+              .restoreAll()
+              .then(() => updateTrayMenu())
+              .catch((error) => sendLog(toMessage(error))),
+        },
+        { type: 'separator' },
+        { label: copy.trayQuit, click: () => deps.onQuit() },
+      ]),
+    );
   }
 
   function createTray(): void {

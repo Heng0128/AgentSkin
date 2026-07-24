@@ -4,47 +4,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { ApplicationAdapter } from '../adapters/base';
 import { requireAdapter } from '../adapters/registry';
-import { detectInstallation } from './install-detection';
-import { connectCdp, type CdpSession } from './cdp-client';
+import {
+  ERROR_CODES,
+  type ResolvedThemeTarget,
+  type ThemeBundle,
+} from '../legacy/agentskin-core-runtime';
 import { isPort, resolveLivePort } from '../shared/cdp-discovery';
 import { toMessage } from '../shared/errors';
-import { writeJsonAtomic, appendLogLine } from './fs-utils';
-import { resolveSchemeMode, type SchemeMode, type SchemeSnapshot } from './agent-scheme';
-import { pickPageTarget } from './cdp-targets';
-import {
-  resolveEngineDirDefault,
-  tryEngineInjection as tryEngineInjectionImpl,
-  type EngineInjectionDeps,
-} from './palette-builder';
-import {
-  type CdpReadyResult as CdpReadyResultT,
-  type DiscoveryDeps,
-  ensureCdpReady as ensureCdpReadyImpl,
-  inferRestartReason as inferRestartReasonImpl,
-  probeAppStatus as probeAppStatusImpl,
-  reconcileZombiePorts as reconcileZombiePortsImpl,
-  resolveLivePort as resolveLivePortImpl,
-} from './app-discovery';
-import {
-  restoreOriginalScheme as restoreOriginalSchemeImpl,
-  syncSchemeWithStability as syncSchemeWithStabilityImpl,
-  type SchemeSyncDeps,
-} from './scheme-sync';
-import {
-  applyAgentWallpaperNow as applyAgentWallpaperNowImpl,
-  applyWallpaperToAgent as applyWallpaperToAgentImpl,
-  injectAgentWallpaperFromApply as injectAgentWallpaperFromApplyImpl,
-  removeAgentVideoWallpaper as removeAgentVideoWallpaperImpl,
-  removeWallpaperFromAgent as removeWallpaperFromAgentImpl,
-  type WallpaperInjectorDeps,
-} from './wallpaper-injector';
-import {
-  hardeningPass as hardeningPassImpl,
-  hardeningRemove as hardeningRemoveImpl,
-  injectSecondaryTargets as injectSecondaryTargetsImpl,
-  removeSecondaryTargets as removeSecondaryTargetsImpl,
-  type CdpFanoutDeps,
-} from './cdp-fanout';
 import { getMainMessages } from '../shared/i18n';
 import {
   AGENT_IDS,
@@ -57,13 +23,53 @@ import {
   type Platform,
   type SystemStatus,
 } from '../shared/types';
-import { toInstalledTheme, inferModeFromColors, type ThemeEntry } from './theme-library';
+import { resolveSchemeMode, type SchemeMode, type SchemeSnapshot } from './agent-scheme';
 import {
-  ERROR_CODES,
-  type ResolvedThemeTarget,
-  type ThemeBundle,
-} from '../legacy/agentskin-core-runtime';
-import type { ThemeLibraryApi, SettingsServiceApi, WallpaperResolver, LoggerApi, StructuredLogEvent } from './services/contracts';
+  type CdpReadyResult as CdpReadyResultT,
+  type DiscoveryDeps,
+  ensureCdpReady as ensureCdpReadyImpl,
+  inferRestartReason as inferRestartReasonImpl,
+  probeAppStatus as probeAppStatusImpl,
+  reconcileZombiePorts as reconcileZombiePortsImpl,
+  resolveLivePort as resolveLivePortImpl,
+} from './app-discovery';
+import { type CdpSession, connectCdp } from './cdp-client';
+import {
+  type CdpFanoutDeps,
+  hardeningPass as hardeningPassImpl,
+  hardeningRemove as hardeningRemoveImpl,
+  injectSecondaryTargets as injectSecondaryTargetsImpl,
+  removeSecondaryTargets as removeSecondaryTargetsImpl,
+} from './cdp-fanout';
+import { pickPageTarget } from './cdp-targets';
+import { appendLogLine, writeJsonAtomic } from './fs-utils';
+import { detectInstallation } from './install-detection';
+import {
+  type EngineInjectionDeps,
+  resolveEngineDirDefault,
+  tryEngineInjection as tryEngineInjectionImpl,
+} from './palette-builder';
+import {
+  restoreOriginalScheme as restoreOriginalSchemeImpl,
+  type SchemeSyncDeps,
+  syncSchemeWithStability as syncSchemeWithStabilityImpl,
+} from './scheme-sync';
+import type {
+  LoggerApi,
+  SettingsServiceApi,
+  StructuredLogEvent,
+  ThemeLibraryApi,
+  WallpaperResolver,
+} from './services/contracts';
+import { inferModeFromColors, type ThemeEntry, toInstalledTheme } from './theme-library';
+import {
+  applyAgentWallpaperNow as applyAgentWallpaperNowImpl,
+  applyWallpaperToAgent as applyWallpaperToAgentImpl,
+  injectAgentWallpaperFromApply as injectAgentWallpaperFromApplyImpl,
+  removeAgentVideoWallpaper as removeAgentVideoWallpaperImpl,
+  removeWallpaperFromAgent as removeWallpaperFromAgentImpl,
+  type WallpaperInjectorDeps,
+} from './wallpaper-injector';
 
 /**
  * Canonical product display names for each AgentId, derived from AGENT_META
@@ -72,23 +78,29 @@ import type { ThemeLibraryApi, SettingsServiceApi, WallpaperResolver, LoggerApi,
  */
 const PRODUCT_DISPLAY_NAMES: Readonly<Record<AgentId, string>> = Object.freeze(
   Object.fromEntries(
-    (Object.entries(AGENT_META) as [AgentId, { displayName: string }][]).map(
-      ([id, meta]) => [id, meta.displayName],
-    ),
+    (Object.entries(AGENT_META) as [AgentId, { displayName: string }][]).map(([id, meta]) => [
+      id,
+      meta.displayName,
+    ]),
   ) as Record<AgentId, string>,
 );
 
 interface PersistedState {
   version: 2;
-  apps: Partial<Record<AgentId, {
-    activeThemeId: string | null;
-    port: number | null;
-    /**
-     * The agent's light/dark scheme state captured before AgentSkin first
-     * switched it to match a theme. Restored when the theme is removed.
-     */
-    schemeSnapshot?: SchemeSnapshot | null;
-  }>>;
+  apps: Partial<
+    Record<
+      AgentId,
+      {
+        activeThemeId: string | null;
+        port: number | null;
+        /**
+         * The agent's light/dark scheme state captured before AgentSkin first
+         * switched it to match a theme. Restored when the theme is removed.
+         */
+        schemeSnapshot?: SchemeSnapshot | null;
+      }
+    >
+  >;
 }
 
 /**
@@ -242,8 +254,15 @@ export class AgentEngineService {
     const wp = installed.wallpaper;
     if (!wp) return { id: null };
     const themeId = installed.id;
-    if (wp.workshopId) return { id: wp.workshopId, speed: wp.speed, loop: wp.loop, scrimOpacity: wp.scrimOpacity };
-    if (wp.video) return { id: `theme:${themeId}`, speed: wp.speed, loop: wp.loop, scrimOpacity: wp.scrimOpacity };
+    if (wp.workshopId)
+      return { id: wp.workshopId, speed: wp.speed, loop: wp.loop, scrimOpacity: wp.scrimOpacity };
+    if (wp.video)
+      return {
+        id: `theme:${themeId}`,
+        speed: wp.speed,
+        loop: wp.loop,
+        scrimOpacity: wp.scrimOpacity,
+      };
     return { id: null };
   }
 
@@ -452,7 +471,9 @@ export class AgentEngineService {
     let dirty = false;
     for (const [appId, appState] of Object.entries(this.state.apps)) {
       if (appState?.activeThemeId && !availableIds.has(appState.activeThemeId)) {
-        this.log(`[state] ${appId}: dropping reference to removed theme "${appState.activeThemeId}"`);
+        this.log(
+          `[state] ${appId}: dropping reference to removed theme "${appState.activeThemeId}"`,
+        );
         appState.activeThemeId = null;
         dirty = true;
       }
@@ -485,9 +506,7 @@ export class AgentEngineService {
    * number that may point at a zombie socket.
    */
   portFor(appId: AgentId): number | null {
-    return this.settings.overridesFor(appId).port
-      ?? this.state.apps[appId]?.port
-      ?? null;
+    return this.settings.overridesFor(appId).port ?? this.state.apps[appId]?.port ?? null;
   }
 
   /**
@@ -531,10 +550,7 @@ export class AgentEngineService {
    * Implementation lives in {@link ensureCdpReadyImpl} (app-discovery.ts);
    * this method just threads the orchestrator's deps slice through.
    */
-  private async ensureCdpReady(
-    appId: AgentId,
-    timeoutMs = 30000,
-  ): Promise<CdpReadyResult> {
+  private async ensureCdpReady(appId: AgentId, timeoutMs = 30000): Promise<CdpReadyResult> {
     return ensureCdpReadyImpl(appId, this.discoveryDeps(), timeoutMs);
   }
 
@@ -602,7 +618,12 @@ export class AgentEngineService {
    * (scheme-sync.ts); this method threads the orchestrator's deps slice
    * through.
    */
-  private async syncSchemeWithStability(appId: AgentId, port: number, mode: SchemeMode, epoch: number): Promise<void> {
+  private async syncSchemeWithStability(
+    appId: AgentId,
+    port: number,
+    mode: SchemeMode,
+    epoch: number,
+  ): Promise<void> {
     await syncSchemeWithStabilityImpl(appId, port, mode, epoch, this.schemeSyncDeps());
   }
 
@@ -761,7 +782,11 @@ export class AgentEngineService {
    * (wallpaper-injector.ts); this method threads the orchestrator's deps
    * slice through.
    */
-  private async removeAgentVideoWallpaper(appId: AgentId, port: number, epoch: number): Promise<void> {
+  private async removeAgentVideoWallpaper(
+    appId: AgentId,
+    port: number,
+    epoch: number,
+  ): Promise<void> {
     await removeAgentVideoWallpaperImpl(appId, port, epoch, this.wallpaperDeps());
   }
 
@@ -831,10 +856,14 @@ export class AgentEngineService {
     // ensureCdpReady gave us a precise cause — map it directly.
     if (cdpFailureReason) {
       switch (cdpFailureReason) {
-        case 'not-installed':   return 'not-installed';
-        case 'singleton-lock':  return 'singleton-lock';
-        case 'spawn-error':     return 'spawn-failed';
-        case 'timeout':         return 'cdp-timeout';
+        case 'not-installed':
+          return 'not-installed';
+        case 'singleton-lock':
+          return 'singleton-lock';
+        case 'spawn-error':
+          return 'spawn-failed';
+        case 'timeout':
+          return 'cdp-timeout';
       }
     }
     try {
@@ -858,7 +887,9 @@ export class AgentEngineService {
 
       let running = false;
       try {
-        running = (await adapter.findRunningPids(process.platform, discovered?.executable ?? null)).length > 0;
+        running =
+          (await adapter.findRunningPids(process.platform, discovered?.executable ?? null)).length >
+          0;
       } catch {
         running = false;
       }
@@ -901,7 +932,9 @@ export class AgentEngineService {
         port = await this.resolveLivePort(appId);
       }
       if (port == null) {
-        this.log(`[apply] ${appId}: no live CDP port${request.restartExisting ? ` (restart failed: ${cdpFailureReason})` : ' (not running with --remote-debugging-port)'}`);
+        this.log(
+          `[apply] ${appId}: no live CDP port${request.restartExisting ? ` (restart failed: ${cdpFailureReason})` : ' (not running with --remote-debugging-port)'}`,
+        );
         // Infer a structured reason so the UI can show specific guidance
         // (install the app / start it manually / singleton lock / etc.)
         // instead of a single generic "restart needed" message. When

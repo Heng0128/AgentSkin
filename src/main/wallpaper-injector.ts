@@ -33,11 +33,13 @@
  *   IPC (UI)                → applyAgentWallpaperNow / applyWallpaperToAgent / removeWallpaperFromAgent
  */
 
-import path from 'node:path';
 import { statSync } from 'node:fs';
-
-import { connectCdp, type CdpSession } from './cdp-client';
-import { pickPageTarget, type CdpTarget } from './cdp-targets';
+import path from 'node:path';
+import { toMessage } from '../shared/errors';
+import type { AgentId, WallpaperAgentSetting } from '../shared/types';
+import type { CdpReadyResult } from './app-discovery';
+import { type CdpSession, connectCdp } from './cdp-client';
+import { type CdpTarget, pickPageTarget } from './cdp-targets';
 import {
   injectImageWallpaper,
   injectVideoWallpaper,
@@ -45,27 +47,24 @@ import {
   removeAllWallpapers,
   videoMimeForPath,
 } from './cdp-wallpaper-inject';
-import { wallpaperMediaServer } from './wallpaper-server';
-import { toMessage } from '../shared/errors';
 import type { LogCallback } from './services/contracts';
-import type { CdpReadyResult } from './app-discovery';
 import type { ThemeEntry } from './theme-library';
-import type { AgentId, WallpaperAgentSetting } from '../shared/types';
+import { wallpaperMediaServer } from './wallpaper-server';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 /** Files larger than this are streamed from the local HTTP server instead of
-  *  being base64-assembled in the agent renderer (keeps the agent's JS heap
-  *  small for big video wallpapers). */
+ *  being base64-assembled in the agent renderer (keeps the agent's JS heap
+ *  small for big video wallpapers). */
 const VIDEO_HTTP_THRESHOLD = 50 * 1024 * 1024;
 
 /** When the streamed HTTP mount fails to load (e.g. a media-src CSP blocks
-  *  loopback URLs), we fall back to the in-page base64 blob path. Blob keeps
-  *  the full file in the agent's JS heap (~1.3x), so we only allow the
-  *  fallback for files below this cap — above it, a CSP-blocked large video
-  *  gets a clear error instead of risking an OOM in the agent renderer. */
+ *  loopback URLs), we fall back to the in-page base64 blob path. Blob keeps
+ *  the full file in the agent's JS heap (~1.3x), so we only allow the
+ *  fallback for files below this cap — above it, a CSP-blocked large video
+ *  gets a clear error instead of risking an OOM in the agent renderer. */
 const VIDEO_BLOB_FALLBACK_CAP = 120 * 1024 * 1024;
 
 /** Resolve the main page target using the agent's adapter matchTarget filter
@@ -145,10 +144,7 @@ export type ResolveLivePort = (appId: AgentId) => Promise<number | null>;
 export type FindAgentTargets = (appId: AgentId, port: number) => Promise<CdpTarget[]>;
 
 /** Persist a per-agent wallpaper preference. */
-export type SetAgentWallpaper = (
-  appId: AgentId,
-  setting: WallpaperAgentSetting,
-) => Promise<void>;
+export type SetAgentWallpaper = (appId: AgentId, setting: WallpaperAgentSetting) => Promise<void>;
 
 /** Best-effort log line sink. Re-exported from `services/contracts.ts` for
  *  backward compatibility — new consumers should import `LogCallback` directly
@@ -253,7 +249,9 @@ export async function injectAgentWallpaper(
         if (!ok) {
           // Streamed mount failed to load — likely a media-src CSP block.
           if (size != null && size <= VIDEO_BLOB_FALLBACK_CAP) {
-            deps.log(`[wallpaper] ${appId}: http stream load failed (possible media-src CSP); retrying via base64 blob`);
+            deps.log(
+              `[wallpaper] ${appId}: http stream load failed (possible media-src CSP); retrying via base64 blob`,
+            );
             ok = await injectVideoWallpaperByBase64(session, {
               videoPath: info.path,
               speed: options.speed,
@@ -261,7 +259,9 @@ export async function injectAgentWallpaper(
               scrimOpacity: options.scrimOpacity,
             });
           } else {
-            deps.log(`[wallpaper] ${appId}: http stream load failed and file too large (${size ? Math.round(size / 1048576) : '?'}MB) for blob fallback`);
+            deps.log(
+              `[wallpaper] ${appId}: http stream load failed and file too large (${size ? Math.round(size / 1048576) : '?'}MB) for blob fallback`,
+            );
           }
         }
       } else {
@@ -273,7 +273,9 @@ export async function injectAgentWallpaper(
         });
       }
     }
-    deps.log(`[wallpaper] ${appId}: ${info.type} wallpaper ${ok ? 'injected' : 'failed'} (${path.basename(info.path)})`);
+    deps.log(
+      `[wallpaper] ${appId}: ${info.type} wallpaper ${ok ? 'injected' : 'failed'} (${path.basename(info.path)})`,
+    );
     return ok;
   } catch (error) {
     deps.log(`[wallpaper] ${appId}: injection failed: ${toMessage(error)}`);
@@ -320,11 +322,18 @@ export async function injectAgentWallpaperFromApply(
     }
     return;
   }
-  await injectAgentWallpaper(appId, port, resolved.id, {
-    speed: resolved.speed,
-    loop: resolved.loop,
-    scrimOpacity: resolved.scrimOpacity,
-  }, epoch, deps);
+  await injectAgentWallpaper(
+    appId,
+    port,
+    resolved.id,
+    {
+      speed: resolved.speed,
+      loop: resolved.loop,
+      scrimOpacity: resolved.scrimOpacity,
+    },
+    epoch,
+    deps,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -380,7 +389,10 @@ export async function applyAgentWallpaperNow(
   const resolved = await deps.resolveAgentWallpaperId(appId);
   const cdpResult = await deps.ensureCdpReady(appId, 30000);
   if (!cdpResult.port) {
-    return { ok: false, reason: cdpResult.reason === 'not-installed' ? 'not-installed' : 'agent-not-running' };
+    return {
+      ok: false,
+      reason: cdpResult.reason === 'not-installed' ? 'not-installed' : 'agent-not-running',
+    };
   }
   const port = cdpResult.port;
 
@@ -407,11 +419,18 @@ export async function applyAgentWallpaperNow(
   // Inject the wallpaper. Use a fresh epoch so this doesn't get cancelled
   // by a stale apply flow (the caller is the user, acting right now).
   const epoch = deps.bumpEpoch(appId);
-  const ok = await injectAgentWallpaper(appId, port, resolved.id, {
-    speed: resolved.speed,
-    loop: resolved.loop,
-    scrimOpacity: resolved.scrimOpacity,
-  }, epoch, deps);
+  const ok = await injectAgentWallpaper(
+    appId,
+    port,
+    resolved.id,
+    {
+      speed: resolved.speed,
+      loop: resolved.loop,
+      scrimOpacity: resolved.scrimOpacity,
+    },
+    epoch,
+    deps,
+  );
   return ok ? { ok: true } : { ok: false, reason: 'injection-failed' };
 }
 
@@ -441,7 +460,10 @@ export async function applyWallpaperToAgent(
   // Ensure CDP is available (discovers existing port or restarts agent with CDP)
   const cdpResult = await deps.ensureCdpReady(appId, 30000);
   if (!cdpResult.port) {
-    return { ok: false, reason: cdpResult.reason === 'not-installed' ? 'agent-not-installed' : 'agent-not-running' };
+    return {
+      ok: false,
+      reason: cdpResult.reason === 'not-installed' ? 'agent-not-installed' : 'agent-not-running',
+    };
   }
 
   // Inject with a fresh epoch

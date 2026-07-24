@@ -39,7 +39,9 @@ export interface AgentSkinClient extends AgentSkinApi {}
  */
 export function getAgentSkinClient(): AgentSkinClient {
   if (!('agentSkin' in window) || !window.agentSkin) {
-    throw new Error('window.agentSkin is not exposed — preload.ts failed to register the contextBridge');
+    throw new Error(
+      'window.agentSkin is not exposed — preload.ts failed to register the contextBridge',
+    );
   }
   return window.agentSkin as AgentSkinClient;
 }

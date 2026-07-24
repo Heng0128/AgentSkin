@@ -14,9 +14,14 @@
  */
 
 import { dialog, ipcMain } from 'electron';
-import { settingsDto, type MainContext } from '../main-context';
 import { IpcChannel } from '../../shared/ipc-channels';
-import { isAgentId, type WallpaperAgentSetting, type WallpaperInfo, type WallpaperSettings } from '../../shared/types';
+import {
+  isAgentId,
+  type WallpaperAgentSetting,
+  type WallpaperInfo,
+  type WallpaperSettings,
+} from '../../shared/types';
+import { type MainContext, settingsDto } from '../main-context';
 
 export function registerWallpaperIpc(deps: MainContext): void {
   ipcMain.handle(IpcChannel.WALLPAPER_LIST, () => deps.wallpapers.list());
@@ -34,7 +39,22 @@ export function registerWallpaperIpc(deps: MainContext): void {
     const result = await dialog.showOpenDialog({
       title: 'Import Wallpaper',
       filters: [
-        { name: 'Images & Videos', extensions: ['mp4', 'webm', 'mkv', 'mov', 'avi', 'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif'] },
+        {
+          name: 'Images & Videos',
+          extensions: [
+            'mp4',
+            'webm',
+            'mkv',
+            'mov',
+            'avi',
+            'jpg',
+            'jpeg',
+            'png',
+            'bmp',
+            'webp',
+            'gif',
+          ],
+        },
         { name: 'Video', extensions: ['mp4', 'webm', 'mkv', 'mov', 'avi'] },
         { name: 'Image', extensions: ['jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif'] },
       ],
@@ -45,32 +65,42 @@ export function registerWallpaperIpc(deps: MainContext): void {
     return deps.wallpapers.list();
   });
 
-  ipcMain.handle(IpcChannel.WALLPAPER_DELETE, async (_event, id: unknown): Promise<WallpaperInfo[]> => {
-    if (typeof id !== 'string' || !id) return deps.wallpapers.list();
-    await deps.wallpapers.deleteWallpaper(id);
-    return deps.wallpapers.list();
-  });
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_DELETE,
+    async (_event, id: unknown): Promise<WallpaperInfo[]> => {
+      if (typeof id !== 'string' || !id) return deps.wallpapers.list();
+      await deps.wallpapers.deleteWallpaper(id);
+      return deps.wallpapers.list();
+    },
+  );
 
-  ipcMain.handle(IpcChannel.WALLPAPER_SET_AGENT, async (_event, appId: unknown, setting: unknown) => {
-    if (!isAgentId(appId)) throw new Error('INVALID_AGENT_ID');
-    const s = (setting ?? {}) as Partial<WallpaperAgentSetting>;
-    await deps.settings.setAgentWallpaper(appId, {
-      enabled: s.enabled === true,
-      id: typeof s.id === 'string' && s.id ? s.id : null,
-    });
-    return settingsDto(deps);
-  });
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_SET_AGENT,
+    async (_event, appId: unknown, setting: unknown) => {
+      if (!isAgentId(appId)) throw new Error('INVALID_AGENT_ID');
+      const s = (setting ?? {}) as Partial<WallpaperAgentSetting>;
+      await deps.settings.setAgentWallpaper(appId, {
+        enabled: s.enabled === true,
+        id: typeof s.id === 'string' && s.id ? s.id : null,
+      });
+      return settingsDto(deps);
+    },
+  );
 
   ipcMain.handle(IpcChannel.WALLPAPER_APPLY_AGENT, async (_event, appId: unknown) => {
     if (!isAgentId(appId)) return { ok: false, reason: 'invalid-agent-id' };
     return deps.core.applyAgentWallpaperNow(appId);
   });
 
-  ipcMain.handle(IpcChannel.WALLPAPER_APPLY_TO_AGENT, async (_event, wallpaperId: unknown, appId: unknown) => {
-    if (typeof wallpaperId !== 'string' || !wallpaperId) return { ok: false, reason: 'invalid-wallpaper-id' };
-    if (!isAgentId(appId)) return { ok: false, reason: 'invalid-agent-id' };
-    return deps.core.applyWallpaperToAgent(wallpaperId, appId);
-  });
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_APPLY_TO_AGENT,
+    async (_event, wallpaperId: unknown, appId: unknown) => {
+      if (typeof wallpaperId !== 'string' || !wallpaperId)
+        return { ok: false, reason: 'invalid-wallpaper-id' };
+      if (!isAgentId(appId)) return { ok: false, reason: 'invalid-agent-id' };
+      return deps.core.applyWallpaperToAgent(wallpaperId, appId);
+    },
+  );
 
   ipcMain.handle(IpcChannel.WALLPAPER_REMOVE_FROM_AGENT, async (_event, appId: unknown) => {
     if (!isAgentId(appId)) return { ok: false };

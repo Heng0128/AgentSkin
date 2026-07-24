@@ -10,11 +10,7 @@ import { execFile } from 'node:child_process';
  * Used by CDP port discovery (src/shared/cdp-discovery.ts) and install
  * detection (src/main/install-detection.ts).
  */
-export function execFileAsync(
-  command: string,
-  args: string[],
-  timeoutMs = 8000,
-): Promise<string> {
+export function execFileAsync(command: string, args: string[], timeoutMs = 8000): Promise<string> {
   return new Promise((resolve) => {
     execFile(command, args, { windowsHide: true, timeout: timeoutMs }, (err, stdout) => {
       resolve(err ? '' : (stdout ?? '').toString());

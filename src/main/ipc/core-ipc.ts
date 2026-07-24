@@ -15,10 +15,10 @@
  */
 
 import { app, ipcMain, shell } from 'electron';
-import { handleThemeFileOpen, wrapCatalog, type MainContext } from '../main-context';
 import { getMainMessages, isAppLocale, setMainLocale } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { saveLocalePreference } from '../locale-preferences';
+import { handleThemeFileOpen, type MainContext, wrapCatalog } from '../main-context';
 
 export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise<void>): void {
   ipcMain.handle(IpcChannel.APP_BOOTSTRAP, async () => {

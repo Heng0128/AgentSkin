@@ -1,20 +1,27 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { api } from '@/api/agentSkinClient';
+import { AppMark } from '@/components/app-mark';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { HugeIcon } from '@/components/ui/huge-icon';
+import { Progress } from '@/components/ui/progress';
+import { AgentStatusDot } from '@/components/workspace/AgentStatusDot';
 import type { AppController } from '@/hooks/useAppController';
-import type { AgentId, WallpaperInfo } from '@shared/types';
-import { AGENT_IDS, AGENT_META } from '@shared/types';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
-import { AppMark } from '@/components/app-mark';
-import { AgentStatusDot } from '@/components/workspace/AgentStatusDot';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { HugeIcon } from '@/components/ui/huge-icon';
-import { Image02Icon, Video01Icon, Search01Icon, Download01Icon, CheckmarkCircle02Icon } from '@hugeicons/core-free-icons';
 import { cn } from '@/lib/utils';
-import { api } from '@/api/agentSkinClient';
+
+import {
+  CheckmarkCircle02Icon,
+  Download01Icon,
+  Image02Icon,
+  Search01Icon,
+  Video01Icon,
+} from '@hugeicons/core-free-icons';
+import type { AgentId, WallpaperInfo } from '@shared/types';
+import { AGENT_IDS, AGENT_META } from '@shared/types';
 
 type TypeFilter = 'all' | 'video' | 'image';
 
@@ -52,9 +59,16 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
   const { t, wallpaper, appStatusFor } = controller;
   const { showToast } = useNotifications(t);
   const {
-    wallpapers, loading, enabled, selectedId,
-    agentWallpapers, setWallpaper, importWallpaper, deleteWallpaper,
-    setAndApplyAgentWallpaper, setAgentWallpaper,
+    wallpapers,
+    loading,
+    enabled,
+    selectedId,
+    agentWallpapers,
+    setWallpaper,
+    importWallpaper,
+    deleteWallpaper,
+    setAndApplyAgentWallpaper,
+    setAgentWallpaper,
   } = wallpaper;
 
   const [installed, setInstalled] = useState<boolean | null>(null);
@@ -78,7 +92,9 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
         if (!cancelled) setInstalled(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Shared relative-time hook drives the detail-panel hint's "updated Ns ago"
@@ -94,15 +110,18 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
     if (filter !== 'all') list = list.filter((w) => w.type === filter);
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      list = list.filter((w) =>
-        w.title.toLowerCase().includes(q) ||
-        w.tags.some((tag) => tag.toLowerCase().includes(q)),
+      list = list.filter(
+        (w) =>
+          w.title.toLowerCase().includes(q) || w.tags.some((tag) => tag.toLowerCase().includes(q)),
       );
     }
     return list;
   }, [wallpapers, filter, search]);
 
-  const videoCount = useMemo(() => wallpapers.filter((w) => w.type === 'video').length, [wallpapers]);
+  const videoCount = useMemo(
+    () => wallpapers.filter((w) => w.type === 'video').length,
+    [wallpapers],
+  );
   const imageCount = wallpapers.length - videoCount;
 
   // Count running agents for the status hint in the detail panel.
@@ -116,91 +135,108 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
     [appStatusFor],
   );
 
-  const handleApply = useCallback(async (wallpaperId: string, agentId: AgentId) => {
-    setApplyingTo(agentId);
-    setInjectResults((prev) => ({ ...prev, [agentId]: undefined }));
-    const name = AGENT_META[agentId].displayName;
-    showToast(t.weInjecting(name));
-    try {
-      const result = await setAndApplyAgentWallpaper(agentId, true, wallpaperId);
-      if (result.ok) {
-        showToast(t.weInjected(name));
-        setInjectResults((prev) => ({ ...prev, [agentId]: 'ok' }));
-      } else {
-        showToast(result.reason === 'agent-not-running'
-          ? t.weAgentNotRunning(name)
-          : t.weApplyFailed, 'destructive');
-        setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
-      }
-    } catch {
-      showToast(t.weApplyFailed, 'destructive');
-      setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
-    } finally {
-      setApplyingTo(null);
-    }
-  }, [setAndApplyAgentWallpaper, showToast, t]);
-
-  const handleRemove = useCallback(async (agentId: AgentId) => {
-    const name = AGENT_META[agentId].displayName;
-    setApplyingTo(agentId);
-    setInjectResults((prev) => ({ ...prev, [agentId]: undefined }));
-    try {
-      await setAgentWallpaper(agentId, false, null);
-      await api.removeWallpaperFromAgent(agentId);
-      showToast(t.weRemoved(name));
-    } catch { /* best-effort */ }
-    finally {
-      setApplyingTo(null);
-    }
-  }, [setAgentWallpaper, showToast, t]);
-
-  const handleDelete = useCallback(async (id: string) => {
-    setDeletingId(id);
-    try {
-      await deleteWallpaper(id);
-      if (selected?.id === id) setSelected(null);
-      showToast(t.wallpaperDeleted);
-    } catch {
-      showToast(t.wallpaperDeleteFailed, 'destructive');
-    } finally {
-      setDeletingId(null);
-    }
-  }, [deleteWallpaper, selected, showToast, t]);
-
-  /** Apply the selected wallpaper to every running agent sequentially. */
-  const handleApplyAll = useCallback(async (wallpaperId: string) => {
-    const targets = AGENT_IDS.filter((id) => appStatusFor(id)?.running);
-    if (targets.length === 0) {
-      showToast(t.weNoRunningAgents, 'destructive');
-      return;
-    }
-    setBatchProgress({ done: 0, total: targets.length });
-    setInjectResults((prev) => {
-      const cleared = { ...prev };
-      for (const id of targets) cleared[id] = undefined;
-      return cleared;
-    });
-    let ok = 0;
-    for (let i = 0; i < targets.length; i++) {
-      const agentId = targets[i];
+  const handleApply = useCallback(
+    async (wallpaperId: string, agentId: AgentId) => {
       setApplyingTo(agentId);
+      setInjectResults((prev) => ({ ...prev, [agentId]: undefined }));
+      const name = AGENT_META[agentId].displayName;
+      showToast(t.weInjecting(name));
       try {
         const result = await setAndApplyAgentWallpaper(agentId, true, wallpaperId);
         if (result.ok) {
-          ok++;
+          showToast(t.weInjected(name));
           setInjectResults((prev) => ({ ...prev, [agentId]: 'ok' }));
         } else {
+          showToast(
+            result.reason === 'agent-not-running' ? t.weAgentNotRunning(name) : t.weApplyFailed,
+            'destructive',
+          );
           setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
         }
       } catch {
+        showToast(t.weApplyFailed, 'destructive');
         setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
+      } finally {
+        setApplyingTo(null);
       }
-      setBatchProgress({ done: i + 1, total: targets.length });
-    }
-    setApplyingTo(null);
-    setBatchProgress(null);
-    showToast(t.weApplyAllDone(ok, targets.length), ok === targets.length ? 'default' : 'destructive');
-  }, [appStatusFor, setAndApplyAgentWallpaper, showToast, t]);
+    },
+    [setAndApplyAgentWallpaper, showToast, t],
+  );
+
+  const handleRemove = useCallback(
+    async (agentId: AgentId) => {
+      const name = AGENT_META[agentId].displayName;
+      setApplyingTo(agentId);
+      setInjectResults((prev) => ({ ...prev, [agentId]: undefined }));
+      try {
+        await setAgentWallpaper(agentId, false, null);
+        await api.removeWallpaperFromAgent(agentId);
+        showToast(t.weRemoved(name));
+      } catch {
+        /* best-effort */
+      } finally {
+        setApplyingTo(null);
+      }
+    },
+    [setAgentWallpaper, showToast, t],
+  );
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      setDeletingId(id);
+      try {
+        await deleteWallpaper(id);
+        if (selected?.id === id) setSelected(null);
+        showToast(t.wallpaperDeleted);
+      } catch {
+        showToast(t.wallpaperDeleteFailed, 'destructive');
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [deleteWallpaper, selected, showToast, t],
+  );
+
+  /** Apply the selected wallpaper to every running agent sequentially. */
+  const handleApplyAll = useCallback(
+    async (wallpaperId: string) => {
+      const targets = AGENT_IDS.filter((id) => appStatusFor(id)?.running);
+      if (targets.length === 0) {
+        showToast(t.weNoRunningAgents, 'destructive');
+        return;
+      }
+      setBatchProgress({ done: 0, total: targets.length });
+      setInjectResults((prev) => {
+        const cleared = { ...prev };
+        for (const id of targets) cleared[id] = undefined;
+        return cleared;
+      });
+      let ok = 0;
+      for (let i = 0; i < targets.length; i++) {
+        const agentId = targets[i];
+        setApplyingTo(agentId);
+        try {
+          const result = await setAndApplyAgentWallpaper(agentId, true, wallpaperId);
+          if (result.ok) {
+            ok++;
+            setInjectResults((prev) => ({ ...prev, [agentId]: 'ok' }));
+          } else {
+            setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
+          }
+        } catch {
+          setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
+        }
+        setBatchProgress({ done: i + 1, total: targets.length });
+      }
+      setApplyingTo(null);
+      setBatchProgress(null);
+      showToast(
+        t.weApplyAllDone(ok, targets.length),
+        ok === targets.length ? 'default' : 'destructive',
+      );
+    },
+    [appStatusFor, setAndApplyAgentWallpaper, showToast, t],
+  );
 
   // --- Loading state ---
   if (loading) {
@@ -222,7 +258,9 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold tracking-[-0.01em]">{t.navWallpaperEngine}</h2>
             {wallpapers.length > 0 && (
-              <Badge variant="secondary" className="text-[10px]">{wallpapers.length}</Badge>
+              <Badge variant="secondary" className="text-[10px]">
+                {wallpapers.length}
+              </Badge>
             )}
             {wallpapers.length > 0 && (
               <span className="text-[11px] text-muted-foreground">
@@ -280,7 +318,10 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
           {/* Toolbar: search + type filter */}
           <div className="flex items-center gap-3 border-b px-6 py-3">
             <div className="relative max-w-xs flex-1">
-              <HugeIcon icon={Search01Icon} className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+              <HugeIcon
+                icon={Search01Icon}
+                className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60"
+              />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -359,7 +400,10 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     <img src={selected.previewDataUrl} alt="" className="size-full object-cover" />
                   ) : (
                     <div className="flex size-full items-center justify-center">
-                      <HugeIcon icon={selected.type === 'video' ? Video01Icon : Image02Icon} className="size-6 text-muted-foreground" />
+                      <HugeIcon
+                        icon={selected.type === 'video' ? Video01Icon : Image02Icon}
+                        className="size-6 text-muted-foreground"
+                      />
                     </div>
                   )}
                 </div>
@@ -393,7 +437,9 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                           : 'bg-muted text-muted-foreground hover:bg-accent hover:text-foreground',
                       )}
                     >
-                      {enabled && selectedId === selected.id ? t.wallpaperSelected : t.wallpaperEnable}
+                      {enabled && selectedId === selected.id
+                        ? t.wallpaperSelected
+                        : t.wallpaperEnable}
                     </button>
 
                     <div className="h-4 w-px bg-border" />
@@ -427,7 +473,9 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                       return (
                         <div key={agentId} className="flex flex-col items-center gap-1">
                           <button
-                            onClick={() => isApplied ? handleRemove(agentId) : handleApply(selected.id, agentId)}
+                            onClick={() =>
+                              isApplied ? handleRemove(agentId) : handleApply(selected.id, agentId)
+                            }
                             disabled={!canInject && !isApplied}
                             title={`${AGENT_META[agentId].displayName} · ${stateLabel}${status?.port ? ` · :${status.port}` : ''}`}
                             className={cn(
@@ -449,7 +497,10 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                             {isApplying ? (
                               <div className="size-3.5 animate-spin rounded-full border-[1.5px] border-muted-foreground/30 border-t-foreground" />
                             ) : isApplied ? (
-                              <HugeIcon icon={CheckmarkCircle02Icon} className="size-4.5 text-emerald-500" />
+                              <HugeIcon
+                                icon={CheckmarkCircle02Icon}
+                                className="size-4.5 text-emerald-500"
+                              />
                             ) : (
                               <AppMark appId={agentId} size={18} />
                             )}
@@ -460,36 +511,40 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                                 {isReady && !isApplied && lastResult !== 'fail' && (
                                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-cyan-400 opacity-60" />
                                 )}
-                                <span className={cn(
-                                  'relative inline-flex size-2.5 rounded-full ring-2 ring-background transition-colors duration-500',
-                                  isApplied
-                                    ? 'bg-emerald-500'
-                                    : lastResult === 'fail'
-                                      ? 'bg-red-500'
-                                      : isReady
-                                        ? 'bg-cyan-400'
-                                        : isRunning
-                                          ? 'bg-blue-400'
-                                          : isInstalled
-                                            ? 'bg-amber-400/70'
-                                            : 'bg-transparent',
-                                )} />
+                                <span
+                                  className={cn(
+                                    'relative inline-flex size-2.5 rounded-full ring-2 ring-background transition-colors duration-500',
+                                    isApplied
+                                      ? 'bg-emerald-500'
+                                      : lastResult === 'fail'
+                                        ? 'bg-red-500'
+                                        : isReady
+                                          ? 'bg-cyan-400'
+                                          : isRunning
+                                            ? 'bg-blue-400'
+                                            : isInstalled
+                                              ? 'bg-amber-400/70'
+                                              : 'bg-transparent',
+                                  )}
+                                />
                               </span>
                             )}
                           </button>
                           {/* Precise state label */}
-                          <span className={cn(
-                            'max-w-[3.5rem] truncate text-center text-[9px] leading-tight transition-colors duration-500',
-                            isApplied
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : lastResult === 'fail'
-                                ? 'text-red-500'
-                                : isReady
-                                  ? 'text-cyan-600 dark:text-cyan-400'
-                                  : isRunning
-                                    ? 'text-blue-500 dark:text-blue-400'
-                                    : 'text-muted-foreground/60',
-                          )}>
+                          <span
+                            className={cn(
+                              'max-w-[3.5rem] truncate text-center text-[9px] leading-tight transition-colors duration-500',
+                              isApplied
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : lastResult === 'fail'
+                                  ? 'text-red-500'
+                                  : isReady
+                                    ? 'text-cyan-600 dark:text-cyan-400'
+                                    : isRunning
+                                      ? 'text-blue-500 dark:text-blue-400'
+                                      : 'text-muted-foreground/60',
+                            )}
+                          >
                             {stateLabel}
                           </span>
                         </div>
@@ -501,9 +556,11 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                       type="button"
                       onClick={() => void handleApplyAll(selected.id)}
                       disabled={!!batchProgress || !!applyingTo || runningAgentCount === 0}
-                      title={runningAgentCount > 0
-                        ? t.weRunningAgents(runningAgentCount)
-                        : t.weNoRunningAgents}
+                      title={
+                        runningAgentCount > 0
+                          ? t.weRunningAgents(runningAgentCount)
+                          : t.weNoRunningAgents
+                      }
                       className={cn(
                         'flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-colors',
                         batchProgress || applyingTo
@@ -524,9 +581,11 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     <AgentStatusDot
                       size="xs"
                       variant={
-                        controller.isRefreshing ? 'refreshing'
-                        : runningAgentCount > 0 ? 'active'
-                        : 'offline'
+                        controller.isRefreshing
+                          ? 'refreshing'
+                          : runningAgentCount > 0
+                            ? 'active'
+                            : 'offline'
                       }
                     />
                     {runningAgentCount > 0
@@ -543,7 +602,12 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                 </div>
 
                 {/* Close */}
-                <Button variant="ghost" size="sm" onClick={() => setSelected(null)} className="shrink-0 text-xs">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelected(null)}
+                  className="shrink-0 text-xs"
+                >
                   {t.weClose}
                 </Button>
               </div>
@@ -611,13 +675,18 @@ function WallpaperCard({
             </div>
           )}
           {/* Type badge */}
-          <span className={cn(
-            'absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium backdrop-blur-sm',
-            wallpaper.type === 'video'
-              ? 'bg-violet-500/80 text-white'
-              : 'bg-sky-500/80 text-white',
-          )}>
-            <HugeIcon icon={wallpaper.type === 'video' ? Video01Icon : Image02Icon} className="size-2.5" />
+          <span
+            className={cn(
+              'absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium backdrop-blur-sm',
+              wallpaper.type === 'video'
+                ? 'bg-violet-500/80 text-white'
+                : 'bg-sky-500/80 text-white',
+            )}
+          >
+            <HugeIcon
+              icon={wallpaper.type === 'video' ? Video01Icon : Image02Icon}
+              className="size-2.5"
+            />
             {wallpaper.type === 'video' ? '动态' : '静态'}
           </span>
           {/* UI background indicator */}
@@ -637,7 +706,9 @@ function WallpaperCard({
         {/* Title */}
         <div className="px-3 py-2">
           <p className="truncate text-xs font-medium">{wallpaper.title}</p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">{formatSize(wallpaper.sizeBytes)}</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">
+            {formatSize(wallpaper.sizeBytes)}
+          </p>
         </div>
       </button>
 
@@ -648,7 +719,11 @@ function WallpaperCard({
             <div className="flex items-center gap-1 rounded-lg bg-background/95 px-1 py-0.5 shadow-md backdrop-blur">
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); onDelete(); setConfirming(false); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                  setConfirming(false);
+                }}
                 disabled={isDeleting}
                 className="rounded px-1.5 py-0.5 text-[10px] font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50"
               >
@@ -656,7 +731,10 @@ function WallpaperCard({
               </button>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setConfirming(false); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirming(false);
+                }}
                 className="rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-muted"
               >
                 ✕
@@ -665,7 +743,10 @@ function WallpaperCard({
           ) : (
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); setConfirming(true); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirming(true);
+              }}
               className="rounded-lg bg-background/95 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-md backdrop-blur transition-colors hover:bg-red-500/10 hover:text-red-600"
             >
               {deleteLabel}
