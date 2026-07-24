@@ -1,0 +1,26 @@
+/* palette.css — naruto-itachi (火影 · 鼬) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0a0e1c;
+  --agentskin-surface: #202434;
+  --agentskin-surface-elevated: #2a2e40;
+  --agentskin-text: #e8d5d5;
+  --agentskin-muted: #7a7286;
+  --agentskin-accent: #c41e2a;
+  --agentskin-secondary: #d4a0b4;
+  --agentskin-border: rgba(196, 30, 42, 0.18);
+  --agentskin-code-bg: #0a0e1c;
+  --agentskin-code-fg: #e8d5d5;
+  --agentskin-focus-ring: rgba(196, 30, 42, 0.376);
+  --agentskin-selection: color-mix(in srgb, #c41e2a 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 196, 30, 42;
+  --agentskin-secondary-raw: 212, 160, 180;
+  --agentskin-text-raw: 232, 213, 213;
+  --agentskin-muted-raw: 122, 114, 134;
+  --agentskin-surface-raw: 32, 36, 52;
+  --agentskin-surface-elevated-raw: 42, 46, 64;
+  --agentskin-bg-raw: 10, 14, 28;
+  --agentskin-border-raw: 0, 0, 0;
+}

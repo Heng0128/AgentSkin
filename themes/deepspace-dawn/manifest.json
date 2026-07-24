@@ -1,0 +1,174 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "deepspace-dawn",
+  "name": "Deepspace Dawn",
+  "displayName": "恋与深空 · 晨曦",
+  "version": "2.2.0",
+  "description": "晨曦微光下的温柔粉紫，恋与深空的浪漫氛围，工作台沐浴在柔和的暖光里。",
+  "author": {
+    "name": "cdredfox",
+    "url": "https://github.com/cdredfox/workbuddy-skin-studio"
+  },
+  "mode": "light",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role='textbox'][contenteditable='true']",
+              ".wb-home-composer [contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css",
+      "verification": {
+        "required": [
+          {
+            "name": "doubao-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#8f7fe8",
+    "secondary": "#f097c8",
+    "background": "#f6f2fb",
+    "foreground": "#4a4668",
+    "muted": "#8f8ba3",
+    "surface": "#ffffff",
+    "surfaceElevated": "#ffffff",
+    "border": "#8172d138",
+    "codeBackground": "#ebe7f0",
+    "codeForeground": "#413e5c",
+    "inputBackground": "#ffffff",
+    "buttonBackground": "#8f7fe818",
+    "buttonForeground": "#7a6cc5",
+    "focusRing": "#8f7fe860"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "deepspace",
+  "tags": [
+    "light",
+    "anime",
+    "romance",
+    "soft"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao"
+  ],
+  "hero": "assets/hero.webp",
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

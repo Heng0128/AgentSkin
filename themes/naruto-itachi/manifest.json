@@ -1,0 +1,175 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "naruto-itachi",
+  "name": "Naruto Itachi",
+  "displayName": "火影 · 鼬",
+  "version": "2.2.0",
+  "description": "月下的红云披风，晓之暗影在樱花间停驻。",
+  "author": {
+    "name": "cdredfox",
+    "url": "https://github.com/cdredfox/workbuddy-skin-studio"
+  },
+  "mode": "dark",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role='textbox'][contenteditable='true']",
+              ".wb-home-composer [contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css",
+      "verification": {
+        "required": [
+          {
+            "name": "doubao-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#c41e2a",
+    "secondary": "#d4a0b4",
+    "background": "#0a0e1c",
+    "foreground": "#e8d5d5",
+    "muted": "#7a7286",
+    "surface": "#202434",
+    "surfaceElevated": "#2a2e40",
+    "border": "rgba(196, 30, 42, 0.18)",
+    "codeBackground": "#06080f",
+    "codeForeground": "#d8c5d0",
+    "inputBackground": "#21242f",
+    "buttonBackground": "rgba(196, 30, 42, 0.094)",
+    "buttonForeground": "#c41e2a",
+    "focusRing": "rgba(196, 30, 42, 0.376)"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "naruto",
+  "tags": [
+    "dark",
+    "anime",
+    "ninja",
+    "akatsuki",
+    "moon"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao"
+  ],
+  "hero": "assets/hero.webp",
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

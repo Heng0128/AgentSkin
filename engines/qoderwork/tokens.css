@@ -1,0 +1,151 @@
+/* ============================================================
+   ENGINE: qoderwork — Layer 0: Token Override
+   ------------------------------------------------------------
+   Pure --color-* design-token overrides for QoderWork CN.
+   Selector: html.codedrobe-host-qoderwork:root (0,2,1)
+   beats :root[data-theme] (0,2,0).
+   ============================================================ */
+
+html.codedrobe-host-qoderwork:root {
+  color-scheme: dark !important;
+
+  /* Primary / brand */
+  --color-primary: var(--agentskin-accent) !important;
+  --color-primary-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
+  --color-primary-active: color-mix(in srgb, var(--agentskin-accent) 75%, white) !important;
+  --color-primary-bg: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --color-primary-bg-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --color-primary-border: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
+  --color-primary-border-hover: color-mix(in srgb, var(--agentskin-accent) 55%, transparent) !important;
+  --color-primary-text: var(--agentskin-text) !important;
+  --color-primary-text-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
+  --color-primary-text-active: color-mix(in srgb, var(--agentskin-accent) 75%, white) !important;
+  --color-text-on-primary: var(--agentskin-bg) !important;
+
+  /* Text hierarchy */
+  --color-text: var(--agentskin-text) !important;
+  --color-text-secondary: var(--agentskin-muted) !important;
+  --color-text-tertiary: color-mix(in srgb, var(--agentskin-text) 55%, transparent) !important;
+  --color-text-quaternary: color-mix(in srgb, var(--agentskin-text) 40%, transparent) !important;
+  --color-text-base: var(--agentskin-text) !important;
+  --color-muted: var(--agentskin-muted) !important;
+  --color-muted-foreground: color-mix(in srgb, var(--agentskin-muted) 80%, transparent) !important;
+
+  /* Backgrounds — transparent for art punch-through */
+  --color-bg-container: transparent !important;
+  --color-bg-elevated: color-mix(in srgb, var(--agentskin-surface-elevated) 85%, var(--agentskin-accent) 15%) !important;
+  --color-bg-layout: color-mix(in srgb, var(--agentskin-bg) 96%, black) !important;
+  --color-bg-spotlight: color-mix(in srgb, var(--agentskin-bg) 92%, black) !important;
+  --color-bg-base: transparent !important;
+  --color-bg-mask: color-mix(in srgb, var(--agentskin-bg) 60%, transparent) !important;
+  --color-bg-highlight: color-mix(in srgb, var(--agentskin-accent) 6%, transparent) !important;
+  --color-bg-highlight-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+  --color-background: transparent !important;
+  --color-popover: var(--agentskin-surface-elevated) !important;
+  --color-white-opacity: #fff !important;
+  --color-black-opacity: #000 !important;
+
+  /* Borders */
+  --color-border: var(--agentskin-border) !important;
+  --color-border-secondary: color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
+  --color-border-tertiary: color-mix(in srgb, var(--agentskin-border) 35%, transparent) !important;
+
+  /* Fills */
+  --color-fill: color-mix(in srgb, var(--agentskin-text) 16%, transparent) !important;
+  --color-fill-secondary: color-mix(in srgb, var(--agentskin-text) 10%, transparent) !important;
+  --color-fill-tertiary: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+  --color-fill-quaternary: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
+  --color-fill-disable: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+
+  /* Links */
+  --color-link: var(--agentskin-accent) !important;
+
+  /* Semantic: success tied to accent */
+  --color-success: var(--agentskin-accent) !important;
+  --color-success-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
+  --color-success-bg: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --color-success-bg-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --color-success-border: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
+  --color-success-border-hover: color-mix(in srgb, var(--agentskin-accent) 55%, transparent) !important;
+
+  /* Semantic: error (fixed) */
+  --color-error: #ff4d4f !important;
+  --color-error-hover: #ff7875 !important;
+  --color-error-bg: rgba(255, 77, 79, 0.12) !important;
+  --color-error-bg-hover: rgba(255, 77, 79, 0.18) !important;
+  --color-error-border: rgba(255, 77, 79, 0.35) !important;
+  --color-error-border-hover: rgba(255, 77, 79, 0.55) !important;
+
+  /* Semantic: warning (fixed) */
+  --color-warning: #faad14 !important;
+  --color-warning-hover: #ffd666 !important;
+  --color-warning-bg: rgba(250, 173, 20, 0.12) !important;
+  --color-warning-bg-hover: rgba(250, 173, 20, 0.18) !important;
+  --color-warning-border: rgba(250, 173, 20, 0.35) !important;
+  --color-warning-border-hover: rgba(250, 173, 20, 0.55) !important;
+
+  /* Semantic: info (fixed) */
+  --color-info: #0b83f1 !important;
+  --color-info-hover: #5ebcff !important;
+  --color-info-bg: rgba(11, 131, 241, 0.12) !important;
+  --color-info-bg-hover: rgba(11, 131, 241, 0.18) !important;
+  --color-info-border: rgba(11, 131, 241, 0.35) !important;
+  --color-info-border-hover: rgba(11, 131, 241, 0.55) !important;
+
+  /* Diff */
+  --color-diff-insert: color-mix(in srgb, var(--agentskin-accent) 70%, transparent) !important;
+  --color-diff-insert-bg: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --color-diff-remove: #fc6b83 !important;
+  --color-diff-remove-bg: rgba(252, 107, 131, 0.12) !important;
+
+  /* Accent palette (derived from theme) */
+  --color-pink: var(--agentskin-secondary) !important;
+  --color-pink-bg: color-mix(in srgb, var(--agentskin-secondary) 10%, transparent) !important;
+  --color-pink-hover: color-mix(in srgb, var(--agentskin-secondary) 80%, white) !important;
+  --color-purple: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
+  --color-purple-bg: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
+  --color-purple-hover: color-mix(in srgb, var(--agentskin-accent) 80%, white) !important;
+  --color-teal: color-mix(in srgb, var(--agentskin-accent) 90%, black) !important;
+  --color-teal-bg: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
+  --color-teal-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
+  --color-lavender: color-mix(in srgb, var(--agentskin-secondary) 70%, white) !important;
+  --color-lavender-bg: color-mix(in srgb, var(--agentskin-secondary) 8%, transparent) !important;
+  --color-lavender-hover: color-mix(in srgb, var(--agentskin-secondary) 50%, white) !important;
+  --color-sage: color-mix(in srgb, var(--agentskin-accent) 85%, black) !important;
+  --color-sage-bg: color-mix(in srgb, var(--agentskin-accent) 6%, transparent) !important;
+  --color-sage-hover: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --color-mauve: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --color-mauve-bg: color-mix(in srgb, var(--agentskin-muted) 6%, transparent) !important;
+  --color-mauve-hover: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+
+  /* Shadows */
+  --color-shadow-2xs: rgba(0, 0, 0, 0.03) !important;
+  --color-shadow-xs: rgba(0, 0, 0, 0.04) !important;
+  --color-shadow-sm: rgba(0, 0, 0, 0.06) !important;
+  --color-shadow-md: rgba(0, 0, 0, 0.08) !important;
+  --color-shadow-lg: rgba(0, 0, 0, 0.1) !important;
+  --color-shadow-xl: rgba(0, 0, 0, 0.12) !important;
+  --color-shadow-2xl: rgba(0, 0, 0, 0.16) !important;
+  --color-shadow-3xl: rgba(0, 0, 0, 0.3) !important;
+  --color-shadow-scrim: rgba(0, 0, 0, 0.55) !important;
+
+  /* Highlights */
+  --color-highlight-xs: rgba(255, 255, 255, 0.15) !important;
+  --color-highlight-sm: rgba(255, 255, 255, 0.18) !important;
+  --color-highlight-md: rgba(255, 255, 255, 0.22) !important;
+  --color-highlight-lg: rgba(255, 255, 255, 0.35) !important;
+  --color-highlight-xl: rgba(255, 255, 255, 0.4) !important;
+
+  /* Layout tokens — transparent so #root hero art shows through */
+  --agents-layout-bg: transparent !important;
+  --agents-content-area-bg: transparent !important;
+  --agents-fade-bg: transparent !important;
+  --agents-content-area-gap: 4px !important;
+  --agents-content-area-radius: 6px !important;
+  --settings-nav-row-selected-bg: var(--color-fill-secondary) !important;
+
+  /* Chat input parchment — extremely subtle */
+  --chat-input-parchment-edge: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --chat-input-parchment-glow: color-mix(in srgb, var(--agentskin-secondary) 6%, transparent) !important;
+  --chat-input-parchment-halo: transparent !important;
+}

@@ -1,0 +1,174 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "genshin-dawn",
+  "name": "Genshin Dawn",
+  "displayName": "原神 · 晨曦",
+  "version": "2.2.0",
+  "description": "提瓦特大陆清晨的清新绿意，原神冒险者的明亮工作台，充满探索的活力。",
+  "author": {
+    "name": "cdredfox",
+    "url": "https://github.com/cdredfox/workbuddy-skin-studio"
+  },
+  "mode": "light",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role='textbox'][contenteditable='true']",
+              ".wb-home-composer [contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css",
+      "verification": {
+        "required": [
+          {
+            "name": "doubao-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#4a8ad4",
+    "secondary": "#e0aa3e",
+    "background": "#f0f5fb",
+    "foreground": "#2c3a6b",
+    "muted": "#7b83a5",
+    "surface": "#ffffff",
+    "surfaceElevated": "#ffffff",
+    "border": "#4a80c838",
+    "codeBackground": "#e4ecf4",
+    "codeForeground": "#27335e",
+    "inputBackground": "#ffffff",
+    "buttonBackground": "#4a8ad418",
+    "buttonForeground": "#3d72b6",
+    "focusRing": "#4a8ad460"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "genshin",
+  "tags": [
+    "light",
+    "anime",
+    "adventure",
+    "fresh"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao"
+  ],
+  "hero": "assets/hero.webp",
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

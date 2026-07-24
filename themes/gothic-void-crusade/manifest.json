@@ -1,0 +1,174 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "gothic-void-crusade",
+  "name": "Gothic Void Crusade",
+  "displayName": "哥特虚空远征",
+  "version": "2.2.0",
+  "description": "庄严的教堂世界地平线，古铜金光点缀虚空，为专注工作而生的哥特暗色主题。",
+  "author": {
+    "name": "Fei-Away",
+    "url": "https://github.com/Fei-Away/Codex-Dream-Skin"
+  },
+  "mode": "dark",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role='textbox'][contenteditable='true']",
+              ".wb-home-composer [contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css",
+      "verification": {
+        "required": [
+          {
+            "name": "doubao-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#c8a55a",
+    "secondary": "#b84a4a",
+    "background": "#0d0d0e",
+    "foreground": "#f3ead7",
+    "muted": "#b5a386",
+    "surface": "#211e1a",
+    "surfaceElevated": "#2a2620",
+    "border": "rgba(200, 165, 90, 0.28)",
+    "codeBackground": "#080809",
+    "codeForeground": "#d0d0cf",
+    "inputBackground": "#201e1c",
+    "buttonBackground": "#c8a55a18",
+    "buttonForeground": "#c8a55a",
+    "focusRing": "#c8a55a60"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "art",
+  "tags": [
+    "dark",
+    "art",
+    "gothic",
+    "gold"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao"
+  ],
+  "hero": "assets/hero.webp",
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

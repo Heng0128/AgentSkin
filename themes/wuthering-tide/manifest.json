@@ -1,0 +1,174 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "wuthering-tide",
+  "name": "Wuthering Tide",
+  "displayName": "鸣潮 · 声骸",
+  "version": "2.2.0",
+  "description": "深海声骸的幽蓝暗涌，鸣潮的暗色主题，如潮水般律动的编码节奏。",
+  "author": {
+    "name": "cdredfox",
+    "url": "https://github.com/cdredfox/workbuddy-skin-studio"
+  },
+  "mode": "dark",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role='textbox'][contenteditable='true']",
+              ".wb-home-composer [contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css",
+      "verification": {
+        "required": [
+          {
+            "name": "doubao-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#4aa8e8",
+    "secondary": "#9aa8b0",
+    "background": "#0d1418",
+    "foreground": "#d8eef0",
+    "muted": "#7d8c8f",
+    "surface": "#192024",
+    "surfaceElevated": "#252c2f",
+    "border": "#4aa8e82e",
+    "codeBackground": "#080d10",
+    "codeForeground": "#bed3df",
+    "inputBackground": "#22292d",
+    "buttonBackground": "#4aa8e818",
+    "buttonForeground": "#4aa8e8",
+    "focusRing": "#4aa8e860"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "wuthering",
+  "tags": [
+    "dark",
+    "anime",
+    "sci-fi",
+    "ocean"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao"
+  ],
+  "hero": "assets/hero.webp",
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

@@ -1,0 +1,26 @@
+/* palette.css — shadow-dragon (暗影忍龙) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0a0c0a;
+  --agentskin-surface: #202620;
+  --agentskin-surface-elevated: #2a322a;
+  --agentskin-text: #c8d4c0;
+  --agentskin-muted: #6b7a6b;
+  --agentskin-accent: #86e033;
+  --agentskin-secondary: #4a9a6a;
+  --agentskin-border: rgba(134, 224, 51, 0.18);
+  --agentskin-code-bg: #0a0c0a;
+  --agentskin-code-fg: #c8d4c0;
+  --agentskin-focus-ring: rgba(134, 224, 51, 0.376);
+  --agentskin-selection: color-mix(in srgb, #86e033 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 134, 224, 51;
+  --agentskin-secondary-raw: 74, 154, 106;
+  --agentskin-text-raw: 200, 212, 192;
+  --agentskin-muted-raw: 107, 122, 107;
+  --agentskin-surface-raw: 32, 38, 32;
+  --agentskin-surface-elevated-raw: 42, 50, 42;
+  --agentskin-bg-raw: 10, 12, 10;
+  --agentskin-border-raw: 0, 0, 0;
+}

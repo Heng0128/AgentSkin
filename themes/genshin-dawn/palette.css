@@ -1,0 +1,26 @@
+/* palette.css — genshin-dawn (原神 · 晨曦) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #f0f5fb;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #2c3a6b;
+  --agentskin-muted: #7b83a5;
+  --agentskin-accent: #4a8ad4;
+  --agentskin-secondary: #e0aa3e;
+  --agentskin-border: #4a80c838;
+  --agentskin-code-bg: #f0f5fb;
+  --agentskin-code-fg: #2c3a6b;
+  --agentskin-focus-ring: #4a8ad460;
+  --agentskin-selection: color-mix(in srgb, #4a8ad4 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 74, 138, 212;
+  --agentskin-secondary-raw: 224, 170, 62;
+  --agentskin-text-raw: 44, 58, 107;
+  --agentskin-muted-raw: 123, 131, 165;
+  --agentskin-surface-raw: 255, 255, 255;
+  --agentskin-surface-elevated-raw: 255, 255, 255;
+  --agentskin-bg-raw: 240, 245, 251;
+  --agentskin-border-raw: 128, 200, 56;
+}

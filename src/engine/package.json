@@ -1,0 +1,25 @@
+{
+  "name": "@agentskin/core",
+  "version": "5.0.0",
+  "description": "AgentSkin theme runtime, app adapters, and theme tooling (forked from CodeDrobe core).",
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./src/index.mjs"
+    },
+    "./adapters": {
+      "types": "./types/adapters.d.ts",
+      "default": "./src/adapters/index.mjs"
+    },
+    "./theme": {
+      "types": "./types/theme.d.ts",
+      "default": "./src/theme/index.mjs"
+    }
+  },
+  "types": "./types/index.d.ts",
+  "engines": {
+    "node": ">=22.4"
+  }
+}

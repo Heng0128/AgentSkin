@@ -1,0 +1,309 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentskin.dev/schema/manifest-v2.json",
+  "title": "AgentSkin Theme Manifest v2",
+  "description": "Schema for AgentSkin theme package manifest.json files (v2.1+)",
+  "type": "object",
+  "required": ["id", "name", "version", "icon", "preview", "colors"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor validation"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "enum": [1, 2],
+      "description": "Manifest schema version (1=legacy, 2=expanded)"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "description": "Stable theme identifier (lowercase alphanumeric + hyphens)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Human-readable display name"
+    },
+    "displayName": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Optional localized display name (e.g. 赛博霓虹)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+      "description": "Semantic version string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Optional human-readable description"
+    },
+    "icon": {
+      "type": "string",
+      "pattern": "^[^/\\\\]+$",
+      "description": "Filename (relative to manifest) pointing to the theme icon PNG"
+    },
+    "preview": {
+      "type": "string",
+      "description": "Filename (relative to manifest) pointing to the preview screenshot"
+    },
+    "hero": {
+      "type": "string",
+      "description": "Optional filename pointing to hero artwork (png/webp/jpeg)"
+    },
+    "art": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this theme ships hero artwork (default true)"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["dark", "light", "auto"],
+      "description": "Preferred color mode"
+    },
+    "colors": {
+      "type": "object",
+      "required": ["background", "foreground"],
+      "additionalProperties": false,
+      "properties": {
+        "primary": { "type": "string", "description": "v1 compat alias for accent" },
+        "text": { "type": "string", "description": "v1 compat alias for foreground" },
+        "accent": { "type": "string", "description": "Primary accent color" },
+        "secondary": { "type": "string", "description": "Secondary accent color" },
+        "background": { "type": "string", "description": "Base background color (required)" },
+        "foreground": { "type": "string", "description": "Base text color (required)" },
+        "muted": { "type": "string", "description": "Muted text color" },
+        "surface": { "type": "string", "description": "Surface/panel background" },
+        "surfaceElevated": { "type": "string", "description": "Elevated surface background" },
+        "border": { "type": "string", "description": "Border color" },
+        "codeBackground": { "type": "string", "description": "Code block background" },
+        "codeForeground": { "type": "string", "description": "Code block text color" },
+        "inputBackground": { "type": "string", "description": "Input field background" },
+        "buttonBackground": { "type": "string", "description": "Button background" },
+        "buttonForeground": { "type": "string", "description": "Button text color" },
+        "focusRing": { "type": "string", "description": "Focus ring color" }
+      },
+      "description": "CSS color tokens the theme ships with"
+    },
+    "assets": {
+      "type": "object",
+      "properties": {
+        "background": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "default": { "type": "string" },
+                "16x10": { "type": "string" },
+                "16x9": { "type": "string" },
+                "4x3": { "type": "string" },
+                "fallback": { "type": "string" }
+              }
+            }
+          ],
+          "description": "@deprecated Use manifest.hero instead"
+        }
+      },
+      "description": "Optional asset references relative to the package root"
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["css"],
+        "properties": {
+          "css": {
+            "type": "string",
+            "description": "Path to agent-specific CSS relative to manifest directory"
+          },
+          "verification": {
+            "type": "object",
+            "properties": {
+              "required": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "any"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "any": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              },
+              "recommended": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "any"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "any": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "description": "Per-agent target configurations (v2)"
+    },
+    "supportedAgents": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Explicit supported agent ids (v2)"
+    },
+    "author": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "format": "uri" }
+      },
+      "description": "Theme author (v2)"
+    },
+    "category": {
+      "type": "string",
+      "description": "Theme category slug (v2)"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 10,
+      "description": "Theme tags for search/filter (v2)"
+    },
+    "license": {
+      "type": "string",
+      "description": "License identifier (v2), e.g. MIT, MPL-2.0"
+    },
+    "unofficial": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is an unofficial/community theme (v2)"
+    },
+    "dynamic": {
+      "oneOf": [
+        { "type": "string", "enum": ["aurora", "particles", "gradient", "waves"] },
+        { "type": "boolean", "enum": [false] }
+      ],
+      "description": "Dynamic visual effect type (v2.1+). Set false to disable."
+    },
+    "wallpaper": {
+      "type": "object",
+      "required": ["video"],
+      "additionalProperties": false,
+      "properties": {
+        "video": {
+          "type": "string",
+          "description": "Path to video file relative to package root (mp4/webm)"
+        },
+        "poster": {
+          "type": "string",
+          "description": "Optional poster image shown before video loads (png/webp)"
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3.0,
+          "default": 1.0,
+          "description": "Playback speed multiplier"
+        },
+        "loop": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to loop the video"
+        },
+        "scrimOpacity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 55,
+          "description": "Overlay scrim opacity 0-100"
+        }
+      },
+      "description": "Video wallpaper configuration (v2.1+)"
+    },
+    "fonts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["family", "src"],
+        "additionalProperties": false,
+        "properties": {
+          "family": { "type": "string", "minLength": 1 },
+          "src": { "type": "string" },
+          "weight": { "oneOf": [{ "type": "number" }, { "type": "string" }] },
+          "style": { "type": "string", "enum": ["normal", "italic", "oblique"] },
+          "preload": { "type": "boolean", "default": false }
+        }
+      },
+      "maxItems": 5,
+      "description": "Custom web fonts shipped with the theme (v2.1+)"
+    },
+    "minAppVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Minimum AgentSkin desktop version required (v2.1+)"
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Theme homepage URL (v2.1+)"
+    },
+    "repository": {
+      "type": "string",
+      "format": "uri",
+      "description": "Source repository URL (v2.1+)"
+    },
+    "probe": {
+      "type": "object",
+      "description": "样式探针契约声明（CDP probe style contract）。声明本主题贡献的设计 token 命名空间；具体 computed-style 字段集见 $defs.ProbeStyleContract。",
+      "additionalProperties": false,
+      "properties": {
+        "tokenNamespaces": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "本主题在 DOM 上设置的 CSS 自定义属性（设计 token）命名空间，探针会捕获这些 --* 变量。"
+        },
+        "styleContract": {
+          "type": "string",
+          "description": "指向主题接口规范中『探针样式契约』章节的引用（如 THEME_SPEC.md#探针样式契约）。"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ProbeStyleContract": {
+      "description": "CDP 探针（src/main/cdp/dom-snapshot.mjs 的 buildDomSnapshotExpression）读取的样式契约全集。",
+      "computedStyleFields": [
+        "display", "position", "zIndex", "boxSizing", "flexDirection", "alignItems",
+        "justifyContent", "gap", "padding", "margin", "width", "height", "minWidth",
+        "maxWidth", "minHeight", "maxHeight", "overflowX", "overflowY", "color",
+        "backgroundColor", "backgroundImage", "background", "backgroundPosition",
+        "backgroundSize", "backgroundRepeat", "backgroundClip", "backgroundOrigin",
+        "border", "borderRadius", "borderColor", "borderWidth", "borderStyle",
+        "borderTopColor", "borderTopWidth", "borderTopStyle", "borderBottomColor",
+        "outline", "outlineColor", "outlineWidth", "outlineStyle", "boxShadow",
+        "textShadow", "opacity", "fill", "stroke", "cursor", "transition", "transform",
+        "textDecoration", "textTransform", "letterSpacing", "wordSpacing", "whiteSpace",
+        "fontFamily", "fontSize", "fontWeight", "lineHeight", "textAlign",
+        "gridTemplateColumns", "gridTemplateRows", "flex", "flexWrap", "flexGrow",
+        "flexShrink", "flexBasis", "alignSelf", "justifySelf", "objectFit",
+        "mixBlendMode", "filter", "backdropFilter", "pointerEvents", "userSelect",
+        "contentVisibility", "appearance"
+      ],
+      "tokenCapture": "捕获每个 DOM 节点相对父节点 override 的 --* CSS 变量；根节点报告其全部自身 token（无父级可去重）。继承项自动跳过，使 payload 有界。",
+      "perAgentTokenNamespaces": {
+        "brand": "--agentskin-*",
+        "workbuddy": "--cb-*",
+        "traework": "--vscode-*",
+        "qoderwork": "--color-* (antd)",
+        "doubao": "--dbx-*"
+      }
+    }
+  }
+}

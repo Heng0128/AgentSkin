@@ -1,0 +1,26 @@
+/* palette.css — wuthering-tide (鸣潮 · 声骸) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0d1418;
+  --agentskin-surface: #192024;
+  --agentskin-surface-elevated: #252c2f;
+  --agentskin-text: #d8eef0;
+  --agentskin-muted: #7d8c8f;
+  --agentskin-accent: #4aa8e8;
+  --agentskin-secondary: #9aa8b0;
+  --agentskin-border: #4aa8e82e;
+  --agentskin-code-bg: #0d1418;
+  --agentskin-code-fg: #d8eef0;
+  --agentskin-focus-ring: #4aa8e860;
+  --agentskin-selection: color-mix(in srgb, #4aa8e8 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 74, 168, 232;
+  --agentskin-secondary-raw: 154, 168, 176;
+  --agentskin-text-raw: 216, 238, 240;
+  --agentskin-muted-raw: 125, 140, 143;
+  --agentskin-surface-raw: 25, 32, 36;
+  --agentskin-surface-elevated-raw: 37, 44, 47;
+  --agentskin-bg-raw: 13, 20, 24;
+  --agentskin-border-raw: 168, 232, 46;
+}

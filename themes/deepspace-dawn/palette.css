@@ -1,0 +1,26 @@
+/* palette.css — deepspace-dawn (恋与深空 · 晨曦) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #f6f2fb;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #4a4668;
+  --agentskin-muted: #8f8ba3;
+  --agentskin-accent: #8f7fe8;
+  --agentskin-secondary: #f097c8;
+  --agentskin-border: #8172d138;
+  --agentskin-code-bg: #f6f2fb;
+  --agentskin-code-fg: #4a4668;
+  --agentskin-focus-ring: #8f7fe860;
+  --agentskin-selection: color-mix(in srgb, #8f7fe8 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 143, 127, 232;
+  --agentskin-secondary-raw: 240, 151, 200;
+  --agentskin-text-raw: 74, 70, 104;
+  --agentskin-muted-raw: 143, 139, 163;
+  --agentskin-surface-raw: 255, 255, 255;
+  --agentskin-surface-elevated-raw: 255, 255, 255;
+  --agentskin-bg-raw: 246, 242, 251;
+  --agentskin-border-raw: 114, 209, 56;
+}

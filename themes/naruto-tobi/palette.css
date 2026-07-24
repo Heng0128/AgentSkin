@@ -1,0 +1,26 @@
+/* palette.css — naruto-tobi (火影 · 带土) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0a0a14;
+  --agentskin-surface: #222230;
+  --agentskin-surface-elevated: #2c2c3c;
+  --agentskin-text: #e8d5d5;
+  --agentskin-muted: #7a6b75;
+  --agentskin-accent: #c41e2a;
+  --agentskin-secondary: #d4a84a;
+  --agentskin-border: rgba(196, 30, 42, 0.18);
+  --agentskin-code-bg: #0a0a14;
+  --agentskin-code-fg: #e8d5d5;
+  --agentskin-focus-ring: #c41e2a60;
+  --agentskin-selection: color-mix(in srgb, #c41e2a 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 196, 30, 42;
+  --agentskin-secondary-raw: 212, 168, 74;
+  --agentskin-text-raw: 232, 213, 213;
+  --agentskin-muted-raw: 122, 107, 117;
+  --agentskin-surface-raw: 34, 34, 48;
+  --agentskin-surface-elevated-raw: 44, 44, 60;
+  --agentskin-bg-raw: 10, 10, 20;
+  --agentskin-border-raw: 0, 0, 0;
+}

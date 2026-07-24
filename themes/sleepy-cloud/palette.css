@@ -1,0 +1,26 @@
+/* palette.css — sleepy-cloud (困倦云朵) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #1a1020;
+  --agentskin-surface: #261a2c;
+  --agentskin-surface-elevated: #322138;
+  --agentskin-text: #f8d8e8;
+  --agentskin-muted: #8c7088;
+  --agentskin-accent: #f4a3c2;
+  --agentskin-secondary: #cfb1d8;
+  --agentskin-border: rgba(244, 163, 194, 0.18);
+  --agentskin-code-bg: #1a1020;
+  --agentskin-code-fg: #f8d8e8;
+  --agentskin-focus-ring: rgba(244, 163, 194, 0.376);
+  --agentskin-selection: color-mix(in srgb, #f4a3c2 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 244, 163, 194;
+  --agentskin-secondary-raw: 207, 177, 216;
+  --agentskin-text-raw: 248, 216, 232;
+  --agentskin-muted-raw: 140, 112, 136;
+  --agentskin-surface-raw: 38, 26, 44;
+  --agentskin-surface-elevated-raw: 50, 33, 56;
+  --agentskin-bg-raw: 26, 16, 32;
+  --agentskin-border-raw: 0, 0, 0;
+}

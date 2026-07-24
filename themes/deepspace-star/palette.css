@@ -1,0 +1,26 @@
+/* palette.css — deepspace-star (恋与深空 · 星辰) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #201a40;
+  --agentskin-surface: #2b254a;
+  --agentskin-surface-elevated: #363153;
+  --agentskin-text: #e8e2ff;
+  --agentskin-muted: #8e88a9;
+  --agentskin-accent: #9d8bff;
+  --agentskin-secondary: #f097c8;
+  --agentskin-border: #9d8bff2e;
+  --agentskin-code-bg: #201a40;
+  --agentskin-code-fg: #e8e2ff;
+  --agentskin-focus-ring: #9d8bff60;
+  --agentskin-selection: color-mix(in srgb, #9d8bff 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 157, 139, 255;
+  --agentskin-secondary-raw: 240, 151, 200;
+  --agentskin-text-raw: 232, 226, 255;
+  --agentskin-muted-raw: 142, 136, 169;
+  --agentskin-surface-raw: 43, 37, 74;
+  --agentskin-surface-elevated-raw: 54, 49, 83;
+  --agentskin-bg-raw: 32, 26, 64;
+  --agentskin-border-raw: 139, 255, 46;
+}

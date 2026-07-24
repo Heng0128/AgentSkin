@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AgentSkin tray icon">
+  <!-- Monochrome template version of the fanned skin-layers mark. -->
+  <g fill="#000000">
+    <rect x="87" y="175" width="250" height="250" rx="58" fill-opacity="0.35"/>
+    <rect x="131" y="131" width="250" height="250" rx="58" fill-opacity="0.6"/>
+    <rect x="175" y="87" width="250" height="250" rx="58" fill-opacity="0.95"/>
+  </g>
+</svg>

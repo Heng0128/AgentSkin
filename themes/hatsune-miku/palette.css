@@ -1,0 +1,26 @@
+/* palette.css — hatsune-miku (初音未来) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #080a1c;
+  --agentskin-surface: #1c2034;
+  --agentskin-surface-elevated: #262a40;
+  --agentskin-text: #dfe9ff;
+  --agentskin-muted: #6b7a92;
+  --agentskin-accent: #5fdde0;
+  --agentskin-secondary: #a4d4fc;
+  --agentskin-border: rgba(95, 221, 224, 0.18);
+  --agentskin-code-bg: #080a1c;
+  --agentskin-code-fg: #dfe9ff;
+  --agentskin-focus-ring: rgba(95, 221, 224, 0.376);
+  --agentskin-selection: color-mix(in srgb, #5fdde0 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 95, 221, 224;
+  --agentskin-secondary-raw: 164, 212, 252;
+  --agentskin-text-raw: 223, 233, 255;
+  --agentskin-muted-raw: 107, 122, 146;
+  --agentskin-surface-raw: 28, 32, 52;
+  --agentskin-surface-elevated-raw: 38, 42, 64;
+  --agentskin-bg-raw: 8, 10, 28;
+  --agentskin-border-raw: 0, 0, 0;
+}

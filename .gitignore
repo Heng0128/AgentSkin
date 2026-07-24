@@ -1,0 +1,31 @@
+node_modules/
+.vite/
+out/
+coverage/
+*.log
+.DS_Store
+.env
+.env.*
+*.p12
+*.p8
+.tsbuildinfo
+
+# Standalone vite build output (verification runs)
+dist/
+
+# Build artifacts and debug residue
+out_make_trash_*/
+tmp-check*/
+extracted-icons/
+.build-tmp/
+logs/
+$null
+
+# PowerShell backup / transient files
+*.ps1.bak
+find--result.txt
+find-*-result.txt
+
+# Tooling workspace caches (local-only)
+.agnes/
+.workbuddy/

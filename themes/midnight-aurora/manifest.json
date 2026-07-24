@@ -1,0 +1,178 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "midnight-aurora",
+  "name": "Midnight Aurora",
+  "displayName": "午夜极光",
+  "version": "2.2.0",
+  "description": "午夜天幕上的极光舞动，冰蓝光带划过深蓝夜空，壮阔的暗色意境。",
+  "author": {
+    "name": "JarvisPMS",
+    "url": "https://github.com/JarvisPMS/CoderStyle"
+  },
+  "mode": "dark",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role='textbox'][contenteditable='true']",
+              ".wb-home-composer [contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css",
+      "verification": {
+        "required": [
+          {
+            "name": "doubao-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#5ec4b8",
+    "secondary": "#9b8ce8",
+    "background": "#0a0a10",
+    "foreground": "#e8eaf2",
+    "muted": "#84858c",
+    "surface": "#1e1e26",
+    "surfaceElevated": "#282832",
+    "border": "#5ec4b82e",
+    "codeBackground": "#07070a",
+    "codeForeground": "#c9d0e1",
+    "inputBackground": "#1f1f25",
+    "buttonBackground": "#5ec4b818",
+    "buttonForeground": "#5ec4b8",
+    "focusRing": "#5ec4b860"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "nature",
+  "tags": [
+    "dark",
+    "nature",
+    "blue",
+    "aurora"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao"
+  ],
+  "hero": "assets/hero.webp",
+  "dynamic": "aurora",
+  "minAppVersion": "2.1.0",
+  "homepage": "https://agentskin.dev/themes/midnight-aurora",
+  "repository": "https://github.com/JarvisPMS/CoderStyle",
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

@@ -1,0 +1,82 @@
+/* ============================================================
+   ENGINE: traework — Layer 0: Token Override
+   ------------------------------------------------------------
+   TraeWork CN (VS Code architecture) — overrides --vscode-* and
+   --vscode-icube-* design tokens on body + .monaco-workbench.
+   ============================================================ */
+
+html.codedrobe-host-traework body {
+  color-scheme: dark !important;
+
+  /* Ink / text */
+  --vscode-foreground: var(--agentskin-text) !important;
+  --vscode-icube-colorDefaultText: var(--agentskin-text) !important;
+  --vscode-icube--text-text-default: var(--agentskin-text) !important;
+  --vscode-icube-colorHighlightText: var(--agentskin-text) !important;
+  --vscode-descriptionForeground: var(--agentskin-muted) !important;
+  --vscode-icube-colorGrayText: var(--agentskin-muted) !important;
+  --vscode-icube-colorDisableText: color-mix(in srgb, var(--agentskin-text) 42%, transparent) !important;
+
+  /* Brand / links / buttons */
+  --vscode-textLink-foreground: var(--agentskin-accent) !important;
+  --vscode-textLink-activeForeground: var(--agentskin-secondary) !important;
+  --vscode-button-background: var(--agentskin-accent) !important;
+  --vscode-button-foreground: var(--agentskin-bg) !important;
+  --vscode-button-hoverBackground: color-mix(in srgb, var(--agentskin-accent) 85%, transparent) !important;
+  --vscode-icube-colorBrand: var(--agentskin-accent) !important;
+  --vscode-focusBorder: color-mix(in srgb, var(--agentskin-accent) 60%, transparent) !important;
+
+  /* Lines / borders */
+  --vscode-icube-colorLine1: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-icube-colorLine2: color-mix(in srgb, var(--agentskin-accent) 32%, transparent) !important;
+  --vscode-icube--border-border-neutral-l1: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-chat-requestBorder: color-mix(in srgb, var(--agentskin-accent) 25%, transparent) !important;
+  --vscode-widget-border: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-panel-border: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+
+  /* Fills / hovers */
+  --vscode-toolbar-hoverBackground: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --vscode-icube-colorBtnHover: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --vscode-icube-colorBtnHover2: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-list-hoverBackground: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --vscode-list-activeSelectionBackground: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-icube--bg-bg-overlay-l2: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --vscode-icube--bg-bg-overlay-l3: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-input-background: color-mix(in srgb, var(--agentskin-accent) 7%, transparent) !important;
+
+  /* Surfaces */
+  --vscode-editor-background: transparent !important;
+  --vscode-icube-colorBg1: var(--agentskin-bg) !important;
+  --vscode-icube-colorBg2: var(--agentskin-surface) !important;
+  --vscode-icube-colorBg3: var(--agentskin-surface-elevated) !important;
+  --vscode-editorWidget-background: var(--agentskin-surface) !important;
+  --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-widget-shadow: color-mix(in srgb, var(--agentskin-accent) 15%, transparent) !important;
+  --vscode-badge-background: color-mix(in srgb, var(--agentskin-accent) 65%, transparent) !important;
+  --vscode-badge-foreground: var(--agentskin-text) !important;
+  --vscode-scrollbarSlider-background: color-mix(in srgb, var(--agentskin-accent) 22%, transparent) !important;
+  --vscode-scrollbarSlider-hoverBackground: color-mix(in srgb, var(--agentskin-accent) 38%, transparent) !important;
+  --vscode-scrollbarSlider-activeBackground: color-mix(in srgb, var(--agentskin-accent) 52%, transparent) !important;
+
+  /* App-level surface → transparent for art punch-through */
+  --bg-bg-base-default: transparent !important;
+
+  /* Selection */
+  --vscode-editor-selectionBackground: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-selection-background: color-mix(in srgb, var(--agentskin-accent) 24%, transparent) !important;
+
+  background: transparent !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* VS Code re-declares tokens on .monaco-workbench — override there too */
+html.codedrobe-host-traework .monaco-workbench {
+  --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-editor-background: transparent !important;
+  --vscode-panel-background: transparent !important;
+  --vscode-activityBar-background: color-mix(in srgb, var(--agentskin-surface) 12%, transparent) !important;
+  --vscode-statusBar-background: color-mix(in srgb, var(--agentskin-surface) 10%, transparent) !important;
+  --vscode-titleBar-activeBackground: color-mix(in srgb, var(--agentskin-surface) 8%, transparent) !important;
+  --vscode-titleBar-inactiveBackground: color-mix(in srgb, var(--agentskin-surface) 6%, transparent) !important;
+  background: transparent !important;
+}

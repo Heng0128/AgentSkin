@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AgentSkin — 为你的 AI 编码助手换上真正属于你的皮肤</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Sans+Mono:wght@400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #09090B;
+    --bg-alt: #0A0A0C;
+    --surface: #121214;
+    --surface-2: #16181C;
+    --surface-mockup: #0E0E11;
+    --border: #27272A;
+    --purple: #7C3AED;
+    --purple-soft: #A78BFA;
+    --purple-faint: #C4B5FD;
+    --white: #FAFAFA;
+    --text-2: #A1A1AA;
+    --text-3: #71717A;
+    --text-bullet: #D4D4D8;
+    --maxw: 1440px;
+    --pad-x: 120px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  .container {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+
+  /* ---------- Header ---------- */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 72px;
+    background: var(--bg-alt);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 48px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .wordmark {
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--white);
+    letter-spacing: -0.01em;
+  }
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+  }
+  .nav a {
+    font-size: 15px;
+    color: var(--text-2);
+    text-decoration: none;
+    transition: color .15s ease;
+  }
+  .nav a:hover { color: var(--white); }
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    padding: 0 20px;
+    background: var(--purple);
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(124,58,237,0.45);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-download:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(124,58,237,0.55); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    padding: 110px 0 120px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero-glow {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 1440px; height: 820px;
+    background: radial-gradient(circle at 50% 0%, rgba(124,58,237,0.38), rgba(124,58,237,0) 62%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hero-dots {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 1440px; height: 820px;
+    background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(circle at 50% 0%, black, transparent 70%);
+    mask-image: radial-gradient(circle at 50% 0%, black, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .hero-inner { position: relative; z-index: 1; }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 33px;
+    padding: 0 16px 0 14px;
+    background: #16131F;
+    border: 1px solid rgba(124,58,237,0.5);
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--purple-faint);
+    margin-bottom: 26px;
+  }
+  .badge-dot {
+    width: 7px; height: 7px;
+    border-radius: 999px;
+    background: var(--purple-soft);
+  }
+  .hero-headline {
+    font-size: 60px;
+    font-weight: 600;
+    line-height: 74px;
+    color: var(--white);
+    letter-spacing: -0.02em;
+    margin-bottom: 26px;
+  }
+  .hero-subhead {
+    font-size: 18px;
+    line-height: 30px;
+    color: var(--text-2);
+    max-width: 760px;
+    margin: 0 auto 26px;
+  }
+  .hero-cta {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 26px;
+  }
+  .cta-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 51px;
+    padding: 0 28px;
+    background: var(--purple);
+    color: var(--white);
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(124,58,237,0.5);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .cta-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(124,58,237,0.6); }
+  .hero-trust {
+    font-family: "Noto Sans Mono", monospace;
+    font-size: 13px;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+
+  /* ---------- App Mockup ---------- */
+  .app-mockup {
+    width: 960px;
+    max-width: 100%;
+    margin: 56px auto 0;
+    background: var(--surface-mockup);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.55);
+  }
+  .mockup-titlebar {
+    height: 46px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 18px;
+    background: #111114;
+    border-bottom: 1px solid var(--border);
+  }
+  .dot { width: 12px; height: 12px; border-radius: 999px; }
+  .dot-red { background: #FF5F57; }
+  .dot-yellow { background: #FEBC2E; }
+  .dot-green { background: #28C840; }
+  .mockup-label {
+    font-size: 13px;
+    color: var(--text-2);
+    margin-left: 4px;
+  }
+  .mockup-body { display: flex; height: 494px; }
+  .mockup-sidebar {
+    width: 250px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .sidebar-title {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-bottom: 6px;
+  }
+  .theme-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 50px;
+    padding: 0 10px;
+    border-radius: 10px;
+    background: var(--surface-2);
+  }
+  .theme-chip.active { background: rgba(124,58,237,0.14); }
+  .swatch {
+    width: 30px; height: 30px;
+    border-radius: 7px;
+    flex-shrink: 0;
+  }
+  .chip-name { font-size: 14px; }
+  .theme-chip.active .chip-name { color: var(--white); }
+  .theme-chip .chip-name { color: var(--text-2); }
+  .mockup-preview {
+    flex: 1;
+    background: var(--surface-mockup);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .preview-header { font-size: 13px; color: var(--text-2); }
+  .preview-card {
+    flex: 1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #0B0B0E;
+  }
+  .preview-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* ---------- Section primitives ---------- */
+  .section { padding: 96px 0; }
+  .section--alt { background: #0B0B0E; }
+  .eyebrow {
+    font-family: "Noto Sans Mono", monospace;
+    font-size: 13px;
+    color: var(--purple-soft);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-size: 40px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: -0.01em;
+  }
+  .section-sub {
+    font-size: 17px;
+    line-height: 28px;
+    color: var(--text-2);
+    margin-top: 16px;
+  }
+  .head-center { text-align: center; display: flex; flex-direction: column; align-items: center; }
+
+  /* ---------- How It Works ---------- */
+  .howitworks .head { margin-bottom: 48px; }
+  .steps-row {
+    display: flex;
+    gap: 24px;
+    justify-content: space-between;
+  }
+  .step-card {
+    width: 384px;
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .step-num {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    background: var(--purple);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-family: "Inter", sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+  }
+  .step-title { font-size: 18px; font-weight: 600; color: var(--white); }
+  .step-desc { font-size: 14px; line-height: 22px; color: var(--text-2); }
+
+  /* ---------- Core Features ---------- */
+  .feature-row {
+    display: flex;
+    align-items: center;
+    gap: 64px;
+    margin-top: 72px;
+  }
+  .feature-row:first-of-type { margin-top: 56px; }
+  .feature-text { width: 460px; flex-shrink: 0; }
+  .feature-text h3 { font-size: 26px; font-weight: 600; color: var(--white); margin-bottom: 18px; }
+  .feature-text p { font-size: 16px; line-height: 26px; color: var(--text-2); margin-bottom: 18px; }
+  .feature-list { display: flex; flex-direction: column; gap: 10px; }
+  .feature-list span { font-size: 14px; color: var(--text-bullet); }
+  .feature-shot {
+    width: 560px;
+    height: 340px;
+    border-radius: 14px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--surface);
+  }
+  .feature-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* ---------- Feature Grid ---------- */
+  .grid-rows { display: flex; flex-direction: column; gap: 24px; margin-top: 56px; }
+  .grid-row { display: flex; gap: 24px; }
+  .grid-card {
+    width: 384px;
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .gc-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--purple);
+  }
+  .gc-title { font-size: 17px; font-weight: 600; color: var(--white); }
+  .gc-desc { font-size: 14px; line-height: 22px; color: var(--text-2); }
+
+  /* ---------- Pricing ---------- */
+  .pricing .head { margin-bottom: 48px; }
+  .license-card {
+    width: 460px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--purple);
+    border-radius: 20px;
+    padding: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .plan-badge {
+    align-self: flex-start;
+    height: 27px;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    background: var(--purple);
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .plan-name { font-size: 22px; font-weight: 600; color: var(--white); }
+  .plan-price { display: flex; align-items: baseline; gap: 8px; }
+  .price-number { font-family: "Inter", sans-serif; font-weight: 600; font-size: 48px; color: var(--white); }
+  .price-unit { font-size: 15px; color: var(--text-2); }
+  .plan-list { display: flex; flex-direction: column; gap: 12px; }
+  .plan-list span { font-size: 15px; color: var(--text-bullet); }
+  .buy-btn {
+    height: 53px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--purple);
+    color: var(--white);
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(124,58,237,0.45);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .buy-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(124,58,237,0.55); }
+
+  /* ---------- FAQ ---------- */
+  .faq .head { margin-bottom: 48px; }
+  .faq-list { display: flex; flex-direction: column; gap: 16px; }
+  .qa-card {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .qa-q { font-size: 17px; font-weight: 600; color: var(--white); }
+  .qa-a { font-size: 15px; line-height: 24px; color: var(--text-2); }
+
+  /* ---------- Footer ---------- */
+  .site-footer {
+    background: var(--bg-alt);
+    border-top: 1px solid var(--border);
+    padding: 64px 0 48px;
+  }
+  .footer-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 80px;
+  }
+  .footer-brand { width: 300px; }
+  .footer-logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .footer-tagline { font-size: 14px; line-height: 22px; color: var(--text-2); }
+  .footer-cols { display: flex; gap: 64px; }
+  .footer-col { display: flex; flex-direction: column; gap: 14px; width: 160px; }
+  .footer-col .col-title { font-size: 14px; font-weight: 600; color: var(--white); }
+  .footer-col a { font-size: 14px; color: var(--text-2); text-decoration: none; transition: color .15s ease; }
+  .footer-col a:hover { color: var(--white); }
+  .footer-sep { height: 1px; background: var(--border); margin: 48px 0 24px; }
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .copyright { font-size: 13px; color: var(--text-3); }
+  .legal-links { display: flex; gap: 24px; }
+  .legal-links a { font-size: 13px; color: var(--text-3); text-decoration: none; }
+  .legal-links a:hover { color: var(--text-2); }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) {
+    :root { --pad-x: 48px; }
+    .hero-headline { font-size: 44px; line-height: 56px; }
+    .feature-row { flex-direction: column; gap: 32px; }
+    .feature-text, .feature-shot { width: 100%; }
+    .steps-row { flex-direction: column; align-items: center; }
+    .step-card { width: 100%; max-width: 480px; }
+    .grid-row { flex-wrap: wrap; }
+    .grid-card { width: calc(50% - 12px); }
+    .footer-top { flex-direction: column; gap: 48px; }
+  }
+  @media (max-width: 640px) {
+    :root { --pad-x: 24px; }
+    .nav { display: none; }
+    .hero-headline { font-size: 34px; line-height: 44px; }
+    .grid-card { width: 100%; }
+    .license-card { width: 100%; }
+    .footer-cols { flex-wrap: wrap; gap: 32px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="site-header">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="28" height="28" rx="7" fill="#7C3AED"/>
+        <path d="M9 19L14 9L19 19M11 16H17" stroke="#FAFAFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="wordmark">AgentSkin</span>
+    </div>
+    <nav class="nav">
+      <a href="#features">功能</a>
+      <a href="#how">使用方式</a>
+      <a href="#pricing">价格</a>
+      <a href="#faq">常见问题</a>
+    </nav>
+    <a href="#" class="btn-download">下载桌面端</a>
+  </header>
+
+  <!-- ===== Hero ===== -->
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-dots"></div>
+    <div class="hero-inner container">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        为 AI 编码工具而生的主题平台
+      </div>
+      <h1 class="hero-headline">为你的 AI 编码助手<br/>换上真正属于你的皮肤</h1>
+      <p class="hero-subhead">AgentSkin 统一管理 traework、qoderwork、workbuddy 等 AI 编程助手的主题与外观——一键安装、实时预览、本地优先运行。</p>
+      <div class="hero-cta">
+        <a href="#" class="cta-primary">下载桌面端</a>
+      </div>
+      <p class="hero-trust">支持多个 AI 编码工具 · 本地运行 · 授权激活 · 持续更新</p>
+
+      <!-- App Mockup -->
+      <div class="app-mockup">
+        <div class="mockup-titlebar">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+          <span class="mockup-label">AgentSkin — 主题管理</span>
+        </div>
+        <div class="mockup-body">
+          <aside class="mockup-sidebar">
+            <div class="sidebar-title">已安装主题</div>
+            <div class="theme-chip active">
+              <span class="swatch" style="background:#9D8BFF"></span>
+              <span class="chip-name">Deepspace Star</span>
+            </div>
+            <div class="theme-chip">
+              <span class="swatch" style="background:#C41E2A"></span>
+              <span class="chip-name">Naruto Itachi</span>
+            </div>
+            <div class="theme-chip">
+              <span class="swatch" style="background:#5EC4B8"></span>
+              <span class="chip-name">Midnight Aurora</span>
+            </div>
+          </aside>
+          <div class="mockup-preview">
+            <div class="preview-header">实时预览</div>
+            <div class="preview-card">
+              <img src="assets/hero-preview.png" alt="Deepspace Star 主题预览" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== How It Works ===== -->
+  <section class="section howitworks" id="how">
+    <div class="container">
+      <div class="head">
+        <div class="eyebrow">使用方式</div>
+        <h2 class="section-title">三步，重塑你的编码环境</h2>
+        <p class="section-sub">从安装到预览，整个过程不到一分钟。</p>
+      </div>
+      <div class="steps-row">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-title">浏览并安装主题</div>
+          <p class="step-desc">在主题市场浏览，或从本地导入 .codedrobe-theme 文件，一键安装到 AgentSkin。</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-title">选择目标 Agent</div>
+          <p class="step-desc">在已适配的 traework、qoderwork、workbuddy 中，选择要应用主题的编程助手。</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-title">实时预览并应用</div>
+          <p class="step-desc">点击应用，主题即时写入目标 Agent 的运行环境，无需重启编辑器即可生效。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Core Features ===== -->
+  <section class="section section--alt" id="features">
+    <div class="container">
+      <div class="head-center">
+        <div class="eyebrow">核心功能</div>
+        <h2 class="section-title">一个平台，管住所有 AI 编码工具的皮肤</h2>
+        <p class="section-sub">从主题安装到跨 Agent 同步，AgentSkin 把零散的外观管理收到一处。</p>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-text">
+          <h3>统一主题管理</h3>
+          <p>集中浏览、安装、启停所有已适配 Agent 的主题，状态一目了然，不再在各个编辑器设置里来回切换。</p>
+          <div class="feature-list">
+            <span>• 已安装 / 启用 / 推荐 三态标记</span>
+            <span>• 本地主题库与导入导出</span>
+          </div>
+        </div>
+        <div class="feature-shot">
+          <img src="assets/feature-1.png" alt="统一主题管理" />
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-shot">
+          <img src="assets/feature-2.png" alt="实时预览与一键应用" />
+        </div>
+        <div class="feature-text">
+          <h3>实时预览与一键应用</h3>
+          <p>改一处，目标 Agent 立刻换肤。内置实时预览窗，挑主题时就能看到在你编辑器里的真实效果。</p>
+          <div class="feature-list">
+            <span>• 无需重启编辑器即生效</span>
+            <span>• 暗色 / 亮色双模式自动跟随</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <div class="feature-text">
+          <h3>跨 Agent 主题同步</h3>
+          <p>同一套配色，自动映射到不同 Agent 的 token 体系——workbuddy 的 --cb-*、traework 的 --vscode-* 都不在话下。</p>
+          <div class="feature-list">
+            <span>• 多套 token 体系自动适配</span>
+            <span>• 实验性 Agent 一键启用</span>
+          </div>
+        </div>
+        <div class="feature-shot">
+          <img src="assets/feature-3.png" alt="跨 Agent 主题同步" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Feature Grid ===== -->
+  <section class="section">
+    <div class="container">
+      <div class="head-center">
+        <div class="eyebrow">更多能力</div>
+        <h2 class="section-title">细节，决定每天的编码体验</h2>
+      </div>
+      <div class="grid-rows">
+        <div class="grid-row">
+          <div class="grid-card">
+            <div class="gc-icon"></div>
+            <div class="gc-title">主题市场</div>
+            <p class="gc-desc">内置精选与社区主题，按 Agent、配色、风格快速筛选。</p>
+          </div>
+          <div class="grid-card">
+            <div class="gc-icon"></div>
+            <div class="gc-title">实时预览</div>
+            <p class="gc-desc">挑主题时即时看到在编辑器里的真实效果，不满意随时切换。</p>
+          </div>
+          <div class="grid-card">
+            <div class="gc-icon"></div>
+            <div class="gc-title">跨 Agent 同步</div>
+            <p class="gc-desc">一套配色自动映射到不同 Agent 的 token 体系，换工具也不丢风格。</p>
+          </div>
+        </div>
+        <div class="grid-row">
+          <div class="grid-card">
+            <div class="gc-icon"></div>
+            <div class="gc-title">导入导出与备份</div>
+            <p class="gc-desc">本地主题库一键备份，换机或重装后快速恢复全部配置。</p>
+          </div>
+          <div class="grid-card">
+            <div class="gc-icon"></div>
+            <div class="gc-title">暗色 / 亮色双模式</div>
+            <p class="gc-desc">跟随系统自动切换，每个主题都内置两套精心调校的配色。</p>
+          </div>
+          <div class="grid-card">
+            <div class="gc-icon"></div>
+            <div class="gc-title">本地优先与隐私</div>
+            <p class="gc-desc">主题与配置均存于本机，不上传云端，授权信息本地校验。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Pricing ===== -->
+  <section class="section section--alt pricing" id="pricing">
+    <div class="container">
+      <div class="head head-center">
+        <div class="eyebrow">授权方案</div>
+        <h2 class="section-title">一次买断，永久使用</h2>
+        <p class="section-sub">本地运行、授权激活，含后续小版本更新。</p>
+      </div>
+      <div class="license-card">
+        <span class="plan-badge">正式版</span>
+        <div class="plan-name">AgentSkin 正式授权</div>
+        <div class="plan-price">
+          <span class="price-number">¥199</span>
+          <span class="price-unit">/ 一次性买断</span>
+        </div>
+        <div class="plan-list">
+          <span>✓ 全功能解锁，无使用限制</span>
+          <span>✓ 所有已适配 Agent 的主题管理</span>
+          <span>✓ 本地优先运行，隐私可控</span>
+          <span>✓ 后续小版本免费更新</span>
+          <span>✓ 邮件技术支持</span>
+        </div>
+        <a href="#" class="buy-btn">立即购买</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FAQ ===== -->
+  <section class="section faq" id="faq">
+    <div class="container">
+      <div class="head head-center">
+        <div class="eyebrow">常见问题</div>
+        <h2 class="section-title">购买前，先答疑</h2>
+      </div>
+      <div class="faq-list">
+        <div class="qa-card">
+          <div class="qa-q">支持哪些 AI 编码工具？</div>
+          <div class="qa-a">已适配 traework、qoderwork、workbuddy；codebuddy、marscode 等实验性 Agent 可一键启用。</div>
+        </div>
+        <div class="qa-card">
+          <div class="qa-q">是开源软件吗？</div>
+          <div class="qa-a">不是。AgentSkin 是付费商业软件，源代码不公开，但主题文件采用开放格式，你随时可以导入导出自己的主题。</div>
+        </div>
+        <div class="qa-card">
+          <div class="qa-q">一个授权可以装几台设备？</div>
+          <div class="qa-a">单个授权最多可激活 3 台本机设备，换机时可在设置里自助解绑。</div>
+        </div>
+        <div class="qa-card">
+          <div class="qa-q">可以导入自己的主题吗？</div>
+          <div class="qa-a">可以。支持导入 .codedrobe-theme 文件，也能把当前正在用的主题一键导出备份。</div>
+        </div>
+        <div class="qa-card">
+          <div class="qa-q">买之后升级要再付费吗？</div>
+          <div class="qa-a">小版本更新免费；跨大版本升级会为老用户提供专属优惠升级价，绝不强制重复购买。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="footer-logo-row">
+            <svg width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="28" height="28" rx="7" fill="#7C3AED"/>
+              <path d="M9 19L14 9L19 19M11 16H17" stroke="#FAFAFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="wordmark" style="font-size:18px;">AgentSkin</span>
+          </div>
+          <p class="footer-tagline">为 AI 编码工具打造的主题管理平台。</p>
+        </div>
+        <div class="footer-cols">
+          <div class="footer-col">
+            <span class="col-title">产品</span>
+            <a href="#features">功能特性</a>
+            <a href="#pricing">授权定价</a>
+            <a href="#">更新日志</a>
+          </div>
+          <div class="footer-col">
+            <span class="col-title">资源</span>
+            <a href="#">使用文档</a>
+            <a href="#">主题市场</a>
+            <a href="#faq">常见问题</a>
+          </div>
+          <div class="footer-col">
+            <span class="col-title">公司</span>
+            <a href="#">关于我们</a>
+            <a href="#">联系我们</a>
+            <a href="#">许可协议</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-sep"></div>
+      <div class="footer-bottom">
+        <span class="copyright">© 2026 AgentSkin. 保留所有权利。</span>
+        <div class="legal-links">
+          <a href="#">隐私政策</a>
+          <a href="#">服务条款</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

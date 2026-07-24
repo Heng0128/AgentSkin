@@ -1,0 +1,26 @@
+/* palette.css — gothic-void-crusade (哥特虚空远征) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0d0d0e;
+  --agentskin-surface: #211e1a;
+  --agentskin-surface-elevated: #2a2620;
+  --agentskin-text: #f3ead7;
+  --agentskin-muted: #b5a386;
+  --agentskin-accent: #c8a55a;
+  --agentskin-secondary: #b84a4a;
+  --agentskin-border: rgba(200, 165, 90, 0.28);
+  --agentskin-code-bg: #0d0d0e;
+  --agentskin-code-fg: #f3ead7;
+  --agentskin-focus-ring: #c8a55a60;
+  --agentskin-selection: color-mix(in srgb, #c8a55a 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 200, 165, 90;
+  --agentskin-secondary-raw: 184, 74, 74;
+  --agentskin-text-raw: 243, 234, 215;
+  --agentskin-muted-raw: 181, 163, 134;
+  --agentskin-surface-raw: 33, 30, 26;
+  --agentskin-surface-elevated-raw: 42, 38, 32;
+  --agentskin-bg-raw: 13, 13, 14;
+  --agentskin-border-raw: 0, 0, 0;
+}

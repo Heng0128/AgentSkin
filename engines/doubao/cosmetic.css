@@ -1,0 +1,79 @@
+/* ============================================================
+   ENGINE: doubao — Layer 2: Cosmetic Enhancement
+   ------------------------------------------------------------
+   Visual polish that enhances the theme but is NOT critical.
+   If any rule here fails (agent renames a class, removes an
+   element), the theme still works — just with slightly less
+   visual flair.
+
+   Stability: LOW — these target visual details that agents
+   change frequently. All rules use !important but are designed
+   to fail silently (no layout breakage if selector misses).
+   ============================================================ */
+
+/* === Vignette edge glow (subtle, 18%) === */
+html.codedrobe-host-doubao body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background:
+    radial-gradient(ellipse 120% 100% at 50% 50%, transparent 60%, color-mix(in srgb, var(--agentskin-bg) 18%, transparent) 100%),
+    linear-gradient(180deg, color-mix(in srgb, var(--agentskin-accent) 3%, transparent) 0%, transparent 8%),
+    linear-gradient(0deg, color-mix(in srgb, var(--agentskin-accent) 4%, transparent) 0%, transparent 6%);
+}
+
+/* === Scrollbars: accent gradient thumb === */
+html.codedrobe-host-doubao ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+html.codedrobe-host-doubao ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html.codedrobe-host-doubao ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent) 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+html.codedrobe-host-doubao ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--agentskin-accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 50%, transparent) 100%) !important;
+  background-clip: padding-box !important;
+}
+
+/* === Selection: accent tint === */
+html.codedrobe-host-doubao ::selection {
+  background: color-mix(in srgb, var(--agentskin-accent) 32%, transparent) !important;
+}
+
+/* === Focus ring: accent glow === */
+html.codedrobe-host-doubao input:focus,
+html.codedrobe-host-doubao textarea:focus,
+html.codedrobe-host-doubao [contenteditable="true"]:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--agentskin-accent) 40%, transparent),
+    0 4px 18px color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 20%, transparent) !important;
+}
+
+/* === Message text readability over art layer === */
+html.codedrobe-host-doubao [class*="message"] [class*="content"],
+html.codedrobe-host-doubao article {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  html.codedrobe-host-doubao *,
+  html.codedrobe-host-doubao *::before,
+  html.codedrobe-host-doubao *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
