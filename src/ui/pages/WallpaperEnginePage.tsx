@@ -367,11 +367,6 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
 
   return (
     <div className="we-app flex h-full min-h-0 flex-col min-w-0">
-      {/* Header — title only */}
-      <div className="flex items-center justify-between gap-3 border-b border-border px-[14px] py-[8px]">
-        <h2 className="font-display text-sm font-bold tracking-tight">{t.navWallpaperEngine}</h2>
-      </div>
-
       {/* Not installed hint (non-blocking — still shows local imports) */}
       {installed === false && wallpapers.length === 0 && (
         <div className="flex flex-1 items-center justify-center">
