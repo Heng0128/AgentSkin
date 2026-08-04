@@ -31,7 +31,6 @@ import type { EnvironmentModel } from '@/types/environment';
 
 import { Copy01Icon, Image02Icon, PackageIcon, Search01Icon } from '@hugeicons/core-free-icons';
 import type { HugeiconsIconProps } from '@hugeicons/react';
-import type { UiMessages } from '@shared/i18n';
 
 /* ------------------------------------------------------------------ */
 /* Swiss panel primitives                                              */
@@ -108,108 +107,6 @@ function QuickButton({
 }
 
 /* ------------------------------------------------------------------ */
-/* Compact Hero                                                        */
-/* ------------------------------------------------------------------ */
-
-/**
- * CompactHero — slim Swiss banner replacing the original EnvironmentHero.
- * Shows active environment inline with a "Continue" action.
- */
-function CompactHero({
-  activeEnv,
-  t,
-  onContinue,
-}: {
-  activeEnv: EnvironmentModel | null;
-  t: UiMessages;
-  onContinue?: () => void;
-}) {
-  return (
-    <div className="relative overflow-hidden rounded-[2px] border border-border bg-gradient-to-br from-card to-card2">
-      {/* Blob decoration layer */}
-      <div className="absolute right-[8%] top-[-45%] size-[340px] rounded-full bg-[var(--redbg)] opacity-55 blur-[60px] pointer-events-none animate-[agentskin-blob_9s_ease-in-out_infinite_alternate]" />
-      <div
-        className="absolute left-[32%] bottom-[-75%] size-[340px] rounded-full opacity-55 blur-[60px] pointer-events-none animate-[agentskin-blob_13s_ease-in-out_infinite_alternate-reverse]"
-        style={{ background: 'color-mix(in srgb, var(--blu) 13%, transparent)' }}
-      />
-      {/* Dot pattern texture */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.06]"
-        style={{
-          backgroundImage: 'radial-gradient(var(--border-strong) 1px, transparent 1px)',
-          backgroundSize: '14px 14px',
-          maskImage: 'linear-gradient(120deg, transparent 30%, #000)',
-        }}
-      />
-      {/* Decorative letter watermark */}
-      <span className="pointer-events-none select-none absolute right-5 bottom-[-46px] font-display text-[160px]/none font-bold opacity-[0.13] [-webkit-text-stroke:1.5px_var(--red)] text-transparent">
-        A
-      </span>
-      <div className="relative flex items-center gap-4 px-7 py-6">
-        {/* Environment ring indicator */}
-        {activeEnv && (
-          <div
-            className={`grid size-[38px] shrink-0 place-items-center rounded-full border-2 font-display text-[13px] font-bold ${activeEnv.status === 'active' ? 'border-primary text-primary shadow-[0_0_0_4px_var(--redbg)]' : 'border-muted-foreground/40 text-muted-foreground'}`}
-          >
-            {activeEnv.name.slice(0, 1)}
-          </div>
-        )}
-        {/* Greeting / title */}
-        <div className="min-w-0 flex-1">
-          <p className="font-display text-[26px]/[1.15] font-bold tracking-tight">
-            {activeEnv ? activeEnv.name : t.yourWorkspace}
-          </p>
-          {/* Subtitle info row — live Swiss-format date + real agent status */}
-          <div className="mt-1.5 flex flex-wrap gap-3.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-            <span>
-              {new Date()
-                .toLocaleDateString('en-GB', {
-                  year: 'numeric',
-                  month: '2-digit',
-                  day: '2-digit',
-                  weekday: 'short',
-                })
-                .replace(/,/g, '')}
-            </span>
-            {activeEnv && (
-              <span className="text-cr-success">
-                {activeEnv.agentRunning
-                  ? t.statusRunning
-                  : activeEnv.agentInstalled
-                    ? t.statusInstalled
-                    : t.statusNotInstalled}
-              </span>
-            )}
-          </div>
-          <p className="mt-1 font-mono text-[10px] text-muted-foreground/70">
-            {activeEnv
-              ? `${activeEnv.agent.displayName}${activeEnv.theme ? ` · ${activeEnv.theme.name}` : ''}`
-              : t.detailNotInstalled}
-          </p>
-        </div>
-        {/* Status */}
-        {activeEnv && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-cr-success/25 bg-cr-success/10 px-2 py-0.5 text-[10px] font-medium text-cr-success">
-            <span className="size-[5px] rounded-full bg-cr-success" />
-            {t.activeBadge}
-          </span>
-        )}
-        {/* Continue */}
-        {activeEnv && onContinue && (
-          <button
-            type="button"
-            onClick={onContinue}
-            className="h-[27px] rounded-[2px] border border-primary bg-primary px-3 text-[11px] font-semibold text-white hover:bg-primary/90"
-          >
-            {t.continueWorking}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* WorkspacePage                                                       */
 /* ------------------------------------------------------------------ */
 
@@ -238,12 +135,6 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
     },
     [envActions],
   );
-
-  const handleContinue = useCallback(() => {
-    if (activeEnvironment) {
-      void envActions.switchEnvironment(activeEnvironment);
-    }
-  }, [activeEnvironment, envActions]);
 
   const handleBrowseThemes = useCallback(() => {
     controller.setRoute('themes');
@@ -351,12 +242,9 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
           backgroundSize: '22px 22px',
         }}
       />
-      {/* Hero — full-width compact Swiss banner */}
-      <CompactHero activeEnv={activeEnvironment} t={t} onContinue={handleContinue} />
-
-      {/* Content — EnvironmentGrid full-width (removed the demo DASHBOARD /
-          ENGINE / LIVE FEED panels that showed fabricated metrics). */}
-      <div className="mt-3.5 min-h-0 flex-1 overflow-y-auto">
+      {/* Content — EnvironmentGrid full-width (removed the hero banner and
+          the demo DASHBOARD / ENGINE / LIVE FEED panels). */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="grid grid-cols-12 gap-3.5">
           {/* Environment grid — full width */}
           <div className="col-span-12 flex flex-col gap-3.5">
