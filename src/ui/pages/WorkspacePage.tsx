@@ -159,7 +159,7 @@ function CompactHero({
           <p className="font-display text-[26px]/[1.15] font-bold tracking-tight">
             {activeEnv ? activeEnv.name : t.yourWorkspace}
           </p>
-          {/* Subtitle info row — live Swiss-format date (YYYY.MM.DD DDD) */}
+          {/* Subtitle info row — live Swiss-format date + real agent status */}
           <div className="mt-1.5 flex flex-wrap gap-3.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
             <span>
               {new Date()
@@ -171,13 +171,20 @@ function CompactHero({
                 })
                 .replace(/,/g, '')}
             </span>
-            <span>NEURAL-CDP READY</span>
-            <span>LOCAL MODE</span>
+            {activeEnv && (
+              <span className="text-cr-success">
+                {activeEnv.agentRunning
+                  ? t.statusRunning
+                  : activeEnv.agentInstalled
+                    ? t.statusInstalled
+                    : t.statusNotInstalled}
+              </span>
+            )}
           </div>
           <p className="mt-1 font-mono text-[10px] text-muted-foreground/70">
             {activeEnv
               ? `${activeEnv.agent.displayName}${activeEnv.theme ? ` · ${activeEnv.theme.name}` : ''}`
-              : 'No active environment'}
+              : t.detailNotInstalled}
           </p>
         </div>
         {/* Status */}

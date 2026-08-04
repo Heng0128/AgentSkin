@@ -116,13 +116,15 @@ export function EnvironmentCard({
   const statusLabel = (() => {
     switch (env.status) {
       case 'active':
-        return <b className="text-[10.5px] font-semibold text-cr-success">在线</b>;
+        return <b className="text-[10.5px] font-semibold text-cr-success">{t.envStatusActive}</b>;
       case 'available':
-        return <b className="text-[10.5px] font-semibold text-sky-500">可启动</b>;
+        return <b className="text-[10.5px] font-semibold text-sky-500">{t.envStatusAvailable}</b>;
       case 'offline':
-        return <b className="text-[10.5px] font-semibold text-muted-foreground">离线</b>;
+        return (
+          <b className="text-[10.5px] font-semibold text-muted-foreground">{t.envStatusOffline}</b>
+        );
       case 'detecting':
-        return <b className="text-[10.5px] font-semibold text-cr-warning">检测中</b>;
+        return <b className="text-[10.5px] font-semibold text-cr-warning">{t.statusDetecting}</b>;
     }
   })();
 
@@ -248,7 +250,7 @@ export function EnvironmentCard({
           <div className="grid grid-cols-3 gap-1.5 rounded-[2px] bg-secondary px-2.5 py-[10px]">
             <div>
               <i className="mb-0.5 block text-[8px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
-                版本
+                {t.detailVersion}
               </i>
               <b className="block text-[10.5px] font-semibold text-foreground/80">
                 {env.detectedVersion || '—'}
@@ -256,13 +258,13 @@ export function EnvironmentCard({
             </div>
             <div>
               <i className="mb-0.5 block text-[8px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
-                状态
+                {t.agentDetailStatus}
               </i>
               {statusLabel}
             </div>
             <div>
               <i className="mb-0.5 block text-[8px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
-                主题
+                {t.capTheme}
               </i>
               <b className="block truncate text-[10.5px] font-semibold text-foreground/80">
                 {env.theme?.name || '—'}
