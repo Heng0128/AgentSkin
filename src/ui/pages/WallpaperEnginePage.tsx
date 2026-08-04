@@ -498,16 +498,25 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
             {/* Detail panel — 右侧侧栏（预览 + 信息 + 操作） */}
             {selected && (
               <aside className="flex w-[280px] shrink-0 flex-col border-l border-border bg-card2">
-                {/* 侧栏头 */}
-                <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                  <span className="font-mono text-[9px] tracking-[0.12em] text-muted-foreground/60">
-                    PREVIEW · DETAILS
+                {/* 侧栏头 — 壁纸标题 + 类型徽章 + 关闭（取代"PREVIEW · DETAILS"标签） */}
+                <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+                  <span className="shrink-0 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
+                    {selected.type === 'video'
+                      ? t.weFilterVideo
+                      : selected.type === 'image'
+                        ? t.weFilterImage
+                        : selected.type === 'web'
+                          ? t.weFilterWeb
+                          : t.weFilterScene}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-display text-[12.5px] font-bold tracking-tight">
+                    {selected.title}
                   </span>
                   <button
                     type="button"
                     onClick={() => setSelected(null)}
                     aria-label={t.close}
-                    className="flex size-5 items-center justify-center rounded-[2px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    className="flex size-5 shrink-0 items-center justify-center rounded-[2px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     ✕
                   </button>
@@ -552,238 +561,225 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     />
                   </div>
 
-                  {/* Info + actions (Swiss) — 纵向堆叠 */}
-                  <div className="mt-3">
-                    <div className="flex items-center gap-2">
-                      <h3 className="truncate font-display text-sm font-bold">{selected.title}</h3>
-                      <span className="rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
-                        {selected.type === 'video'
-                          ? t.weFilterVideo
-                          : selected.type === 'image'
-                            ? t.weFilterImage
-                            : selected.type === 'web'
-                              ? t.weFilterWeb
-                              : t.weFilterScene}
-                      </span>
-                      <span className="rounded-[2px] border border-border px-1 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground/60">
-                        {selected.source === 'workshop'
-                          ? 'WORKSHOP'
-                          : t.weFilterLocal.toUpperCase()}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+                  {/* Meta row — 大小 + 来源 + 标签（预览下方） */}
+                  <div className="mt-2.5 flex items-center gap-2 font-mono text-[10px] tracking-wider text-muted-foreground">
+                    <span className="font-semibold text-foreground/80">
                       {formatSize(selected.sizeBytes)}
-                      {selected.tags.length > 0 && (
-                        <span className="opacity-60">
-                          {' '}
-                          · {selected.tags.slice(0, 3).join(' • ')}
+                    </span>
+                    <span className="text-muted-foreground/40">·</span>
+                    <span>
+                      {selected.source === 'workshop' ? 'WORKSHOP' : t.weFilterLocal.toUpperCase()}
+                    </span>
+                    {selected.tags.length > 0 && (
+                      <>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span className="truncate opacity-70">
+                          {selected.tags.slice(0, 3).join(' • ')}
                         </span>
-                      )}
-                    </p>
-
-                    {/* Preview-only warning (Swiss mono) */}
-                    {selected.previewOnly && (
-                      <p className="mt-1.5 rounded-[2px] bg-cr-warning/10 px-2 py-1 font-mono text-[10px] leading-tight text-cr-warning">
-                        {t.wePreviewOnlyHint}
-                      </p>
+                      </>
                     )}
-
-                    {/* Actions row: set as UI background + agent apply buttons */}
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      {/* Set as AgentSkin background (Swiss primary) */}
-                      <button
-                        type="button"
-                        onClick={() => void setWallpaper(true, selected.id, renderDraft)}
-                        className={cn(
-                          'rounded-[2px] px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-colors',
-                          enabled && selectedId === selected.id
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted text-muted-foreground hover:bg-accent hover:text-foreground',
-                        )}
-                      >
-                        {enabled && selectedId === selected.id
-                          ? t.wallpaperSelected
-                          : t.wallpaperEnable}
-                      </button>
-
-                      <div className="h-4 w-px bg-border" />
-
-                      {/* Agent apply buttons — 5-state precision */}
-                      {AGENT_IDS.map((agentId) => {
-                        const agentSetting = agentWallpapers[agentId] ?? {
-                          enabled: false,
-                          id: null,
-                        };
-                        const isApplied = agentSetting.enabled && agentSetting.id === selected.id;
-                        const isApplying = applyingTo === agentId;
-                        const status = appStatusFor(agentId);
-                        const isInstalled = status?.installed ?? false;
-                        const isRunning = status?.running ?? false;
-                        const isReady = status?.debugReady ?? false;
-                        const lastResult = injectResults[agentId];
-                        const isFail = lastResult?.status === 'fail';
-                        // Determine precise state label
-                        const stateLabel = isApplying
-                          ? t.weStatusInjecting
-                          : isApplied
-                            ? t.weStatusApplied
-                            : isFail
-                              ? t.weStatusFailed
-                              : !isInstalled
-                                ? t.weStatusNotInstalled
-                                : !isRunning
-                                  ? t.weStatusOffline
-                                  : isReady
-                                    ? t.weStatusReady
-                                    : t.weStatusRunning;
-                        // Can inject if running — if CDP isn't ready, the
-                        // apply will return 'requires-restart' and the user
-                        // will be prompted for explicit restart consent.
-                        const canInject = isRunning && !isApplying && !selected.previewOnly;
-                        // Tooltip includes the failure detail (verdicts) so the
-                        // user can see WHY injection failed without opening logs.
-                        const failDetail =
-                          isFail && lastResult?.detail ? `\n${lastResult.detail}` : '';
-                        return (
-                          <div key={agentId} className="flex flex-col items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                isApplied
-                                  ? handleRemove(agentId)
-                                  : handleApply(selected.id, agentId)
-                              }
-                              disabled={!canInject && !isApplied}
-                              title={`${AGENT_META[agentId].displayName} · ${stateLabel}${status?.port ? ` · :${status.port}` : ''}${failDetail}`}
-                              className={cn(
-                                'relative flex size-8 items-center justify-center rounded-[2px] border transition-all duration-slow',
-                                isApplied
-                                  ? 'border-cr-success/60 bg-cr-success/10'
-                                  : isFail
-                                    ? 'border-destructive/50 bg-destructive/5'
-                                    : isReady
-                                      ? 'border-cr-info/50 bg-cr-info/5 hover:border-cr-info/70 hover:bg-cr-info/10'
-                                      : isRunning
-                                        ? 'border-border bg-muted/30 hover:bg-muted'
-                                        : isInstalled
-                                          ? 'border-cr-warning/30 bg-cr-warning/5 opacity-60'
-                                          : 'border-border/40 bg-muted/20 opacity-35 cursor-not-allowed',
-                                isApplying && 'opacity-60 scale-95',
-                              )}
-                            >
-                              {isApplying ? (
-                                <div className="size-3.5 animate-spin rounded-full border-[1.5px] border-muted-foreground/30 border-t-foreground" />
-                              ) : isApplied ? (
-                                <HugeIcon
-                                  icon={CheckmarkCircle02Icon}
-                                  className="size-4.5 text-cr-success"
-                                />
-                              ) : (
-                                <AppMark appId={agentId} size={18} />
-                              )}
-                              {/* Multi-state status dot */}
-                              {!isApplying && (
-                                <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
-                                  {/* Ping animation only for CDP-ready (not yet applied) */}
-                                  {isReady && !isApplied && !isFail && (
-                                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-cyan-400 opacity-60" />
-                                  )}
-                                  <span
-                                    className={cn(
-                                      'relative inline-flex size-2.5 rounded-full ring-2 ring-background transition-colors duration-slower',
-                                      isApplied
-                                        ? 'bg-cr-success'
-                                        : isFail
-                                          ? 'bg-destructive'
-                                          : isReady
-                                            ? 'bg-cyan-400'
-                                            : isRunning
-                                              ? 'bg-cr-info'
-                                              : isInstalled
-                                                ? 'bg-cr-warning/70'
-                                                : 'bg-transparent',
-                                    )}
-                                  />
-                                </span>
-                              )}
-                            </button>
-                            {/* Precise state label (Swiss mono) */}
-                            <span
-                              className={cn(
-                                'max-w-[3.5rem] truncate text-center font-mono text-[8px] tracking-wider leading-tight transition-colors duration-slower',
-                                isApplied
-                                  ? 'text-cr-success'
-                                  : isFail
-                                    ? 'text-destructive'
-                                    : isReady
-                                      ? 'text-cr-info'
-                                      : isRunning
-                                        ? 'text-muted-foreground'
-                                        : 'text-muted-foreground/60',
-                              )}
-                            >
-                              {stateLabel}
-                            </span>
-                          </div>
-                        );
-                      })}
-
-                      {/* Apply to all running agents */}
-                      <button
-                        type="button"
-                        onClick={() => void handleApplyAll(selected.id)}
-                        disabled={
-                          !!batchProgress ||
-                          !!applyingTo ||
-                          runningAgentCount === 0 ||
-                          selected.previewOnly
-                        }
-                        title={
-                          selected.previewOnly
-                            ? t.wePreviewOnlyHint
-                            : runningAgentCount > 0
-                              ? t.weRunningAgents(runningAgentCount)
-                              : t.weNoRunningAgents
-                        }
-                        className={cn(
-                          'flex items-center gap-1.5 rounded-[2px] border border-border px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-colors',
-                          batchProgress || applyingTo || selected.previewOnly
-                            ? 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-60'
-                            : runningAgentCount > 0
-                              ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
-                              : 'border-border/50 bg-muted/20 text-muted-foreground opacity-40 cursor-not-allowed',
-                        )}
-                      >
-                        {batchProgress
-                          ? t.weApplyingAll(batchProgress.done, batchProgress.total)
-                          : t.weApplyAll}
-                      </button>
-                    </div>
-
-                    {/* Running agents hint (live, Swiss mono) */}
-                    <p className="mt-2 flex items-center gap-1.5 font-mono text-[10px] tracking-wider text-muted-foreground">
-                      <AgentStatusDot
-                        size="xs"
-                        variant={
-                          controller.isRefreshing
-                            ? 'refreshing'
-                            : runningAgentCount > 0
-                              ? 'active'
-                              : 'offline'
-                        }
-                      />
-                      {runningAgentCount > 0
-                        ? t.weRunningAgents(runningAgentCount)
-                        : t.weNoRunningAgents}
-                      {readyAgentCount > 0 && readyAgentCount < runningAgentCount && (
-                        <span className="text-cr-info">
-                          {`(${readyAgentCount} ${t.weStatusReady})`}
-                        </span>
-                      )}
-                      <span className="mx-1 opacity-40">·</span>
-                      {relativeTime}
-                    </p>
                   </div>
+
+                  {/* Preview-only warning (Swiss mono) */}
+                  {selected.previewOnly && (
+                    <p className="mt-1.5 rounded-[2px] bg-cr-warning/10 px-2 py-1 font-mono text-[10px] leading-tight text-cr-warning">
+                      {t.wePreviewOnlyHint}
+                    </p>
+                  )}
+
+                  {/* Actions row: set as UI background + agent apply buttons */}
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {/* Set as AgentSkin background (Swiss primary) */}
+                    <button
+                      type="button"
+                      onClick={() => void setWallpaper(true, selected.id, renderDraft)}
+                      className={cn(
+                        'rounded-[2px] px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-colors',
+                        enabled && selectedId === selected.id
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:bg-accent hover:text-foreground',
+                      )}
+                    >
+                      {enabled && selectedId === selected.id
+                        ? t.wallpaperSelected
+                        : t.wallpaperEnable}
+                    </button>
+
+                    <div className="h-4 w-px bg-border" />
+
+                    {/* Agent apply buttons — 5-state precision */}
+                    {AGENT_IDS.map((agentId) => {
+                      const agentSetting = agentWallpapers[agentId] ?? {
+                        enabled: false,
+                        id: null,
+                      };
+                      const isApplied = agentSetting.enabled && agentSetting.id === selected.id;
+                      const isApplying = applyingTo === agentId;
+                      const status = appStatusFor(agentId);
+                      const isInstalled = status?.installed ?? false;
+                      const isRunning = status?.running ?? false;
+                      const isReady = status?.debugReady ?? false;
+                      const lastResult = injectResults[agentId];
+                      const isFail = lastResult?.status === 'fail';
+                      // Determine precise state label
+                      const stateLabel = isApplying
+                        ? t.weStatusInjecting
+                        : isApplied
+                          ? t.weStatusApplied
+                          : isFail
+                            ? t.weStatusFailed
+                            : !isInstalled
+                              ? t.weStatusNotInstalled
+                              : !isRunning
+                                ? t.weStatusOffline
+                                : isReady
+                                  ? t.weStatusReady
+                                  : t.weStatusRunning;
+                      // Can inject if running — if CDP isn't ready, the
+                      // apply will return 'requires-restart' and the user
+                      // will be prompted for explicit restart consent.
+                      const canInject = isRunning && !isApplying && !selected.previewOnly;
+                      // Tooltip includes the failure detail (verdicts) so the
+                      // user can see WHY injection failed without opening logs.
+                      const failDetail =
+                        isFail && lastResult?.detail ? `\n${lastResult.detail}` : '';
+                      return (
+                        <div key={agentId} className="flex flex-col items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              isApplied ? handleRemove(agentId) : handleApply(selected.id, agentId)
+                            }
+                            disabled={!canInject && !isApplied}
+                            title={`${AGENT_META[agentId].displayName} · ${stateLabel}${status?.port ? ` · :${status.port}` : ''}${failDetail}`}
+                            className={cn(
+                              'relative flex size-8 items-center justify-center rounded-[2px] border transition-all duration-slow',
+                              isApplied
+                                ? 'border-cr-success/60 bg-cr-success/10'
+                                : isFail
+                                  ? 'border-destructive/50 bg-destructive/5'
+                                  : isReady
+                                    ? 'border-cr-info/50 bg-cr-info/5 hover:border-cr-info/70 hover:bg-cr-info/10'
+                                    : isRunning
+                                      ? 'border-border bg-muted/30 hover:bg-muted'
+                                      : isInstalled
+                                        ? 'border-cr-warning/30 bg-cr-warning/5 opacity-60'
+                                        : 'border-border/40 bg-muted/20 opacity-35 cursor-not-allowed',
+                              isApplying && 'opacity-60 scale-95',
+                            )}
+                          >
+                            {isApplying ? (
+                              <div className="size-3.5 animate-spin rounded-full border-[1.5px] border-muted-foreground/30 border-t-foreground" />
+                            ) : isApplied ? (
+                              <HugeIcon
+                                icon={CheckmarkCircle02Icon}
+                                className="size-4.5 text-cr-success"
+                              />
+                            ) : (
+                              <AppMark appId={agentId} size={18} />
+                            )}
+                            {/* Multi-state status dot */}
+                            {!isApplying && (
+                              <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
+                                {/* Ping animation only for CDP-ready (not yet applied) */}
+                                {isReady && !isApplied && !isFail && (
+                                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-cyan-400 opacity-60" />
+                                )}
+                                <span
+                                  className={cn(
+                                    'relative inline-flex size-2.5 rounded-full ring-2 ring-background transition-colors duration-slower',
+                                    isApplied
+                                      ? 'bg-cr-success'
+                                      : isFail
+                                        ? 'bg-destructive'
+                                        : isReady
+                                          ? 'bg-cyan-400'
+                                          : isRunning
+                                            ? 'bg-cr-info'
+                                            : isInstalled
+                                              ? 'bg-cr-warning/70'
+                                              : 'bg-transparent',
+                                  )}
+                                />
+                              </span>
+                            )}
+                          </button>
+                          {/* Precise state label (Swiss mono) */}
+                          <span
+                            className={cn(
+                              'max-w-[3.5rem] truncate text-center font-mono text-[8px] tracking-wider leading-tight transition-colors duration-slower',
+                              isApplied
+                                ? 'text-cr-success'
+                                : isFail
+                                  ? 'text-destructive'
+                                  : isReady
+                                    ? 'text-cr-info'
+                                    : isRunning
+                                      ? 'text-muted-foreground'
+                                      : 'text-muted-foreground/60',
+                            )}
+                          >
+                            {stateLabel}
+                          </span>
+                        </div>
+                      );
+                    })}
+
+                    {/* Apply to all running agents */}
+                    <button
+                      type="button"
+                      onClick={() => void handleApplyAll(selected.id)}
+                      disabled={
+                        !!batchProgress ||
+                        !!applyingTo ||
+                        runningAgentCount === 0 ||
+                        selected.previewOnly
+                      }
+                      title={
+                        selected.previewOnly
+                          ? t.wePreviewOnlyHint
+                          : runningAgentCount > 0
+                            ? t.weRunningAgents(runningAgentCount)
+                            : t.weNoRunningAgents
+                      }
+                      className={cn(
+                        'flex items-center gap-1.5 rounded-[2px] border border-border px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-colors',
+                        batchProgress || applyingTo || selected.previewOnly
+                          ? 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-60'
+                          : runningAgentCount > 0
+                            ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
+                            : 'border-border/50 bg-muted/20 text-muted-foreground opacity-40 cursor-not-allowed',
+                      )}
+                    >
+                      {batchProgress
+                        ? t.weApplyingAll(batchProgress.done, batchProgress.total)
+                        : t.weApplyAll}
+                    </button>
+                  </div>
+
+                  {/* Running agents hint (live, Swiss mono) */}
+                  <p className="mt-2 flex items-center gap-1.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+                    <AgentStatusDot
+                      size="xs"
+                      variant={
+                        controller.isRefreshing
+                          ? 'refreshing'
+                          : runningAgentCount > 0
+                            ? 'active'
+                            : 'offline'
+                      }
+                    />
+                    {runningAgentCount > 0
+                      ? t.weRunningAgents(runningAgentCount)
+                      : t.weNoRunningAgents}
+                    {readyAgentCount > 0 && readyAgentCount < runningAgentCount && (
+                      <span className="text-cr-info">
+                        {`(${readyAgentCount} ${t.weStatusReady})`}
+                      </span>
+                    )}
+                    <span className="mx-1 opacity-40">·</span>
+                    {relativeTime}
+                  </p>
 
                   {/* 渲染设置面板 — 对齐 Wallpaper Engine 渲染面板：主题配色/速度/
                         对齐/位置/翻转/视差/图片筛选器/音频。编辑后随「设为 UI 背景」
