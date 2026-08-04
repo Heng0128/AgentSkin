@@ -467,13 +467,13 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
 
           {/* Grid + detail sidebar — 左右两栏：左侧网格，右侧选中壁纸详情 */}
           <div className="flex min-h-0 flex-1">
-            <div className="we-grid min-h-0 flex-1 overflow-y-auto p-[10px]">
+            <div className="we-grid min-h-0 flex-1 overflow-y-auto p-2">
               {filtered.length === 0 ? (
                 <div className="flex h-40 items-center justify-center font-mono text-[11px] tracking-wider text-muted-foreground/60">
                   {t.weEmpty}
                 </div>
               ) : (
-                <div className={cn('grid gap-[8px]', gridClass(filtered.length))}>
+                <div className={cn('grid gap-2', gridClass(filtered.length))}>
                   {filtered.map((wp, i) => (
                     <WallpaperCard
                       key={wp.id}
@@ -1319,17 +1319,15 @@ function WallpaperCard({
 // --- Helpers ---
 
 function gridClass(count: number): string {
-  // P3-1: count === 4 used to fall back to a 2-column layout (same as count===2)
-  // which broke any 4-card comparison grid (e.g. two light + two dark variants).
-  // 4 cards fit cleanly into a 2x2 grid — same width envelope as the 2-card
-  // case, so keep the max-w-lg cap but use the correct column count that
-  // yields 2 rows instead of 1 over-stretched row.
-  if (count <= 1) return 'grid-cols-1 max-w-sm';
-  if (count === 2) return 'grid-cols-2 max-w-lg';
-  if (count === 3) return 'grid-cols-3';
-  if (count === 4) return 'grid-cols-2 max-w-lg';
-  if (count <= 6) return 'grid-cols-3';
-  return 'grid-cols-4';
+  // Responsive WE-style grid: with 4+ items use auto-fill so cards flow at a
+  // fixed minimum width (170px) and a wide window produces more columns —
+  // previously the grid was capped at 4 columns, so a large library left big
+  // horizontal whitespace and stretched cards. Small counts stay centered at
+  // a bounded width so 1–3 cards don't stretch into one oversized row.
+  if (count === 1) return 'grid-cols-[minmax(0,340px)] justify-center';
+  if (count === 2) return 'grid-cols-2 max-w-[700px]';
+  if (count === 3) return 'grid-cols-3 max-w-[1020px]';
+  return 'grid-cols-[repeat(auto-fill,minmax(170px,1fr))]';
 }
 
 function formatSize(bytes: number): string {
