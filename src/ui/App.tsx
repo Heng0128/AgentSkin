@@ -100,11 +100,10 @@ export default function App() {
                   resolves against it. With min-height the resolved height stays
                   auto, so every page's h-full container collapsed to content
                   height and the inner scroll regions never engaged.
-                  Padding: top 16 / bottom 28 — the old 64px bottom was reserved
-                  for the inject dock, but that's a fixed overlay (default
-                  closed), so a permanent 64px left big vertical whitespace at
-                  the bottom of every page (wallpaper grid especially). */}
-              <div className="mx-auto h-full w-full max-w-[1240px] p-[16px_24px_28px]">
+                  Padding kept minimal (12 top / 20 sides / 16 bottom) so pages
+                  use nearly the full viewport — the sidebar/title/status bars
+                  already frame the edges, and the inject dock floats above. */}
+              <div className="mx-auto h-full w-full max-w-[1240px] p-[12px_20px_16px]">
                 <div key={controller.route} className="h-full animate-page-enter">
                   <Suspense
                     fallback={
