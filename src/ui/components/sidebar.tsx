@@ -88,10 +88,23 @@ export function Sidebar({ controller }: { controller: AppController }) {
       }}
       className="flex h-full min-h-0 flex-col overflow-hidden flex-none z-[4]"
     >
-      {/* Brand */}
-      <div
+      {/* Brand — clicking the logo toggles the collapsed state (Swiss: the
+          brand mark doubles as the collapse control; the footer button
+          remains as a secondary affordance). */}
+      <button
+        type="button"
+        onClick={controller.toggleSidebar}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            controller.toggleSidebar();
+          }
+        }}
+        title={collapsed ? t.expandSidebar : t.collapseSidebar}
+        aria-label={collapsed ? t.expandSidebar : t.collapseSidebar}
+        aria-pressed={collapsed}
         className={cn(
-          'flex items-center gap-2.5 px-4 py-3 shrink-0',
+          'flex items-center gap-2.5 px-4 py-3 shrink-0 cursor-pointer bg-transparent border-0 text-left transition-colors duration-fast',
           collapsed && 'justify-center px-0',
         )}
       >
@@ -100,13 +113,11 @@ export function Sidebar({ controller }: { controller: AppController }) {
           className="size-7 shrink-0 transition-transform duration-250 ease-[cubic-bezier(.34,1.56,.64,1)] hover:rotate-[-4deg] hover:scale-105"
         />
         {!collapsed && (
-          <div className="min-w-0">
-            <p className="truncate font-display text-[13px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
-              AgentSkin
-            </p>
-          </div>
+          <span className="min-w-0 truncate font-display text-[13px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
+            AgentSkin
+          </span>
         )}
-      </div>
+      </button>
 
       {/* Navigation — Swiss grouped sections */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden pt-2.5 pb-2">
