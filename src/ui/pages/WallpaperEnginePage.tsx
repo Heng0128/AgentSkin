@@ -128,6 +128,8 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
   const [installed, setInstalled] = useState<boolean | null>(null);
   const [filter, setFilter] = useState<TypeFilter>('all');
   const [search, setSearch] = useState('');
+  // WE-style sort: by title (asc) or by size (desc).
+  const [sortBy, setSortBy] = useState<'title' | 'size'>('title');
   const [selected, setSelected] = useState<WallpaperInfo | null>(null);
   /** 渲染设置草稿（对齐/位置/翻转/滤镜/视差/音频等），编辑后随「设为 UI 背景」
    *  或「应用到 agent」一起持久化；未编辑时为 undefined（用全局默认/主题默认）。 */
@@ -179,8 +181,12 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
           w.title.toLowerCase().includes(q) || w.tags.some((tag) => tag.toLowerCase().includes(q)),
       );
     }
-    return list;
-  }, [wallpapers, filter, search]);
+    // WE-style sort: title A→Z, or size large→small.
+    const sorted = [...list].sort((a, b) =>
+      sortBy === 'title' ? a.title.localeCompare(b.title, 'zh-Hans-CN') : b.sizeBytes - a.sizeBytes,
+    );
+    return sorted;
+  }, [wallpapers, filter, search, sortBy]);
 
   const videoCount = useMemo(
     () => wallpapers.filter((w) => w.type === 'video').length,
@@ -429,7 +435,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
       {/* Main content (when wallpapers exist or WE is installed) */}
       {(installed !== false || wallpapers.length > 0) && (
         <>
-          {/* Toolbar: search + segmented type filter (Swiss sub-bar) */}
+          {/* Toolbar: search + sort + segmented type filter (WE-style sub-bar) */}
           <div className="we-sub flex items-center gap-[8px] border-b border-border px-[14px] py-[10px]">
             <div className="relative max-w-[240px] flex-1">
               <HugeIcon
@@ -443,6 +449,16 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                 className="h-[30px] w-full rounded-[2px] border border-border bg-card2 pl-8 pr-3 font-mono text-[11px] outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20"
               />
             </div>
+            {/* Sort dropdown — WE-style */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as 'title' | 'size')}
+              aria-label={sortBy === 'title' ? t.weSortTitle : t.weSortSize}
+              className="h-[30px] rounded-[2px] border border-border bg-[var(--bg2)] px-2 font-mono text-[10.5px] text-muted-foreground outline-none transition-colors focus:border-primary"
+            >
+              <option value="title">{t.weSortTitle}</option>
+              <option value="size">{t.weSortSize}</option>
+            </select>
             <div className="we-tabs flex items-center gap-[2px] rounded-[2px] bg-[var(--bg2)] p-[2px]">
               {(['all', 'video', 'image', 'web', 'scene'] as const).map((f) => (
                 <button
@@ -495,6 +511,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                       onDelete={() => void handleDelete(wp.id)}
                       deleteLabel={t.wallpaperDelete}
                       confirmLabel={t.wallpaperDeleteConfirm}
+                      t={t}
                     />
                   ))}
                 </div>
@@ -1129,6 +1146,7 @@ function WallpaperCard({
   onDelete,
   deleteLabel,
   confirmLabel,
+  t,
 }: {
   wallpaper: WallpaperInfo;
   index: number;
@@ -1141,6 +1159,7 @@ function WallpaperCard({
   onDelete: () => void;
   deleteLabel: string;
   confirmLabel: string;
+  t: UiMessages;
 }) {
   const [confirming, setConfirming] = useState(false);
   const wantsMedia = wallpaper.playback === 'video' || wallpaper.playback === 'gif';
@@ -1203,6 +1222,23 @@ function WallpaperCard({
               </div>
             }
           />
+          {/* WE-style hover overlay — dark scrim + hint sliding up on hover */}
+          <div
+            className="pointer-events-none absolute inset-0 flex items-end opacity-0 transition-opacity duration-fast group-hover:opacity-100"
+            aria-hidden
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <span className="relative flex w-full items-center justify-between px-2.5 pb-2 font-mono text-[10px] tracking-wider text-white/90">
+              {wallpaper.type === 'video'
+                ? t.weTypeVideo
+                : wallpaper.type === 'image'
+                  ? t.weTypeImage
+                  : wallpaper.type === 'web'
+                    ? t.weTypeWeb
+                    : t.weTypeScene}
+              <span className="tabular-nums">{formatSize(wallpaper.sizeBytes)}</span>
+            </span>
+          </div>
           {/* Type badge (Swiss mono) */}
           <span
             className={cn(
