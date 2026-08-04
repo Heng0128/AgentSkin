@@ -73,6 +73,19 @@ export function ThemesPage({ controller }: { controller: AppController }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      {/* Swiss header — consistent with the other pages: display title +
+          mono counter + hairline separator */}
+      <div className="mb-3 flex items-center gap-3">
+        <h2 className="font-display text-sm font-bold tracking-tight">{t.navThemes}</h2>
+        <span className="rounded-[2px] bg-muted px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+          {tc.allCount}
+        </span>
+        <span className="h-3 w-px bg-border" aria-hidden />
+        <span className="font-mono text-[10px] tracking-wider text-muted-foreground/60">
+          {tc.categories.length > 0 ? t.categoryLabel(tc.selectedCategory ?? 'all') : ''}
+        </span>
+      </div>
+
       {/* Swiss Toolbar */}
       <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
         <span className="mono text-xs text-muted-foreground" style={{ fontSize: '11px' }}>

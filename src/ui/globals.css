@@ -10,10 +10,14 @@
 /* ------------------------------------------------------------------ */
 
 :root {
-  /* Font stacks — Swiss edition */
-  --font-display: "Space Grotesk", "Noto Sans SC", system-ui, sans-serif;
-  --font-ui: "Noto Sans SC", -apple-system, "Segoe UI", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Noto Sans SC", monospace;
+  /* Font stacks — Swiss edition. Latin display/label faces are bundled
+     locally (@fontsource); CJK uses high-quality system fonts (YaHei on
+     Windows, PingFang on macOS) instead of an unloaded web font. */
+  --font-display:
+    "Space Grotesk Variable", "Space Grotesk", "Microsoft YaHei UI", "PingFang SC", system-ui,
+    sans-serif;
+  --font-ui: "Microsoft YaHei UI", "PingFang SC", -apple-system, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Microsoft YaHei UI", monospace;
 
   /* Brand colors */
   --brand-red: #ff453a;

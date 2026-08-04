@@ -30,7 +30,7 @@ export function ThemeCard({
         'group flex h-full flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-all duration-slow ease-out',
         selected
           ? 'border-primary/60 ring-1 ring-primary/30'
-          : 'hover:border-border-strong hover:-translate-y-[3px] hover:shadow-[0_4px_12px_rgba(0,0,0,0.4)]',
+          : 'hover:border-border-strong hover:-translate-y-px',
       )}
     >
       {/* Preview — 16:9 aspect ratio */}

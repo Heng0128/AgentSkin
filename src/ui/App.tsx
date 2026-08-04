@@ -100,7 +100,7 @@ export default function App() {
                   resolves against it. With min-height the resolved height stays
                   auto, so every page's h-full container collapsed to content
                   height and the inner scroll regions never engaged. */}
-              <div className="mx-auto h-full w-full max-w-[1240px] p-[22px_30px_70px]">
+              <div className="mx-auto h-full w-full max-w-[1240px] p-[20px_24px_64px]">
                 <div key={controller.route} className="h-full animate-page-enter">
                   <Suspense
                     fallback={
