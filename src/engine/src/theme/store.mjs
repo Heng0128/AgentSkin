@@ -6,7 +6,10 @@ import { MAX_THEME_PACKAGE_BYTES, THEME_EXTENSION, validateThemePackage } from "
 import { LEGACY_THEME_FORMAT, convertLegacyThemePackage, validateLegacyThemePackage } from "./legacy.mjs";
 
 function resolveBaseUrl(env = process.env) {
-  const raw = (env.AGENTSKIN_API_BASE || "https://agentskin.app").trim().replace(/\/+$/, "");
+  // AGENTSKIN_API_BASE is only used as a stable namespace for store keys.
+  // Default to a local identifier (the old default pointed at a non-existent
+  // agentskin.app domain).
+  const raw = (env.AGENTSKIN_API_BASE || "https://agentskin.local").trim().replace(/\/+$/, "");
   let url;
   try {
     url = new URL(raw);

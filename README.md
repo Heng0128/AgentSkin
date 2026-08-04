@@ -8,17 +8,15 @@
 
 [English](README.md)
 
-官方网站：[agentskin.app](https://agentskin.app) — [下载最新版本](https://github.com/Heng0128/AgentSkin/releases/latest)
+[下载最新版本](https://github.com/Heng0128/AgentSkin/releases/latest)
 
 AgentSkin 是一款面向 AI 桌面应用的开源主题管理器，目前支持 **TRAE SOLO CN**、**QoderWork CN**、**WorkBuddy** 和 **豆包**，可在 macOS 和 Windows 上使用。一键将主题应用到任何支持的应用，并随时恢复原生界面。主题只改变外观，不修改应用安装和数据。
-
-![AgentSkin 主题管理器](docs/images/desktop.png)
 
 ## v2 全新改版
 
 v2 是一次完全的重构：
 
-- **全新 UI**：基于 Tailwind CSS + shadcn 风格组件，与 [agentskin.app](https://agentskin.app) 共享同一设计语言。
+- **全新 UI**：基于 Tailwind CSS + shadcn 风格组件。
 - **多应用支持**：基于 `@agentskin/engine` 引擎，一个主题包可以针对多个应用，详情面板按应用（TRAE SOLO CN、QoderWork CN、WorkBuddy、豆包）单独应用。
 - **设置对话框**：分类设置项：显示语言、手动指定应用安装路径、应用自定义调试端口。
 - **智能应用流程**：应用已有调试连接时直接切换主题；仅在首次需要重启应用或主机外观设置变更时才请求重启。
@@ -32,12 +30,6 @@ v2 是一次完全的重构：
 - 自动检测不到应用时手动指定安装路径（主要在 Windows），默认调试端口被占用时可按应用修改。
 - 支持中英双语切换，首次启动跟随系统语言。
 
-## 主题画廊
-
-| Cyber Neon | Arctic White | Sakura |
-| --- | --- | --- |
-| ![Cyber Neon 主题](docs/images/cyber-neon.png) | ![Arctic White 主题](docs/images/arctic-white.png) | ![Sakura 主题](docs/images/sakura.png) |
-
 ## 本地开发
 
 ```bash
@@ -47,7 +39,7 @@ npm start
 
 使用 `AGENTSKIN_API_BASE=http://localhost:4173 npm start` 指向本地网站实例。
 
-桌面端将 [`@agentskin/engine`](https://github.com/agentskin/core)（fork 自 `@agentskin/engine`）直接 vendored 在 `src/engine/`，因此开发始终基于仓内引擎版本构建。
+桌面端将 `@agentskin/engine` 引擎直接 vendored 在 `src/engine/`，因此开发始终基于仓内引擎版本构建。
 
 ## 测试和构建
 
@@ -86,8 +78,8 @@ npx electron-builder --win --x64
 
 ## 相关项目
 
-- [AgentSkin Core](https://github.com/agentskin/core) 供 Desktop 和 Skill 共用的 Apache-2.0 主题引擎和 CLI（主题格式、应用适配器、应用/恢复）。
-- [AgentSkin Skills](https://github.com/agentskin/skills) 供 AI 编码助手创建和自定义主题的 AI 技能。
+- **AgentSkin Core** — 供 Desktop 和 Skill 共用的 Apache-2.0 主题引擎和 CLI（主题格式、应用适配器、应用/恢复），随本仓库 `src/engine/` 一同分发。
+- **AgentSkin Skills** — 供 AI 编码助手创建和自定义主题的 AI 技能。
 
 ## 许可证
 
