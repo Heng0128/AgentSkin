@@ -8,9 +8,9 @@
  * For each InstalledThemePackage, the installer:
  * 1. Reads the manifest and icon/preview assets
  * 2. Reads per-agent CSS files (v2) or generates a default CSS (v1 fallback)
- * 3. Maps each AgentId to its @agentskin/core adapter id (coreId) so the
+ * 3. Maps each AgentId to its @agentskin/engine adapter id (coreId) so the
  *    resulting bundle's `targets` keys are engine-compatible with the
- *    adapter ids @agentskin/core understands
+ *    adapter ids @agentskin/engine understands
  * 4. Carries rich v2 metadata (author, category, tags, license, mode,
  *    supportedAgents, colors) in `theme.copy` — the engine-safe free-form
  *    record — so it survives the round-trip into InstalledTheme → catalog → UI
@@ -57,15 +57,100 @@ function currentAppVersion(): string {
 
 /**
  * Compare two semver strings. Returns true if `actual >= required`.
+ *
+ * P1 audit #19: the previous implementation did `split('.').map(Number)`,
+ * which silently dropped prerelease suffixes via `Number('0-beta.1') → NaN →
+ * 0`. That made `1.0.0-beta.1` compare equal to `1.0.0`, so a prerelease
+ * version would satisfy a `minAppVersion: "1.0.0"` requirement even though
+ * semver spec says prereleases are *lower* than their release counterpart.
+ *
+ * Now follows the semver precedence rules:
+ *   - Parse major.minor.patch + optional prerelease tag.
+ *   - Compare numeric major/minor/patch first.
+ *   - If equal, a version WITH a prerelease tag is lower than one without
+ *     (e.g. `1.0.0-beta.1` < `1.0.0`).
+ *   - If both have prerelease tags, compare them per semver §11
+ *     (identifier-by-identifier: numeric < alphanumeric; shorter < longer
+ *     when all preceding identifiers are equal).
+ *
+ * Non-semver strings (no dots, empty, etc.) fall back to the legacy
+ * numeric-split comparison so we never regress on inputs the old code
+ * accepted.
  */
 function semverGte(actual: string, required: string): boolean {
-  const a = actual.split('.').map(Number);
-  const r = required.split('.').map(Number);
-  for (let i = 0; i < 3; i++) {
-    if ((a[i] || 0) > (r[i] || 0)) return true;
-    if ((a[i] || 0) < (r[i] || 0)) return false;
+  return compareSemver(actual, required) >= 0;
+}
+
+/** Parse a semver string into { major, minor, patch, prerelease: string[] }.
+ *  Returns null if the string doesn't look like semver (no dot-separated
+ *  numeric core). */
+function parseSemver(v: string): {
+  major: number;
+  minor: number;
+  patch: number;
+  prerelease: string[];
+} | null {
+  // Strip leading 'v' or whitespace.
+  const cleaned = v.trim().replace(/^v/i, '');
+  // Capture major.minor.patch and optional -prerelease.
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-.]+))?(?:\+[0-9A-Za-z-.]+)?$/.exec(cleaned);
+  if (!match) return null;
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+    prerelease: match[4] ? match[4].split('.') : [],
+  };
+}
+
+/** Compare two semver strings. Returns >0 if a>b, 0 if equal, <0 if a<b.
+ *  Falls back to legacy numeric-split comparison if either input is not
+ *  parseable semver, so we never regress on inputs the old code accepted. */
+function compareSemver(a: string, b: string): number {
+  const pa = parseSemver(a);
+  const pb = parseSemver(b);
+  // Legacy fallback: if either side isn't valid semver, use the old
+  // split-and-map-Number comparison so we don't reject inputs that
+  // previously worked (e.g. "5", "1.2").
+  if (!pa || !pb) {
+    const na = a.split('.').map(Number);
+    const nb = b.split('.').map(Number);
+    for (let i = 0; i < 3; i++) {
+      if ((na[i] || 0) > (nb[i] || 0)) return 1;
+      if ((na[i] || 0) < (nb[i] || 0)) return -1;
+    }
+    return 0;
   }
-  return true;
+  // Compare major.minor.patch numerically.
+  if (pa.major !== pb.major) return pa.major - pb.major;
+  if (pa.minor !== pb.minor) return pa.minor - pb.minor;
+  if (pa.patch !== pb.patch) return pa.patch - pb.patch;
+  // Equal core versions — prerelease precedence per semver §11:
+  //   - A version WITHOUT prerelease is GREATER than one WITH prerelease.
+  //   - If both have prereleases, compare identifier-by-identifier.
+  if (pa.prerelease.length === 0 && pb.prerelease.length === 0) return 0;
+  if (pa.prerelease.length === 0) return 1; // a is release, b is prerelease → a > b
+  if (pb.prerelease.length === 0) return -1; // a is prerelease, b is release → a < b
+  // Both have prereleases — compare identifier by identifier.
+  const len = Math.min(pa.prerelease.length, pb.prerelease.length);
+  for (let i = 0; i < len; i++) {
+    const ai = pa.prerelease[i];
+    const bi = pb.prerelease[i];
+    const aNum = /^\d+$/.test(ai);
+    const bNum = /^\d+$/.test(bi);
+    if (aNum && bNum) {
+      const diff = Number(ai) - Number(bi);
+      if (diff !== 0) return diff < 0 ? -1 : 1;
+    } else if (aNum !== bNum) {
+      // Numeric identifiers always have lower precedence than alphanumeric.
+      return aNum ? -1 : 1;
+    } else {
+      // Both alphanumeric — compare lexically.
+      if (ai !== bi) return ai < bi ? -1 : 1;
+    }
+  }
+  // All preceding identifiers equal — the longer prerelease wins (is greater).
+  return pa.prerelease.length - pb.prerelease.length;
 }
 
 /** An image asset ready to be embedded into a theme bundle. */
@@ -92,6 +177,7 @@ async function inlineCssImports(css: string, cssPath: string): Promise<string> {
   const parts: string[] = [];
   let last = 0;
   let match: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: idiomatic regex exec loop
   while ((match = importRe.exec(css)) !== null) {
     parts.push(css.slice(last, match.index));
     const importUrl = match[1];
@@ -123,13 +209,57 @@ async function readCssWithImports(cssPath: string): Promise<string> {
 }
 
 /**
- * Compute a short content hash over all CSS files referenced by a manifest.
- * Used by the seeder to detect content changes without relying on version bumps.
+ * Generate a minimal fallback CSS from manifest colors. Used when a theme
+ * package ships no per-agent CSS files at all.
  */
-export async function computeThemeContentHash(
+function generateFallbackCss(manifest: ThemeManifest): string {
+  const colors = manifest.colors;
+  // Support both v1 (primary/text) and v2 (accent/foreground) naming.
+  const accent = colors.accent || colors.primary || '#000000';
+  const bg = colors.background || '#ffffff';
+  const surface = colors.surface || '#f0f0f0';
+  const text = colors.foreground || colors.text || '#000000';
+  const border = colors.border || '#e0e0e0';
+  const codeBg = colors.codeBackground || '#f5f5f5';
+  const codeFg = colors.codeForeground || '#333333';
+
+  return `:root {
+  --agentskin-accent: ${accent};
+  --agentskin-bg: ${bg};
+  --agentskin-surface: ${surface};
+  --agentskin-text: ${text};
+  --agentskin-border: ${border};
+  --agentskin-code-bg: ${codeBg};
+  --agentskin-code-fg: ${codeFg};
+}
+body {
+  background: ${bg} !important;
+}
+::selection { background: ${accent}55; }
+a, .accent { color: ${accent}; }
+`;
+}
+
+/**
+ * Resolve per-agent CSS chunks exactly as {@link ThemeInstaller#buildBundle}
+ * would build them. This single source of truth ensures the content hash
+ * computed by {@link computeThemeContentHash} matches the hash stored inside
+ * the built bundle, so theme content updates (including @import-inlined CSS
+ * or generated fallback CSS) don't trigger false re-installs at every boot.
+ *
+ * P1#11: previously computeThemeContentHash used raw `fs.readFile` without
+ * inlining @import, and skipped agents without CSS files instead of using
+ * the color-based fallback generator. This caused a permanent mismatch
+ * between the persisted contentHash and the freshly-computed one for any
+ * theme that relies on @import _shared/*.base.css or has no per-agent CSS.
+ */
+async function resolvePerAgentCssChunks(
   manifest: ThemeManifest,
   packagePath: string,
-): Promise<string> {
+): Promise<string[]> {
+  const chunks: string[] = [];
+  const seenCoreIds = new Set<string>();
+
   const agentIds = getSupportedAgents(manifest);
   const effectiveAgentIds = agentIds.length
     ? agentIds
@@ -137,8 +267,12 @@ export async function computeThemeContentHash(
       ? activeAdapterIds()
       : FALLBACK_AGENT_IDS;
 
-  const cssChunks: string[] = [];
   for (const agentId of effectiveAgentIds) {
+    const adapter = getAdapter(agentId);
+    const coreId = adapter?.coreId || agentId;
+    if (!coreId || seenCoreIds.has(coreId)) continue;
+    seenCoreIds.add(coreId);
+
     let cssPath: string | null = null;
     if (isV2Manifest(manifest) && manifest.targets && manifest.targets[agentId]) {
       cssPath = path.join(packagePath, manifest.targets[agentId].css);
@@ -151,20 +285,33 @@ export async function computeThemeContentHash(
         cssPath = null;
       }
     }
-    if (cssPath) {
-      try {
-        cssChunks.push(await fs.readFile(cssPath, 'utf8'));
-      } catch {
-        // skip unreadable
-      }
-    }
+
+    const css = cssPath ? await readCssWithImports(cssPath) : generateFallbackCss(manifest);
+    chunks.push(css);
   }
+
+  return chunks;
+}
+
+/**
+ * Compute a short content hash over all CSS files referenced by a manifest.
+ * Used by the seeder to detect content changes without relying on version bumps.
+ *
+ * P1#11: delegates to {@link resolvePerAgentCssChunks} so the hash algorithm
+ * is byte-for-byte identical to what buildBundle uses — including inlined
+ * @import _shared/*.base.css and the colors-based fallback generator.
+ */
+export async function computeThemeContentHash(
+  manifest: ThemeManifest,
+  packagePath: string,
+): Promise<string> {
+  const cssChunks = await resolvePerAgentCssChunks(manifest, packagePath);
   return crypto.createHash('sha1').update(cssChunks.join('\n\n')).digest('hex').slice(0, 16);
 }
 
 /**
  * Map a filename extension to an image MIME type. Mirrors the set accepted by
- * @agentskin/core's package validator (png/jpeg/webp/gif); anything else is
+ * @agentskin/engine's package validator (png/jpeg/webp/gif); anything else is
  * reported as png so validation still passes for genuine PNGs with an odd
  * name, while genuinely unsupported formats fail the base64/mime checks
  * downstream rather than silently embedding a broken asset.
@@ -263,7 +410,7 @@ export class ThemeInstaller {
         : FALLBACK_AGENT_IDS;
 
     for (const agentId of effectiveAgentIds) {
-      // Map AgentId → @agentskin/core adapter id (coreId). Experimental
+      // Map AgentId → @agentskin/engine adapter id (coreId). Experimental
       // adapters have an empty coreId and are skipped (not skinnable yet).
       const adapter = getAdapter(agentId);
       const coreId = adapter?.coreId || agentId;
@@ -285,7 +432,7 @@ export class ThemeInstaller {
         }
       }
 
-      const css = cssPath ? await readCssWithImports(cssPath) : this.generateFallbackCSS(manifest);
+      const css = cssPath ? await readCssWithImports(cssPath) : generateFallbackCss(manifest);
 
       targets[coreId] = { css, verification };
     }
@@ -334,9 +481,9 @@ export class ThemeInstaller {
     };
 
     return {
-      // Engine-required format identifier — @agentskin/core validates this
-      // field; both 'codedrobe-theme' and 'agentskin-theme' are accepted.
-      format: 'codedrobe-theme',
+      // Engine-required format identifier — @agentskin/engine validates this
+      // field; both 'agentskin-theme' and 'agentskin-theme' are accepted.
+      format: 'agentskin-theme',
       // The engine only understands schemaVersion 1 for the on-disk bundle.
       // The directory manifest's v2 schema is a packaging-layer concept.
       schemaVersion: 1,
@@ -359,38 +506,6 @@ export class ThemeInstaller {
         },
       },
     };
-  }
-
-  /**
-   * Generate a minimal fallback CSS from manifest colors. Used only when a
-   * theme package ships no per-agent CSS files at all.
-   */
-  private generateFallbackCSS(manifest: ThemeManifest): string {
-    const colors = manifest.colors;
-    // Support both v1 (primary/text) and v2 (accent/foreground) naming.
-    const accent = colors.accent || colors.primary || '#000000';
-    const bg = colors.background || '#ffffff';
-    const surface = colors.surface || '#f0f0f0';
-    const text = colors.foreground || colors.text || '#000000';
-    const border = colors.border || '#e0e0e0';
-    const codeBg = colors.codeBackground || '#f5f5f5';
-    const codeFg = colors.codeForeground || '#333333';
-
-    return `:root {
-  --agentskin-accent: ${accent};
-  --agentskin-bg: ${bg};
-  --agentskin-surface: ${surface};
-  --agentskin-text: ${text};
-  --agentskin-border: ${border};
-  --agentskin-code-bg: ${codeBg};
-  --agentskin-code-fg: ${codeFg};
-}
-body {
-  background: ${bg} !important;
-}
-::selection { background: ${accent}55; }
-a, .accent { color: ${accent}; }
-`;
   }
 
   /**

@@ -19,12 +19,10 @@
   --agentskin-button-bg: #c41e2a;
   --agentskin-focus-ring: #c41e2a60;
   --agentskin-selection: rgba(196, 30, 42, 0.32);
-  --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-  text-shadow: var(--agentskin-text-shadow);
 }
 
 /* ---- design token override (global restyle via app's own variable system) ---- */
-html.codedrobe-host-traework body {
+html.agentskin-host-traework body {
   color-scheme: dark !important;
 
   /* Ink / text */
@@ -89,7 +87,7 @@ html.codedrobe-host-traework body {
 }
 
 /* VS Code shell re-declares tokens on .monaco-workbench — override there too */
-html.codedrobe-host-traework .monaco-workbench {
+html.agentskin-host-traework .monaco-workbench {
   --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
   --vscode-editor-background: transparent !important;
   --vscode-panel-background: transparent !important;
@@ -101,11 +99,11 @@ html.codedrobe-host-traework .monaco-workbench {
 }
 
 /* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
-html.codedrobe-host-traework #root {
+html.agentskin-host-traework #root {
   color: var(--agentskin-text) !important;
   background: transparent !important;
 }
-html.codedrobe-host-traework #root::before {
+html.agentskin-host-traework #root::before {
   content: '' !important;
   position: fixed !important;
   inset: 0 !important;
@@ -120,18 +118,18 @@ html.codedrobe-host-traework #root::before {
       color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
       color-mix(in srgb, var(--agentskin-secondary) 31%, transparent), transparent 60%),
-    var(--codedrobe-art, none) right center / cover no-repeat !important;
+    var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
 /* ---- route surfaces + inner containers transparent for art punch-through ---- */
-html.codedrobe-host-traework .panel-container,
-html.codedrobe-host-traework .solo-lite-layout,
-html.codedrobe-host-traework .solo-lite-chat-panel-container,
-html.codedrobe-host-traework [class*="chat-panel"],
-html.codedrobe-host-traework [class*="message-list"],
-html.codedrobe-host-traework [class*="conversation"],
-html.codedrobe-host-traework [class*="main-content"],
-html.codedrobe-host-traework [class*="workspace"] {
+html.agentskin-host-traework .panel-container,
+html.agentskin-host-traework .solo-lite-layout,
+html.agentskin-host-traework .solo-lite-chat-panel-container,
+html.agentskin-host-traework [class*="chat-panel"],
+html.agentskin-host-traework [class*="message-list"],
+html.agentskin-host-traework [class*="conversation"],
+html.agentskin-host-traework [class*="main-content"],
+html.agentskin-host-traework [class*="workspace"] {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
@@ -139,27 +137,27 @@ html.codedrobe-host-traework [class*="workspace"] {
 }
 
 /* ---- sidebar (frosted glass over art) ---- */
-html.codedrobe-host-traework .task-list-base,
-html.codedrobe-host-traework .task-list-panel {
+html.agentskin-host-traework .task-list-base,
+html.agentskin-host-traework .task-list-panel {
   background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
   border-right: none !important;
   color: var(--agentskin-text) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
-html.codedrobe-host-traework .task-list-base [class*="item"]:hover,
-html.codedrobe-host-traework .task-list-panel [class*="item"]:hover {
+html.agentskin-host-traework .task-list-base [class*="item"]:hover,
+html.agentskin-host-traework .task-list-panel [class*="item"]:hover {
   background: rgba(196, 30, 42, 0.12) !important;
 }
 
-html.codedrobe-host-traework .task-list-base [class*="active"],
-html.codedrobe-host-traework .task-list-panel [class*="active"] {
+html.agentskin-host-traework .task-list-base [class*="active"],
+html.agentskin-host-traework .task-list-panel [class*="active"] {
   background: rgba(196, 30, 42, 0.18) !important;
   box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px rgba(196, 30, 42, 0.32) !important;
 }
 
 /* ---- composer ---- */
-html.codedrobe-host-traework .chat-input-v2-input-box-editable {
+html.agentskin-host-traework .chat-input-v2-input-box-editable {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent) !important;
   backdrop-filter: blur(14px) saturate(1.1) !important;
   color: var(--agentskin-text) !important;
@@ -170,32 +168,32 @@ html.codedrobe-host-traework .chat-input-v2-input-box-editable {
   transition: border-color 160ms ease, box-shadow 160ms ease !important;
 }
 
-html.codedrobe-host-traework .chat-input-v2-input-box-editable:focus,
-html.codedrobe-host-traework .chat-input-v2-input-box-editable:focus-within {
+html.agentskin-host-traework .chat-input-v2-input-box-editable:focus,
+html.agentskin-host-traework .chat-input-v2-input-box-editable:focus-within {
   border-color: rgba(196, 30, 42, 0.5) !important;
   box-shadow: 0 0 0 2px rgba(196, 30, 42, 0.1), 0 4px 18px rgba(212, 168, 74, 0.12) !important;
 }
 
-html.codedrobe-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
+html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
   color: var(--agentskin-muted) !important;
 }
 
 /* Input outer container: frosted glass instead of opaque bg-base */
-html.codedrobe-host-traework [class*="chat-input-primary-glow"] {
+html.agentskin-host-traework [class*="chat-input-primary-glow"] {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 40%, transparent) !important;
   backdrop-filter: blur(14px) saturate(1.1) !important;
   border: 1px solid rgba(196, 30, 42, 0.2) !important;
   box-shadow: none !important;
 }
 
-html.codedrobe-host-traework [class*="chat-input-primary-glow"]:focus-within {
+html.agentskin-host-traework [class*="chat-input-primary-glow"]:focus-within {
   border-color: rgba(196, 30, 42, 0.45) !important;
   box-shadow: 0 0 0 2px rgba(196, 30, 42, 0.08), 0 4px 16px rgba(212, 168, 74, 0.1) !important;
 }
 
 /* ---- buttons ---- */
-html.codedrobe-host-traework button[class*="primary"],
-html.codedrobe-host-traework button[class*="send"] {
+html.agentskin-host-traework button[class*="primary"],
+html.agentskin-host-traework button[class*="send"] {
   background: linear-gradient(135deg, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 62%, var(--agentskin-secondary) 38%) 100%) !important;
   color: rgb(2, 2, 3) !important;
   border: none !important;
@@ -203,33 +201,33 @@ html.codedrobe-host-traework button[class*="send"] {
   transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
 }
 
-html.codedrobe-host-traework button[class*="primary"]:hover,
-html.codedrobe-host-traework button[class*="send"]:hover {
+html.agentskin-host-traework button[class*="primary"]:hover,
+html.agentskin-host-traework button[class*="send"]:hover {
   filter: brightness(1.07) !important;
   transform: translateY(-1px) !important;
 }
 
 /* ---- message text ---- */
-html.codedrobe-host-traework [class*="message"],
-html.codedrobe-host-traework article {
+html.agentskin-host-traework [class*="message"],
+html.agentskin-host-traework article {
   color: var(--agentskin-text);
 }
 
 /* ---- message bubbles: kill native squared box-shadow on side bubbles ---- */
-html.codedrobe-host-traework [class*="message-bubble"],
-html.codedrobe-host-traework [class*="messageBubble"],
-html.codedrobe-host-traework [class*="msg-bubble"],
-html.codedrobe-host-traework [class*="chat-bubble"],
-html.codedrobe-host-traework [class*="bubble"],
-html.codedrobe-host-traework [class*="message-content"],
-html.codedrobe-host-traework [class*="msg-content"] {
+html.agentskin-host-traework [class*="message-bubble"],
+html.agentskin-host-traework [class*="messageBubble"],
+html.agentskin-host-traework [class*="msg-bubble"],
+html.agentskin-host-traework [class*="chat-bubble"],
+html.agentskin-host-traework [class*="bubble"],
+html.agentskin-host-traework [class*="message-content"],
+html.agentskin-host-traework [class*="msg-content"] {
   box-shadow: none !important;
   outline: none !important;
 }
 
 /* ---- contrast fix: avatar badges with hardcoded light bg ---- */
-html.codedrobe-host-traework [class*="agent-avatar"],
-html.codedrobe-host-traework [class*="avatar"] {
+html.agentskin-host-traework [class*="agent-avatar"],
+html.agentskin-host-traework [class*="avatar"] {
   background: var(--agentskin-surface) !important;
   color: var(--agentskin-text) !important;
   border-color: var(--agentskin-border) !important;
@@ -239,135 +237,124 @@ html.codedrobe-host-traework [class*="avatar"] {
    These cards use --vscode-editorWidget-background (opaque surface) normally,
    but native :hover sets background to transparent, causing a visual flicker.
    Make both normal and hover states transparent so the art punches through. */
-html.codedrobe-host-traework [class*="file-change"],
-html.codedrobe-host-traework [class*="fileChange"],
-html.codedrobe-host-traework [class*="changed-file"],
-html.codedrobe-host-traework [class*="changedFile"],
-html.codedrobe-host-traework [class*="file-card"],
-html.codedrobe-host-traework [class*="fileCard"],
-html.codedrobe-host-traework [class*="file-tree"],
-html.codedrobe-host-traework [class*="fileTree"],
-html.codedrobe-host-traework [class*="edit-card"],
-html.codedrobe-host-traework [class*="editCard"],
-html.codedrobe-host-traework [class*="edit-result"],
-html.codedrobe-host-traework [class*="editResult"],
-html.codedrobe-host-traework [class*="apply-result"],
-html.codedrobe-host-traework [class*="applyResult"],
-html.codedrobe-host-traework [class*="modified-file"],
-html.codedrobe-host-traework [class*="modifiedFile"],
-html.codedrobe-host-traework [class*="change-summary"],
-html.codedrobe-host-traework [class*="changeSummary"],
-html.codedrobe-host-traework [class*="tool-result"],
-html.codedrobe-host-traework [class*="toolResult"],
-html.codedrobe-host-traework [class*="result-card"],
-html.codedrobe-host-traework [class*="resultCard"],
-html.codedrobe-host-traework [class*="chat-file"],
-html.codedrobe-host-traework [class*="chatFile"] {
+html.agentskin-host-traework [class*="file-change"],
+html.agentskin-host-traework [class*="fileChange"],
+html.agentskin-host-traework [class*="changed-file"],
+html.agentskin-host-traework [class*="changedFile"],
+html.agentskin-host-traework [class*="file-card"],
+html.agentskin-host-traework [class*="fileCard"],
+html.agentskin-host-traework [class*="file-tree"],
+html.agentskin-host-traework [class*="fileTree"],
+html.agentskin-host-traework [class*="edit-card"],
+html.agentskin-host-traework [class*="editCard"],
+html.agentskin-host-traework [class*="edit-result"],
+html.agentskin-host-traework [class*="editResult"],
+html.agentskin-host-traework [class*="apply-result"],
+html.agentskin-host-traework [class*="applyResult"],
+html.agentskin-host-traework [class*="modified-file"],
+html.agentskin-host-traework [class*="modifiedFile"],
+html.agentskin-host-traework [class*="change-summary"],
+html.agentskin-host-traework [class*="changeSummary"],
+html.agentskin-host-traework [class*="tool-result"],
+html.agentskin-host-traework [class*="toolResult"],
+html.agentskin-host-traework [class*="result-card"],
+html.agentskin-host-traework [class*="resultCard"],
+html.agentskin-host-traework [class*="chat-file"],
+html.agentskin-host-traework [class*="chatFile"] {
   background: transparent !important;
   background-color: transparent !important;
   border-color: rgba(196, 30, 42, 0.15) !important;
 }
-html.codedrobe-host-traework [class*="file-change"]:hover,
-html.codedrobe-host-traework [class*="fileChange"]:hover,
-html.codedrobe-host-traework [class*="changed-file"]:hover,
-html.codedrobe-host-traework [class*="changedFile"]:hover,
-html.codedrobe-host-traework [class*="file-card"]:hover,
-html.codedrobe-host-traework [class*="fileCard"]:hover,
-html.codedrobe-host-traework [class*="file-tree"]:hover,
-html.codedrobe-host-traework [class*="fileTree"]:hover,
-html.codedrobe-host-traework [class*="edit-card"]:hover,
-html.codedrobe-host-traework [class*="editCard"]:hover,
-html.codedrobe-host-traework [class*="edit-result"]:hover,
-html.codedrobe-host-traework [class*="editResult"]:hover,
-html.codedrobe-host-traework [class*="apply-result"]:hover,
-html.codedrobe-host-traework [class*="applyResult"]:hover,
-html.codedrobe-host-traework [class*="modified-file"]:hover,
-html.codedrobe-host-traework [class*="modifiedFile"]:hover,
-html.codedrobe-host-traework [class*="change-summary"]:hover,
-html.codedrobe-host-traework [class*="changeSummary"]:hover,
-html.codedrobe-host-traework [class*="tool-result"]:hover,
-html.codedrobe-host-traework [class*="toolResult"]:hover,
-html.codedrobe-host-traework [class*="result-card"]:hover,
-html.codedrobe-host-traework [class*="resultCard"]:hover,
-html.codedrobe-host-traework [class*="chat-file"]:hover,
-html.codedrobe-host-traework [class*="chatFile"]:hover {
+html.agentskin-host-traework [class*="file-change"]:hover,
+html.agentskin-host-traework [class*="fileChange"]:hover,
+html.agentskin-host-traework [class*="changed-file"]:hover,
+html.agentskin-host-traework [class*="changedFile"]:hover,
+html.agentskin-host-traework [class*="file-card"]:hover,
+html.agentskin-host-traework [class*="fileCard"]:hover,
+html.agentskin-host-traework [class*="file-tree"]:hover,
+html.agentskin-host-traework [class*="fileTree"]:hover,
+html.agentskin-host-traework [class*="edit-card"]:hover,
+html.agentskin-host-traework [class*="editCard"]:hover,
+html.agentskin-host-traework [class*="edit-result"]:hover,
+html.agentskin-host-traework [class*="editResult"]:hover,
+html.agentskin-host-traework [class*="apply-result"]:hover,
+html.agentskin-host-traework [class*="applyResult"]:hover,
+html.agentskin-host-traework [class*="modified-file"]:hover,
+html.agentskin-host-traework [class*="modifiedFile"]:hover,
+html.agentskin-host-traework [class*="change-summary"]:hover,
+html.agentskin-host-traework [class*="changeSummary"]:hover,
+html.agentskin-host-traework [class*="tool-result"]:hover,
+html.agentskin-host-traework [class*="toolResult"]:hover,
+html.agentskin-host-traework [class*="result-card"]:hover,
+html.agentskin-host-traework [class*="resultCard"]:hover,
+html.agentskin-host-traework [class*="chat-file"]:hover,
+html.agentskin-host-traework [class*="chatFile"]:hover {
   background: transparent !important;
   background-color: transparent !important;
 }
 
 /* ---- contrast fix: markdown file links must use theme accent ---- */
-html.codedrobe-host-traework .markdown-file-link,
-html.codedrobe-host-traework [class*="file-link"],
-html.codedrobe-host-traework a[class*="link"] {
+html.agentskin-host-traework .markdown-file-link,
+html.agentskin-host-traework [class*="file-link"],
+html.agentskin-host-traework a[class*="link"] {
   color: var(--agentskin-accent) !important;
 }
-html.codedrobe-host-traework .markdown-file-link:hover,
-html.codedrobe-host-traework [class*="file-link"]:hover,
-html.codedrobe-host-traework a[class*="link"]:hover {
+html.agentskin-host-traework .markdown-file-link:hover,
+html.agentskin-host-traework [class*="file-link"]:hover,
+html.agentskin-host-traework a[class*="link"]:hover {
   color: var(--agentskin-secondary) !important;
 }
 
 /* ---- contrast fix: mode switcher / tab buttons ---- */
-html.codedrobe-host-traework [class*="mode-switcher"] [class*="btn"],
-html.codedrobe-host-traework [class*="tab-item"],
-html.codedrobe-host-traework [class*="segmented"] [class*="item"] {
+html.agentskin-host-traework [class*="mode-switcher"] [class*="btn"],
+html.agentskin-host-traework [class*="tab-item"],
+html.agentskin-host-traework [class*="segmented"] [class*="item"] {
   color: var(--agentskin-text) !important;
   background: transparent !important;
 }
-html.codedrobe-host-traework [class*="mode-switcher"] [class*="active"],
-html.codedrobe-host-traework [class*="tab-item"][class*="active"],
-html.codedrobe-host-traework [class*="segmented"] [class*="active"] {
+html.agentskin-host-traework [class*="mode-switcher"] [class*="active"],
+html.agentskin-host-traework [class*="tab-item"][class*="active"],
+html.agentskin-host-traework [class*="segmented"] [class*="active"] {
   color: var(--agentskin-accent) !important;
   background: rgba(196, 30, 42, 0.12) !important;
 }
 
-/* Text readability on frosted glass */
-html.codedrobe-host-traework body {
-  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
-}
-
-html.codedrobe-host-traework input,
-html.codedrobe-host-traework textarea,
-html.codedrobe-host-traework [contenteditable="true"] {
-  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
-}
-
 /* Links */
-html.codedrobe-host-traework a {
+html.agentskin-host-traework a {
   color: var(--agentskin-accent) !important;
 }
 
 /* Selection */
-html.codedrobe-host-traework ::selection {
+html.agentskin-host-traework ::selection {
   background: var(--agentskin-selection) !important;
 }
 
 /* Generic inputs */
-html.codedrobe-host-traework input,
-html.codedrobe-host-traework textarea,
-html.codedrobe-host-traework select {
+html.agentskin-host-traework input,
+html.agentskin-host-traework textarea,
+html.agentskin-host-traework select {
   background: var(--agentskin-input-bg) !important;
   color: var(--agentskin-text) !important;
   border-color: var(--agentskin-border) !important;
 }
 
-html.codedrobe-host-traework input:focus,
-html.codedrobe-host-traework textarea:focus,
-html.codedrobe-host-traework select:focus {
+html.agentskin-host-traework input:focus,
+html.agentskin-host-traework textarea:focus,
+html.agentskin-host-traework select:focus {
   outline: none !important;
   border-color: var(--agentskin-accent) !important;
   box-shadow: 0 0 0 2px var(--agentskin-focus-ring) !important;
 }
 
 /* Inline code & code blocks */
-html.codedrobe-host-traework code {
+html.agentskin-host-traework code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
   border: 1px solid rgba(196, 30, 42, 0.108) !important;
   border-radius: 6px !important;
 }
 
-html.codedrobe-host-traework pre {
+html.agentskin-host-traework pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
   border: 1px solid rgba(196, 30, 42, 0.108) !important;
@@ -375,37 +362,37 @@ html.codedrobe-host-traework pre {
   border-radius: 10px !important;
 }
 
-html.codedrobe-host-traework pre code {
+html.agentskin-host-traework pre code {
   border: none !important;
 }
 
 /* Scrollbars */
-html.codedrobe-host-traework ::-webkit-scrollbar {
+html.agentskin-host-traework ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
-html.codedrobe-host-traework ::-webkit-scrollbar-track {
+html.agentskin-host-traework ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-html.codedrobe-host-traework ::-webkit-scrollbar-thumb {
+html.agentskin-host-traework ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(196, 30, 42, 0.3) 0%, rgba(212, 168, 74, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
-html.codedrobe-host-traework ::-webkit-scrollbar-thumb:hover {
+html.agentskin-host-traework ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(196, 30, 42, 0.5) 0%, rgba(212, 168, 74, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  html.codedrobe-host-traework *,
-  html.codedrobe-host-traework *::before,
-  html.codedrobe-host-traework *::after {
+  html.agentskin-host-traework *,
+  html.agentskin-host-traework *::before,
+  html.agentskin-host-traework *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }

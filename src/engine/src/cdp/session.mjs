@@ -11,7 +11,7 @@ export async function listCdpTargets(port, timeoutMs = 1500) {
 export class CdpSession {
   constructor(target, timeoutMs = 10000) {
     if (typeof WebSocket !== "function") {
-      throw new Error("The codedrobe CLI requires Node.js 22.4 or newer for WebSocket support.");
+      throw new Error("The agentskin CLI requires Node.js 22.4 or newer for WebSocket support.");
     }
     this.target = target;
     this.timeoutMs = timeoutMs;

@@ -5,7 +5,8 @@ export const durations = {
   instant: 0,
   fast: 150,
   base: 200,
-  slow: 320,
+  slow: 300,
+  slower: 500,
 } as const;
 
 export const easing = {

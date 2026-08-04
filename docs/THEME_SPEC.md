@@ -236,15 +236,15 @@ ThemePackageLoader 在加载时执行以下验证：
 每个 Agent 的 CSS 文件通过 `--agentskin-*` 统一令牌系统工作：
 
 1. 主题 CSS 只覆写 14 个 `--agentskin-*` 令牌
-2. 由 `generate-theme-css.mjs` 生成各 Agent 专用 CSS（traework → `--vscode-*`，qoderwork → `--color-*`，workbuddy → `--cb-*`，doubao → `--dbx-*`）
+2. 由 `generate-theme-css.mjs` 生成各 Agent 专用 CSS（traework → `--vscode-*`，qoderwork → `--color-*`，workbuddy → `--cb-*`，doubao → `--semi-color-*`）
 3. **永远不要手动编辑生成的 CSS 文件**，修改应在 manifest colors 或生成脚本中进行
-4. 共享基础 CSS 在 `themes/_shared/<agent>.base.css`
+4. 结构性选择器由 `generate-theme-css.mjs` 内联产出（无 `_shared/` 共享层、无 `@import` 机制）——详见 `themes/THEME_SPEC.md`
 
 ### 豆包适配说明
 
 豆包（Doubao）使用 `--dbx-*` 前缀的 251 个设计 token，通过 `:root[data-theme="dark"|"light"]` 切换主题。AgentSkin 的覆盖策略：
 
-- 选择器 `html.codedrobe-host-doubao:root`（specificity 0,2,1）击败原生 `:root[data-theme]`（0,1,1）
+- 选择器 `html.agentskin-host-doubao:root`（specificity 0,2,1）击败原生 `:root[data-theme]`（0,1,1）
 - 只覆写语义层（bg/text/fill/line/code/brand），不触碰 neutral 色阶、static alpha 渐变、color-palette（red/orange/green/blue/purple/yellow）、radius、breakpoint、shadow 等结构性 token
 - Art layer 挂载在 `body`（豆包无 React #root 容器）
 - CDP 通过 `--remote-debugging-port=0` 随机端口开放，运行时自动发现

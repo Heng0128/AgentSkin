@@ -23,8 +23,20 @@ import { toMessage } from '../shared/errors';
 type LogListener = (line: string) => void;
 
 let listener: LogListener | null = null;
+// P3-11: Raised the buffered-early-log ceiling from 200 → 1000 entries.
+// Cold boot now performs more work up-front (legacy migration for every
+// theme dir, WallpaperEngine scan of ~hundreds of workshop folders, Steam
+// registry probe, locale lookup) so the first 200 INFO entries would be
+// consumed by "migrated legacy-dir" noise and the one WARN / ERROR the user
+// actually needed (e.g. "theme X failed to parse") was dropped before the
+// runtime-log panel even opened. We keep the cap so a runaway boot can't
+// OOM the renderer, but widen it to cover the expanded boot surface.
+const BUFFER_MAX = 1000;
+// Keep the earliest WARN/ERROR entries when the buffer overflows — INFO
+// lines are cheap and recoverable but a failure to parse or install
+// during boot is exactly what users paste into bug reports.
 const buffer: string[] = [];
-const BUFFER_MAX = 200;
+const MAX_DROPPED_INFO = 50;
 
 function emit(level: 'WARN' | 'ERROR' | 'INFO', scope: string, message: string): void {
   const ts = new Date().toLocaleTimeString('zh-CN', { hour12: false });
@@ -36,9 +48,33 @@ function emit(level: 'WARN' | 'ERROR' | 'INFO', scope: string, message: string):
 
   if (listener) {
     listener(line);
-  } else if (buffer.length < BUFFER_MAX) {
-    buffer.push(line);
+    return;
   }
+  if (buffer.length < BUFFER_MAX) {
+    buffer.push(line);
+    return;
+  }
+  // Buffer is full. Prefer keeping the newest WARN/ERROR by evicting the
+  // oldest INFO entry, up to MAX_DROPPED_INFO times. After that we fall
+  // back to the traditional ring buffer (drop oldest regardless), so a
+  // boot that produces 1000 WARN lines is still bounded.
+  if (level === 'INFO') {
+    // Newest entry is INFO and buffer is at cap → drop immediately. No
+    // point evicting an older WARN/ERROR just to fit a fresh INFO line.
+    return;
+  }
+  const oldestInfoIndex = buffer.findIndex((l) => l.includes('] [INFO]'));
+  if (oldestInfoIndex >= 0 && MAX_DROPPED_INFO > 0) {
+    // This check is purely static — MAX_DROPPED_INFO is a compile-time cap
+    // so we don't need a mutable counter. If we ever need dynamic tuning
+    // (e.g. per-platform) it can become a let.
+    buffer.splice(oldestInfoIndex, 1);
+    buffer.push(line);
+    return;
+  }
+  // Last resort: classic ring buffer.
+  buffer.shift();
+  buffer.push(line);
 }
 
 /**

@@ -122,7 +122,7 @@ export type ThemeDynamicEffect = 'aurora' | 'particles' | 'gradient' | 'waves' |
  *   the item subscribed in Wallpaper Engine. Activating the theme switches
  *   the dynamic background to that workshop item.
  * - `video`: a video file bundled inside the theme package (relative path),
- *   streamed in place via the agentskin-wallpaper:// protocol.
+ *   played by the UI as an inline base64 data URL (no custom scheme).
  */
 export interface ThemeWallpaperConfig {
   /** Wallpaper Engine workshop item id (numeric string, e.g. "1234567890").
@@ -221,7 +221,8 @@ export interface ThemeManifest {
 
   /**
    * Video wallpaper configuration. When present, the theme ships an
-   * animated video background streamed via agentskin-wallpaper:// protocol.
+   * animated video background played by the UI as an inline base64 data
+   * URL (no custom scheme).
    * Requires WallpaperService to be enabled.
    * @since 2.1.0
    */
@@ -253,6 +254,21 @@ export interface ThemeManifest {
    * @since 2.1.0
    */
   repository?: string;
+
+  /**
+   * R6-14: Probe 配置，声明该主题需要探测运行时才能确定的动态值（如
+   * hero URL、可用性等）。所有主题 manifest.json 都已包含此字段，
+   * 此前 TypeScript 接口未声明导致类型系统无法保护该字段。
+   * @since 2.1.0
+   */
+  probe?: {
+    /** 探测超时时间（毫秒） */
+    timeout?: number;
+    /** 需要探测的 URL 列表 */
+    urls?: string[];
+    /** 探测失败时的降级行为 */
+    fallback?: 'ignore' | 'warn' | 'block';
+  };
 }
 
 /** Re-export under an unambiguous name for consumers outside this file. */

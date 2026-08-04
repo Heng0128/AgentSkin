@@ -1,0 +1,13 @@
+"# AgentSkin Wallpaper Engine Integration Proposal (Revised)"  
+""  
+"## Executive Summary"  
+""  
+"This proposal redesigns the wallpaper engine integration based on rigorous code review that identified critical security vulnerabilities, resource leaks, and incomplete type support. The original 'dual-path' design is retained but restructured with **security-first**, **type-complete**, and **maintainable** principles. Critical hotfixes must precede new feature development." 
+"Key changes from original proposal:"  
+"1. Added Phase 0 emergency security fixes (CSP bypass hardening, URL validation, token leak prevention)"  
+"2. Re-designed GIF handling (use img instead of video)"  
+"3. Added fallback/error handling for Scene wallpapers"  
+"4. Made CSP bypass opt-in (disabled by default) instead of unconditional"  
+"5. Unified import API with copy/reference modes"  
+"6. Added incremental scanning architecture" 
+# AgentSkin Wallpaper Engine Integration Proposal (Revised)

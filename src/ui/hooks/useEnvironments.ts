@@ -32,7 +32,7 @@
  *   automatic re-derivation without explicit refresh callbacks.
  */
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { findAppStatus } from '@/lib/status-utils';
 import { loadPresets } from '@/storage/environment-store';
 import type { EnvironmentModel, EnvironmentPreset } from '@/types/environment';
@@ -51,43 +51,30 @@ export interface UseEnvironmentsResult {
   environments: EnvironmentModel[];
   /** Currently active environment (running agent + applied theme). */
   activeEnvironment: EnvironmentModel | null;
-  /** Summary stats. */
-  stats: {
-    total: number;
-    active: number;
-    running: number;
-    installed: number;
-  };
   /** Shared refresh counter getter — increments on mutations. */
   refresh: () => number;
 }
 
 export function useEnvironments(controller: AppController): UseEnvironmentsResult {
-  const { t, agents: allAgents, installed, status } = controller;
+  const { agents: allAgents, installed, status } = controller;
 
   // --- Presets (persistent) ---
-  // Read shared refresh counter; mutations in useEnvironmentActions increment it,
-  // causing this useMemo to re-run and re-derive environments.
+  // P1 audit #14: previously this read localStorage inside a useMemo, which
+  // violates React's "useMemo must be pure" rule (localStorage is a side-
+  // effectful I/O source) and meant `refreshKey` changes from
+  // useEnvironmentActions wouldn't reliably trigger a re-read (the memo's
+  // dependency was a module-level getter that React can't track). Now uses
+  // useState + useEffect so the read is a proper effect that re-runs when
+  // the refresh counter changes, and the result flows through React state
+  // (which React CAN track for re-renders).
   const refreshKey = getRefreshCounter();
-  const presets: EnvironmentPreset[] = useMemo(() => {
-    try {
-      const raw = window.localStorage.getItem('agentskin:environment-presets');
-      if (!raw) return [];
-      const envelope = JSON.parse(raw);
-      return Array.isArray(envelope.presets) ? envelope.presets : [];
-    } catch {
-      return [];
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  const [presets, setPresets] = useState<EnvironmentPreset[]>(() => loadPresets());
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is the reactivity trigger — its value change must re-run this effect to re-read presets, even though it is not read inside the body.
+  useEffect(() => {
+    setPresets(loadPresets());
   }, [refreshKey]);
 
   // --- Lookups ---
-  const agentById = useMemo(() => {
-    const map = new Map<string, (typeof allAgents)[number]>();
-    for (const a of allAgents) map.set(a.id, a);
-    return map;
-  }, [allAgents]);
-
   const themeById = useMemo(() => {
     const map = new Map<string, (typeof installed)[number]>();
     for (const th of installed) map.set(th.id, th);
@@ -189,7 +176,7 @@ export function useEnvironments(controller: AppController): UseEnvironmentsResul
 
       return 0;
     });
-  }, [allAgents, status, activeThemeByAgent, themeById, presets, presetByAgent]);
+  }, [allAgents, status, activeThemeByAgent, themeById, presetByAgent]);
 
   // Active environment
   const activeEnvironment = useMemo(
@@ -197,21 +184,9 @@ export function useEnvironments(controller: AppController): UseEnvironmentsResul
     [environments],
   );
 
-  // Stats
-  const stats = useMemo(
-    () => ({
-      total: environments.length,
-      active: environments.filter((e) => e.status === 'active').length,
-      running: environments.filter((e) => e.agentRunning).length,
-      installed: environments.filter((e) => e.agentInstalled).length,
-    }),
-    [environments],
-  );
-
   return {
     environments,
     activeEnvironment,
-    stats,
     refresh: getRefreshCounter,
   };
 }

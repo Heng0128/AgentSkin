@@ -3,16 +3,16 @@
 /**
  * # Legacy Core Runtime
  *
- * This file is the SINGLE place where `@agentskin/core` is imported. Every
- * other module in AgentSkin talks to the core through this runtime — never
+ * This file is the SINGLE place where `@agentskin/engine` is imported. Every
+ * other module in AgentSkin talks to the engine through this runtime — never
  * directly. That keeps the control layer (AgentSkin) decoupled from the
- * execution engine (@agentskin/core) and makes a future engine swap a
+ * execution engine (@agentskin/engine) and makes a future engine swap a
  * one-file change.
  *
  * ## Why "legacy"
  *
  * The name is intentionally honest about the current migration state:
- * @agentskin/core already owns the real theme execution logic (CDP injection,
+ * @agentskin/engine already owns the real theme execution logic (CDP injection,
  * host-settings transactions, app discovery). AgentSkin V3 is rebuilding the
  * *control* layer on top of it. The label "legacy" is retained for import-path
  * stability; this file is a permanent Windows compatibility + Doubao adapter
@@ -20,7 +20,7 @@
  *
  * ## Call chain
  *
- *   UI → agent-engine-service → registry → ApplicationAdapter → (this runtime) → @agentskin/core
+ *   UI → agent-engine-service → registry → ApplicationAdapter → (this runtime) → @agentskin/engine
  *
  * The runtime exposes:
  *   - Primary:    applyTheme, restoreTheme, discoverApplication, readTheme, convertLegacyTheme
@@ -39,8 +39,8 @@ import {
   findTargets,
   getAdapter,
   listAdapters,
+  listCdpTargets,
   readThemePackage,
-  registerAdapter,
   resolveDebugPorts,
   resolveThemeTarget,
   restoreSkin,
@@ -48,13 +48,11 @@ import {
   verifyTheme as coreVerifyTheme,
   LEGACY_THEME_EXTENSION,
   THEME_EXTENSION,
-} from '@agentskin/core';
+} from '@agentskin/engine';
 import fs from 'node:fs';
-import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
-import { execSync, execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { execSync } from 'node:child_process';
 import type {
   AppAdapter,
   AppInstallation,
@@ -63,20 +61,11 @@ import type {
   ConvertLegacyThemeFileResult,
   RestoreSkinResult,
   ThemePackage,
-} from '@agentskin/core';
+} from '@agentskin/engine';
 import type {
   ThemeBundle as ThemeBundleContract,
   ResolvedThemeTarget as ResolvedThemeTargetContract,
 } from '../main/services/theme-bundle';
-
-/** Promisified execFile with a timeout (ms). Returns stdout as string. */
-const execFileAsync = (cmd: string, args: string[], timeoutMs = 5000): Promise<string> =>
-  new Promise((resolve, reject) => {
-    execFile(cmd, args, { timeout: timeoutMs }, (err, stdout) => {
-      if (err) return reject(err);
-      resolve(stdout);
-    });
-  });
 
 // ---------------------------------------------------------------------------
 // Type re-exports (type-only — no runtime dependency on core for consumers)
@@ -87,7 +76,7 @@ const execFileAsync = (cmd: string, args: string[], timeoutMs = 5000): Promise<s
  *
  * The canonical contract now lives in `main/services/theme-bundle.ts`. We
  * re-export it under the legacy name so existing imports keep compiling,
- * and assert structural compatibility with `@agentskin/core`'s
+ * and assert structural compatibility with `@agentskin/engine`'s
  * `ThemePackage` via the conditional below (erased at compile time).
  */
 export type ThemeBundle = ThemeBundleContract;
@@ -96,7 +85,7 @@ export type ThemeBundle = ThemeBundleContract;
  * assignable to our `ThemeBundle` contract. If the engine ever drifts, this
  * line fails to type-check and surfaces the mismatch immediately.
  */
-const _themeBundleAssert: ThemeBundle = null as unknown as ThemePackage;
+export const _themeBundleAssert: ThemeBundle = null as unknown as ThemePackage;
 
 /** The core's adapter descriptor (defaultPort, displayName, platforms, ...). */
 export type CoreAppAdapter = AppAdapter;
@@ -108,14 +97,14 @@ export type {
 /**
  * Resolved theme target ready for CDP injection. Re-exported from the
  * `main/services/theme-bundle.ts` contract; structurally compatible with
- * `@agentskin/core`'s `ResolvedThemeTarget`.
+ * `@agentskin/engine`'s `ResolvedThemeTarget`.
  */
 export type ResolvedThemeTarget = ResolvedThemeTargetContract;
 /**
  * Compile-time assertion that the engine's `ResolvedThemeTarget` is
  * structurally assignable to our contract type.
  */
-const _resolvedTargetAssert: ResolvedThemeTarget = null as unknown as import('@agentskin/core').ResolvedThemeTarget;
+export const _resolvedTargetAssert: ResolvedThemeTarget = null as unknown as import('@agentskin/engine').ResolvedThemeTarget;
 export type {
   ApplySkinResult as ApplyThemeResult,
   RestoreSkinResult as RestoreThemeResult,
@@ -131,7 +120,7 @@ export { THEME_EXTENSION as themeExtension, LEGACY_THEME_EXTENSION as legacyThem
 /**
  * Product-level canonical theme package extension for AgentSkin.
  *
- * The engine (@agentskin/core) still owns `.agentskin-theme` (and the legacy
+ * The engine (@agentskin/engine) still owns `.agentskin-theme` (and the legacy
  * `.codex-theme`) as its on-disk package format, but the AgentSkin product
  * presents `.agenttheme` as the user-facing format for import / export /
  * file-association / drag-and-drop. Internal storage stays engine-compatible.
@@ -139,25 +128,25 @@ export { THEME_EXTENSION as themeExtension, LEGACY_THEME_EXTENSION as legacyThem
 export const agentThemeExtension = '.agenttheme';
 
 /**
- * Compatibility alias for the engine's `.codedrobe-theme` extension.
- * The engine internally uses `THEME_EXTENSION` (".codedrobe-theme"); AgentSkin
+ * Compatibility alias for the engine's `.agentskin-theme` extension.
+ * The engine internally uses `THEME_EXTENSION` (".agentskin-theme"); AgentSkin
  * code uses `engineThemeExtension` to avoid leaking the legacy name while
  * still matching the real on-disk format. Both names refer to the same value.
  */
 export const engineThemeExtension = THEME_EXTENSION;
 
 /**
- * AgentSkin error codes — the engine's CODEDROBE_* error codes.
+ * AgentSkin error codes — the engine's AGENTSKIN_* error codes.
  *
- * @agentskin/core throws errors with `code: 'CODEDROBE_*'` (the engine's
+ * @agentskin/engine throws errors with `code: 'AGENTSKIN_*'` (the engine's
  * internal product name). These are the engine's stable error identifiers,
  * not a transitional naming — AgentSkin checks against these exact values.
  */
 export const ERROR_CODES = {
-  RESTART_REQUIRED: 'CODEDROBE_RESTART_REQUIRED',
-  PORT_OCCUPIED: 'CODEDROBE_PORT_OCCUPIED',
-  TARGET_TIMEOUT: 'CODEDROBE_TARGET_TIMEOUT',
-  DOM_INCOMPATIBLE: 'CODEDROBE_DOM_INCOMPATIBLE',
+  RESTART_REQUIRED: 'AGENTSKIN_RESTART_REQUIRED',
+  PORT_OCCUPIED: 'AGENTSKIN_PORT_OCCUPIED',
+  TARGET_TIMEOUT: 'AGENTSKIN_TARGET_TIMEOUT',
+  DOM_INCOMPATIBLE: 'AGENTSKIN_DOM_INCOMPATIBLE',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -165,7 +154,7 @@ export const ERROR_CODES = {
 // ---------------------------------------------------------------------------
 
 export interface ApplyThemeParams {
-  /** The @agentskin/core adapter id (e.g. "traework"). */
+  /** The @agentskin/engine adapter id (e.g. "traework"). */
   coreId: string;
   targetTheme: ResolvedThemeTarget;
   port?: number;
@@ -178,10 +167,10 @@ export interface ApplyThemeParams {
 }
 
 /**
- * Apply a resolved theme target to a running app. Wraps @agentskin/core's
+ * Apply a resolved theme target to a running app. Wraps @agentskin/engine's
  * `applySkin`, resolving the core adapter from `coreId` internally so callers
- * never touch core directly. Errors (CODEDROBE_RESTART_REQUIRED,
- * CODEDROBE_PORT_OCCUPIED, ...) propagate unchanged.
+ * never touch core directly. Errors (AGENTSKIN_RESTART_REQUIRED,
+ * AGENTSKIN_PORT_OCCUPIED, ...) propagate unchanged.
  */
 export function applyTheme(params: ApplyThemeParams): Promise<ApplySkinResult> {
   const adapter = getAdapter(params.coreId);
@@ -202,7 +191,7 @@ export interface RestoreThemeParams {
   timeoutMs?: number;
 }
 
-/** Restore an app to its default appearance. Wraps @agentskin/core's restoreSkin. */
+/** Restore an app to its default appearance. Wraps @agentskin/engine's restoreSkin. */
 export function restoreTheme(params: RestoreThemeParams): Promise<RestoreSkinResult> {
   const adapter = getAdapter(params.coreId);
   return restoreSkin({ adapter, port: params.port, timeoutMs: params.timeoutMs });
@@ -217,7 +206,7 @@ export interface VerifyThemeParams {
 
 /**
  * Verify whether a theme is currently applied to a running app. Wraps
- * @agentskin/core's verifyTheme. Returns per-target results with `pass`,
+ * @agentskin/engine's verifyTheme. Returns per-target results with `pass`,
  * `installed`, `stylePresent`, etc. — used by reapplyActiveTheme to skip
  * unnecessary re-injection when the theme survived a flaky debugReady
  * transition (false → true) without an actual app restart.
@@ -234,7 +223,7 @@ export function verifyTheme(params: VerifyThemeParams): Promise<unknown[]> {
 
 /**
  * Discover whether an app is installed on the current platform. Wraps
- * @agentskin/core's discoverApp, resolving the adapter from coreId.
+ * @agentskin/engine's discoverApp, resolving the adapter from coreId.
  */
 export function discoverApplication(
   coreId: string,
@@ -256,7 +245,7 @@ export function validateTheme(bundle: unknown): ThemeBundle {
 
 /**
  * Convert a legacy .codex-theme file to the current .agentskin-theme format.
- * Wraps @agentskin/core's convertLegacyThemeFile.
+ * Wraps @agentskin/engine's convertLegacyThemeFile.
  */
 export function convertLegacyTheme(
   inputFilename: string,
@@ -303,7 +292,7 @@ export function getCoreAdapter(coreId: string): CoreAppAdapter {
   return getAdapter(coreId);
 }
 
-/** List all adapters known to @agentskin/core. */
+/** List all adapters known to @agentskin/engine. */
 export function listCoreAdapters(): CoreAppAdapter[] {
   return listAdapters();
 }
@@ -317,7 +306,7 @@ export function listCoreAdapters(): CoreAppAdapter[] {
 // makes the boundary explicit and testable.
 //
 // Call chain:
-//   UI → IPC → AgentEngineService → ApplicationAdapter → ThemeRuntime → @agentskin/core
+//   UI → IPC → AgentEngineService → ApplicationAdapter → ThemeRuntime → @agentskin/engine
 // ---------------------------------------------------------------------------
 
 /**
@@ -378,12 +367,12 @@ export const themeRuntime: ThemeRuntime = {
 // ---------------------------------------------------------------------------
 // Windows CDP compatibility layer
 //
-// As of @agentskin/core 0.6.0 the `qoderwork` and `traework` adapters are
+// As of @agentskin/engine 0.6.0 the `qoderwork` and `traework` adapters are
 // `lastVerified` on darwin only; their win32 config was never real-machine
 // validated. Two concrete gaps break CDP on Windows:
 //   1. traework declares NO `devToolsActivePortFile` at all, so when the app
 //      forces an ephemeral `--remote-debugging-port=0` the live port is never
-//      discovered → CODEDROBE_TARGET_TIMEOUT.
+//      discovered → AGENTSKIN_TARGET_TIMEOUT.
 //   2. traework's `matchTarget` only matches `/electron-browser/solo/solo-lite.html`,
 //      which is fragile across Windows path casing / layout changes.
 //
@@ -406,13 +395,19 @@ import { probePortLive, explicitDebugPortsFromPids } from '../shared/cdp-discove
 import { AGENT_IDS } from '../shared/types';
 export { probePortLive, explicitDebugPortsFromPids };
 
+// Re-export `listCdpTargets` from the engine so main-process consumers
+// (cdp-targets.ts) go through this single bridge instead of importing
+// @agentskin/engine directly. Preserves the "SINGLE place where @agentskin/engine
+// is imported" contract declared at the top of this file.
+export { listCdpTargets };
+
 // ---------------------------------------------------------------------------
 // WebSocket CDP fallback for apps that disable HTTP /json/list (WorkBuddy 5.3+)
 //
 // WorkBuddy 5.3.x hardened security by no longer serving the HTTP discovery
 // endpoint (/json/list). The WebSocket CDP protocol still works — the browser
 // endpoint path is published in DevToolsActivePort (line 2). This interceptor
-// transparently patches globalThis.fetch so that when @agentskin/core's
+// transparently patches globalThis.fetch so that when @agentskin/engine's
 // listCdpTargets() fails over HTTP, we fall back to WebSocket Target.getTargets
 // and return a synthetic Response in the identical JSON format.
 // ---------------------------------------------------------------------------
@@ -511,6 +506,16 @@ async function listTargetsViaWebSocket(port: number): Promise<unknown[] | null> 
 }
 
 let fetchInterceptorInstalled = false;
+// P3-12: Previously the fetch interceptor held a reference to `originalFetch`
+// in a closure with no dispose path — if the host runtime ever re-ran setup
+// or if tests ran twice, originalFetch would point to the already-patched
+// fetch, producing a layered tower of interceptors. We keep a stable ref and
+// expose a module-level `uninstall` function so the caller can tear the
+// wrapper down (wired into disposeWallpaperInjectionState for the normal
+// production path). The flag is also reset on uninstall so re-install uses
+// the *current* globalThis.fetch rather than a stale closure from the last
+// bootstrap.
+let originalFetch: typeof globalThis.fetch | null = null;
 
 /**
  * Install a globalThis.fetch interceptor that provides a WebSocket fallback for
@@ -520,16 +525,20 @@ function installCdpFetchInterceptor(): void {
   if (fetchInterceptorInstalled || process.platform !== 'win32') return;
   fetchInterceptorInstalled = true;
 
-  const originalFetch = globalThis.fetch;
+  originalFetch = globalThis.fetch;
   globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const url = String(typeof input === 'object' && 'url' in input ? input.url : input);
     const isJsonList = /http:\/\/127\.0\.0\.1:(\d+)\/json\/list/.test(url);
 
-    if (!isJsonList) return originalFetch(input, init);
+    if (!isJsonList) {
+      // Safe because originalFetch is assigned before globalThis.fetch is
+      // overwritten — TypeScript wants the explicit null check.
+      return (originalFetch as typeof globalThis.fetch)(input, init);
+    }
 
     // Try the normal HTTP path first
     try {
-      const response = await originalFetch(input, init);
+      const response = await (originalFetch as typeof globalThis.fetch)(input, init);
       if (response.ok) {
         const text = await response.text();
         if (text.trim().startsWith('[')) {
@@ -566,6 +575,26 @@ function installCdpFetchInterceptor(): void {
   };
 
   console.log('[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)');
+}
+
+/**
+ * Tear down the fetch interceptor installed by {@link installCdpFetchInterceptor}.
+ * Safe to call even if the interceptor was never installed. Restores the
+ * captured `originalFetch` and resets the install flag so a subsequent
+ * install picks up whatever globalThis.fetch is live at that time.
+ *
+ * Wired into disposeWallpaperInjectionState so the main process can clean
+ * the hook when tearing down legacy runtime state (avoids double-patching
+ * if a hot-reload or test re-invokes the boot sequence).
+ */
+export function uninstallCdpFetchInterceptor(): void {
+  if (!fetchInterceptorInstalled) return;
+  if (originalFetch) {
+    globalThis.fetch = originalFetch;
+    originalFetch = null;
+  }
+  fetchInterceptorInstalled = false;
+  console.log('[agentskin:cdp-patch] fetch interceptor uninstalled');
 }
 
 async function patchWindowsAdapters(): Promise<void> {
@@ -644,7 +673,7 @@ async function patchWindowsAdapters(): Promise<void> {
       // the app's PIDs, maps them to their listening ports via netstat, and
       // probes each for a CDP /json/list endpoint whose target matches the app.
       // The discovered port is written to a temp DevToolsActivePort-style file
-      // so @agentskin/core's resolveDebugPorts picks it up unchanged.
+      // so @agentskin/engine's resolveDebugPorts picks it up unchanged.
       const appLiveFiles: string[] = [];
       const pidPort = await discoverLiveCdpPortViaPid(adapter);
       if (pidPort != null) {
@@ -665,6 +694,7 @@ async function patchWindowsAdapters(): Promise<void> {
         qoderwork: [/^qoder/i],
         workbuddy: [/^workbuddy\b/i, /^\.workbuddy$/i],
         doubao: [/^doubao/i],
+        zcode: [/^zcode/i],
       };
       const patterns = appDirPatterns[id] ?? [];
       for (const { dir, file } of liveFilesByDir) {
@@ -678,47 +708,15 @@ async function patchWindowsAdapters(): Promise<void> {
           : [];
       plat.devToolsActivePortFile = [...new Set([...declared, ...appLiveFiles])];
 
-      if (id === 'traework') {
-        const original = adapter.matchTarget.bind(adapter);
-        adapter.matchTarget = (target: CdpTarget): boolean => {
-          if (original(target)) return true;
-          const url = String(target?.url ?? '');
-          const title = String(target?.title ?? '');
-          if (/^(devtools|chrome-extension):/i.test(url)) return false;
-          // Relaxed Windows fallback: catch solo-lite shells regardless of path
-          // casing/layout, and any window whose title names the product.
-          return /solo-lite|trae|traework/i.test(url) || /trae|traework/i.test(title);
-        };
-      }
-
-      if (id === 'qoderwork') {
-        const original = adapter.matchTarget.bind(adapter);
-        adapter.matchTarget = (target: CdpTarget): boolean => {
-          if (original(target)) return true;
-          const title = String(target?.title ?? '');
-          return /qoder/i.test(title);
-        };
-      }
-
-      if (id === 'workbuddy') {
-        const original = adapter.matchTarget.bind(adapter);
-        adapter.matchTarget = (target: CdpTarget): boolean => {
-          // Reject TRAE's vscode-file:// pages FIRST. Core's original
-          // matchTarget includes /^(workbuddy|vscode-file):/i which is too
-          // broad — it matches TRAE Work CN's solo-lite.html page, causing
-          // WorkBuddy's CDP discovery to hijack TRAE's port and fail with
-          // CODEDROBE_DOM_INCOMPATIBLE (.teams-container not found in TRAE).
-          const url = String(target?.url ?? '');
-          if (/^vscode-file:/i.test(url)) return false;
-          if (original(target)) return true;
-          const title = String(target?.title ?? '');
-          if (/^(devtools|chrome-extension):/i.test(url)) return false;
-          // WorkBuddy 更新后可能改了 title/url 模式；放宽匹配以确保 CDP
-          // 端口发现能命中 WorkBuddy 的渲染进程。
-          return /workbuddy|wb-/i.test(title) || /workbuddy/i.test(url);
-        };
-      }
-
+      // matchTarget is no longer monkey-patched at runtime. The fallback
+      // logic (reject vscode-file for workbuddy, broaden title/url matching
+      // for traework/qoderwork/workbuddy/doubao) has been merged into the
+      // engine's static matchTarget in src/engine/src/adapters/*.mjs, so
+      // engine truth and runtime behaviour agree by construction.
+      //
+      // The blocks below remain platform-only patches: defaultPort zeroing,
+      // DevToolsActivePort file injection, and (for doubao) the Tencent
+      // installer registry probing that augments executableCandidates.
       if (id === 'doubao') {
         // Tencent's Doubao installer registers an UninstallString pointing at
         // ..\Doubao\uninstall.exe, but the real executable is at
@@ -744,17 +742,6 @@ async function patchWindowsAdapters(): Promise<void> {
             }
           }
         } catch { /* reg query failed — app not installed via this key */ }
-
-        const original = adapter.matchTarget.bind(adapter);
-        adapter.matchTarget = (target: CdpTarget): boolean => {
-          if (original(target)) return true;
-          const url = String(target?.url ?? '');
-          const title = String(target?.title ?? '');
-          if (/^(devtools|chrome-extension):/i.test(url)) return false;
-          // Doubao 主页面为 chrome://doubao-chat/chat；放宽匹配以覆盖
-          // 标题/URL 变体。
-          return /doubao/i.test(url) || /豆包|doubao/i.test(title);
-        };
       }
     }
 
@@ -767,7 +754,7 @@ async function patchWindowsAdapters(): Promise<void> {
 }
 
 /**
- * Windows-only. Given an @agentskin/core adapter, find its live CDP debugging
+ * Windows-only. Given an @agentskin/engine adapter, find its live CDP debugging
  * port without trusting the (often stale) DevToolsActivePort file.
  *
  * Steps:
@@ -809,7 +796,7 @@ async function discoverLiveCdpPortViaPid(adapter: unknown): Promise<number | nul
   // Fast path: explicit --remote-debugging-port from the command line.
   // WorkBuddy's launcher writes a random port into argv per start, so this
   // hits on the first probe without scanning every listening socket.
-  const explicitPorts = explicitDebugPortsFromPids([...pids]);
+  const explicitPorts = await explicitDebugPortsFromPids([...pids]);
   for (const port of explicitPorts) {
     try {
       const ctrl = new AbortController();
@@ -864,55 +851,18 @@ async function discoverLiveCdpPortViaPid(adapter: unknown): Promise<number | nul
 // ---------------------------------------------------------------------------
 // Doubao (豆包) adapter registration
 //
-// @agentskin/core 0.6.0 does not ship a Doubao adapter. Doubao is a
-// Chromium-based Electron desktop assistant (Doubao.exe); CDP access has
-// been verified via scripts/doubao-cdp.ps1. We register a minimal adapter
-// at module load so the engine can discover, apply, and restore themes for
-// Doubao without waiting for an upstream core release.
+// The static adapter descriptor now lives in `src/engine/src/adapters/doubao.mjs`
+// (registered via the engine's `adapters/index.mjs`). This block previously
+// registered a minimal descriptor at module load as a stopgap until the
+// engine shipped its own — that stopgap is no longer needed.
+//
+// What REMAINS here is `patchWindowsAdapters()`, which augments the engine's
+// descriptor at runtime with Windows-specific state that can only be resolved
+// at process start:
+//   - Tencent installer registry probing → executableCandidates augmentation
+//   - DevToolsActivePort file discovery (per-app dir-name matching)
+//   - matchTarget wrapping (reject vscode-file://, broaden fallback matching)
+//   - defaultPort zeroing (force dynamic port discovery)
 // ---------------------------------------------------------------------------
-
-const doubaoAdapter: CoreAppAdapter = {
-  id: 'doubao',
-  displayName: '豆包',
-  defaultPort: 0,
-  platforms: {
-    win32: {
-      executableCandidates: [
-        '%LOCALAPPDATA%\\Programs\\Doubao\\Doubao.exe',
-        '%LOCALAPPDATA%\\Doubao\\Doubao.exe',
-        '%PROGRAMFILES%\\Doubao\\Doubao.exe',
-        // Tencent installer puts Doubao under a versioned game directory on
-        // a non-standard drive. The registry UninstallString points at
-        // ..\Doubao\uninstall.exe, and the real exe is ..\Doubao\app\Doubao.exe.
-        '%MyAppPrograms%\\com.tencent.pcgame.doubao\\Doubao\\app\\Doubao.exe',
-      ],
-      // HKCU\...\Uninstall\Doubao — Tencent's installer registers here.
-      // (uninstallKeys is read by core's discoverWindowsRegistry at runtime
-      // even though AdapterPlatformConfig's type doesn't declare it.)
-      uninstallKeys: ['Doubao'],
-      processNames: ['Doubao.exe'],
-      // Doubao writes DevToolsActivePort to its user-data dir under APPDATA.
-      devToolsActivePortFile: [
-        '%APPDATA%\\Doubao\\DevToolsActivePort',
-      ],
-    } as CoreAppAdapter['platforms']['win32'],
-  },
-  matchTarget(target: CdpTarget): boolean {
-    if (target?.type !== 'page') return false;
-    const url = String(target.url ?? '');
-    const title = String(target.title ?? '');
-    if (/^(devtools|chrome-extension):/i.test(url)) return false;
-    return /doubao/i.test(title) || /doubao/i.test(url);
-  },
-  verification: {
-    rootAny: ['#root', 'body'],
-  },
-};
-
-try {
-  registerAdapter(doubaoAdapter);
-} catch {
-  // Already registered (e.g. hot reload) — safe to ignore.
-}
 
 void patchWindowsAdapters();

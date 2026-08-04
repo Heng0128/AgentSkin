@@ -16,8 +16,7 @@ import type { EnvironmentModel } from '@/types/environment';
 
 import { Copy01Icon, Delete02Icon, Edit02Icon, MoreVerticalIcon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
-import { envToDotVariant } from './AgentStatusBar';
-import { AgentStatusDot } from './AgentStatusDot';
+import { AgentStatusDot, envToDotVariant } from './AgentStatusDot';
 
 /**
  * # EnvironmentCard
@@ -35,7 +34,7 @@ import { AgentStatusDot } from './AgentStatusDot';
 /** Status → accent color mapping */
 const statusAccent: Record<EnvironmentModel['status'], { ring: string }> = {
   active: {
-    ring: 'ring-emerald-500/30 hover:ring-emerald-500/50',
+    ring: 'ring-cr-success/30 hover:ring-cr-success/50',
   },
   available: {
     ring: 'ring-sky-500/20 hover:ring-sky-500/40',
@@ -117,23 +116,27 @@ export function EnvironmentCard({
   const statusLabel = (() => {
     switch (env.status) {
       case 'active':
-        return t.environmentActive;
+        return <b className="text-[10.5px] font-semibold text-cr-success">在线</b>;
       case 'available':
-        return t.statusDebugReady;
+        return <b className="text-[10.5px] font-semibold text-sky-500">可启动</b>;
       case 'offline':
-        return t.statusUnknown;
+        return <b className="text-[10.5px] font-semibold text-muted-foreground">离线</b>;
       case 'detecting':
-        return t.statusDetecting;
+        return <b className="text-[10.5px] font-semibold text-cr-warning">检测中</b>;
     }
   })();
 
   return (
+    // biome-ignore lint/a11y/noStaticElementInteractions: conditional interactive card — when onClick is present, role="button", tabIndex, and onKeyDown are all set for full keyboard accessibility.
+    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-label is conditionally set only when role="button" is active (i.e., when onClick is present).
     <div
       className={cn(
-        'group/card relative flex flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xs',
-        'transition-all duration-200 ease-out',
-        'hover:-translate-y-0.5 hover:shadow-md',
-        isActive ? `ring-2 ${accent.ring}` : `ring-1 ${accent.ring}`,
+        'group/card relative flex flex-col overflow-hidden rounded-[2px] border border-border bg-card text-card-foreground',
+        'transition-all duration-base ease-out',
+        'hover:-translate-y-[3px] hover:shadow-md',
+        isActive
+          ? `ring-2 ring-primary/40 shadow-sm shadow-primary/10 ${accent.ring}`
+          : `ring-1 ${accent.ring}`,
         onClick && 'cursor-pointer',
       )}
       onClick={onClick}
@@ -149,30 +152,31 @@ export function EnvironmentCard({
             }
           : undefined
       }
-      aria-label={env.name}
+      aria-label={onClick ? env.name : undefined}
     >
-      {/* === Theme preview hover reveal === */}
-      {env.theme?.preview && (
-        <div className="pointer-events-none absolute inset-0 z-0 opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
-          <img
-            src={env.theme.preview}
-            alt=""
-            className="size-full object-cover"
-            draggable={false}
-          />
-          <div className="absolute inset-0 bg-card/80 backdrop-blur-[2px] dark:bg-card/85" />
-        </div>
-      )}
+      {/* === Top accent edge line (Swiss) === */}
+      <div
+        className={cn(
+          'absolute top-0 left-0 h-[2px] w-full transition-all duration-slow',
+          env.status === 'active'
+            ? 'bg-cr-success'
+            : env.status === 'detecting'
+              ? 'bg-cr-warning'
+              : env.status === 'available'
+                ? 'bg-cr-info'
+                : 'bg-transparent',
+        )}
+      />
 
       {/* === Card content === */}
-      <div className="relative z-10 flex flex-1 flex-col p-3">
+      <div className="relative z-10 flex flex-1 flex-col p-3.5">
         {/* Top row: icon + title + menu */}
         <div className="flex items-start gap-2.5">
-          {/* Agent icon with gradient backdrop */}
+          {/* Agent icon — flat Swiss mark */}
           <div
             className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover/card:scale-105',
-              'bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10',
+              'flex size-10 shrink-0 items-center justify-center rounded-[2px] transition-transform duration-base group-hover/card:scale-105',
+              'bg-card2 ring-1 ring-border-strong/50',
             )}
           >
             <AppMark appId={env.agent.id} size={28} />
@@ -181,35 +185,32 @@ export function EnvironmentCard({
           {/* Name + info */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <p className="truncate text-sm font-semibold tracking-tight">{env.name}</p>
+              <p className="truncate font-display text-sm font-bold">{env.name}</p>
               {isActive && (
-                <span className="shrink-0 rounded-full bg-emerald-500/15 px-1.5 py-px text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="shrink-0 rounded-full bg-cr-success/15 px-1.5 py-px text-[10px] font-semibold text-cr-success">
                   {t.activeBadge}
                 </span>
               )}
             </div>
-            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+            <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
               {env.agent.displayName}
               {' · '}
-              {env.theme ? env.theme.name : t.statusNoTheme}
+              {env.theme?.name || t.statusNoTheme}
             </p>
           </div>
 
           {/* Dropdown menu */}
           {hasActions && (
+            // biome-ignore lint/a11y/noStaticElementInteractions: stopPropagation only — prevents card click when interacting with the dropdown menu.
+            // biome-ignore lint/a11y/useKeyWithClickEvents: stopPropagation only — no keyboard action needed.
             <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={t.environmentDelete}
-                      className="opacity-0 transition-opacity group-hover/card:opacity-100"
-                    />
+                    <Button variant="ghost" size="icon-sm" aria-label={t.environmentDelete} />
                   }
                 >
-                  <HugeIcon icon={MoreVerticalIcon} className="size-4" />
+                  <HugeIcon icon={MoreVerticalIcon} className="size-3.5 text-muted-foreground" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-32">
                   {onRename && env.presetId && (
@@ -242,8 +243,36 @@ export function EnvironmentCard({
           )}
         </div>
 
-        {/* Bottom: status */}
-        <div className="mt-2.5 flex items-center gap-2 border-t border-border/50 pt-2">
+        {/* Meta grid: version / status / theme */}
+        <div className="mt-2.5 font-mono">
+          <div className="grid grid-cols-3 gap-1.5 rounded-[2px] bg-secondary px-2.5 py-[10px]">
+            <div>
+              <i className="mb-0.5 block text-[8px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
+                版本
+              </i>
+              <b className="block text-[10.5px] font-semibold text-foreground/80">
+                {env.detectedVersion || '—'}
+              </b>
+            </div>
+            <div>
+              <i className="mb-0.5 block text-[8px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
+                状态
+              </i>
+              {statusLabel}
+            </div>
+            <div>
+              <i className="mb-0.5 block text-[8px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
+                主题
+              </i>
+              <b className="block truncate text-[10.5px] font-semibold text-foreground/80">
+                {env.theme?.name || '—'}
+              </b>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom: status row (Swiss label) */}
+        <div className="mt-2.5 flex items-center gap-2 border-t border-dashed border-border/60 pt-2">
           <AgentStatusDot
             size="xs"
             variant={
@@ -260,7 +289,7 @@ export function EnvironmentCard({
                     : envToDotVariant(env)
             }
           />
-          <span className="text-[11px] font-medium text-muted-foreground">
+          <span className="font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             {progress ? phaseLabel(progress.phase, t) : statusLabel}
           </span>
           {progress && isPhaseActive(progress.phase) ? (
@@ -272,7 +301,7 @@ export function EnvironmentCard({
               {t.statusDetecting}
             </span>
           ) : env.agentInstalled ? (
-            <span className="ml-auto truncate text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+            <span className="ml-auto truncate text-[11px] font-medium text-cr-success">
               {t.statusInstalled}
               {env.detectedVersion ? ` ${t.versionLabel(env.detectedVersion)}` : ''}
             </span>
@@ -286,7 +315,7 @@ export function EnvironmentCard({
           <div className="px-3 pb-2">
             <div className="h-0.5 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-300"
+                className="h-full rounded-full bg-primary transition-all duration-slow"
                 style={{ width: `${progress.progress}%` }}
               />
             </div>

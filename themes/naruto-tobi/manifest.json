@@ -126,6 +126,56 @@
           }
         ]
       }
+    },
+    "codex": {
+      "css": "assets/css/codex.css",
+      "verification": {
+        "required": [
+          {
+            "name": "codex-root",
+            "any": [
+              "main.main-surface"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              "aside.app-shell-left-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".composer-surface-chrome"
+            ]
+          }
+        ]
+      }
+    },
+    "zcode": {
+      "css": "assets/css/zcode.css",
+      "verification": {
+        "required": [
+          {
+            "name": "zcode-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "composer",
+            "any": [
+              "[contenteditable='true']",
+              "textarea"
+            ]
+          }
+        ]
+      }
     }
   },
   "colors": {
@@ -159,7 +209,9 @@
     "traework",
     "qoderwork",
     "workbuddy",
-    "doubao"
+    "doubao",
+    "codex",
+    "zcode"
   ],
   "hero": "assets/hero.webp",
   "probe": {

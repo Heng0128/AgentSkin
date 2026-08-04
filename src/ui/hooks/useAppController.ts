@@ -17,7 +17,7 @@
  * The renderer no longer seeds builtin themes from URLs.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import type { Route } from '@/types/navigation';
 
@@ -26,9 +26,9 @@ import type { AgentId, SystemStatus } from '@shared/types';
 import { AGENT_META } from '@shared/types';
 import { useAgents } from './useAgents';
 import { useBoot } from './useBoot';
-import { type ProgressMap, type StructuredEvent, useBootProgress } from './useBootProgress';
+import { type StructuredEvent, useBootProgress } from './useBootProgress';
 import { useDialogs } from './useDialogs';
-import { type Toast, useNotifications } from './useNotifications';
+import { useNotifications } from './useNotifications';
 import { type SettingsSection, useSettings } from './useSettings';
 import {
   type InstallFlowState,
@@ -56,6 +56,66 @@ export function useAppController() {
   const [busy, setBusy] = useState<BusyKey | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [logsOpen, setLogsOpen] = useState(false);
+  // Inject dock (A.html `#dock`) — floating quick-actions capsule toggled
+  // from the status bar ⏏ button or Ctrl/Cmd+D.
+  const [injectDockOpen, setInjectDockOpen] = useState(false);
+
+  // Sidebar collapse state — persisted to localStorage so the layout
+  // preference survives reloads. Read synchronously on first render so
+  // there is no flash of the expanded sidebar.
+  const SIDEBAR_KEY = 'agentskin:sidebar-collapsed';
+  const [sidebarCollapsed, setSidebarCollapsedState] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem(SIDEBAR_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const setSidebarCollapsed = useCallback((next: boolean) => {
+    setSidebarCollapsedState(next);
+    try {
+      window.localStorage.setItem(SIDEBAR_KEY, next ? '1' : '0');
+    } catch {
+      /* ignore persistence failures */
+    }
+  }, []);
+  const toggleSidebar = useCallback(
+    () => setSidebarCollapsed(!sidebarCollapsed),
+    [sidebarCollapsed, setSidebarCollapsed],
+  );
+
+  // Global shortcut (Ctrl/Cmd + \) — mirrors VS Code / Cursor so the toggle
+  // is reachable without reaching for the mouse. Ignored while typing in a
+  // field so it never hijacks app-level shortcuts.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== '\\') return;
+      if (!(event.ctrlKey || event.metaKey)) return;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return;
+      event.preventDefault();
+      toggleSidebar();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [toggleSidebar]);
+
+  // Global shortcut (Ctrl/Cmd + D) — toggles the inject dock. Mirrors the
+  // A.html ⌘D quick action. Ignored while typing in a field.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== 'd') return;
+      if (!(event.ctrlKey || event.metaKey)) return;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return;
+      event.preventDefault();
+      setInjectDockOpen((open) => !open);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const t: UiMessages = uiMessages[locale];
 
@@ -128,7 +188,9 @@ export function useAppController() {
   const agentsHook = useAgents(status);
   // useWallpaper is created before useThemes so the theme-apply flow can
   // activate the theme's bundled video wallpaper after a successful apply.
-  const wallpaper = useWallpaper();
+  // `fail` reports wallpaper IPC errors instead of letting them become
+  // unhandled rejections or silent .catch(() => undefined) drops.
+  const wallpaper = useWallpaper(fail);
   const themesHook = useThemes({
     showToast,
     fail,
@@ -172,9 +234,15 @@ export function useAppController() {
     isRefreshing,
     busy,
     toasts: controllerToasts,
+    showToast,
     logs,
     logsOpen,
     setLogsOpen,
+    injectDockOpen,
+    setInjectDockOpen,
+    sidebarCollapsed,
+    setSidebarCollapsed,
+    toggleSidebar,
     refreshStatus,
     bootProgress,
 

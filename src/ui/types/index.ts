@@ -40,7 +40,7 @@
  *   ApplicationAdapter, BaseApplicationAdapter (adapter layer)
  *   AgentAdapterInfo, AgentDisplayMeta         (catalog internals)
  *   Registry, registerBuiltinAdapters          (runtime registry)
- *   agentskin-core-runtime, @agentskin/core    (engine)
+ *   agentskin-core-runtime, @agentskin/engine    (engine)
  *
  * Violation = architectural breach. If a component needs a field that isn't
  * on the catalog item, add it to the catalog item in shared/types.ts, not by

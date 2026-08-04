@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { cn } from '@/lib/utils';
+import type { EnvironmentModel } from '@/types/environment';
 
 /**
  * # AgentStatusDot
@@ -29,18 +30,18 @@ export type AgentDotVariant =
 
 const DOT_STYLES: Record<AgentDotVariant, { dot: string; ping?: string }> = {
   refreshing: {
-    dot: 'bg-amber-400',
-    ping: 'bg-amber-400',
+    dot: 'bg-cr-warning',
+    ping: 'bg-cr-warning',
   },
   active: {
-    dot: 'bg-emerald-500',
+    dot: 'bg-cr-success',
     // No ping — uses animate-breathe on the dot itself for a calmer feel.
   },
   available: {
     dot: 'bg-sky-400 animate-pulse',
   },
   detecting: {
-    dot: 'bg-amber-400 animate-pulse',
+    dot: 'bg-cr-warning animate-pulse',
   },
   offline: {
     dot: 'bg-muted-foreground/25',
@@ -49,6 +50,22 @@ const DOT_STYLES: Record<AgentDotVariant, { dot: string; ping?: string }> = {
     dot: 'bg-destructive',
   },
 };
+
+/**
+ * Map an {@link EnvironmentModel}'s runtime status to a dot variant.
+ *
+ * Mirrors the precedence used by {@link AgentStatusBar}: active > running
+ * (available) > detecting > installed-but-stopped (offline) > unknown
+ * (offline). Callers that also have live boot/apply phase information
+ * should layer that on top of this baseline — see {@link EnvironmentCard}
+ * for the canonical layered variant resolution.
+ */
+export function envToDotVariant(env: EnvironmentModel): AgentDotVariant {
+  if (env.status === 'active') return 'active';
+  if (env.agentRunning) return 'available';
+  if (env.status === 'detecting') return 'detecting';
+  return 'offline';
+}
 
 export function AgentStatusDot({
   variant,
@@ -74,7 +91,7 @@ export function AgentStatusDot({
       )}
       <span
         className={cn(
-          'relative inline-flex size-full rounded-full transition-colors duration-500',
+          'relative inline-flex size-full rounded-full transition-colors duration-slower',
           styles.dot,
         )}
       />

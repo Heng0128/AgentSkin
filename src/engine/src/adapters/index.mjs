@@ -1,9 +1,11 @@
 import codex from "./codex.mjs";
+import doubao from "./doubao.mjs";
 import workbuddy from "./workbuddy.mjs";
 import qoderwork from "./qoderwork.mjs";
 import traework from "./traework.mjs";
+import zcode from "./zcode.mjs";
 
-const adapters = new Map([codex, workbuddy, qoderwork, traework].map((adapter) => [adapter.id, adapter]));
+const adapters = new Map([codex, doubao, workbuddy, qoderwork, traework, zcode].map((adapter) => [adapter.id, adapter]));
 
 export function listAdapters() {
   return [...adapters.values()];

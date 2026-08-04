@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
- * Color tokens.
+ * Color tokens — design contract.
  *
- * Most UI should use Tailwind utilities (bg-background, text-foreground, …)
- * which read these CSS variables under the hood. This module exists for the
- * few places that need a concrete color value in JS — canvas theme previews,
- * charts, or inline styles that CSS classes can't reach.
+ * This module is a **design contract**, not dead code. It mirrors the CSS
+ * variables declared in `globals.css` and serves two purposes:
  *
- * `semanticColors` references the active theme's CSS variables, so values stay
- * in sync with the light/dark toggle automatically.
+ * 1. **Documentation** — the source of truth for semantic color names and
+ *    their CSS variable bindings, so contributors don't hard-code hex values.
+ * 2. **JS inline-style interop** — when a canvas context, chart library, or
+ *    inline `style` attribute needs a concrete color value (CSS classes
+ *    can't reach these), import from here instead of duplicating hex.
+ *
+ * Tailwind utilities (`bg-background`, `text-cr-success`, …) remain the
+ * preferred consumption path for normal JSX className usage.
  */
 export const semanticColors = {
   background: 'var(--background)',
@@ -22,6 +26,8 @@ export const semanticColors = {
   accentForeground: 'var(--primary-foreground)',
   accentSoft: 'var(--accent)',
   success: 'var(--cr-success)',
+  warning: 'var(--cr-warning)',
+  info: 'var(--cr-info)',
   danger: 'var(--destructive)',
   sidebar: 'var(--sidebar)',
   sidebarForeground: 'var(--sidebar-foreground)',

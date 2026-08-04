@@ -1,0 +1,167 @@
+/* 火影 · 带土 — OpenAI Codex (--text-*/--bg-* design tokens) */
+:root {
+  color-scheme: dark !important;
+  --agentskin-accent: #c41e2a;
+  --agentskin-secondary: #d4a84a;
+  --agentskin-bg: #0a0a14;
+  --agentskin-surface: #222230;
+  --agentskin-surface-elevated: #2c2c3c;
+  --agentskin-text: #e8d5d5;
+  --agentskin-muted: #7a6b75;
+  --agentskin-border: rgba(196, 30, 42, 0.18);
+  --agentskin-code-bg: #06060c;
+  --agentskin-code-fg: #d8c5cc;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #222230 82%, #c41e2a 18%) 45%, transparent);
+  --agentskin-button-bg: #c41e2a;
+  --agentskin-focus-ring: #c41e2a60;
+  --agentskin-selection: rgba(196, 30, 42, 0.32);
+}
+
+/* ===== Native token overrides ===== */
+html.agentskin-host-codex * {
+  color-scheme: dark !important;
+
+  /* Text hierarchy */
+  --text-primary: #e8d5d5 !important;
+  --text-secondary: #7a6b75 !important;
+  --text-tertiary: rgba(232, 213, 213, 0.55) !important;
+  --text-quaternary: rgba(232, 213, 213, 0.4) !important;
+
+  /* Backgrounds — transparent for art punch-through */
+  --bg-primary: transparent !important;
+  --bg-secondary: rgb(31, 31, 44) !important;
+  --bg-tertiary: color-mix(in srgb, #2c2c3c 85%, #c41e2a 15%) !important;
+  --bg-elevated: #2c2c3c !important;
+  --bg-base: transparent !important;
+  --bg-canvas: transparent !important;
+  --bg-surface: color-mix(in srgb, #222230 80%, transparent) !important;
+  --bg-hover: rgba(196, 30, 42, 0.1) !important;
+  --bg-active: rgba(196, 30, 42, 0.16) !important;
+  --bg-selected: rgba(196, 30, 42, 0.14) !important;
+
+  /* Borders */
+  --border-xsubtle: rgba(196, 30, 42, 0.045) !important;
+  --border-subtle: rgba(196, 30, 42, 0.09) !important;
+  --border-medium: rgba(196, 30, 42, 0.18) !important;
+  --border-strong: rgba(196, 30, 42, 0.144) !important;
+
+  /* Accent / brand */
+  --accent: #c41e2a !important;
+  --accent-hover: rgb(205, 64, 74) !important;
+  --accent-pressed: rgb(211, 86, 95) !important;
+  --accent-soft: rgba(196, 30, 42, 0.12) !important;
+  --accent-soft-hover: rgba(196, 30, 42, 0.18) !important;
+
+  /* Buttons */
+  --button-primary-bg: #c41e2a !important;
+  --button-primary-fg: rgb(2, 2, 3) !important;
+  --button-primary-hover: rgb(205, 64, 74) !important;
+  --button-secondary-bg: rgba(232, 213, 213, 0.12) !important;
+  --button-secondary-fg: #e8d5d5 !important;
+
+  /* Links */
+  --link: #c41e2a !important;
+  --link-hover: rgb(205, 64, 74) !important;
+
+  /* Input / composer */
+  --input-bg: color-mix(in srgb, color-mix(in srgb, #222230 82%, #c41e2a 18%) 45%, transparent) !important;
+  --input-border: rgba(196, 30, 42, 0.18) !important;
+  --input-focus-ring: rgba(196, 30, 42, 0.4) !important;
+
+  /* Sidebar / panels */
+  --sidebar-bg: color-mix(in srgb, color-mix(in srgb, #222230 82%, #c41e2a 18%) 22%, transparent) !important;
+  --panel-bg: color-mix(in srgb, #222230 14%, transparent) !important;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.24) !important;
+
+  /* Selection */
+  --selection-bg: rgba(196, 30, 42, 0.28) !important;
+
+  /* Code blocks */
+  --code-bg: #06060c !important;
+  --code-fg: #d8c5cc !important;
+}
+
+
+/* Links */
+html.agentskin-host-codex a {
+  color: var(--agentskin-accent) !important;
+}
+
+/* Selection */
+html.agentskin-host-codex ::selection {
+  background: var(--agentskin-selection) !important;
+}
+
+/* Generic inputs */
+html.agentskin-host-codex input,
+html.agentskin-host-codex textarea,
+html.agentskin-host-codex select {
+  background: var(--agentskin-input-bg) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
+}
+
+html.agentskin-host-codex input:focus,
+html.agentskin-host-codex textarea:focus,
+html.agentskin-host-codex select:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px var(--agentskin-focus-ring) !important;
+}
+
+/* Inline code & code blocks */
+html.agentskin-host-codex code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(196, 30, 42, 0.108) !important;
+  border-radius: 6px !important;
+}
+
+html.agentskin-host-codex pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(196, 30, 42, 0.108) !important;
+  border-left: 3px solid rgba(196, 30, 42, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+html.agentskin-host-codex pre code {
+  border: none !important;
+}
+
+/* Scrollbars */
+html.agentskin-host-codex ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html.agentskin-host-codex ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.agentskin-host-codex ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(196, 30, 42, 0.3) 0%, rgba(212, 168, 74, 0.3) 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+html.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(196, 30, 42, 0.5) 0%, rgba(212, 168, 74, 0.5) 100%) !important;
+  background-clip: padding-box !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html.agentskin-host-codex *,
+  html.agentskin-host-codex *::before,
+  html.agentskin-host-codex *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

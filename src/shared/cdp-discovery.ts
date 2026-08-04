@@ -14,7 +14,6 @@
  * src/legacy/ (agentskin-core-runtime) can import it without layer inversion.
  */
 
-import { execSync } from 'node:child_process';
 import net from 'node:net';
 import { execFileAsync } from './exec-async';
 
@@ -43,26 +42,80 @@ export function probePortLive(port: number, timeoutMs = 400): Promise<boolean> {
 }
 
 /**
- * Windows-only. Extract explicit `--remote-debugging-port=N` values from the
- * command lines of the given PIDs (via `wmic`). Fast path that hits hosts
- * launched with a fixed debug port directly (e.g. WorkBuddy's per-launch
- * random port). `port=0` (let Chromium pick) is ignored — those need netstat
- * fallback. Returns ports sorted ascending; [] on any failure or non-win32.
+ * TTL cache for the full Win32 process-list snapshot (CommandLine + ProcessId
+ * for every running process). Populated lazily by {@link snapshotProcesses}
+ * and reused across {@link explicitDebugPortsFromPids} calls within the TTL
+ * window.
+ *
+ * Why this cache exists: the renderer's `useBoot` hook polls `status()` every
+ * 3s, and `status()` calls `resolveLivePort` once per agent → 4 calls per
+ * poll. Without a cache that means 4 `wmic`/`Get-CimInstance` invocations
+ * every 3s, each spawning a child process that takes 0.5–2s. The 1.5s TTL
+ * collapses the 4 calls in a single poll to one snapshot while still being
+ * short enough that a freshly-launched process becomes visible before the
+ * next poll.
+ *
+ * The cache holds raw text (the form:list output) plus the timestamp it was
+ * captured. Both fields are written together; readers treat the snapshot as
+ * a unit. JavaScript's single-threaded event loop guarantees no torn reads
+ * even without a lock.
  */
-export function explicitDebugPortsFromPids(pids: number[]): number[] {
-  if (process.platform !== 'win32' || !pids.length) return [];
-  let out = '';
-  try {
-    // /format:list emits `CommandLine=...\nProcessId=...\n\n` blocks — robust
-    // against commas inside the command line (CSV would split on them).
-    out = execSync('wmic process get processid,commandline /format:list', {
-      encoding: 'utf8',
-      maxBuffer: 16 * 1024 * 1024,
-      windowsHide: true,
-    });
-  } catch {
-    return [];
+interface ProcessSnapshot {
+  text: string;
+  capturedAt: number;
+}
+let cachedProcessSnapshot: ProcessSnapshot | null = null;
+const PROCESS_SNAPSHOT_TTL_MS = 1500;
+
+/**
+ * Win32-only. Fetch the full process list (CommandLine + ProcessId) once and
+ * cache it for {@link PROCESS_SNAPSHOT_TTL_MS}. Uses `wmic` via the async
+ * `execFileAsync` helper — `wmic` is deprecated on Windows 11 24H2+ but is
+ * still present and the most broadly compatible option; a future migration
+ * to `Get-CimInstance` (PowerShell) can drop in here without touching
+ * callers.
+ *
+ * Returns '' on any failure or on non-win32 platforms so callers can treat
+ * the empty case uniformly.
+ */
+async function snapshotProcesses(): Promise<string> {
+  if (process.platform !== 'win32') return '';
+  const now = Date.now();
+  if (cachedProcessSnapshot && now - cachedProcessSnapshot.capturedAt < PROCESS_SNAPSHOT_TTL_MS) {
+    return cachedProcessSnapshot.text;
   }
+  // /format:list emits `CommandLine=...\nProcessId=...\n\n` blocks — robust
+  // against commas inside the command line (CSV would split on them).
+  const out = await execFileAsync(
+    'wmic',
+    ['process', 'get', 'processid,commandline', '/format:list'],
+    8000,
+  );
+  // Even if the call "succeeded" but returned empty (rare: wmic present but
+  // output truncated by timeout), cache the empty result so we don't hammer
+  // wmic repeatedly within the TTL window.
+  cachedProcessSnapshot = { text: out, capturedAt: now };
+  return out;
+}
+
+/**
+ * Windows-only. Extract explicit `--remote-debugging-port=N` values from the
+ * command lines of the given PIDs (via `wmic`, cached). Fast path that hits
+ * hosts launched with a fixed debug port directly (e.g. WorkBuddy's
+ * per-launch random port). `port=0` (let Chromium pick) is ignored — those
+ * need netstat fallback. Returns ports sorted ascending; [] on any failure
+ * or non-win32.
+ *
+ * Async since P1 audit #3: the previous `execSync` blocked the Electron
+ * main-process event loop for 0.5–2s per call, and `useBoot`'s 3s poll
+ * multiplied that by 4 agents → up to 8s of frozen UI per poll. Now uses
+ * {@link snapshotProcesses} (async `execFileAsync` + 1.5s TTL cache) so the
+ * 4 agent calls in a single poll share one wmic invocation.
+ */
+export async function explicitDebugPortsFromPids(pids: number[]): Promise<number[]> {
+  if (process.platform !== 'win32' || !pids.length) return [];
+  const out = await snapshotProcesses();
+  if (!out) return [];
   const wanted = new Set(pids);
   const ports: number[] = [];
   // Blocks are separated by blank lines (CRLF CRLF).
@@ -78,7 +131,7 @@ export function explicitDebugPortsFromPids(pids: number[]): number[] {
     if (!portMatch) continue;
     const port = Number(portMatch[1]);
     // port=0 means "let Chromium pick" — no explicit value to use here.
-    if (isFinite(port) && port >= 1024 && port <= 65535) ports.push(port);
+    if (Number.isFinite(port) && port >= 1024 && port <= 65535) ports.push(port);
   }
   return [...new Set(ports)].sort((x, y) => x - y);
 }
@@ -160,6 +213,12 @@ export async function resolveLivePort(
   const filePorts = await adapter.resolveDebugPorts(process.platform);
   for (const filePort of filePorts) {
     if (filePort === knownDeadPort) continue;
+    // Skip stale DevToolsActivePort entries (left over from a previous launch
+    // that had CDP but has since restarted without it, e.g. after an app
+    // update) with a fast TCP probe instead of a 1.2s HTTP /json/list timeout
+    // against a dead port. Without this, every status() poll and apply attempt
+    // wastes ~1.2s on the zombie port before falling through to auto-detect.
+    if (!(await probePortLive(filePort, 300))) continue;
     try {
       if ((await adapter.findTargets(filePort, 1200)).length) {
         log(`[port] ${appId}: layer 1 (DevToolsActivePort file) — CDP on ${filePort}`);
@@ -175,7 +234,7 @@ export async function resolveLivePort(
     const pids = await adapter.findRunningPids(process.platform, null);
 
     // (a) Explicit port from argv — fast path.
-    const explicitPorts = explicitDebugPortsFromPids(pids);
+    const explicitPorts = await explicitDebugPortsFromPids(pids);
     log(
       `[port] ${appId}: layer 2 (PID auto-detect) — ${pids.length} PID(s), ${explicitPorts.length} explicit port(s)`,
     );

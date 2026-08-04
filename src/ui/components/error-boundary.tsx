@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Component, type ErrorInfo, Fragment, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { rError } from '@/utils/renderer-log';
@@ -16,16 +16,17 @@ interface Props {
 interface State {
   error: Error | null;
   hasError: boolean;
+  resetKey: number;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { error: null, hasError: false };
+    this.state = { error: null, hasError: false, resetKey: 0 };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    return { error, hasError: true };
+  static getDerivedStateFromError(_error: Error): Partial<State> {
+    return { error: _error, hasError: true };
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
@@ -33,7 +34,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState({ error: null, hasError: false });
+    this.setState((prevState) => ({
+      error: null,
+      hasError: false,
+      resetKey: prevState.resetKey + 1,
+    }));
   };
 
   handleReload = () => {
@@ -74,6 +79,6 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return this.props.children;
+    return <Fragment key={this.state.resetKey}>{this.props.children}</Fragment>;
   }
 }

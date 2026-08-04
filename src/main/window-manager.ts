@@ -22,6 +22,67 @@ import { BrowserWindow } from 'electron';
 import { IpcChannel } from '../shared/ipc-channels';
 import { brandingRoot, ctx } from './main-context';
 
+/**
+ * Create (or focus, if already open) the dedicated Theme Studio window.
+ *
+ * Unlike the main window, the studio window is a plain utility window:
+ *   - it does NOT close-to-tray (closing it destroys it; `ctx.studioWindow`
+ *     is nulled on the `closed` event so it can be reopened cleanly)
+ *   - its maximize/unmaximize events broadcast `WINDOW_MAXIMIZE_CHANGE` to
+ *     its own webContents so its title bar reflects the maximized state
+ *   - it shares the same preload bridge and loads `studio.html`
+ *
+ * Idempotent: if a live studio window already exists we just surface/focus it
+ * instead of stacking duplicates.
+ */
+export async function createStudioWindow(options: WindowCreateOptions = {}): Promise<void> {
+  if (ctx.studioWindow && !ctx.studioWindow.isDestroyed()) {
+    ctx.studioWindow.show();
+    ctx.studioWindow.focus();
+    return;
+  }
+
+  const win = new BrowserWindow({
+    width: 1340,
+    height: 860,
+    minWidth: 980,
+    minHeight: 680,
+    show: false,
+    title: 'AgentSkin Studio',
+    icon: path.join(brandingRoot(), 'icon.png'),
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
+    backgroundColor: '#09090b',
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  ctx.studioWindow = win;
+  win.setMenuBarVisibility(false);
+
+  // Plain close (no close-to-tray): clear the ref so a later open recreates it.
+  win.on('closed', () => {
+    if (ctx.studioWindow === win) ctx.studioWindow = null;
+  });
+
+  win.once('ready-to-show', () => win.show());
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+
+  // Broadcast maximize/unmaximize to the studio window's own title bar.
+  win.on('maximize', () => win.webContents.send(IpcChannel.WINDOW_MAXIMIZE_CHANGE, true));
+  win.on('unmaximize', () => win.webContents.send(IpcChannel.WINDOW_MAXIMIZE_CHANGE, false));
+
+  if (options.rendererUrl) {
+    const base = options.rendererUrl.replace(/\/+$/, '');
+    await win.loadURL(`${base}/studio.html`);
+  } else {
+    await win.loadFile(path.join(__dirname, '../renderer/studio.html'));
+  }
+}
+
 export interface WindowCreateOptions {
   /** Renderer dev server URL (vite dev), or null to load the built file. */
   rendererUrl?: string;

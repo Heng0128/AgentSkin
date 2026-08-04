@@ -4,7 +4,7 @@
  * # agent-scheme
  *
  * Best-effort light/dark scheme synchronisation. The theme engine
- * (@agentskin/core) only injects/removes CSS; it never touches an agent's
+ * (@agentskin/engine) only injects/removes CSS; it never touches an agent's
  * own internal light/dark mode. Many themes only look right when the host
  * agent is in the matching mode, and users previously had to flip dark mode
  * by hand inside every agent. This module closes that gap: after a theme is
@@ -39,7 +39,7 @@
  */
 
 import type { AgentId } from '../shared/types';
-import type { CdpSession } from './cdp-client';
+import type { CdpSession } from './cdp/cdp-client';
 
 /** A concrete light/dark choice ('auto' is resolved by the caller). */
 export type SchemeMode = 'light' | 'dark';
@@ -380,16 +380,57 @@ export async function restoreScheme(
       return 'ok';
     } catch { return 'err'; }
   })()`;
+
+  // P2-1: restoreScheme used to be fire-and-forget with no retries and no
+  // read-back verification. The app is often mid-navigation / mid-render when
+  // restore runs, so our DOM writes would be silently overwritten — just like
+  // the race applyScheme already handles. We mirror applyScheme's retry pattern
+  // here: up to 3 attempts with exponential backoff, plus a read-back verify.
   let domOk = false;
-  try {
-    domOk = (await session.evaluate(expression)) === 'ok';
-  } catch {
-    domOk = false;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let writeOk = false;
+    try {
+      writeOk = (await session.evaluate(expression)) === 'ok';
+    } catch {
+      writeOk = false;
+    }
+    if (!writeOk) {
+      if (attempt < 2) await sleep(400 * (attempt + 1));
+      continue;
+    }
+    // Read back and confirm the snapshot state actually stuck.
+    // IMPORTANT: read-back failures (session threw, page temporarily
+    // unreadable, parse error, null return) do NOT negate a successful
+    // write. We only retry when read-back returns a *different* concrete
+    // dataTheme — i.e. the app overwrote the value during render. This
+    // matches the fire-and-forget success semantics the old restoreScheme
+    // had while still catching the known race with app-level re-renders.
+    try {
+      const readBack = await readSchemeState(session, strategy);
+      if (readBack) {
+        if (readBack.dataTheme === dataTheme) {
+          domOk = true;
+          break;
+        }
+        // App overwrote the restored state — retry after a delay.
+        if (attempt < 2) {
+          await sleep(500 * (attempt + 1));
+          continue;
+        }
+      }
+      // Read-back inconclusive (null / errored) — assume the write landed
+      // (this is the semantics the pre-P2-1 restoreScheme always had).
+      domOk = true;
+      break;
+    } catch {
+      domOk = true;
+      break;
+    }
   }
 
   // Clear the CDP prefers-color-scheme emulation AFTER the DOM state is
-  // restored, so there is no flash where the app reverts to the OS scheme
-  // before its own theme state is re-synced.
+  // restored (or we exhausted retries), so there is no flash where the app
+  // reverts to the OS scheme before its own theme state is re-synced.
   await clearColorSchemeEmulation(session);
 
   return domOk;

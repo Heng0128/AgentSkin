@@ -1,0 +1,10 @@
+^C:\USERS\SNOWB\DESKTOP\WORK\DESKTOP-MAIN\INSTALLER\WINDOWS\PLUGIN\CMAKELISTS.TXT
+setlocal
+C:\Users\snowb\scoop\apps\cmake\current\bin\cmake.exe -SC:/Users/snowb/Desktop/work/desktop-main/installer/windows/plugin -BC:/Users/snowb/Desktop/work/desktop-main/installer/windows/plugin/build/20260730_005607 --check-stamp-file C:/Users/snowb/Desktop/work/desktop-main/installer/windows/plugin/build/20260730_005607/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

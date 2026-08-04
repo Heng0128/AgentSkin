@@ -14,7 +14,7 @@
  */
 
 import { SHEET_OWNED_FLAG } from '../shared/injection-constants';
-import type { CdpSession } from './cdp-client';
+import type { CdpSession } from './cdp/cdp-client';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -46,12 +46,18 @@ export interface HealthCheckReport {
   agentId: string;
   /** Timestamp of the check. */
   timestamp: number;
-  /** Whether --codedrobe-art is set and active. */
+  /** Whether --agentskin-art is set and active. */
   heroArtActive: boolean;
   /** Whether an __agentskin adoptedStyleSheet is present. */
   themeSheetPresent: boolean;
   /** --agentskin-accent value (confirms token injection). */
   accentToken: string;
+  /** Whether agentskin-host-<agentId> class is on <html>. */
+  hostClassPresent: boolean;
+  /** Whether adapter.mjs marker (window.__agentskin_<agentId>_adapter__) exists. */
+  adapterPresent: boolean;
+  /** Sampled native token values (e.g. --dbx-bg-body-web) to verify overrides. */
+  nativeTokens: Record<string, string>;
   /** Opaque layers that block the hero art, sorted by depth. */
   opaqueLayers: OpaqueLayer[];
   /** Summary: how many visible opaque layers remain. */
@@ -85,19 +91,49 @@ export async function checkThemeHealth(
       const rootCs = getComputedStyle(document.documentElement);
       const root = document.getElementById('root') || document.body;
       const rootBg = getComputedStyle(root).backgroundImage || '';
+      const rootBeforeBg = getComputedStyle(root, '::before').backgroundImage || '';
       const bodyBg = getComputedStyle(document.body).backgroundImage || '';
+      const bodyBeforeBg = getComputedStyle(document.body, '::before').backgroundImage || '';
       const adopted = (document.adoptedStyleSheets || []).filter(s => s.${SHEET_OWNED_FLAG}).length;
+      const hostClass = 'agentskin-host-' + ${JSON.stringify(agentId)};
+      const hostClassPresent = document.documentElement.classList.contains(hostClass);
+      const adapterMarker = '__agentskin_' + ${JSON.stringify(agentId)} + '_adapter__';
+      const adapterPresent = !!window[adapterMarker];
+      // Sample key native tokens per agent to verify overrides took effect.
+      // --dbx-* are DEAD tokens in Doubao; real system is --semi-color-*.
+      const nativeTokens = {};
+      const tokenSamples = {
+        doubao: ['--semi-color-bg-0','--semi-color-text-0','--semi-color-primary','--normal-bg'],
+        traework: ['--vscode-foreground','--vscode-editor-background','--vscode-sideBar-background','--vscode-button-background'],
+        qoderwork: ['--color-bg-base','--color-text-primary','--color-brand-default','--color-bg-elevated'],
+        workbuddy: ['--cb-bg-primary','--cb-text-primary','--cb-button-dark-background','--cb-vscode-editor-background'],
+        codex: ['--color-bg-base','--color-text-primary','--color-brand-default','--color-bg-elevated'],
+      };
+      const sampleKeys = tokenSamples[${JSON.stringify(agentId)}] || tokenSamples.doubao;
+      for (const k of sampleKeys) {
+        nativeTokens[k] = rootCs.getPropertyValue(k).trim();
+      }
       return JSON.stringify({
-        heroArtActive: rootBg.includes('blob:') || bodyBg.includes('blob:'),
+        heroArtActive: rootBg.includes('blob:') || rootBeforeBg.includes('blob:') || bodyBg.includes('blob:') || bodyBeforeBg.includes('blob:'),
         themeSheetPresent: adopted > 0,
         accentToken: rootCs.getPropertyValue('--agentskin-accent').trim(),
+        hostClassPresent,
+        adapterPresent,
+        nativeTokens,
       });
     })()`);
   } catch {
     return emptyReport(agentId);
   }
 
-  let status: { heroArtActive: boolean; themeSheetPresent: boolean; accentToken: string };
+  let status: {
+    heroArtActive: boolean;
+    themeSheetPresent: boolean;
+    accentToken: string;
+    hostClassPresent: boolean;
+    adapterPresent: boolean;
+    nativeTokens: Record<string, string>;
+  };
   try {
     status = JSON.parse(statusRaw);
   } catch {
@@ -117,9 +153,18 @@ export async function checkThemeHealth(
         const cs = getComputedStyle(el);
         const bg = cs.backgroundColor;
         const bgImg = cs.backgroundImage;
-        const isOpaque = bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
+        // Parse alpha from rgba(r, g, b, a) — only truly opaque (a >= 0.9) blocks art.
+        // P0-1: the old inline regex /[d.]+(?=s*)$/ treated [d.] as a character
+        // class (d or dot), so every rgba() with a fractional alpha failed to
+        // match and fell through to alpha=1 — semi-transparent surfaces were
+        // misclassified as opaque blockers and the health score was meaningless.
+        // Delegate to parseBgAlpha (the single source of truth shared with
+        // isSemiTransparent below).
+        const isOpaque = parseBgAlpha(bg) >= 0.9;
+        // Elements with backdrop-filter are intentional frosted glass — not blockers.
+        const hasFrost = !!(cs.backdropFilter && cs.backdropFilter !== 'none');
         const hasBgImg = bgImg && bgImg !== 'none' && !bgImg.includes('blob:');
-        if ((isOpaque || hasBgImg) && el.offsetWidth > 10 && el.offsetHeight > 10) {
+        if ((isOpaque || hasBgImg) && !hasFrost && el.offsetWidth > 10 && el.offsetHeight > 10) {
           // Skip the art root itself (it has the hero gradient layers)
           if (depth === 0 && (el.id === 'root' || el === document.body)) {
             for (const child of el.children) walk(child, depth + 1);
@@ -169,6 +214,9 @@ export async function checkThemeHealth(
     heroArtActive: status.heroArtActive,
     themeSheetPresent: status.themeSheetPresent,
     accentToken: status.accentToken,
+    hostClassPresent: status.hostClassPresent,
+    adapterPresent: status.adapterPresent,
+    nativeTokens: status.nativeTokens,
     opaqueLayers,
     blockingCount,
     score,
@@ -189,7 +237,7 @@ export async function checkThemeHealth(
  */
 export function generatePunchThroughCss(report: HealthCheckReport): string {
   const targets = report.opaqueLayers.filter(
-    (l) => l.visible && !l.backdropFilter && !l.backgroundColor.includes('0.') === false, // skip already semi-transparent
+    (l) => l.visible && !l.backdropFilter && !isSemiTransparent(l.backgroundColor),
   );
 
   if (targets.length === 0) return '';
@@ -199,9 +247,24 @@ export function generatePunchThroughCss(report: HealthCheckReport): string {
   for (const layer of targets) {
     const selector = buildSelector(layer);
     if (!selector) continue;
-    rules.push(
-      `${selector} {\n  background: transparent !important;\n  background-color: transparent !important;\n  background-image: none !important;\n}`,
-    );
+    // P1-7: Previously this blanketed the element with three !important rules,
+    // including the overly-broad `background: transparent !important` shorthand
+    // which RESETS ALL background longhands (position, size, repeat, origin,
+    // clip, attachment) and often broke legitimate styling. We now emit only
+    // the longhand property that actually caused the opaqueness:
+    //   - If the layer has an OPAQUE computed background-color → neutralize it.
+    //   - If the layer has a NON-NONE background-image → neutralize it.
+    // Nothing else gets touched.
+    const declarations: string[] = [];
+    const bgColorOpaque = layer.backgroundColor && !isSemiTransparent(layer.backgroundColor);
+    const bgImageActive =
+      layer.backgroundImage &&
+      layer.backgroundImage !== 'none' &&
+      layer.backgroundImage.trim() !== '';
+    if (bgColorOpaque) declarations.push('  background-color: transparent !important;');
+    if (bgImageActive) declarations.push('  background-image: none !important;');
+    if (declarations.length === 0) continue;
+    rules.push(`${selector} {\n${declarations.join('\n')}\n}`);
   }
 
   return rules.join('\n\n');
@@ -210,6 +273,48 @@ export function generatePunchThroughCss(report: HealthCheckReport): string {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Parse the alpha channel of a computed `backgroundColor` string.
+ * Returns a value in [0, 1]:
+ *   - `transparent` / `rgba(0,0,0,0)` → 0
+ *   - `rgba(r, g, b, a)` → the parsed alpha
+ *   - `rgb(...)` / named colors / anything unparseable → 1 (opaque)
+ *
+ * P0-1: this is the single source of truth for background opacity parsing.
+ * The old health-check inline regex (`/[d.]+(?=s*)$/`) treated `[d.]` as a
+ * character class and misclassified every fractional-alpha rgba() as opaque;
+ * `isSemiTransparent` previously had its own (correct) regex. Both now go
+ * through here so they can never disagree.
+ */
+export function parseBgAlpha(bg: string | undefined): number {
+  if (!bg || bg === 'transparent' || bg === 'rgba(0, 0, 0, 0)') return 0;
+  // Anchor the match so trailing whitespace can't hide a fractional alpha.
+  const m = /^rgba?\(\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*(?:,\s*([\d.]+)\s*)?\)$/.exec(bg);
+  if (!m) return 1; // rgb() / named color / unparseable → treat as opaque
+  if (m[1] === undefined) return 1; // rgb() has no alpha channel → opaque
+  const alpha = parseFloat(m[1]);
+  if (Number.isNaN(alpha)) return 1;
+  return Math.min(1, Math.max(0, alpha));
+}
+
+/**
+ * Check whether a computed backgroundColor string is semi-transparent
+ * (alpha < 1). Handles `rgba(r,g,b,a)` format; `rgb(...)` and named colors
+ * are treated as opaque. Delegates to {@link parseBgAlpha}.
+ */
+export function isSemiTransparent(bg: string): boolean {
+  return parseBgAlpha(bg) < 1;
+}
+
+/**
+ * Escape a string for use as a CSS identifier (class name).
+ * Minimal replacement for the browser-only `CSS.escape` — handles the
+ * characters that appear in CSS-module hashes and typical class names.
+ */
+function escapeCssIdent(value: string): string {
+  return value.replace(/([^\w-])/g, '\\$1');
+}
 
 function buildSelector(layer: OpaqueLayer): string | null {
   // Prefer semantic attributes (stable across versions)
@@ -223,7 +328,7 @@ function buildSelector(layer: OpaqueLayer): string | null {
   // Use first class name (CSS module hash — may change between versions)
   const firstClass = layer.classes.split(' ')[0];
   if (firstClass && firstClass.length > 2) {
-    return `.${CSS.escape(firstClass)}`;
+    return `.${escapeCssIdent(firstClass)}`;
   }
   return null;
 }
@@ -254,6 +359,9 @@ function emptyReport(agentId: string): HealthCheckReport {
     heroArtActive: false,
     themeSheetPresent: false,
     accentToken: '',
+    hostClassPresent: false,
+    adapterPresent: false,
+    nativeTokens: {},
     opaqueLayers: [],
     blockingCount: 0,
     score: -1,

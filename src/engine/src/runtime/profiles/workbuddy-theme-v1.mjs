@@ -1,9 +1,9 @@
 export const WORKBUDDY_THEME_V1_PROFILE = "workbuddy-theme-v1";
 
 function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl = imageUrls.hero ?? artDataUrl }) {
-  const CHROME_ID = "codedrobe-workbuddy-skin-chrome";
+  const CHROME_ID = "agentskin-workbuddy-skin-chrome";
   const copy = {
-    brandTitle: theme.displayName ?? "CodeDrobe",
+    brandTitle: theme.displayName ?? "AgentSkin",
     brandSubtitle: "",
     signature: "",
     tagline: "",
@@ -32,7 +32,7 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
   const ensure = () => {
     const root = document.documentElement;
     if (!root) return false;
-    root.classList.add("codedrobe-workbuddy-skin");
+    root.classList.add("agentskin-workbuddy-skin");
     root.dataset.workbuddySkinTheme = theme.id;
 
     root.style.setProperty("--dream-tagline", cssString(copy.tagline));
@@ -78,7 +78,7 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
 
   const cleanup = () => {
     const root = document.documentElement;
-    root?.classList.remove("codedrobe-workbuddy-skin");
+    root?.classList.remove("agentskin-workbuddy-skin");
     if (root) delete root.dataset.workbuddySkinTheme;
     root?.style.removeProperty("--dream-tagline");
     root?.style.removeProperty("--dream-signature");
@@ -93,18 +93,18 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
     const root = document.documentElement;
     const chrome = document.getElementById(CHROME_ID);
     const missing = [];
-    if (!root?.classList.contains("codedrobe-workbuddy-skin")) {
-      missing.push({ name: "root-class", selectors: ["html.codedrobe-workbuddy-skin"] });
+    if (!root?.classList.contains("agentskin-workbuddy-skin")) {
+      missing.push({ name: "root-class", selectors: ["html.agentskin-workbuddy-skin"] });
     }
-    if (!chrome) missing.push({ name: "chrome-layer", selectors: ["#codedrobe-workbuddy-skin-chrome"] });
+    if (!chrome) missing.push({ name: "chrome-layer", selectors: ["#agentskin-workbuddy-skin-chrome"] });
     if (chrome && getComputedStyle(chrome).pointerEvents !== "none") {
-      missing.push({ name: "noninteractive-chrome", selectors: ["#codedrobe-workbuddy-skin-chrome { pointer-events: none }"] });
+      missing.push({ name: "noninteractive-chrome", selectors: ["#agentskin-workbuddy-skin-chrome { pointer-events: none }"] });
     }
     return {
       id: "workbuddy-theme-v1",
       pass: missing.length === 0,
       missing,
-      rootClassPresent: Boolean(root?.classList.contains("codedrobe-workbuddy-skin")),
+      rootClassPresent: Boolean(root?.classList.contains("agentskin-workbuddy-skin")),
       chromePresent: Boolean(chrome),
     };
   };
@@ -114,7 +114,7 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
 
 function cleanup() {
   const root = document.documentElement;
-  root?.classList.remove("codedrobe-workbuddy-skin");
+  root?.classList.remove("agentskin-workbuddy-skin");
   if (root) delete root.dataset.workbuddySkinTheme;
   root?.style.removeProperty("--dream-tagline");
   root?.style.removeProperty("--dream-signature");
@@ -122,7 +122,7 @@ function cleanup() {
   document.querySelectorAll(".dream-home-shell, .dream-conversation-shell").forEach((node) => {
     node.classList.remove("dream-home-shell", "dream-conversation-shell");
   });
-  document.getElementById("codedrobe-workbuddy-skin-chrome")?.remove();
+  document.getElementById("agentskin-workbuddy-skin-chrome")?.remove();
 }
 
 export default {

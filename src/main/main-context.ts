@@ -6,11 +6,11 @@ import { toMessage } from '../shared/errors';
 import { type AppLocale, DEFAULT_LOCALE } from '../shared/i18n';
 import { IpcChannel } from '../shared/ipc-channels';
 import { AGENT_IDS, type AgentId } from '../shared/types';
-import type { AgentEngineService } from './agent-engine-service';
 import type { AgentCatalog } from './catalog/agent-catalog';
 import type { ThemeCatalog } from './catalog/theme-catalog';
 import { FileOpenQueue } from './file-open';
 import type {
+  AgentEngineServiceApi,
   SettingsServiceApi,
   ThemeLibraryApi,
   WallpaperServiceApi,
@@ -30,14 +30,28 @@ import type {
  */
 export interface MainContext {
   mainWindow: BrowserWindow | null;
+  /** Lightweight splash window shown during boot. Closed when the main
+   *  window's `ready-to-show` fires. Null after splash is dismissed. */
+  splashWindow: BrowserWindow | null;
+  /** Dedicated, independently-closable Theme Studio window (opened on demand
+   *  from the main window's sidebar). Null until first opened; reset to null
+   *  on the window's `closed` event. */
+  studioWindow: BrowserWindow | null;
   tray: Tray | null;
   isQuitting: boolean;
+  /** True after `runBootSequence` completes successfully. IPC handlers and
+   *  tray actions should check this before accessing late-bound services
+   *  to avoid race conditions during shutdown or early access. */
+  bootComplete: boolean;
   library: ThemeLibraryApi;
-  core: AgentEngineService;
+  core: AgentEngineServiceApi;
   settings: SettingsServiceApi;
   agentCatalog: AgentCatalog;
   themeCatalog: ThemeCatalog;
-  wallpapers: WallpaperServiceApi;
+  /** Wallpaper service — optional because its initialization is degradable
+   *  (wrapped in try-catch in boot-sequence). Null when wallpaper init failed;
+   *  callers must null-check before using. */
+  wallpapers: WallpaperServiceApi | null;
   fileOpens: FileOpenQueue;
   locale: AppLocale;
   userDataRoot: string;
@@ -51,8 +65,12 @@ export interface MainContext {
  */
 export const ctx: MainContext = {
   mainWindow: null,
+  splashWindow: null,
+  studioWindow: null,
   tray: null,
   isQuitting: false,
+  bootComplete: false,
+  wallpapers: null,
   fileOpens: new FileOpenQueue(),
   locale: DEFAULT_LOCALE,
   userDataRoot: '',
@@ -73,6 +91,16 @@ export function brandingRoot(): string {
 /** Forward a log line to the renderer's runtime-log panel (if attached). */
 export function sendLog(line: string): void {
   ctx.mainWindow?.webContents.send(IpcChannel.RUNTIME_LOG, line);
+}
+
+/**
+ * Notify the renderer that SystemStatus changed outside the 3s poll cadence
+ * (after apply/restore/delete, tray actions, or boot-restore). The renderer
+ * subscribes via `onStatusChanged` and triggers an immediate `refreshStatus()`
+ * so the UI reflects the new state without waiting for the next poll tick.
+ */
+export function notifyStatusChanged(): void {
+  ctx.mainWindow?.webContents.send(IpcChannel.STATUS_CHANGED);
 }
 
 /**

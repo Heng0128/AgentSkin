@@ -24,7 +24,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { isSafeThemeId } from '../../shared/theme-id';
-import { mainErrorFromCatch, mainWarn, mainWarnFromCatch } from '../logger';
+import { mainErrorFromCatch, mainWarn } from '../logger';
+import { formatSchemaErrors, validateManifest } from './manifest-validator';
 import type { ThemeManifest, ThemeTargetConfig } from './theme-manifest';
 import { isV2Manifest } from './theme-manifest';
 
@@ -152,6 +153,19 @@ export class ThemePackageLoader {
       manifest = JSON.parse(manifestRaw) as ThemeManifest;
     } catch {
       throw new ThemePackageValidationError(themeId, 'manifest.json is not valid JSON');
+    }
+
+    // A2: schema-driven validation (SPEC-2) — the authoritative manifest-v2
+    // schema now lives in src/main/catalog (see manifest-validator.ts) and is
+    // the single source of truth. Hand-written checks below still harden
+    // file-existence / path-safety concerns the schema cannot express, but
+    // structural correctness is enforced here, with JSON paths in the error.
+    const schemaErrors = validateManifest(manifest);
+    if (schemaErrors.length > 0) {
+      throw new ThemePackageValidationError(
+        themeId,
+        `manifest violates schema (${formatSchemaErrors(schemaErrors)})`,
+      );
     }
 
     // Validate required fields (common to v1 and v2)

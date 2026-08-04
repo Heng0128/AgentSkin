@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { AGENT_META } from '../../shared/types';
 import { BaseApplicationAdapter, type InstallHints } from '../base';
 
 /**
- * TRAE SOLO CN — active adapter backed by @agentskin/core's "traework" adapter.
+ * TRAE SOLO CN — active adapter backed by @agentskin/engine's "traework" adapter.
  * Detect, apply, and restore all delegate to the runtime. Both the global
  * edition ("TRAE SOLO") and the CN edition ("TRAE SOLO CN") are supported by
  * the same core adapter (same Code-OSS commit, byte-identical solo-lite UI
@@ -11,7 +12,7 @@ import { BaseApplicationAdapter, type InstallHints } from '../base';
  */
 export class TraeAdapter extends BaseApplicationAdapter {
   readonly id = 'traework';
-  readonly name = 'TRAE';
+  readonly name = AGENT_META.traework.displayName;
   readonly type = 'agent' as const;
   readonly tier = 'active' as const;
   readonly coreId = 'traework';

@@ -1,26 +1,85 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  buildFilter,
+  buildFlipTransform,
+  buildIframeElementStyle,
+  buildMediaElementStyle,
+} from '@/lib/wallpaperRender';
+import { useWallpaperVideoUrl, useWallpaperWebUrl } from '@/lib/wallpaperVideo';
 
-import type { WallpaperInfo } from '@shared/types';
+import type { WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
 
 /**
  * # DynamicBackground
  *
- * Renders the selected Wallpaper Engine video as a full-bleed animated backdrop
- * behind the app UI. A tinted scrim (using the app background color) sits over
- * the video to keep foreground text and surfaces readable while letting the
- * motion show through the frosted sidebar and around opaque cards.
+ * Renders the selected Wallpaper Engine wallpaper as a full-bleed animated
+ * backdrop behind the app UI. A tinted scrim (using the app background color)
+ * sits over the wallpaper to keep foreground text and surfaces readable while
+ * letting the motion show through the frosted sidebar and around opaque cards.
  *
  * The element is `pointer-events-none` and sits at z-0; the app content is
  * layered above it (z-10) with a transparent container background when a
  * wallpaper is active.
  *
+ * ## Rendering by playback kind (mirrors the CDP wallpaper injectors)
+ *  - `video` — plays via `<video>`, falling back to the still preview image
+ *    when the clip can't be decoded. Honors `render.speed` / `render.loop`.
+ *  - `gif` — animates via `<img>` (a `<video>` element can't play GIFs).
+ *  - `image` — shows the media; `render.alignment`/position/flip/filter apply,
+ *    and `tile` renders via CSS background-repeat like the agent injector.
+ *  - `scene` / `web` — renders the SAME loopback iframe renderer that gets
+ *    injected into agent windows (`wallpaperWebUrl`), so the desktop UI
+ *    background matches the agent window exactly — not just a still preview.
+ *    flip/filter apply to the iframe itself, and pointer positions are
+ *    forwarded into the scene renderer so its internal parallax responds to
+ *    the mouse just like in agent windows.
+ *
+ * ## Render options (global defaults, `controller.wallpaper.render`)
+ * Alignment / position / flip / filter / speed are applied here exactly as in
+ * the CDP injectors (see `ui/lib/wallpaperRender.ts` — the renderer-side twin
+ * of `main/cdp/wallpaper/shared.ts`), so "同一个壁纸在桌面 UI 和 agent 窗口
+ * 效果一致". Mouse parallax translates the wallpaper layer (image/video) or
+ * forwards pointer coords to the scene renderer (scene/web).
+ *
  * Performance: playback pauses when the window loses focus or the document
  * becomes hidden (e.g. Alt-Tab, minimize), and resumes automatically on return.
  */
-export function DynamicBackground({ wallpaper }: { wallpaper: WallpaperInfo | null }) {
+export function DynamicBackground({
+  wallpaper,
+  render,
+}: {
+  wallpaper: WallpaperInfo | null;
+  render?: WallpaperRenderOptions;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const parallaxRef = useRef<HTMLDivElement>(null);
+  const webFrameRef = useRef<HTMLIFrameElement>(null);
+  // Streaming loopback URL for the active wallpaper's media (video/gif only).
+  const wantsMedia = wallpaper
+    ? wallpaper.playback === 'video' || wallpaper.playback === 'gif'
+    : false;
+  const video = useWallpaperVideoUrl(wantsMedia ? (wallpaper?.id ?? null) : null);
+  // Loopback renderer URL for scene/web wallpapers (same iframe as agents).
+  const wantsWeb = wallpaper ? wallpaper.type === 'web' || wallpaper.type === 'scene' : false;
+  const web = useWallpaperWebUrl(wantsWeb ? (wallpaper?.id ?? null) : null);
+  // Records which wallpaper id failed to play, so switching wallpapers clears
+  // the failure automatically (no reset effect needed).
+  const [failedId, setFailedId] = useState<string | null>(null);
+  const videoFailed = wallpaper != null && failedId === wallpaper.id;
+
+  // Playback rate: React doesn't expose `playbackRate` as a DOM prop, so it's
+  // applied via a callback ref. Stable while `render.speed` is unchanged; a
+  // speed change gives the ref a new identity → React detaches/reattaches →
+  // the rate is re-applied to the live element.
+  const setVideoRef = useCallback(
+    (el: HTMLVideoElement | null) => {
+      videoRef.current = el;
+      if (el) el.playbackRate = render?.speed ?? 1;
+    },
+    [render?.speed],
+  );
 
   // Pause/resume on visibility change and window blur/focus.
   useEffect(() => {
@@ -49,35 +108,161 @@ export function DynamicBackground({ wallpaper }: { wallpaper: WallpaperInfo | nu
     };
   }, [wallpaper]);
 
+  // Mouse parallax — image/video: translate the wallpaper layer opposite the
+  // cursor (same math as buildParallaxJs in the CDP injectors: scale(1.1) +
+  // MAX_OFFSET 40px × strength, so no exposed edges).
+  const layerParallax =
+    wallpaper != null &&
+    wallpaper.type !== 'web' &&
+    wallpaper.type !== 'scene' &&
+    (render?.parallax ?? 0) > 0;
+  useEffect(() => {
+    const el = parallaxRef.current;
+    if (!el || !layerParallax) return;
+    const strength = Math.min(1, Math.max(0, (render?.parallax ?? 0) / 100));
+    const MAX_OFFSET = 40;
+    const onMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      el.style.transform = `scale(1.1) translate(${(-x * strength * MAX_OFFSET).toFixed(2)}px, ${(-y * strength * MAX_OFFSET).toFixed(2)}px)`;
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => window.removeEventListener('mousemove', onMove);
+  }, [layerParallax, render?.parallax]);
+
+  // Mouse parallax — scene/web: the iframe is pointer-events:none (it sits
+  // behind the app UI), so it never receives mousemove itself. Forward
+  // normalized pointer coords via postMessage — the scene renderer's message
+  // listener (same one the CDP agent bridge uses) drives its internal parallax.
+  const iframeParallax =
+    wallpaper != null &&
+    (wallpaper.type === 'web' || wallpaper.type === 'scene') &&
+    web.url != null &&
+    (render?.parallax ?? 0) > 0;
+  useEffect(() => {
+    if (!iframeParallax) return;
+    // The loopback renderer serves from http://127.0.0.1:{port} — pin the
+    // targetOrigin to that exact origin instead of '*' so the pointer data
+    // can't be intercepted by unrelated windows. The loopback server is a
+    // process-lifetime singleton bound to 127.0.0.1, so the port is stable.
+    let targetOrigin = window.location.origin;
+    try {
+      targetOrigin = web.url ? new URL(web.url).origin : window.location.origin;
+    } catch {
+      // Malformed URL — fall back to this window's origin; the iframe's origin
+      // check then drops the message and parallax silently degrades.
+    }
+    const onMove = (e: MouseEvent) => {
+      // Read the frame at event time: switching wallpapers remounts the iframe
+      // (key = wallpaper.id), so a captured reference would go stale.
+      const frame = webFrameRef.current;
+      if (!frame?.contentWindow) return;
+      try {
+        frame.contentWindow.postMessage(
+          {
+            __agentskin: true,
+            type: 'pointer',
+            data: {
+              x: e.clientX / (window.innerWidth || 1),
+              y: e.clientY / (window.innerHeight || 1),
+            },
+          },
+          targetOrigin,
+        );
+      } catch {
+        // Cross-origin posting is blocked — parallax silently degrades.
+      }
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => window.removeEventListener('mousemove', onMove);
+  }, [iframeParallax, web.url]);
+
   if (!wallpaper) return null;
 
-  const isImage = wallpaper.type === 'image';
+  // Media-element style from global render options (object-fit/position,
+  // flip/filter; defaults match history: cover + centered + no transforms).
+  const mediaStyle = buildMediaElementStyle(render);
+  const alignment = render?.alignment;
+  const flip = buildFlipTransform(render ?? {});
+  const filter = buildFilter(render ?? {});
+
+  const isSceneOrWeb = wallpaper.type === 'web' || wallpaper.type === 'scene';
+  const tileImage = wallpaper.type === 'image' && alignment === 'tile';
+  const loopVideo = render?.loop ?? true;
 
   return (
     <div
       aria-hidden
       className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-background"
     >
-      {isImage ? (
-        <img
-          key={wallpaper.id}
-          src={wallpaper.videoUrl ?? undefined}
-          alt=""
-          className="absolute inset-0 size-full object-cover"
-        />
-      ) : (
-        <video
-          ref={videoRef}
-          key={wallpaper.id}
-          src={wallpaper.videoUrl ?? undefined}
-          autoPlay
-          loop
-          muted
-          playsInline
-          disablePictureInPicture
-          className="absolute inset-0 size-full object-cover"
-        />
-      )}
+      <div
+        ref={parallaxRef}
+        className="absolute inset-0 size-full will-change-transform"
+        style={layerParallax ? { transform: 'scale(1.1)' } : undefined}
+      >
+        {isSceneOrWeb && web.url ? (
+          // Scene/web: the same loopback iframe renderer used in agent windows,
+          // so the desktop background shows the real animated content.
+          <iframe
+            key={wallpaper.id}
+            ref={webFrameRef}
+            src={web.url}
+            title={wallpaper.title}
+            className="absolute inset-0 size-full border-0"
+            style={buildIframeElementStyle(render)}
+          />
+        ) : wallpaper.playback === 'video' && video.url && !videoFailed ? (
+          <video
+            ref={setVideoRef}
+            key={wallpaper.id}
+            src={video.url}
+            autoPlay
+            loop={loopVideo}
+            muted
+            playsInline
+            disablePictureInPicture
+            onError={() => setFailedId(wallpaper.id)}
+            className="absolute inset-0 size-full object-cover"
+            style={mediaStyle}
+          />
+        ) : wallpaper.playback === 'gif' && video.url ? (
+          // GIFs animate natively as an <img> (a <video> element can't play them).
+          <img
+            key={wallpaper.id}
+            src={video.url}
+            alt=""
+            className="absolute inset-0 size-full object-cover"
+            style={mediaStyle}
+          />
+        ) : tileImage && wallpaper.previewUrl ? (
+          // tile alignment: CSS background-repeat (agent injector parity).
+          <div
+            key={wallpaper.id}
+            className="absolute inset-0 size-full"
+            style={{
+              backgroundImage: `url("${wallpaper.previewUrl}")`,
+              backgroundPosition: `${render?.positionX ?? 0}% ${render?.positionY ?? 0}%`,
+              backgroundRepeat: 'repeat',
+              ...(flip ? { transform: flip } : {}),
+              ...(filter ? { filter } : {}),
+            }}
+          />
+        ) : wallpaper.previewUrl ? (
+          // Static image, unsupported video container, or a video that failed
+          // to decode — show the still preview.
+          <img
+            key={wallpaper.id}
+            src={wallpaper.previewUrl}
+            alt=""
+            className="absolute inset-0 size-full object-cover"
+            style={mediaStyle}
+          />
+        ) : (
+          // Nothing to show yet — keep the scrim over the app background colour
+          // so the frosted surfaces stay readable.
+          <div className="absolute inset-0 bg-background" />
+        )}
+      </div>
       {/* Readability scrim tinted with the app background color.
           Opacity is centralized in a CSS variable so themes can tune how
           much of the wallpaper motion punches through without editing this

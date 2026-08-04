@@ -16,7 +16,7 @@
  * runtime, which conflated two concerns:
  *   1. The structural contract *every* main-process module depends on.
  *   2. The legacy runtime functions (`readTheme`, `validateTheme`,
- *      `applyTheme`, ...) that bridge into `@agentskin/core`.
+ *      `applyTheme`, ...) that bridge into `@agentskin/engine`.
  *
  * Lifting the structural types into this file makes the contract explicit,
  * documented, and owned by the services layer — independent of where the
@@ -34,7 +34,7 @@
 
 /**
  * Identity metadata shared by every theme package (modern and legacy).
- * Mirrors `@agentskin/core`'s `ThemeIdentity` 1:1 so the engine's parsed
+ * Mirrors `@agentskin/engine`'s `ThemeIdentity` 1:1 so the engine's parsed
  * bundles are structurally assignable.
  */
 export interface ThemeIdentity {
@@ -52,7 +52,7 @@ export interface ThemeIdentity {
 
 /**
  * A base64-encoded image asset embedded in a theme package.
- * Mirrors `@agentskin/core`'s `ThemeImage`.
+ * Mirrors `@agentskin/engine`'s `ThemeImage`.
  */
 export interface ThemeImage {
   filename: string;
@@ -84,7 +84,7 @@ export interface ThemeTarget {
 /**
  * A single DOM assertion (selector present, CSS variable set, etc.) that
  * the engine runs after injection to confirm the theme took effect.
- * Mirrors `@agentskin/core`'s `VerificationRequirement`.
+ * Mirrors `@agentskin/engine`'s `VerificationRequirement`.
  */
 export interface VerificationRequirement {
   name: string;
@@ -93,7 +93,7 @@ export interface VerificationRequirement {
 
 /**
  * A named verification context that only applies when its `when.any`
- * selectors match something on the page. Mirrors `@agentskin/core`'s
+ * selectors match something on the page. Mirrors `@agentskin/engine`'s
  * `VerificationContext`.
  */
 export interface VerificationContext {
@@ -106,7 +106,7 @@ export interface VerificationContext {
 /**
  * Verification profile for a theme target — drives the post-inject DOM
  * assertion that confirms the theme actually took effect (selector present,
- * CSS variable set, etc.). Mirrors `@agentskin/core`'s
+ * CSS variable set, etc.). Mirrors `@agentskin/engine`'s
  * `VerificationProfile` 1:1 so the engine's parsed profiles are structurally
  * assignable to this contract.
  */
@@ -122,11 +122,11 @@ export interface VerificationProfile {
  * `readThemePackage()` / `validateThemePackage()` through the catalog layer
  * into the orchestrator's `apply()` / `restore()` flows.
  *
- * Structurally identical to `@agentskin/core`'s `ThemePackage`. The engine's
+ * Structurally identical to `@agentskin/engine`'s `ThemePackage`. The engine's
  * parsed bundles are assignable to this interface without any adapter.
  */
 export interface ThemeBundle {
-  format: 'codedrobe-theme';
+  format: 'agentskin-theme';
   schemaVersion: 1;
   exportedAt?: string;
   theme: ThemeIdentity;

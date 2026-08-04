@@ -127,9 +127,12 @@ describe('ThemeCatalog', () => {
     });
 
     it('returns empty when no themes support the agent', async () => {
-      const results = await catalog.filterByAgent('workbuddy');
-      expect(results).toHaveLength(1);
-      expect(results[0].id).toBe('neon');
+      // T4: previously used 'workbuddy', but 'neon' supports workbuddy — so
+      // the assertion (length 1) contradicted the test name. Use 'doubao'
+      // instead: no theme in the mock data declares doubao in its
+      // supportedAgents, so this actually exercises the empty-result path.
+      const results = await catalog.filterByAgent('doubao');
+      expect(results).toHaveLength(0);
     });
 
     it('returns themes with empty supportedAgents for no match', async () => {

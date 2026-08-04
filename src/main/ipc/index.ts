@@ -15,9 +15,14 @@
  * tray-visible state (core: locale; theme: apply/restore/import/delete).
  */
 
+import { ipcMain } from 'electron';
+import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
+import { createStudioWindow } from '../window-manager';
 import { registerCoreIpc } from './core-ipc';
 import { registerSettingsIpc } from './settings-ipc';
+import { registerStudioIpc } from './studio-ipc';
+import { registerStudioProjectIpc } from './studio-project-ipc';
 import { registerThemeIpc } from './theme-ipc';
 import { registerWallpaperIpc } from './wallpaper-ipc';
 import { registerWindowIpc } from './window-ipc';
@@ -27,5 +32,39 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
   registerThemeIpc(ctx, updateTrayMenu);
   registerSettingsIpc(ctx);
   registerWallpaperIpc(ctx);
-  registerWindowIpc(ctx);
+  registerWindowIpc();
+
+  // Open (or focus) the dedicated Theme Studio window on demand. The renderer
+  // env exposes ELECTRON_RENDERER_URL in dev so we can point the studio window
+  // at the vite dev server's `studio.html`; in prod we load the built file.
+  ipcMain.handle(IpcChannel.STUDIO_OPEN, () => {
+    void createStudioWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL });
+    return { ok: true };
+  });
+
+  registerStudioIpc({
+    applyTheme: (request) => ctx.core.apply(request),
+    restoreApp: (appId) => ctx.core.restore(appId),
+    getActiveThemeId: async (appId) => {
+      const status = await ctx.core.status();
+      const app = status.apps.find((a) => a.appId === appId);
+      return app?.activeThemeId ?? null;
+    },
+    resolveLivePort: async (appId) => {
+      const status = await ctx.core.status();
+      const app = status.apps.find((a) => a.appId === appId);
+      return app?.port ?? null;
+    },
+    log: (line: string) => console.log(line),
+    // Studio snapshot/inspect events are pushed back to whichever window
+    // requested them. The studio now lives in its own window, so prefer
+    // `studioWindow`; fall back to the main window for safety.
+    push: (channel: string, payload: unknown) => {
+      const target = ctx.studioWindow ?? ctx.mainWindow;
+      target?.webContents.send(channel, payload);
+    },
+  });
+
+  // Studio "工程" (projects) — self-contained, file-backed, no installed themes.
+  registerStudioProjectIpc();
 }

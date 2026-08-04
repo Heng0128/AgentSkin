@@ -5,11 +5,11 @@
  */
 (() => {
   'use strict';
-  const HOST_CLASS = 'codedrobe-host-qoderwork';
+  const HOST_CLASS = 'agentskin-host-qoderwork';
   const MARKER = '__agentskin_qoderwork_adapter__';
   if (window[MARKER]) return 'already-applied';
 
-  const config = window.__CODEDROBE_CONFIG__ || {};
+  const config = window.__AGENTSKIN_CONFIG__ || {};
   const heroUrl = config.heroBlobUrl || '';
 
   const STRUCTURAL_CSS = `
@@ -24,16 +24,7 @@ html.${HOST_CLASS} #root::before {
   inset: 0 !important;
   z-index: -1 !important;
   pointer-events: none !important;
-  background:
-    linear-gradient(90deg,
-      color-mix(in srgb, var(--agentskin-surface) 26%, transparent) 0 16%,
-      color-mix(in srgb, var(--agentskin-surface) 8%, transparent) 44%,
-      transparent 70%),
-    linear-gradient(180deg, transparent 0 50%,
-      color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
-    radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent), transparent 60%),
-    var(--codedrobe-art, none) right center / cover no-repeat !important;
+  background: var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
 /* === Layout shell transparent === */
@@ -54,29 +45,60 @@ html.${HOST_CLASS} [class*="workspace-panel"] {
 /* === Sidebar: frosted glass === */
 html.${HOST_CLASS} .agents-sidebar {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
-  border-right: 1px solid color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
-  backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 html.${HOST_CLASS} .agents-sidebar [class*="item"]:hover {
   background: var(--color-primary-bg-hover) !important;
 }
 html.${HOST_CLASS} .agents-sidebar [class*="active"] {
   background: var(--color-primary-bg-hover) !important;
-  box-shadow: inset 3px 0 0 0 var(--color-primary), inset 0 0 0 1px var(--color-primary-border) !important;
+}
+
+/* === Titlebar: kill shadow on promo card (签到/邀请,赚积分) === */
+html.${HOST_CLASS} [class*="agents-header"],
+html.${HOST_CLASS} [class*="titlebar"],
+html.${HOST_CLASS} [class*="title-bar"],
+html.${HOST_CLASS} [class*="top-bar"],
+html.${HOST_CLASS} [class*="topbar"],
+html.${HOST_CLASS} [class*="app-header"],
+html.${HOST_CLASS} [class*="window-header"],
+html.${HOST_CLASS} [class*="header"] {
+  box-shadow: none !important;
+  filter: none !important;
+  border: none !important;
+  border-bottom: none !important;
+  outline: none !important;
+}
+html.${HOST_CLASS} [class*="agents-header"] *,
+html.${HOST_CLASS} [class*="titlebar"] *,
+html.${HOST_CLASS} [class*="title-bar"] *,
+html.${HOST_CLASS} [class*="top-bar"] *,
+html.${HOST_CLASS} [class*="topbar"] *,
+html.${HOST_CLASS} [class*="app-header"] *,
+html.${HOST_CLASS} [class*="window-header"] *,
+html.${HOST_CLASS} [class*="header"] * {
+  box-shadow: none !important;
+  filter: none !important;
+}
+/* Pseudo-element shadows (gradient lines / ::after overlays) */
+html.${HOST_CLASS} [class*="agents-header"]::after,
+html.${HOST_CLASS} [class*="agents-header"]::before,
+html.${HOST_CLASS} [class*="titlebar"]::after,
+html.${HOST_CLASS} [class*="titlebar"]::before,
+html.${HOST_CLASS} [class*="header"]::after,
+html.${HOST_CLASS} [class*="header"]::before {
+  box-shadow: none !important;
+  display: none !important;
 }
 
 /* === Right panel: frosted glass === */
 html.${HOST_CLASS} [data-resizable-sidebar]:not(.agents-sidebar) {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
-  border-left: 1px solid color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
-  backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
 /* === Composer focus ring === */
 html.${HOST_CLASS} .chat-input-editor-text:focus,
 html.${HOST_CLASS} .chat-input-editor-text:focus-within {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 3px var(--color-primary-bg-hover), 0 4px 18px color-mix(in srgb, var(--agentskin-secondary) 20%, transparent) !important;
 }
 
 /* === Links === */
@@ -88,9 +110,6 @@ html.${HOST_CLASS} a {
 html.${HOST_CLASS} pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
-  border-left: 3px solid color-mix(in srgb, var(--agentskin-accent) 50%, transparent) !important;
-  border-radius: 10px !important;
 }
 html.${HOST_CLASS} code {
   background: var(--agentskin-code-bg) !important;
@@ -104,7 +123,6 @@ html.${HOST_CLASS} textarea:focus,
 html.${HOST_CLASS} select:focus {
   outline: none !important;
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--agentskin-accent) 15%, transparent) !important;
 }
 `;
 
@@ -147,7 +165,7 @@ html.${HOST_CLASS} select:focus {
   // Injection
   document.documentElement.classList.add(HOST_CLASS);
   if (heroUrl) {
-    document.documentElement.style.setProperty('--codedrobe-art', `url("${heroUrl}")`);
+    document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
   }
 
   const fullCss = [STRUCTURAL_CSS, applyHeuristicStyles(), discoverAndOverrideTokens()].filter(Boolean).join('\n');
@@ -174,8 +192,8 @@ html.${HOST_CLASS} select:focus {
 
   const interval = setInterval(() => {
     if (!document.documentElement.classList.contains(HOST_CLASS)) document.documentElement.classList.add(HOST_CLASS);
-    if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--codedrobe-art').includes('blob:')) {
-      document.documentElement.style.setProperty('--codedrobe-art', `url("${heroUrl}")`);
+    if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
+      document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
     }
   }, 5000);
 

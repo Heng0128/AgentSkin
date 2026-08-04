@@ -7,33 +7,46 @@
  * (minimize / toggle-maximize / close / is-maximized). Extracted from
  * `createWindow` in `main.ts` (H3).
  *
- * These handlers read `deps.mainWindow` lazily, so they can be registered
- * before the window is created (the optional chaining no-ops until a window
- * exists). The maximize/unmaximize *event* broadcasting still lives in
- * `createWindow` because it must be attached to each window instance.
- *
- * Dependencies are injected via `deps` (a {@link MainContext}) so handlers
- * are unit-testable — no implicit singleton import.
+ * These handlers resolve the originating window via
+ * `BrowserWindow.fromWebContents(event.sender)`, so they serve BOTH the main
+ * window and the standalone Theme Studio window without any per-window
+ * branching. The maximize/unmaximize *event* broadcasting still lives in
+ * `createMainWindow` / `createStudioWindow` because it must be attached to
+ * each window instance.
  */
 
-import { ipcMain } from 'electron';
+import { BrowserWindow, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
-import type { MainContext } from '../main-context';
 
-export function registerWindowIpc(deps: MainContext): void {
-  ipcMain.on(IpcChannel.WINDOW_MINIMIZE, () => deps.mainWindow?.minimize());
+export function registerWindowIpc(): void {
+  // Resolve the window that sent the control request so the same handlers
+  // serve BOTH the main window and the standalone Theme Studio window. This
+  // replaced the old `deps.mainWindow` hard-coding that silently controlled
+  // the wrong window once the studio moved into its own BrowserWindow.
+  const senderWindow = (
+    event: Electron.IpcMainEvent | Electron.IpcMainInvokeEvent,
+  ): BrowserWindow | null => BrowserWindow.fromWebContents(event.sender);
 
-  ipcMain.handle(IpcChannel.WINDOW_TOGGLE_MAXIMIZE, () => {
-    if (!deps.mainWindow) return false;
-    if (deps.mainWindow.isMaximized()) {
-      deps.mainWindow.unmaximize();
+  ipcMain.on(IpcChannel.WINDOW_MINIMIZE, (event) => {
+    senderWindow(event)?.minimize();
+  });
+
+  ipcMain.handle(IpcChannel.WINDOW_TOGGLE_MAXIMIZE, (event) => {
+    const win = senderWindow(event);
+    if (!win) return false;
+    if (win.isMaximized()) {
+      win.unmaximize();
       return false;
     }
-    deps.mainWindow.maximize();
+    win.maximize();
     return true;
   });
 
-  ipcMain.on(IpcChannel.WINDOW_CLOSE, () => deps.mainWindow?.close());
+  ipcMain.on(IpcChannel.WINDOW_CLOSE, (event) => {
+    senderWindow(event)?.close();
+  });
 
-  ipcMain.handle(IpcChannel.WINDOW_IS_MAXIMIZED, () => Boolean(deps.mainWindow?.isMaximized()));
+  ipcMain.handle(IpcChannel.WINDOW_IS_MAXIMIZED, (event) =>
+    Boolean(senderWindow(event)?.isMaximized()),
+  );
 }

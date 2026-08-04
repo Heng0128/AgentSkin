@@ -3,14 +3,14 @@
    ============================================================ */
 
 /* === Selection === */
-html.codedrobe-host-qoderwork ::selection {
+html.agentskin-host-qoderwork ::selection {
   background: color-mix(in srgb, var(--agentskin-accent) 28%, transparent) !important;
 }
 
 /* === Scrollbars === */
-html.codedrobe-host-qoderwork ::-webkit-scrollbar { width: 10px; height: 10px; }
-html.codedrobe-host-qoderwork ::-webkit-scrollbar-track { background: transparent; }
-html.codedrobe-host-qoderwork ::-webkit-scrollbar-thumb {
+html.agentskin-host-qoderwork ::-webkit-scrollbar { width: 10px; height: 10px; }
+html.agentskin-host-qoderwork ::-webkit-scrollbar-track { background: transparent; }
+html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%,
     color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent) 100%) !important;
@@ -18,7 +18,7 @@ html.codedrobe-host-qoderwork ::-webkit-scrollbar-thumb {
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
-html.codedrobe-host-qoderwork ::-webkit-scrollbar-thumb:hover {
+html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg,
     color-mix(in srgb, var(--agentskin-accent) 50%, transparent) 0%,
     color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 50%, transparent) 100%) !important;
@@ -27,9 +27,9 @@ html.codedrobe-host-qoderwork ::-webkit-scrollbar-thumb:hover {
 
 /* === Reduced motion === */
 @media (prefers-reduced-motion: reduce) {
-  html.codedrobe-host-qoderwork *,
-  html.codedrobe-host-qoderwork *::before,
-  html.codedrobe-host-qoderwork *::after {
+  html.agentskin-host-qoderwork *,
+  html.agentskin-host-qoderwork *::before,
+  html.agentskin-host-qoderwork *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }

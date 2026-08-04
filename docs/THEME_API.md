@@ -10,7 +10,7 @@ Renderer (AgentSkinApi)
     → AgentEngineService (状态持久化、端口编排、scheme 同步)
       → AdapterRegistry.requireAdapter(appId) → ApplicationAdapter
         → ThemeRuntime (agentskin-core-runtime.ts)
-          → @agentskin/core (CDP 注入、host-settings 事务)
+          → @agentskin/engine (CDP 注入、host-settings 事务)
 ```
 
 每一层只依赖下一层的 **接口**，不跨层调用。
@@ -23,8 +23,8 @@ Renderer (AgentSkinApi)
 | IPC 路由 | `src/main.ts` | 参数校验 + 分发到 Service |
 | 控制层 | `src/main/agent-engine-service.ts` | 状态持久化、CDP 端口发现、scheme 同步、重启策略 |
 | 适配器 | `src/adapters/base.ts` + `src/adapters/registry.ts` | 应用身份 + 委托到 Runtime |
-| 运行时 | `src/legacy/agentskin-core-runtime.ts` | 唯一导入 @agentskin/core 的模块 |
-| 引擎 | `@agentskin/core` | CDP 协议、CSS 注入、应用发现 |
+| 运行时 | `src/legacy/agentskin-core-runtime.ts` | 唯一导入 @agentskin/engine 的模块 |
+| 引擎 | `@agentskin/engine` | CDP 协议、CSS 注入、应用发现 |
 
 ## 核心类型
 
@@ -32,7 +32,7 @@ Renderer (AgentSkinApi)
 
 ```typescript
 // src/legacy/agentskin-core-runtime.ts
-export type ThemeBundle = ThemePackage; // @agentskin/core 的完整解析结果
+export type ThemeBundle = ThemePackage; // @agentskin/engine 的完整解析结果
 // 包含: theme (manifest), targets (Record<coreId, {css, ...}>), assets (images)
 ```
 
@@ -158,10 +158,10 @@ export interface ApplicationAdapter {
 
 | 常量 | 值 | 含义 |
 |---|---|---|
-| `ERROR_CODES.RESTART_REQUIRED` | `CODEDROBE_RESTART_REQUIRED` | 目标应用需要重启才能注入 |
-| `ERROR_CODES.PORT_OCCUPIED` | `CODEDROBE_PORT_OCCUPIED` | CDP 端口被占用 |
-| `ERROR_CODES.TARGET_TIMEOUT` | `CODEDROBE_TARGET_TIMEOUT` | CDP 目标发现超时 |
-| `ERROR_CODES.DOM_INCOMPATIBLE` | `CODEDROBE_DOM_INCOMPATIBLE` | DOM 结构不兼容 |
+| `ERROR_CODES.RESTART_REQUIRED` | `AGENTSKIN_RESTART_REQUIRED` | 目标应用需要重启才能注入 |
+| `ERROR_CODES.PORT_OCCUPIED` | `AGENTSKIN_PORT_OCCUPIED` | CDP 端口被占用 |
+| `ERROR_CODES.TARGET_TIMEOUT` | `AGENTSKIN_TARGET_TIMEOUT` | CDP 目标发现超时 |
+| `ERROR_CODES.DOM_INCOMPATIBLE` | `AGENTSKIN_DOM_INCOMPATIBLE` | DOM 结构不兼容 |
 | `ExperimentalAdapterError.code` | `AGENTSKIN_EXPERIMENTAL_ADAPTER` | 实验性适配器不支持操作 |
 
 ## 主题包生命周期
@@ -204,7 +204,7 @@ export interface ApplicationAdapter {
 
 ### 选择器策略
 
-作用域：`html.codedrobe-host-doubao:root`（特异性 0,2,1），高于豆包原生 `:root[data-theme="dark"]`（0,1,1）和亮色选择器（0,1,0）。
+作用域：`html.agentskin-host-doubao:root`（特异性 0,2,1），高于豆包原生 `:root[data-theme="dark"]`（0,1,1）和亮色选择器（0,1,0）。
 
 豆包使用 `--dbx-*` 设计 token 系统（251 个 token），通过 `:root[data-theme="dark"|"light"]` 和 `@media prefers-color-scheme` 切换明暗。探针仅覆写**语义层**（text/bg/fill/line/code），不触碰中性色阶、静态 alpha 梯度、彩色色板（red/orange/green/blue/purple/yellow）、圆角、断点和阴影 token。
 
@@ -314,12 +314,12 @@ export interface ApplicationAdapter {
 ### Art 层 (背景合成)
 
 ```css
-html.codedrobe-host-doubao body {
+html.agentskin-host-doubao body {
   background:
     linear-gradient(90deg, surface 80%→32%→transparent),  /* 左侧遮罩 */
     linear-gradient(180deg, transparent→surface 76%),      /* 底部渐隐 */
     radial-gradient(120% 80% at 84% 14%, secondary 22%),   /* 右上辉光 */
-    var(--codedrobe-art, none) right center / cover;       /* hero 图 */
+    var(--agentskin-art, none) right center / cover;       /* hero 图 */
 }
 ```
 
@@ -427,7 +427,7 @@ WorkBuddy 使用 `--cb-*` 设计变量系统（背景/文本/VS Code 包装/按�
     linear-gradient(90deg, surface 80%→32%→transparent),  /* 左侧遮罩 */
     linear-gradient(180deg, transparent→surface 76%),      /* 底部渐隐 */
     radial-gradient(120% 80% at 84% 14%, secondary 22%),   /* 右上辉光 */
-    var(--codedrobe-art, none) right center / cover;       /* hero 图 */
+    var(--agentskin-art, none) right center / cover;       /* hero 图 */
 }
 ```
 
@@ -461,7 +461,7 @@ WorkBuddy 使用 `--cb-*` 设计变量系统（背景/文本/VS Code 包装/按�
 
 ### 选择器策略
 
-作用域：`html.codedrobe-host-traework body`（特异性 0,1,2），高于 TRAE SOLO 原生 `body` 选择器（0,0,1）声明的 `--vscode-*` token。
+作用域：`html.agentskin-host-traework body`（特异性 0,1,2），高于 TRAE SOLO 原生 `body` 选择器（0,0,1）声明的 `--vscode-*` token。
 
 TRAE Work CN 基于 VS Code solo-lite 壳，使用 `--vscode-*` 和 `--vscode-icube-*` 设计 token 系统。探针通过覆写这些 token 实现全局换肤，再叠加 hero art 和结构性润色。
 
@@ -548,12 +548,12 @@ TRAE Work CN 基于 VS Code solo-lite 壳，使用 `--vscode-*` 和 `--vscode-ic
 ### Art 层 (背景合成)
 
 ```css
-html.codedrobe-host-traework #root {
+html.agentskin-host-traework #root {
   background:
     linear-gradient(90deg, surface 80%→32%→transparent),  /* 左侧遮罩 */
     linear-gradient(180deg, transparent→surface 76%),      /* 底部渐隐 */
     radial-gradient(120% 80% at 84% 14%, secondary 22%),   /* 右上辉光 */
-    var(--codedrobe-art, none) right center / cover;       /* hero 图 */
+    var(--agentskin-art, none) right center / cover;       /* hero 图 */
 }
 ```
 
@@ -581,7 +581,7 @@ html.codedrobe-host-traework #root {
 
 ### 选择器策略
 
-作用域：`html.codedrobe-host-qoderwork:root`（特异性 0,2,1），击败 QoderWork 原生 `:root[data-theme]`（0,2,0）。
+作用域：`html.agentskin-host-qoderwork:root`（特异性 0,2,1），击败 QoderWork 原生 `:root[data-theme]`（0,2,0）。
 
 QoderWork CN 使用 `--color-*` 设计 token 系统（111 个 token），通过 `html[data-theme="light"|"dark"]` 切换明暗。探针在 `:root` 级别覆写全部语义 token，实现全局换肤。
 
@@ -711,12 +711,12 @@ QoderWork CN 使用 `--color-*` 设计 token 系统（111 个 token），通过 
 ### Art 层 (背景合成)
 
 ```css
-html.codedrobe-host-qoderwork #root {
+html.agentskin-host-qoderwork #root {
   background:
     linear-gradient(90deg, surface 80%→32%→transparent),  /* 左侧遮罩 */
     linear-gradient(180deg, transparent→surface 76%),      /* 底部渐隐 */
     radial-gradient(120% 80% at 84% 14%, secondary 22%),   /* 右上辉光 */
-    var(--codedrobe-art, none) right center / cover;       /* hero 图 */
+    var(--agentskin-art, none) right center / cover;       /* hero 图 */
 }
 ```
 

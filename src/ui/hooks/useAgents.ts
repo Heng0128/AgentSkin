@@ -57,10 +57,13 @@ export function useAgents(status: SystemStatus | null) {
   const [agents, setAgents] = useState<AgentCatalogItem[]>(FALLBACK_AGENTS);
 
   useEffect(() => {
+    // A failure leaves the fallback catalog (no icons/descriptions), which is
+    // silently degraded — surface it via console so a missing catalog IPC is
+    // diagnosable instead of looking like a UI bug.
     void api.catalog.agents
       .list()
       .then((r) => setAgents(r.items))
-      .catch(() => undefined);
+      .catch(console.error);
   }, []);
 
   const appStatusFor = useCallback(

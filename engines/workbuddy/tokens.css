@@ -1,18 +1,22 @@
 /* ============================================================
    ENGINE: workbuddy — Layer 0: Token Override
    ------------------------------------------------------------
-   WorkBuddy uses --cb-* design-variable system.
-   Selector: body[data-application-name="workbuddy"]
+   WorkBuddy uses --cb-* design-variable system (VS Code arch).
+   Selector: html.agentskin-host-workbuddy body (0,1,2)
+   HOST_CLASS added to <html> by adapter.mjs — guaranteed present.
+
+   Stability: HIGH — --cb-* tokens are internal API and rarely rename.
+   If they do, adapter.mjs L4 auto-discovery compensates at runtime.
    ============================================================ */
 
-body[data-application-name="workbuddy"] {
+html.agentskin-host-workbuddy body {
   color-scheme: dark !important;
   --wb-accent: var(--agentskin-accent);
   --wb-secondary: var(--agentskin-secondary);
   --wb-surface: var(--agentskin-bg);
   --wb-text: var(--agentskin-text);
 
-  /* Backgrounds */
+  /* --- Backgrounds --- */
   --cb-bg-primary: var(--wb-surface) !important;
   --cb-bg-secondary: color-mix(in srgb, var(--wb-surface) 94%, transparent) !important;
   --cb-bg-tertiary: color-mix(in srgb, var(--wb-surface) 82%, var(--wb-accent) 6%) !important;
@@ -21,7 +25,7 @@ body[data-application-name="workbuddy"] {
   --cb-panel-bg-secondary: color-mix(in srgb, var(--wb-surface) 78%, var(--wb-accent) 10%) !important;
   --cb-team-member-card-background: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
 
-  /* Text */
+  /* --- Text hierarchy --- */
   --cb-text-primary: var(--wb-text) !important;
   --cb-text-secondary: color-mix(in srgb, var(--wb-text) 70%, transparent) !important;
   --cb-text-tertiary: color-mix(in srgb, var(--wb-text) 50%, transparent) !important;
@@ -30,16 +34,16 @@ body[data-application-name="workbuddy"] {
   --cb-text-link-hover: var(--wb-secondary) !important;
   --cb-text-error-active: var(--wb-accent) !important;
 
-  /* VS Code token wrappers */
+  /* --- VS Code token wrappers --- */
   --cb-vscode-editor-background: var(--wb-surface) !important;
   --cb-vscode-sideBar-background: color-mix(in srgb, var(--wb-surface) 15%, transparent) !important;
   --cb-vscode-foreground: var(--wb-text) !important;
   --cb-vscode-editor-foreground: var(--wb-text) !important;
   --cb-vscode-descriptionForeground: color-mix(in srgb, var(--wb-text) 70%, transparent) !important;
-  --cb-vscode-titleBar-activeBackground: var(--wb-accent) !important;
-  --cb-vscode-titleBar-activeForeground: #ffffff !important;
-  --cb-vscode-titleBar-inactiveBackground: color-mix(in srgb, var(--wb-accent) 80%, var(--wb-surface)) !important;
-  --cb-vscode-titleBar-inactiveForeground: rgba(255, 255, 255, 0.7) !important;
+  --cb-vscode-titleBar-activeBackground: transparent !important;
+  --cb-vscode-titleBar-activeForeground: var(--wb-text) !important;
+  --cb-vscode-titleBar-inactiveBackground: transparent !important;
+  --cb-vscode-titleBar-inactiveForeground: color-mix(in srgb, var(--wb-text) 70%, transparent) !important;
   --cb-titlebar-control-hover-background: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
   --cb-vscode-input-background: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
   --cb-vscode-dropdown-background: color-mix(in srgb, var(--wb-surface) 94%, transparent) !important;
@@ -51,7 +55,7 @@ body[data-application-name="workbuddy"] {
   --cb-vscode-widget-border: color-mix(in srgb, var(--wb-accent) 45%, transparent) !important;
   --cb-vscode-panel-border: color-mix(in srgb, var(--wb-accent) 30%, transparent) !important;
 
-  /* Buttons */
+  /* --- Buttons --- */
   --cb-button-dark-background: var(--wb-accent) !important;
   --cb-button-dark-foreground: #ffffff !important;
   --cb-button-dark-hover-background: color-mix(in srgb, var(--wb-accent) 85%, black) !important;
@@ -61,12 +65,70 @@ body[data-application-name="workbuddy"] {
   --cb-button-ghost-hover-background: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
   --cb-vscode-button-secondaryBackground: color-mix(in srgb, var(--wb-surface) 70%, var(--wb-accent) 12%) !important;
 
-  /* Strokes */
+  /* --- Strokes / Borders --- */
   --cb-stroke-secondary: color-mix(in srgb, var(--wb-accent) 45%, transparent) !important;
   --cb-markdown-hr-border-color: color-mix(in srgb, var(--wb-accent) 30%, transparent) !important;
 
-  /* Focus & selection */
+  /* --- Focus & selection --- */
   --cb-vscode-focusBorder: color-mix(in srgb, var(--wb-accent) 40%, transparent) !important;
   --cb-vscode-list-activeSelectionForeground: var(--wb-text) !important;
   --cb-vscode-list-inactiveSelectionBackground: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+
+  /* --- Chat / Conversation tokens --- */
+  --cb-chat-bg: transparent !important;
+  --cb-chat-input-bg: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-accent) 20%) 48%, transparent) !important;
+  --cb-chat-input-border: color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
+  --cb-chat-input-text: var(--wb-text) !important;
+  --cb-chat-input-placeholder: color-mix(in srgb, var(--wb-text) 50%, transparent) !important;
+  --cb-chat-message-bg: color-mix(in srgb, var(--agentskin-surface) 25%, transparent) !important;
+  --cb-chat-message-user-bg: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --cb-chat-message-text: var(--wb-text) !important;
+  --cb-chat-timestamp: color-mix(in srgb, var(--wb-text) 45%, transparent) !important;
+
+  /* --- Markdown / Code tokens --- */
+  --cb-markdown-code-bg: var(--agentskin-code-bg, color-mix(in srgb, var(--agentskin-surface) 90%, var(--agentskin-bg))) !important;
+  --cb-markdown-code-text: var(--agentskin-code-fg, var(--wb-text)) !important;
+  --cb-markdown-codeblock-bg: var(--agentskin-code-bg, color-mix(in srgb, var(--agentskin-surface) 90%, var(--agentskin-bg))) !important;
+  --cb-markdown-codeblock-header-bg: color-mix(in srgb, var(--agentskin-surface) 95%, var(--agentskin-bg)) !important;
+  --cb-markdown-codeblock-border: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+  --cb-markdown-inline-code-bg: color-mix(in srgb, var(--agentskin-surface) 85%, var(--agentskin-bg)) !important;
+  --cb-markdown-inline-code-text: var(--agentskin-code-fg, var(--wb-text)) !important;
+  --cb-markdown-link: var(--wb-accent) !important;
+  --cb-markdown-link-hover: color-mix(in srgb, var(--wb-accent) 80%, #fff) !important;
+  --cb-markdown-blockquote-border: color-mix(in srgb, var(--wb-accent) 40%, transparent) !important;
+  --cb-markdown-blockquote-bg: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
+  --cb-markdown-table-border: color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
+  --cb-markdown-table-header-bg: color-mix(in srgb, var(--agentskin-surface) 70%, transparent) !important;
+
+  /* --- Input / Editor tokens --- */
+  --cb-input-bg: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --cb-input-border: color-mix(in srgb, var(--wb-accent) 25%, transparent) !important;
+  --cb-input-focus-border: var(--wb-accent) !important;
+  --cb-input-text: var(--wb-text) !important;
+  --cb-input-placeholder: color-mix(in srgb, var(--wb-text) 50%, transparent) !important;
+  --cb-editor-bg: var(--wb-surface) !important;
+  --cb-editor-fg: var(--wb-text) !important;
+  --cb-editor-line-highlight: color-mix(in srgb, var(--wb-accent) 6%, transparent) !important;
+  --cb-editor-selection: color-mix(in srgb, var(--wb-accent) 25%, transparent) !important;
+
+  /* --- Sidebar tokens --- */
+  --cb-sidebar-bg: color-mix(in srgb, var(--wb-surface) 12%, transparent) !important;
+  --cb-sidebar-item-hover: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --cb-sidebar-item-active: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --cb-sidebar-section-header: color-mix(in srgb, var(--wb-text) 60%, transparent) !important;
+  --cb-sidebar-border: color-mix(in srgb, var(--agentskin-border) 40%, transparent) !important;
+
+  /* --- Notification / Badge --- */
+  --cb-badge-bg: var(--wb-accent) !important;
+  --cb-badge-fg: #ffffff !important;
+  --cb-notification-bg: color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent) !important;
+  --cb-notification-border: color-mix(in srgb, var(--wb-accent) 30%, transparent) !important;
+
+  /* --- Tab tokens --- */
+  --cb-tab-active-bg: color-mix(in srgb, var(--wb-surface) 80%, transparent) !important;
+  --cb-tab-inactive-bg: transparent !important;
+  --cb-tab-hover-bg: color-mix(in srgb, var(--wb-accent) 8%, transparent) !important;
+  --cb-tab-active-border: var(--wb-accent) !important;
+  --cb-tab-text: var(--wb-text) !important;
+  --cb-tab-inactive-text: color-mix(in srgb, var(--wb-text) 60%, transparent) !important;
 }

@@ -5,16 +5,16 @@
  *
  * Runs the exact boot path (ThemePackageLoader.scan → ThemeInstaller.installAll
  * → ThemeLibrary) against the real themes/ directory and validates every
- * produced bundle through @agentskin/core's own tooling:
+ * produced bundle through @agentskin/engine's own tooling:
  *
  *   - each package installs and passes core package validation
  *   - each bundle ships CSS + verification for all three active agents
  *   - verification `required` anchors only use selectors that exist in the
  *     real application DOM (cross-checked against the core adapter
  *     landmarks), so the engine's DOM preflight can no longer reject an
- *     apply with CODEDROBE_DOM_INCOMPATIBLE
+ *     apply with AGENTSKIN_DOM_INCOMPATIBLE
  *   - hero artwork is embedded with a real MIME type and surfaces as
- *     artDataUrl / --codedrobe-art for the injected CSS
+ *     artDataUrl / --agentskin-art for the injected CSS
  */
 
 import fs from 'node:fs/promises';
@@ -32,11 +32,11 @@ import { ThemePackageLoader } from './catalog/theme-package-loader';
 import { ThemeLibrary } from './theme-library';
 
 const THEMES_DIR = path.resolve(__dirname, '..', '..', 'themes');
-const ACTIVE_AGENTS = ['traework', 'qoderwork', 'workbuddy'] as const;
+const ACTIVE_AGENTS = ['traework', 'qoderwork', 'workbuddy', 'zcode'] as const;
 
 /**
  * Selectors known to exist in each application's renderer, taken from the
- * @agentskin/core v0.6.0 adapter verification landmarks. A theme's blocking
+ * @agentskin/engine v0.6.0 adapter verification landmarks. A theme's blocking
  * (`required`) anchors must stay within this set — anything else makes the
  * engine refuse the apply.
  */
@@ -73,6 +73,7 @@ const KNOWN_DOM_SELECTORS: Record<string, Set<string>> = {
     "[role='textbox'][contenteditable='true']",
     ".wb-home-composer [contenteditable='true']",
   ]),
+  zcode: new Set(['#root', 'body', "[contenteditable='true']", 'textarea']),
 };
 
 /**
@@ -149,7 +150,8 @@ beforeAll(async () => {
 
   const loader = new ThemePackageLoader(THEMES_DIR);
   const packages = await loader.scan();
-  expect(packages.length).toBeGreaterThanOrEqual(10);
+  // The shipped bundle is a single theme (naruto-tobi, 火影 · 带土).
+  expect(packages.length).toBeGreaterThanOrEqual(1);
 
   const installer = new ThemeInstaller(library);
   await installer.installAll(packages);
@@ -165,7 +167,7 @@ afterAll(async () => {
 
 describe('built-in theme packages', () => {
   it('installs every shipped theme into the library', () => {
-    expect(bundles.size).toBeGreaterThanOrEqual(10);
+    expect(bundles.size).toBeGreaterThanOrEqual(1);
   });
 
   it('produces core-valid bundles with CSS for all three agents', () => {
@@ -200,7 +202,7 @@ describe('built-in theme packages', () => {
     }
   });
 
-  it('embeds hero artwork and exposes it as --codedrobe-art for every agent', () => {
+  it('embeds hero artwork and exposes it as --agentskin-art for every agent', () => {
     for (const [id, bundle] of bundles) {
       const hero = bundle.assets?.images?.hero;
       expect(hero, `${id}: missing hero image`).toBeTruthy();
@@ -231,14 +233,14 @@ describe('built-in theme packages', () => {
   it('references the injected hero art variable in the applied backgrounds', () => {
     for (const [id, bundle] of bundles) {
       // Flat / CSS-only themes (manifest art:false) ship no backdrop image by
-      // design, so they are exempt from the --codedrobe-art reference rule.
+      // design, so they are exempt from the --agentskin-art reference rule.
       const isFlat = (bundle.theme.copy as { art?: boolean } | undefined)?.art === false;
       if (isFlat) continue;
       for (const agent of ACTIVE_AGENTS) {
         expect(
           bundle.targets[agent].css,
-          `${id}/${agent}: CSS never uses --codedrobe-art`,
-        ).toContain('var(--codedrobe-art');
+          `${id}/${agent}: CSS never uses --agentskin-art`,
+        ).toContain('var(--agentskin-art');
       }
     }
   });

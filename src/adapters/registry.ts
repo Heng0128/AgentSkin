@@ -9,8 +9,8 @@
  *
  * `registerBuiltinAdapters()` is idempotent and wires the built-in set:
  *
- *   active (backed by @agentskin/core):
- *     traework, qoderwork, workbuddy, doubao
+ *   active (backed by @agentskin/engine):
+ *     traework, qoderwork, workbuddy, doubao, codex
  *
  *   experimental (registered for discovery, not yet functional):
  *     codebuddy, marscode, comate, tongyi_lingma, tencent_ai_code
@@ -22,6 +22,7 @@
 
 import type { AdapterTier, ApplicationAdapter } from './base';
 import { CodebuddyAdapter } from './domestic/codebuddy';
+import { CodexAdapter } from './domestic/codex';
 import { ComateAdapter } from './domestic/comate';
 import { DoubaoAdapter } from './domestic/doubao';
 import { MarscodeAdapter } from './domestic/marscode';
@@ -30,6 +31,7 @@ import { TencentAiCodeAdapter } from './domestic/tencent-ai-code';
 import { TongyiLingmaAdapter } from './domestic/tongyi-lingma';
 import { TraeAdapter } from './domestic/trae';
 import { WorkbuddyAdapter } from './domestic/workbuddy';
+import { ZcodeAdapter } from './domestic/zcode';
 
 const adapters = new Map<string, ApplicationAdapter>();
 let builtinRegistered = false;
@@ -77,11 +79,13 @@ export function registerBuiltinAdapters(): void {
   if (builtinRegistered) return;
   builtinRegistered = true;
 
-  // --- Active: backed by @agentskin/core ---
+  // --- Active: backed by @agentskin/engine ---
   registerAdapter(new TraeAdapter());
   registerAdapter(new QoderAdapter());
   registerAdapter(new WorkbuddyAdapter());
   registerAdapter(new DoubaoAdapter());
+  registerAdapter(new CodexAdapter());
+  registerAdapter(new ZcodeAdapter());
 
   // --- Experimental: registered for discovery, not yet wired to core ---
   registerAdapter(new CodebuddyAdapter());

@@ -1,0 +1,73 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Users/snowb/scoop/apps/cmake/current/share/cmake-4.4/Modules/CMakeDetermineSystem.cmake:218 (message)"
+      - "CMakeLists.txt:28 (project)"
+    message: |
+      The system is: Windows - 10.0.26200 - AMD64
+  -
+    kind: "find-v1"
+    backtrace:
+      - "C:/Users/snowb/scoop/apps/cmake/current/share/cmake-4.4/Modules/CMakeDetermineCompilerId.cmake:501 (find_file)"
+      - "C:/Users/snowb/scoop/apps/cmake/current/share/cmake-4.4/Modules/CMakeDetermineCompilerId.cmake:538 (CMAKE_DETERMINE_COMPILER_ID_WRITE)"
+      - "C:/Users/snowb/scoop/apps/cmake/current/share/cmake-4.4/Modules/CMakeDetermineCompilerId.cmake:8 (CMAKE_DETERMINE_COMPILER_ID_BUILD)"
+      - "C:/Users/snowb/scoop/apps/cmake/current/share/cmake-4.4/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Users/snowb/scoop/apps/cmake/current/share/cmake-4.4/Modules/CMakeDetermineCXXCompiler.cmake:125 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:28 (project)"
+    mode: "file"
+    variable: "src_in"
+    description: "Path to a file."
+    settings:
+      SearchFramework: "NEVER"
+      SearchAppBundle: "NEVER"
+      CMAKE_FIND_USE_CMAKE_PATH: true
+      CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+      CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+      CMAKE_FIND_USE_INSTALL_PREFIX: true
+    names:
+      - "CMakeCXXCompilerId.cpp.in"
+    candidate_directories:
+      - "C:/Users/snowb/scoop/apps/cmake/current/share/cmake-4.4/Modules/"
+    found: "C:/Users/snowb/scoop/apps/cmake/current/share/cmake-4.4/Modules/CMakeCXXCompilerId.cpp.in"
+    search_context:
+      ENV{PATH}:
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Tools\\MSVC\\14.29.30133\\bin\\HostX64\\x64"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\Common7\\IDE\\VC\\VCPackages"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\TestWindow"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\TeamFoundation\\Team Explorer"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\MSBuild\\Current\\bin\\Roslyn"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\Common7\\Tools\\devinit"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\10.0.19041.0\\x64"
+        - "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\x64"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\\\MSBuild\\Current\\Bin"
+        - "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\Common7\\IDE\\"
+        - "C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\Common7\\Tools\\"
+        - "C:\\Windows\\System32"
+        - "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+        - "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.11.10-hotspot\\bin"
+        - "C:\\Program Files\\Amazon Corretto\\jdk21.0.11_10\\bin"
+        - "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.11.10-hotspot\\\\bin"
+        - "C:\\Program Files\\Eclipse Adoptium\\jdk-8.0.482.8-hotspot\\bin"
+        - "C:\\Program Files (x86)\\VMware\\VMware Workstation\\bin\\"
+        - "C:\\WINDOWS\\system32"
+        - "C:\\WINDOWS"
+        - "C:\\WINDOWS\\System32\\Wbem"
+        - "C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\"
+        - "C:\\WINDOWS\\System32\\OpenSSH\\"
+        - "C:\\ProgramData\\chocolatey\\bin"
+        - "C:\\Program Files\\PowerShell\\7-preview\\preview"
+        - "C:\\Program Files (x86)\\pcsuite\\"
+        - "C:\\tools\\apache-maven-3.9.11\\bin"
+        - "C:\\tools\\apache-maven-3.9.11\\bin"
+        - "C:\\Program Files\\Git\\cmd"
+        - "C:\\mongodb\\bin"
+        - "C:\\install\\Kettle"
+        - "%NVM_HOME%"
+        - "%NVM_SYMLINK%"
+        - "C:\\Program Files\\QoderCN\\bin"
+        - "C:\\Program Files\\Docker\\Doc

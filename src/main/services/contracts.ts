@@ -32,12 +32,44 @@
 
 import type {
   AgentId,
+  ApplyRequest,
+  ApplyResponse,
   DesktopSettings,
   InstalledTheme,
+  SystemStatus,
   WallpaperAgentSetting,
   WallpaperSettings,
 } from '../../shared/types';
-import type { PackageInspection, ThemeEntry } from '../theme-library';
+import type { ThemeBundle } from './theme-bundle';
+
+// ---------------------------------------------------------------------------
+// Theme library data shapes
+// ---------------------------------------------------------------------------
+
+/**
+ * A parsed theme package on disk plus its filesystem path.
+ *
+ * Lives in the contracts module (not `theme-library.ts`) so the
+ * {@link ThemeLibraryApi} interface is self-contained — consumers of the
+ * interface don't transitively import the concrete `ThemeLibrary` class.
+ */
+export interface ThemeEntry {
+  bundle: ThemeBundle;
+  filePath: string;
+}
+
+/**
+ * Result of inspecting a theme package file without installing it.
+ *
+ * `incoming` describes the package as it would be installed; `existing`
+ * is the currently-installed theme with the same id (if any), so the UI
+ * can show "this will replace X" before the user confirms.
+ */
+export interface PackageInspection {
+  incoming: InstalledTheme;
+  /** The installed theme this import would replace, when the id is taken. */
+  existing: InstalledTheme | null;
+}
 
 /**
  * Theme installation / persistence surface. Mirrors the public methods of
@@ -48,6 +80,9 @@ export interface ThemeLibraryApi {
   initialize(): Promise<void>;
   entries(): Promise<ThemeEntry[]>;
   summaries(): Promise<InstalledTheme[]>;
+  /** Resolve the extracted cover image path for a theme id (agentskin-theme://). */
+  coverPathFor(id: string): string | null;
+  iconPathFor(id: string): string | null;
   find(themeId: string): Promise<ThemeEntry>;
   installFile(sourcePath: string): Promise<InstalledTheme>;
   installBytes(bytes: Buffer, suggestedId: string): Promise<InstalledTheme>;
@@ -69,7 +104,7 @@ export interface SettingsServiceApi {
   toDto(defaultPorts: Record<AgentId, number>): DesktopSettings;
   setAppPath(appId: AgentId, appPath: string | null): Promise<void>;
   setAppPort(appId: AgentId, port: number | null): Promise<void>;
-  setWallpaper(wallpaper: Pick<WallpaperSettings, 'enabled' | 'id'>): Promise<void>;
+  setWallpaper(wallpaper: Pick<WallpaperSettings, 'enabled' | 'id' | 'render'>): Promise<void>;
   setAgentWallpaper(appId: AgentId, setting: WallpaperAgentSetting): Promise<void>;
 }
 
@@ -77,9 +112,9 @@ export interface SettingsServiceApi {
  * Wallpaper media discovery and CDP injection surface. Mirrors the public
  * methods of {@link WallpaperService}.
  *
- * `AgentEngineService` only needs `videoPathFor` + `mediaInfoFor` (the slice
- * it consumes via `setWallpaperService`); the full interface is exposed for
- * IPC handlers and the boot sequence.
+ * `AgentEngineService` only needs `videoPathFor` + `mediaInfoFor` +
+ * `webUrlFor` (the slice it consumes via `setWallpaperService`); the full
+ * interface is exposed for IPC handlers and the boot sequence.
  */
 export interface WallpaperServiceApi {
   setCustomDir(dir: string): void;
@@ -89,8 +124,28 @@ export interface WallpaperServiceApi {
   importMedia(sourcePath: string): Promise<string | null>;
   deleteWallpaper(id: string): Promise<boolean>;
   mediaPathFor(id: string): Promise<string | null>;
+  /** Resolve a wallpaper's media as a streamable loopback HTTP URL so video
+   *  wallpapers can play without buffering the whole file (no size cap).
+   *  Returns null when the id is unknown. */
+  videoUrlFor(id: string): Promise<string | null>;
+  /** Resolve a web/scene wallpaper's rendered content as a loopback HTTP URL
+   *  suitable for iframe injection. For web wallpapers, the URL points at
+   *  index.html inside the registered directory tree. For scene wallpapers,
+   *  the URL serves a self-contained HTML canvas renderer generated from
+   *  scene.pkg. Returns null when the id is unknown or the wallpaper is not
+   *  a web/scene type. */
+  webUrlFor(id: string): Promise<string | null>;
+  previewPathFor(id: string): Promise<string | null>;
   videoPathFor(id: string): Promise<string | null>;
-  mediaInfoFor(id: string): Promise<{ type: 'video' | 'image'; path: string } | null>;
+  mediaInfoFor(id: string): Promise<{
+    type: 'video' | 'image' | 'web' | 'scene';
+    path: string;
+    /** Absolute path to the wallpaper's still preview image (preview.jpg/png/gif),
+     *  or null. Used as a fallback when a scene/web wallpaper's rendered
+     *  content cannot be loaded (e.g. scene.pkg parsing failed). */
+    previewPath: string | null;
+    previewOnly: boolean;
+  } | null>;
   isInstalled(): Promise<boolean>;
   count(): Promise<number>;
 }
@@ -99,11 +154,22 @@ export interface WallpaperServiceApi {
  * Narrow slice of {@link WallpaperServiceApi} that `AgentEngineService`
  * consumes via `setWallpaperService`. Declared separately so the orchestrator
  * depends on the smallest possible surface (and tests can stub just these
- * two methods).
+ * methods).
  */
 export interface WallpaperResolver {
   videoPathFor(id: string): Promise<string | null>;
-  mediaInfoFor(id: string): Promise<{ type: 'video' | 'image'; path: string } | null>;
+  mediaInfoFor(id: string): Promise<{
+    type: 'video' | 'image' | 'web' | 'scene';
+    path: string;
+    /** Absolute path to the wallpaper's still preview image (preview.jpg/png/gif),
+     *  or null. Used as a fallback when a scene/web wallpaper's rendered
+     *  content cannot be loaded (e.g. scene.pkg parsing failed). */
+    previewPath: string | null;
+    previewOnly: boolean;
+  } | null>;
+  /** Resolve a web/scene wallpaper's rendered content URL for iframe
+   *  injection. Returns null for non-web/scene wallpapers. */
+  webUrlFor(id: string): Promise<string | null>;
 }
 
 // ---------------------------------------------------------------------------
@@ -175,4 +241,77 @@ export interface StructuredLogEvent {
 export interface LoggerApi {
   log(line: string): void;
   logStructured(event: StructuredLogEvent): void;
+}
+
+// ---------------------------------------------------------------------------
+// Agent engine orchestrator contract
+// ---------------------------------------------------------------------------
+
+/**
+ * Orchestrator surface that wires together theme apply/restore, CDP injection,
+ * wallpaper injection, scheme sync, and app discovery. Mirrors the public
+ * methods of {@link AgentEngineService}.
+ *
+ * Declared as an interface so:
+ *   1. `MainContext.core` can be typed against this contract instead of the
+ *      concrete class — `main-context.ts` no longer needs to type-import
+ *      `AgentEngineService`, breaking a type-level coupling.
+ *   2. Unit tests for IPC handlers / boot sequence can inject a stub
+ *      orchestrator without standing up the real CDP + filesystem stack.
+ *
+ * The concrete class declares `implements AgentEngineServiceApi` so the
+ * compiler verifies the contract at the class definition site. The boot
+ * sequence is the only place that instantiates the concrete class; every
+ * other consumer depends on this interface.
+ */
+export interface AgentEngineServiceApi {
+  /** Wire the wallpaper resolver before {@link initialize}. */
+  setWallpaperService(svc: WallpaperResolver): void;
+  /** Wire the log line sink before {@link initialize}. */
+  setLogListener(listener: (line: string) => void): void;
+  /** Expose the logger as a {@link LoggerApi} for consumers. */
+  asLogger(): LoggerApi;
+
+  /** Boot-time initialization (restore active themes, etc.). */
+  initialize(): Promise<void>;
+  /** Drop active-theme references for ids no longer in the library (upgrade path). */
+  reconcileActiveThemes(availableIds: Set<string>): Promise<void>;
+
+  /** Snapshot of every agent's install/running/debug/theme status. */
+  status(): Promise<SystemStatus>;
+  /** Apply a theme to an agent (user-initiated). */
+  apply(request: ApplyRequest): Promise<ApplyResponse>;
+  /** Restore an agent to its default look (user-initiated). Returns updated status. */
+  restore(appId: AgentId): Promise<SystemStatus>;
+  /** Restore all agents to their defaults (boot / "restore all" tray action). */
+  restoreAll(): Promise<void>;
+
+  /** Immediately push the per-agent wallpaper preference into the agent.
+   *  When `restartExisting` is false/absent, only probes for an existing CDP
+   *  port — returns `{ ok: false, reason: 'requires-restart' }` if the agent
+   *  is running without `--remote-debugging-port`. Pass `restartExisting:
+   *  true` ONLY after the user has explicitly confirmed a restart. */
+  applyAgentWallpaperNow(
+    appId: AgentId,
+    options?: { restartExisting?: boolean },
+  ): Promise<{ ok: boolean; reason?: string; detail?: string }>;
+  /** Apply a specific wallpaper to a specific agent (one-shot).
+   *  Same `restartExisting` two-phase CDP discovery as
+   *  {@link applyAgentWallpaperNow}. */
+  applyWallpaperToAgent(
+    wallpaperId: string,
+    appId: AgentId,
+    options?: { restartExisting?: boolean },
+  ): Promise<{ ok: boolean; reason?: string; detail?: string }>;
+  /** Remove the wallpaper from a specific agent. */
+  removeWallpaperFromAgent(appId: AgentId): Promise<{ ok: boolean }>;
+
+  /**
+   * Release all module-scoped state retained by sub-modules (CDP
+   * persistence-script ids, wallpaper media-server tokens, self-heal
+   * counters, cover/icon caches, etc.). Called once at before-quit so the
+   * process exits cleanly with no dangling streaming file handles or
+   * retained references.
+   */
+  dispose(): void;
 }

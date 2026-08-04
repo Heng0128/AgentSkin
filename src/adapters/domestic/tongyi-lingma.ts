@@ -4,7 +4,7 @@ import { BaseApplicationAdapter } from '../base';
 
 /**
  * 通义灵码 — experimental adapter. Registered but not yet backed by
- * @agentskin/core.
+ * @agentskin/engine.
  */
 export class TongyiLingmaAdapter extends BaseApplicationAdapter {
   readonly id = 'tongyi_lingma';

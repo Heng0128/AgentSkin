@@ -22,7 +22,8 @@
 type Level = 'INFO' | 'WARN' | 'ERROR';
 
 function emit(level: Level, scope: string, message: string, extra?: unknown): void {
-  const ts = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  // locale omitted → uses system default; hour12:false guarantees 24h HH:MM:SS
+  const ts = new Date().toLocaleTimeString(undefined, { hour12: false });
   const line = `[${ts}] [Renderer] [${level}] [${scope}] ${message}`;
   if (level === 'ERROR') console.error(line, extra ?? '');
   else if (level === 'WARN') console.warn(line, extra ?? '');

@@ -4,7 +4,7 @@ AgentSkin includes or depends on third-party software. Those components remain u
 
 | Component | License | Project |
 | --- | --- | --- |
-| `@codedrobe/core` | Apache-2.0 | https://github.com/CodeDrobe/core |
+| `@agentskin/engine` | Apache-2.0 | https://github.com/AgentSkin/core |
 | Electron | MIT | https://github.com/electron/electron |
 | `electron-squirrel-startup` | MIT | https://github.com/mongodb-js/electron-squirrel-startup |
 | React | MIT | https://github.com/facebook/react |

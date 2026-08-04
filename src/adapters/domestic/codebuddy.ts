@@ -4,7 +4,7 @@ import { BaseApplicationAdapter } from '../base';
 
 /**
  * CodeBuddy — experimental adapter. Registered for discovery but NOT yet
- * wired to @agentskin/core. Calling apply/restore/detect throws
+ * wired to @agentskin/engine. Calling apply/restore/detect throws
  * AGENTSKIN_EXPERIMENTAL_ADAPTER so callers get an honest error.
  */
 export class CodebuddyAdapter extends BaseApplicationAdapter {

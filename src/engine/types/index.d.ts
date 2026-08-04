@@ -149,7 +149,7 @@ export interface ThemeTarget {
 }
 
 export interface ThemePackage {
-  format: "codedrobe-theme";
+  format: "agentskin-theme";
   schemaVersion: 1;
   exportedAt?: string;
   theme: ThemeIdentity;
@@ -413,8 +413,8 @@ export class CdpSession {
 }
 
 export const VERSION: string;
-export const THEME_FORMAT: "codedrobe-theme";
-export const THEME_EXTENSION: ".codedrobe-theme";
+export const THEME_FORMAT: "agentskin-theme";
+export const THEME_EXTENSION: ".agentskin-theme";
 export const THEME_SCHEMA_VERSION: 1;
 export const MAX_THEME_PACKAGE_BYTES: number;
 export const MAX_THEME_IMAGES: number;

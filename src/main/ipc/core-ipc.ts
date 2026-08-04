@@ -19,6 +19,7 @@ import { getMainMessages, isAppLocale, setMainLocale } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { saveLocalePreference } from '../locale-preferences';
 import { handleThemeFileOpen, type MainContext, wrapCatalog } from '../main-context';
+import { assertNonEmptyString } from './ipc-validators';
 
 export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise<void>): void {
   ipcMain.handle(IpcChannel.APP_BOOTSTRAP, async () => {
@@ -64,7 +65,7 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
   });
 
   ipcMain.handle(IpcChannel.SHELL_SHOW_ITEM, (_event, itemPath: unknown) => {
-    if (typeof itemPath !== 'string' || !itemPath) throw new Error('Invalid path.');
+    assertNonEmptyString(itemPath, getMainMessages().invalidPath);
     return shell.showItemInFolder(itemPath);
   });
 }

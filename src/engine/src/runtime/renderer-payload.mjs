@@ -1,5 +1,5 @@
 function safeHostClass(appId) {
-  return `codedrobe-host-${String(appId).replace(/[^a-z0-9_-]/gi, "-")}`;
+  return `agentskin-host-${String(appId).replace(/[^a-z0-9_-]/gi, "-")}`;
 }
 
 function resolveRendererProfile(adapter, targetTheme) {
@@ -151,7 +151,7 @@ export function buildApplyExpression({ adapter, targetTheme }) {
     const imageDataUrls = ${images};
     const profileId = ${profileId};
     const profileFactory = ${profileFactory};
-    const rootState = window.__CODEDROBE__ ||= { hosts: {} };
+    const rootState = window.__AGENTSKIN__ ||= { hosts: {} };
     rootState.hosts ||= {};
     rootState.hosts[host.id]?.cleanup?.();
     const imageUrls = {};
@@ -185,20 +185,20 @@ export function buildApplyExpression({ adapter, targetTheme }) {
       for (const objectUrl of ownedImageUrls) globalThis.URL?.revokeObjectURL?.(objectUrl);
       throw error;
     }
-    const styleId = 'codedrobe-theme-style-' + host.id;
+    const styleId = 'agentskin-theme-style-' + host.id;
 
     const ensure = () => {
       const root = document.documentElement;
       if (!root) return false;
-      root.classList.add('codedrobe-theme', host.className);
-      root.dataset.codedrobeHost = host.id;
-      root.dataset.codedrobeTheme = theme.id;
-      root.dataset.codedrobeThemeVersion = theme.version;
+      root.classList.add('agentskin-theme', host.className);
+      root.dataset.agentskinHost = host.id;
+      root.dataset.agentskinTheme = theme.id;
+      root.dataset.agentskinThemeVersion = theme.version;
       for (const [name, imageUrl] of Object.entries(imageUrls)) {
-        root.style.setProperty('--codedrobe-image-' + name, 'url("' + imageUrl + '")');
+        root.style.setProperty('--agentskin-image-' + name, 'url("' + imageUrl + '")');
       }
-      if (artUrl) root.style.setProperty('--codedrobe-art', 'url("' + artUrl + '")');
-      else root.style.removeProperty('--codedrobe-art');
+      if (artUrl) root.style.setProperty('--agentskin-art', 'url("' + artUrl + '")');
+      else root.style.removeProperty('--agentskin-art');
       let style = document.getElementById(styleId);
       if (!style) {
         style = document.createElement('style');
@@ -230,15 +230,15 @@ export function buildApplyExpression({ adapter, targetTheme }) {
       document.getElementById(styleId)?.remove();
       const root = document.documentElement;
       root?.classList.remove(host.className);
-      root?.style.removeProperty('--codedrobe-art');
-      for (const name of Object.keys(imageUrls)) root?.style.removeProperty('--codedrobe-image-' + name);
-      if (root?.dataset.codedrobeHost === host.id) {
-        delete root.dataset.codedrobeHost;
-        delete root.dataset.codedrobeTheme;
-        delete root.dataset.codedrobeThemeVersion;
+      root?.style.removeProperty('--agentskin-art');
+      for (const name of Object.keys(imageUrls)) root?.style.removeProperty('--agentskin-image-' + name);
+      if (root?.dataset.agentskinHost === host.id) {
+        delete root.dataset.agentskinHost;
+        delete root.dataset.agentskinTheme;
+        delete root.dataset.agentskinThemeVersion;
       }
       delete rootState.hosts[host.id];
-      if (!Object.keys(rootState.hosts).length) root?.classList.remove('codedrobe-theme');
+      if (!Object.keys(rootState.hosts).length) root?.classList.remove('agentskin-theme');
       return true;
     };
     rootState.hosts[host.id] = {
@@ -258,26 +258,26 @@ export function buildRemoveExpression(adapter) {
   const fallbackCleanup = fallbackCleanupSource(adapter);
   return `(() => {
     const appId = ${appId};
-    const state = window.__CODEDROBE__?.hosts?.[appId];
+    const state = window.__AGENTSKIN__?.hosts?.[appId];
     if (state?.cleanup) return state.cleanup();
     ${fallbackCleanup}
-    document.getElementById('codedrobe-theme-style-' + appId)?.remove();
+    document.getElementById('agentskin-theme-style-' + appId)?.remove();
     const root = document.documentElement;
     root?.classList.remove(${hostClass});
-    root?.style.removeProperty('--codedrobe-art');
+    root?.style.removeProperty('--agentskin-art');
     if (root?.style) {
       for (let index = root.style.length - 1; index >= 0; index -= 1) {
         const name = root.style.item(index);
-        if (name.startsWith('--codedrobe-image-')) root.style.removeProperty(name);
+        if (name.startsWith('--agentskin-image-')) root.style.removeProperty(name);
       }
     }
-    if (root?.dataset.codedrobeHost === appId) {
-      delete root.dataset.codedrobeHost;
-      delete root.dataset.codedrobeTheme;
-      delete root.dataset.codedrobeThemeVersion;
+    if (root?.dataset.agentskinHost === appId) {
+      delete root.dataset.agentskinHost;
+      delete root.dataset.agentskinTheme;
+      delete root.dataset.agentskinThemeVersion;
     }
-    if (root && ![...root.classList].some((name) => name.startsWith('codedrobe-host-'))) {
-      root.classList.remove('codedrobe-theme');
+    if (root && ![...root.classList].some((name) => name.startsWith('agentskin-host-'))) {
+      root.classList.remove('agentskin-theme');
     }
     return true;
   })()`;
@@ -298,7 +298,7 @@ export function buildVerifyExpression(adapter, expectedTheme = null, themeVerifi
     ${buildCompatibilityPrelude(adapter, themeVerification)}
     const expected = ${expected};
     const expectedProfileId = ${expectedProfileId};
-    const state = window.__CODEDROBE__?.hosts?.[appId];
+    const state = window.__AGENTSKIN__?.hosts?.[appId];
     const profile = state?.verifyProfile?.() ?? null;
     const profileMissing = (profile?.missing ?? []).map((item) => ({
       scope: 'profile', context: profile.id ?? state?.profileId ?? null, severity: 'required',
@@ -309,7 +309,7 @@ export function buildVerifyExpression(adapter, expectedTheme = null, themeVerifi
       installed: Boolean(state),
       themeId: state?.themeId ?? null,
       version: state?.version ?? null,
-      stylePresent: Boolean(document.getElementById('codedrobe-theme-style-' + appId)),
+      stylePresent: Boolean(document.getElementById('agentskin-theme-style-' + appId)),
       horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
       images: state?.imageNames ?? [],
       profile,

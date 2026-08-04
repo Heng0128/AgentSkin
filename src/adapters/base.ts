@@ -7,12 +7,12 @@
  * target application (AI agent, IDE, or desktop app). It knows WHO the app
  * is and HOW to reach it, but it does NOT reimplement theme execution —
  * every apply/restore/detect call delegates to the legacy core runtime,
- * which in turn calls @agentskin/core.
+ * which in turn calls @agentskin/engine.
  *
  * ## What an adapter is responsible for
  *
  *   1. Application identity (id, name, type, tier)
- *   2. Mapping to the @agentskin/core adapter that actually knows how to
+ *   2. Mapping to the @agentskin/engine adapter that actually knows how to
  *      detect and skin this app (via `coreId`)
  *   3. Delegating detect / apply / restore to the runtime
  *
@@ -25,7 +25,7 @@
  *
  * ## Tier
  *
- *   - `active`: backed by a real @agentskin/core adapter. Fully functional.
+ *   - `active`: backed by a real @agentskin/engine adapter. Fully functional.
  *   - `experimental`: registered for discovery but NOT yet wired to core.
  *     Calling apply/restore/detect throws AGENTSKIN_EXPERIMENTAL_ADAPTER so
  *     callers get an honest error instead of a silent no-op.
@@ -55,7 +55,7 @@ export type AdapterTier = 'active' | 'experimental';
 
 /**
  * Hints that let AgentSkin detect an installed agent on Windows without
- * modifying @agentskin/core. Each adapter declares its own candidates; the
+ * modifying @agentskin/engine. Each adapter declares its own candidates; the
  * generic detector in `src/main/install-detection.ts` consumes them.
  */
 export interface InstallHints {
@@ -93,7 +93,7 @@ export interface ApplicationAdapter {
   readonly type: ApplicationType;
   readonly tier: AdapterTier;
   /**
-   * The @agentskin/core adapter id this application maps to. Empty string for
+   * The @agentskin/engine adapter id this application maps to. Empty string for
    * experimental adapters that are not yet backed by core.
    */
   readonly coreId: string;
@@ -101,7 +101,7 @@ export interface ApplicationAdapter {
   /**
    * AgentSkin-side install detection hints (Windows). Optional — adapters
    * that declare it enable robust path/registry detection; adapters that
-   * omit it rely solely on @agentskin/core's discovery.
+   * omit it rely solely on @agentskin/engine's discovery.
    */
   readonly installHints?: InstallHints;
 
@@ -127,7 +127,7 @@ export interface ApplicationAdapter {
 export class ExperimentalAdapterError extends Error {
   readonly code = 'AGENTSKIN_EXPERIMENTAL_ADAPTER';
   constructor(adapterId: string) {
-    super(`Adapter "${adapterId}" is experimental and not yet backed by @agentskin/core.`);
+    super(`Adapter "${adapterId}" is experimental and not yet backed by @agentskin/engine.`);
     this.name = 'ExperimentalAdapterError';
   }
 }

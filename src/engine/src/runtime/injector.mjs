@@ -26,7 +26,7 @@ export async function waitForTargets(adapter, port, timeoutMs = 30000) {
     if (remaining > 0) await delay(Math.min(350, remaining));
   }
   const error = new Error(`No ${adapter.displayName} renderer target on 127.0.0.1:${port} within ${timeoutMs}ms: ${lastError?.message ?? "timed out"}`);
-  error.code = "CODEDROBE_TARGET_TIMEOUT";
+  error.code = "AGENTSKIN_TARGET_TIMEOUT";
   error.appId = adapter.id;
   error.port = port;
   error.timeoutMs = timeoutMs;
@@ -67,7 +67,7 @@ function compatibilityError(adapter, results) {
     `${detail ? `: ${detail}` : "."}` +
     ` The app may have updated since this adapter was last verified (${JSON.stringify(adapter.lastVerified ?? {})}).`,
   );
-  error.code = "CODEDROBE_DOM_INCOMPATIBLE";
+  error.code = "AGENTSKIN_DOM_INCOMPATIBLE";
   error.missing = missing;
   error.results = results;
   return error;
@@ -261,7 +261,7 @@ export async function watchTheme({ adapter, targetTheme, port, timeoutMs = 30000
           onEvent({ type: "injected", targetId: target.id, title: target.title });
         } catch (error) {
           session?.close();
-          if (error.code === "CODEDROBE_DOM_INCOMPATIBLE") incompatibleUntil.set(target.id, Date.now() + INCOMPATIBLE_RETRY_MS);
+          if (error.code === "AGENTSKIN_DOM_INCOMPATIBLE") incompatibleUntil.set(target.id, Date.now() + INCOMPATIBLE_RETRY_MS);
           onEvent({ type: "error", targetId: target.id, code: error.code, message: error.message, missing: error.missing ?? [] });
         }
       }

@@ -25,7 +25,7 @@
  * when late stability-check events (2s/5s/10s) arrive after theme_apply.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { AgentId } from '@shared/types';
 
@@ -133,6 +133,19 @@ export function useBootProgress(
   onEvent?: (event: StructuredEvent) => void,
 ) {
   const [progress, setProgress] = useState<ProgressMap>(new Map());
+  // R6-17: 存储 setTimeout timer ID 以便 cleanup。原实现 setTimeout 无 cleanup，
+  // 组件卸载后可能触发 setState 警告。
+  const cleanupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // R6-17: 组件卸载时清理 setTimeout，防止 setState 警告。
+  useEffect(() => {
+    return () => {
+      if (cleanupTimerRef.current !== null) {
+        clearTimeout(cleanupTimerRef.current);
+        cleanupTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const listener = useCallback(
     (line: string) => {
@@ -185,7 +198,12 @@ export function useBootProgress(
         event.type === 'theme_apply' ||
         event.type === 'theme_restore'
       ) {
-        setTimeout(() => {
+        // R6-17: 存储 timer ID 以便在组件卸载时清理。
+        if (cleanupTimerRef.current !== null) {
+          clearTimeout(cleanupTimerRef.current);
+        }
+        cleanupTimerRef.current = setTimeout(() => {
+          cleanupTimerRef.current = null;
           setProgress((prev) => {
             const next = new Map(prev);
             for (const [id, p] of next) {

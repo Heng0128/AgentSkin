@@ -1,0 +1,10 @@
+^C:\USERS\SNOWB\DESKTOP\WORK\DESKTOP-MAIN\INSTALLER\WINDOWS\PLUGIN\BUILD\20260730_010427\CMAKEFILES\D6C6869F3E4C56D58F9208AF703FEA54\GENERATE.STAMP.RULE
+setlocal
+C:\Users\snowb\scoop\apps\cmake\current\bin\cmake.exe -SC:/Users/snowb/Desktop/work/desktop-main/installer/windows/plugin -BC:/Users/snowb/Desktop/work/desktop-main/installer/windows/plugin/build/20260730_010427 --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file C:/Users/snowb/Desktop/work/desktop-main/installer/windows/plugin/build/20260730_010427/AgentSkinUI.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

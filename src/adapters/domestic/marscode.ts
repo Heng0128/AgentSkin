@@ -4,7 +4,7 @@ import { BaseApplicationAdapter } from '../base';
 
 /**
  * 豆包 MarsCode — experimental adapter. Registered but not yet backed by
- * @agentskin/core.
+ * @agentskin/engine.
  */
 export class MarscodeAdapter extends BaseApplicationAdapter {
   readonly id = 'marscode';

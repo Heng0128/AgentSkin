@@ -15,12 +15,10 @@
   --agentskin-button-bg: #c41e2a;
   --agentskin-focus-ring: #c41e2a60;
   --agentskin-selection: rgba(196, 30, 42, 0.32);
-  --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-  text-shadow: var(--agentskin-text-shadow);
 }
 
 /* ===== Native token overrides (wins over :root[data-theme]) ===== */
-html.codedrobe-host-qoderwork:root {
+html.agentskin-host-qoderwork * {
   color-scheme: dark !important;
 
   /* Primary / brand */
@@ -177,11 +175,11 @@ html.codedrobe-host-qoderwork:root {
 }
 
 /* ===== Art layer on #root — palette-driven wash, hero visible right side ===== */
-html.codedrobe-host-qoderwork #root {
+html.agentskin-host-qoderwork #root {
   color: var(--agentskin-text) !important;
   background: transparent !important;
 }
-html.codedrobe-host-qoderwork #root::before {
+html.agentskin-host-qoderwork #root::before {
   content: '' !important;
   position: fixed !important;
   inset: 0 !important;
@@ -196,18 +194,18 @@ html.codedrobe-host-qoderwork #root::before {
       color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
       color-mix(in srgb, var(--agentskin-secondary) 31%, transparent), transparent 60%),
-    var(--codedrobe-art, none) right center / cover no-repeat !important;
+    var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
 /* Layout shell + inner containers transparent so #root art shows through */
-html.codedrobe-host-qoderwork .agents-layout-root,
-html.codedrobe-host-qoderwork .agents-layout-body,
-html.codedrobe-host-qoderwork .agents-content-area,
-html.codedrobe-host-qoderwork [class*="agents-content"],
-html.codedrobe-host-qoderwork [class*="chat-panel"],
-html.codedrobe-host-qoderwork [class*="message-list"],
-html.codedrobe-host-qoderwork [class*="conversation-panel"],
-html.codedrobe-host-qoderwork [class*="workspace-panel"] {
+html.agentskin-host-qoderwork .agents-layout-root,
+html.agentskin-host-qoderwork .agents-layout-body,
+html.agentskin-host-qoderwork .agents-content-area,
+html.agentskin-host-qoderwork [class*="agents-content"],
+html.agentskin-host-qoderwork [class*="chat-panel"],
+html.agentskin-host-qoderwork [class*="message-list"],
+html.agentskin-host-qoderwork [class*="conversation-panel"],
+html.agentskin-host-qoderwork [class*="workspace-panel"] {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
@@ -215,58 +213,58 @@ html.codedrobe-host-qoderwork [class*="workspace-panel"] {
 }
 
 /* Sidebar: frosted glass over art (only the actual .agents-sidebar element) */
-html.codedrobe-host-qoderwork .agents-sidebar {
+html.agentskin-host-qoderwork .agents-sidebar {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
   border-right: 1px solid rgba(196, 30, 42, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
-html.codedrobe-host-qoderwork .agents-sidebar [class*="item"]:hover {
+html.agentskin-host-qoderwork .agents-sidebar [class*="item"]:hover {
   background: var(--color-primary-bg-hover) !important;
 }
 
-html.codedrobe-host-qoderwork .agents-sidebar [class*="active"] {
+html.agentskin-host-qoderwork .agents-sidebar [class*="active"] {
   background: var(--color-primary-bg-hover) !important;
   box-shadow: inset 3px 0 0 0 var(--color-primary), inset 0 0 0 1px var(--color-primary-border) !important;
 }
 
 /* Right panel: frosted glass matching left sidebar */
-html.codedrobe-host-qoderwork [data-resizable-sidebar]:not(.agents-sidebar) {
+html.agentskin-host-qoderwork [data-resizable-sidebar]:not(.agents-sidebar) {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
   border-left: 1px solid rgba(196, 30, 42, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
 /* Composer focus ring uses native tokens */
-html.codedrobe-host-qoderwork .chat-input-editor-text:focus,
-html.codedrobe-host-qoderwork .chat-input-editor-text:focus-within {
+html.agentskin-host-qoderwork .chat-input-editor-text:focus,
+html.agentskin-host-qoderwork .chat-input-editor-text:focus-within {
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 3px var(--color-primary-bg-hover), 0 4px 18px rgba(212, 168, 74, 0.2) !important;
 }
 
 /* Selection */
-html.codedrobe-host-qoderwork ::selection {
+html.agentskin-host-qoderwork ::selection {
   background: rgba(196, 30, 42, 0.28) !important;
 }
 
 /* Links */
-html.codedrobe-host-qoderwork a {
+html.agentskin-host-qoderwork a {
   color: var(--color-primary) !important;
   transition: opacity 120ms ease;
 }
-html.codedrobe-host-qoderwork a:hover {
+html.agentskin-host-qoderwork a:hover {
   opacity: 0.82;
 }
 
 /* Code blocks */
-html.codedrobe-host-qoderwork code {
+html.agentskin-host-qoderwork code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
   border: 1px solid rgba(196, 30, 42, 0.108) !important;
   border-radius: 6px !important;
 }
 
-html.codedrobe-host-qoderwork pre {
+html.agentskin-host-qoderwork pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
   border: 1px solid rgba(196, 30, 42, 0.108) !important;
@@ -274,45 +272,45 @@ html.codedrobe-host-qoderwork pre {
   border-radius: 10px !important;
 }
 
-html.codedrobe-host-qoderwork pre code {
+html.agentskin-host-qoderwork pre code {
   border: none !important;
 }
 
 /* Generic inputs focus ring */
-html.codedrobe-host-qoderwork input:focus,
-html.codedrobe-host-qoderwork textarea:focus,
-html.codedrobe-host-qoderwork select:focus {
+html.agentskin-host-qoderwork input:focus,
+html.agentskin-host-qoderwork textarea:focus,
+html.agentskin-host-qoderwork select:focus {
   outline: none !important;
   border-color: var(--color-primary) !important;
   box-shadow: 0 0 0 2px rgba(196, 30, 42, 0.15) !important;
 }
 
 /* Scrollbars */
-html.codedrobe-host-qoderwork ::-webkit-scrollbar {
+html.agentskin-host-qoderwork ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
-html.codedrobe-host-qoderwork ::-webkit-scrollbar-track {
+html.agentskin-host-qoderwork ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-html.codedrobe-host-qoderwork ::-webkit-scrollbar-thumb {
+html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(196, 30, 42, 0.3) 0%, rgba(212, 168, 74, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
-html.codedrobe-host-qoderwork ::-webkit-scrollbar-thumb:hover {
+html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(196, 30, 42, 0.5) 0%, rgba(212, 168, 74, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.codedrobe-host-qoderwork *,
-  html.codedrobe-host-qoderwork *::before,
-  html.codedrobe-host-qoderwork *::after {
+  html.agentskin-host-qoderwork *,
+  html.agentskin-host-qoderwork *::before,
+  html.agentskin-host-qoderwork *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }

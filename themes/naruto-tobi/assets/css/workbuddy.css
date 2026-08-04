@@ -15,11 +15,10 @@
   --agentskin-button-bg: #c41e2a;
   --agentskin-focus-ring: #c41e2a60;
   --agentskin-selection: rgba(196, 30, 42, 0.32);
-  --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-  text-shadow: var(--agentskin-text-shadow);
 }
 
-body[data-application-name="workbuddy"] {
+html.agentskin-host-workbuddy body,
+html.agentskin-host-workbuddy body * {
   color-scheme: dark !important;
   --wb-accent: #c41e2a;
   --wb-secondary: #d4a84a;
@@ -111,7 +110,7 @@ body[data-application-name="workbuddy"] {
       color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
       color-mix(in srgb, var(--agentskin-secondary) 31%, transparent), transparent 60%),
-    var(--codedrobe-art, none) right center / cover no-repeat !important;
+    var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
 /* teams-container is #root's direct child and ships an opaque grey base */
@@ -231,27 +230,27 @@ body[data-application-name="workbuddy"] {
 }
 
 /* Selection & scrollbars */
-body[data-application-name="workbuddy"] ::selection {
+html.agentskin-host-workbuddy ::selection {
   background: rgba(196, 30, 42, 0.32) !important;
 }
 
-body[data-application-name="workbuddy"] ::-webkit-scrollbar {
+html.agentskin-host-workbuddy ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
-body[data-application-name="workbuddy"] ::-webkit-scrollbar-track {
+html.agentskin-host-workbuddy ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb {
+html.agentskin-host-workbuddy ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(196, 30, 42, 0.3) 0%, rgba(212, 168, 74, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
-body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb:hover {
+html.agentskin-host-workbuddy ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(196, 30, 42, 0.5) 0%, rgba(212, 168, 74, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
@@ -390,9 +389,9 @@ a:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body[data-application-name="workbuddy"] *,
-  body[data-application-name="workbuddy"] *::before,
-  body[data-application-name="workbuddy"] *::after {
+  html.agentskin-host-workbuddy *,
+  html.agentskin-host-workbuddy *::before,
+  html.agentskin-host-workbuddy *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }

@@ -69,6 +69,7 @@ export function EnvironmentHero({
           <img
             src={activeEnv.theme.preview}
             alt=""
+            decoding="async"
             className="size-full object-cover"
             draggable={false}
           />
@@ -89,7 +90,7 @@ export function EnvironmentHero({
         {activeEnv ? (
           <div
             className={cn(
-              'mt-4 rounded-xl border backdrop-blur-sm transition-all duration-300',
+              'mt-4 rounded-xl border backdrop-blur-sm transition-all duration-slow',
               'border-white/20 bg-white/[0.06] shadow-lg shadow-primary/5',
               'dark:border-white/10 dark:bg-white/[0.04]',
               'group/hero',
@@ -99,7 +100,7 @@ export function EnvironmentHero({
               {/* Agent icon — prominent with glow */}
               <div
                 className={cn(
-                  'relative flex size-13 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover/hero:scale-105',
+                  'relative flex size-13 shrink-0 items-center justify-center rounded-xl transition-transform duration-slow group-hover/hero:scale-105',
                   'bg-gradient-to-br from-primary/25 to-primary/10 ring-1 ring-primary/20',
                   'shadow-md shadow-primary/10',
                 )}
@@ -116,12 +117,12 @@ export function EnvironmentHero({
                   <span
                     className={cn(
                       'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium',
-                      'border-emerald-500/25 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+                      'border-cr-success/25 bg-cr-success/10 text-cr-success',
                     )}
                   >
                     <span className="relative flex size-1.5">
-                      <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+                      <span className="absolute inline-flex size-full animate-ping rounded-full bg-cr-success opacity-75" />
+                      <span className="relative inline-flex size-1.5 rounded-full bg-cr-success" />
                     </span>
                     {t.activeBadge}
                   </span>
@@ -138,7 +139,7 @@ export function EnvironmentHero({
                 <Button
                   size="sm"
                   className={cn(
-                    'gap-1.5 rounded-lg shadow-md transition-all duration-200',
+                    'gap-1.5 rounded-lg shadow-md transition-all duration-base',
                     'bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20',
                     'dark:bg-primary dark:text-white dark:hover:bg-primary/90',
                   )}

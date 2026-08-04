@@ -127,8 +127,13 @@ export function createTrayManager(ctx: MainContext, deps: TrayDeps): TrayManager
         {
           label: copy.trayOpen,
           click: () => {
-            ctx.mainWindow?.show();
-            ctx.mainWindow?.focus();
+            // P2-2: Guard against destroyed window — optional chaining only
+            // checks null/undefined, but a destroyed window reference is
+            // non-null and calling .show() on it throws.
+            if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+              ctx.mainWindow.show();
+              ctx.mainWindow.focus();
+            }
           },
         },
         { type: 'separator' },
@@ -151,7 +156,12 @@ export function createTrayManager(ctx: MainContext, deps: TrayDeps): TrayManager
   function createTray(): void {
     ctx.tray = new Tray(trayIconImage(false));
     void updateTrayMenu();
-    ctx.tray.on('double-click', () => ctx.mainWindow?.show());
+    ctx.tray.on('double-click', () => {
+      // P2-2: Same isDestroyed guard as the tray menu open handler.
+      if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+        ctx.mainWindow.show();
+      }
+    });
   }
 
   return { createTray, updateTrayMenu };

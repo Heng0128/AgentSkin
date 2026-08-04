@@ -23,11 +23,14 @@ function SettingRow({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border bg-background/60 px-4 py-3.5">
+    <div
+      className="setrow flex items-center justify-between gap-4 rounded-[2px] border border-border px-3.5 py-2.5"
+      style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
+    >
       <div className="min-w-0">
-        <p className="text-sm font-medium">{title}</p>
+        <p className="text-[12.5px] font-semibold text-foreground">{title}</p>
         {description && (
-          <p className="mt-0.5 text-xs leading-5 text-muted-foreground">{description}</p>
+          <p className="mt-0.5 text-[10.5px] text-muted-foreground/70">{description}</p>
         )}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
@@ -54,16 +57,20 @@ function AppOverrideCard({ controller, appId }: { controller: AppController; app
   };
 
   return (
-    <div className="rounded-xl border bg-background/60">
-      <div className="flex items-center gap-2 border-b px-4 py-3">
-        <AppMark appId={appId} size={22} />
-        <span className="text-sm font-medium">{APP_META[appId].name}</span>
+    <div className="rounded-[2px] border border-border bg-card overflow-hidden">
+      <div className="flex items-center gap-2 border-b border-border px-3.5 py-2.5">
+        <AppMark appId={appId} size={18} />
+        <span className="font-display text-[13px] font-bold tracking-[-.01em]">
+          {APP_META[appId].name}
+        </span>
       </div>
-      <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
+      <div className="flex items-center justify-between gap-4 border-b border-border px-3.5 py-2.5">
         <div className="min-w-0">
-          <p className="text-sm">{t.settingsPathLabel}</p>
+          <p className="font-mono text-[11px] tracking-wide text-foreground">
+            {t.settingsPathLabel}
+          </p>
           <p
-            className="mt-0.5 truncate text-xs text-muted-foreground"
+            className="mt-0.5 truncate font-mono text-[10px] tracking-wider text-muted-foreground/70"
             title={override.appPath ?? undefined}
           >
             {override.appPath ?? t.settingsPathAuto}
@@ -81,16 +88,20 @@ function AppOverrideCard({ controller, appId }: { controller: AppController; app
           </Button>
         </div>
       </div>
-      <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <div className="flex items-center justify-between gap-4 px-3.5 py-2.5">
         <div>
-          <p className="text-sm">{t.settingsPortLabel}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{t.settingsPortHint(defaultPort)}</p>
+          <p className="font-mono text-[11px] tracking-wide text-foreground">
+            {t.settingsPortLabel}
+          </p>
+          <p className="mt-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+            {t.settingsPortHint(defaultPort)}
+          </p>
         </div>
         <Input
           value={portDraft}
           inputMode="numeric"
           placeholder={defaultPort > 0 ? String(defaultPort) : t.settingsPortHint(0)}
-          className="h-8 w-28 text-xs"
+          className="h-[30px] w-24 rounded-[2px] border-border bg-muted font-mono text-[11px] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25"
           onChange={(event) => setPortDraft(event.target.value)}
           onBlur={() => void commitPort()}
           onKeyDown={(event) => {
@@ -116,10 +127,15 @@ export function SettingsPage({ controller }: { controller: AppController }) {
   const setSection = controller.setSettingsSection;
 
   // Load settings data on mount so AppOverrideCard has real overrides.
+  // P3-2: controller.openSettings is already stable (useCallback with empty
+  // deps in useSettings.ts — identity never changes). The explicit section
+  // dep means we also reload data when the user switches the settings rail
+  // (General / Apps / Wallpaper), so per-section caches are refreshed and
+  // stale overrides don't linger. eslint-disable can be removed safely
+  // because the dep list now exactly matches what the effect body uses.
   useEffect(() => {
     void controller.openSettings(section);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [section, controller.openSettings]);
 
   const sections: Array<{ id: SettingsSection; label: string; icon: typeof Settings01Icon }> = [
     { id: 'general', label: t.settingsGeneralTitle, icon: Settings01Icon },
@@ -134,17 +150,23 @@ export function SettingsPage({ controller }: { controller: AppController }) {
   ];
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="grid min-h-0 flex-1 grid-cols-[190px_minmax(0,1fr)]">
-        {/* Section rail */}
-        <aside className="flex min-h-0 flex-col gap-1 overflow-y-auto border-r bg-muted/40 p-3">
-          <p className="px-2 pt-1 pb-2 text-sm font-semibold">{t.settingsTitle}</p>
+    <div className="setp flex h-full min-h-0 flex-col min-w-0">
+      <div className="grid min-h-0 flex-1 grid-cols-[180px_minmax(0,1fr)]">
+        {/* Section rail (Swiss) */}
+        <aside className="set-rail flex min-h-0 flex-col gap-[3px] overflow-y-auto border-r border-border bg-card2 p-2">
+          <p className="px-3 pb-1 font-mono text-[8.5px] font-semibold uppercase tracking-[.18em] text-muted-foreground/60">
+            {t.settingsTitle.toUpperCase()}
+          </p>
           {sections.map((item) => (
             <Button
               key={item.id}
-              variant={section === item.id ? 'secondary' : 'ghost'}
+              variant="ghost"
               size="sm"
-              className={cn('justify-start', section !== item.id && 'text-muted-foreground')}
+              className={cn(
+                'justify-start rounded-[2px] h-8 px-3 text-muted-foreground',
+                section === item.id &&
+                  'bg-card text-foreground shadow-[inset_3px_0_0_var(--primary)]',
+              )}
               onClick={() => setSection(item.id)}
             >
               <HugeIcon icon={item.icon} data-icon="inline-start" />
@@ -155,14 +177,16 @@ export function SettingsPage({ controller }: { controller: AppController }) {
 
         {/* Content */}
         <div className="flex min-h-0 flex-col">
-          <div className="border-b px-6 py-4">
-            <h2 className="text-base font-semibold tracking-[-0.01em]">{activeSection.label}</h2>
+          <div className="border-b border-border px-3.5 py-2.5">
+            <h2 className="font-display text-[13px] font-bold tracking-tight">
+              {activeSection.label}
+            </h2>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3.5 py-2.5">
             {section === 'general' && (
               <>
                 <SettingRow title={t.themeModeLabel}>
-                  <div className="inline-flex items-center gap-0.5 rounded-[11px] bg-black/[0.05] p-0.5 dark:bg-white/[0.06]">
+                  <div className="inline-flex items-center gap-[2px] rounded-[2px] border border-border bg-muted p-[2px]">
                     {themeOptions.map((opt) => (
                       <button
                         key={opt.value}
@@ -170,9 +194,9 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                         onClick={() => setMode(opt.value)}
                         aria-pressed={mode === opt.value}
                         className={cn(
-                          'h-7 rounded-lg px-3 text-xs font-medium transition-all duration-200 ease-out',
+                          'h-6 rounded-[2px] px-3 font-medium text-[11.5px] transition-all duration-fast',
                           mode === opt.value
-                            ? 'bg-card text-foreground shadow-xs'
+                            ? 'bg-card text-foreground shadow-sm'
                             : 'text-muted-foreground hover:text-foreground',
                         )}
                       >
@@ -182,13 +206,17 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                   </div>
                 </SettingRow>
                 <SettingRow title={t.settingsAbout} description={t.settingsAboutDesc}>
-                  <span className="text-xs text-muted-foreground">v{appVersion}</span>
+                  <span className="font-mono text-[10px] tracking-wider text-muted-foreground/70">
+                    v{appVersion}
+                  </span>
                 </SettingRow>
               </>
             )}
             {section === 'apps' && (
               <>
-                <p className="text-xs leading-5 text-muted-foreground">{t.settingsAppsHint}</p>
+                <p className="font-mono text-[11px] tracking-wider text-muted-foreground/70">
+                  {t.settingsAppsHint}
+                </p>
                 {AGENT_IDS.map((appId) => (
                   <AppOverrideCard key={appId} controller={controller} appId={appId} />
                 ))}

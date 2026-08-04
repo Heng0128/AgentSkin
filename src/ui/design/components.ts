@@ -13,8 +13,8 @@
  * `globals.css` (`bg-card`, `border-border`, `shadow-*`, `animate-*`).
  */
 
-/** Base surface: elevated panel with the standard radius + hairline border. */
-export const card = 'rounded-2xl border border-border bg-card text-card-foreground shadow-xs';
+/** Base surface: Swiss sharp panel — 2px radius + hairline border. */
+export const card = 'rounded-[2px] border border-border bg-card text-card-foreground shadow-xs';
 
 /** Padding preset for a comfortable card interior. */
 export const cardPadding = 'p-4';
@@ -28,7 +28,7 @@ export const cardPaddingSm = 'p-3';
  * Pair with {@link card}.
  */
 export const cardInteractive =
-  'transition-[transform,box-shadow,background-color] duration-300 ease-out ' +
+  'transition-[transform,box-shadow,background-color] duration-slow ease-out ' +
   'hover:-translate-y-0.5 hover:shadow-md';
 
 /** Pressable / clickable card: interactive lift + pointer cursor. */
@@ -54,7 +54,7 @@ export const statusMotion: Record<'running' | 'idle' | 'offline', string> = {
 
 /** Color classes for the three statuses (matches the breathing dot palette). */
 export const statusColor: Record<'running' | 'idle' | 'offline', string> = {
-  running: 'bg-emerald-500',
+  running: 'bg-cr-success',
   idle: 'bg-muted-foreground/40',
   offline: 'bg-muted-foreground/25',
 };

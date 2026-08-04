@@ -4,7 +4,7 @@ import { BaseApplicationAdapter } from '../base';
 
 /**
  * 百度 Comate — experimental adapter. Registered but not yet backed by
- * @agentskin/core.
+ * @agentskin/engine.
  */
 export class ComateAdapter extends BaseApplicationAdapter {
   readonly id = 'comate';

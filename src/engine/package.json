@@ -1,7 +1,7 @@
 {
-  "name": "@agentskin/core",
+  "name": "@agentskin/engine",
   "version": "5.0.0",
-  "description": "AgentSkin theme runtime, app adapters, and theme tooling (forked from CodeDrobe core).",
+  "description": "AgentSkin theme engine, app adapters, and theme tooling (forked from AgentSkin core).",
   "type": "module",
   "license": "Apache-2.0",
   "exports": {

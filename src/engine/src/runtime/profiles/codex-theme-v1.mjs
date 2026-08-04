@@ -1,11 +1,11 @@
 export const CODEX_THEME_V1_PROFILE = "codex-theme-v1";
 
 function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl = imageUrls.hero ?? artDataUrl }) {
-  const CHROME_ID = "codedrobe-codex-skin-chrome";
-  const LEGACY_STYLE_ID = "codedrobe-codex-skin-style";
-  const LEGACY_STATE_KEY = "__CODEDROBE_CODEX_SKIN_STATE__";
+  const CHROME_ID = "agentskin-codex-skin-chrome";
+  const LEGACY_STYLE_ID = "agentskin-codex-skin-style";
+  const LEGACY_STATE_KEY = "__AGENTSKIN_CODEX_SKIN_STATE__";
   const copy = {
-    brandTitle: theme.displayName ?? "CodeDrobe",
+    brandTitle: theme.displayName ?? "AgentSkin",
     brandSubtitle: "",
     signature: "",
     tagline: "",
@@ -17,7 +17,7 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
   const cssString = (value) => JSON.stringify(String(value ?? ""));
 
   const stopLegacyRuntime = () => {
-    window.__CODEDROBE_CODEX_SKIN_DISABLED__ = true;
+    window.__AGENTSKIN_CODEX_SKIN_DISABLED__ = true;
     const legacyState = window[LEGACY_STATE_KEY];
     try { legacyState?.cleanup?.(); } catch { /* Fall through to static cleanup. */ }
     legacyState?.observer?.disconnect?.();
@@ -40,7 +40,7 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
   const ensure = () => {
     const root = document.documentElement;
     if (!root) return false;
-    root.classList.add("codedrobe-codex-skin");
+    root.classList.add("agentskin-codex-skin");
     root.dataset.codexSkinTheme = theme.id;
     if (artUrl) root.style.setProperty("--dream-art", `url("${artUrl}")`);
     else root.style.removeProperty("--dream-art");
@@ -83,7 +83,7 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
 
   const cleanup = () => {
     const root = document.documentElement;
-    root?.classList.remove("codedrobe-codex-skin");
+    root?.classList.remove("agentskin-codex-skin");
     if (root) delete root.dataset.codexSkinTheme;
     root?.style.removeProperty("--dream-art");
     root?.style.removeProperty("--dream-tagline");
@@ -100,12 +100,12 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
     const nativeHome = document.querySelector('[role="main"]:has([data-testid="home-icon"])');
     const markedHome = document.querySelector('[role="main"].dream-home');
     const missing = [];
-    if (!root?.classList.contains("codedrobe-codex-skin")) {
-      missing.push({ name: "legacy-root-class", selectors: ["html.codedrobe-codex-skin"] });
+    if (!root?.classList.contains("agentskin-codex-skin")) {
+      missing.push({ name: "legacy-root-class", selectors: ["html.agentskin-codex-skin"] });
     }
-    if (!chrome) missing.push({ name: "legacy-chrome", selectors: ["#codedrobe-codex-skin-chrome"] });
+    if (!chrome) missing.push({ name: "legacy-chrome", selectors: ["#agentskin-codex-skin-chrome"] });
     if (chrome && getComputedStyle(chrome).pointerEvents !== "none") {
-      missing.push({ name: "noninteractive-chrome", selectors: ["#codedrobe-codex-skin-chrome { pointer-events: none }"] });
+      missing.push({ name: "noninteractive-chrome", selectors: ["#agentskin-codex-skin-chrome { pointer-events: none }"] });
     }
     if (artDataUrl && !root?.style.getPropertyValue("--dream-art")) {
       missing.push({ name: "legacy-art-variable", selectors: ["--dream-art"] });
@@ -117,7 +117,7 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
       id: "codex-theme-v1",
       pass: missing.length === 0,
       missing,
-      rootClassPresent: Boolean(root?.classList.contains("codedrobe-codex-skin")),
+      rootClassPresent: Boolean(root?.classList.contains("agentskin-codex-skin")),
       chromePresent: Boolean(chrome),
       homeContextActive: Boolean(nativeHome),
       homeMarked: !nativeHome || markedHome === nativeHome,
@@ -128,16 +128,16 @@ function runtime({ theme, imageDataUrls = {}, imageUrls = {}, artDataUrl, artUrl
 }
 
 function cleanup() {
-  window.__CODEDROBE_CODEX_SKIN_DISABLED__ = true;
-  const legacyState = window.__CODEDROBE_CODEX_SKIN_STATE__;
+  window.__AGENTSKIN_CODEX_SKIN_DISABLED__ = true;
+  const legacyState = window.__AGENTSKIN_CODEX_SKIN_STATE__;
   try { legacyState?.cleanup?.(); } catch { /* Fall through to static cleanup. */ }
   legacyState?.observer?.disconnect?.();
   if (legacyState?.timer) clearInterval(legacyState.timer);
   if (legacyState?.scheduler?.timeout) clearTimeout(legacyState.scheduler.timeout);
   if (legacyState?.artUrl) globalThis.URL?.revokeObjectURL?.(legacyState.artUrl);
-  delete window.__CODEDROBE_CODEX_SKIN_STATE__;
+  delete window.__AGENTSKIN_CODEX_SKIN_STATE__;
   const root = document.documentElement;
-  root?.classList.remove("codedrobe-codex-skin");
+  root?.classList.remove("agentskin-codex-skin");
   if (root) delete root.dataset.codexSkinTheme;
   root?.style.removeProperty("--dream-art");
   root?.style.removeProperty("--dream-tagline");
@@ -145,8 +145,8 @@ function cleanup() {
   root?.style.removeProperty("--dream-project-label");
   document.querySelectorAll(".dream-home").forEach((node) => node.classList.remove("dream-home"));
   document.querySelectorAll(".dream-home-shell").forEach((node) => node.classList.remove("dream-home-shell"));
-  document.getElementById("codedrobe-codex-skin-style")?.remove();
-  document.getElementById("codedrobe-codex-skin-chrome")?.remove();
+  document.getElementById("agentskin-codex-skin-style")?.remove();
+  document.getElementById("agentskin-codex-skin-chrome")?.remove();
 }
 
 export default {

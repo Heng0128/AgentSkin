@@ -6,7 +6,7 @@
  * Provides the UI-facing theme display model. The renderer calls
  * `listThemes()` / `getTheme(id)` / `searchThemes(query)` / `filterByAgent()`
  * and receives `ThemeCatalogItem` — it never touches `ThemePackage`,
- * `ThemeLibrary`, or `@agentskin/core`.
+ * `ThemeLibrary`, or `@agentskin/engine`.
  *
  * ## Boundary
  *
@@ -86,6 +86,11 @@ export class ThemeCatalog {
       version: theme.version,
       author: theme.author ?? '',
       description: theme.tagline ?? '',
+      // Preview/icon are served as inline base64 data URLs (the library
+      // already extracts them in toInstalledTheme). We deliberately do NOT use
+      // a custom scheme here — `agentskin-theme://` was never registered as a
+      // privileged scheme and is absent from the renderer CSP, so <img> tags
+      // pointing at it are silently blocked. Base64 renders reliably.
       preview: theme.coverDataUrl,
       icon: theme.icon ?? null,
       supportedAgents: theme.supportedAgents,

@@ -1,5 +1,14 @@
 # AgentSkin 主题生态优化设计文档
 
+> **⚠️ 已废弃（DEPRECATED）**
+>
+> 本文档是 2026-07-21 的设计评审稿，其中的**部分规范已被实际实现取代**，且与实际代码存在互斥：
+> - 包名 `.agenttheme` ≠ 实际产物 `.agentskin-theme`（见 `scripts/build-theme-package.mjs` / `theme-workbench/out/`）。
+> - `assets/background` 多比例背景、`.agenttheme` ZIP 结构等设计未落地；实际 art 源是 `manifest.hero`（`--agentskin-art`）。
+>
+> **请以 `themes/THEME_SPEC.md`（作者规范）与 `docs/THEME_SPEC.md`（主题包规范）为准。**
+> 本节"参考项目分析报告"（§1）仍有参考价值；其余章节仅作历史归档。
+
 > 版本: 1.0.0  
 > 日期: 2026-07-21  
 > 状态: 设计评审
@@ -10,7 +19,7 @@
 
 ### 1.1 AgentSkin Skills
 
-**核心机制**: `.codedrobe-theme` 包格式，通过 CDP 注入可逆 CSS。
+**核心机制**: `.agentskin-theme` 包格式，通过 CDP 注入可逆 CSS。
 
 **关键设计决策**:
 - **声明式包**: 主题包不包含 JavaScript，只声明 CSS 文件和验证锚点
@@ -18,13 +27,13 @@
 - **目标声明**: `targets.<adapterId>.css` 指定 CSS 文件
 - **验证锚点**: `verification.required` + `verification.recommended` 定义 DOM 结构契约
 - **上下文感知**: `contexts[].when` 条件匹配路由特定的 DOM 节点
-- **最大 32 张命名图片**: `assets.images` 嵌入为 base64，CSS 变量 `--codedrobe-image-{name}` 暴露
-- **Legacy 转换**: `codedrobe theme convert` 可将旧 `.codex-theme` 转为通用格式
+- **最大 32 张命名图片**: `assets.images` 嵌入为 base64，CSS 变量 `--agentskin-image-{name}` 暴露
+- **Legacy 转换**: `agentskin theme convert` 可将旧 `.codex-theme` 转为通用格式
 
 **manifest 关键字段**:
 ```json
 {
-  "format": "codedrobe-theme",
+  "format": "agentskin-theme",
   "schemaVersion": 1,
   "theme": { "id": "...", "displayName": "...", "version": "..." },
   "targets": { "workbuddy": { "css": "workbuddy.css" } },

@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useId } from 'react';
 import { cn } from '@/lib/utils';
 
 /**
  * # Logo
  *
- * AgentSkin's "skin layers" brand mark — three fanned rounded panels
- * (cyan → violet → pink) representing interchangeable skins layered over an
- * AI agent. This is the single source of truth for the in-app brand mark; the
- * raster app/tray/file icons in `assets/branding` are drawn from the same
- * concept.
+ * AgentSkin brand mark — a white rounded square with a red "A" monogram
+ * constructed from geometric shapes (triangle + serif + baseline bar).
+ * Matches the reference design in A.html.
  *
  * Variants:
- *   - `color`: full brand gradients — splash screens, about panels, hero.
+ *   - `color`: full brand mark — white bg, red "A", warm serif accent.
  *   - `mono`: single color (currentColor) with layered opacity — the sidebar
  *     brand chip and other compact UI where the mark inherits text color.
  *
@@ -29,49 +26,46 @@ export function Logo({
   className?: string;
   title?: string;
 }) {
-  // useId may contain characters (e.g. ":") that are awkward inside url(#...)
-  // references — keep only alphanumerics for safe gradient ids.
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const svgClass = cn(
+    'block shrink-0 drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-transform duration-[250ms] ease-[cubic-bezier(.34,1.56,.64,1)] hover:-rotate-[4deg] hover:scale-[1.06]',
+    className,
+  );
 
   if (variant === 'mono') {
     return (
-      <svg
-        viewBox="0 0 24 24"
-        className={cn('shrink-0', className)}
-        role="img"
-        aria-label={title}
-        fill="currentColor"
-      >
-        <rect x="2.1" y="8.9" width="13" height="13" rx="3" fillOpacity="0.38" />
-        <rect x="5.5" y="5.5" width="13" height="13" rx="3" fillOpacity="0.62" />
-        <rect x="8.9" y="2.1" width="13" height="13" rx="3" fillOpacity="1" />
+      <svg viewBox="0 0 48 48" className={svgClass} role="img" aria-label={title} fill="none">
+        {/* White rounded-square background */}
+        <rect x="1" y="1" width="46" height="46" rx="11.5" fill="currentColor" fillOpacity="0.08" />
+        <rect
+          x="1.3"
+          y="1.3"
+          width="45.4"
+          height="45.4"
+          rx="11.2"
+          stroke="currentColor"
+          strokeOpacity="0.12"
+          strokeWidth="0.6"
+        />
+        {/* "A" triangle */}
+        <path d="M24 8.5L39.5 39.5h-7.6L24 22.4l-7.9 17.1H8.5Z" fill="currentColor" />
+        {/* Baseline bar */}
+        <path d="M20 30.1h8l1.5 3.5H18.5Z" fill="currentColor" />
+        {/* Top serif accent */}
+        <path d="M24 8.5L27 14.6 24 13.2 21 14.6Z" fill="currentColor" fillOpacity="0.6" />
       </svg>
     );
   }
 
-  const cyan = `asCyan${uid}`;
-  const violet = `asViolet${uid}`;
-  const pink = `asPink${uid}`;
-
   return (
-    <svg viewBox="0 0 24 24" className={cn('shrink-0', className)} role="img" aria-label={title}>
-      <defs>
-        <linearGradient id={cyan} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#67e8f9" />
-          <stop offset="100%" stopColor="#2563eb" />
-        </linearGradient>
-        <linearGradient id={violet} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="100%" stopColor="#6d28d9" />
-        </linearGradient>
-        <linearGradient id={pink} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#f9a8d4" />
-          <stop offset="100%" stopColor="#db2777" />
-        </linearGradient>
-      </defs>
-      <rect x="2.1" y="8.9" width="13" height="13" rx="3" fill={`url(#${cyan})`} />
-      <rect x="5.5" y="5.5" width="13" height="13" rx="3" fill={`url(#${violet})`} />
-      <rect x="8.9" y="2.1" width="13" height="13" rx="3" fill={`url(#${pink})`} />
+    <svg viewBox="0 0 48 48" className={svgClass} role="img" aria-label={title} fill="none">
+      {/* White rounded-square background */}
+      <rect x="1" y="1" width="46" height="46" rx="11.5" fill="#FFFFFF" />
+      {/* "A" triangle — the main body of the letter */}
+      <path d="M24 8.5L39.5 39.5h-7.6L24 22.4l-7.9 17.1H8.5Z" fill="#E30613" />
+      {/* Baseline bar — sits under the "A" crossbar area */}
+      <path d="M20 30.1h8l1.5 3.5H18.5Z" fill="#E30613" />
+      {/* Top serif accent — lighter warm red */}
+      <path d="M24 8.5L27 14.6 24 13.2 21 14.6Z" fill="#FF6B61" />
     </svg>
   );
 }

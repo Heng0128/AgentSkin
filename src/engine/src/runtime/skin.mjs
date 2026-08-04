@@ -17,7 +17,7 @@ function verificationError(results) {
   const missing = failures.flatMap((item) => item.result?.missing ?? []);
   const detail = failures.map(describeVerifyFailure).join(" ‖ ");
   const error = new Error(`Theme application verification failed for ${failures.length} renderer target(s)${detail ? `: ${detail}` : "."}`);
-  error.code = "CODEDROBE_VERIFY_FAILED";
+  error.code = "AGENTSKIN_VERIFY_FAILED";
   error.missing = missing;
   error.results = results;
   return error;
@@ -25,7 +25,7 @@ function verificationError(results) {
 
 function restartRequiredError(adapter, port) {
   const error = new Error(`${adapter.displayName} is already running, but its host appearance settings changed. Close it or pass --restart-existing so the complete skin can load.`);
-  error.code = "CODEDROBE_RESTART_REQUIRED";
+  error.code = "AGENTSKIN_RESTART_REQUIRED";
   error.appId = adapter.id;
   error.port = port;
   return error;

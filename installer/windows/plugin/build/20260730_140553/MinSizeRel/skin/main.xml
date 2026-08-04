@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Window size="720,520" sizebox="4,4,4,4" caption="0,0,0,0" roundcorner="12,12">
+    <!-- global brand defaults; accent 6B8FD8, primary 5B3FA0, surface F5F5F7, text 1D1D1F -->
+    <Font name="Microsoft YaHei UI" size="12" bold="false" default="true" shared="false"/>
+    <Font id="1" name="Microsoft YaHei UI" size="14" bold="true"  shared="false"/>
+    <Font id="2" name="Microsoft YaHei UI" size="18" bold="true"  shared="false"/>
+    <Font id="3" name="Microsoft YaHei UI" size="24" bold="true"  shared="false"/>
+
+    <VerticalLayout name="root" bkcolor="0xFFF5F5F7">
+
+        <!-- ===== Custom title bar (48px) ================================== -->
+        <HorizontalLayout name="titlebar" height="48" inset="0,0,0,0" bkcolor="0xFFFFFFFF">
+            <HorizontalLayout inset="24,0,0,0" childpadding="8">
+                <Label name="logo" text="AgentSkin" textcolor="0xFF1D1D1F" font="1"/>
+            </HorizontalLayout>
+            <HorizontalLayout name="titlebar_buttons" width="96" height="48" inset="0,0,0,0" childpadding="0">
+                <Button name="btn_min"     width="48" height="48" text="&#x2014;"  textcolor="0xFF1D1D1F" bkcolor="0xFFFFFFFF" hotbkcolor="0xFFEEEEF2" pushedbkcolor="0xFFE0E0E6"/>
+                <Button name="btn_close"   width="48" height="48" text="&#x2715;"  textcolor="0xFF1D1D1F" bkcolor="0xFFFFFFFF" hotbkcolor="0xFFFFE5E5" pushedbkcolor="0xFFFF8585"/>
+            </HorizontalLayout>
+        </HorizontalLayout>
+
+        <!-- ===== Wizard pages ============================================== -->
+        <AnimationTabLayout name="pages" inset="0,0,0,0">
+
+            <!-- page 0: Welcome -->
+            <VerticalLayout name="page_welcome" inset="0,0,0,0" bkcolor="0xFFF5F5F7">
+                <VerticalLayout height="120"/>
+                <VerticalLayout inset="60,0,60,0" childpadding="16">
+                    <Label text="欢迎使用 AgentSkin 安装向导" align="center" font="3" textcolor="0xFF1D1D1F"/>
+                    <Label text="点击下一步开始安装。" align="center" textcolor="0xFF6E6E73"/>
+                    <Control height="40"/>
+                    <HorizontalLayout height="44" childpadding="0" inset="60,0,60,0">
+                        <Control/>
+                        <Button name="btn_next" width="160" height="44" text="下一步" font="1" textcolor="0xFFFFFFFF" bkcolor="0xFF5B3FA0" hotbkcolor="0xFF7B5FC0" pushedbkcolor="0xFF432C78" roundcorner="6,6"/>
+                    </HorizontalLayout>
+                </VerticalLayout>
+            </VerticalLayout>
+
+            <!-- page 1: Directory selection -->
+            <VerticalLayout name="page_directory" inset="0,0,0,0" bkcolor="0xFFF5F5F7">
+                <VerticalLayout height="60"/>
+                <VerticalLayout inset="60,0,60,0" childpadding="12">
+                    <Label text="选择安装目录" font="2" textcolor="0xFF1D1D1F"/>
+                    <HorizontalLayout height="42" childpadding="8">
+                        <Edit name="edit_path" height="42" textpadding="8,0,8,0" bordercolor="0xFFD4D4D8" bkcolor="0xFFFFFFFF"/>
+                        <Button name="btn_browse" width="96" height="42" text="浏览..." font="1" textcolor="0xFFFFFFFF" bkcolor="0xFF5B3FA0" hotbkcolor="0xFF7B5FC0" pushedbkcolor="0xFF432C78" roundcorner="6,6"/>
+                    </HorizontalLayout>
+                    <Label name="lbl_path_error" height="24" text="" textcolor="0xFFFF3B30"/>
+                    <Control height="8"/>
+                    <CheckBox name="chk_desktop"   text="创建桌面快捷方式" selected="true"  textcolor="0xFF1D1D1F" height="22"/>
+                    <Control height="8"/>
+                    <CheckBox name="chk_startmenu" text="创建开始菜单快捷方式" selected="true" textcolor="0xFF1D1D1F" height="22"/>
+                    <Control height="32"/>
+                    <HorizontalLayout height="44" childpadding="8">
+                        <Button name="btn_back"   width="120" height="44" text="上一步"     textcolor="0xFF6E6E73" bkcolor="0xFFFFFFFF" hotbkcolor="0xFFEEEEF2" bordercolor="0xFFD4D4D8" roundcorner="6,6"/>
+                        <Control/>
+                        <Button name="btn_cancel" width="120" height="44" text="取消"     textcolor="0xFF6E6E73" bkcolor="0xFFFFFFFF" hotbkcolor="0xFFEEEEF2" bordercolor="0xFFD4D4D8" roundcorner="6,6"/>
+                        <Button name="btn_install" width="160" height="44" text="安装"    font="1" textcolor="0xFFFFFFFF" bkcolor="0xFF5B3FA0" hotbkcolor="0xFF7B5FC0" pushedbkcolor="0xFF432C78" roundcorner="6,6"/>
+                    </HorizontalLayout>
+                </VerticalLayout>
+            </VerticalLayout>
+
+            <!-- page 2: Progress -->
+            <VerticalLayout name="page_progress" inset="0,0,0,0" bkcolor="0xFFF5F5F7">
+                <VerticalLayout height="90"/>
+                <VerticalLayout inset="60,0,60,0" childpadding="12">
+                    <Label name="lbl_progress_title" text="正在安装 AgentSkin" font="3" textcolor="0xFF1D1D1F"/>
+                    <Control height="24"/>
+                    <Progress name="pbar" height="20" min="0" max="100" value="0" fgcolor="0xFF5B3FA0" bkcolor="0xFFE5E5EA" roundcorner="10,10"/>
+                    <Control height="16"/>
+                    <Label  name="lbl_percent"   text="0%"   align="center" font="1" textcolor="0xFF5B3FA0"/>
+                    <Label  name="lbl_status"    text=""    align="center"          textcolor="0xFF6E6E73"/>
+                </VerticalLayout>
+            </VerticalLayout>
+
+            <!-- page 3: Finish (install or uninstall) -->
+            <VerticalLayout name="page_finish" inset="0,0,0,0" bkcolor="0xFFF5F5F7">
+                <VerticalLayout height="90"/>
+                <VerticalLayout inset="60,0,60,0" childpadding="12">
+                    <Label name="lbl_finish_title" text="安装完成" font="3" textcolor="0xFF1D1D1F"/>
+                    <Control height="16"/>
+                    <Label  name="lbl_finish_sub"  text="AgentSkin 已成功安装到你的电脑。" textcolor="0xFF6E6E73"/>
+                    <Control height="24"/>
+                    <CheckBox name="chk_run" text="立即运行 AgentSkin" selected="true" textcolor="0xFF1D1D1F" height="24" autotooltip="true"/>
+                    <Control height="24"/>
+                    <HorizontalLayout height="44" inset="60,0,60,0" childpadding="0">
+                        <Control/>
+                        <Button name="btn_finish" width="160" height="44" text="完成" font="1" textcolor="0xFFFFFFFF" bkcolor="0xFF5B3FA0" hotbkcolor="0xFF7B5FC0" pushedbkcolor="0xFF432C78" roundcorner="6,6"/>
+                    </HorizontalLayout>
+                </VerticalLayout>
+            </VerticalLayout>
+
+            <!-- page 4: Uninstall confirm -->
+            <VerticalLayout name="page_uninstall" inset="0,0,0,0" bkcolor="0xFFF5F5F7">
+                <VerticalLayout height="90"/>
+                <VerticalLayout inset="60,0,60,0" childpadding="12">
+                    <Label text="卸载 AgentSkin" font="3" textcolor="0xFF1D1D1F"/>
+                    <Control height="16"/>
+                    <Label text="确定要卸载 AgentSkin 吗？" textcolor="0xFF6E6E73"/>
+                    <Control height="16"/>
+                    <CheckBox name="chk_removedata" text="同时删除我的用户数据 (%APPDATA%/AgentSkin)" selected="false" textcolor="0xFFFF3B30" height="22"/>
+                    <Control height="32"/>
+                    <HorizontalLayout height="44" childpadding="8">
+                        <Control/>
+                        <Button name="btn_cancel_un"  width="140" height="44" text="取消"     textcolor="0xFF6E6E73" bkcolor="0xFFFFFFFF" hotbkcolor="0xFFEEEEF2" bordercolor="0xFFD4D4D8" roundcorner="6,6"/>
+                        <Button name="btn_uninstall"  width="160" height="44" text="卸载"     font="1" textcolor="0xFFFFFFFF" bkcolor="0xFFFF3B30" hotbkcolor="0xFFFF6B6B" pushedbkcolor="0xFFCC0000" roundcorner="6,6"/>
+                    </HorizontalLayout>
+                </VerticalLayout>
+            </VerticalLayout>
+
+        </AnimationTabLayout>
+    </VerticalLayout>
+</Window>

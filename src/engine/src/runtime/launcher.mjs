@@ -267,7 +267,7 @@ export async function launchApp({ adapter, port = adapter.defaultPort, appPath =
 
   if (!readyTargets.length && await isPortOccupied(port)) {
     const error = new Error(`Port ${port} is already occupied by another process.`);
-    error.code = "CODEDROBE_PORT_OCCUPIED";
+    error.code = "AGENTSKIN_PORT_OCCUPIED";
     error.port = port;
     throw error;
   }
@@ -283,8 +283,8 @@ export async function launchApp({ adapter, port = adapter.defaultPort, appPath =
   const runningPids = await findRunningPids(adapter, process.platform, discovered.executable);
   if (runningPids.length) {
     if (!restartExisting) {
-      const error = new Error(`${adapter.displayName} is already running without CodeDrobe on port ${port}. Close it or pass --restart-existing.`);
-      error.code = "CODEDROBE_RESTART_REQUIRED";
+      const error = new Error(`${adapter.displayName} is already running without AgentSkin on port ${port}. Close it or pass --restart-existing.`);
+      error.code = "AGENTSKIN_RESTART_REQUIRED";
       error.appId = adapter.id;
       error.port = port;
       throw error;
@@ -301,7 +301,7 @@ export async function launchApp({ adapter, port = adapter.defaultPort, appPath =
   }
   if (portStillOccupied) {
     const error = new Error(`Port ${port} is still occupied after stopping ${adapter.displayName}.`);
-    error.code = "CODEDROBE_PORT_OCCUPIED";
+    error.code = "AGENTSKIN_PORT_OCCUPIED";
     error.port = port;
     throw error;
   }

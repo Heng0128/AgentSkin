@@ -6,19 +6,19 @@
     "jsx": "react-jsx",
     "strict": true,
     "esModuleInterop": true,
+    "allowJs": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "types": ["node", "vite/client"],
     "noEmit": true,
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo",
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/ui/*"],
-      "@shared/*": ["src/shared/*"],
-      "@agentskin/core": ["./src/engine"]
+      "@/*": ["./src/ui/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@agentskin/engine": ["./src/engine"]
     }
   },
-  "include": ["src", "forge.config.ts", "vite.*.config.ts"],
+  "include": ["src", "electron.vite.config.ts"],
   "exclude": ["installer", "out", ".build-tmp", "node_modules"]
 }

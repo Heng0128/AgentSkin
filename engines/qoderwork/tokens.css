@@ -2,11 +2,11 @@
    ENGINE: qoderwork — Layer 0: Token Override
    ------------------------------------------------------------
    Pure --color-* design-token overrides for QoderWork CN.
-   Selector: html.codedrobe-host-qoderwork:root (0,2,1)
+   Selector: html.agentskin-host-qoderwork:root (0,2,1)
    beats :root[data-theme] (0,2,0).
    ============================================================ */
 
-html.codedrobe-host-qoderwork:root {
+html.agentskin-host-qoderwork:root {
   color-scheme: dark !important;
 
   /* Primary / brand */

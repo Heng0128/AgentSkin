@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/app-mark';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
-import { Progress } from '@/components/ui/progress';
+import { Spinner } from '@/components/ui/spinner';
 import { AgentStatusDot } from '@/components/workspace/AgentStatusDot';
 import type { AppController } from '@/hooks/useAppController';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { cn } from '@/lib/utils';
+import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 
 import {
   CheckmarkCircle02Icon,
@@ -20,12 +19,13 @@ import {
   Search01Icon,
   Video01Icon,
 } from '@hugeicons/core-free-icons';
-import type { AgentId, WallpaperInfo } from '@shared/types';
-import { AGENT_IDS, AGENT_META } from '@shared/types';
+import type { UiMessages } from '@shared/i18n';
+import type { AgentId, WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
+import { AGENT_IDS, AGENT_META, WALLPAPER_ALIGNMENTS } from '@shared/types';
 
-type TypeFilter = 'all' | 'video' | 'image';
+type TypeFilter = 'all' | 'video' | 'image' | 'web' | 'scene';
 
-/** Apple-style iOS switch. */
+/** Swiss toggle switch — 34×20, rounded-full, red when active, 14px knob with slide animation (matches A.html .sw). */
 function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <button
@@ -34,18 +34,72 @@ function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       aria-checked={checked}
       onClick={() => onChange(!checked)}
       className={cn(
-        'relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ease-out outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
-        checked ? 'bg-primary' : 'bg-muted-foreground/25',
+        'relative inline-flex h-[20px] w-[34px] shrink-0 items-center rounded-full transition-colors duration-base ease-out outline-none focus-visible:ring-2 focus-visible:ring-ring/50 border',
+        checked ? 'bg-primary border-primary' : 'bg-card2 border-[var(--border2)]',
       )}
     >
       <span
         className={cn(
-          'inline-block size-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out',
-          checked ? 'translate-x-[16px]' : 'translate-x-0.5',
+          'inline-block size-[14px] rounded-full shadow-sm transition-transform duration-base',
+          checked ? 'bg-background translate-x-[17px]' : 'bg-muted-foreground translate-x-[2px]',
         )}
       />
     </button>
   );
+}
+
+/**
+ * Map a wallpaper injection `detail` verdict to a human-readable, localized
+ * failure message. The engine emits raw verdicts like
+ * `stream:loadfail:src-not-supported`, `image:loadfail:csp-or-unsupported`,
+ * `cdp-connect-failed:CDP request timed out`, which are meaningless to users.
+ *
+ * Classification priority (a detail string may carry multiple per-target
+ * verdicts joined by `, ` or `|`):
+ * 1. Codec unsupported — `src-not-supported` (video.error.code === 4). The
+ *    stream→blob fallback cannot fix this (same codec), so the only remedy is
+ *    transcoding. Surfaced with an actionable "transcode to H.264" hint.
+ * 2. CDP connect / timeout — `cdp-connect-failed` or `CDP request timed out`
+ *    or `WebSocket closed`. Usually transient; retry after confirming the app
+ *    is running.
+ * 3. CSP / media load failure — `loadfail:csp-or-unsupported`, `loadfail`
+ *    without a codec code, `blob:loadfail`. Indicates the app's CSP blocked
+ *    the media source or the media failed to decode.
+ * 4. Other / unknown — fallback.
+ *
+ * Returns the localized message; never returns the raw verdict.
+ */
+function describeWallpaperFailure(detail: string | undefined, t: UiMessages): string {
+  if (!detail) return t.wpFailUnknown;
+  const lower = detail.toLowerCase();
+  // Codec not supported (MEDIA_ERR_SRC_NOT_SUPPORTED). Highest priority: the
+  // fallback path can't help, so the user MUST transcode.
+  if (lower.includes('src-not-supported')) return t.wpFailCodec;
+  // CDP transport failures: connect refused, command timeout, socket closed.
+  if (
+    lower.includes('cdp-connect-failed') ||
+    lower.includes('timed out') ||
+    lower.includes('websocket closed') ||
+    lower.includes('cdp request')
+  ) {
+    return t.wpFailCdp;
+  }
+  // Visibility probe failure: media loaded but wallpaper is not visible
+  // (punch-through failed, element removed by React, or clipped). Retry
+  // usually fixes this because the punch-through is timing-sensitive.
+  if (lower.includes('invisible')) {
+    return t.wpFailInvisible;
+  }
+  // CSP block or generic media load failure (not codec-specific).
+  if (
+    lower.includes('csp-or-unsupported') ||
+    lower.includes('loadfail') ||
+    lower.includes('blob:loadfail') ||
+    lower.includes('stream:loadfail')
+  ) {
+    return t.wpFailCsp;
+  }
+  return t.wpFailOther;
 }
 
 /**
@@ -56,7 +110,7 @@ function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean
  * AgentSkin's own animated background.
  */
 export function WallpaperEnginePage({ controller }: { controller: AppController }) {
-  const { t, wallpaper, appStatusFor } = controller;
+  const { t, wallpaper, appStatusFor, setWallpaperRestartPrompt } = controller;
   const { showToast } = useNotifications(t);
   const {
     wallpapers,
@@ -75,11 +129,21 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
   const [filter, setFilter] = useState<TypeFilter>('all');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<WallpaperInfo | null>(null);
+  /** 渲染设置草稿（对齐/位置/翻转/滤镜/视差/音频等），编辑后随「设为 UI 背景」
+   *  或「应用到 agent」一起持久化；未编辑时为 undefined（用全局默认/主题默认）。 */
+  const [renderDraft, setRenderDraft] = useState<WallpaperRenderOptions | undefined>(undefined);
   const [applyingTo, setApplyingTo] = useState<AgentId | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [batchProgress, setBatchProgress] = useState<{ done: number; total: number } | null>(null);
-  /** Persistent per-agent injection result (survives until next action on that agent). */
-  const [injectResults, setInjectResults] = useState<Partial<Record<AgentId, 'ok' | 'fail'>>>({});
+  /** Persistent per-agent injection result (survives until next action on that agent).
+   *  `detail` carries the per-target verdicts for precise failure diagnosis. */
+  const [injectResults, setInjectResults] = useState<
+    Partial<Record<AgentId, { status: 'ok' | 'fail'; detail?: string }>>
+  >({});
+  // Streaming loopback URL for the selected wallpaper's media (video/gif only).
+  const selectedVideo = useWallpaperVideoUrl(
+    selected && (selected.playback === 'video' || selected.playback === 'gif') ? selected.id : null,
+  );
 
   // Detect Wallpaper Engine installation on mount
   useEffect(() => {
@@ -122,7 +186,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
     () => wallpapers.filter((w) => w.type === 'video').length,
     [wallpapers],
   );
-  const imageCount = wallpapers.length - videoCount;
+  const imageCount = wallpapers.filter((w) => w.type === 'image').length;
 
   // Count running agents for the status hint in the detail panel.
   const runningAgentCount = useMemo(
@@ -142,25 +206,54 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
       const name = AGENT_META[agentId].displayName;
       showToast(t.weInjecting(name));
       try {
-        const result = await setAndApplyAgentWallpaper(agentId, true, wallpaperId);
+        const result = await setAndApplyAgentWallpaper(agentId, true, wallpaperId, {
+          render: renderDraft,
+        });
         if (result.ok) {
           showToast(t.weInjected(name));
-          setInjectResults((prev) => ({ ...prev, [agentId]: 'ok' }));
+          setInjectResults((prev) => ({ ...prev, [agentId]: { status: 'ok' } }));
+        } else if (result.reason === 'requires-restart') {
+          // Agent is not CDP-ready — prompt the user for explicit consent.
+          // NEVER auto-restart/launch: the hard constraint forbids restarting
+          // an agent without the user's permission. `restartReason` lets the
+          // dialog show specific guidance (e.g. "not-running" → the agent will
+          // be launched from its install path after confirmation).
+          setWallpaperRestartPrompt({
+            appId: agentId,
+            wallpaperId,
+            restartReason: result.restartReason,
+          });
+          setInjectResults((prev) => ({
+            ...prev,
+            [agentId]: { status: 'fail', detail: 'requires-restart' },
+          }));
         } else {
-          showToast(
-            result.reason === 'agent-not-running' ? t.weAgentNotRunning(name) : t.weApplyFailed,
-            'destructive',
-          );
-          setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
+          // Surface a human-readable failure reason. `detail` carries raw
+          // per-target verdicts (e.g. "image:loadfail:csp-or-unsupported",
+          // "stream:loadfail:src-not-supported") that are meaningless to users.
+          // `describeWallpaperFailure` maps them to actionable guidance:
+          // codec-not-supported (transcode hint), CDP/timeout (retry hint),
+          // CSP/load-failure, or a generic fallback.
+          const baseMsg =
+            result.reason === 'agent-not-running'
+              ? t.weAgentNotRunning(name)
+              : result.reason === 'agent-not-installed'
+                ? t.weAgentNotInstalled(name)
+                : describeWallpaperFailure(result.detail, t);
+          showToast(baseMsg, 'destructive');
+          setInjectResults((prev) => ({
+            ...prev,
+            [agentId]: { status: 'fail', detail: result.detail },
+          }));
         }
       } catch {
         showToast(t.weApplyFailed, 'destructive');
-        setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
+        setInjectResults((prev) => ({ ...prev, [agentId]: { status: 'fail' } }));
       } finally {
         setApplyingTo(null);
       }
     },
-    [setAndApplyAgentWallpaper, showToast, t],
+    [setAndApplyAgentWallpaper, showToast, t, setWallpaperRestartPrompt, renderDraft],
   );
 
   const handleRemove = useCallback(
@@ -197,7 +290,8 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
     [deleteWallpaper, selected, showToast, t],
   );
 
-  /** Apply the selected wallpaper to every running agent sequentially. */
+  /** Apply the selected wallpaper to every running agent, with a bounded
+   *  concurrency pool so a large agent fleet doesn't trigger a CDP storm. */
   const handleApplyAll = useCallback(
     async (wallpaperId: string) => {
       const targets = AGENT_IDS.filter((id) => appStatusFor(id)?.running);
@@ -211,28 +305,49 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
         for (const id of targets) cleared[id] = undefined;
         return cleared;
       });
-      let ok = 0;
-      for (let i = 0; i < targets.length; i++) {
-        const agentId = targets[i];
-        setApplyingTo(agentId);
-        try {
-          const result = await setAndApplyAgentWallpaper(agentId, true, wallpaperId);
-          if (result.ok) {
-            ok++;
-            setInjectResults((prev) => ({ ...prev, [agentId]: 'ok' }));
-          } else {
-            setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
+
+      const CONCURRENCY = 4;
+      let cursor = 0;
+      // 成功计数用 worker 局部变量累加（P3-7 之前试图在 setState updater 里读取
+      // latest snapshot，但 updater 要等渲染期才执行，紧随其后的 showToast 拿到的
+      // finalOk 恒为 0 —— toast 永远显示 "0/N 成功"）。JS 单线程下 await 边界之间
+      // 的 read-modify-write 是无竞争的，这里直接在 worker 内累加、结束后读取。
+      let okCount = 0;
+      const worker = async (): Promise<void> => {
+        for (;;) {
+          const idx = cursor++;
+          if (idx >= targets.length) break;
+          const agentId = targets[idx];
+          setApplyingTo(agentId);
+          try {
+            const result = await setAndApplyAgentWallpaper(agentId, true, wallpaperId);
+            if (result.ok) {
+              okCount++;
+              setInjectResults((prev) => ({ ...prev, [agentId]: { status: 'ok' } }));
+            } else {
+              setInjectResults((prev) => ({
+                ...prev,
+                [agentId]: { status: 'fail', detail: result.detail },
+              }));
+            }
+          } catch {
+            setInjectResults((prev) => ({ ...prev, [agentId]: { status: 'fail' } }));
           }
-        } catch {
-          setInjectResults((prev) => ({ ...prev, [agentId]: 'fail' }));
+          // Fold the increment into the setState updater so the worker does
+          // not share mutable let bindings — JS single-thread safety is not
+          // obvious from a quick scan and this form removes the ambiguity.
+          setBatchProgress((prev) => (prev ? { done: prev.done + 1, total: prev.total } : prev));
         }
-        setBatchProgress({ done: i + 1, total: targets.length });
-      }
+      };
+
+      const poolSize = Math.min(CONCURRENCY, targets.length);
+      await Promise.all(Array.from({ length: poolSize }, () => worker()));
+
       setApplyingTo(null);
       setBatchProgress(null);
       showToast(
-        t.weApplyAllDone(ok, targets.length),
-        ok === targets.length ? 'default' : 'destructive',
+        t.weApplyAllDone(okCount, targets.length),
+        okCount === targets.length ? 'default' : 'destructive',
       );
     },
     [appStatusFor, setAndApplyAgentWallpaper, showToast, t],
@@ -251,60 +366,59 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      {/* Header */}
-      <div className="border-b px-6 py-4">
-        <div className="flex items-center justify-between">
+    <div className="we-app flex h-full min-h-0 flex-col min-w-0">
+      {/* Header — Swiss: monoCount + import + toggle */}
+      <div className="flex items-center justify-between gap-3 border-b border-border px-[14px] py-[10px] flex-wrap">
+        <div className="flex items-center gap-3">
+          <h2 className="font-display text-sm font-bold tracking-tight">{t.navWallpaperEngine}</h2>
+          {wallpapers.length > 0 && (
+            <span className="rounded-[2px] bg-muted px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+              {wallpapers.length}
+            </span>
+          )}
+          {wallpapers.length > 0 && (
+            <span className="font-mono text-[10px] tracking-wider text-muted-foreground/60">
+              {t.weStats(videoCount, imageCount)}
+            </span>
+          )}
+        </div>
+        {/* Import + toggle */}
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => void importWallpaper()}
+            className="flex items-center gap-1.5 rounded-[2px] border border-[var(--border2)] bg-card2 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          >
+            <HugeIcon icon={Download01Icon} className="size-3" />
+            {t.wallpaperImport}
+          </button>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold tracking-[-0.01em]">{t.navWallpaperEngine}</h2>
-            {wallpapers.length > 0 && (
-              <Badge variant="secondary" className="text-[10px]">
-                {wallpapers.length}
-              </Badge>
-            )}
-            {wallpapers.length > 0 && (
-              <span className="text-[11px] text-muted-foreground">
-                {t.weStats(videoCount, imageCount)}
-              </span>
-            )}
-          </div>
-          {/* AgentSkin background toggle + import */}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => void importWallpaper()}
-              className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <HugeIcon icon={Download01Icon} className="size-3" />
-              {t.wallpaperImport}
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">{t.wallpaperEnable}</span>
-              <Switch
-                checked={enabled}
-                onChange={(v) => void setWallpaper(v, v ? selectedId : null)}
-              />
-            </div>
+            <span className="font-mono text-[10px] tracking-wider text-muted-foreground">
+              {t.wallpaperEnable}
+            </span>
+            <Switch
+              checked={enabled}
+              onChange={(v) => void setWallpaper(v, v ? selectedId : null)}
+            />
           </div>
         </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">{t.wePageDesc}</p>
       </div>
 
       {/* Not installed hint (non-blocking — still shows local imports) */}
       {installed === false && wallpapers.length === 0 && (
         <div className="flex flex-1 items-center justify-center">
           <div className="flex flex-col items-center gap-4 text-center">
-            <div className="flex size-16 items-center justify-center rounded-2xl bg-muted">
-              <HugeIcon icon={Image02Icon} className="size-7 text-muted-foreground" />
+            <div className="flex size-14 items-center justify-center rounded-[2px] bg-card2">
+              <HugeIcon icon={Image02Icon} className="size-6 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-sm font-medium">{t.weNotInstalled}</p>
+              <p className="font-display text-sm font-bold">{t.weNotInstalled}</p>
               <p className="mt-1 text-xs text-muted-foreground">{t.weNotInstalledHint}</p>
             </div>
             <button
               type="button"
               onClick={() => void importWallpaper()}
-              className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+              className="rounded-[2px] bg-primary px-3 py-1.5 text-[11px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {t.wallpaperImport}
             </button>
@@ -315,9 +429,9 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
       {/* Main content (when wallpapers exist or WE is installed) */}
       {(installed !== false || wallpapers.length > 0) && (
         <>
-          {/* Toolbar: search + type filter */}
-          <div className="flex items-center gap-3 border-b px-6 py-3">
-            <div className="relative max-w-xs flex-1">
+          {/* Toolbar: search + segmented type filter (Swiss sub-bar) */}
+          <div className="we-sub flex items-center gap-[8px] border-b border-border px-[14px] py-[10px]">
+            <div className="relative max-w-[240px] flex-1">
               <HugeIcon
                 icon={Search01Icon}
                 className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60"
@@ -326,37 +440,46 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t.weSearchPlaceholder}
-                className="h-8 w-full rounded-lg border bg-background pl-8 pr-3 text-xs outline-none transition-colors focus:border-primary/40 focus:ring-1 focus:ring-primary/20"
+                className="h-[30px] w-full rounded-[2px] border border-border bg-card2 pl-8 pr-3 font-mono text-[11px] outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20"
               />
             </div>
-            <div className="flex items-center gap-1 rounded-lg bg-muted/60 p-0.5">
-              {(['all', 'video', 'image'] as const).map((f) => (
+            <div className="we-tabs flex items-center gap-[2px] rounded-[2px] bg-[var(--bg2)] p-[2px]">
+              {(['all', 'video', 'image', 'web', 'scene'] as const).map((f) => (
                 <button
+                  type="button"
                   key={f}
                   onClick={() => setFilter(f)}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all',
+                    'flex items-center gap-1 rounded-[2px] px-[12px] py-[5px] font-medium text-[11px] transition-colors duration-fast',
                     filter === f
-                      ? 'bg-background text-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground',
+                      ? 'bg-card text-foreground font-semibold shadow-sm'
+                      : 'text-muted-foreground/70 hover:text-foreground',
                   )}
                 >
-                  {f === 'video' && <HugeIcon icon={Video01Icon} className="size-3" />}
-                  {f === 'image' && <HugeIcon icon={Image02Icon} className="size-3" />}
-                  {f === 'all' ? t.weFilterAll : f === 'video' ? t.weFilterVideo : t.weFilterImage}
+                  {f === 'video' && <HugeIcon icon={Video01Icon} className="size-2.5" />}
+                  {f === 'image' && <HugeIcon icon={Image02Icon} className="size-2.5" />}
+                  {f === 'all'
+                    ? t.weFilterAll
+                    : f === 'video'
+                      ? t.weFilterVideo
+                      : f === 'image'
+                        ? t.weFilterImage
+                        : f === 'web'
+                          ? t.weFilterWeb
+                          : t.weFilterScene}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Grid */}
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+          <div className="we-grid min-h-0 flex-1 overflow-y-auto p-[10px]">
             {filtered.length === 0 ? (
-              <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+              <div className="flex h-40 items-center justify-center font-mono text-[11px] tracking-wider text-muted-foreground/60">
                 {t.weEmpty}
               </div>
             ) : (
-              <div className={cn('grid gap-3', gridClass(filtered.length))}>
+              <div className={cn('grid gap-[8px]', gridClass(filtered.length))}>
                 {filtered.map((wp, i) => (
                   <WallpaperCard
                     key={wp.id}
@@ -364,6 +487,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     index={i}
                     selected={selected?.id === wp.id}
                     isUiBackground={enabled && selectedId === wp.id}
+                    previewOnly={wp.previewOnly}
                     onSelect={() => setSelected(wp)}
                     deletable={wp.source === 'local' && wp.id.startsWith('local:')}
                     isDeleting={deletingId === wp.id}
@@ -376,64 +500,90 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
             )}
           </div>
 
-          {/* Detail panel (bottom sheet) */}
+          {/* Detail panel (Swiss bottom panel — preview + info + actions) */}
           {selected && (
-            <div className="border-t bg-background/95 px-6 py-4 backdrop-blur-sm">
+            <div className="we-bottom flex items-center gap-[8px] border-t border-border bg-card2 px-[14px] py-[10px] flex-wrap">
               {/* Batch progress bar */}
               {batchProgress && (
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
+                <div className="mb-2 flex items-center gap-2">
+                  <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-primary transition-all duration-300"
+                      className="h-full rounded-full bg-primary transition-all duration-slow"
                       style={{ width: `${(batchProgress.done / batchProgress.total) * 100}%` }}
                     />
                   </div>
-                  <span className="text-[11px] font-medium text-muted-foreground">
+                  <span className="font-mono text-[10px] tracking-wider text-muted-foreground">
                     {t.weApplyingAll(batchProgress.done, batchProgress.total)}
                   </span>
                 </div>
               )}
               <div className="flex items-start gap-4">
-                {/* Preview thumbnail */}
-                <div className="size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
-                  {selected.previewDataUrl ? (
-                    <img src={selected.previewDataUrl} alt="" className="size-full object-cover" />
-                  ) : (
-                    <div className="flex size-full items-center justify-center">
-                      <HugeIcon
-                        icon={selected.type === 'video' ? Video01Icon : Image02Icon}
-                        className="size-6 text-muted-foreground"
-                      />
-                    </div>
-                  )}
+                {/* Preview thumbnail — Swiss sharp */}
+                <div className="size-[72px] shrink-0 overflow-hidden rounded-[2px] bg-[#000]">
+                  <WallpaperPreview
+                    key={selected.id}
+                    playback={selected.playback}
+                    mediaUrl={selectedVideo.url}
+                    previewUrl={selected.previewUrl}
+                    loading={selectedVideo.loading}
+                    className="size-full object-cover"
+                    loadingNode={
+                      <div className="flex size-full items-center justify-center">
+                        <Spinner className="size-4 text-muted-foreground/50" />
+                      </div>
+                    }
+                    emptyNode={
+                      <div className="flex size-full items-center justify-center">
+                        <HugeIcon
+                          icon={selected.type === 'video' ? Video01Icon : Image02Icon}
+                          className="size-6 text-muted-foreground"
+                        />
+                      </div>
+                    }
+                  />
                 </div>
 
-                {/* Info + actions */}
+                {/* Info + actions (Swiss) */}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="truncate text-sm font-semibold">{selected.title}</h3>
-                    <Badge variant="secondary" className="shrink-0 text-[10px]">
-                      {selected.type === 'video' ? t.weFilterVideo : t.weFilterImage}
-                    </Badge>
-                    <Badge variant="outline" className="shrink-0 text-[10px]">
-                      {selected.source === 'workshop' ? 'Workshop' : t.weFilterLocal}
-                    </Badge>
+                    <h3 className="truncate font-display text-sm font-bold">{selected.title}</h3>
+                    <span className="rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
+                      {selected.type === 'video'
+                        ? t.weFilterVideo
+                        : selected.type === 'image'
+                          ? t.weFilterImage
+                          : selected.type === 'web'
+                            ? t.weFilterWeb
+                            : t.weFilterScene}
+                    </span>
+                    <span className="rounded-[2px] border border-border px-1 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground/60">
+                      {selected.source === 'workshop' ? 'WORKSHOP' : t.weFilterLocal.toUpperCase()}
+                    </span>
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="mt-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
                     {formatSize(selected.sizeBytes)}
-                    {selected.tags.length > 0 && ` · ${selected.tags.slice(0, 3).join(', ')}`}
+                    {selected.tags.length > 0 && (
+                      <span className="opacity-60"> · {selected.tags.slice(0, 3).join(' • ')}</span>
+                    )}
                   </p>
 
+                  {/* Preview-only warning (Swiss mono) */}
+                  {selected.previewOnly && (
+                    <p className="mt-1.5 rounded-[2px] bg-cr-warning/10 px-2 py-1 font-mono text-[10px] leading-tight text-cr-warning">
+                      {t.wePreviewOnlyHint}
+                    </p>
+                  )}
+
                   {/* Actions row: set as UI background + agent apply buttons */}
-                  <div className="mt-3 flex items-center gap-3">
-                    {/* Set as AgentSkin background */}
+                  <div className="mt-2 flex items-center gap-2">
+                    {/* Set as AgentSkin background (Swiss primary) */}
                     <button
                       type="button"
-                      onClick={() => void setWallpaper(true, selected.id)}
+                      onClick={() => void setWallpaper(true, selected.id, renderDraft)}
                       className={cn(
-                        'rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-colors',
+                        'rounded-[2px] px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-colors',
                         enabled && selectedId === selected.id
-                          ? 'bg-primary/15 text-primary'
+                          ? 'bg-primary text-primary-foreground'
                           : 'bg-muted text-muted-foreground hover:bg-accent hover:text-foreground',
                       )}
                     >
@@ -446,7 +596,10 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
 
                     {/* Agent apply buttons — 5-state precision */}
                     {AGENT_IDS.map((agentId) => {
-                      const agentSetting = agentWallpapers[agentId] ?? { enabled: false, id: null };
+                      const agentSetting = agentWallpapers[agentId] ?? {
+                        enabled: false,
+                        id: null,
+                      };
                       const isApplied = agentSetting.enabled && agentSetting.id === selected.id;
                       const isApplying = applyingTo === agentId;
                       const status = appStatusFor(agentId);
@@ -454,12 +607,13 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                       const isRunning = status?.running ?? false;
                       const isReady = status?.debugReady ?? false;
                       const lastResult = injectResults[agentId];
+                      const isFail = lastResult?.status === 'fail';
                       // Determine precise state label
                       const stateLabel = isApplying
                         ? t.weStatusInjecting
                         : isApplied
                           ? t.weStatusApplied
-                          : lastResult === 'fail'
+                          : isFail
                             ? t.weStatusFailed
                             : !isInstalled
                               ? t.weStatusNotInstalled
@@ -468,28 +622,35 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                                 : isReady
                                   ? t.weStatusReady
                                   : t.weStatusRunning;
-                      // Can inject if running (ensureCdpReady will enable CDP)
-                      const canInject = isRunning && !isApplying;
+                      // Can inject if running — if CDP isn't ready, the
+                      // apply will return 'requires-restart' and the user
+                      // will be prompted for explicit restart consent.
+                      const canInject = isRunning && !isApplying && !selected.previewOnly;
+                      // Tooltip includes the failure detail (verdicts) so the
+                      // user can see WHY injection failed without opening logs.
+                      const failDetail =
+                        isFail && lastResult?.detail ? `\n${lastResult.detail}` : '';
                       return (
                         <div key={agentId} className="flex flex-col items-center gap-1">
                           <button
+                            type="button"
                             onClick={() =>
                               isApplied ? handleRemove(agentId) : handleApply(selected.id, agentId)
                             }
                             disabled={!canInject && !isApplied}
-                            title={`${AGENT_META[agentId].displayName} · ${stateLabel}${status?.port ? ` · :${status.port}` : ''}`}
+                            title={`${AGENT_META[agentId].displayName} · ${stateLabel}${status?.port ? ` · :${status.port}` : ''}${failDetail}`}
                             className={cn(
-                              'relative flex size-9 items-center justify-center rounded-xl border transition-all duration-300',
+                              'relative flex size-8 items-center justify-center rounded-[2px] border transition-all duration-slow',
                               isApplied
-                                ? 'border-emerald-400/60 bg-emerald-500/10 ring-1 ring-emerald-400/40'
-                                : lastResult === 'fail'
-                                  ? 'border-red-400/50 bg-red-500/5 ring-1 ring-red-400/30'
+                                ? 'border-cr-success/60 bg-cr-success/10'
+                                : isFail
+                                  ? 'border-destructive/50 bg-destructive/5'
                                   : isReady
-                                    ? 'border-cyan-400/50 bg-cyan-500/5 hover:border-cyan-400/70 hover:bg-cyan-500/10'
+                                    ? 'border-cr-info/50 bg-cr-info/5 hover:border-cr-info/70 hover:bg-cr-info/10'
                                     : isRunning
-                                      ? 'border-blue-400/40 bg-blue-500/5 hover:border-blue-400/60 hover:bg-blue-500/10'
+                                      ? 'border-border bg-muted/30 hover:bg-muted'
                                       : isInstalled
-                                        ? 'border-amber-400/30 bg-amber-500/5 opacity-60'
+                                        ? 'border-cr-warning/30 bg-cr-warning/5 opacity-60'
                                         : 'border-border/40 bg-muted/20 opacity-35 cursor-not-allowed',
                               isApplying && 'opacity-60 scale-95',
                             )}
@@ -499,7 +660,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                             ) : isApplied ? (
                               <HugeIcon
                                 icon={CheckmarkCircle02Icon}
-                                className="size-4.5 text-emerald-500"
+                                className="size-4.5 text-cr-success"
                               />
                             ) : (
                               <AppMark appId={agentId} size={18} />
@@ -508,40 +669,40 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                             {!isApplying && (
                               <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
                                 {/* Ping animation only for CDP-ready (not yet applied) */}
-                                {isReady && !isApplied && lastResult !== 'fail' && (
+                                {isReady && !isApplied && !isFail && (
                                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-cyan-400 opacity-60" />
                                 )}
                                 <span
                                   className={cn(
-                                    'relative inline-flex size-2.5 rounded-full ring-2 ring-background transition-colors duration-500',
+                                    'relative inline-flex size-2.5 rounded-full ring-2 ring-background transition-colors duration-slower',
                                     isApplied
-                                      ? 'bg-emerald-500'
-                                      : lastResult === 'fail'
-                                        ? 'bg-red-500'
+                                      ? 'bg-cr-success'
+                                      : isFail
+                                        ? 'bg-destructive'
                                         : isReady
                                           ? 'bg-cyan-400'
                                           : isRunning
-                                            ? 'bg-blue-400'
+                                            ? 'bg-cr-info'
                                             : isInstalled
-                                              ? 'bg-amber-400/70'
+                                              ? 'bg-cr-warning/70'
                                               : 'bg-transparent',
                                   )}
                                 />
                               </span>
                             )}
                           </button>
-                          {/* Precise state label */}
+                          {/* Precise state label (Swiss mono) */}
                           <span
                             className={cn(
-                              'max-w-[3.5rem] truncate text-center text-[9px] leading-tight transition-colors duration-500',
+                              'max-w-[3.5rem] truncate text-center font-mono text-[8px] tracking-wider leading-tight transition-colors duration-slower',
                               isApplied
-                                ? 'text-emerald-600 dark:text-emerald-400'
-                                : lastResult === 'fail'
-                                  ? 'text-red-500'
+                                ? 'text-cr-success'
+                                : isFail
+                                  ? 'text-destructive'
                                   : isReady
-                                    ? 'text-cyan-600 dark:text-cyan-400'
+                                    ? 'text-cr-info'
                                     : isRunning
-                                      ? 'text-blue-500 dark:text-blue-400'
+                                      ? 'text-muted-foreground'
                                       : 'text-muted-foreground/60',
                             )}
                           >
@@ -555,16 +716,23 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     <button
                       type="button"
                       onClick={() => void handleApplyAll(selected.id)}
-                      disabled={!!batchProgress || !!applyingTo || runningAgentCount === 0}
+                      disabled={
+                        !!batchProgress ||
+                        !!applyingTo ||
+                        runningAgentCount === 0 ||
+                        selected.previewOnly
+                      }
                       title={
-                        runningAgentCount > 0
-                          ? t.weRunningAgents(runningAgentCount)
-                          : t.weNoRunningAgents
+                        selected.previewOnly
+                          ? t.wePreviewOnlyHint
+                          : runningAgentCount > 0
+                            ? t.weRunningAgents(runningAgentCount)
+                            : t.weNoRunningAgents
                       }
                       className={cn(
-                        'flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-colors',
-                        batchProgress || applyingTo
-                          ? 'border-muted bg-muted text-muted-foreground opacity-60'
+                        'flex items-center gap-1.5 rounded-[2px] border border-border px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-colors',
+                        batchProgress || applyingTo || selected.previewOnly
+                          ? 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-60'
                           : runningAgentCount > 0
                             ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
                             : 'border-border/50 bg-muted/20 text-muted-foreground opacity-40 cursor-not-allowed',
@@ -576,8 +744,8 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     </button>
                   </div>
 
-                  {/* Running agents hint (live) */}
-                  <p className="mt-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                  {/* Running agents hint (live, Swiss mono) */}
+                  <p className="mt-2 flex items-center gap-1.5 font-mono text-[10px] tracking-wider text-muted-foreground">
                     <AgentStatusDot
                       size="xs"
                       variant={
@@ -592,25 +760,34 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                       ? t.weRunningAgents(runningAgentCount)
                       : t.weNoRunningAgents}
                     {readyAgentCount > 0 && readyAgentCount < runningAgentCount && (
-                      <span className="text-cyan-500 dark:text-cyan-400">
+                      <span className="text-cr-info">
                         {`(${readyAgentCount} ${t.weStatusReady})`}
                       </span>
                     )}
-                    <span className="mx-1">·</span>
+                    <span className="mx-1 opacity-40">·</span>
                     {relativeTime}
                   </p>
                 </div>
 
-                {/* Close */}
-                <Button
-                  variant="ghost"
-                  size="sm"
+                {/* Close (Swiss) */}
+                <button
+                  type="button"
                   onClick={() => setSelected(null)}
-                  className="shrink-0 text-xs"
+                  aria-label={t.close}
+                  className="flex size-6 shrink-0 items-center justify-center rounded-[2px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
-                  {t.weClose}
-                </Button>
+                  ✕
+                </button>
               </div>
+
+              {/* 渲染设置面板 — 对齐 Wallpaper Engine 渲染面板：主题配色/速度/
+                  对齐/位置/翻转/视差/图片筛选器/音频。编辑后随「设为 UI 背景」
+                  或「应用到 agent」一起持久化。 */}
+              <RenderSettingsPanel
+                value={renderDraft}
+                onChange={setRenderDraft}
+                playback={selected.playback}
+              />
             </div>
           )}
         </>
@@ -619,13 +796,318 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
   );
 }
 
-// --- Sub-components ---
+// --- WallpaperCard sub-component ---
+
+/** 渲染设置面板（对齐 WE 渲染面板）。`value` 是编辑中的草稿（undefined =
+ *  未自定义，用全局/主题默认）；`onChange` 更新草稿。滑块编辑即时更新草稿，
+ *  持久化发生在点「设为 UI 背景」/「应用到 agent」时。 */
+function RenderSettingsPanel({
+  value,
+  onChange,
+  playback,
+}: {
+  value: WallpaperRenderOptions | undefined;
+  onChange: (v: WallpaperRenderOptions | undefined) => void;
+  playback: WallpaperInfo['playback'];
+}) {
+  const r = value ?? {};
+  // 局部 setter：更新单个字段；全部字段都回默认时重置为 undefined。
+  const set = (patch: Partial<WallpaperRenderOptions>) => {
+    const next = { ...r, ...patch };
+    const isEmpty =
+      next.speed === undefined &&
+      next.loop === undefined &&
+      next.alignment === undefined &&
+      next.positionX === undefined &&
+      next.positionY === undefined &&
+      next.flipH === undefined &&
+      next.flipV === undefined &&
+      next.parallax === undefined &&
+      next.brightness === undefined &&
+      next.contrast === undefined &&
+      next.saturation === undefined &&
+      next.hueRotate === undefined &&
+      next.sepia === undefined &&
+      next.grayscale === undefined &&
+      next.blur === undefined &&
+      next.tint === undefined &&
+      next.audioLevel === undefined;
+    onChange(isEmpty ? undefined : next);
+  };
+  const isVideo = playback === 'video';
+  /** Swiss property row: 76px mono label + flex-1 range + 42px value (matches A.html .we-prow). */
+  const slider = (
+    label: string,
+    key: keyof WallpaperRenderOptions,
+    min: number,
+    max: number,
+    step = 1,
+    display?: string,
+  ) => (
+    <div className="we-prow flex items-center gap-[9px]">
+      <span className="w-[76px] shrink-0 font-mono text-[10px] tracking-wider text-muted-foreground">
+        {label}
+      </span>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={typeof r[key] === 'number' ? (r[key] as number) : min}
+        onChange={(e) => set({ [key]: Number(e.target.value) } as Partial<WallpaperRenderOptions>)}
+        className="we-range h-[3px] flex-1 cursor-pointer appearance-none rounded-full bg-[var(--border2)] [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:ring-2 [&::-webkit-slider-thumb]:ring-card [&::-webkit-slider-thumb]:shadow-sm"
+      />
+      <span className="w-[42px] text-right font-mono text-[10px] font-bold tabular-nums text-foreground">
+        {display ?? (typeof r[key] === 'number' ? String(r[key]) : '默认')}
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="mt-[8px] grid grid-cols-2 gap-x-[9px] gap-y-[6px] rounded-[2px] border border-border bg-card2/80 p-[10px_14px_4px]">
+      <div className="col-span-2 flex items-center gap-2">
+        <span className="font-mono text-[10px] font-semibold tracking-[.14em] text-muted-foreground uppercase">
+          RENDER_SETTINGS
+        </span>
+        <span className="h-px flex-1 bg-border" />
+        <button
+          type="button"
+          onClick={() => onChange(undefined)}
+          className="font-mono text-[9px] tracking-[.08em] text-muted-foreground/60 hover:text-primary"
+        >
+          RESET
+        </button>
+      </div>
+
+      {/* 主题配色 tint (Swiss row) */}
+      <div className="we-prow flex items-center gap-[9px]">
+        <span className="w-[76px] shrink-0 font-mono text-[10px] tracking-wider text-muted-foreground">
+          THEME_TINT
+        </span>
+        <input
+          type="color"
+          value={r.tint ?? '#c41e2a'}
+          onChange={(e) => set({ tint: e.target.value })}
+          className="h-[26px] w-[30px] cursor-pointer rounded-[2px] border border-[var(--border2)] bg-card2 p-[2px]"
+        />
+        <span className="w-[42px] text-right font-mono text-[10px] font-bold text-foreground">
+          {r.tint ? r.tint.toUpperCase() : '默认'}
+        </span>
+      </div>
+
+      {/* 对齐方式 (Swiss select) */}
+      <div className="we-prow flex items-center gap-[9px]">
+        <span className="w-[76px] shrink-0 font-mono text-[10px] tracking-wider text-muted-foreground">
+          ALIGNMENT
+        </span>
+        <select
+          value={r.alignment ?? 'fill'}
+          onChange={(e) =>
+            set({ alignment: e.target.value as WallpaperRenderOptions['alignment'] })
+          }
+          className="h-[26px] flex-1 rounded-[2px] border border-border bg-card2 px-1.5 py-0.5 font-mono text-[10px] tracking-wider"
+        >
+          {WALLPAPER_ALIGNMENTS.map((a) => (
+            <option key={a} value={a}>
+              {a}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* 播放速度（仅视频） */}
+      {isVideo &&
+        slider('播放速度', 'speed', 25, 200, 5, r.speed !== undefined ? `${r.speed}x` : undefined)}
+      {/* 循环（仅视频, Swiss inline) */}
+      {isVideo && (
+        <div className="we-prow flex items-center gap-[9px]">
+          <span className="w-[76px] shrink-0 font-mono text-[10px] tracking-wider text-muted-foreground">
+            LOOP
+          </span>
+          <Switch checked={r.loop ?? true} onChange={(v) => set({ loop: v })} />
+        </div>
+      )}
+
+      {slider(
+        '位置 X',
+        'positionX',
+        -100,
+        100,
+        1,
+        r.positionX !== undefined ? `${r.positionX}%` : undefined,
+      )}
+      {slider(
+        '位置 Y',
+        'positionY',
+        -100,
+        100,
+        1,
+        r.positionY !== undefined ? `${r.positionY}%` : undefined,
+      )}
+      {slider(
+        '视差',
+        'parallax',
+        0,
+        100,
+        5,
+        r.parallax !== undefined ? `${r.parallax}` : undefined,
+      )}
+      {slider(
+        '音频响应',
+        'audioLevel',
+        0,
+        100,
+        5,
+        r.audioLevel !== undefined ? `${r.audioLevel}` : undefined,
+      )}
+
+      {/* 翻转 (Swiss switches) */}
+      <div className="we-prow flex items-center gap-[9px]">
+        <span className="w-[76px] shrink-0 font-mono text-[10px] tracking-wider text-muted-foreground">
+          FLIP
+        </span>
+        <span className="flex flex-1 items-center gap-[6px]">
+          <button
+            type="button"
+            onClick={() => set({ flipH: !r.flipH })}
+            className={cn(
+              'h-[24px] flex-1 rounded-[2px] border border-[var(--border2)] bg-card2 font-mono text-[9.5px] font-semibold tracking-wider transition-colors',
+              r.flipH ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground',
+            )}
+          >
+            H ↕
+          </button>
+          <button
+            type="button"
+            onClick={() => set({ flipV: !r.flipV })}
+            className={cn(
+              'h-[24px] flex-1 rounded-[2px] border border-[var(--border2)] bg-card2 font-mono text-[9.5px] font-semibold tracking-wider transition-colors',
+              r.flipV ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground',
+            )}
+          >
+            V ↔
+          </button>
+        </span>
+      </div>
+
+      {/* 图片筛选器 (Swiss section header) */}
+      <div className="col-span-2 mt-[6px] grid grid-cols-2 gap-x-[9px] gap-y-[9px]">
+        <span className="col-span-2 flex items-center gap-2">
+          <span className="font-mono text-[10px] font-semibold tracking-[.14em] text-muted-foreground uppercase">
+            IMAGE_FILTERS
+          </span>
+          <span className="h-px flex-1 bg-border" />
+        </span>
+        {slider(
+          '亮度',
+          'brightness',
+          0,
+          200,
+          5,
+          r.brightness !== undefined ? `${r.brightness}` : undefined,
+        )}
+        {slider(
+          '对比度',
+          'contrast',
+          0,
+          200,
+          5,
+          r.contrast !== undefined ? `${r.contrast}` : undefined,
+        )}
+        {slider(
+          '饱和度',
+          'saturation',
+          0,
+          200,
+          5,
+          r.saturation !== undefined ? `${r.saturation}` : undefined,
+        )}
+        {slider(
+          '色相',
+          'hueRotate',
+          -180,
+          180,
+          5,
+          r.hueRotate !== undefined ? `${r.hueRotate}°` : undefined,
+        )}
+        {slider('模糊', 'blur', 0, 50, 1, r.blur !== undefined ? `${r.blur}px` : undefined)}
+        {slider(
+          '灰度',
+          'grayscale',
+          0,
+          100,
+          5,
+          r.grayscale !== undefined ? `${r.grayscale}` : undefined,
+        )}
+        {slider('棕褐', 'sepia', 0, 100, 5, r.sepia !== undefined ? `${r.sepia}` : undefined)}
+      </div>
+    </div>
+  );
+}
+
+/** Renders a wallpaper preview according to its `playback` kind:
+ *  - `video` — plays via `<video>`, falling back to the still preview image
+ *    when the clip can't be decoded (e.g. an HEVC mp4 Chromium rejects).
+ *  - `gif` — renders the media as an `<img>`, which browsers animate natively
+ *    (a `<video>` element cannot play GIFs).
+ *  - `image` — shows the still preview (static images).
+ *  - `web` / `scene` — shows the still preview image (the workshop
+ *    preview.jpg/png). The actual animated content is rendered on demand
+ *    via an iframe (web) or canvas (scene) when applied to an agent — the
+ *    grid card only shows a static thumbnail.
+ *  When neither media nor a preview is available it shows `loadingNode` while
+ *  the media URL resolves, then `emptyNode`. Key the element by wallpaper id at
+ *  the call site so the failed state resets when the selection changes. */
+function WallpaperPreview({
+  playback,
+  mediaUrl,
+  previewUrl,
+  className,
+  loading,
+  loadingNode,
+  emptyNode,
+}: {
+  playback: 'video' | 'gif' | 'image' | 'web' | 'scene';
+  mediaUrl: string | null;
+  previewUrl: string | null;
+  className: string;
+  loading: boolean;
+  loadingNode?: ReactNode;
+  emptyNode?: ReactNode;
+}) {
+  const [failed, setFailed] = useState(false);
+  const onError = () => setFailed(true);
+  if (playback === 'video' && mediaUrl && !failed) {
+    return (
+      <video
+        src={mediaUrl}
+        muted
+        loop
+        autoPlay
+        playsInline
+        disablePictureInPicture
+        onError={onError}
+        className={className}
+      />
+    );
+  }
+  if (playback === 'gif' && mediaUrl && !failed) {
+    return <img src={mediaUrl} alt="" onError={onError} className={className} />;
+  }
+  // image / web / scene: show the still preview image.
+  if (previewUrl) {
+    return <img src={previewUrl} alt="" loading="lazy" className={className} />;
+  }
+  if (loading) return <>{loadingNode}</>;
+  return <>{emptyNode}</>;
+}
 
 function WallpaperCard({
   wallpaper,
   index,
   selected,
   isUiBackground,
+  previewOnly,
   deletable,
   isDeleting,
   onSelect,
@@ -637,6 +1119,7 @@ function WallpaperCard({
   index: number;
   selected: boolean;
   isUiBackground: boolean;
+  previewOnly: boolean;
   deletable: boolean;
   isDeleting: boolean;
   onSelect: () => void;
@@ -645,78 +1128,125 @@ function WallpaperCard({
   confirmLabel: string;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const wantsMedia = wallpaper.playback === 'video' || wallpaper.playback === 'gif';
+  // Lazy-load the streaming URL only when the card is (about to be) visible.
+  // Previously every grid card resolved its loopback video URL + registered a
+  // media-server token at once — a 45-wallpaper library fired 45 IPC calls and
+  // minted 45 server entries on first paint, stalling the main process. The
+  // IntersectionObserver gates resolution to the visible viewport (+0.15x
+  // overscan), so scrolling populates cards on demand instead of all at once.
+  const [inView, setInView] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const node = cardRef.current;
+    if (!node || !wantsMedia) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setInView(true);
+          obs.disconnect();
+        }
+      },
+      { rootMargin: '15% 0px', threshold: 0 },
+    );
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, [wantsMedia]);
+  const { url: mediaUrl, loading: mediaLoading } = useWallpaperVideoUrl(
+    wantsMedia && inView ? wallpaper.id : null,
+  );
   return (
     <div
+      ref={cardRef}
       style={{ animationDelay: `${Math.min(index * 40, 320)}ms` }}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-xl border text-left transition-all duration-200 animate-card-enter',
-        'hover:-translate-y-0.5 hover:shadow-md',
-        selected
-          ? 'border-primary/50 shadow-sm ring-1 ring-primary/30'
-          : 'border-border hover:border-primary/30',
+        'group relative flex flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-all duration-base animate-card-enter',
+        'hover:border-primary/40 hover:shadow-sm',
+        selected && 'border-primary/60 shadow-sm',
       )}
     >
-      <button onClick={onSelect} className="flex flex-1 flex-col">
+      <button type="button" onClick={onSelect} className="flex flex-1 flex-col">
         {/* Preview */}
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
-          {wallpaper.previewDataUrl ? (
-            <img
-              src={wallpaper.previewDataUrl}
-              alt=""
-              loading="lazy"
-              className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center">
-              <HugeIcon
-                icon={wallpaper.type === 'video' ? Video01Icon : Image02Icon}
-                className="size-8 text-muted-foreground/40"
-              />
-            </div>
-          )}
-          {/* Type badge */}
+          <WallpaperPreview
+            playback={wallpaper.playback}
+            mediaUrl={mediaUrl}
+            previewUrl={wallpaper.previewUrl}
+            loading={mediaLoading}
+            className="size-full object-cover transition-transform duration-slow group-hover:scale-[1.03]"
+            loadingNode={
+              <div className="flex size-full items-center justify-center">
+                <Spinner className="size-5 text-muted-foreground/50" />
+              </div>
+            }
+            emptyNode={
+              <div className="flex size-full items-center justify-center">
+                <HugeIcon
+                  icon={wallpaper.type === 'video' ? Video01Icon : Image02Icon}
+                  className="size-8 text-muted-foreground/40"
+                />
+              </div>
+            }
+          />
+          {/* Type badge (Swiss mono) */}
           <span
             className={cn(
-              'absolute bottom-1.5 right-1.5 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-medium backdrop-blur-sm',
+              'absolute bottom-1 right-1 flex items-center gap-0.5 rounded-[2px] px-1 py-0.5 font-mono text-[9px] tracking-wider',
               wallpaper.type === 'video'
-                ? 'bg-violet-500/80 text-white'
-                : 'bg-sky-500/80 text-white',
+                ? 'bg-primary/85 text-white'
+                : wallpaper.type === 'image'
+                  ? 'bg-cr-info/85 text-white'
+                  : wallpaper.type === 'web'
+                    ? 'bg-success/85 text-white'
+                    : 'bg-cr-warning/85 text-white',
             )}
           >
             <HugeIcon
               icon={wallpaper.type === 'video' ? Video01Icon : Image02Icon}
-              className="size-2.5"
+              className="size-2"
             />
-            {wallpaper.type === 'video' ? '动态' : '静态'}
+            {wallpaper.type === 'video'
+              ? 'VID'
+              : wallpaper.type === 'image'
+                ? 'IMG'
+                : wallpaper.type === 'web'
+                  ? 'WEB'
+                  : 'SCN'}
           </span>
-          {/* UI background indicator */}
+          {/* UI background indicator (Swiss) */}
           {isUiBackground && (
-            <span className="absolute left-1.5 top-1.5 rounded-md bg-primary/90 px-1.5 py-0.5 text-[9px] font-medium text-primary-foreground">
+            <span className="absolute left-1 top-1 rounded-[2px] bg-primary px-1 py-0.5 font-mono text-[8px] tracking-wider text-primary-foreground">
               UI
             </span>
           )}
-          {/* Source badge for local imports */}
+          {/* Preview-only badge (Swiss warning) */}
+          {previewOnly && !isUiBackground && (
+            <span className="absolute left-1 top-1 rounded-[2px] bg-cr-warning px-1 py-0.5 font-mono text-[8px] tracking-wider text-white">
+              PREVIEW
+            </span>
+          )}
+          {/* Source badge for local imports (Swiss) */}
           {wallpaper.source === 'local' && (
-            <span className="absolute right-1.5 top-1.5 rounded-md bg-amber-500/80 px-1.5 py-0.5 text-[9px] font-medium text-white backdrop-blur-sm">
-              本地
+            <span className="absolute right-1 top-1 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[8px] tracking-wider text-muted-foreground">
+              LOCAL
             </span>
           )}
         </div>
 
-        {/* Title */}
-        <div className="px-3 py-2">
-          <p className="truncate text-xs font-medium">{wallpaper.title}</p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
+        {/* Title (Swiss mono info) */}
+        <div className="px-2 py-1.5">
+          <p className="truncate font-display text-[11px] font-bold">{wallpaper.title}</p>
+          <p className="mt-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
             {formatSize(wallpaper.sizeBytes)}
           </p>
         </div>
       </button>
 
-      {/* Delete button for local wallpapers */}
+      {/* Delete button for local wallpapers (Swiss) */}
       {deletable && (
-        <div className="absolute left-1.5 bottom-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+        <div className="absolute left-1 bottom-1 opacity-0 transition-opacity duration-fast group-hover:opacity-100">
           {confirming ? (
-            <div className="flex items-center gap-1 rounded-lg bg-background/95 px-1 py-0.5 shadow-md backdrop-blur">
+            <div className="flex items-center gap-0.5 rounded-[2px] bg-card px-1 py-0.5 shadow-md">
               <button
                 type="button"
                 onClick={(e) => {
@@ -725,7 +1255,7 @@ function WallpaperCard({
                   setConfirming(false);
                 }}
                 disabled={isDeleting}
-                className="rounded px-1.5 py-0.5 text-[10px] font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50"
+                className="rounded-[2px] px-1 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-destructive hover:bg-destructive/10 disabled:opacity-50"
               >
                 {isDeleting ? '…' : confirmLabel}
               </button>
@@ -735,7 +1265,7 @@ function WallpaperCard({
                   e.stopPropagation();
                   setConfirming(false);
                 }}
-                className="rounded px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-muted"
+                className="rounded-[2px] px-1 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground hover:bg-muted"
               >
                 ✕
               </button>
@@ -747,7 +1277,7 @@ function WallpaperCard({
                 e.stopPropagation();
                 setConfirming(true);
               }}
-              className="rounded-lg bg-background/95 px-2 py-1 text-[10px] font-medium text-muted-foreground shadow-md backdrop-blur transition-colors hover:bg-red-500/10 hover:text-red-600"
+              className="rounded-[2px] bg-card px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
               {deleteLabel}
             </button>
@@ -761,6 +1291,11 @@ function WallpaperCard({
 // --- Helpers ---
 
 function gridClass(count: number): string {
+  // P3-1: count === 4 used to fall back to a 2-column layout (same as count===2)
+  // which broke any 4-card comparison grid (e.g. two light + two dark variants).
+  // 4 cards fit cleanly into a 2x2 grid — same width envelope as the 2-card
+  // case, so keep the max-w-lg cap but use the correct column count that
+  // yields 2 rows instead of 1 over-stretched row.
   if (count <= 1) return 'grid-cols-1 max-w-sm';
   if (count === 2) return 'grid-cols-2 max-w-lg';
   if (count === 3) return 'grid-cols-3';

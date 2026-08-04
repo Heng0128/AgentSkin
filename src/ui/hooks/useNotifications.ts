@@ -1,6 +1,6 @@
 /** Owns toast notification state and the shared showToast/fail utilities. */
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toMessage } from '@shared/errors';
 import type { UiMessages } from '@shared/i18n';
@@ -39,6 +39,13 @@ function friendlyMessage(raw: string, t: UiMessages): string {
 export function useNotifications(t: UiMessages) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastTimerRef = useRef<Map<number, number>>(new Map());
+  // Keep the latest messages for stable fail(): fail is consumed by one-time
+  // effects (useBoot, event listeners) whose dep arrays must not churn when
+  // the locale changes — otherwise the whole boot sequence re-runs.
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
 
   const clearTimer = useCallback((id: number) => {
     const timer = toastTimerRef.current.get(id);
@@ -64,11 +71,25 @@ export function useNotifications(t: UiMessages) {
 
   const fail = useCallback(
     (error: unknown) => {
-      const message = friendlyMessage(toMessage(error), t);
-      showToast(message || t.actionFailed, 'destructive');
+      const current = tRef.current;
+      const message = friendlyMessage(toMessage(error), current);
+      showToast(message || current.actionFailed, 'destructive');
     },
-    [showToast, t.actionFailed],
+    [showToast],
   );
+
+  // P2-15: Clear all pending toast timers on unmount. Without this, the
+  // setTimeout callbacks fire after the component tree is torn down and
+  // trigger React's "Can't perform a React state update on an unmounted
+  // component" warning in StrictMode / HMR reloads.
+  useEffect(() => {
+    return () => {
+      for (const [id, timer] of toastTimerRef.current.entries()) {
+        window.clearTimeout(timer);
+        toastTimerRef.current.delete(id);
+      }
+    };
+  }, []);
 
   return { toasts, showToast, fail };
 }

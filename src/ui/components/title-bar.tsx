@@ -11,35 +11,48 @@ import { cn } from '@/lib/utils';
 import {
   Cancel01Icon,
   ComputerIcon,
-  Copy01Icon,
   Maximize02Icon,
   Minimize01Icon,
   Moon02Icon,
-  Refresh01Icon,
   Sun03Icon,
-  Upload04Icon,
 } from '@hugeicons/core-free-icons';
 
 /**
- * # TitleBar
+ * # TitleBar — Swiss Edition
  *
  * Custom frameless title bar rendered at the top of the window. Replaces the
  * native Windows title bar (macOS keeps its traffic-light buttons via
  * `hiddenInset` and this bar only draws the functional buttons on the right,
  * leaving the left margin free for the native buttons).
  *
+ * Swiss design specs:
+ *   - Height: 38px sharp, no rounded corners
+ *   - Background: var(--surface) default; glass effect when wallpaper active
+ *   - Brand: "AgentSkin" + version in Space Grotesk bold 13px
+ *   - Icon buttons: 27×27px, transparent by default, hover → card2 + border
+ *   - Close button: red background + white text on hover
+ *   - Transition: background 0.4s; icon buttons 0.15s with scale(1.05) hover
+ *
  * Layout (left → right):
  *   - drag region (the whole bar is draggable except interactive controls)
- *   - app name / current route label
+ *   - app brand + version
  *   - spacer
- *   - quick actions: import theme · restore all · refresh status · theme mode
+ *   - quick actions: import theme · restore all · refresh status
+ *   - theme mode control (2-or-3 way segmented)
  *   - divider (Windows only)
  *   - window controls (Windows only): minimize · maximize/restore · close
  *
  * macOS skips the window controls and the divider; the native buttons sit in
  * the drag region's left padding.
  */
-export function TitleBar({ controller }: { controller: AppController }) {
+export function TitleBar({
+  controller,
+  hasWallpaper = false,
+}: {
+  controller: AppController;
+  /** When an active wallpaper is rendering, the bar switches to glass mode. */
+  hasWallpaper?: boolean;
+}) {
   const { t, status, route } = controller;
   const isMac = status?.platform === 'darwin';
   const { mode, setMode } = useThemeMode();
@@ -51,18 +64,18 @@ export function TitleBar({ controller }: { controller: AppController }) {
     return off;
   }, []);
 
-  // Restore every app that currently has an active theme.
-  // Delegates to controller.restoreAll (shared with WorkspacePage).
-  const restoreAll = () => controller.restoreAll();
-
   const routeLabel =
     route === 'workspace'
       ? t.navWorkspace
       : route === 'themes'
         ? t.navThemes
-        : route === 'settings'
-          ? t.navSettings
-          : 'AgentSkin';
+        : route === 'studio'
+          ? t.navStudio
+          : route === 'wallpaper'
+            ? t.navWallpaperEngine
+            : route === 'settings'
+              ? t.navSettings
+              : 'AgentSkin';
 
   const themeModes: Array<{ value: ThemeMode; icon: typeof Sun03Icon; label: string }> = [
     { value: 'dark', icon: Moon02Icon, label: t.themeDark },
@@ -70,70 +83,40 @@ export function TitleBar({ controller }: { controller: AppController }) {
     { value: 'system', icon: ComputerIcon, label: t.themeSystem },
   ];
 
-  const quickActions: Array<{
-    icon: typeof Refresh01Icon;
-    label: string;
-    onClick: () => void;
-    disabled?: boolean;
-  }> = [
-    {
-      icon: Upload04Icon,
-      label: t.titlebarImport,
-      onClick: () => void controller.importTheme(),
-    },
-    {
-      icon: Copy01Icon,
-      label: t.titlebarRestoreAll,
-      onClick: () => void restoreAll(),
-      disabled: !status?.apps.some((app) => app.activeThemeId),
-    },
-    {
-      icon: Refresh01Icon,
-      label: t.titlebarRefresh,
-      onClick: () => void controller.refreshStatus(),
-    },
-  ];
+  // Swiss-style icon button class — transparent by default, reveals bg + border on hover.
+  const swissBtn =
+    'flex h-[27px] w-[27px] items-center justify-center rounded-[2px] border border-transparent text-muted-foreground transition-all duration-150 hover:scale-[1.05] hover:border-border hover:bg-card2 hover:text-foreground active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent disabled:hover:scale-100';
 
   return (
-    <div
+    <header
       className={cn(
-        'relative flex h-9 shrink-0 items-center justify-between gap-2 border-b bg-background/80 px-2 backdrop-blur-xl',
+        'relative flex h-[38px] shrink-0 items-center justify-between gap-2 px-2 transition-[background] duration-400',
+        'border-b border-border',
+        // Surface solid default; glass switch when wallpaper active.
+        hasWallpaper
+          ? 'bg-[var(--glass)] backdrop-blur-[20px] backdrop-saturate-[1.2]'
+          : 'bg-[var(--surface)]',
         // The whole bar is a drag region; interactive elements opt out below.
         '[-webkit-app-region:drag]',
         isMac ? 'pl-20' : 'pl-2',
       )}
     >
-      {/* Left: current route label (non-draggable only on click targets). */}
-      <div className="pointer-events-none flex items-center gap-2 text-xs font-medium text-muted-foreground">
-        <span className="text-foreground/80">AgentSkin</span>
-        <span className="text-muted-foreground/40">/</span>
-        <span>{routeLabel}</span>
+      {/* Left: brand + version — Space Grotesk bold 13px. */}
+      <div className="pointer-events-none flex items-center gap-1.5">
+        <span className="font-display text-[13px] font-bold tracking-tight text-foreground">
+          AgentSkin
+        </span>
+        <span className="font-mono text-[10px] text-muted-foreground/60">{routeLabel}</span>
       </div>
 
-      {/* Right cluster: quick actions + theme mode + window controls.
+      {/* Spacer — pushes everything after it to the far right. */}
+      <div className="flex-1" />
+
+      {/* Right cluster: theme mode + window controls.
           Each interactive element sets `no-drag` so clicks don't move the window. */}
       <div className="flex items-center gap-0.5 [-webkit-app-region:no-drag]">
-        {/* Quick actions */}
-        {quickActions.map((action) => (
-          <button
-            key={action.label}
-            type="button"
-            title={action.label}
-            aria-label={action.label}
-            disabled={action.disabled}
-            onClick={action.onClick}
-            className={cn(
-              'flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors',
-              'hover:bg-muted hover:text-foreground',
-              'disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
-            )}
-          >
-            <HugeIcon icon={action.icon} className="size-4" />
-          </button>
-        ))}
-
-        {/* Theme mode segmented control */}
-        <div className="ml-1 mr-0.5 inline-flex items-center gap-0.5 rounded-[11px] bg-black/[0.05] p-0.5 dark:bg-white/[0.06]">
+        {/* Theme mode segmented control — Swiss flat style. */}
+        <div className="ml-1 mr-0.5 inline-flex items-center gap-0.5 rounded-[2px] border border-border bg-[var(--bg2)] p-0.5">
           {themeModes.map((opt) => (
             <button
               key={opt.value}
@@ -143,13 +126,11 @@ export function TitleBar({ controller }: { controller: AppController }) {
               aria-pressed={mode === opt.value}
               onClick={() => setMode(opt.value)}
               className={cn(
-                'flex size-6 items-center justify-center rounded-lg transition-all duration-200 ease-out',
-                mode === opt.value
-                  ? 'bg-card text-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground',
+                'flex h-6 w-6 items-center justify-center rounded-[1px] text-muted-foreground transition-all duration-150',
+                mode === opt.value ? 'bg-card text-foreground shadow-xs' : 'hover:text-foreground',
               )}
             >
-              <HugeIcon icon={opt.icon} className="size-3.5" />
+              <HugeIcon icon={opt.icon} className="size-3" />
             </button>
           ))}
         </div>
@@ -157,37 +138,40 @@ export function TitleBar({ controller }: { controller: AppController }) {
         {/* Window controls — Windows/Linux only. macOS uses native traffic lights. */}
         {!isMac && (
           <>
-            <div className="mx-1 h-4 w-px bg-border" />
+            <div className="mx-1.5 h-4 w-px bg-border" />
             <button
               type="button"
               title={t.titlebarMinimize}
               aria-label={t.titlebarMinimize}
               onClick={() => api.windowMinimize()}
-              className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className={swissBtn}
             >
-              <HugeIcon icon={Minimize01Icon} className="size-4" />
+              <HugeIcon icon={Minimize01Icon} className="size-3.5" />
             </button>
             <button
               type="button"
               title={maximized ? t.titlebarRestore : t.titlebarMaximize}
               aria-label={maximized ? t.titlebarRestore : t.titlebarMaximize}
               onClick={() => void api.windowToggleMaximize()}
-              className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className={swissBtn}
             >
-              <HugeIcon icon={Maximize02Icon} className="size-3.5" />
+              <HugeIcon icon={Maximize02Icon} className="size-3" />
             </button>
             <button
               type="button"
               title={t.titlebarClose}
               aria-label={t.titlebarClose}
               onClick={() => api.windowClose()}
-              className="flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-destructive hover:text-destructive-foreground"
+              className={cn(
+                swissBtn,
+                'hover:bg-[var(--brand-red)] hover:text-white hover:border-[var(--brand-red)]',
+              )}
             >
-              <HugeIcon icon={Cancel01Icon} className="size-4" />
+              <HugeIcon icon={Cancel01Icon} className="size-3.5" />
             </button>
           </>
         )}
       </div>
-    </div>
+    </header>
   );
 }

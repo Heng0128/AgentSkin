@@ -12,7 +12,7 @@
  * boot lifecycle is testable in isolation.
  */
 
-import { type Dispatch, type SetStateAction, useEffect } from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
 
 import type { AppLocale } from '@shared/i18n';
@@ -28,6 +28,10 @@ interface UseBootDeps {
 
 export function useBoot(deps: UseBootDeps): void {
   const { fail, setLocaleState, setAppVersion, setBooting, setLogs, refreshStatus } = deps;
+  // P1 audit #12: in-flight guard for the 3s status poll. Lives outside the
+  // effect so it survives effect re-runs (and so we don't call useRef inside
+  // the effect, which would violate the rules of hooks).
+  const isPollingRef = useRef(false);
 
   useEffect(() => {
     let disposed = false;
@@ -53,8 +57,19 @@ export function useBoot(deps: UseBootDeps): void {
     const offLog = api.onRuntimeLog((line) => {
       setLogs((cur) => [
         ...cur.slice(-399),
-        `[${new Date().toLocaleTimeString('zh-CN', { hour12: false })}] [Renderer] [INFO] ${line}`,
+        `[${new Date().toLocaleTimeString(undefined, { hour12: false })}] [Renderer] [INFO] ${line}`,
       ]);
+    });
+    // Push-based status refresh: the main process emits STATUS_CHANGED after
+    // apply/restore/delete/tray operations, so the UI refreshes immediately
+    // instead of waiting up to 3s for the next poll tick. The isPollingRef
+    // guard prevents overlap if a push arrives while a poll is in flight.
+    const offStatusChanged = api.onStatusChanged(() => {
+      if (disposed || isPollingRef.current) return;
+      isPollingRef.current = true;
+      void refreshStatus().finally(() => {
+        isPollingRef.current = false;
+      });
     });
     // Immediately execute status refresh, then poll every 3s. The poll is
     // gated on document visibility so a backgrounded window doesn't burn
@@ -62,22 +77,37 @@ export function useBoot(deps: UseBootDeps): void {
     // to avoid showing stale status for up to 3s. The 3s cadence balances
     // real-time feel against the cost of probing 4 agents × 5 IO operations
     // per cycle.
-    void refreshStatus();
+    //
+    // P1 audit #12: an isPolling ref guards against interval overlap. If a
+    // single poll takes longer than 3s (wmic blocking, slow CDP round-trip),
+    // the next setInterval tick would otherwise fire while the previous
+    // refreshStatus() is still in flight, stacking concurrent IPC calls and
+    // amplifying the main-process block. The ref ensures at most one poll is
+    // in flight at a time; a slow poll simply delays the next one.
+    const triggerPoll = () => {
+      if (disposed || isPollingRef.current) return;
+      isPollingRef.current = true;
+      void refreshStatus().finally(() => {
+        isPollingRef.current = false;
+      });
+    };
+    triggerPoll();
     const poll = window.setInterval(() => {
       if (document.hidden) return;
-      void refreshStatus();
+      triggerPoll();
     }, 3000);
     const onFocus = () => {
-      if (!disposed) void refreshStatus();
+      if (!disposed) triggerPoll();
     };
     window.addEventListener('focus', onFocus);
     return () => {
       disposed = true;
       if (bootTimeout !== undefined) clearTimeout(bootTimeout);
       offLog();
+      offStatusChanged();
       window.clearInterval(poll);
       window.removeEventListener('focus', onFocus);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setLocaleState, refreshStatus, setLogs, setBooting, setAppVersion, fail]);
 }

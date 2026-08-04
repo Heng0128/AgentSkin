@@ -8,7 +8,7 @@ import {
   restoreScheme,
   type SchemeSnapshot,
 } from './agent-scheme';
-import type { CdpSession } from './cdp-client';
+import type { CdpSession } from './cdp/cdp-client';
 
 /**
  * A CdpSession whose evaluate() drives a tiny in-memory model of the agent

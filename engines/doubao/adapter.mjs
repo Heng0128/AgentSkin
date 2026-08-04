@@ -21,16 +21,16 @@
  *               mutates its DOM (e.g., navigation, re-render).
  *
  * Usage: injected as a JS expression string via CDP Runtime.evaluate.
- * The caller provides __CODEDROBE_CONFIG__ with heroBlobUrl and palette info.
+ * The caller provides __AGENTSKIN_CONFIG__ with heroBlobUrl and palette info.
  */
 
 (() => {
   'use strict';
-  const HOST_CLASS = 'codedrobe-host-doubao';
+  const HOST_CLASS = 'agentskin-host-doubao';
   const MARKER = '__agentskin_doubao_adapter__';
   if (window[MARKER]) return 'already-applied';
 
-  const config = window.__CODEDROBE_CONFIG__ || {};
+  const config = window.__AGENTSKIN_CONFIG__ || {};
   const heroUrl = config.heroBlobUrl || '';
 
   // ═══════════════════════════════════════════════════════════
@@ -43,22 +43,38 @@ html.${HOST_CLASS} body {
   color: var(--agentskin-text) !important;
   background: transparent !important;
 }
+/* === Forced text color: belt-and-suspenders for dark theme ===
+   Ensures text is NEVER black-on-dark even if token override misses. */
+html.${HOST_CLASS} p,
+html.${HOST_CLASS} span,
+html.${HOST_CLASS} div,
+html.${HOST_CLASS} li,
+html.${HOST_CLASS} td,
+html.${HOST_CLASS} th,
+html.${HOST_CLASS} label,
+html.${HOST_CLASS} h1,
+html.${HOST_CLASS} h2,
+html.${HOST_CLASS} h3,
+html.${HOST_CLASS} h4,
+html.${HOST_CLASS} h5,
+html.${HOST_CLASS} h6 {
+  color: inherit;
+}
+html.${HOST_CLASS} [style*="color: rgb(0"],
+html.${HOST_CLASS} [style*="color: #000"],
+html.${HOST_CLASS} [style*="color: black"],
+html.${HOST_CLASS} [style*="color:rgb(0"],
+html.${HOST_CLASS} [style*="color:#000"],
+html.${HOST_CLASS} [style*="color:black"] {
+  color: var(--agentskin-text) !important;
+}
 html.${HOST_CLASS} body::before {
   content: '' !important;
   position: fixed !important;
   inset: 0 !important;
   z-index: -1 !important;
   pointer-events: none !important;
-  background:
-    linear-gradient(90deg,
-      color-mix(in srgb, var(--agentskin-surface) 26%, transparent) 0 16%,
-      color-mix(in srgb, var(--agentskin-surface) 8%, transparent) 44%,
-      transparent 70%),
-    linear-gradient(180deg, transparent 0 50%,
-      color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
-    radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent), transparent 60%),
-    var(--codedrobe-art, none) right center / cover no-repeat !important;
+  background: var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
 /* === Greeting pseudo-element suppression ===
@@ -77,7 +93,6 @@ html.${HOST_CLASS} [class*="input-container"][class*="flex"] {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-accent) 20%) 48%, transparent) !important;
   border: none !important;
   border-radius: var(--dbx-radius-4xl, 24px) !important;
-  backdrop-filter: blur(24px) saturate(1.25) !important;
   overflow: hidden !important;
   box-shadow: none !important;
 }
@@ -101,10 +116,10 @@ html.${HOST_CLASS} [class*="logo-decoration"] {
   display: none !important;
 }
 
-/* === Titlebar: fully transparent so art shows through (light glass) === */
+/* === Titlebar: fully transparent so art shows through === */
 html.${HOST_CLASS} [class*="h-header-height"] {
   background: transparent !important;
-  backdrop-filter: blur(6px) saturate(1.1) !important;
+  backdrop-filter: none !important;
   border-bottom: none !important;
 }
 html.${HOST_CLASS} [class*="h-header-height"] button {
@@ -113,6 +128,30 @@ html.${HOST_CLASS} [class*="h-header-height"] button {
 }
 html.${HOST_CLASS} [class*="h-header-height"] button:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+}
+
+/* === Sidebar: kill borders, shadows, opaque bg === */
+html.${HOST_CLASS} [class*="left-side"] > div[class*="relative"][class*="fixed"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+html.${HOST_CLASS} [class*="left-side"] [class*="rounded-full"][class*="size-20"],
+html.${HOST_CLASS} [class*="left-side"] [class*="rounded-full"][class*="size-22"] {
+  border: none !important;
+  box-shadow: none !important;
+}
+html.${HOST_CLASS} [class*="left-side"] [class*="rounded-dbx"][class*="border"] {
+  border: none !important;
+  box-shadow: none !important;
+}
+html.${HOST_CLASS} [class*="sidebar_nav_item"],
+html.${HOST_CLASS} [class*="sidebar_nav_item"] * {
+  box-shadow: none !important;
+  border: none !important;
+}
+html.${HOST_CLASS} [class*="left-side"] img[class*="border"] {
+  border: none !important;
 }
 
 /* === Suggestion bar: glass CANCELLED (enforced by SUGGEST_GLASS_KILLER
@@ -163,76 +202,6 @@ html.${HOST_CLASS} [class*="topic"] * {
 html.${HOST_CLASS} [class*="suggest-message-list-wrapper"] {
   background: transparent !important;
   backdrop-filter: none !important;
-}
-
-/* === Message bubbles: subtle surface tint === */
-html.${HOST_CLASS} [class*="message"][class*="bubble"],
-html.${HOST_CLASS} [class*="msg-content"],
-html.${HOST_CLASS} [class*="message-content"],
-html.${HOST_CLASS} [class*="bubble"] {
-  background: color-mix(in srgb, var(--agentskin-surface) 25%, transparent) !important;
-  border: none !important;
-  backdrop-filter: blur(6px) !important;
-}
-
-/* === Active/selected items: accent tint === */
-html.${HOST_CLASS} [class*="active"],
-html.${HOST_CLASS} [class*="selected"],
-html.${HOST_CLASS} [aria-selected="true"] {
-  background: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
-  border: none !important;
-}
-
-/* === Primary buttons: frosted glass (neutral fill + accent border) === */
-html.${HOST_CLASS} button[class*="primary"],
-html.${HOST_CLASS} button[class*="send"],
-html.${HOST_CLASS} [class*="btn-primary"],
-html.${HOST_CLASS} [class*="btn-brand"] {
-  background: color-mix(in srgb, var(--agentskin-surface) 20%, transparent) !important;
-  backdrop-filter: blur(14px) saturate(1.15) !important;
-  color: var(--agentskin-text) !important;
-  border: 1px solid color-mix(in srgb, var(--agentskin-accent) 38%, transparent) !important;
-}
-html.${HOST_CLASS} button[class*="primary"]:hover,
-html.${HOST_CLASS} button[class*="send"]:hover {
-  background: color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
-  backdrop-filter: blur(14px) saturate(1.2) !important;
-}
-
-/* === Code blocks === */
-html.${HOST_CLASS} pre {
-  background: var(--agentskin-code-bg) !important;
-  color: var(--agentskin-code-fg) !important;
-  border: 1px solid color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
-  border-left: 3px solid color-mix(in srgb, var(--agentskin-accent) 50%, transparent) !important;
-  border-radius: 10px !important;
-}
-html.${HOST_CLASS} code {
-  background: var(--agentskin-code-bg) !important;
-  color: var(--agentskin-code-fg) !important;
-}
-html.${HOST_CLASS} pre code {
-  border: none !important;
-  background: transparent !important;
-}
-
-/* === Links === */
-html.${HOST_CLASS} a {
-  color: var(--agentskin-accent) !important;
-}
-
-/* === Popovers / modals: frosted glass === */
-html.${HOST_CLASS} [role="dialog"],
-html.${HOST_CLASS} [role="menu"],
-html.${HOST_CLASS} [role="tooltip"],
-html.${HOST_CLASS} [role="listbox"],
-html.${HOST_CLASS} [class*="popover"],
-html.${HOST_CLASS} [class*="dropdown"],
-html.${HOST_CLASS} [class*="modal"],
-html.${HOST_CLASS} [class*="tooltip"] {
-  background: color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent) !important;
-  backdrop-filter: blur(20px) saturate(1.1) !important;
-  border: 1px solid color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
 }
 `;
 
@@ -293,14 +262,18 @@ html.${HOST_CLASS} [class*="tooltip"] {
     const nav = document.querySelector('nav');
     if (nav) {
       const rect = nav.getBoundingClientRect();
-      if (rect.left < 10 && rect.width < 350 && rect.height > 400) return nav;
+      // Widened from rect.left < 10 to rect.left < 60 — Doubao's nav can
+      // have a small left offset (padding/margin/border) that pushes it
+      // past 10px, causing the sidebar heuristic to miss it and leave
+      // NAV.left-side-U7A0kz opaque (the #1 blocker in health reports).
+      if (rect.left < 60 && rect.width < 350 && rect.height > 400) return nav;
     }
     // Strategy 2: fixed/absolute left panel
     const all = document.querySelectorAll('div, aside, section');
     for (const el of all) {
       const rect = el.getBoundingClientRect();
       const style = getComputedStyle(el);
-      if (rect.left < 10 && rect.width > 150 && rect.width < 350 && rect.height > 400
+      if (rect.left < 60 && rect.width > 150 && rect.width < 350 && rect.height > 400
           && (style.position === 'fixed' || style.position === 'relative' || style.position === 'absolute')) {
         return el;
       }
@@ -321,7 +294,6 @@ html.${HOST_CLASS} [class*="tooltip"] {
       input.style.setProperty('border-radius', 'var(--dbx-radius-4xl, 24px)', 'important');
       input.style.setProperty('backdrop-filter', 'blur(24px) saturate(1.25)', 'important');
       input.style.setProperty('overflow', 'hidden', 'important');
-      input.style.setProperty('box-shadow', 'none', 'important');
       input.setAttribute('data-agentskin-input', '1');
     }
 
@@ -359,7 +331,6 @@ html.${HOST_CLASS} [class*="tooltip"] {
       sidebar.style.setProperty('background',
         'color-mix(in srgb, var(--agentskin-surface) 10%, transparent)', 'important');
       sidebar.style.setProperty('border-right', 'none', 'important');
-      sidebar.style.setProperty('backdrop-filter', 'blur(24px) saturate(1.15)', 'important');
       sidebar.setAttribute('data-agentskin-sidebar', '1');
     }
 
@@ -372,7 +343,77 @@ html.${HOST_CLASS} [class*="tooltip"] {
       mainArea.style.setProperty('background-color', 'transparent', 'important');
     }
 
+    // Generic punch-through: neutralize any remaining opaque full-bleed
+    // elements that the targeted heuristics above missed. This is the same
+    // strategy as the wallpaper punch-through script — walk the DOM and
+    // add a transparent class to any element covering >=80% of the viewport
+    // with an opaque background. Without this, Doubao's root containers
+    // (DIV.relative, #root > div, etc.) stay opaque and completely hide
+    // the hero art layer, giving "apply succeeded but nothing visible".
+    rules.push(applyGenericPunchThrough());
+
     return rules.join('\n');
+  }
+
+  /**
+   * Generic DOM walk that finds opaque full-bleed elements and emits a CSS
+   * rule to neutralize them. Targets elements that:
+   *   - Cover >=80% of viewport width AND height
+   *   - Have an opaque backgroundColor OR backgroundImage (not blob:)
+   *   - Are not the art layer itself (body::before)
+   * Returns a CSS string with a scoped rule using data-agentskin-punched.
+   */
+  function applyGenericPunchThrough() {
+    const punched = [];
+    const vw = document.documentElement.clientWidth;
+    const vh = document.documentElement.clientHeight;
+    if (!vw || !vh) return '';
+
+    function alpha(c) {
+      const m = (c || '').match(/rgba?\(([^)]+)\)/);
+      if (!m) return 0;
+      const p = m[1].split(',').map(s => parseFloat(s));
+      if (p.length < 3) return 0;
+      return p.length >= 4 ? p[3] : 1;
+    }
+    function isOpaque(cs) {
+      if (alpha(cs.backgroundColor) > 0.05) return true;
+      if (cs.backgroundImage && cs.backgroundImage !== 'none' && !cs.backgroundImage.includes('blob:')) return true;
+      return false;
+    }
+
+    (function walk(el) {
+      if (!el || el.nodeType !== 1) return;
+      // Skip the art layer elements
+      if (el.id === 'root' || el === document.body || el === document.documentElement) {
+        for (const c of el.children) walk(c);
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      if (r.width >= vw * 0.8 && r.height >= vh * 0.8) {
+        const cs = getComputedStyle(el);
+        if (isOpaque(cs)) {
+          el.setAttribute('data-agentskin-punched', '1');
+          punched.push(el);
+        }
+      }
+      for (const c of el.children) walk(c);
+    })(document.documentElement);
+
+    if (!punched.length) return '';
+
+    return `
+html.${HOST_CLASS} [data-agentskin-punched] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+html.${HOST_CLASS} [data-agentskin-punched]::before,
+html.${HOST_CLASS} [data-agentskin-punched]::after {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+}`;
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -450,7 +491,7 @@ html.${HOST_CLASS} [class*="tooltip"] {
 
   // 2. Set hero blob URL
   if (heroUrl) {
-    document.documentElement.style.setProperty('--codedrobe-art', `url("${heroUrl}")`);
+    document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
   }
 
   // 3. Build combined CSS: structural + heuristic + auto-discovered
@@ -545,40 +586,9 @@ html.${HOST_CLASS} [class*="topic"]:hover {
 }
 `;
 
-  // ═══════════════════════════════════════════════════════════
-  // GENERIC BUTTON GLASS — appended AFTER L4
-  // Doubao's generic buttons (not just primary/send) draw their fill from
-  // --dbx-fill-* variables, which L4's token auto-discovery re-casts into an
-  // ~85% opaque surface block. Force a frosted-glass (semi-transparent) look
-  // on every button-like element so the opaque block is replaced. Placed LAST
-  // so it beats both L4's variable override and Doubao's own !important fills.
-  // (Header buttons keep their own transparent rule via higher specificity.)
-  // ═══════════════════════════════════════════════════════════
-  const BUTTON_GLASS_CSS = `
-html.${HOST_CLASS} button,
-html.${HOST_CLASS} [role="button"],
-html.${HOST_CLASS} [class*="btn"],
-html.${HOST_CLASS} [class*="button"] {
-  background: color-mix(in srgb, var(--agentskin-surface) 18%, transparent) !important;
-  backdrop-filter: blur(12px) saturate(1.12) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(1.12) !important;
-  color: var(--agentskin-text) !important;
-  border: 1px solid color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
-  box-shadow: none !important;
-}
-html.${HOST_CLASS} button:hover,
-html.${HOST_CLASS} [role="button"]:hover,
-html.${HOST_CLASS} [class*="btn"]:hover,
-html.${HOST_CLASS} [class*="button"]:hover {
-  background: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
-  backdrop-filter: blur(12px) saturate(1.18) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(1.18) !important;
-}
-`;
-
-  // Rebuild with the line-frame override + suggestion killer + button glass
-  // appended LAST so they beat L4's token auto-discovery.
-  const finalCss = [fullCss, INPUT_LINE_FRAME_CSS, SUGGEST_GLASS_KILLER, BUTTON_GLASS_CSS].filter(Boolean).join('\n');
+  // Rebuild with the line-frame override + suggestion killer appended LAST
+  // so they beat L4's token auto-discovery.
+  const finalCss = [fullCss, INPUT_LINE_FRAME_CSS, SUGGEST_GLASS_KILLER].filter(Boolean).join('\n');
   const finalSheet = new CSSStyleSheet();
   finalSheet.replaceSync(finalCss);
   finalSheet.__agentskin = true;
@@ -602,7 +612,7 @@ html.${HOST_CLASS} [class*="button"]:hover {
     healTimer = setTimeout(() => {
       const newRules = applyHeuristicStyles();
       const newDiscovered = discoverAndOverrideTokens();
-      const updatedCss = [STRUCTURAL_CSS, newRules, newDiscovered, INPUT_LINE_FRAME_CSS, SUGGEST_GLASS_KILLER, BUTTON_GLASS_CSS].filter(Boolean).join('\n');
+      const updatedCss = [STRUCTURAL_CSS, newRules, newDiscovered, INPUT_LINE_FRAME_CSS, SUGGEST_GLASS_KILLER].filter(Boolean).join('\n');
       try { finalSheet.replaceSync(updatedCss); } catch {}
     }, 300);
   });
@@ -614,8 +624,8 @@ html.${HOST_CLASS} [class*="button"]:hover {
     if (!document.documentElement.classList.contains(HOST_CLASS)) {
       document.documentElement.classList.add(HOST_CLASS);
     }
-    if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--codedrobe-art').includes('blob:')) {
-      document.documentElement.style.setProperty('--codedrobe-art', `url("${heroUrl}")`);
+    if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
+      document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
     }
   }, 5000);
 

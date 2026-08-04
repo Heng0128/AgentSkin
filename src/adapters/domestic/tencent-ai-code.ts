@@ -4,7 +4,7 @@ import { BaseApplicationAdapter } from '../base';
 
 /**
  * 腾讯云 AI Code — experimental adapter. Registered but not yet backed by
- * @agentskin/core.
+ * @agentskin/engine.
  */
 export class TencentAiCodeAdapter extends BaseApplicationAdapter {
   readonly id = 'tencent_ai_code';

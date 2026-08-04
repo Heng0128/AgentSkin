@@ -13,10 +13,30 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import type { AppController } from '@/hooks/useAppController';
 
-import { AGENT_IDS, type AgentId } from '@shared/types';
+import { AGENT_IDS, type AgentId, type RestartReason } from '@shared/types';
+
+/**
+ * Whether a "restart/launch & apply" action button is shown for a restart
+ * reason. Shared by the theme and wallpaper dialogs so both surfaces behave
+ * identically.
+ *
+ * The button is HIDDEN when the action cannot help:
+ *   - `not-installed` — the app must be installed first.
+ *   - `spawn-failed` / `singleton-lock` — AgentSkin's own launch failed; the
+ *     user should close the conflicting instance or start the app manually.
+ *
+ * It is SHOWN (and, for `not-running`, labeled "启动并应用") when the action
+ * CAN fix the situation: `no-cdp` (restart to enable the debug port),
+ * `cdp-timeout` (retry), `not-running` (launch from install path), or when no
+ * reason was provided (older main process — fall back to the button).
+ */
+export function shouldShowActionButton(reason: RestartReason | undefined): boolean {
+  if (!reason) return true;
+  return reason === 'no-cdp' || reason === 'cdp-timeout' || reason === 'not-running';
+}
 
 export function DialogsHost({ controller }: { controller: AppController }) {
-  const { t, restartPrompt, deletePrompt, fileImportPrompt } = controller;
+  const { t, restartPrompt, wallpaperRestartPrompt, deletePrompt, fileImportPrompt } = controller;
   const appName = (appId: string) =>
     AGENT_IDS.includes(appId as AgentId) ? APP_META[appId as AgentId].name : appId;
 
@@ -37,23 +57,36 @@ export function DialogsHost({ controller }: { controller: AppController }) {
         return t.restartReasonSingletonLock;
       case 'cdp-timeout':
         return t.restartDescription(name);
-      case 'no-cdp':
       default:
         return t.restartDescription(name);
     }
   })();
 
-  // When the app is not installed or already running fine, the "Restart &
-  // apply" button is misleading — hide it for reasons where a restart won't
-  // help. The user needs to install / start / close the app manually first.
-  const showRestartButton =
-    !restartPrompt?.restartReason ||
-    restartPrompt.restartReason === 'no-cdp' ||
-    restartPrompt.restartReason === 'cdp-timeout';
+  /** Wallpaper dialog description — same reason mapping as the theme dialog. */
+  const wallpaperRestartDescription = (() => {
+    if (!wallpaperRestartPrompt) return null;
+    const name = appName(wallpaperRestartPrompt.appId);
+    switch (wallpaperRestartPrompt.restartReason) {
+      case 'not-installed':
+        return t.restartReasonNotInstalled;
+      case 'not-running':
+        return t.restartReasonNotRunning;
+      case 'spawn-failed':
+        return t.restartReasonSpawnFailed;
+      case 'singleton-lock':
+        return t.restartReasonSingletonLock;
+      case 'no-cdp':
+        return t.restartReasonNoCdp;
+      case 'cdp-timeout':
+        return t.restartDescription(name);
+      default:
+        return t.restartDescription(name);
+    }
+  })();
 
   return (
     <>
-      {/* Restart dialog */}
+      {/* Restart dialog (theme apply) */}
       <Dialog
         open={restartPrompt !== null}
         onOpenChange={(open) => {
@@ -69,7 +102,7 @@ export function DialogsHost({ controller }: { controller: AppController }) {
             <Button variant="outline" onClick={() => controller.setRestartPrompt(null)}>
               {t.restartLater}
             </Button>
-            {showRestartButton ? (
+            {shouldShowActionButton(restartPrompt?.restartReason) ? (
               <Button
                 disabled={controller.busy !== null}
                 onClick={() => {
@@ -85,7 +118,56 @@ export function DialogsHost({ controller }: { controller: AppController }) {
                 {controller.busy?.startsWith('apply:') ? (
                   <Spinner data-icon="inline-start" />
                 ) : null}
-                {t.restartAndApply}
+                {restartPrompt?.restartReason === 'not-running'
+                  ? t.launchAndApply
+                  : t.restartAndApply}
+              </Button>
+            ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Wallpaper restart dialog — shown when wallpaper apply returns
+          `requires-restart`. The user must explicitly click "Restart &
+          apply" (or "Launch & apply" when the agent is not running) before
+          the agent is killed + relaunched with CDP. */}
+      <Dialog
+        open={wallpaperRestartPrompt !== null}
+        onOpenChange={(open) => {
+          if (!open) controller.setWallpaperRestartPrompt(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t.restartTitle}</DialogTitle>
+            <DialogDescription>{wallpaperRestartDescription}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => controller.setWallpaperRestartPrompt(null)}>
+              {t.restartLater}
+            </Button>
+            {shouldShowActionButton(wallpaperRestartPrompt?.restartReason) ? (
+              <Button
+                disabled={controller.busy !== null}
+                onClick={() => {
+                  const prompt = wallpaperRestartPrompt;
+                  controller.setWallpaperRestartPrompt(null);
+                  if (prompt) {
+                    void controller.wallpaper.setAndApplyAgentWallpaper(
+                      prompt.appId,
+                      true,
+                      prompt.wallpaperId ?? null,
+                      { restartExisting: true },
+                    );
+                  }
+                }}
+              >
+                {controller.busy?.startsWith('apply:') ? (
+                  <Spinner data-icon="inline-start" />
+                ) : null}
+                {wallpaperRestartPrompt?.restartReason === 'not-running'
+                  ? t.launchAndApply
+                  : t.restartAndApply}
               </Button>
             ) : null}
           </DialogFooter>

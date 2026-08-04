@@ -1,54 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { useEffect, useState } from 'react';
 import { AppMark } from '@/components/app-mark';
-import { useRelativeTime } from '@/hooks/useRelativeTime';
+import type { AgentProgress, BootPhase } from '@/hooks/useBootProgress';
 import { cn } from '@/lib/utils';
 import type { EnvironmentModel } from '@/types/environment';
 
 import type { UiMessages } from '@shared/i18n';
-import { type AgentDotVariant, AgentStatusDot } from './AgentStatusDot';
-
-/**
- * # LiveBadge
- *
- * "Real-time" indicator for the status strip header. Uses the shared
- * useRelativeTime hook (single 1s ticker for the whole app) and the shared
- * AgentStatusDot for the pulsing dot.
- */
-function LiveBadge({
-  t,
-  lastStatusAt,
-  isRefreshing,
-}: {
-  t: UiMessages;
-  lastStatusAt: number | null;
-  isRefreshing: boolean;
-}) {
-  const relative = useRelativeTime(lastStatusAt, isRefreshing, t);
-
-  return (
-    <span className="flex items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-2 py-0.5">
-      <AgentStatusDot variant={isRefreshing ? 'refreshing' : 'active'} size="xs" />
-      <span className="text-[9px] font-semibold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
-        {t.statusLive}
-      </span>
-      <span className="text-[9px] tabular-nums text-muted-foreground">{relative}</span>
-    </span>
-  );
-}
-
-/**
- * Map an environment's runtime state to a unified dot variant.
- * Single source of truth for "which dot color for which state" — previously
- * duplicated in 7+ places.
- */
-export function envToDotVariant(env: EnvironmentModel): AgentDotVariant {
-  if (env.status === 'active') return 'active';
-  if (env.agentRunning) return 'available';
-  if (env.status === 'detecting') return 'detecting';
-  if (env.agentInstalled) return 'offline';
-  return 'offline';
-}
 
 /**
  * # AgentStatusBar
@@ -60,23 +18,111 @@ export function envToDotVariant(env: EnvironmentModel): AgentDotVariant {
  *   - Agent display name
  *   - Status dot (active=emerald, available=sky, detecting=amber, offline=muted)
  *   - Active theme name (truncated, muted) or "no theme"
+ *   - Live operation phase + progress bar when bootProgress has an entry
+ *
+ * The live phase comes from structured log events pushed by the main process
+ * (via runtime:log IPC) — NOT from the 3s status poll — so the strip reflects
+ * apply/restore/boot operations in real time without waiting for the next
+ * poll cycle.
  *
  * Clicking a pill switches the route to the themes center so users can
  * quickly apply a theme to that agent.
  */
+
+/** True for phases that represent ongoing work (progress bar should show). */
+function isPhaseActive(phase: BootPhase): boolean {
+  return (
+    phase !== 'done' &&
+    phase !== 'failed' &&
+    phase !== 'cdp_timeout' &&
+    phase !== 'cdp_spawn_failed' &&
+    phase !== 'inject_failed' &&
+    phase !== 'inject_done'
+  );
+}
+
+/** Map a boot phase to its localized label. */
+function phaseLabel(phase: BootPhase, t: UiMessages): string {
+  switch (phase) {
+    case 'boot_start':
+      return t.phaseBootStart;
+    case 'cdp_resolving':
+      return t.phaseCdpResolving;
+    case 'cdp_killing':
+      return t.phaseCdpKilling;
+    case 'cdp_spawning':
+      return t.phaseCdpSpawning;
+    case 'cdp_ready':
+      return t.phaseCdpReady;
+    case 'cdp_timeout':
+      return t.phaseCdpTimeout;
+    case 'cdp_spawn_failed':
+      return t.phaseCdpSpawnFailed;
+    case 'inject_start':
+      return t.phaseInjectStart;
+    case 'inject_done':
+      return t.phaseInjectDone;
+    case 'inject_failed':
+      return t.phaseInjectFailed;
+    case 'scheme_sync':
+      return t.phaseSchemeSync;
+    case 'done':
+      return t.phaseDone;
+    case 'failed':
+      return t.phaseFailed;
+  }
+}
+
+/**
+ * Format a "x s ago" / "x m ago" label for the last status refresh timestamp.
+ * Returns null for >10 minutes (stale enough that a precise label is noise).
+ */
+function relativeAgo(at: number, now: number): string | null {
+  const diff = Math.max(0, Math.floor((now - at) / 1000));
+  if (diff < 1) return 'now';
+  if (diff < 60) return `${diff}s ago`;
+  const m = Math.floor(diff / 60);
+  if (m < 10) return `${m}m ago`;
+  return null;
+}
+
+/**
+ * Re-render once per second so the "x s ago" label stays accurate without
+ * waiting for the 3s status poll. Cheap: the component is small and the
+ * only consumer of this tick is the header label.
+ */
+function useTick(): number {
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((n) => n + 1), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return 0;
+}
+
 export function AgentStatusBar({
   environments,
-  t,
-  onSelectAgent,
+  progress,
   lastStatusAt,
   isRefreshing,
+  t,
+  onSelectAgent,
 }: {
   environments: EnvironmentModel[];
+  /** Live per-agent operation progress (from structured log events). */
+  progress?: Map<string, AgentProgress> | null;
+  /** Timestamp (epoch ms) of the last successful status refresh. */
+  lastStatusAt?: number | null;
+  /** True while a status refresh is in flight (drives the live pulse). */
+  isRefreshing?: boolean;
   t: UiMessages;
   onSelectAgent?: (env: EnvironmentModel) => void;
-  lastStatusAt: number | null;
-  isRefreshing: boolean;
 }) {
+  // Re-render every second so the "x s ago" label stays live.
+  useTick();
+  // Relative "x s ago" label for the last successful status refresh.
+  const agoLabel = lastStatusAt ? relativeAgo(lastStatusAt, Date.now()) : null;
+
   return (
     <div className="mt-4">
       <div className="mb-2 flex items-center gap-1.5">
@@ -86,14 +132,65 @@ export function AgentStatusBar({
         <span className="inline-flex size-4 items-center justify-center rounded-md bg-secondary text-[9px] font-semibold text-muted-foreground">
           {environments.length}
         </span>
-        <span className="ml-auto">
-          <LiveBadge t={t} lastStatusAt={lastStatusAt} isRefreshing={isRefreshing} />
+        {/* Live refresh indicator — relative timestamp + pulsing dot */}
+        <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/60">
+          {isRefreshing ? (
+            <>
+              <span className="relative flex size-1.5">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-sky-400 opacity-75" />
+                <span className="relative inline-flex size-1.5 rounded-full bg-sky-400" />
+              </span>
+              <span className="text-sky-500">{t.statusDetecting}</span>
+            </>
+          ) : agoLabel ? (
+            <>
+              <span className="size-1.5 rounded-full bg-cr-success/60" />
+              <span>{agoLabel}</span>
+            </>
+          ) : null}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
         {environments.map((env) => {
+          const agentProgress = progress?.get(env.agent.id) ?? null;
+          const hasLivePhase = agentProgress && isPhaseActive(agentProgress.phase);
+          const isFailed =
+            agentProgress &&
+            (agentProgress.phase === 'failed' ||
+              agentProgress.phase === 'cdp_timeout' ||
+              agentProgress.phase === 'cdp_spawn_failed' ||
+              agentProgress.phase === 'inject_failed');
+          const isDone = agentProgress?.phase === 'done';
+
+          const isRunning = env.agentRunning;
+          const isInstalled = env.agentInstalled;
           const isActive = env.status === 'active';
+          const isDetecting = env.status === 'detecting';
+
+          // Status dot — prefers live phase over static status
+          const dotClass = hasLivePhase
+            ? 'bg-cr-warning animate-pulse'
+            : isFailed
+              ? 'bg-destructive'
+              : isDone
+                ? 'bg-cr-success'
+                : isActive
+                  ? 'bg-cr-success animate-breathe'
+                  : isRunning
+                    ? 'bg-sky-400 animate-pulse'
+                    : isDetecting
+                      ? 'bg-cr-warning animate-pulse'
+                      : isInstalled
+                        ? 'bg-muted-foreground/40'
+                        : 'bg-muted-foreground/20';
+
+          // Label — prefers live phase label over static status
+          const statusText = agentProgress
+            ? phaseLabel(agentProgress.phase, t)
+            : env.theme
+              ? env.theme.name
+              : t.statusNoTheme;
 
           return (
             <button
@@ -101,10 +198,12 @@ export function AgentStatusBar({
               type="button"
               onClick={() => onSelectAgent?.(env)}
               className={cn(
-                'group/pill flex items-center gap-2 rounded-lg border bg-card p-2 text-left',
-                'transition-all duration-200 ease-out',
+                'group/pill relative flex items-center gap-2 overflow-hidden rounded-lg border bg-card p-2 text-left',
+                'transition-all duration-base ease-out',
                 'hover:-translate-y-0.5 hover:shadow-sm hover:border-border/80',
-                isActive && 'border-emerald-500/30 ring-1 ring-emerald-500/15',
+                hasLivePhase && 'border-cr-warning/30 ring-1 ring-cr-warning/15',
+                isFailed && 'border-destructive/30 ring-1 ring-destructive/15',
+                isActive && !hasLivePhase && 'border-cr-success/30 ring-1 ring-cr-success/15',
               )}
             >
               {/* App icon */}
@@ -112,17 +211,21 @@ export function AgentStatusBar({
                 className={cn(
                   'relative flex size-8 shrink-0 items-center justify-center rounded-md',
                   'bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10',
-                  'transition-transform duration-200 group-hover/pill:scale-105',
+                  'transition-transform duration-base group-hover/pill:scale-105',
                 )}
               >
                 <AppMark appId={env.agent.id} size={20} />
                 {/* Status dot overlay */}
-                <span className="absolute -right-0.5 -top-0.5 ring-2 ring-card" aria-hidden>
-                  <AgentStatusDot variant={envToDotVariant(env)} size="xs" />
-                </span>
+                <span
+                  className={cn(
+                    'absolute -right-0.5 -top-0.5 size-2 rounded-full ring-2 ring-card',
+                    dotClass,
+                  )}
+                  aria-hidden
+                />
               </div>
 
-              {/* Name + theme */}
+              {/* Name + live status */}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[11px] font-semibold leading-tight">
                   {env.agent.displayName}
@@ -130,12 +233,36 @@ export function AgentStatusBar({
                 <p
                   className={cn(
                     'mt-0.5 truncate text-[10px] leading-tight',
-                    env.theme ? 'text-muted-foreground' : 'text-muted-foreground/50',
+                    hasLivePhase
+                      ? 'font-medium text-cr-warning'
+                      : isFailed
+                        ? 'font-medium text-destructive'
+                        : env.theme
+                          ? 'text-muted-foreground'
+                          : 'text-muted-foreground/50',
                   )}
                 >
-                  {env.theme ? env.theme.name : t.statusNoTheme}
+                  {statusText}
+                  {hasLivePhase && agentProgress && agentProgress.progress > 0 && (
+                    <span className="ml-1 tabular-nums text-muted-foreground/60">
+                      {agentProgress.progress}%
+                    </span>
+                  )}
                 </p>
               </div>
+
+              {/* Live progress bar — bottom edge */}
+              {hasLivePhase && agentProgress && (
+                <div className="absolute inset-x-0 bottom-0 h-0.5 bg-muted">
+                  <div
+                    className={cn(
+                      'h-full transition-all duration-slow ease-out',
+                      isFailed ? 'bg-destructive' : 'bg-cr-warning',
+                    )}
+                    style={{ width: `${Math.max(3, agentProgress.progress)}%` }}
+                  />
+                </div>
+              )}
             </button>
           );
         })}

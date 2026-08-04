@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\windows\plugin\src\Exports.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\windows\plugin\src\Bridge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\windows\plugin\src\InstallerWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\windows\plugin\src\dllmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIActiveX.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIAnimation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIColorPalette.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UICombo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIComboBox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIDateTime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIEdit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIFadeButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIGifAnim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIGifAnimEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIGroupBox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIHotKey.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIIPAddress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIIPAddressEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UILabel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIListEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UILoading.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIMenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIOption.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIPageControl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIProgress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIRichEdit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIRing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIRollText.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIScrollBar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UISlider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIText.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UITreeView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Control\UIWebBrowser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Core\ControlFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Core\UIBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Core\UIContainer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Core\UIControl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Core\UIDlgBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Core\UIManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Core\UIMarkup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Core\UIRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Core\UIResourceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Layout\UIAnimationTabLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Layout\UIChildLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Layout\UIHorizontalLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Layout\UITabLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Layout\UITileLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Layout\UIVerticalLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\StdAfx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Utils\DPI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Utils\DragDropImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Utils\TrayIcon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Utils\UIDelegate.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Utils\UIShadow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Utils\Utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Utils\WinImplBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\third_party\DuiLib_Ultimate\DuiLib\Utils\unzip.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\snowb\Desktop\work\desktop-main\installer\windows\plugin\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\snowb\Desktop\work\desktop-main\installer\windows\plugin\src\AgentSkinUI.def">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C:\Users\snowb\Desktop\work\desktop-main\installer\windows\plugin\src\resource.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{423F4CAE-8EF6-3FEE-8D2A-4C507629E829}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

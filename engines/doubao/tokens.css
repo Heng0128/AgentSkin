@@ -5,7 +5,7 @@
    rules. Every value derives from --agentskin-* custom properties
    so this file is theme-agnostic and never needs regeneration.
 
-   Selector: html.codedrobe-host-doubao:root  (specificity 0,2,1)
+   Selector: html.agentskin-host-doubao:root  (specificity 0,2,1)
    beats both :root[data-theme="dark"] (0,1,1) and light selectors.
 
    Stability: HIGH — agent token names (--dbx-*, --s-color-*, --ffc-*)
@@ -13,7 +13,7 @@
    auto-discovery compensates at runtime.
    ============================================================ */
 
-html.codedrobe-host-doubao:root {
+html.agentskin-host-doubao:root {
   color-scheme: dark !important;
 
   /* --- Backgrounds --- */
@@ -107,7 +107,7 @@ html.codedrobe-host-doubao:root {
 }
 
 /* ===== Body-level token overrides ===== */
-html.codedrobe-host-doubao:root body {
+html.agentskin-host-doubao:root body {
   --dbx-bg-body-web: transparent !important;
   --chat-bg-color: transparent !important;
 
@@ -394,4 +394,105 @@ html.codedrobe-host-doubao:root body {
   --input-guidance-input-editor-color: var(--agentskin-text) !important;
   --input-guidance-input-editor-placeholder-color: color-mix(in srgb, var(--agentskin-muted) 60%, transparent) !important;
   --left-side: var(--agentskin-surface) !important;
+}
+
+/* ===== REAL Doubao token system: Semi Design (--semi-color-*) =====
+   Probe (2026-07-23) confirmed Doubao ships 268 --semi-* tokens + 12 --gray*
+   + 64 semantic vars. These are the tokens that ACTUALLY drive the UI.
+   The --dbx-*/--s-color-*/--ffc-* above are dead/legacy but kept for safety.
+   Selector: html.agentskin-host-doubao:root (0,2,1) + adoptedStyleSheets
+   cascade position beats Doubao's own :root[data-theme] rules. */
+html.agentskin-host-doubao:root {
+  /* Background layers */
+  --semi-color-bg-0: var(--agentskin-bg) !important;
+  --semi-color-bg-1: var(--agentskin-surface) !important;
+  --semi-color-bg-2: var(--agentskin-surface-elevated) !important;
+  --semi-color-bg-3: var(--agentskin-surface-elevated) !important;
+  --semi-color-bg-4: color-mix(in srgb, var(--agentskin-surface-elevated) 92%, #fff) !important;
+
+  /* Text hierarchy — CRITICAL: these control actual text color */
+  --semi-color-text-0: var(--agentskin-text) !important;
+  --semi-color-text-1: var(--agentskin-muted) !important;
+  --semi-color-text-2: color-mix(in srgb, var(--agentskin-muted) 75%, transparent) !important;
+  --semi-color-text-3: color-mix(in srgb, var(--agentskin-muted) 45%, transparent) !important;
+
+  /* Primary / brand */
+  --semi-color-primary: var(--agentskin-accent) !important;
+  --semi-color-primary-hover: color-mix(in srgb, var(--agentskin-accent) 88%, black) !important;
+  --semi-color-primary-active: color-mix(in srgb, var(--agentskin-accent) 76%, black) !important;
+  --semi-color-primary-light-default: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --semi-color-primary-light-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --semi-color-primary-light-active: color-mix(in srgb, var(--agentskin-accent) 24%, transparent) !important;
+  --semi-color-primary-disabled: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
+
+  /* Secondary / tertiary */
+  --semi-color-secondary: var(--agentskin-secondary) !important;
+  --semi-color-secondary-hover: color-mix(in srgb, var(--agentskin-secondary) 88%, black) !important;
+  --semi-color-secondary-active: color-mix(in srgb, var(--agentskin-secondary) 76%, black) !important;
+  --semi-color-secondary-light-default: color-mix(in srgb, var(--agentskin-secondary) 12%, transparent) !important;
+  --semi-color-secondary-light-hover: color-mix(in srgb, var(--agentskin-secondary) 18%, transparent) !important;
+  --semi-color-tertiary: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+  --semi-color-tertiary-hover: color-mix(in srgb, var(--agentskin-text) 10%, transparent) !important;
+  --semi-color-tertiary-light-default: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+
+  /* Fills */
+  --semi-color-fill-0: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --semi-color-fill-1: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+  --semi-color-fill-2: color-mix(in srgb, var(--agentskin-text) 12%, transparent) !important;
+
+  /* Border / disabled */
+  --semi-color-border: var(--agentskin-border) !important;
+  --semi-color-disabled-bg: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --semi-color-disabled-border: color-mix(in srgb, var(--agentskin-border) 50%, transparent) !important;
+  --semi-color-disabled-fill: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+  --semi-color-disabled-text: color-mix(in srgb, var(--agentskin-muted) 40%, transparent) !important;
+
+  /* Links / highlight / shadow / nav */
+  --semi-color-link: var(--agentskin-accent) !important;
+  --semi-color-link-hover: color-mix(in srgb, var(--agentskin-accent) 88%, black) !important;
+  --semi-color-link-active: color-mix(in srgb, var(--agentskin-accent) 76%, black) !important;
+  --semi-color-link-visited: color-mix(in srgb, var(--agentskin-accent) 70%, transparent) !important;
+  --semi-color-highlight: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --semi-color-highlight-bg: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+  --semi-color-shadow: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --semi-color-nav-bg: var(--agentskin-surface) !important;
+  --semi-color-overlay-bg: color-mix(in srgb, var(--agentskin-bg) 60%, transparent) !important;
+
+  /* Gray ramp (gray1 lightest → gray12 darkest in dark mode) */
+  --gray1: var(--agentskin-text) !important;
+  --gray2: color-mix(in srgb, var(--agentskin-text) 90%, var(--agentskin-bg)) !important;
+  --gray3: color-mix(in srgb, var(--agentskin-text) 80%, var(--agentskin-bg)) !important;
+  --gray4: color-mix(in srgb, var(--agentskin-text) 70%, var(--agentskin-bg)) !important;
+  --gray5: color-mix(in srgb, var(--agentskin-text) 60%, var(--agentskin-bg)) !important;
+  --gray6: color-mix(in srgb, var(--agentskin-text) 50%, var(--agentskin-bg)) !important;
+  --gray7: color-mix(in srgb, var(--agentskin-text) 40%, var(--agentskin-bg)) !important;
+  --gray8: color-mix(in srgb, var(--agentskin-text) 30%, var(--agentskin-bg)) !important;
+  --gray9: color-mix(in srgb, var(--agentskin-text) 22%, var(--agentskin-bg)) !important;
+  --gray10: color-mix(in srgb, var(--agentskin-text) 15%, var(--agentskin-bg)) !important;
+  --gray11: color-mix(in srgb, var(--agentskin-text) 8%, var(--agentskin-bg)) !important;
+  --gray12: var(--agentskin-bg) !important;
+
+  /* Semantic vars (verified via CDP probe 2026-07-23) */
+  --normal-bg: var(--agentskin-surface) !important;
+  --normal-bg-hover: var(--agentskin-surface-elevated) !important;
+  --normal-text: var(--agentskin-text) !important;
+  --normal-border: var(--agentskin-border) !important;
+  --hover-bg-color: color-mix(in srgb, var(--agentskin-text) 6%, transparent) !important;
+  --active-bg-color: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+  --static-bg-color: var(--agentskin-bg) !important;
+  --error-bg: rgba(255, 77, 79, 0.12) !important;
+  --error-border: rgba(255, 77, 79, 0.4) !important;
+  --error-text: rgb(255, 99, 101) !important;
+  --warning-bg: rgba(255, 168, 0, 0.12) !important;
+  --warning-border: rgba(255, 168, 0, 0.4) !important;
+  --warning-text: rgb(255, 183, 77) !important;
+  --success-bg: rgba(0, 184, 96, 0.12) !important;
+  --success-border: rgba(0, 184, 96, 0.4) !important;
+  --success-text: rgb(38, 200, 120) !important;
+  --info-bg: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --info-border: color-mix(in srgb, var(--agentskin-accent) 40%, transparent) !important;
+  --info-text: var(--agentskin-accent) !important;
+  --scrollbar-color-active: color-mix(in srgb, var(--agentskin-accent) 50%, transparent) !important;
+  --scrollbar-color-hover: color-mix(in srgb, var(--agentskin-accent) 40%, transparent) !important;
+  --scrollthumbcolor: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
 }

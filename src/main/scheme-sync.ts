@@ -35,7 +35,7 @@ import {
   type SchemeMode,
   type SchemeSnapshot,
 } from './agent-scheme';
-import type { CdpSession } from './cdp-client';
+import type { CdpSession } from './cdp/cdp-client';
 import type { LogCallback } from './services/contracts';
 
 // ---------------------------------------------------------------------------
@@ -189,65 +189,51 @@ export async function syncSchemeWithStability(
   });
   await syncSchemeToTheme(appId, port, mode, deps);
 
-  // Stability checks at 2s / 5s / 10s. Re-resolve port each time in case
-  // the app restarted and bound a new debug port.
-  let stableCount = 0;
-  const checkPoints = [2000, 5000, 10000];
-  for (const delay of checkPoints) {
-    await new Promise((resolve) => setTimeout(resolve, delay));
-    // Abort if a newer apply/restore/reapply superseded this one — the
-    // scheme may have been changed by the newer operation, and re-applying
-    // our stale mode would clobber it.
-    if (!deps.isEpochCurrent(appId, epoch)) {
-      deps.log(`[scheme] ${appId}: epoch changed, aborting stability check`);
-      return;
-    }
-    try {
-      const livePort = await deps.resolveLivePort(appId);
-      if (livePort == null) return; // app closed / CDP gone — stop checking
-      let stillOk = false;
-      await deps.withPageSession(
-        appId,
-        livePort,
-        async (session) => {
-          // Re-check inside the session callback in case epoch flipped while
-          // we were resolving the port / connecting.
-          if (!deps.isEpochCurrent(appId, epoch)) return;
-          // Re-apply unconditionally — applyScheme's read-back verification
-          // will no-op if the mode is already correct (returns quickly).
-          stillOk = await applyScheme(session, appId, mode);
-        },
-        3,
-      );
-      if (stillOk) {
-        stableCount++;
-        // Two consecutive stable checks → mode has stuck, stop polling.
-        if (stableCount >= 2) {
+  // Single stability check at 5s. Previously this was 2s / 5s / 10s (three
+  // checkpoints), each re-resolving the port + opening a CDP session + calling
+  // applyScheme. That tripled the background CDP load after every apply.
+  // In production logs, drift that would be caught at 2s but not 5s was
+  // essentially never observed (agents either overwrite during their initial
+  // render cycle, which completes within 5s, or not at all). A single 5s
+  // check with unconditional re-apply covers the real-world drift cases.
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+  if (!deps.isEpochCurrent(appId, epoch)) {
+    deps.log(`[scheme] ${appId}: epoch changed, aborting stability check`);
+    return;
+  }
+  try {
+    const livePort = await deps.resolveLivePort(appId);
+    if (livePort == null) return; // app closed / CDP gone — stop checking
+    await deps.withPageSession(
+      appId,
+      livePort,
+      async (session) => {
+        if (!deps.isEpochCurrent(appId, epoch)) return;
+        const ok = await applyScheme(session, appId, mode);
+        if (!ok) {
+          deps.log(`[scheme] ${appId}: mode drifted after stability window, re-applied (${mode})`);
           deps.logStructured({
             type: 'scheme_sync',
             agentId: appId,
-            phase: 'done',
+            phase: 'drifted',
             timestamp: new Date().toISOString(),
-            progress: 95,
+            progress: 80,
           });
-          return;
         }
-      } else {
-        stableCount = 0;
-        deps.log(`[scheme] ${appId}: mode drifted during stability window, re-applied (${mode})`);
-        deps.logStructured({
-          type: 'scheme_sync',
-          agentId: appId,
-          phase: 'drifted',
-          timestamp: new Date().toISOString(),
-          progress: 80,
-        });
-      }
-    } catch {
-      // Agent may have been closed — stop stability checks silently.
-      return;
-    }
+      },
+      3,
+    );
+  } catch {
+    // Agent may have been closed — stop silently.
+    return;
   }
+  deps.logStructured({
+    type: 'scheme_sync',
+    agentId: appId,
+    phase: 'done',
+    timestamp: new Date().toISOString(),
+    progress: 95,
+  });
 }
 
 // ---------------------------------------------------------------------------

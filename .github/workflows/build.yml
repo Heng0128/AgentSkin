@@ -198,8 +198,12 @@ jobs:
       - name: Build packaged application
         run: npm run package -- --arch=x64
 
-      - name: Build NSIS installer
-        run: npm run make:windows:installers
+      - name: Build NSIS installer (electron-builder)
+        shell: cmd
+        run: |
+          call build.bat --no-bump
+        env:
+          VERSION: ${{ github.ref_name }}
 
       - name: Verify Windows artifacts and bundled runtime
         shell: pwsh
@@ -263,6 +267,8 @@ jobs:
           set -euo pipefail
           mapfile -d '' ASSETS < <(find release-assets -type f -print0)
           test "${#ASSETS[@]}" -gt 0
+          # 幂等：如果 release 已存在则先删除，避免重跑失败
+          gh release delete "$GITHUB_REF_NAME" --yes --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
           gh release create "$GITHUB_REF_NAME" "${ASSETS[@]}" \
             --repo "$GITHUB_REPOSITORY" \
             --title "AgentSkin $GITHUB_REF_NAME" \

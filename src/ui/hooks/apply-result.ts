@@ -42,5 +42,9 @@ export function handleApplyResult(
       return { kind: 'port-occupied', message: result.message };
     case 'applied':
       return { kind: 'success' };
+    default:
+      // Exhaustiveness guard: an unknown status from a future main process
+      // must not crash the renderer with a TypeError on outcome.kind.
+      return { kind: 'success' };
   }
 }

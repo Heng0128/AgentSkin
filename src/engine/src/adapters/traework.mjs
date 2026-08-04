@@ -9,11 +9,12 @@
 // of the official installers), so one adapter id serves both and themes apply
 // unchanged.
 import traeworkThemeV1Profile from "../runtime/profiles/traework-theme-v1.mjs";
+import { DISPLAY_NAMES } from "./meta.mjs";
 
 const traework = {
   id: "traework",
-  displayName: "TRAE SOLO",
-  defaultPort: 9338,
+  displayName: DISPLAY_NAMES.traework,
+  defaultPort: 0,
   rendererProfiles: {
     [traeworkThemeV1Profile.id]: traeworkThemeV1Profile,
   },
@@ -63,15 +64,26 @@ const traework = {
         "{E7D41D89-D044-48DF-B02C-6A2443FB1E49}_is1",
       ],
       processNames: ["TRAE SOLO.exe", "TRAE SOLO CN.exe"],
+      // TRAE SOLO writes DevToolsActivePort to its user-data dir under APPDATA.
+      // Both global and CN editions use separate folders.
+      devToolsActivePortFile: [
+        "%APPDATA%\\TRAE SOLO\\DevToolsActivePort",
+        "%APPDATA%\\TRAE SOLO CN\\DevToolsActivePort",
+      ],
     },
   },
   matchTarget(target) {
     if (target?.type !== "page") return false;
     const url = String(target.url ?? "");
+    const title = String(target.title ?? "");
     if (/^(devtools|chrome-extension):/i.test(url)) return false;
-    // Auxiliary windows (process explorer, file preview) live in sibling
-    // electron-browser directories; only the solo-lite shell is the main UI.
-    return /\/electron-browser\/solo\/solo-lite\.html/i.test(url);
+    // Strict path match catches the main solo-lite shell.
+    if (/\/electron-browser\/solo\/solo-lite\.html/i.test(url)) return true;
+    // Relaxed fallback: catch solo-lite shells regardless of path casing/layout,
+    // and any window whose title names the product. Survives UI refactors that
+    // rename the .html entry point. (Previously injected at runtime by
+    // patchWindowsAdapters; now static so engine and runtime agree.)
+    return /solo-lite|trae|traework/i.test(url) || /trae|traework/i.test(title);
   },
   verification: {
     // The root landmark is the only blocking check: it doubles as the

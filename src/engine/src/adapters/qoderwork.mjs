@@ -4,11 +4,12 @@
 // static extraction of the official installers), so one adapter id serves
 // both and themes apply unchanged.
 import qoderworkThemeV1Profile from "../runtime/profiles/qoderwork-theme-v1.mjs";
+import { DISPLAY_NAMES } from "./meta.mjs";
 
 const qoderwork = {
   id: "qoderwork",
-  displayName: "QoderWork",
-  defaultPort: 9337,
+  displayName: DISPLAY_NAMES.qoderwork,
+  defaultPort: 0,
   rendererProfiles: {
     [qoderworkThemeV1Profile.id]: qoderworkThemeV1Profile,
   },
@@ -61,12 +62,24 @@ const qoderwork = {
   matchTarget(target) {
     if (target?.type !== "page") return false;
     const url = String(target.url ?? "");
+    const title = String(target.title ?? "");
     if (/^(devtools|chrome-extension):/i.test(url)) return false;
+    if (/^about:/i.test(url)) return false;
     // Auxiliary windows (artifact preview, quick pick, voice overlay, MCP app
     // preview) live in the same renderer directory but are not the main shell.
     if (/(artifact-preview|mcp-app-preview|quickpick|voice-overlay)\.html/i.test(url)) return false;
-    return /app\.asar\/out\/renderer\/index\.html/i.test(url) ||
-      /qoderwork/i.test(String(target.title ?? ""));
+    if (/app\.asar\/out\/renderer\/index\.html/i.test(url)) return true;
+    // Localhost-served renderer (dev mode or new architecture).
+    if (/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//i.test(url)) return true;
+    // Title fallback (previously injected at runtime by patchWindowsAdapters;
+    // now static so engine and runtime agree). Broader `/qoder/i` catches
+    // both "Qoder" and "QoderWork" window titles.
+    if (/qoder/i.test(title)) return true;
+    // Broad fallback: any page target with a non-empty title that looks like
+    // an app window (not DevTools, not chrome-internal). Catches edge cases
+    // where the window title is the conversation name rather than the product.
+    if (title && !/^(DevTools|chrome|about:)/i.test(title) && url && !url.startsWith("about:")) return true;
+    return false;
   },
   verification: {
     // The root landmark is the only blocking check: it doubles as the

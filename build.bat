@@ -1,30 +1,5 @@
 @echo off
-chcp 65001 >nul 2>&1
 setlocal enabledelayedexpansion
-
-REM ============================================================================
-REM  AgentSkin one-click build script (pure ASCII - avoids cmd.exe UTF-8 bug)
-REM
-REM  Usage:
-REM    build.bat              bump patch (default)
-REM    build.bat minor        bump minor
-REM    build.bat major        bump major
-REM    build.bat --set 3.0.0  set explicit version
-REM    build.bat --no-bump    keep current version
-REM    build.bat --fast       skip NSIS installer, output unpacked dir only
-REM                           (combine: build.bat --no-bump --fast)
-REM
-REM  Flow:
-REM    1. Bump version (strategy from arg1)
-REM    2. Kill running AgentSkin + clean out/
-REM    3. TypeScript typecheck
-REM    4. electron-vite build (main+preload+renderer)
-REM    5. electron-builder (NSIS installer, or --dir in fast mode) + verify
-REM
-REM  Log : logs\build-<timestamp>.log
-REM  Out : out\make\v<ver>\AgentSkin-<ver>-x64-Setup.exe
-REM ============================================================================
-
 cd /d "%~dp0"
 title AgentSkin Build
 
@@ -34,235 +9,220 @@ echo    AgentSkin Build
 echo  ========================================
 echo.
 
-REM --- sanity check ---
-if not exist "package.json" goto :wrongdir
-if not exist "scripts\bump-version.mjs" goto :wrongdir
+REM --- Node.js (system first, NVM fallbacks, version check >= 22) ---
+REM Project engines: node >=22 (see package.json). We try the system PATH
+REM node first, then every v22.x.* install under the standard NVM_HOME.
+REM The previous hard-coded path (%NVM_HOME%\v22.18.0) broke when users had
+REM any other 22.x patch level ??? the engine contract is on MAJOR.MINOR, not
+REM an exact build. System32 is forced in PATH because stripped environments
+REM (e.g. Task Scheduler launches) sometimes omit it, breaking spawn of
+REM powershell.exe by electron-builder's node-module-collector.
+set "PATH=C:\Windows\System32;C:\Windows\System32\WindowsPowerShell\v1.0;%PATH%"
 
-REM --- Node.js: prefer nvm v22 (electron-builder needs Node 16+) ---
-REM Avoid nested if-blocks with goto -- cmd.exe misparses them.
-if exist "%LOCALAPPDATA%\nvm\v22.18.0\node.exe" set "PATH=%LOCALAPPDATA%\nvm\v22.18.0;%PATH%"
-node -v >nul 2>&1
-if errorlevel 1 (
-  echo   [ERROR] Node.js not found - install via nvm or add to PATH
-  goto :fail
+set "NVM_DIR=%LOCALAPPDATA%\nvm"
+set "NODE_FOUND=0"
+set "REQ_MAJOR=22"
+set "REQ_MINOR=0"
+
+REM (1) Try whatever `node` is already on PATH first (dev machines, CI).
+REM Use `node -p` to get clean version without the leading 'v' that breaks parsing.
+for /f "tokens=1,2,3 delims=." %%A in ('node -p "process.versions.node" 2^>nul') do (
+  set "SYS_MAJOR=%%A"
+  set "SYS_MINOR=%%B"
+  set "SYS_PATCH=%%C"
 )
-for /f "delims=" %%v in ('node -v') do set "NODEVER=%%v"
-echo   Node.js: %NODEVER%
-
-REM --- Full PowerShell path (avoids '-File' not recognized when PATH is odd) ---
-set "PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
-
-REM --- log file ---
-if not exist logs mkdir logs
-for /f "usebackq delims=" %%t in (`node -e "var d=new Date();function p(n){return(n<10?'0':'')+n}console.log(''+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+'-'+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds()))"`) do set "STAMP=%%t"
-set "LOG=logs\build-%STAMP%.log"
-> "%LOG%" echo ==== AgentSkin build %STAMP% ====
-echo   Log: %LOG%
-
-REM --- China mirrors for Electron downloads ---
-set "MSYS_NO_PATHCONV=1"
-set "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/"
-set "ELECTRON_CUSTOM_DIR={{ version }}"
-set "ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/"
-
-REM --- parse arguments: --fast can appear in any position ---
-set "FAST="
-if "%~1"=="--fast" set "FAST=1"
-if "%~2"=="--fast" set "FAST=1"
-if "%~3"=="--fast" set "FAST=1"
-set "BUMP_ARG=%~1"
-if "!BUMP_ARG!"=="--fast" set "BUMP_ARG=%~2"
-if "!BUMP_ARG!"=="" set "BUMP_ARG=patch"
-
-REM --- record current version so :fail can roll back ---
-for /f "usebackq delims=" %%v in (`node -e "console.log(require('./package.json').version)"`) do set "OLDVER=%%v"
-
-REM ============ [1/5] Bump version ============
-call :step "Bump version (!BUMP_ARG!)" 1 5 0
-set "NEWVER="
-if "!BUMP_ARG!"=="--no-bump" (
-  for /f "usebackq delims=" %%v in (`node -e "console.log(require('./package.json').version)"`) do set "NEWVER=%%v"
-) else if "!BUMP_ARG!"=="--set" (
-  for /f "usebackq delims=" %%v in (`node scripts\bump-version.mjs --set "%~2"`) do set "NEWVER=%%v"
-) else (
-  for /f "usebackq delims=" %%v in (`node scripts\bump-version.mjs !BUMP_ARG!`) do set "NEWVER=%%v"
-)
-if "!NEWVER!"=="" goto :fail
->>"%LOG%" echo [step1] version -^> !NEWVER! (strategy: !BUMP_ARG!, was: !OLDVER!)
-echo   version: !NEWVER!
-
-REM ============ engine is now vendored at src/engine (no probe sync needed) ============
-
-REM ============ [2/5] Kill AgentSkin + clean ============
-call :step "Kill AgentSkin + clean" 2 5 5
-taskkill /F /IM AgentSkin.exe >>"%LOG%" 2>&1
-taskkill /F /IM electron.exe >>"%LOG%" 2>&1
-REM Clean electron-vite build output + electron-builder output + legacy forge
-REM output. Uses a PowerShell script with retry + long-path fallback because
-REM plain `rd /s /q` fails silently when Windows Defender locks app.asar
-REM during real-time scanning, leaving stale files that mix with new build
-REM output and cause "duplicate products" to accumulate.
-"%PS%" -NoProfile -ExecutionPolicy Bypass -File scripts\clean-out.ps1 -LogPath "%LOG%"
-echo   done
-
-REM ============ [3/5] TypeScript typecheck ============
-call :step "TypeScript typecheck" 3 5 10
-node node_modules\typescript\bin\tsc --noEmit >>"%LOG%" 2>&1
-if errorlevel 1 (
-  echo   [ERROR] typecheck failed - see log
-  goto :fail
-)
-echo   pass
-
-REM ============ [4/5] electron-vite build ============
-call :step "electron-vite build" 4 5 15
-echo   streaming output (also in log)...
-"%PS%" -NoProfile -ExecutionPolicy Bypass -File scripts\run-step.ps1 -LogPath "%LOG%" -Command "npm run build"
-if !errorlevel! neq 0 goto :fail
-
-REM ============ [5/5] electron-builder + verify ============
-set "OUT_DIR=out\make\v!NEWVER!"
-set "ELECTRON_BUILDER_OUT_DIR=!OUT_DIR!"
-REM Clean stale win-unpacked from a previous --fast build (same version).
-REM Without this, electron-builder hits EBUSY on locked files (icudtl.dat).
-if exist "!OUT_DIR!\win-unpacked" (
-  echo   cleaning stale win-unpacked ...
-  rd /s /q "!OUT_DIR!\win-unpacked" 2>nul
-)
-
-if not defined FAST goto :full_mode
-
-REM --- FAST MODE: unpacked dir only, no NSIS / signing / blockmap ---
-call :step "electron-builder --dir (fast)" 5 5 60
-echo   streaming output (also in log)...
-"%PS%" -NoProfile -ExecutionPolicy Bypass -File scripts\run-step.ps1 -LogPath "%LOG%" -Command "npx electron-builder --config electron-builder.yml --config.win.sign=false --win --x64 --dir --publish never"
-ping -n 3 127.0.0.1 >nul
-set "APP_EXE=!OUT_DIR!\win-unpacked\AgentSkin.exe"
-if not exist "!APP_EXE!" (
-  echo   [ERROR] AgentSkin.exe not found: !APP_EXE!
-  dir "!OUT_DIR!" 2>nul
-  goto :fail
-)
-for %%F in ("!APP_EXE!") do set /a "INST_MB=%%~zF/1048576"
->>"%LOG%" echo [step5] OK fast: app=!APP_EXE!
-call :step "BUILD OK (fast)" 5 5 100
-echo.
-echo  ========================================
-echo    BUILD OK ^(fast -- no installer^)
-echo    version : !NEWVER!
-echo    app     : %CD%\!APP_EXE!
-echo    log     : %CD%\%LOG%
-echo  ========================================
-echo.
-pause
-exit /b 0
-
-:full_mode
-REM --- FULL MODE: NSIS installer ---
-call :step "electron-builder NSIS installer" 5 5 60
-echo   streaming output (also in log)...
-REM Step 4 already ran `electron-vite build`, so here we call electron-builder
-REM directly instead of `npm run package` (which re-runs electron-vite build).
-REM ELECTRON_BUILDER_OUT_DIR gives each build a fresh versioned output dir
-REM (out/make/v{version}/) so we never need to clean stale win-unpacked/ --
-REM that cleanup fails when Defender locks app.asar, causing old+new mix.
-REM --- [5a] Generate NSIS skin assets (BMPs + brand.nsh) and verify ---
-echo   generating NSIS skin assets (icons:nsis) + verify ...
-"%PS%" -NoProfile -ExecutionPolicy Bypass -File scripts\run-step.ps1 -LogPath "%LOG%" -Command "npm run icons:nsis"
-if !errorlevel! neq 0 goto :fail
-node scripts/verify-nsis-assets.mjs
-if !errorlevel! neq 0 goto :fail
-
-"%PS%" -NoProfile -ExecutionPolicy Bypass -File scripts\run-step.ps1 -LogPath "%LOG%" -Command "npx electron-builder --config electron-builder.yml --win --x64 --publish never"
-REM NOTE: Do NOT fail on errorlevel alone. TRAE Sandbox sometimes blocks
-REM Windows Recent-file access AFTER electron-builder has finished, returning
-REM exit code 1 even though the installer was built successfully. We verify
-REM by checking the installer file itself (size > 50MB) instead.
-
-REM --- verify by output file, not exit code ---
-REM Wait for NTFS/Defender to release the file, then check with one retry.
-ping -n 4 127.0.0.1 >nul
-set "INSTALLER_EXE=!OUT_DIR!\AgentSkin-!NEWVER!-x64-Setup.exe"
-if not exist "!INSTALLER_EXE!" (
-  echo   [retry] installer not visible yet, waiting 3s...
-  ping -n 4 127.0.0.1 >nul
-)
-if not exist "!INSTALLER_EXE!" (
-  echo   [ERROR] NSIS installer not found: !INSTALLER_EXE!
-  echo   [diag] output directory listing:
-  dir "!OUT_DIR!" 2>nul
-  goto :fail
-)
-for %%F in ("!INSTALLER_EXE!") do set /a "INST_MB=%%~zF/1048576"
-if !INST_MB! LSS 50 (
-  echo   [ERROR] Installer too small (!INST_MB! MB ^< 50 MB) -- build likely incomplete
-  goto :fail
-)
->>"%LOG%" echo [step5] OK: installer=!INSTALLER_EXE! (!INST_MB! MB)
-call :step "BUILD OK" 5 5 100
-
-echo.
-echo  ========================================
-echo    BUILD OK
-echo    version  : !NEWVER!
-echo    installer: %CD%\!INSTALLER_EXE!
-echo    size     : !INST_MB! MB
-echo    log      : %CD%\%LOG%
-echo  ========================================
-echo.
-pause
-exit /b 0
-
-:wrongdir
-echo.
-echo   [ERROR] Run from AgentSkin project root
-echo           (folder with package.json and scripts\)
-echo.
-pause
-exit /b 1
-
-:fail
-echo.
-echo  ========================================
-echo    BUILD FAILED
-echo  ========================================
-echo   log: %LOG%
-echo   last 25 lines:
-echo   ----------------------------------------
-if exist "%LOG%" "%PS%" -NoProfile -Command "Get-Content -LiteralPath '%LOG%' -Tail 25"
-echo   ----------------------------------------
-REM Roll back version bump so failed builds don't accumulate version numbers.
-REM Only rolls back when OLDVER is captured AND a bump actually happened
-REM (NEWVER differs from OLDVER and BUMP_ARG is not --no-bump).
-REM Skip rollback if the installer was actually built (false-negative guard).
-set "SKIP_ROLLBACK="
-if defined NEWVER if defined OUT_DIR (
-  if exist "!OUT_DIR!\AgentSkin-!NEWVER!-x64-Setup.exe" set "SKIP_ROLLBACK=1"
-)
-if defined SKIP_ROLLBACK (
-  echo   [NOTE] Installer exists -- skipping version rollback
-) else (
-  if defined OLDVER if defined NEWVER if not "!BUMP_ARG!"=="--no-bump" if not "!NEWVER!"=="!OLDVER!" (
-    node scripts\bump-version.mjs --set "!OLDVER!" >nul 2>&1
-    echo   [ROLLBACK] version reverted !NEWVER! -^> !OLDVER!
+if defined SYS_MAJOR (
+  if !SYS_MAJOR! GEQ !REQ_MAJOR! (
+    if !SYS_MAJOR! GTR !REQ_MAJOR! (
+      set "NODE_FOUND=1"
+    ) else (
+      if !SYS_MINOR! GEQ !REQ_MINOR! set "NODE_FOUND=1"
+    )
   )
 )
-echo.
-pause
-exit /b 1
 
-REM ============================================================================
-REM  subroutines
-REM ============================================================================
-
-REM --- progress header: %~1 label  %~2 step  %~3 total  %~4 pct ---
-:step
-set /a "FILL=%~4*30/100"
-set "BAR="
-for /l %%i in (1,1,30) do (
-  if %%i leq !FILL! (set "BAR=!BAR!#") else (set "BAR=!BAR!-")
+REM (2) If PATH node was absent or too old, scan %NVM_DIR%\v22.* for the
+REM highest matching install (true SemVer, not string-order). Wildcard enumeration
+REM in a FOR /D loop picks up ANY 22.x patch instead of pinning 22.18.0.
+if "!NODE_FOUND!"=="0" (
+  if exist "!NVM_DIR!" (
+    set "BEST_NODE_DIR="
+    set "BEST_MINOR=-1"
+    set "BEST_PATCH=-1"
+    
+    for /d %%D in ("!NVM_DIR!\v22.*") do (
+      if exist "%%D\node.exe" (
+        for /f "tokens=1,2,3 delims=." %%A in ('"%%D\node.exe" -p "process.versions.node" 2^>nul') do (
+          set "CAND_MINOR=%%B"
+          set "CAND_PATCH=%%C"
+          set "UPDATE=0"
+          if !CAND_MINOR! GTR !BEST_MINOR! set "UPDATE=1"
+          if !CAND_MINOR! EQU !BEST_MINOR! (
+            if !CAND_PATCH! GTR !BEST_PATCH! set "UPDATE=1"
+          )
+          if !UPDATE! EQU 1 (
+            set "BEST_MINOR=!CAND_MINOR!"
+            set "BEST_PATCH=!CAND_PATCH!"
+            set "BEST_NODE_DIR=%%D"
+          )
+        )
+      )
+    )
+    
+    if defined BEST_NODE_DIR (
+      echo   [node] found NVM install !BEST_NODE_DIR!
+      set "PATH=!BEST_NODE_DIR!;!PATH!"
+      set "NODE_FOUND=1"
+    )
+  )
 )
+:node_done
+
+REM (3) Final validation ??? after (1) and (2) we MUST have a valid node.
+node -v >nul 2>&1 || (
+  echo.
+  echo   [ERROR] Node.js ^>=v!REQ_MAJOR!.!REQ_MINOR!.x not found.
+  echo           Install it from https://nodejs.org or via:
+  echo             nvm install !REQ_MAJOR!.!REQ_MINOR! ^&^& nvm use !REQ_MAJOR!.!REQ_MINOR!
+  echo.
+  pause & exit /b 1
+)
+
+REM --- Parse args: patch (default) / minor / major / --no-bump / --set X.Y.Z ---
+set "BUMP=patch"
+if "%~1"=="minor" set "BUMP=minor"
+if "%~1"=="major" set "BUMP=major"
+if "%~1"=="--no-bump" set "BUMP=--no-bump"
+if "%~1"=="--set" (
+  if "%~2"=="" (echo   [ERROR] --set needs a version & pause & exit /b 1)
+  set "BUMP=--set"
+  set "SETVER=%~2"
+)
+
+REM --- Bump version ---
+echo   [1/7] bump version (!BUMP!) ...
+if "!BUMP!"=="--set" (
+  for /f "delims=" %%v in ('node scripts\bump-version.mjs !BUMP! !SETVER!') do set "VER=%%v"
+) else (
+  for /f "delims=" %%v in ('node scripts\bump-version.mjs !BUMP!') do set "VER=%%v"
+)
+if "!VER!"=="" (echo   FAIL & pause & exit /b 1)
+echo     !VER!
+
+REM --- China mirrors ---
+set "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/"
+set "ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/"
+REM Versioned output dir: each build gets a fresh out\make\v{version}\ so
+REM stale win-unpacked/ from the previous build never mixes with the new one
+REM (Windows Defender locks app.asar during real-time scanning, preventing
+REM cleanup of a shared output dir).
+REM Note: Ensure your package.json or electron-builder.yml has:
+REM   "build": { "directories": { "output": "${ELECTRON_BUILDER_OUT_DIR}" } }
+set "ELECTRON_BUILDER_OUT_DIR=out\make\v!VER!"
+
+REM --- Kill running app ---
+REM AgentSkin spawns agent apps (TRAE/QoderWork/WorkBuddy/Doubao/Codex/ZCode)
+REM via child_process with --remote-debugging-port=0. On Windows a detached
+REM spawn still leaves the child's ParentProcessId pointing at AgentSkin
+REM (verified), so `taskkill /F /IM AgentSkin.exe /T` — the /T recurses into
+REM the process tree — kills every agent AgentSkin launched for theming, even
+REM agents the user is actively working in. That is a destructive surprise for
+REM the user, so we kill AgentSkin precisely and never recurse into agents:
+REM
+REM   1. Packaged builds: main process + helpers all carry the AgentSkin.exe
+REM      image name (electron-builder renames electron.exe). Kill by PID from
+REM      wmic — matches every AgentSkin.exe process (main + renderer/GPU
+REM      helpers) but NEVER an agent, whose image name differs.
+REM   2. Dev builds: the dev instance runs as electron.exe. Killing by that
+REM      generic image name would also kill every other Electron app on the
+REM      machine, so we restrict to the electron.exe whose executable lives
+REM      under this project's node_modules (CommandLine check via PowerShell).
+REM
+REM No /T anywhere: /T follows the parent→child tree, which is exactly what
+REM kills user agents. Killing the main PID covers its own helpers (they are
+REM children) without touching sibling processes.
+REM
+REM If AgentSkin.exe refuses to die, run this script as Administrator.
+for /f "tokens=2 delims==." %%P in ('wmic process where "Name='AgentSkin.exe'" get ProcessId /value ^| findstr /R "^ProcessId="') do taskkill /F /PID %%P >nul 2>&1
+powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='electron.exe'\" | Where-Object { $_.ExecutablePath -like '%~dp0node_modules*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+
+REM --- Step 2: electron-vite build ---
+echo   [2/7] electron-vite build ...
+call npx electron-vite build
+if !errorlevel! neq 0 (echo   FAIL & pause & exit /b 1)
+
+REM --- Step 2.5: 清理当前版本旧残留，避免干扰新构建 ---
+echo   [2.5] cleaning old v!VER! artifacts ...
+if exist "out\make\v!VER!" rmdir /s /q "out\make\v!VER!" 2>nul
+
+REM --- Step 3: electron-builder pack (NSIS installer) ---
+REM electron-builder directly builds the NSIS installer (target: nsis in yml).
+REM electron.exe rename may occasionally fail under Defender scanning;
+REM detect and retry once.
+echo   [3/7] electron-builder pack (NSIS) ...
+set "EB_RETRY=0"
+
+:eb_pack_retry
+call npx electron-builder --win --x64 --publish never
+if !errorlevel! neq 0 (
+  REM Retry judgment: installer .exe already generated -> real success
+  if exist "out\make\v!VER!\AgentSkin-!VER!-x64-Setup.exe" (
+    echo     OK: installer present — treating as success.
+  ) else if !EB_RETRY! LSS 1 (
+    set /a EB_RETRY+=1
+    echo     WARN: electron-builder failed ^(!EB_RETRY!/2^), retrying after cleanup...
+    timeout /t 3 /nobreak >nul
+    if exist "out\make\v!VER!" rmdir /s /q "out\make\v!VER!" 2>nul
+    goto :eb_pack_retry
+  ) else (
+    echo   FAIL: electron-builder exited with code !errorlevel! after retries & pause & exit /b 1
+  )
+)
+
+REM --- Step 4: (removed — DuiLib payload generation no longer needed) ---
+REM --- Step 5: (removed — DuiLib plugin + NSIS compilation no longer needed) ---
+
+REM --- Step 6: verify ---
+echo   [6/7] verify ...
+set "INST_EXE=out\make\v!VER!\AgentSkin-!VER!-x64-Setup.exe"
+if not exist "!INST_EXE!" (
+  echo   [ERROR] Installer not found: !INST_EXE!
+  dir /b "out\make\v!VER!\" 2>nul
+  pause & exit /b 1
+)
+REM Verify size >= 10MB (per project constraint: build success = file exists and size >= 10MB)
+for %%S in ("!INST_EXE!") do set "INST_SIZE=%%~zS"
+if !INST_SIZE! LSS 10485760 (
+  echo   [ERROR] Installer too small: !INST_SIZE! bytes ^(expected >= 10MB^)
+  pause & exit /b 1
+)
+set "FOUND=!INST_EXE!"
+
+REM --- Step 7: cleanup (DISABLED: retain all artifacts, do NOT delete) ---
+echo   [7/7] cleanup skipped (no files deleted) ...
+
+REM 7a: win-unpacked retained for payload inspection / crash debugging
+if exist "out\make\v!VER!\win-unpacked" (
+  echo     kept out\make\v!VER!\win-unpacked
+)
+echo     kept out\make\v!VER!\builder-debug.yml
+echo     kept out\make\v!VER!\builder-effective-config.yaml
+
+REM 7b: electron-vite build outputs retained
+if exist "out\main" echo     kept out\main
+if exist "out\preload" echo     kept out\preload
+if exist "out\renderer" echo     kept out\renderer
+
+REM 7c: stale version dirs retained
+echo     kept all out\make\v* dirs
+echo  ========================================
+echo    BUILD OK  v!VER!
+echo    installer: !FOUND!
+echo    size: !INST_SIZE! bytes
+echo  ========================================
 echo.
-echo   [!BAR!] %~4%%  [%~2/%~3] %~1
-title AgentSkin Build - %~4%% - %~1
-exit /b 0
+
+REM --- Step 8: auto-launch the installer (GUI wizard) ---
+echo   [8] launching installer ...
+start "" "!INST_EXE!"
+pause

@@ -3,7 +3,7 @@
 /**
  * # Install Detection (AgentSkin-side, Windows)
  *
- * @agentskin/core's `discoverApp` is the execution-layer detector and must
+ * @agentskin/engine's `discoverApp` is the execution-layer detector and must
  * NOT be modified for this fix. AgentSkin adds its own install-location
  * detection (filesystem paths + Uninstall registry keys) so that an installed
  * agent is reported as detected even when it is not currently running. The
@@ -15,7 +15,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { InstallHints } from '../adapters/base';
-import { execFileAsync } from '../shared/exec-async';
+import { toMessage } from '../shared/errors';
+import { type ExecFileResult, execFileAsync } from '../shared/exec-async';
 import { appendLogLine } from './fs-utils';
 
 export interface InstallDetection {
@@ -50,20 +51,32 @@ export interface DetectInstallationOptions {
 /** Read FileVersion + ProductVersion + ProductName + FileDescription of an exe. */
 async function readExeInfo(
   exePath: string,
+  logFile?: string | null,
 ): Promise<{ version: string | null; productName: string; fileDescription: string } | null> {
   const literal = exePath.replace(/'/g, "''");
   // NOTE: single-quoted JS strings — `$` is literal, no template interpolation.
   const script = [
-    '$v = (Get-Item -LiteralPath ' + "'" + literal + "'" + ').VersionInfo',
+    `$v = (Get-Item -LiteralPath '${literal}').VersionInfo`,
     '"$($v.FileVersion)|$($v.ProductVersion)|$($v.ProductName)|$($v.FileDescription)"',
   ].join('\n');
-  const out = await execFileAsync('powershell', [
-    '-NoProfile',
-    '-NonInteractive',
-    '-Command',
-    script,
-  ]);
-  const line = out.trim();
+  const res: ExecFileResult = await execFileAsync(
+    'powershell',
+    ['-NoProfile', '-NonInteractive', '-Command', script],
+    8000,
+    { includeStderr: true },
+  );
+  // P3-8 / N13: When the PowerShell call barfs (execution policy, missing
+  // binary, path containing special chars) stderr used to be silently
+  // dropped — callers got back empty stdout and inferred "not installed"
+  // with no breadcrumb. Now we log stderr (and the underlying err message)
+  // to the detection log so it's clear why detection failed.
+  if ((!res.stdout.trim() || res.errorMessage) && (res.stderr || res.errorMessage) && logFile) {
+    await appendLogLine(
+      logFile,
+      `[${new Date().toISOString()}] [readExeInfo] ${exePath}: ${res.errorMessage ? `${res.errorMessage}; ` : ''}stderr=${res.stderr.trim() || '(empty)'}`,
+    ).catch(() => undefined);
+  }
+  const line = res.stdout.trim();
   if (!line) return null;
   const [fileVersion, productVersion, productName, fileDescription] = line.split('|');
   const version = (fileVersion || productVersion || '').trim() || null;
@@ -78,15 +91,33 @@ function matchesIdentity(
   info: { productName: string; fileDescription: string },
   hints: InstallHints,
 ): boolean {
-  const hay = `${info.productName} ${info.fileDescription}`.toLowerCase();
+  const haystack = `${info.productName} ${info.fileDescription}`.toLowerCase();
   const tokens = [...hints.registryNames, ...hints.dirNames].map((s) => s.toLowerCase());
-  return tokens.some((token) => token && hay.includes(token));
+  // N5: The original `haystack.includes(token)` matched any SUBSTRING, so
+  // short tokens like "code" or "qoder" would fire on unrelated strings
+  // ("Microsoft Visual Studio Code Insider" matched for a token meant only
+  // for the app "Code.exe", and a short rebrand token could match a directory
+  // name fragment). We now:
+  //   - Split the haystack into UNICODE-aware whole words (letters + digits).
+  //   - Short (< 8 chars) single-word tokens must match a WHOLE word in the
+  //     set, not a substring.
+  //   - Long tokens (>= 8 chars) or tokens containing spaces / punctuation
+  //     (file paths, product phrases) keep the includes() semantics because
+  //     they're distinctive enough to not trigger false positives.
+  const wordSet = new Set(haystack.split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 0));
+  return tokens.some((token) => {
+    if (!token) return false;
+    const isPhrase = /\s|[^a-z0-9]/.test(token);
+    if (isPhrase || token.length >= 8) return haystack.includes(token);
+    return wordSet.has(token);
+  });
 }
 
 /** Look for the agent exe inside a single directory (exact name, then verify). */
 async function scanDirForExe(
   dir: string,
   hints: InstallHints,
+  logFile?: string | null,
 ): Promise<{ version: string | null } | null> {
   let entries: string[] = [];
   try {
@@ -103,7 +134,7 @@ async function scanDirForExe(
     try {
       const stat = await fs.stat(candidate);
       if (stat.isFile()) {
-        const version = await readExeInfo(candidate)
+        const version = await readExeInfo(candidate, logFile)
           .then((i) => i?.version ?? null)
           .catch(() => null);
         return { version };
@@ -114,7 +145,11 @@ async function scanDirForExe(
   }
 
   // 2) Fallback: scan top-level *.exe and confirm identity via version info.
+  // Cap at 10 candidates to avoid spawning excessive PowerShell processes
+  // in directories with many executables (e.g. game launcher folders).
+  let probed = 0;
   for (const entry of entries) {
+    if (probed >= 10) break;
     if (!entry.toLowerCase().endsWith('.exe')) continue;
     const candidate = path.join(dir, entry);
     try {
@@ -123,12 +158,12 @@ async function scanDirForExe(
     } catch {
       continue;
     }
-    const info = await readExeInfo(candidate).catch(() => null);
+    probed++;
+    const info = await readExeInfo(candidate, logFile).catch(() => null);
     if (info && matchesIdentity(info, hints)) {
       return { version: info.version };
     }
   }
-
   return null;
 }
 
@@ -162,9 +197,9 @@ function candidateRoots(): string[] {
  * apps that write DisplayIcon + UninstallString but leave InstallLocation blank).
  */
 function buildRegistryScript(names: string[]): string {
-  const nameArray = names.map((n) => "'" + n.replace(/'/g, "''") + "'").join(',');
+  const nameArray = names.map((n) => `'${n.replace(/'/g, "''")}'`).join(',');
   const lines = [
-    '$names = @(' + nameArray + ')',
+    `$names = @(${nameArray})`,
     "$keys = @('HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*','HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*')",
     'Get-ItemProperty $keys -ErrorAction SilentlyContinue | Where-Object { $e=$_; ($e.DisplayName -and ($names | Where-Object { $e.DisplayName -like "*$_*" })) -or ($names | Where-Object { $e.PSChildName -like "*$_*" }) } | ForEach-Object { "$($_.DisplayName)|$($_.DisplayVersion)|$($_.InstallLocation)|$($_.DisplayIcon)|$($_.UninstallString)" }',
   ];
@@ -196,7 +231,7 @@ function formatLogEntry(
 }
 
 async function appendLog(logFile: string, content: string): Promise<void> {
-  await appendLogLine(logFile, content + '\n');
+  await appendLogLine(logFile, `${content}\n`);
 }
 
 // ---------------------------------------------------------------------------
@@ -241,7 +276,7 @@ export async function detectInstallation(
     } catch {
       dir = path.dirname(normalized);
     }
-    const found = await scanDirForExe(dir, hints).catch(() => null);
+    const found = await scanDirForExe(dir, hints, logFile).catch(() => null);
     const result: InstallDetection = {
       installed: true,
       path: dir,
@@ -266,7 +301,7 @@ export async function detectInstallation(
       const dir = path.join(root, dirName);
       scanPaths.push(dir);
       if (!pathResult) {
-        const found = await scanDirForExe(dir, hints).catch(() => null);
+        const found = await scanDirForExe(dir, hints, logFile).catch(() => null);
         if (found) pathResult = { path: dir, version: found.version };
       }
     }
@@ -276,18 +311,17 @@ export async function detectInstallation(
   const registryInfo: string[] = [];
   let registryResult: { path: string | null; version: string | null } | null = null;
   try {
-    const out = await execFileAsync('powershell', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      buildRegistryScript(hints.registryNames),
-    ]);
+    const out = await execFileAsync(
+      'powershell',
+      ['-NoProfile', '-NonInteractive', '-Command', buildRegistryScript(hints.registryNames)],
+      10000,
+    );
     for (const raw of out.split('\n')) {
       const line = raw.trim();
       if (!line) continue;
       // Fields: DisplayName|DisplayVersion|InstallLocation|DisplayIcon|UninstallString
       const [dn, dv, il, icon, uninst] = line.split('|');
-      registryInfo.push(`${dn ?? ''}${dv ? ' v' + dv : ''}`);
+      registryInfo.push(`${dn ?? ''}${dv ? ` v${dv}` : ''}`);
       if (!registryResult) {
         // InstallLocation is authoritative when present; otherwise derive the
         // install dir from DisplayIcon or UninstallString (common for Tencent-
@@ -312,8 +346,16 @@ export async function detectInstallation(
         };
       }
     }
-  } catch {
-    // Registry scan is best-effort; ignore failures.
+  } catch (error) {
+    // Registry scan is best-effort, but record the failure reason so a
+    // broken PowerShell execution policy or missing reg key is diagnosable
+    // instead of silently producing "NOT FOUND" for every registry-only app.
+    if (logFile) {
+      await appendLogLine(
+        logFile,
+        `[${stamp}] [${displayName}] registry scan failed: ${toMessage(error)}`,
+      );
+    }
   }
 
   // Merge: path detection is preferred (gives both dir + version); registry

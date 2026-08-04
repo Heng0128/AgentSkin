@@ -9,6 +9,7 @@
  * install-detection.
  */
 
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -26,10 +27,10 @@ import path from 'node:path';
 export async function writeJsonAtomic(file: string, data: unknown): Promise<void> {
   const dir = path.dirname(file);
   await fs.mkdir(dir, { recursive: true });
-  const tmp = path.join(
-    dir,
-    `.${path.basename(file)}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`,
-  );
+  // R6-20: 改用 crypto.randomUUID() 替代 Math.random().toString(36)。
+  // 原实现 Math.random() 在极小规模并发下有碰撞风险，crypto.randomUUID() 生成
+  // 122 位随机数，碰撞概率可忽略不计。
+  const tmp = path.join(dir, `.${path.basename(file)}.${process.pid}.${randomUUID()}.tmp`);
   await fs.writeFile(tmp, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
   try {
     await fs.rename(tmp, file);

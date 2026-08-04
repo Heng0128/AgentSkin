@@ -14,33 +14,41 @@
  */
 
 import { dialog, ipcMain } from 'electron';
+import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
-import {
-  isAgentId,
-  type WallpaperAgentSetting,
-  type WallpaperInfo,
-  type WallpaperSettings,
-} from '../../shared/types';
+import type { WallpaperAgentSetting, WallpaperInfo, WallpaperSettings } from '../../shared/types';
 import { type MainContext, settingsDto } from '../main-context';
+import { assertAgentId, assertNonEmptyString } from './ipc-validators';
 
 export function registerWallpaperIpc(deps: MainContext): void {
-  ipcMain.handle(IpcChannel.WALLPAPER_LIST, () => deps.wallpapers.list());
+  /** Guard: wallpaper service may be null if its initialization failed during
+   *  boot (degradable step). Returns an empty array for list operations so
+   *  the UI shows "no wallpapers" instead of crashing. */
+  const wp = (): NonNullable<MainContext['wallpapers']> => {
+    if (!deps.wallpapers) throw new Error('Wallpaper service unavailable');
+    return deps.wallpapers;
+  };
+
+  ipcMain.handle(IpcChannel.WALLPAPER_LIST, () => deps.wallpapers?.list() ?? []);
 
   ipcMain.handle(IpcChannel.WALLPAPER_SET, async (_event, next: unknown) => {
     const candidate = (next ?? {}) as Partial<WallpaperSettings>;
     await deps.settings.setWallpaper({
       enabled: candidate.enabled === true,
       id: typeof candidate.id === 'string' && candidate.id ? candidate.id : null,
+      render: candidate.render,
     });
     return settingsDto(deps);
   });
 
   ipcMain.handle(IpcChannel.WALLPAPER_IMPORT, async () => {
+    if (!deps.wallpapers) return [];
+    const copy = getMainMessages();
     const result = await dialog.showOpenDialog({
-      title: 'Import Wallpaper',
+      title: copy.wallpaperImportDialogTitle,
       filters: [
         {
-          name: 'Images & Videos',
+          name: copy.wallpaperImportFilterAll,
           extensions: [
             'mp4',
             'webm',
@@ -55,8 +63,11 @@ export function registerWallpaperIpc(deps: MainContext): void {
             'gif',
           ],
         },
-        { name: 'Video', extensions: ['mp4', 'webm', 'mkv', 'mov', 'avi'] },
-        { name: 'Image', extensions: ['jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif'] },
+        { name: copy.wallpaperImportFilterVideo, extensions: ['mp4', 'webm', 'mkv', 'mov', 'avi'] },
+        {
+          name: copy.wallpaperImportFilterImage,
+          extensions: ['jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif'],
+        },
       ],
       properties: ['openFile'],
     });
@@ -68,48 +79,73 @@ export function registerWallpaperIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.WALLPAPER_DELETE,
     async (_event, id: unknown): Promise<WallpaperInfo[]> => {
-      if (typeof id !== 'string' || !id) return deps.wallpapers.list();
-      await deps.wallpapers.deleteWallpaper(id);
-      return deps.wallpapers.list();
+      assertNonEmptyString(id, getMainMessages().invalidPath);
+      await wp().deleteWallpaper(id);
+      return wp().list();
     },
   );
 
   ipcMain.handle(
     IpcChannel.WALLPAPER_SET_AGENT,
     async (_event, appId: unknown, setting: unknown) => {
-      if (!isAgentId(appId)) throw new Error('INVALID_AGENT_ID');
+      assertAgentId(appId);
       const s = (setting ?? {}) as Partial<WallpaperAgentSetting>;
       await deps.settings.setAgentWallpaper(appId, {
         enabled: s.enabled === true,
         id: typeof s.id === 'string' && s.id ? s.id : null,
+        render: s.render,
       });
       return settingsDto(deps);
     },
   );
 
-  ipcMain.handle(IpcChannel.WALLPAPER_APPLY_AGENT, async (_event, appId: unknown) => {
-    if (!isAgentId(appId)) return { ok: false, reason: 'invalid-agent-id' };
-    return deps.core.applyAgentWallpaperNow(appId);
-  });
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_APPLY_AGENT,
+    async (_event, appId: unknown, options?: unknown) => {
+      assertAgentId(appId);
+      const opts = (options ?? {}) as { restartExisting?: boolean };
+      return deps.core.applyAgentWallpaperNow(appId, {
+        restartExisting: opts.restartExisting === true,
+      });
+    },
+  );
 
   ipcMain.handle(
     IpcChannel.WALLPAPER_APPLY_TO_AGENT,
-    async (_event, wallpaperId: unknown, appId: unknown) => {
-      if (typeof wallpaperId !== 'string' || !wallpaperId)
-        return { ok: false, reason: 'invalid-wallpaper-id' };
-      if (!isAgentId(appId)) return { ok: false, reason: 'invalid-agent-id' };
-      return deps.core.applyWallpaperToAgent(wallpaperId, appId);
+    async (_event, wallpaperId: unknown, appId: unknown, options?: unknown) => {
+      assertNonEmptyString(wallpaperId, getMainMessages().invalidPath);
+      assertAgentId(appId);
+      const opts = (options ?? {}) as { restartExisting?: boolean };
+      return deps.core.applyWallpaperToAgent(wallpaperId, appId, {
+        restartExisting: opts.restartExisting === true,
+      });
     },
   );
 
   ipcMain.handle(IpcChannel.WALLPAPER_REMOVE_FROM_AGENT, async (_event, appId: unknown) => {
-    if (!isAgentId(appId)) return { ok: false };
+    assertAgentId(appId);
     return deps.core.removeWallpaperFromAgent(appId);
   });
 
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_VIDEO_URL,
+    async (_event, id: unknown): Promise<string | null> => {
+      assertNonEmptyString(id, getMainMessages().invalidPath);
+      return deps.wallpapers?.videoUrlFor(id) ?? null;
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_WEB_URL,
+    async (_event, id: unknown): Promise<string | null> => {
+      assertNonEmptyString(id, getMainMessages().invalidPath);
+      return deps.wallpapers?.webUrlFor(id) ?? null;
+    },
+  );
+
   ipcMain.handle(IpcChannel.WE_DETECT, async () => {
-    const installed = await deps.wallpapers.isInstalled();
-    const wallpaperCount = installed ? await deps.wallpapers.count() : 0;
+    const installed = deps.wallpapers ? await deps.wallpapers.isInstalled() : false;
+    const wallpaperCount = installed ? await deps.wallpapers!.count() : 0;
     return { installed, wallpaperCount };
   });
 }

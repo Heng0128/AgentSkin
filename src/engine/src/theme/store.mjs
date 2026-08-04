@@ -6,15 +6,15 @@ import { MAX_THEME_PACKAGE_BYTES, THEME_EXTENSION, validateThemePackage } from "
 import { LEGACY_THEME_FORMAT, convertLegacyThemePackage, validateLegacyThemePackage } from "./legacy.mjs";
 
 function resolveBaseUrl(env = process.env) {
-  const raw = (env.CODEDROBE_API_BASE || "https://codedrobe.app").trim().replace(/\/+$/, "");
+  const raw = (env.AGENTSKIN_API_BASE || "https://agentskin.app").trim().replace(/\/+$/, "");
   let url;
   try {
     url = new URL(raw);
   } catch {
-    throw new Error(`Invalid CODEDROBE_API_BASE '${raw}'.`);
+    throw new Error(`Invalid AGENTSKIN_API_BASE '${raw}'.`);
   }
   if (url.protocol !== "https:" && url.protocol !== "http:") {
-    throw new Error("CODEDROBE_API_BASE must use http(s).");
+    throw new Error("AGENTSKIN_API_BASE must use http(s).");
   }
   return url.origin;
 }
@@ -29,12 +29,22 @@ export class ThemeStoreError extends Error {
   }
 }
 
-async function storeRequest(fetchImpl, url) {
+async function storeRequest(fetchImpl, url, { timeoutMs = 10_000 } = {}) {
   let response;
+  const signal = AbortSignal.timeout(timeoutMs);
   try {
-    response = await fetchImpl(url, { headers: { accept: "application/json" } });
+    response = await fetchImpl(url, {
+      headers: { accept: "application/json" },
+      signal,
+    });
   } catch (cause) {
-    throw new ThemeStoreError(`Could not reach the CodeDrobe store: ${cause.message}`, "network_error");
+    if (cause.name === "TimeoutError") {
+      throw new ThemeStoreError(
+        `Could not reach the AgentSkin store (timeout after ${timeoutMs}ms).`,
+        "network_timeout",
+      );
+    }
+    throw new ThemeStoreError(`Could not reach the AgentSkin store: ${cause.message}`, "network_error");
   }
   let payload = null;
   try {
@@ -92,7 +102,7 @@ export async function searchThemes({
 }
 
 /**
- * Download a free store theme as a local .codedrobe-theme file.
+ * Download a free store theme as a local .agentskin-theme file.
  *
  * Mirrors the desktop install pipeline: the byte size and SHA-256 must match
  * the store record (and the response digest header when present), and the
@@ -132,8 +142,14 @@ export async function downloadTheme({
   const downloadUrl = new URL(theme.downloadUrl, baseUrl).toString();
   let response;
   try {
-    response = await fetchImpl(downloadUrl, { headers: { accept: "application/octet-stream" } });
+    response = await fetchImpl(downloadUrl, {
+      headers: { accept: "application/octet-stream" },
+      signal: AbortSignal.timeout(60_000),
+    });
   } catch (cause) {
+    if (cause.name === "TimeoutError") {
+      throw new ThemeStoreError("Theme download timed out after 60000ms.", "network_timeout");
+    }
     throw new ThemeStoreError(`Theme download failed: ${cause.message}`, "network_error");
   }
   if (!response.ok) {
@@ -144,13 +160,13 @@ export async function downloadTheme({
     throw new ThemeStoreError("The downloaded package size does not match the store record.", "integrity_mismatch");
   }
   const digest = createHash("sha256").update(bytes).digest("hex");
-  const headerDigest = response.headers?.get?.("x-codedrobe-sha256")?.toLowerCase() ?? null;
+  const headerDigest = response.headers?.get?.("x-agentskin-sha256")?.toLowerCase() ?? null;
   if (digest !== expectedSha || (headerDigest && digest !== headerDigest)) {
     throw new ThemeStoreError("The downloaded package failed its SHA-256 integrity check.", "integrity_mismatch");
   }
 
   // Early store uploads are legacy .codex-theme packages; convert them on the
-  // way in so the written file is always ready for `codedrobe apply`.
+  // way in so the written file is always ready for `agentskin apply`.
   let bundle;
   let converted = false;
   let fileBytes = bytes;
@@ -171,7 +187,7 @@ export async function downloadTheme({
   // directory and skills find them at a predictable path.
   let filename = output
     ? path.resolve(output)
-    : path.join(home, ".codedrobe", "themes", `${slug}-${bundle.theme.version}${THEME_EXTENSION}`);
+    : path.join(home, ".agentskin", "themes", `${slug}-${bundle.theme.version}${THEME_EXTENSION}`);
   if (!filename.endsWith(THEME_EXTENSION)) filename += THEME_EXTENSION;
   if (!force) {
     try {

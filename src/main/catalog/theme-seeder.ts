@@ -16,7 +16,6 @@
  */
 
 import { existsSync } from 'node:fs';
-import fs from 'node:fs/promises';
 import path from 'node:path';
 import { app } from 'electron';
 import type { InstalledTheme } from '../../shared/types';
@@ -46,12 +45,24 @@ export async function seedBuiltInThemes(
   const loader = new ThemePackageLoader(themesDir);
   const installer = new ThemeInstaller(library);
 
-  // Scan all theme packages in the directory
-  const packages = await loader.scan();
+  // Scan all theme packages in the directory.
+  // Filter out themes in REMOVED_BUILTIN_THEME_IDS: their directories can
+  // still be present in the bundle (older builds shipped them, or they linger
+  // in a dev working tree) even though they are no longer part of the shipped
+  // set. Without this filter, seedBuiltInThemes would RE-INSTALL every removed
+  // theme on every boot — and because pruning runs after seeding, the prune
+  // would have nothing to remove. The catalog then regrows to the full old set
+  // (e.g. 77 themes) instead of staying at the single kept theme. Filtering
+  // here means the seeder only ever (re)installs themes we actually ship.
+  const removedIds = new Set(REMOVED_BUILTIN_THEME_IDS);
+  const packages = (await loader.scan()).filter((pkg) => !removedIds.has(pkg.manifest.id));
 
-  // Install new packages and refresh outdated built-in copies.
-  // A theme needs reseed if version differs OR contentHash differs.
+  // Phase 1: Quick filter — separate packages that definitely need install
+  // (missing, version-changed, or no contentHash) from those that need a
+  // hash comparison. This is pure Map lookups, no I/O.
   const toInstall: typeof packages = [];
+  const needsHashCheck: { pkg: (typeof packages)[0]; expectedHash: string }[] = [];
+
   for (const pkg of packages) {
     const snapshot = installedSnapshots.get(pkg.manifest.id);
     if (!snapshot) {
@@ -68,9 +79,20 @@ export async function seedBuiltInThemes(
       toInstall.push(pkg);
       continue;
     }
-    const newHash = await computeThemeContentHash(pkg.manifest, pkg.packagePath);
-    if (newHash !== snapshot.contentHash) {
-      toInstall.push(pkg); // CSS content changed without version bump
+    needsHashCheck.push({ pkg, expectedHash: snapshot.contentHash });
+  }
+
+  // Phase 2: Compute content hashes in parallel — reading CSS files for each
+  // theme is I/O-bound, so parallelizing eliminates the sequential wait when
+  // many themes have matching versions (the common case after initial install).
+  if (needsHashCheck.length > 0) {
+    const hashes = await Promise.all(
+      needsHashCheck.map(({ pkg }) => computeThemeContentHash(pkg.manifest, pkg.packagePath)),
+    );
+    for (let i = 0; i < needsHashCheck.length; i++) {
+      if (hashes[i] !== needsHashCheck[i].expectedHash) {
+        toInstall.push(needsHashCheck[i].pkg); // CSS content changed without version bump
+      }
     }
   }
 
@@ -104,6 +126,102 @@ export const REMOVED_BUILTIN_THEME_IDS = [
   // theme with no light/dark pair; miku-light overlapped with other light anime)
   'arina-hashimoto',
   'miku-light',
+  // All built-in themes removed in favor of a single bundled theme
+  // (naruto-tobi, 火影 · 带土). The ThemeLibrary persists in userData, so
+  // copies installed by an older version must be pruned on boot.
+  'arctic-rose',
+  'attack-on-titan',
+  'autumn-harvest',
+  'bioshock-infinite',
+  'bleach-ichigo',
+  'catppuccin-mocha',
+  'chainsaw-man',
+  'cherry-blossom',
+  'corporate-blue',
+  'cowboy-bebop',
+  'crimson-tide',
+  'cyberpunk-2077',
+  'cyberpunk-neon',
+  'dark-souls',
+  'death-note',
+  'deep-ocean',
+  'deepspace-dawn',
+  'deepspace-star',
+  'demon-slayer',
+  'digital-lavender',
+  'dracula-pro',
+  'dragonball-goku',
+  'earth-sage',
+  'elden-ring',
+  'emerald-dream',
+  'evangelion',
+  'everforest',
+  'final-fantasy',
+  'frieren-snow',
+  'fullmetal-alchemist',
+  'gear5-rising',
+  'genshin-dawn',
+  'genshin-night',
+  'genshin-raiden',
+  'god-of-war',
+  'golden-hour',
+  'gothic-void-crusade',
+  'gruvbox-warm',
+  'hades-realm',
+  'hatsune-miku',
+  'hollow-knight',
+  'hunter-hunter',
+  'ice-blue',
+  'ink-wash',
+  'jujutsu-gojo',
+  'kanagawa',
+  'kitsune-pink',
+  'league-of-legends',
+  'manga-sketch',
+  'mass-effect-n7',
+  'midnight-aurora',
+  'minecraft-blocks',
+  'minimal-light',
+  'monokai-pro',
+  'my-hero-academia',
+  'naruto-hokage',
+  'naruto-itachi',
+  'naruto-sasuke',
+  'night-owl',
+  'nord-aurora',
+  'one-dark-pro',
+  'one-punch-man',
+  'onepiece-zoro',
+  'overwatch-hero',
+  'pastel-dream',
+  'persona5',
+  'poimandres',
+  'pokemon-pikachu',
+  'portal-science',
+  'rose-pine',
+  'royal-purple',
+  'sailor-moon',
+  'shadow-dragon',
+  'sleepy-cloud',
+  'solar-forge',
+  'solarized-dark',
+  'spy-family',
+  'stardew-valley',
+  'steampunk-brass',
+  'studio-ghibli',
+  'summer-breeze',
+  'sunset-glow',
+  'sword-art-online',
+  'synthwave-84',
+  'terminal-green',
+  'the-witcher',
+  'tokyo-night',
+  'valorant-agent',
+  'vaporwave',
+  'winter-frost',
+  'wuthering-echo',
+  'wuthering-tide',
+  'zelda-breath',
 ];
 
 /**

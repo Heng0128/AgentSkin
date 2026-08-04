@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import type { AppController, Selection } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
+import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 
 import { Delete02Icon, PaintBoardIcon, Share05Icon } from '@hugeicons/core-free-icons';
 import { AGENT_IDS, type AgentId } from '@shared/types';
@@ -26,15 +27,19 @@ function AppActionList({
   onApply: (appId: AgentId) => Promise<unknown>;
 }) {
   const { t } = controller;
-  const [pendingApp, setPendingApp] = useState<AgentId | null>(null);
+  const [pendingApps, setPendingApps] = useState<Set<AgentId>>(new Set());
   const [pendingAll, setPendingAll] = useState(false);
 
   const run = async (appId: AgentId) => {
-    setPendingApp(appId);
+    setPendingApps((prev) => new Set(prev).add(appId));
     try {
-      await onApply(appId);
+      await onApply(appId).catch(() => undefined);
     } finally {
-      setPendingApp(null);
+      setPendingApps((prev) => {
+        const next = new Set(prev);
+        next.delete(appId);
+        return next;
+      });
     }
   };
 
@@ -48,10 +53,22 @@ function AppActionList({
    *  is replaced by a single "detecting" state instead of greyed-out rows. */
   const detecting = controller.statusStale;
 
+  /** Run applies across all eligible apps with a bounded worker pool so the
+   *  operations run concurrently (useThemes allows up to 4 in flight) instead
+   *  of blocking one after another. */
   const runAll = async () => {
     setPendingAll(true);
     try {
-      await Promise.all(eligibleApps.map((appId) => onApply(appId).catch(() => undefined)));
+      const queue = [...eligibleApps];
+      const CONCURRENCY = 4;
+      const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
+        for (;;) {
+          const appId = queue.shift();
+          if (!appId) break;
+          await run(appId).catch(() => undefined);
+        }
+      });
+      await Promise.all(workers);
     } finally {
       setPendingAll(false);
     }
@@ -70,14 +87,21 @@ function AppActionList({
       <Button
         size="sm"
         className="w-full"
-        disabled={pendingAll || detecting || controller.busy !== null || eligibleApps.length === 0}
+        disabled={
+          pendingAll ||
+          detecting ||
+          (controller.busy !== null && !String(controller.busy).startsWith('apply:')) ||
+          eligibleApps.length === 0
+        }
         title={detecting ? t.applyDetectingHint : undefined}
         onClick={() => void runAll()}
       >
         {pendingAll && <Spinner data-icon="inline-start" />}
         {detecting ? t.statusDetecting : t.applyToAllAgents}
         {!detecting && eligibleApps.length > 0 && (
-          <span className="ml-1 text-xs opacity-70">({eligibleApps.length})</span>
+          <span className="ml-1 text-xs opacity-70">
+            {pendingAll ? `${pendingApps.size}/${eligibleApps.length}` : `(${eligibleApps.length})`}
+          </span>
         )}
       </Button>
 
@@ -100,7 +124,7 @@ function AppActionList({
                   : appStatus?.running
                     ? t.statusRunning
                     : t.statusInstalled;
-          const busyHere = pendingApp === appId && controller.busy !== null;
+          const appPending = pendingApps.has(appId);
           const displayName =
             controller.agents.find((a) => a.id === appId)?.displayName ??
             APP_META[appId]?.name ??
@@ -125,7 +149,14 @@ function AppActionList({
               <Button
                 size="sm"
                 variant={live ? 'default' : 'outline'}
-                disabled={!supported || detecting || !detected || controller.busy !== null}
+                disabled={
+                  !supported ||
+                  detecting ||
+                  !detected ||
+                  appPending ||
+                  pendingAll ||
+                  (controller.busy !== null && !String(controller.busy).startsWith('apply:'))
+                }
                 title={
                   detecting
                     ? t.applyDetectingHint
@@ -137,7 +168,7 @@ function AppActionList({
                 }
                 onClick={() => void run(appId)}
               >
-                {busyHere && <Spinner data-icon="inline-start" />}
+                {appPending && <Spinner data-icon="inline-start" />}
                 {detecting ? t.statusDetecting : live ? t.applyAction : t.applyAndLaunch}
               </Button>
             </div>
@@ -168,6 +199,16 @@ export function DetailPanel({
   const { t } = controller;
   const selection = selectionOverride !== undefined ? selectionOverride : controller.selection;
 
+  // Theme-bundled wallpaper videos can't be a static preview; fetch the
+  // media as an inline base64 data URL (no custom scheme) so it plays
+  // reliably in the sandboxed renderer. Must be called before any early
+  // return to satisfy the Rules of Hooks.
+  const dynamicWallpaperId =
+    selection && (selection.theme.wallpaper?.video || selection.theme.wallpaper?.workshopId)
+      ? `theme:${selection.theme.id}`
+      : null;
+  const { url: videoUrl, loading: videoLoading } = useWallpaperVideoUrl(dynamicWallpaperId);
+
   if (!selection) {
     return (
       <div className="flex min-h-48 items-center justify-center p-6 text-center">
@@ -181,13 +222,12 @@ export function DetailPanel({
 
   const theme = selection.theme;
   const isDynamic = Boolean(theme.wallpaper?.video || theme.wallpaper?.workshopId);
-  const videoUrl = isDynamic ? `agentskin-wallpaper://media/theme:${theme.id}` : null;
 
   return (
     <div className="flex h-[min(80svh,38rem)] overflow-hidden">
       {/* Left: preview image / video */}
       <div className="relative flex w-[58%] shrink-0 items-center justify-center overflow-hidden bg-muted/60">
-        {videoUrl ? (
+        {isDynamic && videoUrl ? (
           <video
             key={theme.id}
             src={videoUrl}
@@ -199,6 +239,10 @@ export function DetailPanel({
             disablePictureInPicture
             className="size-full object-cover"
           />
+        ) : isDynamic && videoLoading ? (
+          <div className="flex size-full items-center justify-center">
+            <Spinner className="size-6 text-muted-foreground/50" />
+          </div>
         ) : theme.preview ? (
           <img src={theme.preview} alt={theme.name} className="size-full object-contain" />
         ) : (
@@ -207,7 +251,7 @@ export function DetailPanel({
           </div>
         )}
         {/* Subtle inner shadow for depth */}
-        <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_24px_rgba(0,0,0,0.06)]" />
+        <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_24px_var(--border)]" />
       </div>
 
       {/* Right: info + actions */}

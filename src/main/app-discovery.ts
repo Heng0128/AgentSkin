@@ -29,6 +29,8 @@
  */
 
 import { execFile, spawn } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import type { ApplicationAdapter } from '../adapters/base';
 import { probePortLive } from '../legacy/agentskin-core-runtime';
@@ -118,6 +120,79 @@ export type AdapterFactory = (appId: AgentId) => ApplicationAdapter;
 export type ActiveThemeIdAccessor = (appId: AgentId) => string | null;
 
 // ---------------------------------------------------------------------------
+// Singleton lock cleanup
+// ---------------------------------------------------------------------------
+
+/**
+ * Electron singleton lock files left behind when an app is killed via
+ * `taskkill /F` (which bypasses the graceful `app.quit()` path that would
+ * normally clean them up). Each maps an AgentId to the known userData
+ * directories where Electron's `requestSingleInstanceLock()` creates
+ * `SingletonLock`, `SingletonCookie`, and `SingletonSocket`.
+ *
+ * WorkBuddy is special: its userData dir is under `%USERPROFILE%\.workbuddy\`
+ * (not `%APPDATA%`), and 5.3.x moved the session dir into a `session/`
+ * subdirectory. The other three agents follow the standard Electron
+ * `%APPDATA%\{appName}\` layout.
+ */
+const SINGLETON_LOCK_DIRS: Record<AgentId, string[]> = (() => {
+  const home = process.env.USERPROFILE ?? os.homedir();
+  const appdata = process.env.APPDATA ?? path.join(home, 'AppData', 'Roaming');
+  return {
+    workbuddy: [
+      path.join(home, '.workbuddy', 'app', 'session'),
+      path.join(home, '.workbuddy', 'app'),
+      path.join(home, 'AppData', 'Local', 'WorkBuddy'),
+      path.join(home, 'AppData', 'Roaming', 'WorkBuddy'),
+    ],
+    traework: [path.join(appdata, 'trae'), path.join(appdata, 'TRAE')],
+    qoderwork: [path.join(appdata, 'qoderwork'), path.join(appdata, 'QoderWork')],
+    doubao: [path.join(appdata, 'doubao'), path.join(appdata, 'Doubao')],
+    codex: [path.join(appdata, 'ChatGPT'), path.join(appdata, 'codex')],
+    zcode: [path.join(appdata, 'ZCode', 'session'), path.join(appdata, 'ZCode')],
+  };
+})();
+
+/**
+ * Delete stale Electron singleton lock files for an agent.
+ *
+ * Called after `taskkill /F` and before `spawn`. Without this, the freshly
+ * spawned process sees the stale lock (left behind by the force-killed
+ * previous instance) and exits immediately with "singleton lock or launch
+ * failure" — which was the root cause of WorkBuddy never being able to
+ * restart with CDP.
+ *
+ * Best-effort: file deletion failures are logged but never thrown. On
+ * Windows, a file that is still open by a dying process can return EBUSY;
+ * the 2500ms wait after this function gives the OS time to release the
+ * handle, and the spawn poll loop will still try to discover a port.
+ */
+function cleanSingletonLockFiles(appId: AgentId, log: (line: string) => void): void {
+  const dirs = SINGLETON_LOCK_DIRS[appId] ?? [];
+  // WorkBuddy 5.3.x uses 'lockfile' instead of the standard Electron
+  // SingletonLock/SingletonCookie/SingletonSocket trio.
+  const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket', 'lockfile'];
+  let cleaned = 0;
+  for (const dir of dirs) {
+    for (const name of lockFiles) {
+      const file = path.join(dir, name);
+      try {
+        if (fs.existsSync(file)) {
+          fs.unlinkSync(file);
+          cleaned++;
+        }
+      } catch {
+        // File may be locked by the dying process — the 2500ms wait
+        // after this gives the OS time to release the handle.
+      }
+    }
+  }
+  if (cleaned > 0) {
+    log(`[ensure-cdp] ${appId}: cleaned ${cleaned} stale singleton lock file(s)`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
@@ -160,18 +235,28 @@ export async function reconcileZombiePorts(
   appIds: readonly AgentId[],
   deps: DiscoveryDeps,
 ): Promise<void> {
-  let dirty = false;
-  for (const appId of appIds) {
+  // Probe all persisted ports in parallel — each probePortLive has a 1.5s
+  // timeout, so probing 4 agents sequentially could block startup for up to
+  // 6s when all ports are dead (common after a reboot). Parallelizing
+  // collapses that to a single 1.5s window regardless of agent count.
+  const probes = appIds.map(async (appId) => {
     const appState = deps.getAppPort(appId);
-    if (appState?.port != null) {
-      const live = await probePortLive(appState.port, 1500);
-      if (!live) {
-        deps.log(
-          `[state] ${appId}: port ${appState.port} is dead — clearing stale port (activeThemeId preserved for re-injection)`,
-        );
-        deps.clearAppPort(appId);
-        dirty = true;
-      }
+    if (appState?.port == null) return null;
+    const live = await probePortLive(appState.port, 1500);
+    return { appId, port: appState.port, live };
+  });
+  const results = (await Promise.all(probes)).filter(
+    (r): r is { appId: AgentId; port: number; live: boolean } => r !== null,
+  );
+
+  let dirty = false;
+  for (const { appId, port, live } of results) {
+    if (!live) {
+      deps.log(
+        `[state] ${appId}: port ${port} is dead — clearing stale port (activeThemeId preserved for re-injection)`,
+      );
+      deps.clearAppPort(appId);
+      dirty = true;
     }
   }
   if (dirty) await deps.persist();
@@ -242,7 +327,8 @@ export async function ensureCdpReady(
     try {
       const discovered = await adapter.discover(process.platform, null);
       exePath = discovered?.executable ?? discovered?.appPath ?? null;
-    } catch {
+    } catch (error) {
+      deps.log(`[ensure-cdp] ${appId}: adapter.discover failed — ${toMessage(error)}`);
       exePath = null;
     }
   }
@@ -264,7 +350,8 @@ export async function ensureCdpReady(
   let killedPids: number[] = [];
   try {
     killedPids = await adapter.findRunningPids(process.platform, exePath);
-  } catch {
+  } catch (error) {
+    deps.log(`[ensure-cdp] ${appId}: findRunningPids failed — ${toMessage(error)}`);
     killedPids = [];
   }
   deps.log(
@@ -292,9 +379,45 @@ export async function ensureCdpReady(
       // Not running or already gone — fine.
     }
   }
-  // Give Windows time to release the process table + any singleton lock
-  // file the app holds. 800ms is enough on a warm machine.
-  await new Promise((resolve) => setTimeout(resolve, 800));
+
+  // Clean up Electron singleton lock files. When an Electron app is killed
+  // via taskkill /F (rather than a graceful app.quit()), the singleton lock
+  // / cookie / socket files in its userData dir are NOT cleaned up. The next
+  // launch sees the stale lock and exits immediately ("singleton lock or
+  // launch failure"). This was the root cause of WorkBuddy always failing
+  // to restart with CDP: 9 PIDs killed, but the lock file persisted.
+  // Deleting these files after kill lets the next spawn succeed.
+  cleanSingletonLockFiles(appId, deps.log.bind(null));
+
+  // Wait for Windows to release the process table + file handles before
+  // spawning the replacement.
+  //
+  // Previously this was a FIXED 2500ms sleep that always burned the full
+  // budget, even when nothing was killed (cold start: app not running). The
+  // restart path needs the wait because a taskkill /F'd app can still hold
+  // the singleton lock file for a moment; the cold-start path has nothing to
+  // release. Now we:
+  //   - cold start (nothing killed): tiny 250ms buffer, then spawn immediately
+  //     — removes ~2.2s of dead time from the common "apply to idle agent"
+  //     flow.
+  //   - restart (killed PIDs): poll findRunningPids until the process tree
+  //     actually exits (max 2500ms), so we only wait as long as the OS
+  //     really needs, not a fixed budget.
+  if (killedPids.length > 0) {
+    const exitDeadline = Date.now() + 2500;
+    while (Date.now() < exitDeadline) {
+      let stillAlive: number[] = [];
+      try {
+        stillAlive = await adapter.findRunningPids(process.platform, exePath);
+      } catch {
+        break;
+      }
+      if (stillAlive.length === 0) break;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  } else {
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
 
   // Pass --remote-debugging-port=0 directly on the command line: Chromium
   // picks a free port itself, avoiding collisions across the three apps.
@@ -341,16 +464,19 @@ export async function ensureCdpReady(
   // relies on the netstat layer.
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    // Detect early exit: if the spawned child is gone, the launch failed
-    // (singleton lock, missing dependency, sandbox rejection). Bail out
-    // instead of polling for the full 30s.
+    // Detect early exit: if the spawned child is gone, the launch *may* have
+    // failed (singleton lock, missing dependency, sandbox rejection). However,
+    // on Windows process.kill(pid, 0) also throws EPERM when the child
+    // elevated itself (UAC) or moved to a different session — the process IS
+    // alive, we just can't signal it. Before bailing, verify the app truly
+    // isn't running by checking for any live PIDs via the adapter.
     if (childPid > 0) {
       try {
         process.kill(childPid, 0);
       } catch {
-        // Child already exited. One last resolveLivePort in case the app
-        // forwarded args to a pre-existing singleton and that one opened
-        // CDP — otherwise give up.
+        // Child PID unreachable. Check if the app started anyway (fork,
+        // elevation, or launcher-stub pattern where the initial exe exits
+        // after spawning the real process).
         const lastChance = await resolveLivePort(appId, deps);
         if (lastChance != null) {
           deps.log(
@@ -364,19 +490,38 @@ export async function ensureCdpReady(
           });
           return { port: lastChance, reason: null };
         }
+        // No CDP port yet — but is the app running at all? If PIDs exist,
+        // the launch succeeded and CDP may appear once boot completes.
+        let appPids: number[] = [];
+        try {
+          appPids = await adapter.findRunningPids(process.platform, exePath);
+        } catch (error) {
+          deps.log(
+            `[ensure-cdp] ${appId}: post-spawn findRunningPids failed — ${toMessage(error)}`,
+          );
+        }
+        if (appPids.length === 0) {
+          // Truly dead — no process, no port. Bail.
+          deps.log(
+            `[ensure-cdp] ${appId}: spawned process exited immediately (singleton lock or launch failure)`,
+          );
+          deps.logStructured({
+            type: 'cdp_spawn_failed',
+            agentId: appId,
+            reason: 'singleton-lock',
+            timestamp: new Date().toISOString(),
+          });
+          return { port: null, reason: 'singleton-lock' };
+        }
+        // App is running but CDP not yet open — stop tracking childPid
+        // (it's stale) and fall through to the normal poll loop below.
         deps.log(
-          `[ensure-cdp] ${appId}: spawned process exited immediately (singleton lock or launch failure)`,
+          `[ensure-cdp] ${appId}: child PID ${childPid} gone but ${appPids.length} app PID(s) alive — continuing poll`,
         );
-        deps.logStructured({
-          type: 'cdp_spawn_failed',
-          agentId: appId,
-          reason: 'singleton-lock',
-          timestamp: new Date().toISOString(),
-        });
-        return { port: null, reason: 'singleton-lock' };
+        childPid = -1;
       }
     }
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await new Promise((resolve) => setTimeout(resolve, 600));
     const port = await resolveLivePort(appId, deps);
     if (port != null) {
       deps.log(`[ensure-cdp] ${appId}: CDP up on random port ${port}`);
@@ -429,7 +574,8 @@ export async function probeAppStatus(
   let debugReady = false;
   try {
     discovered = await adapter.discover(process.platform, appPathOverride);
-  } catch {
+  } catch (error) {
+    deps.log(`[detect] ${appId}: adapter.discover failed — ${toMessage(error)}`);
     discovered = null;
   }
   const coreInstalled = Boolean(discovered);
@@ -450,7 +596,8 @@ export async function probeAppStatus(
       running =
         (await adapter.findRunningPids(process.platform, discovered?.executable ?? null)).length >
         0;
-    } catch {
+    } catch (error) {
+      deps.log(`[detect] ${appId}: findRunningPids failed — ${toMessage(error)}`);
       running = false;
     }
   }
@@ -460,7 +607,8 @@ export async function probeAppStatus(
       port = livePort;
       try {
         debugReady = (await adapter.findTargets(port, 1200)).length > 0;
-      } catch {
+      } catch (error) {
+        deps.log(`[detect] ${appId}: findTargets failed on port ${port} — ${toMessage(error)}`);
         debugReady = false;
       }
     } else {

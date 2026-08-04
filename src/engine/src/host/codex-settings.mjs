@@ -140,12 +140,12 @@ export function defaultCodexSettingsPaths({
   stateRoot = null,
 } = {}) {
   let root = stateRoot;
-  if (!root && platform === "darwin") root = path.join(home, "Library", "Application Support", "CodeDrobe");
-  if (!root && platform === "win32") root = path.join(env.LOCALAPPDATA || path.join(home, "AppData", "Local"), "CodeDrobe");
-  if (!root) root = path.join(env.XDG_STATE_HOME || path.join(home, ".local", "state"), "codedrobe", "codex");
+  if (!root && platform === "darwin") root = path.join(home, "Library", "Application Support", "AgentSkin");
+  if (!root && platform === "win32") root = path.join(env.LOCALAPPDATA || path.join(home, "AppData", "Local"), "AgentSkin");
+  if (!root) root = path.join(env.XDG_STATE_HOME || path.join(home, ".local", "state"), "agentskin", "codex");
   return {
     configPath: path.join(home, ".codex", "config.toml"),
-    backupPath: path.join(root, "config.before-codedrobe.toml"),
+    backupPath: path.join(root, "config.before-agentskin.toml"),
   };
 }
 

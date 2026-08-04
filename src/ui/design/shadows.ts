@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
- * Elevation shadows. Dark UI uses subtle, low-opacity shadows; light UI uses
- * the same shapes with lighter tints. Reference these for inline styles only —
- * prefer Tailwind `shadow-*` utilities (mapped in globals.css) when possible.
+ * Elevation shadows — design contract.
+ *
+ * This module is a **design contract**, not dead code. It documents the
+ * shadow elevation scale and provides concrete values for JS inline-style
+ * scenarios (canvas, chart tooltips, dynamic popovers) where Tailwind
+ * `shadow-*` utilities cannot reach.
+ *
+ * Dark UI uses subtle, low-opacity shadows; light UI uses the same shapes
+ * with lighter tints. Prefer Tailwind `shadow-*` utilities for normal JSX
+ * className usage — values here mirror the CSS `--shadow-*` scale.
  */
 export const shadows = {
   sm: '0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04)',

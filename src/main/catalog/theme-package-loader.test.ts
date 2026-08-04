@@ -4,11 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  type InstalledThemePackage,
-  ThemePackageLoader,
-  ThemePackageValidationError,
-} from './theme-package-loader';
+import { ThemePackageLoader } from './theme-package-loader';
 
 function createMinimalManifest(themeId: string): string {
   return JSON.stringify({
@@ -22,28 +18,12 @@ function createMinimalManifest(themeId: string): string {
     colors: {
       primary: '#00ffff',
       background: '#050816',
+      foreground: '#e0e8ff',
       surface: '#0a0a12',
       text: '#e0e8ff',
     },
     assets: {
       background: 'assets/background.png',
-    },
-  });
-}
-
-function createMinimalManifestNoAssets(themeId: string): string {
-  return JSON.stringify({
-    id: themeId,
-    name: `Test Theme ${themeId}`,
-    version: '1.0.0',
-    icon: 'icon.png',
-    preview: 'preview.png',
-    mode: 'dark' as const,
-    colors: {
-      primary: '#00ffff',
-      background: '#050816',
-      surface: '#0a0a12',
-      text: '#e0e8ff',
     },
   });
 }
@@ -123,7 +103,13 @@ describe('ThemePackageLoader', () => {
           icon: 'icon.png',
           preview: 'preview.png',
           mode: 'dark' as const,
-          colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
+          colors: {
+            primary: '#000',
+            background: '#fff',
+            foreground: '#000',
+            surface: '#eee',
+            text: '#000',
+          },
         }),
       );
       await fs.writeFile(
@@ -150,7 +136,13 @@ describe('ThemePackageLoader', () => {
           icon: 'icon.png',
           preview: 'preview.png',
           mode: 'dark' as const,
-          colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
+          colors: {
+            primary: '#000',
+            background: '#fff',
+            foreground: '#000',
+            surface: '#eee',
+            text: '#000',
+          },
         }),
       );
       await fs.writeFile(
@@ -173,7 +165,13 @@ describe('ThemePackageLoader', () => {
           icon: 'icon.png',
           preview: 'preview.png',
           mode: 'dark' as const,
-          colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
+          colors: {
+            primary: '#000',
+            background: '#fff',
+            foreground: '#000',
+            surface: '#eee',
+            text: '#000',
+          },
         }),
       );
       await fs.writeFile(
@@ -196,7 +194,13 @@ describe('ThemePackageLoader', () => {
           icon: 'icon.png',
           preview: 'preview.png',
           mode: 'sepia' as never,
-          colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
+          colors: {
+            primary: '#000',
+            background: '#fff',
+            foreground: '#000',
+            surface: '#eee',
+            text: '#000',
+          },
         }),
       );
       await fs.writeFile(
@@ -208,7 +212,7 @@ describe('ThemePackageLoader', () => {
         Buffer.from(createPlaceholderPng(), 'base64'),
       );
 
-      await expect(loader.load('bad-mode')).rejects.toThrow('invalid mode');
+      await expect(loader.load('bad-mode')).rejects.toThrow('mode: value must be one of');
     });
 
     it('tolerates missing optional asset background', async () => {
@@ -222,7 +226,13 @@ describe('ThemePackageLoader', () => {
           version: '1.0.0',
           icon: 'icon.png',
           preview: 'preview.png',
-          colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
+          colors: {
+            primary: '#000',
+            background: '#fff',
+            foreground: '#000',
+            surface: '#eee',
+            text: '#000',
+          },
           assets: { background: 'assets/background.png' },
         }),
       );
@@ -251,7 +261,13 @@ describe('ThemePackageLoader', () => {
           version: '1.0.0',
           icon: 'icon.png',
           preview: 'preview.png',
-          colors: { primary: '#000', background: '#fff', surface: '#eee', text: '#000' },
+          colors: {
+            primary: '#000',
+            background: '#fff',
+            foreground: '#000',
+            surface: '#eee',
+            text: '#000',
+          },
           assets: { background: '../../etc/passwd' },
         }),
       );
@@ -269,6 +285,26 @@ describe('ThemePackageLoader', () => {
 
     it('rejects invalid theme id format', async () => {
       await expect(loader.load('invalid id!')).rejects.toThrow('invalid theme id');
+    });
+
+    it('rejects a typo target key (SPEC-3 cross-field)', async () => {
+      const themeDir = path.join(themesRoot, 'bad-target');
+      await fs.mkdir(themeDir, { recursive: true });
+      const manifest = JSON.parse(createMinimalManifest('bad-target')) as Record<string, unknown>;
+      manifest.targets = { traewrok: { css: 'assets/css/traework.css' } }; // typo
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(manifest));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+
+      await expect(loader.load('bad-target')).rejects.toThrow(
+        'targets.traewrok: unknown agent id "traewrok"',
+      );
     });
   });
 

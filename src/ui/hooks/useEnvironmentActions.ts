@@ -21,7 +21,7 @@
  *   - refresh() is called after mutations so the caller can re-derive environments.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   createPreset,
   loadPresets,
@@ -91,16 +91,29 @@ export function useEnvironmentActions(controller: AppController): EnvironmentAct
   const { showToast, fail } = useNotifications(t);
   const [switching, setSwitching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // P0#3: use a local state tick in addition to the module counter so
+  // incrementing refresh actually triggers a re-render in the caller.
+  // The module counter remains for useEnvironments (a separate consumer
+  // that reads via getRefreshCounter()).
+  const [, setTick] = useState(0);
 
   // Signal that a mutation occurred
   const refresh = useCallback(() => {
     refreshCounter++;
+    setTick((prev) => prev + 1);
   }, []);
 
   // --- switchEnvironment ---
 
+  // Epoch guard: rapid consecutive switches must not let an earlier (slower)
+  // flow's `finally { setSwitching(false) }` clear the busy state while a
+  // newer flow is still in flight, nor let the older flow apply after a newer
+  // one has superseded it.
+  const switchEpochRef = useRef(0);
+
   const switchEnvironment = useCallback(
     async (env: EnvironmentModel): Promise<boolean> => {
+      const myEpoch = ++switchEpochRef.current;
       setSwitching(true);
       setError(null);
 
@@ -112,12 +125,22 @@ export function useEnvironmentActions(controller: AppController): EnvironmentAct
         );
         if (!hasPreset) {
           const newPreset = createPreset(env.agent.id, env.theme?.id ?? null, env.name);
-          savePresets([...presets, newPreset]);
+          // P1 audit #20: check the return value so a full localStorage
+          // doesn't silently drop the preset while still applying the theme.
+          // The user sees an error instead of a phantom preset.
+          const saved = savePresets([...presets, newPreset]);
+          if (!saved) {
+            setError(t.environmentSaveFailed);
+            // Continue with the apply — the theme still takes effect, just
+            // without a persisted preset. The user can retry saving later.
+          }
         }
+        if (myEpoch !== switchEpochRef.current) return false;
 
         // Apply the theme via controller
         if (env.theme) {
           const ok = await applyToApp(env.theme.id, env.theme.name, env.agent.id);
+          if (myEpoch !== switchEpochRef.current) return false;
           if (ok) {
             showToast(t.switchSuccess(env.name));
             refresh();
@@ -126,7 +149,8 @@ export function useEnvironmentActions(controller: AppController): EnvironmentAct
           return false;
         } else {
           // No theme = restore default
-          await restoreApp(env.agent.id as never);
+          await restoreApp(env.agent.id);
+          if (myEpoch !== switchEpochRef.current) return false;
           showToast(t.nativeRestored(env.agent.displayName));
           refresh();
           return true;
@@ -137,10 +161,11 @@ export function useEnvironmentActions(controller: AppController): EnvironmentAct
         fail(err);
         return false;
       } finally {
-        setSwitching(false);
+        // Only the most recent switch may clear the busy state.
+        if (myEpoch === switchEpochRef.current) setSwitching(false);
       }
     },
-    [applyToApp, restoreApp, installed, showToast, fail, refresh, t],
+    [applyToApp, restoreApp, showToast, fail, refresh, t],
   );
 
   // --- createEnvironment ---
@@ -219,7 +244,13 @@ export function useEnvironmentActions(controller: AppController): EnvironmentAct
         }
         const newPreset = createPreset(source.agentId, source.themeId, newName);
         const updated = [...presets, newPreset];
-        savePresets(updated);
+        // P1 audit #20: check the return value so a full localStorage doesn't
+        // silently drop the duplicate while showing a success toast.
+        const saved = savePresets(updated);
+        if (!saved) {
+          setError(t.environmentSaveFailed);
+          return null;
+        }
         showToast(`${t.environmentDuplicated} ${newName}`);
         refresh();
         return newPreset;

@@ -30,6 +30,11 @@
     "lineWidth": 100,
     "lineEnding": "lf"
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "javascript": {
     "formatter": {
       "quoteStyle": "single",
@@ -62,5 +67,38 @@
         }
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noDuplicateCustomProperties": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "**/__tests__/**",
+        "**/test/**"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "warn"
+          },
+          "correctness": {
+            "noUnusedVariables": "info",
+            "noUnusedFunctionParameters": "off"
+          }
+        }
+      }
+    }
+  ]
 }

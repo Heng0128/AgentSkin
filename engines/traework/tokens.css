@@ -5,7 +5,7 @@
    --vscode-icube-* design tokens on body + .monaco-workbench.
    ============================================================ */
 
-html.codedrobe-host-traework body {
+html.agentskin-host-traework body {
   color-scheme: dark !important;
 
   /* Ink / text */
@@ -70,7 +70,7 @@ html.codedrobe-host-traework body {
 }
 
 /* VS Code re-declares tokens on .monaco-workbench — override there too */
-html.codedrobe-host-traework .monaco-workbench {
+html.agentskin-host-traework .monaco-workbench {
   --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
   --vscode-editor-background: transparent !important;
   --vscode-panel-background: transparent !important;

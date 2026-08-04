@@ -4,14 +4,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { ApplicationAdapter } from '../adapters/base';
 import { requireAdapter } from '../adapters/registry';
-import {
-  ERROR_CODES,
-  type ResolvedThemeTarget,
-  type ThemeBundle,
-} from '../legacy/agentskin-core-runtime';
-import { isPort, resolveLivePort } from '../shared/cdp-discovery';
+import type { ResolvedThemeTarget, ThemeBundle } from '../legacy/agentskin-core-runtime';
 import { toMessage } from '../shared/errors';
-import { getMainMessages } from '../shared/i18n';
 import {
   AGENT_IDS,
   AGENT_META,
@@ -19,11 +13,11 @@ import {
   type ApplyRequest,
   type ApplyResponse,
   type AppStatus,
-  type InstalledTheme,
   type Platform,
   type SystemStatus,
+  type WallpaperRenderOptions,
 } from '../shared/types';
-import { resolveSchemeMode, type SchemeMode, type SchemeSnapshot } from './agent-scheme';
+import type { SchemeMode, SchemeSnapshot } from './agent-scheme';
 import {
   type CdpReadyResult as CdpReadyResultT,
   type DiscoveryDeps,
@@ -33,17 +27,21 @@ import {
   reconcileZombiePorts as reconcileZombiePortsImpl,
   resolveLivePort as resolveLivePortImpl,
 } from './app-discovery';
-import { type CdpSession, connectCdp } from './cdp-client';
+import { type CdpSession, connectCdp } from './cdp/cdp-client';
 import {
   type CdpFanoutDeps,
   hardeningPass as hardeningPassImpl,
   hardeningRemove as hardeningRemoveImpl,
   injectSecondaryTargets as injectSecondaryTargetsImpl,
   removeSecondaryTargets as removeSecondaryTargetsImpl,
-} from './cdp-fanout';
-import { pickPageTarget } from './cdp-targets';
+} from './cdp/cdp-fanout';
+import { pickPageTarget } from './cdp/cdp-targets';
+import {
+  cleanupEngineInjectionForAgent,
+  disposeEngineInjectionState,
+} from './cdp/injection/engine-strategy';
+import { EpochManager } from './epoch-manager';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
-import { detectInstallation } from './install-detection';
 import {
   type EngineInjectionDeps,
   resolveEngineDirDefault,
@@ -55,13 +53,24 @@ import {
   syncSchemeWithStability as syncSchemeWithStabilityImpl,
 } from './scheme-sync';
 import type {
+  AgentEngineServiceApi,
   LoggerApi,
   SettingsServiceApi,
   StructuredLogEvent,
   ThemeLibraryApi,
   WallpaperResolver,
 } from './services/contracts';
-import { inferModeFromColors, type ThemeEntry, toInstalledTheme } from './theme-library';
+import { disposeThemeAssetCache } from './theme/utils';
+import { type ApplyFlowDeps, applyThemeFlow as applyThemeFlowImpl } from './theme-apply-flow';
+import { type ThemeEntry, toInstalledTheme } from './theme-library';
+import {
+  type RestoreFlowDeps,
+  restoreThemeFlow as restoreThemeFlowImpl,
+} from './theme-restore-flow';
+import {
+  cleanupWallpaperStateForAgent,
+  disposeWallpaperInjectionState,
+} from './wallpaper/injection-state';
 import {
   applyAgentWallpaperNow as applyAgentWallpaperNowImpl,
   applyWallpaperToAgent as applyWallpaperToAgentImpl,
@@ -70,6 +79,7 @@ import {
   removeWallpaperFromAgent as removeWallpaperFromAgentImpl,
   type WallpaperInjectorDeps,
 } from './wallpaper-injector';
+import { cleanupSelfHealForAgent, disposeSelfHealState } from './wallpaper-self-heal';
 
 /**
  * Canonical product display names for each AgentId, derived from AGENT_META
@@ -104,6 +114,44 @@ interface PersistedState {
 }
 
 /**
+ * Narrow `unknown` (from JSON.parse) to PersistedState without unsafe casts.
+ * Checks the minimal structural contract: version === 2, apps is a plain object.
+ * Field-level types are enforced by the TypeScript interface at compile time;
+ * the guard ensures the parse result matches the shape before assignment.
+ *
+ * R6-24: 增加 apps entry 字段级检查。原实现 `isPersistedState` 只做浅层检查
+ * （只验证 apps 是对象），不验证 apps 内部结构。损坏数据（如 port 为字符串）
+ * 会进入运行态导致后续逻辑出错。
+ */
+function isPersistedState(x: unknown): x is PersistedState {
+  if (!x || typeof x !== 'object') return false;
+  const rec = x as Record<string, unknown>;
+  if (rec.version !== 2) return false;
+  if (!rec.apps || typeof rec.apps !== 'object' || Array.isArray(rec.apps)) return false;
+  // R6-24: 逐条验证 apps 内部结构。
+  for (const [appId, entry] of Object.entries(rec.apps)) {
+    // appId 必须是合法 AgentId
+    if (!(AGENT_IDS as readonly string[]).includes(appId)) return false;
+    // entry 可以为 null 或对象
+    if (entry == null) continue;
+    if (typeof entry !== 'object') return false;
+    const e = entry as Record<string, unknown>;
+    // activeThemeId: string | null | undefined
+    if (e.activeThemeId != null && typeof e.activeThemeId !== 'string') return false;
+    // port: number | null | undefined
+    if (e.port != null && typeof e.port !== 'number') return false;
+    // schemeSnapshot: object | null | undefined
+    if (e.schemeSnapshot != null && typeof e.schemeSnapshot !== 'object') return false;
+    // schemeSnapshot 为对象时验证其必要字段
+    if (e.schemeSnapshot && typeof e.schemeSnapshot === 'object') {
+      const ss = e.schemeSnapshot as Record<string, unknown>;
+      if (ss.mode != null && typeof ss.mode !== 'string') return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Structured result of {@link AgentEngineService.ensureCdpReady}. When the
  * port is null, `reason` carries the precise failure cause so
  * {@link AgentEngineService.inferRestartReason} can map it to a user-facing
@@ -121,6 +169,21 @@ function platform(): Platform {
 }
 
 /**
+ * Merge two render option sets with a per-field precedence: `base` supplies
+ * defaults, `override` wins on any field it sets. Used to resolve the
+ * per-agent → global → theme render chain so a partially-configured
+ * per-agent setting doesn't wipe the global default.
+ */
+function mergeRenderOptions(
+  base: WallpaperRenderOptions | undefined,
+  override: WallpaperRenderOptions | undefined,
+): WallpaperRenderOptions | undefined {
+  if (!override) return base;
+  if (!base) return override;
+  return { ...base, ...override };
+}
+
+/**
  * AgentSkin's control-layer orchestrator (now a thin facade after the
  * P1-2..P1-5 god-object teardown).
  *
@@ -130,7 +193,7 @@ function platform(): Platform {
  * turn delegates to the legacy core runtime.
  *
  * Call chain:
- *   UI -> IPC -> this service -> registry.getAdapter() -> ApplicationAdapter -> runtime -> @agentskin/core
+ *   UI -> IPC -> this service -> registry.getAdapter() -> ApplicationAdapter -> runtime -> @agentskin/engine
  *
  * The service owns only cross-cutting concerns that don't fit a single
  * extracted module:
@@ -150,14 +213,49 @@ function platform(): Platform {
  *   - {@link ./cdp-fanout}         — multi-target CDP fan-out (hardening + secondary targets)
  */
 
-export class AgentEngineService {
+export class AgentEngineService implements AgentEngineServiceApi {
   private state: PersistedState = { version: 2, apps: {} };
   private logListener: ((line: string) => void) | null = null;
   /**
    * Apps currently undergoing a user-initiated applyTheme. Used to prevent
    * concurrent apply/restore from racing each other on the same CDP target.
+   *
+   * P1 audit #6: previously this Set was only ever `add`ed to and `delete`d
+   * from — the `has()` check at the entry of {@link apply} / {@link restore}
+   * was missing, so rapid double-clicks or tray bursts could start two
+   * applies on the same agent simultaneously, racing each other on the same
+   * CDP target (CSS layering corruption, duplicate persistence scripts).
+   * The `has()` check is now enforced, and the in-flight Promise Maps below
+   * go one step further: a concurrent call awaits the in-flight operation
+   * instead of being rejected, so the user's second click still gets a
+   * correct result instead of a stale snapshot.
    */
   private readonly applyingTheme = new Set<AgentId>();
+
+  /**
+   * Unified in-flight operations per agent. Replaces the previous pair of
+   * separate maps (inflightApply / inflightRestore) so apply↔restore races
+   * are globally ordered:
+   *   - Same kind (apply during apply, restore during restore) → deduplicate
+   *     by sharing the Promise, preserving the previous behaviour.
+   *   - Opposite kind (restore issued mid-apply or vice-versa) → queue
+   *     BEHIND the currently running operation. This avoids the previous
+   *     race where restoreThemeFlow's isApplyingTheme check would silently
+   *     skip the user's restore click if the apply was still inside its
+   *     lock window, and avoids the indeterminate end-state when both
+   *     operations overlap on the CDP target (each writing + erasing the
+   *     same CSS layers).
+   *
+   * The epoch manager handles cancellation of the previous op's *background*
+   * follow-ups (hardening, scheme-sync stability window, secondary inject) —
+   * this queue only serialises the top-level apply/restore orchestration so
+   * the user-visible result of "what's the state of this agent after my
+   * click" is deterministic regardless of event-loop timing.
+   */
+  private readonly inflightOperations = new Map<
+    AgentId,
+    { kind: 'apply' | 'restore'; promise: Promise<unknown> }
+  >();
 
   /**
    * Monotonic epoch per agent — bumped at the start of every apply / restore
@@ -173,21 +271,7 @@ export class AgentEngineService {
    * after the lock is released. Epoch cancellation makes those follow-ups
    * self-terminate the moment a newer operation supersedes them.
    */
-  private readonly applyEpoch = new Map<AgentId, number>();
-
-  /** Bump the epoch for an agent. Returns the new value for the caller to
-   *  pass to background tasks so they can detect supersession. */
-  private bumpEpoch(appId: AgentId): number {
-    const next = (this.applyEpoch.get(appId) ?? 0) + 1;
-    this.applyEpoch.set(appId, next);
-    return next;
-  }
-
-  /** True if `captured` is still the current epoch for `appId`. Background
-   *  tasks check this before each CDP touch and abort when it flips. */
-  private isEpochCurrent(appId: AgentId, captured: number): boolean {
-    return (this.applyEpoch.get(appId) ?? 0) === captured;
-  }
+  private readonly epochs = new EpochManager();
 
   constructor(
     private readonly library: ThemeLibraryApi,
@@ -232,37 +316,83 @@ export class AgentEngineService {
     speed?: number;
     loop?: boolean;
     scrimOpacity?: number;
+    render?: WallpaperRenderOptions;
   }> {
-    const agentWp = this.settings.agentWallpaper(appId);
-    if (agentWp.enabled && agentWp.id) {
-      return { id: agentWp.id };
-    }
-    // Fall back to the active theme's bundled wallpaper.
-    let installed: InstalledTheme | null = null;
+    // When actively applying a theme (entry provided), the theme is the SOLE
+    // authority on wallpaper: theme has wallpaper → use it; theme has no
+    // wallpaper → return null (removes any previously injected wallpaper).
+    // "Last applied wins" — no fallback to stale per-agent settings. The
+    // theme's own render setting (wp.render) is used, but per-agent settings
+    // are NOT consulted during an explicit apply.
     if (entry) {
-      installed = toInstalledTheme(entry);
-    } else {
-      const themeId = this.state.apps[appId]?.activeThemeId;
-      if (!themeId) return { id: null };
-      try {
-        const found = await this.library.find(themeId);
-        installed = toInstalledTheme(found);
-      } catch {
-        return { id: null };
+      const installed = toInstalledTheme(entry);
+      const wp = installed.wallpaper;
+      if (wp) {
+        const themeId = installed.id;
+        if (wp.workshopId)
+          return {
+            id: wp.workshopId,
+            speed: wp.speed,
+            loop: wp.loop,
+            scrimOpacity: wp.scrimOpacity,
+            render: wp.render,
+          };
+        if (wp.video)
+          return {
+            id: `theme:${themeId}`,
+            speed: wp.speed,
+            loop: wp.loop,
+            scrimOpacity: wp.scrimOpacity,
+            render: wp.render,
+          };
       }
+      // Theme has no wallpaper → clear whatever was there before.
+      return { id: null };
     }
-    const wp = installed.wallpaper;
-    if (!wp) return { id: null };
-    const themeId = installed.id;
-    if (wp.workshopId)
-      return { id: wp.workshopId, speed: wp.speed, loop: wp.loop, scrimOpacity: wp.scrimOpacity };
-    if (wp.video)
+
+    // Not applying a theme (restart/reconnect) — resolve with the full
+    // per-agent → global → theme precedence so the restored wallpaper renders
+    // exactly as configured.
+    const agentWp = this.settings.agentWallpaper(appId);
+    const globalWp = this.settings.wallpaper();
+    if (agentWp.enabled && agentWp.id) {
       return {
-        id: `theme:${themeId}`,
-        speed: wp.speed,
-        loop: wp.loop,
-        scrimOpacity: wp.scrimOpacity,
+        id: agentWp.id,
+        // per-agent render wins; fall back to the global default for the
+        // fields the per-agent setting does not override.
+        render: mergeRenderOptions(globalWp.render, agentWp.render),
       };
+    }
+
+    // No per-agent setting — look up the persisted active theme's wallpaper.
+    const themeId = this.state.apps[appId]?.activeThemeId;
+    if (!themeId) return { id: null };
+    try {
+      const found = await this.library.find(themeId);
+      const installed = toInstalledTheme(found);
+      const wp = installed.wallpaper;
+      if (!wp) return { id: null };
+      if (wp.workshopId)
+        return {
+          id: wp.workshopId,
+          speed: wp.speed,
+          loop: wp.loop,
+          scrimOpacity: wp.scrimOpacity,
+          // global default → theme render (theme is the base when there is no
+          // per-agent override).
+          render: mergeRenderOptions(globalWp.render, wp.render),
+        };
+      if (wp.video)
+        return {
+          id: `theme:${themeId}`,
+          speed: wp.speed,
+          loop: wp.loop,
+          scrimOpacity: wp.scrimOpacity,
+          render: mergeRenderOptions(globalWp.render, wp.render),
+        };
+    } catch {
+      return { id: null };
+    }
     return { id: null };
   }
 
@@ -331,18 +461,21 @@ export class AgentEngineService {
 
   async initialize(): Promise<void> {
     try {
-      const parsed = JSON.parse(await fs.readFile(this.stateFile, 'utf8')) as PersistedState;
-      if (parsed && parsed.version === 2 && parsed.apps && typeof parsed.apps === 'object') {
+      const parsed: unknown = JSON.parse(await fs.readFile(this.stateFile, 'utf8'));
+      if (isPersistedState(parsed)) {
         this.state = parsed;
       }
     } catch {
       // Fresh install or legacy state - defaults apply.
     }
-    // Clean up zombie ports: if a persisted port is no longer live, the app
-    // was restarted (or crashed) and the theme is no longer injected. Drop
-    // the port so the UI shows accurate state. activeThemeId is PRESERVED so
-    // the user can re-apply with one click after restarting the agent.
-    await this.reconcileZombiePorts();
+    // Clean up zombie ports in the background — this only touches persisted
+    // state (clearing dead ports), and status() independently re-probes all
+    // ports on every call, so blocking startup for the cleanup is unnecessary.
+    // The probePortLive timeout (1.5s per agent) previously caused multi-
+    // second startup delays when all agents' persisted ports were dead.
+    void this.reconcileZombiePorts().catch((error) => {
+      this.log(`[state] zombie port reconciliation failed: ${toMessage(error)}`);
+    });
 
     // NOTE: Boot-time auto-restore was removed. AgentSkin no longer
     // auto-launches agents or auto-injects themes on startup — that behavior
@@ -409,7 +542,7 @@ export class AgentEngineService {
         if (s) s.schemeSnapshot = snapshot;
       },
       persist: () => this.persist(),
-      isEpochCurrent: (appId, captured) => this.isEpochCurrent(appId, captured),
+      isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
       resolveLivePort: (appId) => this.resolveLivePort(appId),
       log: (line) => this.log(line),
       logStructured: (event) => this.logStructured(event),
@@ -430,11 +563,13 @@ export class AgentEngineService {
   private wallpaperDeps(): WallpaperInjectorDeps {
     return {
       wallpaperService: this.wallpaperService,
-      isEpochCurrent: (appId, captured) => this.isEpochCurrent(appId, captured),
-      bumpEpoch: (appId) => this.bumpEpoch(appId),
+      isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
+      bumpEpoch: (appId) => this.epochs.bumpEpoch(appId),
       resolveAgentWallpaperId: (appId, entry) => this.resolveAgentWallpaperId(appId, entry),
       ensureCdpReady: (appId, timeoutMs) => this.ensureCdpReady(appId, timeoutMs),
       resolveLivePort: (appId) => this.resolveLivePort(appId),
+      inferRestartReason: (appId, cdpFailureReason) =>
+        this.inferRestartReason(appId, cdpFailureReason),
       findAgentTargets: (appId, port) => this.adapter(appId).findTargets(port, 1200),
       setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
       log: (line) => this.log(line),
@@ -454,10 +589,97 @@ export class AgentEngineService {
   private fanoutDeps(): CdpFanoutDeps {
     return {
       adapter: (appId) => this.adapter(appId),
-      isEpochCurrent: (appId, captured) => this.isEpochCurrent(appId, captured),
+      isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
       tryEngineInjection: (session, appId, bundle, targetTheme, heroDataUrl) =>
         this.tryEngineInjection(session, appId, bundle, targetTheme, heroDataUrl),
       log: (line) => this.log(line),
+    };
+  }
+
+  /**
+   * Build the {@link RestoreFlowDeps} slice that backs the restore flow.
+   * Defined once so the restore orchestration shares the same plumbing
+   * (adapter factory, concurrency lock, epoch guard, state accessors,
+   * CDP fan-out, wallpaper injection, scheme sync, logger) as the other
+   * extracted modules.
+   */
+  private restoreFlowDeps(): RestoreFlowDeps {
+    return {
+      adapter: (appId) => this.adapter(appId),
+      isApplyingTheme: (appId) => this.applyingTheme.has(appId),
+      lockAgent: (appId) => this.applyingTheme.add(appId),
+      unlockAgent: (appId) => this.applyingTheme.delete(appId),
+      resolveLivePort: (appId) => this.resolveLivePort(appId),
+      bumpEpoch: (appId) => this.epochs.bumpEpoch(appId),
+      getSchemeSnapshot: (appId) => this.state.apps[appId]?.schemeSnapshot ?? null,
+      clearActiveTheme: (appId, port) => {
+        this.state.apps[appId] = { activeThemeId: null, port, schemeSnapshot: null };
+      },
+      persist: () => this.persist(),
+      setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
+      hardeningRemove: (appId, port, epoch) => this.hardeningRemove(appId, port, epoch),
+      removeSecondaryTargets: (appId, port, epoch) =>
+        this.removeSecondaryTargets(appId, port, epoch),
+      removeAgentVideoWallpaper: (appId, port, epoch) =>
+        this.removeAgentVideoWallpaper(appId, port, epoch),
+      restoreOriginalScheme: (appId, port, snapshot, epoch) =>
+        this.restoreOriginalScheme(appId, port, snapshot, epoch),
+      cleanupModuleStateForAgent: (appId) => {
+        // Order: CDP-layer ids first, then wallpaper (media tokens must be
+        // unregistered in the server), then self-heal counters. Theme cover/
+        // icon cache is per-theme-id, not per-agent, so it is cleaned up via
+        // the theme-uninstall path instead of the restore path.
+        cleanupEngineInjectionForAgent(appId);
+        cleanupWallpaperStateForAgent(appId);
+        cleanupSelfHealForAgent(appId);
+      },
+      status: () => this.status(),
+      log: (line) => this.log(line),
+      logStructured: (event) => this.logStructured(event),
+    };
+  }
+
+  /**
+   * Build the {@link ApplyFlowDeps} slice that backs the apply flow.
+   * Defined once so the apply orchestration shares the same plumbing
+   * (adapter factory, concurrency lock, epoch guard, CDP discovery,
+   * theme library, state accessors, CDP fan-out, wallpaper injection,
+   * scheme sync, logger, display-name resolver) as the other extracted
+   * modules.
+   */
+  private applyFlowDeps(): ApplyFlowDeps {
+    return {
+      adapter: (appId) => this.adapter(appId),
+      isApplyingTheme: (appId) => this.applyingTheme.has(appId),
+      lockAgent: (appId) => this.applyingTheme.add(appId),
+      unlockAgent: (appId) => this.applyingTheme.delete(appId),
+      ensureCdpReady: (appId, timeoutMs) => this.ensureCdpReady(appId, timeoutMs),
+      resolveLivePort: (appId) => this.resolveLivePort(appId),
+      inferRestartReason: (appId, cdpFailureReason) =>
+        this.inferRestartReason(appId, cdpFailureReason),
+      findTheme: (themeId) => this.library.find(themeId),
+      bumpEpoch: (appId) => this.epochs.bumpEpoch(appId),
+      setActiveTheme: (appId, themeId, port) => {
+        this.state.apps[appId] = {
+          activeThemeId: themeId,
+          port,
+          schemeSnapshot: this.state.apps[appId]?.schemeSnapshot ?? null,
+        };
+      },
+      persist: () => this.persist(),
+      getAppPath: (appId) => this.settings.overridesFor(appId).appPath,
+      setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
+      injectSecondaryTargets: (appId, port, bundle, epoch) =>
+        this.injectSecondaryTargets(appId, port, bundle, epoch),
+      hardeningPass: (appId, port, bundle, epoch) => this.hardeningPass(appId, port, bundle, epoch),
+      injectAgentWallpaperFromApply: (appId, port, entry, epoch) =>
+        this.injectAgentWallpaperFromApply(appId, port, entry, epoch),
+      syncSchemeWithStability: (appId, port, mode, epoch) =>
+        this.syncSchemeWithStability(appId, port, mode, epoch),
+      status: () => this.status(),
+      displayName: (appId) => PRODUCT_DISPLAY_NAMES[appId],
+      log: (line) => this.log(line),
+      logStructured: (event) => this.logStructured(event),
     };
   }
 
@@ -482,7 +704,14 @@ export class AgentEngineService {
   }
 
   private async persist(): Promise<void> {
-    await writeJsonAtomic(this.stateFile, this.state);
+    // R6-4: persist() 被 fire-and-forget 调用（如 () => this.persist()），
+    // 写盘失败时异常会被静默丢弃，用户以为保存成功但状态未持久化。
+    // 在内部 wrap try/catch + log 确保失败可观测。
+    try {
+      await writeJsonAtomic(this.stateFile, this.state);
+    } catch (error) {
+      this.log(`[state] persist failed: ${toMessage(error)}`);
+    }
   }
 
   /**
@@ -569,26 +798,38 @@ export class AgentEngineService {
    */
   private async withPageSession(
     appId: AgentId,
-    port: number,
+    _port: number,
     fn: (session: CdpSession) => Promise<void>,
     retries = 8,
   ): Promise<void> {
     const adapter = this.adapter(appId);
     let lastError: Error | null = null;
+    // Cache the resolved port across retries. Previously every retry called
+    // resolveLivePort again (DevToolsActivePort file read + PID/netstat
+    // probing), wasting IO when the port doesn't change between attempts.
+    // The port is only re-resolved when the cached port fails to yield
+    // targets (app may have restarted and bound a new port).
+    let cachedPort: number | null = null;
     for (let attempt = 0; attempt < retries; attempt++) {
-      const livePort = await this.resolveLivePort(appId);
-      if (livePort == null) {
+      // First attempt or previous port yielded no targets → re-resolve.
+      if (cachedPort == null) {
+        cachedPort = await this.resolveLivePort(appId);
+      }
+      if (cachedPort == null) {
         // No live CDP port yet (app still booting / not debug-enabled) — wait
-        // and re-resolve instead of erroring on a null port.
+        // and retry. Reset cachedPort so the next iteration re-resolves.
         lastError = new Error('no live CDP port');
+        cachedPort = null;
         await new Promise((resolve) => setTimeout(resolve, 500));
         continue;
       }
       let targets: Awaited<ReturnType<typeof adapter.findTargets>> = [];
       try {
-        targets = await adapter.findTargets(livePort, 1200);
+        targets = await adapter.findTargets(cachedPort, 1200);
       } catch (error) {
         lastError = error as Error;
+        // Port may be stale (app restarted) → force re-resolve on next attempt.
+        cachedPort = null;
       }
       const page = pickPageTarget(targets);
       if (page) {
@@ -601,7 +842,9 @@ export class AgentEngineService {
         }
       }
       lastError = new Error('no reachable page target');
-      // Renderer not ready yet (fresh launch / restart) — wait and re-resolve.
+      // Renderer not ready yet (fresh launch / restart) — wait and retry.
+      // Keep cachedPort: the app is still launching, the port is likely the
+      // same, just the renderer hasn't registered targets yet.
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
     throw lastError ?? new Error('no reachable page target');
@@ -734,7 +977,7 @@ export class AgentEngineService {
     bundle: ThemeBundle,
     targetTheme: ResolvedThemeTarget,
     heroDataUrl: string | null,
-  ): Promise<import('./cdp-inject').InjectEngineResult | null> {
+  ): Promise<import('./cdp/cdp-inject').InjectEngineResult | null> {
     const deps: EngineInjectionDeps = {
       resolveEngineDir: resolveEngineDirDefault,
       log: (line) => this.log(line),
@@ -770,8 +1013,11 @@ export class AgentEngineService {
    * (wallpaper-injector.ts); this method threads the orchestrator's deps
    * slice through.
    */
-  async applyAgentWallpaperNow(appId: AgentId): Promise<{ ok: boolean; reason?: string }> {
-    return applyAgentWallpaperNowImpl(appId, this.wallpaperDeps());
+  async applyAgentWallpaperNow(
+    appId: AgentId,
+    options?: { restartExisting?: boolean },
+  ): Promise<{ ok: boolean; reason?: string; detail?: string }> {
+    return applyAgentWallpaperNowImpl(appId, this.wallpaperDeps(), options);
   }
 
   /**
@@ -802,8 +1048,9 @@ export class AgentEngineService {
   async applyWallpaperToAgent(
     wallpaperId: string,
     appId: AgentId,
-  ): Promise<{ ok: boolean; reason?: string }> {
-    return applyWallpaperToAgentImpl(wallpaperId, appId, this.wallpaperDeps());
+    options?: { restartExisting?: boolean },
+  ): Promise<{ ok: boolean; reason?: string; detail?: string }> {
+    return applyWallpaperToAgentImpl(wallpaperId, appId, this.wallpaperDeps(), options);
   }
 
   /**
@@ -831,9 +1078,27 @@ export class AgentEngineService {
     await removeSecondaryTargetsImpl(appId, port, epoch, this.fanoutDeps());
   }
 
+  /**
+   * Cached status result with a TTL (ms). The UI typically polls status
+   * every few seconds; without caching, each poll triggers a full CDP
+   * discovery cycle (DevToolsActivePort file reads + PID/netstat probing)
+   * for ALL agents simultaneously. A 2-second TTL collapses repeated
+   * polls within that window into a single probe burst.
+   */
+  private statusCache: SystemStatus | null = null;
+  private statusCacheAt = 0;
+  private static readonly STATUS_CACHE_TTL = 2000;
+
   async status(): Promise<SystemStatus> {
+    const now = Date.now();
+    if (this.statusCache && now - this.statusCacheAt < AgentEngineService.STATUS_CACHE_TTL) {
+      return this.statusCache;
+    }
     const apps = await Promise.all(AGENT_IDS.map((appId) => this.appStatus(appId)));
-    return { platform: platform(), apps };
+    const result = { platform: platform(), apps };
+    this.statusCache = result;
+    this.statusCacheAt = now;
+    return result;
   }
 
   /**
@@ -841,299 +1106,131 @@ export class AgentEngineService {
    * Used by the UI to show specific guidance (install / start manually /
    * singleton lock / etc.) instead of a single generic message.
    *
-   * When `cdpFailureReason` is non-null (i.e. ensureCdpReady already
-   * diagnosed the failure), it is mapped directly — no re-detection needed.
-   * Otherwise (first-attempt probe path, no restart attempted), we fall back
-   * to detection-based inference:
-   *   - App not installed              → 'not-installed'
-   *   - App installed but not running  → 'not-running'
-   *   - App running, no CDP            → 'no-cdp'
+   * Implementation lives in {@link inferRestartReasonImpl} (app-discovery.ts);
+   * this method just threads the orchestrator's deps slice through.
    */
   private async inferRestartReason(
     appId: AgentId,
     cdpFailureReason: CdpReadyResult['reason'] = null,
   ): Promise<NonNullable<ApplyResponse['restartReason']>> {
-    // ensureCdpReady gave us a precise cause — map it directly.
-    if (cdpFailureReason) {
-      switch (cdpFailureReason) {
-        case 'not-installed':
-          return 'not-installed';
-        case 'singleton-lock':
-          return 'singleton-lock';
-        case 'spawn-error':
-          return 'spawn-failed';
-        case 'timeout':
-          return 'cdp-timeout';
-      }
-    }
-    try {
-      const adapter = this.adapter(appId);
-      const override = this.settings.overridesFor(appId);
-      let discovered: Awaited<ReturnType<typeof adapter.discover>> = null;
-      try {
-        discovered = await adapter.discover(process.platform, override.appPath);
-      } catch {
-        discovered = null;
-      }
-      const probe = await detectInstallation({
-        platform: process.platform,
-        appPath: override.appPath,
-        hints: adapter.installHints,
-        displayName: PRODUCT_DISPLAY_NAMES[appId],
-        logFile: this.detectionLogFile,
-      });
-      const installed = Boolean(discovered) || probe.installed;
-      if (!installed) return 'not-installed';
-
-      let running = false;
-      try {
-        running =
-          (await adapter.findRunningPids(process.platform, discovered?.executable ?? null)).length >
-          0;
-      } catch {
-        running = false;
-      }
-
-      if (!running) return 'not-running';
-      return 'no-cdp';
-    } catch {
-      // Detection itself failed — fall back to the generic 'no-cdp' reason.
-      return 'no-cdp';
-    }
+    return inferRestartReasonImpl(appId, this.discoveryDeps(), cdpFailureReason);
   }
 
   async apply(request: ApplyRequest): Promise<ApplyResponse> {
-    const copy = getMainMessages();
-    if (platform() === 'unsupported') throw new Error(copy.unsupportedPlatform);
     const appId = request.appId;
-    const adapter = this.adapter(appId);
-
-    // CDP discovery + (conditional) restart policy:
-    //
-    //   - If the user has NOT confirmed a restart (restartExisting !== true),
-    //     we only probe for a live CDP port via resolveLivePort. If none is
-    //     found we return `requires-restart` so the UI can show a confirmation
-    //     dialog — we never silently kill an app the user may be working in.
-    //   - If the user HAS confirmed (restartExisting === true), ensureCdpReady
-    //     is allowed to kill and relaunch the app with --remote-debugging-port=0.
-    //
-    // This two-phase flow guarantees an app is only ever restarted after an
-    // explicit user "Restart & apply" click, not on the first apply attempt.
-    let port: number | null | undefined = request.port;
-    let cdpFailureReason: CdpReadyResult['reason'] = null;
-    if (!port) {
-      if (request.restartExisting) {
-        // User confirmed the restart — allowed to kill + relaunch with CDP.
-        const cdpResult = await this.ensureCdpReady(appId);
-        port = cdpResult.port;
-        cdpFailureReason = cdpResult.reason;
-      } else {
-        // First attempt: probe only, do not restart.
-        port = await this.resolveLivePort(appId);
-      }
-      if (port == null) {
+    // (1) Same-kind dedup: a second apply() joins the already-running promise.
+    const existing = this.inflightOperations.get(appId);
+    if (existing && existing.kind === 'apply') {
+      return existing.promise as Promise<ApplyResponse>;
+    }
+    // (2) Opposite-kind ordering: wait for any in-flight restore to settle
+    // before starting the apply, so the post-apply state is deterministic.
+    if (existing && existing.kind === 'restore') {
+      this.log(`[apply] ${appId}: restore in progress — queued behind in-flight restore`);
+      try {
+        await existing.promise;
+      } catch (error) {
         this.log(
-          `[apply] ${appId}: no live CDP port${request.restartExisting ? ` (restart failed: ${cdpFailureReason})` : ' (not running with --remote-debugging-port)'}`,
+          `[apply] ${appId}: queued restore failed — proceeding anyway: ${toMessage(error)}`,
         );
-        // Infer a structured reason so the UI can show specific guidance
-        // (install the app / start it manually / singleton lock / etc.)
-        // instead of a single generic "restart needed" message. When
-        // ensureCdpReady already gave us a precise failure cause, use it
-        // directly instead of re-detecting (and guessing) from scratch.
-        const restartReason = await this.inferRestartReason(appId, cdpFailureReason);
-        return {
-          status: 'requires-restart',
-          message: copy.cdpNotDetectedMessage,
-          system: await this.status(),
-          restartReason,
-        };
       }
+      // Re-check: a new op may have been enqueued while we awaited; if so
+      // recurse so we chain onto it instead of racing it.
+      return this.apply(request);
     }
-    if (!isPort(port)) throw new Error(copy.invalidCdpPort);
-
-    const entry = await this.library.find(request.themeId);
-
-    // CDP is guaranteed live at this point (ensureCdpReady either found an
-    // existing port or restarted the app and waited for one). Inject CSS
-    // directly via the existing connection — launch:false skips core's own
-    // launch/restart, which would otherwise fight the port we just resolved.
-    this.log(`[apply] ${entry.bundle.theme.id} -> ${appId} (port ${port})`);
-    // Bump epoch before applying so any background tasks still running from a
-    // previous apply/restore/reapply will see the epoch flip and self-terminate
-    // before they touch the CDP target again.
-    const epoch = this.bumpEpoch(appId);
-    this.applyingTheme.add(appId);
-    this.logStructured({
-      type: 'inject_start',
-      agentId: appId,
-      themeId: entry.bundle.theme.id,
-      timestamp: new Date().toISOString(),
-      progress: 60,
-    });
-    try {
-      await adapter.applyTheme(entry.bundle, {
-        port,
-        launch: false,
-        appPath: this.settings.overridesFor(appId).appPath,
-        restartExisting: false,
-      });
-    } catch (error) {
-      const code = (error as { code?: string }).code;
-      const message = toMessage(error);
-      this.log(`[apply] ${appId} failed${code ? ` [${code}]` : ''}: ${message}`);
-      this.logStructured({
-        type: 'apply_failed',
-        agentId: appId,
-        themeId: entry.bundle.theme.id,
-        reason: code ? `${code}: ${message}` : message,
-        timestamp: new Date().toISOString(),
-      });
-      if (code === ERROR_CODES.RESTART_REQUIRED) {
-        return {
-          status: 'requires-restart',
-          message: copy.restartRequiredMessage,
-          system: await this.status(),
-        };
+    let promise!: Promise<ApplyResponse>;
+    promise = (async () => {
+      try {
+        return await this.applyInternal(request);
+      } finally {
+        if (this.inflightOperations.get(appId)?.promise === promise) {
+          this.inflightOperations.delete(appId);
+        }
       }
-      // An occupied port is not fixed by restarting the target app, so it must
-      // not funnel into the restart dialog.
-      if (code === ERROR_CODES.PORT_OCCUPIED) {
-        const occupiedPort = (error as { port?: number }).port ?? port;
-        return {
-          status: 'port-occupied',
-          message: copy.portOccupiedMessage(occupiedPort),
-          system: await this.status(),
-        };
-      }
-      throw error;
-    } finally {
-      this.applyingTheme.delete(appId);
-    }
+    })();
+    this.inflightOperations.set(appId, { kind: 'apply', promise });
+    return promise;
+  }
 
-    this.state.apps[appId] = {
-      activeThemeId: entry.bundle.theme.id,
-      port,
-      schemeSnapshot: this.state.apps[appId]?.schemeSnapshot ?? null,
-    };
-    await this.persist();
-    // Inject the theme CSS into secondary targets (MCP webviews, ardot
-    // iframes) that the core's matchTarget/preflight filter out. Non-blocking
-    // and best-effort — the main page is already themed, the response can
-    // return immediately while embedded content is themed a moment later.
-    void this.injectSecondaryTargets(appId, port, entry.bundle, epoch).catch(() => undefined);
-    // Hardening pass: re-inject via adoptedStyleSheets (bypasses Doubao's
-    // MutationObserver anti-tamper) and verify the theme actually took effect.
-    // Non-blocking — core's applyTheme already succeeded, this is a safety net.
-    void this.hardeningPass(appId, port, entry.bundle, epoch).catch(() => undefined);
-    // Video wallpaper: resolve the effective wallpaper for this agent
-    // (per-agent setting takes priority over the theme's bundled wallpaper)
-    // and inject it into the agent's page as a fixed background video.
-    // Non-blocking — the theme CSS is already applied, wallpaper is cosmetic.
-    const installed = toInstalledTheme(entry);
-    void this.injectAgentWallpaperFromApply(appId, port, entry, epoch).catch(() => undefined);
-    // Match the agent's internal light/dark scheme to the theme so users do
-    // not have to toggle dark mode by hand in each agent (best-effort). The
-    // app may have been (re)launched by applyTheme and bound a different
-    // debug port, so re-resolve the live port first.
-    //
-    // Mode resolution priority: copy.mode → infer from theme colors → null.
-    const rawMode = installed.mode ?? inferModeFromColors(installed.colors);
-    const schemeMode = resolveSchemeMode(rawMode);
-    if (schemeMode) {
-      // Re-resolve in case the app rebound a different port during apply; fall
-      // back to the apply port (just-proven-live) if detection isn't ready yet
-      // — syncSchemeWithStability re-resolves internally with retries.
-      const livePort = (await this.resolveLivePort(appId)) ?? port;
-      // Best-effort and non-blocking: the theme CSS is already applied, so the
-      // "applied" response returns immediately while the agent's light/dark
-      // scheme is matched a moment later. After the initial sync, a stability
-      // window re-checks at 2s/5s/10s to catch apps that overwrite our mode
-      // setting during their own render cycle.
-      void this.syncSchemeWithStability(appId, livePort, schemeMode, epoch).catch(() => undefined);
-    }
-    this.log(`[apply] ${entry.bundle.theme.id} applied to ${appId}`);
-    // Structured log for reliable parsing (locale-independent).
-    this.logStructured({
-      type: 'inject_done',
-      agentId: appId,
-      themeId: entry.bundle.theme.id,
-      timestamp: new Date().toISOString(),
-      progress: 100,
-    });
-    this.logStructured({
-      type: 'theme_apply',
-      agentId: appId,
-      themeId: entry.bundle.theme.id,
-      timestamp: new Date().toISOString(),
-    });
-    return {
-      status: 'applied',
-      message: copy.themeApplied(entry.bundle.theme.displayName, PRODUCT_DISPLAY_NAMES[appId]),
-      system: await this.status(),
-    };
+  private async applyInternal(request: ApplyRequest): Promise<ApplyResponse> {
+    this.statusCache = null; // Invalidate cache — apply changes app state
+    return applyThemeFlowImpl(request, this.applyFlowDeps());
   }
 
   async restore(appId: AgentId): Promise<SystemStatus> {
-    const adapter = this.adapter(appId);
-    const port = await this.resolveLivePort(appId);
-    if (port == null) {
-      // No live CDP port (app closed or running without --remote-debugging-port).
-      // We can't reach the renderer to remove the theme CSS — leave state as-is
-      // so the UI still shows the theme as active until the app is reachable.
-      this.log(`[restore] ${appId}: no live CDP port, skipping renderer restore`);
-      return this.status();
+    // Mirror of apply() — same-kind dedup, opposite-kind ordered queueing.
+    const existing = this.inflightOperations.get(appId);
+    if (existing && existing.kind === 'restore') {
+      return existing.promise as Promise<SystemStatus>;
     }
-    this.log(`[restore] ${appId} (port ${port})`);
-    const snapshot = this.state.apps[appId]?.schemeSnapshot ?? null;
-    // Bump epoch so any background tasks still running from the previous
-    // apply/reapply self-terminate before they re-inject CSS or re-apply the
-    // scheme that restore is about to tear down.
-    const epoch = this.bumpEpoch(appId);
-    this.applyingTheme.add(appId);
-    // Remove engine injection (CSS layers + adapter.mjs + persistence script)
-    // from ALL DOM-bearing targets BEFORE the core restore. This ensures the
-    // persistence script (Page.addScriptToEvaluateOnNewDocument) is torn down
-    // first, otherwise it would re-apply the engine on the next navigation
-    // even after the core restore succeeds. Must iterate the same target set
-    // as hardeningPass (page, webview, iframe) so no surface is missed.
-    await this.hardeningRemove(appId, port, epoch).catch(() => undefined);
-    try {
-      await adapter.restoreTheme(port);
-    } catch (error) {
-      // Restoring when the app is closed still clears host settings state.
-      this.log(`[restore] ${appId}: ${toMessage(error)}`);
-      this.logStructured({
-        type: 'restore_failed',
-        agentId: appId,
-        reason: toMessage(error),
-        timestamp: new Date().toISOString(),
-      });
-      // On failure, keep the original activeThemeId - do not clear it.
-      return this.status();
-    } finally {
-      this.applyingTheme.delete(appId);
+    if (existing && existing.kind === 'apply') {
+      this.log(`[restore] ${appId}: apply in progress — queued behind in-flight apply`);
+      try {
+        await existing.promise;
+      } catch (error) {
+        this.log(
+          `[restore] ${appId}: queued apply failed — proceeding anyway: ${toMessage(error)}`,
+        );
+      }
+      return this.restore(appId);
     }
-    // Remove the theme CSS from secondary targets (webviews/iframes) too.
-    // Best-effort — the main window is already restored by adapter.restoreTheme.
-    await this.removeSecondaryTargets(appId, port, epoch).catch(() => undefined);
-    // Remove video wallpaper if one was injected.
-    await this.removeAgentVideoWallpaper(appId, port, epoch).catch(() => undefined);
-    // Put the user's original light/dark scheme back (best-effort).
-    if (snapshot) await this.restoreOriginalScheme(appId, port, snapshot, epoch);
-    this.state.apps[appId] = { activeThemeId: null, port };
-    await this.persist();
-    // Structured log for reliable parsing (locale-independent).
-    this.logStructured({
-      type: 'theme_restore',
-      agentId: appId,
-      timestamp: new Date().toISOString(),
-    });
-    return this.status();
+    let promise!: Promise<SystemStatus>;
+    promise = (async () => {
+      try {
+        return await this.restoreInternal(appId);
+      } finally {
+        if (this.inflightOperations.get(appId)?.promise === promise) {
+          this.inflightOperations.delete(appId);
+        }
+      }
+    })();
+    this.inflightOperations.set(appId, { kind: 'restore', promise });
+    return promise;
+  }
+
+  private async restoreInternal(appId: AgentId): Promise<SystemStatus> {
+    this.statusCache = null; // Invalidate cache — restore changes app state
+    return restoreThemeFlowImpl(appId, this.restoreFlowDeps());
   }
 
   async restoreAll(): Promise<void> {
     // 并行恢复所有已应用主题的 agent —— 各 agent 的 restore 相互独立。
-    const targets = AGENT_IDS.filter((appId) => this.activeThemeId(appId));
+    // Also includes agents that have no theme but DO have a wallpaper
+    // preference, so "restore all" truly clears every visual modification.
+    const targets = AGENT_IDS.filter(
+      (appId) => this.activeThemeId(appId) || this.settings.agentWallpaper(appId)?.enabled,
+    );
     await Promise.all(targets.map((appId) => this.restore(appId).catch(() => undefined)));
+    // For agents that had a wallpaper but no theme, restore() won't touch
+    // them (it skips when activeThemeId is null). Clear their wallpaper
+    // preference explicitly so nothing visual survives the "restore all".
+    await Promise.all(
+      AGENT_IDS.filter(
+        (appId) => !this.activeThemeId(appId) && this.settings.agentWallpaper(appId)?.enabled,
+      ).map((appId) => this.removeWallpaperFromAgent(appId).catch(() => undefined)),
+    );
+  }
+
+  /**
+   * Release ALL module-scoped state retained by sub-modules. Intended to be
+   * called once at app shutdown (before-quit) so the process doesn't exit
+   * with stale streaming file handles held open by the media server, or with
+   * maps retaining references for every agent/theme that was ever touched.
+   *
+   * Ordering notes:
+   *   - Wallpapers first so media tokens are unregistered before the maps
+   *     are cleared (server.handle needs the token to look up the stream).
+   *   - CDP engine injection next so persistence-script identifiers are
+   *     dropped before we clear UI-level caching state.
+   *   - Self-heal + UI caches last (purely in-memory, no side effects).
+   */
+  dispose(): void {
+    disposeWallpaperInjectionState();
+    disposeEngineInjectionState();
+    disposeSelfHealState();
+    disposeThemeAssetCache();
+    this.applyingTheme.clear();
+    this.inflightOperations.clear();
+    this.statusCache = null;
   }
 }

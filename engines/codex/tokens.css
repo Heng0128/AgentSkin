@@ -1,0 +1,79 @@
+/* ============================================================
+   ENGINE: codex — Layer 0: Token Override
+   ------------------------------------------------------------
+   Pure design-token overrides for the OpenAI Codex (ChatGPT)
+   desktop app. The app uses Tailwind tokens (--text-primary,
+   --bg-* etc.) declared on `main.main-surface` and other
+   containers; we override them on the html host class.
+
+   Selector: html.agentskin-host-codex:root (0,2,1)
+   beats :root[data-theme] (0,2,0).
+   ============================================================ */
+
+html.agentskin-host-codex:root {
+  color-scheme: dark !important;
+
+  /* Text hierarchy — Codex uses --text-* tokens */
+  --text-primary: var(--agentskin-text) !important;
+  --text-secondary: var(--agentskin-muted) !important;
+  --text-tertiary: color-mix(in srgb, var(--agentskin-text) 55%, transparent) !important;
+  --text-quaternary: color-mix(in srgb, var(--agentskin-text) 40%, transparent) !important;
+
+  /* Backgrounds — transparent for art punch-through */
+  --bg-primary: transparent !important;
+  --bg-secondary: color-mix(in srgb, var(--agentskin-surface) 92%, black) !important;
+  --bg-tertiary: color-mix(in srgb, var(--agentskin-surface-elevated) 85%, var(--agentskin-accent) 15%) !important;
+  --bg-elevated: var(--agentskin-surface-elevated) !important;
+  --bg-base: transparent !important;
+  --bg-canvas: transparent !important;
+  --bg-surface: color-mix(in srgb, var(--agentskin-surface) 80%, transparent) !important;
+  --bg-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+  --bg-active: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
+  --bg-selected: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+
+  /* Borders */
+  --border-xsubtle: color-mix(in srgb, var(--agentskin-border) 25%, transparent) !important;
+  --border-subtle: color-mix(in srgb, var(--agentskin-border) 50%, transparent) !important;
+  --border-medium: var(--agentskin-border) !important;
+  --border-strong: color-mix(in srgb, var(--agentskin-border) 80%, transparent) !important;
+
+  /* Accent / brand */
+  --accent: var(--agentskin-accent) !important;
+  --accent-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
+  --accent-pressed: color-mix(in srgb, var(--agentskin-accent) 75%, white) !important;
+  --accent-soft: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --accent-soft-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+
+  /* Buttons */
+  --button-primary-bg: var(--agentskin-accent) !important;
+  --button-primary-fg: var(--agentskin-bg) !important;
+  --button-primary-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
+  --button-secondary-bg: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
+  --button-secondary-fg: var(--agentskin-text) !important;
+
+  /* Links */
+  --link: var(--agentskin-accent) !important;
+  --link-hover: color-mix(in srgb, var(--agentskin-accent) 80%, white) !important;
+
+  /* Input / composer */
+  --input-bg: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent) !important;
+  --input-border: var(--agentskin-border) !important;
+  --input-focus-ring: var(--agentskin-focus-ring) !important;
+
+  /* Sidebar / panels */
+  --sidebar-bg: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 22%, transparent) !important;
+  --panel-bg: color-mix(in srgb, var(--agentskin-surface) 14%, transparent) !important;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.24) !important;
+
+  /* Selection */
+  --selection-bg: color-mix(in srgb, var(--agentskin-accent) 28%, transparent) !important;
+
+  /* Code blocks */
+  --code-bg: var(--agentskin-code-bg) !important;
+  --code-fg: var(--agentskin-code-fg) !important;
+}

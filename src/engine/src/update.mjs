@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { VERSION } from "./version.mjs";
 
-export const PACKAGE_NAME = "@agentskin/core";
+export const PACKAGE_NAME = "@agentskin/engine";
 export const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_REGISTRY = "https://registry.npmjs.org";
 const PACKAGE_ROOT = fileURLToPath(new URL("../", import.meta.url));
@@ -50,14 +50,14 @@ export function compareVersions(leftValue, rightValue) {
 }
 
 export function getUpdateCacheFile({ env = process.env, platform = process.platform, home = os.homedir() } = {}) {
-  if (env.CODEDROBE_UPDATE_CACHE) return path.resolve(env.CODEDROBE_UPDATE_CACHE);
-  if (env.CODEDROBE_CACHE_DIR) return path.resolve(env.CODEDROBE_CACHE_DIR, "update-check.json");
-  if (platform === "darwin") return path.join(home, "Library", "Caches", "codedrobe", "update-check.json");
+  if (env.AGENTSKIN_UPDATE_CACHE) return path.resolve(env.AGENTSKIN_UPDATE_CACHE);
+  if (env.AGENTSKIN_CACHE_DIR) return path.resolve(env.AGENTSKIN_CACHE_DIR, "update-check.json");
+  if (platform === "darwin") return path.join(home, "Library", "Caches", "agentskin", "update-check.json");
   if (platform === "win32") {
     const base = env.LOCALAPPDATA || path.join(home, "AppData", "Local");
-    return path.join(base, "CodeDrobe", "Cache", "update-check.json");
+    return path.join(base, "AgentSkin", "Cache", "update-check.json");
   }
-  return path.join(env.XDG_CACHE_HOME || path.join(home, ".cache"), "codedrobe", "update-check.json");
+  return path.join(env.XDG_CACHE_HOME || path.join(home, ".cache"), "agentskin", "update-check.json");
 }
 
 async function readFreshCache(cacheFile, now, maxAgeMs) {
@@ -131,7 +131,7 @@ export async function checkForUpdate({
   const registryBase = normalizeRegistry(registry);
   const packagePath = PACKAGE_NAME.replace("/", "%2F");
   const response = await fetchImpl(`${registryBase}/${packagePath}/latest`, {
-    headers: { accept: "application/json", "user-agent": `codedrobe/${currentVersion}` },
+    headers: { accept: "application/json", "user-agent": `agentskin/${currentVersion}` },
     signal: AbortSignal.timeout(timeoutMs),
   });
   if (!response.ok) throw new Error(`npm registry returned HTTP ${response.status}.`);
@@ -156,7 +156,7 @@ export function detectPackageManager({ env = process.env, packageRoot = PACKAGE_
   const userAgent = String(env.npm_config_user_agent || "").toLowerCase();
   if (normalizedRoot.includes("/.bun/install/global/")) return "bun";
   if (normalizedRoot.includes("/pnpm/global/") || normalizedRoot.includes("/.pnpm-global/")) return "pnpm";
-  if (normalizedRoot.includes("/lib/node_modules/@agentskin/core") || normalizedRoot.includes("/npm/node_modules/@agentskin/core")) return "npm";
+  if (normalizedRoot.includes("/lib/node_modules/@agentskin/engine") || normalizedRoot.includes("/npm/node_modules/@agentskin/engine")) return "npm";
   if (userAgent.startsWith("bun/") || versions.bun) return "bun";
   if (userAgent.startsWith("pnpm/")) return "pnpm";
   return "npm";
@@ -174,7 +174,7 @@ export function formatCommand({ command, args }) {
 
 async function runPackageManager(command, args, { quiet = false } = {}) {
   await new Promise((resolve, reject) => {
-    const child = spawn(command, args, { stdio: quiet ? "ignore" : "inherit", shell: false });
+    const child = spawn(command, args, { stdio: quiet ? "ignore" : "inherit", shell: false, timeout: 120_000 });
     child.once("error", (error) => reject(new Error(`Unable to run ${command}: ${error.message}`)));
     child.once("close", (code, signal) => {
       if (code === 0) resolve();
@@ -183,7 +183,7 @@ async function runPackageManager(command, args, { quiet = false } = {}) {
   });
 }
 
-export async function updateCodeDrobe({
+export async function updateAgentSkin({
   checkOptions = {},
   packageManager = detectPackageManager(),
   quiet = false,
@@ -202,8 +202,8 @@ function environmentFlag(value) {
 
 export function isGlobalInstallation(packageRoot = PACKAGE_ROOT) {
   const normalized = packageRoot.replaceAll("\\", "/").toLowerCase();
-  return normalized.includes("/lib/node_modules/@agentskin/core")
-    || normalized.includes("/npm/node_modules/@agentskin/core")
+  return normalized.includes("/lib/node_modules/@agentskin/engine")
+    || normalized.includes("/npm/node_modules/@agentskin/engine")
     || normalized.includes("/.bun/install/global/")
     || normalized.includes("/pnpm/global/")
     || normalized.includes("/.pnpm-global/");
@@ -218,7 +218,7 @@ export function shouldNotifyUpdate({
 } = {}) {
   if (!stderrIsTTY || json || !isGlobalInstallation(packageRoot)) return false;
   if (["help", "version", "update"].includes(command)) return false;
-  if (environmentFlag(env.CI) || environmentFlag(env.NO_UPDATE_NOTIFIER) || environmentFlag(env.CODEDROBE_DISABLE_UPDATE_CHECK)) return false;
+  if (environmentFlag(env.CI) || environmentFlag(env.NO_UPDATE_NOTIFIER) || environmentFlag(env.AGENTSKIN_DISABLE_UPDATE_CHECK)) return false;
   return true;
 }
 
@@ -236,7 +236,7 @@ export async function maybeNotifyUpdate({
     const status = await checkForUpdate({ timeoutMs: 1_500, ...checkOptions });
     if (status.updateAvailable) {
       const updateCommand = getUpdateCommand(detectPackageManager({ env, packageRoot }));
-      stderr(`[codedrobe] Update available ${status.current} → ${status.latest}. Run: ${formatCommand(updateCommand)}`);
+      stderr(`[agentskin] Update available ${status.current} → ${status.latest}. Run: ${formatCommand(updateCommand)}`);
     }
     return status;
   } catch {

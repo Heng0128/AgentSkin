@@ -1,36 +1,19 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { Progress } from '@/components/ui/progress';
-import type { InstallStep, InstallStepStatus } from '@/hooks/useThemeInstallFlow';
+import type { InstallStep } from '@/hooks/useThemeInstallFlow';
 import { cn } from '@/lib/utils';
 
-import {
-  AlertCircleIcon,
-  CheckIcon,
-  File01Icon,
-  LoadingIcon,
-  RotateIcon,
-  X,
-} from '@hugeicons/core-free-icons';
+import { AlertCircleIcon, CheckIcon, LoadingIcon, RotateIcon, X } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import appIcon from '../../../assets/branding/app-icon.png';
 
 // ---------------------------------------------------------------------------
-// Formatted timestamp from epoch ms
+// Formatted elapsed time from ms
 // ---------------------------------------------------------------------------
-
-function formatTime(epochMs: number): string {
-  const d = new Date(epochMs);
-  return d.toLocaleTimeString('zh-CN', {
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-}
 
 function formatElapsed(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
@@ -46,7 +29,7 @@ function StepRow({ step }: { step: InstallStep }) {
   const statusIcon = (() => {
     switch (step.status) {
       case 'done':
-        return <HugeIcon icon={CheckIcon} className="size-3.5 text-emerald-500" />;
+        return <HugeIcon icon={CheckIcon} className="size-3.5 text-cr-success" />;
       case 'active':
         return <HugeIcon icon={LoadingIcon} className="size-3.5 animate-spin text-primary" />;
       case 'error':
@@ -110,7 +93,7 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
       case 'ERROR':
         return 'text-destructive';
       case 'WARN':
-        return 'text-amber-500';
+        return 'text-cr-warning';
       default:
         return 'text-muted-foreground';
     }
@@ -132,7 +115,6 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
 
 export function InstallWizard({
   steps,
-  flowState,
   currentTheme,
   lastError,
   progress,
@@ -147,7 +129,6 @@ export function InstallWizard({
   t,
 }: {
   steps: InstallStep[];
-  flowState: string;
   currentTheme: string | null;
   lastError: string | null;
   progress: number;
@@ -164,17 +145,29 @@ export function InstallWizard({
   const logRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll logs
+  // P2-13: Empty deps meant this only ran on mount — never re-scrolled when
+  // new log lines arrived during an install. We now run after every render
+  // that changes `logs`, and only scroll when the user wasn't manually
+  // scrolling up. `steps.length` is included so the scroll also catches the
+  // state transition at the end of a step (when the "done" row appears).
+  // `void logs` / `void steps.length` reads keep biome exhaustive-deps happy
+  // (both deps are trigger-only and not used for actual DOM computation).
   useEffect(() => {
-    if (logRef.current) {
-      logRef.current.scrollTop = logRef.current.scrollHeight;
+    void logs;
+    void steps.length;
+    if (!logRef.current) return;
+    const el = logRef.current;
+    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+    if (atBottom) {
+      el.scrollTop = el.scrollHeight;
     }
-  }, [logs]);
+  }, [logs, steps.length]);
 
   if (steps.length === 0 && !isInstalling && !isComplete && !isFailed && !isCancelled) return null;
 
   const title = (() => {
     if (isFailed) return t?.installFailed ?? '安装失败';
-    if (isCancelled) return t?.actionFailed ?? '安装已取消';
+    if (isCancelled) return t?.installCancelled ?? '安装已取消';
     if (isComplete) return t?.installCompleted ?? '安装完成';
     return t?.installProgress ?? '正在安装主题…';
   })();
@@ -212,7 +205,7 @@ export function InstallWizard({
         <Progress
           value={progress}
           className="h-1.5"
-          fillClassName={isFailed ? 'bg-destructive' : isComplete ? 'bg-emerald-500' : undefined}
+          fillClassName={isFailed ? 'bg-destructive' : isComplete ? 'bg-cr-success' : undefined}
         />
       </div>
 
@@ -232,6 +225,7 @@ export function InstallWizard({
           className="mx-4 mt-2 max-h-24 overflow-y-auto rounded-lg border bg-muted/20 p-2"
         >
           {logEntries.map((entry, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: log entries are append-only display items — no reorder, insert, or delete, so index keys are safe.
             <LogEntryRow key={i} entry={entry} />
           ))}
         </div>
@@ -252,7 +246,7 @@ export function InstallWizard({
           </Button>
         )}
         {isComplete && (
-          <span className="text-xs text-emerald-500">✓ {t?.installCompleted ?? '完成'}</span>
+          <span className="text-xs text-cr-success">✓ {t?.installCompleted ?? '完成'}</span>
         )}
         {isFailed && lastError && (
           <span className="text-xs text-destructive truncate">{lastError}</span>

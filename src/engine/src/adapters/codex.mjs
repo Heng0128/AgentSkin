@@ -1,10 +1,11 @@
 import codexThemeV1Profile from "../runtime/profiles/codex-theme-v1.mjs";
 import codexHostSettings from "../host/codex-settings.mjs";
+import { DISPLAY_NAMES } from "./meta.mjs";
 
 const codex = {
   id: "codex",
-  displayName: "OpenAI Codex",
-  defaultPort: 9335,
+  displayName: DISPLAY_NAMES.codex,
+  defaultPort: 0,
   lastVerified: {
     darwin: { appVersion: "26.707.72221", build: "5307", verifiedAt: "2026-07-16" },
   },
@@ -23,10 +24,35 @@ const codex = {
       appxPackage: "OpenAI.Codex",
       executableRelative: "app\\ChatGPT.exe",
       processNames: ["ChatGPT.exe"],
+      // ChatGPT desktop writes DevToolsActivePort to its user-data dir.
+      devToolsActivePortFile: [
+        "%APPDATA%\\ChatGPT\\DevToolsActivePort",
+        "%APPDATA%\\Codex\\DevToolsActivePort",
+      ],
     },
   },
   matchTarget(target) {
-    return target?.type === "page" && String(target.url ?? "").startsWith("app://");
+    if (target?.type !== "page") return false;
+    const url = String(target.url ?? "");
+    const title = String(target.title ?? "");
+    // Exclude devtools and extension pages.
+    if (/^(devtools|chrome-extension):/i.test(url)) return false;
+    // Exclude about:blank and other non-app pages.
+    if (/^about:/i.test(url)) return false;
+    // ChatGPT desktop uses app:// custom protocol — primary match.
+    if (/^app:\/\//i.test(url)) return true;
+    // file:// renderer (some Electron builds serve from disk).
+    if (/^file:\/\//i.test(url) && /chatgpt|codex|openai/i.test(url)) return true;
+    // Localhost-served renderer (dev mode or Tauri-based architecture).
+    if (/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?\//i.test(url)) return true;
+    // app.asar renderer (standard Electron packaging).
+    if (/app\.asar/i.test(url)) return true;
+    // Title-based: ChatGPT or Codex in window title.
+    if (/chatgpt|codex|openai/i.test(title)) return true;
+    // Broad fallback: any page target with a non-empty title that looks like
+    // an app window (not DevTools, not chrome-internal).
+    if (title && !/^(DevTools|chrome|about:)/i.test(title) && url && !url.startsWith("about:")) return true;
+    return false;
   },
   verification: {
     // The root landmark is the only blocking check: it doubles as the

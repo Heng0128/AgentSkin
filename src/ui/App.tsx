@@ -1,27 +1,52 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { BootScreen } from '@/components/boot-screen';
 import { DetailPanel } from '@/components/detail-panel';
 import { DialogsHost } from '@/components/dialogs-host';
 import { DynamicBackground } from '@/components/dynamic-background';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { InjectDock } from '@/components/inject-dock';
 import { InstallWizard } from '@/components/install-progress';
 import { LogDrawer } from '@/components/log-drawer';
 import { Sidebar } from '@/components/sidebar';
+import { StatusBar } from '@/components/status-bar';
 import { TitleBar } from '@/components/title-bar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import { type Selection, useAppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
-import { SettingsPage } from '@/pages/SettingsPage';
-import { ThemesPage } from '@/pages/ThemesPage';
-import { WallpaperEnginePage } from '@/pages/WallpaperEnginePage';
-import { WorkspacePage } from '@/pages/WorkspacePage';
+
+// Lazy-load page components so each route is a separate chunk. On first
+// navigation, only the requested page's JS is fetched — the initial bundle
+// shrinks by the combined size of all 4 pages (~40% of business code), so
+// the main window paints faster and the user reaches the first interactive
+// state sooner. Subsequent route switches are instant (chunk already cached).
+const SettingsPage = lazy(() =>
+  import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
+);
+const ThemesPage = lazy(() =>
+  import('@/pages/ThemesPage').then((m) => ({ default: m.ThemesPage })),
+);
+const WallpaperEnginePage = lazy(() =>
+  import('@/pages/WallpaperEnginePage').then((m) => ({ default: m.WallpaperEnginePage })),
+);
+const WorkspacePage = lazy(() =>
+  import('@/pages/WorkspacePage').then((m) => ({ default: m.WorkspacePage })),
+);
 
 export default function App() {
   const controller = useAppController();
   const lastSelection = useRef<Selection>(null);
-  if (controller.selection) lastSelection.current = controller.selection;
+  // P2-6: Previously this assignment ran inside the render function body,
+  // violating React's purity requirement (writing to a ref during render is a
+  // side-effect visible outside the render). In Strict Mode renders can run
+  // twice, so the ref's value would unpredictably clobber the "last" value.
+  // Moving it into a useEffect guarantees it only runs once per actual
+  // committed selection change.
+  useEffect(() => {
+    if (controller.selection) lastSelection.current = controller.selection;
+  }, [controller.selection]);
 
   // Unmount the boot overlay as soon as bootstrap finishes — the perceived
   // opening duration should match the real bootstrap time, not a fixed delay.
@@ -36,10 +61,11 @@ export default function App() {
 
   return (
     <ErrorBoundary locale={controller.locale}>
-      <DynamicBackground wallpaper={activeWallpaper} />
+      <DynamicBackground wallpaper={activeWallpaper} render={controller.wallpaper.render} />
       <main
         className={cn(
-          'relative z-10 flex h-svh flex-col overflow-hidden font-sans text-foreground',
+          'relative z-10 grid h-full overflow-hidden font-sans text-foreground',
+          'grid-rows-[38px_1fr_28px]',
           activeWallpaper ? 'bg-transparent' : 'bg-background',
         )}
         lang={controller.locale === 'zh-CN' ? 'zh-CN' : 'en'}
@@ -49,20 +75,48 @@ export default function App() {
           controller.dropThemeFiles(Array.from(event.dataTransfer.files));
         }}
       >
-        <TitleBar controller={controller} />
+        <TitleBar controller={controller} hasWallpaper={!!activeWallpaper} />
 
-        <div className="grid min-h-0 flex-1 grid-cols-[240px_minmax(0,1fr)]">
+        <div
+          className={cn(
+            'grid min-h-0 transition-[grid-template-columns] duration-slow ease-out',
+            controller.sidebarCollapsed
+              ? 'grid-cols-[62px_minmax(0,1fr)]'
+              : 'grid-cols-[224px_minmax(0,1fr)]',
+          )}
+        >
           <Sidebar controller={controller} />
 
-          <section className="min-h-0 min-w-0 overflow-hidden">
-            <div key={controller.route} className="h-full animate-page-enter">
-              {controller.route === 'workspace' && <WorkspacePage controller={controller} />}
-              {controller.route === 'themes' && <ThemesPage controller={controller} />}
-              {controller.route === 'wallpaper' && <WallpaperEnginePage controller={controller} />}
-              {controller.route === 'settings' && <SettingsPage controller={controller} />}
+          <section className="relative flex min-h-0 min-w-0 flex-col">
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              {/* h-full (not min-h-full): the chain below relies on the parent
+                  having a definite height — `height:100%` (h-full) in the pages
+                  resolves against it. With min-height the resolved height stays
+                  auto, so every page's h-full container collapsed to content
+                  height and the inner scroll regions never engaged. */}
+              <div className="mx-auto h-full w-full max-w-[1240px] p-[22px_30px_70px]">
+                <div key={controller.route} className="h-full animate-page-enter">
+                  <Suspense
+                    fallback={
+                      <div className="flex h-full items-center justify-center">
+                        <Spinner className="size-6" />
+                      </div>
+                    }
+                  >
+                    {controller.route === 'workspace' && <WorkspacePage controller={controller} />}
+                    {controller.route === 'themes' && <ThemesPage controller={controller} />}
+                    {controller.route === 'wallpaper' && (
+                      <WallpaperEnginePage controller={controller} />
+                    )}
+                    {controller.route === 'settings' && <SettingsPage controller={controller} />}
+                  </Suspense>
+                </div>
+              </div>
             </div>
           </section>
         </div>
+
+        <StatusBar controller={controller} />
 
         <Dialog
           open={controller.selection !== null}
@@ -83,11 +137,11 @@ export default function App() {
 
         <DialogsHost controller={controller} />
         <LogDrawer controller={controller} />
+        <InjectDock controller={controller} />
 
         {/* Install wizard — replaces the old InstallProgress */}
         <InstallWizard
           steps={controller.installSteps}
-          flowState={controller.flowState ?? 'idle'}
           currentTheme={controller.currentTheme}
           lastError={controller.lastError}
           progress={controller.progress}
@@ -95,7 +149,7 @@ export default function App() {
           isComplete={controller.isComplete}
           isFailed={controller.isFailed}
           isCancelled={controller.isCancelled}
-          onRetry={() => void controller.retryInstall(controller.currentTheme ?? '')}
+          onRetry={() => void controller.retryInstall()}
           onCancel={controller.cancelInstall}
           onClose={() => {
             controller.setSteps([]);

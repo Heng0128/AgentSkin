@@ -20,12 +20,17 @@ export function useRelativeTime(
   isRefreshing: boolean,
   t: UiMessages,
 ): string {
-  // 1s ticker so the relative-time label updates continuously.
+  // 1s ticker so the relative-time label updates continuously. Only run it
+  // while a timestamp is actually rendered: the detecting/refreshing labels
+  // are static, so ticking then would re-render the consumer every second
+  // for nothing.
   const [, setTick] = useState(0);
+  const needsTick = !isRefreshing && lastStatusAt != null;
   useEffect(() => {
+    if (!needsTick) return;
     const id = window.setInterval(() => setTick((n) => n + 1), 1000);
     return () => window.clearInterval(id);
-  }, []);
+  }, [needsTick]);
 
   if (isRefreshing) return t.statusRefreshing;
   if (lastStatusAt == null) return t.statusDetecting;

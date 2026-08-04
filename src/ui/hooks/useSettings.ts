@@ -33,13 +33,13 @@ export function useSettings(deps: UseSettingsDeps) {
   // is kept as a convenience for callers that want to jump to a specific
   // section: it just loads the settings data so the page is ready when the
   // route switches. The dialog open flag is no longer used for rendering.
-  const openSettings = useCallback((section: SettingsSection = 'general') => {
-    setSettingsSection(section);
-    void api
-      .getSettings()
-      .then(setSettings)
-      .catch(() => undefined);
-  }, []);
+  const openSettings = useCallback(
+    (section: SettingsSection = 'general') => {
+      setSettingsSection(section);
+      void api.getSettings().then(setSettings).catch(fail);
+    },
+    [fail],
+  );
 
   const chooseAppPath = useCallback(
     async (appId: AgentId) => {

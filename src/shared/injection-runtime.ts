@@ -24,7 +24,7 @@
  *
  * ## Contract
  *
- * All identifiers (`__agentskin`, `__agentskin_layer`, `__CODEDROBE_CONFIG__`,
+ * All identifiers (`__agentskin`, `__agentskin_layer`, `__AGENTSKIN_CONFIG__`,
  * adapter markers, host classes) come from {@link injection-constants} — never
  * hard-code them here.
  */
@@ -45,8 +45,10 @@ import { AGENT_IDS } from './types';
 /**
  * Escape CSS text for safe embedding inside a JS template literal
  * (backtick string). Applied before injecting CSS via `session.evaluate()`.
+ *
+ * Internal — only used by the build*Expression builders in this module.
  */
-export function escapeCssForTemplateLiteral(css: string): string {
+function escapeCssForTemplateLiteral(css: string): string {
   return css.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
 }
 
@@ -82,8 +84,10 @@ export const ADOPT_LAYER_BODY = [
 /**
  * JS body: remove all AgentSkin-owned adoptedStyleSheets.
  * No scope variables required — operates only on `document`.
+ *
+ * Internal — only consumed by {@link buildClearEngineInjectionExpression}.
  */
-export const CLEAR_OWNED_SHEETS_BODY =
+const CLEAR_OWNED_SHEETS_BODY =
   `document.adoptedStyleSheets = (document.adoptedStyleSheets || []).filter(` +
   `function(s) { return !s.${SHEET_OWNED_FLAG}; });`;
 
@@ -106,13 +110,15 @@ export const CLEAR_ADAPTERS_BODY = [
 /**
  * JS body: remove all known host classes from <html>, clear the hero art CSS
  * variable, and clear the renderer config global. Also removes the legacy
- * `codedrobe-theme` class. No scope variables required.
+ * `agentskin-theme` class. No scope variables required.
+ *
+ * Internal — only consumed by {@link buildClearEngineInjectionExpression}.
  */
-export const CLEAR_HOST_BODY = [
+const CLEAR_HOST_BODY = [
   'var root = document.documentElement;',
   'if (root) {',
-  `  root.classList.remove(${JSON.stringify(AGENT_IDS.map((id) => hostClassFor(id)))}, 'codedrobe-theme');`,
-  "  root.style.removeProperty('--codedrobe-art');",
+  `  root.classList.remove(${JSON.stringify(AGENT_IDS.map((id) => hostClassFor(id)))}, 'agentskin-theme');`,
+  "  root.style.removeProperty('--agentskin-art');",
   '}',
   `delete window.${RENDERER_CONFIG_GLOBAL};`,
 ].join('\n');

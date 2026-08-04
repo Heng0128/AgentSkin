@@ -18,6 +18,7 @@ import {
   type AgentId,
   type WallpaperAgentSetting,
   type WallpaperInfo,
+  type WallpaperRenderOptions,
 } from '@shared/types';
 
 /** Build a default empty per-agent setting map (all agents disabled, null id). */
@@ -27,12 +28,14 @@ function emptyAgentWallpapers(): Record<AgentId, WallpaperAgentSetting> {
   return result;
 }
 
-export function useWallpaper() {
+export function useWallpaper(onError?: (error: unknown) => void) {
   const [wallpapers, setWallpapers] = useState<WallpaperInfo[]>([]);
   const [enabled, setEnabled] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [agentWallpapers, setAgentWallpapers] =
     useState<Record<AgentId, WallpaperAgentSetting>>(emptyAgentWallpapers);
+  /** 全局默认渲染设置（对齐/位置/翻转/滤镜/速度等），作用于桌面 UI 背景。 */
+  const [render, setRender] = useState<WallpaperRenderOptions | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   // Initial load: discover wallpapers + read the persisted preference.
@@ -45,6 +48,7 @@ export function useWallpaper() {
         setWallpapers(list);
         setEnabled(settings.wallpaper.enabled);
         setSelectedId(settings.wallpaper.id);
+        setRender(settings.wallpaper.render);
         setAgentWallpapers(settings.wallpaper.agents ?? emptyAgentWallpapers());
       } catch {
         // Wallpaper Engine may be absent — fail soft with an empty list.
@@ -57,18 +61,31 @@ export function useWallpaper() {
     };
   }, []);
 
-  /** Persist the AgentSkin UI wallpaper preference and update local state. */
-  const setWallpaper = useCallback(async (nextEnabled: boolean, nextId: string | null) => {
-    const settings = await api.setWallpaper({ enabled: nextEnabled, id: nextId });
-    setEnabled(settings.wallpaper.enabled);
-    setSelectedId(settings.wallpaper.id);
-  }, []);
+  /** Persist the AgentSkin UI wallpaper preference + optional global render
+   *  settings, and update local state. */
+  const setWallpaper = useCallback(
+    async (nextEnabled: boolean, nextId: string | null, render?: WallpaperRenderOptions) => {
+      try {
+        const settings = await api.setWallpaper({ enabled: nextEnabled, id: nextId, render });
+        setEnabled(settings.wallpaper.enabled);
+        setSelectedId(settings.wallpaper.id);
+        setRender(settings.wallpaper.render);
+      } catch (error) {
+        onError?.(error);
+      }
+    },
+    [onError],
+  );
 
   /** Open a file dialog to import a local image or video as a wallpaper. */
   const importWallpaper = useCallback(async () => {
-    const list = await api.importWallpaper();
-    setWallpapers(list);
-  }, []);
+    try {
+      const list = await api.importWallpaper();
+      setWallpapers(list);
+    } catch (error) {
+      onError?.(error);
+    }
+  }, [onError]);
 
   /**
    * Delete a locally-imported wallpaper by id. Only items with a `local:`
@@ -78,29 +95,33 @@ export function useWallpaper() {
    */
   const deleteWallpaper = useCallback(
     async (id: string) => {
-      const list = await api.deleteWallpaper(id);
-      setWallpapers(list);
-      // If the deleted wallpaper was the active UI background, clear it.
-      if (selectedId === id) {
-        setSelectedId(null);
-      }
-      // Clear any per-agent selection that pointed at the deleted wallpaper.
-      setAgentWallpapers((prev) => {
-        const next = {} as Record<AgentId, WallpaperAgentSetting>;
-        let changed = false;
-        for (const key of Object.keys(prev) as AgentId[]) {
-          const entry = prev[key];
-          if (entry.id === id) {
-            next[key] = { enabled: false, id: null };
-            changed = true;
-          } else {
-            next[key] = entry;
-          }
+      try {
+        const list = await api.deleteWallpaper(id);
+        setWallpapers(list);
+        // If the deleted wallpaper was the active UI background, clear it.
+        if (selectedId === id) {
+          setSelectedId(null);
         }
-        return changed ? next : prev;
-      });
+        // Clear any per-agent selection that pointed at the deleted wallpaper.
+        setAgentWallpapers((prev) => {
+          const next = {} as Record<AgentId, WallpaperAgentSetting>;
+          let changed = false;
+          for (const key of Object.keys(prev) as AgentId[]) {
+            const entry = prev[key];
+            if (entry.id === id) {
+              next[key] = { enabled: false, id: null };
+              changed = true;
+            } else {
+              next[key] = entry;
+            }
+          }
+          return changed ? next : prev;
+        });
+      } catch (error) {
+        onError?.(error);
+      }
     },
-    [selectedId],
+    [selectedId, onError],
   );
 
   /**
@@ -109,32 +130,62 @@ export function useWallpaper() {
    * the agent's running page.
    */
   const setAgentWallpaper = useCallback(
-    async (appId: AgentId, nextEnabled: boolean, nextId: string | null) => {
-      const settings = await api.setAgentWallpaper(appId, {
-        enabled: nextEnabled,
-        id: nextId,
-      });
-      setAgentWallpapers(settings.wallpaper.agents ?? emptyAgentWallpapers());
+    async (
+      appId: AgentId,
+      nextEnabled: boolean,
+      nextId: string | null,
+      render?: WallpaperRenderOptions,
+    ): Promise<boolean> => {
+      try {
+        const settings = await api.setAgentWallpaper(appId, {
+          enabled: nextEnabled,
+          id: nextId,
+          render,
+        });
+        setAgentWallpapers(settings.wallpaper.agents ?? emptyAgentWallpapers());
+        return true;
+      } catch (error) {
+        onError?.(error);
+        return false;
+      }
     },
-    [],
+    [onError],
   );
 
   /**
    * Immediately inject (or remove) the wallpaper into a running agent's page
    * via CDP. Returns `{ ok, reason }` so the UI can surface errors.
+   *
+   * When `restartExisting` is false/absent, only probes for an existing CDP
+   * port — returns `{ ok: false, reason: 'requires-restart' }` if the agent
+   * is running without `--remote-debugging-port`. The caller should prompt
+   * the user for consent and retry with `restartExisting: true`.
    */
-  const applyAgentWallpaper = useCallback(async (appId: AgentId) => {
-    return api.applyAgentWallpaper(appId);
-  }, []);
+  const applyAgentWallpaper = useCallback(
+    async (appId: AgentId, options?: { restartExisting?: boolean }) => {
+      return api.applyAgentWallpaper(appId, options);
+    },
+    [],
+  );
 
   /**
    * Convenience: persist a per-agent wallpaper preference AND immediately
    * apply it to the agent's running page.
    */
   const setAndApplyAgentWallpaper = useCallback(
-    async (appId: AgentId, nextEnabled: boolean, nextId: string | null) => {
-      await setAgentWallpaper(appId, nextEnabled, nextId);
-      return applyAgentWallpaper(appId);
+    async (
+      appId: AgentId,
+      nextEnabled: boolean,
+      nextId: string | null,
+      options?: { restartExisting?: boolean; render?: WallpaperRenderOptions },
+    ) => {
+      const persisted = await setAgentWallpaper(appId, nextEnabled, nextId, options?.render);
+      if (!persisted) {
+        // Preference failed to persist (reported via onError) — don't inject
+        // into the agent, or the apply would succeed without the setting.
+        return { ok: false, reason: 'persist-failed' as const };
+      }
+      return applyAgentWallpaper(appId, options);
     },
     [setAgentWallpaper, applyAgentWallpaper],
   );
@@ -156,14 +207,20 @@ export function useWallpaper() {
    */
   const activateThemeWallpaper = useCallback(
     async (themeId: string, workshopId?: string) => {
-      const list = await api.listWallpapers();
-      setWallpapers(list);
-      const targetId = workshopId ?? `theme:${themeId}`;
-      if (list.some((w) => w.id === targetId)) {
-        await setWallpaper(true, targetId);
+      try {
+        const list = await api.listWallpapers();
+        setWallpapers(list);
+        const targetId = workshopId ?? `theme:${themeId}`;
+        if (list.some((w) => w.id === targetId)) {
+          await setWallpaper(true, targetId);
+        }
+      } catch (error) {
+        // Best-effort: a theme apply shouldn't fail because the wallpaper
+        // activation failed. Report and move on.
+        onError?.(error);
       }
     },
-    [setWallpaper],
+    [setWallpaper, onError],
   );
 
   /** The currently active wallpaper (resolved from the list), or null. */
@@ -177,6 +234,7 @@ export function useWallpaper() {
     selectedId,
     agentWallpapers,
     active,
+    render,
     setWallpaper,
     importWallpaper,
     deleteWallpaper,

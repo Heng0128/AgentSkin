@@ -186,9 +186,9 @@ export function buildDomSnapshotExpression(adapter, {
     };
     const pathname = String(globalThis.location?.pathname ?? '')
       .split('/').map(redactSegment).join('/').slice(0, 300);
-    const activeState = globalThis.__CODEDROBE__?.hosts?.[config.appId];
-    const activeThemeId = activeState?.themeId ?? document.documentElement?.dataset?.codedrobeTheme ?? null;
-    const activeThemeVersion = activeState?.version ?? document.documentElement?.dataset?.codedrobeThemeVersion ?? null;
+    const activeState = globalThis.__AGENTSKIN__?.hosts?.[config.appId];
+    const activeThemeId = activeState?.themeId ?? document.documentElement?.dataset?.agentskinTheme ?? null;
+    const activeThemeVersion = activeState?.version ?? document.documentElement?.dataset?.agentskinThemeVersion ?? null;
     return {
       schemaVersion: 1,
       appId: config.appId,

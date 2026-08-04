@@ -2,8 +2,8 @@
 
 /** Typography tokens. */
 export const fontFamily = {
-  sans: 'var(--font-geist)',
-  mono: 'var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace)',
+  sans: 'var(--font-sans)',
+  mono: 'var(--font-mono)',
 } as const;
 
 export const fontSize = {

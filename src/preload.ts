@@ -9,6 +9,11 @@ import type {
   ApplyRequest,
   FileImportConfirmRequest,
   FileImportResult,
+  InspectedNode,
+  StudioProject,
+  StudioSnapshotOptions,
+  ThemeStudioExportRequest,
+  ThemeVisualSnapshot,
   TrayApplyRequest,
   WallpaperAgentSetting,
   WallpaperSettings,
@@ -57,14 +62,19 @@ const api: AgentSkinApi = {
   importWallpaper: () => ipcRenderer.invoke(IpcChannel.WALLPAPER_IMPORT),
   setAgentWallpaper: (appId: AgentId, setting: WallpaperAgentSetting) =>
     ipcRenderer.invoke(IpcChannel.WALLPAPER_SET_AGENT, appId, setting),
-  applyAgentWallpaper: (appId: AgentId) =>
-    ipcRenderer.invoke(IpcChannel.WALLPAPER_APPLY_AGENT, appId),
+  applyAgentWallpaper: (appId: AgentId, options?: { restartExisting?: boolean }) =>
+    ipcRenderer.invoke(IpcChannel.WALLPAPER_APPLY_AGENT, appId, options),
   deleteWallpaper: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_DELETE, id),
-  applyWallpaperToAgent: (wallpaperId: string, agentId: AgentId) =>
-    ipcRenderer.invoke(IpcChannel.WALLPAPER_APPLY_TO_AGENT, wallpaperId, agentId),
+  applyWallpaperToAgent: (
+    wallpaperId: string,
+    agentId: AgentId,
+    options?: { restartExisting?: boolean },
+  ) => ipcRenderer.invoke(IpcChannel.WALLPAPER_APPLY_TO_AGENT, wallpaperId, agentId, options),
   removeWallpaperFromAgent: (agentId: AgentId) =>
     ipcRenderer.invoke(IpcChannel.WALLPAPER_REMOVE_FROM_AGENT, agentId),
   weDetect: () => ipcRenderer.invoke(IpcChannel.WE_DETECT),
+  wallpaperVideoUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_VIDEO_URL, id),
+  wallpaperWebUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_WEB_URL, id),
   showInFolder: (itemPath: string) => ipcRenderer.invoke(IpcChannel.SHELL_SHOW_ITEM, itemPath),
   onRuntimeLog: (listener) => subscribe<string>(IpcChannel.RUNTIME_LOG, listener),
   onFileImported: (listener) => subscribe<FileImportResult>(IpcChannel.FILE_IMPORTED, listener),
@@ -72,6 +82,57 @@ const api: AgentSkinApi = {
     subscribe<FileImportConfirmRequest>(IpcChannel.FILE_IMPORT_CONFIRM, listener),
   onFileImportFailed: (listener) => subscribe<string>(IpcChannel.FILE_IMPORT_FAILED, listener),
   onTrayApply: (listener) => subscribe<TrayApplyRequest>(IpcChannel.TRAY_APPLY, listener),
+  onStatusChanged: (listener) => subscribe<void>(IpcChannel.STATUS_CHANGED, listener),
+  // --- Theme Studio: snapshot theme DOM for replica renderer ---
+  snapshotThemeDom: (agentId: AgentId, themeId?: string, options?: StudioSnapshotOptions) =>
+    ipcRenderer.invoke(IpcChannel.THEME_STUDIO_SNAPSHOT, {
+      agentId,
+      themeId,
+      options,
+    }) as Promise<ThemeVisualSnapshot>,
+  // --- Theme Studio: capture the agent's native (un-themed) baseline ---
+  snapshotBaseline: (agentId: AgentId, options?: StudioSnapshotOptions) =>
+    ipcRenderer.invoke(IpcChannel.THEME_STUDIO_SNAPSHOT_BASELINE, {
+      agentId,
+      options,
+    }) as Promise<ThemeVisualSnapshot>,
+  // --- Theme Studio: export crafted theme package ---
+  exportStudioTheme: (payload: ThemeStudioExportRequest) =>
+    ipcRenderer.invoke(IpcChannel.THEME_STUDIO_EXPORT, payload),
+  // --- Theme Studio: live inspect (DevTools-style element picker) ---
+  startInspect: (agentId: AgentId) =>
+    ipcRenderer.invoke(IpcChannel.THEME_STUDIO_INSPECT_START, { agentId }),
+  stopInspect: () => ipcRenderer.invoke(IpcChannel.THEME_STUDIO_INSPECT_STOP),
+  onInspectResult: (listener) =>
+    subscribe<InspectedNode | { error: string }>(IpcChannel.THEME_STUDIO_INSPECT_RESULT, listener),
+  // --- Open the dedicated Theme Studio window (main window sidebar) ---
+  openStudioWindow: () => ipcRenderer.invoke(IpcChannel.STUDIO_OPEN) as Promise<{ ok: boolean }>,
+  // --- Theme Studio projects (file-backed, no installed-theme dependency) ---
+  listStudioProjects: () =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_LIST) as Promise<StudioProject[]>,
+  createStudioProject: (req: { name: string; author: string; agentId: AgentId }) =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_CREATE, req) as Promise<StudioProject>,
+  saveStudioProject: (project: StudioProject) =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_SAVE, project) as Promise<StudioProject>,
+  deleteStudioProject: (id: string) =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_DELETE, { id }) as Promise<{ ok: boolean }>,
+  importStudioProject: () =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_IMPORT) as Promise<StudioProject | null>,
+  saveStudioSnapshot: (
+    projectId: string,
+    snapshot: ThemeVisualSnapshot,
+    kind?: 'current' | 'baseline',
+  ) =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_SNAPSHOT_SAVE, {
+      projectId,
+      snapshot,
+      kind,
+    }) as Promise<{ ok: boolean }>,
+  loadStudioSnapshot: (projectId: string, kind?: 'current' | 'baseline') =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_SNAPSHOT_LOAD, {
+      projectId,
+      kind,
+    }) as Promise<ThemeVisualSnapshot | null>,
   // --- Window controls (custom title bar) ---
   windowMinimize: () => ipcRenderer.send(IpcChannel.WINDOW_MINIMIZE),
   windowToggleMaximize: () => ipcRenderer.invoke(IpcChannel.WINDOW_TOGGLE_MAXIMIZE),
@@ -82,3 +143,21 @@ const api: AgentSkinApi = {
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);
+
+/**
+ * Minimal subset used only by the splash screen. Exposed separately so the
+ * splash window (which has no renderer bundle) can subscribe to progress
+ * updates without pulling in the full AgentSkinApi surface.
+ */
+contextBridge.exposeInMainWorld('splashApi', {
+  onSplashProgress: (
+    listener: (payload: { label?: string; pct?: number }) => void,
+  ): (() => void) => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      payload: { label?: string; pct?: number },
+    ) => listener(payload);
+    ipcRenderer.on('splash:progress', handler);
+    return () => ipcRenderer.removeListener('splash:progress', handler);
+  },
+});

@@ -7,44 +7,38 @@
  *   - privileged-protocol scheme registration (must run before app ready)
  *   - single-instance lock + second-instance / open-file routing
  *   - top-level app event handlers (activate / before-quit / window-all-closed)
+ *   - splash screen lifecycle (shown immediately, closed when boot completes)
  *
  * All initialization logic lives in `main/boot-sequence.ts`; IPC handlers in
  * `main/ipc/*`; tray in `main/tray-manager.ts`; window lifecycle in
  * `main/window-manager.ts`; shared state in `main/main-context.ts`.
  */
 
-import { app, dialog, protocol } from 'electron';
+import fs from 'node:fs';
+import path from 'node:path';
+import { app, BrowserWindow, dialog } from 'electron';
 import { runBootSequence } from './main/boot-sequence';
 import { extractThemeFilesFromArgv } from './main/file-open';
+import { flushLocalePreference } from './main/locale-preferences';
 import { ctx } from './main/main-context';
-import { WALLPAPER_SCHEME } from './main/wallpaper-service';
 import { createMainWindow } from './main/window-manager';
 import { toMessage } from './shared/errors';
 import { getMainMessages } from './shared/i18n';
 import { IpcChannel } from './shared/ipc-channels';
 import type { AgentId } from './shared/types';
 
-// Register the wallpaper streaming scheme before the app is ready so the
-// sandboxed renderer can load <video> sources via agentskin-wallpaper://.
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: WALLPAPER_SCHEME,
-    privileges: {
-      standard: true,
-      secure: true,
-      stream: true,
-      supportFetchAPI: true,
-      bypassCSP: false,
-    },
-  },
-]);
-
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 if (!hasSingleInstanceLock) app.quit();
 
 app.on('second-instance', (_event, argv) => {
-  ctx.mainWindow?.show();
-  ctx.mainWindow?.focus();
+  // P2-2: Guard against a destroyed mainWindow (GPU/renderer crash leaves
+  // the BrowserWindow JS wrapper non-null but isDestroyed()===true). Without
+  // this, calling show() throws "Object has been destroyed" and the second
+  // instance's file-open payload is dropped on the floor.
+  if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+    ctx.mainWindow.show();
+    ctx.mainWindow.focus();
+  }
   for (const filePath of extractThemeFilesFromArgv(argv)) ctx.fileOpens.handlePath(filePath);
 });
 
@@ -54,15 +48,140 @@ app.on('open-file', (event, filePath) => {
   ctx.fileOpens.handlePath(filePath);
 });
 
+/**
+ * Create and show a lightweight splash window (no React, no preload).
+ * Used to give the user immediate visual feedback while the boot
+ * sequence runs in the background.
+ */
+function createSplashWindow(): BrowserWindow {
+  const splash = new BrowserWindow({
+    width: 400,
+    height: 320,
+    frame: false,
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    transparent: true,
+    show: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    webPreferences: {
+      // Electron security defaults — splash content is local-only, and the
+      // only renderer→main bridge is the small `splashApi` surface exposed
+      // via contextBridge in preload.ts.
+      preload: path.join(__dirname, '../preload/index.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      disableBlinkFeatures: 'Auxclick',
+    },
+  });
+
+  // Load splash.html from project root (dev) or resources (packaged).
+  if (app.isPackaged) {
+    void splash.loadFile(path.join(process.resourcesPath, 'splash.html'));
+  } else {
+    void splash.loadFile(path.join(__dirname, '../..', 'splash.html'));
+  }
+
+  return splash;
+}
+
 app
   .whenReady()
-  .then(() =>
-    runBootSequence({
-      createWindow: () => createMainWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL }),
-      onQuit,
-      onApplyRequest: requestTrayApply,
-    }),
-  )
+  .then(async () => {
+    // Show splash immediately — user sees the app is alive.
+    ctx.splashWindow = createSplashWindow();
+
+    // Safety timeout: close splash after 15s even if ready-to-show never fires
+    // (e.g. GPU process crash, renderer hang).
+    const splashTimeout = setTimeout(() => {
+      if (ctx.splashWindow && !ctx.splashWindow.isDestroyed()) {
+        ctx.splashWindow.close();
+        ctx.splashWindow = null;
+      }
+    }, 15_000);
+
+    try {
+      await runBootSequence({
+        createWindow: () => createMainWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL }),
+        onQuit,
+        onApplyRequest: requestTrayApply,
+      });
+
+      // Wait for the main window to be ready, then close splash.
+      if (ctx.mainWindow) {
+        ctx.mainWindow.once('ready-to-show', () => {
+          clearTimeout(splashTimeout);
+          ctx.splashWindow?.close();
+          ctx.splashWindow = null;
+        });
+      } else {
+        // Fallback: close splash after a short delay.
+        clearTimeout(splashTimeout);
+        setTimeout(() => {
+          ctx.splashWindow?.close();
+          ctx.splashWindow = null;
+        }, 500);
+      }
+    } catch (error) {
+      clearTimeout(splashTimeout);
+
+      console.warn('[boot] releasing resources after failure...');
+      try {
+        if (ctx.core && typeof (ctx.core as { dispose?: () => void }).dispose === 'function') {
+          try {
+            ctx.core.dispose();
+          } catch (e) {
+            console.warn('[boot] ctx.core.dispose() failed:', e);
+          }
+        }
+      } catch {
+        /* swallow */
+      }
+
+      try {
+        const wallpapersAny = ctx.wallpapers as unknown as { dispose?: () => void };
+        if (ctx.wallpapers && typeof wallpapersAny.dispose === 'function') {
+          try {
+            wallpapersAny.dispose();
+          } catch (e) {
+            console.warn('[boot] ctx.wallpapers.dispose() failed:', e);
+          }
+        }
+      } catch {
+        /* swallow */
+      }
+
+      try {
+        if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+          try {
+            ctx.mainWindow.destroy();
+          } catch (e) {
+            console.warn('[boot] ctx.mainWindow.destroy() failed:', e);
+          }
+        }
+      } catch {
+        /* swallow */
+      }
+
+      try {
+        if (ctx.splashWindow && !ctx.splashWindow.isDestroyed()) {
+          try {
+            ctx.splashWindow.close();
+          } catch (e) {
+            console.warn('[boot] ctx.splashWindow.close() failed:', e);
+          }
+        }
+      } catch {
+        /* swallow */
+      }
+      ctx.splashWindow = null;
+
+      dialog.showErrorBox(getMainMessages().startupErrorTitle, toMessage(error));
+      app.quit();
+    }
+  })
   .catch((error) => {
     dialog.showErrorBox(getMainMessages().startupErrorTitle, toMessage(error));
     app.quit();
@@ -79,18 +198,59 @@ function onQuit(): void {
  * The window is surfaced so the resulting toast / dialog is visible.
  */
 function requestTrayApply(themeId: string, themeName: string, appId: AgentId): void {
-  ctx.mainWindow?.show();
-  ctx.mainWindow?.focus();
-  ctx.mainWindow?.webContents.send(IpcChannel.TRAY_APPLY, { themeId, themeName, appId });
+  // P2-2: Same isDestroyed guard for tray-initiated actions. If the window
+  // died (GPU crash), we can't show the dialog so just surface the apply
+  // failure via console + return; attempting webContents.send on a dead
+  // renderer would throw and break the tray menu for subsequent clicks.
+  if (!ctx.mainWindow || ctx.mainWindow.isDestroyed()) return;
+  ctx.mainWindow.show();
+  ctx.mainWindow.focus();
+  ctx.mainWindow.webContents.send(IpcChannel.TRAY_APPLY, { themeId, themeName, appId });
 }
 
 app.on('activate', () => {
-  if (ctx.mainWindow) ctx.mainWindow.show();
-  else void createMainWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL });
+  if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+    ctx.mainWindow.show();
+  } else {
+    void createMainWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL });
+  }
 });
 
 app.on('before-quit', () => {
   ctx.isQuitting = true;
+
+  // R6-7: 应用退出时排空 pending 文件打开队列。
+  // 用户双击的主题文件如果在队列中未处理，将其写入临时位置供下次启动处理。
+  try {
+    const pendingFiles = ctx.fileOpens.drain();
+    if (pendingFiles.length > 0) {
+      console.log(`[before-quit] draining ${pendingFiles.length} pending file-open(s)`);
+      // 将未处理的路径写入 pending-files.json，供下次启动处理。
+      const pendingFile = path.join(ctx.userDataRoot, 'pending-files.json');
+      fs.writeFileSync(pendingFile, JSON.stringify({ files: pendingFiles }, null, 2), 'utf8');
+    }
+  } catch (error) {
+    console.warn('[before-quit] fileOpenQueue.drain() failed:', error);
+  }
+
+  // R6-21: 同步 flush locale preference，确保首次启动时异步写入的
+  // preferences.json 在进程退出前已落盘。
+  if (ctx.locale) {
+    try {
+      flushLocalePreference(ctx.userDataRoot, ctx.locale);
+    } catch (error) {
+      console.warn('[before-quit] flushLocalePreference failed:', error);
+    }
+  }
+
+  // Best-effort: release module-scoped state (media tokens, streaming file
+  // handles, cache maps) before the process exits. Swallow any dispose error
+  // — shutdown must never hang.
+  try {
+    if (ctx.bootComplete) ctx.core.dispose();
+  } catch (error) {
+    console.warn('[before-quit] core.dispose() failed:', error);
+  }
 });
 
 app.on('window-all-closed', () => {
