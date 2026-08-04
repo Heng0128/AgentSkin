@@ -18,7 +18,7 @@ import type { ReactNode } from 'react';
  *   - deleteEnvironment() removes a preset
  *   - No direct controller calls from JSX
  */
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { RenameDialog } from '@/components/rename-dialog';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { AgentDetailSheet } from '@/components/workspace/AgentDetailSheet';
@@ -71,30 +71,6 @@ function SwissPanel({
   );
 }
 
-/** KvRow — key/value pair with dashed bottom border (A.html `.kv`). */
-function KvRow({ k, v }: { k: string; v: ReactNode }) {
-  return (
-    <div className="flex items-center justify-between border-b border-dashed border-border py-[6.5px] text-sm last:border-0">
-      <span className="font-mono text-[9.5px] font-medium tracking-[0.12em] text-[var(--dim)]">
-        {k}
-      </span>
-      <span className="font-mono text-[11.5px] font-semibold">{v}</span>
-    </div>
-  );
-}
-
-/** Loadbar — small horizontal bar (A.html `.loadbar`). */
-function Loadbar({ percent }: { percent: number }) {
-  return (
-    <span className="ml-2 inline-block h-1 w-[70px] overflow-hidden rounded bg-border align-middle">
-      <span
-        className="block h-full bg-primary transition-[width] duration-600"
-        style={{ width: `${Math.min(100, percent)}%` }}
-      />
-    </span>
-  );
-}
-
 /** QuickButton — `.qbtn` with hover red bar growing from top to bottom. */
 function QuickButton({
   icon: Icon,
@@ -128,27 +104,6 @@ function QuickButton({
       <b className="text-[12px]">{label}</b>
       <span className="font-mono text-[9px] text-[var(--dim)]">{shortcut}</span>
     </button>
-  );
-}
-
-/** FeedList — activity feed (A.html `#feedList`). */
-function FeedList({ entries }: { entries: { color: string; msg: string }[] }) {
-  if (entries.length === 0) {
-    return <p className="font-mono text-[11px] text-muted-foreground/50">暂无活动</p>;
-  }
-  return (
-    <ul className="max-h-[190px] overflow-y-auto">
-      {entries.map((e, i) => (
-        <li
-          // biome-ignore lint/suspicious/noArrayIndexKey: stable static list
-          key={`feed-${e.color}-${e.msg}-${i}`}
-          className="flex items-baseline gap-2 border-b border-dashed border-border py-[5px] font-mono text-[11px] last:border-0"
-        >
-          <span className={cn('shrink-0 font-semibold', e.color)}>·</span>
-          <span className="text-muted-foreground">{e.msg}</span>
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -261,55 +216,6 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
 
   // Environment whose detail sheet is open (null = closed).
   const [detailEnv, setDetailEnv] = useState<EnvironmentModel | null>(null);
-
-  // --- Dashboard metrics ---
-  const activeCount = useMemo(
-    () => environments.filter((e) => e.status === 'active').length,
-    [environments],
-  );
-  const detectedCount = useMemo(
-    () => environments.filter((e) => e.agentInstalled).length,
-    [environments],
-  );
-  const installedAppsCount = useMemo(
-    () => (controller.status?.apps ?? []).filter((a) => a.installed).length,
-    [controller.status?.apps],
-  );
-
-  // --- Uptime counter ---
-  const [uptime, setUptime] = useState('00:00:00');
-  useEffect(() => {
-    const start = Date.now();
-    const fmt = (ms: number) => {
-      const s = Math.floor(ms / 1000);
-      const h = String(Math.floor(s / 3600)).padStart(2, '0');
-      const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
-      const sec = String(s % 60).padStart(2, '0');
-      return `${h}:${m}:${sec}`;
-    };
-    setUptime(fmt(Date.now() - start));
-    const id = setInterval(() => setUptime(fmt(Date.now() - start)), 1000);
-    return () => clearInterval(id);
-  }, []);
-
-  // --- Activity feed entries ---
-  const feedEntries = useMemo(() => {
-    return environments
-      .filter((e) => e.status !== 'offline')
-      .slice(0, 6)
-      .map((e) => ({
-        color:
-          e.status === 'active'
-            ? 'text-primary'
-            : e.agentRunning
-              ? 'text-cr-info'
-              : 'text-cr-warning',
-        msg:
-          e.status === 'active'
-            ? `${e.agent.displayName} — ${e.theme?.name ?? 'no theme'}`
-            : `${e.agent.displayName} — ${e.agentRunning ? t.statusInstalled : t.detailNotInstalled}`,
-      }));
-  }, [environments, t]);
 
   // --- Lifecycle handlers ---
 
@@ -441,13 +347,12 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
       {/* Hero — full-width compact Swiss banner */}
       <CompactHero activeEnv={activeEnvironment} t={t} onContinue={handleContinue} />
 
-      {/* g12 grid layout — scrolls below the fixed hero once the app height
-          chain gives this page a definite height. */}
+      {/* Content — EnvironmentGrid full-width (removed the demo DASHBOARD /
+          ENGINE / LIVE FEED panels that showed fabricated metrics). */}
       <div className="mt-3.5 min-h-0 flex-1 overflow-y-auto">
         <div className="grid grid-cols-12 gap-3.5">
-          {/* ===== RIGHT column: c8 (2/3) ===== */}
-          <div className="col-span-8 flex flex-col gap-3.5">
-            {/* Environment grid */}
+          {/* Environment grid — full width */}
+          <div className="col-span-12 flex flex-col gap-3.5">
             <EnvironmentGrid
               environments={environments}
               activeId={activeEnvironment?.id ?? null}
@@ -463,79 +368,7 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
               isRefreshing={controller.isRefreshing}
             />
 
-            {/* Activity feed */}
-            <SwissPanel
-              label={
-                <>
-                  <b className="text-primary">LIVE FEED</b> · 实时流
-                </>
-              }
-              action={
-                <span className="relative flex size-1.5">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-cr-success opacity-75" />
-                  <span className="relative inline-flex size-1.5 rounded-full bg-cr-success" />
-                </span>
-              }
-            >
-              <FeedList entries={feedEntries} />
-            </SwissPanel>
-          </div>
-
-          {/* ===== LEFT column: c4 stack (1/3) ===== */}
-          <div className="col-span-4 flex flex-col gap-3.5">
-            {/* Dashboard stats */}
-            <SwissPanel
-              label={
-                <>
-                  <b className="text-primary">DASHBOARD</b> · 仪表盘
-                </>
-              }
-              action={
-                <span className="font-mono text-[10px] text-cr-success">
-                  {activeCount > 0 ? `▲ +${activeCount}` : '·'}
-                </span>
-              }
-            >
-              <div className="font-display text-4xl font-bold tracking-tight">{activeCount}</div>
-              <div className="mt-0.5 font-display text-[15px] text-muted-foreground/60">
-                次注入 · 本月
-              </div>
-              <div className="mt-2 font-mono text-[10.5px] text-muted-foreground">
-                已安装 <b className="text-foreground">{installedAppsCount}</b> 平台 · 可检测{' '}
-                <b className="text-foreground">{detectedCount}</b> / {environments.length}
-              </div>
-            </SwissPanel>
-
-            {/* Engine KV status */}
-            <SwissPanel
-              label={
-                <>
-                  <b className="text-primary">ENGINE</b> · CDP 状态
-                </>
-              }
-              action={
-                <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] font-medium tracking-wide text-muted-foreground">
-                  <span className="size-[5px] rounded-full bg-cr-success" />
-                  V2.0
-                </span>
-              }
-            >
-              <KvRow k="STATUS" v={<span className="text-cr-success">● 运行中</span>} />
-              <KvRow k="LATENCY" v="12ms" />
-              <KvRow
-                k="LOAD"
-                v={
-                  <>
-                    <span>{Math.min(99, activeCount * 12 + 20)}%</span>
-                    <Loadbar percent={activeCount * 12 + 20} />
-                  </>
-                }
-              />
-              <KvRow k="UPTIME" v={uptime} />
-              <KvRow k="TARGETS" v={`${detectedCount}/${environments.length}`} />
-            </SwissPanel>
-
-            {/* Quick actions grid */}
+            {/* Quick actions */}
             <SwissPanel
               label={
                 <>
@@ -543,7 +376,7 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
                 </>
               }
             >
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-4 gap-2">
                 {quickActions.map((action) => (
                   <QuickButton
                     key={action.id}
