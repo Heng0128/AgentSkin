@@ -1,3 +1,0 @@
-C:/Users/snowb/Desktop/work/desktop-main/installer/windows/plugin/build/20260730_112420/CMakeFiles/AgentSkinUI.dir
-C:/Users/snowb/Desktop/work/desktop-main/installer/windows/plugin/build/20260730_112420/CMakeFiles/ALL_BUILD.dir
-C:/Users/snowb/Desktop/work/desktop-main/installer/windows/plugin/build/20260730_112420/CMakeFiles/ZERO_CHECK.dir
