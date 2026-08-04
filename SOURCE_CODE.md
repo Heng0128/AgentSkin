@@ -1,11 +1,11 @@
-# Source code availability
+# 源代码获取
 
-AgentSkin is distributed under the Mozilla Public License 2.0.
+AgentSkin 以 Mozilla Public License 2.0 许可证分发。
 
-The preferred source code form for this application is available at:
+本应用的首选源代码形式可在以下位置获取：
 
-https://github.com/AgentSkin/desktop
+https://github.com/Heng0128/AgentSkin
 
-Release tags identify the source corresponding to published builds. The shared Apache-2.0 Core source is available at:
+发布标签对应已发布构建的源代码。共享的 Apache-2.0 Core 源代码可在以下位置获取：
 
 https://github.com/AgentSkin/core

@@ -1,9 +1,9 @@
-# Trademark policy
+# 商标政策
 
-The Mozilla Public License 2.0 applies to covered source files. It does not grant permission to use project names, product names, service names, logos, icons, or other brand identifiers except for reasonable, descriptive references to the original project.
+Mozilla Public License 2.0 适用于受保护源代码文件。除非是对原项目进行合理、描述性引用，否则该许可证不授予使用项目名称、产品名称、服务名称、徽标、图标或其他品牌标识的权限。
 
-`AgentSkin` and its logos and visual identities are reserved by their respective owners. Forks and redistributed builds must use distinct branding and must not imply that they are official AgentSkin releases or are endorsed by the AgentSkin project.
+`AgentSkin` 及其徽标和视觉标识归其各自所有者所有。Fork 和重新分发的构建必须使用不同的品牌标识，且不得暗示其为 AgentSkin 官方版本或获得 AgentSkin 项目的认可。
 
-You may accurately state that a product is based on, compatible with, or derived from AgentSkin, provided the statement is not misleading.
+您可以如实声明某产品基于、兼容或衍生自 AgentSkin，前提是该声明不具误导性。
 
-Codex and OpenAI are trademarks of their respective owners. This independent project is not endorsed by or affiliated with OpenAI.
+Codex 和 OpenAI 是各自所有者的商标。本独立项目与 OpenAI 无任何关联，也未获其认可。

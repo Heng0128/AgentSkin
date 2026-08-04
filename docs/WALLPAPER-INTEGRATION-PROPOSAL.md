@@ -1,13 +1,16 @@
-"# AgentSkin Wallpaper Engine Integration Proposal (Revised)"  
-""  
-"## Executive Summary"  
-""  
-"This proposal redesigns the wallpaper engine integration based on rigorous code review that identified critical security vulnerabilities, resource leaks, and incomplete type support. The original 'dual-path' design is retained but restructured with **security-first**, **type-complete**, and **maintainable** principles. Critical hotfixes must precede new feature development." 
-"Key changes from original proposal:"  
-"1. Added Phase 0 emergency security fixes (CSP bypass hardening, URL validation, token leak prevention)"  
-"2. Re-designed GIF handling (use img instead of video)"  
-"3. Added fallback/error handling for Scene wallpapers"  
-"4. Made CSP bypass opt-in (disabled by default) instead of unconditional"  
-"5. Unified import API with copy/reference modes"  
-"6. Added incremental scanning architecture" 
-# AgentSkin Wallpaper Engine Integration Proposal (Revised)
+# AgentSkin 壁纸引擎集成方案（原版）
+
+> **注意**：本文档为早期方案，已被 [WALLPAPER-REVISED-PROPOSAL.md](WALLPAPER-REVISED-PROPOSAL.md)（严格修订版）取代。修订版基于对代码的严格审查，识别出安全漏洞、资源泄漏和类型支持不完整等关键问题，并引入了"安全优先、类型完备、可维护"的重构原则。请以修订版为准。
+
+## 摘要
+
+本方案基于严格代码审查对壁纸引擎集成进行重新设计。审查发现了关键安全漏洞、资源泄漏和类型支持不完整等问题。原"双路径"设计予以保留，但按**安全优先**、**类型完备**和**可维护**原则重构。关键热修复必须先于新功能开发。
+
+与原方案的主要差异：
+
+1. 新增 Phase 0 紧急安全修复（CSP 绕过加固、URL 校验、token 泄漏防护）
+2. 重新设计 GIF 处理（使用 `<img>` 而非 `<video>`）
+3. 为 Scene 壁纸增加回退/错误处理
+4. CSP 绕过改为可选启用（默认关闭），而非无条件执行
+5. 统一导入 API，支持复制/引用两种模式
+6. 新增增量扫描架构

@@ -1,57 +1,52 @@
-# AgentSkin UI Redesign (Phase 4.2.8.3)
+# AgentSkin UI 改版设计（阶段 4.2.8.3）
 
-> Living proposal. **v2** updates P2 from an "Agent console upgrade" to a genuine
-> product-model redesign: the primary subject changes from **Agent** to **Environment**.
+> 持续更新的方案。**v2** 将 P2 从"Agent 控制台升级"升级为真正的**产品模型重设计**：主要对象从 **Agent** 变为 **环境（Environment）**。
 
-## 0. Product framing (corrected)
+## 0. 产品定位（修订后）
 
-AgentSkin is **not** a tool that manages TRAE / Qoder / WorkBuddy.
-It manages the developer's **AI work environment**.
+AgentSkin **不是**管理 TRAE / Qoder / WorkBuddy 的工具，它管理的是开发者的 **AI 工作环境**。
 
-- Agent + Skin(theme) + State + Preference are bound into one **Environment persona**.
-- A named Environment (Frontend Work / Backend Work / AI Research) is what "Skin" means:
-  a complete work-environment skin for an AI agent.
-- Unified product language tree:
+- Agent + 皮肤（主题）+ 状态 + 偏好绑定为一个 **环境人设（Environment persona）**。
+- 一个有名称的环境（前端工作 / 后端工作 / AI 研究）就是"皮肤"的含义：一个 AI agent 的完整工作环境皮肤。
+- 统一的产品语言树：
   `Workspace → { Environments, Skins, Agents }`
 
-## 1. Information architecture
+## 1. 信息架构
 
 ```
-Workspace            (Home — current environment + recent activity)
- ├ Environments      (AI Environment Center: current env, env cards, switcher)
- ├ Skins             (P3: was Theme Library → Skin Studio)
- └ Agents            (underlying agent discovery/status, read-only, de-emphasized)
+Workspace            (首页 —— 当前环境 + 最近活动)
+ ├ Environments      (AI 环境中心：当前环境、环境卡片、切换器)
+ ├ Skins             (P3：原"主题库" → 皮肤工作室)
+ └ Agents            (底层 agent 发现/状态，只读，弱化展示)
 Settings
 ```
 
-"Agents" remains the underlying registry/discovery layer, but the user-facing primary
-concept is **Environments**. The management-table feel is removed.
+"Agents" 仍是底层注册/发现层，但用户面对的首要概念是 **Environments**。移除管理表格的观感。
 
-## 2. P2 — AI Environment Center (phased)
+## 2. P2 —— AI 环境中心（分阶段）
 
-### P2.1 — Renderer concept validation (NO Main Process change)
-- New UI types: `src/ui/types/environment.ts` → `EnvironmentModel` v1.
-- New hook: `src/ui/hooks/useEnvironments.ts` backed by **mock data**.
-- New page: `EnvironmentsPage` composing:
-  - `EnvironmentHero` — current environment (name, agent + skin, last used)
-  - `EnvironmentCard` — a saved environment
-  - `AgentSwitcher` — switch active environment
-  - `EnvironmentTimeline` — recent usage
-  - `QuickEnvironmentActions` — Apply / Restore / Customize
-- Nav: "Agents" → "Environments".
-- Goal: validate page structure, card design, user mental model. Main Process untouched.
+### P2.1 —— 渲染层概念验证（不涉及主进程改动）
+- 新增 UI 类型：`src/ui/types/environment.ts` → `EnvironmentModel` v1。
+- 新增 hook：`src/ui/hooks/useEnvironments.ts`，基于 **mock 数据**。
+- 新页面：`EnvironmentsPage`，由以下部分组成：
+  - `EnvironmentHero` —— 当前环境（名称、agent + 皮肤、上次使用）
+  - `EnvironmentCard` —— 一个已保存的环境
+  - `AgentSwitcher` —— 切换当前环境
+  - `EnvironmentTimeline` —— 最近使用记录
+  - `QuickEnvironmentActions` —— 应用 / 恢复 / 自定义
+- 导航：将 "Agents" 改为 "Environments"。
+- 目标：验证页面结构、卡片设计、用户心智模型。主进程不涉及。
 
-### P2.5 — Confirm model
-`EnvironmentModel v1 = { id, name, agentId, themeId, themeName?, lastUsed?, status }`.
-(Defer v2 extras: workspace path, font, settings, prompt profile.)
+### P2.5 —— 确认模型
+`EnvironmentModel v1 = { id, name, agentId, themeId, themeName?, lastUsed?, status }`。
+（推迟 v2 扩展项：工作区路径、字体、设置、提示词配置。）
 
-### P2.6 — Promote to infrastructure
-- New `src/main/environment-service.ts` (JSON store under userData/).
-- IPC: `environment:list | create | update | delete`.
-- `useEnvironments` swaps mock → real service. Main Process now touched (acceptable,
-  narrowly scoped; does NOT touch Runtime / Adapter / Core / Theme Engine).
+### P2.6 —— 升级为基础能力
+- 新增 `src/main/environment-service.ts`（userData/ 下的 JSON 存储）。
+- IPC：`environment:list | create | update | delete`。
+- `useEnvironments` 将 mock 替换为真实服务。此时涉及主进程（可接受，范围受控；不影响 Runtime / Adapter / Core / 主题引擎）。
 
-## 3. EnvironmentModel (v1)
+## 3. EnvironmentModel（v1）
 
 ```ts
 export type EnvironmentStatus = 'active' | 'idle';
@@ -61,37 +56,35 @@ export interface EnvironmentModel {
   name: string;
   agentId: AgentId;
   themeId: string;
-  themeName: string;   // display only, mock-era convenience
-  lastUsed?: string;   // ISO; undefined = never activated
+  themeName: string;   // 仅用于展示，mock 阶段的便利字段
+  lastUsed?: string;   // ISO；undefined = 从未激活
   status: EnvironmentStatus;
 }
 ```
 
-## 4. Component tree (P2.1)
+## 4. 组件树（P2.1）
 
 ```
 EnvironmentsPage
- ├ EnvironmentHero         (current environment)
- ├ QuickEnvironmentActions (Apply / Restore / Customize)
- ├ EnvironmentCard × N     (saved environments grid)
- ├ AgentSwitcher           (switch active environment)
- └ EnvironmentTimeline      (recent usage)
+ ├ EnvironmentHero         (当前环境)
+ ├ QuickEnvironmentActions (应用 / 恢复 / 自定义)
+ ├ EnvironmentCard × N     (已保存环境网格)
+ ├ AgentSwitcher           (切换当前环境)
+ └ EnvironmentTimeline      (最近使用)
 ```
 
-## 5. Design tokens
+## 5. 设计令牌
 
-Unchanged from v1 — the design system in `src/ui/design` already supports this
-(dark-default, surface/hover/transition utilities reused).
+与 v1 保持一致 —— `src/ui/design` 中的设计系统已支持该方案（默认深色、surface/hover/transition 工具类复用）。
 
-## 6. P3 — Skin Studio (after P2)
+## 6. P3 —— 皮肤工作室（P2 之后）
 
-Theme Library → **Skin Studio**: themes reframed as skins bound to environments.
-Product language: `Skins` instead of `Themes` in nav.
+主题库 → **皮肤工作室**：主题重构为绑定到环境的皮肤。产品语言：导航中用 `Skins` 替代 `Themes`。
 
-## 7. Migration status
+## 7. 迁移状态
 
-- P1 ✅ Home→Workspace rename (renderer-only, `npm run check` green).
-- P2.1 🔄 Environments concept (renderer-only, mock data) — this turn.
-- P2.5 ⏳ confirm EnvironmentModel v1.
-- P2.6 ⏳ environment-service + IPC (deferred until model stable).
-- P3  ⏳ Skin Studio (after P2).
+- P1 ✅ Home→Workspace 重命名（仅渲染层，`npm run check` 通过）。
+- P2.1 🔄 环境概念（仅渲染层，mock 数据）—— 当前阶段。
+- P2.5 ⏳ 确认 EnvironmentModel v1。
+- P2.6 ⏳ environment-service + IPC（推迟到模型稳定后）。
+- P3  ⏳ 皮肤工作室（P2 之后）。

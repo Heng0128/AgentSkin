@@ -1,7 +1,7 @@
-# Asset licensing
+# 资产许可
 
-The Mozilla Public License 2.0 covers AgentSkin source files unless a file contains a different notice.
+Mozilla Public License 2.0 覆盖 AgentSkin 的源代码文件，除非某文件包含不同的许可声明。
 
-AgentSkin logos, application icons, product artwork, screenshots, preview images, and other binary visual assets are not automatically licensed under the MPL. Unless a separate license or permission is included, those assets are all rights reserved and may not be used to brand or distribute an unofficial build.
+AgentSkin 徽标、应用图标、产品美术资源、截图、预览图片及其他二进制视觉资产不受 MPL 自动授权。除非附带单独的许可或授权，这些资产保留所有权利，不得用于为非官方构建做品牌宣传或分发。
 
-Imported and marketplace themes are separately licensed by their authors. Installing or purchasing a theme grants only the rights stated in that theme's license and purchase terms.
+导入和商城主题由各自的作者单独授权。安装或购买主题仅授予该主题许可证及购买条款中声明的权利。

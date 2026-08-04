@@ -1,14 +1,14 @@
 # AgentSkin AI 应用主题管理器
 
-[![最新版本](https://img.shields.io/github/v/release/agentskin/desktop?display_name=tag&sort=semver)](https://github.com/agentskin/desktop/releases/latest)
-[![版本构建](https://github.com/agentskin/desktop/actions/workflows/build.yml/badge.svg)](https://github.com/agentskin/desktop/actions/workflows/build.yml)
-[![下载量](https://img.shields.io/github/downloads/agentskin/desktop/total)](https://github.com/agentskin/desktop/releases)
+[![最新版本](https://img.shields.io/github/v/release/Heng0128/AgentSkin?display_name=tag&sort=semver)](https://github.com/Heng0128/AgentSkin/releases/latest)
+[![版本构建](https://github.com/Heng0128/AgentSkin/actions/workflows/build.yml/badge.svg)](https://github.com/Heng0128/AgentSkin/actions/workflows/build.yml)
+[![下载量](https://img.shields.io/github/downloads/Heng0128/AgentSkin/total)](https://github.com/Heng0128/AgentSkin/releases)
 [![许可证 MPL-2.0](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
-[![macOS 与 Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-6f4d62)](https://github.com/agentskin/desktop/releases)
+[![macOS 与 Windows](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-6f4d62)](https://github.com/Heng0128/AgentSkin/releases)
 
 [English](README.md)
 
-官方网站：[agentskin.app](https://agentskin.app) — [下载最新版本](https://github.com/agentskin/desktop/releases/latest)
+官方网站：[agentskin.app](https://agentskin.app) — [下载最新版本](https://github.com/Heng0128/AgentSkin/releases/latest)
 
 AgentSkin 是一款面向 AI 桌面应用的开源主题管理器，目前支持 **TRAE SOLO CN**、**QoderWork CN**、**WorkBuddy** 和 **豆包**，可在 macOS 和 Windows 上使用。一键将主题应用到任何支持的应用，并随时恢复原生界面。主题只改变外观，不修改应用安装和数据。
 
