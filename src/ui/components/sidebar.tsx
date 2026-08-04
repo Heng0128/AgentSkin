@@ -29,7 +29,9 @@ interface NavEntry {
  *
  * Structure:
  *   Brand (top)
- *   Navigation — grouped, mono section labels
+ *   Navigation — grouped by Swiss section labels (CORE / SYSTEM), mono
+ *     uppercase labels with wide tracking, active item gets a 3px red
+ *     left rule (the classic Swiss "red line" indicator)
  *   Footer — Studio / Logs / Collapse
  *
  * Width: 224px expanded · 62px collapsed.
@@ -38,11 +40,20 @@ export function Sidebar({ controller }: { controller: AppController }) {
   const { t } = controller;
   const collapsed = controller.sidebarCollapsed;
 
-  const primaryNav: readonly NavEntry[] = [
-    { route: 'workspace', icon: Home02Icon, label: t.navWorkspace },
-    { route: 'themes', icon: PaintBoardIcon, label: t.navThemes },
-    { route: 'wallpaper', icon: Image02Icon, label: t.navWallpaperEngine },
-    { route: 'settings', icon: Settings01Icon, label: t.navSettings },
+  // Swiss grouping — mirrors the A.html reference nav (CORE / MANAGE / SYSTEM).
+  const navGroups: Array<{ label: string; items: NavEntry[] }> = [
+    {
+      label: t.navGroupCore,
+      items: [
+        { route: 'workspace', icon: Home02Icon, label: t.navWorkspace },
+        { route: 'themes', icon: PaintBoardIcon, label: t.navThemes },
+        { route: 'wallpaper', icon: Image02Icon, label: t.navWallpaperEngine },
+      ],
+    },
+    {
+      label: t.navGroupSystem,
+      items: [{ route: 'settings', icon: Settings01Icon, label: t.navSettings }],
+    },
   ];
 
   const NavButton = ({ item }: { item: NavEntry }) => {
@@ -54,9 +65,9 @@ export function Sidebar({ controller }: { controller: AppController }) {
         aria-current={active ? 'page' : undefined}
         title={collapsed ? item.label : undefined}
         className={cn(
-          'group relative h-[37px] justify-start gap-2.5 rounded-[2px] m-[2px_9px] text-muted-foreground font-medium transition-all duration-fast ease-out active:scale-[0.98]',
+          'group relative h-[37px] justify-start gap-2.5 rounded-[2px] m-[2px_9px] text-muted-foreground font-medium transition-all duration-fast ease-out',
           collapsed && 'justify-center m-[2px_8px] p-0',
-          'hover:bg-card2 hover:text-foreground hover:translate-x-[1px]',
+          'hover:bg-card2 hover:text-foreground',
           active && 'bg-accent text-foreground shadow-[inset_3px_0_0_var(--primary)]',
           active && '[&_svg]:text-primary',
         )}
@@ -97,18 +108,22 @@ export function Sidebar({ controller }: { controller: AppController }) {
         )}
       </div>
 
-      {/* Navigation — section label */}
+      {/* Navigation — Swiss grouped sections */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden pt-2.5 pb-2">
-        {!collapsed && (
-          <div className="px-[18px] pt-1 pb-1 font-mono text-[8.5px] font-semibold tracking-[.18em] uppercase text-[var(--muted-foreground)]">
-            NAVIGATION
+        {navGroups.map((group) => (
+          <div key={group.label} className="mb-1">
+            {!collapsed && (
+              <div className="px-[18px] pt-1 pb-1 font-mono text-[8.5px] font-semibold tracking-[.18em] uppercase text-[var(--muted-foreground)]">
+                {group.label}
+              </div>
+            )}
+            <div className="flex flex-col">
+              {group.items.map((item) => (
+                <NavButton key={item.route} item={item} />
+              ))}
+            </div>
           </div>
-        )}
-        <div className="flex flex-col">
-          {primaryNav.map((item) => (
-            <NavButton key={item.route} item={item} />
-          ))}
-        </div>
+        ))}
       </nav>
 
       {/* Footer */}

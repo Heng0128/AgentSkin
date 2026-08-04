@@ -204,9 +204,18 @@ function CompactHero({
           <p className="font-display text-[26px]/[1.15] font-bold tracking-tight">
             {activeEnv ? activeEnv.name : t.yourWorkspace}
           </p>
-          {/* Subtitle info row */}
+          {/* Subtitle info row — live Swiss-format date (YYYY.MM.DD DDD) */}
           <div className="mt-1.5 flex flex-wrap gap-3.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-            <span>2026.08.04 TUE</span>
+            <span>
+              {new Date()
+                .toLocaleDateString('en-GB', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  weekday: 'short',
+                })
+                .replace(/,/g, '')}
+            </span>
             <span>NEURAL-CDP READY</span>
             <span>LOCAL MODE</span>
           </div>

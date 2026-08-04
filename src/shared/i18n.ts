@@ -25,6 +25,8 @@ export function localeFromSystem(value: string | undefined): AppLocale {
 export const uiMessages = {
   'zh-CN': {
     installedNav: '已安装',
+    navGroupCore: '核心 CORE',
+    navGroupSystem: '系统 SYSTEM',
     navWorkspace: '工作台',
     navAgents: 'Agent',
     navThemes: '主题中心',
@@ -461,6 +463,8 @@ export const uiMessages = {
   },
   en: {
     installedNav: 'Installed',
+    navGroupCore: 'Core',
+    navGroupSystem: 'System',
     navWorkspace: 'Workspace',
     navAgents: 'Agents',
     navThemes: 'Themes',

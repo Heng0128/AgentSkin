@@ -101,12 +101,16 @@ export function TitleBar({
         isMac ? 'pl-20' : 'pl-2',
       )}
     >
-      {/* Left: brand + version — Space Grotesk bold 13px. */}
-      <div className="pointer-events-none flex items-center gap-1.5">
+      {/* Left: brand + page — Space Grotesk bold 13px, mono page label after
+          a Swiss hairline divider. */}
+      <div className="pointer-events-none flex items-center gap-2">
         <span className="font-display text-[13px] font-bold tracking-tight text-foreground">
           AgentSkin
         </span>
-        <span className="font-mono text-[10px] text-muted-foreground/60">{routeLabel}</span>
+        <span className="h-3 w-px bg-border" aria-hidden />
+        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70">
+          {routeLabel}
+        </span>
       </div>
 
       {/* Spacer — pushes everything after it to the far right. */}
