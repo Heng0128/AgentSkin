@@ -373,40 +373,16 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
 
   return (
     <div className="we-app flex h-full min-h-0 flex-col min-w-0">
-      {/* Header — Swiss: monoCount + import + toggle */}
-      <div className="flex items-center justify-between gap-3 border-b border-border px-[14px] py-[10px] flex-wrap">
-        <div className="flex items-center gap-3">
+      {/* Header — slim: title + compact one-line stats */}
+      <div className="flex items-center justify-between gap-3 border-b border-border px-[14px] py-[8px]">
+        <div className="flex items-center gap-2.5">
           <h2 className="font-display text-sm font-bold tracking-tight">{t.navWallpaperEngine}</h2>
           {wallpapers.length > 0 && (
-            <span className="rounded-[2px] bg-muted px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
-              {wallpapers.length}
-            </span>
-          )}
-          {wallpapers.length > 0 && (
             <span className="font-mono text-[10px] tracking-wider text-muted-foreground/60">
-              {t.weStats(videoCount, imageCount)}
+              <span className="font-semibold text-foreground/80">{wallpapers.length}</span>
+              {` · ${t.weStats(videoCount, imageCount)}`}
             </span>
           )}
-        </div>
-        {/* Import + toggle */}
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => void importWallpaper()}
-            className="flex items-center gap-1.5 rounded-[2px] border border-[var(--border2)] bg-card2 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-          >
-            <HugeIcon icon={Download01Icon} className="size-3" />
-            {t.wallpaperImport}
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] tracking-wider text-muted-foreground">
-              {t.wallpaperEnable}
-            </span>
-            <Switch
-              checked={enabled}
-              onChange={(v) => void setWallpaper(v, v ? selectedId : null)}
-            />
-          </div>
         </div>
       </div>
 
@@ -486,6 +462,26 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                 </button>
               ))}
             </div>
+            {/* Import + enable toggle — pushed to the toolbar's right edge */}
+            <div className="ml-auto flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => void importWallpaper()}
+                className="flex items-center gap-1.5 rounded-[2px] border border-[var(--border2)] bg-card2 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+              >
+                <HugeIcon icon={Download01Icon} className="size-3" />
+                {t.wallpaperImport}
+              </button>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] tracking-wider text-muted-foreground">
+                  {t.wallpaperEnable}
+                </span>
+                <Switch
+                  checked={enabled}
+                  onChange={(v) => void setWallpaper(v, v ? selectedId : null)}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Grid + detail sidebar — 左右两栏：左侧网格，右侧选中壁纸详情 */}
@@ -520,7 +516,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
 
             {/* Detail panel — 右侧侧栏（预览 + 信息 + 操作） */}
             {selected && (
-              <aside className="flex w-[340px] shrink-0 flex-col border-l border-border bg-card2">
+              <aside className="flex w-[280px] shrink-0 flex-col border-l border-border bg-card2">
                 {/* 侧栏头 */}
                 <div className="flex items-center justify-between border-b border-border px-3 py-2">
                   <span className="font-mono text-[9px] tracking-[0.12em] text-muted-foreground/60">
