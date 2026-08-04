@@ -618,6 +618,15 @@ body {
   height: 100%;
 }
 
+/* React root must participate in the height chain: `main` uses h-full
+   (height:100%) and the page grid-rows rely on it. Without this, #root
+   collapses to content height, main is as tall as its content, and the
+   fixed 38px/1fr/28px grid rows get pushed past the window edge (clipped
+   by overflow-hidden → black bands / inconsistent panel sizes). */
+#root {
+  height: 100%;
+}
+
 /* --- Input focus ring (border + 3px glow matching brand red) --- */
 input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):focus,
 textarea:focus,

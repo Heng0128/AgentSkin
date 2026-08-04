@@ -65,7 +65,13 @@ export default function App() {
       <main
         className={cn(
           'relative z-10 grid h-full overflow-hidden font-sans text-foreground',
-          'grid-rows-[38px_1fr_28px]',
+          // minmax(0,1fr) — plain `1fr` has an implicit min of auto (content
+          // height): content taller than the viewport blows the row past the
+          // window edge (clipped by overflow-hidden → black bands / lost
+          // content), and shorter content leaves the row at content height
+          // (inconsistent panel sizes across pages). minmax(0,1fr) locks the
+          // middle row to the available space so every page fills identically.
+          'grid-rows-[38px_minmax(0,1fr)_28px]',
           activeWallpaper ? 'bg-transparent' : 'bg-background',
         )}
         lang={controller.locale === 'zh-CN' ? 'zh-CN' : 'en'}
