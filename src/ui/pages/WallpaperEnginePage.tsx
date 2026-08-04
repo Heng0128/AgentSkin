@@ -188,12 +188,6 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
     return sorted;
   }, [wallpapers, filter, search, sortBy]);
 
-  const videoCount = useMemo(
-    () => wallpapers.filter((w) => w.type === 'video').length,
-    [wallpapers],
-  );
-  const imageCount = wallpapers.filter((w) => w.type === 'image').length;
-
   // Count running agents for the status hint in the detail panel.
   const runningAgentCount = useMemo(
     () => AGENT_IDS.filter((id) => appStatusFor(id)?.running).length,
@@ -373,17 +367,9 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
 
   return (
     <div className="we-app flex h-full min-h-0 flex-col min-w-0">
-      {/* Header — slim: title + compact one-line stats */}
+      {/* Header — title only */}
       <div className="flex items-center justify-between gap-3 border-b border-border px-[14px] py-[8px]">
-        <div className="flex items-center gap-2.5">
-          <h2 className="font-display text-sm font-bold tracking-tight">{t.navWallpaperEngine}</h2>
-          {wallpapers.length > 0 && (
-            <span className="font-mono text-[10px] tracking-wider text-muted-foreground/60">
-              <span className="font-semibold text-foreground/80">{wallpapers.length}</span>
-              {` · ${t.weStats(videoCount, imageCount)}`}
-            </span>
-          )}
-        </div>
+        <h2 className="font-display text-sm font-bold tracking-tight">{t.navWallpaperEngine}</h2>
       </div>
 
       {/* Not installed hint (non-blocking — still shows local imports) */}
