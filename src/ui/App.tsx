@@ -8,7 +8,6 @@ import { DynamicBackground } from '@/components/dynamic-background';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { InjectDock } from '@/components/inject-dock';
 import { InstallWizard } from '@/components/install-progress';
-import { LogDrawer } from '@/components/log-drawer';
 import { Sidebar } from '@/components/sidebar';
 import { StatusBar } from '@/components/status-bar';
 import { TitleBar } from '@/components/title-bar';
@@ -145,7 +144,6 @@ export default function App() {
         </Dialog>
 
         <DialogsHost controller={controller} />
-        <LogDrawer controller={controller} />
         <InjectDock controller={controller} />
 
         {/* Install wizard — replaces the old InstallProgress */}

@@ -9,12 +9,9 @@ import { cn } from '@/lib/utils';
 import type { Route } from '@/types/navigation';
 
 import {
-  File01Icon,
   Home02Icon,
   Image02Icon,
   PaintBoardIcon,
-  PanelLeftCloseIcon,
-  PanelLeftOpenIcon,
   Settings01Icon,
 } from '@hugeicons/core-free-icons';
 
@@ -152,41 +149,6 @@ export function Sidebar({ controller }: { controller: AppController }) {
         >
           <HugeIcon icon={PaintBoardIcon} className="size-3.5 shrink-0" />
           {!collapsed && <span>{t.navStudio}</span>}
-        </button>
-
-        {/* Logs */}
-        <button
-          type="button"
-          onClick={() => controller.setLogsOpen(true)}
-          title={collapsed ? t.showLogs : undefined}
-          className={cn(
-            'flex h-[30px] w-full items-center justify-center gap-2 rounded-[2px] border-0 bg-transparent text-[var(--muted-foreground)] cursor-pointer text-[10.5px] font-medium whitespace-nowrap transition-colors duration-fast',
-            'hover:bg-card2 hover:text-[var(--foreground)]',
-            collapsed && 'px-0',
-          )}
-        >
-          <HugeIcon icon={File01Icon} className="size-3.5 shrink-0" />
-          {!collapsed && <span>{t.showLogs}</span>}
-        </button>
-
-        {/* Collapse / expand toggle */}
-        <button
-          type="button"
-          onClick={controller.toggleSidebar}
-          title={collapsed ? t.expandSidebar : t.collapseSidebar}
-          aria-label={collapsed ? t.expandSidebar : t.collapseSidebar}
-          aria-pressed={collapsed}
-          className={cn(
-            'flex h-[30px] w-full items-center justify-center gap-2 rounded-[2px] border-0 bg-transparent text-[var(--muted-foreground)] cursor-pointer text-[10.5px] font-medium whitespace-nowrap transition-colors duration-fast',
-            'hover:bg-card2 hover:text-[var(--foreground)]',
-            collapsed && 'px-0',
-          )}
-        >
-          <HugeIcon
-            icon={collapsed ? PanelLeftOpenIcon : PanelLeftCloseIcon}
-            className="size-3.5 shrink-0"
-          />
-          {!collapsed && <span>{t.collapseSidebar}</span>}
         </button>
       </div>
     </aside>

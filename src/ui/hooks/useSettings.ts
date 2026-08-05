@@ -14,7 +14,7 @@ import { toMessage } from '@shared/errors';
 import type { UiMessages } from '@shared/i18n';
 import type { AgentId, DesktopSettings, SystemStatus } from '@shared/types';
 
-export type SettingsSection = 'general' | 'apps' | 'wallpaper';
+export type SettingsSection = 'general' | 'apps' | 'wallpaper' | 'system';
 
 interface UseSettingsDeps {
   showToast: (message: string, tone?: 'default' | 'destructive') => void;
