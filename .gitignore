@@ -29,3 +29,4 @@ find-*-result.txt
 # Tooling workspace caches (local-only)
 .agnes/
 .workbuddy/
+.zcode/
