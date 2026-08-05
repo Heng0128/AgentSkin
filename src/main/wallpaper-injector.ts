@@ -174,6 +174,8 @@ export async function injectAgentWallpaper(
 ): Promise<{ ok: boolean; detail?: string }> {
   if (!deps.wallpaperService) return { ok: false, detail: 'wallpaper-service-unavailable' };
   if (!deps.isEpochCurrent(appId, epoch)) return { ok: false, detail: 'epoch-cancelled' };
+  // 非空局部：injectOne 闭包内 TypeScript 无法保持 narrowing，用这个引用。
+  const wallpaperService = deps.wallpaperService;
 
   // Resolve the media file path and type via the wallpaper service
   const info = await deps.wallpaperService.mediaInfoFor(wallpaperId);
@@ -235,12 +237,18 @@ export async function injectAgentWallpaper(
       // the apply doesn't hard-fail on the most common workshop type. Web
       // wallpapers always resolve a URL (index.html is served directly), so
       // this fallback is scene-only.
-      if (info.type === 'scene' && info.previewPath) {
-        deps.log(
-          `[wallpaper] ${appId}: scene "${wallpaperId}" has no renderable content — falling back to preview image`,
-        );
-        info.path = info.previewPath;
-        isWeb = false;
+      if (info.type === 'scene') {
+        const fallbackImage = await wallpaperService.bestFallbackImageFor(wallpaperId);
+        if (fallbackImage) {
+          deps.log(
+            `[wallpaper] ${appId}: scene "${wallpaperId}" has no renderable content — falling back to static image`,
+          );
+          info.path = fallbackImage;
+          isWeb = false;
+        } else {
+          deps.log(`[wallpaper] ${appId}: failed to resolve web URL for "${wallpaperId}"`);
+          return { ok: false, detail: 'web-url-resolve-failed' };
+        }
       } else {
         deps.log(`[wallpaper] ${appId}: failed to resolve web URL for "${wallpaperId}"`);
         return { ok: false, detail: 'web-url-resolve-failed' };
@@ -309,24 +317,27 @@ export async function injectAgentWallpaper(
       });
       if (webResult.ok) return { ok: true, verdict: 'ok' };
       // The iframe failed to load (CSP frame-src block, or the rendered HTML
-      // exceeded the iframe watchdog). Scene wallpapers still ship their
-      // workshop preview image (preview.jpg/png/gif) — mount it as a static
-      // wallpaper so the agent page never goes black on the most common
-      // workshop type. The preview fallback reuses the same image path as a
-      // direct image wallpaper (base64/blob/HTTP dispatch below), so the
-      // scrim and punch-through behavior are identical.
-      if (info.type === 'scene' && info.previewPath) {
-        const imgResult = await injectImageWallpaper(session, {
-          imagePath: info.previewPath,
-          scrimOpacity: options.scrimOpacity,
-          render: options.render,
-        });
-        return {
-          ok: imgResult.ok,
-          verdict: imgResult.ok
-            ? `web:${webResult.verdict}|scene-preview:ok`
-            : `web:${webResult.verdict}|scene-preview:${imgResult.verdict}`,
-        };
+      // exceeded the iframe watchdog). Scene wallpapers still ship a workshop
+      // preview image — mount the best static fallback (largest decodable
+      // image in the wallpaper dir, else the preview) so the agent page never
+      // goes black on the most common workshop type. The fallback reuses the
+      // same image path as a direct image wallpaper (base64/blob/HTTP dispatch
+      // below), so the scrim and punch-through behavior are identical.
+      if (info.type === 'scene') {
+        const fallbackImage = await wallpaperService.bestFallbackImageFor(wallpaperId);
+        if (fallbackImage) {
+          const imgResult = await injectImageWallpaper(session, {
+            imagePath: fallbackImage,
+            scrimOpacity: options.scrimOpacity,
+            render: options.render,
+          });
+          return {
+            ok: imgResult.ok,
+            verdict: imgResult.ok
+              ? `web:${webResult.verdict}|scene-preview:ok`
+              : `web:${webResult.verdict}|scene-preview:${imgResult.verdict}`,
+          };
+        }
       }
       return { ok: webResult.ok, verdict: webResult.ok ? 'ok' : `web:${webResult.verdict}` };
     }

@@ -76,6 +76,7 @@ function createMockDeps(opts: MockDepsOptions = {}): WallpaperInjectorDeps & {
       videoPathFor: async () => null,
       mediaInfoFor: async (id: string) => mediaInfo[id] ?? null,
       webUrlFor: async () => null,
+      bestFallbackImageFor: async () => null,
     },
     isEpochCurrent: () => epochCurrent,
     bumpEpoch: () => 1,
@@ -437,13 +438,15 @@ describe('media token cleanup on early exits', () => {
     ];
     // webUrlFor returns null → triggers the scene→preview fallback.
     deps.wallpaperService!.webUrlFor = async () => null;
+    // 兜底图解析：scene 目录无更大图时返回 previewPath（与 production 行为一致）。
+    deps.wallpaperService!.bestFallbackImageFor = async () => '/test/preview.jpg';
 
     const result = await injectAgentWallpaper(TEST_AGENT, 9222, 'wp-scene', {}, 1, deps);
 
-    // NOT the hard failure — the scene fell back to its preview image and
+    // NOT the hard failure — the scene fell back to its static image and
     // proceeded into the (failing-at-CDP) injection loop.
     expect(result.detail).not.toBe('web-url-resolve-failed');
-    expect(deps.logLines.some((l) => l.includes('falling back to preview image'))).toBe(true);
+    expect(deps.logLines.some((l) => l.includes('falling back to static image'))).toBe(true);
   }, 35000);
 
   it('cleans up previous token on epoch-cancelled after no-targets (split path)', async () => {

@@ -141,6 +141,13 @@ export interface WallpaperServiceApi {
   webUrlFor(id: string): Promise<string | null>;
   previewPathFor(id: string): Promise<string | null>;
   videoPathFor(id: string): Promise<string | null>;
+  /**
+   * Resolve the best static fallback image for a wallpaper whose interactive
+   * content cannot be injected (scene render failure / iframe blocked): the
+   * largest decodable image in the wallpaper directory when available, else
+   * the workshop preview. Null when the wallpaper has no preview.
+   */
+  bestFallbackImageFor(id: string): Promise<string | null>;
   mediaInfoFor(id: string): Promise<{
     type: 'video' | 'image' | 'web' | 'scene';
     path: string;
@@ -174,6 +181,10 @@ export interface WallpaperResolver {
   /** Resolve a web/scene wallpaper's rendered content URL for iframe
    *  injection. Returns null for non-web/scene wallpapers. */
   webUrlFor(id: string): Promise<string | null>;
+  /** Resolve the best static fallback image for a scene wallpaper whose
+   *  rendered content cannot be injected: the largest decodable image in the
+   *  wallpaper directory when available, else the workshop preview. */
+  bestFallbackImageFor(id: string): Promise<string | null>;
 }
 
 // ---------------------------------------------------------------------------

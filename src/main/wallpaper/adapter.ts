@@ -25,6 +25,7 @@ import fs from 'node:fs/promises';
 import type { WallpaperInfo } from '../../shared/types';
 import type { WallpaperServiceApi } from '../services/contracts';
 import { resolveWorkshopRoot } from '../steam-path-resolver';
+import { pickLargestFallbackImage } from './fallback-image';
 import { deleteLocalWallpaperFile, importMedia, scanCustomDir } from './local/importer';
 import { MediaRegistry } from './media-registry';
 import type { DiscoveredItem } from './types';
@@ -214,6 +215,23 @@ export class WallpaperService implements WallpaperServiceApi {
       previewPath: item.previewPath,
       previewOnly: item.previewOnly,
     };
+  }
+
+  /**
+   * Resolve the best static fallback image for a wallpaper whose interactive
+   * content cannot be injected (scene render failure / iframe blocked):
+   * the largest decodable image in the wallpaper directory when available,
+   * else the workshop preview. Returns null when the wallpaper has no preview
+   * and no directory (e.g. theme-registered video wallpapers).
+   */
+  async bestFallbackImageFor(id: string): Promise<string | null> {
+    await this.scan();
+    const item = this.items.get(id);
+    if (!item) return null;
+    if (item.dirPath) {
+      return pickLargestFallbackImage(item.dirPath, item.previewPath);
+    }
+    return item.previewPath;
   }
 
   /** Resolve a loopback URL for web/scene wallpaper content. */
