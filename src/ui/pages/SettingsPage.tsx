@@ -1,16 +1,25 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { api } from '@/api/agentSkinClient';
 import { APP_META, AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import type { ThemeMode } from '@/design/theme-mode';
 import type { AppController, SettingsSection } from '@/hooks/useAppController';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
 
-import { DashboardSquare01Icon, Folder01Icon, Settings01Icon } from '@hugeicons/core-free-icons';
+import {
+  CheckmarkCircle02Icon,
+  Copy01Icon,
+  DashboardSquare01Icon,
+  File01Icon,
+  Folder01Icon,
+  Settings01Icon,
+} from '@hugeicons/core-free-icons';
 import { AGENT_IDS, type AgentId } from '@shared/types';
 
 function SettingRow({
@@ -34,6 +43,72 @@ function SettingRow({
         )}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
+    </div>
+  );
+}
+
+/** Custom CSS editor: load the persisted value on mount, edit in a textarea,
+ *  save via IPC (apply to agents takes effect on the next apply). */
+function CustomCssEditor({
+  t,
+  showToast,
+}: {
+  t: AppController['t'];
+  showToast: AppController['showToast'];
+}) {
+  const [value, setValue] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    void api
+      .getCustomThemeCss()
+      .then((css) => {
+        setValue(css);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api.setCustomThemeCss(value);
+      showToast(t.settingsCustomCssSaved);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const clear = () => setValue('');
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        className="flex items-center justify-between gap-4 rounded-[2px] border border-border px-3.5 py-2.5"
+        style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
+      >
+        <div className="min-w-0">
+          <p className="text-[12.5px] font-semibold text-foreground">{t.settingsCustomCssTitle}</p>
+          <p className="mt-0.5 text-[10.5px] text-muted-foreground/70">{t.settingsCustomCssDesc}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button variant="outline" size="sm" onClick={clear}>
+            {t.settingsCustomCssClear}
+          </Button>
+          <Button size="sm" disabled={saving || loading} onClick={() => void save()}>
+            {saving ? t.loading : t.settingsCustomCssSave}
+          </Button>
+        </div>
+      </div>
+      <Textarea
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        placeholder={t.settingsCustomCssPlaceholder}
+        disabled={loading}
+        spellCheck={false}
+        className="min-h-32 w-full resize-y rounded-[2px] border-border bg-card font-mono text-[11px] leading-5"
+      />
     </div>
   );
 }
@@ -121,10 +196,39 @@ function AppOverrideCard({ controller, appId }: { controller: AppController; app
  * the right-hand content, mirroring the old dialog layout but embedded.
  */
 export function SettingsPage({ controller }: { controller: AppController }) {
-  const { t, appVersion } = controller;
+  const { t, appVersion, logs, showToast } = controller;
   const { mode, setMode } = useThemeMode();
   const section = controller.settingsSection;
   const setSection = controller.setSettingsSection;
+
+  // Copy logs to clipboard — moved from the old LogDrawer sheet.
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(async () => {
+    if (logs.length === 0) return;
+    const text = logs.join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      showToast(t.copyLogsDone);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        setCopied(true);
+        showToast(t.copyLogsDone);
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        showToast(t.copyLogsFailed, 'destructive');
+      }
+    }
+  }, [logs, showToast, t]);
 
   // Load settings data on mount so AppOverrideCard has real overrides.
   // P3-2: controller.openSettings is already stable (useCallback with empty
@@ -140,6 +244,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
   const sections: Array<{ id: SettingsSection; label: string; icon: typeof Settings01Icon }> = [
     { id: 'general', label: t.settingsGeneralTitle, icon: Settings01Icon },
     { id: 'apps', label: t.settingsAppsTitle, icon: DashboardSquare01Icon },
+    { id: 'system', label: t.settingsSystemTitle, icon: File01Icon },
   ];
   const activeSection = sections.find((item) => item.id === section) ?? sections[0];
 
@@ -177,10 +282,24 @@ export function SettingsPage({ controller }: { controller: AppController }) {
 
         {/* Content */}
         <div className="flex min-h-0 flex-col">
-          <div className="border-b border-border px-3.5 py-2.5">
+          <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
             <h2 className="font-display text-[13px] font-bold tracking-tight">
               {activeSection.label}
             </h2>
+            {section === 'system' && logs.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => void handleCopy()}
+                className="h-7 shrink-0 gap-1.5 px-2.5 text-[11px]"
+              >
+                <HugeIcon
+                  icon={copied ? CheckmarkCircle02Icon : Copy01Icon}
+                  className={cn('size-3.5', copied && 'text-cr-success')}
+                />
+                {copied ? t.copyLogsDone : t.copyLogs}
+              </Button>
+            )}
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3.5 py-2.5">
             {section === 'general' && (
@@ -210,6 +329,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                     v{appVersion}
                   </span>
                 </SettingRow>
+                <CustomCssEditor t={t} showToast={showToast} />
               </>
             )}
             {section === 'apps' && (
@@ -222,6 +342,34 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 ))}
               </>
             )}
+            {section === 'system' &&
+              (logs.length === 0 ? (
+                <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-muted/60">
+                    <HugeIcon icon={File01Icon} className="size-4 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{t.noLogs}</p>
+                </div>
+              ) : (
+                <div className="space-y-px rounded-[2px] border border-border bg-card p-2 font-mono text-[11px] leading-5">
+                  <div className="mb-1.5 px-1.5 text-[10px] text-muted-foreground/50">
+                    {logs.length} {t.showLogs}
+                  </div>
+                  <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
+                    {logs.map((line, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: log lines are append-only display items — no reorder, insert, or delete, so index keys are safe.
+                      <div key={i} className="flex gap-2 rounded px-1.5 py-0.5 odd:bg-muted/30">
+                        <span className="w-6 shrink-0 select-none text-right text-muted-foreground/40 tabular-nums">
+                          {i + 1}
+                        </span>
+                        <span className="min-w-0 break-words whitespace-pre-wrap text-muted-foreground">
+                          {line}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
           </div>
         </div>
       </div>

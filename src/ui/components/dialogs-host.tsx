@@ -111,6 +111,7 @@ export function DialogsHost({ controller }: { controller: AppController }) {
                   if (prompt) {
                     void controller.applyToApp(prompt.themeId, prompt.themeName, prompt.appId, {
                       restartExisting: true,
+                      schemeId: prompt.schemeId,
                     });
                   }
                 }}

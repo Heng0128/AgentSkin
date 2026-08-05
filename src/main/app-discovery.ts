@@ -213,6 +213,8 @@ export interface DiscoveryDeps {
   persist: PersistCallback;
   /** Returns the persisted active-theme id (for status payload). */
   activeThemeId: ActiveThemeIdAccessor;
+  /** Returns the persisted active color-scheme id (for status payload). */
+  activeSchemeId: (appId: AgentId) => string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -626,6 +628,7 @@ export async function probeAppStatus(
     debugReady,
     port,
     activeThemeId: deps.activeThemeId(appId),
+    activeSchemeId: deps.activeSchemeId(appId),
     version: probe.version ?? null,
     path: probe.path ?? discovered?.appPath ?? discovered?.executable ?? null,
   };

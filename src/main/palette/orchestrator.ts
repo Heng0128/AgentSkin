@@ -40,6 +40,9 @@ export interface EngineInjectionDeps {
   resolveEngineDir(appId: string): Promise<string>;
   /** Logger sink (usually `AgentEngineService.log`). */
   log(line: string): void;
+  /** Global user-authored custom CSS (custom.css), empty when unset. Injected
+   *  as the final CSS layer so user overrides win over every theme layer. */
+  customThemeCss?: () => string;
 }
 
 // ---------------------------------------------------------------------------
@@ -134,6 +137,9 @@ export async function tryEngineInjection(
       // visual styles). Injected AFTER engine layers so theme-specific
       // --dbx-*/--vscode-* values take precedence over engine var() mappings.
       themeCss: targetTheme.css,
+      // 5th (final) layer: user-authored custom CSS, if any. Appended last so
+      // it beats every theme layer at equal specificity.
+      customCss: deps.customThemeCss?.() || undefined,
       heroDataUrl,
       agent: appId,
       themeId,

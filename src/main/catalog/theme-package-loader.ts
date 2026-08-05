@@ -370,6 +370,64 @@ export class ThemePackageLoader {
         }
       }
 
+      // Validate colorSchemes: each declared scheme id must resolve to a
+      // color-schemes/<id>.json file whose colors match the manifest shape.
+      if (manifest.colorSchemes) {
+        for (const schemeId of manifest.colorSchemes) {
+          const schemePath = resolveWithin(
+            themeId,
+            packagePath,
+            `color-schemes/${schemeId}.json`,
+            `colorSchemes.${schemeId}`,
+          );
+          let schemeRaw: string;
+          try {
+            schemeRaw = await fs.readFile(schemePath, 'utf8');
+          } catch {
+            throw new ThemePackageValidationError(
+              themeId,
+              `color scheme file not found: color-schemes/${schemeId}.json`,
+            );
+          }
+          let scheme: {
+            id?: unknown;
+            name?: unknown;
+            mode?: unknown;
+            colors?: Record<string, unknown>;
+          };
+          try {
+            scheme = JSON.parse(schemeRaw) as typeof scheme;
+          } catch {
+            throw new ThemePackageValidationError(
+              themeId,
+              `color scheme file is not valid JSON: color-schemes/${schemeId}.json`,
+            );
+          }
+          if (scheme.id !== schemeId) {
+            throw new ThemePackageValidationError(
+              themeId,
+              `color scheme id mismatch: expected "${schemeId}", got "${String(scheme.id)}"`,
+            );
+          }
+          if (typeof scheme.colors !== 'object' || scheme.colors === null) {
+            throw new ThemePackageValidationError(
+              themeId,
+              `color scheme "${schemeId}" is missing a colors object`,
+            );
+          }
+          const schemeColors = scheme.colors as Record<string, unknown>;
+          if (
+            typeof schemeColors.background !== 'string' ||
+            typeof schemeColors.foreground !== 'string'
+          ) {
+            throw new ThemePackageValidationError(
+              themeId,
+              `color scheme "${schemeId}" must declare colors.background and colors.foreground`,
+            );
+          }
+        }
+      }
+
       // Validate homepage/repository URLs
       if (manifest.homepage !== undefined && typeof manifest.homepage !== 'string') {
         throw new ThemePackageValidationError(themeId, 'homepage must be a string URL');

@@ -62,6 +62,8 @@ export const IpcChannel = {
   SETTINGS_PICK_APP_PATH: 'settings:pick-app-path',
   SETTINGS_CLEAR_APP_PATH: 'settings:clear-app-path',
   SETTINGS_SET_APP_PORT: 'settings:set-app-port',
+  SETTINGS_GET_CUSTOM_CSS: 'settings:get-custom-css',
+  SETTINGS_SET_CUSTOM_CSS: 'settings:set-custom-css',
 
   // --- Wallpaper (wallpaper-ipc.ts) ---
   WALLPAPER_LIST: 'wallpaper:list',

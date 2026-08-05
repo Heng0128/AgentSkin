@@ -190,6 +190,16 @@ export interface ThemeManifest {
   art?: boolean;
   /** Preferred color mode. */
   mode?: ThemeMode;
+  /**
+   * Alternative color scheme ids (v2.2+). Each id resolves to
+   * `color-schemes/<id>.json` whose `colors` match the manifest colors shape.
+   * The id `'default'` is reserved for the manifest's own colors — the base
+   * scheme every theme ships implicitly. When declared, the installer emits
+   * one bundle per scheme (`<themeId>--<schemeId>`) and the catalog merges
+   * them back into a single entry with a `schemes` list.
+   * @since 2.2.0
+   */
+  colorSchemes?: string[];
   /** CSS color tokens the theme ships with. */
   colors: ThemeColors;
   /** Optional asset references relative to the package root. */

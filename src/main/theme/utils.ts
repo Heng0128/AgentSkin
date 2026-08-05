@@ -22,7 +22,12 @@
 import fsSync from 'node:fs';
 import path from 'node:path';
 import type { ThemeBundle } from '../../legacy/agentskin-core-runtime';
-import { type AgentId, type InstalledTheme, isAgentId } from '../../shared/types';
+import {
+  type AgentId,
+  type InstalledTheme,
+  isAgentId,
+  type ThemeColorScheme,
+} from '../../shared/types';
 import type { ThemeEntry } from '../services/contracts';
 
 // ---------------------------------------------------------------------------
@@ -306,6 +311,14 @@ export function toInstalledTheme(entry: ThemeEntry): InstalledTheme {
     typeof pick('unofficial') === 'boolean' ? (pick('unofficial') as boolean) : undefined;
   const mode =
     typeof pick('mode') === 'string' ? (pick('mode') as 'dark' | 'light' | 'auto') : undefined;
+  // Color-scheme variant this bundle represents. Present only for themes
+  // installed by the scheme-aware installer (v2.2+); legacy/imported bundles
+  // have no scheme marker and are treated as 'default'.
+  const schemeRaw = pick('scheme');
+  const scheme = typeof schemeRaw === 'string' && schemeRaw !== 'default' ? schemeRaw : 'default';
+  const colorSchemes = Array.isArray(pick('colorSchemes'))
+    ? (pick('colorSchemes') as string[])
+    : undefined;
 
   // Prefer an explicit supportedAgents list (the agent ids this theme
   // targets); else derive from target keys.
@@ -322,6 +335,24 @@ export function toInstalledTheme(entry: ThemeEntry): InstalledTheme {
     (copy?.colors && typeof copy.colors === 'object'
       ? (copy.colors as Record<string, string>)
       : undefined);
+
+  // Full scheme metadata (id/name/mode for every variant, default first).
+  // The catalog uses this to build the UI's scheme picker. Colors are
+  // placeholders for THIS bundle; the catalog merge step overwrites each
+  // variant's colors with the colors from its own bundle.
+  const schemesRaw = pick('schemes');
+  const schemes = Array.isArray(schemesRaw)
+    ? (schemesRaw as Array<{ id?: unknown; name?: unknown; mode?: unknown }>)
+        .filter((s) => s && typeof s === 'object' && typeof s.id === 'string')
+        .map(
+          (s): ThemeColorScheme => ({
+            id: s.id as string,
+            name: typeof s.name === 'string' ? s.name : (s.id as string),
+            mode: s.mode === 'dark' || s.mode === 'light' || s.mode === 'auto' ? s.mode : undefined,
+            colors: colors ?? {},
+          }),
+        )
+    : undefined;
 
   return {
     id: bundle.theme.id,
@@ -345,6 +376,13 @@ export function toInstalledTheme(entry: ThemeEntry): InstalledTheme {
     contentHash:
       typeof pick('contentHash') === 'string' ? (pick('contentHash') as string) : undefined,
     wallpaper: extractWallpaper(pick('wallpaper')),
+    scheme,
+    // Flatten the declared color-scheme ids for the catalog merge step; each
+    // variant carries the full list so the default entry knows every scheme
+    // the theme ships (and each variant knows its own id via `scheme`).
+    colorSchemes,
+    // Full scheme metadata (id/name/mode for every variant, default first).
+    schemes,
   };
 }
 

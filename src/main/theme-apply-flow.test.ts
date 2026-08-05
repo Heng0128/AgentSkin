@@ -206,8 +206,20 @@ describe('applyThemeFlow', () => {
     it('persists active theme via setActiveTheme + persist', async () => {
       const deps = makeDeps();
       await applyThemeFlow(makeRequest(), deps);
-      expect(deps.setActiveTheme).toHaveBeenCalledWith(TEST_APP, TEST_THEME_ID, TEST_PORT);
+      expect(deps.setActiveTheme).toHaveBeenCalledWith(
+        TEST_APP,
+        TEST_THEME_ID,
+        TEST_PORT,
+        undefined,
+      );
       expect(deps.persist).toHaveBeenCalledTimes(1);
+    });
+
+    it('resolves a schemeId to the scheme bundle id and persists it', async () => {
+      const deps = makeDeps();
+      await applyThemeFlow({ ...makeRequest(), schemeId: 'nord' }, deps);
+      expect(deps.findTheme).toHaveBeenCalledWith(`${TEST_THEME_ID}--nord`);
+      expect(deps.setActiveTheme).toHaveBeenCalledWith(TEST_APP, TEST_THEME_ID, TEST_PORT, 'nord');
     });
 
     it('emits inject_start, inject_done and theme_apply structured events', async () => {

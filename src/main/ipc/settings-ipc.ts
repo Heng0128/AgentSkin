@@ -63,4 +63,17 @@ export function registerSettingsIpc(deps: MainContext): void {
       return { settings: settingsDto(deps), status: await deps.core.status() };
     },
   );
+
+  ipcMain.handle(IpcChannel.SETTINGS_GET_CUSTOM_CSS, () => deps.settings.customThemeCss());
+
+  ipcMain.handle(
+    IpcChannel.SETTINGS_SET_CUSTOM_CSS,
+    async (_event, css: unknown): Promise<SettingsUpdateResult> => {
+      if (typeof css !== 'string' || css.length > 256 * 1024) {
+        throw new Error(getMainMessages().invalidCustomCss);
+      }
+      await deps.settings.setCustomThemeCss(css);
+      return { settings: settingsDto(deps), status: await deps.core.status() };
+    },
+  );
 }

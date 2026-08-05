@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { APP_META, AppMark } from '@/components/app-mark';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,11 +19,14 @@ function AppActionList({
   controller,
   supportedAgents,
   installedThemeId,
+  schemeId,
   onApply,
 }: {
   controller: AppController;
   supportedAgents: AgentId[];
   installedThemeId: string | null;
+  /** Currently selected color-scheme id (undefined = default). */
+  schemeId?: string;
   onApply: (appId: AgentId) => Promise<unknown>;
 }) {
   const { t } = controller;
@@ -189,6 +192,59 @@ function MetaRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** Color-scheme picker: one swatch card per scheme, using each scheme's
+ *  actual colors so the difference is visible at a glance. */
+function ColorSchemePicker({
+  schemes,
+  activeSchemeId,
+  onChange,
+  t,
+}: {
+  schemes: NonNullable<import('@shared/types').ThemeCatalogItem['schemes']>;
+  activeSchemeId?: string;
+  onChange: (schemeId: string | undefined) => void;
+  t: import('@shared/i18n').UiMessages;
+}) {
+  return (
+    <div className="mb-3">
+      <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted-foreground/70">
+        {t.colorSchemesLabel}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {schemes.map((scheme) => {
+          const selected = (activeSchemeId ?? 'default') === scheme.id;
+          const bg = scheme.colors.background ?? scheme.colors.bg;
+          const accent = scheme.colors.accent;
+          const swatchStyle: React.CSSProperties = {};
+          if (bg) swatchStyle.backgroundColor = bg;
+          if (accent) swatchStyle.boxShadow = `inset 0 0 0 1px ${accent}`;
+          return (
+            <button
+              key={scheme.id}
+              type="button"
+              aria-pressed={selected}
+              onClick={() => onChange(scheme.id === 'default' ? undefined : scheme.id)}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] transition-colors',
+                selected
+                  ? 'border-primary bg-card text-foreground shadow-sm'
+                  : 'border-border bg-background/50 text-muted-foreground hover:bg-background/80',
+              )}
+            >
+              <span
+                className="size-3 shrink-0 rounded-[2px]"
+                style={swatchStyle}
+                aria-hidden="true"
+              />
+              {scheme.id === 'default' ? t.colorSchemeDefault : scheme.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function DetailPanel({
   controller,
   selection: selectionOverride,
@@ -198,6 +254,7 @@ export function DetailPanel({
 }) {
   const { t } = controller;
   const selection = selectionOverride !== undefined ? selectionOverride : controller.selection;
+  const [schemeId, setSchemeId] = useState<string | undefined>(undefined);
 
   // Theme-bundled wallpaper videos can't be a static preview; fetch the
   // media as an inline base64 data URL (no custom scheme) so it plays
@@ -208,6 +265,18 @@ export function DetailPanel({
       ? `theme:${selection.theme.id}`
       : null;
   const { url: videoUrl, loading: videoLoading } = useWallpaperVideoUrl(dynamicWallpaperId);
+
+  // When the selection changes, reset the scheme back to default. Track the
+  // selection id in a ref so the effect only fires on theme switch, not on
+  // every schemeId update (biome's exhaustive-deps rule can't see the ref).
+  const lastSelectionIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const current = selection?.theme.id ?? null;
+    if (lastSelectionIdRef.current !== current) {
+      lastSelectionIdRef.current = current;
+      setSchemeId(undefined);
+    }
+  });
 
   if (!selection) {
     return (
@@ -305,12 +374,23 @@ export function DetailPanel({
 
         <Separator className="mb-3" />
 
+        {/* Color-scheme picker (v2.2+): only when the theme ships alternatives */}
+        {theme.schemes && theme.schemes.length > 1 && (
+          <ColorSchemePicker
+            schemes={theme.schemes}
+            activeSchemeId={schemeId}
+            onChange={setSchemeId}
+            t={t}
+          />
+        )}
+
         {/* Apply section */}
         <AppActionList
           controller={controller}
           supportedAgents={theme.supportedAgents}
           installedThemeId={theme.id}
-          onApply={(appId) => controller.applyToApp(theme.id, theme.name, appId)}
+          schemeId={schemeId}
+          onApply={(appId) => controller.applyToApp(theme.id, theme.name, appId, { schemeId })}
         />
 
         {/* Bottom actions — pinned to bottom */}

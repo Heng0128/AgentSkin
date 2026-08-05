@@ -121,29 +121,66 @@ async function main() {
     // 1) target CSS files: existence + token coverage + color-scheme match.
     const targets = manifest.targets ?? {};
     const agentIds = Object.keys(targets);
+
+    // Resolve the scheme list: 'default' (manifest colors) + each declared
+    // color scheme (its mode may differ from the manifest mode).
+    const schemeIds = ['default', ...(manifest.colorSchemes ?? [])];
+    const schemeModes = new Map();
+    for (const schemeId of schemeIds) {
+      if (schemeId === 'default') {
+        schemeModes.set('default', manifest.mode);
+        continue;
+      }
+      try {
+        const scheme = JSON.parse(
+          await fs.readFile(path.join(themeDir, 'color-schemes', `${schemeId}.json`), 'utf8'),
+        );
+        schemeModes.set(schemeId, scheme.mode ?? manifest.mode);
+      } catch {
+        errors.push(`${entry.name}: cannot read color-schemes/${schemeId}.json`);
+      }
+    }
+
     for (const agentId of agentIds) {
       const config = targets[agentId];
       if (!config || typeof config.css !== 'string') {
         errors.push(`${entry.name}: targets.${agentId} missing css path`);
         continue;
       }
-      const cssPath = path.join(themeDir, config.css);
-      const label = `${entry.name}/${agentId} (${config.css})`;
-      const css = await checkTokenCoverage(cssPath, label, errors);
-      if (css && manifest.mode === 'dark' && !/color-scheme:\s*dark/.test(css)) {
-        errors.push(`${label}: mode=dark but CSS lacks "color-scheme: dark"`);
-      }
-      if (css && manifest.mode === 'light' && !/color-scheme:\s*light/.test(css)) {
-        errors.push(`${label}: mode=light but CSS lacks "color-scheme: light"`);
+      // Default scheme CSS lives at the manifest-referenced path (e.g.
+      // assets/css/<agent>.css); alternative schemes at assets/css/<schemeId>/<agent>.css.
+      for (const schemeId of schemeIds) {
+        const cssPath =
+          schemeId === 'default'
+            ? path.join(themeDir, config.css)
+            : path.join(
+                themeDir,
+                'assets',
+                'css',
+                schemeId,
+                path.basename(config.css),
+              );
+        const label = `${entry.name}/${schemeId}/${agentId} (${cssPath})`;
+        const css = await checkTokenCoverage(cssPath, label, errors);
+        const mode = schemeModes.get(schemeId);
+        if (css && mode === 'dark' && !/color-scheme:\s*dark/.test(css)) {
+          errors.push(`${label}: mode=dark but CSS lacks "color-scheme: dark"`);
+        }
+        if (css && mode === 'light' && !/color-scheme:\s*light/.test(css)) {
+          errors.push(`${label}: mode=light but CSS lacks "color-scheme: light"`);
+        }
       }
     }
 
-    // 2) generated palette.css (when present) must declare the core tokens.
-    const palettePath = path.join(themeDir, 'palette.css');
-    if (
-      (await fs.stat(palettePath).then(() => true).catch(() => false)) === true
-    ) {
-      await checkTokenCoverage(palettePath, `${entry.name}/palette.css`, errors, PALETTE_TOKENS);
+    // 2) generated palette files (when present) must declare the core tokens.
+    for (const schemeId of schemeIds) {
+      const paletteName = schemeId === 'default' ? 'palette.css' : `palette.${schemeId}.css`;
+      const palettePath = path.join(themeDir, paletteName);
+      if (
+        (await fs.stat(palettePath).then(() => true).catch(() => false)) === true
+      ) {
+        await checkTokenCoverage(palettePath, `${entry.name}/${paletteName}`, errors, PALETTE_TOKENS);
+      }
     }
   }
 

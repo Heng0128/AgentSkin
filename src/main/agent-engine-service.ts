@@ -102,6 +102,12 @@ interface PersistedState {
       AgentId,
       {
         activeThemeId: string | null;
+        /**
+         * Color-scheme id of the active theme (v2.2+). 'default' (or absent)
+         * means the theme's own manifest colors; other values are alternative
+         * schemes applied via `ApplyRequest.schemeId`.
+         */
+        activeSchemeId?: string | null;
         port: number | null;
         /**
          * The agent's light/dark scheme state captured before AgentSkin first
@@ -138,6 +144,8 @@ function isPersistedState(x: unknown): x is PersistedState {
     const e = entry as Record<string, unknown>;
     // activeThemeId: string | null | undefined
     if (e.activeThemeId != null && typeof e.activeThemeId !== 'string') return false;
+    // activeSchemeId: string | null | undefined
+    if (e.activeSchemeId != null && typeof e.activeSchemeId !== 'string') return false;
     // port: number | null | undefined
     if (e.port != null && typeof e.port !== 'number') return false;
     // schemeSnapshot: object | null | undefined
@@ -514,6 +522,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
       },
       persist: () => this.persist(),
       activeThemeId: (appId) => this.activeThemeId(appId),
+      activeSchemeId: (appId) => this.activeSchemeId(appId),
     };
   }
 
@@ -613,7 +622,12 @@ export class AgentEngineService implements AgentEngineServiceApi {
       bumpEpoch: (appId) => this.epochs.bumpEpoch(appId),
       getSchemeSnapshot: (appId) => this.state.apps[appId]?.schemeSnapshot ?? null,
       clearActiveTheme: (appId, port) => {
-        this.state.apps[appId] = { activeThemeId: null, port, schemeSnapshot: null };
+        this.state.apps[appId] = {
+          activeThemeId: null,
+          activeSchemeId: null,
+          port,
+          schemeSnapshot: null,
+        };
       },
       persist: () => this.persist(),
       setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
@@ -659,9 +673,10 @@ export class AgentEngineService implements AgentEngineServiceApi {
         this.inferRestartReason(appId, cdpFailureReason),
       findTheme: (themeId) => this.library.find(themeId),
       bumpEpoch: (appId) => this.epochs.bumpEpoch(appId),
-      setActiveTheme: (appId, themeId, port) => {
+      setActiveTheme: (appId, themeId, port, schemeId) => {
         this.state.apps[appId] = {
           activeThemeId: themeId,
+          activeSchemeId: schemeId ?? null,
           port,
           schemeSnapshot: this.state.apps[appId]?.schemeSnapshot ?? null,
         };
@@ -697,6 +712,21 @@ export class AgentEngineService implements AgentEngineServiceApi {
           `[state] ${appId}: dropping reference to removed theme "${appState.activeThemeId}"`,
         );
         appState.activeThemeId = null;
+        appState.activeSchemeId = null;
+        dirty = true;
+        continue;
+      }
+      // When a scheme variant is active, the persisted base id must resolve to
+      // an installed bundle; if the base is present but the specific scheme
+      // variant was removed, fall back to the base theme (default colors).
+      if (
+        appState?.activeSchemeId &&
+        !availableIds.has(`${appState.activeThemeId}--${appState.activeSchemeId}`)
+      ) {
+        this.log(
+          `[state] ${appId}: scheme "${appState.activeSchemeId}" of "${appState.activeThemeId}" no longer available, falling back to default`,
+        );
+        appState.activeSchemeId = null;
         dirty = true;
       }
     }
@@ -785,6 +815,11 @@ export class AgentEngineService implements AgentEngineServiceApi {
 
   activeThemeId(appId: AgentId): string | null {
     return this.state.apps[appId]?.activeThemeId ?? null;
+  }
+
+  /** Active color-scheme id for an agent (null/undefined = default colors). */
+  activeSchemeId(appId: AgentId): string | null {
+    return this.state.apps[appId]?.activeSchemeId ?? null;
   }
 
   /**
@@ -981,6 +1016,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
     const deps: EngineInjectionDeps = {
       resolveEngineDir: resolveEngineDirDefault,
       log: (line) => this.log(line),
+      customThemeCss: () => this.settings.customThemeCss(),
     };
     return tryEngineInjectionImpl(session, appId, bundle, targetTheme, heroDataUrl, deps);
   }

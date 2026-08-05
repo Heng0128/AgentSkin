@@ -292,6 +292,35 @@ function crossFieldErrors(manifest: Record<string, unknown>): SchemaError[] {
     }
   }
 
+  // colorSchemes: each entry must be a safe scheme id (matching the theme-id
+  // rule) and must not collide with the reserved 'default' id, which always
+  // refers to the manifest's own colors.
+  const schemes = manifest.colorSchemes;
+  if (schemes !== undefined) {
+    if (!Array.isArray(schemes)) {
+      errors.push({ path: 'colorSchemes', message: 'expected an array of scheme ids' });
+    } else {
+      const seen = new Set<string>();
+      for (const [i, id] of schemes.entries()) {
+        if (typeof id !== 'string' || !/^[a-z0-9][a-z0-9_-]*$/i.test(id)) {
+          errors.push({
+            path: `colorSchemes[${i}]`,
+            message: `invalid scheme id "${String(id)}" (must match ${'^[a-z0-9][a-z0-9_-]*$'})`,
+          });
+        } else if (id === 'default') {
+          errors.push({
+            path: `colorSchemes[${i}]`,
+            message: '"default" is reserved for the manifest\'s own colors',
+          });
+        } else if (seen.has(id)) {
+          errors.push({ path: `colorSchemes[${i}]`, message: `duplicate scheme id "${id}"` });
+        } else {
+          seen.add(id);
+        }
+      }
+    }
+  }
+
   return errors;
 }
 

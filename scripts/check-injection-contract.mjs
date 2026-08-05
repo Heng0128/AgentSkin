@@ -226,58 +226,76 @@ if (!existsSync(themesDir)) {
     const cssDir = join(themesDir, theme, 'assets/css');
     if (!existsSync(cssDir)) continue;
 
-    const cssFiles = readdirSync(cssDir).filter((f) => f.endsWith('.css'));
-    const cssAgents = new Set(cssFiles.map((f) => f.replace(/\.css$/, '')));
+    // Check both the flat default layout (assets/css/<agent>.css) and every
+    // alternative color-scheme directory (assets/css/<schemeId>/<agent>.css).
+    // Each variant is generated from the same templates and must carry the
+    // agent's scope selector, otherwise a scheme variant silently stops
+    // targeting its agent.
+    const cssLayouts = [
+      'default',
+      ...readdirSync(cssDir, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => d.name),
+    ];
 
-    // Structural assertion: every theme must have CSS for every canonical agent.
-    for (const agent of CANONICAL_AGENT_SET) {
-      if (!cssAgents.has(agent)) {
-        fail(
-          `themes/${theme}/assets/css/${agent}.css missing — every theme must ship CSS ` +
-          `for every AgentId (expected: ${[...CANONICAL_AGENT_SET].sort().join(', ')}).`,
-        );
-      }
-    }
-    // And no extra CSS files for unknown agents.
-    for (const agent of cssAgents) {
-      if (!CANONICAL_AGENT_SET.has(agent)) {
-        fail(
-          `themes/${theme}/assets/css/${agent}.css exists but '${agent}' is not in the AgentId union ` +
-          `(src/shared/types.ts). Either add it to the union or remove the file.`,
-        );
-      }
-    }
+    for (const layout of cssLayouts) {
+      const layoutDir = layout === 'default' ? cssDir : join(cssDir, layout);
+      if (!existsSync(layoutDir)) continue;
 
-    for (const cssFile of cssFiles) {
-      const agent = cssFile.replace(/\.css$/, '');
-      const cssPath = join(cssDir, cssFile);
-      const cssSrc = readFileSync(cssPath, 'utf8');
+      const cssFiles = readdirSync(layoutDir).filter((f) => f.endsWith('.css'));
+      const cssAgents = new Set(cssFiles.map((f) => f.replace(/\.css$/, '')));
+      const label = layout === 'default' ? 'assets/css' : `assets/css/${layout}`;
 
-      const acceptedScopes = SCOPE_SELECTORS[agent];
-      if (!acceptedScopes) {
-        // Already reported above as a structural violation; skip the scope check.
-        continue;
-      }
-
-      // CSS must contain at least one accepted scope selector.
-      const hasAnyScope = acceptedScopes.some((sel) => cssSrc.includes(sel));
-      if (!hasAnyScope) {
-        fail(
-          `themes/${theme}/assets/css/${cssFile}: no recognized scope selector found ` +
-          `(expected one of: ${acceptedScopes.join(', ')}) — scope drift will silent-break this theme`,
-        );
-      }
-
-      // Warn if CSS references a host class for a *different* agent
-      // (copy-paste mistake between theme files).
-      const expectedHostClass = htmlHostClass(agent, HOST_CLASS_PREFIX);
-      const allHostClassRefs = new Set(cssSrc.match(new RegExp(`${escapeRegex(HOST_CLASS_PREFIX)}[a-z]+`, 'g')) || []);
-      for (const ref of allHostClassRefs) {
-        if (ref !== expectedHostClass) {
-          warn(
-            `themes/${theme}/assets/css/${cssFile}: references '${ref}' ` +
-            `(expected only '${expectedHostClass}' for this agent)`,
+      // Structural assertion: every theme must have CSS for every canonical agent.
+      for (const agent of CANONICAL_AGENT_SET) {
+        if (!cssAgents.has(agent)) {
+          fail(
+            `themes/${theme}/${label}/${agent}.css missing — every theme must ship CSS ` +
+            `for every AgentId (expected: ${[...CANONICAL_AGENT_SET].sort().join(', ')}).`,
           );
+        }
+      }
+      // And no extra CSS files for unknown agents.
+      for (const agent of cssAgents) {
+        if (!CANONICAL_AGENT_SET.has(agent)) {
+          fail(
+            `themes/${theme}/${label}/${agent}.css exists but '${agent}' is not in the AgentId union ` +
+            `(src/shared/types.ts). Either add it to the union or remove the file.`,
+          );
+        }
+      }
+
+      for (const cssFile of cssFiles) {
+        const agent = cssFile.replace(/\.css$/, '');
+        const cssPath = join(layoutDir, cssFile);
+        const cssSrc = readFileSync(cssPath, 'utf8');
+
+        const acceptedScopes = SCOPE_SELECTORS[agent];
+        if (!acceptedScopes) {
+          // Already reported above as a structural violation; skip the scope check.
+          continue;
+        }
+
+        // CSS must contain at least one accepted scope selector.
+        const hasAnyScope = acceptedScopes.some((sel) => cssSrc.includes(sel));
+        if (!hasAnyScope) {
+          fail(
+            `themes/${theme}/${label}/${cssFile}: no recognized scope selector found ` +
+            `(expected one of: ${acceptedScopes.join(', ')}) — scope drift will silent-break this theme`,
+          );
+        }
+
+        // Warn if CSS references a host class for a *different* agent
+        // (copy-paste mistake between theme files).
+        const expectedHostClass = htmlHostClass(agent, HOST_CLASS_PREFIX);
+        const allHostClassRefs = new Set(cssSrc.match(new RegExp(`${escapeRegex(HOST_CLASS_PREFIX)}[a-z]+`, 'g')) || []);
+        for (const ref of allHostClassRefs) {
+          if (ref !== expectedHostClass) {
+            warn(
+              `themes/${theme}/${label}/${cssFile}: references '${ref}' ` +
+              `(expected only '${expectedHostClass}' for this agent)`,
+            );
+          }
         }
       }
     }

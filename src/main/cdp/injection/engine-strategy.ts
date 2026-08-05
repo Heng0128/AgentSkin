@@ -124,6 +124,12 @@ export interface InjectEngineOptions {
    * layers don't cover. Optional — omitted when no per-agent CSS exists.
    */
   themeCss?: string;
+  /**
+   * Global user-authored custom CSS (custom.css). Injected as the 5th and
+   * LAST CSS layer so it beats every theme layer at equal specificity —
+   * the "user override wins" guarantee. Optional — omitted when unset.
+   */
+  customCss?: string;
   /** Hero image as data URL (data:image/webp;base64,...). */
   heroDataUrl?: string | null;
   /** Absolute path to hero.webp (alternative to heroDataUrl). */
@@ -176,6 +182,7 @@ export async function injectThemeViaEngine(
     tokensCss,
     cosmeticCss,
     themeCss,
+    customCss,
     adapterJs,
     heroDataUrl,
     heroPath,
@@ -233,11 +240,14 @@ export async function injectThemeViaEngine(
   }
 
   // --- Step 4: Inject CSS layers as separate adoptedStyleSheets ---
+  // The custom layer is appended LAST so it wins at equal specificity over
+  // palette/tokens/cosmetic/theme (adoptedStyleSheets order = priority).
   const layers: [string, string][] = [
     ['palette', paletteCss],
     ['tokens', tokensCss],
     ['cosmetic', cosmeticCss],
     ...(themeCss ? [['theme', themeCss] as [string, string]] : []),
+    ...(customCss ? [['custom', customCss] as [string, string]] : []),
   ];
 
   let layersInjected = 0;
@@ -300,6 +310,7 @@ async function registerEnginePersistence(
     tokensCss,
     cosmeticCss,
     themeCss,
+    customCss,
     adapterJs,
     heroDataUrl,
     heroPath,
@@ -333,6 +344,7 @@ async function registerEnginePersistence(
     ['tokens', tokensCss],
     ['cosmetic', cosmeticCss],
     ...(themeCss ? [['theme', themeCss] as [string, string]] : []),
+    ...(customCss ? [['custom', customCss] as [string, string]] : []),
   ]);
   const configJson = JSON.stringify({
     heroBlobUrl: '',

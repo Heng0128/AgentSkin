@@ -256,6 +256,7 @@ a, .accent { color: ${accent}; }
 async function resolvePerAgentCssChunks(
   manifest: ThemeManifest,
   packagePath: string,
+  schemeId?: string,
 ): Promise<string[]> {
   const chunks: string[] = [];
   const seenCoreIds = new Set<string>();
@@ -275,9 +276,25 @@ async function resolvePerAgentCssChunks(
 
     let cssPath: string | null = null;
     if (isV2Manifest(manifest) && manifest.targets && manifest.targets[agentId]) {
-      cssPath = path.join(packagePath, manifest.targets[agentId].css);
+      // Alternative schemes live at assets/css/<schemeId>/<basename>; the
+      // default scheme keeps the manifest-referenced path.
+      cssPath = schemeId
+        ? path.join(
+            packagePath,
+            'assets',
+            'css',
+            schemeId,
+            path.basename(manifest.targets[agentId].css),
+          )
+        : path.join(packagePath, manifest.targets[agentId].css);
     } else {
-      const candidate = path.join(packagePath, 'assets', 'css', `${agentId}.css`);
+      const candidate = path.join(
+        packagePath,
+        'assets',
+        'css',
+        ...(schemeId ? [schemeId] : []),
+        `${agentId}.css`,
+      );
       try {
         await fs.access(candidate);
         cssPath = candidate;
@@ -294,8 +311,54 @@ async function resolvePerAgentCssChunks(
 }
 
 /**
- * Compute a short content hash over all CSS files referenced by a manifest.
- * Used by the seeder to detect content changes without relying on version bumps.
+ * Resolve a theme's color-scheme list. The implicit 'default' scheme (the
+ * manifest's own colors) always comes first, followed by each declared
+ * `colorSchemes` id resolved from color-schemes/<id>.json. Missing or
+ * malformed scheme files throw — the loader validates them at scan time, but
+ * install-time reads are defensive against a stale working tree.
+ */
+async function resolveColorSchemes(
+  manifest: ThemeManifest,
+  packagePath: string,
+): Promise<
+  Array<{ id: string; name: string; mode?: ThemeManifest['mode']; colors: ThemeManifest['colors'] }>
+> {
+  const schemes: Array<{
+    id: string;
+    name: string;
+    mode?: ThemeManifest['mode'];
+    colors: ThemeManifest['colors'];
+  }> = [{ id: 'default', name: 'Default', mode: manifest.mode, colors: manifest.colors }];
+  for (const schemeId of manifest.colorSchemes ?? []) {
+    const raw = await fs.readFile(
+      path.join(packagePath, 'color-schemes', `${schemeId}.json`),
+      'utf8',
+    );
+    const scheme = JSON.parse(raw) as {
+      name?: unknown;
+      mode?: unknown;
+      colors?: Record<string, unknown>;
+    };
+    const colors = scheme.colors as unknown as ThemeManifest['colors'];
+    const mode =
+      scheme.mode === 'light' || scheme.mode === 'dark' || scheme.mode === 'auto'
+        ? scheme.mode
+        : manifest.mode;
+    schemes.push({
+      id: schemeId,
+      name: typeof scheme.name === 'string' && scheme.name ? scheme.name : schemeId,
+      mode,
+      colors,
+    });
+  }
+  return schemes;
+}
+
+/**
+ * Compute a short content hash over ALL color-scheme variants of a theme
+ * (default + each declared scheme). Used by the seeder to detect content
+ * changes — including adding/removing/editing a scheme — without relying on
+ * version bumps.
  *
  * P1#11: delegates to {@link resolvePerAgentCssChunks} so the hash algorithm
  * is byte-for-byte identical to what buildBundle uses — including inlined
@@ -305,8 +368,17 @@ export async function computeThemeContentHash(
   manifest: ThemeManifest,
   packagePath: string,
 ): Promise<string> {
-  const cssChunks = await resolvePerAgentCssChunks(manifest, packagePath);
-  return crypto.createHash('sha1').update(cssChunks.join('\n\n')).digest('hex').slice(0, 16);
+  const allChunks: string[] = [];
+  const schemes = await resolveColorSchemes(manifest, packagePath);
+  for (const scheme of schemes) {
+    const chunks = await resolvePerAgentCssChunks(
+      manifest,
+      packagePath,
+      scheme.id === 'default' ? undefined : scheme.id,
+    );
+    allChunks.push(...chunks);
+  }
+  return crypto.createHash('sha1').update(allChunks.join('\n\n')).digest('hex').slice(0, 16);
 }
 
 /**
@@ -371,17 +443,34 @@ export class ThemeInstaller {
     // dedicated artwork fall back to the preview screenshot.
     const hero = manifest.hero ? await readImageAsset(packagePath, manifest.hero) : preview;
 
-    // Build bundle (v1 or v2) — async because per-agent CSS is read from disk.
-    const bundle = await this.buildBundle(manifest, { icon, preview, hero }, packagePath);
+    // Install one bundle per color scheme (default + each declared scheme).
+    // Scheme variants are stored under `<themeId>--<schemeId>` ids; the
+    // catalog merges them back into a single entry with a `schemes` list.
+    const schemes = await resolveColorSchemes(manifest, packagePath);
 
     // Write temporary .agentskin-theme file in OS-temp
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'agentskin-theme-'));
-    const tmpFile = path.join(tmpDir, `${manifest.id}${engineThemeExtension}`);
-    await fs.writeFile(tmpFile, JSON.stringify(bundle), 'utf8');
 
     try {
-      const installed = await this.library.installFile(tmpFile);
-      this.onInstall?.(installed);
+      let installed: InstalledTheme | undefined;
+      for (const scheme of schemes) {
+        const bundle = await this.buildBundle(
+          manifest,
+          { icon, preview, hero },
+          packagePath,
+          scheme,
+        );
+        const bundleThemeId = (bundle.theme as { id?: unknown }).id;
+        if (typeof bundleThemeId !== 'string' || !bundleThemeId) {
+          throw new Error(`Theme "${manifest.id}": bundle missing theme id`);
+        }
+        const tmpFile = path.join(tmpDir, `${bundleThemeId}${engineThemeExtension}`);
+        await fs.writeFile(tmpFile, JSON.stringify(bundle), 'utf8');
+        const result = await this.library.installFile(tmpFile);
+        this.onInstall?.(result);
+        if (scheme.id === 'default') installed = result;
+      }
+      if (!installed) throw new Error(`Theme "${manifest.id}": no scheme bundles installed`);
       return installed;
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
@@ -391,11 +480,21 @@ export class ThemeInstaller {
   /**
    * Build an agentskin-theme bundle from a directory-based manifest.
    * Handles both v1 (generate default CSS) and v2 (embed per-agent CSS) formats.
+   *
+   * `scheme` selects the color-scheme variant: the default scheme embeds the
+   * manifest-referenced CSS under the plain `<id>` bundle id; alternative
+   * schemes embed `assets/css/<schemeId>/<agent>.css` under `<id>--<schemeId>`.
    */
   private async buildBundle(
     manifest: ThemeManifest,
     images: { icon: EmbeddedImage; preview: EmbeddedImage; hero: EmbeddedImage },
     packagePath: string,
+    scheme: {
+      id: string;
+      name: string;
+      mode?: ThemeManifest['mode'];
+      colors: ThemeManifest['colors'];
+    },
   ): Promise<Record<string, unknown>> {
     const targets: Record<string, { css: string; verification?: unknown }> = {};
 
@@ -416,14 +515,31 @@ export class ThemeInstaller {
       const coreId = adapter?.coreId || agentId;
       if (!coreId || targets[coreId]) continue; // skip if coreId already has a target
 
-      // Determine the CSS source for this agent.
+      // Determine the CSS source for this agent. Alternative schemes live at
+      // assets/css/<schemeId>/<basename>; the default scheme keeps the
+      // manifest-referenced path.
       let cssPath: string | null = null;
       let verification: unknown;
       if (isV2Manifest(manifest) && manifest.targets && manifest.targets[agentId]) {
-        cssPath = path.join(packagePath, manifest.targets[agentId].css);
+        cssPath =
+          scheme.id === 'default'
+            ? path.join(packagePath, manifest.targets[agentId].css)
+            : path.join(
+                packagePath,
+                'assets',
+                'css',
+                scheme.id,
+                path.basename(manifest.targets[agentId].css),
+              );
         verification = manifest.targets[agentId].verification;
       } else {
-        const candidate = path.join(packagePath, 'assets', 'css', `${agentId}.css`);
+        const candidate = path.join(
+          packagePath,
+          'assets',
+          'css',
+          ...(scheme.id === 'default' ? [] : [scheme.id]),
+          `${agentId}.css`,
+        );
         try {
           await fs.access(candidate);
           cssPath = candidate;
@@ -457,6 +573,15 @@ export class ThemeInstaller {
         : manifest.author.name
       : undefined;
 
+    // Every scheme bundle carries the theme's full scheme metadata so the
+    // catalog can merge variants back into a single entry (the default entry
+    // lists every scheme; each variant knows its own id via `scheme`).
+    const schemesMeta = (await resolveColorSchemes(manifest, packagePath)).map((s) => ({
+      id: s.id,
+      name: s.name,
+      mode: s.mode ?? null,
+    }));
+
     const copy: Record<string, unknown> = {
       tagline: manifest.description || null,
       supportedAgents: effectiveAgentIds,
@@ -465,8 +590,14 @@ export class ThemeInstaller {
       tags: manifest.tags ?? null,
       license: manifest.license ?? null,
       unofficial: manifest.unofficial ?? null,
-      mode: manifest.mode ?? null,
-      colors: manifest.colors ?? null,
+      // Scheme-aware metadata: the mode/colors of THIS variant (not the whole
+      // manifest), plus the scheme id so the catalog can merge variants back
+      // into a single entry and the UI can label which colors are in use.
+      mode: scheme.mode ?? manifest.mode ?? null,
+      colors: scheme.colors ?? manifest.colors ?? null,
+      scheme: scheme.id,
+      colorSchemes: manifest.colorSchemes ?? null,
+      schemes: schemesMeta,
       contentHash,
       // Flat / CSS-only themes declare art:false; consumers (seed-pipeline
       // test, catalog) use this to skip the --agentskin-art requirement.
@@ -488,8 +619,11 @@ export class ThemeInstaller {
       // The directory manifest's v2 schema is a packaging-layer concept.
       schemaVersion: 1,
       theme: {
-        id: manifest.id,
-        displayName: manifest.displayName || manifest.name,
+        id: scheme.id === 'default' ? manifest.id : `${manifest.id}--${scheme.id}`,
+        displayName:
+          scheme.id === 'default'
+            ? manifest.displayName || manifest.name
+            : `${manifest.displayName || manifest.name} · ${scheme.name}`,
         version: manifest.version,
         copy,
       },

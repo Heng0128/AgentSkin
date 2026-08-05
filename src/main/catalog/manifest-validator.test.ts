@@ -203,3 +203,41 @@ describe('formatSchemaErrors', () => {
     expect(line).toContain('b.c: y');
   });
 });
+
+describe('validateManifest — colorSchemes (v2.2+)', () => {
+  it('accepts valid colorSchemes ids', () => {
+    const manifest = validManifest();
+    manifest.colorSchemes = ['nord', 'tokyo-night'];
+    expect(validateManifest(manifest)).toEqual([]);
+  });
+
+  it('rejects a reserved "default" scheme id', () => {
+    const manifest = validManifest();
+    manifest.colorSchemes = ['default'];
+    const errors = validateManifest(manifest);
+    expect(errors.some((e) => e.path === 'colorSchemes[0]' && e.message.includes('reserved'))).toBe(
+      true,
+    );
+  });
+
+  it('rejects an invalid scheme id (path separators)', () => {
+    const manifest = validManifest();
+    manifest.colorSchemes = ['../evil'];
+    const errors = validateManifest(manifest);
+    expect(errors.some((e) => e.path === 'colorSchemes[0]')).toBe(true);
+  });
+
+  it('rejects duplicate scheme ids', () => {
+    const manifest = validManifest();
+    manifest.colorSchemes = ['nord', 'nord'];
+    const errors = validateManifest(manifest);
+    expect(errors.some((e) => e.message.includes('duplicate'))).toBe(true);
+  });
+
+  it('rejects non-array colorSchemes', () => {
+    const manifest = validManifest();
+    manifest.colorSchemes = 'nord';
+    const errors = validateManifest(manifest);
+    expect(errors.some((e) => e.path === 'colorSchemes')).toBe(true);
+  });
+});

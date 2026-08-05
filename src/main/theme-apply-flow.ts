@@ -107,8 +107,9 @@ export interface ApplyFlowDeps {
 
   // -- Persisted state ---------------------------------------------------
 
-  /** Set the active theme for an agent (preserves existing schemeSnapshot). */
-  setActiveTheme: (appId: AgentId, themeId: string, port: number) => void;
+  /** Set the active theme (and optional color-scheme) for an agent
+   *  (preserves existing schemeSnapshot). */
+  setActiveTheme: (appId: AgentId, themeId: string, port: number, schemeId?: string) => void;
   /** Persist the orchestrator state to disk. */
   persist: () => Promise<void>;
 
@@ -245,7 +246,13 @@ export async function applyThemeFlow(
   }
   if (!isPort(port)) throw new Error(copy.invalidCdpPort);
 
-  const entry = await deps.findTheme(request.themeId);
+  // Resolve the bundle id. Scheme variants install under `<themeId>--<schemeId>`
+  // (see ThemeInstaller); requesting a scheme resolves to that variant, while
+  // the default scheme uses the plain theme id.
+  const resolvedThemeId = request.schemeId
+    ? `${request.themeId}--${request.schemeId}`
+    : request.themeId;
+  const entry = await deps.findTheme(resolvedThemeId);
 
   // CDP is guaranteed live at this point (ensureCdpReady either found an
   // existing port or restarted the app and waited for one). Inject CSS
@@ -305,7 +312,10 @@ export async function applyThemeFlow(
     deps.unlockAgent(appId);
   }
 
-  deps.setActiveTheme(appId, entry.bundle.theme.id, port);
+  // Persist the user-facing theme id (base, without the scheme suffix) plus
+  // the optional scheme id so restore and the UI can reconstruct the exact
+  // applied variant.
+  deps.setActiveTheme(appId, request.themeId, port, request.schemeId);
   await deps.persist();
 
   // Inject the theme CSS into secondary targets (MCP webviews, ardot

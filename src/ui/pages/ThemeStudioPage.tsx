@@ -43,6 +43,7 @@ import {
   Search01Icon,
   SlidersHorizontalIcon,
 } from '@hugeicons/core-free-icons';
+import { semanticColorsToPalette } from '@shared/theme-mapping';
 import {
   AGENT_IDS,
   AGENT_META,
@@ -50,6 +51,7 @@ import {
   type CssMatchedRule,
   type InspectedNode,
   type StudioProject,
+  type ThemeCatalogItem,
   type ThemeVisualSnapshot,
 } from '@shared/types';
 
@@ -184,6 +186,52 @@ export function ThemeStudioPage({ controller }: { controller: AppController }) {
     [projects, activeProjectId],
   );
   const activeAgent = activeProject?.agentId ?? null;
+
+  // Installed-theme library linkage: list catalog themes and load a theme's
+  // semantic colors into the active project palette (副本模式 — the project
+  // stays self-contained; the loaded palette is just a starting point).
+  const [installedThemes, setInstalledThemes] = useState<ThemeCatalogItem[]>([]);
+  const [themeLibraryOpen, setThemeLibraryOpen] = useState(false);
+
+  const refreshThemeLibrary = useCallback(async () => {
+    try {
+      setInstalledThemes((await api.catalog.themes.list()).items);
+    } catch {
+      /* ignore — library linkage is best-effort */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (themeLibraryOpen) void refreshThemeLibrary();
+  }, [themeLibraryOpen, refreshThemeLibrary]);
+
+  const loadThemeIntoProject = useCallback(
+    async (themeId: string) => {
+      const project = projects.find((p) => p.id === activeProjectId) ?? null;
+      if (!project) return;
+      try {
+        const item = await api.catalog.themes.get(themeId);
+        if (!item?.colors) {
+          showToast('该主题不包含可加载的调色板', 'destructive');
+          return;
+        }
+        const palette = semanticColorsToPalette(item.colors);
+        if (Object.keys(palette).length === 0) {
+          showToast('该主题不包含可加载的调色板', 'destructive');
+          return;
+        }
+        // Merge the loaded palette into the active project and persist it —
+        // mirrors saveActiveProject without depending on its declaration order.
+        const next = { ...project, palette, updatedAt: new Date().toISOString() };
+        setProjects((prev) => prev.map((p) => (p.id === next.id ? next : p)));
+        void api.saveStudioProject(next).catch(() => {});
+        showToast(`已从「${item.name}」加载调色板`);
+      } catch {
+        showToast('加载主题调色板失败', 'destructive');
+      }
+    },
+    [projects, activeProjectId, showToast],
+  );
 
   const refreshProjects = useCallback(async () => {
     try {
@@ -973,6 +1021,76 @@ export function ThemeStudioPage({ controller }: { controller: AppController }) {
                   )}
                 </div>
               ))}
+          </div>
+
+          {/* Section: Installed theme library linkage */}
+          <div className="mt-4 space-y-2 border-t border-border pt-3">
+            <div className="flex items-center justify-between">
+              <Kicker>主题库 · LIBRARY</Kicker>
+              <button
+                type="button"
+                onClick={() => {
+                  setThemeLibraryOpen((v) => !v);
+                }}
+                className="flex h-5 items-center gap-1 border border-border bg-muted px-1.5 font-mono text-[8.5px] uppercase transition-colors hover:bg-accent"
+                style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
+              >
+                <HugeIcon
+                  icon={themeLibraryOpen ? RefreshIcon : Folder01Icon}
+                  className="size-2.5"
+                />
+                {themeLibraryOpen ? 'CLOSE' : 'OPEN'}
+              </button>
+            </div>
+
+            {themeLibraryOpen && (
+              <div
+                className="max-h-40 space-y-1 overflow-y-auto border border-border bg-card p-1.5"
+                style={{ borderRadius: 'var(--radius)' }}
+              >
+                {installedThemes.length === 0 ? (
+                  <p
+                    className="px-1 py-1 font-mono text-[8.5px]"
+                    style={{ color: 'var(--muted-foreground)' }}
+                  >
+                    暂无已安装主题
+                  </p>
+                ) : (
+                  installedThemes.map((theme) => (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      disabled={!activeProject}
+                      onClick={() => void loadThemeIntoProject(theme.id)}
+                      className="flex w-full items-center gap-1.5 rounded-[2px] px-1.5 py-1 text-left transition-colors hover:bg-accent disabled:opacity-40"
+                      title={
+                        activeProject ? `加载「${theme.name}」调色板到当前工程` : '先新建/选择工程'
+                      }
+                    >
+                      {theme.icon ? (
+                        <img src={theme.icon} alt="" className="size-3.5 shrink-0 rounded-[2px]" />
+                      ) : (
+                        <span
+                          className="size-3.5 shrink-0 rounded-[2px] border border-border"
+                          style={{ background: theme.colors?.background ?? 'var(--muted)' }}
+                        />
+                      )}
+                      <span
+                        className="min-w-0 flex-1 truncate font-mono text-[9px]"
+                        style={{ color: 'var(--foreground)' }}
+                      >
+                        {theme.name}
+                      </span>
+                      <HugeIcon
+                        icon={FolderAddIcon}
+                        className="size-2.5 shrink-0"
+                        style={{ color: 'var(--muted-foreground)' }}
+                      />
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
           </div>
 
           {/* Section: Custom capture controls */}

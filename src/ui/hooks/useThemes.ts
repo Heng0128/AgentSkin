@@ -36,6 +36,8 @@ export interface RestartPrompt {
   themeId: string;
   themeName: string;
   appId: AgentId;
+  /** Color-scheme id to re-apply after the confirmed restart. */
+  schemeId?: string;
   restartReason?: import('@shared/types').ApplyResponse['restartReason'];
 }
 
@@ -211,7 +213,7 @@ export function useThemes(deps: UseThemesDeps) {
       themeId: string,
       themeName: string,
       appId: AgentId,
-      options: { restartExisting?: boolean } = {},
+      options: { restartExisting?: boolean; schemeId?: string } = {},
     ) => {
       const result = await withBusy(`apply:${appId}:${themeId}`, async () => {
         // Two-phase CDP discovery: first attempt probes only (no restart).
@@ -223,6 +225,7 @@ export function useThemes(deps: UseThemesDeps) {
           themeId,
           appId,
           restartExisting: options.restartExisting,
+          schemeId: options.schemeId,
         });
       });
       if (!result) return false;
@@ -234,7 +237,13 @@ export function useThemes(deps: UseThemesDeps) {
       const outcome = handleApplyResult(result, { themeId, themeName, appId });
       switch (outcome.kind) {
         case 'requires-restart':
-          setRestartPrompt({ themeId, themeName, appId, restartReason: outcome.restartReason });
+          setRestartPrompt({
+            themeId,
+            themeName,
+            appId,
+            schemeId: options.schemeId,
+            restartReason: outcome.restartReason,
+          });
           return false;
         case 'port-occupied':
           showToast(outcome.message, 'destructive');

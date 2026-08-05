@@ -315,6 +315,33 @@ export interface InstalledTheme {
   /** Video wallpaper config bundled with this theme (v2.1+). When present,
    *  applying the theme also activates the video background in AgentSkin. */
   wallpaper?: ThemeWallpaper | null;
+  /** Color-scheme variant this entry represents. 'default' (or absent) is the
+   *  theme's own manifest colors; other values are alternative color schemes
+   *  declared via `manifest.colorSchemes`. Scheme variants install as
+   *  `<themeId>--<schemeId>` bundle ids and are merged back into a single
+   *  catalog entry. */
+  scheme?: 'default' | string;
+  /** Declared color-scheme ids for this theme (excluding the implicit
+   *  'default'). Present on bundles installed by the scheme-aware installer;
+   *  used by the catalog to merge variants into a single entry. */
+  colorSchemes?: string[];
+  /** Full color-scheme metadata (id/name/mode for every variant, default
+   *  first). Present on bundles installed by the scheme-aware installer;
+   *  used by the catalog to build the UI scheme picker. */
+  schemes?: ThemeColorScheme[];
+}
+
+/**
+ * A named alternative color-scheme variant of a theme (v2.2+). Each entry
+ * corresponds to a `color-schemes/<id>.json` file whose `colors` match the
+ * manifest colors shape. The id `'default'` always refers to the theme's own
+ * colors and is implicit (no file).
+ */
+export interface ThemeColorScheme {
+  id: string;
+  name: string;
+  mode?: 'dark' | 'light' | 'auto';
+  colors: Record<string, string>;
 }
 
 /** A themed environment snapshot across multiple applications. */
@@ -341,6 +368,8 @@ export interface AppStatus {
   debugReady: boolean;
   port: number | null;
   activeThemeId: string | null;
+  /** Active color-scheme id of the active theme (null/absent = default colors). */
+  activeSchemeId?: string | null;
   /** Detected install version (AgentSkin-side; @agentskin/engine does not always report it). */
   version?: string | null;
   /** Detected install path (AgentSkin-side). */
@@ -370,6 +399,10 @@ export interface ApplyResult {
 
 export interface ApplyRequest {
   themeId: string;
+  /** Optional color-scheme id to apply (v2.2+). Omit to apply the theme's
+   *  default (manifest) colors. Resolved to the `<themeId>--<schemeId>`
+   *  bundle id by the apply flow. */
+  schemeId?: string;
   appId: AgentId;
   port?: number;
   restartExisting?: boolean;
@@ -502,6 +535,9 @@ export interface DesktopSettings {
   apps: Record<AgentId, AppOverride>;
   defaultPorts: Record<AgentId, number>;
   wallpaper: WallpaperSettings;
+  /** Global user-authored CSS injected as the highest-priority theme layer
+   *  (custom.css). Never overwritten by theme applies; cleared on restore. */
+  customThemeCss?: string;
 }
 
 export interface SettingsUpdateResult {
@@ -598,6 +634,10 @@ export interface ThemeCatalogItem {
   installed: boolean;
   /** Theme color palette from manifest (primary, background, surface, text). */
   colors?: Record<string, string>;
+  /** Alternative color-scheme variants (v2.2+). Always includes the implicit
+   *  'default' entry first, followed by each declared scheme. When absent the
+   *  theme ships a single color set. */
+  schemes?: ThemeColorScheme[];
   /** Video wallpaper config bundled with this theme. When present, applying
    *  the theme also activates the video background in AgentSkin. */
   wallpaper?: ThemeWallpaper | null;
@@ -640,6 +680,10 @@ export interface AgentSkinApi {
   pickAppPath(appId: AgentId): Promise<SettingsUpdateResult & { canceled: boolean }>;
   clearAppPath(appId: AgentId): Promise<SettingsUpdateResult>;
   setAppPort(appId: AgentId, port: number | null): Promise<SettingsUpdateResult>;
+  /** Read the global user-authored theme CSS (custom.css). */
+  getCustomThemeCss(): Promise<string>;
+  /** Replace the global user-authored theme CSS. Empty string clears it. */
+  setCustomThemeCss(css: string): Promise<SettingsUpdateResult>;
   // --- Dynamic wallpapers (Wallpaper Engine integration) ---
   listWallpapers(): Promise<WallpaperInfo[]>;
   /** Persist the AgentSkin UI wallpaper preference (enabled + id). Per-agent

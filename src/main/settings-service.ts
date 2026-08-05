@@ -29,6 +29,22 @@ interface PersistedSettings {
   version: 2;
   apps: Partial<Record<AgentId, Partial<AppOverride>>>;
   wallpaper?: PersistedWallpaper;
+  /** Global user-authored CSS injected as the highest-priority theme layer
+   *  (custom.css). Never overwritten by theme applies; cleared on restore. */
+  customThemeCss?: string;
+}
+
+/** Upper bound on user custom CSS (256 KB) — generous for a CSS file, small
+ *  enough to reject accidental multi-MB pastes from the settings textarea. */
+const MAX_CUSTOM_THEME_CSS_CHARS = 256 * 1024;
+
+/** Read the persisted custom CSS; malformed values (non-string, oversized)
+ *  are dropped silently so a corrupt settings file never surfaces garbage. */
+function normalizeCustomThemeCss(raw: unknown): string | undefined {
+  if (typeof raw !== 'string') return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.length > MAX_CUSTOM_THEME_CSS_CHARS) return undefined;
+  return trimmed;
 }
 
 // R6-10: 运行时验证 apps 字段结构，避免 `as unknown as PersistedSettings` 绕过类型检查。
@@ -228,6 +244,9 @@ export class SettingsService implements SettingsServiceApi {
             version: 2,
             apps: parsed.apps as Partial<Record<AgentId, Partial<AppOverride>>>,
             wallpaper: parsed.wallpaper,
+            customThemeCss: normalizeCustomThemeCss(
+              (parsed as { customThemeCss?: unknown }).customThemeCss,
+            ),
           };
         } else if (parsed.version === 2) {
           // Schema 结构异常但版本号匹配 — 走安全降级
@@ -283,10 +302,27 @@ export class SettingsService implements SettingsServiceApi {
     return normalizeAgentWallpaper(this.data.wallpaper?.agents?.[appId]);
   }
 
+  /** Read the global user-authored theme CSS (empty string when unset). */
+  customThemeCss(): string {
+    return this.data.customThemeCss ?? '';
+  }
+
+  /** Replace the global user-authored theme CSS. Empty string clears it. */
+  async setCustomThemeCss(css: string): Promise<void> {
+    const normalized = normalizeCustomThemeCss(css);
+    this.data.customThemeCss = normalized;
+    await this.persist();
+  }
+
   toDto(defaultPorts: Record<AgentId, number>): DesktopSettings {
     const apps = {} as Record<AgentId, AppOverride>;
     for (const appId of AGENT_IDS) apps[appId] = this.overridesFor(appId);
-    return { apps, defaultPorts, wallpaper: this.wallpaper() };
+    return {
+      apps,
+      defaultPorts,
+      wallpaper: this.wallpaper(),
+      ...(this.data.customThemeCss ? { customThemeCss: this.data.customThemeCss } : {}),
+    };
   }
 
   async setAppPath(appId: AgentId, appPath: string | null): Promise<void> {

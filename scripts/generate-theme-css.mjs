@@ -22,8 +22,8 @@
 //                 :root[data-theme], body background layer, chrome://doubao-chat.
 //
 // Hero artwork is NOT embedded in the CSS. The engine converts the bundle's
-// assets.images.hero into an object URL and exposes it as --codedrobe-art on
-// <html>, so the CSS references var(--codedrobe-art, none).
+// assets.images.hero into an object URL and exposes it as --agentskin-art on
+// <html>, so the CSS references var(--agentskin-art, none).
 //
 // Usage:  node scripts/generate-theme-css.mjs
 
@@ -173,7 +173,7 @@ ${host} #root::before {
       color-mix(in srgb, var(--agentskin-surface) ${p.washBottom}%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
       color-mix(in srgb, ${p.glowColor} ${p.glowStrength}%, transparent), transparent 60%),
-    var(--codedrobe-art, none) right center / cover no-repeat !important;
+    var(--agentskin-art, none) right center / cover no-repeat !important;
 }`;
 }
 
@@ -303,12 +303,215 @@ ${host} ::-webkit-scrollbar-thumb:hover {
 }
 
 // ---------------------------------------------------------------------------
+// ZCode / Codex (generic --text-*/--bg-* design-token shells)
+// ---------------------------------------------------------------------------
+
+/** Native design-token override block shared by the two shell-style agents.
+ *  Both ZCode and Codex expose a flat text/bg/accent CSS-variable system;
+ *  overriding the variables on :root (they inherit everywhere) is cheaper
+ *  than the historical per-element `host *` scoping. */
+function shellTokenOverrides(host, t) {
+  const c = t.colors;
+  const accentHover = shade(c.accent, 'white', 0.15);
+  const accentPressed = shade(c.accent, 'white', 0.25);
+  const buttonPrimaryFg = t.isLight ? '#ffffff' : shade(c.background, 'black', 0.85);
+  const inputMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 45%, transparent)`;
+  const sidebarMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 22%, transparent)`;
+  const panelBg = `color-mix(in srgb, ${c.surface} 14%, transparent)`;
+  return `${host} {
+  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+
+  /* Text hierarchy */
+  --text-primary: ${c.foreground} !important;
+  --text-secondary: ${c.muted} !important;
+  --text-tertiary: ${alpha(c.foreground, 0.55)} !important;
+  --text-quaternary: ${alpha(c.foreground, 0.4)} !important;
+
+  /* Backgrounds — transparent for art punch-through */
+  --bg-primary: transparent !important;
+  --bg-secondary: ${shade(c.surface, 'black', 0.1)} !important;
+  --bg-tertiary: color-mix(in srgb, ${c.surfaceElevated} 85%, ${c.accent} 15%) !important;
+  --bg-elevated: ${c.surfaceElevated} !important;
+  --bg-base: transparent !important;
+  --bg-canvas: transparent !important;
+  --bg-surface: color-mix(in srgb, ${c.surface} 80%, transparent) !important;
+  --bg-hover: ${alpha(c.accent, 0.1)} !important;
+  --bg-active: ${alpha(c.accent, 0.16)} !important;
+  --bg-selected: ${alpha(c.accent, 0.14)} !important;
+
+  /* Borders */
+  --border-xsubtle: ${alpha(c.accent, 0.045)} !important;
+  --border-subtle: ${alpha(c.accent, 0.09)} !important;
+  --border-medium: ${alpha(c.accent, 0.18)} !important;
+  --border-strong: ${alpha(c.accent, 0.144)} !important;
+
+  /* Accent / brand */
+  --accent: ${c.accent} !important;
+  --accent-hover: ${accentHover} !important;
+  --accent-pressed: ${accentPressed} !important;
+  --accent-soft: ${alpha(c.accent, 0.12)} !important;
+  --accent-soft-hover: ${alpha(c.accent, 0.18)} !important;
+
+  /* Buttons */
+  --button-primary-bg: ${c.accent} !important;
+  --button-primary-fg: ${buttonPrimaryFg} !important;
+  --button-primary-hover: ${accentHover} !important;
+  --button-secondary-bg: ${alpha(c.foreground, 0.12)} !important;
+  --button-secondary-fg: ${c.foreground} !important;
+
+  /* Links */
+  --link: ${c.accent} !important;
+  --link-hover: ${accentHover} !important;
+
+  /* Input / composer */
+  --input-bg: ${inputMix} !important;
+  --input-border: ${alpha(c.accent, 0.18)} !important;
+  --input-focus-ring: ${alpha(c.accent, 0.4)} !important;
+
+  /* Sidebar / panels */
+  --sidebar-bg: ${sidebarMix} !important;
+  --panel-bg: ${panelBg} !important;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.24) !important;
+
+  /* Selection */
+  --selection-bg: ${alpha(c.accent, 0.28)} !important;
+
+  /* Code blocks */
+  --code-bg: ${c.codeBackground} !important;
+  --code-fg: ${c.codeForeground} !important;
+}`;
+}
+
+/** Structural chrome shared by the shell-style agents (art layer, frosted
+ *  sidebar/composer, popovers). Selectors are the heuristic L5 landmarks the
+ *  per-agent adapter additionally positions via JS. */
+function shellStructureCss(host, t) {
+  const c = t.colors;
+  const inputMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 45%, transparent)`;
+  const sidebarMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 22%, transparent)`;
+  const popoverBg = `color-mix(in srgb, ${c.surfaceElevated} 94%, transparent)`;
+  const buttonPrimaryFg = t.isLight ? '#ffffff' : shade(c.background, 'black', 0.85);
+  return `/* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
+${artLayerCss(host, t)}
+
+/* Root + main surfaces transparent so #root art shows through */
+${host} #root,
+${host} main,
+${host} [role="main"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* Sidebar: frosted glass over art */
+${host} aside,
+${host} nav {
+  background: ${sidebarMix} !important;
+  border-right: 1px solid ${alpha(c.accent, 0.1)} !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+
+${host} aside [class*="item"]:hover,
+${host} nav [class*="item"]:hover {
+  background: var(--bg-hover) !important;
+}
+
+${host} aside [class*="active"],
+${host} nav [class*="active"] {
+  background: var(--bg-active) !important;
+  box-shadow: inset 3px 0 0 0 var(--accent) !important;
+}
+
+/* Composer / input: frosted glass */
+${host} [contenteditable="true"],
+${host} textarea {
+  background: ${inputMix} !important;
+  backdrop-filter: blur(14px) saturate(1.1) !important;
+  color: var(--agentskin-text) !important;
+  caret-color: var(--agentskin-accent) !important;
+  border: 1px solid ${alpha(c.accent, 0.25)} !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+${host} [contenteditable="true"]:focus,
+${host} [contenteditable="true"]:focus-within,
+${host} textarea:focus {
+  border-color: ${alpha(c.accent, 0.5)} !important;
+  box-shadow: 0 0 0 2px ${alpha(c.accent, 0.1)}, 0 4px 18px ${alpha(c.secondary, 0.12)} !important;
+}
+
+/* Buttons */
+${host} button[class*="primary"],
+${host} button[class*="send"],
+${host} button[class*="submit"] {
+  background: linear-gradient(135deg, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 62%, var(--agentskin-secondary) 38%) 100%) !important;
+  color: ${buttonPrimaryFg} !important;
+  border: none !important;
+  box-shadow: 0 2px 10px var(--agentskin-focus-ring) !important;
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
+}
+
+${host} button[class*="primary"]:hover,
+${host} button[class*="send"]:hover,
+${host} button[class*="submit"]:hover {
+  filter: brightness(1.07) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Message text */
+${host} [class*="message"],
+${host} article {
+  color: var(--agentskin-text);
+}
+
+/* Popovers / modals: frosted glass */
+${host} [role="dialog"],
+${host} [role="menu"],
+${host} [role="tooltip"],
+${host} [class*="popover"],
+${host} [class*="modal"] {
+  background: ${popoverBg} !important;
+  border: none !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}`;
+}
+
+function zcodeCss(t) {
+  const host = 'html.agentskin-host-zcode';
+  return `/* ${t.name} — ZCode (generic --text-*/--bg-* design tokens) */
+${tokenBlock(t)}
+
+/* ===== Native token overrides (wins over :root[data-theme]) ===== */
+${shellTokenOverrides(host, t)}
+${shellStructureCss(host, t)}
+${sharedChromeRules(host, t)}`;
+}
+
+function codexCss(t) {
+  const host = 'html.agentskin-host-codex';
+  return `/* ${t.name} — OpenAI Codex (--text-*/--bg-* design tokens) */
+${tokenBlock(t)}
+
+/* ===== Native token overrides ===== */
+${shellTokenOverrides(host, t)}
+${shellStructureCss(host, t)}
+${sharedChromeRules(host, t)}`;
+}
+
+// ---------------------------------------------------------------------------
 // TRAE Work CN (TRAE SOLO solo-lite shell)
 // ---------------------------------------------------------------------------
 
 function traeworkCss(t) {
   const c = t.colors;
-  const host = 'html.codedrobe-host-traework';
+  const host = 'html.agentskin-host-traework';
   const mutedFg = c.muted;
   const disabledFg = alpha(c.foreground, 0.42);
   const lineColor = alpha(c.accent, 0.18);
@@ -606,12 +809,12 @@ ${sharedChromeRules(host, t)}
 
 // ---------------------------------------------------------------------------
 // QoderWork CN — native --color-* design-token override strategy
-// Selector: html:root.codedrobe-host-qoderwork (0,2,1) > :root[data-theme] (0,2,0)
+// Selector: html:root.agentskin-host-qoderwork (0,2,1) > :root[data-theme] (0,2,0)
 // ---------------------------------------------------------------------------
 
 function qoderworkCss(t) {
   const c = t.colors;
-  const host = 'html.codedrobe-host-qoderwork';
+  const host = 'html.agentskin-host-qoderwork';
 
   // Derived palette from theme colors
   const accentHover = shade(c.accent, t.isLight ? 'black' : 'white', 0.15);
@@ -1299,7 +1502,7 @@ a:hover {
 
 function doubaoCss(t) {
   const c = t.colors;
-  const host = 'html.codedrobe-host-doubao';
+  const host = 'html.agentskin-host-doubao';
   const p = computeArtParams(t);
 
   return `/* ${t.name} — 豆包 (Doubao) (--dbx-* design tokens)
@@ -1506,7 +1709,7 @@ ${host}:root {
 
 /* ===== Body-level overrides =====
    :root[data-theme="dark"] body sets --dbx-bg-body-web at (0,2,1).
-   Our html.codedrobe-host-doubao:root body = (0,2,2) beats it. */
+   Our html.agentskin-host-doubao:root body = (0,2,2) beats it. */
 ${host}:root body {
   /* Body bg is handled by the art layer (body::before) — token must be transparent
      so elements referencing it don't paint an opaque block over the hero. */
@@ -1846,7 +2049,7 @@ ${host} body::before {
       color-mix(in srgb, var(--agentskin-surface) ${p.washBottom}%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
       color-mix(in srgb, ${p.glowColor} ${p.glowStrength}%, transparent), transparent 60%),
-    var(--codedrobe-art, none) right center / cover no-repeat !important;
+    var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
 /* ===== Transparency punch-through ===== */
@@ -2234,23 +2437,42 @@ const GENERATORS = {
   qoderwork: qoderworkCss,
   workbuddy: workbuddyCss,
   doubao: doubaoCss,
+  codex: codexCss,
+  zcode: zcodeCss,
 };
 
-function buildContext(id, manifest) {
-  const c = manifest.colors ?? {};
+/** Read color scheme definitions for a theme. The manifest declares the
+ *  scheme ids; each resolves to color-schemes/<id>.json with a `colors`
+ *  object matching the manifest colors shape. 'default' (no file) always
+ *  resolves to the manifest's own colors. */
+function loadColorSchemes(id, themeDir, manifest) {
+  const schemes = [{ id: 'default', mode: manifest.mode, colors: manifest.colors }];
+  for (const schemeId of manifest.colorSchemes ?? []) {
+    const schemePath = path.join(themeDir, 'color-schemes', `${schemeId}.json`);
+    if (!fs.existsSync(schemePath)) {
+      throw new Error(`themes/${id}: declared color scheme "${schemeId}" has no color-schemes/${schemeId}.json`);
+    }
+    const scheme = JSON.parse(fs.readFileSync(schemePath, 'utf8').replace(/^\uFEFF/, ''));
+    schemes.push({ id: schemeId, mode: scheme.mode, colors: scheme.colors });
+  }
+  return schemes;
+}
+
+function buildContext(id, manifest, scheme = null) {
+  const colors = scheme?.colors ?? manifest.colors ?? {};
   const required = ['accent', 'secondary', 'background', 'foreground', 'muted', 'surface',
     'surfaceElevated', 'border', 'codeBackground', 'codeForeground', 'inputBackground',
     'buttonBackground', 'buttonForeground', 'focusRing'];
   for (const key of required) {
-    if (!c[key]) throw new Error(`themes/${id}: missing colors.${key}`);
+    if (!colors[key]) throw new Error(`themes/${id}: missing colors.${key}`);
   }
-  const mode = manifest.mode === 'light' ? 'light' : 'dark'; // auto → dark (dark canvas)
+  const mode = (scheme?.mode ?? manifest.mode) === 'light' ? 'light' : 'dark'; // auto → dark (dark canvas)
   return {
     id,
     name: manifest.displayName || manifest.name,
     mode,
     isLight: mode === 'light',
-    colors: c,
+    colors,
   };
 }
 
@@ -2269,30 +2491,39 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
     console.log(`[generate-theme-css] ${id}: skipped (flat theme, art=false)`);
     continue;
   }
-  const ctx = buildContext(id, manifest);
-  const cssDir = path.join(themeDir, 'assets', 'css');
-  if (!verifyMode) fs.mkdirSync(cssDir, { recursive: true });
-  for (const [agent, generate] of Object.entries(GENERATORS)) {
-    const css = generate(ctx);
-    const cssPath = path.join(cssDir, `${agent}.css`);
-    if (verifyMode) {
-      if (!fs.existsSync(cssPath)) {
-        console.error(`[generate-theme-css:verify] ${id}/${agent}.css MISSING — run 'npm run generate:theme-css'`);
-        stale++;
-        continue;
+  const schemes = loadColorSchemes(id, themeDir, manifest);
+  for (const scheme of schemes) {
+    const ctx = buildContext(id, manifest, scheme);
+    // The default scheme keeps the historical flat layout (assets/css/<agent>.css);
+    // each alternative scheme gets its own directory (assets/css/<schemeId>/).
+    const isDefault = scheme.id === 'default';
+    const cssDir = path.join(themeDir, 'assets', 'css', isDefault ? '' : scheme.id);
+    if (!verifyMode) fs.mkdirSync(cssDir, { recursive: true });
+    for (const [agent, generate] of Object.entries(GENERATORS)) {
+      const css = generate(ctx);
+      const cssPath = path.join(cssDir, `${agent}.css`);
+      if (verifyMode) {
+        if (!fs.existsSync(cssPath)) {
+          console.error(`[generate-theme-css:verify] ${id}/${scheme.id}/${agent}.css MISSING — run 'npm run generate:theme-css'`);
+          stale++;
+          continue;
+        }
+        const actual = fs.readFileSync(cssPath, 'utf8');
+        // Compare against the same trailing-newline normalization used when
+        // writing (writeFileSync appends '\n' when the template lacks one).
+        const expected = css.endsWith('\n') ? css : `${css}\n`;
+        if (actual !== expected) {
+          console.error(`[generate-theme-css:verify] ${id}/${scheme.id}/${agent}.css STALE — run 'npm run generate:theme-css'`);
+          stale++;
+        }
+      } else {
+        fs.writeFileSync(cssPath, css.endsWith('\n') ? css : `${css}\n`, 'utf8');
+        count += 1;
       }
-      const actual = fs.readFileSync(cssPath, 'utf8');
-      if (actual !== css) {
-        console.error(`[generate-theme-css:verify] ${id}/${agent}.css STALE — run 'npm run generate:theme-css'`);
-        stale++;
-      }
-    } else {
-      fs.writeFileSync(cssPath, css, 'utf8');
-      count += 1;
     }
-  }
-  if (!verifyMode) {
-    console.log(`[generate-theme-css] ${id} (${ctx.mode})${manifest.dynamic ? ` [dynamic:${manifest.dynamic}]` : ''}`);
+    if (!verifyMode) {
+      console.log(`[generate-theme-css] ${id}/${scheme.id} (${ctx.mode})${manifest.dynamic ? ` [dynamic:${manifest.dynamic}]` : ''}`);
+    }
   }
 }
 

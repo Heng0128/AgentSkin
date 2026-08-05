@@ -164,3 +164,65 @@ describe('ThemeCatalog', () => {
     });
   });
 });
+
+describe('ThemeCatalog scheme merging (v2.2+)', () => {
+  const base: InstalledTheme = {
+    id: 'nordic-minimal',
+    displayName: '极简北欧',
+    version: '2.2.0',
+    supportedAgents: ['traework'] as AgentId[],
+    legacyTargets: [],
+    coverDataUrl: 'data:image/png;base64,c',
+    tagline: 't',
+    icon: null,
+    colors: { accent: '#c41e2a', background: '#0a0a14' },
+    mode: 'dark',
+    scheme: 'default',
+    colorSchemes: ['nord', 'tokyo-night'],
+    schemes: [
+      { id: 'default', name: 'Default', colors: { accent: '#c41e2a' } },
+      { id: 'nord', name: 'Nord', colors: { accent: '#88c0d0' } },
+      { id: 'tokyo-night', name: 'Tokyo Night', colors: { accent: '#7aa2f7' } },
+    ],
+  };
+  const nordVariant: InstalledTheme = {
+    ...base,
+    id: 'nordic-minimal--nord',
+    displayName: '极简北欧 · Nord',
+    scheme: 'nord',
+    colors: { accent: '#88c0d0', background: '#10141c' },
+  };
+  const tokyoVariant: InstalledTheme = {
+    ...base,
+    id: 'nordic-minimal--tokyo-night',
+    displayName: '极简北欧 · Tokyo Night',
+    scheme: 'tokyo-night',
+    colors: { accent: '#7aa2f7', background: '#12141f' },
+  };
+
+  it('merges scheme variants into a single entry with per-scheme colors', async () => {
+    const catalog = new ThemeCatalog({
+      summaries: async () => [base, nordVariant, tokyoVariant],
+    });
+    const themes = await catalog.listThemes();
+    expect(themes).toHaveLength(1);
+    expect(themes[0].id).toBe('nordic-minimal');
+    expect(themes[0].schemes).toEqual([
+      { id: 'default', name: 'Default', colors: { accent: '#c41e2a', background: '#0a0a14' } },
+      { id: 'nord', name: 'Nord', colors: { accent: '#88c0d0', background: '#10141c' } },
+      {
+        id: 'tokyo-night',
+        name: 'Tokyo Night',
+        colors: { accent: '#7aa2f7', background: '#12141f' },
+      },
+    ]);
+  });
+
+  it('passes themes without scheme metadata through unchanged', async () => {
+    const plain: InstalledTheme = { ...base, schemes: undefined, colorSchemes: undefined };
+    const catalog = new ThemeCatalog({ summaries: async () => [plain] });
+    const themes = await catalog.listThemes();
+    expect(themes).toHaveLength(1);
+    expect(themes[0].schemes).toBeUndefined();
+  });
+});

@@ -106,6 +106,10 @@ export interface SettingsServiceApi {
   setAppPort(appId: AgentId, port: number | null): Promise<void>;
   setWallpaper(wallpaper: Pick<WallpaperSettings, 'enabled' | 'id' | 'render'>): Promise<void>;
   setAgentWallpaper(appId: AgentId, setting: WallpaperAgentSetting): Promise<void>;
+  /** Read the global user-authored theme CSS (empty string when unset). */
+  customThemeCss(): string;
+  /** Replace the global user-authored theme CSS. Empty string clears it. */
+  setCustomThemeCss(css: string): Promise<void>;
 }
 
 /**

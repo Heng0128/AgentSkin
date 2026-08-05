@@ -32,6 +32,7 @@ import path from 'node:path';
 import { app, dialog, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { isSafeThemeId } from '../../shared/theme-id';
+import { semanticColorsToPalette } from '../../shared/theme-mapping';
 import {
   AGENT_IDS,
   type AgentId,
@@ -41,24 +42,6 @@ import {
 
 const PROJECTS_DIR = path.join(app.getAppPath(), 'theme-workbench', 'projects');
 const PROJECT_SCHEMA = 'agentskin-studio-project/v1';
-
-/** Semantic color names emitted by the export builder's manifest `colors`. */
-const SEMANTIC_TO_AGENTSKIN: Record<string, string> = {
-  background: '--agentskin-bg',
-  foreground: '--agentskin-text',
-  accent: '--agentskin-accent',
-  secondary: '--agentskin-secondary',
-  surface: '--agentskin-surface',
-  surfaceElevated: '--agentskin-surface-elevated',
-  muted: '--agentskin-muted',
-  border: '--agentskin-border',
-  codeBackground: '--agentskin-code-bg',
-  codeForeground: '--agentskin-code-fg',
-  inputBackground: '--agentskin-input-bg',
-  buttonBackground: '--agentskin-button-bg',
-  focusRing: '--agentskin-focus-ring',
-  selection: '--agentskin-selection',
-};
 
 function ensureDir(): void {
   fs.mkdirSync(PROJECTS_DIR, { recursive: true });
@@ -138,12 +121,7 @@ function projectFromManifest(manifest: Record<string, unknown>): StudioProject |
     : undefined;
   if (!name || !agentId) return null;
 
-  const palette: Record<string, string> = {};
-  const colors = (manifest.colors as Record<string, string> | undefined) ?? {};
-  for (const [semantic, value] of Object.entries(colors)) {
-    const token = SEMANTIC_TO_AGENTSKIN[semantic];
-    if (token && typeof value === 'string') palette[token] = value;
-  }
+  const palette = semanticColorsToPalette(manifest.colors as Record<string, unknown> | undefined);
 
   const now = new Date().toISOString();
   return {
