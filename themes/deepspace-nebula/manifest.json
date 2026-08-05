@@ -202,5 +202,9 @@
     "buttonBackground": "rgba(139, 124, 247, 0.15)",
     "buttonForeground": "#8b7cf7",
     "focusRing": "#8b7cf760"
-  }
+  },
+  "colorSchemes": [
+    "rose-nebula",
+    "galaxy-teal"
+  ]
 }

@@ -1,0 +1,22 @@
+{
+  "id": "rose-nebula",
+  "name": "Rose Nebula",
+  "mode": "dark",
+  "description": "玫瑰星云：粉红星尘漂浮在深空之中。",
+  "colors": {
+    "accent": "#f08aa8",
+    "secondary": "#e0a9d0",
+    "background": "#160b12",
+    "foreground": "#e8d6de",
+    "muted": "#8d7683",
+    "surface": "#1f1220",
+    "surfaceElevated": "#271830",
+    "border": "rgba(240, 138, 168, 0.22)",
+    "codeBackground": "#0e070d",
+    "codeForeground": "#d6bcc9",
+    "inputBackground": "#22131f",
+    "buttonBackground": "rgba(240, 138, 168, 0.16)",
+    "buttonForeground": "#f08aa8",
+    "focusRing": "rgba(240, 138, 168, 0.42)"
+  }
+}

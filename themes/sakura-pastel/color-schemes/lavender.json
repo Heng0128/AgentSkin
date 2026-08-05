@@ -1,0 +1,22 @@
+{
+  "id": "lavender",
+  "name": "Lavender",
+  "mode": "light",
+  "description": "薰衣草：温柔的薰衣草紫，宁静放松。",
+  "colors": {
+    "accent": "#9d92d6",
+    "secondary": "#c2b8e0",
+    "background": "#f7f4fb",
+    "foreground": "#4c4660",
+    "muted": "#978fa8",
+    "surface": "#ffffff",
+    "surfaceElevated": "#fcfbfe",
+    "border": "rgba(157, 146, 214, 0.28)",
+    "codeBackground": "#efeaf8",
+    "codeForeground": "#6b6284",
+    "inputBackground": "#ffffff",
+    "buttonBackground": "rgba(157, 146, 214, 0.2)",
+    "buttonForeground": "#9d92d6",
+    "focusRing": "rgba(157, 146, 214, 0.45)"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "aurora",
+  "name": "Aurora",
+  "mode": "dark",
+  "description": "北极光：冷杉绿与极光青，静谧而清醒。",
+  "colors": {
+    "accent": "#6fc3a8",
+    "secondary": "#8fb8a8",
+    "background": "#0c1210",
+    "foreground": "#d8e4dc",
+    "muted": "#7a8d84",
+    "surface": "#141c18",
+    "surfaceElevated": "#1a241f",
+    "border": "rgba(111, 195, 168, 0.2)",
+    "codeBackground": "#080d0b",
+    "codeForeground": "#c4d3cb",
+    "inputBackground": "#16201b",
+    "buttonBackground": "rgba(111, 195, 168, 0.14)",
+    "buttonForeground": "#6fc3a8",
+    "focusRing": "rgba(111, 195, 168, 0.4)"
+  }
+}

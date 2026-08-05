@@ -1,0 +1,22 @@
+{
+  "id": "mint",
+  "name": "Mint",
+  "mode": "light",
+  "description": "薄荷：清凉的薄荷绿，干净通透。",
+  "colors": {
+    "accent": "#6cb79b",
+    "secondary": "#a3c9b4",
+    "background": "#f3faf6",
+    "foreground": "#40544c",
+    "muted": "#8aa39a",
+    "surface": "#ffffff",
+    "surfaceElevated": "#fbfdfc",
+    "border": "rgba(108, 183, 155, 0.28)",
+    "codeBackground": "#e9f4ee",
+    "codeForeground": "#5c7a6d",
+    "inputBackground": "#ffffff",
+    "buttonBackground": "rgba(108, 183, 155, 0.18)",
+    "buttonForeground": "#6cb79b",
+    "focusRing": "rgba(108, 183, 155, 0.45)"
+  }
+}

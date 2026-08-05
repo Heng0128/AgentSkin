@@ -1,0 +1,22 @@
+{
+  "id": "amber",
+  "name": "Amber",
+  "mode": "dark",
+  "description": "琥珀暖金：极简冷灰上的一点暖色，克制而提神。",
+  "colors": {
+    "accent": "#d9a05b",
+    "secondary": "#c7b28f",
+    "background": "#141008",
+    "foreground": "#e8e0d2",
+    "muted": "#8f8574",
+    "surface": "#1e1810",
+    "surfaceElevated": "#262015",
+    "border": "rgba(217, 160, 91, 0.2)",
+    "codeBackground": "#0e0b05",
+    "codeForeground": "#d6cbb4",
+    "inputBackground": "#211a10",
+    "buttonBackground": "rgba(217, 160, 91, 0.15)",
+    "buttonForeground": "#d9a05b",
+    "focusRing": "rgba(217, 160, 91, 0.4)"
+  }
+}

@@ -202,5 +202,9 @@
     "buttonBackground": "rgba(127, 168, 189, 0.14)",
     "buttonForeground": "#7fa8bd",
     "focusRing": "#7fa8bd60"
-  }
+  },
+  "colorSchemes": [
+    "amber",
+    "aurora"
+  ]
 }
