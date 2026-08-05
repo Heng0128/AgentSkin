@@ -1,0 +1,26 @@
+/* palette.css — deepspace-nebula (深空星云) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0b0816;
+  --agentskin-surface: #141026;
+  --agentskin-surface-elevated: #1b1630;
+  --agentskin-text: #d6cfe8;
+  --agentskin-muted: #7d7399;
+  --agentskin-accent: #8b7cf7;
+  --agentskin-secondary: #c9a0f0;
+  --agentskin-border: rgba(139, 124, 247, 0.2);
+  --agentskin-code-bg: #070510;
+  --agentskin-code-fg: #c1b8dc;
+  --agentskin-focus-ring: #8b7cf760;
+  --agentskin-selection: color-mix(in srgb, #8b7cf7 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 139, 124, 247;
+  --agentskin-secondary-raw: 201, 160, 240;
+  --agentskin-text-raw: 214, 207, 232;
+  --agentskin-muted-raw: 125, 115, 153;
+  --agentskin-surface-raw: 20, 16, 38;
+  --agentskin-surface-elevated-raw: 27, 22, 48;
+  --agentskin-bg-raw: 11, 8, 22;
+  --agentskin-border-raw: 139, 124, 247;
+}

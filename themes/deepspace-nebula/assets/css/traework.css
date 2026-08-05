@@ -1,24 +1,26 @@
-/* 火影 · 带土 — TRAE Work CN (solo-lite shell)
+/* 深空星云 — TRAE Work CN (solo-lite shell)
    Strategy: override --vscode-* / --vscode-icube-* design tokens (the app
    declares them on plain `body` selectors; our host-scoped body rule at
    specificity (0,1,2) always outranks them), then layer hero art + structural
    touches on stable solo-lite landmarks. */
 :root {
   color-scheme: dark !important;
-  --agentskin-accent: #c41e2a;
-  --agentskin-secondary: #d4a84a;
-  --agentskin-bg: #0a0a14;
-  --agentskin-surface: #222230;
-  --agentskin-surface-elevated: #2c2c3c;
-  --agentskin-text: #e8d5d5;
-  --agentskin-muted: #7a6b75;
-  --agentskin-border: rgba(196, 30, 42, 0.18);
-  --agentskin-code-bg: #06060c;
-  --agentskin-code-fg: #d8c5cc;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #222230 82%, #c41e2a 18%) 45%, transparent);
-  --agentskin-button-bg: #c41e2a;
-  --agentskin-focus-ring: #c41e2a60;
-  --agentskin-selection: rgba(196, 30, 42, 0.32);
+  --agentskin-accent: #8b7cf7;
+  --agentskin-secondary: #c9a0f0;
+  --agentskin-bg: #0b0816;
+  --agentskin-surface: #141026;
+  --agentskin-surface-elevated: #1b1630;
+  --agentskin-text: #d6cfe8;
+  --agentskin-muted: #7d7399;
+  --agentskin-border: rgba(139, 124, 247, 0.2);
+  --agentskin-code-bg: #070510;
+  --agentskin-code-fg: #c1b8dc;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #141026 82%, #8b7cf7 18%) 45%, transparent);
+  --agentskin-button-bg: #8b7cf7;
+  --agentskin-focus-ring: #8b7cf760;
+  --agentskin-selection: rgba(139, 124, 247, 0.32);
+  --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  text-shadow: var(--agentskin-text-shadow);
 }
 
 /* ---- design token override (global restyle via app's own variable system) ---- */
@@ -26,61 +28,61 @@ html.agentskin-host-traework body {
   color-scheme: dark !important;
 
   /* Ink / text */
-  --vscode-foreground: #e8d5d5 !important;
-  --vscode-icube-colorDefaultText: #e8d5d5 !important;
-  --vscode-icube--text-text-default: #e8d5d5 !important;
-  --vscode-icube-colorHighlightText: #e8d5d5 !important;
-  --vscode-descriptionForeground: #7a6b75 !important;
-  --vscode-icube-colorGrayText: #7a6b75 !important;
-  --vscode-icube-colorDisableText: rgba(232, 213, 213, 0.42) !important;
+  --vscode-foreground: #d6cfe8 !important;
+  --vscode-icube-colorDefaultText: #d6cfe8 !important;
+  --vscode-icube--text-text-default: #d6cfe8 !important;
+  --vscode-icube-colorHighlightText: #d6cfe8 !important;
+  --vscode-descriptionForeground: #7d7399 !important;
+  --vscode-icube-colorGrayText: #7d7399 !important;
+  --vscode-icube-colorDisableText: rgba(214, 207, 232, 0.42) !important;
 
   /* Brand / links / buttons */
-  --vscode-textLink-foreground: #c41e2a !important;
-  --vscode-textLink-activeForeground: #d4a84a !important;
-  --vscode-button-background: #c41e2a !important;
-  --vscode-button-foreground: rgb(2, 2, 3) !important;
-  --vscode-button-hoverBackground: rgba(196, 30, 42, 0.85) !important;
-  --vscode-icube-colorBrand: #c41e2a !important;
-  --vscode-focusBorder: rgba(196, 30, 42, 0.6) !important;
+  --vscode-textLink-foreground: #8b7cf7 !important;
+  --vscode-textLink-activeForeground: #c9a0f0 !important;
+  --vscode-button-background: #8b7cf7 !important;
+  --vscode-button-foreground: rgb(2, 1, 3) !important;
+  --vscode-button-hoverBackground: rgba(139, 124, 247, 0.85) !important;
+  --vscode-icube-colorBrand: #8b7cf7 !important;
+  --vscode-focusBorder: rgba(139, 124, 247, 0.6) !important;
 
   /* Lines / borders */
-  --vscode-icube-colorLine1: rgba(196, 30, 42, 0.18) !important;
-  --vscode-icube-colorLine2: rgba(196, 30, 42, 0.32) !important;
-  --vscode-icube--border-border-neutral-l1: rgba(196, 30, 42, 0.18) !important;
-  --vscode-chat-requestBorder: rgba(196, 30, 42, 0.25) !important;
-  --vscode-widget-border: rgba(196, 30, 42, 0.18) !important;
-  --vscode-panel-border: rgba(196, 30, 42, 0.18) !important;
+  --vscode-icube-colorLine1: rgba(139, 124, 247, 0.18) !important;
+  --vscode-icube-colorLine2: rgba(139, 124, 247, 0.32) !important;
+  --vscode-icube--border-border-neutral-l1: rgba(139, 124, 247, 0.18) !important;
+  --vscode-chat-requestBorder: rgba(139, 124, 247, 0.25) !important;
+  --vscode-widget-border: rgba(139, 124, 247, 0.18) !important;
+  --vscode-panel-border: rgba(139, 124, 247, 0.18) !important;
 
   /* Fills / hovers */
-  --vscode-toolbar-hoverBackground: rgba(196, 30, 42, 0.12) !important;
-  --vscode-icube-colorBtnHover: rgba(196, 30, 42, 0.12) !important;
-  --vscode-icube-colorBtnHover2: rgba(196, 30, 42, 0.18) !important;
-  --vscode-list-hoverBackground: rgba(196, 30, 42, 0.12) !important;
-  --vscode-list-activeSelectionBackground: rgba(196, 30, 42, 0.18) !important;
-  --vscode-icube--bg-bg-overlay-l2: rgba(196, 30, 42, 0.12) !important;
-  --vscode-icube--bg-bg-overlay-l3: rgba(196, 30, 42, 0.18) !important;
-  --vscode-input-background: rgba(196, 30, 42, 0.07) !important;
+  --vscode-toolbar-hoverBackground: rgba(139, 124, 247, 0.12) !important;
+  --vscode-icube-colorBtnHover: rgba(139, 124, 247, 0.12) !important;
+  --vscode-icube-colorBtnHover2: rgba(139, 124, 247, 0.18) !important;
+  --vscode-list-hoverBackground: rgba(139, 124, 247, 0.12) !important;
+  --vscode-list-activeSelectionBackground: rgba(139, 124, 247, 0.18) !important;
+  --vscode-icube--bg-bg-overlay-l2: rgba(139, 124, 247, 0.12) !important;
+  --vscode-icube--bg-bg-overlay-l3: rgba(139, 124, 247, 0.18) !important;
+  --vscode-input-background: rgba(139, 124, 247, 0.07) !important;
 
   /* Surfaces */
-  --vscode-editor-background: #0a0a14 !important;
-  --vscode-icube-colorBg1: #0a0a14 !important;
-  --vscode-icube-colorBg2: #222230 !important;
-  --vscode-icube-colorBg3: #2c2c3c !important;
-  --vscode-editorWidget-background: #222230 !important;
+  --vscode-editor-background: #0b0816 !important;
+  --vscode-icube-colorBg1: #0b0816 !important;
+  --vscode-icube-colorBg2: #141026 !important;
+  --vscode-icube-colorBg3: #1b1630 !important;
+  --vscode-editorWidget-background: #141026 !important;
   --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
-  --vscode-widget-shadow: rgba(196, 30, 42, 0.15) !important;
-  --vscode-badge-background: rgba(196, 30, 42, 0.65) !important;
-  --vscode-badge-foreground: #e8d5d5 !important;
-  --vscode-scrollbarSlider-background: rgba(196, 30, 42, 0.22) !important;
-  --vscode-scrollbarSlider-hoverBackground: rgba(196, 30, 42, 0.38) !important;
-  --vscode-scrollbarSlider-activeBackground: rgba(196, 30, 42, 0.52) !important;
+  --vscode-widget-shadow: rgba(139, 124, 247, 0.15) !important;
+  --vscode-badge-background: rgba(139, 124, 247, 0.65) !important;
+  --vscode-badge-foreground: #d6cfe8 !important;
+  --vscode-scrollbarSlider-background: rgba(139, 124, 247, 0.22) !important;
+  --vscode-scrollbarSlider-hoverBackground: rgba(139, 124, 247, 0.38) !important;
+  --vscode-scrollbarSlider-activeBackground: rgba(139, 124, 247, 0.52) !important;
 
   /* App-level surface variables → transparent for art punch-through */
   --bg-bg-base-default: transparent !important;
 
   /* Selection */
-  --vscode-editor-selectionBackground: rgba(196, 30, 42, 0.18) !important;
-  --vscode-selection-background: rgba(196, 30, 42, 0.24) !important;
+  --vscode-editor-selectionBackground: rgba(139, 124, 247, 0.18) !important;
+  --vscode-selection-background: rgba(139, 124, 247, 0.24) !important;
 
   background: transparent !important;
   color: var(--agentskin-text) !important;
@@ -117,7 +119,7 @@ html.agentskin-host-traework #root::before {
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary) 31%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 34%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -147,13 +149,13 @@ html.agentskin-host-traework .task-list-panel {
 
 html.agentskin-host-traework .task-list-base [class*="item"]:hover,
 html.agentskin-host-traework .task-list-panel [class*="item"]:hover {
-  background: rgba(196, 30, 42, 0.12) !important;
+  background: rgba(139, 124, 247, 0.12) !important;
 }
 
 html.agentskin-host-traework .task-list-base [class*="active"],
 html.agentskin-host-traework .task-list-panel [class*="active"] {
-  background: rgba(196, 30, 42, 0.18) !important;
-  box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px rgba(196, 30, 42, 0.32) !important;
+  background: rgba(139, 124, 247, 0.18) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px rgba(139, 124, 247, 0.32) !important;
 }
 
 /* ---- composer ---- */
@@ -162,7 +164,7 @@ html.agentskin-host-traework .chat-input-v2-input-box-editable {
   backdrop-filter: blur(14px) saturate(1.1) !important;
   color: var(--agentskin-text) !important;
   caret-color: var(--agentskin-accent) !important;
-  border: 1px solid rgba(196, 30, 42, 0.25) !important;
+  border: 1px solid rgba(139, 124, 247, 0.25) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
   transition: border-color 160ms ease, box-shadow 160ms ease !important;
@@ -170,8 +172,8 @@ html.agentskin-host-traework .chat-input-v2-input-box-editable {
 
 html.agentskin-host-traework .chat-input-v2-input-box-editable:focus,
 html.agentskin-host-traework .chat-input-v2-input-box-editable:focus-within {
-  border-color: rgba(196, 30, 42, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(196, 30, 42, 0.1), 0 4px 18px rgba(212, 168, 74, 0.12) !important;
+  border-color: rgba(139, 124, 247, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(139, 124, 247, 0.1), 0 4px 18px rgba(201, 160, 240, 0.12) !important;
 }
 
 html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
@@ -182,20 +184,20 @@ html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
 html.agentskin-host-traework [class*="chat-input-primary-glow"] {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 40%, transparent) !important;
   backdrop-filter: blur(14px) saturate(1.1) !important;
-  border: 1px solid rgba(196, 30, 42, 0.2) !important;
+  border: 1px solid rgba(139, 124, 247, 0.2) !important;
   box-shadow: none !important;
 }
 
 html.agentskin-host-traework [class*="chat-input-primary-glow"]:focus-within {
-  border-color: rgba(196, 30, 42, 0.45) !important;
-  box-shadow: 0 0 0 2px rgba(196, 30, 42, 0.08), 0 4px 16px rgba(212, 168, 74, 0.1) !important;
+  border-color: rgba(139, 124, 247, 0.45) !important;
+  box-shadow: 0 0 0 2px rgba(139, 124, 247, 0.08), 0 4px 16px rgba(201, 160, 240, 0.1) !important;
 }
 
 /* ---- buttons ---- */
 html.agentskin-host-traework button[class*="primary"],
 html.agentskin-host-traework button[class*="send"] {
   background: linear-gradient(135deg, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 62%, var(--agentskin-secondary) 38%) 100%) !important;
-  color: rgb(2, 2, 3) !important;
+  color: rgb(2, 1, 3) !important;
   border: none !important;
   box-shadow: 0 2px 10px var(--agentskin-focus-ring) !important;
   transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
@@ -263,7 +265,7 @@ html.agentskin-host-traework [class*="chat-file"],
 html.agentskin-host-traework [class*="chatFile"] {
   background: transparent !important;
   background-color: transparent !important;
-  border-color: rgba(196, 30, 42, 0.15) !important;
+  border-color: rgba(139, 124, 247, 0.15) !important;
 }
 html.agentskin-host-traework [class*="file-change"]:hover,
 html.agentskin-host-traework [class*="fileChange"]:hover,
@@ -316,7 +318,18 @@ html.agentskin-host-traework [class*="mode-switcher"] [class*="active"],
 html.agentskin-host-traework [class*="tab-item"][class*="active"],
 html.agentskin-host-traework [class*="segmented"] [class*="active"] {
   color: var(--agentskin-accent) !important;
-  background: rgba(196, 30, 42, 0.12) !important;
+  background: rgba(139, 124, 247, 0.12) !important;
+}
+
+/* Text readability on frosted glass */
+html.agentskin-host-traework body {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+html.agentskin-host-traework input,
+html.agentskin-host-traework textarea,
+html.agentskin-host-traework [contenteditable="true"] {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
 }
 
 /* Links */
@@ -350,15 +363,15 @@ html.agentskin-host-traework select:focus {
 html.agentskin-host-traework code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(196, 30, 42, 0.108) !important;
+  border: 1px solid rgba(139, 124, 247, 0.12) !important;
   border-radius: 6px !important;
 }
 
 html.agentskin-host-traework pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(196, 30, 42, 0.108) !important;
-  border-left: 3px solid rgba(196, 30, 42, 0.5) !important;
+  border: 1px solid rgba(139, 124, 247, 0.12) !important;
+  border-left: 3px solid rgba(139, 124, 247, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -377,14 +390,14 @@ html.agentskin-host-traework ::-webkit-scrollbar-track {
 }
 
 html.agentskin-host-traework ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(196, 30, 42, 0.3) 0%, rgba(212, 168, 74, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(139, 124, 247, 0.3) 0%, rgba(201, 160, 240, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 html.agentskin-host-traework ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(196, 30, 42, 0.5) 0%, rgba(212, 168, 74, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(139, 124, 247, 0.5) 0%, rgba(201, 160, 240, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 

@@ -1,0 +1,206 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "deepspace-nebula",
+  "name": "Deepspace Nebula",
+  "displayName": "深空星云",
+  "version": "1.0.0",
+  "description": "深紫黑的夜空中漂浮着星云紫光，梦幻而深邃。为深夜编码营造沉浸的星空氛围。",
+  "author": {
+    "name": "AgentSkin Team",
+    "url": "https://github.com/Heng0128/AgentSkin"
+  },
+  "mode": "dark",
+  "category": "dark",
+  "tags": [
+    "dark",
+    "nebula",
+    "space"
+  ],
+  "icon": "icon.png",
+  "preview": "preview.png",
+  "hero": "hero.webp",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role='textbox'][contenteditable='true']",
+              ".wb-home-composer [contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css",
+      "verification": {
+        "required": [
+          {
+            "name": "doubao-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ]
+      }
+    },
+    "codex": {
+      "css": "assets/css/codex.css",
+      "verification": {
+        "required": [
+          {
+            "name": "codex-root",
+            "any": [
+              "main.main-surface"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              "aside.app-shell-left-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".composer-surface-chrome"
+            ]
+          }
+        ]
+      }
+    },
+    "zcode": {
+      "css": "assets/css/zcode.css",
+      "verification": {
+        "required": [
+          {
+            "name": "zcode-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "composer",
+            "any": [
+              "[contenteditable='true']",
+              "textarea"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#8b7cf7",
+    "secondary": "#c9a0f0",
+    "background": "#0b0816",
+    "foreground": "#d6cfe8",
+    "muted": "#7d7399",
+    "surface": "#141026",
+    "surfaceElevated": "#1b1630",
+    "border": "rgba(139, 124, 247, 0.2)",
+    "codeBackground": "#070510",
+    "codeForeground": "#c1b8dc",
+    "inputBackground": "#181329",
+    "buttonBackground": "rgba(139, 124, 247, 0.15)",
+    "buttonForeground": "#8b7cf7",
+    "focusRing": "#8b7cf760"
+  }
+}

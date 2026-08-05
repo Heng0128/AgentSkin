@@ -1,29 +1,30 @@
-/* 火影 · 带土 — WorkBuddy (--cb-* design tokens) */
+/* 深空星云 — WorkBuddy (--cb-* design tokens) */
 :root {
   color-scheme: dark !important;
-  --agentskin-accent: #c41e2a;
-  --agentskin-secondary: #d4a84a;
-  --agentskin-bg: #0a0a14;
-  --agentskin-surface: #222230;
-  --agentskin-surface-elevated: #2c2c3c;
-  --agentskin-text: #e8d5d5;
-  --agentskin-muted: #7a6b75;
-  --agentskin-border: rgba(196, 30, 42, 0.18);
-  --agentskin-code-bg: #06060c;
-  --agentskin-code-fg: #d8c5cc;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #222230 82%, #c41e2a 18%) 45%, transparent);
-  --agentskin-button-bg: #c41e2a;
-  --agentskin-focus-ring: #c41e2a60;
-  --agentskin-selection: rgba(196, 30, 42, 0.32);
+  --agentskin-accent: #8b7cf7;
+  --agentskin-secondary: #c9a0f0;
+  --agentskin-bg: #0b0816;
+  --agentskin-surface: #141026;
+  --agentskin-surface-elevated: #1b1630;
+  --agentskin-text: #d6cfe8;
+  --agentskin-muted: #7d7399;
+  --agentskin-border: rgba(139, 124, 247, 0.2);
+  --agentskin-code-bg: #070510;
+  --agentskin-code-fg: #c1b8dc;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #141026 82%, #8b7cf7 18%) 45%, transparent);
+  --agentskin-button-bg: #8b7cf7;
+  --agentskin-focus-ring: #8b7cf760;
+  --agentskin-selection: rgba(139, 124, 247, 0.32);
+  --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  text-shadow: var(--agentskin-text-shadow);
 }
 
-html.agentskin-host-workbuddy body,
-html.agentskin-host-workbuddy body * {
+body[data-application-name="workbuddy"] {
   color-scheme: dark !important;
-  --wb-accent: #c41e2a;
-  --wb-secondary: #d4a84a;
-  --wb-surface: #0a0a14;
-  --wb-text: #e8d5d5;
+  --wb-accent: #8b7cf7;
+  --wb-secondary: #c9a0f0;
+  --wb-surface: #0b0816;
+  --wb-text: #d6cfe8;
 
   /* Backgrounds */
   --cb-bg-primary: var(--wb-surface) !important;
@@ -109,7 +110,7 @@ html.agentskin-host-workbuddy body * {
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary) 31%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 34%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -168,7 +169,7 @@ html.agentskin-host-workbuddy body * {
 [class*="_mainArea_"] {
   background: color-mix(in srgb, var(--agentskin-surface) 50%, transparent) !important;
   backdrop-filter: blur(14px) !important;
-  border: 1px solid rgba(196, 30, 42, 0.25) !important;
+  border: 1px solid rgba(139, 124, 247, 0.25) !important;
   border-radius: 12px !important;
 }
 
@@ -194,7 +195,7 @@ html.agentskin-host-workbuddy body * {
 /* Sidebar search box */
 .my-files-search {
   background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
-  border: 1px solid rgba(196, 30, 42, 0.15) !important;
+  border: 1px solid rgba(139, 124, 247, 0.15) !important;
   border-radius: 8px !important;
   backdrop-filter: blur(8px) !important;
 }
@@ -226,32 +227,32 @@ html.agentskin-host-workbuddy body * {
 [role="textbox"][contenteditable="true"]:focus,
 .wb-home-composer [contenteditable="true"]:focus {
   outline: none !important;
-  box-shadow: 0 0 0 2px rgba(196, 30, 42, 0.4), 0 4px 18px rgba(212, 168, 74, 0.2) !important;
+  box-shadow: 0 0 0 2px rgba(139, 124, 247, 0.4), 0 4px 18px rgba(201, 160, 240, 0.2) !important;
 }
 
 /* Selection & scrollbars */
-html.agentskin-host-workbuddy ::selection {
-  background: rgba(196, 30, 42, 0.32) !important;
+body[data-application-name="workbuddy"] ::selection {
+  background: rgba(139, 124, 247, 0.32) !important;
 }
 
-html.agentskin-host-workbuddy ::-webkit-scrollbar {
+body[data-application-name="workbuddy"] ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
-html.agentskin-host-workbuddy ::-webkit-scrollbar-track {
+body[data-application-name="workbuddy"] ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-html.agentskin-host-workbuddy ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(196, 30, 42, 0.3) 0%, rgba(212, 168, 74, 0.3) 100%) !important;
+body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(139, 124, 247, 0.3) 0%, rgba(201, 160, 240, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
-html.agentskin-host-workbuddy ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(196, 30, 42, 0.5) 0%, rgba(212, 168, 74, 0.5) 100%) !important;
+body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(139, 124, 247, 0.5) 0%, rgba(201, 160, 240, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
@@ -278,15 +279,15 @@ button[class*="send"]:hover,
 code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(196, 30, 42, 0.14) !important;
+  border: 1px solid rgba(139, 124, 247, 0.14) !important;
   border-radius: 6px !important;
 }
 
 pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(196, 30, 42, 0.14) !important;
-  border-left: 3px solid rgba(196, 30, 42, 0.5) !important;
+  border: 1px solid rgba(139, 124, 247, 0.14) !important;
+  border-left: 3px solid rgba(139, 124, 247, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -324,20 +325,20 @@ a:hover {
 .wb-home-composer__input-slot {
   background: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
   backdrop-filter: blur(12px) saturate(1.1) !important;
-  border: 1px solid rgba(196, 30, 42, 0.22) !important;
+  border: 1px solid rgba(139, 124, 247, 0.22) !important;
   border-radius: 18px !important;
   transition: border-color 180ms ease, box-shadow 180ms ease !important;
 }
 
 .wb-home-composer__input-slot:focus-within {
-  border-color: rgba(196, 30, 42, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(196, 30, 42, 0.12), 0 4px 20px rgba(196, 30, 42, 0.08) !important;
+  border-color: rgba(139, 124, 247, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(139, 124, 247, 0.12), 0 4px 20px rgba(139, 124, 247, 0.08) !important;
 }
 
 /* Quick action pills: semi-transparent accent tint instead of opaque rgb(31,31,31) */
 .quick-actions__item {
   background: color-mix(in srgb, var(--agentskin-surface) 35%, transparent) !important;
-  border: 1px solid rgba(196, 30, 42, 0.18) !important;
+  border: 1px solid rgba(139, 124, 247, 0.18) !important;
   color: var(--cb-text-secondary) !important;
   backdrop-filter: blur(8px) !important;
   box-shadow: none !important;
@@ -347,7 +348,7 @@ a:hover {
 
 .quick-actions__item:hover {
   background: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
-  border-color: rgba(196, 30, 42, 0.4) !important;
+  border-color: rgba(139, 124, 247, 0.4) !important;
   color: var(--cb-text-primary) !important;
 }
 
@@ -371,7 +372,7 @@ a:hover {
 [class*="msg-content"] {
   background: color-mix(in srgb, var(--agentskin-surface) 38%, transparent) !important;
   backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(196, 30, 42, 0.12) !important;
+  border: 1px solid rgba(139, 124, 247, 0.12) !important;
   border-radius: 14px !important;
 }
 
@@ -379,19 +380,19 @@ a:hover {
 [class*="messageBubble"][class*="assistant"],
 [class*="msg-content"][class*="bot"] {
   background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
-  border-color: rgba(212, 168, 74, 0.15) !important;
+  border-color: rgba(201, 160, 240, 0.15) !important;
 }
 
 /* Composer container focus glow */
 .wb-home-composer:focus-within [class*="_mainArea_"] {
-  border-color: rgba(196, 30, 42, 0.4) !important;
-  box-shadow: 0 2px 24px rgba(196, 30, 42, 0.1) !important;
+  border-color: rgba(139, 124, 247, 0.4) !important;
+  box-shadow: 0 2px 24px rgba(139, 124, 247, 0.1) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html.agentskin-host-workbuddy *,
-  html.agentskin-host-workbuddy *::before,
-  html.agentskin-host-workbuddy *::after {
+  body[data-application-name="workbuddy"] *,
+  body[data-application-name="workbuddy"] *::before,
+  body[data-application-name="workbuddy"] *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }

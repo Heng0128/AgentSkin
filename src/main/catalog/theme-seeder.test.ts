@@ -110,7 +110,7 @@ describe('seedBuiltInThemes — removed themes must never be reseeded', () => {
     // Pick two ids from the actual removed list so the test tracks the list.
     const removedA = REMOVED_BUILTIN_THEME_IDS[0];
     const removedB = REMOVED_BUILTIN_THEME_IDS[1];
-    const kept = 'naruto-tobi'; // the single theme the product ships
+    const kept = 'nordic-minimal'; // a shipped theme id (not in the removed list)
     await writePackage(themesRoot, removedA);
     await writePackage(themesRoot, removedB);
     await writePackage(themesRoot, kept);
@@ -132,7 +132,7 @@ describe('seedBuiltInThemes — removed themes must never be reseeded', () => {
     // does not wipe it). Pruning must remove them.
     const removedA = REMOVED_BUILTIN_THEME_IDS[0];
     const library = createFakeLibrary();
-    await pruneRemovedBuiltInThemes(library, new Set([removedA, 'naruto-tobi']));
+    await pruneRemovedBuiltInThemes(library, new Set([removedA, 'nordic-minimal']));
     expect(library.deletedIds).toEqual([removedA]);
   });
 });

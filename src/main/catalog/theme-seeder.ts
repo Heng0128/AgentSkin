@@ -222,6 +222,10 @@ export const REMOVED_BUILTIN_THEME_IDS = [
   'wuthering-echo',
   'wuthering-tide',
   'zelda-breath',
+  // The single legacy bundled theme (naruto-tobi, 火影 · 带土) was replaced
+  // by the v2.3 built-in set (nordic-minimal / deepspace-nebula /
+  // sakura-pastel). Prune copies installed by older versions on upgrade.
+  'naruto-tobi',
 ];
 
 /**

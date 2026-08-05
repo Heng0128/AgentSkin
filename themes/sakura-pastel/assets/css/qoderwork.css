@@ -1,146 +1,148 @@
-/* 火影 · 带土 — QoderWork CN (--color-* design tokens) */
+/* 樱花粉 — QoderWork CN (--color-* design tokens) */
 :root {
-  color-scheme: dark !important;
-  --agentskin-accent: #c41e2a;
-  --agentskin-secondary: #d4a84a;
-  --agentskin-bg: #0a0a14;
-  --agentskin-surface: #222230;
-  --agentskin-surface-elevated: #2c2c3c;
-  --agentskin-text: #e8d5d5;
-  --agentskin-muted: #7a6b75;
-  --agentskin-border: rgba(196, 30, 42, 0.18);
-  --agentskin-code-bg: #06060c;
-  --agentskin-code-fg: #d8c5cc;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #222230 82%, #c41e2a 18%) 45%, transparent);
-  --agentskin-button-bg: #c41e2a;
-  --agentskin-focus-ring: #c41e2a60;
-  --agentskin-selection: rgba(196, 30, 42, 0.32);
+  color-scheme: light !important;
+  --agentskin-accent: #e08aa8;
+  --agentskin-secondary: #d9b8c8;
+  --agentskin-bg: #faf4f0;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #fffdfb;
+  --agentskin-text: #4a3f45;
+  --agentskin-muted: #9a8b92;
+  --agentskin-border: rgba(224, 138, 168, 0.25);
+  --agentskin-code-bg: #f3e9e5;
+  --agentskin-code-fg: #6b5a63;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #e08aa8 18%) 45%, transparent);
+  --agentskin-button-bg: #e08aa8;
+  --agentskin-focus-ring: #e08aa866;
+  --agentskin-selection: rgba(224, 138, 168, 0.32);
+  --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+  text-shadow: var(--agentskin-text-shadow);
 }
 
 /* ===== Native token overrides (wins over :root[data-theme]) ===== */
-html.agentskin-host-qoderwork * {
-  color-scheme: dark !important;
+html.agentskin-host-qoderwork:root {
+  color-scheme: light !important;
 
   /* Primary / brand */
-  --color-primary: #c41e2a !important;
-  --color-primary-hover: rgb(205, 64, 74) !important;
-  --color-primary-active: rgb(211, 86, 95) !important;
-  --color-primary-bg: rgba(196, 30, 42, 0.12) !important;
-  --color-primary-bg-hover: rgba(196, 30, 42, 0.18) !important;
-  --color-primary-border: rgba(196, 30, 42, 0.35) !important;
-  --color-primary-border-hover: rgba(196, 30, 42, 0.55) !important;
-  --color-primary-text: #e8d5d5 !important;
-  --color-primary-text-hover: rgb(205, 64, 74) !important;
-  --color-primary-text-active: rgb(211, 86, 95) !important;
-  --color-text-on-primary: rgb(2, 2, 3) !important;
+  --color-primary: #e08aa8 !important;
+  --color-primary-hover: rgb(190, 117, 143) !important;
+  --color-primary-active: rgb(168, 104, 126) !important;
+  --color-primary-bg: rgba(224, 138, 168, 0.08) !important;
+  --color-primary-bg-hover: rgba(224, 138, 168, 0.14) !important;
+  --color-primary-border: rgba(224, 138, 168, 0.35) !important;
+  --color-primary-border-hover: rgba(224, 138, 168, 0.55) !important;
+  --color-primary-text: #4a3f45 !important;
+  --color-primary-text-hover: rgb(190, 117, 143) !important;
+  --color-primary-text-active: rgb(168, 104, 126) !important;
+  --color-text-on-primary: #ffffff !important;
 
   /* Text hierarchy */
-  --color-text: #e8d5d5 !important;
-  --color-text-secondary: #7a6b75 !important;
-  --color-text-tertiary: rgba(232, 213, 213, 0.55) !important;
-  --color-text-quaternary: rgba(232, 213, 213, 0.4) !important;
-  --color-text-base: #e8d5d5 !important;
-  --color-muted: #7a6b75 !important;
-  --color-muted-foreground: rgba(122, 107, 117, 0.8) !important;
+  --color-text: #4a3f45 !important;
+  --color-text-secondary: #9a8b92 !important;
+  --color-text-tertiary: rgba(74, 63, 69, 0.55) !important;
+  --color-text-quaternary: rgba(74, 63, 69, 0.4) !important;
+  --color-text-base: #4a3f45 !important;
+  --color-muted: #9a8b92 !important;
+  --color-muted-foreground: rgba(154, 139, 146, 0.8) !important;
 
   /* Backgrounds */
-  --color-bg-container: #0a0a14 !important;
-  --color-bg-elevated: color-mix(in srgb, #2c2c3c 85%, #c41e2a 15%) !important;
-  --color-bg-layout: rgb(10, 10, 19) !important;
-  --color-bg-spotlight: rgb(9, 9, 18) !important;
-  --color-bg-base: #0a0a14 !important;
-  --color-bg-mask: rgba(10, 10, 20, 0.6) !important;
-  --color-bg-highlight: rgba(196, 30, 42, 0.06) !important;
-  --color-bg-highlight-hover: rgba(196, 30, 42, 0.1) !important;
+  --color-bg-container: #faf4f0 !important;
+  --color-bg-elevated: color-mix(in srgb, #fffdfb 85%, #e08aa8 15%) !important;
+  --color-bg-layout: rgb(250, 244, 240) !important;
+  --color-bg-spotlight: rgb(250, 244, 241) !important;
+  --color-bg-base: #faf4f0 !important;
+  --color-bg-mask: rgba(250, 244, 240, 0.6) !important;
+  --color-bg-highlight: rgba(224, 138, 168, 0.06) !important;
+  --color-bg-highlight-hover: rgba(224, 138, 168, 0.1) !important;
   --color-background: var(--color-bg-container) !important;
-  --color-popover: #2c2c3c !important;
-  --color-white-opacity: #fff !important;
-  --color-black-opacity: #000 !important;
+  --color-popover: #000 !important;
+  --color-white-opacity: #000 !important;
+  --color-black-opacity: #fff !important;
 
   /* Borders */
-  --color-border: rgba(196, 30, 42, 0.18) !important;
-  --color-border-secondary: rgba(196, 30, 42, 0.108) !important;
-  --color-border-tertiary: rgba(196, 30, 42, 0.063) !important;
+  --color-border: rgba(224, 138, 168, 0.25) !important;
+  --color-border-secondary: rgba(224, 138, 168, 0.15) !important;
+  --color-border-tertiary: rgba(224, 138, 168, 0.087) !important;
 
   /* Fills */
-  --color-fill: rgba(232, 213, 213, 0.16) !important;
-  --color-fill-secondary: rgba(232, 213, 213, 0.1) !important;
-  --color-fill-tertiary: rgba(232, 213, 213, 0.06) !important;
-  --color-fill-quaternary: rgba(232, 213, 213, 0.03) !important;
-  --color-fill-disable: rgba(232, 213, 213, 0.08) !important;
+  --color-fill: rgba(74, 63, 69, 0.12) !important;
+  --color-fill-secondary: rgba(74, 63, 69, 0.07) !important;
+  --color-fill-tertiary: rgba(74, 63, 69, 0.04) !important;
+  --color-fill-quaternary: rgba(74, 63, 69, 0.02) !important;
+  --color-fill-disable: rgba(74, 63, 69, 0.08) !important;
 
   /* Links */
-  --color-link: #c41e2a !important;
+  --color-link: #e08aa8 !important;
 
   /* Semantic: error */
   --color-error: #ff4d4f !important;
   --color-error-hover: #ff7875 !important;
-  --color-error-bg: rgba(255, 77, 79, 0.12) !important;
-  --color-error-bg-hover: rgba(255, 77, 79, 0.18) !important;
-  --color-error-border: rgba(255, 77, 79, 0.35) !important;
-  --color-error-border-hover: rgba(255, 77, 79, 0.55) !important;
+  --color-error-bg: #fff2f0 !important;
+  --color-error-bg-hover: #fff1f0 !important;
+  --color-error-border: #ffccc7 !important;
+  --color-error-border-hover: #ffa39e !important;
 
   /* Semantic: info */
   --color-info: #0b83f1 !important;
   --color-info-hover: #5ebcff !important;
-  --color-info-bg: rgba(11, 131, 241, 0.12) !important;
-  --color-info-bg-hover: rgba(11, 131, 241, 0.18) !important;
-  --color-info-border: rgba(11, 131, 241, 0.35) !important;
-  --color-info-border-hover: rgba(11, 131, 241, 0.55) !important;
+  --color-info-bg: #e6f7ff !important;
+  --color-info-bg-hover: #d0efff !important;
+  --color-info-border: #b0e3ff !important;
+  --color-info-border-hover: #87d1ff !important;
 
   /* Semantic: success (tied to accent) */
-  --color-success: #c41e2a !important;
-  --color-success-hover: rgb(205, 64, 74) !important;
-  --color-success-bg: rgba(196, 30, 42, 0.12) !important;
-  --color-success-bg-hover: rgba(196, 30, 42, 0.18) !important;
-  --color-success-border: rgba(196, 30, 42, 0.35) !important;
-  --color-success-border-hover: rgba(196, 30, 42, 0.55) !important;
+  --color-success: #e08aa8 !important;
+  --color-success-hover: rgb(190, 117, 143) !important;
+  --color-success-bg: rgba(224, 138, 168, 0.08) !important;
+  --color-success-bg-hover: rgba(224, 138, 168, 0.14) !important;
+  --color-success-border: rgba(224, 138, 168, 0.35) !important;
+  --color-success-border-hover: rgba(224, 138, 168, 0.55) !important;
 
   /* Semantic: warning */
   --color-warning: #faad14 !important;
   --color-warning-hover: #ffd666 !important;
-  --color-warning-bg: rgba(250, 173, 20, 0.12) !important;
-  --color-warning-bg-hover: rgba(250, 173, 20, 0.18) !important;
-  --color-warning-border: rgba(250, 173, 20, 0.35) !important;
-  --color-warning-border-hover: rgba(250, 173, 20, 0.55) !important;
+  --color-warning-bg: #fffbe6 !important;
+  --color-warning-bg-hover: #fff1b8 !important;
+  --color-warning-border: #ffe5bf !important;
+  --color-warning-border-hover: #ffd666 !important;
 
   /* Diff */
-  --color-diff-insert: rgba(196, 30, 42, 0.7) !important;
-  --color-diff-insert-bg: rgba(196, 30, 42, 0.12) !important;
+  --color-diff-insert: rgba(224, 138, 168, 0.7) !important;
+  --color-diff-insert-bg: rgba(224, 138, 168, 0.12) !important;
   --color-diff-remove: #fc6b83 !important;
-  --color-diff-remove-bg: rgba(252, 107, 131, 0.12) !important;
+  --color-diff-remove-bg: #e3d1d5 !important;
 
   /* Accent palette (derived from theme secondary + accent) */
-  --color-pink: #d4a84a !important;
-  --color-pink-bg: rgba(212, 168, 74, 0.1) !important;
-  --color-pink-hover: rgb(221, 185, 110) !important;
-  --color-purple: rgb(157, 24, 34) !important;
-  --color-purple-bg: rgba(196, 30, 42, 0.08) !important;
-  --color-purple-hover: rgb(208, 75, 85) !important;
+  --color-pink: #d9b8c8 !important;
+  --color-pink-bg: rgba(217, 184, 200, 0.1) !important;
+  --color-pink-hover: rgb(225, 198, 211) !important;
+  --color-purple: rgb(179, 110, 134) !important;
+  --color-purple-bg: rgba(224, 138, 168, 0.08) !important;
+  --color-purple-hover: rgb(230, 161, 185) !important;
   --color-yellow: #fac414 !important;
-  --color-yellow-bg: rgba(250, 196, 20, 0.1) !important;
+  --color-yellow-bg: #fff3cf !important;
   --color-yellow-hover: #f1d372 !important;
   --color-orange: #fa8125 !important;
-  --color-orange-bg: rgba(250, 129, 37, 0.1) !important;
+  --color-orange-bg: #ffefde !important;
   --color-orange-hover: #e88c45 !important;
-  --color-teal: rgb(176, 27, 38) !important;
-  --color-teal-bg: rgba(196, 30, 42, 0.08) !important;
-  --color-teal-hover: rgb(205, 64, 74) !important;
+  --color-teal: rgb(202, 124, 151) !important;
+  --color-teal-bg: rgba(224, 138, 168, 0.08) !important;
+  --color-teal-hover: rgb(229, 156, 181) !important;
   --color-blue: #0090ff !important;
-  --color-blue-bg: rgba(0, 144, 255, 0.1) !important;
+  --color-blue-bg: #deedff !important;
   --color-blue-hover: #72bcf5 !important;
-  --color-mauve: rgba(122, 107, 117, 0.7) !important;
-  --color-mauve-bg: rgba(122, 107, 117, 0.06) !important;
-  --color-mauve-hover: rgba(122, 107, 117, 0.4) !important;
-  --color-slate: #94a3b8 !important;
-  --color-slate-bg: rgba(148, 163, 184, 0.1) !important;
-  --color-slate-hover: #cbd5e1 !important;
-  --color-lavender: rgb(225, 194, 128) !important;
-  --color-lavender-bg: rgba(212, 168, 74, 0.08) !important;
-  --color-lavender-hover: rgb(234, 212, 165) !important;
-  --color-sage: rgb(167, 26, 36) !important;
-  --color-sage-bg: rgba(196, 30, 42, 0.06) !important;
-  --color-sage-hover: rgba(196, 30, 42, 0.12) !important;
+  --color-mauve: rgba(154, 139, 146, 0.7) !important;
+  --color-mauve-bg: rgba(154, 139, 146, 0.06) !important;
+  --color-mauve-hover: rgba(154, 139, 146, 0.4) !important;
+  --color-slate: #1e293b !important;
+  --color-slate-bg: #e2e8f0 !important;
+  --color-slate-hover: #475569 !important;
+  --color-lavender: rgb(228, 205, 217) !important;
+  --color-lavender-bg: rgba(217, 184, 200, 0.08) !important;
+  --color-lavender-hover: rgb(236, 220, 228) !important;
+  --color-sage: rgb(190, 117, 143) !important;
+  --color-sage-bg: rgba(224, 138, 168, 0.06) !important;
+  --color-sage-hover: rgba(224, 138, 168, 0.12) !important;
 
   /* Shadows */
   --color-shadow-2xs: rgba(0, 0, 0, 0.03) !important;
@@ -169,8 +171,8 @@ html.agentskin-host-qoderwork * {
   --settings-nav-row-selected-bg: var(--color-fill-secondary) !important;
 
   /* Chat input parchment — keep extremely subtle to avoid jarring border */
-  --chat-input-parchment-edge: rgba(196, 30, 42, 0.12) !important;
-  --chat-input-parchment-glow: rgba(212, 168, 74, 0.06) !important;
+  --chat-input-parchment-edge: rgba(224, 138, 168, 0.12) !important;
+  --chat-input-parchment-glow: rgba(217, 184, 200, 0.06) !important;
   --chat-input-parchment-halo: transparent !important;
 }
 
@@ -187,13 +189,13 @@ html.agentskin-host-qoderwork #root::before {
   pointer-events: none !important;
   background:
     linear-gradient(90deg,
-      color-mix(in srgb, var(--agentskin-surface) 26%, transparent) 0 16%,
-      color-mix(in srgb, var(--agentskin-surface) 8%, transparent) 44%,
+      color-mix(in srgb, var(--agentskin-surface) 42%, transparent) 0 16%,
+      color-mix(in srgb, var(--agentskin-surface) 14%, transparent) 44%,
       transparent 70%),
     linear-gradient(180deg, transparent 0 50%,
-      color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
+      color-mix(in srgb, var(--agentskin-surface) 38%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary) 31%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 21%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -215,7 +217,7 @@ html.agentskin-host-qoderwork [class*="workspace-panel"] {
 /* Sidebar: frosted glass over art (only the actual .agents-sidebar element) */
 html.agentskin-host-qoderwork .agents-sidebar {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
-  border-right: 1px solid rgba(196, 30, 42, 0.1) !important;
+  border-right: 1px solid rgba(224, 138, 168, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
@@ -231,7 +233,7 @@ html.agentskin-host-qoderwork .agents-sidebar [class*="active"] {
 /* Right panel: frosted glass matching left sidebar */
 html.agentskin-host-qoderwork [data-resizable-sidebar]:not(.agents-sidebar) {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
-  border-left: 1px solid rgba(196, 30, 42, 0.1) !important;
+  border-left: 1px solid rgba(224, 138, 168, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
@@ -239,12 +241,12 @@ html.agentskin-host-qoderwork [data-resizable-sidebar]:not(.agents-sidebar) {
 html.agentskin-host-qoderwork .chat-input-editor-text:focus,
 html.agentskin-host-qoderwork .chat-input-editor-text:focus-within {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 3px var(--color-primary-bg-hover), 0 4px 18px rgba(212, 168, 74, 0.2) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-bg-hover), 0 4px 18px rgba(217, 184, 200, 0.2) !important;
 }
 
 /* Selection */
 html.agentskin-host-qoderwork ::selection {
-  background: rgba(196, 30, 42, 0.28) !important;
+  background: rgba(224, 138, 168, 0.28) !important;
 }
 
 /* Links */
@@ -260,15 +262,15 @@ html.agentskin-host-qoderwork a:hover {
 html.agentskin-host-qoderwork code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(196, 30, 42, 0.108) !important;
+  border: 1px solid rgba(224, 138, 168, 0.15) !important;
   border-radius: 6px !important;
 }
 
 html.agentskin-host-qoderwork pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(196, 30, 42, 0.108) !important;
-  border-left: 3px solid rgba(196, 30, 42, 0.5) !important;
+  border: 1px solid rgba(224, 138, 168, 0.15) !important;
+  border-left: 3px solid rgba(224, 138, 168, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -282,7 +284,7 @@ html.agentskin-host-qoderwork textarea:focus,
 html.agentskin-host-qoderwork select:focus {
   outline: none !important;
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 2px rgba(196, 30, 42, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(224, 138, 168, 0.15) !important;
 }
 
 /* Scrollbars */
@@ -296,14 +298,14 @@ html.agentskin-host-qoderwork ::-webkit-scrollbar-track {
 }
 
 html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(196, 30, 42, 0.3) 0%, rgba(212, 168, 74, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(224, 138, 168, 0.3) 0%, rgba(217, 184, 200, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(196, 30, 42, 0.5) 0%, rgba(212, 168, 74, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(224, 138, 168, 0.5) 0%, rgba(217, 184, 200, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
