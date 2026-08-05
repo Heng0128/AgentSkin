@@ -115,6 +115,10 @@ export interface BuildWallpaperThemeInput {
   previewPath: string;
   /** 输出根目录（<userData>/wallpaper-themes）。 */
   outRoot: string;
+  /** 壁纸视频绝对路径（视频壁纸时提供）。存在时视频被拷入主题包并声明
+   *  `theme.wallpaper.video`，使主题自带壁纸（apply 时自动注入，无需
+   *  渲染层重应用壁纸）。 */
+  videoPath?: string;
 }
 
 export interface BuiltWallpaperTheme {
@@ -237,6 +241,23 @@ export async function buildWallpaperTheme(
     );
   }
 
+  // 视频壁纸：把视频拷入 wallpaper/ 并声明 theme.wallpaper.video，使主题
+  // 自带壁纸（apply 时经 theme-apply-flow 自动注入 theme:<id>）。
+  let wallpaper: Record<string, string> | undefined;
+  if (input.videoPath) {
+    const ext = path.extname(input.videoPath).toLowerCase() || '.mp4';
+    const videoRel = `wallpaper/video${ext}`;
+    await fs.mkdir(path.join(packagePath, 'wallpaper'), { recursive: true });
+    try {
+      await fs.copyFile(input.videoPath, path.join(packagePath, videoRel));
+      wallpaper = { video: videoRel, poster: 'preview.png' };
+    } catch {
+      // 视频拷贝失败 → 不声明 wallpaper，主题退化为纯色版（壁纸由渲染层
+      // "重应用"绕行恢复）。
+      wallpaper = undefined;
+    }
+  }
+
   const manifest = {
     $schema: 'https://agentskin.dev/schema/manifest-v2.json',
     schemaVersion: 2,
@@ -256,6 +277,7 @@ export async function buildWallpaperTheme(
       AGENT_IDS.map((agent) => [agent, { css: `assets/css/${agent}.css` }]),
     ),
     colors: derived,
+    ...(wallpaper ? { wallpaper } : {}),
   };
   await fs.writeFile(
     path.join(packagePath, 'manifest.json'),

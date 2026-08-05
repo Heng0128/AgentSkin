@@ -38,6 +38,7 @@ import { brandingRoot, ctx, sendLog } from './main-context';
 import { SettingsService } from './settings-service';
 import { ThemeLibrary } from './theme-library';
 import { createTrayManager, type TrayManager } from './tray-manager';
+import { registerThemeWallpaperForInstalled } from './wallpaper/theme-wallpaper';
 import { registerWallpaperLifecycle } from './wallpaper-lifecycle';
 import { WallpaperService } from './wallpaper-service';
 
@@ -131,17 +132,13 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
   await ctx.core.reconcileActiveThemes(finalThemeIds);
 
   // Register video wallpapers bundled with installed themes (best-effort).
-  if (ctx.wallpapers) {
-    for (const theme of finalThemes) {
-      const wp = theme.wallpaper;
-      if (!wp?.video) continue;
-      try {
-        const videoPath = path.join(themesDir, theme.id, wp.video);
-        await ctx.wallpapers.registerThemeWallpaper(theme.id, videoPath, theme.displayName);
-      } catch (error) {
-        sendLog(`[boot] wallpaper registration failed for "${theme.id}": ${toMessage(error)}`);
-      }
-    }
+  // Shared with runtime theme installs via registerThemeWallpaperForInstalled:
+  // directory-package themes record their package root in `theme.packageRoot`
+  // (pywal wallpaper-themes, bundle installs); built-in themes fall back to
+  // the app's themes dir (unchanged behavior).
+  for (const theme of finalThemes) {
+    const packageRoot = theme.packageRoot ?? themesDir;
+    await registerThemeWallpaperForInstalled(ctx, theme, packageRoot, (line) => sendLog(line));
   }
 
   ctx.themeCatalog = new ThemeCatalog(ctx.library);

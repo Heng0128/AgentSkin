@@ -87,6 +87,12 @@ export const IpcChannel = {
   WALLPAPER_EXTRACT_THEME: 'wallpaper:extract-theme',
   WE_DETECT: 'we:detect',
 
+  // --- Bundles (.agentskin-bundle: theme + wallpaper combo packages) ---
+  BUNDLE_CREATE: 'bundle:create',
+  BUNDLE_INSTALL: 'bundle:install',
+  /** Open a .agentskin-bundle file directly (file-open / "Open with"分流). */
+  BUNDLE_OPEN_FILE: 'bundle:open-file',
+
   // --- Theme Studio (studio-ipc.ts) ---
   THEME_STUDIO_SNAPSHOT: 'studio:snapshot',
   /** Capture the agent's NATIVE (un-themed) appearance, then automatically

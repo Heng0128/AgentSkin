@@ -19,6 +19,7 @@ import { ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
 import { createStudioWindow } from '../window-manager';
+import { registerBundleIpc } from './bundle-ipc';
 import { registerCoreIpc } from './core-ipc';
 import { registerSettingsIpc } from './settings-ipc';
 import { registerStudioIpc } from './studio-ipc';
@@ -30,6 +31,7 @@ import { registerWindowIpc } from './window-ipc';
 export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void>): void {
   registerCoreIpc(ctx, updateTrayMenu);
   registerThemeIpc(ctx, updateTrayMenu);
+  registerBundleIpc(ctx, updateTrayMenu);
   registerSettingsIpc(ctx);
   registerWallpaperIpc(ctx);
   registerWindowIpc();

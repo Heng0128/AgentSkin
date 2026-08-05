@@ -53,7 +53,8 @@ export type BusyKey =
   | `apply:${string}`
   | `restore:${string}`
   | `delete:${string}`
-  | `export:${string}`;
+  | `export:${string}`
+  | `bundle:${string}`;
 
 interface UseThemesDeps {
   showToast: (message: string, tone?: 'default' | 'destructive') => void;
@@ -371,6 +372,17 @@ export function useThemes(deps: UseThemesDeps) {
     [showToast, t, withBusy],
   );
 
+  /** Create an `.agentskin-bundle` combo package (theme + bundled wallpaper)
+   *  from a directory-package theme via a save dialog. Only built-in and
+   *  wallpaper-generated themes have a directory package to pack. */
+  const createBundle = useCallback(
+    async (themeId: string) => {
+      const result = await withBusy(`bundle:${themeId}`, () => api.createBundle(themeId));
+      if (result && !result.canceled) showToast(t.bundleExported);
+    },
+    [showToast, t, withBusy],
+  );
+
   const confirmDelete = useCallback(async () => {
     if (!deletePrompt) return;
     const result = await withBusy(`delete:${deletePrompt.id}`, () =>
@@ -395,6 +407,7 @@ export function useThemes(deps: UseThemesDeps) {
     restoreApp,
     restoreAll,
     exportTheme,
+    createBundle,
     confirmDelete,
     confirmFileImport,
     dropThemeFiles,

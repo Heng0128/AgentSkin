@@ -383,6 +383,11 @@ export function toInstalledTheme(entry: ThemeEntry): InstalledTheme {
     colorSchemes,
     // Full scheme metadata (id/name/mode for every variant, default first).
     schemes,
+    // Directory-package root (absolute) — recorded by the installer for
+    // themes installed from a directory package, so wallpaper registration
+    // can resolve video paths outside the app's built-in themes dir.
+    packageRoot:
+      typeof pick('packageRoot') === 'string' ? (pick('packageRoot') as string) : undefined,
   };
 }
 

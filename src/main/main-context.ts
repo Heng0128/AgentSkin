@@ -8,7 +8,8 @@ import { IpcChannel } from '../shared/ipc-channels';
 import { AGENT_IDS, type AgentId } from '../shared/types';
 import type { AgentCatalog } from './catalog/agent-catalog';
 import type { ThemeCatalog } from './catalog/theme-catalog';
-import { FileOpenQueue } from './file-open';
+import { BUNDLE_EXTENSION, FileOpenQueue } from './file-open';
+import { installBundleFromPath } from './ipc/bundle-ipc';
 import type {
   AgentEngineServiceApi,
   SettingsServiceApi,
@@ -130,6 +131,11 @@ export function settingsDto(context: MainContext) {
  * drag-drop). New theme ids install silently; when the id is already taken
  * the renderer asks the user before replacing (imports never overwrite
  * silently). Used as the `fileOpens` sink and by `theme:open-file`.
+ *
+ * `.agentskin-bundle` combo packages take a different path: they are
+ * directory-package archives (theme + wallpaper video) that must be unpacked
+ * and installed via the bundle installer, not `library.importPackage` (which
+ * only accepts single-file engine bundles).
  */
 export async function handleThemeFileOpen(
   context: MainContext,
@@ -139,6 +145,15 @@ export async function handleThemeFileOpen(
   context.mainWindow?.show();
   context.mainWindow?.focus();
   try {
+    if (filePath.endsWith(BUNDLE_EXTENSION)) {
+      const theme = await installBundleFromPath(context, filePath);
+      void updateTrayMenu();
+      context.mainWindow?.webContents.send(IpcChannel.FILE_IMPORTED, {
+        theme,
+        themes: await context.library.summaries(),
+      });
+      return;
+    }
     const inspection = await context.library.inspectPackage(filePath);
     if (inspection.existing) {
       context.mainWindow?.webContents.send(IpcChannel.FILE_IMPORT_CONFIRM, {

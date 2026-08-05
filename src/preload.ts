@@ -39,6 +39,8 @@ const api: AgentSkinApi = {
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
   exportTheme: (themeId: string) => ipcRenderer.invoke(IpcChannel.THEME_EXPORT, themeId),
   deleteTheme: (themeId: string) => ipcRenderer.invoke(IpcChannel.THEME_DELETE, themeId),
+  createBundle: (themeId: string) => ipcRenderer.invoke(IpcChannel.BUNDLE_CREATE, themeId),
+  installBundle: () => ipcRenderer.invoke(IpcChannel.BUNDLE_INSTALL),
   // --- Catalog (read-only product data layer) ---
   catalog: {
     agents: {

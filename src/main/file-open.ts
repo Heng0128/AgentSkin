@@ -7,12 +7,16 @@ import {
   themeExtension,
 } from '../legacy/agentskin-core-runtime';
 
+/** `.agentskin-bundle` — Theme + Wallpaper combo package container. */
+export const BUNDLE_EXTENSION = '.agentskin-bundle';
+
 export function isThemePackagePath(value: string): boolean {
   return (
     value.endsWith(agentThemeExtension) ||
     value.endsWith('.agentskin-theme') ||
     value.endsWith(themeExtension) ||
-    value.endsWith(legacyThemeExtension)
+    value.endsWith(legacyThemeExtension) ||
+    value.endsWith(BUNDLE_EXTENSION)
   );
 }
 

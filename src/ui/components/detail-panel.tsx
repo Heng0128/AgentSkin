@@ -11,7 +11,12 @@ import type { AppController, Selection } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
 import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 
-import { Delete02Icon, PaintBoardIcon, Share05Icon } from '@hugeicons/core-free-icons';
+import {
+  Delete02Icon,
+  Package01Icon,
+  PaintBoardIcon,
+  Share05Icon,
+} from '@hugeicons/core-free-icons';
 import { AGENT_IDS, type AgentId } from '@shared/types';
 
 /** Per-app apply rows: the drawer chooses the target app, not a global picker. */
@@ -404,6 +409,18 @@ export function DetailPanel({
             <HugeIcon icon={Share05Icon} data-icon="inline-start" />
             {t.exportTheme}
           </Button>
+          {theme.wallpaper && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              disabled={controller.busy !== null}
+              onClick={() => void controller.createBundle(theme.id)}
+            >
+              <HugeIcon icon={Package01Icon} data-icon="inline-start" />
+              {t.bundleExport}
+            </Button>
+          )}
           <Button
             variant="destructive"
             size="sm"

@@ -422,7 +422,7 @@ export class ThemeInstaller {
   /**
    * Install a single directory-based theme package into the library.
    */
-  async install(pkg: InstalledThemePackage): Promise<InstalledTheme> {
+  async install(pkg: InstalledThemePackage, packageRoot?: string): Promise<InstalledTheme> {
     const { packagePath, manifest } = pkg;
 
     // v2.1: Check minimum app version requirement
@@ -459,6 +459,7 @@ export class ThemeInstaller {
           { icon, preview, hero },
           packagePath,
           scheme,
+          packageRoot,
         );
         const bundleThemeId = (bundle.theme as { id?: unknown }).id;
         if (typeof bundleThemeId !== 'string' || !bundleThemeId) {
@@ -495,6 +496,10 @@ export class ThemeInstaller {
       mode?: ThemeManifest['mode'];
       colors: ThemeManifest['colors'];
     },
+    /** Directory-package root recorded for runtime wallpaper registration
+     *  (pywal wallpaper-themes, bundle installs). Omitted for built-in
+     *  themes installed by the seeder (they resolve against the app themes dir). */
+    packageRoot?: string,
   ): Promise<Record<string, unknown>> {
     const targets: Record<string, { css: string; verification?: unknown }> = {};
 
@@ -602,6 +607,9 @@ export class ThemeInstaller {
       // Flat / CSS-only themes declare art:false; consumers (seed-pipeline
       // test, catalog) use this to skip the --agentskin-art requirement.
       art: manifest.art !== false,
+      // Directory-package root (absolute) so runtime wallpaper registration
+      // can resolve theme.wallpaper.video outside the built-in themes dir.
+      ...(packageRoot ? { packageRoot } : {}),
       // --- v2.1 extensions ---
       dynamic: manifest.dynamic ?? null,
       wallpaper: manifest.wallpaper ?? null,

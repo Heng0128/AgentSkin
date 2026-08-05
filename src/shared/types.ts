@@ -329,6 +329,11 @@ export interface InstalledTheme {
    *  first). Present on bundles installed by the scheme-aware installer;
    *  used by the catalog to build the UI scheme picker. */
   schemes?: ThemeColorScheme[];
+  /** Directory-package root (absolute) for themes installed from a directory
+   *  package (pywal wallpaper-themes, .agentskin-bundle installs). Used by
+   *  wallpaper registration to resolve `theme.wallpaper.video` relative
+   *  paths. Built-in themes lack this and fall back to the app themes dir. */
+  packageRoot?: string;
 }
 
 /**
@@ -560,6 +565,18 @@ export interface DialogResult {
   theme?: InstalledTheme;
 }
 
+/** Result of creating an `.agentskin-bundle` combo package (save dialog). */
+export interface BundleCreateResult {
+  canceled: boolean;
+  path?: string;
+}
+
+/** Result of installing an `.agentskin-bundle` combo package. */
+export interface BundleInstallResult {
+  canceled: boolean;
+  theme?: InstalledTheme;
+}
+
 export interface DeleteThemeResult {
   themes: InstalledTheme[];
   status: SystemStatus;
@@ -664,6 +681,11 @@ export interface AgentSkinApi {
   getPathForFile(file: File): string;
   exportTheme(themeId: string): Promise<DialogResult>;
   deleteTheme(themeId: string): Promise<DeleteThemeResult>;
+  /** Create an `.agentskin-bundle` combo package from a theme's directory
+   *  package (pywal wallpaper-themes / built-in themes) via a save dialog. */
+  createBundle(themeId: string): Promise<BundleCreateResult>;
+  /** Install an `.agentskin-bundle` combo package via an open dialog. */
+  installBundle(): Promise<BundleInstallResult>;
   // --- Catalog (read-only product data layer) ---
   catalog: {
     agents: {

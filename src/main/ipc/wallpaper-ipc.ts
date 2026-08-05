@@ -27,6 +27,7 @@ import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
 import { type MainContext, settingsDto } from '../main-context';
 import { buildWallpaperTheme, removeWallpaperTheme } from '../theme/wallpaper-theme';
+import { registerThemeWallpaperForInstalled } from '../wallpaper/theme-wallpaper';
 import { assertAgentId, assertNonEmptyString } from './ipc-validators';
 
 export function registerWallpaperIpc(deps: MainContext): void {
@@ -168,12 +169,29 @@ export function registerWallpaperIpc(deps: MainContext): void {
       // library (userData/themes) and return the installed theme so the
       // renderer can apply it immediately.
       const outRoot = path.join(deps.userDataRoot, 'wallpaper-themes');
-      const built = await buildWallpaperTheme({ wallpaperId, title, previewPath, outRoot });
+      // 视频壁纸：把视频路径传入，使生成的主题捆绑 wallpaper.video（apply
+      // 时自动注入）；非视频壁纸不捆绑。
+      let videoPath: string | undefined;
+      if (deps.wallpapers) {
+        const info = await deps.wallpapers.mediaInfoFor(wallpaperId);
+        if (info?.type === 'video') videoPath = info.path;
+      }
+      const built = await buildWallpaperTheme({
+        wallpaperId,
+        title,
+        previewPath,
+        outRoot,
+        videoPath,
+      });
       await removeWallpaperTheme(outRoot, built.themeId);
       const loader = new ThemePackageLoader(outRoot);
       const pkg = await loader.load(built.themeId);
       const installer = new ThemeInstaller(deps.library);
-      return installer.install(pkg);
+      const installed = await installer.install(pkg, outRoot);
+      // 主题自带视频壁纸 → 注册为 theme:<id>，使 UI/apply 可解析（pywal
+      // 主题在 userData 下，boot 的 themesDir 路径拼接不适用）。
+      await registerThemeWallpaperForInstalled(deps, installed, outRoot);
+      return installed;
     },
   );
 
