@@ -17,7 +17,7 @@
  * The renderer no longer seeds builtin themes from URLs.
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import type { Route } from '@/types/navigation';
 
@@ -190,7 +190,22 @@ export function useAppController() {
   // activate the theme's bundled video wallpaper after a successful apply.
   // `fail` reports wallpaper IPC errors instead of letting them become
   // unhandled rejections or silent .catch(() => undefined) drops.
-  const wallpaper = useWallpaper(fail);
+  //
+  // pywal-style wallpaper→theme linkage: when a wallpaper is applied to an
+  // agent, auto-extract a matching theme, apply it, then re-apply the
+  // wallpaper (theme apply clears per-agent wallpaper per "last applied
+  // wins"). The companion needs `applyToApp` from useThemes, which is created
+  // after useWallpaper — so it goes through a ref that useThemes populates.
+  const wallpaperCompanionRef = useRef<
+    ((appId: AgentId, wallpaperId: string) => Promise<void>) | null
+  >(null);
+  // Guards against recursion: the companion re-applies the wallpaper, which
+  // triggers onWallpaperApplied again — short-circuit while it is running.
+  const wallpaperCompanionBusyRef = useRef(false);
+  const wallpaper = useWallpaper(fail, async (appId, wallpaperId) => {
+    const run = wallpaperCompanionRef.current;
+    if (run) await run(appId, wallpaperId);
+  });
   const themesHook = useThemes({
     showToast,
     fail,
@@ -207,6 +222,29 @@ export function useAppController() {
     setRestartPrompt: dialogs.setRestartPrompt,
     activateThemeWallpaper: wallpaper.activateThemeWallpaper,
   });
+
+  // Populate the companion ref with the actual implementation (needs
+  // themesHook.applyToApp + wallpaper.setAndApplyAgentWallpaper).
+  wallpaperCompanionRef.current = async (appId, wallpaperId) => {
+    if (wallpaperCompanionBusyRef.current) return;
+    wallpaperCompanionBusyRef.current = true;
+    try {
+      const theme = await api.extractThemeFromWallpaper(wallpaperId);
+      const applied = await themesHook.applyToApp(theme.id, theme.displayName, appId);
+      if (applied) {
+        // Theme apply cleared the per-agent wallpaper preference (last
+        // applied wins) — re-apply it to restore both. The re-apply triggers
+        // onWallpaperApplied again, short-circuited by the busy ref.
+        await wallpaper.setAndApplyAgentWallpaper(appId, true, wallpaperId);
+      }
+    } catch (error) {
+      fail(error);
+      showToast(t.wallpaperThemeAutoFailed, 'destructive');
+    } finally {
+      wallpaperCompanionBusyRef.current = false;
+    }
+  };
+
   const settingsHook = useSettings({ showToast, fail, t, setStatus });
 
   // Install flow (real step sequence)

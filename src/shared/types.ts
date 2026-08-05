@@ -686,6 +686,11 @@ export interface AgentSkinApi {
   setCustomThemeCss(css: string): Promise<SettingsUpdateResult>;
   // --- Dynamic wallpapers (Wallpaper Engine integration) ---
   listWallpapers(): Promise<WallpaperInfo[]>;
+  /** Extract a wallpaper's dominant colors into a generated `.agentskin-theme`
+   *  package, install it into the library, and return the installed theme —
+   *  pywal-style wallpaper→theme linkage. Throws when the wallpaper has no
+   *  decodable preview image. */
+  extractThemeFromWallpaper(wallpaperId: string): Promise<InstalledTheme>;
   /** Persist the AgentSkin UI wallpaper preference (enabled + id). Per-agent
    *  settings are preserved server-side and not overwritten by this call. */
   setWallpaper(

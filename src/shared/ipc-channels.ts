@@ -81,6 +81,10 @@ export const IpcChannel = {
    *  renderer injected into agent windows) so the desktop UI background can
    *  render the wallpaper identically. */
   WALLPAPER_WEB_URL: 'wallpaper:web-url',
+  /** Extract a wallpaper's dominant colors into a generated `.agentskin-theme`
+   *  package, install it into the library, and return the installed theme
+   *  (pywal-style wallpaper→theme linkage). */
+  WALLPAPER_EXTRACT_THEME: 'wallpaper:extract-theme',
   WE_DETECT: 'we:detect',
 
   // --- Theme Studio (studio-ipc.ts) ---

@@ -13,11 +13,20 @@
  * are unit-testable — no implicit singleton import.
  */
 
+import path from 'node:path';
 import { dialog, ipcMain } from 'electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
-import type { WallpaperAgentSetting, WallpaperInfo, WallpaperSettings } from '../../shared/types';
+import type {
+  InstalledTheme,
+  WallpaperAgentSetting,
+  WallpaperInfo,
+  WallpaperSettings,
+} from '../../shared/types';
+import { ThemeInstaller } from '../catalog/theme-installer';
+import { ThemePackageLoader } from '../catalog/theme-package-loader';
 import { type MainContext, settingsDto } from '../main-context';
+import { buildWallpaperTheme, removeWallpaperTheme } from '../theme/wallpaper-theme';
 import { assertAgentId, assertNonEmptyString } from './ipc-validators';
 
 export function registerWallpaperIpc(deps: MainContext): void {
@@ -140,6 +149,31 @@ export function registerWallpaperIpc(deps: MainContext): void {
     async (_event, id: unknown): Promise<string | null> => {
       assertNonEmptyString(id, getMainMessages().invalidPath);
       return deps.wallpapers?.webUrlFor(id) ?? null;
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_EXTRACT_THEME,
+    async (_event, wallpaperId: unknown): Promise<InstalledTheme> => {
+      assertNonEmptyString(wallpaperId, getMainMessages().invalidPath);
+      if (!deps.wallpapers) throw new Error('Wallpaper service unavailable');
+      const copy = getMainMessages();
+      const previewPath = await deps.wallpapers.previewPathFor(wallpaperId);
+      if (!previewPath) throw new Error(copy.wallpaperThemeNoPreview);
+      // Title for the generated theme's display name (fall back to the id).
+      const items = await deps.wallpapers.list();
+      const title = items.find((w) => w.id === wallpaperId)?.title ?? wallpaperId;
+      // Build the theme package under <userData>/wallpaper-themes (independent
+      // of the built-in themes/ dir the seeder scans), install it into the
+      // library (userData/themes) and return the installed theme so the
+      // renderer can apply it immediately.
+      const outRoot = path.join(deps.userDataRoot, 'wallpaper-themes');
+      const built = await buildWallpaperTheme({ wallpaperId, title, previewPath, outRoot });
+      await removeWallpaperTheme(outRoot, built.themeId);
+      const loader = new ThemePackageLoader(outRoot);
+      const pkg = await loader.load(built.themeId);
+      const installer = new ThemeInstaller(deps.library);
+      return installer.install(pkg);
     },
   );
 

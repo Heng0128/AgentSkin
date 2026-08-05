@@ -28,7 +28,10 @@ function emptyAgentWallpapers(): Record<AgentId, WallpaperAgentSetting> {
   return result;
 }
 
-export function useWallpaper(onError?: (error: unknown) => void) {
+export function useWallpaper(
+  onError?: (error: unknown) => void,
+  onWallpaperApplied?: (appId: AgentId, wallpaperId: string) => Promise<void>,
+) {
   const [wallpapers, setWallpapers] = useState<WallpaperInfo[]>([]);
   const [enabled, setEnabled] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -171,6 +174,14 @@ export function useWallpaper(onError?: (error: unknown) => void) {
   /**
    * Convenience: persist a per-agent wallpaper preference AND immediately
    * apply it to the agent's running page.
+   *
+   * When the apply succeeds and `onWallpaperApplied` is provided (pywal-style
+   * wallpaper→theme linkage), the callback runs afterwards — fire-and-forget:
+   * failures inside it never roll back the wallpaper apply, they're only
+   * reported via onError. `onWallpaperApplied` is expected to re-apply the
+   * wallpaper after its own theme apply (theme apply clears per-agent
+   * wallpaper per "last applied wins"), so callers must guard against
+   * recursion (e.g. a ref that short-circuits while the callback runs).
    */
   const setAndApplyAgentWallpaper = useCallback(
     async (
@@ -185,9 +196,19 @@ export function useWallpaper(onError?: (error: unknown) => void) {
         // into the agent, or the apply would succeed without the setting.
         return { ok: false, reason: 'persist-failed' as const };
       }
-      return applyAgentWallpaper(appId, options);
+      const result = await applyAgentWallpaper(appId, options);
+      if (result?.ok && nextEnabled && nextId && onWallpaperApplied) {
+        try {
+          await onWallpaperApplied(appId, nextId);
+        } catch (error) {
+          // The wallpaper itself is applied; the follow-up (theme extraction +
+          // apply) is best-effort. Report but keep the wallpaper result.
+          onError?.(error);
+        }
+      }
+      return result;
     },
-    [setAgentWallpaper, applyAgentWallpaper],
+    [setAgentWallpaper, applyAgentWallpaper, onWallpaperApplied, onError],
   );
 
   /**

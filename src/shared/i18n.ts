@@ -286,6 +286,7 @@ export const uiMessages = {
     wallpaperAgentNotRunning: '未运行',
     wallpaperAgentInjectFailed: '注入失败',
     wallpaperAgentNone: '无壁纸',
+    wallpaperThemeAutoFailed: '按壁纸生成主题失败',
     // --- Wallpaper Engine page ---
     wePageDesc: '浏览 Wallpaper Engine 壁纸库，选择壁纸应用到任意 Agent',
     weDetecting: '正在检测 Wallpaper Engine…',
@@ -773,6 +774,7 @@ export const uiMessages = {
     wallpaperAgentNotRunning: 'Not running',
     wallpaperAgentInjectFailed: 'Injection failed',
     wallpaperAgentNone: 'No wallpaper',
+    wallpaperThemeAutoFailed: 'Failed to generate a theme from the wallpaper',
     // --- Wallpaper Engine page ---
     wePageDesc: 'Browse Wallpaper Engine library and apply wallpapers to any Agent',
     weDetecting: 'Detecting Wallpaper Engine…',
@@ -983,6 +985,7 @@ export const mainMessages = {
     wallpaperImportFilterAll: '图片和视频',
     wallpaperImportFilterVideo: '视频',
     wallpaperImportFilterImage: '图片',
+    wallpaperThemeNoPreview: '该壁纸没有可用的预览图，无法自动取色生成主题。',
     restartRequiredMessage:
       '应用正在运行，需要由 AgentSkin 重启一次才能启用主题。请在弹窗中点击"重启并应用"。',
     cdpNotDetectedMessage:
@@ -1029,6 +1032,8 @@ export const mainMessages = {
     wallpaperImportFilterAll: 'Images & Videos',
     wallpaperImportFilterVideo: 'Video',
     wallpaperImportFilterImage: 'Image',
+    wallpaperThemeNoPreview:
+      'This wallpaper has no usable preview image — cannot auto-extract a theme.',
     restartRequiredMessage:
       'The app is running and AgentSkin must restart it once before the theme can be enabled. Click "Restart & apply" in the dialog.',
     cdpNotDetectedMessage:
