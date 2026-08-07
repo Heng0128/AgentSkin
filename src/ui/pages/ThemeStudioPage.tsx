@@ -206,7 +206,7 @@ export function ThemeStudioPage({ controller }: { controller: AppController }) {
   const [baselineLoadingMap, setBaselineLoadingMap] = useState<Record<AgentId, boolean>>(
     {} as Record<AgentId, boolean>,
   );
-  const [baselineErrorMap, setBaselineErrorMap] = useState<Record<AgentId, string>>(
+  const [_baselineErrorMap, setBaselineErrorMap] = useState<Record<AgentId, string>>(
     {} as Record<AgentId, string>,
   );
   // 当前 active agent 的派生基线状态

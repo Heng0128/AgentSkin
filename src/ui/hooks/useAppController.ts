@@ -19,16 +19,18 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useShellStore } from '@/stores/shellStore';
+import { useStatusStore } from '@/stores/statusStore';
 import type { Route } from '@/types/navigation';
 
-import { type AppLocale, DEFAULT_LOCALE, type UiMessages, uiMessages } from '@shared/i18n';
-import type { AgentId, SystemStatus } from '@shared/types';
+import { type AppLocale, type UiMessages, uiMessages } from '@shared/i18n';
+import type { AgentId } from '@shared/types';
 import { AGENT_META } from '@shared/types';
 import { useAgents } from './useAgents';
 import { useBoot } from './useBoot';
 import { type StructuredEvent, useBootProgress } from './useBootProgress';
 import { useDialogs } from './useDialogs';
-import { useNotifications } from './useNotifications';
 import { type SettingsSection, useSettings } from './useSettings';
 import {
   type InstallFlowState,
@@ -44,47 +46,35 @@ export type { RestartPrompt } from './useThemes';
 export type { BusyKey, InstallFlowState, InstallStep, Route, Selection, SettingsSection };
 
 export function useAppController() {
-  // --- Shared state ---
-  const [locale, setLocaleState] = useState<AppLocale>(DEFAULT_LOCALE);
-  const [appVersion, setAppVersion] = useState('');
-  const [route, setRouteState] = useState<Route>('dashboard');
-  const [activeAgentId, setActiveAgentId] = useState<string | null>(null);
-  const [status, setStatus] = useState<SystemStatus | null>(null);
-  const [lastStatusAt, setLastStatusAt] = useState<number | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [booting, setBooting] = useState(true);
+  // --- Shared state (from shellStore) ---
+  const locale = useShellStore((s) => s.locale);
+  const appVersion = useShellStore((s) => s.appVersion);
+  const route = useShellStore((s) => s.route);
+  const activeAgentId = useShellStore((s) => s.activeAgentId);
+  const booting = useShellStore((s) => s.booting);
+  const logs = useShellStore((s) => s.logs);
+  const logsOpen = useShellStore((s) => s.logsOpen);
+  const injectDockOpen = useShellStore((s) => s.injectDockOpen);
+  const sidebarCollapsed = useShellStore((s) => s.sidebarCollapsed);
+  const setLocaleState = useShellStore((s) => s.setLocale);
+  const setAppVersion = useShellStore((s) => s.setAppVersion);
+  const setBooting = useShellStore((s) => s.setBooting);
+  const setLogs = useShellStore((s) => s.setLogs);
+  const setLogsOpen = useShellStore((s) => s.setLogsOpen);
+  const setActiveAgentId = useShellStore((s) => s.setActiveAgentId);
+
+  const status = useStatusStore((s) => s.status);
+  const lastStatusAt = useStatusStore((s) => s.lastStatusAt);
+  const isRefreshing = useStatusStore((s) => s.isRefreshing);
+  const setStatus = useStatusStore((s) => s.setStatus);
   const [busy, setBusy] = useState<BusyKey | null>(null);
-  const [logs, setLogs] = useState<string[]>([]);
-  const [logsOpen, setLogsOpen] = useState(false);
+
   // Inject dock (A.html `#dock`) — floating quick-actions capsule toggled
   // from the status bar ⏏ button or Ctrl/Cmd+D.
-  const [injectDockOpen, setInjectDockOpen] = useState(false);
-
-  // Sidebar collapse state — persisted to localStorage so the layout
-  // preference survives reloads. Read synchronously on first render so
-  // there is no flash of the expanded sidebar.
-  const SIDEBAR_KEY = 'agentskin:sidebar-collapsed';
-  const [sidebarCollapsed, setSidebarCollapsedState] = useState<boolean>(() => {
-    try {
-      return window.localStorage.getItem(SIDEBAR_KEY) === '1';
-    } catch {
-      return false;
-    }
-  });
-  const setSidebarCollapsed = useCallback((next: boolean) => {
-    setSidebarCollapsedState(next);
-    try {
-      window.localStorage.setItem(SIDEBAR_KEY, next ? '1' : '0');
-    } catch {
-      /* ignore persistence failures */
-    }
-  }, []);
-  // Use functional setState in the toggle to avoid depending on
-  // sidebarCollapsed in the effect below — prevents re-subscription
-  // on every collapse/expand.
-  const toggleSidebar = useCallback(() => {
-    setSidebarCollapsedState((prev) => !prev);
-  }, []);
+  const setInjectDockOpen = useShellStore((s) => s.setInjectDockOpen);
+  const toggleInjectDock = useShellStore((s) => s.toggleInjectDock);
+  const setSidebarCollapsed = useShellStore((s) => s.setSidebarCollapsed);
+  const toggleSidebar = useShellStore((s) => s.toggleSidebar);
 
   // Global shortcut (Ctrl/Cmd + \) — mirrors VS Code / Cursor so the toggle
   // is reachable without reaching for the mouse. Ignored while typing in a
@@ -113,42 +103,35 @@ export function useAppController() {
       const tag = target?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return;
       event.preventDefault();
-      setInjectDockOpen((open) => !open);
+      toggleInjectDock();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [toggleInjectDock]);
 
   const t: UiMessages = uiMessages[locale];
 
   // --- Shared functions ---
-  // refreshStatus tracks in-flight state + last-success timestamp so the UI
-  // can surface a "live" indicator with relative time and a refreshing pulse.
-  const refreshStatus = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      setStatus(await api.refreshStatus());
-      setLastStatusAt(Date.now());
-    } catch {
-      /* transient */
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, []);
+  const refreshStatus = useStatusStore((s) => s.refreshStatus);
 
-  const setLocale = useCallback(async (next: AppLocale) => {
-    setLocaleState(next);
-    try {
-      await api.setLocale(next);
-    } catch {
-      /* toast handled by caller */
-    }
-  }, []);
+  const setLocale = useCallback(
+    async (next: AppLocale) => {
+      setLocaleState(next);
+      try {
+        await api.setLocale(next);
+      } catch {
+        /* toast handled by caller */
+      }
+    },
+    [setLocaleState],
+  );
 
-  const setRoute = useCallback((next: Route) => setRouteState(next), []);
+  const setRoute = useShellStore((s) => s.setRoute);
 
   // --- Notifications (needed before boot so fail() is available) ---
-  const { toasts: controllerToasts, showToast, fail } = useNotifications(t);
+  const controllerToasts = useNotificationStore((s) => s.toasts);
+  const showToast = useNotificationStore((s) => s.showToast);
+  const fail = useNotificationStore((s) => s.fail);
 
   // --- Boot warnings: surface degraded boot steps as a toast once the main
   // window is ready. The main process pushes the list once (boot:warnings);
