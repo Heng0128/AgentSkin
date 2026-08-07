@@ -65,6 +65,14 @@ class WallpaperMediaServer {
   private readonly dirEntries = new Map<string, { dirPath: string }>();
   /** Inline HTML served for scene-type wallpapers (token -> raw markup). */
   private readonly htmlEntries = new Map<string, { html: string; mime: string }>();
+  /**
+   * Active in-flight responses, tracked so {@link stop} can destroy them
+   * instead of waiting for long-lived video streams to drain. Without this,
+   * `server.close()` only stops accepting NEW connections — existing ones
+   * (e.g. a buffered video stream) keep the event loop alive and the port
+   * stays bound, which breaks hot-reload and test re-bootstrap.
+   */
+  private readonly activeResponses = new Set<http.ServerResponse>();
 
   /** Lazily start the server (idempotent). Resolves once listening. */
   private async ensureStarted(): Promise<void> {
@@ -167,6 +175,14 @@ class WallpaperMediaServer {
   private handle(req: http.IncomingMessage, res: http.ServerResponse): void {
     const parsed = new URL(req.url ?? '', 'http://localhost');
     const pathname = parsed.pathname ?? '';
+
+    // Track the response so stop() can destroy it instead of waiting for
+    // long-lived streams to drain. Removed on 'close' (covers both normal
+    // finish and socket errors) so the set never leaks entries.
+    this.activeResponses.add(res);
+    res.once('close', () => {
+      this.activeResponses.delete(res);
+    });
 
     // Path-based directory serving: /d/{token}/{filepath...}
     // Relative URLs in web wallpaper HTML resolve correctly under this scheme
@@ -355,6 +371,14 @@ class WallpaperMediaServer {
     this.entries.clear();
     this.dirEntries.clear();
     this.htmlEntries.clear();
+    // Destroy in-flight responses BEFORE close() so long-lived streams
+    // (buffered video) don't keep the event loop / port alive. Without this,
+    // hot-reload and test re-bootstrap hit EADDRINUSE because the previous
+    // server's sockets linger in TIME_WAIT.
+    for (const res of this.activeResponses) {
+      if (!res.writableEnded) res.destroy();
+    }
+    this.activeResponses.clear();
     if (this.server) {
       this.server.close();
       this.server = null;

@@ -123,11 +123,15 @@ export class MediaRegistry {
     return null;
   }
 
-  /** Unregister all minted tokens and clear all URL caches. Called on rescan. */
+  /**
+   * Unregister all minted tokens and clear all URL caches. Called on rescan.
+   * Each token is unregistered individually so one throw (server hiccup)
+   * can't leak the remaining tokens — unregister is best-effort by contract.
+   */
   releaseAll(): void {
-    for (const { token } of this.previewUrls.values()) wallpaperMediaServer.unregister(token);
-    for (const { token } of this.videoUrls.values()) wallpaperMediaServer.unregister(token);
-    for (const { token } of this.webUrls.values()) wallpaperMediaServer.unregister(token);
+    for (const { token } of this.previewUrls.values()) safeUnregister(token);
+    for (const { token } of this.videoUrls.values()) safeUnregister(token);
+    for (const { token } of this.webUrls.values()) safeUnregister(token);
     this.previewUrls.clear();
     this.videoUrls.clear();
     this.webUrls.clear();
@@ -138,18 +142,28 @@ export class MediaRegistry {
   releaseForId(id: string): void {
     const cachedPreview = this.previewUrls.get(id);
     if (cachedPreview) {
-      wallpaperMediaServer.unregister(cachedPreview.token);
+      safeUnregister(cachedPreview.token);
       this.previewUrls.delete(id);
     }
     const cachedVideo = this.videoUrls.get(id);
     if (cachedVideo) {
-      wallpaperMediaServer.unregister(cachedVideo.token);
+      safeUnregister(cachedVideo.token);
       this.videoUrls.delete(id);
     }
     const cachedWeb = this.webUrls.get(id);
     if (cachedWeb) {
-      wallpaperMediaServer.unregister(cachedWeb.token);
+      safeUnregister(cachedWeb.token);
       this.webUrls.delete(id);
     }
+  }
+}
+
+/** Unregister a media-server token without letting a throw abort a cleanup
+ *  loop (releaseAll / releaseForId iterate multiple tokens). */
+function safeUnregister(token: string): void {
+  try {
+    wallpaperMediaServer.unregister(token);
+  } catch (error) {
+    console.warn(`[wallpaper] failed to unregister media token: ${String(error)}`);
   }
 }

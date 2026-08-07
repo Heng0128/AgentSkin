@@ -1,12 +1,27 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { type DragEvent, useRef, useState } from 'react';
+import { type DragEvent, useMemo, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { VirtualThemeGrid } from '@/components/themes/VirtualThemeGrid';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { AppController } from '@/hooks/useAppController';
 import type { ThemeSortKey } from '@/hooks/useThemeCenter';
 import { useThemeCenter } from '@/hooks/useThemeCenter';
@@ -48,14 +63,17 @@ export function ThemesPage({ controller }: { controller: AppController }) {
   };
 
   // Build a map: themeId → AgentId[] (which agents have this theme active)
-  const activeAgentsByTheme = new Map<string, AgentId[]>();
-  for (const app of controller.status?.apps ?? []) {
-    if (app.activeThemeId) {
-      const list = activeAgentsByTheme.get(app.activeThemeId) ?? [];
-      list.push(app.appId);
-      activeAgentsByTheme.set(app.activeThemeId, list);
+  const activeAgentsByTheme = useMemo(() => {
+    const map = new Map<string, AgentId[]>();
+    for (const app of controller.status?.apps ?? []) {
+      if (app.activeThemeId) {
+        const list = map.get(app.activeThemeId) ?? [];
+        list.push(app.appId);
+        map.set(app.activeThemeId, list);
+      }
     }
-  }
+    return map;
+  }, [controller.status]);
   const activeThemeCount = activeAgentsByTheme.size;
   const dynamicCount = tc.themes.filter((th) => th.hasWallpaper).length;
 
@@ -107,21 +125,41 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           </InputGroupAddon>
         </InputGroup>
 
-        {/* Sort select — Swiss: rounded-[2px] */}
-        <select
-          value={tc.sortBy}
-          onChange={(e) => tc.setSortBy(e.target.value as ThemeSortKey)}
-          aria-label={t.sortName}
-          className="h-[30px] rounded-[2px] border bg-[var(--bg2,theme(colors.muted.DEFAULT))] px-2 text-xs text-muted-foreground outline-none transition-[border-color] duration-150 focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.13)]"
-        >
-          <option value="name">{t.sortName}</option>
-          <option value="author">{t.sortAuthor}</option>
-          <option value="category">{t.sortCategory}</option>
-          <option value="version">{t.sortVersion}</option>
-        </select>
+        {/* Sort select — Swiss: rounded-[2px] shadcn Select */}
+        <Select value={tc.sortBy} onValueChange={(v) => tc.setSortBy(v as ThemeSortKey)}>
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SelectTrigger
+                  className="h-[30px] w-[130px] rounded-[2px] border-border bg-muted text-[11px] focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.13)]"
+                  aria-label={t.sortName}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-[10.5px]">
+                按名称、作者、分类或版本号排序
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <SelectContent className="rounded-[2px] border-border bg-card">
+            <SelectItem value="name" className="text-[11px]">
+              {t.sortName}
+            </SelectItem>
+            <SelectItem value="author" className="text-[11px]">
+              {t.sortAuthor}
+            </SelectItem>
+            <SelectItem value="category" className="text-[11px]">
+              {t.sortCategory}
+            </SelectItem>
+            <SelectItem value="version" className="text-[11px]">
+              {t.sortVersion}
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
         {/* View toggle — Swiss segmented */}
-        <div className="inline-flex items-center gap-0.5 rounded-[2px] bg-[var(--bg2,theme(colors.muted.DEFAULT))] p-0.5">
+        <div className="inline-flex items-center gap-0.5 rounded-[2px] bg-muted p-0.5">
           <button
             type="button"
             onClick={() => tc.setSortOrder(tc.sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -129,7 +167,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             aria-pressed={tc.sortOrder === 'asc'}
             className={cn(
               'h-[26px] rounded-[2px] px-2.5 text-xs font-medium transition-all duration-150',
-              'bg-card text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.18)]',
+              'bg-card text-foreground shadow-sm',
             )}
           >
             <span className="font-mono">{tc.sortOrder === 'asc' ? '↑' : '↓'}</span>
@@ -155,7 +193,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         {/* Theme Studio — btn-red */}
         <Button
           size="sm"
-          className="h-[30px] rounded-[2px] bg-[#FF453A] text-white border border-[#FF453A] transition-[background-color,transform] duration-150 hover:bg-[#FF6B61] active:translate-y-px active:scale-[.99]"
+          className="h-[30px] rounded-[2px] bg-primary text-primary-foreground border border-primary transition-[background-color,transform] duration-150 hover:bg-primary/90 active:translate-y-px active:scale-[.99]"
           onClick={() => {
             void api.openStudioWindow();
           }}
@@ -168,14 +206,14 @@ export function ThemesPage({ controller }: { controller: AppController }) {
       <div className="flex flex-wrap items-center gap-2">
         {/* Category filter — segmented */}
         {tc.categories.length > 0 && (
-          <div className="inline-flex items-center gap-0.5 rounded-[2px] bg-[var(--bg2,theme(colors.muted.DEFAULT))] border border-border p-0.5">
+          <div className="inline-flex items-center gap-0.5 rounded-[2px] bg-muted border border-border p-0.5">
             <button
               type="button"
               onClick={() => tc.setSelectedCategory(null)}
               className={cn(
                 'h-[26px] rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
                 tc.selectedCategory === null
-                  ? 'bg-card text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
+                  ? 'bg-card text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -189,7 +227,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                 className={cn(
                   'h-[26px] rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
                   tc.selectedCategory === cat
-                    ? 'bg-card text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
+                    ? 'bg-card text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -200,7 +238,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         )}
 
         {/* Mode filter — segmented */}
-        <div className="inline-flex items-center gap-0.5 rounded-[2px] bg-[var(--bg2,theme(colors.muted.DEFAULT))] border border-border p-0.5">
+        <div className="inline-flex items-center gap-0.5 rounded-[2px] bg-muted border border-border p-0.5">
           {(['all', 'dark', 'light'] as const).map((m) => (
             <button
               key={m}
@@ -209,7 +247,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
               className={cn(
                 'h-[26px] rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
                 tc.modeFilter === m
-                  ? 'bg-card text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.18)]'
+                  ? 'bg-card text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -227,8 +265,8 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             className={cn(
               'inline-flex h-[26px] items-center gap-1 rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
               tc.dynamicFilter === 'dynamic'
-                ? 'bg-card text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.18)] border border-border'
-                : 'bg-[var(--bg2,theme(colors.muted.DEFAULT))] text-muted-foreground hover:text-foreground border border-border',
+                ? 'bg-card text-foreground shadow-sm border border-border'
+                : 'bg-muted text-muted-foreground hover:text-foreground border border-border',
             )}
           >
             <span className="relative flex size-1.5">
@@ -251,20 +289,37 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           </button>
         )}
 
-        {/* Stats badges — right side */}
+        {/* Stats badges — right side — Swiss Badge */}
         <div className="ml-auto flex items-center gap-2">
           {dynamicCount > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-[2px] border border-border2 px-2 py-0.5 font-mono text-[9.5px] tracking-wide text-muted-foreground">
+            <Badge variant="red" data-icon="inline-start" className="gap-1">
               {dynamicCount} DYNAMIC
-            </span>
+            </Badge>
           )}
           {activeThemeCount > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-[2px] border border-border2 px-2 py-0.5 font-mono text-[9.5px] tracking-wide text-muted-foreground">
+            <Badge variant="grn" data-icon="inline-start" className="gap-1">
               {activeThemeCount} ACTIVE
-            </span>
+            </Badge>
           )}
         </div>
       </div>
+
+      {/* Quick guide accordion — collapsible usage instructions */}
+      <Accordion type="single" collapsible className="mb-2">
+        <AccordionItem value="guide" className="border-b-0">
+          <AccordionTrigger className="py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground">
+            快速指南
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-1 pb-2 font-mono text-[10.5px] leading-relaxed text-muted-foreground/70">
+              <p>· 拖拽 .zip / .agentheme 文件到页面任意位置即可导入主题</p>
+              <p>· 点击主题卡片可在右侧预览详情并一键应用到 Agent</p>
+              <p>· DYNAMIC 标记的主题包含动态壁纸，应用后自动生效</p>
+              <p>· Theme Studio 提供完整的主题编辑与导出工作流</p>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {/* Swiss metadata row — theme count + active palette info */}
       <div className="flex items-center gap-3 py-2">
@@ -347,7 +402,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           }}
         >
           <div
-            className="flex flex-col items-center gap-3 rounded-[2px] border-2 border-dashed border-[var(--border,rgba(255,255,255,0.09))] bg-[var(--card,theme(colors.card.DEFAULT))] px-12 py-9 text-center"
+            className="flex flex-col items-center gap-3 rounded-[2px] border-2 border-dashed border-border bg-card px-12 py-9 text-center"
             style={{ boxShadow: 'var(--shadow, 0 10px 28px rgba(0,0,0,0.4))' }}
           >
             <div

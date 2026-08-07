@@ -30,7 +30,15 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
     // takes seconds and left the environment list blank until detection finished.
     return {
       themes: [],
-      status: { apps: [], platform: process.platform === 'win32' ? 'win32' : 'darwin' },
+      status: {
+        apps: [],
+        platform:
+          process.platform === 'win32'
+            ? 'win32'
+            : process.platform === 'darwin'
+              ? 'darwin'
+              : 'unsupported',
+      },
       locale: deps.locale,
       appVersion: app.getVersion(),
     };

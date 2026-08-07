@@ -24,6 +24,7 @@
 import {
   IMAGE_SCRIM_ID,
   IMAGE_WALLPAPER_ID,
+  RENDERER_SELF_HEAL_INTERVAL_MS,
   VIDEO_SCRIM_ID,
   VIDEO_WALLPAPER_ID,
   WALLPAPER_CONTAINER_ID,
@@ -63,7 +64,6 @@ export function alignmentObjectFit(alignment: WallpaperRenderOptions['alignment'
       return 'none';
     case 'tile':
       return 'none';
-    case 'fill':
     default:
       return 'cover';
   }
@@ -511,7 +511,7 @@ export function buildWallpaperGuardJs(
       if(isNaN(sop)||sop<=0){currentSc.style.setProperty('opacity','1','important');}
     }
     ${isVideo ? "if(currentWp&&currentWp.tagName==='VIDEO'&&currentWp.paused){try{currentWp.play().catch(function(){});}catch(e){}}" : ''}
-  },2000);
+  },${RENDERER_SELF_HEAL_INTERVAL_MS});
   window.${WALLPAPER_HEAL_GLOBAL}=healInterval;
   // Re-enforce container positioning on window resize / DPI change.
   // When the window is resized (taskbar show/hide, split-screen, DPI scaling),
@@ -583,6 +583,37 @@ const WALLPAPER_PUNCH_JS = `
   if(!window[G+'_els']){window[G+'_els']=new Set();}
   function track(el){window[G+'_els'].add(el);}
   function isWp(el){return el&&el.id&&IDS.indexOf(el.id)>=0;}
+  function isSidebar(el){
+    if(!el)return false;
+    var tag=el.tagName;
+    if(tag!=='DIV'&&tag!=='NAV'&&tag!=='ASIDE'&&tag!=='SECTION')return false;
+    var id=el.id||'',cn=el.className||'',role=el.getAttribute('role')||'',dvid=el.getAttribute('data-view-id')||'',das=el.getAttribute('data-agentskin-sidebar')||'';
+    if(typeof cn!=='string'){cn=cn.baseVal||'';}
+    if(das==='1')return true;
+    if(dvid==='sidebar')return true;
+    if(id==='sidebar'||id==='Sidebar')return true;
+    if(cn.indexOf('sidebar')>=0||cn.indexOf('Sidebar')>=0)return true;
+    if(tag==='NAV')return true;
+    if(tag==='ASIDE'&&role==='navigation')return true;
+    if(role==='navigation'||role==='complementary')return true;
+    var r=el.getBoundingClientRect(),vw=document.documentElement.clientWidth,vh=document.documentElement.clientHeight;
+    if(r.left<60&&r.height>vh*0.5&&r.width<350&&r.width>40)return true;
+    return false;
+  }
+  function insideSidebar(el){
+    // Walk up to find a sidebar ancestor. 6 levels covers the typical
+    // platform structures (e.g. workbuddy: sidebar>div>div>list>item>button
+    // = 4 levels). If a future agent introduces deeper nesting, bump this
+    // ceiling or switch to a tagged-pointer approach (set a marker on the
+    // sidebar element once, then check for it in O(1)).
+    var p=el.parentElement,d=0;
+    while(p&&d<6){
+      if(p===document.documentElement||p===document.body)return false;
+      if(isSidebar(p))return true;
+      p=p.parentElement;d++;
+    }
+    return false;
+  }
   // Class-name substrings for UI mask/overlay elements that should be
   // FORCE-neutralized regardless of the size threshold. These are narrow
   // strips (e.g. top/bottom gradient fades) that cover < 50% of the
@@ -712,17 +743,21 @@ const WALLPAPER_PUNCH_JS = `
           // but agent shells have additional wrapper divs (.workspace-shell,
           // .monaco-workbench, .chat-container, etc.) that also set these
           // properties for GPU acceleration or layout containment.
-          // Neutralizing them on large elements is safe because:
-          //   - These properties don't affect visual appearance (only layout
-          //     containment and GPU compositing)
-          //   - The element is already being transparentized (background removed)
-          //   - The wallpaper container is prepended to documentElement, so
-            //     any ancestor with these properties breaks its positioning
-          el.style.setProperty('transform','none','important');
-          el.style.setProperty('filter','none','important');
-          el.style.setProperty('perspective','none','important');
-          el.style.setProperty('contain','none','important');
-          el.style.setProperty('will-change','auto','important');
+          //
+          // SIDEBAR EXEMPTION: sidebars (nav, aside, [data-*=sidebar]) depend
+          // on transform/contain to establish scroll containers and stacking
+          // contexts for their internal buttons. Stripping those properties
+          // makes the sidebar buttons unclickable ("visible but inert"). We
+          // preserve the full original logic for everything else, but skip
+          // layout-property stripping on the sidebar and its descendants so
+          // pointer-events / hit-testing remain intact.
+          if(!isSidebar(el)&&!insideSidebar(el)){
+            el.style.setProperty('transform','none','important');
+            el.style.setProperty('filter','none','important');
+            el.style.setProperty('perspective','none','important');
+            el.style.setProperty('contain','none','important');
+            el.style.setProperty('will-change','auto','important');
+          }
         }
       }
       var ch=el.children;
@@ -761,7 +796,23 @@ const WALLPAPER_PUNCH_JS = `
   if(!window[G]){
     window[G]=true;
     var t=null;
-    var mo=new MutationObserver(function(){
+    var mo=new MutationObserver(function(mutations){
+      // Only re-run neutralize when a non-wallpaper element changed. Pure
+      // wallpaper-container DOM churn or data-agentskin-* attribute updates
+      // triggered by adapters must not force another DOM walk — doing so
+      // re-applies transform:none / contain:none and re-breaks the sidebar.
+      var shouldRun=false;
+      for(var mi=0;mi<mutations.length;mi++){
+        var m=mutations[mi];
+        if(m.type!=='childList')continue;
+        var nodes=m.addedNodes.length>=m.removedNodes.length?m.addedNodes:m.removedNodes;
+        for(var ni=0;ni<nodes.length;ni++){
+          var n=nodes[ni];
+          if(n.nodeType===1&&!isWp(n)&&n.id&&n.id.indexOf('agentskin')<0){shouldRun=true;break;}
+        }
+        if(shouldRun)break;
+      }
+      if(!shouldRun)return;
       if(t)return;
       t=setTimeout(function(){t=null;neutralize();},250);
     });

@@ -30,3 +30,16 @@ find-*-result.txt
 .agnes/
 .workbuddy/
 .zcode/
+
+# Windows reserved-name artifact (accidentally created by `> NUL` redirect)
+/NUL
+
+# CDP raw extraction dumps (large, regeneratable from live agents)
+agents-raw-data/
+
+# Probe screenshots (local-only capture artifacts)
+assets/probe-shots/
+
+# Consulting audit deliverables (not project source)
+项目审计报告.md
+战略审计报告.md

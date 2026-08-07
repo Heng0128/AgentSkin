@@ -192,6 +192,34 @@ function mergeRenderOptions(
 }
 
 /**
+ * Fold a theme wallpaper's top-level `speed/loop/scrimOpacity` (legacy fields)
+ * into its `render` options. The CDP injector only reads `render` — without
+ * this fold, a theme that sets `speed: 2` (but no `render.speed`) would play
+ * at 1×. Returns undefined when the wallpaper sets nothing.
+ */
+function themeRenderOptions(wp: {
+  render?: WallpaperRenderOptions;
+  speed?: number;
+  loop?: boolean;
+  scrimOpacity?: number;
+}): WallpaperRenderOptions | undefined {
+  if (
+    !wp.render &&
+    wp.speed === undefined &&
+    wp.loop === undefined &&
+    wp.scrimOpacity === undefined
+  ) {
+    return undefined;
+  }
+  return {
+    ...(wp.render ?? {}),
+    ...(wp.speed !== undefined ? { speed: wp.speed } : {}),
+    ...(wp.loop !== undefined ? { loop: wp.loop } : {}),
+    ...(wp.scrimOpacity !== undefined ? { scrimOpacity: wp.scrimOpacity } : {}),
+  };
+}
+
+/**
  * AgentSkin's control-layer orchestrator (now a thin facade after the
  * P1-2..P1-5 god-object teardown).
  *
@@ -321,9 +349,6 @@ export class AgentEngineService implements AgentEngineServiceApi {
     entry?: ThemeEntry,
   ): Promise<{
     id: string | null;
-    speed?: number;
-    loop?: boolean;
-    scrimOpacity?: number;
     render?: WallpaperRenderOptions;
   }> {
     // When actively applying a theme (entry provided), the theme is the SOLE
@@ -337,21 +362,18 @@ export class AgentEngineService implements AgentEngineServiceApi {
       const wp = installed.wallpaper;
       if (wp) {
         const themeId = installed.id;
+        // All playback settings ride in `render` (single source of truth —
+        // the CDP injector reads only render). Top-level speed/loop/scrimOpacity
+        // are folded in via themeRenderOptions so legacy themes still apply.
         if (wp.workshopId)
           return {
             id: wp.workshopId,
-            speed: wp.speed,
-            loop: wp.loop,
-            scrimOpacity: wp.scrimOpacity,
-            render: wp.render,
+            render: themeRenderOptions(wp),
           };
         if (wp.video)
           return {
             id: `theme:${themeId}`,
-            speed: wp.speed,
-            loop: wp.loop,
-            scrimOpacity: wp.scrimOpacity,
-            render: wp.render,
+            render: themeRenderOptions(wp),
           };
       }
       // Theme has no wallpaper → clear whatever was there before.
@@ -383,20 +405,14 @@ export class AgentEngineService implements AgentEngineServiceApi {
       if (wp.workshopId)
         return {
           id: wp.workshopId,
-          speed: wp.speed,
-          loop: wp.loop,
-          scrimOpacity: wp.scrimOpacity,
           // global default → theme render (theme is the base when there is no
-          // per-agent override).
-          render: mergeRenderOptions(globalWp.render, wp.render),
+          // per-agent override). Top-level speed/loop/scrimOpacity folded in.
+          render: mergeRenderOptions(globalWp.render, themeRenderOptions(wp)),
         };
       if (wp.video)
         return {
           id: `theme:${themeId}`,
-          speed: wp.speed,
-          loop: wp.loop,
-          scrimOpacity: wp.scrimOpacity,
-          render: mergeRenderOptions(globalWp.render, wp.render),
+          render: mergeRenderOptions(globalWp.render, themeRenderOptions(wp)),
         };
     } catch {
       return { id: null };
@@ -673,6 +689,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
         this.inferRestartReason(appId, cdpFailureReason),
       findTheme: (themeId) => this.library.find(themeId),
       bumpEpoch: (appId) => this.epochs.bumpEpoch(appId),
+      isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
       setActiveTheme: (appId, themeId, port, schemeId) => {
         this.state.apps[appId] = {
           activeThemeId: themeId,

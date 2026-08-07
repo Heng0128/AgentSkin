@@ -58,6 +58,19 @@ function loadSettings(): typeof DEFAULT_SETTINGS {
             const s = settings as typeof DEFAULT_SETTINGS & Record<string, unknown>;
             s[key] = DEFAULT_SETTINGS[key];
           }
+          // Range check: a corrupt/absurd threshold (negative, NaN, or huge)
+          // would make getImageBlobThresholdBytes() return a nonsense cap and
+          // every image wallpaper balloon the heap. Clamp into 1..1000 MB.
+          if (key === 'imageBlobThresholdMB') {
+            const mb = (settings as typeof DEFAULT_SETTINGS).imageBlobThresholdMB;
+            if (!Number.isFinite(mb) || mb <= 0 || mb > 1000) {
+              console.warn(
+                `[WallpaperSettings]: imageBlobThresholdMB=${String(mb)} out of range (1..1000), using default`,
+              );
+              (settings as typeof DEFAULT_SETTINGS).imageBlobThresholdMB =
+                DEFAULT_SETTINGS.imageBlobThresholdMB;
+            }
+          }
         }
       });
     } else {
@@ -86,6 +99,11 @@ export function updateSetting(key: SettingsKey, value: number): void {
   // Validate type
   if (typeof value !== typeof DEFAULT_SETTINGS[key]) {
     throw new Error(`Invalid type for ${key}`);
+  }
+  // Range validation mirrors the load-time clamp: reject absurd thresholds
+  // instead of persisting them.
+  if (key === 'imageBlobThresholdMB' && (!Number.isFinite(value) || value <= 0 || value > 1000)) {
+    throw new Error('imageBlobThresholdMB must be between 1 and 1000');
   }
 
   // R6-2: 先构造完整对象并写入磁盘，成功后再更新内存缓存。

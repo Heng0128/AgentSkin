@@ -39,7 +39,7 @@ export function EnvironmentHero({
   const greeting = greetingForHour(new Date().getHours(), t);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-border/60">
+    <div className="relative overflow-hidden rounded-[2px] border border-border/60">
       {/* === Animated aurora mesh gradient background === */}
       <div
         aria-hidden
@@ -90,7 +90,7 @@ export function EnvironmentHero({
         {activeEnv ? (
           <div
             className={cn(
-              'mt-4 rounded-xl border backdrop-blur-sm transition-all duration-slow',
+              'mt-4 rounded-[2px] border backdrop-blur-sm transition-all duration-slow',
               'border-white/20 bg-white/[0.06] shadow-lg shadow-primary/5',
               'dark:border-white/10 dark:bg-white/[0.04]',
               'group/hero',
@@ -100,14 +100,14 @@ export function EnvironmentHero({
               {/* Agent icon — prominent with glow */}
               <div
                 className={cn(
-                  'relative flex size-13 shrink-0 items-center justify-center rounded-xl transition-transform duration-slow group-hover/hero:scale-105',
+                  'relative flex size-13 shrink-0 items-center justify-center rounded-[2px] transition-transform duration-slow group-hover/hero:scale-105',
                   'bg-gradient-to-br from-primary/25 to-primary/10 ring-1 ring-primary/20',
                   'shadow-md shadow-primary/10',
                 )}
               >
                 <AppMark appId={activeEnv.agent.id} size={36} />
                 {/* Glow ring */}
-                <div className="absolute -inset-1 rounded-xl bg-primary/10 blur-md -z-10" />
+                <div className="absolute -inset-1 rounded-[2px] bg-primary/10 blur-md -z-10" />
               </div>
 
               {/* Environment info */}
@@ -116,7 +116,7 @@ export function EnvironmentHero({
                   <p className="text-base font-bold tracking-tight">{activeEnv.name}</p>
                   <span
                     className={cn(
-                      'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium',
+                      'inline-flex items-center gap-1.5 rounded-[2px] border px-2 py-0.5 text-[10px] font-medium',
                       'border-cr-success/25 bg-cr-success/10 text-cr-success',
                     )}
                   >
@@ -139,9 +139,8 @@ export function EnvironmentHero({
                 <Button
                   size="sm"
                   className={cn(
-                    'gap-1.5 rounded-lg shadow-md transition-all duration-base',
-                    'bg-primary text-white hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20',
-                    'dark:bg-primary dark:text-white dark:hover:bg-primary/90',
+                    'gap-1.5 rounded-[2px] shadow-md transition-all duration-base',
+                    'bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20',
                   )}
                   onClick={onContinue}
                 >
@@ -153,7 +152,7 @@ export function EnvironmentHero({
           </div>
         ) : (
           /* Empty state — first launch */
-          <div className="mt-5 rounded-xl border-2 border-dashed border-border/40 py-10 text-center backdrop-blur-sm dark:border-border/30">
+          <div className="mt-5 rounded-[2px] border-2 border-dashed border-border/40 py-10 text-center backdrop-blur-sm dark:border-border/30">
             <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-primary/10 animate-float">
               <HugeIcon icon={BotIcon} className="size-6 text-primary/60" />
             </div>

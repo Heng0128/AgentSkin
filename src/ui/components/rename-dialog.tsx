@@ -57,7 +57,7 @@ export function RenameDialog({
         <h3 className="text-sm font-semibold">{title}</h3>
         <input
           ref={inputRef}
-          className="mt-2 w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none transition-colors focus:ring-2 focus:ring-primary/30"
+          className="mt-2 w-full rounded-[2px] border bg-background px-3 py-2 text-sm outline-none transition-colors focus:ring-2 focus:ring-primary/30"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
@@ -69,14 +69,14 @@ export function RenameDialog({
         <div className="mt-3 flex justify-end gap-2">
           <button
             type="button"
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary"
+            className="rounded-[2px] px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary"
             onClick={onCancel}
           >
             {cancelLabel}
           </button>
           <button
             type="button"
-            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+            className="rounded-[2px] bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             disabled={!value.trim()}
             onClick={onConfirm}
           >

@@ -76,7 +76,6 @@ function createMockDeps(opts: MockDepsOptions = {}): WallpaperInjectorDeps & {
       videoPathFor: async () => null,
       mediaInfoFor: async (id: string) => mediaInfo[id] ?? null,
       webUrlFor: async () => null,
-      bestFallbackImageFor: async () => null,
     },
     isEpochCurrent: () => epochCurrent,
     bumpEpoch: () => 1,
@@ -131,7 +130,7 @@ describe('injectWithFallback', () => {
       TEST_AGENT,
       9222,
       'wp-A',
-      { scrimOpacity: 45 },
+      { render: { scrimOpacity: 45 } },
       1,
       deps,
     );
@@ -142,7 +141,7 @@ describe('injectWithFallback', () => {
 
   it('falls back to last successful wallpaper on failure', async () => {
     // Pre-set the last successful wallpaper to wp-A
-    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { scrimOpacity: 45 });
+    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { render: { scrimOpacity: 45 } });
 
     const deps = createMockDeps({
       mediaInfo: {
@@ -156,7 +155,7 @@ describe('injectWithFallback', () => {
       TEST_AGENT,
       9222,
       'wp-B',
-      { scrimOpacity: 45 },
+      { render: { scrimOpacity: 45 } },
       1,
       deps,
     );
@@ -179,7 +178,7 @@ describe('injectWithFallback', () => {
       TEST_AGENT,
       9222,
       'wp-A',
-      { scrimOpacity: 45 },
+      { render: { scrimOpacity: 45 } },
       1,
       deps,
     );
@@ -192,7 +191,7 @@ describe('injectWithFallback', () => {
 
   it('does NOT fall back to the same wallpaper that just failed', async () => {
     // Pre-set last successful to wp-A (same as what's being attempted)
-    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { scrimOpacity: 45 });
+    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { render: { scrimOpacity: 45 } });
 
     const deps = createMockDeps({
       // wp-A not in mediaInfo → fails with wallpaper-not-found
@@ -202,7 +201,7 @@ describe('injectWithFallback', () => {
       TEST_AGENT,
       9222,
       'wp-A',
-      { scrimOpacity: 45 },
+      { render: { scrimOpacity: 45 } },
       1,
       deps,
     );
@@ -215,7 +214,7 @@ describe('injectWithFallback', () => {
 
   it('skips fallback when fallback wallpaper no longer exists', async () => {
     // Pre-set last successful to wp-old
-    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-old', { scrimOpacity: 45 });
+    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-old', { render: { scrimOpacity: 45 } });
 
     const deps = createMockDeps({
       // wp-old NOT in mediaInfo → mediaInfoFor returns null for fallback
@@ -226,7 +225,7 @@ describe('injectWithFallback', () => {
       TEST_AGENT,
       9222,
       'wp-B',
-      { scrimOpacity: 45 },
+      { render: { scrimOpacity: 45 } },
       1,
       deps,
     );
@@ -238,7 +237,7 @@ describe('injectWithFallback', () => {
   });
 
   it('skips fallback when epoch changed during injection', async () => {
-    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { scrimOpacity: 45 });
+    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { render: { scrimOpacity: 45 } });
 
     const deps = createMockDeps({
       mediaInfo: {
@@ -251,7 +250,7 @@ describe('injectWithFallback', () => {
       TEST_AGENT,
       9222,
       'wp-B',
-      { scrimOpacity: 45 },
+      { render: { scrimOpacity: 45 } },
       1,
       deps,
     );
@@ -262,7 +261,7 @@ describe('injectWithFallback', () => {
   });
 
   it('logs fallback attempt and failure when fallback also fails', async () => {
-    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { scrimOpacity: 45 });
+    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { render: { scrimOpacity: 45 } });
 
     const deps = createMockDeps({
       mediaInfo: {
@@ -276,7 +275,7 @@ describe('injectWithFallback', () => {
       TEST_AGENT,
       9222,
       'wp-B',
-      { scrimOpacity: 45 },
+      { render: { scrimOpacity: 45 } },
       1,
       deps,
     );
@@ -295,7 +294,7 @@ describe('injectWithFallback', () => {
 describe('lastSuccessfulWallpaper state management', () => {
   it('setLastSuccessfulWallpaper and clearLastSuccessfulWallpaper round-trip', () => {
     // Set
-    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-X', { scrimOpacity: 50 });
+    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-X', { render: { scrimOpacity: 50 } });
     // Clear
     clearLastSuccessfulWallpaper(TEST_AGENT);
     // After clear, a fallback attempt should NOT find a previous wallpaper
@@ -309,7 +308,7 @@ describe('lastSuccessfulWallpaper state management', () => {
 
   it('clearLastSuccessfulWallpaper prevents fallback', async () => {
     // Set then immediately clear
-    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { scrimOpacity: 45 });
+    setLastSuccessfulWallpaper(TEST_AGENT, 'wp-A', { render: { scrimOpacity: 45 } });
     clearLastSuccessfulWallpaper(TEST_AGENT);
 
     const deps = createMockDeps({
@@ -322,7 +321,7 @@ describe('lastSuccessfulWallpaper state management', () => {
       TEST_AGENT,
       9222,
       'wp-B',
-      { scrimOpacity: 45 },
+      { render: { scrimOpacity: 45 } },
       1,
       deps,
     );
@@ -414,13 +413,11 @@ describe('media token cleanup on early exits', () => {
     expect(wallpaperMediaServer.unregister).toHaveBeenCalledWith('prev-token-web-fail');
   });
 
-  it('falls back to the preview image when a scene cannot render (webUrlFor null)', async () => {
+  it('hard-fails when a scene cannot render (webUrlFor null) — no preview fallback', async () => {
     // A scene wallpaper whose scene.pkg cannot be parsed/renderer (webUrlFor
-    // returns null) still ships a workshop preview image. Instead of hard-
-    // failing with 'web-url-resolve-failed', the injector re-wires the media
-    // path to the preview and continues as an image wallpaper. This keeps the
-    // most common workshop type (scene) applyable even when its proprietary
-    // renderer is unavailable.
+    // returns null) previously fell back to its workshop preview thumbnail.
+    // A low-res preview still image looks bad and misrepresents the wallpaper,
+    // so a failed render is now a HARD failure — the preview is never injected.
     const deps = createMockDeps({
       mediaInfo: {
         'wp-scene': {
@@ -436,17 +433,36 @@ describe('media token cleanup on early exits', () => {
     (deps as any).findAgentTargets = async () => [
       { type: 'page', webSocketDebuggerUrl: 'ws://127.0.0.1:9222/page/1' },
     ];
-    // webUrlFor returns null → triggers the scene→preview fallback.
+    // webUrlFor returns null → triggers the scene hard-failure path.
     deps.wallpaperService!.webUrlFor = async () => null;
-    // 兜底图解析：scene 目录无更大图时返回 previewPath（与 production 行为一致）。
-    deps.wallpaperService!.bestFallbackImageFor = async () => '/test/preview.jpg';
 
     const result = await injectAgentWallpaper(TEST_AGENT, 9222, 'wp-scene', {}, 1, deps);
 
-    // NOT the hard failure — the scene fell back to its static image and
-    // proceeded into the (failing-at-CDP) injection loop.
-    expect(result.detail).not.toBe('web-url-resolve-failed');
-    expect(deps.logLines.some((l) => l.includes('falling back to static image'))).toBe(true);
+    // The hard failure — NO fallback to the preview image.
+    expect(result.ok).toBe(false);
+    expect(result.detail).toBe('web-url-resolve-failed');
+    expect(deps.logLines.some((l) => l.includes('failed to resolve web URL'))).toBe(true);
+  }, 35000);
+
+  it('refuses to inject preview-only wallpapers (no animated content)', async () => {
+    // previewOnly wallpapers only have the low-res workshop preview thumbnail —
+    // injecting it looks bad, so the injector refuses outright.
+    const deps = createMockDeps({
+      mediaInfo: {
+        'wp-preview-only': {
+          type: 'image',
+          path: '/test/preview.jpg',
+          previewPath: '/test/preview.jpg',
+          previewOnly: true,
+        },
+      },
+    });
+    const result = await injectAgentWallpaper(TEST_AGENT, 9222, 'wp-preview-only', {}, 1, deps);
+    expect(result.ok).toBe(false);
+    expect(result.detail).toBe('preview-only');
+    expect(deps.logLines.some((l) => l.includes('refusing to inject the preview thumbnail'))).toBe(
+      true,
+    );
   }, 35000);
 
   it('cleans up previous token on epoch-cancelled after no-targets (split path)', async () => {

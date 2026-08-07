@@ -210,6 +210,11 @@ export function DynamicBackground({
             title={wallpaper.title}
             className="absolute inset-0 size-full border-0"
             style={buildIframeElementStyle(render)}
+            // Sandbox the iframe: the loopback URL maps to wallpaper-rendered
+            // HTML from the Sucrose engine or WE scene exports. Restrict to
+            // scripts + presentation to prevent any wallpaper code from
+            // accessing cookies, storage, or navigating the host frame.
+            sandbox="allow-scripts allow-presentation"
           />
         ) : wallpaper.playback === 'video' && video.url && !videoFailed ? (
           <video

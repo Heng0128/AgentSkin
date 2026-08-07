@@ -25,7 +25,6 @@ import fs from 'node:fs/promises';
 import type { WallpaperInfo } from '../../shared/types';
 import type { WallpaperServiceApi } from '../services/contracts';
 import { resolveWorkshopRoot } from '../steam-path-resolver';
-import { pickLargestFallbackImage } from './fallback-image';
 import { deleteLocalWallpaperFile, importMedia, scanCustomDir } from './local/importer';
 import { MediaRegistry } from './media-registry';
 import type { DiscoveredItem } from './types';
@@ -124,10 +123,14 @@ export class WallpaperService implements WallpaperServiceApi {
    * (no copy) and is streamed to the UI on demand via `videoUrlFor`.
    */
   async registerThemeWallpaper(themeId: string, videoPath: string, title?: string): Promise<void> {
-    let sizeBytes = 0;
+    let sizeBytes: number;
     try {
       sizeBytes = (await fs.stat(videoPath)).size;
     } catch {
+      // R6-24: previously this swallowed the stat error silently, so a missing
+      // theme video registered nothing with zero feedback to the caller. Log it
+      // so theme-wallpaper registration failures are debuggable.
+      console.warn(`[wallpaper] registerThemeWallpaper: missing video file "${videoPath}"`);
       return;
     }
     const id = `theme:${themeId}`;
@@ -218,23 +221,10 @@ export class WallpaperService implements WallpaperServiceApi {
   }
 
   /**
-   * Resolve the best static fallback image for a wallpaper whose interactive
-   * content cannot be injected (scene render failure / iframe blocked):
-   * the largest decodable image in the wallpaper directory when available,
-   * else the workshop preview. Returns null when the wallpaper has no preview
-   * and no directory (e.g. theme-registered video wallpapers).
+   * Resolve a loopback URL for web/scene wallpaper content. Returns null when
+   * the wallpaper cannot be rendered — the injector treats that as a hard
+   * failure (it never falls back to the low-res workshop preview thumbnail).
    */
-  async bestFallbackImageFor(id: string): Promise<string | null> {
-    await this.scan();
-    const item = this.items.get(id);
-    if (!item) return null;
-    if (item.dirPath) {
-      return pickLargestFallbackImage(item.dirPath, item.previewPath);
-    }
-    return item.previewPath;
-  }
-
-  /** Resolve a loopback URL for web/scene wallpaper content. */
   async webUrlFor(id: string): Promise<string | null> {
     await this.scan();
     const item = this.items.get(id);

@@ -21,10 +21,13 @@ import type { MainContext } from '../main-context';
 import { createStudioWindow } from '../window-manager';
 import { registerBundleIpc } from './bundle-ipc';
 import { registerCoreIpc } from './core-ipc';
+import { registerPerformanceIpc } from './performance-ipc';
 import { registerSettingsIpc } from './settings-ipc';
 import { registerStudioIpc } from './studio-ipc';
 import { registerStudioProjectIpc } from './studio-project-ipc';
+import { registerStudioWorkspaceIpc } from './studio-workspace-ipc';
 import { registerThemeIpc } from './theme-ipc';
+import { registerVisualAnalyzerIpc } from './visual-analyzer-ipc';
 import { registerWallpaperIpc } from './wallpaper-ipc';
 import { registerWindowIpc } from './window-ipc';
 
@@ -34,13 +37,20 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
   registerBundleIpc(ctx, updateTrayMenu);
   registerSettingsIpc(ctx);
   registerWallpaperIpc(ctx);
+  registerPerformanceIpc();
   registerWindowIpc();
+  registerVisualAnalyzerIpc();
 
   // Open (or focus) the dedicated Theme Studio window on demand. The renderer
   // env exposes ELECTRON_RENDERER_URL in dev so we can point the studio window
   // at the vite dev server's `studio.html`; in prod we load the built file.
-  ipcMain.handle(IpcChannel.STUDIO_OPEN, () => {
-    void createStudioWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL });
+  //
+  // The handler is async so that any exception from createStudioWindow propagates
+  // back to the renderer via IPC rejection (instead of becoming an unhandled
+  // rejection that silently swallows the error — the renderer would see "no
+  // response" after a 30s timeout).
+  ipcMain.handle(IpcChannel.STUDIO_OPEN, async () => {
+    await createStudioWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL });
     return { ok: true };
   });
 
@@ -69,4 +79,7 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
 
   // Studio "工程" (projects) — self-contained, file-backed, no installed themes.
   registerStudioProjectIpc();
+
+  // Studio Workspace — image→theme extraction, wallpaper picker, bundle management.
+  registerStudioWorkspaceIpc(ctx);
 }

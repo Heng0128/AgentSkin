@@ -21,6 +21,7 @@ import { runBootSequence } from './main/boot-sequence';
 import { extractThemeFilesFromArgv } from './main/file-open';
 import { flushLocalePreference } from './main/locale-preferences';
 import { ctx } from './main/main-context';
+import { disposeAudioBroadcast } from './main/wallpaper-injector';
 import { createMainWindow } from './main/window-manager';
 import { toMessage } from './shared/errors';
 import { getMainMessages } from './shared/i18n';
@@ -87,6 +88,55 @@ function createSplashWindow(): BrowserWindow {
   return splash;
 }
 
+/**
+ * Smoothly transition from the splash screen to the main window.
+ *
+ * Instead of abruptly closing the splash and showing the main window,
+ * we cross-fade: the splash fades out (opacity 1→0) while the main
+ * window fades in (opacity 0→1) over a 150ms window.
+ *
+ * @param splash - The splash BrowserWindow to fade out.
+ * @param mainWindow - The main BrowserWindow to fade in.
+ * @param durationMs - Duration of the fade transition (default 150ms).
+ * @returns Promise that resolves when the transition is complete.
+ */
+async function fadeOutSplash(
+  splash: BrowserWindow,
+  mainWindow: BrowserWindow,
+  durationMs = 150,
+): Promise<void> {
+  // Step 1: Send fade-out command to splash renderer
+  if (!splash.isDestroyed()) {
+    splash.webContents.send(IpcChannel.SPLASH_PROGRESS, {
+      label: '就绪',
+      pct: 100,
+      fadeOut: true,
+    });
+  }
+
+  // Step 2: Start showing the main window with 0 opacity
+  if (!mainWindow.isDestroyed()) {
+    mainWindow.setOpacity(0);
+    mainWindow.show();
+  }
+
+  // Step 3: Animate main window opacity from 0 → 1
+  // Using setOpacity with requestAnimationFrame-style stepping
+  const steps = 10;
+  const intervalMs = durationMs / steps;
+  for (let i = 1; i <= steps; i++) {
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    if (mainWindow.isDestroyed()) break;
+    mainWindow.setOpacity(i / steps);
+  }
+
+  // Step 4: Close splash after a brief delay to let its CSS animation finish
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  if (!splash.isDestroyed()) {
+    splash.close();
+  }
+}
+
 app
   .whenReady()
   .then(async () => {
@@ -103,24 +153,52 @@ app
     }, 15_000);
 
     try {
-      await runBootSequence({
+      const { warnings } = await runBootSequence({
         createWindow: () => createMainWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL }),
         onQuit,
         onApplyRequest: requestTrayApply,
       });
 
-      // Wait for the main window to be ready, then close splash.
+      // Wait for the main window to be ready, then perform smooth transition.
       if (ctx.mainWindow) {
-        ctx.mainWindow.once('ready-to-show', () => {
+        ctx.mainWindow.once('ready-to-show', async () => {
           clearTimeout(splashTimeout);
-          ctx.splashWindow?.close();
+          const splash = ctx.splashWindow;
+          const mainWin = ctx.mainWindow;
+          if (splash && !splash.isDestroyed() && mainWin) {
+            await fadeOutSplash(splash, mainWin);
+          } else if (mainWin) {
+            // Splash already closed (timeout) — just show main window
+            if (!mainWin.isDestroyed()) {
+              mainWin.show();
+            }
+          }
           ctx.splashWindow = null;
+
+          // Push degraded boot steps to the renderer so they surface as
+          // toasts ("启动警告") once the main window is up. Safe to drop when
+          // the window died — the warnings are also in the runtime log.
+          if (warnings.length > 0 && mainWin && !mainWin.isDestroyed()) {
+            try {
+              mainWin.webContents.send(IpcChannel.BOOT_WARNINGS, warnings);
+            } catch (error) {
+              console.warn('[boot] failed to push boot warnings:', error);
+            }
+          }
+
+          // Log any boot warnings after transition
+          if (warnings.length > 0) {
+            console.warn(`[boot] ${warnings.length} warning(s) during boot:`);
+            for (const w of warnings) console.warn(`[boot]   ${w}`);
+          }
         });
       } else {
         // Fallback: close splash after a short delay.
         clearTimeout(splashTimeout);
         setTimeout(() => {
-          ctx.splashWindow?.close();
+          if (ctx.splashWindow && !ctx.splashWindow.isDestroyed()) {
+            ctx.splashWindow.close();
+          }
           ctx.splashWindow = null;
         }, 500);
       }
@@ -177,6 +255,15 @@ app
         /* swallow */
       }
       ctx.splashWindow = null;
+
+      // Boot failed — the audio sampler may already be running (a wallpaper
+      // was applied before the failure). Kill it so the child process doesn't
+      // outlive the app.
+      try {
+        disposeAudioBroadcast();
+      } catch {
+        /* swallow */
+      }
 
       dialog.showErrorBox(getMainMessages().startupErrorTitle, toMessage(error));
       app.quit();
@@ -250,6 +337,15 @@ app.on('before-quit', () => {
     if (ctx.bootComplete) ctx.core.dispose();
   } catch (error) {
     console.warn('[before-quit] core.dispose() failed:', error);
+  }
+
+  // Kill the long-lived PowerShell audio sampler if it is running (audio-
+  // responsive scene/web wallpapers). Without this the child process outlives
+  // the app and keeps sampling system audio forever.
+  try {
+    disposeAudioBroadcast();
+  } catch (error) {
+    console.warn('[before-quit] disposeAudioBroadcast() failed:', error);
   }
 });
 

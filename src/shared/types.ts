@@ -8,22 +8,31 @@ export type Platform = 'darwin' | 'win32' | 'unsupported';
 export type AgentId = 'workbuddy' | 'qoderwork' | 'traework' | 'doubao' | 'codex' | 'zcode';
 
 /**
- * Experimental agent ids — registered for discovery but NOT yet backed by
- * @agentskin/engine. Calling apply/restore/detect on these throws
- * AGENTSKIN_EXPERIMENTAL_ADAPTER. Kept as a separate union so the type
- * system can distinguish "formal" from "experimental" at call sites:
- * IPC validation only accepts `AgentId`, while the theme/registry layer
- * may accept `AnyAgentId`.
+ * Experimental agent ids (v1.4: removed from supported, reserved for future).
+ * These adapters have been deleted. The type remains for forward compatibility.
  */
-export type ExperimentalAgentId =
-  | 'codebuddy'
-  | 'marscode'
-  | 'comate'
-  | 'tongyi_lingma'
-  | 'tencent_ai_code';
+export type ExperimentalAgentId = never;
 
 /** All recognized agent ids (formal + experimental). */
 export type AnyAgentId = AgentId | ExperimentalAgentId;
+
+/** 14 semantic color tokens used by image-to-theme pipeline and Theme Studio.
+ *  Single source of truth — do NOT duplicate this list in renderer code. */
+export type ImagePaletteKey =
+  | 'accent'
+  | 'secondary'
+  | 'background'
+  | 'foreground'
+  | 'muted'
+  | 'surface'
+  | 'surfaceElevated'
+  | 'border'
+  | 'codeBackground'
+  | 'codeForeground'
+  | 'inputBackground'
+  | 'buttonBackground'
+  | 'buttonForeground'
+  | 'focusRing';
 
 /**
  * Canonical product metadata for every recognized agent.
@@ -88,47 +97,7 @@ export const AGENT_META: Readonly<Record<AnyAgentId, AgentMeta>> = Object.freeze
     region: 'Global',
     tier: 'active',
   }),
-  // AC1-B: Experimental adapters — registered for discovery, not yet wired
-  // to @agentskin/engine. coreId is '' so apply/restore/detect throws
-  // AGENTSKIN_EXPERIMENTAL_ADAPTER. Previously these ids were absent from
-  // the type system entirely (EXPERIMENTAL_AGENT_IDS filtered AGENT_META
-  // for tier==='experimental' but no experimental entries existed, so it
-  // was always empty — a silent bug).
-  codebuddy: Object.freeze({
-    id: 'codebuddy',
-    displayName: 'CodeBuddy',
-    officialName: 'CodeBuddy',
-    region: 'CN',
-    tier: 'experimental',
-  }),
-  marscode: Object.freeze({
-    id: 'marscode',
-    displayName: '豆包 MarsCode',
-    officialName: 'MarsCode',
-    region: 'CN',
-    tier: 'experimental',
-  }),
-  comate: Object.freeze({
-    id: 'comate',
-    displayName: '百度 Comate',
-    officialName: 'Comate',
-    region: 'CN',
-    tier: 'experimental',
-  }),
-  tongyi_lingma: Object.freeze({
-    id: 'tongyi_lingma',
-    displayName: '通义灵码',
-    officialName: 'Tongyi Lingma',
-    region: 'CN',
-    tier: 'experimental',
-  }),
-  tencent_ai_code: Object.freeze({
-    id: 'tencent_ai_code',
-    displayName: '腾讯云 AI Code',
-    officialName: 'Tencent AI Code',
-    region: 'CN',
-    tier: 'experimental',
-  }),
+  // v1.4: Experimental adapters removed. Reserved for future support.
 });
 
 /** Formal product agents — shown in the main UI, checked for status, listed in settings. */
@@ -138,12 +107,8 @@ export const AGENT_IDS: readonly AgentId[] = Object.freeze(
     .map((m) => m.id as AgentId),
 );
 
-/** Experimental / non-formal agents — isolated from the main UI but still recognized by the theme system. */
-export const EXPERIMENTAL_AGENT_IDS: readonly ExperimentalAgentId[] = Object.freeze(
-  (Object.values(AGENT_META) as AgentMeta[])
-    .filter((m) => m.tier === 'experimental')
-    .map((m) => m.id as ExperimentalAgentId),
-);
+/** v1.4: Experimental adapters removed. Empty for forward compatibility. */
+export const EXPERIMENTAL_AGENT_IDS: readonly ExperimentalAgentId[] = Object.freeze([]);
 
 /** All recognized agent ids (formal + experimental). Used by the theme system and validation. */
 export const ALL_AGENT_IDS: readonly AnyAgentId[] = Object.freeze([
@@ -771,6 +736,9 @@ export interface AgentSkinApi {
    *  cadence (after apply/restore, agent launch/exit detection). The
    *  renderer refreshes immediately instead of waiting for the next poll. */
   onStatusChanged(listener: () => void): () => void;
+  /** Pushed once after the main window is ready, listing boot steps that were
+   *  degraded during startup (each entry is a human-readable warning). */
+  onBootWarnings(listener: (warnings: string[]) => void): () => void;
   // --- Window controls (custom title bar) ---
   windowMinimize(): void;
   windowToggleMaximize(): Promise<boolean>;
@@ -818,6 +786,54 @@ export interface AgentSkinApi {
     snapshot: ThemeVisualSnapshot,
     kind?: 'current' | 'baseline',
   ): Promise<{ ok: boolean }>;
+  /** Extract a color palette from an uploaded image → theme (pywal-style).
+   *  Returns a normalized 14-key `--agentskin-*` palette + recommended mode. */
+  extractThemeFromImage(base64Data: string): Promise<{
+    palette: Record<string, string>;
+    mode: 'light' | 'dark';
+  }>;
+  // --- Theme Studio: Bundles (workspace-scoped, no dialog passthrough) ---
+  /** List all installed `.agentskin-bundle` entries. */
+  listBundles(): Promise<
+    Array<{ id: string; name: string; themeId?: string; hasWallpaper: boolean; createdAt: string }>
+  >;
+  /** Open an `.agentskin-bundle` file → install (reuses existing flow).
+   *  Returns null if canceled. */
+  importBundle(): Promise<{ id: string; name: string } | null>;
+  /** Install an existing bundle by id (re-applies its theme). */
+  installBundleById(id: string): Promise<{ ok: boolean }>;
+  /** Delete an installed bundle by id (filesystem rm). */
+  deleteBundle(id: string): Promise<{ ok: boolean }>;
+  // --- Diagnostics (Performance panel) ---
+  /** Fetch recent theme-apply traces and aggregate statistics for the
+   *  Diagnostics tab. `count` caps at 50; defaults to 10. */
+  getPerformanceHistory(count?: number): Promise<{
+    recent: Array<{
+      id: string;
+      agentId: string;
+      themeId?: string;
+      finishedAt: string;
+      duration: number;
+      success: boolean;
+      steps: Array<{ name: string; duration: number; success: boolean; error?: string }>;
+      error?: string;
+    }>;
+    stats: {
+      totalApplies: number;
+      avgDurationMs: number;
+      perAgentAvg: Record<string, number>;
+    };
+  }>;
+  // --- Theme Studio: Wallpaper picker (workspace-scoped) ---
+  /** List wallpapers for the Studio WALLPAPER tab. */
+  listWallpapersForStudio(): Promise<
+    Array<{
+      id: string;
+      name: string;
+      type: 'scene' | 'video' | 'web' | 'preset';
+      thumbUrl?: string;
+    }>
+  >;
   /** Load a previously persisted snapshot for a project, or null if none.
    *  `kind` mirrors `saveStudioSnapshot`. */
   loadStudioSnapshot(
@@ -828,6 +844,26 @@ export interface AgentSkinApi {
    *  its default look, captures the live DOM, then re-applies the previously
    *  active theme. Returns the native snapshot for side-by-side comparison. */
   snapshotBaseline(agentId: AgentId, options?: StudioSnapshotOptions): Promise<ThemeVisualSnapshot>;
+  // --- Visual Analysis ---
+  /** Get a visual analysis target by name. Returns null if not found. */
+  getVisualAnalysisTarget(agentName: string): Promise<Record<string, unknown> | null>;
+  /** List all visual analysis target names. */
+  listVisualAnalysisTargets(): Promise<string[]>;
+  /** Detect whether a specific agent is currently running (CDP-accessible). */
+  detectVisualAnalysisAgent(
+    agentName: string,
+  ): Promise<{ running: boolean; port?: number; title?: string }>;
+  /** Trigger a CDP-based extraction of visual analysis tokens from a running agent. */
+  extractVisualAnalysisCdp(agentName: string): Promise<{ ok: boolean; message: string }>;
+  /** Subscribe to progress updates for an ongoing visual analysis extraction. */
+  onVisualAnalysisProgress(
+    cb: (progress: { agent: string; step: string; progress: number }) => void,
+  ): () => void;
+  /** Export visual analysis theme data as a standalone theme package. */
+  exportVisualAnalysisTheme(
+    agentName: string,
+    themeData: Record<string, unknown>,
+  ): Promise<{ ok: boolean; path?: string }>;
 }
 
 /** Payload sent by the Theme Studio renderer when exporting a crafted theme
@@ -967,7 +1003,7 @@ export interface DomTreeNode {
   style: Record<string, string>;
   /** Whitelisted SVG geometry/paint attributes (for faithful icon replay). */
   attrs?: Record<string, string>;
-  /** Protocol/viewport geometry. */
+  /** Viewport geometry — used by native-profile saliency calc. */
   rect: { w: number; h: number; x: number; y: number };
   children: DomTreeNode[];
 }

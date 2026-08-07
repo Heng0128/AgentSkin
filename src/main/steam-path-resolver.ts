@@ -23,10 +23,10 @@
  * since the registry + VDF approach is Windows-only.
  */
 
-import { execSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { execFileAsync } from '../shared/exec-async';
 
 /** Wallpaper Engine's Steam app id. */
 const WE_APP_ID = '431960';
@@ -181,48 +181,47 @@ export function parseVdf(text: string): VdfObject {
  * the 32-bit path. Returns null when not found (e.g. Steam not installed
  * or running on macOS/Linux).
  *
- * Uses `reg query` via child_process — the same approach WEML uses with
- * Python's `winreg` module, adapted for Node.js.
+ * Async since the registry probe previously used synchronous `execSync`
+ * (which blocks the event loop ~80ms per call while the wallpaper service
+ * scans on renderer startup). Uses `execFileAsync` — the async, Windows-
+ * friendly variant — so the scan never freezes the main process.
  */
-function getSteamInstallPathFromRegistry(): string | null {
+async function getSteamInstallPathFromRegistry(): Promise<string | null> {
   if (process.platform !== 'win32') return null;
 
   const registryPaths = ['SOFTWARE\\WOW6432Node\\Valve\\Steam', 'SOFTWARE\\Valve\\Steam'];
 
   for (const regPath of registryPaths) {
-    try {
-      const output = execSync(`reg query "HKLM\\${regPath}" /v InstallPath`, {
-        encoding: 'utf8',
-        timeout: 3000,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-      // Output looks like:
-      //   HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam
-      //       InstallPath    REG_SZ    C:\Program Files (x86)\Steam
-      // P3-9: The old regex anchored on "REG_SZ" which is the English reg.exe
-      // token name. On localized Windows the friendly type label varies, but
-      // the column format is always:
-      //   <whitespace><valueName><whitespace><typeToken><whitespace><data>
-      // We first look for the InstallPath line, then either:
-      //   1. Split by 2+ whitespace (tab/space run) and take the 3rd column, or
-      //   2. Fall back to the English REG_SZ regex if that doesn't work.
-      // This keeps parsing robust on Chinese / Japanese / Korean editions
-      // where the type token is translated but the column layout still holds.
-      const line = output.split(/\r?\n/).find((ln) => /^\s*InstallPath\s+/i.test(ln));
-      if (line) {
-        const byColumn = line.trim().split(/\s{2,}|\t+/);
-        if (byColumn.length >= 3 && byColumn[2]) {
-          const installPath = byColumn[2].trim();
-          if (installPath) return installPath;
-        }
-        const matchEn = line.match(/InstallPath\s+REG_SZ\s+(.+)/i);
-        if (matchEn) {
-          const installPath = matchEn[1].trim();
-          if (installPath) return installPath;
-        }
+    const output = await execFileAsync(
+      'reg',
+      ['query', `HKLM\\${regPath}`, '/v', 'InstallPath'],
+      3000,
+    );
+    if (!output) continue; // registry key not found or reg failed — try next
+    // Output looks like:
+    //   HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Valve\Steam
+    //       InstallPath    REG_SZ    C:\Program Files (x86)\Steam
+    // P3-9: The old regex anchored on "REG_SZ" which is the English reg.exe
+    // token name. On localized Windows the friendly type label varies, but
+    // the column format is always:
+    //   <whitespace><valueName><whitespace><typeToken><whitespace><data>
+    // We first look for the InstallPath line, then either:
+    //   1. Split by 2+ whitespace (tab/space run) and take the 3rd column, or
+    //   2. Fall back to the English REG_SZ regex if that doesn't work.
+    // This keeps parsing robust on Chinese / Japanese / Korean editions
+    // where the type token is translated but the column layout still holds.
+    const line = output.split(/\r?\n/).find((ln) => /^\s*InstallPath\s+/i.test(ln));
+    if (line) {
+      const byColumn = line.trim().split(/\s{2,}|\t+/);
+      if (byColumn.length >= 3 && byColumn[2]) {
+        const installPath = byColumn[2].trim();
+        if (installPath) return installPath;
       }
-    } catch {
-      // Registry key not found or reg command failed — try next path
+      const matchEn = line.match(/InstallPath\s+REG_SZ\s+(.+)/i);
+      if (matchEn) {
+        const installPath = matchEn[1].trim();
+        if (installPath) return installPath;
+      }
     }
   }
   return null;
@@ -306,7 +305,7 @@ function fallbackSteamPaths(): string[] {
  * `<root>/steamapps/workshop/content/431960` for each.
  */
 export async function resolveSteamLibraryPaths(): Promise<string[]> {
-  const steamInstallPath = getSteamInstallPathFromRegistry();
+  const steamInstallPath = await getSteamInstallPathFromRegistry();
 
   if (steamInstallPath) {
     // Parse libraryfolders.vdf to find all libraries with WE installed

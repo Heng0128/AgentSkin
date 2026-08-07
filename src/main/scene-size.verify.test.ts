@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: MPL-2.0
 import { describe, expect, it } from 'vitest';
+import { resolveWorkshopOrSkip } from './scene/_workshop-test-helpers';
 import { extractScene, resolveObjectTexture } from './scene-pkg-parser';
 import { layerDisplaySize } from './scene-renderer-html';
 
-const WORKSHOP = 'C:/Program Files (x86)/Steam/steamapps/workshop/content/431960';
-
 describe('post-fix scene draw size verification (real workshop data)', () => {
   it('draws every fullscreen background at the projection size on a 1920x1080 viewport', async () => {
+    const WORKSHOP = await resolveWorkshopOrSkip();
+    if (!WORKSHOP) return; // WE not installed — skip
     const { readdir, access } = await import('node:fs/promises');
     const dirs = await readdir(WORKSHOP);
     const lines: string[] = [];
     let bgOk = 0;
     let bgTotal = 0;
     for (const d of dirs) {
-      const pkgPath = WORKSHOP + '/' + d + '/scene.pkg';
+      const pkgPath = `${WORKSHOP}/${d}/scene.pkg`;
       try {
         await access(pkgPath);
       } catch {
@@ -30,7 +31,7 @@ describe('post-fix scene draw size verification (real workshop data)', () => {
         if (!tex || !tex.dataUrl) continue;
         const quad = layerDisplaySize(o.size, { width: tex.width, height: tex.height });
         // A fullscreen background: quad ≈ projection size.
-        const nearProjection =
+        const _nearProjection =
           Math.abs(quad.width - proj.width) / proj.width < 0.15 &&
           Math.abs(quad.height - proj.height) / proj.height < 0.15;
         if (quad.width >= proj.width * 0.8 && quad.height >= proj.height * 0.8) {
@@ -57,9 +58,7 @@ describe('post-fix scene draw size verification (real workshop data)', () => {
         }
       }
     }
-    console.log(
-      'fullscreen backgrounds: ' + bgTotal + ', now cover the 1920x1080 viewport: ' + bgOk,
-    );
+    console.log(`fullscreen backgrounds: ${bgTotal}, now cover the 1920x1080 viewport: ${bgOk}`);
     console.log(lines.join('\n') || '(all fullscreen backgrounds cover the viewport)');
     expect(true).toBe(true);
   }, 120000);
@@ -83,12 +82,14 @@ describe('post-fix scene draw size verification (real workshop data)', () => {
     // negative dimensions. The renderer mirrors via ctx.scale and draws with
     // absolute sizes — so every fullscreen background must compute positive
     // draw dims on real workshop data.
+    const WORKSHOP = await resolveWorkshopOrSkip();
+    if (!WORKSHOP) return; // WE not installed — skip
     const { readdir, access } = await import('node:fs/promises');
     const dirs = await readdir(WORKSHOP);
     let negatives = 0;
     let checked = 0;
     for (const d of dirs) {
-      const pkgPath = WORKSHOP + '/' + d + '/scene.pkg';
+      const pkgPath = `${WORKSHOP}/${d}/scene.pkg`;
       try {
         await access(pkgPath);
       } catch {

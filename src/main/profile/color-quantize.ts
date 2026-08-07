@@ -47,6 +47,15 @@ export function parseColor(input: string | undefined): Rgba | null {
         a: 1,
       };
     }
+    // 4-digit hex (#RGBA)
+    if (/^[0-9a-f]{4}$/i.test(hex)) {
+      return {
+        r: parseInt(hex[0] + hex[0], 16),
+        g: parseInt(hex[1] + hex[1], 16),
+        b: parseInt(hex[2] + hex[2], 16),
+        a: Math.round((parseInt(hex[3] + hex[3], 16) / 255) * 100) / 100,
+      };
+    }
     if (/^[0-9a-f]{6}$/i.test(hex)) {
       return {
         r: parseInt(hex.slice(0, 2), 16),

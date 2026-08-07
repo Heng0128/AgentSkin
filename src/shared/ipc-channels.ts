@@ -92,6 +92,18 @@ export const IpcChannel = {
   BUNDLE_INSTALL: 'bundle:install',
   /** Open a .agentskin-bundle file directly (file-open / "Open with"分流). */
   BUNDLE_OPEN_FILE: 'bundle:open-file',
+  /** Theme Studio Workspace: image → palette extraction (pywal-style). */
+  STUDIO_IMAGE_EXTRACT_THEME: 'studio:image:extract-theme',
+  /** Theme Studio Workspace: wallpaper list for the WALLPAPER tab picker. */
+  STUDIO_WALLPAPER_LIST: 'studio:wallpaper:list',
+  /** Theme Studio Workspace: list installed bundles (read userData/bundles). */
+  STUDIO_BUNDLE_LIST: 'studio:bundle:list',
+  /** Theme Studio Workspace: import .agentskin-bundle (dialog-based, reuses existing flow). */
+  STUDIO_BUNDLE_IMPORT: 'studio:bundle:import',
+  /** Theme Studio Workspace: install bundle by id (no dialog). */
+  STUDIO_BUNDLE_INSTALL_BY_ID: 'studio:bundle:install-by-id',
+  /** Theme Studio Workspace: delete installed bundle (filesystem rm). */
+  STUDIO_BUNDLE_DELETE: 'studio:bundle:delete',
 
   // --- Theme Studio (studio-ipc.ts) ---
   THEME_STUDIO_SNAPSHOT: 'studio:snapshot',
@@ -135,12 +147,29 @@ export const IpcChannel = {
   FILE_IMPORT_FAILED: 'file:import-failed',
   TRAY_APPLY: 'tray:apply',
   WINDOW_MAXIMIZE_CHANGE: 'window:maximize-change',
+  /** Pushed once after the main window is ready, with the list of boot steps
+   *  that were degraded (skipped) during startup. The renderer surfaces them
+   *  as toasts so the user knows what didn't initialize. */
+  BOOT_WARNINGS: 'boot:warnings',
   /** Pushed by the main process whenever SystemStatus changes outside the
    *  3s poll cadence — e.g. after apply/restore completes, or when an
    *  agent process launch/exit is detected. The renderer subscribes to
    *  refresh its status cache immediately instead of waiting for the next
    *  poll tick. */
   STATUS_CHANGED: 'status:changed',
+
+  // --- Performance / Diagnostics (performance-ipc.ts) ---
+  /** Renderer asks for performance trace history. Returns the most recent
+   *  `count` traces plus aggregate stats. */
+  PERFORMANCE_GET: 'performance:get',
+
+  // --- Visual Analysis ---
+  VISUAL_ANALYSIS_LIST: 'visual-analysis:list',
+  VISUAL_ANALYSIS_GET: 'visual-analysis:get',
+  VISUAL_ANALYSIS_DETECT: 'visual-analysis:detect',
+  VISUAL_ANALYSIS_CDP_EXTRACT: 'visual-analysis:cdp-extract',
+  VISUAL_ANALYSIS_STATUS: 'visual-analysis:status',
+  VISUAL_ANALYSIS_EXPORT_THEME: 'visual-analysis:export-theme',
 } as const;
 
 /** Union of all IPC channel names (for type-level validation in callers). */

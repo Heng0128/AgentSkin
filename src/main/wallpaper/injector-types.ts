@@ -30,14 +30,16 @@ import type { ThemeEntry } from '../theme-library';
 
 /**
  * 注入时的壁纸渲染选项 — 由 `ResolvedWallpaper` 合并后的完整设置，透传给
- * CDP 注入器。`speed/loop/scrimOpacity` 为历史顶层字段（兼容），`render`
- * 携带对齐/位置/翻转/滤镜/视差等规范化设置；未设置的字段落到注入器内置
- * 默认（fill=cover、无滤镜、无翻转、无视差、speed=1、loop=true）。
+ * CDP 注入器。`render` 是**唯一**参数来源：`speed/loop/scrimOpacity` 由
+ * `resolveAgentWallpaperId` 合并进 `render`，注入器不再单独读取顶层字段
+ * （历史路径曾导致 per-agent 设置的 speed/loop/scrimOpacity 不生效 ——
+ * 顶层字段与 `render` 内字段重复且优先规则只靠注释约定）。
  */
 export interface WallpaperApplyOptions {
-  speed?: number;
-  loop?: boolean;
-  scrimOpacity?: number;
+  /**
+   * 渲染设置（speed/loop/scrimOpacity/对齐/位置/翻转/滤镜/视差）。这是
+   * speed/loop/scrimOpacity 的唯一来源。默认空 = 注入器内置默认。
+   */
   render?: WallpaperRenderOptions;
 }
 
@@ -51,18 +53,13 @@ export interface WallpaperService {
     type: 'video' | 'image' | 'web' | 'scene';
     path: string;
     /** Absolute path to the wallpaper's still preview image (preview.jpg/png/gif),
-     *  or null. Used as a fallback when a scene/web wallpaper's rendered
-     *  content cannot be loaded (e.g. scene.pkg parsing failed). */
+     *  or null. Used for the wallpaper library UI only — never injected. */
     previewPath: string | null;
     previewOnly: boolean;
   } | null>;
   /** Resolve a web/scene wallpaper's rendered content URL for iframe
    *  injection. Returns null for non-web/scene wallpapers. */
   webUrlFor(id: string): Promise<string | null>;
-  /** Resolve the best static fallback image for a scene wallpaper whose
-   *  rendered content cannot be injected: the largest decodable image in the
-   *  wallpaper directory when available, else the workshop preview. */
-  bestFallbackImageFor(id: string): Promise<string | null>;
 }
 
 /** Effective wallpaper id + playback options resolved for an agent. */

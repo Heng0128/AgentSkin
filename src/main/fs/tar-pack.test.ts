@@ -89,7 +89,7 @@ describe('tar-pack — 解包安全', () => {
       // checksum 合法化
       evilEntry.fill(0x20, 148, 156);
       const sum = evilEntry.reduce((a, b) => a + b, 0);
-      Buffer.from(sum.toString(8).padStart(6, '0') + '\0 ', 'utf8').copy(evilEntry, 148);
+      Buffer.from(`${sum.toString(8).padStart(6, '0')}\0 `, 'utf8').copy(evilEntry, 148);
       const data = Buffer.from('EVIL', 'utf8');
       const tar = Buffer.concat([evilEntry, data, Buffer.alloc(508), Buffer.alloc(1024)]);
       const { gzipSync } = await import('node:zlib');

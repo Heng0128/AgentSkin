@@ -84,6 +84,12 @@ function writeProject(project: StudioProject): void {
   const file = path.join(dir, 'project.json');
   const tmp = `${file}.tmp`;
   fs.writeFileSync(tmp, `${JSON.stringify(project, null, 2)}\n`, 'utf8');
+  // On Windows, renameSync fails if target exists — delete first (best-effort).
+  try {
+    fs.unlinkSync(file);
+  } catch {
+    /* target doesn't exist — fine */
+  }
   fs.renameSync(tmp, file);
 }
 
@@ -137,8 +143,33 @@ function projectFromManifest(manifest: Record<string, unknown>): StudioProject |
   };
 }
 
+function createDefaultProject(): StudioProject {
+  ensureDir();
+  const now = new Date().toISOString();
+  const project: StudioProject = {
+    schema: PROJECT_SCHEMA,
+    id: `default-${randomUUID().slice(0, 8)}`,
+    name: '我的第一个工程',
+    author: '',
+    agentId: 'workbuddy',
+    createdAt: now,
+    updatedAt: now,
+    hasSnapshot: false,
+  };
+  writeProject(project);
+  return project;
+}
+
 export function registerStudioProjectIpc(): void {
-  ipcMain.handle(IpcChannel.STUDIO_PROJECT_LIST, (): StudioProject[] => listProjects());
+  ipcMain.handle(IpcChannel.STUDIO_PROJECT_LIST, (): StudioProject[] => {
+    const list = listProjects();
+    // Auto-seed a default project so entering Studio never shows an empty state.
+    if (list.length === 0) {
+      const def = createDefaultProject();
+      return [def];
+    }
+    return list;
+  });
 
   ipcMain.handle(
     IpcChannel.STUDIO_PROJECT_CREATE,
@@ -179,20 +210,21 @@ export function registerStudioProjectIpc(): void {
 
   ipcMain.handle(
     IpcChannel.STUDIO_PROJECT_DELETE,
-    (_event, req: { id?: unknown }): { ok: boolean } => {
+    (_event, req: { id?: unknown }): { ok: boolean; error?: string } => {
       const id = String(req.id ?? '');
       // R6-1: 校验项目 ID 防止路径遍历攻击（如 "../../../../important-folder"）。
       // 项目 ID 格式为 `${slug}-${uuid8}`，由 ASCII 字母数字 + 连字符组成。
-      if (!id || !isSafeThemeId(id)) return { ok: false };
+      if (!id || !isSafeThemeId(id)) return { ok: false, error: 'Invalid project ID' };
       const dir = path.join(PROJECTS_DIR, id);
       // 二次确认解析后的路径仍在 PROJECTS_DIR 内（防御符号链接等边缘情况）。
-      if (!dir.startsWith(`${PROJECTS_DIR}${path.sep}`)) return { ok: false };
+      if (!dir.startsWith(`${PROJECTS_DIR}${path.sep}`))
+        return { ok: false, error: 'Path traversal blocked' };
       try {
         fs.rmSync(dir, { recursive: true, force: true });
-      } catch {
-        /* ignore */
+        return { ok: true };
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : String(e) };
       }
-      return { ok: true };
     },
   );
 
@@ -224,24 +256,40 @@ export function registerStudioProjectIpc(): void {
   // or 'baseline' (native/un-themed) — persisted as snapshot.json / baseline.json.
   ipcMain.handle(
     IpcChannel.STUDIO_SNAPSHOT_SAVE,
-    (_event, req: { projectId?: unknown; snapshot?: unknown; kind?: unknown }): { ok: boolean } => {
+    (
+      _event,
+      req: { projectId?: unknown; snapshot?: unknown; kind?: unknown },
+    ): { ok: boolean; error?: string } => {
       const id = String(req.projectId ?? '');
-      if (!id || !isSafeThemeId(id)) return { ok: false };
-      if (req.snapshot == null) return { ok: false };
+      if (!id || !isSafeThemeId(id)) return { ok: false, error: 'Invalid project ID' };
+      if (req.snapshot == null) return { ok: false, error: 'No snapshot data' };
       const kind = req.kind === 'baseline' ? 'baseline' : 'current';
       const dir = path.join(PROJECTS_DIR, id);
       // R6-1: 二次确认解析后的路径仍在 PROJECTS_DIR 内。
-      if (!dir.startsWith(`${PROJECTS_DIR}${path.sep}`)) return { ok: false };
+      if (!dir.startsWith(`${PROJECTS_DIR}${path.sep}`))
+        return { ok: false, error: 'Path traversal blocked' };
       try {
         fs.mkdirSync(dir, { recursive: true });
         const file =
           kind === 'baseline' ? path.join(dir, 'baseline.json') : path.join(dir, 'snapshot.json');
         const tmp = `${file}.tmp`;
-        fs.writeFileSync(tmp, JSON.stringify(req.snapshot), 'utf8');
+        const serialized = JSON.stringify(req.snapshot);
+        // Guard against excessively large snapshots that could cause OOM on load
+        const MAX_SNAPSHOT_BYTES = 16 * 1024 * 1024; // 16 MiB
+        if (Buffer.byteLength(serialized, 'utf8') > MAX_SNAPSHOT_BYTES) {
+          return { ok: false, error: 'Snapshot data exceeds 16 MiB limit' };
+        }
+        fs.writeFileSync(tmp, serialized, 'utf8');
+        // On Windows, renameSync fails if target exists — delete first.
+        try {
+          fs.unlinkSync(file);
+        } catch {
+          /* not exist — fine */
+        }
         fs.renameSync(tmp, file);
         return { ok: true };
-      } catch {
-        return { ok: false };
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : String(e) };
       }
     },
   );

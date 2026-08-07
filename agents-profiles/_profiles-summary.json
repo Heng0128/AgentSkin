@@ -1,0 +1,265 @@
+{
+  "generatedAt": "2026-08-06T13:12:16.010Z",
+  "profiles": {
+    "codex": {
+      "tokensLight": 10,
+      "tokensDark": 10,
+      "categories": [
+        "backgrounds",
+        "other",
+        "borders",
+        "text",
+        "spacing",
+        "accent",
+        "typography",
+        "gradient",
+        "shadows",
+        "scrollbar",
+        "radius",
+        "code",
+        "semantic",
+        "icon",
+        "inputs"
+      ],
+      "stats": {
+        "rootVars": {
+          "default": 1282,
+          "dark": 1282,
+          "light": 1282
+        },
+        "domNodes": {
+          "default": 98,
+          "dark": 98,
+          "light": 98
+        },
+        "styleVars": {
+          "dark": 1291,
+          "light": 1282,
+          "neutral": 1461
+        },
+        "computedSamples": {
+          "default": 247,
+          "dark": 247,
+          "light": 247
+        }
+      }
+    },
+    "doubao": {
+      "tokensLight": 10,
+      "tokensDark": 10,
+      "categories": [
+        "other",
+        "typography",
+        "borders",
+        "gradient",
+        "spacing",
+        "shadows",
+        "backgrounds",
+        "icon",
+        "text",
+        "radius",
+        "code",
+        "accent",
+        "semantic",
+        "scrollbar",
+        "buttons"
+      ],
+      "stats": {
+        "rootVars": {
+          "default": 1242,
+          "dark": 1242,
+          "light": 1242
+        },
+        "domNodes": {
+          "default": 244,
+          "dark": 244,
+          "light": 244
+        },
+        "styleVars": {
+          "dark": 2337,
+          "light": 1242,
+          "neutral": 2754
+        },
+        "computedSamples": {
+          "default": 223,
+          "dark": 223,
+          "light": 225
+        }
+      }
+    },
+    "qoderwork": {
+      "tokensLight": 0,
+      "tokensDark": 0,
+      "categories": [
+        "other",
+        "text",
+        "icon",
+        "accent",
+        "backgrounds",
+        "borders",
+        "semantic",
+        "shadows",
+        "scrollbar",
+        "gradient",
+        "typography",
+        "spacing",
+        "radius",
+        "code",
+        "inputs"
+      ],
+      "stats": {
+        "rootVars": {
+          "default": 0,
+          "dark": 0,
+          "light": 0
+        },
+        "domNodes": {
+          "default": 134,
+          "dark": 134,
+          "light": 134
+        },
+        "styleVars": {
+          "dark": 123,
+          "light": 110,
+          "neutral": 383
+        },
+        "computedSamples": {
+          "default": 300,
+          "dark": 300,
+          "light": 300
+        }
+      }
+    },
+    "traework": {
+      "tokensLight": 10,
+      "tokensDark": 10,
+      "categories": [
+        "spacing",
+        "backgrounds",
+        "radius",
+        "other",
+        "typography",
+        "text",
+        "borders",
+        "accent",
+        "scrollbar",
+        "inputs",
+        "buttons",
+        "shadows",
+        "code",
+        "semantic",
+        "icon",
+        "gradient"
+      ],
+      "stats": {
+        "rootVars": {
+          "default": 4294,
+          "dark": 4294,
+          "light": 4294
+        },
+        "domNodes": {
+          "default": 136,
+          "dark": 136,
+          "light": 136
+        },
+        "styleVars": {
+          "dark": 4432,
+          "light": 4417,
+          "neutral": 5104
+        },
+        "computedSamples": {
+          "default": 279,
+          "dark": 279,
+          "light": 279
+        }
+      }
+    },
+    "workbuddy": {
+      "tokensLight": 0,
+      "tokensDark": 0,
+      "categories": [
+        "other",
+        "backgrounds",
+        "typography",
+        "text",
+        "borders",
+        "shadows",
+        "code",
+        "accent",
+        "inputs",
+        "semantic",
+        "scrollbar",
+        "spacing",
+        "radius",
+        "gradient",
+        "buttons",
+        "icon"
+      ],
+      "stats": {
+        "rootVars": {
+          "default": 0,
+          "dark": 0,
+          "light": 0
+        },
+        "domNodes": {
+          "default": 205,
+          "dark": 205,
+          "light": 205
+        },
+        "styleVars": {
+          "dark": 1987,
+          "light": 1289,
+          "neutral": 4072
+        },
+        "computedSamples": {
+          "default": 205,
+          "dark": 205,
+          "light": 205
+        }
+      }
+    },
+    "zcode": {
+      "tokensLight": 9,
+      "tokensDark": 9,
+      "categories": [
+        "other",
+        "shadows",
+        "backgrounds",
+        "borders",
+        "gradient",
+        "typography",
+        "spacing",
+        "icon",
+        "text",
+        "radius",
+        "code",
+        "accent",
+        "inputs",
+        "semantic",
+        "scrollbar"
+      ],
+      "stats": {
+        "rootVars": {
+          "default": 388,
+          "dark": 388,
+          "light": 388
+        },
+        "domNodes": {
+          "default": 52,
+          "dark": 52,
+          "light": 52
+        },
+        "styleVars": {
+          "dark": 408,
+          "light": 388,
+          "neutral": 474
+        },
+        "computedSamples": {
+          "default": 300,
+          "dark": 300,
+          "light": 300
+        }
+      }
+    }
+  }
+}

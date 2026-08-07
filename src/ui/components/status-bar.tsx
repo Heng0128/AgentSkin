@@ -57,21 +57,18 @@ function useTick(): string {
   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
-const LED_STYLE: Record<LedState['variant'], { dot: string; glow: string; keyframe: string }> = {
+const LED_STYLE: Record<LedState['variant'], { dot: string; glow: string }> = {
   running: {
     dot: 'bg-cr-success',
     glow: 'shadow-[0_0_7px_var(--cr-success)]',
-    keyframe: 'animate-[agentskin-led-pulse_2s_ease-in-out_infinite]',
   },
   standby: {
     dot: 'bg-cr-warning',
     glow: 'shadow-[0_0_7px_var(--cr-warning)]',
-    keyframe: 'animate-[agentskin-led-pulse_2.5s_ease-in-out_infinite]',
   },
   offline: {
     dot: 'bg-muted-foreground/30',
     glow: '',
-    keyframe: '',
   },
 };
 
@@ -91,10 +88,7 @@ export function StatusBar({ controller }: { controller: AppController }) {
     <footer className="flex h-[28px] shrink-0 items-center justify-between gap-[14px] border-t border-border bg-[var(--surface)] px-3 [-webkit-app-region:drag] transition-[background] duration-400">
       {/* Left cluster: LED + CDP status. */}
       <div className="flex items-center gap-1.5 [-webkit-app-region:no-drag]">
-        <span
-          className={cn('size-[7px] shrink-0 rounded-full', led.dot, led.glow, led.keyframe)}
-          aria-hidden
-        />
+        <span className={cn('size-[7px] shrink-0 rounded-full', led.dot, led.glow)} aria-hidden />
         <span className="font-mono text-[10px] font-medium text-muted-foreground">{cdp.label}</span>
       </div>
 

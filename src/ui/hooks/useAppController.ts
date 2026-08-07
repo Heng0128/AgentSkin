@@ -47,7 +47,7 @@ export function useAppController() {
   // --- Shared state ---
   const [locale, setLocaleState] = useState<AppLocale>(DEFAULT_LOCALE);
   const [appVersion, setAppVersion] = useState('');
-  const [route, setRouteState] = useState<Route>('workspace');
+  const [route, setRouteState] = useState<Route>('dashboard');
   const [activeAgentId, setActiveAgentId] = useState<string | null>(null);
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [lastStatusAt, setLastStatusAt] = useState<number | null>(null);
@@ -79,10 +79,12 @@ export function useAppController() {
       /* ignore persistence failures */
     }
   }, []);
-  const toggleSidebar = useCallback(
-    () => setSidebarCollapsed(!sidebarCollapsed),
-    [sidebarCollapsed, setSidebarCollapsed],
-  );
+  // Use functional setState in the toggle to avoid depending on
+  // sidebarCollapsed in the effect below — prevents re-subscription
+  // on every collapse/expand.
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsedState((prev) => !prev);
+  }, []);
 
   // Global shortcut (Ctrl/Cmd + \) — mirrors VS Code / Cursor so the toggle
   // is reachable without reaching for the mouse. Ignored while typing in a
@@ -147,6 +149,22 @@ export function useAppController() {
 
   // --- Notifications (needed before boot so fail() is available) ---
   const { toasts: controllerToasts, showToast, fail } = useNotifications(t);
+
+  // --- Boot warnings: surface degraded boot steps as a toast once the main
+  // window is ready. The main process pushes the list once (boot:warnings);
+  // empty lists are never sent. Uses a ref for the locale so re-subscribing
+  // isn't needed when the user switches language (the event fires once). ---
+  const bootWarningTRef = useRef(t);
+  useEffect(() => {
+    bootWarningTRef.current = t;
+  }, [t]);
+  useEffect(() => {
+    const off = api.onBootWarnings((warnings) => {
+      if (!warnings || warnings.length === 0) return;
+      showToast(bootWarningTRef.current.bootWarningToast(warnings.length), 'destructive');
+    });
+    return off;
+  }, [showToast]);
 
   // --- Boot: bootstrap + log subscription + status polling ---
   useBoot({
@@ -223,27 +241,33 @@ export function useAppController() {
     activateThemeWallpaper: wallpaper.activateThemeWallpaper,
   });
 
-  // Populate the companion ref with the actual implementation (needs
-  // themesHook.applyToApp + wallpaper.setAndApplyAgentWallpaper).
-  wallpaperCompanionRef.current = async (appId, wallpaperId) => {
-    if (wallpaperCompanionBusyRef.current) return;
-    wallpaperCompanionBusyRef.current = true;
-    try {
-      const theme = await api.extractThemeFromWallpaper(wallpaperId);
-      const applied = await themesHook.applyToApp(theme.id, theme.displayName, appId);
-      if (applied) {
-        // Theme apply cleared the per-agent wallpaper preference (last
-        // applied wins) — re-apply it to restore both. The re-apply triggers
-        // onWallpaperApplied again, short-circuited by the busy ref.
-        await wallpaper.setAndApplyAgentWallpaper(appId, true, wallpaperId);
+  // Keep the companion ref in sync with the latest themesHook / wallpaper
+  // instances. Previously this assignment ran in the render body (a side
+  // effect during render), and the closure captured the themesHook reference
+  // from the first render — so if the theme list refreshed after boot, the
+  // companion used a stale `applyToApp`. Updating via effect guarantees the
+  // ref always holds the latest implementations.
+  useEffect(() => {
+    wallpaperCompanionRef.current = async (appId, wallpaperId) => {
+      if (wallpaperCompanionBusyRef.current) return;
+      wallpaperCompanionBusyRef.current = true;
+      try {
+        const theme = await api.extractThemeFromWallpaper(wallpaperId);
+        const applied = await themesHook.applyToApp(theme.id, theme.displayName, appId);
+        if (applied) {
+          // Theme apply cleared the per-agent wallpaper preference (last
+          // applied wins) — re-apply it to restore both. The re-apply triggers
+          // onWallpaperApplied again, short-circuited by the busy ref.
+          await wallpaper.setAndApplyAgentWallpaper(appId, true, wallpaperId);
+        }
+      } catch (error) {
+        fail(error);
+        showToast(t.wallpaperThemeAutoFailed, 'destructive');
+      } finally {
+        wallpaperCompanionBusyRef.current = false;
       }
-    } catch (error) {
-      fail(error);
-      showToast(t.wallpaperThemeAutoFailed, 'destructive');
-    } finally {
-      wallpaperCompanionBusyRef.current = false;
-    }
-  };
+    };
+  }, [themesHook, wallpaper, fail, showToast, t.wallpaperThemeAutoFailed]);
 
   const settingsHook = useSettings({ showToast, fail, t, setStatus });
 

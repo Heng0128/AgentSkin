@@ -29,14 +29,18 @@ export function registerSettingsIpc(deps: MainContext): void {
     async (_event, appId: unknown): Promise<SettingsUpdateResult & { canceled: boolean }> => {
       assertAgentId(appId);
       const copy = getMainMessages();
-      const selection = await dialog.showOpenDialog(deps.mainWindow!, {
+      const opts: Electron.OpenDialogOptions = {
         title: copy.pickAppDialogTitle(appId),
         properties: ['openFile'],
         filters:
           process.platform === 'win32'
             ? [{ name: 'Programs', extensions: ['exe'] }]
             : [{ name: 'Applications', extensions: ['app'] }],
-      });
+      };
+      // Guard against null mainWindow (e.g. renderer holds stale reference after window destroyed).
+      const selection = deps.mainWindow
+        ? await dialog.showOpenDialog(deps.mainWindow, opts)
+        : await dialog.showOpenDialog(opts);
       if (selection.canceled || !selection.filePaths[0]) {
         return { canceled: true, settings: settingsDto(deps), status: await deps.core.status() };
       }

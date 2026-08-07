@@ -57,13 +57,18 @@ function computeSignature(snap: ThemeVisualSnapshot) {
     for (const s of lm.styles) {
       if (s.property === 'box-shadow' && s.value !== 'none') {
         hasShadow = true;
-        const m = s.value.match(/(\d+)px\s+blur/);
-        if (m) {
-          const px = parseInt(m[1], 10);
-          if (px <= 4) shadowLevel = 'sm';
-          else if (px <= 12) shadowLevel = 'md';
-          else if (px <= 24) shadowLevel = 'lg';
+        // CSS box-shadow: <offset-x> <offset-y> <blur-radius> <spread-radius>?
+        // <color>? — extract all <length> values and use the 3rd as blur.
+        const lengths = s.value.match(/([\d.]+)(?:px|rem|em|vh|vw)?/g);
+        if (lengths && lengths.length >= 3) {
+          const blurPx = parseFloat(lengths[2]);
+          if (blurPx <= 4) shadowLevel = 'sm';
+          else if (blurPx <= 12) shadowLevel = 'md';
+          else if (blurPx <= 24) shadowLevel = 'lg';
           else shadowLevel = 'xl';
+        } else if (lengths && lengths.length >= 1) {
+          // Fallback: at least one length present but <3 — treat as 'sm'
+          shadowLevel = 'sm';
         }
       }
     }
@@ -216,6 +221,9 @@ export interface ToolOverride {
   invert?: boolean;
   contrast?: number;
   saturate?: number;
+  // visual effects (preview-only, inspired by HeiGe/WorkBuddy)
+  dim?: number; // 0-1 暗化叠加层
+  opacity?: number; // 0-1 整体内容透明度
   // gradient (bakeable)
   gradientAccent?: boolean;
 }
@@ -230,11 +238,11 @@ export interface StudioColorSets {
 }
 
 const shadowLevels: Array<{ label: string; value: 'none' | 'sm' | 'md' | 'lg' | 'xl' }> = [
-  { label: 'NONE', value: 'none' },
-  { label: 'SM', value: 'sm' },
-  { label: 'MD', value: 'md' },
-  { label: 'LG', value: 'lg' },
-  { label: 'XL', value: 'xl' },
+  { label: '无', value: 'none' },
+  { label: '小', value: 'sm' },
+  { label: '中', value: 'md' },
+  { label: '大', value: 'lg' },
+  { label: '超大', value: 'xl' },
 ];
 
 const easingOptions = [
@@ -445,10 +453,22 @@ function TextRow({
 }
 
 /** Convert an rgb()/rgba() computed value to #rrggbb for <input type="color">.
+ *  Also passes through hex values (#rgb, #rrggbb) directly.
  *  Returns null when it can't be parsed (e.g. named colors / gradients). */
 function rgbToHex(v: string | null | undefined): string | null {
   if (!v) return null;
-  const m = v.match(/rgba?\(([^)]+)\)/);
+  const trimmed = v.trim();
+  // Already hex → pass through
+  if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) return trimmed;
+  if (/^#[0-9a-fA-F]{3}$/.test(trimmed)) {
+    // Expand #rgb → #rrggbb
+    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+  }
+  // 8-digit hex (#rrggbbaa) → strip alpha for <input type="color">
+  if (/^#[0-9a-fA-F]{8}$/.test(trimmed)) {
+    return trimmed.slice(0, 7);
+  }
+  const m = trimmed.match(/rgba?\(([^)]+)\)/);
   if (!m) return null;
   const parts = m[1].split(',').map((s) => s.trim());
   const r = Number.parseInt(parts[0], 10);
@@ -605,6 +625,9 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
   const finalInvert = overrides?.invert ?? false;
   const finalContrast = overrides?.contrast ?? 1;
   const finalSaturate = overrides?.saturate ?? 1;
+  // visual effects
+  const finalDim = overrides?.dim ?? 0;
+  const finalOpacity = overrides?.opacity ?? 1;
   const finalGrad = overrides?.gradientAccent ?? false;
 
   // Number of override dimensions the user has actually touched (any key set
@@ -632,7 +655,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
                 letterSpacing: '0.06em',
               }}
             >
-              {activeCount} MOD
+              {activeCount} 项
             </span>
           )}
         </div>
@@ -643,45 +666,45 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
           className="font-mono text-[9px] uppercase tracking-wider disabled:opacity-30"
           style={{ color: 'var(--muted-foreground)' }}
         >
-          ↺ RESET
+          ↺ 重置
         </button>
       </div>
 
       {/* Section: 配色 / Color */}
-      <SectionHeader>配色 · COLOR</SectionHeader>
+      <SectionHeader>配色</SectionHeader>
       <ColorRow
-        label="ACCENT"
+        label="强调色"
         hint="复刻中原本带强调色的元素（边框/链接/高亮）会重染为此色"
         value={finalAccent}
         onChange={(v) => onOverride('accent', v)}
       />
       <ColorRow
-        label="BACKGROUND"
+        label="背景色"
         hint="应用主背景（通常为根背景）"
         value={finalBg}
         onChange={(v) => onOverride('background', v)}
       />
       <ColorRow
-        label="FOREGROUND"
+        label="前景色"
         hint="正文与主要文字颜色"
         value={finalFg}
         onChange={(v) => onOverride('foreground', v)}
       />
       <ColorRow
-        label="SURFACE"
+        label="表面色"
         hint="面板/卡片等次级表面背景"
         value={finalSurface}
         onChange={(v) => onOverride('surface', v)}
       />
       <ToggleRow
-        label="GRADIENT BG"
+        label="渐变背景"
         hint="开启后主背景以「强调色→背景色」渐变铺底（会烘焙进导出主题）"
         checked={finalGrad}
         onChange={(v) => onOverride('gradientAccent', v)}
       />
 
       {/* Section: 形状与边框 / Shape */}
-      <SectionHeader>形状 · SHAPE</SectionHeader>
+      <SectionHeader>形状</SectionHeader>
       <SliderRow
         label={`${t.studioDimRadius} (${finalRadius})`}
         hint={t.studioToolboxRadiusHint}
@@ -717,7 +740,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('blurPx', Number(v))}
       />
       <SliderRow
-        label={`BORDER W (${finalBorder}px)`}
+        label={`线宽 (${finalBorder}px)`}
         hint="重设原有边框的粗细（仅影响原本就有边框的元素）"
         value={finalBorder}
         min={0}
@@ -726,14 +749,14 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('borderWidth', Number(v))}
       />
       <ToggleRow
-        label="SEPARATORS"
+        label="分割线"
         hint="关闭后隐藏细分割线（边框透明）"
         checked={finalSep}
         onChange={(v) => onOverride('separators', v)}
       />
 
       {/* Section: 字体 / Typography */}
-      <SectionHeader>字体 · TYPO</SectionHeader>
+      <SectionHeader>字体</SectionHeader>
       <SliderRow
         label={`${t.studioDimFont} (${finalFontSize}px)`}
         hint={t.studioToolboxFontHint}
@@ -744,13 +767,13 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('fontSize', Number(v))}
       />
       <TextRow
-        label={`${t.studioDimFont} FAMILY`}
+        label="字体"
         value={finalFontFam || ''}
         onChange={(v) => onOverride('fontFam', v)}
         placeholder="system-ui, sans-serif"
       />
       <SliderRow
-        label={`LINE H (${finalLh})`}
+        label="行高"
         hint="正文行高，影响阅读密度"
         value={finalLh}
         min={1}
@@ -760,16 +783,16 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       />
 
       {/* Section: 动效 / Motion */}
-      <SectionHeader>动效 · MOTION</SectionHeader>
+      <SectionHeader>动效</SectionHeader>
       <div className="grid grid-cols-2 gap-2 py-1">
         <TextRow
-          label={`${t.studioDimMotion} DURATION`}
+          label={`${t.studioDimMotion} 时长`}
           value={finalDuration}
           onChange={(v) => onOverride('duration', v)}
           placeholder="0.2s"
         />
         <SelectRow
-          label={`${t.studioDimMotion} EASING`}
+          label={`${t.studioDimMotion} 缓动`}
           value={finalTiming}
           options={easingOptions.map((e) => ({ label: e, value: e }))}
           onChange={(v) => onOverride('timing', v)}
@@ -777,9 +800,9 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       </div>
 
       {/* Section: 密度与滤镜 / Filter (preview only) */}
-      <SectionHeader>滤镜 · FILTER</SectionHeader>
+      <SectionHeader>滤镜</SectionHeader>
       <SliderRow
-        label={`SCALE (${finalScale})`}
+        label="缩放"
         hint="仅缩放复刻预览，不影响真实应用"
         value={finalScale}
         min={0.6}
@@ -788,13 +811,13 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('scale', Number(v))}
       />
       <ToggleRow
-        label="INVERT"
+        label="反相"
         hint="基于原明暗一键反转（预览）"
         checked={finalInvert}
         onChange={(v) => onOverride('invert', v)}
       />
       <SliderRow
-        label={`CONTRAST (${finalContrast})`}
+        label="对比度"
         hint="仅预览"
         value={finalContrast}
         min={0.5}
@@ -803,7 +826,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('contrast', Number(v))}
       />
       <SliderRow
-        label={`SATURATE (${finalSaturate})`}
+        label="饱和度"
         hint="仅预览"
         value={finalSaturate}
         min={0}
@@ -812,13 +835,34 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('saturate', Number(v))}
       />
 
+      {/* Section: 视觉效果 / Effects (new in P0-1) */}
+      <SectionHeader>视觉效果</SectionHeader>
+      <SliderRow
+        label="暗化"
+        hint="叠加半透明黑色遮罩（仅预览，模拟暗色氛围）"
+        value={finalDim}
+        min={0}
+        max={0.85}
+        step={0.05}
+        onChange={(v) => onOverride('dim', Number(v))}
+      />
+      <SliderRow
+        label="不透明度"
+        hint="整体内容透明度（仅预览，检查层级对比）"
+        value={finalOpacity}
+        min={0.1}
+        max={1}
+        step={0.05}
+        onChange={(v) => onOverride('opacity', Number(v))}
+      />
+
       {/* Summary of effective values */}
       <div className="mt-2 border border-border p-2" style={{ background: 'var(--muted)' }}>
         <p
           className="mb-1.5 font-mono text-[9px] font-semibold uppercase"
           style={{ letterSpacing: '0.12em', color: 'var(--muted-foreground)' }}
         >
-          ACTIVE PROPS
+          当前属性
         </p>
         <div className="space-y-0.5">
           {[
@@ -832,6 +876,10 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
             [
               `scale: ${finalScale}`,
               `${finalInvert ? 'inv ' : ''}c${finalContrast}/s${finalSaturate}`,
+            ],
+            [
+              `dim: ${(finalDim * 100).toFixed(0)}%`,
+              `opacity: ${(finalOpacity * 100).toFixed(0)}%`,
             ],
           ].map(([k, v]) => (
             <p key={k} className="flex items-center justify-between font-mono text-[9px]">
@@ -849,7 +897,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
           className="mt-1 font-mono text-[9px]"
           style={{ color: 'var(--dim, var(--muted-foreground))' }}
         >
-          配色/形状/字体/动效/渐变背景会烘焙进导出主题；内容缩放·分隔线·明暗反转·对比度·饱和度仅作用于模拟预览。
+          配色/形状/字体/动效/渐变背景会烘焙进导出主题；内容缩放·分隔线·明暗反转·对比度·饱和度·暗化·不透明度仅作用于模拟预览。
         </p>
       )}
     </div>

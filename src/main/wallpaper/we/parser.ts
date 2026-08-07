@@ -86,7 +86,10 @@ export async function parseWorkshopProject(
     const raw = await fs.readFile(projectFile, 'utf8');
     project = JSON.parse(raw) as ProjectJson;
   } catch {
-    return parseBareImageDir(dir, entry);
+    // Missing or corrupt project.json — still try web/scene/video detection
+    // below (index.html / scene.pkg presence doesn't depend on it). The
+    // bare-image fallback at the end covers directories with only images.
+    project = {};
   }
 
   const projectType = typeof project.type === 'string' ? project.type.toLowerCase() : '';
@@ -201,7 +204,7 @@ export async function parseWorkshopProject(
     if (mediaPath === previewPath) previewOnly = true;
   }
 
-  if (!type || !mediaPath) return null;
+  if (!type || !mediaPath) return parseBareImageDir(dir, entry);
 
   const mediaStat = await fs.stat(mediaPath).catch(() => null);
   if (!mediaStat || !mediaStat.isFile()) return null;

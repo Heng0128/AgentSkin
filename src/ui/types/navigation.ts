@@ -15,4 +15,4 @@
  * The old 'store' / 'installed' views are merged into Themes.
  */
 
-export type Route = 'workspace' | 'themes' | 'studio' | 'wallpaper' | 'settings';
+export type Route = 'dashboard' | 'workspace' | 'themes' | 'studio' | 'wallpaper' | 'settings';

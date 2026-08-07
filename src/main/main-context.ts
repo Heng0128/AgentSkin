@@ -91,7 +91,12 @@ export function brandingRoot(): string {
 
 /** Forward a log line to the renderer's runtime-log panel (if attached). */
 export function sendLog(line: string): void {
-  ctx.mainWindow?.webContents.send(IpcChannel.RUNTIME_LOG, line);
+  // Check both reference presence and isDestroyed(): after close-to-tray the
+  // window reference may linger but webContents.send on a destroyed window
+  // throws "Object has been destroyed".
+  if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+    ctx.mainWindow.webContents.send(IpcChannel.RUNTIME_LOG, line);
+  }
 }
 
 /**
@@ -101,7 +106,9 @@ export function sendLog(line: string): void {
  * so the UI reflects the new state without waiting for the next poll tick.
  */
 export function notifyStatusChanged(): void {
-  ctx.mainWindow?.webContents.send(IpcChannel.STATUS_CHANGED);
+  if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+    ctx.mainWindow.webContents.send(IpcChannel.STATUS_CHANGED);
+  }
 }
 
 /**

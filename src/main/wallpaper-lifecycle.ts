@@ -21,6 +21,14 @@ import type { CdpSession } from './cdp/cdp-client';
 import { getActiveWallpaperAgents, openAgentWallpaperSession } from './wallpaper-injector';
 
 let registered = false;
+/**
+ * References to the listeners installed by {@link registerWallpaperLifecycle}.
+ * Kept so `_resetWallpaperLifecycleForTest()` can remove them (tests and
+ * hot-reload need a way to register → reset → re-register).
+ *
+ * Keys are the electron event name used with on()/off().
+ */
+const installedListeners: Partial<Record<string, (...args: unknown[]) => void>> = {};
 
 /** Register system-level pause/resume for agent-injected video wallpapers. */
 export function registerWallpaperLifecycle(): void {
@@ -47,12 +55,22 @@ export function registerWallpaperLifecycle(): void {
     );
   };
 
+  const onSuspend = () => void broadcast(true);
+  const onBattery = () => void broadcast(true);
+  const onResume = () => void broadcast(false);
+  const onAc = () => void broadcast(false);
+  const onWillQuit = () => void broadcast(true);
+
   // Suspend decoding when the machine sleeps or drops to battery power.
-  powerMonitor.on('suspend', () => void broadcast(true));
-  powerMonitor.on('on-battery', () => void broadcast(true));
+  powerMonitor.on('suspend', onSuspend);
+  installedListeners.suspend = onSuspend;
+  powerMonitor.on('on-battery', onBattery);
+  installedListeners['on-battery'] = onBattery;
   // Resume when back on AC or awake.
-  powerMonitor.on('resume', () => void broadcast(false));
-  powerMonitor.on('on-ac', () => void broadcast(false));
+  powerMonitor.on('resume', onResume);
+  installedListeners.resume = onResume;
+  powerMonitor.on('on-ac', onAc);
+  installedListeners['on-ac'] = onAc;
 
   // Be a good citizen on quit: stop decoding agent wallpapers.
   // Use `will-quit` (not `before-quit`) so that if the user cancels the
@@ -60,5 +78,34 @@ export function registerWallpaperLifecycle(): void {
   // before-quit handler), the wallpapers are NOT paused and keep playing.
   // `will-quit` only fires after `before-quit` has run without being
   // prevented, so it reliably indicates the app is actually shutting down.
-  app.on('will-quit', () => void broadcast(true));
+  app.on('will-quit', onWillQuit);
+  installedListeners['will-quit'] = onWillQuit;
+}
+
+/**
+ * Drop all registered lifecycle listeners and reset the `registered` flag.
+ *
+ * Production code never calls this; it exists so unit tests can exercise
+ * `registerWallpaperLifecycle()` cleanly across test cases, and so
+ * hot-reload can tear down + re-register without layering listeners.
+ *
+ * MUST NOT be called after electron starts dispatching power events in
+ * real usage — the name explicitly flags it as a test-only helper.
+ */
+export function _resetWallpaperLifecycleForTest(): void {
+  const suspend = installedListeners.suspend;
+  if (suspend) powerMonitor.off('suspend', suspend);
+  const onBattery = installedListeners['on-battery'];
+  if (onBattery) powerMonitor.off('on-battery', onBattery);
+  const resume = installedListeners.resume;
+  if (resume) powerMonitor.off('resume', resume);
+  const onAc = installedListeners['on-ac'];
+  if (onAc) powerMonitor.off('on-ac', onAc);
+  const willQuit = installedListeners['will-quit'];
+  if (willQuit) app.off('will-quit', willQuit);
+
+  for (const k of Object.keys(installedListeners)) {
+    delete installedListeners[k as keyof typeof installedListeners];
+  }
+  registered = false;
 }

@@ -57,46 +57,52 @@ export function parsePkgBuffer(buf: Buffer): PkgPackage | null {
   let magic: string;
   try {
     magic = reader.readStringI32();
-  } catch {
-    return null;
-  }
-  const entryCount = reader.readInt32();
-  if (entryCount < 0 || entryCount > 10000) return null;
+    const entryCount = reader.readInt32();
+    if (entryCount < 0 || entryCount > 10000) return null;
 
-  const rawEntries: Array<{ name: string; offset: number; length: number }> = [];
-  for (let i = 0; i < entryCount; i++) {
-    const name = reader.readStringI32();
-    const offset = reader.readInt32();
-    const length = reader.readInt32();
-    rawEntries.push({ name, offset, length });
-  }
+    const rawEntries: Array<{ name: string; offset: number; length: number }> = [];
+    for (let i = 0; i < entryCount; i++) {
+      const name = reader.readStringI32();
+      const offset = reader.readInt32();
+      const length = reader.readInt32();
+      rawEntries.push({ name, offset, length });
+    }
 
-  const dataStart = reader.position;
-  const dataEnd = buf.length;
-  const entries: PkgEntry[] = [];
-  for (const e of rawEntries) {
-    // P2-12: Boundary-validate offset and length. A malformed/malicious PKG
-    // can claim offset+length far past the buffer end, causing buf.subarray
-    // to silently return an empty view (or throw when used downstream on a
-    // path that assumes non-empty content). Negative values are also caught
-    // by the >= 0 guards. Valid entries that fit within the data region are
-    // kept; silently drop the rest so a single bad entry doesn't kill the
-    // whole package.
-    if (e.offset < 0 || e.length < 0) continue;
-    const absStart = dataStart + e.offset;
-    const absEnd = absStart + e.length;
-    if (!Number.isFinite(absStart) || !Number.isFinite(absEnd)) continue;
-    if (absStart < dataStart || absStart > dataEnd) continue;
-    if (absEnd < absStart || absEnd > dataEnd) continue;
-    entries.push({
-      fullPath: e.name,
-      offset: e.offset,
-      length: e.length,
-      bytes: buf.subarray(absStart, absEnd),
-    });
-  }
+    const dataStart = reader.position;
+    const dataEnd = buf.length;
+    const entries: PkgEntry[] = [];
+    for (const e of rawEntries) {
+      // P2-12: Boundary-validate offset and length. A malformed/malicious PKG
+      // can claim offset+length far past the buffer end, causing buf.subarray
+      // to silently return an empty view (or throw when used downstream on a
+      // path that assumes non-empty content). Negative values are also caught
+      // by the >= 0 guards. Valid entries that fit within the data region are
+      // kept; silently drop the rest so a single bad entry doesn't kill the
+      // whole package.
+      if (e.offset < 0 || e.length < 0) continue;
+      const absStart = dataStart + e.offset;
+      const absEnd = absStart + e.length;
+      if (!Number.isFinite(absStart) || !Number.isFinite(absEnd)) continue;
+      if (absStart < dataStart || absStart > dataEnd) continue;
+      if (absEnd < absStart || absEnd > dataEnd) continue;
+      entries.push({
+        fullPath: e.name,
+        offset: e.offset,
+        length: e.length,
+        bytes: buf.subarray(absStart, absEnd),
+      });
+    }
 
-  return { magic, entries };
+    return { magic, entries };
+  } catch (error) {
+    // BinaryReader now throws RangeError on truncated reads (P4#1) instead of
+    // silently returning short Buffers. A corrupt PKG that claims more entries
+    // / longer strings than the buffer holds surfaces here as a clean null,
+    // matching the existing contract: callers (extractScene etc.) treat null
+    // as "unparseable, skip this wallpaper" without a try/catch of their own.
+    if (error instanceof RangeError) return null;
+    throw error;
+  }
 }
 
 /** Find an entry by path (case-insensitive). */

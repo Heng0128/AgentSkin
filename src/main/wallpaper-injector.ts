@@ -111,7 +111,7 @@ export type { WallpaperInjectorDeps } from './wallpaper/injector-types';
 // it into the wallpaper iframe via postMessage. One poller is shared across
 // all agents; sessions unsubscribe on close / wallpaper removal.
 
-import { onAudioLevel, startAudioLevelPolling, stopAudioLevelPolling } from './audio-level';
+import { startAudioLevelPolling, stopAudioLevelPolling } from './audio-level';
 
 /** CDP sessions currently showing an audio-responsive web/scene wallpaper. */
 const audioBroadcastSessions = new Set<CdpSession>();
@@ -175,7 +175,7 @@ export async function injectAgentWallpaper(
   if (!deps.wallpaperService) return { ok: false, detail: 'wallpaper-service-unavailable' };
   if (!deps.isEpochCurrent(appId, epoch)) return { ok: false, detail: 'epoch-cancelled' };
   // 非空局部：injectOne 闭包内 TypeScript 无法保持 narrowing，用这个引用。
-  const wallpaperService = deps.wallpaperService;
+  const _wallpaperService = deps.wallpaperService;
 
   // Resolve the media file path and type via the wallpaper service
   const info = await deps.wallpaperService.mediaInfoFor(wallpaperId);
@@ -183,14 +183,16 @@ export async function injectAgentWallpaper(
     deps.log(`[wallpaper] ${appId}: no media found for "${wallpaperId}"`);
     return { ok: false, detail: 'wallpaper-not-found' };
   }
-  // Surface previewOnly wallpapers (no real animated content — just a static
-  // preview thumbnail) so the user knows they're injecting a still image, not
-  // the original animated wallpaper. This doesn't block injection (a static
-  // image is still a valid wallpaper) but makes the limitation visible.
+  // previewOnly wallpapers have no real animated content — their only usable
+  // asset IS the low-res workshop preview thumbnail. Injecting it looks bad
+  // (a blurry still image), so refuse outright instead of degrading the
+  // apply. The UI already blocks these (canInject excludes previewOnly);
+  // this guard makes the injector consistent regardless of the caller.
   if (info.previewOnly) {
     deps.log(
-      `[wallpaper] ${appId}: "${wallpaperId}" is preview-only (no animated content — injecting static preview image)`,
+      `[wallpaper] ${appId}: "${wallpaperId}" is preview-only (no animated content) — refusing to inject the preview thumbnail`,
     );
+    return { ok: false, detail: 'preview-only' };
   }
   if (!deps.isEpochCurrent(appId, epoch)) return { ok: false, detail: 'epoch-cancelled' };
 
@@ -217,7 +219,7 @@ export async function injectAgentWallpaper(
   // rendered via an iframe (web) or a generated canvas HTML (scene), both
   // served by the wallpaper media server as a loopback URL. Video and image
   // wallpapers stream their media file directly.
-  let isWeb = info.type === 'web' || info.type === 'scene';
+  const isWeb = info.type === 'web' || info.type === 'scene';
 
   // Web/scene wallpaper: resolve the rendered-content URL ONCE (shared across
   // all targets). The URL is cached by the wallpaper service so repeated
@@ -232,27 +234,13 @@ export async function injectAgentWallpaper(
     webUrl = await deps.wallpaperService.webUrlFor(wallpaperId);
     if (!webUrl) {
       // Scene wallpapers whose scene.pkg cannot be parsed/rendered (parse
-      // failure, no renderable layers, registerHtml failure) still ship a
-      // workshop preview image. Fall back to injecting the still preview so
-      // the apply doesn't hard-fail on the most common workshop type. Web
-      // wallpapers always resolve a URL (index.html is served directly), so
-      // this fallback is scene-only.
-      if (info.type === 'scene') {
-        const fallbackImage = await wallpaperService.bestFallbackImageFor(wallpaperId);
-        if (fallbackImage) {
-          deps.log(
-            `[wallpaper] ${appId}: scene "${wallpaperId}" has no renderable content — falling back to static image`,
-          );
-          info.path = fallbackImage;
-          isWeb = false;
-        } else {
-          deps.log(`[wallpaper] ${appId}: failed to resolve web URL for "${wallpaperId}"`);
-          return { ok: false, detail: 'web-url-resolve-failed' };
-        }
-      } else {
-        deps.log(`[wallpaper] ${appId}: failed to resolve web URL for "${wallpaperId}"`);
-        return { ok: false, detail: 'web-url-resolve-failed' };
-      }
+      // failure, no renderable layers, registerHtml failure) previously fell
+      // back to the workshop preview thumbnail. That is never injected — a
+      // low-res still preview looks bad and misrepresents the wallpaper — so
+      // a failed render is a hard failure here. (Web wallpapers always
+      // resolve a URL since index.html is served directly.)
+      deps.log(`[wallpaper] ${appId}: failed to resolve web URL for "${wallpaperId}"`);
+      return { ok: false, detail: 'web-url-resolve-failed' };
     }
     if (!deps.isEpochCurrent(appId, epoch)) return { ok: false, detail: 'epoch-cancelled' };
   }
@@ -307,46 +295,32 @@ export async function injectAgentWallpaper(
   }
 
   // Inject into a single target's session. Returns { ok, verdict }.
+  // All playback settings come from `options.render` (single source of
+  // truth). Passing `undefined` fields lets each injector apply its built-in
+  // default (image scrim 45, video scrim 55, speed 1, loop true).
   const injectOne = async (session: CdpSession): Promise<{ ok: boolean; verdict: string }> => {
+    const { render } = options;
     // Web / scene wallpaper: mount an iframe pointing at the rendered HTML.
     if (isWeb && webUrl) {
       const webResult = await injectWebWallpaper(session, {
         url: webUrl,
-        scrimOpacity: options.scrimOpacity,
-        render: options.render,
+        scrimOpacity: render?.scrimOpacity,
+        render,
       });
       if (webResult.ok) return { ok: true, verdict: 'ok' };
       // The iframe failed to load (CSP frame-src block, or the rendered HTML
-      // exceeded the iframe watchdog). Scene wallpapers still ship a workshop
-      // preview image — mount the best static fallback (largest decodable
-      // image in the wallpaper dir, else the preview) so the agent page never
-      // goes black on the most common workshop type. The fallback reuses the
-      // same image path as a direct image wallpaper (base64/blob/HTTP dispatch
-      // below), so the scrim and punch-through behavior are identical.
-      if (info.type === 'scene') {
-        const fallbackImage = await wallpaperService.bestFallbackImageFor(wallpaperId);
-        if (fallbackImage) {
-          const imgResult = await injectImageWallpaper(session, {
-            imagePath: fallbackImage,
-            scrimOpacity: options.scrimOpacity,
-            render: options.render,
-          });
-          return {
-            ok: imgResult.ok,
-            verdict: imgResult.ok
-              ? `web:${webResult.verdict}|scene-preview:ok`
-              : `web:${webResult.verdict}|scene-preview:${imgResult.verdict}`,
-          };
-        }
-      }
+      // exceeded the iframe watchdog). Scene wallpapers previously fell back
+      // to their workshop preview thumbnail — that is never injected (a
+      // low-res still preview looks bad), so a failed iframe is a hard
+      // failure for the target.
       return { ok: webResult.ok, verdict: webResult.ok ? 'ok' : `web:${webResult.verdict}` };
     }
     if (isImage) {
       if (useHttpImage && httpUrl) {
         const urlResult = await injectImageWallpaperByUrl(session, {
           url: httpUrl,
-          scrimOpacity: options.scrimOpacity,
-          render: options.render,
+          scrimOpacity: render?.scrimOpacity,
+          render,
         });
         if (urlResult.ok) return { ok: true, verdict: `image-http:${urlResult.verdict}` };
         // HTTP stream failed (likely CSP blocked the loopback URL) — fall
@@ -359,9 +333,9 @@ export async function injectAgentWallpaper(
         if (imageSize != null && imageSize <= IMAGE_BLOB_FALLBACK_CAP) {
           const imgResult = await injectImageWallpaper(session, {
             imagePath: info.path,
-            scrimOpacity: options.scrimOpacity,
+            scrimOpacity: render?.scrimOpacity,
             forceInject: true,
-            render: options.render,
+            render,
           });
           return {
             ok: imgResult.ok,
@@ -372,8 +346,8 @@ export async function injectAgentWallpaper(
       }
       const imgResult = await injectImageWallpaper(session, {
         imagePath: info.path,
-        scrimOpacity: options.scrimOpacity,
-        render: options.render,
+        scrimOpacity: render?.scrimOpacity,
+        render,
       });
       return { ok: imgResult.ok, verdict: imgResult.ok ? 'ok' : `image:${imgResult.verdict}` };
     }
@@ -383,10 +357,10 @@ export async function injectAgentWallpaper(
       const streamResult = await injectVideoWallpaper(session, {
         src: httpUrl,
         mime,
-        speed: options.speed,
-        loop: options.loop,
-        scrimOpacity: options.scrimOpacity,
-        render: options.render,
+        speed: render?.speed,
+        loop: render?.loop,
+        scrimOpacity: render?.scrimOpacity,
+        render,
       });
       if (streamResult.ok) return { ok: true, verdict: `stream:${streamResult.verdict}` };
       // Streamed mount failed — fall back to in-page base64 blob if small enough.
@@ -400,10 +374,10 @@ export async function injectAgentWallpaper(
       if (videoSize != null && videoSize <= VIDEO_BLOB_FALLBACK_CAP) {
         const blobResult = await injectVideoWallpaperByBase64(session, {
           videoPath: info.path,
-          speed: options.speed,
-          loop: options.loop,
-          scrimOpacity: options.scrimOpacity,
-          render: options.render,
+          speed: render?.speed,
+          loop: render?.loop,
+          scrimOpacity: render?.scrimOpacity,
+          render,
         });
         return {
           ok: blobResult.ok,
@@ -414,10 +388,10 @@ export async function injectAgentWallpaper(
     }
     const blobResult = await injectVideoWallpaperByBase64(session, {
       videoPath: info.path,
-      speed: options.speed,
-      loop: options.loop,
-      scrimOpacity: options.scrimOpacity,
-      render: options.render,
+      speed: render?.speed,
+      loop: render?.loop,
+      scrimOpacity: render?.scrimOpacity,
+      render,
     });
     return { ok: blobResult.ok, verdict: `blob:${blobResult.verdict}` };
   };
@@ -678,9 +652,6 @@ export async function injectAgentWallpaperFromApply(
     port,
     resolved.id,
     {
-      speed: resolved.speed,
-      loop: resolved.loop,
-      scrimOpacity: resolved.scrimOpacity,
       ...(resolved.render ? { render: resolved.render } : {}),
     },
     epoch,
@@ -794,9 +765,6 @@ export async function applyAgentWallpaperNow(
     port,
     resolved.id,
     {
-      speed: resolved.speed,
-      loop: resolved.loop,
-      scrimOpacity: resolved.scrimOpacity,
       ...(resolved.render ? { render: resolved.render } : {}),
     },
     epoch,
@@ -868,9 +836,6 @@ export async function applyWallpaperToAgent(
     port,
     wallpaperId,
     {
-      speed: resolved.speed,
-      loop: resolved.loop,
-      scrimOpacity: resolved.scrimOpacity,
       ...(resolved.render ? { render: resolved.render } : {}),
     },
     epoch,

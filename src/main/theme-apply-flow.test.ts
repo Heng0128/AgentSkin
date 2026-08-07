@@ -116,6 +116,7 @@ function makeDeps(overrides: DepsOverrides = {}): ApplyFlowDeps {
     inferRestartReason: vi.fn(async () => 'not-running' as const),
     findTheme: vi.fn(async () => overrides.findThemeEntry ?? makeEntry()),
     bumpEpoch: vi.fn(() => overrides.bumpEpochResult ?? 42),
+    isEpochCurrent: vi.fn(() => true),
     setActiveTheme: vi.fn(),
     persist: vi.fn(async () => {}),
     getAppPath: vi.fn(() => overrides.getAppPath ?? null),

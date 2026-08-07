@@ -83,4 +83,50 @@ describe('registerThemeWallpaperForInstalled', () => {
       ),
     ).resolves.toBeUndefined();
   });
+
+  it('blocks video paths that escape the package root (traversal / absolute)', async () => {
+    const onError = vi.fn();
+    const register = vi.fn(async () => {});
+    // `../` traversal through the theme id escapes the root → blocked.
+    await registerThemeWallpaperForInstalled(
+      { wallpapers: { registerThemeWallpaper: register } as never },
+      fakeTheme({ id: '../evil', wallpaper: { video: 'wallpaper/x.mp4' } }),
+      root,
+      onError,
+    );
+    // `..` inside the video path escapes the root → blocked. (A single `..`
+    // is absorbed by path.join; `../../` actually walks above the root.)
+    await registerThemeWallpaperForInstalled(
+      { wallpapers: { registerThemeWallpaper: register } as never },
+      fakeTheme({ id: 'theme-b', wallpaper: { video: '../../outside.mp4' } }),
+      root,
+      onError,
+    );
+    // An absolute video path is absorbed into the join (stays inside root) and
+    // simply misses — never registered, no escape.
+    await registerThemeWallpaperForInstalled(
+      { wallpapers: { registerThemeWallpaper: register } as never },
+      fakeTheme({ id: 'theme-c', wallpaper: { video: '/etc/passwd' } }),
+      root,
+      onError,
+    );
+    expect(register).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledTimes(2);
+  });
+
+  it('still registers videos inside the root even when the id contains dots', async () => {
+    // A dots-only id is fine (path.resolve normalizes it); only escapes are
+    // blocked — guards against over-blocking legitimate ids.
+    const themeId = 'theme.with.dots';
+    const themeDir = path.join(root, themeId);
+    await fs.mkdir(path.join(themeDir, 'wallpaper'), { recursive: true });
+    await fs.writeFile(path.join(themeDir, 'wallpaper', 'video.mp4'), Buffer.from('x'));
+    const register = vi.fn(async () => {});
+    await registerThemeWallpaperForInstalled(
+      { wallpapers: { registerThemeWallpaper: register } as never },
+      fakeTheme({ id: themeId, wallpaper: { video: 'wallpaper/video.mp4' } }),
+      root,
+    );
+    expect(register).toHaveBeenCalledTimes(1);
+  });
 });

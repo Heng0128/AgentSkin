@@ -179,7 +179,7 @@ export function InstallWizard({
     .slice(-50); // last 50 entries
 
   return (
-    <div className="animate-page-enter fixed bottom-4 left-1/2 z-[110] w-[480px] -translate-x-1/2 rounded-xl border bg-popover shadow-xl">
+    <div className="animate-page-enter fixed bottom-4 left-1/2 z-[110] w-[480px] -translate-x-1/2 rounded-[2px] border bg-popover shadow-xl">
       {/* Header */}
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <img src={appIcon} alt="" className="size-6 rounded" draggable={false} />
@@ -210,7 +210,7 @@ export function InstallWizard({
       </div>
 
       {/* Steps list */}
-      <div className="mx-4 mt-3 max-h-32 overflow-y-auto rounded-lg bg-muted/30 p-2">
+      <div className="mx-4 mt-3 max-h-32 overflow-y-auto rounded-[2px] bg-muted/30 p-2">
         <ul className="flex flex-col gap-1">
           {steps.map((step) => (
             <StepRow key={step.id} step={step} />
@@ -222,7 +222,7 @@ export function InstallWizard({
       {logEntries.length > 0 && (
         <div
           ref={logRef}
-          className="mx-4 mt-2 max-h-24 overflow-y-auto rounded-lg border bg-muted/20 p-2"
+          className="mx-4 mt-2 max-h-24 overflow-y-auto rounded-[2px] border bg-muted/20 p-2"
         >
           {logEntries.map((entry, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: log entries are append-only display items — no reorder, insert, or delete, so index keys are safe.

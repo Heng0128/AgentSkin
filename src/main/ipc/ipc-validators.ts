@@ -24,8 +24,8 @@
  * and some channels silently returned empty results instead of errors.
  */
 
-import path from 'node:path';
 import { getMainMessages } from '../../shared/i18n';
+import { isSafeThemeId } from '../../shared/theme-id';
 import { type AgentId, isAgentId } from '../../shared/types';
 
 /**
@@ -43,22 +43,14 @@ export function assertAgentId(value: unknown): asserts value is AgentId {
 }
 
 /**
- * Assert that `value` is a non-empty string with no path-traversal characters.
- * Used by IPC handlers that receive a theme id (`themeId`).
+ * Assert that `value` is a valid theme id. Throws a localised error if not.
  *
- * The library layer (`isSafeThemeId`) already enforces a strict
- * `[a-z0-9][a-z0-9_-]*` shape, but IPC is the trust boundary — fail fast
- * here so malicious renderer input never reaches the filesystem layer.
+ * Used by IPC handlers that receive a `themeId` parameter. Delegates to
+ * `isSafeThemeId` from shared/theme-id.ts to ensure consistent validation
+ * rules across the application layer and the engine layer.
  */
 export function assertSafeThemeId(value: unknown): asserts value is string {
-  if (
-    typeof value !== 'string' ||
-    !value ||
-    value.includes('..') ||
-    value.includes('/') ||
-    value.includes('\\') ||
-    path.isAbsolute(value)
-  ) {
+  if (typeof value !== 'string' || !isSafeThemeId(value)) {
     throw new Error(getMainMessages().invalidThemeId);
   }
 }

@@ -28,6 +28,9 @@ import type { MainContext } from '../main-context';
  * 读取 `theme.wallpaper.video`（相对包根的路径），文件存在且 WallpaperService
  * 可用时注册为 `theme:<themeId>`；否则静默跳过（不抛错——注册失败不应影响
  * 主题安装/应用主流程）。`onError` 可选，用于记录日志。
+ *
+ * 路径安全：`theme.id` 与 `wp.video` 均来自主题包内容（可能被篡改），拼接后
+ * 做一次包含性校验——解析结果必须落在 `packageRoot` 内，否则视为恶意跳过。
  */
 export async function registerThemeWallpaperForInstalled(
   context: Pick<MainContext, 'wallpapers'>,
@@ -37,11 +40,29 @@ export async function registerThemeWallpaperForInstalled(
 ): Promise<void> {
   const wp = theme.wallpaper;
   if (!wp?.video || !context.wallpapers) return;
-  const videoPath = path.join(packageRoot, theme.id, wp.video);
+  const videoPath = resolveInside(packageRoot, path.join(theme.id, wp.video));
+  if (!videoPath) {
+    onError?.(`[theme-wallpaper] blocked out-of-root video path for "${theme.id}"`);
+    return;
+  }
   try {
     if (!existsSync(videoPath)) return; // 视频文件缺失 → 跳过（与 registerThemeWallpaper 内部一致）
     await context.wallpapers.registerThemeWallpaper(theme.id, videoPath, theme.displayName);
   } catch (error) {
     onError?.(`[theme-wallpaper] registration failed for "${theme.id}": ${toMessage(error)}`);
   }
+}
+
+/**
+ * Resolve `rel` against `root` and verify the result stays inside `root`.
+ * Returns the absolute path, or null when `rel` escapes (absolute path, or
+ * `..` segments resolving above the root). `path.join` alone would silently
+ * drop an absolute `rel`'s earlier segments and let `../` walk out.
+ */
+function resolveInside(root: string, rel: string): string | null {
+  const absRoot = path.resolve(root);
+  const absTarget = path.resolve(absRoot, rel);
+  const relToRoot = path.relative(absRoot, absTarget);
+  if (relToRoot.startsWith('..') || path.isAbsolute(relToRoot)) return null;
+  return absTarget;
 }

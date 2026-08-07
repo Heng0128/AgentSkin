@@ -86,4 +86,31 @@ describe('wallpaper settings (config/settings.ts)', () => {
     // The string value must not survive the type check — the field is removed.
     expect(typeof result.imageBlobThresholdMB).not.toBe('string');
   });
+
+  it('loadSettings clamps an out-of-range threshold back to the default', async () => {
+    await fs.mkdir(path.dirname(settingsFile(tmpDir)), { recursive: true });
+    for (const bad of [-5, 0, 1e10, Number.NaN]) {
+      // resetModules so each write is a fresh load
+      vi.resetModules();
+      await fs.writeFile(
+        settingsFile(tmpDir),
+        JSON.stringify({ imageBlobThresholdMB: bad }, null, 2),
+        'utf8',
+      );
+      const { getImageBlobThresholdBytes } = await import('./settings');
+      // Clamped to the default 20MB, never a nonsense cap.
+      expect(getImageBlobThresholdBytes()).toBe(20 * 1024 * 1024);
+    }
+  });
+
+  it('updateSetting rejects an out-of-range threshold', async () => {
+    const { updateSetting } = await import('./settings');
+    expect(() => updateSetting('imageBlobThresholdMB', 0)).toThrow(/between 1 and 1000/);
+    expect(() => updateSetting('imageBlobThresholdMB', -3)).toThrow(/between 1 and 1000/);
+    expect(() => updateSetting('imageBlobThresholdMB', 1e10)).toThrow(/between 1 and 1000/);
+    // A valid value still persists.
+    updateSetting('imageBlobThresholdMB', 100);
+    const { getImageBlobThresholdBytes } = await import('./settings');
+    expect(getImageBlobThresholdBytes()).toBe(100 * 1024 * 1024);
+  });
 });

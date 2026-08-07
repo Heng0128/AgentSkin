@@ -444,8 +444,11 @@ export async function hardeningPass(
           document.adoptedStyleSheets = Array.from(document.adoptedStyleSheets || []).filter(function(s){ return s !== sheet; }).concat([sheet]);
           return 'wp-reappended';
         })()`);
-      } catch {
-        // best-effort
+      } catch (error) {
+        deps.log(
+          `[hardening] ${appId}: failed to re-append wallpaper punch-through sheet — ` +
+            `theme art-layer may hide the wallpaper: ${(error as Error)?.message ?? String(error)}`,
+        );
       }
     } finally {
       firstSession.close();

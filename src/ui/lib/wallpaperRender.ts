@@ -38,7 +38,6 @@ export function alignmentObjectFit(
       return 'none';
     case 'tile':
       return 'none';
-    case 'fill':
     default:
       return 'cover';
   }

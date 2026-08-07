@@ -12,6 +12,8 @@
  * - `studio:inspect:start` / `studio:inspect:stop` drive the DevTools-style
  *   live element picker (Tier B). Picked nodes are pushed back via
  *   `studio:inspect:result`.
+ * - PROBE tab is now rendered entirely by the renderer (static mock
+ *   skeletons); this module no longer exposes any probe IPC channels.
  */
 
 import path from 'node:path';
@@ -66,7 +68,13 @@ export function registerStudioIpc(deps: {
     async (_event, request: unknown): Promise<{ packageDir: string }> => {
       const root = app.getAppPath();
       const scriptUrl = pathToFileURL(path.join(root, 'scripts', 'build-theme-package.mjs')).href;
-      const mod = await import(scriptUrl);
+      let mod: { buildThemePackage(req: unknown, outDir: string): Promise<string> };
+      try {
+        mod = await import(scriptUrl);
+      } catch (e) {
+        deps.log(`[studio] export script load failed: ${String(e)}`);
+        throw new Error('Theme package builder unavailable — rebuild the app');
+      }
       const outDir = path.join(root, 'theme-workbench', 'out');
       const pkgDir = await mod.buildThemePackage(request, outDir);
       return { packageDir: pkgDir };
@@ -127,6 +135,9 @@ export function registerStudioIpc(deps: {
    *   2. restore (remove theme) so the DOM reflects the default look
    *   3. capture the live DOM with no theme re-applied (`themeId: undefined`)
    *   4. re-apply the previously active theme so the agent is left unchanged
+   *
+   * Step 4 is in a `finally` block to guarantee the agent is never left in a
+   * theme-less state if the snapshot capture throws.
    */
   ipcMain.handle(
     IpcChannel.THEME_STUDIO_SNAPSHOT_BASELINE,
@@ -147,27 +158,29 @@ export function registerStudioIpc(deps: {
         }
       }
 
-      const snap = await snapshotThemeVisuals(
-        agentId,
-        undefined,
-        {
-          applyTheme: deps.applyTheme,
-          findPortForAgent: deps.resolveLivePort,
-          adapter: () => null, // not used in this minimal path
-          log: deps.log,
-        },
-        (request.options as StudioSnapshotOptions | undefined) ?? undefined,
-      );
-
-      if (prevThemeId) {
-        try {
-          await deps.applyTheme({ themeId: prevThemeId, appId: agentId });
-          deps.log(`[studio] re-applied theme ${prevThemeId} to ${agentId}`);
-        } catch (error) {
-          deps.log(`[studio] re-apply failed: ${String(error)}`);
+      // Always re-apply the previous theme, even if snapshotThemeVisuals throws.
+      try {
+        return await snapshotThemeVisuals(
+          agentId,
+          undefined,
+          {
+            applyTheme: deps.applyTheme,
+            findPortForAgent: deps.resolveLivePort,
+            adapter: () => null, // not used in this minimal path
+            log: deps.log,
+          },
+          (request.options as StudioSnapshotOptions | undefined) ?? undefined,
+        );
+      } finally {
+        if (prevThemeId) {
+          try {
+            await deps.applyTheme({ themeId: prevThemeId, appId: agentId });
+            deps.log(`[studio] re-applied theme ${prevThemeId} to ${agentId}`);
+          } catch (error) {
+            deps.log(`[studio] CRITICAL: re-apply failed: ${String(error)}`);
+          }
         }
       }
-      return snap;
     },
   );
 }

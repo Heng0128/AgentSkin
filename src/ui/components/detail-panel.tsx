@@ -141,7 +141,7 @@ function AppActionList({
             <div
               key={appId}
               className={cn(
-                'flex items-center gap-2.5 rounded-xl border bg-background/50 px-3 py-2 transition-colors',
+                'flex items-center gap-2.5 rounded-[2px] border bg-background/50 px-3 py-2 transition-colors',
                 !supported && 'opacity-50',
                 supported && detected && 'hover:bg-background/80',
               )}
@@ -230,7 +230,7 @@ function ColorSchemePicker({
               aria-pressed={selected}
               onClick={() => onChange(scheme.id === 'default' ? undefined : scheme.id)}
               className={cn(
-                'flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11px] transition-colors',
+                'flex items-center gap-1.5 rounded-[2px] border px-2 py-1 text-[11px] transition-colors',
                 selected
                   ? 'border-primary bg-card text-foreground shadow-sm'
                   : 'border-border bg-background/50 text-muted-foreground hover:bg-background/80',
@@ -281,7 +281,7 @@ export function DetailPanel({
       lastSelectionIdRef.current = current;
       setSchemeId(undefined);
     }
-  });
+  }, [selection]);
 
   if (!selection) {
     return (
@@ -352,7 +352,7 @@ export function DetailPanel({
 
         {/* Metadata grid */}
         {(theme.author || theme.category || theme.license) && (
-          <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-2 rounded-xl bg-muted/40 px-3 py-2.5">
+          <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-2 rounded-[2px] bg-muted/40 px-3 py-2.5">
             {theme.author && <MetaRow label={t.themeAuthor} value={theme.author} />}
             {theme.category && (
               <MetaRow label={t.themeCategory} value={t.categoryLabel(theme.category)} />
@@ -370,7 +370,11 @@ export function DetailPanel({
         {theme.tags.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-1">
             {theme.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="rounded-md text-[10px] font-normal">
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="rounded-[2px] text-[10px] font-normal"
+              >
                 {tag}
               </Badge>
             ))}

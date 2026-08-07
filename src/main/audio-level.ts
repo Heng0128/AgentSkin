@@ -65,7 +65,8 @@ export function startAudioLevelPolling(
   if (timer) return () => listeners.delete(onLevel!);
   if (process.platform !== 'win32') return () => listeners.delete(onLevel!);
 
-  // Launch the long-lived sampler.
+  // Launch the long-lived sampler. ${process.pid} = AgentSkin main process
+  // pid — injected so the script can detect parent exit (orphan fallback).
   const script = `
 $ErrorActionPreference = 'SilentlyContinue'
 Add-Type -TypeDefinition @"
@@ -124,9 +125,16 @@ public static class AudioMeter {
   }
 }
 "@
+$i = 0
 while ($true) {
   $lvl = [AudioMeter]::GetPeak()
   Write-Output ("L:{0:F3}" -f $lvl)
+  # 父进程（AgentSkin 主进程）退出后自动终止 —— app 崩溃/被强杀时
+  # stopAudioLevelPolling 不会执行，没有这个兜底 PowerShell 采样进程会
+  # 变成孤儿永久运行。每 5 次采样（约 1s）查一次，.NET 查进程几乎零开销。
+  if (($i++ % 5) -eq 0) {
+    try { [System.Diagnostics.Process]::GetProcessById(${process.pid}) | Out-Null } catch { exit }
+  }
   Start-Sleep -Milliseconds ${intervalMs}
 }
 `;

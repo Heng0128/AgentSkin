@@ -2,6 +2,12 @@
 
 import type { ReactNode } from 'react';
 import { AppMark } from '@/components/app-mark';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import {
@@ -77,7 +83,7 @@ export function AgentDetailSheet({
 
               {/* Theme preview banner */}
               {env.theme?.preview && (
-                <div className="overflow-hidden rounded-xl border border-border/60 bg-muted">
+                <div className="overflow-hidden rounded-[2px] border border-border/60 bg-muted">
                   <img
                     src={env.theme.preview}
                     alt=""
@@ -88,42 +94,55 @@ export function AgentDetailSheet({
                 </div>
               )}
 
-              {/* Current theme */}
+              {/* Current theme — always visible */}
               <DetailRow label={t.detailCurrentTheme}>
                 {env.theme ? env.theme.name : t.statusNoTheme}
               </DetailRow>
 
-              {/* Version */}
-              <DetailRow label={t.detailVersion}>
-                {env.detectedVersion ? t.versionLabel(env.detectedVersion) : t.detailNotInstalled}
-              </DetailRow>
+              {/* Advanced details — collapsible via Accordion */}
+              <Accordion type="single" collapsible>
+                <AccordionItem value="advanced" className="border-b-0">
+                  <AccordionTrigger className="py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground">
+                    高级详情
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-3 pb-2">
+                      {/* Version */}
+                      <DetailRow label={t.detailVersion}>
+                        {env.detectedVersion
+                          ? t.versionLabel(env.detectedVersion)
+                          : t.detailNotInstalled}
+                      </DetailRow>
 
-              {/* Install path */}
-              <DetailRow label={t.detailPath}>
-                {env.detectedPath ? (
-                  <span
-                    className="block max-w-full truncate font-mono text-xs text-muted-foreground"
-                    title={env.detectedPath}
-                  >
-                    {env.detectedPath}
-                  </span>
-                ) : (
-                  t.detailNotInstalled
-                )}
-              </DetailRow>
+                      {/* Install path */}
+                      <DetailRow label={t.detailPath}>
+                        {env.detectedPath ? (
+                          <span
+                            className="block max-w-full truncate font-mono text-xs text-muted-foreground"
+                            title={env.detectedPath}
+                          >
+                            {env.detectedPath}
+                          </span>
+                        ) : (
+                          t.detailNotInstalled
+                        )}
+                      </DetailRow>
 
-              {/* Installed themes targeting this agent */}
-              <DetailRow label={t.supportedAppsLabel}>
-                {t.detailInstalledThemes(installedThemeCount)}
-              </DetailRow>
+                      {/* Installed themes targeting this agent */}
+                      <DetailRow label={t.supportedAppsLabel}>
+                        {t.detailInstalledThemes(installedThemeCount)}
+                      </DetailRow>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </div>
 
             <SheetFooter className="border-t border-border/60">
               <Button
                 className={cn(
-                  'w-full gap-1.5 rounded-lg bg-primary text-white shadow-md',
+                  'w-full gap-1.5 rounded-[2px] bg-primary text-primary-foreground shadow-md',
                   'hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20',
-                  'dark:bg-primary dark:text-white dark:hover:bg-primary/90',
                 )}
                 onClick={() => {
                   onApply(env);

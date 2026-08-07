@@ -218,6 +218,15 @@ function overridesToCss(o: ToolOverride | null): string {
   if (typeof o.contrast === 'number' && o.contrast !== 1) filters.push(`contrast(${o.contrast})`);
   if (typeof o.saturate === 'number' && o.saturate !== 1) filters.push(`saturate(${o.saturate})`);
   if (filters.length) extra.push(`html{filter:${filters.join(' ')}}`);
+  // visual effects (P0-1): darkening overlay + body opacity
+  if (typeof o.dim === 'number' && o.dim > 0) {
+    extra.push(
+      `body::before{content:"";position:fixed;inset:0;background:rgba(0,0,0,${o.dim});pointer-events:none;z-index:99999}`,
+    );
+  }
+  if (typeof o.opacity === 'number' && o.opacity < 1) {
+    extra.push(`body{opacity:${o.opacity}}`);
+  }
 
   const blocks: string[] = [];
   if (root.length) blocks.push(`:root{${root.join(';')}}`);
@@ -310,7 +319,7 @@ function RealDomPreview({
       <iframe
         ref={iframeRef}
         title="Agent real DOM preview"
-        sandbox="allow-scripts"
+        sandbox="allow-scripts allow-same-origin"
         srcDoc={srcDoc}
         onLoad={pushOverrides}
         className="block h-[560px] w-full"

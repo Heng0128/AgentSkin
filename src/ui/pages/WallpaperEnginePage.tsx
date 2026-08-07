@@ -3,8 +3,15 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/app-mark';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { Spinner } from '@/components/ui/spinner';
+import { Switch } from '@/components/ui/switch';
 import { AgentStatusDot } from '@/components/workspace/AgentStatusDot';
 import type { AppController } from '@/hooks/useAppController';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -24,29 +31,6 @@ import type { AgentId, WallpaperInfo, WallpaperRenderOptions } from '@shared/typ
 import { AGENT_IDS, AGENT_META, WALLPAPER_ALIGNMENTS } from '@shared/types';
 
 type TypeFilter = 'all' | 'video' | 'image' | 'web' | 'scene';
-
-/** Swiss toggle switch — 34×20, rounded-full, red when active, 14px knob with slide animation (matches A.html .sw). */
-function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        'relative inline-flex h-[20px] w-[34px] shrink-0 items-center rounded-full transition-colors duration-base ease-out outline-none focus-visible:ring-2 focus-visible:ring-ring/50 border',
-        checked ? 'bg-primary border-primary' : 'bg-card2 border-[var(--border2)]',
-      )}
-    >
-      <span
-        className={cn(
-          'inline-block size-[14px] rounded-full shadow-sm transition-transform duration-base',
-          checked ? 'bg-background translate-x-[17px]' : 'bg-muted-foreground translate-x-[2px]',
-        )}
-      />
-    </button>
-  );
-}
 
 /**
  * Map a wallpaper injection `detail` verdict to a human-readable, localized
@@ -305,7 +289,6 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
         for (const id of targets) cleared[id] = undefined;
         return cleared;
       });
-
       const CONCURRENCY = 4;
       let cursor = 0;
       // 成功计数用 worker 局部变量累加（P3-7 之前试图在 setState updater 里读取
@@ -320,7 +303,9 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
           const agentId = targets[idx];
           setApplyingTo(agentId);
           try {
-            const result = await setAndApplyAgentWallpaper(agentId, true, wallpaperId);
+            const result = await setAndApplyAgentWallpaper(agentId, true, wallpaperId, {
+              render: renderDraft,
+            });
             if (result.ok) {
               okCount++;
               setInjectResults((prev) => ({ ...prev, [agentId]: { status: 'ok' } }));
@@ -350,7 +335,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
         okCount === targets.length ? 'default' : 'destructive',
       );
     },
-    [appStatusFor, setAndApplyAgentWallpaper, showToast, t],
+    [appStatusFor, setAndApplyAgentWallpaper, showToast, t, renderDraft],
   );
 
   // --- Loading state ---
@@ -459,7 +444,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                 </span>
                 <Switch
                   checked={enabled}
-                  onChange={(v) => void setWallpaper(v, v ? selectedId : null)}
+                  onCheckedChange={(v) => void setWallpaper(v, v ? selectedId : null)}
                 />
               </div>
             </div>
@@ -537,7 +522,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     </div>
                   )}
                   {/* Preview — 宽幅预览 */}
-                  <div className="aspect-video w-full shrink-0 overflow-hidden rounded-[2px] bg-[#000]">
+                  <div className="aspect-video w-full shrink-0 overflow-hidden rounded-[2px] bg-card2">
                     <WallpaperPreview
                       key={selected.id}
                       playback={selected.playback}
@@ -781,16 +766,21 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     {relativeTime}
                   </p>
 
-                  {/* 渲染设置面板 — 对齐 Wallpaper Engine 渲染面板：主题配色/速度/
-                        对齐/位置/翻转/视差/图片筛选器/音频。编辑后随「设为 UI 背景」
-                        或「应用到 agent」一起持久化。 */}
-                  <div className="mt-3 border-t border-border pt-3">
-                    <RenderSettingsPanel
-                      value={renderDraft}
-                      onChange={setRenderDraft}
-                      playback={selected.playback}
-                    />
-                  </div>
+                  {/* 渲染设置面板 — 用 Accordion 包裹 Wallpaper Engine 渲染面板 */}
+                  <Accordion type="single" collapsible defaultValue="render">
+                    <AccordionItem value="render" className="border-b-0">
+                      <AccordionTrigger className="py-2 text-[10px] font-semibold tracking-[.14em] uppercase text-muted-foreground hover:text-foreground">
+                        RENDER_SETTINGS
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <RenderSettingsPanel
+                          value={renderDraft}
+                          onChange={setRenderDraft}
+                          playback={selected.playback}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </aside>
             )}
@@ -929,7 +919,7 @@ function RenderSettingsPanel({
           <span className="w-[76px] shrink-0 font-mono text-[10px] tracking-wider text-muted-foreground">
             LOOP
           </span>
-          <Switch checked={r.loop ?? true} onChange={(v) => set({ loop: v })} />
+          <Switch checked={r.loop ?? true} onCheckedChange={(v) => set({ loop: v })} />
         </div>
       )}
 
@@ -1167,8 +1157,8 @@ function WallpaperCard({
       ref={cardRef}
       style={{ animationDelay: `${Math.min(index * 40, 320)}ms` }}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-all duration-base animate-card-enter',
-        'hover:border-primary/40 hover:shadow-sm',
+        'group relative flex flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-colors duration-fast animate-card-enter',
+        'hover:border-primary/40 hover:bg-card2 hover:shadow-sm',
         selected && 'border-primary/60 shadow-sm',
       )}
     >
@@ -1202,7 +1192,7 @@ function WallpaperCard({
             aria-hidden
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-            <span className="relative flex w-full items-center justify-between px-2.5 pb-2 font-mono text-[10px] tracking-wider text-white/90">
+            <span className="relative flex w-full items-center justify-between px-2.5 pb-2 font-mono text-[10px] tracking-wider text-popover-foreground/90">
               {wallpaper.type === 'video'
                 ? t.weTypeVideo
                 : wallpaper.type === 'image'
@@ -1218,7 +1208,7 @@ function WallpaperCard({
             className={cn(
               'absolute bottom-1 right-1 flex items-center gap-0.5 rounded-[2px] px-1 py-0.5 font-mono text-[9px] tracking-wider',
               wallpaper.type === 'video'
-                ? 'bg-primary/85 text-white'
+                ? 'bg-primary/85 text-primary-foreground'
                 : wallpaper.type === 'image'
                   ? 'bg-cr-info/85 text-white'
                   : wallpaper.type === 'web'
@@ -1246,7 +1236,7 @@ function WallpaperCard({
           )}
           {/* Preview-only badge (Swiss warning) */}
           {previewOnly && !isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-[2px] bg-cr-warning px-1 py-0.5 font-mono text-[8px] tracking-wider text-white">
+            <span className="absolute left-1 top-1 rounded-[2px] bg-cr-warning px-1 py-0.5 font-mono text-[8px] tracking-wider text-yellow-950">
               PREVIEW
             </span>
           )}

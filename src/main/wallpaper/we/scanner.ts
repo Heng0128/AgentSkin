@@ -34,8 +34,11 @@ const SCAN_CONCURRENCY = 8;
 /**
  * Run an async map over `items` with a bounded concurrency pool. Preserves
  * input order in the result.
+ *
+ * Exported for unit testing — the bounded pool is the scanner's core
+ * concurrency contract (order preservation + no more than `limit` in flight).
  */
-async function mapWithConcurrency<T, R>(
+export async function mapWithConcurrency<T, R>(
   items: T[],
   limit: number,
   fn: (item: T) => Promise<R>,

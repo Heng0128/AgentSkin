@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { useState } from 'react';
 import type { UiMessages } from '@shared/i18n';
 import type { ThemeCenterCardModel } from '@/types/theme-center';
 import type { AgentId } from '@shared/types';
@@ -22,36 +23,36 @@ export function ThemeCard({
   t: UiMessages;
 }) {
   const isActive = activeAgentIds.length > 0;
+  // Track image load failure via React state (not direct DOM manipulation
+  // which can conflict with React's virtual DOM on re-render).
+  const [imgError, setImgError] = useState(false);
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        'group flex h-full flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-all duration-slow ease-out',
+        'group flex h-full flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-all duration-fast ease-out',
         selected
-          ? 'border-primary/60 ring-1 ring-primary/30'
-          : 'hover:border-border-strong hover:-translate-y-px',
+          ? 'border-primary/60 shadow-[inset_3px_0_0_var(--primary)]'
+          : 'hover:border-border-strong hover:-translate-y-0.5 hover:shadow-md',
       )}
     >
       {/* Preview — 16:9 aspect ratio */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-        {theme.preview ? (
+        {theme.preview && !imgError ? (
           <img
             src={theme.preview}
             alt={theme.name}
             loading="lazy"
             decoding="async"
             className="size-full object-cover transition-transform duration-slower ease-out group-hover:scale-[1.02]"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
-              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-            }}
+            onError={() => setImgError(true)}
           />
         ) : null}
         <div
           className={cn(
             'absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/8 via-muted to-card text-muted-foreground',
-            theme.preview ? 'hidden' : 'flex',
+            theme.preview && !imgError ? 'hidden' : 'flex',
           )}
         >
           <span className="text-sm font-medium opacity-20">{theme.name.slice(0, 2)}</span>
@@ -61,7 +62,7 @@ export function ThemeCard({
         {isActive && (
           <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-[2px] bg-cr-success/90 px-1 py-0.5">
             {activeAgentIds.map((agentId) => (
-              <span key={agentId} className="flex size-3 items-center justify-center rounded-[1px] bg-white/90">
+              <span key={agentId} className="flex size-3 items-center justify-center rounded-[1px] bg-popover/90">
                 <AppMark appId={agentId} size={8} />
               </span>
             ))}
@@ -97,7 +98,7 @@ export function ThemeCard({
 
         {/* Dynamic wallpaper indicator — bottom-right */}
         {theme.hasWallpaper && (
-          <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 rounded-[2px] bg-violet-500/80 px-1 py-0.5 font-mono text-[9px] font-medium text-white">
+          <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 rounded-[2px] bg-violet-500/80 px-1 py-0.5 font-mono text-[9px] font-medium text-violet-50">
             <span className="relative flex size-1">
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-white/60" />
               <span className="relative inline-flex size-1 rounded-full bg-white" />
@@ -151,7 +152,7 @@ export function ThemeCard({
           {theme.tags.length > 0 && (
             <div className="ml-auto flex gap-0.5">
               {theme.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="outline" className="rounded-[2px] px-1 py-0 font-mono text-[9.5px] font-medium uppercase tracking-wider">{tag}</Badge>
+                <Badge key={tag} variant="outline" className="rounded-[2px] px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider">{tag}</Badge>
               ))}
             </div>
           )}

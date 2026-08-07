@@ -20,6 +20,7 @@
  * - https://github.com/notscuffed/repkg (C# reference implementation)
  */
 
+import { deflateSync } from 'node:zlib';
 import { lz4DecodeBlock } from '../lz4-decoder';
 import { BinaryReader } from './binary-reader';
 
@@ -317,8 +318,17 @@ function readMipmap(reader: BinaryReader, version: number): TexMipmap {
     try {
       lz4DecodeBlock(bytes, output);
       bytes = output;
-    } catch {
-      // LZ4 decode failed — leave compressed data (will likely fail DXT decode)
+    } catch (error) {
+      // LZ4 decode failed — leave compressed data in place. Downstream DXT
+      // decode will then also fail and the texture is dropped by the caller,
+      // but log here so a corrupt/compressed mipmap is diagnosable instead
+      // of producing silently garbage pixels. Compression ratio + error
+      // message are enough to identify whether this is a truncated file,
+      // an unsupported LZ4 variant, or a malformed header.
+      console.warn(
+        `[tex-parser] LZ4 decode failed (compressed=${bytes.length}B, ` +
+          `expected=${decompressedBytesCount}B): ${(error as Error)?.message ?? error}`,
+      );
     }
   }
 
@@ -476,19 +486,11 @@ function decompressDxt5(width: number, height: number, src: Buffer): Buffer {
 
   for (let by = 0; by < blocksY; by++) {
     for (let bx = 0; bx < blocksX; bx++) {
-      // Read alpha block (8 bytes)
-      const _a0 = src[srcPos];
-      const _a1 = src[srcPos + 1];
-      const _alphaLookup = src.readUint32LE(srcPos + 2);
-      srcPos += 8; // Skip alpha data (but we already read from srcPos, not srcPos+8)
-
-      // Actually re-read: alpha block is 8 bytes total
-      // a0 (1 byte), a1 (1 byte), alpha lookup (6 bytes)
-      // Let me re-read the alpha lookup as 48 bits
-      srcPos -= 8; // Go back
+      // Read alpha block (8 bytes total):
+      //   alpha0 (1 byte), alpha1 (1 byte), 6 bytes of 4-bit lookup values
+      //   (48 bits = 16 x 3-bit indices into the alphas[] table below).
       const alpha0 = src[srcPos];
       const alpha1 = src[srcPos + 1];
-      // 6 bytes of 4-bit lookup values = 48 bits = 16 values
       const alphaBytes = src.subarray(srcPos + 2, srcPos + 8);
       srcPos += 8;
 
@@ -598,49 +600,37 @@ function embeddedImageToDataUrl(bytes: Buffer): string | null {
   return null;
 }
 
-/** Convert a TexData's first image (largest mipmap) to a base64 PNG data URL.
- *  Uses the `canvas` package or falls back to raw RGBA → PNG encoding.
- *
- *  For TEXB0003/TEXB0004 containers with imageFormat = PNG (13) or JPEG (2),
- *  the mipmap bytes ARE the raw image file — we return them directly as a
- *  data URL without attempting DXT decompression. This is the most common
- *  case for scene wallpapers created from static images. */
-export function texToDataUrl(tex: TexData): string | null {
-  const image = tex.images[0];
-  if (!image) return null;
+/** One rendered GIF frame: a data URL plus its display duration in seconds. */
+export interface TexFrameRendered {
+  dataUrl: string;
+  frametime: number;
+}
 
-  // Find the largest mipmap — the mipmap chains in embedded-PNG textures mix
-  // formats: the LARGEST mip is the real PNG/JPEG file, while the smaller
-  // mips are DXT-compressed (verified against real workshop data: 431 of 256
-  // multi-mip embedded textures have non-image bytes in their smaller mips).
-  // Feeding a DXT mip to the embedded-image path produces a black/blank layer.
+/** Largest mipmap of an image. Embedded-PNG chains mix formats: the LARGEST
+ *  mip is the real PNG/JPEG file while the smaller mips are DXT-compressed
+ *  (verified against real workshop data: 431 of 256 multi-mip embedded
+ *  textures have non-image bytes in their smaller mips). */
+function largestMipOf(image: TexImage): TexMipmap | null {
+  if (image.mipmaps.length === 0) return null;
   let largest = image.mipmaps[0];
   for (const m of image.mipmaps) {
     if (m.width * m.height > largest.width * largest.height) largest = m;
   }
+  return largest;
+}
 
-  // Embedded image format (PNG/JPEG): ONLY the largest mip carries the raw
-  // image file — return it directly as a base64 data URL. Do NOT pick a
-  // capped mip here: the smaller mips are DXT-compressed, not image files,
-  // so decoding them as PNG/JPEG yields garbage (the black-block symptom).
-  // This handles both explicit imageFormat fields and fallback signature
-  // detection (some TEXB0001 files lack the imageFormat field but still
-  // contain embedded PNG data).
-  if (tex.imageFormat === FIF_PNG || tex.imageFormat === FIF_JPEG) {
-    return embeddedImageToDataUrl(largest.bytes);
-  }
-  // Fallback: detect PNG/JPEG by magic bytes even if imageFormat wasn't set
-  // (e.g. TEXB0001 containers that predate the imageFormat field).
-  const dataUrl = embeddedImageToDataUrl(largest.bytes);
-  if (dataUrl) return dataUrl;
-
-  // --- DXT/raw path: the mipmap chain is uniformly compressed, so we can
-  // pick a smaller mip to cut decode cost. ---
-  // Pick the mipmap that best matches the scene-texture cap: the smallest mip
-  // ≥ 2048 (e.g. a 4096² texture decodes its 2048² mip directly — 1/4 the
-  // RGBA of the full-res decode). Only when the chain lacks a fitting mip
-  // (single-mip 4096², or 8192²→4096² jumps) do we decode a larger mip and
-  // downscale it below.
+/** Decode one image of a TexData to an RGBA buffer, capped to the scene
+ *  texture limit. Shared by {@link texToDataUrl} and the GIF frame renderer.
+ *
+ *  Picks the mipmap that best matches the scene-texture cap: the smallest mip
+ *  ≥ 2048 (e.g. a 4096² texture decodes its 2048² mip directly — 1/4 the RGBA
+ *  of the full-res decode). Only when the chain lacks a fitting mip
+ *  (single-mip 4096², or 8192²→4096² jumps) do we decode a larger mip and
+ *  downscale it below. */
+function decodeTexImageRgba(
+  tex: TexData,
+  image: TexImage,
+): { rgba: Buffer; width: number; height: number } | null {
   const mipmap = pickMipmapForDisplay(image.mipmaps, MAX_SCENE_TEXTURE_DIM);
   const targetW = cappedTextureDim(mipmap.width);
   const targetH = cappedTextureDim(mipmap.height);
@@ -688,7 +678,111 @@ export function texToDataUrl(tex: TexData): string | null {
     height = nextH;
   }
 
-  return rgbaToPngDataUrl(rgba, width, height);
+  return { rgba, width, height };
+}
+
+/** Convert a TexData's first image (largest mipmap) to a base64 PNG data URL.
+ *  Uses the `canvas` package or falls back to raw RGBA → PNG encoding.
+ *
+ *  For TEXB0003/TEXB0004 containers with imageFormat = PNG (13) or JPEG (2),
+ *  the mipmap bytes ARE the raw image file — we return them directly as a
+ *  data URL without attempting DXT decompression. This is the most common
+ *  case for scene wallpapers created from static images. */
+export function texToDataUrl(tex: TexData): string | null {
+  const image = tex.images[0];
+  if (!image) return null;
+  const largest = largestMipOf(image);
+  if (!largest) return null;
+
+  // Embedded image format (PNG/JPEG): ONLY the largest mip carries the raw
+  // image file — return it directly as a base64 data URL. Do NOT pick a
+  // capped mip here: the smaller mips are DXT-compressed, not image files,
+  // so decoding them as PNG/JPEG yields garbage (the black-block symptom).
+  // This handles both explicit imageFormat fields and fallback signature
+  // detection (some TEXB0001 files lack the imageFormat field but still
+  // contain embedded PNG data).
+  if (tex.imageFormat === FIF_PNG || tex.imageFormat === FIF_JPEG) {
+    return embeddedImageToDataUrl(largest.bytes);
+  }
+  // Fallback: detect PNG/JPEG by magic bytes even if imageFormat wasn't set
+  // (e.g. TEXB0001 containers that predate the imageFormat field).
+  const dataUrl = embeddedImageToDataUrl(largest.bytes);
+  if (dataUrl) return dataUrl;
+
+  const decoded = decodeTexImageRgba(tex, image);
+  if (!decoded) return null;
+  return rgbaToPngDataUrl(decoded.rgba, decoded.width, decoded.height);
+}
+
+/** Render every frame of an animated (GIF) texture to data URLs, preserving
+ *  each frame's display duration. Returns null when the texture is not
+ *  animated (no TEXS0001 frame table) or no frame decodes successfully.
+ *
+ *  Frames that fail to decode are skipped — a partially-usable GIF still
+ *  animates with its remaining frames instead of falling back to static. */
+export function texFramesToDataUrls(tex: TexData): TexFrameRendered[] | null {
+  if (!tex.isGif || tex.frames.length === 0) return null;
+  // Per-image decode cache: animated textures can reference the same image
+  // multiple times (sprite-atlas GIFs), so decode once per imageId.
+  const rgbaCache = new Map<number, { rgba: Buffer; width: number; height: number }>();
+  const out: TexFrameRendered[] = [];
+  for (const frame of tex.frames) {
+    const dataUrl = renderTexFrame(tex, frame, rgbaCache);
+    if (dataUrl) out.push({ dataUrl, frametime: frame.frametime });
+  }
+  return out.length > 0 ? out : null;
+}
+
+/** Render a single TEXS0001 frame entry (imageId + atlas region) to a data URL. */
+function renderTexFrame(
+  tex: TexData,
+  frame: TexFrameInfo,
+  rgbaCache: Map<number, { rgba: Buffer; width: number; height: number }>,
+): string | null {
+  const image = tex.images[frame.imageId];
+  if (!image) return null;
+
+  // Embedded PNG/JPEG frames: return the whole image file directly. Sub-rect
+  // crop is unsupported for embedded formats — the frame covers the full
+  // image in the common flipbook case, and the whole image is a better
+  // degraded result than nothing for sprite-atlas GIFs.
+  if (tex.imageFormat === FIF_PNG || tex.imageFormat === FIF_JPEG) {
+    const largest = largestMipOf(image);
+    return largest ? embeddedImageToDataUrl(largest.bytes) : null;
+  }
+
+  let decoded: { rgba: Buffer; width: number; height: number } | null =
+    rgbaCache.get(frame.imageId) ?? null;
+  if (!decoded) {
+    // Fallback: some non-PNG-flagged textures still embed image bytes.
+    const largest = largestMipOf(image);
+    if (largest) {
+      const embedded = embeddedImageToDataUrl(largest.bytes);
+      if (embedded) return embedded;
+    }
+    decoded = decodeTexImageRgba(tex, image);
+    if (!decoded) return null;
+    rgbaCache.set(frame.imageId, decoded);
+  }
+
+  // Region crop from the TEXS0001 frame table (sprite-atlas GIFs). The frame
+  // x/y/width/height are in texture space (top-origin row order, matching the
+  // decoded buffer). Frames that cover the whole image — or declare an empty
+  // region (0) — skip the crop entirely, which is the common flipbook case.
+  const cropW = frame.width > 0 && frame.width < decoded.width ? frame.width : decoded.width;
+  const cropH = frame.height > 0 && frame.height < decoded.height ? frame.height : decoded.height;
+  const isFull =
+    frame.x <= 0 && frame.y <= 0 && cropW === decoded.width && cropH === decoded.height;
+  if (isFull) return rgbaToPngDataUrl(decoded.rgba, decoded.width, decoded.height);
+
+  const cx = Math.max(0, Math.min(decoded.width - cropW, Math.round(frame.x)));
+  const cy = Math.max(0, Math.min(decoded.height - cropH, Math.round(frame.y)));
+  const cropped = Buffer.alloc(cropW * cropH * 4);
+  for (let row = 0; row < cropH; row++) {
+    const srcStart = (cy + row) * decoded.width * 4 + cx * 4;
+    decoded.rgba.copy(cropped, row * cropW * 4, srcStart, srcStart + cropW * 4);
+  }
+  return rgbaToPngDataUrl(cropped, cropW, cropH);
 }
 
 /** Encode raw RGBA bytes as a base64 PNG data URL (pure TS, no canvas dep). */
@@ -714,8 +808,7 @@ export function rgbaToPngDataUrl(rgba: Buffer, width: number, height: number): s
   }
 
   // Compress with zlib (Node built-in)
-  const zlib = require('node:zlib');
-  const compressed = zlib.deflateSync(raw);
+  const compressed = deflateSync(raw);
 
   const chunks = [
     makeChunk('IHDR', ihdr),

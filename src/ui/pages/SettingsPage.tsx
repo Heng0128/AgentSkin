@@ -1,26 +1,45 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { APP_META, AppMark } from '@/components/app-mark';
+import { PerformancePanel } from '@/components/diagnostics/PerformancePanel';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ThemeMode } from '@/design/theme-mode';
 import type { AppController, SettingsSection } from '@/hooks/useAppController';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
 
 import {
+  Activity01Icon,
   CheckmarkCircle02Icon,
   Copy01Icon,
   DashboardSquare01Icon,
   File01Icon,
   Folder01Icon,
+  InformationCircleIcon,
   Settings01Icon,
 } from '@hugeicons/core-free-icons';
 import { AGENT_IDS, type AgentId } from '@shared/types';
+import { toast } from 'sonner';
 
 function SettingRow({
   title,
@@ -33,7 +52,7 @@ function SettingRow({
 }) {
   return (
     <div
-      className="setrow flex items-center justify-between gap-4 rounded-[2px] border border-border px-3.5 py-2.5"
+      className="setrow flex items-center justify-between gap-4 rounded-[2px] border border-border px-3.5 py-2.5 transition-colors duration-fast hover:bg-card2"
       style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
     >
       <div className="min-w-0">
@@ -75,6 +94,7 @@ function CustomCssEditor({
     try {
       await api.setCustomThemeCss(value);
       showToast(t.settingsCustomCssSaved);
+      toast.success('设置已保存');
     } finally {
       setSaving(false);
     }
@@ -201,8 +221,20 @@ export function SettingsPage({ controller }: { controller: AppController }) {
   const section = controller.settingsSection;
   const setSection = controller.setSettingsSection;
 
+  // Demo boolean toggle for shadcn/ui Switch integration
+  const [compactMode, setCompactMode] = useState(false);
+
   // Copy logs to clipboard — moved from the old LogDrawer sheet.
   const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up the copy timer on unmount to avoid setState-after-unmount.
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
+
   const handleCopy = useCallback(async () => {
     if (logs.length === 0) return;
     const text = logs.join('\n');
@@ -210,7 +242,8 @@ export function SettingsPage({ controller }: { controller: AppController }) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       showToast(t.copyLogsDone);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
       try {
         const textarea = document.createElement('textarea');
@@ -223,7 +256,8 @@ export function SettingsPage({ controller }: { controller: AppController }) {
         document.body.removeChild(textarea);
         setCopied(true);
         showToast(t.copyLogsDone);
-        setTimeout(() => setCopied(false), 2000);
+        if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+        copyTimerRef.current = setTimeout(() => setCopied(false), 2000);
       } catch {
         showToast(t.copyLogsFailed, 'destructive');
       }
@@ -245,6 +279,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
     { id: 'general', label: t.settingsGeneralTitle, icon: Settings01Icon },
     { id: 'apps', label: t.settingsAppsTitle, icon: DashboardSquare01Icon },
     { id: 'system', label: t.settingsSystemTitle, icon: File01Icon },
+    { id: 'diagnostics', label: t.settingsDiagnosticsTitle, icon: Activity01Icon },
   ];
   const activeSection = sections.find((item) => item.id === section) ?? sections[0];
 
@@ -283,9 +318,79 @@ export function SettingsPage({ controller }: { controller: AppController }) {
         {/* Content */}
         <div className="flex min-h-0 flex-col">
           <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
-            <h2 className="font-display text-[13px] font-bold tracking-tight">
-              {activeSection.label}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-[13px] font-bold tracking-tight">
+                {activeSection.label}
+              </h2>
+              {section === 'general' && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex size-4 cursor-help items-center justify-center rounded-full bg-muted">
+                        <HugeIcon
+                          icon={InformationCircleIcon}
+                          className="size-3 text-muted-foreground"
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-[220px] text-[10.5px]">
+                      主题模式决定整体配色走向。Light 白色、Dark 深色、System 跟随系统设置。
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {section === 'apps' && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex size-4 cursor-help items-center justify-center rounded-full bg-muted">
+                        <HugeIcon
+                          icon={InformationCircleIcon}
+                          className="size-3 text-muted-foreground"
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-[220px] text-[10.5px]">
+                      覆盖各 Agent 的执行文件路径和通讯端口，便于调试或运行多个实例。
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {section === 'system' && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex size-4 cursor-help items-center justify-center rounded-full bg-muted">
+                        <HugeIcon
+                          icon={InformationCircleIcon}
+                          className="size-3 text-muted-foreground"
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-[220px] text-[10.5px]">
+                      应用运行日志，可用于排查主题注入 / CDP 连接 / DPI 相关故障。
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              {section === 'diagnostics' && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex size-4 cursor-help items-center justify-center rounded-full bg-muted">
+                        <HugeIcon
+                          icon={InformationCircleIcon}
+                          className="size-3 text-muted-foreground"
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-[220px] text-[10.5px]">
+                      {t.settingsDiagnosticsDesc}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             {section === 'system' && logs.length > 0 && (
               <Button
                 variant="ghost"
@@ -305,31 +410,38 @@ export function SettingsPage({ controller }: { controller: AppController }) {
             {section === 'general' && (
               <>
                 <SettingRow title={t.themeModeLabel}>
-                  <div className="inline-flex items-center gap-[2px] rounded-[2px] border border-border bg-muted p-[2px]">
-                    {themeOptions.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setMode(opt.value)}
-                        aria-pressed={mode === opt.value}
-                        className={cn(
-                          'h-6 rounded-[2px] px-3 font-medium text-[11.5px] transition-all duration-fast',
-                          mode === opt.value
-                            ? 'bg-card text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground',
-                        )}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
+                  <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
+                    <SelectTrigger className="h-7 w-[140px] rounded-[2px] border-border bg-muted text-[11px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-[2px] border-border bg-card">
+                      {themeOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </SettingRow>
                 <SettingRow title={t.settingsAbout} description={t.settingsAboutDesc}>
                   <span className="font-mono text-[10px] tracking-wider text-muted-foreground/70">
                     v{appVersion}
                   </span>
                 </SettingRow>
-                <CustomCssEditor t={t} showToast={showToast} />
+                {/* Switch demo: compact layout toggle */}
+                <SettingRow title="紧凑布局" description="减少页面间距和元素尺寸，提升信息密度">
+                  <Switch checked={compactMode} onCheckedChange={setCompactMode} size="sm" />
+                </SettingRow>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="custom-css" className="border-b-0">
+                    <AccordionTrigger className="py-2.5 text-[12px] font-semibold text-foreground">
+                      {t.settingsCustomCssTitle}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <CustomCssEditor t={t} showToast={showToast} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </>
             )}
             {section === 'apps' && (
@@ -345,7 +457,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
             {section === 'system' &&
               (logs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-muted/60">
+                  <div className="flex size-10 items-center justify-center rounded-[2px] bg-muted/60">
                     <HugeIcon icon={File01Icon} className="size-4 text-muted-foreground/50" />
                   </div>
                   <p className="text-xs text-muted-foreground">{t.noLogs}</p>
@@ -370,6 +482,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                   </div>
                 </div>
               ))}
+            {section === 'diagnostics' && <PerformancePanel t={t} />}
           </div>
         </div>
       </div>

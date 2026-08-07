@@ -23,17 +23,31 @@
  * layers without their shader effects.
  */
 
-import type { SceneData, SceneObject } from './scene-pkg-parser';
-import { extractScene, resolveObjectTexture } from './scene-pkg-parser';
+import type { SceneData, SceneObject, SceneParticle } from './scene-pkg-parser';
+import {
+  deriveWeInstallRoot,
+  extractScene,
+  findParticleOperator,
+  resolveObjectTexture,
+  resolveSceneParticle,
+} from './scene-pkg-parser';
 
 /**
  * Render a scene.pkg file into a self-contained HTML string.
  *
  * @param pkgPath Absolute path to the `.pkg` file.
+ * @param options Optional resolution context. `weInstallRoot` points at the
+ *          Wallpaper Engine install directory whose `assets/` folder holds
+ *          particle presets, particle materials and textures (scene.pkg
+ *          itself only references them by path). When omitted, the install
+ *          root is derived from the pkg's workshop-layout path.
  * @returns A complete HTML document string, or `null` if the pkg could not
  *          be parsed or contains no renderable content.
  */
-export function renderSceneToHtml(pkgPath: string): string | null {
+export function renderSceneToHtml(
+  pkgPath: string,
+  options?: { weInstallRoot?: string },
+): string | null {
   // P2-3: extractScene is a synchronous binary parser that can throw on
   // corrupted / truncated .pkg files. Previously the throw bubbled up to
   // whichever IPC handler called renderSceneToHtml, taking the whole
@@ -48,9 +62,11 @@ export function renderSceneToHtml(pkgPath: string): string | null {
   }
   if (!scene) return null;
 
+  const weInstallRoot = options?.weInstallRoot ?? deriveWeInstallRoot(pkgPath);
+
   let layers: RenderLayer[] = [];
   try {
-    layers = buildRenderLayers(scene);
+    layers = buildRenderLayers(scene, weInstallRoot);
   } catch {
     return null;
   }
@@ -66,6 +82,10 @@ export function renderSceneToHtml(pkgPath: string): string | null {
 interface RenderLayer {
   /** Texture data URL (null for solid-color layers). */
   dataUrl: string | null;
+  /** Animated (GIF) frames for this layer: { dataUrl, frametime } per frame.
+   *  When present the renderer switches the drawn image on each frame's
+   *  interval; the still image at index 0 is the fallback until loaded. */
+  frames: Array<{ dataUrl: string; frametime: number }> | null;
   /** Origin x in scene space (centered at canvas center). */
   x: number;
   /** Origin y in scene space. */
@@ -98,6 +118,56 @@ interface RenderLayer {
    *  the overflow cropped; drawing it stretched to the quad is the
    *  "壁纸被压扁/压缩" symptom. */
   texAspect: number | null;
+  /** Particle-simulation config (null for static/solid layers). */
+  particle: ParticleLayer | null;
+}
+
+/**
+ * Serialized config for a 2D particle-simulation layer. Built from a Wallpaper
+ * Engine particle JSON (resolved from the WE install `assets/`), flattened so
+ * the inline HTML script only needs this compact object.
+ */
+interface ParticleLayer {
+  /** Particles emitted per second. */
+  rate: number;
+  /** Particle count cap (WE `maxcount`). */
+  maxCount: number;
+  /** Spawn volume: 'sphere' (radius distanceMin..distanceMax) or 'box'. */
+  spawn: 'sphere' | 'box';
+  /** Absolute emitter position in scene space (bottom-left origin, +y up). */
+  origin: { x: number; y: number; z: number };
+  /** Spawn direction / box half-extent. */
+  directions: { x: number; y: number; z: number };
+  distanceMin: number;
+  distanceMax: number;
+  lifetimeMin: number;
+  lifetimeMax: number;
+  sizeMin: number;
+  sizeMax: number;
+  velocityMin: { x: number; y: number; z: number };
+  velocityMax: { x: number; y: number; z: number };
+  /** Particle color range, normalized 0-1. */
+  colorMin: { r: number; g: number; b: number };
+  colorMax: { r: number; g: number; b: number };
+  /** Object tint (from instanceoverride.colorn), 0-1, or null. */
+  tint: { r: number; g: number; b: number } | null;
+  gravity: { x: number; y: number; z: number };
+  /** Drag coefficient (0 = none). */
+  drag: number;
+  /** Fade-in duration in seconds (0 = instant). */
+  fadeInTime: number;
+  /** True for additive-blended materials → canvas 'lighter' composite. */
+  additive: boolean;
+  /** Sprite data URL (null → draw plain colored circles). */
+  image: string | null;
+  /** Sprite aspect ratio (width/height), for undistorted drawing. */
+  aspect: number;
+  /** Object transform applied to every particle. */
+  scaleX: number;
+  scaleY: number;
+  rotation: number;
+  alpha: number;
+  parallaxDepth: number;
 }
 
 /**
@@ -126,19 +196,33 @@ export function layerDisplaySize(
 
 /**
  * Extract renderable layers from scene objects. Each visible object with a
- * resolved texture (or a solid color) becomes one layer. Layers are sorted
- * by parallax depth so that further-back layers render first.
+ * resolved texture (or a solid color) becomes one layer. Particle objects
+ * (obj.particle) become particle-simulation layers when their preset resolves
+ * from the WE install. Layers are sorted by parallax depth so that further
+ * back layers render first.
  */
-function buildRenderLayers(scene: SceneData): RenderLayer[] {
+function buildRenderLayers(scene: SceneData, weInstallRoot: string | null): RenderLayer[] {
   const layers: RenderLayer[] = [];
 
   for (const obj of scene.objects) {
     if (!obj.visible) continue;
 
+    // Particle layer — resolved pkg-first (particle JSONs + materials are
+    // bundled inside scene.pkg), with the WE install assets as fallback.
+    // Falls through to the static path when the preset is missing/malformed.
+    if (obj.particle) {
+      const particle = resolveSceneParticle(obj, scene, weInstallRoot);
+      if (particle) {
+        layers.push(buildParticleLayer(obj, particle));
+        continue;
+      }
+    }
+
     // Solid color layer
     if (obj.color && isSolidLayer(scene, obj)) {
       layers.push({
         dataUrl: null,
+        frames: null,
         x: obj.origin.x,
         y: obj.origin.y,
         scaleX: obj.scale.x,
@@ -150,6 +234,7 @@ function buildRenderLayers(scene: SceneData): RenderLayer[] {
         width: obj.size.x || 1920,
         height: obj.size.y || 1080,
         texAspect: null,
+        particle: null,
       });
       continue;
     }
@@ -166,6 +251,7 @@ function buildRenderLayers(scene: SceneData): RenderLayer[] {
 
     layers.push({
       dataUrl: texture.dataUrl,
+      frames: texture.frames ?? null,
       x: obj.origin.x,
       y: obj.origin.y,
       scaleX: obj.scale.x,
@@ -179,12 +265,104 @@ function buildRenderLayers(scene: SceneData): RenderLayer[] {
       // Aspect ratio of the SOURCE texture — the renderer preserves this
       // when drawing so the image never stretches to the quad.
       texAspect: texture.height > 0 ? texture.width / texture.height : 1,
+      particle: null,
     });
   }
 
   // Sort back-to-front: lower parallaxDepth = further back = render first.
   layers.sort((a, b) => a.parallaxDepth - b.parallaxDepth);
   return layers;
+}
+
+/** Parse a 0-1 RGB string like "0.69 0.52 0.22" (instanceoverride.colorn). */
+function parseInstanceColor(v: unknown): { r: number; g: number; b: number } | null {
+  if (typeof v !== 'string') return null;
+  const parts = v.trim().split(/\s+/).map(Number);
+  if (parts.length < 3 || parts.some((n) => !Number.isFinite(n))) return null;
+  return { r: parts[0], g: parts[1], b: parts[2] };
+}
+
+/**
+ * Build a particle-simulation layer from a resolved scene particle. Uses the
+ * first emitter and the movement/alphafade operators (the common structure);
+ * multi-emitter systems approximate with the first emitter.
+ */
+function buildParticleLayer(obj: SceneObject, particle: SceneParticle): RenderLayer {
+  const data = particle.data;
+  const emitter =
+    data.emitters[0] ??
+    ({
+      name: 'sphererandom',
+      rate: 1,
+      origin: { x: 0, y: 0, z: 0 },
+      directions: { x: 1, y: 1, z: 1 },
+      distanceMin: 0,
+      distanceMax: 0,
+    } as {
+      name: string;
+      rate: number;
+      origin: { x: number; y: number; z: number };
+      directions: { x: number; y: number; z: number };
+      distanceMin: number;
+      distanceMax: number;
+    });
+  const movement = findParticleOperator(data, 'movement');
+  const alphaFade = findParticleOperator(data, 'alphafade');
+
+  // Absolute emitter position = object origin + emitter offset (scene space).
+  const origin = {
+    x: obj.origin.x + emitter.origin.x,
+    y: obj.origin.y + emitter.origin.y,
+    z: obj.origin.z + emitter.origin.z,
+  };
+
+  const tex = particle.texture;
+  const cfg: ParticleLayer = {
+    rate: Math.max(0, emitter.rate),
+    maxCount: Math.max(1, data.maxCount),
+    spawn: emitter.name.toLowerCase().includes('box') ? 'box' : 'sphere',
+    origin,
+    directions: emitter.directions,
+    distanceMin: emitter.distanceMin,
+    distanceMax: Math.max(emitter.distanceMin, emitter.distanceMax),
+    lifetimeMin: data.initializers.lifetime.min,
+    lifetimeMax: data.initializers.lifetime.max,
+    sizeMin: data.initializers.size.min,
+    sizeMax: data.initializers.size.max,
+    velocityMin: data.initializers.velocity.min,
+    velocityMax: data.initializers.velocity.max,
+    colorMin: data.initializers.color.min,
+    colorMax: data.initializers.color.max,
+    tint: parseInstanceColor(obj.instanceOverride?.colorn),
+    gravity: movement?.gravity ?? { x: 0, y: 0, z: 0 },
+    drag: movement?.drag ?? 0,
+    fadeInTime: alphaFade?.fadeInTime ?? 0,
+    additive: particle.blending === 'additive',
+    image: tex?.dataUrl ?? null,
+    aspect: tex && tex.height > 0 ? tex.width / tex.height : 1,
+    scaleX: obj.scale.x,
+    scaleY: obj.scale.y,
+    rotation: (obj.angles.z * Math.PI) / 180,
+    alpha: obj.alpha,
+    parallaxDepth: obj.parallaxDepth ?? 0,
+  };
+
+  return {
+    dataUrl: null,
+    frames: null,
+    x: obj.origin.x,
+    y: obj.origin.y,
+    scaleX: obj.scale.x,
+    scaleY: obj.scale.y,
+    rotation: (obj.angles.z * Math.PI) / 180,
+    alpha: obj.alpha,
+    solidColor: null,
+    parallaxDepth: obj.parallaxDepth ?? 0,
+    width: 0,
+    height: 0,
+    texAspect: null,
+    particle: cfg,
+  };
 }
 
 /**
@@ -346,20 +524,55 @@ function buildHtmlDocument(scene: SceneData, layers: RenderLayer[]): string {
   var mouseX = 0, mouseY = 0;
   var targetMouseX = 0, targetMouseY = 0;
 
-  // Preload all texture images.
+  // Preload all texture images. Animated layers preload every frame's image;
+  // the render loop switches the drawn image on each frame's accumulated
+  // timing (see current[i] below).
   var loaded = 0;
   var totalToLoad = 0;
   for (var i = 0; i < LAYERS.length; i++) {
-    if (LAYERS[i].dataUrl) {
+    var imgs = [];
+    if (LAYERS[i].frames && LAYERS[i].frames.length > 0) {
+      for (var f = 0; f < LAYERS[i].frames.length; f++) {
+        totalToLoad++;
+        (function(imgIndex, src) {
+          var img = new Image();
+          img.onload = function() { loaded++; if (loaded >= totalToLoad) render(); };
+          img.onerror = function() { loaded++; if (loaded >= totalToLoad) render(); };
+          img.src = src;
+          imgs[imgIndex] = img;
+        })(f, LAYERS[i].frames[f].dataUrl);
+      }
+    } else if (LAYERS[i].dataUrl) {
       totalToLoad++;
       var img = new Image();
       img.onload = function() { loaded++; if (loaded >= totalToLoad) render(); };
       img.onerror = function() { loaded++; if (loaded >= totalToLoad) render(); };
       img.src = LAYERS[i].dataUrl;
-      images[i] = img;
-    } else {
-      images[i] = null;
+      imgs[0] = img;
     }
+    images[i] = imgs.length > 0 ? imgs : null;
+  }
+
+  // Particle simulation sources: one state block per particle layer. Sprites
+  // preload like the static layers above so the first frame has them ready.
+  var PSOURCES = [];
+  for (var i = 0; i < LAYERS.length; i++) {
+    if (LAYERS[i].particle) {
+      PSOURCES.push({ cfg: LAYERS[i].particle, parts: [], emitAcc: 0, lastT: null, img: null });
+    }
+  }
+  for (var i = 0; i < PSOURCES.length; i++) {
+    (function(ps) {
+      var src = ps.cfg.image;
+      if (src) {
+        totalToLoad++;
+        var img = new Image();
+        img.onload = function() { loaded++; if (loaded >= totalToLoad) render(); };
+        img.onerror = function() { loaded++; if (loaded >= totalToLoad) render(); };
+        img.src = src;
+        ps.img = img;
+      }
+    })(PSOURCES[i]);
   }
 
   // If nothing to load, render immediately (solid layers only).
@@ -432,7 +645,7 @@ function buildHtmlDocument(scene: SceneData, layers: RenderLayer[]): string {
         var b = Math.round(layer.solidColor.b * 255);
         ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
         ctx.fillRect(-fillW / 2, -fillH / 2, fillW, fillH);
-      } else if (images[i] && images[i].complete && images[i].naturalWidth > 0) {
+      } else if (images[i] && images[i][current[i] || 0]) {
         // Textured layer: draw at the object's QUAD size (layer.width/height)
         // while PRESERVING the texture's own aspect ratio (texAspect) —
         // cover-fit the texture into the quad area and crop the overflow.
@@ -440,11 +653,13 @@ function buildHtmlDocument(scene: SceneData, layers: RenderLayer[]): string {
         // texture stretched to the quad flattens square 2048² sources onto
         // 16:9 frames (the "壁纸被压扁/压缩" symptom). Cover-fit keeps the
         // source undistorted and centered, exactly like <img object-fit:cover>.
-        var img = images[i];
-        var quadW = layer.width * scale * absScaleX;
-        var quadH = layer.height * scale * absScaleY;
-        var draw = LAYER_DRAW_SIZE(quadW, quadH, layer.texAspect || 1);
-        ctx.drawImage(img, -draw.width / 2, -draw.height / 2, draw.width, draw.height);
+        var img = images[i][current[i] || 0];
+        if (img.complete && img.naturalWidth > 0) {
+          var quadW = layer.width * scale * absScaleX;
+          var quadH = layer.height * scale * absScaleY;
+          var draw = LAYER_DRAW_SIZE(quadW, quadH, layer.texAspect || 1);
+          ctx.drawImage(img, -draw.width / 2, -draw.height / 2, draw.width, draw.height);
+        }
       }
 
       ctx.restore();
@@ -477,30 +692,173 @@ function buildHtmlDocument(scene: SceneData, layers: RenderLayer[]): string {
 
   window.addEventListener('resize', resize);
 
-  // Animation loop for smooth parallax + audio breathing
+  // --- Basic 2D particle simulation (WE particle presets) ---
+  function randRange(min, max) { return min + Math.random() * (max - min); }
+
+  function spawnParticle(cfg) {
+    var x = cfg.origin.x;
+    var y = cfg.origin.y;
+    if (cfg.spawn === 'box') {
+      x += (Math.random() * 2 - 1) * cfg.directions.x;
+      y += (Math.random() * 2 - 1) * cfg.directions.y;
+    } else {
+      var dist = cfg.distanceMin + Math.random() * (cfg.distanceMax - cfg.distanceMin);
+      var ang = Math.random() * Math.PI * 2;
+      x += Math.cos(ang) * dist;
+      y += Math.sin(ang) * dist;
+    }
+    var size = randRange(cfg.sizeMin, cfg.sizeMax);
+    return {
+      x: x, y: y,
+      vx: randRange(cfg.velocityMin.x, cfg.velocityMax.x),
+      vy: randRange(cfg.velocityMin.y, cfg.velocityMax.y),
+      age: 0,
+      life: Math.max(0.05, randRange(cfg.lifetimeMin, cfg.lifetimeMax)),
+      size: size > 0 ? size : 1,
+      r: randRange(cfg.colorMin.r, cfg.colorMax.r) * (cfg.tint ? cfg.tint.r : 1),
+      g: randRange(cfg.colorMin.g, cfg.colorMax.g) * (cfg.tint ? cfg.tint.g : 1),
+      b: randRange(cfg.colorMin.b, cfg.colorMax.b) * (cfg.tint ? cfg.tint.b : 1)
+    };
+  }
+
+  function stepParticles(t) {
+    for (var s = 0; s < PSOURCES.length; s++) {
+      var ps = PSOURCES[s];
+      if (!ps.lastT) { ps.lastT = t; continue; }
+      var dt = Math.min(0.1, (t - ps.lastT) / 1000);
+      ps.lastT = t;
+      var cfg = ps.cfg;
+      // Emit at the configured rate (accumulate fractional seconds).
+      ps.emitAcc += cfg.rate * dt;
+      var n = Math.floor(ps.emitAcc);
+      ps.emitAcc -= n;
+      while (n > 0 && ps.parts.length < cfg.maxCount) {
+        ps.parts.push(spawnParticle(cfg));
+        n--;
+      }
+      // Integrate position/velocity; drop dead particles.
+      for (var i = ps.parts.length - 1; i >= 0; i--) {
+        var p = ps.parts[i];
+        p.age += dt;
+        if (p.age >= p.life) { ps.parts.splice(i, 1); continue; }
+        p.vx += cfg.gravity.x * dt;
+        p.vy += cfg.gravity.y * dt;
+        var drag = Math.max(0, 1 - cfg.drag * dt);
+        p.vx *= drag;
+        p.vy *= drag;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+      }
+    }
+  }
+
+  function drawParticles(w, h, audio) {
+    // Viewport cover scale (constant per frame) — used to size particles in
+    // canvas px from their scene-space sizes.
+    var coverScale = SCENE_COORD(0, 0, PROJ_W, PROJ_H, w, h).scale;
+    for (var s = 0; s < PSOURCES.length; s++) {
+      var ps = PSOURCES[s];
+      if (ps.parts.length === 0) continue;
+      var cfg = ps.cfg;
+      ctx.save();
+      // Additive materials (light shafts, halos) approximate with 'lighter'.
+      ctx.globalCompositeOperation = cfg.additive ? 'lighter' : 'source-over';
+      for (var i = 0; i < ps.parts.length; i++) {
+        var p = ps.parts[i];
+        var pos = SCENE_COORD(p.x, p.y, PROJ_W, PROJ_H, w, h);
+        // Fade in over fadeInTime; fade out in the last 20% of life.
+        var a = cfg.fadeInTime > 0 ? Math.min(1, p.age / cfg.fadeInTime) : 1;
+        var lifeLeft = 1 - p.age / p.life;
+        if (lifeLeft < 0.2) a *= lifeLeft / 0.2;
+        if (a <= 0.01) continue;
+        ctx.globalAlpha = cfg.alpha * a;
+        // Audio pulse scales particle size like the layer breathing.
+        var size = Math.abs(p.size * coverScale * cfg.scaleX) * (1 + audio * 0.2);
+        var wd = size;
+        var hd = size / cfg.aspect;
+        var col = 'rgb(' + Math.round(p.r * 255) + ',' + Math.round(p.g * 255) + ',' + Math.round(p.b * 255) + ')';
+        ctx.fillStyle = col;
+        if (cfg.rotation !== 0) {
+          ctx.save();
+          ctx.translate(pos.x, pos.y);
+          ctx.rotate(cfg.rotation);
+          if (ps.img && ps.img.complete && ps.img.naturalWidth > 0) {
+            ctx.drawImage(ps.img, -wd / 2, -hd / 2, wd, hd);
+          } else {
+            ctx.beginPath();
+            ctx.arc(0, 0, Math.max(0.5, wd / 2), 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        } else if (ps.img && ps.img.complete && ps.img.naturalWidth > 0) {
+          ctx.drawImage(ps.img, pos.x - wd / 2, pos.y - hd / 2, wd, hd);
+        } else {
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, Math.max(0.5, wd / 2), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+  }
+
+  // Animation loop for smooth parallax + audio breathing + GIF frame advance
+  var current = []; // per-layer current frame index
+  var lastFrameAt = []; // per-layer timestamp of the last frame switch
+  var accum = []; // per-layer accumulated time past the current frame
+  function advanceFrames(t) {
+    var changed = false;
+    for (var i = 0; i < LAYERS.length; i++) {
+      var fr = LAYERS[i].frames;
+      if (!fr || fr.length < 2) continue;
+      if (!lastFrameAt[i]) {
+        lastFrameAt[i] = t;
+        accum[i] = 0;
+        continue;
+      }
+      accum[i] += t - lastFrameAt[i];
+      lastFrameAt[i] = t;
+      while (true) {
+        var idx = current[i] || 0;
+        var ft = fr[idx].frametime;
+        if (!(ft > 0)) ft = 0.1; // guard against malformed/zero durations
+        if (accum[i] < ft * 1000) break;
+        accum[i] -= ft * 1000;
+        current[i] = (idx + 1) % fr.length;
+        changed = true;
+      }
+    }
+    return changed;
+  }
   function animate() {
     var t = Date.now();
     // Smooth the audio level (attack/decay like a meter).
     audioLevel += (audioTarget - audioLevel) * 0.2;
     if (audioLevel < 0.001) audioLevel = 0;
     var needAudio = audioLevel > 0.005;
+    var framesChanged = advanceFrames(t);
+    stepParticles(t);
+    var hasParticles = PSOURCES.length > 0;
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    var dirty = framesChanged || hasParticles;
     if (PARALLAX) {
       var dx = Math.abs(targetMouseX - mouseX);
       var dy = Math.abs(targetMouseY - mouseY);
-      if (dx > 0.001 || dy > 0.001 || needAudio) {
-        // Audio breathing: gentle scale pulse driven by the smoothed level.
-        if (needAudio) {
-          var pulse = 1 + audioLevel * 0.04 * (0.6 + 0.4 * Math.sin(t / 220));
-          ctx.setTransform(dpr * pulse, 0, 0, dpr * pulse, 0, 0);
-        } else {
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        }
-        render();
-      }
+      if (dx > 0.001 || dy > 0.001 || needAudio) dirty = true;
     } else if (needAudio) {
-      var pulse2 = 1 + audioLevel * 0.04 * (0.6 + 0.4 * Math.sin(t / 220));
-      ctx.setTransform(dpr * pulse2, 0, 0, dpr * pulse2, 0, 0);
+      dirty = true;
+    }
+    if (dirty) {
+      // Audio breathing: gentle scale pulse driven by the smoothed level.
+      if (needAudio) {
+        var pulse = 1 + audioLevel * 0.04 * (0.6 + 0.4 * Math.sin(t / 220));
+        ctx.setTransform(dpr * pulse, 0, 0, dpr * pulse, 0, 0);
+      } else {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
       render();
+      if (hasParticles) drawParticles(w, h, audioLevel);
     }
     requestAnimationFrame(animate);
   }

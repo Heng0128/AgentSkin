@@ -229,7 +229,7 @@ export function DialogsHost({ controller }: { controller: AppController }) {
             <img
               src={fileImportPrompt.incoming.coverDataUrl}
               alt=""
-              className="max-h-40 w-full rounded-lg border object-cover"
+              className="max-h-40 w-full rounded-[2px] border object-cover"
             />
           )}
           <DialogFooter>

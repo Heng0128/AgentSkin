@@ -78,6 +78,7 @@ export type {
   SceneMaterial,
   SceneMaterialPass,
   SceneModel,
+  SceneParticle,
   SceneTexture,
 } from './scene/scene-extractor';
 
@@ -85,4 +86,26 @@ export type {
 // Scene Extractor — functions
 // ---------------------------------------------------------------------------
 
-export { extractScene, resolveObjectTexture } from './scene/scene-extractor';
+export {
+  deriveWeInstallRoot,
+  extractScene,
+  findInstallAsset,
+  resolveObjectTexture,
+  resolveParticleTexture,
+  resolveSceneParticle,
+} from './scene/scene-extractor';
+
+// ---------------------------------------------------------------------------
+// Particle Parser
+// ---------------------------------------------------------------------------
+
+export type {
+  ParticleColor,
+  ParticleEmitter,
+  ParticleInitializers,
+  ParticleOperator,
+  ParticleRange,
+  ParticleVec3,
+  SceneParticleData,
+} from './scene/particle-parser';
+export { findParticleOperator, parseParticleJson } from './scene/particle-parser';

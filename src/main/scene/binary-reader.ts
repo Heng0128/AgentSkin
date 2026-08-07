@@ -49,8 +49,23 @@ export class BinaryReader {
   }
 
   readBytes(n: number): Buffer {
-    const slice = this.buf.subarray(this.pos, this.pos + n);
-    this.pos += n;
+    if (n < 0) {
+      throw new RangeError(`BinaryReader.readBytes: negative length ${n}`);
+    }
+    const end = this.pos + n;
+    if (end > this.buf.length) {
+      // Throw instead of silently returning a truncated Buffer. A truncated
+      // view would be passed downstream to TEX / DXT / LZ4 parsers that
+      // assume the requested byte count is available — they would then read
+      // garbage / zero-filled memory and silently produce corrupt textures.
+      // Caller is expected to validate file structure (e.g. parsePkg's
+      // entryCount bound check) before requesting reads of that size.
+      throw new RangeError(
+        `BinaryReader.readBytes: requested ${n} bytes at offset ${this.pos} but only ${this.buf.length - this.pos} remain`,
+      );
+    }
+    const slice = this.buf.subarray(this.pos, end);
+    this.pos = end;
     return slice;
   }
 

@@ -19,6 +19,63 @@
  * The caller provides __AGENTSKIN_CONFIG__ with heroBlobUrl and palette info.
  */
 
+/*
+ * AdaptiveMutationObserver — three-layer throttle wrapper
+ * Embedded from src/engine/src/runtime/adaptive-observer.mjs
+ */
+class AdaptiveMutationObserver {
+  constructor(callback, opts = {}) {
+    this.callback = callback;
+    this.throttleWindow = opts.throttleWindow ?? 10000;
+    this.throttleMaxAttempts = opts.throttleMaxAttempts ?? 50;
+    this.retryTimeout = opts.retryTimeout ?? 2000;
+    this.loopThreshold = opts.loopThreshold ?? 1000;
+    this.loopMaxCycles = opts.loopMaxCycles ?? 10;
+    this.attemptCount = 0;
+    this.windowStart = Date.now();
+    this.isThrottled = false;
+    this.elementChanges = new WeakMap();
+    this._throttleTimer = null;
+    this.observer = new MutationObserver((records) => {
+      this._handleMutations(records);
+    });
+  }
+  observe(target, options) { this.observer.observe(target, options); }
+  disconnect() {
+    this.observer.disconnect();
+    if (this._throttleTimer) { clearTimeout(this._throttleTimer); this._throttleTimer = null; }
+  }
+  takeRecords() { return this.observer.takeRecords(); }
+  _handleMutations(records) {
+    const filtered = records.filter(r => !this._isLooping(r.target));
+    if (filtered.length === 0) return;
+    if (this.isThrottled) return;
+    const now = Date.now();
+    if (now - this.windowStart > this.throttleWindow) { this.windowStart = now; this.attemptCount = 0; }
+    this.attemptCount++;
+    if (this.attemptCount > this.throttleMaxAttempts) { this._enterCooldown(); return; }
+    this.callback(filtered);
+  }
+  _isLooping(node) {
+    const last = this.elementChanges.get(node);
+    const now = Date.now();
+    if (!last || now - last.time > this.loopThreshold) {
+      this.elementChanges.set(node, { count: 1, time: now });
+      return false;
+    }
+    last.count++; last.time = now;
+    return last.count > this.loopMaxCycles;
+  }
+  _enterCooldown() {
+    this.isThrottled = true;
+    console.warn(`[AgentSkin] MutationObserver throttled for ${this.retryTimeout}ms`);
+    this._throttleTimer = setTimeout(() => {
+      this.isThrottled = false; this.attemptCount = 0;
+      this.windowStart = Date.now(); this._throttleTimer = null;
+    }, this.retryTimeout);
+  }
+}
+
 (() => {
   'use strict';
   const HOST_CLASS = 'agentskin-host-zcode';
@@ -248,9 +305,9 @@ html.${HOST_CLASS} [class*="tooltip"] {
     sheet,
   ];
 
-  // Self-healing
+  // Self-healing (with adaptive throttle to prevent observer storms)
   let healTimer = null;
-  const observer = new MutationObserver((mutations) => {
+  const observer = new AdaptiveMutationObserver((mutations) => {
     const structural = mutations.some(m => m.addedNodes.length > 3 || m.removedNodes.length > 3);
     if (!structural) return;
     if (healTimer) clearTimeout(healTimer);

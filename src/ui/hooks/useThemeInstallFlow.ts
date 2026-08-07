@@ -186,6 +186,12 @@ export function useThemeInstallFlow(deps: UseThemeInstallFlowDeps) {
         );
         return;
       }
+      // Clear any pending auto-clear timer from a previous cancelled flow
+      // to prevent the new import's completed state from being clobbered.
+      if (clearingRef.current) {
+        window.clearTimeout(clearingRef.current);
+        clearingRef.current = null;
+      }
       const myEpoch = installEpochRef.current + 1;
       installEpochRef.current = myEpoch;
       setFlowState('installing');
@@ -218,6 +224,11 @@ export function useThemeInstallFlow(deps: UseThemeInstallFlowDeps) {
 
   /** User-driven import through the OS file dialog. */
   const runImport = useCallback(async () => {
+    // Clear any pending auto-clear timer from a previous cancelled flow.
+    if (clearingRef.current) {
+      window.clearTimeout(clearingRef.current);
+      clearingRef.current = null;
+    }
     const myEpoch = installEpochRef.current + 1;
     installEpochRef.current = myEpoch;
     setFlowState('selecting');
@@ -260,6 +271,11 @@ export function useThemeInstallFlow(deps: UseThemeInstallFlowDeps) {
    */
   const runImportFromPath = useCallback(
     async (sourcePath: string) => {
+      // Clear any pending auto-clear timer from a previous cancelled flow.
+      if (clearingRef.current) {
+        window.clearTimeout(clearingRef.current);
+        clearingRef.current = null;
+      }
       const myEpoch = installEpochRef.current + 1;
       installEpochRef.current = myEpoch;
       setFlowState('installing');

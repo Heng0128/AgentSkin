@@ -172,10 +172,8 @@ export function registerWallpaperIpc(deps: MainContext): void {
       // 视频壁纸：把视频路径传入，使生成的主题捆绑 wallpaper.video（apply
       // 时自动注入）；非视频壁纸不捆绑。
       let videoPath: string | undefined;
-      if (deps.wallpapers) {
-        const info = await deps.wallpapers.mediaInfoFor(wallpaperId);
-        if (info?.type === 'video') videoPath = info.path;
-      }
+      const info = await deps.wallpapers.mediaInfoFor(wallpaperId);
+      if (info?.type === 'video') videoPath = info.path;
       const built = await buildWallpaperTheme({
         wallpaperId,
         title,

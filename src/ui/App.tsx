@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { BootScreen } from '@/components/boot-screen';
+import { lazy, Suspense, useEffect, useRef } from 'react';
+import CommandPalette from '@/components/CommandPalette';
 import { DetailPanel } from '@/components/detail-panel';
 import { DialogsHost } from '@/components/dialogs-host';
 import { DynamicBackground } from '@/components/dynamic-background';
@@ -14,6 +14,7 @@ import { TitleBar } from '@/components/title-bar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { type Selection, useAppController } from '@/hooks/useAppController';
+import { useCommandPalette } from '@/hooks/useCommandPalette';
 import { cn } from '@/lib/utils';
 
 // Lazy-load page components so each route is a separate chunk. On first
@@ -21,6 +22,7 @@ import { cn } from '@/lib/utils';
 // shrinks by the combined size of all 4 pages (~40% of business code), so
 // the main window paints faster and the user reaches the first interactive
 // state sooner. Subsequent route switches are instant (chunk already cached).
+const AgentDashboardPage = lazy(() => import('@/pages/AgentDashboardPage'));
 const SettingsPage = lazy(() =>
   import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
@@ -36,6 +38,7 @@ const WorkspacePage = lazy(() =>
 
 export default function App() {
   const controller = useAppController();
+  const palette = useCommandPalette();
   const lastSelection = useRef<Selection>(null);
   // P2-6: Previously this assignment ran inside the render function body,
   // violating React's purity requirement (writing to a ref during render is a
@@ -46,15 +49,6 @@ export default function App() {
   useEffect(() => {
     if (controller.selection) lastSelection.current = controller.selection;
   }, [controller.selection]);
-
-  // Unmount the boot overlay as soon as bootstrap finishes — the perceived
-  // opening duration should match the real bootstrap time, not a fixed delay.
-  const [showBoot, setShowBoot] = useState(true);
-  useEffect(() => {
-    if (controller.booting) return;
-    const timer = window.setTimeout(() => setShowBoot(false), 200);
-    return () => window.clearTimeout(timer);
-  }, [controller.booting]);
 
   const activeWallpaper = controller.wallpaper.active;
 
@@ -103,7 +97,7 @@ export default function App() {
                   use nearly the full viewport — the sidebar/title/status bars
                   already frame the edges, and the inject dock floats above. */}
               <div className="mx-auto h-full w-full max-w-[1240px] p-[12px_20px_16px]">
-                <div key={controller.route} className="h-full animate-page-enter">
+                <div className="h-full animate-page-enter">
                   <Suspense
                     fallback={
                       <div className="flex h-full items-center justify-center">
@@ -111,6 +105,9 @@ export default function App() {
                       </div>
                     }
                   >
+                    {controller.route === 'dashboard' && (
+                      <AgentDashboardPage controller={controller} />
+                    )}
                     {controller.route === 'workspace' && <WorkspacePage controller={controller} />}
                     {controller.route === 'themes' && <ThemesPage controller={controller} />}
                     {controller.route === 'wallpaper' && (
@@ -170,7 +167,7 @@ export default function App() {
           <div
             key={toast.id}
             className={cn(
-              'animate-page-enter fixed bottom-4 left-1/2 z-[100] -translate-x-1/2 rounded-full border px-4 py-2 text-sm shadow-lg',
+              'fixed bottom-4 left-1/2 z-[100] -translate-x-1/2 rounded-full border px-4 py-2 text-sm shadow-lg',
               toast.tone === 'destructive'
                 ? 'border-destructive/30 bg-destructive/10 text-destructive'
                 : 'border-border bg-popover text-popover-foreground',
@@ -180,10 +177,9 @@ export default function App() {
           </div>
         ))}
       </main>
+      {/* Sonner Toaster disabled — custom toast divs rendered above <Toaster position="top-right" richColors /> */}
 
-      {/* Opening sequence overlay — covers the app during bootstrap, then
-        zooms-and-fades out (leaving) once the UI underneath is ready. */}
-      {showBoot && <BootScreen hint={controller.t.bootLoading} leaving={!controller.booting} />}
+      <CommandPalette open={palette.open} onOpenChange={palette.setOpen} controller={controller} />
     </ErrorBoundary>
   );
 }

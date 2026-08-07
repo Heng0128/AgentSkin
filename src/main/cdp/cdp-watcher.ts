@@ -150,7 +150,9 @@ export class CdpWatcher {
   private async onTarget(info: WatcherTargetInfo, reInject = false): Promise<void> {
     if (!this.deps.shouldInject(info)) return;
     if (this.seenTargets.has(info.targetId) && !reInject) return;
-    if (!this.deps.currentEpoch) return; // 无 epoch 直接跳过（防御）
+    // Guard: epoch must be valid for this app. currentEpoch is a function that
+    // returns the current epoch value (0 means not yet initialized).
+    if (!this.deps.currentEpoch(this.appId)) return;
 
     const ok = await this.deps.inject(info, this.deps.currentEpoch(this.appId));
     if (ok) {

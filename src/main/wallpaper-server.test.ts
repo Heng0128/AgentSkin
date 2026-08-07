@@ -251,3 +251,173 @@ describe('WallpaperMediaServer file disappearance', () => {
     expect(res.status).toBe(404);
   });
 });
+
+// ---------------------------------------------------------------------------
+// registerDirectory() — path-based directory serving
+// ---------------------------------------------------------------------------
+
+/**
+ * Directory serving is used by web-type wallpapers. The registered root is
+ * served under /d/{token}/{filepath}; relative URLs in the wallpaper's
+ * index.html resolve correctly under this scheme. Path traversal must be
+ * blocked both syntactically (no `..`, no leading slash) and via a
+ * post-resolve containment check.
+ */
+describe('WallpaperMediaServer.registerDirectory', () => {
+  let webRoot: string;
+  const indexHtml = Buffer.from('<!doctype html><body>web-wallpaper</body>');
+  const scriptJs = Buffer.from('console.log("wp");');
+  const nestedCss = Buffer.from('body { color: red; }');
+  const binAsset = Buffer.from([0x00, 0x01, 0x02, 0xff]);
+
+  beforeEach(async () => {
+    webRoot = path.join(tmpDir, 'web-root');
+    await fs.mkdir(path.join(webRoot, 'sub'), { recursive: true });
+    await fs.writeFile(path.join(webRoot, 'index.html'), indexHtml);
+    await fs.writeFile(path.join(webRoot, 'script.js'), scriptJs);
+    await fs.writeFile(path.join(webRoot, 'sub', 'nested.css'), nestedCss);
+    await fs.writeFile(path.join(webRoot, 'data.bin'), binAsset);
+    // A sibling directory OUTSIDE webRoot — must not be reachable.
+    await fs.writeFile(path.join(tmpDir, 'secret.txt'), 'top-secret');
+  });
+
+  it('returns a loopback base URL ending with /d/{token}/', async () => {
+    const result = await wallpaperMediaServer.registerDirectory(webRoot);
+    expect(result).not.toBeNull();
+    expect(result!.token).toHaveLength(32);
+    expect(result!.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/d\/[0-9a-f]{32}\//);
+  });
+
+  it('serves index.html from the registered root', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    const res = await fetchUrl(`${url}index.html`);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('text/html');
+    expect(res.body).toEqual(indexHtml);
+  });
+
+  it('serves nested files via relative path', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    const res = await fetchUrl(`${url}sub/nested.css`);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('text/css');
+    expect(res.body).toEqual(nestedCss);
+  });
+
+  it('derives MIME from extension', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    const res = await fetchUrl(`${url}script.js`);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/javascript');
+  });
+
+  it('falls back to application/octet-stream for unknown extensions', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    const res = await fetchUrl(`${url}data.bin`);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/octet-stream');
+    expect(res.body).toEqual(binAsset);
+  });
+
+  it('returns 404 for missing files', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    const res = await fetchUrl(`${url}does-not-exist.html`);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 404 when the path targets the root directory itself', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    // Empty path -> root directory -> 404 (directories are not served)
+    const res = await fetchUrl(url);
+    expect(res.status).toBe(404);
+  });
+
+  it('returns 404 for a subdirectory path', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    const res = await fetchUrl(`${url}sub`);
+    expect(res.status).toBe(404);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// registerDirectory() — path traversal protection
+// ---------------------------------------------------------------------------
+
+describe('WallpaperMediaServer.registerDirectory path traversal', () => {
+  let webRoot: string;
+
+  beforeEach(async () => {
+    webRoot = path.join(tmpDir, 'web-root');
+    await fs.mkdir(webRoot, { recursive: true });
+    await fs.writeFile(path.join(webRoot, 'index.html'), 'ok');
+    // Sibling file outside the registered root — must never be served.
+    await fs.writeFile(path.join(tmpDir, 'secret.txt'), 'top-secret');
+  });
+
+  it('rejects encoded ".." traversal (%2e%2e%2f)', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    // %2e%2e%2f decodes to ../ which is syntactically rejected.
+    const res = await fetchUrl(`${url}%2e%2e%2fsecret.txt`);
+    expect(res.status).toBe(403);
+  });
+
+  it('rejects encoded absolute path (%2f leading slash)', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    // %2fetc%2fpasswd decodes to /etc/passwd — leading slash rejected.
+    const res = await fetchUrl(`${url}%2fetc%2fpasswd`);
+    expect(res.status).toBe(403);
+  });
+
+  it('rejects encoded backslash absolute path (%5c leading)', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    // %5c decodes to \ — leading backslash rejected (Windows absolute).
+    const res = await fetchUrl(`${url}%5cwindows%5csystem32%5cdrivers%5cetc%5chosts`);
+    expect(res.status).toBe(403);
+  });
+
+  it('does not serve files outside the root even with multiple .. segments', async () => {
+    const { url } = (await wallpaperMediaServer.registerDirectory(webRoot))!;
+    const res = await fetchUrl(`${url}%2e%2e%2f%2e%2e%2fsecret.txt`);
+    expect(res.status).toBe(403);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// registerHtml() — inline HTML serving
+// ---------------------------------------------------------------------------
+
+describe('WallpaperMediaServer.registerHtml', () => {
+  it('serves inline HTML with default text/html MIME', async () => {
+    const html = '<!doctype html><body>scene-wallpaper</body>';
+    const { url } = (await wallpaperMediaServer.registerHtml(html))!;
+    expect(url).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/h\?t=/);
+    const res = await fetchUrl(url);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('text/html');
+    expect(res.body.toString('utf8')).toBe(html);
+  });
+
+  it('serves inline HTML with a custom MIME type', async () => {
+    const { url } = (await wallpaperMediaServer.registerHtml('{}', 'application/json'))!;
+    const res = await fetchUrl(url);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('application/json');
+    expect(res.body.toString('utf8')).toBe('{}');
+  });
+
+  it('returns 404 for unknown token', async () => {
+    const { url } = (await wallpaperMediaServer.registerHtml('<p>x</p>'))!;
+    const port = url.split(':')[2].split('/')[0];
+    const res = await fetchUrl(`http://127.0.0.1:${port}/h?t=bogustoken`);
+    expect(res.status).toBe(404);
+  });
+
+  it('unregister removes the inline HTML entry', async () => {
+    const { token, url } = (await wallpaperMediaServer.registerHtml('<p>x</p>'))!;
+    const before = await fetchUrl(url);
+    expect(before.status).toBe(200);
+    wallpaperMediaServer.unregister(token);
+    const after = await fetchUrl(url);
+    expect(after.status).toBe(404);
+  });
+});

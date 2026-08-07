@@ -58,12 +58,29 @@ import { resolvePageTarget, resolvePageTargets } from './target-discovery';
 const activeMediaTokens = new Map<AgentId, string>();
 
 /** Replace the active token for an agent: unregister the previous one (if
- *  any) and record the new one. Pass `null` to clear. */
+ *  any) and record the new one. Pass `null` to clear.
+ *
+ *  Ordering matters: the new token is recorded BEFORE the old one is
+ *  unregistered, so a throw inside `unregister` cannot leave the agent with
+ *  no tracked token while the old media-server entry is already gone (the
+ *  "lost token" state where the next apply thinks there is nothing to clean
+ *  up). Recording first means the old token only disappears from the map
+ *  after it has been successfully released; a throw mid-cleanup keeps the
+ *  stale token tracked (harmless — it is a no-op entry) instead of losing
+ *  the bookkeeping. */
 export function setActiveMediaToken(appId: AgentId, token: string | null): void {
   const prev = activeMediaTokens.get(appId);
-  if (prev) wallpaperMediaServer.unregister(prev);
   if (token) activeMediaTokens.set(appId, token);
   else activeMediaTokens.delete(appId);
+  if (prev && prev !== token) {
+    try {
+      wallpaperMediaServer.unregister(prev);
+    } catch (error) {
+      // Best-effort cleanup: a throw here must not break the caller's flow
+      // (the new token is already tracked). Log and move on.
+      console.warn(`[wallpaper] failed to unregister stale media token: ${String(error)}`);
+    }
+  }
 }
 
 /** Directly place a token in {@link activeMediaTokens} WITHOUT calling
@@ -73,6 +90,11 @@ export function setActiveMediaToken(appId: AgentId, token: string | null): void 
  *  without triggering a real unregister on a fake token. */
 export function _setActiveMediaTokenForTest(appId: AgentId, token: string): void {
   activeMediaTokens.set(appId, token);
+}
+
+/** Read the tracked token for an agent — test observation helper. */
+export function _getActiveMediaTokenForTest(appId: AgentId): string | undefined {
+  return activeMediaTokens.get(appId);
 }
 
 /** Clear all entries from {@link activeMediaTokens} — for test cleanup only. */
@@ -273,6 +295,10 @@ export function disposeWallpaperInjectionState(): void {
   activeMediaTokens.clear();
   activeWallpaperAgents.clear();
   lastSuccessfulWallpaper.clear();
+  // Reset the module-level deps reference so a subsequent init cycle starts
+  // clean — without this, openAgentWallpaperSession would use stale deps from
+  // the previous lifecycle, potentially referencing destroyed windows.
+  wallpaperDeps = null;
   // P3-12: The legacy agentskin-core-runtime installs a global fetch
   // interceptor on first win32 boot so CDP /json/list calls can fall back to
   // WebSocket. Without uninstalling it here, a dispose → re-init cycle

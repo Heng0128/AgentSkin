@@ -49,6 +49,8 @@ export interface TreatmentEvidence {
   contrastPass?: boolean;
   /** 判定命中的规则名，供审查面板显示依据。 */
   rule: string;
+  /** 实际的 surface 色（用于 CSS 生成，避免硬编码白色）。 */
+  surfaceColor?: { r: number; g: number; b: number };
 }
 
 export interface TreatmentVerdict {
@@ -286,6 +288,13 @@ function buildFrostVerdict(
       contrastRatio: ratio,
       contrastPass: pass,
       rule: `${base.rule}${pass ? '' : ':contrast-gated'}`,
+      surfaceColor: c.quantified.background
+        ? {
+            r: c.quantified.background.r,
+            g: c.quantified.background.g,
+            b: c.quantified.background.b,
+          }
+        : undefined,
     },
   };
 }
@@ -325,8 +334,11 @@ export function buildTreatmentCss(verdicts: TreatmentVerdict[]): string {
       rules.push(`[data-as-ref="${cssEscape(v.ref)}"] { background: transparent !important; }`);
     } else if (v.treatment === 'frost' && v.evidence.frost) {
       const { opacity, blurPx } = v.evidence.frost;
+      // Use actual surface color instead of hardcoded white
+      const surf = v.evidence.surfaceColor;
+      const rgb = surf ? `${surf.r},${surf.g},${surf.b}` : '255,255,255';
       rules.push(
-        `[data-as-ref="${cssEscape(v.ref)}"] { background: rgba(255,255,255,${opacity.toFixed(2)}) !important; backdrop-filter: blur(${blurPx}px) !important; }`,
+        `[data-as-ref="${cssEscape(v.ref)}"] { background: rgba(${rgb},${opacity.toFixed(2)}) !important; backdrop-filter: blur(${blurPx}px) !important; }`,
       );
     }
   }

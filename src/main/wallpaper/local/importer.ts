@@ -135,8 +135,9 @@ export async function importMedia(
  * Only files inside `customDir` can be deleted (safety guard against
  * deleting workshop or system files). Uses `shell.trashItem` (recycle bin)
  * with a fallback to `unlink` for network drives.
- * Returns true when the file was deleted, false when the path is outside
- * the custom directory.
+ * Returns true only when the file was actually deleted (or moved to trash);
+ * false when the path is outside the custom directory OR both delete
+ * attempts failed.
  */
 export async function deleteLocalWallpaperFile(
   item: DiscoveredItem,
@@ -145,15 +146,21 @@ export async function deleteLocalWallpaperFile(
   const resolvedCustom = path.resolve(customDir);
   const resolvedMedia = path.resolve(item.mediaPath);
   const rel = path.relative(resolvedCustom, resolvedMedia);
-  if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) {
-    try {
-      await shell.trashItem(resolvedMedia);
-    } catch {
-      // trashItem can fail on network drives or headless envs — fall back
-      // to unlink as last resort.
-      await fs.unlink(resolvedMedia).catch(() => {});
-    }
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) return false;
+  try {
+    await shell.trashItem(resolvedMedia);
     return true;
+  } catch {
+    // trashItem can fail on network drives or headless envs — fall back
+    // to unlink as last resort.
+    try {
+      await fs.unlink(resolvedMedia);
+      return true;
+    } catch {
+      // Both delete paths failed — report failure instead of a false
+      // positive (previously the unlink error was swallowed and the
+      // function always returned true).
+      return false;
+    }
   }
-  return false;
 }

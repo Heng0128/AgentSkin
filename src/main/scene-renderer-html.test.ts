@@ -4,6 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { resolveWorkshopOrSkip } from './scene/_workshop-test-helpers';
 import { layerDrawSize, renderSceneToHtml, sceneLayerCenter } from './scene-renderer-html';
 
 // ---------------------------------------------------------------------------
@@ -47,6 +48,90 @@ async function renderPkgJson(sceneJson: unknown): Promise<string | null> {
   const pkgPath = path.join(tmpDir, 'scene.pkg');
   const pkg = buildPkg([
     { name: 'scene.json', data: Buffer.from(JSON.stringify(sceneJson), 'utf8') },
+  ]);
+  await fs.writeFile(pkgPath, pkg);
+  return renderSceneToHtml(pkgPath);
+}
+
+/** Minimal TEXV0005 container (RGBA8888 mips, optional TEXS0001 GIF frames). */
+function buildTex(options: {
+  images: Array<Buffer>;
+  flags?: number;
+  frames?: Array<{ imageId: number; frametime: number }>;
+}): Buffer {
+  const parts: Buffer[] = [];
+  const str = (s: string) => Buffer.concat([Buffer.from(s, 'utf8'), Buffer.alloc(1, 0)]);
+  const i32 = (n: number) => {
+    const b = Buffer.alloc(4);
+    b.writeInt32LE(n, 0);
+    return b;
+  };
+  const f32 = (n: number) => {
+    const b = Buffer.alloc(4);
+    b.writeFloatLE(n, 0);
+    return b;
+  };
+  const flags = options.flags ?? 0;
+  parts.push(
+    str('TEXV0005'),
+    str('TEXI0001'),
+    i32(0),
+    i32(flags),
+    i32(1),
+    i32(1),
+    i32(1),
+    i32(1),
+    i32(0),
+  );
+  parts.push(str('TEXB0001'), i32(options.images.length));
+  for (const px of options.images) {
+    parts.push(i32(1), i32(1), i32(1), i32(px.length), px);
+  }
+  if (options.frames && options.frames.length > 0) {
+    parts.push(str('TEXS0001'), i32(options.frames.length));
+    for (const f of options.frames) {
+      parts.push(i32(f.imageId), f32(f.frametime), i32(0), i32(0), i32(1), i32(1), i32(0), i32(0));
+    }
+  }
+  return Buffer.concat(parts);
+}
+
+/**
+ * Build a scene.pkg with a textured layer resolved through the full chain
+ * object.image → model JSON → material JSON → .tex entry.
+ */
+async function renderPkgWithTexture(
+  texBytes: Buffer,
+  sceneOverrides: Record<string, unknown> = {},
+): Promise<string | null> {
+  const pkgPath = path.join(tmpDir, 'scene.pkg');
+  const sceneJson = {
+    general: { clearenabled: true, orthogonalprojection: { width: 1920, height: 1080 } },
+    camera: {},
+    objects: [
+      {
+        id: 1,
+        name: 'Background',
+        image: 'models/bg.json',
+        origin: '960.0 540.0 0.0',
+        angles: '0.0 0.0 0.0',
+        scale: '1.0 1.0 1.0',
+        visible: true,
+        ...sceneOverrides,
+      },
+    ],
+  };
+  const pkg = buildPkg([
+    { name: 'scene.json', data: Buffer.from(JSON.stringify(sceneJson), 'utf8') },
+    {
+      name: 'models/bg.json',
+      data: Buffer.from(JSON.stringify({ material: 'materials/bg.json' }), 'utf8'),
+    },
+    {
+      name: 'materials/bg.json',
+      data: Buffer.from(JSON.stringify({ passes: [{ textures: ['bg'] }] }), 'utf8'),
+    },
+    { name: 'materials/bg.tex', data: texBytes },
   ]);
   await fs.writeFile(pkgPath, pkg);
   return renderSceneToHtml(pkgPath);
@@ -118,6 +203,242 @@ describe('scene HTML — agent signal bridge (pointer/audio forwarding)', () => 
       objects: [],
     }))!;
     expect(html).toContain('audioLevel += (audioTarget - audioLevel) * 0.2');
+  });
+});
+
+describe('scene HTML — animated (GIF) texture frame rendering', () => {
+  it('carries animated frames into the layer JSON with frametimes preserved', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
+    // 2-frame animated texture: flags 4 (IS_GIF), TEXS0001 with per-frame durations.
+    const tex = buildTex({
+      images: [Buffer.alloc(4, 0xff), Buffer.alloc(4, 0x00)],
+      flags: 4, // IS_GIF
+      frames: [
+        { imageId: 0, frametime: 0.1 },
+        { imageId: 1, frametime: 0.05 },
+      ],
+    });
+    const html = (await renderPkgWithTexture(tex))!;
+    // The layer must serialize BOTH frames with their durations.
+    expect(html).toContain('"frames":[{');
+    expect(html).toMatch(/"frames":\[\{"dataUrl":"data:image\/png;base64,/);
+    expect(html).toContain('"frametime":0.1');
+    expect(html).toContain('"frametime":0.05');
+  });
+
+  it('embeds the frame-advance loop and per-frame preload', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
+    const tex = buildTex({
+      images: [Buffer.alloc(4, 0xff), Buffer.alloc(4, 0x00)],
+      flags: 4, // IS_GIF
+      frames: [
+        { imageId: 0, frametime: 0.1 },
+        { imageId: 1, frametime: 0.05 },
+      ],
+    });
+    const html = (await renderPkgWithTexture(tex))!;
+    // Preload every frame image...
+    expect(html).toContain('for (var f = 0; f < LAYERS[i].frames.length; f++)');
+    // ...and switch the drawn image on each frame's accumulated timing.
+    expect(html).toContain('advanceFrames(t)');
+    expect(html).toContain('current[i] = (idx + 1) % fr.length');
+  });
+
+  it('renders static textures with frames:null (no animation data)', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
+    const tex = buildTex({ images: [Buffer.alloc(4, 0xff)] });
+    const html = (await renderPkgWithTexture(tex))!;
+    expect(html).toContain('"frames":null');
+    // No frame timing data leaks into static scenes.
+    expect(html).not.toContain('"frametime":');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Particle layers (basic 2D simulation from WE particle presets)
+// ---------------------------------------------------------------------------
+
+/** Minimal embedded-PNG TEXV0005 (TEXB0003, FIF_PNG=13). */
+function buildPngTex(): Buffer {
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+    'base64',
+  );
+  const parts: Buffer[] = [];
+  const str = (s: string) => Buffer.concat([Buffer.from(s, 'utf8'), Buffer.alloc(1, 0)]);
+  const i32 = (n: number) => {
+    const b = Buffer.alloc(4);
+    b.writeInt32LE(n, 0);
+    return b;
+  };
+  parts.push(
+    str('TEXV0005'),
+    str('TEXI0001'),
+    i32(0),
+    i32(0),
+    i32(1),
+    i32(1),
+    i32(1),
+    i32(1),
+    i32(0),
+  );
+  parts.push(
+    str('TEXB0003'),
+    i32(1),
+    i32(13),
+    i32(1),
+    i32(1),
+    i32(1),
+    i32(0),
+    i32(png.length),
+    i32(png.length),
+    png,
+  );
+  return Buffer.concat(parts);
+}
+
+/** Fake WE install: particles/presets/rain.json → additive material + sprite. */
+async function createFakeInstall(): Promise<string> {
+  const install = path.join(tmpDir, 'wallpaper_engine');
+  const asset = path.join(install, 'assets');
+  await fs.mkdir(path.join(asset, 'presets', 'rainy', 'particles', 'presets'), { recursive: true });
+  await fs.mkdir(path.join(asset, 'presets', 'rainy', 'materials', 'presets'), { recursive: true });
+  await fs.mkdir(path.join(asset, 'materials', 'particle'), { recursive: true });
+  await fs.writeFile(
+    path.join(asset, 'presets', 'rainy', 'particles', 'presets', 'rain.json'),
+    JSON.stringify({
+      material: 'materials/presets/rain.json',
+      maxcount: 1000,
+      emitter: [
+        {
+          name: 'sphererandom',
+          rate: 40,
+          origin: '0 500 0',
+          directions: '1 1 0',
+          distancemin: 0,
+          distancemax: 800,
+        },
+      ],
+      initializer: [
+        { name: 'lifetimerandom', min: 2, max: 4 },
+        { name: 'sizerandom', min: 2, max: 6 },
+        { name: 'velocityrandom', min: '0 -500 0', max: '0 -500 0' },
+        { name: 'colorrandom', min: '200 210 255', max: '230 240 255' },
+      ],
+      operator: [
+        { name: 'movement', gravity: '0 0 0' },
+        { name: 'alphafade', fadeintime: 0.2 },
+      ],
+    }),
+  );
+  await fs.writeFile(
+    path.join(asset, 'presets', 'rainy', 'materials', 'presets', 'rain.json'),
+    JSON.stringify({
+      passes: [{ shader: 'genericparticle', blending: 'additive', textures: ['particle/rain'] }],
+    }),
+  );
+  await fs.writeFile(path.join(asset, 'materials', 'particle', 'rain.tex'), buildPngTex());
+  return install;
+}
+
+/** scene.pkg with a single particle object, resolved against `installRoot`. */
+async function renderPkgWithParticle(installRoot: string): Promise<string> {
+  const pkgPath = path.join(tmpDir, 'scene.pkg');
+  const sceneJson = {
+    general: { clearenabled: true, orthogonalprojection: { width: 1920, height: 1080 } },
+    camera: {},
+    objects: [
+      {
+        id: 13,
+        name: 'Light shafts',
+        image: null,
+        origin: '831.773 999.849 0.0',
+        angles: '0.0 -0.0 1.376',
+        scale: '-2.646 2.254 1.977',
+        visible: true,
+        particle: 'particles/presets/rain.json',
+        instanceoverride: { colorn: '0.69 0.52 0.22', id: 14 },
+        locktransforms: false,
+      },
+    ],
+  };
+  const pkg = buildPkg([
+    { name: 'scene.json', data: Buffer.from(JSON.stringify(sceneJson), 'utf8') },
+  ]);
+  await fs.writeFile(pkgPath, pkg);
+  return renderSceneToHtml(pkgPath, { weInstallRoot: installRoot })!;
+}
+
+describe('scene HTML — particle layers', () => {
+  it('emits a particle config when the preset resolves from the install', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
+    const install = await createFakeInstall();
+    const html = await renderPkgWithParticle(install);
+    expect(html).toContain('"particle":{');
+    // Flattened emitter + initializer + operator fields
+    expect(html).toContain('"rate":40');
+    expect(html).toContain('"maxCount":1000');
+    expect(html).toContain('"spawn":"sphere"');
+    expect(html).toContain('"lifetimeMax":4');
+    expect(html).toContain('"gravity":{"x":0,"y":0,"z":0}');
+    // instanceoverride.colorn tint normalized
+    expect(html).toContain('"tint":{"r":0.69,"g":0.52,"b":0.22}');
+    // Additive blending from the material + decoded sprite
+    expect(html).toContain('"additive":true');
+    expect(html).toContain('"image":"data:image/png;base64,');
+  });
+
+  it('embeds the particle simulation loop (emit/integrate/draw)', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
+    const install = await createFakeInstall();
+    const html = await renderPkgWithParticle(install);
+    expect(html).toContain('function spawnParticle');
+    expect(html).toContain('function stepParticles');
+    expect(html).toContain('function drawParticles');
+    expect(html).toContain('ps.emitAcc += cfg.rate * dt');
+    expect(html).toContain('ps.parts.length < cfg.maxCount');
+    expect(html).toContain(
+      "ctx.globalCompositeOperation = cfg.additive ? 'lighter' : 'source-over'",
+    );
+  });
+
+  it('keeps particle layers off non-particle objects (particle:null)', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
+    const install = await createFakeInstall();
+    const tex = buildTex({ images: [Buffer.alloc(4, 0xff)] });
+    const html = (await renderPkgWithTexture(tex))!;
+    expect(html).toContain('"particle":null');
+    expect(install).toBeTruthy(); // silence unused warning — install not used here
+  });
+
+  it('falls back to static when the particle preset is missing', async () => {
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
+    const install = await createFakeInstall();
+    // Scene references a preset that doesn't exist in the fake install.
+    const pkgPath = path.join(tmpDir, 'scene.pkg');
+    const sceneJson = {
+      general: { clearenabled: true, orthogonalprojection: { width: 1920, height: 1080 } },
+      camera: {},
+      objects: [
+        {
+          id: 1,
+          name: 'Missing',
+          image: null,
+          origin: '960 540 0',
+          visible: true,
+          particle: 'particles/presets/not_there.json',
+        },
+      ],
+    };
+    const pkg = buildPkg([
+      { name: 'scene.json', data: Buffer.from(JSON.stringify(sceneJson), 'utf8') },
+    ]);
+    await fs.writeFile(pkgPath, pkg);
+    const html = renderSceneToHtml(pkgPath, { weInstallRoot: install });
+    // No particle config, no simulation code path (static scene still renders).
+    expect(html).not.toBeNull();
+    expect(html!).not.toContain('"particle":{');
+    expect(html!).toContain('<canvas');
   });
 });
 
@@ -215,22 +536,16 @@ describe('sceneLayerCenter (scene → canvas coordinate mapping)', () => {
 // Real workshop verification (skipped when Wallpaper Engine isn't installed)
 // ---------------------------------------------------------------------------
 
-const WORKSHOP = 'C:/Program Files (x86)/Steam/steamapps/workshop/content/431960';
-
 describe('scene HTML — real workshop scenes (parallax revival)', () => {
   it('every scene.pkg embeds the postMessage bridge and a working mousemove fallback', async () => {
+    const WORKSHOP = await resolveWorkshopOrSkip();
+    if (!WORKSHOP) return; // WE not installed — skip
     const { readdir, access } = await import('node:fs/promises');
-    let dirs: string[];
-    try {
-      dirs = await readdir(WORKSHOP);
-    } catch {
-      console.log('(Wallpaper Engine workshop not found — skipping real-scene check)');
-      return;
-    }
+    const dirs = await readdir(WORKSHOP);
     let withBridge = 0;
     let total = 0;
     for (const d of dirs) {
-      const pkgPath = WORKSHOP + '/' + d + '/scene.pkg';
+      const pkgPath = `${WORKSHOP}/${d}/scene.pkg`;
       try {
         await access(pkgPath);
       } catch {

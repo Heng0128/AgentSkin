@@ -89,6 +89,7 @@ const api: AgentSkinApi = {
   onFileImportFailed: (listener) => subscribe<string>(IpcChannel.FILE_IMPORT_FAILED, listener),
   onTrayApply: (listener) => subscribe<TrayApplyRequest>(IpcChannel.TRAY_APPLY, listener),
   onStatusChanged: (listener) => subscribe<void>(IpcChannel.STATUS_CHANGED, listener),
+  onBootWarnings: (listener) => subscribe<string[]>(IpcChannel.BOOT_WARNINGS, listener),
   // --- Theme Studio: snapshot theme DOM for replica renderer ---
   snapshotThemeDom: (agentId: AgentId, themeId?: string, options?: StudioSnapshotOptions) =>
     ipcRenderer.invoke(IpcChannel.THEME_STUDIO_SNAPSHOT, {
@@ -146,6 +147,90 @@ const api: AgentSkinApi = {
   windowIsMaximized: () => ipcRenderer.invoke(IpcChannel.WINDOW_IS_MAXIMIZED),
   onWindowMaximizeChange: (listener) =>
     subscribe<boolean>(IpcChannel.WINDOW_MAXIMIZE_CHANGE, listener),
+  // --- Visual Analysis ---
+  getVisualAnalysisTarget: (agentName: string) =>
+    ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_GET, agentName) as Promise<Record<
+      string,
+      unknown
+    > | null>,
+  listVisualAnalysisTargets: () =>
+    ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_LIST) as Promise<string[]>,
+  detectVisualAnalysisAgent: (agentName: string) =>
+    ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_DETECT, agentName) as Promise<{
+      running: boolean;
+      port?: number;
+      title?: string;
+    }>,
+  extractVisualAnalysisCdp: (agentName: string) =>
+    ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_CDP_EXTRACT, agentName) as Promise<{
+      ok: boolean;
+      message: string;
+    }>,
+  onVisualAnalysisProgress: (listener) =>
+    subscribe<{ agent: string; step: string; progress: number }>(
+      IpcChannel.VISUAL_ANALYSIS_STATUS,
+      listener,
+    ),
+  exportVisualAnalysisTheme: (agentName: string, themeData: Record<string, unknown>) =>
+    ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_EXPORT_THEME, agentName, themeData) as Promise<{
+      ok: boolean;
+      path?: string;
+    }>,
+  // --- Theme Studio: image → palette extraction ---
+  extractThemeFromImage: (base64Data: string) =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_IMAGE_EXTRACT_THEME, base64Data) as Promise<{
+      palette: Record<string, string>;
+      mode: 'light' | 'dark';
+    }>,
+  // --- Theme Studio: Bundles (workspace-scoped) ---
+  listBundles: () =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_BUNDLE_LIST) as Promise<
+      Array<{
+        id: string;
+        name: string;
+        themeId?: string;
+        hasWallpaper: boolean;
+        createdAt: string;
+      }>
+    >,
+  importBundle: () =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_BUNDLE_IMPORT) as Promise<{
+      id: string;
+      name: string;
+    } | null>,
+  installBundleById: (id: string) =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_BUNDLE_INSTALL_BY_ID, id) as Promise<{ ok: boolean }>,
+  deleteBundle: (id: string) =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_BUNDLE_DELETE, id) as Promise<{ ok: boolean }>,
+  // --- Theme Studio: Wallpaper picker ---
+  listWallpapersForStudio: () =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_WALLPAPER_LIST) as Promise<
+      Array<{
+        id: string;
+        name: string;
+        type: 'scene' | 'video' | 'web' | 'preset';
+        thumbUrl?: string;
+      }>
+    >,
+  // --- Diagnostics: performance trace history ---
+  getPerformanceHistory: (count?: number) =>
+    ipcRenderer.invoke(IpcChannel.PERFORMANCE_GET, count) as Promise<{
+      recent: Array<{
+        id: string;
+        agentId: string;
+        themeId?: string;
+        finishedAt: string;
+        duration: number;
+        success: boolean;
+        steps: Array<{ name: string; duration: number; success: boolean; error?: string }>;
+        error?: string;
+      }>;
+      stats: {
+        totalApplies: number;
+        avgDurationMs: number;
+        perAgentAvg: Record<string, number>;
+      };
+    }>,
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);
@@ -163,7 +248,7 @@ contextBridge.exposeInMainWorld('splashApi', {
       _event: Electron.IpcRendererEvent,
       payload: { label?: string; pct?: number },
     ) => listener(payload);
-    ipcRenderer.on('splash:progress', handler);
-    return () => ipcRenderer.removeListener('splash:progress', handler);
+    ipcRenderer.on(IpcChannel.SPLASH_PROGRESS, handler);
+    return () => ipcRenderer.removeListener(IpcChannel.SPLASH_PROGRESS, handler);
   },
 });

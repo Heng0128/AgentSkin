@@ -380,7 +380,7 @@ export async function injectVideoWallpaperByBase64(
         return 'ok';
       } catch (e) { return 'err:' + e.message; }
     })()`);
-    if (assembled !== 'ok') return { ok: false, verdict: 'assemble-failed:' + assembled };
+    if (assembled !== 'ok') return { ok: false, verdict: `assemble-failed:${assembled}` };
     return mountVideoWallpaper(session, {
       src: '',
       srcGlobal: WALLPAPER_DATA_URL_GLOBAL,

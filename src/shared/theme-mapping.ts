@@ -27,8 +27,8 @@ export const SEMANTIC_TO_AGENTSKIN: Record<string, string> = {
   codeForeground: '--agentskin-code-fg',
   inputBackground: '--agentskin-input-bg',
   buttonBackground: '--agentskin-button-bg',
+  buttonForeground: '--agentskin-button-fg',
   focusRing: '--agentskin-focus-ring',
-  selection: '--agentskin-selection',
 };
 
 /**

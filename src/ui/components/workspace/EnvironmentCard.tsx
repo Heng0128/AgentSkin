@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { AppMark } from '@/components/app-mark';
+import { APP_META } from '@/components/app-mark';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -174,15 +175,23 @@ export function EnvironmentCard({
       <div className="relative z-10 flex flex-1 flex-col p-3.5">
         {/* Top row: icon + title + menu */}
         <div className="flex items-start gap-2.5">
-          {/* Agent icon — flat Swiss mark */}
-          <div
+          {/* Agent icon — shadcn Avatar (image + fallback) */}
+          <Avatar
+            size="default"
             className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-[2px] transition-transform duration-base group-hover/card:scale-105',
-              'bg-card2 ring-1 ring-border-strong/50',
+              'size-10 shrink-0 transition-transform duration-base group-hover/card:scale-105',
+              'ring-1 ring-border-strong/50',
             )}
           >
-            <AppMark appId={env.agent.id} size={28} />
-          </div>
+            <AvatarImage
+              src={APP_META[env.agent.id]?.icon}
+              alt={env.agent.displayName}
+              className="object-contain"
+            />
+            <AvatarFallback className="bg-card2 rounded-[2px] text-[13px] font-semibold text-muted-foreground">
+              {(env.agent.displayName || env.agent.id).charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
 
           {/* Name + info */}
           <div className="min-w-0 flex-1">

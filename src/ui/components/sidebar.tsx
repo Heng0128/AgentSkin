@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import type { Route } from '@/types/navigation';
 
 import {
+  DashboardSquare01Icon,
   Home02Icon,
   Image02Icon,
   PaintBoardIcon,
@@ -20,6 +21,34 @@ interface NavEntry {
   icon: typeof Home02Icon;
   label: string;
 }
+
+interface NavButtonProps {
+  item: NavEntry;
+  active: boolean;
+  collapsed: boolean;
+  onClick: () => void;
+}
+
+const NavButton = ({ item, active, collapsed, onClick }: NavButtonProps) => {
+  return (
+    <Button
+      variant="ghost"
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      title={collapsed ? item.label : undefined}
+      className={cn(
+        'group relative h-[37px] justify-start gap-2.5 rounded-[2px] m-[2px_9px] text-muted-foreground font-medium transition-all duration-fast ease-out',
+        collapsed && 'justify-center m-[2px_8px] p-0',
+        'hover:bg-card2 hover:text-foreground',
+        active && 'bg-accent text-foreground shadow-[inset_3px_0_0_var(--primary)]',
+        active && '[&_svg]:text-primary',
+      )}
+    >
+      <HugeIcon icon={item.icon} className="w-4 h-4 shrink-0" />
+      {!collapsed && <span className="text-[12.5px] truncate">{item.label}</span>}
+    </Button>
+  );
+};
 
 /**
  * Swiss/International-style sidebar.
@@ -42,6 +71,7 @@ export function Sidebar({ controller }: { controller: AppController }) {
     {
       label: t.navGroupCore,
       items: [
+        { route: 'dashboard', icon: DashboardSquare01Icon, label: t.navDashboard },
         { route: 'workspace', icon: Home02Icon, label: t.navWorkspace },
         { route: 'themes', icon: PaintBoardIcon, label: t.navThemes },
         { route: 'wallpaper', icon: Image02Icon, label: t.navWallpaperEngine },
@@ -52,28 +82,6 @@ export function Sidebar({ controller }: { controller: AppController }) {
       items: [{ route: 'settings', icon: Settings01Icon, label: t.navSettings }],
     },
   ];
-
-  const NavButton = ({ item }: { item: NavEntry }) => {
-    const active = controller.route === item.route;
-    return (
-      <Button
-        variant="ghost"
-        onClick={() => controller.setRoute(item.route)}
-        aria-current={active ? 'page' : undefined}
-        title={collapsed ? item.label : undefined}
-        className={cn(
-          'group relative h-[37px] justify-start gap-2.5 rounded-[2px] m-[2px_9px] text-muted-foreground font-medium transition-all duration-fast ease-out',
-          collapsed && 'justify-center m-[2px_8px] p-0',
-          'hover:bg-card2 hover:text-foreground',
-          active && 'bg-accent text-foreground shadow-[inset_3px_0_0_var(--primary)]',
-          active && '[&_svg]:text-primary',
-        )}
-      >
-        <HugeIcon icon={item.icon} className="w-4 h-4 shrink-0" />
-        {!collapsed && <span className="text-[12.5px] truncate">{item.label}</span>}
-      </Button>
-    );
-  };
 
   return (
     <aside
@@ -127,7 +135,13 @@ export function Sidebar({ controller }: { controller: AppController }) {
             )}
             <div className="flex flex-col">
               {group.items.map((item) => (
-                <NavButton key={item.route} item={item} />
+                <NavButton
+                  key={item.route}
+                  item={item}
+                  active={controller.route === item.route}
+                  collapsed={collapsed}
+                  onClick={() => controller.setRoute(item.route)}
+                />
               ))}
             </div>
           </div>

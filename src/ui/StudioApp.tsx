@@ -18,7 +18,6 @@
  */
 
 import { useEffect } from 'react';
-import { BootScreen } from '@/components/boot-screen';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TitleBar } from '@/components/title-bar';
 import { useAppController } from '@/hooks/useAppController';
@@ -45,9 +44,6 @@ export default function StudioApp() {
         <section className="min-h-0 min-w-0 flex-1 overflow-hidden">
           <ThemeStudioPage controller={controller} />
         </section>
-
-        {/* Opening/bootstrap overlay — covers the shell until boot completes. */}
-        {controller.booting && <BootScreen hint={controller.t.bootLoading} leaving={false} />}
       </main>
     </ErrorBoundary>
   );

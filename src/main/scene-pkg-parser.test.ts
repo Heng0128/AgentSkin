@@ -334,4 +334,116 @@ describe('parseSceneJson', () => {
       expect(general.orthogonalProjection).toEqual({ width: 2560, height: 1440 });
     });
   });
+
+  describe('malformed input robustness', () => {
+    it('returns full defaults for non-object root', () => {
+      for (const junk of [null, undefined, 42, 'scene', true, [1, 2]]) {
+        const { general, camera, objects, version } = parseSceneJson(junk);
+        expect(general.clearColor).toEqual({ r: 0, g: 0, b: 0 });
+        expect(general.orthogonalProjection).toEqual({ width: 1920, height: 1080 });
+        expect(camera.eye).toEqual({ x: 0, y: 0, z: 0 });
+        expect(objects).toEqual([]);
+        expect(version).toBeNull();
+      }
+    });
+
+    it('treats a non-object general block as absent', () => {
+      for (const junk of ['opaque', 42, null, [], true]) {
+        const { general } = parseSceneJson({ general: junk });
+        expect(general.clearColor).toEqual({ r: 0, g: 0, b: 0 });
+        expect(general.clearEnabled).toBe(true);
+        expect(general.fov).toBe(50);
+      }
+    });
+
+    it('treats a non-array objects field as an empty list', () => {
+      for (const junk of ['layers', 42, null, { a: 1 }]) {
+        const { objects } = parseSceneJson({ objects: junk });
+        expect(objects).toEqual([]);
+      }
+    });
+
+    it('skips non-object entries in the objects array instead of crashing', () => {
+      const { objects } = parseSceneJson({
+        objects: [null, 42, 'text', [1], { id: 1, name: 'kept' }, { id: 'bad' }],
+      });
+      expect(objects).toHaveLength(2);
+      expect(objects[0].id).toBe(1);
+      expect(objects[0].name).toBe('kept');
+      // Entry that IS an object but has a non-numeric id falls back to 0
+      expect(objects[1].id).toBe(0);
+    });
+
+    it('falls back to defaults for unparseable vector/color strings', () => {
+      const { general, camera, objects } = parseSceneJson({
+        general: {
+          clearcolor: 'not a color',
+          winddirection: 'also not a vector',
+          ambientcolor: { r: 'red' },
+        },
+        camera: { center: 'garbage here', eye: 42, up: null },
+        objects: [
+          {
+            id: 1,
+            origin: 'abc def',
+            scale: 'not numbers',
+            size: 'not numbers at all',
+            color: 'x y z',
+            parallaxDepth: 'NaN',
+          },
+        ],
+      });
+      // Garbage strings parse to zero-component vectors (no crash, no NaN)
+      expect(general.clearColor).toEqual({ r: 0, g: 0, b: 0 });
+      expect(general.windDirection).toEqual({ x: 0, y: 0 });
+      // Object color with non-numeric components → {0,0,0}, not null
+      expect(general.ambientColor).toEqual({ r: 0, g: 0, b: 0 });
+      expect(camera.center).toEqual({ x: 0, y: 0, z: 0 });
+      // A bare number broadcasts to all components
+      expect(camera.eye).toEqual({ x: 42, y: 42, z: 42 });
+      expect(camera.up).toEqual({ x: 0, y: 1, z: 0 });
+      const obj = objects[0];
+      expect(obj.origin).toEqual({ x: 0, y: 0, z: 0 });
+      expect(obj.scale).toEqual({ x: 0, y: 0, z: 0 });
+      expect(obj.size).toEqual({ x: 0, y: 0, z: 0 });
+      expect(obj.color).toEqual({ r: 0, g: 0, b: 0 });
+      expect(obj.parallaxDepth).toBeNull();
+    });
+
+    it('drops garbage effects and effect passes, keeping well-formed ones', () => {
+      const { objects } = parseSceneJson({
+        objects: [
+          {
+            id: 1,
+            effects: [
+              null,
+              'shader',
+              42,
+              { file: 'effects/blur/effect.json', id: 9 },
+              { file: 'ok', passes: [null, { id: 3 }, 'bad'] },
+            ],
+          },
+        ],
+      });
+      const effects = objects[0].effects;
+      expect(effects).toHaveLength(2);
+      expect(effects[0].file).toBe('effects/blur/effect.json');
+      expect(effects[0].passes).toEqual([]);
+      expect(effects[1].passes).toHaveLength(1);
+      expect(effects[1].passes[0].id).toBe(3);
+    });
+
+    it('falls back to defaults when an animated property value is not numeric', () => {
+      const { general } = parseSceneJson({
+        general: {
+          bloomstrength: { script: 'return 2;', value: '2' },
+          fov: { value: null },
+          gravitystrength: { value: true },
+        },
+      });
+      expect(general.bloomStrength).toBe(1);
+      expect(general.fov).toBe(50);
+      expect(general.gravityStrength).toBe(1);
+    });
+  });
 });
