@@ -44,6 +44,10 @@ extraResources:
     filter:
       - "**/*.css"
       - "**/*.mjs"
+  - from: agents-profiles/
+    to: agents-profiles/
+    filter:
+      - "**/*.json"
   - from: assets/runtime/
     to: runtime/
   - from: assets/branding/theme-file.ico

@@ -19,7 +19,7 @@
 | P1-2 | 头部双目标深化 | ⬜ 未开始 | 豆包 + ChatGPT 桌面版的版本跟踪与快速适配机制 |
 | P1-3 | 壁纸-主题联动打磨 | 🔶 部分 | 取色生成主题已上线，需提升成品质量；bundle 导入导出 UX |
 | P1-4 | Theme Studio 减重 | ⬜ 未开始 | 按 Tab 拆文件（当前 2149 行单文件）；保留快照/检查器/导出主线 |
-| P1-5 | Visual Analyzer 接通 | ⬜ 未开始 | IPC 当前为 stub；agents-profiles 数据资产已存在，接通后 Studio 入口才完整 |
+| P1-5 | Visual Analyzer 接通 | ✅ 已完成 | LIST/GET 已接通 agents-profiles 数据资产（含测试与打包配置）；DETECT/CDP 实时提取留给 P2 |
 | P1-6 | Scene PKG 解析补完 | 🔶 进行中 | 主流壁纸格式，继续提升兼容性 |
 
 ## P2 —— 以后再做
