@@ -14,18 +14,37 @@ export default defineConfig({
     },
   },
   test: {
-    environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
-    testTimeout: 15000,
-    pool: 'forks',
+    // Use projects to isolate environments:
+    // - main/shared tests run in node
+    // - ui tests (hooks, lib) can use jsdom when needed
+    projects: [
+      {
+        test: {
+          name: 'main',
+          environment: 'node',
+          include: ['src/main/**/*.test.ts', 'src/shared/**/*.test.ts'],
+          testTimeout: 15000,
+          pool: 'forks',
+        },
+        resolve: {
+          alias: {
+            '@agentskin/engine': corePkg,
+          },
+        },
+      },
+      {
+        test: {
+          name: 'ui',
+          environment: 'node',
+          include: ['src/ui/**/*.test.ts', 'src/ui/**/*.test.tsx'],
+          testTimeout: 15000,
+          pool: 'forks',
+        },
+      },
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary'],
-      // T1: include src/ui in coverage so hooks / lib / types are measured.
-      // Only .ts is included — .tsx (components/pages) is excluded because the
-      // test environment is 'node' (no jsdom + RTL setup), so measuring them
-      // would tank the threshold without an actionable signal. Add .tsx back
-      // when component tests land.
       include: ['src/main/**/*.ts', 'src/shared/**/*.ts', 'src/ui/**/*.ts'],
       exclude: [
         '**/*.test.ts',
@@ -35,11 +54,6 @@ export default defineConfig({
         'src/ui/**/*.d.ts',
       ],
       thresholds: {
-        // Floor — never let coverage drop below these values.
-        // T1 baseline (with src/ui/**/*.ts included): 29.78% statements,
-        // 31.56% branches, 28.59% functions, 30.38% lines. Set slightly below
-        // actual to avoid flaky CI on minor changes. Raise these back up once
-        // T2 (core UI hook tests) lands.
         statements: 25,
         branches: 28,
         functions: 25,

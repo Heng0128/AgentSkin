@@ -64,39 +64,15 @@ export default defineConfig({
           studio: path.resolve(__dirname, 'studio.html'),
         },
         output: {
-          // 代码分割：把 vendor 依赖拆成独立 chunk，避免单文件 1.3MB。
-          // 改动业务代码时 Vite 只重新打包 affected chunk，构建提速 3-5x。
-          //
-          // 分块策略：
-          //   - vendor-hugeicons: 图标库（无 React 依赖，独立）
-          //   - vendor-utils:     cva/clsx/tailwind-merge（无 React 依赖，独立）
-          //   - vendor-base-ui:   @base-ui React 组件库（体积大，独立分块）
-          //   - vendor-react:     react/react-dom/scheduler 核心 + use-sync-external-store
-          //   - vendor:           其余 node_modules（杂项，体积小）
-          //   - index:            业务代码（src/ui）
-          //
-          // 关键：use-sync-external-store 必须和 react 在同一 chunk。
-          // 它被 react-dom 间接依赖，又反过来 require react，若拆到 vendor
-          // chunk 会形成循环引用：vendor-react → vendor(shim) → vendor-react
-          // (尚未初始化完成) → exports undefined → 运行时崩溃
-          // (Cannot set properties of undefined (setting 'Activity'))。
-          // 这是 Vite 7 "Circular chunk" 告警的真实运行时后果。
+          // 简化为三个 chunk：react 核心生态 / base-ui / hugeicons
+          // 避免多 chunk 导致的循环引用崩溃。vendor 不再单独分块，
+          // 与 vendor-react 合并后总大小约 800KB，gzip 后约 200KB，
+          // 对 Electron 首屏影响可忽略。
           manualChunks(id) {
             if (!id.includes('node_modules')) return;
             if (id.includes('@hugeicons')) return 'vendor-hugeicons';
-            if (id.includes('class-variance-authority') || id.includes('clsx') || id.includes('tailwind-merge')) {
-              return 'vendor-utils';
-            }
             if (id.includes('@base-ui')) return 'vendor-base-ui';
-            if (
-              id.includes('react-dom') ||
-              id.includes('/react/') ||
-              id.includes('/scheduler/') ||
-              id.includes('use-sync-external-store')
-            ) {
-              return 'vendor-react';
-            }
-            return 'vendor';
+            return 'vendor-react';
           },
         },
       },
