@@ -1,0 +1,22 @@
+{
+  "id": "lavender",
+  "name": "Lavender",
+  "mode": "light",
+  "description": "薰衣草田：玫瑰退场，淡紫接管。",
+  "colors": {
+    "accent": "#8a70c4",
+    "secondary": "#9d88b8",
+    "background": "#f5f3f8",
+    "foreground": "#2e2a3a",
+    "muted": "#7a7090",
+    "surface": "#ffffff",
+    "surfaceElevated": "#faf9fd",
+    "codeBackground": "#ece8f2",
+    "codeForeground": "#3e3a4a",
+    "inputBackground": "#f2eef7",
+    "border": "rgba(40, 42, 54, 0.14)",
+    "buttonBackground": "rgba(138, 112, 196, 0.16)",
+    "buttonForeground": "#8a70c4",
+    "focusRing": "rgba(138, 112, 196, 0.4)"
+  }
+}

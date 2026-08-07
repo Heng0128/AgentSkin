@@ -1,0 +1,26 @@
+/* palette.css — rose-quartz (蔷薇石英) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #f8f3f4;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #fdf9fa;
+  --agentskin-text: #3a2a30;
+  --agentskin-muted: #8a7078;
+  --agentskin-accent: #c4708f;
+  --agentskin-secondary: #b08296;
+  --agentskin-border: rgba(40, 42, 54, 0.14);
+  --agentskin-code-bg: #f0e8ea;
+  --agentskin-code-fg: #4a3a40;
+  --agentskin-focus-ring: rgba(196, 112, 143, 0.4);
+  --agentskin-selection: color-mix(in srgb, #c4708f 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 196, 112, 143;
+  --agentskin-secondary-raw: 176, 130, 150;
+  --agentskin-text-raw: 58, 42, 48;
+  --agentskin-muted-raw: 138, 112, 120;
+  --agentskin-surface-raw: 255, 255, 255;
+  --agentskin-surface-elevated-raw: 253, 249, 250;
+  --agentskin-bg-raw: 248, 243, 244;
+  --agentskin-border-raw: 40, 42, 54;
+}

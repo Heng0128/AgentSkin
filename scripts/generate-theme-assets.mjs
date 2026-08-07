@@ -115,7 +115,13 @@ async function renderAssets(themeId) {
 
 const args = process.argv.slice(2);
 const only = args.find((a) => !a.startsWith('-'));
-const ids = only ? [only] : Object.keys(THEME_ART);
+// Default: every theme directory with a manifest (THEME_ART entries tune the
+// gradient stops; unlisted themes fall back to manifest-derived colors).
+const { readdirSync, existsSync } = await import('node:fs');
+const allIds = readdirSync(THEMES_DIR).filter((id) =>
+  existsSync(path.join(THEMES_DIR, id, 'manifest.json')),
+);
+const ids = only ? [only] : allIds;
 for (const id of ids) {
   await renderAssets(id);
 }

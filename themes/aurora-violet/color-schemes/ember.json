@@ -1,0 +1,22 @@
+{
+  "id": "ember",
+  "name": "Ember",
+  "mode": "dark",
+  "description": "余烬粉：极光散去后的暖粉色地平线。",
+  "colors": {
+    "accent": "#e88fb0",
+    "secondary": "#c994a8",
+    "background": "#160a12",
+    "foreground": "#f0dee6",
+    "muted": "#9c7f8e",
+    "surface": "#261220",
+    "surfaceElevated": "#31182a",
+    "codeBackground": "#10070d",
+    "codeForeground": "#ddcad4",
+    "inputBackground": "#291423",
+    "border": "rgba(232, 143, 176, 0.18)",
+    "buttonBackground": "rgba(232, 143, 176, 0.14)",
+    "buttonForeground": "#e88fb0",
+    "focusRing": "#e88fb060"
+  }
+}

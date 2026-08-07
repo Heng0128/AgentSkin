@@ -1,0 +1,22 @@
+{
+  "id": "jade",
+  "name": "Jade",
+  "mode": "light",
+  "description": "青玉沉水：更深一点的玉色，压住纸面的暖。",
+  "colors": {
+    "accent": "#5b8a8f",
+    "secondary": "#7a9694",
+    "background": "#f2f5f5",
+    "foreground": "#26302e",
+    "muted": "#6e7c7a",
+    "surface": "#ffffff",
+    "surfaceElevated": "#f8fbfb",
+    "codeBackground": "#e6eeee",
+    "codeForeground": "#34403e",
+    "inputBackground": "#edf2f2",
+    "border": "rgba(40, 42, 54, 0.14)",
+    "buttonBackground": "rgba(91, 138, 143, 0.16)",
+    "buttonForeground": "#5b8a8f",
+    "focusRing": "rgba(91, 138, 143, 0.4)"
+  }
+}

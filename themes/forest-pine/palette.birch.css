@@ -1,0 +1,26 @@
+/* palette.css — forest-pine (松林雾霭) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #161210;
+  --agentskin-surface: #1e1815;
+  --agentskin-surface-elevated: #27201b;
+  --agentskin-text: #e8ddd2;
+  --agentskin-muted: #94897d;
+  --agentskin-accent: #d8b48f;
+  --agentskin-secondary: #c9b39c;
+  --agentskin-border: rgba(216, 180, 143, 0.18);
+  --agentskin-code-bg: #0f0c0a;
+  --agentskin-code-fg: #dbd0c2;
+  --agentskin-focus-ring: #d8b48f60;
+  --agentskin-selection: color-mix(in srgb, #d8b48f 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 216, 180, 143;
+  --agentskin-secondary-raw: 201, 179, 156;
+  --agentskin-text-raw: 232, 221, 210;
+  --agentskin-muted-raw: 148, 137, 125;
+  --agentskin-surface-raw: 30, 24, 21;
+  --agentskin-surface-elevated-raw: 39, 32, 27;
+  --agentskin-bg-raw: 22, 18, 16;
+  --agentskin-border-raw: 216, 180, 143;
+}

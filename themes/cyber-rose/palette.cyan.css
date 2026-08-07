@@ -1,0 +1,26 @@
+/* palette.css — cyber-rose (赛博蔷薇) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0e1216;
+  --agentskin-surface: #151c22;
+  --agentskin-surface-elevated: #1c252c;
+  --agentskin-text: #dde8ea;
+  --agentskin-muted: #7f9094;
+  --agentskin-accent: #6fd4d9;
+  --agentskin-secondary: #8fb0c0;
+  --agentskin-border: rgba(111, 212, 217, 0.18);
+  --agentskin-code-bg: #0a0e11;
+  --agentskin-code-fg: #cad8da;
+  --agentskin-focus-ring: #6fd4d960;
+  --agentskin-selection: color-mix(in srgb, #6fd4d9 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 111, 212, 217;
+  --agentskin-secondary-raw: 143, 176, 192;
+  --agentskin-text-raw: 221, 232, 234;
+  --agentskin-muted-raw: 127, 144, 148;
+  --agentskin-surface-raw: 21, 28, 34;
+  --agentskin-surface-elevated-raw: 28, 37, 44;
+  --agentskin-bg-raw: 14, 18, 22;
+  --agentskin-border-raw: 111, 212, 217;
+}

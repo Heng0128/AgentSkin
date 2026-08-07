@@ -1,0 +1,22 @@
+{
+  "id": "frost",
+  "name": "Frost",
+  "mode": "light",
+  "description": "霜色紫灰：白昼将尽时冰面上的冷紫。",
+  "colors": {
+    "accent": "#7f8fc9",
+    "secondary": "#96a0b8",
+    "background": "#faf9fc",
+    "foreground": "#26282e",
+    "muted": "#767a84",
+    "surface": "#ffffff",
+    "surfaceElevated": "#f7f6fa",
+    "codeBackground": "#efeff3",
+    "codeForeground": "#36383e",
+    "inputBackground": "#f2f2f6",
+    "border": "rgba(40, 42, 54, 0.14)",
+    "buttonBackground": "rgba(127, 143, 201, 0.16)",
+    "buttonForeground": "#7f8fc9",
+    "focusRing": "rgba(127, 143, 201, 0.4)"
+  }
+}

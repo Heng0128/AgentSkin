@@ -1,0 +1,22 @@
+{
+  "id": "birch",
+  "name": "Birch",
+  "mode": "dark",
+  "description": "白桦暖光：松林尽头的暖色暮光。",
+  "colors": {
+    "accent": "#d8b48f",
+    "secondary": "#c9b39c",
+    "background": "#161210",
+    "foreground": "#e8ddd2",
+    "muted": "#94897d",
+    "surface": "#1e1815",
+    "surfaceElevated": "#27201b",
+    "codeBackground": "#0f0c0a",
+    "codeForeground": "#dbd0c2",
+    "inputBackground": "#221c17",
+    "border": "rgba(216, 180, 143, 0.18)",
+    "buttonBackground": "rgba(216, 180, 143, 0.14)",
+    "buttonForeground": "#d8b48f",
+    "focusRing": "#d8b48f60"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "smoke",
+  "name": "Smoke",
+  "mode": "dark",
+  "description": "烟雾紫：爵士散场后的紫色余烬。",
+  "colors": {
+    "accent": "#b48fd9",
+    "secondary": "#a894b8",
+    "background": "#131018",
+    "foreground": "#e4dee9",
+    "muted": "#8d8496",
+    "surface": "#1a1622",
+    "surfaceElevated": "#221c2d",
+    "codeBackground": "#0d0b12",
+    "codeForeground": "#d4cddd",
+    "inputBackground": "#1e1927",
+    "border": "rgba(180, 143, 217, 0.18)",
+    "buttonBackground": "rgba(180, 143, 217, 0.14)",
+    "buttonForeground": "#b48fd9",
+    "focusRing": "#b48fd960"
+  }
+}

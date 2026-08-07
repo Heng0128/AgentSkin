@@ -1,0 +1,26 @@
+/* palette.css — midnight-jazz (午夜爵士) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0a0e18;
+  --agentskin-surface: #111726;
+  --agentskin-surface-elevated: #181f33;
+  --agentskin-text: #dbe1ef;
+  --agentskin-muted: #757f99;
+  --agentskin-accent: #7f9fd9;
+  --agentskin-secondary: #96a3c0;
+  --agentskin-border: rgba(127, 159, 217, 0.18);
+  --agentskin-code-bg: #070a12;
+  --agentskin-code-fg: #c4cde2;
+  --agentskin-focus-ring: #7f9fd960;
+  --agentskin-selection: color-mix(in srgb, #7f9fd9 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 127, 159, 217;
+  --agentskin-secondary-raw: 150, 163, 192;
+  --agentskin-text-raw: 219, 225, 239;
+  --agentskin-muted-raw: 117, 127, 153;
+  --agentskin-surface-raw: 17, 23, 38;
+  --agentskin-surface-elevated-raw: 24, 31, 51;
+  --agentskin-bg-raw: 10, 14, 24;
+  --agentskin-border-raw: 127, 159, 217;
+}

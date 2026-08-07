@@ -1,0 +1,319 @@
+/* 竹雾茶烟 — QoderWork CN (--color-* design tokens) */
+:root {
+  color-scheme: light !important;
+  --agentskin-accent: #7fa860;
+  --agentskin-secondary: #94a884;
+  --agentskin-bg: #f4f6ef;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #fafbf7;
+  --agentskin-text: #2c3226;
+  --agentskin-muted: #747e68;
+  --agentskin-border: rgba(40, 42, 54, 0.14);
+  --agentskin-code-bg: #e9eee2;
+  --agentskin-code-fg: #3a4232;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #7fa860 18%) 45%, transparent);
+  --agentskin-button-bg: #7fa860;
+  --agentskin-focus-ring: rgba(127, 168, 96, 0.4);
+  --agentskin-selection: rgba(127, 168, 96, 0.32);
+  --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+  text-shadow: var(--agentskin-text-shadow);
+}
+
+/* ===== Native token overrides (wins over :root[data-theme]) ===== */
+html.agentskin-host-qoderwork:root {
+  color-scheme: light !important;
+
+  /* Primary / brand */
+  --color-primary: #7fa860 !important;
+  --color-primary-hover: rgb(108, 143, 82) !important;
+  --color-primary-active: rgb(95, 126, 72) !important;
+  --color-primary-bg: rgba(127, 168, 96, 0.08) !important;
+  --color-primary-bg-hover: rgba(127, 168, 96, 0.14) !important;
+  --color-primary-border: rgba(127, 168, 96, 0.35) !important;
+  --color-primary-border-hover: rgba(127, 168, 96, 0.55) !important;
+  --color-primary-text: #2c3226 !important;
+  --color-primary-text-hover: rgb(108, 143, 82) !important;
+  --color-primary-text-active: rgb(95, 126, 72) !important;
+  --color-text-on-primary: #ffffff !important;
+
+  /* Text hierarchy */
+  --color-text: #2c3226 !important;
+  --color-text-secondary: #747e68 !important;
+  --color-text-tertiary: rgba(44, 50, 38, 0.55) !important;
+  --color-text-quaternary: rgba(44, 50, 38, 0.4) !important;
+  --color-text-base: #2c3226 !important;
+  --color-muted: #747e68 !important;
+  --color-muted-foreground: rgba(116, 126, 104, 0.8) !important;
+
+  /* Backgrounds */
+  --color-bg-container: #f4f6ef !important;
+  --color-bg-elevated: color-mix(in srgb, #fafbf7 85%, #7fa860 15%) !important;
+  --color-bg-layout: rgb(244, 246, 239) !important;
+  --color-bg-spotlight: rgb(244, 246, 240) !important;
+  --color-bg-base: #f4f6ef !important;
+  --color-bg-mask: rgba(244, 246, 239, 0.6) !important;
+  --color-bg-highlight: rgba(127, 168, 96, 0.06) !important;
+  --color-bg-highlight-hover: rgba(127, 168, 96, 0.1) !important;
+  --color-background: var(--color-bg-container) !important;
+  --color-popover: #000 !important;
+  --color-white-opacity: #000 !important;
+  --color-black-opacity: #fff !important;
+
+  /* Borders */
+  --color-border: rgba(40, 42, 54, 0.14) !important;
+  --color-border-secondary: rgba(40, 42, 54, 0.084) !important;
+  --color-border-tertiary: rgba(40, 42, 54, 0.049) !important;
+
+  /* Fills */
+  --color-fill: rgba(44, 50, 38, 0.12) !important;
+  --color-fill-secondary: rgba(44, 50, 38, 0.07) !important;
+  --color-fill-tertiary: rgba(44, 50, 38, 0.04) !important;
+  --color-fill-quaternary: rgba(44, 50, 38, 0.02) !important;
+  --color-fill-disable: rgba(44, 50, 38, 0.08) !important;
+
+  /* Links */
+  --color-link: #7fa860 !important;
+
+  /* Semantic: error */
+  --color-error: #ff4d4f !important;
+  --color-error-hover: #ff7875 !important;
+  --color-error-bg: #fff2f0 !important;
+  --color-error-bg-hover: #fff1f0 !important;
+  --color-error-border: #ffccc7 !important;
+  --color-error-border-hover: #ffa39e !important;
+
+  /* Semantic: info */
+  --color-info: #0b83f1 !important;
+  --color-info-hover: #5ebcff !important;
+  --color-info-bg: #e6f7ff !important;
+  --color-info-bg-hover: #d0efff !important;
+  --color-info-border: #b0e3ff !important;
+  --color-info-border-hover: #87d1ff !important;
+
+  /* Semantic: success (tied to accent) */
+  --color-success: #7fa860 !important;
+  --color-success-hover: rgb(108, 143, 82) !important;
+  --color-success-bg: rgba(127, 168, 96, 0.08) !important;
+  --color-success-bg-hover: rgba(127, 168, 96, 0.14) !important;
+  --color-success-border: rgba(127, 168, 96, 0.35) !important;
+  --color-success-border-hover: rgba(127, 168, 96, 0.55) !important;
+
+  /* Semantic: warning */
+  --color-warning: #faad14 !important;
+  --color-warning-hover: #ffd666 !important;
+  --color-warning-bg: #fffbe6 !important;
+  --color-warning-bg-hover: #fff1b8 !important;
+  --color-warning-border: #ffe5bf !important;
+  --color-warning-border-hover: #ffd666 !important;
+
+  /* Diff */
+  --color-diff-insert: rgba(127, 168, 96, 0.7) !important;
+  --color-diff-insert-bg: rgba(127, 168, 96, 0.12) !important;
+  --color-diff-remove: #fc6b83 !important;
+  --color-diff-remove-bg: #e3d1d5 !important;
+
+  /* Accent palette (derived from theme secondary + accent) */
+  --color-pink: #94a884 !important;
+  --color-pink-bg: rgba(148, 168, 132, 0.1) !important;
+  --color-pink-hover: rgb(169, 185, 157) !important;
+  --color-purple: rgb(102, 134, 77) !important;
+  --color-purple-bg: rgba(127, 168, 96, 0.08) !important;
+  --color-purple-hover: rgb(153, 185, 128) !important;
+  --color-yellow: #fac414 !important;
+  --color-yellow-bg: #fff3cf !important;
+  --color-yellow-hover: #f1d372 !important;
+  --color-orange: #fa8125 !important;
+  --color-orange-bg: #ffefde !important;
+  --color-orange-hover: #e88c45 !important;
+  --color-teal: rgb(114, 151, 86) !important;
+  --color-teal-bg: rgba(127, 168, 96, 0.08) !important;
+  --color-teal-hover: rgb(146, 181, 120) !important;
+  --color-blue: #0090ff !important;
+  --color-blue-bg: #deedff !important;
+  --color-blue-hover: #72bcf5 !important;
+  --color-mauve: rgba(116, 126, 104, 0.7) !important;
+  --color-mauve-bg: rgba(116, 126, 104, 0.06) !important;
+  --color-mauve-hover: rgba(116, 126, 104, 0.4) !important;
+  --color-slate: #1e293b !important;
+  --color-slate-bg: #e2e8f0 !important;
+  --color-slate-hover: #475569 !important;
+  --color-lavender: rgb(180, 194, 169) !important;
+  --color-lavender-bg: rgba(148, 168, 132, 0.08) !important;
+  --color-lavender-hover: rgb(202, 212, 194) !important;
+  --color-sage: rgb(108, 143, 82) !important;
+  --color-sage-bg: rgba(127, 168, 96, 0.06) !important;
+  --color-sage-hover: rgba(127, 168, 96, 0.12) !important;
+
+  /* Shadows */
+  --color-shadow-2xs: rgba(0, 0, 0, 0.03) !important;
+  --color-shadow-xs: rgba(0, 0, 0, 0.04) !important;
+  --color-shadow-sm: rgba(0, 0, 0, 0.06) !important;
+  --color-shadow-md: rgba(0, 0, 0, 0.08) !important;
+  --color-shadow-lg: rgba(0, 0, 0, 0.1) !important;
+  --color-shadow-xl: rgba(0, 0, 0, 0.12) !important;
+  --color-shadow-2xl: rgba(0, 0, 0, 0.16) !important;
+  --color-shadow-3xl: rgba(0, 0, 0, 0.3) !important;
+  --color-shadow-scrim: rgba(0, 0, 0, 0.55) !important;
+
+  /* Highlights */
+  --color-highlight-xs: rgba(255, 255, 255, 0.15) !important;
+  --color-highlight-sm: rgba(255, 255, 255, 0.18) !important;
+  --color-highlight-md: rgba(255, 255, 255, 0.22) !important;
+  --color-highlight-lg: rgba(255, 255, 255, 0.35) !important;
+  --color-highlight-xl: rgba(255, 255, 255, 0.4) !important;
+
+  /* Layout tokens — transparent so #root hero art shows through */
+  --agents-layout-bg: transparent !important;
+  --agents-content-area-bg: transparent !important;
+  --agents-fade-bg: transparent !important;
+  --agents-content-area-gap: 4px !important;
+  --agents-content-area-radius: 6px !important;
+  --settings-nav-row-selected-bg: var(--color-fill-secondary) !important;
+
+  /* Chat input parchment — keep extremely subtle to avoid jarring border */
+  --chat-input-parchment-edge: rgba(127, 168, 96, 0.12) !important;
+  --chat-input-parchment-glow: rgba(148, 168, 132, 0.06) !important;
+  --chat-input-parchment-halo: transparent !important;
+}
+
+/* ===== Art layer on #root — palette-driven wash, hero visible right side ===== */
+html.agentskin-host-qoderwork #root {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+html.agentskin-host-qoderwork #root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--agentskin-surface) 42%, transparent) 0 16%,
+      color-mix(in srgb, var(--agentskin-surface) 14%, transparent) 44%,
+      transparent 70%),
+    linear-gradient(180deg, transparent 0 50%,
+      color-mix(in srgb, var(--agentskin-surface) 38%, transparent) 86% 100%),
+    radial-gradient(120% 80% at 84% 14%,
+      color-mix(in srgb, var(--agentskin-accent) 18%, transparent), transparent 60%),
+    var(--agentskin-art, none) right center / cover no-repeat !important;
+}
+
+/* Layout shell + inner containers transparent so #root art shows through */
+html.agentskin-host-qoderwork .agents-layout-root,
+html.agentskin-host-qoderwork .agents-layout-body,
+html.agentskin-host-qoderwork .agents-content-area,
+html.agentskin-host-qoderwork [class*="agents-content"],
+html.agentskin-host-qoderwork [class*="chat-panel"],
+html.agentskin-host-qoderwork [class*="message-list"],
+html.agentskin-host-qoderwork [class*="conversation-panel"],
+html.agentskin-host-qoderwork [class*="workspace-panel"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Sidebar: frosted glass over art (only the actual .agents-sidebar element) */
+html.agentskin-host-qoderwork .agents-sidebar {
+  background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
+  border-right: 1px solid rgba(127, 168, 96, 0.1) !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+
+html.agentskin-host-qoderwork .agents-sidebar [class*="item"]:hover {
+  background: var(--color-primary-bg-hover) !important;
+}
+
+html.agentskin-host-qoderwork .agents-sidebar [class*="active"] {
+  background: var(--color-primary-bg-hover) !important;
+  box-shadow: inset 3px 0 0 0 var(--color-primary), inset 0 0 0 1px var(--color-primary-border) !important;
+}
+
+/* Right panel: frosted glass matching left sidebar */
+html.agentskin-host-qoderwork [data-resizable-sidebar]:not(.agents-sidebar) {
+  background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
+  border-left: 1px solid rgba(127, 168, 96, 0.1) !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+
+/* Composer focus ring uses native tokens */
+html.agentskin-host-qoderwork .chat-input-editor-text:focus,
+html.agentskin-host-qoderwork .chat-input-editor-text:focus-within {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-bg-hover), 0 4px 18px rgba(148, 168, 132, 0.2) !important;
+}
+
+/* Selection */
+html.agentskin-host-qoderwork ::selection {
+  background: rgba(127, 168, 96, 0.28) !important;
+}
+
+/* Links */
+html.agentskin-host-qoderwork a {
+  color: var(--color-primary) !important;
+  transition: opacity 120ms ease;
+}
+html.agentskin-host-qoderwork a:hover {
+  opacity: 0.82;
+}
+
+/* Code blocks */
+html.agentskin-host-qoderwork code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(40, 42, 54, 0.084) !important;
+  border-radius: 6px !important;
+}
+
+html.agentskin-host-qoderwork pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(40, 42, 54, 0.084) !important;
+  border-left: 3px solid rgba(127, 168, 96, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+html.agentskin-host-qoderwork pre code {
+  border: none !important;
+}
+
+/* Generic inputs focus ring */
+html.agentskin-host-qoderwork input:focus,
+html.agentskin-host-qoderwork textarea:focus,
+html.agentskin-host-qoderwork select:focus {
+  outline: none !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(127, 168, 96, 0.15) !important;
+}
+
+/* Scrollbars */
+html.agentskin-host-qoderwork ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html.agentskin-host-qoderwork ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(127, 168, 96, 0.3) 0%, rgba(148, 168, 132, 0.3) 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(127, 168, 96, 0.5) 0%, rgba(148, 168, 132, 0.5) 100%) !important;
+  background-clip: padding-box !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.agentskin-host-qoderwork *,
+  html.agentskin-host-qoderwork *::before,
+  html.agentskin-host-qoderwork *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

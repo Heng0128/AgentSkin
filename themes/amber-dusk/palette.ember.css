@@ -1,0 +1,26 @@
+/* palette.css — amber-dusk (琥珀暮色) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #171110;
+  --agentskin-surface: #211917;
+  --agentskin-surface-elevated: #2b211d;
+  --agentskin-text: #e9ded6;
+  --agentskin-muted: #968579;
+  --agentskin-accent: #d97f4f;
+  --agentskin-secondary: #bf8f6f;
+  --agentskin-border: rgba(217, 127, 79, 0.18);
+  --agentskin-code-bg: #100c0b;
+  --agentskin-code-fg: #d9ccc0;
+  --agentskin-focus-ring: #d97f4f60;
+  --agentskin-selection: color-mix(in srgb, #d97f4f 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 217, 127, 79;
+  --agentskin-secondary-raw: 191, 143, 111;
+  --agentskin-text-raw: 233, 222, 214;
+  --agentskin-muted-raw: 150, 133, 121;
+  --agentskin-surface-raw: 33, 25, 23;
+  --agentskin-surface-elevated-raw: 43, 33, 29;
+  --agentskin-bg-raw: 23, 17, 16;
+  --agentskin-border-raw: 217, 127, 79;
+}

@@ -1,0 +1,22 @@
+{
+  "id": "moss",
+  "name": "Moss",
+  "mode": "dark",
+  "description": "苔原暖绿：把松林染上一层初春的苔色。",
+  "colors": {
+    "accent": "#a8bf7f",
+    "secondary": "#c0bf9a",
+    "background": "#12180e",
+    "foreground": "#e2e8d5",
+    "muted": "#8d947c",
+    "surface": "#1a2214",
+    "surfaceElevated": "#222d1a",
+    "codeBackground": "#0b100a",
+    "codeForeground": "#d2dcc0",
+    "inputBackground": "#1e2916",
+    "border": "rgba(168, 191, 127, 0.18)",
+    "buttonBackground": "rgba(168, 191, 127, 0.14)",
+    "buttonForeground": "#a8bf7f",
+    "focusRing": "#a8bf7f60"
+  }
+}

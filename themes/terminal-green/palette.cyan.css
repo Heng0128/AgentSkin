@@ -1,0 +1,26 @@
+/* palette.css — terminal-green (终端磷光) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0a1010;
+  --agentskin-surface: #101818;
+  --agentskin-surface-elevated: #172121;
+  --agentskin-text: #d5e6e8;
+  --agentskin-muted: #778a8c;
+  --agentskin-accent: #6fd4d9;
+  --agentskin-secondary: #8fb4b8;
+  --agentskin-border: rgba(111, 212, 217, 0.18);
+  --agentskin-code-bg: #060b0b;
+  --agentskin-code-fg: #c0d6d8;
+  --agentskin-focus-ring: #6fd4d960;
+  --agentskin-selection: color-mix(in srgb, #6fd4d9 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 111, 212, 217;
+  --agentskin-secondary-raw: 143, 180, 184;
+  --agentskin-text-raw: 213, 230, 232;
+  --agentskin-muted-raw: 119, 138, 140;
+  --agentskin-surface-raw: 16, 24, 24;
+  --agentskin-surface-elevated-raw: 23, 33, 33;
+  --agentskin-bg-raw: 10, 16, 16;
+  --agentskin-border-raw: 111, 212, 217;
+}

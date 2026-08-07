@@ -1,0 +1,26 @@
+/* palette.css — glacier-white (冰川白) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #f9fcfa;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #f5faf7;
+  --agentskin-text: #242c28;
+  --agentskin-muted: #727c78;
+  --agentskin-accent: #5bbf8f;
+  --agentskin-secondary: #8aa69c;
+  --agentskin-border: rgba(40, 42, 54, 0.14);
+  --agentskin-code-bg: #eef3f0;
+  --agentskin-code-fg: #343c38;
+  --agentskin-focus-ring: rgba(91, 191, 143, 0.4);
+  --agentskin-selection: color-mix(in srgb, #5bbf8f 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 91, 191, 143;
+  --agentskin-secondary-raw: 138, 166, 156;
+  --agentskin-text-raw: 36, 44, 40;
+  --agentskin-muted-raw: 114, 124, 120;
+  --agentskin-surface-raw: 255, 255, 255;
+  --agentskin-surface-elevated-raw: 245, 250, 247;
+  --agentskin-bg-raw: 249, 252, 250;
+  --agentskin-border-raw: 40, 42, 54;
+}

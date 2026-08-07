@@ -1,0 +1,22 @@
+{
+  "id": "matcha",
+  "name": "Matcha",
+  "mode": "light",
+  "description": "抹茶乳：把竹色调进一杯抹茶拿铁。",
+  "colors": {
+    "accent": "#7fa860",
+    "secondary": "#94a884",
+    "background": "#f4f6ef",
+    "foreground": "#2c3226",
+    "muted": "#747e68",
+    "surface": "#ffffff",
+    "surfaceElevated": "#fafbf7",
+    "codeBackground": "#e9eee2",
+    "codeForeground": "#3a4232",
+    "inputBackground": "#eff3e8",
+    "border": "rgba(40, 42, 54, 0.14)",
+    "buttonBackground": "rgba(127, 168, 96, 0.16)",
+    "buttonForeground": "#7fa860",
+    "focusRing": "rgba(127, 168, 96, 0.4)"
+  }
+}

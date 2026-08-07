@@ -1,0 +1,22 @@
+{
+  "id": "ice",
+  "name": "Ice",
+  "mode": "dark",
+  "description": "冰蓝极光：紫色退场，青蓝色接管夜空。",
+  "colors": {
+    "accent": "#8fd4e8",
+    "secondary": "#94b0c9",
+    "background": "#0a1016",
+    "foreground": "#dce8ee",
+    "muted": "#7a8b94",
+    "surface": "#101a24",
+    "surfaceElevated": "#17232e",
+    "codeBackground": "#060b0f",
+    "codeForeground": "#c8d8de",
+    "inputBackground": "#131e28",
+    "border": "rgba(143, 212, 232, 0.18)",
+    "buttonBackground": "rgba(143, 212, 232, 0.14)",
+    "buttonForeground": "#8fd4e8",
+    "focusRing": "#8fd4e860"
+  }
+}

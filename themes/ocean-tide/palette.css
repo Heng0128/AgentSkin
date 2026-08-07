@@ -1,0 +1,26 @@
+/* palette.css — ocean-tide (深海潮汐) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0a1218;
+  --agentskin-surface: #101c26;
+  --agentskin-surface-elevated: #172531;
+  --agentskin-text: #d8e4ea;
+  --agentskin-muted: #7a8b94;
+  --agentskin-accent: #6fc3d9;
+  --agentskin-secondary: #8fa8bf;
+  --agentskin-border: rgba(111, 195, 217, 0.18);
+  --agentskin-code-bg: #060c10;
+  --agentskin-code-fg: #c0d2da;
+  --agentskin-focus-ring: #6fc3d960;
+  --agentskin-selection: color-mix(in srgb, #6fc3d9 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 111, 195, 217;
+  --agentskin-secondary-raw: 143, 168, 191;
+  --agentskin-text-raw: 216, 228, 234;
+  --agentskin-muted-raw: 122, 139, 148;
+  --agentskin-surface-raw: 16, 28, 38;
+  --agentskin-surface-elevated-raw: 23, 37, 49;
+  --agentskin-bg-raw: 10, 18, 24;
+  --agentskin-border-raw: 111, 195, 217;
+}

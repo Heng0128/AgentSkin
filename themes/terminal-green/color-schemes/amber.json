@@ -1,0 +1,22 @@
+{
+  "id": "amber",
+  "name": "Amber",
+  "mode": "dark",
+  "description": "琥珀单色：DEC 终端的经典琥珀屏。",
+  "colors": {
+    "accent": "#d9a86f",
+    "secondary": "#bf9f7f",
+    "background": "#0f0c08",
+    "foreground": "#e8ded0",
+    "muted": "#96887a",
+    "surface": "#181410",
+    "surfaceElevated": "#201b15",
+    "codeBackground": "#0a0806",
+    "codeForeground": "#d8ccbc",
+    "inputBackground": "#1c1712",
+    "border": "rgba(217, 168, 111, 0.18)",
+    "buttonBackground": "rgba(217, 168, 111, 0.14)",
+    "buttonForeground": "#d9a86f",
+    "focusRing": "#d9a86f60"
+  }
+}

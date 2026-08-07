@@ -1,0 +1,26 @@
+/* palette.css — sakura-noir (夜樱) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #121018;
+  --agentskin-surface: #1b1824;
+  --agentskin-surface-elevated: #23202e;
+  --agentskin-text: #e6e0f0;
+  --agentskin-muted: #8c84a0;
+  --agentskin-accent: #b0a0e8;
+  --agentskin-secondary: #a89cc0;
+  --agentskin-border: rgba(176, 160, 232, 0.18);
+  --agentskin-code-bg: #0d0b12;
+  --agentskin-code-fg: #d6d0e2;
+  --agentskin-focus-ring: #b0a0e860;
+  --agentskin-selection: color-mix(in srgb, #b0a0e8 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 176, 160, 232;
+  --agentskin-secondary-raw: 168, 156, 192;
+  --agentskin-text-raw: 230, 224, 240;
+  --agentskin-muted-raw: 140, 132, 160;
+  --agentskin-surface-raw: 27, 24, 36;
+  --agentskin-surface-elevated-raw: 35, 32, 46;
+  --agentskin-bg-raw: 18, 16, 24;
+  --agentskin-border-raw: 176, 160, 232;
+}

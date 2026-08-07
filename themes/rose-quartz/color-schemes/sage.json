@@ -1,0 +1,22 @@
+{
+  "id": "sage",
+  "name": "Sage",
+  "mode": "light",
+  "description": "鼠尾草绿：一点清醒的绿意平衡甜度。",
+  "colors": {
+    "accent": "#70a88f",
+    "secondary": "#8aab96",
+    "background": "#f3f6f4",
+    "foreground": "#2a3a32",
+    "muted": "#70887c",
+    "surface": "#ffffff",
+    "surfaceElevated": "#f9fcfa",
+    "codeBackground": "#e8f0ec",
+    "codeForeground": "#3a4a42",
+    "inputBackground": "#eff5f1",
+    "border": "rgba(40, 42, 54, 0.14)",
+    "buttonBackground": "rgba(112, 168, 143, 0.16)",
+    "buttonForeground": "#70a88f",
+    "focusRing": "rgba(112, 168, 143, 0.4)"
+  }
+}
