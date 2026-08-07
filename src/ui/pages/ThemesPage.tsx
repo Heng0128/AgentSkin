@@ -32,7 +32,7 @@ import type { AgentId } from '@shared/types';
 
 export function ThemesPage({ controller }: { controller: AppController }) {
   const { t } = controller;
-  const tc = useThemeCenter(controller);
+  const tc = useThemeCenter();
 
   // Drag-and-drop theme import: a depth counter keeps the overlay stable
   // across child dragenter/leave events (which fire on every nested element).

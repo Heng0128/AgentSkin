@@ -23,17 +23,25 @@ import { TitleBar } from '@/components/title-bar';
 import { useAppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
 import { ThemeStudioPage } from '@/pages/ThemeStudioPage';
+import { useShellStore } from '@/stores/shellStore';
+
+import type { UiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
 
 export default function StudioApp() {
   const controller = useAppController();
+  const locale = useShellStore((s) => s.locale);
+  const setRoute = useShellStore((s) => s.setRoute);
 
   // Pin the route to 'studio' so the title bar renders the right label.
   useEffect(() => {
-    controller.setRoute('studio');
-  }, [controller]);
+    setRoute('studio');
+  }, [setRoute]);
+
+  const t: UiMessages = uiMessages[locale];
 
   return (
-    <ErrorBoundary locale={controller.locale}>
+    <ErrorBoundary locale={locale}>
       <main
         className={cn(
           'relative z-10 flex h-svh flex-col overflow-hidden font-sans text-foreground bg-background',
@@ -42,7 +50,7 @@ export default function StudioApp() {
         <TitleBar controller={controller} />
 
         <section className="min-h-0 min-w-0 flex-1 overflow-hidden">
-          <ThemeStudioPage controller={controller} />
+          <ThemeStudioPage t={t} />
         </section>
       </main>
     </ErrorBoundary>

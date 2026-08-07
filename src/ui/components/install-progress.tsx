@@ -4,8 +4,8 @@ import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { Progress } from '@/components/ui/progress';
-import type { InstallStep } from '@/hooks/useThemeInstallFlow';
 import { cn } from '@/lib/utils';
+import type { InstallStep } from '@/stores/installFlowStore';
 
 import { AlertCircleIcon, CheckIcon, LoadingIcon, RotateIcon, X } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';

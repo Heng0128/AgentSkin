@@ -3,82 +3,84 @@
 /**
  * # useAppController
  *
- * Pure composition layer that owns shared state (locale, status, busy, logs, view)
- * and wires domain hooks together.
+ * Pure composition layer that aggregates all zustand stores into a single
+ * object (the "controller") consumed by pages and global chrome components.
  *
- *   useBoot          → one-time bootstrap + log subscription + status polling
- *   useNotifications  → toasts + showToast + fail
- *   useDialogs        → all prompt state (restart/delete/fileImport)
- *   useAgents         → agent catalog + status lookup
- *   useThemes         → installed themes CRUD + apply/restore/import
- *   useSettings       → settings dialog + app path/port
+ * After Phase A3 this hook owns NO domain state — every piece of state lives
+ * in its own store (`themeStore`, `wallpaperStore`, `dialogStore`, ...). This
+ * hook's remaining responsibilities are:
  *
- * Note: Built-in theme seeding is handled in main.ts (P3.1).
- * The renderer no longer seeds builtin themes from URLs.
+ *   1. Wire boot-time side effects (log subscription, status polling, theme /
+ *      wallpaper / agent catalog refresh) — these need access to the `api`
+ *      singleton so they stay here rather than inside any one store.
+ *   2. Wire cross-cutting IPC subscribers (boot:warnings → toast) that span
+ *      multiple stores.
+ *   3. Wire global keyboard shortcuts (Ctrl+\ sidebar, Ctrl+D inject dock).
+ *   4. Subscribe to each store's slices and re-expose them under the legacy
+ *      field names so 13 downstream components need zero changes.
+ *
+ * The returned shape is intentionally unchanged from pre-A3 — see the
+ * `AppController` type. Fields are grouped by their owning store.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
+import { appStatusFor, useAgentStore } from '@/stores/agentStore';
+import { useDialogStore } from '@/stores/dialogStore';
+import { selectInstallFlags, useInstallFlowStore } from '@/stores/installFlowStore';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';
-import type { Route } from '@/types/navigation';
+import { useThemeStore } from '@/stores/themeStore';
+import { selectActiveWallpaper, useWallpaperStore } from '@/stores/wallpaperStore';
 
-import { type AppLocale, type UiMessages, uiMessages } from '@shared/i18n';
-import type { AgentId } from '@shared/types';
-import { AGENT_META } from '@shared/types';
-import { useAgents } from './useAgents';
+import type { UiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
+import { AGENT_META, type AgentId } from '@shared/types';
 import { useBoot } from './useBoot';
 import { type StructuredEvent, useBootProgress } from './useBootProgress';
-import { useDialogs } from './useDialogs';
-import { type SettingsSection, useSettings } from './useSettings';
-import {
-  type InstallFlowState,
-  type InstallStep,
-  useThemeInstallFlow,
-} from './useThemeInstallFlow';
-import { type BusyKey, type Selection, useThemes } from './useThemes';
-import { useWallpaper } from './useWallpaper';
 
-export type { AgentProgress, BootPhase, ProgressMap } from './useBootProgress';
-export type { Toast } from './useNotifications';
-export type { RestartPrompt } from './useThemes';
-export type { BusyKey, InstallFlowState, InstallStep, Route, Selection, SettingsSection };
+export type { AgentProgress, BootPhase, ProgressMap } from '@/stores/bootProgressStore';
+export type { RestartPrompt } from '@/stores/dialogStore';
+export type {
+  InstallFlowState,
+  InstallStep,
+} from '@/stores/installFlowStore';
+export type { Toast } from '@/stores/notificationStore';
+export type { SettingsSection } from '@/stores/settingsStore';
+export type {
+  BusyKey,
+  Selection,
+} from '@/stores/themeStore';
+export type { Route } from '@/types/navigation';
 
 export function useAppController() {
-  // --- Shared state (from shellStore) ---
+  // -----------------------------------------------------------------------
+  // Shell slice — app frame state
+  // -----------------------------------------------------------------------
   const locale = useShellStore((s) => s.locale);
   const appVersion = useShellStore((s) => s.appVersion);
+  const booting = useShellStore((s) => s.booting);
   const route = useShellStore((s) => s.route);
   const activeAgentId = useShellStore((s) => s.activeAgentId);
-  const booting = useShellStore((s) => s.booting);
+  const sidebarCollapsed = useShellStore((s) => s.sidebarCollapsed);
   const logs = useShellStore((s) => s.logs);
   const logsOpen = useShellStore((s) => s.logsOpen);
   const injectDockOpen = useShellStore((s) => s.injectDockOpen);
-  const sidebarCollapsed = useShellStore((s) => s.sidebarCollapsed);
-  const setLocaleState = useShellStore((s) => s.setLocale);
+  const setActiveAgentId = useShellStore((s) => s.setActiveAgentId);
   const setAppVersion = useShellStore((s) => s.setAppVersion);
   const setBooting = useShellStore((s) => s.setBooting);
+  const setLocaleState = useShellStore((s) => s.setLocale);
   const setLogs = useShellStore((s) => s.setLogs);
   const setLogsOpen = useShellStore((s) => s.setLogsOpen);
-  const setActiveAgentId = useShellStore((s) => s.setActiveAgentId);
-
-  const status = useStatusStore((s) => s.status);
-  const lastStatusAt = useStatusStore((s) => s.lastStatusAt);
-  const isRefreshing = useStatusStore((s) => s.isRefreshing);
-  const setStatus = useStatusStore((s) => s.setStatus);
-  const [busy, setBusy] = useState<BusyKey | null>(null);
-
-  // Inject dock (A.html `#dock`) — floating quick-actions capsule toggled
-  // from the status bar ⏏ button or Ctrl/Cmd+D.
-  const setInjectDockOpen = useShellStore((s) => s.setInjectDockOpen);
-  const toggleInjectDock = useShellStore((s) => s.toggleInjectDock);
   const setSidebarCollapsed = useShellStore((s) => s.setSidebarCollapsed);
   const toggleSidebar = useShellStore((s) => s.toggleSidebar);
+  const toggleInjectDock = useShellStore((s) => s.toggleInjectDock);
 
-  // Global shortcut (Ctrl/Cmd + \) — mirrors VS Code / Cursor so the toggle
-  // is reachable without reaching for the mouse. Ignored while typing in a
-  // field so it never hijacks app-level shortcuts.
+  // -----------------------------------------------------------------------
+  // Install dock — Ctrl/Cmd+\ shortcut
+  // -----------------------------------------------------------------------
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== '\\') return;
@@ -93,8 +95,6 @@ export function useAppController() {
     return () => window.removeEventListener('keydown', onKey);
   }, [toggleSidebar]);
 
-  // Global shortcut (Ctrl/Cmd + D) — toggles the inject dock. Mirrors the
-  // A.html ⌘D quick action. Ignored while typing in a field.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() !== 'd') return;
@@ -109,34 +109,61 @@ export function useAppController() {
     return () => window.removeEventListener('keydown', onKey);
   }, [toggleInjectDock]);
 
+  // -----------------------------------------------------------------------
+  // i18n — derived from locale so reference identity is stable per language
+  // -----------------------------------------------------------------------
   const t: UiMessages = uiMessages[locale];
 
-  // --- Shared functions ---
-  const refreshStatus = useStatusStore((s) => s.refreshStatus);
-
-  const setLocale = useCallback(
-    async (next: AppLocale) => {
-      setLocaleState(next);
-      try {
-        await api.setLocale(next);
-      } catch {
-        /* toast handled by caller */
-      }
-    },
-    [setLocaleState],
-  );
-
-  const setRoute = useShellStore((s) => s.setRoute);
-
-  // --- Notifications (needed before boot so fail() is available) ---
+  // -----------------------------------------------------------------------
+  // Notifications
+  // -----------------------------------------------------------------------
   const controllerToasts = useNotificationStore((s) => s.toasts);
   const showToast = useNotificationStore((s) => s.showToast);
   const fail = useNotificationStore((s) => s.fail);
 
-  // --- Boot warnings: surface degraded boot steps as a toast once the main
-  // window is ready. The main process pushes the list once (boot:warnings);
-  // empty lists are never sent. Uses a ref for the locale so re-subscribing
-  // isn't needed when the user switches language (the event fires once). ---
+  // -----------------------------------------------------------------------
+  // Status slice
+  // -----------------------------------------------------------------------
+  const status = useStatusStore((s) => s.status);
+  const lastStatusAt = useStatusStore((s) => s.lastStatusAt);
+  const isRefreshing = useStatusStore((s) => s.isRefreshing);
+  const refreshStatus = useStatusStore((s) => s.refreshStatus);
+
+  const setLocale = async (next: typeof locale) => {
+    setLocaleState(next);
+    try {
+      await api.setLocale(next);
+    } catch {
+      /* toast handled by caller */
+    }
+  };
+
+  const setRoute = useShellStore((s) => s.setRoute);
+
+  // -----------------------------------------------------------------------
+  // Status slice
+  // -----------------------------------------------------------------------
+
+  // -----------------------------------------------------------------------
+  // Dialog prompt slice
+  // -----------------------------------------------------------------------
+  const restartPrompt = useDialogStore((s) => s.restartPrompt);
+  const wallpaperRestartPrompt = useDialogStore((s) => s.wallpaperRestartPrompt);
+  const deletePrompt = useDialogStore((s) => s.deletePrompt);
+  const fileImportPrompt = useDialogStore((s) => s.fileImportPrompt);
+  const setDeletePrompt = useDialogStore((s) => s.setDeletePrompt);
+  const setFileImportPrompt = useDialogStore((s) => s.setFileImportPrompt);
+  const setRestartPrompt = useDialogStore((s) => s.setRestartPrompt);
+
+  // -----------------------------------------------------------------------
+  // Agent slice
+  // -----------------------------------------------------------------------
+  const agents = useAgentStore((s) => s.agents);
+
+  // -----------------------------------------------------------------------
+  // Boot warnings — surface degraded boot steps as a toast once ready.
+  // Uses a ref for locale so re-subscribing isn't needed on language switch.
+  // -----------------------------------------------------------------------
   const bootWarningTRef = useRef(t);
   useEffect(() => {
     bootWarningTRef.current = t;
@@ -149,7 +176,9 @@ export function useAppController() {
     return off;
   }, [showToast]);
 
-  // --- Boot: bootstrap + log subscription + status polling ---
+  // -----------------------------------------------------------------------
+  // Boot orchestration (log subscription, status polling)
+  // -----------------------------------------------------------------------
   useBoot({
     fail,
     setLocaleState,
@@ -159,111 +188,89 @@ export function useAppController() {
     refreshStatus,
   });
 
-  // --- Boot progress: parse structured log events into per-agent phases ---
-  // onBootEvent fires toasts for the boot-restore lifecycle so the user
-  // gets explicit feedback when themes are being restored after a reboot,
-  // even if the workspace view isn't visible.
-  const onBootEvent = useCallback(
-    (event: StructuredEvent) => {
-      const displayName = (id: string): string => AGENT_META[id as AgentId]?.displayName ?? id;
-      switch (event.type) {
-        case 'boot_start':
-          if (event.agentCount && event.agentCount > 0) {
-            showToast(t.bootRestoringToast(event.agentCount));
-          }
-          break;
-        case 'boot_agent_done':
-          showToast(t.bootAgentRestoredToast(displayName(event.agentId)));
-          break;
-        case 'boot_agent_failed':
-          showToast(t.bootAgentFailedToast(displayName(event.agentId)), 'destructive');
-          break;
-      }
-    },
-    [showToast, t],
-  );
+  // -----------------------------------------------------------------------
+  // Boot progress — per-agent phase map + lifecycle toasts
+  // -----------------------------------------------------------------------
+  const onBootEvent = (event: StructuredEvent) => {
+    const displayName = (id: string): string => AGENT_META[id as AgentId]?.displayName ?? id;
+    switch (event.type) {
+      case 'boot_start':
+        if (event.agentCount && event.agentCount > 0) {
+          showToast(t.bootRestoringToast(event.agentCount));
+        }
+        break;
+      case 'boot_agent_done':
+        showToast(t.bootAgentRestoredToast(displayName(event.agentId)));
+        break;
+      case 'boot_agent_failed':
+        showToast(t.bootAgentFailedToast(displayName(event.agentId)), 'destructive');
+        break;
+    }
+  };
   const bootProgress = useBootProgress(api.onRuntimeLog, onBootEvent);
 
-  // --- Compose domain hooks ---
-  const dialogs = useDialogs();
-  const agentsHook = useAgents(status);
-  // useWallpaper is created before useThemes so the theme-apply flow can
-  // activate the theme's bundled video wallpaper after a successful apply.
-  // `fail` reports wallpaper IPC errors instead of letting them become
-  // unhandled rejections or silent .catch(() => undefined) drops.
-  //
-  // pywal-style wallpaper→theme linkage: when a wallpaper is applied to an
-  // agent, auto-extract a matching theme, apply it, then re-apply the
-  // wallpaper (theme apply clears per-agent wallpaper per "last applied
-  // wins"). The companion needs `applyToApp` from useThemes, which is created
-  // after useWallpaper — so it goes through a ref that useThemes populates.
-  const wallpaperCompanionRef = useRef<
-    ((appId: AgentId, wallpaperId: string) => Promise<void>) | null
-  >(null);
-  // Guards against recursion: the companion re-applies the wallpaper, which
-  // triggers onWallpaperApplied again — short-circuit while it is running.
-  const wallpaperCompanionBusyRef = useRef(false);
-  const wallpaper = useWallpaper(fail, async (appId, wallpaperId) => {
-    const run = wallpaperCompanionRef.current;
-    if (run) await run(appId, wallpaperId);
-  });
-  const themesHook = useThemes({
-    showToast,
-    fail,
-    busy,
-    setBusy,
-    t,
-    status,
-    setStatus,
-    refreshStatus,
-    deletePrompt: dialogs.deletePrompt,
-    setDeletePrompt: dialogs.setDeletePrompt,
-    fileImportPrompt: dialogs.fileImportPrompt,
-    setFileImportPrompt: dialogs.setFileImportPrompt,
-    setRestartPrompt: dialogs.setRestartPrompt,
-    activateThemeWallpaper: wallpaper.activateThemeWallpaper,
-  });
-
-  // Keep the companion ref in sync with the latest themesHook / wallpaper
-  // instances. Previously this assignment ran in the render body (a side
-  // effect during render), and the closure captured the themesHook reference
-  // from the first render — so if the theme list refreshed after boot, the
-  // companion used a stale `applyToApp`. Updating via effect guarantees the
-  // ref always holds the latest implementations.
+  // Boot-time catalog / data refresh — these call IPC so they stay in the
+  // hook rather than inside store create().
   useEffect(() => {
-    wallpaperCompanionRef.current = async (appId, wallpaperId) => {
-      if (wallpaperCompanionBusyRef.current) return;
-      wallpaperCompanionBusyRef.current = true;
-      try {
-        const theme = await api.extractThemeFromWallpaper(wallpaperId);
-        const applied = await themesHook.applyToApp(theme.id, theme.displayName, appId);
-        if (applied) {
-          // Theme apply cleared the per-agent wallpaper preference (last
-          // applied wins) — re-apply it to restore both. The re-apply triggers
-          // onWallpaperApplied again, short-circuited by the busy ref.
-          await wallpaper.setAndApplyAgentWallpaper(appId, true, wallpaperId);
-        }
-      } catch (error) {
-        fail(error);
-        showToast(t.wallpaperThemeAutoFailed, 'destructive');
-      } finally {
-        wallpaperCompanionBusyRef.current = false;
-      }
-    };
-  }, [themesHook, wallpaper, fail, showToast, t.wallpaperThemeAutoFailed]);
+    void useThemeStore
+      .getState()
+      .refreshThemes()
+      .finally(() => useThemeStore.setState({ loading: false }));
+    void useWallpaperStore.getState().initialize();
+    void useAgentStore.getState().loadAgents();
+  }, []);
 
-  const settingsHook = useSettings({ showToast, fail, t, setStatus });
+  // -----------------------------------------------------------------------
+  // Theme slice
+  // -----------------------------------------------------------------------
+  const installed = useThemeStore((s) => s.installed);
+  const themeLoading = useThemeStore((s) => s.loading);
+  const selection = useThemeStore((s) => s.selection);
+  const themeBusy = useThemeStore((s) => s.busy);
+  const setSelection = useThemeStore((s) => s.setSelection);
+  const applyToApp = useThemeStore((s) => s.applyToApp);
+  const restoreApp = useThemeStore((s) => s.restoreApp);
+  const restoreAll = useThemeStore((s) => s.restoreAll);
+  const exportTheme = useThemeStore((s) => s.exportTheme);
+  const createBundle = useThemeStore((s) => s.createBundle);
+  const confirmDelete = useThemeStore((s) => s.confirmDelete);
+  const confirmFileImport = useThemeStore((s) => s.confirmFileImport);
+  const dropThemeFiles = useThemeStore((s) => s.dropThemeFiles);
 
-  // Install flow (real step sequence)
-  const installFlow = useThemeInstallFlow({
-    refreshThemes: themesHook.refreshThemes,
-    showToast,
-    fail,
-    t,
-  });
+  // -----------------------------------------------------------------------
+  // Install flow slice
+  // -----------------------------------------------------------------------
+  const installSteps = useInstallFlowStore((s) => s.steps);
+  const flowState = useInstallFlowStore((s) => s.flowState);
+  const currentTheme = useInstallFlowStore((s) => s.currentTheme);
+  const lastError = useInstallFlowStore((s) => s.lastError);
+  const retryInstall = useInstallFlowStore((s) => s.retryInstall);
+  const cancelInstall = useInstallFlowStore((s) => s.cancelInstall);
+  const setInstallSteps = useInstallFlowStore((s) => s.setSteps);
+  const setFlowStateAction = useInstallFlowStore((s) => s.setFlowState);
+  const installFlags = useInstallFlowStore(selectInstallFlags);
+
+  // -----------------------------------------------------------------------
+  // Settings slice
+  // -----------------------------------------------------------------------
+  const settingsOpen = useSettingsStore((s) => s.settingsOpen);
+  const settingsSection = useSettingsStore((s) => s.settingsSection);
+  const settings = useSettingsStore((s) => s.settings);
+  const setSettingsOpen = useSettingsStore((s) => s.setSettingsOpen);
+  const setSettingsSection = useSettingsStore((s) => s.setSettingsSection);
+  const openSettings = useSettingsStore((s) => s.openSettings);
+  const chooseAppPath = useSettingsStore((s) => s.chooseAppPath);
+  const clearAppPath = useSettingsStore((s) => s.clearAppPath);
+  const saveAppPort = useSettingsStore((s) => s.saveAppPort);
+
+  // -----------------------------------------------------------------------
+  // Wallpaper slice
+  // -----------------------------------------------------------------------
+  const wallpaperState = useWallpaperStore((s) => s);
+  const wallpaperActive = useWallpaperStore(selectActiveWallpaper);
 
   return {
-    // Shared
+    // ── Shared / shell ─────────────────────────────────────────────────
     t,
     locale,
     setLocale,
@@ -277,55 +284,94 @@ export function useAppController() {
     statusStale: status === null,
     lastStatusAt,
     isRefreshing,
-    busy,
+    busy: themeBusy,
     toasts: controllerToasts,
     showToast,
     logs,
     logsOpen,
     setLogsOpen,
     injectDockOpen,
-    setInjectDockOpen,
+    setInjectDockOpen: useShellStore.getState().setInjectDockOpen,
     sidebarCollapsed,
     setSidebarCollapsed,
     toggleSidebar,
     refreshStatus,
     bootProgress,
 
-    // Agents
-    agents: agentsHook.agents,
-    appStatusFor: agentsHook.appStatusFor,
+    // ── Agents ────────────────────────────────────────────────────────
+    agents,
+    appStatusFor,
 
-    // Themes
-    ...themesHook,
-    // Import theme — unified to always use the install flow (step-by-step
-    // progress). Previously useThemes had a separate simple-toast importTheme
-    // that duplicated the IPC call. The InstallProgress component is globally
-    // rendered in App.tsx so the progress UI shows regardless of caller.
-    importTheme: installFlow.runImport,
+    // ── Themes ───────────────────────────────────────────────────────
+    installed,
+    installedById: useThemeStore.getState().installedById,
+    selection,
+    setSelection,
+    applyToApp,
+    restoreApp,
+    restoreAll,
+    exportTheme,
+    createBundle,
+    confirmDelete,
+    confirmFileImport,
+    dropThemeFiles,
+    refreshThemes: useThemeStore.getState().refreshThemes,
+    loading: themeLoading,
 
-    // Install flow
-    installSteps: installFlow.steps,
-    flowState: installFlow.flowState,
-    currentTheme: installFlow.currentTheme,
-    lastError: installFlow.lastError,
-    isInstalling: installFlow.isInstalling,
-    isComplete: installFlow.isComplete,
-    isFailed: installFlow.isFailed,
-    isCancelled: installFlow.isCancelled,
-    progress: installFlow.progress,
-    retryInstall: installFlow.retryInstall,
-    cancelInstall: installFlow.cancelInstall,
-    setSteps: installFlow.setSteps,
-    setFlowState: installFlow.setFlowState,
+    // ── Import / install flow ────────────────────────────────────────
+    importTheme: useInstallFlowStore.getState().runImport,
+    installSteps,
+    setSteps: setInstallSteps,
+    flowState,
+    setFlowState: setFlowStateAction,
+    currentTheme,
+    lastError,
+    isInstalling: installFlags.isInstalling,
+    isComplete: installFlags.isComplete,
+    isFailed: installFlags.isFailed,
+    isCancelled: installFlags.isCancelled,
+    progress: installFlags.progress,
+    retryInstall,
+    cancelInstall,
 
-    // Dialogs
-    ...dialogs,
+    // ── Dialogs ──────────────────────────────────────────────────────
+    restartPrompt,
+    setRestartPrompt,
+    wallpaperRestartPrompt,
+    setWallpaperRestartPrompt: useDialogStore.getState().setWallpaperRestartPrompt,
+    deletePrompt,
+    setDeletePrompt,
+    fileImportPrompt,
+    setFileImportPrompt,
 
-    // Settings
-    ...settingsHook,
+    // ── Settings ─────────────────────────────────────────────────────
+    settingsOpen,
+    setSettingsOpen,
+    settingsSection,
+    setSettingsSection,
+    settings,
+    openSettings,
+    chooseAppPath,
+    clearAppPath,
+    saveAppPort,
 
-    // Dynamic wallpapers
-    wallpaper,
+    // ── Dynamic wallpapers ───────────────────────────────────────────
+    wallpaper: {
+      wallpapers: wallpaperState.wallpapers,
+      loading: wallpaperState.loading,
+      enabled: wallpaperState.enabled,
+      selectedId: wallpaperState.selectedId,
+      agentWallpapers: wallpaperState.agentWallpapers,
+      active: wallpaperActive,
+      render: wallpaperState.render,
+      setWallpaper: useWallpaperStore.getState().setWallpaper,
+      importWallpaper: useWallpaperStore.getState().importWallpaper,
+      deleteWallpaper: useWallpaperStore.getState().deleteWallpaper,
+      setAgentWallpaper: useWallpaperStore.getState().setAgentWallpaper,
+      applyAgentWallpaper: useWallpaperStore.getState().applyAgentWallpaper,
+      setAndApplyAgentWallpaper: useWallpaperStore.getState().setAndApplyAgentWallpaper,
+      activateThemeWallpaper: useWallpaperStore.getState().activateThemeWallpaper,
+    },
   };
 }
 

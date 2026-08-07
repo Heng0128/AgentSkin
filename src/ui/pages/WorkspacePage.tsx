@@ -111,8 +111,8 @@ function QuickButton({
 /* ------------------------------------------------------------------ */
 
 export function WorkspacePage({ controller }: { controller: AppController }) {
-  const { activeEnvironment, environments } = useEnvironments(controller);
-  const envActions = useEnvironmentActions(controller);
+  const { activeEnvironment, environments } = useEnvironments();
+  const envActions = useEnvironmentActions();
   const { t } = controller;
 
   // Installed themes (for per-agent counts shown in the detail sheet).

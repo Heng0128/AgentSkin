@@ -28,9 +28,9 @@ import {
   type StudioColorSets,
   type ToolOverride,
 } from '@/components/studio/Toolbox';
-import type { AppController } from '@/hooks/useAppController';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationStore } from '@/stores/notificationStore';
 
+import type { UiMessages } from '@shared/i18n';
 import { semanticColorsToPalette } from '@shared/theme-mapping';
 import {
   AGENT_META,
@@ -48,9 +48,8 @@ type SnapshotState = {
   themeName: string;
 };
 
-export function ThemeStudioPage({ controller }: { controller: AppController }) {
-  const { t } = controller;
-  const { showToast } = useNotifications(t);
+export function ThemeStudioPage({ t }: { t: UiMessages }) {
+  const showToast = useNotificationStore((s) => s.showToast);
 
   // --- Projects: self-contained theme "工程" (no installed-theme dependency) ---
   const [projects, setProjects] = useState<StudioProject[]>([]);

@@ -3,7 +3,7 @@
 /**
  * # useThemeCenter
  *
- * Transforms controller data into Theme Center models with search,
+ * Transforms installed themes into Theme Center models with search,
  * category filter, and sorting (name, author, category, version).
  * ThemesPage consumes this — it never touches ThemeCatalogItem directly.
  *
@@ -12,11 +12,12 @@
  */
 
 import { useMemo, useState } from 'react';
+import { useThemeStore } from '@/stores/themeStore';
 import type { ThemeCenterCardModel } from '@/types/theme-center';
 
-import type { AppController } from './useAppController';
+import type { ThemeCatalogItem } from '@shared/types';
 
-function toCard(theme: AppController['installed'][number]): ThemeCenterCardModel {
+function toCard(theme: ThemeCatalogItem): ThemeCenterCardModel {
   return {
     id: theme.id,
     name: theme.name,
@@ -39,7 +40,8 @@ export type SortOrder = 'asc' | 'desc';
 export type ThemeModeFilter = 'all' | 'dark' | 'light';
 export type ThemeDynamicFilter = 'all' | 'dynamic';
 
-export function useThemeCenter(controller: AppController) {
+export function useThemeCenter() {
+  const installed = useThemeStore((s) => s.installed);
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [modeFilter, setModeFilter] = useState<ThemeModeFilter>('all');
@@ -47,7 +49,7 @@ export function useThemeCenter(controller: AppController) {
   const [sortBy, setSortBy] = useState<ThemeSortKey>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
-  const allThemes = useMemo(() => controller.installed.map(toCard), [controller.installed]);
+  const allThemes = useMemo(() => installed.map(toCard), [installed]);
 
   const categories = useMemo(() => {
     const set = new Set(allThemes.map((t) => t.category).filter(Boolean));

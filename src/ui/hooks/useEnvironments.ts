@@ -7,7 +7,7 @@
  *
  * Data model (v2):
  *   EnvironmentPreset (saved)  →  user-defined Agent+Theme combo
- *   Runtime status (live)      →  AppController's current agent/theme state
+ *   Runtime status (live)      →  current agent/theme state from stores
  *   EnvironmentModel (derived) →  Preset + runtime overlay
  *
  * Key changes in P2.6:
@@ -19,7 +19,7 @@
  *
  * Flow:
  *   1. Load presets from localStorage (EnvironmentStore)
- *   2. Merge with runtime status from AppController
+ *   2. Merge with runtime status from stores
  *   3. Derive EnvironmentModel[] for UI consumption
  *   4. Map each env to its preset by agentId+themeId match
  *
@@ -35,10 +35,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { findAppStatus } from '@/lib/status-utils';
 import { loadPresets } from '@/storage/environment-store';
+import { useAgentStore } from '@/stores/agentStore';
+import { useStatusStore } from '@/stores/statusStore';
+import { useThemeStore } from '@/stores/themeStore';
 import type { EnvironmentModel, EnvironmentPreset } from '@/types/environment';
 
 import type { AgentId } from '@shared/types';
-import type { AppController } from './useAppController';
 import { getRefreshCounter } from './useEnvironmentActions';
 
 /** Build an environment id from agent + theme. */
@@ -55,8 +57,10 @@ export interface UseEnvironmentsResult {
   refresh: () => number;
 }
 
-export function useEnvironments(controller: AppController): UseEnvironmentsResult {
-  const { agents: allAgents, installed, status } = controller;
+export function useEnvironments(): UseEnvironmentsResult {
+  const allAgents = useAgentStore((s) => s.agents);
+  const installed = useThemeStore((s) => s.installed);
+  const status = useStatusStore((s) => s.status);
 
   // --- Presets (persistent) ---
   // P1 audit #14: previously this read localStorage inside a useMemo, which
