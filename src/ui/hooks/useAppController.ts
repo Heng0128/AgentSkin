@@ -27,6 +27,7 @@ import { useEffect, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { appStatusFor, useAgentStore } from '@/stores/agentStore';
 import { useDialogStore } from '@/stores/dialogStore';
+import { useEnvironmentStore } from '@/stores/environmentStore';
 import { selectInstallFlags, useInstallFlowStore } from '@/stores/installFlowStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -218,6 +219,7 @@ export function useAppController() {
       .finally(() => useThemeStore.setState({ loading: false }));
     void useWallpaperStore.getState().initialize();
     void useAgentStore.getState().loadAgents();
+    useEnvironmentStore.getState().loadPresets();
   }, []);
 
   // -----------------------------------------------------------------------

@@ -14,10 +14,10 @@ import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { AgentStatusDot } from '@/components/workspace/AgentStatusDot';
 import type { AppController } from '@/hooks/useAppController';
-import { useNotifications } from '@/hooks/useNotifications';
 import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { cn } from '@/lib/utils';
 import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
+import { useNotificationStore } from '@/stores/notificationStore';
 
 import {
   CheckmarkCircle02Icon,
@@ -95,7 +95,7 @@ function describeWallpaperFailure(detail: string | undefined, t: UiMessages): st
  */
 export function WallpaperEnginePage({ controller }: { controller: AppController }) {
   const { t, wallpaper, appStatusFor, setWallpaperRestartPrompt } = controller;
-  const { showToast } = useNotifications(t);
+  const showToast = useNotificationStore((s) => s.showToast);
   const {
     wallpapers,
     loading,

@@ -11,12 +11,7 @@ import type { ReactNode } from 'react';
  *   - g12 grid: right `c8` (environment grid + live feed) + left `c4` stack
  *     (dashboard stats / engine KV / quick actions)
  *
- * Environment actions are centralized in useEnvironmentActions:
- *   - switchEnvironment() creates preset + applies theme
- *   - renameEnvironment() updates preset name
- *   - duplicateEnvironment() clones a preset
- *   - deleteEnvironment() removes a preset
- *   - No direct controller calls from JSX
+ * Environment presets are managed by environmentStore.
  */
 import { useCallback, useState } from 'react';
 import { RenameDialog } from '@/components/rename-dialog';
@@ -24,9 +19,9 @@ import { HugeIcon } from '@/components/ui/huge-icon';
 import { AgentDetailSheet } from '@/components/workspace/AgentDetailSheet';
 import { EnvironmentGrid } from '@/components/workspace/EnvironmentGrid';
 import type { AppController } from '@/hooks/useAppController';
-import { useEnvironmentActions } from '@/hooks/useEnvironmentActions';
 import { useEnvironments } from '@/hooks/useEnvironments';
 import { cn } from '@/lib/utils';
+import { useEnvironmentStore } from '@/stores/environmentStore';
 import type { EnvironmentModel } from '@/types/environment';
 
 import { Copy01Icon, Image02Icon, PackageIcon, Search01Icon } from '@hugeicons/core-free-icons';
@@ -112,7 +107,6 @@ function QuickButton({
 
 export function WorkspacePage({ controller }: { controller: AppController }) {
   const { activeEnvironment, environments } = useEnvironments();
-  const envActions = useEnvironmentActions();
   const { t } = controller;
 
   // Installed themes (for per-agent counts shown in the detail sheet).
@@ -129,12 +123,9 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
   }, []);
 
   // Apply from the detail sheet — switches, then closes the sheet.
-  const handleApplyFromDetail = useCallback(
-    (env: EnvironmentModel) => {
-      void envActions.switchEnvironment(env);
-    },
-    [envActions],
-  );
+  const handleApplyFromDetail = useCallback((env: EnvironmentModel) => {
+    void useEnvironmentStore.getState().switchEnvironment(env);
+  }, []);
 
   const handleBrowseThemes = useCallback(() => {
     controller.setRoute('themes');
@@ -164,11 +155,11 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
 
   const handleRenameSubmit = useCallback(() => {
     if (renamePresetId && renameValue.trim()) {
-      envActions.renameEnvironment(renamePresetId, renameValue.trim());
+      useEnvironmentStore.getState().renameEnvironment(renamePresetId, renameValue.trim());
     }
     setRenamePresetId(null);
     setRenameValue('');
-  }, [renamePresetId, renameValue, envActions]);
+  }, [renamePresetId, renameValue]);
 
   // --- Duplicate handler ---
   const handleDuplicate = useCallback(
@@ -176,19 +167,16 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
       const preset = environments.find((e) => e.presetId === presetId);
       if (preset) {
         const newName = `${preset.name} 副本`;
-        envActions.duplicateEnvironment(presetId, newName);
+        useEnvironmentStore.getState().duplicateEnvironment(presetId, newName);
       }
     },
-    [environments, envActions],
+    [environments],
   );
 
   // --- Delete handler ---
-  const handleDelete = useCallback(
-    (presetId: string) => {
-      envActions.deleteEnvironment(presetId);
-    },
-    [envActions],
-  );
+  const handleDelete = useCallback((presetId: string) => {
+    useEnvironmentStore.getState().deleteEnvironment(presetId);
+  }, []);
 
   // Quick actions (plain array — handlers are useCallback-stable, controller is stable)
   const hasActiveTheme = (controller.status?.apps ?? []).some((app) => app.activeThemeId);

@@ -20,7 +20,6 @@
 import { useEffect } from 'react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TitleBar } from '@/components/title-bar';
-import { useAppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
 import { ThemeStudioPage } from '@/pages/ThemeStudioPage';
 import { useShellStore } from '@/stores/shellStore';
@@ -29,7 +28,6 @@ import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
 
 export default function StudioApp() {
-  const controller = useAppController();
   const locale = useShellStore((s) => s.locale);
   const setRoute = useShellStore((s) => s.setRoute);
 
@@ -47,7 +45,7 @@ export default function StudioApp() {
           'relative z-10 flex h-svh flex-col overflow-hidden font-sans text-foreground bg-background',
         )}
       >
-        <TitleBar controller={controller} />
+        <TitleBar />
 
         <section className="min-h-0 min-w-0 flex-1 overflow-hidden">
           <ThemeStudioPage t={t} />

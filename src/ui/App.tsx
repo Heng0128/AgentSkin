@@ -74,7 +74,7 @@ export default function App() {
           controller.dropThemeFiles(Array.from(event.dataTransfer.files));
         }}
       >
-        <TitleBar controller={controller} hasWallpaper={!!activeWallpaper} />
+        <TitleBar hasWallpaper={!!activeWallpaper} />
 
         <div
           className={cn(
@@ -84,7 +84,7 @@ export default function App() {
               : 'grid-cols-[224px_minmax(0,1fr)]',
           )}
         >
-          <Sidebar controller={controller} />
+          <Sidebar />
 
           <section className="relative flex min-h-0 min-w-0 flex-col">
             <div className="min-h-0 flex-1 overflow-y-auto">
@@ -121,7 +121,7 @@ export default function App() {
           </section>
         </div>
 
-        <StatusBar controller={controller} />
+        <StatusBar />
 
         <Dialog
           open={controller.selection !== null}

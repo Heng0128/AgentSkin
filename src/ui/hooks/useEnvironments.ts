@@ -3,49 +3,34 @@
 /**
  * # useEnvironments
  *
- * Preset-first environment derivation.
+ * Pure derivation hook — transforms store state into EnvironmentModel[].
  *
- * Data model (v2):
- *   EnvironmentPreset (saved)  →  user-defined Agent+Theme combo
- *   Runtime status (live)      →  current agent/theme state from stores
- *   EnvironmentModel (derived) →  Preset + runtime overlay
+ * Data model:
+ *   EnvironmentPreset (from environmentStore)  →  user-defined Agent+Theme combo
+ *   Runtime status (live, from statusStore)    →  AppStatus per app
+ *   EnvironmentModel (derived)                →  Preset + runtime overlay
  *
- * Key changes in P2.6:
- *   - EnvironmentModel.presetId links to its corresponding preset.
- *   - If no preset exists, presetId is null (runtime-only env).
- *   - switchEnvironment() auto-creates a preset when needed.
- *   - Presets are loaded via EnvironmentStore (not raw localStorage).
- *   - Reactivity driven by shared refresh counter from useEnvironmentActions.
- *
- * Flow:
- *   1. Load presets from localStorage (EnvironmentStore)
- *   2. Merge with runtime status from stores
- *   3. Derive EnvironmentModel[] for UI consumption
- *   4. Map each env to its preset by agentId+themeId match
- *
- * This hook is read-only for EnvironmentModel — it never mutates presets.
- * Mutations go through useEnvironmentActions.
- *
- * Reactivity note:
- *   Presets are loaded inside useMemo keyed on the shared refresh counter
- *   (getRefreshCounter()), so mutations in useEnvironmentActions trigger
- *   automatic re-derivation without explicit refresh callbacks.
+ * Reactivity: this hook subscribes to environmentStore.presets,
+ * agentStore.agents, themeStore.installed, and statusStore.status. Any
+ * mutation in environmentStore (create/rename/delete/duplicate) updates the
+ * presets slice, which automatically re-runs the derivation — no module counter
+ * or manual refresh callback needed.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { findAppStatus } from '@/lib/status-utils';
-import { loadPresets } from '@/storage/environment-store';
 import { useAgentStore } from '@/stores/agentStore';
+import { useEnvironmentStore } from '@/stores/environmentStore';
 import { useStatusStore } from '@/stores/statusStore';
 import { useThemeStore } from '@/stores/themeStore';
 import type { EnvironmentModel, EnvironmentPreset } from '@/types/environment';
 
 import type { AgentId } from '@shared/types';
-import { getRefreshCounter } from './useEnvironmentActions';
 
 /** Build an environment id from agent + theme. */
 function envId(agentId: string, themeId: string | null): string {
-  return themeId ? `${agentId}-${themeId}` : `${agentId}-default`;
+  const resolved = themeId || 'default';
+  return `${agentId}-${resolved}`;
 }
 
 export interface UseEnvironmentsResult {
@@ -53,30 +38,14 @@ export interface UseEnvironmentsResult {
   environments: EnvironmentModel[];
   /** Currently active environment (running agent + applied theme). */
   activeEnvironment: EnvironmentModel | null;
-  /** Shared refresh counter getter — increments on mutations. */
-  refresh: () => number;
 }
 
 export function useEnvironments(): UseEnvironmentsResult {
+  // --- Subscribe to stores (selector-based, re-renders only on slice change) ---
+  const presets = useEnvironmentStore((s) => s.presets);
   const allAgents = useAgentStore((s) => s.agents);
   const installed = useThemeStore((s) => s.installed);
   const status = useStatusStore((s) => s.status);
-
-  // --- Presets (persistent) ---
-  // P1 audit #14: previously this read localStorage inside a useMemo, which
-  // violates React's "useMemo must be pure" rule (localStorage is a side-
-  // effectful I/O source) and meant `refreshKey` changes from
-  // useEnvironmentActions wouldn't reliably trigger a re-read (the memo's
-  // dependency was a module-level getter that React can't track). Now uses
-  // useState + useEffect so the read is a proper effect that re-runs when
-  // the refresh counter changes, and the result flows through React state
-  // (which React CAN track for re-renders).
-  const refreshKey = getRefreshCounter();
-  const [presets, setPresets] = useState<EnvironmentPreset[]>(() => loadPresets());
-  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey is the reactivity trigger — its value change must re-run this effect to re-read presets, even though it is not read inside the body.
-  useEffect(() => {
-    setPresets(loadPresets());
-  }, [refreshKey]);
 
   // --- Lookups ---
   const themeById = useMemo(() => {
@@ -191,6 +160,5 @@ export function useEnvironments(): UseEnvironmentsResult {
   return {
     environments,
     activeEnvironment,
-    refresh: getRefreshCounter,
   };
 }
