@@ -241,7 +241,7 @@ describe('AgentEngineService (orchestration)', () => {
       const second = await svc.status();
       expect(first.platform).toBe('win32');
       expect(second).toBe(first); // same cached object
-      expect(probeAppStatus.mock.calls.length).toBe(first.apps.length);
+      expect(vi.mocked(probeAppStatus).mock.calls.length).toBe(first.apps.length);
     });
 
     it('re-probes after the cache TTL expires', async () => {
@@ -251,17 +251,17 @@ describe('AgentEngineService (orchestration)', () => {
       await vi.advanceTimersByTimeAsync(2100); // TTL = 2000ms
       const second = await svc.status();
       expect(second).not.toBe(first);
-      expect(probeAppStatus.mock.calls.length).toBe(first.apps.length * 2);
+      expect(vi.mocked(probeAppStatus).mock.calls.length).toBe(first.apps.length * 2);
     });
 
     it('invalidates the cache when apply runs', async () => {
       vi.useFakeTimers();
       const svc = makeService();
       await svc.status();
-      const before = probeAppStatus.mock.calls.length;
+      const before = vi.mocked(probeAppStatus).mock.calls.length;
       await svc.apply(APPLY_REQUEST);
       await svc.status();
-      expect(probeAppStatus.mock.calls.length).toBeGreaterThan(before);
+      expect(vi.mocked(probeAppStatus).mock.calls.length).toBeGreaterThan(before);
     });
   });
 
@@ -325,8 +325,8 @@ describe('AgentEngineService (orchestration)', () => {
       expect(applyThemeFlow).toHaveBeenCalledTimes(1);
       expect(restoreThemeFlow).toHaveBeenCalledTimes(1);
       // apply 必须先于 restore 完成。
-      const applyOrder = applyThemeFlow.mock.invocationCallOrder[0];
-      const restoreOrder = restoreThemeFlow.mock.invocationCallOrder[0];
+      const applyOrder = vi.mocked(applyThemeFlow).mock.invocationCallOrder[0];
+      const restoreOrder = vi.mocked(restoreThemeFlow).mock.invocationCallOrder[0];
       expect(applyOrder).toBeLessThan(restoreOrder);
     });
 
@@ -345,8 +345,8 @@ describe('AgentEngineService (orchestration)', () => {
 
       expect(applyThemeFlow).toHaveBeenCalledTimes(1);
       expect(restoreThemeFlow).toHaveBeenCalledTimes(1);
-      const restoreOrder = restoreThemeFlow.mock.invocationCallOrder[0];
-      const applyOrder = applyThemeFlow.mock.invocationCallOrder[0];
+      const restoreOrder = vi.mocked(restoreThemeFlow).mock.invocationCallOrder[0];
+      const applyOrder = vi.mocked(applyThemeFlow).mock.invocationCallOrder[0];
       expect(restoreOrder).toBeLessThan(applyOrder);
     });
 
