@@ -72,7 +72,8 @@ describe('validateManifest — core schema', () => {
 
   it('rejects an invalid schemaVersion', () => {
     const m = validManifest();
-    (m as Record<string, unknown>).schemaVersion = 3;
+    // schemaVersion 99 is not in the allowed enum [1, 2, 3]
+    (m as Record<string, unknown>).schemaVersion = 99;
     const errors = validateManifest(m);
     expect(errors.some((e) => e.path === 'schemaVersion')).toBe(true);
   });
@@ -170,17 +171,23 @@ describe('validateManifest — cross-field (SPEC-3)', () => {
     );
   });
 
-  it('accepts experimental agent ids (registered adapters)', () => {
+  it('rejects unknown agent ids (experimental removed in v1.4)', () => {
     const m = validManifest();
     (m.targets as Record<string, unknown>).codebuddy = { css: 'codebuddy.css' };
-    (m as Record<string, unknown>).supportedAgents = ['traework', 'zcode', 'codebuddy'];
-    expect(validateManifest(m)).toEqual([]);
+    const errors = validateManifest(m);
+    expect(errors.length).toBeGreaterThan(0);
+    expect(
+      errors.some((e) => e.path.includes('codebuddy') && e.message.includes('unknown agent')),
+    ).toBe(true);
   });
 
-  it('KNOWN_AGENT_IDS covers the six active product agents', () => {
+  it('KNOWN_AGENT_IDS covers the six active product agents (v1.4)', () => {
     for (const id of ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode']) {
       expect(KNOWN_AGENT_IDS).toContain(id);
     }
+    // v1.4: Experimental removed
+    expect(KNOWN_AGENT_IDS).not.toContain('codebuddy');
+    expect(KNOWN_AGENT_IDS).not.toContain('marscode');
   });
 });
 

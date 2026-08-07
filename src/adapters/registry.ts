@@ -10,10 +10,7 @@
  * `registerBuiltinAdapters()` is idempotent and wires the built-in set:
  *
  *   active (backed by @agentskin/engine):
- *     traework, qoderwork, workbuddy, doubao, codex
- *
- *   experimental (registered for discovery, not yet functional):
- *     codebuddy, marscode, comate, tongyi_lingma, tencent_ai_code
+ *     traework, qoderwork, workbuddy, doubao, codex, zcode
  *
  * Call it once during startup (see main.ts). Custom adapters can be added
  * later via `registerAdapter()` — the registry does not care where an adapter
@@ -21,14 +18,9 @@
  */
 
 import type { AdapterTier, ApplicationAdapter } from './base';
-import { CodebuddyAdapter } from './domestic/codebuddy';
 import { CodexAdapter } from './domestic/codex';
-import { ComateAdapter } from './domestic/comate';
 import { DoubaoAdapter } from './domestic/doubao';
-import { MarscodeAdapter } from './domestic/marscode';
 import { QoderAdapter } from './domestic/qoder';
-import { TencentAiCodeAdapter } from './domestic/tencent-ai-code';
-import { TongyiLingmaAdapter } from './domestic/tongyi-lingma';
 import { TraeAdapter } from './domestic/trae';
 import { WorkbuddyAdapter } from './domestic/workbuddy';
 import { ZcodeAdapter } from './domestic/zcode';
@@ -86,11 +78,4 @@ export function registerBuiltinAdapters(): void {
   registerAdapter(new DoubaoAdapter());
   registerAdapter(new CodexAdapter());
   registerAdapter(new ZcodeAdapter());
-
-  // --- Experimental: registered for discovery, not yet wired to core ---
-  registerAdapter(new CodebuddyAdapter());
-  registerAdapter(new MarscodeAdapter());
-  registerAdapter(new ComateAdapter());
-  registerAdapter(new TongyiLingmaAdapter());
-  registerAdapter(new TencentAiCodeAdapter());
 }

@@ -20,26 +20,16 @@ const mockAdapters: AgentAdapterInfo[] = [
     coreId: 'qoderwork',
     displayName: () => 'QoderWork CN',
   },
-  {
-    id: 'codebuddy',
-    name: 'CodeBuddy',
-    type: 'agent',
-    tier: 'experimental',
-    coreId: '',
-    displayName: () => {
-      throw new Error('experimental');
-    },
-  },
 ];
 
 describe('AgentCatalog', () => {
   const catalog = new AgentCatalog(mockAdapters);
 
   describe('listAgents', () => {
-    it('returns all agents (active + experimental)', () => {
+    it('returns all agents', () => {
       const agents = catalog.listAgents();
-      expect(agents).toHaveLength(3);
-      expect(agents.map((a) => a.id)).toEqual(['traework', 'qoderwork', 'codebuddy']);
+      expect(agents).toHaveLength(2);
+      expect(agents.map((a) => a.id)).toEqual(['traework', 'qoderwork']);
     });
 
     it('provides default status (IPC layer overwrites with live data)', () => {
@@ -57,12 +47,6 @@ describe('AgentCatalog', () => {
       expect(trae!.capabilities.theme).toBe(true);
       expect(trae!.capabilities.hotReload).toBe(true);
       expect(trae!.capabilities.extension).toBe(false);
-    });
-
-    it('sets experimental capabilities for experimental adapters', () => {
-      const codebuddy = catalog.getAgent('codebuddy');
-      expect(codebuddy!.capabilities.theme).toBe(false);
-      expect(codebuddy!.capabilities.hotReload).toBe(false);
     });
   });
 
@@ -84,12 +68,6 @@ describe('AgentCatalog', () => {
       expect(agent!.displayName).toBe('QoderWork CN');
     });
 
-    it('falls back to adapter name for experimental adapters', () => {
-      const agent = catalog.getAgent('codebuddy');
-      expect(agent).not.toBeNull();
-      expect(agent!.displayName).toBe('CodeBuddy');
-    });
-
     it('returns null for unknown id', () => {
       expect(catalog.getAgent('unknown')).toBeNull();
     });
@@ -102,9 +80,10 @@ describe('AgentCatalog', () => {
       expect(active.every((a) => a.supported)).toBe(true);
     });
 
-    it('excludes experimental agents', () => {
+    it('returns active agents from the catalog', () => {
       const active = catalog.getAvailableAgents();
-      expect(active.find((a) => a.id === 'codebuddy')).toBeUndefined();
+      expect(active.find((a) => a.id === 'traework')).toBeDefined();
+      expect(active.find((a) => a.id === 'qoderwork')).toBeDefined();
     });
   });
 });

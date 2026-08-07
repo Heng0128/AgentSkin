@@ -52,7 +52,7 @@ import {
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execFileAsync } from '../shared/exec-async';
 import type {
   AppAdapter,
   AppInstallation,
@@ -391,7 +391,7 @@ export const themeRuntime: ThemeRuntime = {
 // this runtime and agent-engine-service can share one implementation.
 // Re-exported here to preserve the existing import surface for consumers
 // that historically imported them from this module.
-import { probePortLive, explicitDebugPortsFromPids } from '../shared/cdp-discovery';
+import { probePortLive, explicitDebugPortsFromPids, listeningPortsForPids } from '../shared/cdp-discovery';
 import { AGENT_IDS } from '../shared/types';
 export { probePortLive, explicitDebugPortsFromPids };
 
@@ -724,24 +724,23 @@ async function patchWindowsAdapters(): Promise<void> {
         // InstallLocation (empty for Tencent installs) and DisplayIcon (an
         // .ico file, not .exe), so it never finds the exe. Probe the registry
         // ourselves and inject the discovered path as an executableCandidate.
-        try {
-          const regOut = execSync(
-            'reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Doubao" /v UninstallString',
-            { encoding: 'utf8', windowsHide: true, timeout: 3000 },
-          );
-          const m = regOut.match(/UninstallString\s+REG_SZ\s+"?([^"\r\n]+)/i);
-          if (m) {
-            const uninstPath = m[1].trim().replace(/"$/, '');
-            const doubaoRoot = path.dirname(uninstPath); // ..\Doubao
-            const exePath = path.join(doubaoRoot, 'app', 'Doubao.exe');
-            if (fs.existsSync(exePath)) {
-              const existing = Array.isArray(plat.executableCandidates) ? plat.executableCandidates : [];
-              if (!existing.includes(exePath)) {
-                plat.executableCandidates = [...existing, exePath];
-              }
+        const regOut = await execFileAsync(
+          'reg',
+          ['query', 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Doubao', '/v', 'UninstallString'],
+          3000,
+        );
+        const m = regOut.match(/UninstallString\s+REG_SZ\s+"?([^"\r\n]+)/i);
+        if (m) {
+          const uninstPath = m[1].trim().replace(/"$/, '');
+          const doubaoRoot = path.dirname(uninstPath); // ..\Doubao
+          const exePath = path.join(doubaoRoot, 'app', 'Doubao.exe');
+          if (fs.existsSync(exePath)) {
+            const existing = Array.isArray(plat.executableCandidates) ? plat.executableCandidates : [];
+            if (!existing.includes(exePath)) {
+              plat.executableCandidates = [...existing, exePath];
             }
           }
-        } catch { /* reg query failed — app not installed via this key */ }
+        }
       }
     }
 
@@ -766,6 +765,14 @@ async function patchWindowsAdapters(): Promise<void> {
  *      port that serves a CDP target accepted by `adapter.matchTarget` wins.
  *
  * Returns the port number, or null if no CDP endpoint is reachable.
+ *
+ * ALL process I/O is async. The previous implementation used synchronous
+ * `execSync('tasklist')` + `execSync('netstat')` — measured at ~600ms +
+ * ~80ms per call on a dev machine. `patchWindowsAdapters()` ran this once
+ * per agent (6 agents) at module load, and the first `status()` poll ran it
+ * again — freezing the Electron main-process event loop for ~3.6s, which
+ * the user saw as "app frozen / not responding" during a plain boot with no
+ * wallpaper or theme applied.
  */
 async function discoverLiveCdpPortViaPid(adapter: unknown): Promise<number | null> {
   const a = adapter as { platforms?: { win32?: { processNames?: string[] } }; matchTarget?: (t: unknown) => boolean };
@@ -778,12 +785,9 @@ async function discoverLiveCdpPortViaPid(adapter: unknown): Promise<number | nul
   );
   if (!names.size) return null;
 
-  let procs = '';
-  try {
-    procs = execSync('tasklist.exe /FO CSV /NH', { encoding: 'utf8' });
-  } catch {
-    return null;
-  }
+  // Async tasklist — the sync form blocked the event loop for ~600ms per
+  // call (measured). Never block the main process for process enumeration.
+  const procs = await execFileAsync('tasklist.exe', ['/FO', 'CSV', '/NH']);
   const pids = new Set<number>();
   procs.split(/\r?\n/).forEach((line) => {
     const m = /^"([^"]+)","(\d+)"/.exec(line);
@@ -811,26 +815,13 @@ async function discoverLiveCdpPortViaPid(adapter: unknown): Promise<number | nul
     }
   }
 
-  // Fallback: netstat PID→listening-ports. Catches apps that use
-  // --remote-debugging-port=0 (Chromium picks a free port itself, argv has
-  // no usable value) and any case where the explicit port probe failed.
-  let netOut = '';
-  try {
-    netOut = execSync('netstat -ano', { encoding: 'utf8' });
-  } catch {
-    return null;
-  }
-  const ports: number[] = [];
-  netOut.split(/\r?\n/).forEach((line) => {
-    const m = line.trim().match(/TCP\s+\S+:(\d+)\s+\S+\s+LISTENING\s+(\d+)/i);
-    if (m) {
-      const port = Number(m[1]);
-      const pid = Number(m[2]);
-      if (pids.has(pid)) ports.push(port);
-    }
-  });
+  // Fallback: async netstat PID→listening-ports (loopback-only, shared TTL
+  // snapshot). Catches apps that use --remote-debugging-port=0 (Chromium
+  // picks a free port itself, argv has no usable value) and any case where
+  // the explicit port probe failed.
+  const ports = await listeningPortsForPids([...pids]);
 
-  for (const port of [...new Set(ports)].sort((x, y) => x - y)) {
+  for (const port of ports.sort((x, y) => x - y)) {
     // Already tried via the explicit path above — skip the re-probe.
     if (explicitPorts.includes(port)) continue;
     try {

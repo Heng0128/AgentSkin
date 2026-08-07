@@ -1,3 +1,5 @@
+import { getSelectors } from "./selectivity-registry.mjs";
+
 function safeHostClass(appId) {
   return `agentskin-host-${String(appId).replace(/[^a-z0-9_-]/gi, "-")}`;
 }
@@ -34,8 +36,23 @@ function buildCompatibilityProfile(adapter, themeVerification = null) {
     whenAny: context.when.any,
     checks: checks(context, scope, context.name),
   }));
+
+  /**
+   * Supplement the adapter's rootAny with registry root selectors not already
+   * present. This gives CDP preflight an extra fallback chain when the agent
+   * app's primary hash class names change after a major update. (See
+   * selectivity-registry.mjs for the full per-platform semantic selector map.)
+   */
+  const registryRootSelectors = getSelectors(adapter.id, "root");
+  let enrichedRootAny = adapterProfile.rootAny ?? ["body"];
+  if (registryRootSelectors) {
+    const existing = new Set(enrichedRootAny);
+    const supplements = registryRootSelectors.filter((sel) => !existing.has(sel));
+    if (supplements.length) enrichedRootAny = [...enrichedRootAny, ...supplements];
+  }
+
   return {
-    rootAny: adapterProfile.rootAny ?? ["body"],
+    rootAny: enrichedRootAny,
     checks: [
       ...checks(adapterProfile, "adapter"),
       ...checks(themeVerification, "theme"),
@@ -154,6 +171,8 @@ export function buildApplyExpression({ adapter, targetTheme }) {
     const rootState = window.__AGENTSKIN__ ||= { hosts: {} };
     rootState.hosts ||= {};
     rootState.hosts[host.id]?.cleanup?.();
+    // AdaptiveMutationObserver — three-layer throttle to prevent observer storms
+    class AdaptiveMutationObserver{constructor(e,o={}){this.callback=e;this.throttleWindow=o.throttleWindow??10000;this.throttleMaxAttempts=o.throttleMaxAttempts??50;this.retryTimeout=o.retryTimeout??2000;this.loopThreshold=o.loopThreshold??1000;this.loopMaxCycles=o.loopMaxCycles??10;this.attemptCount=0;this.windowStart=Date.now();this.isThrottled=!1;this.elementChanges=new WeakMap;this._throttleTimer=null;this.observer=new MutationObserver((o=>{this._handleMutations(o)}))}observe(e,o){this.observer.observe(e,o)}disconnect(){this.observer.disconnect();this._throttleTimer&&(clearTimeout(this._throttleTimer),this._throttleTimer=null)}takeRecords(){return this.observer.takeRecords()}_handleMutations(e){const o=e.filter((e=>!this._isLooping(e.target)));if(0===o.length)return;if(this.isThrottled)return;const t=Date.now();t-this.windowStart>this.throttleWindow&&(this.windowStart=t,this.attemptCount=0);this.attemptCount++;this.attemptCount>this.throttleMaxAttempts?this._enterCooldown():this.callback(o)}_isLooping(e){const o=this.elementChanges.get(e),t=Date.now();return o&&!(t-o.time>this.loopThreshold)?(o.count++,o.time=t,o.count>this.loopMaxCycles):(this.elementChanges.set(e,{count:1,time:t}),!1)}_enterCooldown(){this.isThrottled=!0;console.warn('[AgentSkin] MutationObserver throttled for '+this.retryTimeout+'ms'),this._throttleTimer=setTimeout((()=>{this.isThrottled=!1,this.attemptCount=0,this.windowStart=Date.now(),this._throttleTimer=null}),this.retryTimeout)}}
     const imageUrls = {};
     const ownedImageUrls = new Set();
     const resolveImageUrl = (dataUrl) => {
@@ -214,7 +233,7 @@ export function buildApplyExpression({ adapter, targetTheme }) {
     };
 
     let timer;
-    const observer = new MutationObserver(() => {
+    const observer = new AdaptiveMutationObserver(() => {
       clearTimeout(timer);
       timer = setTimeout(ensure, 120);
     });

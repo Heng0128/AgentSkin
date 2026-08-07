@@ -14,7 +14,6 @@ export interface AgentAdapterInfo {
 }
 
 const ACTIVE_CAPS: AgentCapabilities = { theme: true, hotReload: true, extension: false };
-const EXPERIMENTAL_CAPS: AgentCapabilities = { theme: false, hotReload: false, extension: false };
 
 /**
  * Catalog-level display metadata. Display names, official names, and regions
@@ -49,16 +48,6 @@ const DISPLAY_META: Record<string, AgentDisplayMeta> = {
     region: AGENT_META.workbuddy.region,
     capabilities: ACTIVE_CAPS,
   },
-  codebuddy: {
-    slug: 'codebuddy',
-    icon: 'codebuddy',
-    description: 'Tencent Cloud CodeBuddy — experimental.',
-    displayName: 'CodeBuddy',
-    officialName: 'CodeBuddy',
-    region: 'CN',
-    tier: 'experimental',
-    capabilities: EXPERIMENTAL_CAPS,
-  },
   doubao: {
     slug: 'doubao',
     icon: 'doubao',
@@ -86,46 +75,6 @@ const DISPLAY_META: Record<string, AgentDisplayMeta> = {
     region: AGENT_META.zcode.region,
     capabilities: ACTIVE_CAPS,
   },
-  marscode: {
-    slug: 'marscode',
-    icon: 'marscode',
-    description: 'Doubao MarsCode AI IDE — experimental.',
-    displayName: '豆包 MarsCode',
-    officialName: 'MarsCode',
-    region: 'CN',
-    tier: 'experimental',
-    capabilities: EXPERIMENTAL_CAPS,
-  },
-  comate: {
-    slug: 'comate',
-    icon: 'comate',
-    description: 'Baidu Comate AI coding assistant — experimental.',
-    displayName: '百度 Comate',
-    officialName: 'Comate',
-    region: 'CN',
-    tier: 'experimental',
-    capabilities: EXPERIMENTAL_CAPS,
-  },
-  tongyi_lingma: {
-    slug: 'tongyi',
-    icon: 'tongyi_lingma',
-    description: 'Alibaba Tongyi Lingma — experimental.',
-    displayName: '通义灵码',
-    officialName: '通义灵码',
-    region: 'CN',
-    tier: 'experimental',
-    capabilities: EXPERIMENTAL_CAPS,
-  },
-  tencent_ai_code: {
-    slug: 'tencent-ai-code',
-    icon: 'tencent_ai_code',
-    description: 'Tencent Cloud AI Code — experimental.',
-    displayName: '腾讯云 AI Code',
-    officialName: '腾讯AI代码',
-    region: 'CN',
-    tier: 'experimental',
-    capabilities: EXPERIMENTAL_CAPS,
-  },
 };
 
 const FALLBACK_META: AgentDisplayMeta = {
@@ -134,7 +83,7 @@ const FALLBACK_META: AgentDisplayMeta = {
   description: '',
   officialName: '',
   region: 'Global',
-  capabilities: EXPERIMENTAL_CAPS,
+  capabilities: ACTIVE_CAPS,
 };
 
 export class AgentCatalog {
@@ -158,12 +107,12 @@ export class AgentCatalog {
     let displayName = meta.displayName ?? adapter.name;
     // Product display names in DISPLAY_META are authoritative. Only fall back
     // to the engine's runtime name when no curated display name exists (e.g.
-    // experimental adapters without a catalog entry).
+    // unknown adapters without a catalog entry).
     if (!meta.displayName && adapter.coreId) {
       try {
         displayName = adapter.displayName();
       } catch {
-        /* experimental */
+        /* fallback to adapter.name below */
       }
     }
     return {

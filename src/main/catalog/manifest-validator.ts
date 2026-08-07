@@ -28,23 +28,16 @@
 
 import schemaJson from './manifest-v2.schema.json';
 
-/** Known agent ids — the 6 active product agents plus experimental adapters
- *  registered in the registry (see src/shared/types.ts AGENT_META). A targets
- *  key outside this set is a typo, not a new agent. */
+/** Known agent ids — the 6 active product agents (v1.4).
+ *  Experimental adapters removed from supported list.
+ *  A targets key outside this set is a typo, not a new agent. */
 export const KNOWN_AGENT_IDS: readonly string[] = [
-  // active
   'traework',
   'qoderwork',
   'workbuddy',
   'doubao',
   'codex',
   'zcode',
-  // experimental (registered adapters, no engine wiring yet)
-  'codebuddy',
-  'marscode',
-  'comate',
-  'tongyi_lingma',
-  'tencent_ai_code',
 ];
 
 export interface SchemaError {

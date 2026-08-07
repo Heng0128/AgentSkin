@@ -42,7 +42,13 @@ export class CdpSession {
   }
 
   #onMessage(event) {
-    const message = JSON.parse(String(event.data));
+    let message;
+    try {
+      message = JSON.parse(String(event.data));
+    } catch {
+      // Skip non-JSON frames (binary data, truncated messages, protocol errors).
+      return;
+    }
     if (message.id) {
       const waiter = this.pending.get(message.id);
       if (!waiter) return;
