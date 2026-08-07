@@ -1,22 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useEffect, useState } from 'react';
-import { api } from '@/api/agentSkinClient';
-import { HugeIcon } from '@/components/ui/huge-icon';
-import type { ThemeMode } from '@/design/theme-mode';
-import type { AppController } from '@/hooks/useAppController';
-import { useThemeMode } from '@/hooks/useThemeMode';
-import { cn } from '@/lib/utils';
-
-import {
-  Cancel01Icon,
-  ComputerIcon,
-  Maximize02Icon,
-  Minimize01Icon,
-  Moon02Icon,
-  Sun03Icon,
-} from '@hugeicons/core-free-icons';
-
 /**
  * # TitleBar — Swiss Edition
  *
@@ -45,15 +28,33 @@ import {
  * macOS skips the window controls and the divider; the native buttons sit in
  * the drag region's left padding.
  */
-export function TitleBar({
-  controller,
-  hasWallpaper = false,
-}: {
-  controller: AppController;
-  /** When an active wallpaper is rendering, the bar switches to glass mode. */
-  hasWallpaper?: boolean;
-}) {
-  const { t, status, route } = controller;
+
+import { useEffect, useState } from 'react';
+import { api } from '@/api/agentSkinClient';
+import { HugeIcon } from '@/components/ui/huge-icon';
+import type { ThemeMode } from '@/design/theme-mode';
+import { useThemeMode } from '@/hooks/useThemeMode';
+import { cn } from '@/lib/utils';
+import { useShellStore } from '@/stores/shellStore';
+import { useStatusStore } from '@/stores/statusStore';
+
+import {
+  Cancel01Icon,
+  ComputerIcon,
+  Maximize02Icon,
+  Minimize01Icon,
+  Moon02Icon,
+  Sun03Icon,
+} from '@hugeicons/core-free-icons';
+import type { UiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
+
+export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
+  const locale = useShellStore((s) => s.locale);
+  const route = useShellStore((s) => s.route);
+  const status = useStatusStore((s) => s.status);
+  const t: UiMessages = uiMessages[locale];
+
   const isMac = status?.platform === 'darwin';
   const { mode, setMode } = useThemeMode();
   const [maximized, setMaximized] = useState(false);

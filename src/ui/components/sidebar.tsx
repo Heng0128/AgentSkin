@@ -4,8 +4,8 @@ import { api } from '@/api/agentSkinClient';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
-import type { AppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
+import { useShellStore } from '@/stores/shellStore';
 import type { Route } from '@/types/navigation';
 
 import {
@@ -15,6 +15,8 @@ import {
   PaintBoardIcon,
   Settings01Icon,
 } from '@hugeicons/core-free-icons';
+import type { UiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
 
 interface NavEntry {
   route: Route;
@@ -62,9 +64,13 @@ const NavButton = ({ item, active, collapsed, onClick }: NavButtonProps) => {
  *
  * Width: 224px expanded · 62px collapsed.
  */
-export function Sidebar({ controller }: { controller: AppController }) {
-  const { t } = controller;
-  const collapsed = controller.sidebarCollapsed;
+export function Sidebar() {
+  const locale = useShellStore((s) => s.locale);
+  const collapsed = useShellStore((s) => s.sidebarCollapsed);
+  const toggleSidebar = useShellStore((s) => s.toggleSidebar);
+  const route = useShellStore((s) => s.route);
+  const setRoute = useShellStore((s) => s.setRoute);
+  const t: UiMessages = uiMessages[locale];
 
   // Swiss grouping — mirrors the A.html reference nav (CORE / MANAGE / SYSTEM).
   const navGroups: Array<{ label: string; items: NavEntry[] }> = [
@@ -98,11 +104,11 @@ export function Sidebar({ controller }: { controller: AppController }) {
           remains as a secondary affordance). */}
       <button
         type="button"
-        onClick={controller.toggleSidebar}
+        onClick={toggleSidebar}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            controller.toggleSidebar();
+            toggleSidebar();
           }
         }}
         title={collapsed ? t.expandSidebar : t.collapseSidebar}
@@ -138,9 +144,9 @@ export function Sidebar({ controller }: { controller: AppController }) {
                 <NavButton
                   key={item.route}
                   item={item}
-                  active={controller.route === item.route}
+                  active={route === item.route}
                   collapsed={collapsed}
-                  onClick={() => controller.setRoute(item.route)}
+                  onClick={() => setRoute(item.route)}
                 />
               ))}
             </div>

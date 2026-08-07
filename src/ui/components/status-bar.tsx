@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useState } from 'react';
-import type { AppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
+import { useShellStore } from '@/stores/shellStore';
+import { useStatusStore } from '@/stores/statusStore';
 
+import type { UiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
 import type { SystemStatus } from '@shared/types';
 
 /**
@@ -16,7 +19,7 @@ import type { SystemStatus } from '@shared/types';
  *   Center → platform count · injected count
  *   Right  → inject dock · local · clock · version
  *
- * No IPC calls — derives everything from the AppController snapshot.
+ * No controller dependency — reads directly from shellStore + statusStore.
  */
 
 /** Derive CDP/aggregate status from live system snapshot. */
@@ -31,20 +34,6 @@ function deriveCdpState(status: SystemStatus | null): 'running' | 'standby' | 'o
 interface LedState {
   variant: 'running' | 'standby' | 'offline';
   label: string;
-}
-
-function useCdpState(controller: AppController): LedState {
-  const { status } = controller;
-  const variant = deriveCdpState(status);
-  return {
-    variant,
-    label:
-      variant === 'running'
-        ? controller.t.swissLedRunning
-        : variant === 'standby'
-          ? controller.t.swissLedStandby
-          : controller.t.swissLedOffline,
-  };
 }
 
 /** Local HH:mm:ss tick — re-renders only once a second. */
@@ -72,12 +61,24 @@ const LED_STYLE: Record<LedState['variant'], { dot: string; glow: string }> = {
   },
 };
 
-export function StatusBar({ controller }: { controller: AppController }) {
-  const { t, status, appVersion } = controller;
-  const cdp = useCdpState(controller);
-  const clock = useTick();
+export function StatusBar() {
+  const locale = useShellStore((s) => s.locale);
+  const appVersion = useShellStore((s) => s.appVersion);
+  const injectDockOpen = useShellStore((s) => s.injectDockOpen);
+  const setInjectDockOpen = useShellStore((s) => s.setInjectDockOpen);
+  const status = useStatusStore((s) => s.status);
+  const t: UiMessages = uiMessages[locale];
 
-  const led = LED_STYLE[cdp.variant];
+  const variant = deriveCdpState(status);
+  const cdpLabel =
+    variant === 'running'
+      ? t.swissLedRunning
+      : variant === 'standby'
+        ? t.swissLedStandby
+        : t.swissLedOffline;
+
+  const clock = useTick();
+  const led = LED_STYLE[variant];
 
   // Aggregate counts from the live status snapshot.
   const totalPlatforms = status?.apps.length ?? 0;
@@ -89,7 +90,7 @@ export function StatusBar({ controller }: { controller: AppController }) {
       {/* Left cluster: LED + CDP status. */}
       <div className="flex items-center gap-1.5 [-webkit-app-region:no-drag]">
         <span className={cn('size-[7px] shrink-0 rounded-full', led.dot, led.glow)} aria-hidden />
-        <span className="font-mono text-[10px] font-medium text-muted-foreground">{cdp.label}</span>
+        <span className="font-mono text-[10px] font-medium text-muted-foreground">{cdpLabel}</span>
       </div>
 
       {/* Center cluster: platform count · injected — visible only on lg+. */}
@@ -114,11 +115,11 @@ export function StatusBar({ controller }: { controller: AppController }) {
           type="button"
           title={t.injectDockTitle}
           aria-label={t.injectDockTitle}
-          aria-pressed={controller.injectDockOpen}
-          onClick={() => controller.setInjectDockOpen((open) => !open)}
+          aria-pressed={injectDockOpen}
+          onClick={() => setInjectDockOpen((open) => !open)}
           className={cn(
             'inline-grid place-items-center size-[27px] rounded-[2px] border bg-transparent text-[12px] transition-[background,border-color] duration-400 active:translate-y-[1px]',
-            controller.injectDockOpen
+            injectDockOpen
               ? 'border-primary bg-card2 text-primary'
               : 'border-border-strong text-muted-foreground hover:bg-card2 hover:text-foreground hover:border-border',
           )}
