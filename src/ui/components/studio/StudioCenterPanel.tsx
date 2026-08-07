@@ -18,7 +18,6 @@ import type { AppController } from '@/hooks/useAppController';
 
 import { BeakerIcon, EyeIcon, RefreshIcon, Search01Icon } from '@hugeicons/core-free-icons';
 import type { AgentId, ThemeVisualSnapshot } from '@shared/types';
-import { AGENT_META } from '@shared/types';
 
 export type PreviewView = 'theme' | 'wallpaper' | 'bundle' | 'inspect';
 

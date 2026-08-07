@@ -25,7 +25,7 @@ import {
 import type {
   AgentId,
   InspectedNode,
-  StudioProject,
+  NodeCascade,
   ThemeCatalogItem,
   ThemeVisualSnapshot,
 } from '@shared/types';
@@ -94,7 +94,7 @@ export function StudioRightInspector({
   setPseudoView: (v: string | null) => void;
   schemeView: 'light' | 'dark' | null;
   setSchemeView: (v: 'light' | 'dark' | null) => void;
-  activePseudo: { computed: Array<{ property: string; value: string }> } | undefined;
+  activePseudo: NodeCascade | undefined;
   activeScheme: { styles: Array<{ property: string; value: string }> } | undefined;
   landmarkSearch: ThemeVisualSnapshot['landmarks'];
   allLandmarks: ThemeVisualSnapshot['landmarks'];

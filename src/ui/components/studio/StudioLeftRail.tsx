@@ -75,14 +75,14 @@ export function StudioLeftRail({
   pseudoStates: string[];
   captureSchemes: boolean;
   customSelectorInput: string;
-  setCreatingProject: (v: boolean) => void;
+  setCreatingProject: React.Dispatch<React.SetStateAction<boolean>>;
   setNewName: (v: string) => void;
   setNewAuthor: (v: string) => void;
   setNewAgent: (v: AgentId) => void;
   setEditingId: (v: string | null) => void;
   setEditName: (v: string) => void;
   setEditAuthor: (v: string) => void;
-  setThemeLibraryOpen: (v: boolean) => void;
+  setThemeLibraryOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setCustomSelectorInput: (v: string) => void;
   setActiveProjectId: (v: string) => void;
   handleCreateProject: () => void;
@@ -93,7 +93,7 @@ export function StudioLeftRail({
   addPinnedSelector: () => void;
   removePinnedSelector: (sel: string) => void;
   togglePseudo: (state: string) => void;
-  setCaptureSchemes: (v: boolean) => void;
+  setCaptureSchemes: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   return (
     <div
