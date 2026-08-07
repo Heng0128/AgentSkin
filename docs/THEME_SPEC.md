@@ -1,5 +1,7 @@
 # AgentSkin 主题包规范 v2.1
 
+> 活文档：随主题包系统变更而更新。2026-08-07 文档体系重建时保留。
+
 本文档定义了 AgentSkin 主题包（Theme Package）的目录结构、manifest.json 字段规范、验证规则和最佳实践。
 
 ## 目录结构
