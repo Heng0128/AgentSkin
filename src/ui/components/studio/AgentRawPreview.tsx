@@ -3,35 +3,27 @@
 /**
  * Agent Raw Preview — rebuild an Agent's original visuals inside an isolated iframe.
  *
- * Input:  the compact DOM tree captured by CDP plus the native root CSS variables for
- *         a given light / dark scheme.
- * Output: an iframe whose srcDoc renders every node with its captured inline style and
- *         a synthesized stylesheet (:root { --native-vars } + captured inline <style>
- *         blocks). The result is a pixel-identical soft-reconstruction of the Agent's
- *         original UI that the user can switch between light / dark at the click of a tab.
+ * Input:  the real DOM subtree captured by CDP (`DomTreeNode`, see `dom-tree.ts`)
+ *         plus the native root CSS variables for a given light / dark scheme.
+ * Output: an iframe whose srcDoc renders every node with its captured inline style
+ *         and a synthesized stylesheet (:root { --native-vars } + captured inline
+ *         <style> blocks). The result is a pixel-identical soft-reconstruction of
+ *         the Agent's original UI that the user can switch between light / dark at
+ *         the click of a tab.
+ *
+ * Unlike the theme-editing preview (`RealDomPreview`), this preview renders the
+ * agent's NATIVE appearance: no toolbox overrides, no role-based color rebinding.
+ * The captured styles are emitted verbatim so the user can compare "before theme"
+ * (baseline) against "after theme" (current snapshot).
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-// ===========================================================================
-// Types (mirror agents-profiles/*-profile.json > dom.samples.*)
-// ===========================================================================
-
-export interface CompactDomNode {
-  t: string; // tag
-  d: number; // depth
-  c?: string; // class string (truncated <= 120 by extractor)
-  i?: string; // id
-  r?: string; // aria role
-  m?: string; // theme / data-theme
-  x?: string; // leaf text
-  s?: Record<string, string>; // captured computed-style subset
-  ch?: CompactDomNode[]; // children
-}
+import type { DomTreeNode } from '@shared/types';
 
 export interface AgentRawPreviewProps {
-  /** Compacted DOM tree as returned by the CDP full-extract runtime. */
-  domTree: CompactDomNode | null;
+  /** Real DOM subtree as returned by the CDP capture (`DomTreeNode`). */
+  domTree: DomTreeNode | null;
   /** Native CSS custom properties keyed by name (e.g. "--color-background"). */
   rootVars: Record<string, string>;
   /** Native <style> blocks (textContent) captured from inline <style> tags. */
@@ -44,92 +36,120 @@ export interface AgentRawPreviewProps {
 }
 
 // ===========================================================================
-// Captured computed-style key -> CSS property mapping
+// Safe attribute replay (same policy as RealDomPreview)
 // ===========================================================================
 
-const STYLE_KEY_MAP: Record<string, string> = {
-  bg: 'background-color',
-  fg: 'color',
-  bc: 'border-color',
-  br: 'border-radius',
-  bs: 'box-shadow',
-  ff: 'font-family',
-  fs: 'font-size',
-  fw: 'font-weight',
-  p: 'padding',
-  mg: 'margin',
-  gap: 'gap',
-  dp: 'display',
-  pos: 'position',
-  op: 'opacity',
-  flt: 'filter',
-  bdf: 'backdrop-filter',
-  tr: 'transition',
-};
+const ALLOWED_ATTRS = new Set([
+  'class',
+  'id',
+  'title',
+  'alt',
+  'width',
+  'height',
+  'cols',
+  'rows',
+  'placeholder',
+  'type',
+  'value',
+  'name',
+  'for',
+  'href',
+  'src',
+  'srcset',
+  'target',
+  'rel',
+  'aria-label',
+  'aria-hidden',
+  'role',
+  'data-*',
+]);
+
+function isSafeAttr(k: string, v: string): boolean {
+  if (k.startsWith('on')) return false; // strip event handlers
+  if (k.startsWith('data-')) return true; // data-* carries no code paths
+  if (ALLOWED_ATTRS.has(k)) {
+    if (k === 'href' || k === 'src' || k === 'srcset') {
+      return !/^\s*(javascript|vbscript|data:text\/html)/i.test(v);
+    }
+    return true;
+  }
+  return false;
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function escapeAttr(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
 
 // ===========================================================================
 // Recursive DOM reconstruction → raw HTML string
 // ===========================================================================
 
-function buildInlineStyle(s?: Record<string, string>): string {
-  if (!s) return '';
-  const parts: string[] = [];
-  for (const [k, v] of Object.entries(s)) {
-    const prop = STYLE_KEY_MAP[k];
-    if (!prop) continue;
-    // Treat `background-color: transparent` from the extractor as "no opacity override" —
-    // we still emit it because the Agent's original was transparent.
-    parts.push(`${prop}: ${v}`);
+const VOID_TAGS = new Set([
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
+]);
+
+function renderDomNode(node: DomTreeNode): string {
+  const tag = escapeHtml(node.tag || 'div');
+
+  // Inline styles are emitted verbatim — `DomTreeNode.style` already carries
+  // resolved CSS property names (e.g. "background-color"), unlike the old
+  // abridged-key contract that dropped most captured properties.
+  const styleEntries = Object.entries(node.style ?? {});
+  const styleAttr =
+    styleEntries.length > 0
+      ? ` style="${escapeAttr(styleEntries.map(([k, v]) => `${k}: ${v}`).join('; '))}"`
+      : '';
+
+  const cls = node.cls ? ` class="${escapeAttr(node.cls)}"` : '';
+
+  // Replay whitelisted attributes (SVG geometry, aria, img width/height…).
+  let attrs = '';
+  if (node.attrs) {
+    attrs = Object.entries(node.attrs)
+      .filter(([k, v]) => isSafeAttr(k, v))
+      .map(([k, v]) => ` ${k}="${escapeAttr(v)}"`)
+      .join('');
   }
-  return parts.join('; ');
-}
 
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
+  // Inlined image source (data URL) for <img> nodes, when available.
+  const src =
+    node.imgSrc && !/^\s*(javascript|vbscript|data:text\/html)/i.test(node.imgSrc)
+      ? ` src="${escapeAttr(node.imgSrc)}"`
+      : '';
 
-function renderNode(node: CompactDomNode): string {
-  const tag = escapeHtml(node.t || 'div');
-  const cls = node.c ? ` class="${escapeHtml(node.c)}"` : '';
-  const id = node.i ? ` id="${escapeHtml(node.i)}"` : '';
-  const role = node.r ? ` role="${escapeHtml(node.r)}"` : '';
-  const dataTheme = node.m ? ` data-theme="${escapeHtml(node.m)}"` : '';
-  const style =
-    node.s && Object.keys(node.s).length > 0 ? ` style="${buildInlineStyle(node.s)}"` : '';
-
-  // Self-closing tags
-  const voidTags = new Set([
-    'area',
-    'base',
-    'br',
-    'col',
-    'embed',
-    'hr',
-    'img',
-    'input',
-    'link',
-    'meta',
-    'param',
-    'source',
-    'track',
-    'wbr',
-  ]);
-  if (voidTags.has(tag)) {
-    return `<${tag}${id}${cls}${role}${dataTheme}${style}>`;
+  if (VOID_TAGS.has(node.tag)) {
+    return `<${tag}${cls}${attrs}${src}${styleAttr}>`;
   }
 
   let children = '';
-  if (node.ch && node.ch.length > 0) {
-    children = node.ch.map(renderNode).join('');
-  } else if (node.x) {
-    children = escapeHtml(node.x);
+  if (node.children && node.children.length > 0) {
+    children = node.children.map(renderDomNode).join('');
+  } else if (node.text) {
+    children = escapeHtml(node.text);
   }
 
-  return `<${tag}${id}${cls}${role}${dataTheme}${style}>${children}</${tag}>`;
+  return `<${tag}${cls}${attrs}${styleAttr}>${children}</${tag}>`;
 }
 
 // ===========================================================================
@@ -154,7 +174,7 @@ function buildSrcDoc(props: AgentRawPreviewProps): string {
 
   let bodyHtml = '';
   if (domTree) {
-    bodyHtml = `${renderNode(domTree)}`;
+    bodyHtml = renderDomNode(domTree);
   }
 
   // 3. Stylesheet assembly order:
@@ -164,7 +184,7 @@ function buildSrcDoc(props: AgentRawPreviewProps): string {
   const blocks: string[] = [];
   if (rootVarCss) blocks.push(`<style data-origin="native-vars">\n${rootVarCss}\n</style>`);
   for (const [href, text] of Object.entries(externalSheets)) {
-    blocks.push(`<style data-origin="${escapeHtml(href)}">\n${text}\n</style>`);
+    blocks.push(`<style data-origin="${escapeAttr(href)}">\n${text}\n</style>`);
   }
   for (const idx in inlineStyleBlocks) {
     blocks.push(`<style data-origin="inline-${idx}">\n${inlineStyleBlocks[idx]}\n</style>`);
@@ -194,18 +214,30 @@ ${bodyHtml}
 // ===========================================================================
 
 export function AgentRawPreview(props: AgentRawPreviewProps) {
-  const { domTree, rootVars, scale = 1 } = props;
+  const { domTree, scale = 1 } = props;
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [ready, setReady] = useState(false);
 
   const srcDoc = useMemo(() => {
     try {
-      return buildSrcDoc(props);
+      return buildSrcDoc({
+        domTree: props.domTree,
+        rootVars: props.rootVars,
+        inlineStyleBlocks: props.inlineStyleBlocks,
+        externalSheets: props.externalSheets,
+        themeMode: props.themeMode,
+      });
     } catch (e) {
       console.error('[AgentRawPreview] build failed:', e);
       return '<html><body>Failed to render preview</body></html>';
     }
-  }, [props.inlineStyleBlocks, props.externalSheets, props.themeMode, props]);
+  }, [
+    props.domTree,
+    props.rootVars,
+    props.inlineStyleBlocks,
+    props.externalSheets,
+    props.themeMode,
+  ]);
 
   // srcDoc approach is synchronous and self-contained — no postMessage bridge needed.
   useEffect(() => {
@@ -246,8 +278,8 @@ export function AgentRawPreview(props: AgentRawPreviewProps) {
 // ===========================================================================
 
 export interface AgentRawDualPreviewProps {
-  domLight: CompactDomNode | null;
-  domDark: CompactDomNode | null;
+  domLight: DomTreeNode | null;
+  domDark: DomTreeNode | null;
   rootVarsLight: Record<string, string>;
   rootVarsDark: Record<string, string>;
   inlineStyleBlocks?: string[];
@@ -313,27 +345,4 @@ export function AgentRawDualPreview(props: AgentRawDualPreviewProps) {
       </div>
     </div>
   );
-}
-
-// Convenience helper — given a raw-extract-style rootVars object, strip out
-// entries whose value is clearly non-color (line-heights, durations, numbers).
-export function filterColorVars(vars: Record<string, string>): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of Object.entries(vars)) {
-    if (!v) continue;
-    // Skip pure numbers, dimensions, calculations
-    if (/^[\d.]+(px|rem|em|%|s|ms|vh|vw)?$/.test(v)) continue;
-    if (
-      /^(inherit|initial|unset|none|auto|normal|transparent|currentColor|visible|hidden)$/i.test(v)
-    )
-      continue;
-    if (/^calc\(/.test(v)) continue;
-    // Skip box-shadow values that look like "none var(...)"
-    if (/^none\s+var\(/.test(v)) continue;
-    // Keep anything that looks like it has color info
-    if (/#|rgb|hsl|oklch|color-mix|--/.test(v)) {
-      out[k] = v;
-    }
-  }
-  return out;
 }

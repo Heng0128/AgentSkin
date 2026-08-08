@@ -54,7 +54,7 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
     return { ok: true };
   });
 
-  registerStudioIpc({
+  const { stopAllInspects } = registerStudioIpc({
     applyTheme: (request) => ctx.core.apply(request),
     restoreApp: (appId) => ctx.core.restore(appId),
     getActiveThemeId: async (appId) => {
@@ -67,6 +67,10 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
       const app = status.apps.find((a) => a.appId === appId);
       return app?.port ?? null;
     },
+    getThemeName: async (themeId) => {
+      const theme = await ctx.themeCatalog.getTheme(themeId);
+      return theme?.name ?? null;
+    },
     log: (line: string) => console.log(line),
     // Studio snapshot/inspect events are pushed back to whichever window
     // requested them. The studio now lives in its own window, so prefer
@@ -76,6 +80,13 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
       target?.webContents.send(channel, payload);
     },
   });
+
+  // Tear down any live CDP inspect session when the studio window closes —
+  // otherwise the WebSocket stays open and the agent is left in
+  // Overlay.inspectMode until the next start/stop cycle.
+  ctx.onStudioWindowClosed = () => {
+    void stopAllInspects();
+  };
 
   // Studio "工程" (projects) — self-contained, file-backed, no installed themes.
   registerStudioProjectIpc();

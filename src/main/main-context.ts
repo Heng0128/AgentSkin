@@ -38,6 +38,11 @@ export interface MainContext {
    *  from the main window's sidebar). Null until first opened; reset to null
    *  on the window's `closed` event. */
   studioWindow: BrowserWindow | null;
+  /** Invoked when the Theme Studio window is closed. Lets IPC domains (e.g.
+   *  the live-inspect controller) release CDP sessions that would otherwise
+   *  leak past the window's lifetime. Set during IPC registration; null when
+   *  no cleanup is needed. */
+  onStudioWindowClosed: (() => void) | null;
   tray: Tray | null;
   isQuitting: boolean;
   /** True after `runBootSequence` completes successfully. IPC handlers and
@@ -68,6 +73,7 @@ export const ctx: MainContext = {
   mainWindow: null,
   splashWindow: null,
   studioWindow: null,
+  onStudioWindowClosed: null,
   tray: null,
   isQuitting: false,
   bootComplete: false,

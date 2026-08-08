@@ -24,7 +24,7 @@ import type { AgentId, StudioSnapshotOptions, ThemeVisualSnapshot } from '../../
 import { findDomTargets } from '../cdp/cdp-targets';
 import { type InspectController, startInspect } from '../cdp/inspect-session';
 import { snapshotThemeVisuals } from '../cdp/snapshot-theme';
-import { assertAgentId } from './ipc-validators';
+import { assertAgentId, assertSafeThemeId } from './ipc-validators';
 
 export function registerStudioIpc(deps: {
   applyTheme: (request: { themeId: string; appId: AgentId }) => Promise<unknown>;
@@ -32,12 +32,26 @@ export function registerStudioIpc(deps: {
   /** Resolve the currently-applied theme id for an agent (or null). */
   getActiveThemeId: (appId: AgentId) => Promise<string | null>;
   resolveLivePort: (appId: AgentId) => Promise<number | null>;
+  /** Resolve a theme id to its display name (or null when unknown). */
+  getThemeName: (themeId: string) => Promise<string | null>;
   log: (line: string) => void;
   /** Push a main→renderer event. Wired to the main window's webContents. */
   push: (channel: string, payload: unknown) => void;
-}): void {
+}): { stopAllInspects: () => Promise<void> } {
   // Single active live-inspect session (one agent at a time).
   let activeInspect: InspectController | null = null;
+
+  /** Idempotently stop the active inspect session, if any. */
+  async function stopAllInspects(): Promise<void> {
+    if (!activeInspect) return;
+    const session = activeInspect;
+    activeInspect = null;
+    try {
+      await session.stop();
+    } catch (error) {
+      deps.log(`[studio] inspect stop during cleanup failed: ${String(error)}`);
+    }
+  }
 
   ipcMain.handle(
     IpcChannel.THEME_STUDIO_SNAPSHOT,
@@ -48,8 +62,9 @@ export function registerStudioIpc(deps: {
       const agentId = request.agentId as AgentId;
       const themeId = (request.themeId as string | undefined) || undefined;
       assertAgentId(agentId);
+      if (themeId !== undefined) assertSafeThemeId(themeId);
 
-      return snapshotThemeVisuals(
+      const snapshot = await snapshotThemeVisuals(
         agentId,
         themeId,
         {
@@ -60,6 +75,13 @@ export function registerStudioIpc(deps: {
         },
         (request.options as StudioSnapshotOptions | undefined) ?? undefined,
       );
+
+      // `snapshotThemeVisuals` cannot resolve names (it has no catalog access);
+      // fill the display name here so the payload is complete for any consumer.
+      if (themeId) {
+        snapshot.themeName = (await deps.getThemeName(themeId)) ?? '';
+      }
+      return snapshot;
     },
   );
 
@@ -75,7 +97,10 @@ export function registerStudioIpc(deps: {
         deps.log(`[studio] export script load failed: ${String(e)}`);
         throw new Error('Theme package builder unavailable — rebuild the app');
       }
-      const outDir = path.join(root, 'theme-workbench', 'out');
+      // Write the exported package to a writable per-user dir. `root` (appPath)
+      // is read-only inside the asar bundle when packaged, so outDir must live
+      // under userData or the export would fail in production builds.
+      const outDir = path.join(app.getPath('userData'), 'theme-workbench', 'out');
       const pkgDir = await mod.buildThemePackage(request, outDir);
       return { packageDir: pkgDir };
     },
@@ -87,15 +112,8 @@ export function registerStudioIpc(deps: {
       const agentId = request.agentId as AgentId;
       assertAgentId(agentId);
 
-      // Stop any previous session first.
-      if (activeInspect) {
-        try {
-          await activeInspect.stop();
-        } catch {
-          /* ignore */
-        }
-        activeInspect = null;
-      }
+      // Stop any previous session first (idempotent).
+      await stopAllInspects();
 
       const port = await deps.resolveLivePort(agentId);
       if (!port) throw new Error(`No debug port found for ${agentId}`);
@@ -117,14 +135,7 @@ export function registerStudioIpc(deps: {
   );
 
   ipcMain.handle(IpcChannel.THEME_STUDIO_INSPECT_STOP, async (): Promise<{ ok: boolean }> => {
-    if (activeInspect) {
-      try {
-        await activeInspect.stop();
-      } catch {
-        /* ignore */
-      }
-      activeInspect = null;
-    }
+    await stopAllInspects();
     return { ok: true };
   });
 
@@ -183,4 +194,9 @@ export function registerStudioIpc(deps: {
       }
     },
   );
+
+  // Exposed so the studio window's `closed` event can tear down any live
+  // CDP inspect session — without this, closing the window mid-inspect leaks
+  // the WebSocket and leaves the agent in Overlay.inspectMode.
+  return { stopAllInspects };
 }

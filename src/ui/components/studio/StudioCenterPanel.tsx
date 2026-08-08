@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { AgentRawDualPreview } from '@/components/studio/AgentRawPreview';
 import { BundleStudioTab } from '@/components/studio/BundleStudioTab';
+import { FitGeneratorPanel } from '@/components/studio/FitGeneratorPanel';
 import { InspectStudioTab } from '@/components/studio/InspectStudioTab';
 import { RealDomPreview } from '@/components/studio/RealDomPreview';
 import {
@@ -19,7 +21,7 @@ import type { AppController } from '@/hooks/useAppController';
 import { BeakerIcon, EyeIcon, RefreshIcon, Search01Icon } from '@hugeicons/core-free-icons';
 import type { AgentId, ThemeVisualSnapshot } from '@shared/types';
 
-export type PreviewView = 'theme' | 'wallpaper' | 'bundle' | 'inspect';
+export type PreviewView = 'theme' | 'wallpaper' | 'bundle' | 'inspect' | 'generator' | 'raw';
 
 export type BaselineState = {
   baseline: ThemeVisualSnapshot | null;
@@ -50,6 +52,7 @@ export function StudioCenterPanel({
   studioColorSets,
   activeProject,
   onToast,
+  onPaletteApply,
 }: {
   t: AppController['t'];
   previewView: PreviewView;
@@ -75,6 +78,10 @@ export function StudioCenterPanel({
   toolOverrides: ToolOverride | null;
   studioColorSets: StudioColorSets | undefined;
   onToast: (msg: string, type?: 'default' | 'destructive') => void;
+  onPaletteApply?: (
+    palette: Record<string, string | undefined>,
+    action: 'preview' | 'apply',
+  ) => void;
 }) {
   return (
     <div className="flex min-h-0 flex-col" style={{ background: 'var(--bg, var(--background))' }}>
@@ -95,6 +102,8 @@ export function StudioCenterPanel({
                 ['wallpaper', '壁纸', false],
                 ['bundle', '打包', false],
                 ['inspect', '检查', false],
+                ['generator', '搭配', false],
+                ['raw', '原貌', !(baseline || snapshotState.snapshot)],
               ] as const
             ).map(([view, label, disabled]) => (
               <TabsTrigger
@@ -252,6 +261,32 @@ export function StudioCenterPanel({
             pinnedSelectors={pinnedSelectors}
             onPinSelector={(sel) => setPinnedSelectors((prev) => [...prev, sel])}
             onToast={onToast}
+          />
+        )}
+        {/* GENERATOR */}
+        {previewView === 'generator' && activeProject && (
+          <FitGeneratorPanel
+            embedded
+            onToast={onToast}
+            onPreviewPalette={(_agentId, palette) => onPaletteApply?.({ ...palette }, 'preview')}
+            onPaletteApply={(_agentId, palette) => onPaletteApply?.({ ...palette }, 'apply')}
+          />
+        )}
+        {previewView === 'generator' && !activeProject && (
+          <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2">
+            <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+              新建或导入工程后可使用生成器
+            </p>
+          </div>
+        )}
+        {/* RAW: baseline vs current side-by-side */}
+        {previewView === 'raw' && (
+          <AgentRawDualPreview
+            domDark={baseline?.domTree ?? null}
+            domLight={snapshotState.snapshot?.domTree ?? null}
+            rootVarsDark={{}}
+            rootVarsLight={{}}
+            scale={0.55}
           />
         )}
       </div>

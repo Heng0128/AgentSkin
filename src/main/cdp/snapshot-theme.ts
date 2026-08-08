@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
- * # CDP Theme Snapshot �?DevTools-grade DOM Visual Probe
+ * # CDP Theme Snapshot — DevTools-grade DOM Visual Probe
  *
  * Drives the Theme Studio's replica pipeline:
  * 1. Apply the target theme to a running agent via core's applySkin.
@@ -354,7 +354,7 @@ export async function snapshotThemeVisuals(
       throw error;
     }
   } else {
-    deps.log(`[studio] no theme selected �?capturing ${agentId} live interface`);
+    deps.log(`[studio] no theme selected — capturing ${agentId} live interface`);
   }
 
   // P2-10/N4: Replaced the blind 1500ms setTimeout with a DOM-idle + theme-
@@ -500,7 +500,7 @@ export async function snapshotThemeVisuals(
 
     return {
       themeId: themeId ?? '',
-      themeName: '', // caller fills from catalog
+      themeName: '', // filled by the IPC layer (studio:snapshot resolves via the theme catalog)
       agentId,
       timestamp: new Date().toISOString(),
       landmarks,

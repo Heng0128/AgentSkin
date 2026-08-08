@@ -64,8 +64,11 @@ export async function createStudioWindow(options: WindowCreateOptions = {}): Pro
   win.setMenuBarVisibility(false);
 
   // Plain close (no close-to-tray): clear the ref so a later open recreates it.
+  // Also run the injected cleanup hook (stops any live CDP inspect session that
+  // would otherwise leak past the window's lifetime).
   win.on('closed', () => {
     if (ctx.studioWindow === win) ctx.studioWindow = null;
+    ctx.onStudioWindowClosed?.();
   });
 
   win.once('ready-to-show', () => win.show());
@@ -86,6 +89,16 @@ export async function createStudioWindow(options: WindowCreateOptions = {}): Pro
 export interface WindowCreateOptions {
   /** Renderer dev server URL (vite dev), or null to load the built file. */
   rendererUrl?: string;
+  /**
+   * Optional handler invoked on `ready-to-show`. When provided, it replaces
+   * the default `ready-to-show → show()` behavior so the caller (the boot
+   * splash transition in `main.ts`) owns the single show/transition path.
+   * This avoids the main window being shown twice — once here and again in
+   * `fadeOutSplash` — which made the always-on-top splash linger on top of
+   * the already-visible main window. When omitted, the window shows itself
+   * as soon as it is ready to paint (non-boot paths, e.g. `activate`).
+   */
+  onReadyToShow?: () => void;
 }
 
 /**
@@ -133,7 +146,18 @@ export async function createMainWindow(options: WindowCreateOptions = {}): Promi
     }
   });
 
-  ctx.mainWindow.once('ready-to-show', () => ctx.mainWindow?.show());
+  ctx.mainWindow.once('ready-to-show', () => {
+    if (options.onReadyToShow) {
+      // Boot path: the caller coordinates the splash fade-out + main window
+      // fade-in as a single transition. Do NOT also call show() here or the
+      // main window appears in full before the splash has been dismissed.
+      options.onReadyToShow();
+    } else {
+      // Non-boot path (e.g. recreated on `activate`): no splash to wait for,
+      // show as soon as the first paint is ready.
+      ctx.mainWindow?.show();
+    }
+  });
   ctx.mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
   // Broadcast maximize/unmaximize so the title bar button can update its icon.
