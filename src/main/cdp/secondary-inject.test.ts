@@ -103,8 +103,8 @@ describe('buildSecondaryRemoveExpression', () => {
 
   it('sanitizes appId with special characters via hostClassFor', () => {
     // hostClassFor replaces non-alphanumeric chars with dashes.
-    const expr = buildSecondaryRemoveExpression('traework');
-    const expectedClass = `${HOST_CLASS_PREFIX}traework`;
+    const expr = buildSecondaryRemoveExpression('my/app.id');
+    const expectedClass = `${HOST_CLASS_PREFIX}my-app-id`;
     expect(expr).toContain(expectedClass);
   });
 });

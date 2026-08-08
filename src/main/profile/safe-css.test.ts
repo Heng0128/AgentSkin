@@ -182,15 +182,6 @@ describe('sanitizeCSS — quote escaping & style-tag close', () => {
   });
 });
 
-describe('sanitizeCSS — Pure function guarantee', () => {
-  it('does not mutate its input', () => {
-    const input = 'color:#FF453A;background:blue';
-    const before = input;
-    sanitizeCSS(input);
-    expect(input).toBe(before);
-  });
-});
-
 describe('sanitizeCSS — reasons deduplication', () => {
   it('deduplicates identical reasons', () => {
     const input = ["background:url('javascript:1')", "background:url('javascript:2')"].join(';');

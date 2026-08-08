@@ -48,6 +48,13 @@ const qoderwork = {
         "%LOCALAPPDATA%\\Programs\\QoderWork\\QoderWork.exe",
         "%LOCALAPPDATA%\\Programs\\QoderWork CN\\QoderWork CN.exe",
         "%LOCALAPPDATA%\\Programs\\QoderWorkCN\\QoderWorkCN.exe",
+        // QoderWork is also installed to Program Files (per-machine installs);
+        // the CN edition nests an extra "QoderWork CN" subfolder.
+        "%PROGRAMFILES%\\QoderWork\\QoderWork.exe",
+        "%PROGRAMFILES%\\QoderWork CN\\QoderWork CN\\QoderWork CN.exe",
+        "%PROGRAMFILES%\\QoderWork CN\\QoderWork.exe",
+        "%PROGRAMFILES(X86)%\\QoderWork\\QoderWork.exe",
+        "%PROGRAMFILES(X86)%\\QoderWork CN\\QoderWork CN\\QoderWork CN.exe",
       ],
       // electron-builder keys the uninstall entry by appId (or product name on
       // older builds); probe both editions.

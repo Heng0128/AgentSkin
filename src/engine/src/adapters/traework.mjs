@@ -50,6 +50,11 @@ const traework = {
         "%LOCALAPPDATA%\\Programs\\TRAE SOLO CN\\TRAE SOLO CN.exe",
         "%PROGRAMFILES%\\TRAE SOLO\\TRAE SOLO.exe",
         "%PROGRAMFILES%\\TRAE SOLO CN\\TRAE SOLO CN.exe",
+        // Per-machine / x86 installs on other drives are also possible.
+        "%PROGRAMFILES(X86)%\\TRAE SOLO\\TRAE SOLO.exe",
+        "%PROGRAMFILES(X86)%\\TRAE SOLO CN\\TRAE SOLO CN.exe",
+        "%PROGRAMDATA%\\TRAE SOLO\\TRAE SOLO.exe",
+        "%PROGRAMDATA%\\TRAE SOLO CN\\TRAE SOLO CN.exe",
       ],
       // Inno Setup keys the uninstall entry by the product.json AppId GUID
       // plus the "_is1" suffix (x64/arm64 × user/system × global/CN).

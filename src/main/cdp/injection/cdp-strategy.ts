@@ -19,14 +19,10 @@
 import { existsSync } from 'node:fs';
 import { DEFAULT_VERIFY_DELAY_MS } from '../../../shared/injection-constants';
 import type { CdpSession } from '../cdp-client';
-import {
-  delay,
-  injectCssAdopted,
-  injectHeroBlob,
-  injectHeroFromDataUrl,
-  type ThemeVerification,
-  verifyTheme,
-} from './shared';
+import { injectCssAdopted } from './css-inject';
+import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
+import { delay, verifyTheme } from './shared';
+import type { ThemeVerification } from './types';
 
 // ---------------------------------------------------------------------------
 // Types

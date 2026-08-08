@@ -24,7 +24,8 @@ const workbuddy = {
         "%PROGRAMFILES%\\WorkBuddy\\WorkBuddy.exe",
         "%LOCALAPPDATA%\\Programs\\WorkBuddy\\WorkBuddy.exe",
         "%LOCALAPPDATA%\\WorkBuddy\\WorkBuddy.exe",
-        "%PROGRAMFILES(X86)%\\WorkBuddy\\WorkBuddy.exe"
+        "%PROGRAMFILES(X86)%\\WorkBuddy\\WorkBuddy.exe",
+        "%PROGRAMDATA%\\WorkBuddy\\WorkBuddy.exe",
       ],
       // Covers installs on non-default drives (e.g. D:\Program Files) via the
       // installer's registry uninstall entry.

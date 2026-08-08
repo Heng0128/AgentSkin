@@ -28,6 +28,8 @@ describe('registerThemeWallpaperForInstalled', () => {
 
   afterEach(async () => {
     await fs.rm(root, { recursive: true, force: true });
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   it('registers a bundled video wallpaper when the file exists', async () => {

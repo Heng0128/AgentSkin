@@ -4,9 +4,9 @@
  * # Warm-Up Pipeline
  *
  * Background initialization tasks that run concurrently during the boot
- * sequence (between the "core ready" point at ~45% and "IPC registered"
- * at ~75%). These tasks pre-warm caches and compile resources so the
- * user's first interaction after boot is snappy.
+ * sequence (between the "catalog ready" step and the "IPC registered" step).
+ * These tasks pre-warm caches and compile resources so the user's first
+ * interaction after boot is snappy.
  *
  * ## Tasks
  *
@@ -53,7 +53,7 @@ export interface WarmUpResult {
  * Run all warm-up tasks sequentially within the warm-up progress window.
  *
  * @param ctx - Main process context (for library, theme dirs, etc.)
- * @param reporter - Boot progress reporter (handles 60–90% range)
+ * @param reporter - Boot progress reporter (advances the pre-registered warm-up steps)
  */
 export async function runWarmUp(
   ctx: Pick<MainContext, 'library'>,
@@ -67,7 +67,9 @@ export async function runWarmUp(
   // ── Task 1: Pre-compile theme CSS ──────────────────────────────────
   reporter.startWarmUp('预编译主题样式...');
   try {
-    compiledThemeCount = await preCompileThemeCss(ctx);
+    compiledThemeCount = await preCompileThemeCss(ctx, (done, total) =>
+      reporter.reportWarmUp(done / total),
+    );
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     warnings.push(`pre-compile theme CSS: ${msg}`);
@@ -77,7 +79,9 @@ export async function runWarmUp(
   // ── Task 2: Build thumbnail cache index ────────────────────────────
   reporter.startWarmUp('建立缩略图索引...');
   try {
-    thumbnailCacheCount = await buildThumbnailIndex(ctx);
+    thumbnailCacheCount = await buildThumbnailIndex(ctx, (done, total) =>
+      reporter.reportWarmUp(done / total),
+    );
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     warnings.push(`thumbnail cache index: ${msg}`);
@@ -87,7 +91,9 @@ export async function runWarmUp(
   // ── Task 3: Preload adapter modules ────────────────────────────────
   reporter.startWarmUp('预加载适配器模块...');
   try {
-    preloadedAdapterCount = await preloadAdapters();
+    preloadedAdapterCount = await preloadAdapters((done, total) =>
+      reporter.reportWarmUp(done / total),
+    );
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     warnings.push(`preload adapters: ${msg}`);
@@ -98,6 +104,13 @@ export async function runWarmUp(
 
   return { compiledThemeCount, thumbnailCacheCount, preloadedAdapterCount, warnings };
 }
+
+/**
+ * Progress callback fired as a batch progresses.
+ * @param done - Number of items completed so far.
+ * @param total - Total number of items in the batch.
+ */
+type BatchProgress = (done: number, total: number) => void;
 
 // ── Task 1: Pre-compile theme CSS ─────────────────────────────────────
 
@@ -114,14 +127,21 @@ export async function runWarmUp(
  * bundle CSS strings (warming V8's JIT) without re-reading every package
  * from disk (a `find()` per theme would re-readTheme and duplicate the
  * multi-MB I/O the boot scan already did).
+ *
+ * Reports per-theme progress via `onProgress` so the splash bar tracks real
+ * work instead of sitting still at 60% then jumping to 90%.
  */
-async function preCompileThemeCss(ctx: Pick<MainContext, 'library'>): Promise<number> {
+async function preCompileThemeCss(
+  ctx: Pick<MainContext, 'library'>,
+  onProgress: BatchProgress,
+): Promise<number> {
   const entries = await ctx.library.entries();
   let count = 0;
 
   // Limit to first N themes to avoid overloading boot time
   const BATCH_LIMIT = 20;
   const batch = entries.slice(0, BATCH_LIMIT);
+  const total = Math.max(1, batch.length);
 
   for (const entry of batch) {
     try {
@@ -135,6 +155,7 @@ async function preCompileThemeCss(ctx: Pick<MainContext, 'library'>): Promise<nu
     } catch {
       // Individual theme failure is non-fatal
     }
+    onProgress(count, total);
   }
 
   return count;
@@ -151,14 +172,22 @@ async function preCompileThemeCss(ctx: Pick<MainContext, 'library'>): Promise<nu
  * are idempotent (cached by theme id + existsSync guard), so this task only
  * pays the write cost on first boot after an install.
  */
-async function buildThumbnailIndex(ctx: Pick<MainContext, 'library'>): Promise<number> {
+async function buildThumbnailIndex(
+  ctx: Pick<MainContext, 'library'>,
+  onProgress: BatchProgress,
+): Promise<number> {
   const entries = await ctx.library.entries();
   let count = 0;
 
   // Limit to first N themes
   const BATCH_LIMIT = 30;
   const batch = entries.slice(0, BATCH_LIMIT);
+  const total = Math.max(1, batch.length);
 
+  // Track per-theme progress independently of `count` (which sums cover+icon
+  // writes and can exceed the theme count) so the splash bar advances
+  // monotonically across the batch.
+  let processed = 0;
   for (const entry of batch) {
     try {
       const { bundle } = entry;
@@ -172,6 +201,8 @@ async function buildThumbnailIndex(ctx: Pick<MainContext, 'library'>): Promise<n
     } catch {
       // Individual theme failure is non-fatal
     }
+    processed++;
+    onProgress(processed, total);
   }
 
   return count;
@@ -189,9 +220,10 @@ async function buildThumbnailIndex(ctx: Pick<MainContext, 'library'>): Promise<n
  * Preloading them during warm-up moves that cost to boot time where it's
  * invisible to the user.
  */
-async function preloadAdapters(): Promise<number> {
+async function preloadAdapters(onProgress: BatchProgress): Promise<number> {
   const adapters = listAdapters().filter((a) => a.tier === 'active');
   let count = 0;
+  const total = Math.max(1, adapters.length);
 
   for (const adapter of adapters) {
     try {
@@ -205,6 +237,7 @@ async function preloadAdapters(): Promise<number> {
     } catch {
       // Individual adapter failure is non-fatal
     }
+    onProgress(count, total);
   }
 
   return count;

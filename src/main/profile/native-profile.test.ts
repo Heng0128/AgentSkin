@@ -184,12 +184,13 @@ describe('buildNativeProfile', () => {
       appVersion: '1.0.0',
       viewport: VIEWPORT,
     });
-    const roles = profile.components.map((c) => c.role);
-    expect(roles).toContain('backdrop');
-    expect(roles).toContain('sidebar');
-    expect(roles).toContain('chatlist');
-    expect(roles).toContain('composer');
-    expect(roles).toContain('message');
+    // Verify specific ref→role mappings (path::tag format) rather than just role existence.
+    const byRef = new Map(profile.components.map((c) => [c.ref, c.role]));
+    expect(byRef.get('::div')).toBe('backdrop');
+    expect(byRef.get('/div[0]::div')).toBe('sidebar');
+    expect(byRef.get('/div[1]/div[0]::div')).toBe('chatlist');
+    expect(byRef.get('/div[1]/div[1]::div')).toBe('composer');
+    expect(byRef.get('/div[1]/div[0]/div[0]::div')).toBe('message');
   });
 
   it('flags hasText on the message bubble and composer', () => {

@@ -34,7 +34,7 @@ import {
   buildTileContainerCss as cdpBuildTileContainerCss,
   buildTintFilter as cdpBuildTintFilter,
   hexHue as cdpHexHue,
-} from './shared';
+} from './css-render';
 
 const RENDER: WallpaperRenderOptions = {
   alignment: 'fit',

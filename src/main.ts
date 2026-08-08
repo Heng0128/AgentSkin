@@ -137,6 +137,57 @@ async function fadeOutSplash(
   }
 }
 
+/**
+ * Single transition handler for the boot path. Invoked (via
+ * `createMainWindow`'s `onReadyToShow`) exactly once when the main window has
+ * its first paint ready. It clears the splash safety timeout and runs the
+ * cross-fade from splash → main window, then surfaces any degraded-boot
+ * warnings as toasts once the main window is on screen.
+ *
+ * Ownership of the main window's first display lives here (not in
+ * `createMainWindow`) so the window is shown exactly once, and only after the
+ * splash has begun fading out — preventing the splash from lingering on top
+ * of an already-visible main window.
+ */
+// Module-level splash safety timeout (15s), armed in `whenReady` and cleared
+// by `handleSplashTransition` once the main window is ready. Hoisted out of
+// the `.then` callback so the transition handler can reach it.
+let splashTimeout: ReturnType<typeof setTimeout> | undefined;
+
+async function handleSplashTransition(warnings: string[]): Promise<void> {
+  if (splashTimeout) {
+    clearTimeout(splashTimeout);
+    splashTimeout = undefined;
+  }
+  const splash = ctx.splashWindow;
+  const mainWin = ctx.mainWindow;
+  if (splash && !splash.isDestroyed() && mainWin) {
+    await fadeOutSplash(splash, mainWin);
+  } else if (mainWin) {
+    // Splash already closed (timeout) — just show the main window.
+    if (!mainWin.isDestroyed()) {
+      mainWin.show();
+    }
+  }
+  ctx.splashWindow = null;
+
+  // Push degraded boot steps to the renderer so they surface as toasts
+  // ("启动警告") once the main window is up. Safe to drop when the window
+  // died — the warnings are also in the runtime log.
+  if (warnings.length > 0 && mainWin && !mainWin.isDestroyed()) {
+    try {
+      mainWin.webContents.send(IpcChannel.BOOT_WARNINGS, warnings);
+    } catch (error) {
+      console.warn('[boot] failed to push boot warnings:', error);
+    }
+  }
+
+  if (warnings.length > 0) {
+    console.warn(`[boot] ${warnings.length} warning(s) during boot:`);
+    for (const w of warnings) console.warn(`[boot]   ${w}`);
+  }
+}
+
 app
   .whenReady()
   .then(async () => {
@@ -145,55 +196,36 @@ app
 
     // Safety timeout: close splash after 15s even if ready-to-show never fires
     // (e.g. GPU process crash, renderer hang).
-    const splashTimeout = setTimeout(() => {
+    splashTimeout = setTimeout(() => {
       if (ctx.splashWindow && !ctx.splashWindow.isDestroyed()) {
         ctx.splashWindow.close();
         ctx.splashWindow = null;
       }
+      splashTimeout = undefined;
     }, 15_000);
 
     try {
       const { warnings } = await runBootSequence({
-        createWindow: () => createMainWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL }),
+        // Boot path: hand the main window's ready-to-show to a single
+        // transition handler (splash fade-out + main window fade-in) instead
+        // of letting createMainWindow auto-show it. This fixes the race where
+        // the always-on-top splash lingered on top of an already-visible main
+        // window (the window was shown twice — once by createMainWindow and
+        // again by fadeOutSplash).
+        createWindow: () =>
+          createMainWindow({
+            rendererUrl: process.env.ELECTRON_RENDERER_URL,
+            onReadyToShow: () => void handleSplashTransition(warnings),
+          }),
         onQuit,
         onApplyRequest: requestTrayApply,
       });
 
-      // Wait for the main window to be ready, then perform smooth transition.
-      if (ctx.mainWindow) {
-        ctx.mainWindow.once('ready-to-show', async () => {
-          clearTimeout(splashTimeout);
-          const splash = ctx.splashWindow;
-          const mainWin = ctx.mainWindow;
-          if (splash && !splash.isDestroyed() && mainWin) {
-            await fadeOutSplash(splash, mainWin);
-          } else if (mainWin) {
-            // Splash already closed (timeout) — just show main window
-            if (!mainWin.isDestroyed()) {
-              mainWin.show();
-            }
-          }
-          ctx.splashWindow = null;
-
-          // Push degraded boot steps to the renderer so they surface as
-          // toasts ("启动警告") once the main window is up. Safe to drop when
-          // the window died — the warnings are also in the runtime log.
-          if (warnings.length > 0 && mainWin && !mainWin.isDestroyed()) {
-            try {
-              mainWin.webContents.send(IpcChannel.BOOT_WARNINGS, warnings);
-            } catch (error) {
-              console.warn('[boot] failed to push boot warnings:', error);
-            }
-          }
-
-          // Log any boot warnings after transition
-          if (warnings.length > 0) {
-            console.warn(`[boot] ${warnings.length} warning(s) during boot:`);
-            for (const w of warnings) console.warn(`[boot]   ${w}`);
-          }
-        });
-      } else {
-        // Fallback: close splash after a short delay.
+      // Splash timeout stays armed until the transition runs; the transition
+      // handler clears it the moment the main window is ready.
+      if (!ctx.mainWindow) {
+        // No main window was created (degraded boot) — close splash after a
+        // short delay.
         clearTimeout(splashTimeout);
         setTimeout(() => {
           if (ctx.splashWindow && !ctx.splashWindow.isDestroyed()) {

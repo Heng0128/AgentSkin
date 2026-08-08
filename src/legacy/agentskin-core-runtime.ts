@@ -820,22 +820,29 @@ async function discoverLiveCdpPortViaPid(adapter: unknown): Promise<number | nul
   // picks a free port itself, argv has no usable value) and any case where
   // the explicit port probe failed.
   const ports = await listeningPortsForPids([...pids]);
-
-  for (const port of ports.sort((x, y) => x - y)) {
-    // Already tried via the explicit path above — skip the re-probe.
-    if (explicitPorts.includes(port)) continue;
-    try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 1500);
-      const res = await fetch(`http://127.0.0.1:${port}/json/list`, { signal: ctrl.signal });
-      clearTimeout(timer);
-      if (!res.ok) continue;
-      const targets = (await res.json()) as unknown[];
-      if (Array.isArray(targets) && match && targets.some((t) => match(t))) return port;
-    } catch {
-      /* not a CDP port (closed, proxy, or non-JSON) — try the next */
-    }
-  }
+  const candidates = ports.filter((port) => !explicitPorts.includes(port)).sort((x, y) => x - y);
+  // netstat ports are a superset of the app's listeners and are usually IPC /
+  // gRPC sockets rather than CDP. Probe them in parallel with a short timeout
+  // so a burst of non-CDP listeners (e.g. WorkBuddy's 5 sockets) fails fast
+  // instead of stalling patchWindowsAdapters serially for seconds at boot.
+  const results = await Promise.all(
+    candidates.map(async (port) => {
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 800);
+        const res = await fetch(`http://127.0.0.1:${port}/json/list`, { signal: ctrl.signal });
+        clearTimeout(timer);
+        if (!res.ok) return null;
+        const targets = (await res.json()) as unknown[];
+        if (Array.isArray(targets) && match && targets.some((t) => match(t))) return port;
+        return null;
+      } catch {
+        return null; // not a CDP port (closed, proxy, or non-JSON)
+      }
+    }),
+  );
+  const found = results.find((p): p is number => p != null);
+  if (found != null) return found;
   return null;
 }
 

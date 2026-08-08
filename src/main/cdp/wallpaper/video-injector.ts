@@ -39,17 +39,11 @@ import {
 } from '../../../shared/injection-constants';
 import type { WallpaperRenderOptions } from '../../../shared/types';
 import type { CdpSession } from '../cdp-client';
-import {
-  applyPunchThrough,
-  buildMediaElementCss,
-  buildParallaxJs,
-  buildWallpaperGuardJs,
-  bypassPageCsp,
-  evaluateWithRetry,
-  verifyWallpaperVisibility,
-  videoMimeForPath,
-  WALLPAPER_TRANSPARENCY_CSS,
-} from './shared';
+import { WALLPAPER_TRANSPARENCY_CSS } from './constants';
+import { buildMediaElementCss } from './css-render';
+import { buildWallpaperGuardJs } from './guard';
+import { applyPunchThrough, verifyWallpaperVisibility } from './punch-through';
+import { buildParallaxJs, bypassPageCsp, evaluateWithRetry, videoMimeForPath } from './shared';
 
 // ---------------------------------------------------------------------------
 // Shared video mount (URL already valid inside the agent page)

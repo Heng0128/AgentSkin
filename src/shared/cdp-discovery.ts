@@ -67,6 +67,38 @@ interface ProcessSnapshot {
 let cachedProcessSnapshot: ProcessSnapshot | null = null;
 const PROCESS_SNAPSHOT_TTL_MS = 1500;
 
+// A TTL cache for the full `netstat -ano` output, mirroring the wmic process
+// snapshot cache above. `listeningPortsForPids` is called from
+// `resolveLivePort`'s layer-2 fallback, which the apply flow re-runs multiple
+// times (cdp-ready probe, apply-time port re-resolve, withPageSession retries).
+// Without a cache each call spawns a fresh `netstat` child process
+// (0.5–2s), so a single apply can burn several seconds just re-listing the
+// same loopback ports. The 1.5s TTL collapses repeated calls within one
+// apply window into a single invocation while still catching a freshly-bound
+// port before the next poll.
+interface NetstatSnapshot {
+  text: string;
+  capturedAt: number;
+}
+let cachedNetstatSnapshot: NetstatSnapshot | null = null;
+const NETSTAT_SNAPSHOT_TTL_MS = 1500;
+
+// TTL cache for `adapter.findRunningPids` results inside `resolveLivePort`.
+// The apply flow re-runs resolveLivePort several times (cdp-ready probe,
+// apply-time port re-resolve, withPageSession retries), and each call re-lists
+// every process via `tasklist` (0.5–2s). Caching the PID set for 1.5s collapses
+// the repeated probes within one apply window into a single tasklist spawn.
+// Safe: `resolveLivePort` only uses the PID set to locate a debug port, and
+// a freshly-launched process becomes visible before the next 1.5s window.
+// The engine's own `findRunningPids` callers that need real-time liveness
+// (e.g. waiting for a killed process to exit) do NOT go through this cache.
+interface RunningPidsSnapshot {
+  pids: number[];
+  capturedAt: number;
+}
+let cachedRunningPids: RunningPidsSnapshot | null = null;
+const RUNNING_PIDS_TTL_MS = 1500;
+
 /**
  * Win32-only. Fetch the full process list (CommandLine + ProcessId) once and
  * cache it for {@link PROCESS_SNAPSHOT_TTL_MS}. Uses `wmic` via the async
@@ -148,9 +180,26 @@ export async function explicitDebugPortsFromPids(pids: number[]): Promise<number
  * bindings avoids probing IPC ports, Crashpad handlers, extension hosts,
  * and other unrelated listeners that would each waste a 1.2s HTTP probe.
  */
-export async function listeningPortsForPids(pids: number[]): Promise<number[]> {
+export async function listeningPortsForPids(
+  pids: number[],
+  options: { bypassCache?: boolean } = {},
+): Promise<number[]> {
   if (process.platform !== 'win32' || !pids.length) return [];
-  const out = await execFileAsync('netstat', ['-ano']);
+  const { bypassCache = false } = options;
+  const now = Date.now();
+  let out = '';
+  if (
+    !bypassCache &&
+    cachedNetstatSnapshot &&
+    now - cachedNetstatSnapshot.capturedAt < NETSTAT_SNAPSHOT_TTL_MS
+  ) {
+    out = cachedNetstatSnapshot.text;
+  } else {
+    out = await execFileAsync('netstat', ['-ano']);
+    // Even an empty result is cached so a transient netstat failure doesn't
+    // hammer the child process within the TTL window.
+    cachedNetstatSnapshot = { text: out, capturedAt: now };
+  }
   if (!out) return [];
   const wanted = new Set(pids.map((pid) => String(pid)));
   const ports = new Set<number>();
@@ -208,7 +257,9 @@ export async function resolveLivePort(
   appId: string,
   log: (msg: string) => void,
   knownDeadPort: number | null = null,
+  options: { bypassCache?: boolean } = {},
 ): Promise<number | null> {
+  const { bypassCache = false } = options;
   // Layer 1: DevToolsActivePort files (may point at an ephemeral port).
   const filePorts = await adapter.resolveDebugPorts(process.platform);
   for (const filePort of filePorts) {
@@ -231,7 +282,18 @@ export async function resolveLivePort(
 
   // Layer 2: Auto-detection — PID → command line → netstat → /json/list.
   try {
-    const pids = await adapter.findRunningPids(process.platform, null);
+    const now = Date.now();
+    let pids: number[] = [];
+    if (
+      !bypassCache &&
+      cachedRunningPids &&
+      now - cachedRunningPids.capturedAt < RUNNING_PIDS_TTL_MS
+    ) {
+      pids = cachedRunningPids.pids;
+    } else {
+      pids = await adapter.findRunningPids(process.platform, null);
+      cachedRunningPids = { pids, capturedAt: now };
+    }
 
     // (a) Explicit port from argv — fast path.
     const explicitPorts = await explicitDebugPortsFromPids(pids);
@@ -251,13 +313,19 @@ export async function resolveLivePort(
     }
 
     // (b) netstat fallback — catches port=0 apps and argv misses.
-    const livePorts = await listeningPortsForPids(pids);
+    const livePorts = await listeningPortsForPids(pids, { bypassCache });
     log(`[port] ${appId}: layer 2 (netstat) — ${livePorts.length} listening port(s)`);
     for (const livePort of livePorts) {
       if (livePort === knownDeadPort) continue;
       if (explicitPorts.includes(livePort)) continue; // already probed above
       try {
-        if ((await adapter.findTargets(livePort, 1200)).length) {
+        // netstat ports are a superset of the app's listeners and are usually
+        // IPC/gRPC sockets, NOT CDP. Use a short HTTP probe so a non-CDP port
+        // fails fast instead of burning the full 1.2s timeout per candidate —
+        // a real CDP endpoint answers /json/list in well under 100ms. This
+        // keeps the common "many IPC ports, none CDP" case (e.g. WorkBuddy's
+        // 5 listeners) from stalling discovery for seconds.
+        if ((await adapter.findTargets(livePort, 800)).length) {
           log(`[port] ${appId}: layer 2 (netstat) — CDP found on ${livePort}`);
           return livePort;
         }

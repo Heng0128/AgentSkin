@@ -1,9 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { BootProfiler } from './boot-profiler';
 
 describe('BootProfiler', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('records per-step durations and reports total', () => {
     const p = new BootProfiler();
     p.begin('加载主题库...');
@@ -40,16 +48,13 @@ describe('BootProfiler', () => {
 
   it('sorts the report by slowest step first', () => {
     const p = new BootProfiler();
-    p.begin('快');
+    p.begin('a');
+    vi.setSystemTime(Date.now() + 1); // 1ms duration
     p.end();
-    p.begin('慢');
-    // Force the slower duration by sleeping briefly.
-    const t0 = Date.now();
-    while (Date.now() - t0 < 2) {
-      /* busy-wait 2ms */
-    }
+    p.begin('b');
+    vi.setSystemTime(Date.now() + 10); // 10ms duration
     p.end();
     const report = p.report();
-    expect(report.indexOf('慢')).toBeLessThan(report.indexOf('快'));
+    expect(report.indexOf('b')).toBeLessThan(report.indexOf('a'));
   });
 });

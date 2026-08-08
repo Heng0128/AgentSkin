@@ -11,6 +11,14 @@ import {
   wcagContrast,
 } from './studio-theme-templates';
 
+// Helper to check if a string is a valid CSS color (hex or rgba)
+const isValidColor = (value: unknown): boolean => {
+  if (typeof value !== 'string') return false;
+  const hexMatch = value.match(/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/);
+  const rgbaMatch = value.match(/^rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*[\d.]+\s*)?\)$/);
+  return !!hexMatch || !!rgbaMatch;
+};
+
 // ---------------------------------------------------------------------------
 // Contrast utility tests
 // ---------------------------------------------------------------------------
@@ -96,7 +104,11 @@ describe('STUDIO_THEME_TEMPLATES curation rules', () => {
     ];
     for (const t of STUDIO_THEME_TEMPLATES) {
       for (const key of REQUIRED) {
-        expect(t.palette[key], `${t.id}: missing palette key ${key}`).toBeTruthy();
+        const value = t.palette[key];
+        expect(value, `${t.id}: palette.${key} must be a valid color`).toBeDefined();
+        expect(typeof value).toBe('string');
+        // Validate using helper function
+        expect(isValidColor(value), `${t.id}: palette.${key} is not a valid color`).toBe(true);
       }
     }
   });

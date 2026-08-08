@@ -43,6 +43,14 @@ export class BootProfiler {
   }
 
   /**
+   * Read-only copy of the recorded per-step timings, for persistence and for
+   * driving next boot's progress weighting.
+   */
+  getTimings(): BootTiming[] {
+    return this.timings.map((t) => ({ label: t.label, durationMs: t.durationMs }));
+  }
+
+  /**
    * Compact report: total + the N slowest steps, for the runtime log.
    * Returns an empty body when no step was timed (defensive).
    */

@@ -40,7 +40,10 @@ import {
   type ThemeVisualSnapshot,
 } from '../../shared/types';
 
-const PROJECTS_DIR = path.join(app.getAppPath(), 'theme-workbench', 'projects');
+// Use a writable per-user data directory. `app.getAppPath()` points at the
+// read-only asar bundle when packaged, so writing projects there would fail
+// in production builds. userData is always writable and survives updates.
+const PROJECTS_DIR = path.join(app.getPath('userData'), 'theme-workbench', 'projects');
 const PROJECT_SCHEMA = 'agentskin-studio-project/v1';
 
 function ensureDir(): void {
@@ -107,9 +110,15 @@ function listProjects(): StudioProject[] {
 }
 
 function slugify(s: string): string {
+  // Produce a SAFE ASCII id that satisfies `isSafeThemeId` (lowercase
+  // alphanumeric + `_`/`-`, must start alphanumeric). Non-ASCII characters
+  // (e.g. CJK project names like "我的第一个工程") are stripped rather than
+  // kept, so the derived id stays path-safe and passes the snapshot/delete
+  // guards. The human-readable name stays in `project.name`; only the id is
+  // slugified.
   const base = (s || 'studio')
     .toLowerCase()
-    .replace(/[^a-z0-9一-龥]+/g, '-')
+    .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 32);
   return base || 'studio';
@@ -151,7 +160,10 @@ function createDefaultProject(): StudioProject {
     id: `default-${randomUUID().slice(0, 8)}`,
     name: '我的第一个工程',
     author: '',
-    agentId: 'workbuddy',
+    // Keep in sync with the frontend's default `newAgent` ('traework') so the
+    // auto-seeded project doesn't switch the user to a different agent than
+    // the one pre-selected in the "new project" form.
+    agentId: 'traework',
     createdAt: now,
     updatedAt: now,
     hasSnapshot: false,
@@ -188,6 +200,11 @@ export function registerStudioProjectIpc(): void {
         updatedAt: now,
         hasSnapshot: false,
       };
+      // Defensive: the id must always satisfy isSafeThemeId so downstream
+      // snapshot save/load/delete guards accept it. If slugify ever regresses
+      // (e.g. a non-ASCII id slips through), fail fast here instead of letting
+      // a project be created that can never be saved/loaded/deleted.
+      if (!isSafeThemeId(project.id)) throw new Error('Generated project id is not safe');
       writeProject(project);
       return project;
     },

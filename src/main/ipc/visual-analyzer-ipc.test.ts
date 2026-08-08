@@ -110,8 +110,11 @@ describe('visual-analyzer-ipc', () => {
     it('returns null when the profile file is missing or corrupt', async () => {
       mockReadFile.mockRejectedValue(new Error('ENOENT'));
       expect(await invoke(IpcChannel.VISUAL_ANALYSIS_GET, 'zcode')).toBeNull();
+      expect(mockReadFile).toHaveBeenCalled();
+      mockReadFile.mockClear();
       mockReadFile.mockResolvedValue('{not-json');
       expect(await invoke(IpcChannel.VISUAL_ANALYSIS_GET, 'zcode')).toBeNull();
+      expect(mockReadFile).toHaveBeenCalled();
     });
 
     it('returns null for non-string agent names', async () => {
@@ -120,7 +123,7 @@ describe('visual-analyzer-ipc', () => {
     });
   });
 
-  describe('stubs (P2)', () => {
+  describe('visual analysis — detect / extract / export', () => {
     it('DETECT reports not-running', async () => {
       const result = (await invoke(IpcChannel.VISUAL_ANALYSIS_DETECT, 'zcode')) as {
         running: boolean;
@@ -139,8 +142,26 @@ describe('visual-analyzer-ipc', () => {
       expect(typeof result.message).toBe('string');
     });
 
-    it('EXPORT_THEME reports failure', async () => {
+    it('EXPORT_THEME refuses an empty palette', async () => {
       const result = await invoke(IpcChannel.VISUAL_ANALYSIS_EXPORT_THEME, 'zcode', {});
+      expect(result).toEqual({ ok: false, path: undefined });
+    });
+
+    it('EXPORT_THEME refuses a non-empty payload without --agentskin-* tokens', async () => {
+      const result = await invoke(IpcChannel.VISUAL_ANALYSIS_EXPORT_THEME, 'zcode', {
+        root: { background: '#000000' },
+      });
+      expect(result).toEqual({ ok: false, path: undefined });
+    });
+
+    it('EXPORT_THEME fails gracefully when the package builder is unavailable', async () => {
+      // A valid palette is supplied, but the dynamic import of
+      // scripts/build-theme-package.mjs cannot resolve in the test env
+      // (app.getAppPath() resolves to /app-root), so the handler must return
+      // { ok: false } instead of throwing.
+      const result = await invoke(IpcChannel.VISUAL_ANALYSIS_EXPORT_THEME, 'zcode', {
+        root: { '--agentskin-bg': '#201a40' },
+      });
       expect(result).toEqual({ ok: false, path: undefined });
     });
   });

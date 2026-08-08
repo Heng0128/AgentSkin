@@ -37,7 +37,7 @@ import { probePortLive } from '../legacy/agentskin-core-runtime';
 import { resolveLivePort as resolveLivePortShared } from '../shared/cdp-discovery';
 import { toMessage } from '../shared/errors';
 import type { AgentId, ApplyResponse, AppStatus } from '../shared/types';
-import { detectInstallation } from './install-detection';
+import { detectInstallation, verifyInstallPath } from './install-detection';
 import type { LogCallback } from './services/contracts';
 
 // ---------------------------------------------------------------------------
@@ -51,7 +51,10 @@ import type { LogCallback } from './services/contracts';
  */
 export type CdpReadyResult =
   | { port: number; reason: null }
-  | { port: null; reason: 'not-installed' | 'spawn-error' | 'singleton-lock' | 'timeout' };
+  | {
+      port: null;
+      reason: 'not-installed' | 'spawn-error' | 'singleton-lock' | 'kill-denied' | 'timeout';
+    };
 
 /**
  * The slice of the persisted state that this module needs to read/write.
@@ -211,6 +214,10 @@ export interface DiscoveryDeps {
   clearAppPort(appId: AgentId): void;
   /** Persist callback — invoked after `clearAppPort` so changes survive boot. */
   persist: PersistCallback;
+  /** Cached auto-detected install dir for an agent (null = not yet detected). */
+  getDetectedPath: (appId: AgentId) => string | null;
+  /** Cache the auto-detected install dir for an agent (null clears it). */
+  setDetectedPath: (appId: AgentId, path: string | null) => void;
   /** Returns the persisted active-theme id (for status payload). */
   activeThemeId: ActiveThemeIdAccessor;
   /** Returns the persisted active color-scheme id (for status payload). */
@@ -291,13 +298,56 @@ export async function resolveLivePort(
   appId: AgentId,
   deps: DiscoveryDeps,
   knownDeadPort: number | null = null,
+  options: { bypassCache?: boolean } = {},
 ): Promise<number | null> {
-  return resolveLivePortShared(deps.adapter(appId), appId, deps.log.bind(null), knownDeadPort);
+  return resolveLivePortShared(
+    deps.adapter(appId),
+    appId,
+    deps.log.bind(null),
+    knownDeadPort,
+    options,
+  );
 }
 
 // ---------------------------------------------------------------------------
 // ensureCdpReady
 // ---------------------------------------------------------------------------
+
+/**
+ * Fast probe for a freshly-spawned app's CDP port. After `spawn(...)` with
+ * `--remote-debugging-port=0`, Chromium writes DevToolsActivePort quickly (in
+ * the boot stage, before the renderer window is ready), so the port file is
+ * the fastest reliable signal. This helper reads the file candidates and does
+ * a cheap live check — no PID/wmic/netstat chain — so the spawn-wait loop can
+ * return as soon as the port is bound instead of re-running the full
+ * `resolveLivePort` discovery every 600ms.
+ *
+ * Returns the live CDP port, or null if no file port answers yet.
+ */
+async function probeFreshlySpawnedPort(
+  adapter: ApplicationAdapter,
+  _log: (line: string) => void,
+): Promise<number | null> {
+  let filePorts: number[] = [];
+  try {
+    filePorts = await adapter.resolveDebugPorts(process.platform);
+  } catch {
+    return null;
+  }
+  for (const port of filePorts) {
+    // Dead port file (stale copy) — skip fast.
+    if (!(await probePortLive(port, 300))) continue;
+    try {
+      // A bound CDP port that answers /json/list is instantly usable, even
+      // before the renderer fully mounts. Short timeout: a real CDP endpoint
+      // responds in well under 100ms.
+      if ((await adapter.findTargets(port, 800)).length) return port;
+    } catch {
+      // Not serving CDP yet — try the next candidate.
+    }
+  }
+  return null;
+}
 
 /**
  * Ensure the target app has a live CDP endpoint, (re)starting it with
@@ -367,6 +417,11 @@ export async function ensureCdpReady(
       progress: 15,
     });
   }
+  // Track kills that failed because the process is still running (e.g. the
+  // app was launched elevated / as admin, so taskkill is denied). A stale
+  // process that survives the kill will block the fresh spawn via the
+  // singleton lock, so we must surface this instead of silently continuing.
+  let killDenied = false;
   for (const pid of killedPids) {
     try {
       await new Promise<void>((resolve) => {
@@ -374,12 +429,36 @@ export async function ensureCdpReady(
           'taskkill',
           ['/F', '/T', '/PID', String(pid)],
           { windowsHide: true, timeout: 5000 },
-          () => resolve(),
+          (error) => {
+            if (error) {
+              // taskkill failed. Distinguish "already gone" (fine) from
+              // "still alive but denied" (needs the user to close it).
+              try {
+                process.kill(pid, 0); // throws if the process is gone
+                killDenied = true;
+                deps.log(
+                  `[ensure-cdp] ${appId}: taskkill denied for PID ${pid} (still running) — likely elevated`,
+                );
+              } catch {
+                // Process already exited — kill succeeded effectively.
+              }
+            }
+            resolve();
+          },
         );
       });
     } catch {
       // Not running or already gone — fine.
     }
+  }
+  if (killDenied) {
+    deps.logStructured({
+      type: 'cdp_spawn_failed',
+      agentId: appId,
+      reason: 'kill-denied',
+      timestamp: new Date().toISOString(),
+    });
+    return { port: null, reason: 'kill-denied' };
   }
 
   // Clean up Electron singleton lock files. When an Electron app is killed
@@ -479,7 +558,7 @@ export async function ensureCdpReady(
         // Child PID unreachable. Check if the app started anyway (fork,
         // elevation, or launcher-stub pattern where the initial exe exits
         // after spawning the real process).
-        const lastChance = await resolveLivePort(appId, deps);
+        const lastChance = await resolveLivePort(appId, deps, null, { bypassCache: true });
         if (lastChance != null) {
           deps.log(
             `[ensure-cdp] ${appId}: CDP up on random port ${lastChance} (via forwarded singleton)`,
@@ -524,7 +603,25 @@ export async function ensureCdpReady(
       }
     }
     await new Promise((resolve) => setTimeout(resolve, 600));
-    const port = await resolveLivePort(appId, deps);
+    // Fast path: the freshly-spawned app's DevToolsActivePort file is written
+    // early in boot (before the renderer window is ready), so prefer reading
+    // it + a cheap live check over the full PID/wmic/netstat chain. This
+    // shaves the common case down to one file read + one TCP probe instead of
+    // re-running complete discovery every 600ms.
+    const fastPort = await probeFreshlySpawnedPort(adapter, deps.log.bind(null));
+    if (fastPort != null) {
+      deps.log(`[ensure-cdp] ${appId}: CDP up on ${fastPort} (fresh spawn fast path)`);
+      deps.logStructured({
+        type: 'cdp_ready',
+        agentId: appId,
+        timestamp: new Date().toISOString(),
+        progress: 50,
+      });
+      return { port: fastPort, reason: null };
+    }
+    // Fall back to the full discovery chain (catches apps that don't write a
+    // port file, or where the file lags behind the actual bind).
+    const port = await resolveLivePort(appId, deps, null, { bypassCache: true });
     if (port != null) {
       deps.log(`[ensure-cdp] ${appId}: CDP up on random port ${port}`);
       deps.logStructured({
@@ -584,13 +681,60 @@ export async function probeAppStatus(
 
   // AgentSkin-side install detection (paths + Uninstall registry). Merges
   // with core discovery so a closed-but-installed app is still reported.
-  const probe = await detectInstallation({
-    platform: process.platform,
-    appPath: appPathOverride,
-    hints: adapter.installHints,
-    displayName: deps.displayName(appId),
-    logFile: deps.detectionLogFile,
-  });
+  //
+  // Detected-path cache: the first full scan caches the result in persisted
+  // state, so later status() polls skip the expensive filesystem + registry
+  // scan and only cheaply verify the cached path still holds the exe. If the
+  // cached path is stale (uninstalled / moved), we re-run the full scan and
+  // refresh the cache.
+  let probe = {
+    installed: false,
+    path: null as string | null,
+    version: null as string | null,
+    source: null as 'path' | 'registry' | 'core' | null,
+  };
+  const cachedPath = deps.getDetectedPath(appId);
+  // `cacheHandled` is true once the cache path was either verified valid or
+  // cleared as stale — only then do we know a full scan is needed (or not).
+  // A manual appPath override always wins over the auto-detected cache.
+  let cacheHandled = !appPathOverride;
+  if (appPathOverride) {
+    deps.log(`[detect] ${appId}: manual appPath override — skipping detected-path cache`);
+  }
+  if (cachedPath && adapter.installHints && !appPathOverride) {
+    const verified = await verifyInstallPath(
+      cachedPath,
+      adapter.installHints,
+      deps.detectionLogFile,
+    );
+    if (verified) {
+      probe = { installed: true, path: verified.path, version: verified.version, source: 'path' };
+      deps.log(`[detect] ${appId}: detected-path cache hit (${verified.path})`);
+      cacheHandled = true;
+    } else {
+      // Cached path stale — clear and fall through to a full re-scan.
+      deps.log(`[detect] ${appId}: cached path ${cachedPath} stale — re-scanning`);
+      deps.setDetectedPath(appId, null);
+      cacheHandled = true;
+    }
+  }
+  if (!probe.installed && !cacheHandled) {
+    probe = await detectInstallation({
+      platform: process.platform,
+      appPath: appPathOverride,
+      hints: adapter.installHints,
+      displayName: deps.displayName(appId),
+      logFile: deps.detectionLogFile,
+    });
+    // Cache the auto-detected path so future polls skip the full scan.
+    // Fire-and-forget persist so the cache survives restarts without
+    // blocking the status() poll.
+    if (probe.installed && probe.path) {
+      const wasCached = deps.getDetectedPath(appId);
+      deps.setDetectedPath(appId, probe.path);
+      if (!wasCached) void deps.persist().catch(() => undefined);
+    }
+  }
   const installed = coreInstalled || probe.installed;
 
   if (installed) {
@@ -661,6 +805,8 @@ export async function inferRestartReason(
         return 'not-installed';
       case 'singleton-lock':
         return 'singleton-lock';
+      case 'kill-denied':
+        return 'kill-denied';
       case 'spawn-error':
         return 'spawn-failed';
       case 'timeout':

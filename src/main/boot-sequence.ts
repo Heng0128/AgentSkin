@@ -19,9 +19,11 @@
  * engine (`BootProgressReporter`) so the user sees continuous, real-looking
  * progress rather than jump-cut percentages.
  *
- * After the critical path (~45% mark), background warm-up tasks run in the
- * 60%-90% range to pre-compile theme CSS, build thumbnail cache indices,
- * and preload adapter modules - making first interactions snappier.
+ * After the critical path, background warm-up tasks run as their own progress
+ * steps (between step 6 and step 7, spanning ~65%-80%) to pre-compile theme
+ * CSS, build thumbnail cache indices, and preload adapter modules - making
+ * first interactions snappier. They share the same normalized progress pool so
+ * the bar never regresses.
  *
  * Every step is individually try-catched so a single failure degrades
  * gracefully rather than crashing the entire boot sequence.
@@ -36,6 +38,12 @@ import { IpcChannel } from '../shared/ipc-channels';
 import type { AgentId } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
 import { BootProfiler } from './boot-profiler';
+import {
+  type BootBaseline,
+  estimateStepMs,
+  loadBootBaseline,
+  saveBootBaseline,
+} from './boot-progress';
 import { BootProgressReporter, type ProgressSender } from './boot-reporter';
 import { AgentCatalog } from './catalog/agent-catalog';
 import { ThemeCatalog } from './catalog/theme-catalog';
@@ -63,17 +71,38 @@ export interface BootResult {
   warnings: string[];
 }
 
+// Per-step duration baseline (loaded once after `userDataRoot` is known).
+// Cached at module scope so `runStep` can read it without threading a
+// parameter through every call site. Reset on each boot.
+let baselineCache: BootBaseline | null = null;
+
+/** Test hook: reset the cached baseline between boot simulations. */
+export function __resetBootBaselineCache(): void {
+  baselineCache = null;
+}
+
 async function runStep<T>(
   reporter: BootProgressReporter,
   profiler: BootProfiler,
   label: string,
-  weight: number,
+  _weight: number,
   fn: () => Promise<T>,
   warnMsg: string,
 ): Promise<{ ok: true; value: T } | { ok: false; warning: string }> {
-  reporter.addStep(label, weight);
   reporter.advance(label, 0);
   profiler.begin(label);
+
+  // Advance the bar *within* the step by elapsed time vs the baseline estimate
+  // so the splash tracks real loading time (a slow step creeps forward, a fast
+  // step finishes quickly) instead of sitting still then jumping on completion.
+  // Capped at 0.95 so completion still shows a small, honest step-up.
+  const estimateMs = estimateStepMs(label, baselineCache ?? {});
+  const stepStart = Date.now();
+  const ticker = setInterval(() => {
+    const pct = (Date.now() - stepStart) / estimateMs;
+    reporter.advance(label, Math.min(0.95, pct));
+  }, 33);
+
   try {
     const value = await fn();
     profiler.end();
@@ -88,6 +117,8 @@ async function runStep<T>(
     // the failure instead of a silently skipped step.
     reporter.skipped(label);
     return { ok: false, warning };
+  } finally {
+    clearInterval(ticker);
   }
 }
 
@@ -109,6 +140,26 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
   const profiler = new BootProfiler();
   const warnings: string[] = [];
 
+  // Pre-register every boot step and warm-up phase as one normalized progress
+  // pool so the bar is strictly monotonic: boot steps and warm-up share the
+  // same 0–100% scale, and warm-up sits between the boot steps that surround
+  // it (steps 1–6 → 0–65%, warm-up → 65–80%, steps 7–8 → 80–100%). Registering
+  // up front (instead of lazily in `runStep`) keeps `totalWeight` stable so the
+  // reported percentage never regresses. The warm-up labels must match the
+  // `startWarmUp()` calls in `runWarmUp`.
+  reporter
+    .addStep('初始化语言...', 5)
+    .addStep('加载主题库...', 15)
+    .addStep('加载设置...', 10)
+    .addStep('初始化壁纸引擎...', 10)
+    .addStep('启动 CDP 引擎...', 10)
+    .addStep('加载主题目录...', 15)
+    .addStep('预编译主题样式...', 5)
+    .addStep('建立缩略图索引...', 5)
+    .addStep('预加载适配器模块...', 5)
+    .addStep('注册 IPC 处理器...', 10)
+    .addStep('打开主窗口...', 10);
+
   // --- Step 1: Locale (CRITICAL) ---
   const localeResult = await runStep(
     reporter,
@@ -119,6 +170,9 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
       ctx.userDataRoot = app.getPath('userData');
       ctx.locale = await loadLocalePreference(ctx.userDataRoot, app.getLocale());
       setMainLocale(ctx.locale);
+      // Load the per-step duration baseline now that userDataRoot is known, so
+      // subsequent steps can size their progress slices by real loading time.
+      baselineCache = loadBootBaseline(ctx.userDataRoot);
     },
     'locale init failed',
   );
@@ -232,7 +286,7 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
   );
   if (!catalogResult.ok) warnings.push(catalogResult.warning);
 
-  // --- Warm-up: run backgound tasks (60%->90%) ---
+  // --- Warm-up: run background tasks as pre-registered steps (~65%->80%) ---
   const warmUpWarnings = await runWarmUp(ctx, reporter);
   for (const w of warmUpWarnings.warnings) warnings.push(`预热: ${w}`);
 
@@ -284,6 +338,10 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
 
   ctx.bootComplete = true;
   reporter.completeBoot('就绪');
+
+  // Persist this boot's per-step durations so the next launch can size its
+  // progress slices by real loading time (moving-average smoothed).
+  saveBootBaseline(ctx.userDataRoot, profiler.getTimings());
 
   // P0: boot performance report — total + slowest steps, for diagnosing slow
   // starts from the runtime log without DevTools.

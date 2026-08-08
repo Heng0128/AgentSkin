@@ -16,6 +16,10 @@ const zcode = {
       executableCandidates: [
         "%PROGRAMFILES%\\ZCode\\ZCode.exe",
         "%LOCALAPPDATA%\\Programs\\ZCode\\ZCode.exe",
+        // x86 / per-machine installs on non-default drives are common.
+        "%PROGRAMFILES(X86)%\\ZCode\\ZCode.exe",
+        "%PROGRAMDATA%\\ZCode\\ZCode.exe",
+        "%LOCALAPPDATA%\\ZCode\\ZCode.exe",
       ],
       // Squirrel installers register HKCU\...\Uninstall\ZCode.
       uninstallKeys: ["ZCode"],

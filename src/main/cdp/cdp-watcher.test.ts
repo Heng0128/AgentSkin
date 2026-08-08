@@ -47,6 +47,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 function fire(method: string, params: unknown): void {

@@ -167,20 +167,63 @@ async function scanDirForExe(
   return null;
 }
 
+/**
+ * Cheaply verify a previously-detected install directory still contains the
+ * agent executable. Used by the detected-path cache: on later status() polls
+ * we skip the full filesystem + registry scan and just confirm the cached
+ * path is still valid. Returns the version if the path still holds the exe,
+ * or null if the path is now stale (exe gone / moved).
+ *
+ * Unlike `detectInstallation`'s appPath override branch (which always reports
+ * installed:true for a manual override), this returns a truthful result so a
+ * cached path that went stale falls back to a full re-scan.
+ */
+export async function verifyInstallPath(
+  dir: string,
+  hints: InstallHints,
+  logFile?: string | null,
+): Promise<{ path: string; version: string | null } | null> {
+  if (!dir || !dir.trim()) return null;
+  const found = await scanDirForExe(dir.trim(), hints, logFile).catch(() => null);
+  if (!found) return null;
+  return { path: dir.trim(), version: found.version };
+}
+
 /** Common Windows install roots where agent folders are expected. */
 function candidateRoots(): string[] {
   const roots: string[] = [];
   const pf = process.env.ProgramFiles;
   const pf86 = process.env['ProgramFiles(x86)'];
+  const w6432 = process.env.ProgramW6432;
   const local = process.env.LOCALAPPDATA;
   const appData = process.env.APPDATA;
-  if (pf) roots.push(pf);
-  if (pf86) roots.push(pf86);
+  const programData = process.env.ProgramData;
+  const userProfile = process.env.USERPROFILE;
+  // Dedup paths that resolve to the same directory (on 64-bit systems
+  // ProgramFiles and ProgramW6432 are usually identical).
+  const seen = new Set<string>();
+  const push = (p?: string) => {
+    if (p && p.trim() && !seen.has(p.trim())) {
+      seen.add(p.trim());
+      roots.push(p.trim());
+    }
+  };
+  if (pf) push(pf);
+  if (w6432) push(w6432);
+  if (pf86) push(pf86);
+  if (programData) push(programData);
   if (local) {
-    roots.push(path.join(local, 'Programs'));
-    roots.push(local);
+    push(path.join(local, 'Programs'));
+    push(local);
   }
-  if (appData) roots.push(appData);
+  if (appData) push(appData);
+  if (userProfile) {
+    // Users sometimes install standalone exes (portable builds) directly
+    // under their home directory or a "Downloads"/"Desktop" subfolder.
+    push(userProfile);
+    push(path.join(userProfile, 'Downloads'));
+    push(path.join(userProfile, 'Desktop'));
+  }
   return roots;
 }
 
@@ -243,8 +286,14 @@ async function appendLog(logFile: string, content: string): Promise<void> {
  *
  * Strategy (Windows):
  *   1. If a manual `appPath` override is set, verify it directly.
- *   2. Scan known install directories for the agent exe (path detection).
- *   3. Query the Uninstall registry keys for a matching DisplayName (registry).
+ *   2. Query the Uninstall registry for a matching DisplayName, and use every
+ *      matching InstallLocation (or the dir derived from DisplayIcon /
+ *      UninstallString) as an EXTRA scan root. This is what makes installs on
+ *      non-default drives (D:\Program Files, custom folders) detectable: the
+ *      registry knows where the app actually lives even when it is outside
+ *      the fixed candidateRoots() list.
+ *   3. Scan the fixed candidate roots PLUS the registry-derived roots for the
+ *      agent exe (path detection).
  *
  * On non-Windows platforms (or when the adapter provides no hints) this
  * returns a non-installed result without touching the OS.
@@ -292,24 +341,15 @@ export async function detectInstallation(
     return result;
   }
 
-  // 2) Filesystem path scan.
-  const roots = candidateRoots();
-  const scanPaths: string[] = [];
-  let pathResult: { path: string; version: string | null } | null = null;
-  for (const root of roots) {
-    for (const dirName of hints.dirNames) {
-      const dir = path.join(root, dirName);
-      scanPaths.push(dir);
-      if (!pathResult) {
-        const found = await scanDirForExe(dir, hints, logFile).catch(() => null);
-        if (found) pathResult = { path: dir, version: found.version };
-      }
-    }
-  }
-
-  // 3) Registry scan.
-  const registryInfo: string[] = [];
-  let registryResult: { path: string | null; version: string | null } | null = null;
+  // 2) Registry scan FIRST — its InstallLocation values become extra scan
+  //    roots so non-default-drive / custom-folder installs are found by the
+  //    filesystem pass below (which can also read the exe version).
+  const registryEntries: {
+    displayName: string;
+    version: string | null;
+    location: string | null;
+  }[] = [];
+  let registryScanError = '';
   try {
     const out = await execFileAsync(
       'powershell',
@@ -321,45 +361,74 @@ export async function detectInstallation(
       if (!line) continue;
       // Fields: DisplayName|DisplayVersion|InstallLocation|DisplayIcon|UninstallString
       const [dn, dv, il, icon, uninst] = line.split('|');
-      registryInfo.push(`${dn ?? ''}${dv ? ` v${dv}` : ''}`);
-      if (!registryResult) {
-        // InstallLocation is authoritative when present; otherwise derive the
-        // install dir from DisplayIcon or UninstallString (common for Tencent-
-        // installed apps whose InstallLocation is blank).
-        let regPath: string | null = il && il.trim() ? il.trim() : null;
-        if (!regPath) {
-          const probe = String(icon ?? uninst ?? '').trim();
-          const m = probe.match(/^("[^"]+"|\S+)/);
-          if (m) {
-            try {
-              const p = m[1].replace(/^"|"$/g, '');
-              const stat = await fs.stat(p);
-              regPath = stat.isDirectory() ? p : path.dirname(p);
-            } catch {
-              // Path not resolvable — leave regPath null.
-            }
+      // InstallLocation is authoritative when present; otherwise derive the
+      // install dir from DisplayIcon or UninstallString (common for Tencent-
+      // installed apps whose InstallLocation is blank).
+      let regPath: string | null = il && il.trim() ? il.trim() : null;
+      if (!regPath) {
+        const probe = String(icon ?? uninst ?? '').trim();
+        const m = probe.match(/^("[^"]+"|\S+)/);
+        if (m) {
+          try {
+            const p = m[1].replace(/^"|"$/g, '');
+            const stat = await fs.stat(p);
+            regPath = stat.isDirectory() ? p : path.dirname(p);
+          } catch {
+            // Path not resolvable — leave regPath null.
           }
         }
-        registryResult = {
-          path: regPath,
-          version: dv && dv.trim() ? dv.trim() : null,
-        };
       }
+      registryEntries.push({
+        displayName: dn ?? '',
+        version: dv && dv.trim() ? dv.trim() : null,
+        location: regPath,
+      });
     }
   } catch (error) {
     // Registry scan is best-effort, but record the failure reason so a
     // broken PowerShell execution policy or missing reg key is diagnosable
     // instead of silently producing "NOT FOUND" for every registry-only app.
+    registryScanError = toMessage(error);
     if (logFile) {
       await appendLogLine(
         logFile,
-        `[${stamp}] [${displayName}] registry scan failed: ${toMessage(error)}`,
+        `[${stamp}] [${displayName}] registry scan failed: ${registryScanError}`,
       );
     }
   }
 
+  // 3) Filesystem path scan — fixed roots PLUS every registry-derived root.
+  const registryRoots = registryEntries
+    .map((e) => e.location)
+    .filter((l): l is string => Boolean(l));
+  const roots = [...new Set([...candidateRoots(), ...registryRoots])];
+  const scanPaths: string[] = [];
+  let pathResult: { path: string; version: string | null } | null = null;
+  for (const root of roots) {
+    const isRegistryRoot = registryRoots.includes(root);
+    // A registry InstallLocation is usually the install directory itself —
+    // scan it directly (not just root<sep>dirName) so a custom folder whose
+    // name differs from dirNames is still found.
+    if (isRegistryRoot && !pathResult) {
+      const found = await scanDirForExe(root, hints, logFile).catch(() => null);
+      if (found) pathResult = { path: root, version: found.version };
+    }
+    for (const dirName of hints.dirNames) {
+      const dir = path.join(root, dirName);
+      scanPaths.push(dir);
+      if (!pathResult) {
+        const found = await scanDirForExe(dir, hints, logFile).catch(() => null);
+        if (found) pathResult = { path: dir, version: found.version };
+      }
+    }
+  }
+
   // Merge: path detection is preferred (gives both dir + version); registry
-  // is the fallback for version / InstallLocation.
+  // is the fallback for version + InstallLocation.
+  const registryInfo = registryEntries.map(
+    (e) => `${e.displayName}${e.version ? ` v${e.version}` : ''}`,
+  );
+  const registryResult = registryEntries.find((e) => e.location) ?? null;
   let result: InstallDetection;
   if (pathResult) {
     result = {
@@ -371,7 +440,7 @@ export async function detectInstallation(
   } else if (registryResult) {
     result = {
       installed: true,
-      path: registryResult.path,
+      path: registryResult.location,
       version: registryResult.version,
       source: 'registry',
     };

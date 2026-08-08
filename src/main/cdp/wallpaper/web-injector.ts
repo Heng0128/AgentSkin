@@ -38,16 +38,11 @@ import {
 } from '../../../shared/injection-constants';
 import type { WallpaperRenderOptions } from '../../../shared/types';
 import type { CdpSession } from '../cdp-client';
-import {
-  applyPunchThrough,
-  buildFilter,
-  buildFlipTransform,
-  buildWallpaperGuardJs,
-  buildWpSignalBridgeJs,
-  bypassPageCsp,
-  verifyWallpaperVisibility,
-  WALLPAPER_TRANSPARENCY_CSS,
-} from './shared';
+import { WALLPAPER_TRANSPARENCY_CSS } from './constants';
+import { buildFilter, buildFlipTransform } from './css-render';
+import { buildWallpaperGuardJs } from './guard';
+import { applyPunchThrough, verifyWallpaperVisibility } from './punch-through';
+import { buildWpSignalBridgeJs, bypassPageCsp } from './shared';
 
 // ---------------------------------------------------------------------------
 // Web / scene wallpaper injection (iframe-based)

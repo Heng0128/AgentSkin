@@ -132,8 +132,12 @@ describe('StudioHistory', () => {
 });
 
 describe('formatHistoryTime', () => {
-  it('returns a string for a valid ISO timestamp', () => {
-    expect(typeof formatHistoryTime('2025-08-07T12:34:56.000Z')).toBe('string');
+  it('returns a formatted time string for a valid ISO timestamp', () => {
+    const result = formatHistoryTime('2025-08-07T12:34:56.000Z');
+    // Locale time string (e.g. "20:34:56" or "8:34:56 PM") — not raw input, not "Invalid Date".
+    expect(result).toMatch(/\d{1,2}[:.]\d{2}/);
+    expect(result).not.toBe('2025-08-07T12:34:56.000Z');
+    expect(result).not.toBe('Invalid Date');
   });
 
   it('returns raw input on parse failure', () => {

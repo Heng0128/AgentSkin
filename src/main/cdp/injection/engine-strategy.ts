@@ -37,14 +37,10 @@ import {
   CLEAR_ADAPTERS_BODY,
 } from '../../../shared/injection-runtime';
 import type { CdpSession } from '../cdp-client';
-import {
-  delay,
-  injectCssLayer,
-  injectHeroBlob,
-  injectHeroFromDataUrl,
-  type ThemeVerification,
-  verifyTheme,
-} from './shared';
+import { injectCssLayer } from './css-inject';
+import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
+import { delay, verifyTheme } from './shared';
+import type { ThemeVerification } from './types';
 
 // ---------------------------------------------------------------------------
 // Persistence-script identifier tracking (P1 audit #8)

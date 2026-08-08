@@ -60,19 +60,12 @@ export interface ReporterState {
 
 export type ProgressSender = (label: string, pct: number) => void;
 
-const WARMUP_MIN = 60;
-const WARMUP_MAX = 90;
-
 export class BootProgressReporter {
   private steps: BootStep[] = [];
   private currentIndex = -1;
   private totalWeight = 0;
   private _isWarmUp = false;
-  private _warmUpSubIndex = -1;
-  private _warmUpSubLabels: string[] = [];
-  private _warmUpSubWeights: number[] = [];
-  private _warmUpSubProgress = 0;
-  private _warmUpCompletedWeights = 0;
+  private _currentWarmUpLabel: string | null = null;
   private _isBootComplete = false;
   private _send: ProgressSender;
   private _lastSentLabel = '';
@@ -100,7 +93,6 @@ export class BootProgressReporter {
    * @param stepProgress - Progress within this step (0–1).   */
   advance(label: string, stepProgress: number): void {
     this._isBootComplete = false;
-    this._isWarmUp = false;
     const idx = this.steps.findIndex((s) => s.label === label);
     if (idx === -1) return;
     this.currentIndex = idx;
@@ -126,26 +118,17 @@ export class BootProgressReporter {
 
   // ── Warm-up phases ─────────────────────────────────────────────────
 
-  /**
-   * Start a warm-up sub-phase. Progress is mapped to the 60%–90% range.
-   * Multiple sub-phases run sequentially; each reports its own label.
-   */
+  // Warm-up sub-phases are registered as ordinary boot steps (in
+  // `boot-sequence.ts`) with their own weights, so they share the same
+  // normalized 0–100% progress pool. This keeps the bar strictly monotonic:
+  // a warm-up phase advances between the boot steps that surround it instead
+  // of owning a separate fixed 60–90% window that could make the bar regress.
+
+  /** Start a warm-up sub-phase (label must be pre-registered via `addStep`). */
   startWarmUp(label: string): void {
-    if (!this._isWarmUp) {
-      this._isWarmUp = true;
-      this._warmUpSubLabels = [];
-      this._warmUpSubWeights = [];
-      this._warmUpCompletedWeights = 0;
-      this._warmUpSubIndex = -1;
-    }
-    this._warmUpSubIndex++;
-    this._warmUpSubLabels.push(label);
-    // Distribute warm-up weight evenly among sub-phases
-    const count = this._warmUpSubLabels.length;
-    const weightPerSub = 100 / count;
-    this._warmUpSubWeights.push(weightPerSub);
-    this._warmUpSubProgress = 0;
-    this._reportWarmUpPosition(label, 0);
+    this._isWarmUp = true;
+    this._currentWarmUpLabel = label;
+    this.advance(label, 0);
   }
 
   /**
@@ -153,26 +136,21 @@ export class BootProgressReporter {
    * @param progress - 0–1 within the current sub-phase.
    */
   reportWarmUp(progress: number): void {
-    if (!this._isWarmUp) return;
-    this._warmUpSubProgress = Math.max(0, Math.min(1, progress));
-    this._reportWarmUpPosition(
-      this._warmUpSubLabels[this._warmUpSubIndex] ?? '',
-      this._warmUpSubProgress,
-    );
+    if (!this._isWarmUp || !this._currentWarmUpLabel) return;
+    this.advance(this._currentWarmUpLabel, Math.max(0, Math.min(1, progress)));
   }
 
   /** Mark the current warm-up sub-phase as complete. */
   endWarmUp(): void {
-    if (!this._isWarmUp) return;
-    this._warmUpCompletedWeights += this._warmUpSubWeights[this._warmUpSubIndex] ?? 0;
-    this._warmUpSubProgress = 1;
+    if (!this._isWarmUp || !this._currentWarmUpLabel) return;
+    this.completeStep(this._currentWarmUpLabel);
+    this._currentWarmUpLabel = null;
   }
 
-  /** Finish all warm-up phases. Resets to normal step mode at 90%. */
+  /** Finish all warm-up phases. Returns to normal boot-step mode. */
   completeWarmUp(): void {
     this._isWarmUp = false;
-    this._warmUpSubIndex = -1;
-    this._sendIfChanged('加载完成', WARMUP_MAX);
+    this._currentWarmUpLabel = null;
   }
 
   // ── Boot completion ──────────────────────────────────────────────────
@@ -210,17 +188,6 @@ export class BootProgressReporter {
   }
 
   // ── Internal ───────────────────────────────────────────────────────
-
-  private _reportWarmUpPosition(label: string, subProgress: number): void {
-    const basePct = WARMUP_MIN;
-    const range = WARMUP_MAX - WARMUP_MIN;
-    const completedFraction = this._warmUpCompletedWeights / 100;
-    const currentFraction =
-      ((this._warmUpSubWeights[this._warmUpSubIndex] ?? 0) / 100) * subProgress;
-    const totalFraction = completedFraction + currentFraction;
-    const pct = basePct + range * Math.min(1, totalFraction);
-    this._sendIfChanged(label, Math.round(pct * 10) / 10);
-  }
 
   private _sendIfChanged(label: string, pct: number): void {
     if (label === this._lastSentLabel && pct === this._lastSentPct) return;

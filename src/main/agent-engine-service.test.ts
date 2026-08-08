@@ -26,7 +26,7 @@ import type {
   SystemStatus,
 } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
-import { inferRestartReason, probeAppStatus, reconcileZombiePorts } from './app-discovery';
+import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
 import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
 import { writeJsonAtomic } from './fs-utils';
 import { disposeThemeAssetCache } from './theme/utils';

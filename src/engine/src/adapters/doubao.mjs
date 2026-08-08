@@ -21,6 +21,8 @@ const doubao = {
         "%LOCALAPPDATA%\\Programs\\Doubao\\Doubao.exe",
         "%LOCALAPPDATA%\\Doubao\\Doubao.exe",
         "%PROGRAMFILES%\\Doubao\\Doubao.exe",
+        "%PROGRAMFILES(X86)%\\Doubao\\Doubao.exe",
+        "%PROGRAMDATA%\\Doubao\\Doubao.exe",
         // Tencent installer puts Doubao under a versioned game directory on
         // a non-standard drive. The registry UninstallString points at
         // ..\Doubao\uninstall.exe, and the real exe is ..\Doubao\app\Doubao.exe.

@@ -261,6 +261,7 @@ describe('fingerprintCombined', () => {
     // 但结果框架应相同
     expect(combined.framework).toBe('tailwind');
     expect(single.framework).toBe('tailwind');
+    expect(single.confidence).toBeGreaterThan(combined.confidence);
   });
 
   it('多维度信号不一致时取加权最高', () => {
@@ -356,6 +357,7 @@ describe('pickBest', () => {
     const best = pickBest([cls, css]);
     // cssVars 的两个变量 / 总量 = 1.0, 类名命中率较低
     expect(best.confidence).toBeGreaterThan(0);
+    expect(best.framework).toBe('mui');
   });
 });
 

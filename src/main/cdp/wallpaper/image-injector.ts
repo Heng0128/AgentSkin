@@ -38,18 +38,11 @@ import {
 import type { WallpaperRenderOptions } from '../../../shared/types';
 import { getImageBlobThresholdBytes } from '../../config/settings';
 import type { CdpSession } from '../cdp-client';
-import {
-  applyPunchThrough,
-  buildMediaElementCss,
-  buildParallaxJs,
-  buildTileContainerCss,
-  buildWallpaperGuardJs,
-  bypassPageCsp,
-  evaluateWithRetry,
-  imageMimeForPath,
-  verifyWallpaperVisibility,
-  WALLPAPER_TRANSPARENCY_CSS,
-} from './shared';
+import { WALLPAPER_TRANSPARENCY_CSS } from './constants';
+import { buildMediaElementCss, buildTileContainerCss } from './css-render';
+import { buildWallpaperGuardJs } from './guard';
+import { applyPunchThrough, verifyWallpaperVisibility } from './punch-through';
+import { buildParallaxJs, bypassPageCsp, evaluateWithRetry, imageMimeForPath } from './shared';
 
 // ---------------------------------------------------------------------------
 // Constants

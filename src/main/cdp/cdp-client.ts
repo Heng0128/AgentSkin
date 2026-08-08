@@ -133,12 +133,16 @@ function openCdpSocket(
   let closed = false;
 
   ws.onmessage = (event: MessageEvent) => {
+    // Guard against non-string data in production
+    if (typeof event.data !== 'string') return;
+
     let message: CdpResponse;
     try {
-      const raw: unknown = JSON.parse(String(event.data));
+      const raw: unknown = JSON.parse(event.data);
       if (!isCdpResponse(raw)) return; // Malformed — ignore, don't corrupt pending map
       message = raw;
     } catch {
+      // Don't crash the session on malformed JSON from the target
       return;
     }
     // Response (has an id) → resolve/reject a pending command.
@@ -183,6 +187,11 @@ function openCdpSocket(
   const send = <T = unknown>(method: string, params: Record<string, unknown> = {}): Promise<T> => {
     const id = ++seq;
     return new Promise<T>((resolve, reject) => {
+      // Guard against sending on a closed/closing socket
+      if (closed) {
+        return reject(new Error('CDP session is closed'));
+      }
+
       const timer = setTimeout(() => {
         if (pending.has(id)) {
           pending.delete(id);
@@ -248,13 +257,20 @@ function openCdpSocket(
       clearTimeout(timer);
       resolve(core);
     };
-    ws.onerror = () => {
+    ws.onerror = (_event: Event) => {
       if (closed) return; // Already handled — prevent re-entrant stack overflow
       // Don't set closed=true here; close() will set it and call ws.close().
       // If we set it first, close() would skip ws.close().
       clearTimeout(timer);
-      close();
-      reject(new Error('CDP connection failed'));
+      try {
+        close();
+        reject(new Error('CDP connection failed'));
+      } catch (err) {
+        // close() can throw if already closing; reject with a wrapped error
+        reject(
+          new Error(`CDP connection failed: ${err instanceof Error ? err.message : String(err)}`),
+        );
+      }
     };
   });
 }

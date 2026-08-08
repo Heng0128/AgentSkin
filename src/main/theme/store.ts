@@ -335,7 +335,13 @@ export class ThemeLibrary implements ThemeLibraryApi {
   }
 
   async delete(themeId: string): Promise<void> {
-    await fs.rm(this.packagePath(themeId), { force: true });
+    const filePath = this.packagePath(themeId);
+    try {
+      await fs.rm(filePath, { force: true });
+    } catch (error) {
+      // Log but don't throw - the file may have been deleted by another process
+      mainWarnFromCatch('ThemeLibrary', error, `failed to delete theme package ${themeId}`);
+    }
     this.invalidateEntriesCache();
     // Drop the cached cover so a re-added theme with the same id refreshes.
     clearCoverCache(themeId);

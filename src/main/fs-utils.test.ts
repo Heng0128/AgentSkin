@@ -29,6 +29,7 @@ describe('writeJsonAtomic', () => {
 
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
+    vi.restoreAllMocks();
   });
 
   it('writes pretty-printed JSON with a trailing newline', async () => {
@@ -77,6 +78,7 @@ describe('appendLogLine', () => {
 
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
+    vi.restoreAllMocks();
   });
 
   it('appends a line, creating parent directories as needed', async () => {

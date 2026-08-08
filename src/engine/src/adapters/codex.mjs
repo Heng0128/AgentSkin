@@ -23,6 +23,18 @@ const codex = {
     win32: {
       appxPackage: "OpenAI.Codex",
       executableRelative: "app\\ChatGPT.exe",
+      // Filesystem candidates for non-MSIX installs (portable / electron-
+      // builder / manually-extracted builds). MSIX installs live under the
+      // WindowsApps package dir and are discovered via appxPackage instead.
+      executableCandidates: [
+        "%LOCALAPPDATA%\\Programs\\OpenAI\\ChatGPT\\app\\ChatGPT.exe",
+        "%LOCALAPPDATA%\\Programs\\ChatGPT\\app\\ChatGPT.exe",
+        "%LOCALAPPDATA%\\Programs\\Codex\\app\\ChatGPT.exe",
+        "%PROGRAMFILES%\\OpenAI\\ChatGPT\\app\\ChatGPT.exe",
+        "%PROGRAMFILES%\\ChatGPT\\app\\ChatGPT.exe",
+        "%LOCALAPPDATA%\\ChatGPT\\app\\ChatGPT.exe",
+        "%APPDATA%\\ChatGPT\\app\\ChatGPT.exe",
+      ],
       processNames: ["ChatGPT.exe"],
       // ChatGPT desktop writes DevToolsActivePort to its user-data dir.
       devToolsActivePortFile: [
@@ -58,7 +70,10 @@ const codex = {
     // The root landmark is the only blocking check: it doubles as the
     // "app finished booting" signal and the minimal app fingerprint. Everything
     // else warns — the sidebar collapses, and CSS is inert on absent nodes.
-    rootAny: ["main.main-surface"],
+    // Codex's main content surface uses a CSS-Modules hashed class
+    // (`_MainContentSurface_xxx`) rather than the `main-surface` class, so
+    // match the hashed prefix and fall back to a bare `<main>`.
+    rootAny: ["main.main-surface", "main[class*='MainContentSurface']", "main"],
     recommended: [
       { name: "sidebar", any: ["aside.app-shell-left-panel"] },
       { name: "composer", any: [".composer-surface-chrome"] },

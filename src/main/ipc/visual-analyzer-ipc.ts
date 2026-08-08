@@ -9,10 +9,12 @@
  *   - LIST: enumerate agent ids that have a profile on disk.
  *   - GET:  read + parse `<id>-profile.json` for the UI (Studio's
  *           FitGeneratorPanel consumes `tokens.*` and `stats.*`).
+ *   - EXPORT_THEME: build an installable `.agentskin-theme` package from a
+ *           visual-analysis palette (via scripts/build-theme-package.mjs).
  *
- * Stub — no renderer consumer exists yet (P2, requires live CDP):
- *   - DETECT / CDP_EXTRACT / EXPORT_THEME return graceful placeholders.
- *   - STATUS: intentionally no handle (push-only channel, see note below).
+ * Stub / not yet wired (P2, requires live CDP):
+ *   - DETECT / CDP_EXTRACT return graceful placeholders (no renderer consumer
+ *     yet; CDP live extraction is not implemented).
  *
  * The stubs:
  *   1. Prevent renderer-side `ipcRenderer.invoke` calls from hanging
@@ -24,6 +26,7 @@
 import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { type AgentId, isAgentId } from '../../shared/types';
@@ -116,11 +119,69 @@ export function registerVisualAnalyzerIpc(): void {
   // the preload layer (returns a no-op unsubscribe) so renderer code does not crash.
 
   // Export a visual analysis theme as an .agentskin-theme package.
-  // Stub (P2): no renderer consumer yet.
+  //
+  // The renderer (FitGeneratorPanel) sends a `ThemeStudioExportRequest`-shaped
+  // payload ({ agentId, meta?, root?, signature? }). We reuse the same
+  // directory-based package builder as the Theme Studio export
+  // (scripts/build-theme-package.mjs) so the resulting package is byte-for-byte
+  // compatible and installable through the normal theme pipeline.
   ipcMain.handle(
     IpcChannel.VISUAL_ANALYSIS_EXPORT_THEME,
-    (_event, _agentName: unknown, _themeData: unknown) => {
-      return { ok: false, path: undefined };
+    async (
+      _event,
+      agentName: unknown,
+      themeData: unknown,
+    ): Promise<{ ok: boolean; path?: string }> => {
+      if (typeof agentName !== 'string' || !isAgentId(agentName)) {
+        return { ok: false };
+      }
+      if (!themeData || typeof themeData !== 'object' || Array.isArray(themeData)) {
+        return { ok: false };
+      }
+      const request = themeData as Record<string, unknown>;
+      // Normalize the payload so the shared builder can consume it.
+      const normalized = {
+        agentId: agentName,
+        meta:
+          request.meta && typeof request.meta === 'object' && !Array.isArray(request.meta)
+            ? (request.meta as Record<string, unknown>)
+            : undefined,
+        root:
+          request.root && typeof request.root === 'object' && !Array.isArray(request.root)
+            ? (request.root as Record<string, string>)
+            : undefined,
+        signature:
+          request.signature &&
+          typeof request.signature === 'object' &&
+          !Array.isArray(request.signature)
+            ? (request.signature as Record<string, unknown>)
+            : undefined,
+      };
+      // Refuse to export when no palette is supplied — an empty export would
+      // silently fall back to the builder's default tokens and confuse users.
+      if (
+        !normalized.root ||
+        Object.keys(normalized.root).filter((k) => k.startsWith('--agentskin-')).length === 0
+      ) {
+        return { ok: false };
+      }
+
+      const root = app.getAppPath();
+      const scriptUrl = pathToFileURL(path.join(root, 'scripts', 'build-theme-package.mjs')).href;
+      let mod: { buildThemePackage(req: unknown, outDir: string): Promise<string> };
+      try {
+        mod = await import(scriptUrl);
+      } catch {
+        return { ok: false };
+      }
+      // Write to a writable per-user dir (appPath is read-only inside asar).
+      const outDir = path.join(app.getPath('userData'), 'theme-workbench', 'out');
+      try {
+        const pkgDir = await mod.buildThemePackage(normalized, outDir);
+        return { ok: true, path: pkgDir };
+      } catch {
+        return { ok: false };
+      }
     },
   );
 }

@@ -167,35 +167,6 @@ describe('evaluateWithRetry', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Verdict classification regression guard
-// ---------------------------------------------------------------------------
-// The "codec-skip" optimization (skipping blob fallback when stream reported
-// src-not-supported) was REVERTED after log evidence proved src-not-supported
-// is NOT a codec issue — same file succeeded on codex but failed on qoderwork
-// (both Electron, same codec capability). These tests document the verdict
-// tokens that appear in production logs so future changes to the verdict
-// format are caught by tests rather than discovered in production.
-
-describe('verdict token format (regression guard)', () => {
-  it('src-not-supported verdict contains the expected token', () => {
-    // Verifies the verdict substring that the (now-reverted) codec-skip logic
-    // keyed on. Kept as a regression guard so the verdict format stays stable
-    // for log-parsing tools.
-    const verdict = 'loadfail:src-not-supported';
-    expect(verdict).toContain('src-not-supported');
-  });
-
-  it('csp-or-unsupported verdict is distinct from src-not-supported', () => {
-    // These two verdicts have different root causes (CSP block vs protocol/
-    // loading failure) and must not be conflated by future "smart skip" logic.
-    const cspVerdict = 'loadfail:csp-or-unsupported';
-    const srcVerdict = 'loadfail:src-not-supported';
-    expect(cspVerdict).not.toContain('src-not-supported');
-    expect(srcVerdict).not.toContain('csp');
-  });
-});
-
-// ---------------------------------------------------------------------------
 // bypassPageCsp — three-layer CSP bypass behavior
 // ---------------------------------------------------------------------------
 
@@ -258,38 +229,6 @@ describe('bypassPageCsp', () => {
     };
     const result = await bypassPageCsp(session);
     expect(result).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Image fallback verdict format (regression guard)
-// ---------------------------------------------------------------------------
-
-describe('image fallback verdict format (regression guard)', () => {
-  it('image HTTP stream fallback verdict contains both stream and blob tokens', () => {
-    // When image HTTP stream fails and falls back to base64, the verdict
-    // should contain both the stream failure reason and the blob result,
-    // joined by '|'. This mirrors the video stream|blob verdict format.
-    const verdict = 'image-http:loadfail:csp-or-unsupported|image-blob:ok';
-    expect(verdict).toContain('image-http:');
-    expect(verdict).toContain('image-blob:');
-    expect(verdict).toContain('|');
-  });
-
-  it('image HTTP stream success verdict contains only stream token', () => {
-    const verdict = 'image-http:ok';
-    expect(verdict).toContain('image-http:');
-    expect(verdict).not.toContain('image-blob:');
-    expect(verdict).not.toContain('|');
-  });
-
-  it('image blob fallback verdict distinguishes from video blob verdict', () => {
-    const imageVerdict = 'image-http:loadfail:csp|image-blob:ok';
-    const videoVerdict = 'stream:loadfail:src-not-supported|blob:ok';
-    expect(imageVerdict).toContain('image-blob:');
-    expect(videoVerdict).toContain('blob:');
-    expect(imageVerdict).not.toContain('stream:');
-    expect(videoVerdict).not.toContain('image-');
   });
 });
 

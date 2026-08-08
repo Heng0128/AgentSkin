@@ -201,7 +201,7 @@ describe('TokenExtractor.sample', () => {
     const result = await extractor.sample();
     expect(result.agentId).toBe('workbuddy');
     expect(typeof result.extractedAt).toBe('string');
-    expect(() => new Date(result.extractedAt)).not.toThrow();
+    expect(Number.isNaN(new Date(result.extractedAt).getTime())).toBe(false);
     expect(Array.isArray(result.colors)).toBe(true);
     expect(Array.isArray(result.fonts)).toBe(true);
     expect(Array.isArray(result.spacings)).toBe(true);
@@ -341,6 +341,9 @@ describe('TokenExtractor — edge cases', () => {
     const result = await extractor.sample();
     expect(result.colors).toEqual([]);
     expect(result.fonts).toEqual([]);
+    expect(result.spacings).toEqual([]);
+    expect(result.shadows).toEqual([]);
+    expect(result.radii).toEqual([]);
   });
 
   it('returns empty arrays when evaluate throws', async () => {
@@ -353,7 +356,10 @@ describe('TokenExtractor — edge cases', () => {
     );
     const result = await extractor.sample();
     expect(result.colors).toEqual([]);
+    expect(result.fonts).toEqual([]);
     expect(result.spacings).toEqual([]);
+    expect(result.shadows).toEqual([]);
+    expect(result.radii).toEqual([]);
   });
 
   it('returns empty arrays when evaluate returns malformed JSON', async () => {
@@ -364,6 +370,10 @@ describe('TokenExtractor — edge cases', () => {
     );
     const result = await extractor.sample();
     expect(result.colors).toEqual([]);
+    expect(result.fonts).toEqual([]);
+    expect(result.spacings).toEqual([]);
+    expect(result.shadows).toEqual([]);
+    expect(result.radii).toEqual([]);
   });
 
   it('returns empty arrays when evaluate returns a non-array JSON', async () => {
@@ -374,6 +384,10 @@ describe('TokenExtractor — edge cases', () => {
     );
     const result = await extractor.sample();
     expect(result.colors).toEqual([]);
+    expect(result.fonts).toEqual([]);
+    expect(result.spacings).toEqual([]);
+    expect(result.shadows).toEqual([]);
+    expect(result.radii).toEqual([]);
   });
 
   it('handles an empty element array gracefully', async () => {
