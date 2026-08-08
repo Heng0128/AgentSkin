@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
+import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/app-mark';
 import {
   Accordion,
@@ -23,6 +24,7 @@ import type { EnvironmentModel } from '@/types/environment';
 
 import { Rocket01Icon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
+import type { WallpaperInfo } from '@shared/types';
 import { AgentStatusDot, envToDotVariant } from './AgentStatusDot';
 
 interface AgentDetailSheetProps {
@@ -57,6 +59,28 @@ export function AgentDetailSheet({
   onApply,
   onOpenChange,
 }: AgentDetailSheetProps) {
+  const [wallpaperName, setWallpaperName] = useState<string | null>(null);
+  useEffect(() => {
+    if (!env?.wallpaperId) {
+      setWallpaperName(null);
+      return;
+    }
+    let alive = true;
+    api
+      .listWallpapers()
+      .then((list: WallpaperInfo[]) => {
+        if (alive) {
+          setWallpaperName(
+            list.find((w) => w.id === env.wallpaperId)?.title ?? env.wallpaperId ?? null,
+          );
+        }
+      })
+      .catch(() => setWallpaperName(env.wallpaperId ?? null));
+    return () => {
+      alive = false;
+    };
+  }, [env?.wallpaperId]);
+
   return (
     <Sheet open={env !== null} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
@@ -97,6 +121,11 @@ export function AgentDetailSheet({
               {/* Current theme — always visible */}
               <DetailRow label={t.detailCurrentTheme}>
                 {env.theme ? env.theme.name : t.statusNoTheme}
+              </DetailRow>
+
+              {/* Bound wallpaper (P0-3: environment = theme + wallpaper) */}
+              <DetailRow label="壁纸">
+                {env.wallpaperId ? (wallpaperName ?? env.wallpaperId) : '无'}
               </DetailRow>
 
               {/* Advanced details — collapsible via Accordion */}

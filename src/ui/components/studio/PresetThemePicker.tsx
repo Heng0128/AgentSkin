@@ -26,6 +26,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useNotificationStore } from '@/stores/notificationStore';
 
 import {
   Add01Icon,
@@ -35,6 +36,7 @@ import {
   RefreshIcon,
   Search01Icon,
 } from '@hugeicons/core-free-icons';
+import { toMessage } from '@shared/errors';
 import { semanticColorsToPalette } from '@shared/theme-mapping';
 import type { AgentId, ApplyRequest, ThemeCatalogItem } from '@shared/types';
 
@@ -49,8 +51,6 @@ interface PresetThemePickerProps {
   themes: ThemeCatalogItem[];
   /** Fires after a theme's palette is loaded into the Studio editor. */
   onPaletteLoaded: (palette: Record<string, string>) => void;
-  /** Toast callback for user feedback. */
-  onToast: (msg: string, variant?: 'default' | 'destructive') => void;
   /** Refresh the theme list (re-fetch from catalog). */
   onRefresh: () => void;
 }
@@ -87,9 +87,9 @@ export function PresetThemePicker({
   activeAgent,
   themes,
   onPaletteLoaded,
-  onToast,
   onRefresh,
 }: PresetThemePickerProps) {
+  const showToast = useNotificationStore((s) => s.showToast);
   const [search, setSearch] = useState('');
   const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
   const [busy, setBusy] = useState<string | null>(null);
@@ -113,20 +113,20 @@ export function PresetThemePicker({
     (theme: ThemeCatalogItem) => {
       const palette = semanticColorsToPalette(theme.colors as Record<string, unknown>);
       if (Object.keys(palette).length === 0) {
-        onToast(`「${theme.name}」无可载入的调色板`, 'destructive');
+        showToast(`「${theme.name}」无可载入的调色板`, 'destructive');
         return;
       }
       onPaletteLoaded(palette);
-      onToast(`已载入「${theme.name}」的调色板`);
+      showToast(`已载入「${theme.name}」的调色板`);
     },
-    [onPaletteLoaded, onToast],
+    [onPaletteLoaded, showToast],
   );
 
   // --- Apply theme to active agent ---
   const handleApply = useCallback(
     async (theme: ThemeCatalogItem) => {
       if (!activeAgent) {
-        onToast('请先选择一个 Agent', 'destructive');
+        showToast('请先选择一个 Agent', 'destructive');
         return;
       }
       setBusy(theme.id);
@@ -134,17 +134,17 @@ export function PresetThemePicker({
         const request: ApplyRequest = { themeId: theme.id, appId: activeAgent };
         const res = await api.applyTheme(request);
         if (res.status === 'applied') {
-          onToast(`「${theme.name}」已应用到 ${activeAgent}`);
+          showToast(`「${theme.name}」已应用到 ${activeAgent}`);
         } else if (res.status === 'requires-restart') {
-          onToast(`「${theme.name}」已排队 — 重启 ${activeAgent} 后生效`);
+          showToast(`「${theme.name}」已排队 — 重启 ${activeAgent} 后生效`);
         }
       } catch (e) {
-        onToast(`应用失败: ${e instanceof Error ? e.message : String(e)}`, 'destructive');
+        showToast(`应用失败: ${toMessage(e)}`, 'destructive');
       } finally {
         setBusy(null);
       }
     },
-    [activeAgent, onToast],
+    [activeAgent, showToast],
   );
 
   return (

@@ -30,6 +30,7 @@ import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/spinner';
+import { contrastRatio, hexToHsl, hexToHsv, hexToRgb, textOn } from '@/utils/color-theory';
 
 import {
   ChevronRightIcon,
@@ -145,49 +146,10 @@ const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'i
 // ---------------------------------------------------------------------------
 
 /** Pick black or white text for legibility over a hex background. */
-function readableText(hex: string): string {
-  if (!hex || !/^#?[0-9a-fA-F]{3,8}/.test(hex)) return '#ffffff';
-  const h = hex.replace('#', '');
-  const full =
-    h.length === 3
-      ? h
-          .split('')
-          .map((c) => c + c)
-          .join('')
-      : h.slice(0, 6);
-  const r = parseInt(full.slice(0, 2), 16);
-  const g = parseInt(full.slice(2, 4), 16);
-  const b = parseInt(full.slice(4, 6), 16);
-  if ([r, g, b].some((n) => Number.isNaN(n))) return '#ffffff';
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5 ? '#000000' : '#ffffff';
-}
 
 // ---------------------------------------------------------------------------
 // WCAG contrast helpers (P0-2)
 // ---------------------------------------------------------------------------
-
-function linearize(v: number): number {
-  const s = v / 255;
-  return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-}
-
-function relLuminance(hex: string): number {
-  const h = hex.replace('#', '');
-  if (h.length < 6) return 0.5;
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  if ([r, g, b].some((n) => Number.isNaN(n))) return 0.5;
-  return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
-}
-
-function contrastRatio(a: string, b: string): number {
-  const la = relLuminance(a);
-  const lb = relLuminance(b);
-  const hi = Math.max(la, lb);
-  const lo = Math.min(la, lb);
-  return (hi + 0.05) / (lo + 0.05);
-}
 
 export type WcagLevel = 'AAA' | 'AA' | 'AA Large' | 'Fail';
 
@@ -271,7 +233,7 @@ function SwatchRow({
           {contrastLevel}
         </span>
       )}
-      <span className="font-mono text-[8px]" style={{ color: readableText(safe), opacity: 0.5 }}>
+      <span className="font-mono text-[8px]" style={{ color: textOn(safe), opacity: 0.5 }}>
         {expanded ? '▴' : '●'}
       </span>
     </button>
@@ -282,76 +244,6 @@ function SwatchRow({
 // Color format converters (P0-3)
 // ---------------------------------------------------------------------------
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
-  const h = hex.replace('#', '');
-  const full =
-    h.length === 3
-      ? h
-          .split('')
-          .map((c) => c + c)
-          .join('')
-      : h.slice(0, 6);
-  if (full.length !== 6) return null;
-  const r = parseInt(full.slice(0, 2), 16);
-  const g = parseInt(full.slice(2, 4), 16);
-  const b = parseInt(full.slice(4, 6), 16);
-  if ([r, g, b].some((n) => Number.isNaN(n))) return null;
-  return { r, g, b };
-}
-
-function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
-  const rn = r / 255,
-    gn = g / 255,
-    bn = b / 255;
-  const max = Math.max(rn, gn, bn),
-    min = Math.min(rn, gn, bn);
-  const l = (max + min) / 2;
-  let h = 0,
-    s = 0;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case rn:
-        h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
-        break;
-      case gn:
-        h = ((bn - rn) / d + 2) / 6;
-        break;
-      default:
-        h = ((rn - gn) / d + 4) / 6;
-        break;
-    }
-  }
-  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
-}
-
-function rgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: number } {
-  const rn = r / 255,
-    gn = g / 255,
-    bn = b / 255;
-  const max = Math.max(rn, gn, bn),
-    min = Math.min(rn, gn, bn);
-  const d = max - min;
-  const v = max;
-  const s = max === 0 ? 0 : d / max;
-  let h = 0;
-  if (d !== 0) {
-    switch (max) {
-      case rn:
-        h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
-        break;
-      case gn:
-        h = ((bn - rn) / d + 2) / 6;
-        break;
-      default:
-        h = ((rn - gn) / d + 4) / 6;
-        break;
-    }
-  }
-  return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) };
-}
-
 function SwatchDetailPanel({ hex }: { hex: string }) {
   const [copied, setCopied] = useState<string | null>(null);
   useEffect(() => {
@@ -361,14 +253,20 @@ function SwatchDetailPanel({ hex }: { hex: string }) {
   }, [copied]);
   const rgb = hexToRgb(hex);
   if (!rgb) return null;
-  const { r, g, b } = rgb;
-  const hsl = rgbToHsl(r, g, b);
-  const hsv = rgbToHsv(r, g, b);
+  const [r, g, b] = rgb;
+  const [hslH, hslS, hslL] = hexToHsl(hex);
+  const [hsvH, hsvS, hsvV] = hexToHsv(hex);
   const formats = [
     { label: 'HEX', value: hex.toUpperCase() },
     { label: 'RGB', value: `${r}, ${g}, ${b}` },
-    { label: 'HSL', value: `${hsl.h}°, ${hsl.s}%, ${hsl.l}%` },
-    { label: 'HSV', value: `${hsv.h}°, ${hsv.s}%, ${hsv.v}%` },
+    {
+      label: 'HSL',
+      value: `${Math.round(hslH)}°, ${Math.round(hslS * 100)}%, ${Math.round(hslL * 100)}%`,
+    },
+    {
+      label: 'HSV',
+      value: `${Math.round(hsvH)}°, ${Math.round(hsvS * 100)}%, ${Math.round(hsvV * 100)}%`,
+    },
   ];
   const handleCopy = (val: string, label: string) => {
     navigator.clipboard.writeText(val).then(

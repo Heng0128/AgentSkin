@@ -16,6 +16,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useStudioStore } from '@/stores/studioStore';
 
 import {
   ColorPickerIcon,
@@ -24,7 +26,8 @@ import {
   Tick01Icon,
   Upload01Icon,
 } from '@hugeicons/core-free-icons';
-import type { AgentId, WallpaperInfo } from '@shared/types';
+import { toMessage } from '@shared/errors';
+import type { WallpaperInfo } from '@shared/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -38,21 +41,6 @@ interface WallpaperItem {
 }
 
 type WallpaperVariant = 'scene' | 'video' | 'web' | 'preset';
-
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
-
-interface WallpaperStudioPanelProps {
-  /** Currently selected agent — used for apply-to-agent operation. */
-  activeAgent: AgentId | null;
-  /** ID of the currently active wallpaper for this agent (highlight). */
-  activeWallpaperId: string | null;
-  /** Toast callback for user feedback. */
-  onToast: (msg: string, variant?: 'default' | 'destructive') => void;
-  /** Fired after a wallpaper is successfully applied. */
-  onWallpaperActivated?: (id: string) => void;
-}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -186,12 +174,10 @@ function WallpaperCard({
 // Main component
 // ---------------------------------------------------------------------------
 
-export function WallpaperStudioPanel({
-  activeAgent,
-  activeWallpaperId,
-  onToast,
-  onWallpaperActivated,
-}: WallpaperStudioPanelProps) {
+export function WallpaperStudioPanel() {
+  const activeProject = useStudioStore((s) => s.getActiveProject());
+  const activeAgent = activeProject?.agentId ?? null;
+  const showToast = useNotificationStore((s) => s.showToast);
   const [wallpapers, setWallpapers] = useState<WallpaperItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -214,10 +200,7 @@ export function WallpaperStudioPanel({
         }
       } catch (e) {
         if (!cancelled) {
-          onToast(
-            `壁纸列表加载失败: ${e instanceof Error ? e.message : '未知错误'}`,
-            'destructive',
-          );
+          showToast(`壁纸列表加载失败: ${toMessage(e)}`, 'destructive');
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -227,7 +210,7 @@ export function WallpaperStudioPanel({
     return () => {
       cancelled = true;
     };
-  }, [onToast]);
+  }, [showToast]);
 
   // --- Extract theme from wallpaper ---
   const handleExtract = useCallback(
@@ -235,35 +218,34 @@ export function WallpaperStudioPanel({
       setBusy(wallpaperId);
       try {
         const result = await api.extractThemeFromWallpaper(wallpaperId);
-        onToast(`主题已生成: ${result.displayName || result.id || 'extracted-theme'}`);
+        showToast(`主题已生成: ${result.displayName || result.id || 'extracted-theme'}`);
       } catch (e) {
-        onToast(`提取失败: ${e instanceof Error ? e.message : '未知错误'}`, 'destructive');
+        showToast(`提取失败: ${toMessage(e)}`, 'destructive');
       } finally {
         setBusy(null);
       }
     },
-    [onToast],
+    [showToast],
   );
 
   // --- Apply wallpaper to active agent ---
   const handleApply = useCallback(
     async (wallpaperId: string) => {
       if (!activeAgent) {
-        onToast('请先选择一个 Agent', 'destructive');
+        showToast('请先选择一个 Agent', 'destructive');
         return;
       }
       setBusy(wallpaperId);
       try {
         await api.applyWallpaperToAgent(wallpaperId, activeAgent);
-        onToast('壁纸已应用');
-        onWallpaperActivated?.(wallpaperId);
+        showToast('壁纸已应用');
       } catch (e) {
-        onToast(`应用失败: ${e instanceof Error ? e.message : '未知错误'}`, 'destructive');
+        showToast(`应用失败: ${toMessage(e)}`, 'destructive');
       } finally {
         setBusy(null);
       }
     },
-    [activeAgent, onToast, onWallpaperActivated],
+    [activeAgent, showToast],
   );
 
   // --- Import new wallpaper ---
@@ -280,16 +262,13 @@ export function WallpaperStudioPanel({
           })),
           ...prev,
         ]);
-        onToast(`已导入 ${imported.length} 张壁纸`);
+        showToast(`已导入 ${imported.length} 张壁纸`);
       }
     } catch (e) {
       if (e instanceof Error && e.message.includes('cancel')) return; // user cancelled
-      onToast(`导入失败: ${e instanceof Error ? e.message : '未知错误'}`, 'destructive');
+      showToast(`导入失败: ${toMessage(e)}`, 'destructive');
     }
-  }, [onToast]);
-
-  // --- Active wallpaper (find item from list) ---
-  const activeItem = wallpapers.find((w) => w.id === activeWallpaperId) ?? null;
+  }, [showToast]);
 
   // --- Counts by type ---
   const typeCounts: Record<string, number> = {};
@@ -321,27 +300,6 @@ export function WallpaperStudioPanel({
           上传
         </button>
       </div>
-
-      {/* --- Active wallpaper summary --- */}
-      {activeItem && (
-        <div className="border-b border-white/[0.06] bg-[#FF453A]/[0.04] px-4 py-2">
-          <div className="flex items-center gap-3">
-            <span className="size-[6px] rounded-full bg-[#FF453A]" />
-            <span className="font-mono text-[8px] uppercase tracking-wider text-white/40">
-              当前壁纸
-            </span>
-            <span className="truncate font-mono text-[10px] font-medium text-white/85">
-              {activeItem.name}
-            </span>
-            <span
-              className="ml-auto rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[7.5px] font-semibold"
-              style={{ color: TYPE_DOT_COLOR[activeItem.type] }}
-            >
-              {TYPE_LABELS[activeItem.type]}
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* --- Scrollable content --- */}
       <ScrollArea className="flex-1">
@@ -396,7 +354,7 @@ export function WallpaperStudioPanel({
                   <WallpaperCard
                     key={wp.id}
                     wallpaper={wp}
-                    isActive={wp.id === activeWallpaperId}
+                    isActive={false}
                     busy={busy === wp.id}
                     onExtract={handleExtract}
                     onApply={handleApply}

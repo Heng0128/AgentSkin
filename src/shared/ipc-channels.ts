@@ -105,6 +105,10 @@ export const IpcChannel = {
   /** Theme Studio Workspace: delete installed bundle (filesystem rm). */
   STUDIO_BUNDLE_DELETE: 'studio:bundle:delete',
 
+  // --- Environment presets (main-process persisted, v2+) ---
+  ENV_PRESET_GET: 'env-preset:get',
+  ENV_PRESET_SET: 'env-preset:set',
+
   // --- Theme Studio (studio-ipc.ts) ---
   THEME_STUDIO_SNAPSHOT: 'studio:snapshot',
   /** Capture the agent's NATIVE (un-themed) appearance, then automatically
@@ -170,6 +174,7 @@ export const IpcChannel = {
   VISUAL_ANALYSIS_CDP_EXTRACT: 'visual-analysis:cdp-extract',
   VISUAL_ANALYSIS_STATUS: 'visual-analysis:status',
   VISUAL_ANALYSIS_EXPORT_THEME: 'visual-analysis:export-theme',
+  VISUAL_ANALYSIS_LIST_SUMMARY: 'visual-analysis:list-summary',
 } as const;
 
 /** Union of all IPC channel names (for type-level validation in callers). */

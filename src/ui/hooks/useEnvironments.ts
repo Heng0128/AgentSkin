@@ -124,6 +124,7 @@ export function useEnvironments(): UseEnvironmentsResult {
           displayName: agent.displayName,
         },
         theme,
+        wallpaperId: preset?.wallpaperId ?? null,
         status: envStatus,
         agentRunning: isRunning,
         agentInstalled: isInstalled,

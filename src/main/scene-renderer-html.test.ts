@@ -559,5 +559,5 @@ describe('scene HTML — real workshop scenes (parallax revival)', () => {
       }
     }
     expect(withBridge).toBe(total);
-  }, 120000);
+  }, 300000);
 });

@@ -29,7 +29,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
-import { type AgentId, isAgentId } from '../../shared/types';
+import { type AgentId, isAgentId, type VisualAnalysisSummary } from '../../shared/types';
 
 const PROFILE_FILE_SUFFIX = '-profile.json';
 
@@ -76,6 +76,91 @@ async function readProfile(agentId: AgentId): Promise<Record<string, unknown> | 
   }
 }
 
+/** Process-lifetime cache for the computed summaries (built once on first use). */
+let summariesCache: VisualAnalysisSummary[] | null = null;
+
+/**
+ * Build a compact per-agent summary digest from the bundled asset:
+ *   - `_profiles-summary.json` → token counts / categories / stats
+ *   - `<id>-profile.json` → brand accent (`tokens.core.*.accent`)
+ *
+ * Reading the multi-MB raw profiles is the only expensive part; it happens
+ * once, here, in the main process, and the result is cached.
+ */
+function buildVisualAnalysisSummaries(): VisualAnalysisSummary[] {
+  if (summariesCache) return summariesCache;
+  const dir = getProfilesDir();
+
+  let summaryMap: Record<string, Record<string, unknown>> = {};
+  try {
+    const raw = fs.readFileSync(path.join(dir, '_profiles-summary.json'), 'utf8');
+    const parsed = JSON.parse(raw) as { profiles?: Record<string, Record<string, unknown>> };
+    summaryMap = parsed.profiles ?? {};
+  } catch {
+    summaryMap = {};
+  }
+
+  const out: VisualAnalysisSummary[] = [];
+  for (const [id, s] of Object.entries(summaryMap)) {
+    if (!isAgentId(id)) continue;
+    const agentId = id as AgentId;
+
+    // Extract brand accent colors from the raw profile (best-effort).
+    let brandDark: string | undefined;
+    let brandLight: string | undefined;
+    try {
+      const prof = JSON.parse(
+        fs.readFileSync(path.join(dir, `${agentId}${PROFILE_FILE_SUFFIX}`), 'utf8'),
+      ) as { tokens?: { core?: { dark?: { accent?: string }; light?: { accent?: string } } } };
+      brandDark = prof.tokens?.core?.dark?.accent;
+      brandLight = prof.tokens?.core?.light?.accent;
+    } catch {
+      // Profile missing/unparseable — fall back to stats-only card.
+    }
+
+    const stats = (s.stats ?? {}) as Record<string, Record<string, unknown>>;
+    const num = (obj: Record<string, unknown> | undefined, key: string): number => {
+      const v = obj?.[key];
+      return typeof v === 'number' ? v : 0;
+    };
+
+    out.push({
+      id: agentId,
+      tokensLight: Number(s.tokensLight ?? 0),
+      tokensDark: Number(s.tokensDark ?? 0),
+      categories: Array.isArray(s.categories) ? (s.categories as string[]) : [],
+      stats: {
+        rootVars: {
+          default: num(stats.rootVars, 'default'),
+          dark: num(stats.rootVars, 'dark'),
+          light: num(stats.rootVars, 'light'),
+        },
+        domNodes: {
+          default: num(stats.domNodes, 'default'),
+          dark: num(stats.domNodes, 'dark'),
+          light: num(stats.domNodes, 'light'),
+        },
+        styleVars: {
+          dark: num(stats.styleVars, 'dark'),
+          light: num(stats.styleVars, 'light'),
+          neutral: num(stats.styleVars, 'neutral'),
+        },
+        computedSamples: {
+          default: num(stats.computedSamples, 'default'),
+          dark: num(stats.computedSamples, 'dark'),
+          light: num(stats.computedSamples, 'light'),
+        },
+      },
+      brandDark,
+      brandLight,
+    });
+  }
+
+  out.sort((a, b) => a.id.localeCompare(b.id));
+  summariesCache = out;
+  return out;
+}
+
 export function registerVisualAnalyzerIpc(): void {
   // List agent ids that have a bundled profile on disk (known AgentIds only).
   ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_LIST, async () => {
@@ -87,6 +172,15 @@ export function registerVisualAnalyzerIpc(): void {
     }
     const ids = entries.map(agentIdFromProfileFile).filter((id): id is AgentId => id !== null);
     return [...new Set(ids)].sort();
+  });
+
+  // Compact per-agent summary for the Studio profile browser. The renderer
+  // must not load the multi-MB raw profiles just to render a card, so we
+  // serve a trimmed digest: lightweight stats from `_profiles-summary.json`
+  // plus the brand accent extracted lazily from each `<id>-profile.json`.
+  // Built once and cached for the process lifetime.
+  ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_LIST_SUMMARY, (): VisualAnalysisSummary[] => {
+    return buildVisualAnalysisSummaries();
   });
 
   // Get a single agent profile by id. Input is validated as a known AgentId

@@ -87,6 +87,33 @@ export function hslToHex(h, s, l) {
   return rgbToHex([(r + m) * 255, (g + m) * 255, (b + m) * 255]);
 }
 
+/** Convert #hex → [h (0-360), s (0-1), v (0-1)]. */
+export function hexToHsv(hex) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return [0, 0, 0];
+  const [r, g, b] = rgb.map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  const v = max;
+  const s = max === 0 ? 0 : d / max;
+  let h = 0;
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+  }
+  if (h < 0) h += 360;
+  return [h, s, v];
+}
+
+/** Pick black or white text for legibility over a hex background (WCAG 1.4.3). */
+export function textOn(hex) {
+  if (!hex) return '#ffffff';
+  return relLuminance(hex) > 0.179 ? '#000000' : '#ffffff';
+}
+
 // ---------------------------------------------------------------------------
 // Harmony generators — return arrays of HSL offsets
 // ---------------------------------------------------------------------------

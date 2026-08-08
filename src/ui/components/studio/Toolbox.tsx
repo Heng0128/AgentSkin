@@ -334,56 +334,6 @@ function SliderRow({
   );
 }
 
-function _NumberInput({
-  label,
-  hint,
-  value,
-  min,
-  max,
-  step,
-  unit = '',
-  placeholder,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  value: number | string;
-  min: number;
-  max: number;
-  step: number;
-  unit?: string;
-  placeholder?: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="space-y-1 py-1">
-      <span
-        className="font-mono text-[9.5px] font-medium uppercase"
-        style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
-      >
-        {label}
-      </span>
-      <input
-        type="number"
-        min={min}
-        max={max}
-        step={step}
-        value={String(value)}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        title={hint}
-        className="h-6 w-full border border-border bg-muted px-2 font-mono text-[10px] outline-none transition-colors focus:border-primary/60"
-      />
-      <span
-        className="font-mono text-[8px]"
-        style={{ color: 'var(--dim, var(--muted-foreground))' }}
-      >
-        {unit}
-      </span>
-    </div>
-  );
-}
-
 function SelectRow({
   label,
   options,
@@ -904,5 +854,4 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
   );
 }
 
-export type { ToolboxPanelProps };
 export { computeSignature, fingerprintFromSnapshot, ToolboxPanel };

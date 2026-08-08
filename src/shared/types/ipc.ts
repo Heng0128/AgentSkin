@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { EnvironmentPreset } from '../../ui/types/environment';
 import type { AppLocale } from '../i18n';
 import type { AgentCatalogItem, AgentId, InstallState, Platform } from './agent';
 import type {
@@ -10,6 +11,7 @@ import type {
   ThemeCatalogItem,
   ThemeStudioExportRequest,
 } from './theme';
+import type { VisualAnalysisSummary } from './visual-analysis';
 import type {
   DesktopSettings,
   WallpaperAgentSetting,
@@ -253,6 +255,16 @@ export interface ThemeVisualSnapshot {
    *  styles + geometry), used to render an authentic preview. Optional — may
    *  be absent if the DOM probe is unavailable. */
   domTree?: DomTreeNode;
+  /**
+   * Native `:root` CSS custom properties captured live from the agent at
+   * snapshot time, keyed by variable name (e.g. `--color-background`). These
+   * are the agent's REAL CSS variables (not our injected `--agentskin-*`
+   * unless a theme was applied), used by the RAW (native-look) preview to
+   * resolve `var()` references authentically instead of rendering against an
+   * empty `:root`. Optional — absent on snapshots captured before this field
+   * existed, in which case the preview falls back to an empty map.
+   */
+  rootVars?: Record<string, string>;
   summary: {
     totalLandmarks: number;
     visibleLandmarks: number;
@@ -346,6 +358,11 @@ export interface AgentSkinApi {
   ): Promise<{ ok: boolean; reason?: string; detail?: string; restartReason?: RestartReason }>;
   /** Remove the injected wallpaper from a specific agent. */
   removeWallpaperFromAgent(agentId: AgentId): Promise<{ ok: boolean }>;
+  // --- Environment presets (main-process persisted, v2+) ---
+  /** Load all persisted environment presets from the main process. */
+  getEnvironmentPresets(): Promise<EnvironmentPreset[]>;
+  /** Persist the full environment preset array (renderer is source of truth). */
+  saveEnvironmentPresets(presets: EnvironmentPreset[]): Promise<{ ok: boolean }>;
   /** Detect whether Wallpaper Engine is installed on this machine. */
   weDetect(): Promise<{ installed: boolean; wallpaperCount: number }>;
   /** Resolve a wallpaper's media as a streamable loopback HTTP URL (served by
@@ -479,6 +496,8 @@ export interface AgentSkinApi {
   getVisualAnalysisTarget(agentName: string): Promise<Record<string, unknown> | null>;
   /** List all visual analysis target names. */
   listVisualAnalysisTargets(): Promise<string[]>;
+  /** List visual analysis targets with a compact summary (brand color + stats). */
+  listVisualAnalysisSummaries(): Promise<VisualAnalysisSummary[]>;
   /** Detect whether a specific agent is currently running (CDP-accessible). */
   detectVisualAnalysisAgent(
     agentName: string,

@@ -21,6 +21,7 @@ import type { MainContext } from '../main-context';
 import { createStudioWindow } from '../window-manager';
 import { registerBundleIpc } from './bundle-ipc';
 import { registerCoreIpc } from './core-ipc';
+import { registerEnvironmentIpc } from './environment-ipc';
 import { registerPerformanceIpc } from './performance-ipc';
 import { registerSettingsIpc } from './settings-ipc';
 import { registerStudioIpc } from './studio-ipc';
@@ -40,6 +41,7 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
   registerPerformanceIpc();
   registerWindowIpc();
   registerVisualAnalyzerIpc();
+  registerEnvironmentIpc(ctx);
 
   // Open (or focus) the dedicated Theme Studio window on demand. The renderer
   // env exposes ELECTRON_RENDERER_URL in dev so we can point the studio window

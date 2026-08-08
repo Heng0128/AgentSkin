@@ -15,7 +15,13 @@ import type { AgentProgress, BootPhase } from '@/hooks/useBootProgress';
 import { cn } from '@/lib/utils';
 import type { EnvironmentModel } from '@/types/environment';
 
-import { Copy01Icon, Delete02Icon, Edit02Icon, MoreVerticalIcon } from '@hugeicons/core-free-icons';
+import {
+  Copy01Icon,
+  Delete02Icon,
+  Edit02Icon,
+  Image02Icon,
+  MoreVerticalIcon,
+} from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import { AgentStatusDot, envToDotVariant } from './AgentStatusDot';
 
@@ -281,6 +287,14 @@ export function EnvironmentCard({
             </div>
           </div>
         </div>
+
+        {/* Wallpaper binding indicator (P0-3: environment = theme + wallpaper) */}
+        {env.wallpaperId && (
+          <div className="mt-1.5 flex items-center gap-1 font-mono text-[9px] text-muted-foreground">
+            <HugeIcon icon={Image02Icon} className="size-3" />
+            <span>壁纸已绑定</span>
+          </div>
+        )}
 
         {/* Bottom: status row (Swiss label) */}
         <div className="mt-2.5 flex items-center gap-2 border-t border-dashed border-border/60 pt-2">

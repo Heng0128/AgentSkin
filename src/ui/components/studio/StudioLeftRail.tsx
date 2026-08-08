@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { appStatusFor } from '@/stores/agentStore';
+import { useStudioStore } from '@/stores/studioStore';
 
 import {
   Add01Icon,
@@ -15,87 +16,51 @@ import {
   FolderAddIcon,
   RefreshIcon,
 } from '@hugeicons/core-free-icons';
-import type { AgentId, StudioProject, ThemeCatalogItem } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
 
 /**
  * Studio left rail — project CRUD + installed-theme library linkage + custom
  * capture controls (pinned selectors / pseudo states / dark-light schemes).
- * Controlled presentational component; all state flows in via props.
+ * Reads shared studio state directly from {@link useStudioStore}.
  */
-export function StudioLeftRail({
-  projects,
-  activeProjectId,
-  creatingProject,
-  newName,
-  newAuthor,
-  newAgent,
-  importing,
-  editingId,
-  editName,
-  editAuthor,
-  installedThemes,
-  themeLibraryOpen,
-  pinnedSelectors,
-  pseudoStates,
-  captureSchemes,
-  customSelectorInput,
-  setCreatingProject,
-  setNewName,
-  setNewAuthor,
-  setNewAgent,
-  setEditingId,
-  setEditName,
-  setEditAuthor,
-  setThemeLibraryOpen,
-  setCustomSelectorInput,
-  setActiveProjectId,
-  handleCreateProject,
-  handleImportProject,
-  handleDeleteProject,
-  handleRenameProject,
-  loadThemeIntoProject,
-  addPinnedSelector,
-  removePinnedSelector,
-  togglePseudo,
-  setCaptureSchemes,
-}: {
-  projects: StudioProject[];
-  activeProjectId: string | null;
-  creatingProject: boolean;
-  newName: string;
-  newAuthor: string;
-  newAgent: AgentId;
-  importing: boolean;
-  editingId: string | null;
-  editName: string;
-  editAuthor: string;
-  installedThemes: ThemeCatalogItem[];
-  themeLibraryOpen: boolean;
-  pinnedSelectors: string[];
-  pseudoStates: string[];
-  captureSchemes: boolean;
-  customSelectorInput: string;
-  setCreatingProject: React.Dispatch<React.SetStateAction<boolean>>;
-  setNewName: (v: string) => void;
-  setNewAuthor: (v: string) => void;
-  setNewAgent: (v: AgentId) => void;
-  setEditingId: (v: string | null) => void;
-  setEditName: (v: string) => void;
-  setEditAuthor: (v: string) => void;
-  setThemeLibraryOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setCustomSelectorInput: (v: string) => void;
-  setActiveProjectId: (v: string) => void;
-  handleCreateProject: () => void;
-  handleImportProject: () => void;
-  handleDeleteProject: (id: string) => void;
-  handleRenameProject: (p: StudioProject, name: string, author: string) => void;
-  loadThemeIntoProject: (themeId: string) => void;
-  addPinnedSelector: () => void;
-  removePinnedSelector: (sel: string) => void;
-  togglePseudo: (state: string) => void;
-  setCaptureSchemes: React.Dispatch<React.SetStateAction<boolean>>;
-}) {
+export function StudioLeftRail() {
+  const projects = useStudioStore((s) => s.projects);
+  const activeProjectId = useStudioStore((s) => s.activeProjectId);
+  const creatingProject = useStudioStore((s) => s.creatingProject);
+  const newName = useStudioStore((s) => s.newName);
+  const newAuthor = useStudioStore((s) => s.newAuthor);
+  const newAgent = useStudioStore((s) => s.newAgent);
+  const importing = useStudioStore((s) => s.importing);
+  const editingId = useStudioStore((s) => s.editingId);
+  const editName = useStudioStore((s) => s.editName);
+  const editAuthor = useStudioStore((s) => s.editAuthor);
+  const installedThemes = useStudioStore((s) => s.installedThemes);
+  const themeLibraryOpen = useStudioStore((s) => s.themeLibraryOpen);
+  const pinnedSelectors = useStudioStore((s) => s.pinnedSelectors);
+  const pseudoStates = useStudioStore((s) => s.pseudoStates);
+  const captureSchemes = useStudioStore((s) => s.captureSchemes);
+  const customSelectorInput = useStudioStore((s) => s.customSelectorInput);
+
+  const setCreatingProject = useStudioStore((s) => s.setCreatingProject);
+  const setNewName = useStudioStore((s) => s.setNewName);
+  const setNewAuthor = useStudioStore((s) => s.setNewAuthor);
+  const setNewAgent = useStudioStore((s) => s.setNewAgent);
+  const setEditingId = useStudioStore((s) => s.setEditingId);
+  const setEditName = useStudioStore((s) => s.setEditName);
+  const setEditAuthor = useStudioStore((s) => s.setEditAuthor);
+  const setThemeLibraryOpen = useStudioStore((s) => s.setThemeLibraryOpen);
+  const setCustomSelectorInput = useStudioStore((s) => s.setCustomSelectorInput);
+  const selectProject = useStudioStore((s) => s.selectProject);
+  const createProject = useStudioStore((s) => s.createProject);
+  const importProject = useStudioStore((s) => s.importProject);
+  const deleteProject = useStudioStore((s) => s.deleteProject);
+  const renameProject = useStudioStore((s) => s.renameProject);
+  const loadThemeIntoProject = useStudioStore((s) => s.loadThemeIntoProject);
+  const addPinnedSelector = useStudioStore((s) => s.addPinnedSelector);
+  const removePinnedSelector = useStudioStore((s) => s.removePinnedSelector);
+  const togglePseudo = useStudioStore((s) => s.togglePseudo);
+  const setCaptureSchemes = useStudioStore((s) => s.setCaptureSchemes);
+
   return (
     <div
       className="overflow-y-auto border-r border-border px-3 pt-3"
@@ -114,7 +79,7 @@ export function StudioLeftRail({
         </button>
         <button
           type="button"
-          onClick={handleImportProject}
+          onClick={() => void importProject()}
           disabled={importing}
           className="flex h-6 items-center gap-1 border border-border bg-muted px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent disabled:opacity-40"
           style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
@@ -133,7 +98,7 @@ export function StudioLeftRail({
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleCreateProject();
+              if (e.key === 'Enter') void createProject();
             }}
             placeholder="工程名"
             className="h-6 w-full border border-border bg-muted px-2 font-mono text-[10px] outline-none focus:border-primary/60"
@@ -173,7 +138,7 @@ export function StudioLeftRail({
           <div className="flex gap-1.5 pt-1">
             <button
               type="button"
-              onClick={handleCreateProject}
+              onClick={() => void createProject()}
               className="h-6 flex-1 border border-border bg-primary px-2 font-mono text-[9.5px] font-bold uppercase text-primary-foreground"
               style={{ letterSpacing: '0.08em', borderRadius: 'var(--radius)' }}
             >
@@ -220,7 +185,7 @@ export function StudioLeftRail({
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') void handleRenameProject(p, editName, editAuthor);
+                      if (e.key === 'Enter') void renameProject(p, editName, editAuthor);
                       if (e.key === 'Escape') setEditingId(null);
                     }}
                     placeholder="工程名"
@@ -232,7 +197,7 @@ export function StudioLeftRail({
                     value={editAuthor}
                     onChange={(e) => setEditAuthor(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') void handleRenameProject(p, editName, editAuthor);
+                      if (e.key === 'Enter') void renameProject(p, editName, editAuthor);
                       if (e.key === 'Escape') setEditingId(null);
                     }}
                     placeholder="作者"
@@ -242,7 +207,7 @@ export function StudioLeftRail({
                   <div className="flex gap-1">
                     <button
                       type="button"
-                      onClick={() => void handleRenameProject(p, editName, editAuthor)}
+                      onClick={() => void renameProject(p, editName, editAuthor)}
                       className="bg-primary px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase text-primary-foreground"
                       style={{ borderRadius: 'var(--radius)' }}
                     >
@@ -264,7 +229,7 @@ export function StudioLeftRail({
               ) : (
                 <button
                   type="button"
-                  onClick={() => setActiveProjectId(p.id)}
+                  onClick={() => selectProject(p.id)}
                   className="min-w-0 flex-1 text-left"
                 >
                   <div className="flex items-center gap-1.5">
@@ -329,7 +294,7 @@ export function StudioLeftRail({
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleDeleteProject(p.id)}
+                    onClick={() => void deleteProject(p.id)}
                     className="p-0.5 text-[9px] transition-opacity opacity-0 group-hover:opacity-100 hover:!text-[var(--primary)]"
                     style={{ color: 'var(--muted-foreground)' }}
                     aria-label="删除工程"
@@ -348,9 +313,7 @@ export function StudioLeftRail({
           <Kicker>主题库 · LIBRARY</Kicker>
           <button
             type="button"
-            onClick={() => {
-              setThemeLibraryOpen((v) => !v);
-            }}
+            onClick={() => setThemeLibraryOpen(!themeLibraryOpen)}
             className="flex h-5 items-center gap-1 border border-border bg-muted px-1.5 font-mono text-[8.5px] uppercase transition-colors hover:bg-accent"
             style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           >
@@ -494,7 +457,7 @@ export function StudioLeftRail({
         {/* Capture schemes toggle */}
         <button
           type="button"
-          onClick={() => setCaptureSchemes((v) => !v)}
+          onClick={() => setCaptureSchemes(!captureSchemes)}
           className="flex w-full items-center justify-between border border-border px-2 py-1.5 font-mono text-[9.5px] uppercase"
           style={{
             letterSpacing: '0.06em',

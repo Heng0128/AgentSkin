@@ -453,10 +453,10 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     ✕
                   </button>
                 </div>
-                <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-3">
                   {/* Batch progress bar */}
                   {batchProgress && (
-                    <div className="mb-2 flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-muted">
                         <div
                           className="h-full rounded-full bg-primary transition-all duration-slow"
@@ -494,7 +494,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                   </div>
 
                   {/* Meta row — 大小 + 来源 + 标签（预览下方） */}
-                  <div className="mt-2.5 flex items-center gap-2 font-mono text-[10px] tracking-wider text-muted-foreground">
+                  <div className="flex items-center gap-2 font-mono text-[10px] tracking-wider text-muted-foreground">
                     <span className="font-semibold text-foreground/80">
                       {formatSize(selected.sizeBytes)}
                     </span>
@@ -514,13 +514,13 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
 
                   {/* Preview-only warning (Swiss mono) */}
                   {selected.previewOnly && (
-                    <p className="mt-1.5 rounded-[2px] bg-cr-warning/10 px-2 py-1 font-mono text-[10px] leading-tight text-cr-warning">
+                    <p className="rounded-[2px] bg-cr-warning/10 px-2 py-1 font-mono text-[10px] leading-tight text-cr-warning">
                       {t.wePreviewOnlyHint}
                     </p>
                   )}
 
                   {/* Actions row: set as UI background + agent apply buttons */}
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {/* Set as AgentSkin background (Swiss primary) */}
                     <button
                       type="button"
@@ -694,7 +694,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                   </div>
 
                   {/* Running agents hint (live, Swiss mono) */}
-                  <p className="mt-2 flex items-center gap-1.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+                  <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-wider text-muted-foreground">
                     <AgentStatusDot
                       size="xs"
                       variant={

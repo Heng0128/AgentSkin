@@ -26,6 +26,7 @@ import { api } from '@/api/agentSkinClient';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useNotificationStore } from '@/stores/notificationStore';
 
 import {
   Delete01Icon,
@@ -33,6 +34,7 @@ import {
   Package01Icon,
   RefreshIcon,
 } from '@hugeicons/core-free-icons';
+import { toMessage } from '@shared/errors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -55,11 +57,8 @@ interface BundleStatus {
 // Component
 // ---------------------------------------------------------------------------
 
-interface Props {
-  onToast: (msg: string, variant?: 'default' | 'destructive') => void;
-}
-
-export function BundleStudioTab({ onToast }: Props) {
+export function BundleStudioTab() {
+  const showToast = useNotificationStore((s) => s.showToast);
   const [bundles, setBundles] = useState<BundleEntry[]>([]);
   const [status, setStatus] = useState<BundleStatus>({ loading: false, error: null });
 
@@ -69,7 +68,7 @@ export function BundleStudioTab({ onToast }: Props) {
       const list = await api.listBundles();
       setBundles(list);
     } catch (e) {
-      setStatus((s) => ({ ...s, error: e instanceof Error ? e.message : String(e) }));
+      setStatus((s) => ({ ...s, error: toMessage(e) }));
     } finally {
       setStatus((s) => ({ ...s, loading: false }));
     }
@@ -83,26 +82,26 @@ export function BundleStudioTab({ onToast }: Props) {
     try {
       const result = await api.importBundle();
       if (result) {
-        onToast(`已安装 Bundle: ${result.name}`);
+        showToast(`已安装 Bundle: ${result.name}`);
         await refresh();
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      onToast(`导入失败: ${msg}`, 'destructive');
+      const msg = toMessage(e);
+      showToast(`导入失败: ${msg}`, 'destructive');
     }
-  }, [onToast, refresh]);
+  }, [showToast, refresh]);
 
   const handleInstall = useCallback(
     async (id: string) => {
       try {
         await api.installBundleById(id);
-        onToast(`Bundle ${id} 已安装并应用`);
+        showToast(`Bundle ${id} 已安装并应用`);
       } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        onToast(`安装失败: ${msg}`, 'destructive');
+        const msg = toMessage(e);
+        showToast(`安装失败: ${msg}`, 'destructive');
       }
     },
-    [onToast],
+    [showToast],
   );
 
   const handleReveal = useCallback(
@@ -111,24 +110,24 @@ export function BundleStudioTab({ onToast }: Props) {
         await api.showInFolder(`bundles/${id}`);
       } catch (e) {
         // Folder may not exist yet (never exported), or the OS reveal failed.
-        onToast(`无法在文件夹中显示：${e instanceof Error ? e.message : String(e)}`, 'destructive');
+        showToast(`无法在文件夹中显示：${toMessage(e)}`, 'destructive');
       }
     },
-    [onToast],
+    [showToast],
   );
 
   const handleDelete = useCallback(
     async (id: string) => {
       try {
         await api.deleteBundle(id);
-        onToast(`已删除: ${id}`);
+        showToast(`已删除: ${id}`);
         await refresh();
       } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        onToast(`删除失败: ${msg}`, 'destructive');
+        const msg = toMessage(e);
+        showToast(`删除失败: ${msg}`, 'destructive');
       }
     },
-    [onToast, refresh],
+    [showToast, refresh],
   );
 
   return (

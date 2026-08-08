@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { useMemo } from 'react';
 import { AgentRawDualPreview } from '@/components/studio/AgentRawPreview';
 import { BundleStudioTab } from '@/components/studio/BundleStudioTab';
 import { FitGeneratorPanel } from '@/components/studio/FitGeneratorPanel';
 import { InspectStudioTab } from '@/components/studio/InspectStudioTab';
 import { RealDomPreview } from '@/components/studio/RealDomPreview';
 import {
+  computeSignature,
   fingerprintFromSnapshot,
   type StudioColorSets,
-  type ToolOverride,
 } from '@/components/studio/Toolbox';
 import { WallpaperStudioPanel } from '@/components/studio/WallpaperStudioPanel';
 import { Button } from '@/components/ui/button';
@@ -16,73 +17,52 @@ import { HugeIcon } from '@/components/ui/huge-icon';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { AppController } from '@/hooks/useAppController';
+import { useStudioStore } from '@/stores/studioStore';
 
 import { BeakerIcon, EyeIcon, RefreshIcon, Search01Icon } from '@hugeicons/core-free-icons';
-import type { AgentId, ThemeVisualSnapshot } from '@shared/types';
+import type { UiMessages } from '@shared/i18n';
 
 export type PreviewView = 'theme' | 'wallpaper' | 'bundle' | 'inspect' | 'generator' | 'raw';
 
-export type BaselineState = {
-  baseline: ThemeVisualSnapshot | null;
-  baselineLoading: boolean;
-};
-
 /**
  * Studio center panel — tab bar + canvas (theme preview / wallpaper / bundle /
- * inspect) + fingerprint bar. Controlled presentational component.
+ * inspect) + fingerprint bar. Reads shared studio state directly from
+ * {@link useStudioStore}; derived values (baseline / colorSets) are computed
+ * here from the stored primitives.
  */
-export function StudioCenterPanel({
-  t,
-  previewView,
-  setPreviewView,
-  snapshotState,
-  baseline,
-  baselineLoading,
-  searchQuery,
-  setSearchQuery,
-  inspectMode,
-  toggleInspect,
-  activeAgent,
-  handleSnapshot,
-  handleBaselineSnapshot,
-  pinnedSelectors,
-  setPinnedSelectors,
-  toolOverrides,
-  studioColorSets,
-  activeProject,
-  onToast,
-  onPaletteApply,
-}: {
-  t: AppController['t'];
-  previewView: PreviewView;
-  setPreviewView: (v: PreviewView) => void;
-  snapshotState: {
-    snapshot: ThemeVisualSnapshot | null;
-    loading: boolean;
-    error: string | null;
-    themeName: string;
-  };
-  baseline: ThemeVisualSnapshot | null;
-  baselineLoading: boolean;
-  activeProject: import('@shared/types').StudioProject | null;
-  searchQuery: string;
-  setSearchQuery: (v: string) => void;
-  inspectMode: boolean;
-  toggleInspect: () => void;
-  activeAgent: AgentId | null;
-  handleSnapshot: () => void;
-  handleBaselineSnapshot: () => void;
-  pinnedSelectors: string[];
-  setPinnedSelectors: React.Dispatch<React.SetStateAction<string[]>>;
-  toolOverrides: ToolOverride | null;
-  studioColorSets: StudioColorSets | undefined;
-  onToast: (msg: string, type?: 'default' | 'destructive') => void;
-  onPaletteApply?: (
-    palette: Record<string, string | undefined>,
-    action: 'preview' | 'apply',
-  ) => void;
-}) {
+export function StudioCenterPanel({ t }: { t: UiMessages }) {
+  const previewView = useStudioStore((s) => s.previewView);
+  const setPreviewView = useStudioStore((s) => s.setPreviewView);
+  const snapshot = useStudioStore((s) => s.snapshot);
+  const snapshotLoading = useStudioStore((s) => s.snapshotLoading);
+  const activeProject = useStudioStore((s) => s.getActiveProject());
+  const activeAgent = activeProject?.agentId ?? null;
+  const baselines = useStudioStore((s) => s.baselines);
+  const baselineLoadingMap = useStudioStore((s) => s.baselineLoadingMap);
+  const searchQuery = useStudioStore((s) => s.searchQuery);
+  const setSearchQuery = useStudioStore((s) => s.setSearchQuery);
+  const inspectMode = useStudioStore((s) => s.inspectMode);
+  const toolOverrides = useStudioStore((s) => s.toolOverrides);
+  const toggleInspect = useStudioStore((s) => s.toggleInspect);
+  const captureSnapshot = useStudioStore((s) => s.captureSnapshot);
+  const baselineSnapshot = useStudioStore((s) => s.baselineSnapshot);
+  const applyPalette = useStudioStore((s) => s.applyPalette);
+
+  const baseline = activeAgent ? (baselines[activeAgent] ?? null) : null;
+  const baselineLoading = activeAgent ? Boolean(baselineLoadingMap[activeAgent]) : false;
+
+  const studioColorSets = useMemo<StudioColorSets | undefined>(() => {
+    if (!snapshot) return undefined;
+    const sig = computeSignature(snapshot);
+    const primaryBg = sig.color.rootBackground || sig.color.backgrounds[0] || null;
+    return {
+      primaryBg,
+      surfaceBgs: sig.color.backgrounds.filter((b) => b !== primaryBg),
+      texts: sig.color.texts,
+      accents: sig.color.accents,
+    };
+  }, [snapshot]);
+
   return (
     <div className="flex min-h-0 flex-col" style={{ background: 'var(--bg, var(--background))' }}>
       {/* Tools tab bar */}
@@ -98,12 +78,12 @@ export function StudioCenterPanel({
           <TabsList variant="line" className="h-7 gap-0.5 rounded-[2px] bg-transparent p-0">
             {(
               [
-                ['theme', '主题', !snapshotState.snapshot],
+                ['theme', '主题', !snapshot],
                 ['wallpaper', '壁纸', false],
                 ['bundle', '打包', false],
                 ['inspect', '检查', false],
                 ['generator', '搭配', false],
-                ['raw', '原貌', !(baseline || snapshotState.snapshot)],
+                ['raw', '原貌', !(baseline || snapshot)],
               ] as const
             ).map(([view, label, disabled]) => (
               <TabsTrigger
@@ -141,7 +121,7 @@ export function StudioCenterPanel({
             size="sm"
             variant={inspectMode ? 'default' : 'outline'}
             disabled={!activeAgent}
-            onClick={toggleInspect}
+            onClick={() => void toggleInspect()}
             className="h-6 gap-1 px-2 font-mono text-[9.5px] uppercase"
             style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           >
@@ -150,23 +130,23 @@ export function StudioCenterPanel({
           </Button>
           <Button
             size="sm"
-            disabled={!activeAgent || snapshotState.loading}
-            onClick={handleSnapshot}
+            disabled={!activeAgent || snapshotLoading}
+            onClick={() => void captureSnapshot()}
             className="h-6 gap-1 px-2 font-mono text-[9.5px] uppercase"
             style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           >
-            {snapshotState.loading ? (
+            {snapshotLoading ? (
               <Spinner data-icon="inline-start" className="size-2.5" />
             ) : (
               <HugeIcon icon={EyeIcon} className="size-2.5" />
             )}
-            {snapshotState.loading ? t.studioSnapshooting : t.studioSnapshotButton}
+            {snapshotLoading ? t.studioSnapshooting : t.studioSnapshotButton}
           </Button>
           <Button
             size="sm"
             variant="outline"
             disabled={!activeAgent || baselineLoading}
-            onClick={handleBaselineSnapshot}
+            onClick={() => void baselineSnapshot()}
             className="h-6 gap-1 px-2 font-mono text-[9.5px] uppercase"
             style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
             title="还原 agent 到无主题原生态后抓取，抓完自动重上原主题"
@@ -187,7 +167,7 @@ export function StudioCenterPanel({
         style={{ background: 'var(--bg, var(--background))' }}
       >
         {/* Empty state overlay */}
-        {!snapshotState.snapshot && !baseline && !snapshotState.loading && !baselineLoading && (
+        {!snapshot && !baseline && !snapshotLoading && !baselineLoading && (
           <div className="flex h-full min-h-64 flex-col items-center justify-center gap-3 text-center">
             <div
               className="flex size-14 items-center justify-center border border-border"
@@ -230,14 +210,14 @@ export function StudioCenterPanel({
           </div>
         )}
         {/* THEME: RealDomPreview */}
-        {previewView === 'theme' && snapshotState.snapshot && (
+        {previewView === 'theme' && snapshot && (
           <RealDomPreview
-            domTree={snapshotState.snapshot.domTree}
+            domTree={snapshot.domTree}
             overrides={toolOverrides}
             colorSets={studioColorSets}
           />
         )}
-        {previewView === 'theme' && !snapshotState.snapshot && (
+        {previewView === 'theme' && !snapshot && (
           <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2">
             <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
               点击「SNAP」抓取主题快照后在此编辑
@@ -245,31 +225,17 @@ export function StudioCenterPanel({
           </div>
         )}
         {/* WALLPAPER */}
-        {previewView === 'wallpaper' && (
-          <WallpaperStudioPanel
-            activeAgent={activeAgent}
-            activeWallpaperId={null}
-            onToast={onToast}
-          />
-        )}
+        {previewView === 'wallpaper' && <WallpaperStudioPanel />}
         {/* BUNDLE */}
-        {previewView === 'bundle' && <BundleStudioTab onToast={onToast} />}
+        {previewView === 'bundle' && <BundleStudioTab />}
         {/* INSPECT */}
-        {previewView === 'inspect' && (
-          <InspectStudioTab
-            activeAgent={activeAgent}
-            pinnedSelectors={pinnedSelectors}
-            onPinSelector={(sel) => setPinnedSelectors((prev) => [...prev, sel])}
-            onToast={onToast}
-          />
-        )}
+        {previewView === 'inspect' && <InspectStudioTab />}
         {/* GENERATOR */}
         {previewView === 'generator' && activeProject && (
           <FitGeneratorPanel
             embedded
-            onToast={onToast}
-            onPreviewPalette={(_agentId, palette) => onPaletteApply?.({ ...palette }, 'preview')}
-            onPaletteApply={(_agentId, palette) => onPaletteApply?.({ ...palette }, 'apply')}
+            onPreviewPalette={(_agentId, palette) => applyPalette({ ...palette }, 'preview')}
+            onPaletteApply={(_agentId, palette) => applyPalette({ ...palette }, 'apply')}
           />
         )}
         {previewView === 'generator' && !activeProject && (
@@ -283,16 +249,16 @@ export function StudioCenterPanel({
         {previewView === 'raw' && (
           <AgentRawDualPreview
             domDark={baseline?.domTree ?? null}
-            domLight={snapshotState.snapshot?.domTree ?? null}
-            rootVarsDark={{}}
-            rootVarsLight={{}}
+            domLight={snapshot?.domTree ?? null}
+            rootVarsDark={baseline?.rootVars ?? {}}
+            rootVarsLight={snapshot?.rootVars ?? {}}
             scale={0.55}
           />
         )}
       </div>
 
       {/* Fingerprint bar */}
-      {snapshotState.snapshot && (
+      {snapshot && (
         <div
           className="flex h-6 shrink-0 items-center border-t border-border px-3 font-mono text-[9px]"
           style={{
@@ -305,9 +271,7 @@ export function StudioCenterPanel({
           <span className="mx-2" style={{ color: 'var(--border)' }}>
             |
           </span>
-          <span style={{ color: 'var(--foreground)' }}>
-            {fingerprintFromSnapshot(snapshotState.snapshot)}
-          </span>
+          <span style={{ color: 'var(--foreground)' }}>{fingerprintFromSnapshot(snapshot)}</span>
         </div>
       )}
     </div>

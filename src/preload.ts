@@ -15,9 +15,11 @@ import type {
   ThemeStudioExportRequest,
   ThemeVisualSnapshot,
   TrayApplyRequest,
+  VisualAnalysisSummary,
   WallpaperAgentSetting,
   WallpaperSettings,
 } from './shared/types';
+import type { EnvironmentPreset } from './ui/types/environment';
 
 function subscribe<T>(channel: string, listener: (payload: T) => void): () => void {
   const handler = (_event: Electron.IpcRendererEvent, payload: T) => listener(payload);
@@ -78,6 +80,10 @@ const api: AgentSkinApi = {
   ) => ipcRenderer.invoke(IpcChannel.WALLPAPER_APPLY_TO_AGENT, wallpaperId, agentId, options),
   removeWallpaperFromAgent: (agentId: AgentId) =>
     ipcRenderer.invoke(IpcChannel.WALLPAPER_REMOVE_FROM_AGENT, agentId),
+  // --- Environment presets (main-process persisted, v2+) ---
+  getEnvironmentPresets: () => ipcRenderer.invoke(IpcChannel.ENV_PRESET_GET),
+  saveEnvironmentPresets: (presets: EnvironmentPreset[]) =>
+    ipcRenderer.invoke(IpcChannel.ENV_PRESET_SET, presets),
   weDetect: () => ipcRenderer.invoke(IpcChannel.WE_DETECT),
   wallpaperVideoUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_VIDEO_URL, id),
   wallpaperWebUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_WEB_URL, id),
@@ -155,6 +161,8 @@ const api: AgentSkinApi = {
     > | null>,
   listVisualAnalysisTargets: () =>
     ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_LIST) as Promise<string[]>,
+  listVisualAnalysisSummaries: () =>
+    ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_LIST_SUMMARY) as Promise<VisualAnalysisSummary[]>,
   detectVisualAnalysisAgent: (agentName: string) =>
     ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_DETECT, agentName) as Promise<{
       running: boolean;

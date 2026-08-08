@@ -142,6 +142,12 @@ export interface SceneObject {
   maxTime: number | null;
   // Instance override (for particles/lights)
   instanceOverride: SceneInstanceOverride | null;
+  // Audio reactivity
+  audioResponsive: boolean;
+  /** Audio frequency band: 0 = bass, 1 = mid, 2 = treble; null = unset. */
+  audioBand: number | null;
+  /** Audio reactivity gain multiplier (1 = default). */
+  audioGain: number;
   // LED source (for LED-compatible wallpapers)
   ledSource: boolean;
   // Config (arbitrary object for custom properties)
@@ -192,6 +198,7 @@ export interface SceneGeneral {
   windEnabled: boolean;
   windStrength: number;
   windDirection: SceneVec2;
+  windTurbulence: number;
   // Gravity
   gravityStrength: number;
   gravityDirection: { x: number; y: number; z: number };
@@ -317,6 +324,7 @@ export function parseSceneJson(json: unknown): {
     windEnabled: unwrapBoolean(g.windenabled, false),
     windStrength: unwrapNumber(g.windstrength, 1),
     windDirection: parseVec2(g.winddirection) ?? { x: 0, y: 0 },
+    windTurbulence: unwrapNumber(g.windturbulence, 1),
     // Gravity
     gravityStrength: unwrapNumber(g.gravitystrength, 1),
     gravityDirection: parseVec3(g.gravitydirection, 0, { x: 0, y: -1, z: 0 }),
@@ -496,6 +504,10 @@ function parseSceneObject(o: JsonObject): SceneObject {
     maxTime: typeof o.maxtime === 'number' ? o.maxtime : null,
     // Instance override
     instanceOverride: parseInstanceOverride(o.instanceoverride),
+    // Audio reactivity
+    audioResponsive: !!o.audioreactive,
+    audioBand: typeof o.audioband === 'number' ? o.audioband : null,
+    audioGain: typeof o.audiogain === 'number' ? o.audiogain : 1,
     // LED
     ledSource: !!o.ledsource,
     // Config

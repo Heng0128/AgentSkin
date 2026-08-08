@@ -10,6 +10,8 @@ export declare function hexToRgb(hex: string): [number, number, number] | null;
 export declare function rgbToHex(rgb: number[]): string;
 export declare function hexToHsl(hex: string): [number, number, number];
 export declare function hslToHex(h: number, s: number, l: number): string;
+export declare function hexToHsv(hex: string): [number, number, number];
+export declare function textOn(hex: string): string;
 export declare function harmonyPalette(
   baseHex: string,
   harmony: string,

@@ -461,6 +461,33 @@ export async function snapshotThemeVisuals(
       deps.log(`[studio] domTree capture failed: ${String(error)}`);
     }
 
+    // Capture the agent's native `:root` custom properties so the RAW
+    // (native-look) preview resolves `var()` references against the real
+    // variable set instead of an empty `:root`. When a theme is applied the
+    // injected `--agentskin-*` vars are included too (the current snapshot's
+    // DOM references them); for the baseline (no theme) only native vars are
+    // present. Degrades to undefined on any failure — the preview still works,
+    // just without resolved custom properties.
+    let rootVars: Record<string, string> | undefined;
+    try {
+      const rootVarsExpr = `(function(){
+        var cs = getComputedStyle(document.documentElement);
+        var out = {};
+        for (var i = 0; i < cs.length; i++) {
+          var name = cs[i];
+          if (name && name.charAt(0) === '-' && name.charAt(1) === '-') {
+            var val = cs.getPropertyValue(name);
+            if (val) out[name] = String(val).trim();
+          }
+        }
+        return JSON.stringify(out);
+      })()`;
+      const raw = await session.evaluate(rootVarsExpr);
+      rootVars = raw && raw !== 'null' ? (JSON.parse(raw) as Record<string, string>) : undefined;
+    } catch (error) {
+      deps.log(`[studio] rootVars capture skipped: ${String(error)}`);
+    }
+
     // Optional light/dark scheme variants via emulated media. Re-captures each
     // landmark's styles + cascade under forced prefers-color-scheme. Degrades
     // gracefully when the agent ignores emulated media.
@@ -505,6 +532,7 @@ export async function snapshotThemeVisuals(
       timestamp: new Date().toISOString(),
       landmarks,
       domTree: domTree ?? undefined,
+      rootVars,
       summary: {
         totalLandmarks: selectors.length,
         visibleLandmarks: visibleCount,

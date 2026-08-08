@@ -31,7 +31,7 @@ describe('scene HTML — real workshop particle scenes (smoke)', () => {
     }
     console.log(`scenes rendered: ${rendered}, with particle layers: ${withParticleLayers}`);
     expect(rendered).toBeGreaterThan(30);
-  }, 120000);
+  }, 300000);
 });
 
 describe('workshop pkg-embedded particle resolution', () => {

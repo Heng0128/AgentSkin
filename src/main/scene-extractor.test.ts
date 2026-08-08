@@ -185,6 +185,9 @@ function objWithParticle(ref: string): SceneObject {
     minTime: null,
     maxTime: null,
     instanceOverride: null,
+    audioResponsive: false,
+    audioBand: null,
+    audioGain: 1,
     ledSource: false,
     config: null,
   };

@@ -11,47 +11,26 @@ import {
 } from '@/components/ui/select';
 import type { AppController } from '@/hooks/useAppController';
 import { appStatusFor } from '@/stores/agentStore';
+import { useStudioStore } from '@/stores/studioStore';
 
 import { Download01Icon, RefreshIcon } from '@hugeicons/core-free-icons';
-import type { AgentId, StudioProject } from '@shared/types';
+import type { AgentId } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
-
-export type SnapshotState = {
-  snapshot: import('@shared/types').ThemeVisualSnapshot | null;
-  loading: boolean;
-  error: string | null;
-  themeName: string;
-};
-
-export type StudioExportState = {
-  loading: boolean;
-  dir: string | null;
-  error: string | null;
-};
 
 /**
  * Studio top toolbar — brand cluster + agent selector + restore/export actions.
- * Controlled presentational component; all state flows in via props.
+ * Reads shared studio state directly from {@link useStudioStore}.
  */
-export function StudioHeader({
-  t,
-  activeProject,
-  activeAgent,
-  handleChangeAgent,
-  snapshotState,
-  exportState,
-  handleRestore,
-  handleExport,
-}: {
-  t: AppController['t'];
-  activeProject: StudioProject | null;
-  activeAgent: AgentId | null;
-  handleChangeAgent: (agentId: AgentId) => void;
-  snapshotState: SnapshotState;
-  exportState: StudioExportState;
-  handleRestore: () => void;
-  handleExport: () => void;
-}) {
+export function StudioHeader({ t }: { t: AppController['t'] }) {
+  const activeProject = useStudioStore((s) => s.getActiveProject());
+  const snapshot = useStudioStore((s) => s.snapshot);
+  const exportState = useStudioStore((s) => s.exportState);
+  const changeAgent = useStudioStore((s) => s.changeAgent);
+  const restoreAgent = useStudioStore((s) => s.restoreAgent);
+  const exportTheme = useStudioStore((s) => s.exportTheme);
+
+  const activeAgent = activeProject?.agentId ?? null;
+
   return (
     <div
       className="flex h-[44px] shrink-0 items-center border-b border-border px-4"
@@ -99,7 +78,7 @@ export function StudioHeader({
           </span>
           <Select
             value={activeAgent ?? undefined}
-            onValueChange={(v) => handleChangeAgent(v as AgentId)}
+            onValueChange={(v) => void changeAgent(v as AgentId)}
           >
             <SelectTrigger
               id="studio-agent-select"
@@ -125,7 +104,7 @@ export function StudioHeader({
         <button
           type="button"
           disabled
-          className="flex h-7 items-center gap-1 border border-border px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent disabled:opacity-30 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex h-7 items-center gap-1 border border-border px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           title="撤销"
         >
@@ -140,11 +119,11 @@ export function StudioHeader({
         >
           ✦ 灵感
         </button>
-        {snapshotState.snapshot && (
+        {snapshot && (
           <Button
             size="sm"
             variant="ghost"
-            onClick={handleRestore}
+            onClick={() => void restoreAgent()}
             className="h-7 gap-1 px-2 font-mono text-[9.5px] uppercase"
             style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           >
@@ -156,8 +135,8 @@ export function StudioHeader({
           type="button"
           className="flex h-7 items-center gap-1 border border-border bg-primary px-3 font-mono text-[9.5px] font-bold uppercase text-primary-foreground transition-opacity hover:opacity-90"
           style={{ letterSpacing: '0.08em', borderRadius: 'var(--radius)' }}
-          onClick={handleExport}
-          disabled={!snapshotState.snapshot || exportState.loading}
+          onClick={() => void exportTheme()}
+          disabled={!snapshot || exportState.loading}
         >
           <HugeIcon icon={Download01Icon} className="size-3" />
           导出

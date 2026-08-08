@@ -17,6 +17,7 @@
  * store wraps it with React reactivity.
  */
 
+import { api } from '@/api/agentSkinClient';
 import {
   createPreset,
   loadPresets,
@@ -68,12 +69,13 @@ export interface EnvironmentState {
   createEnvironment: (
     agentId: EnvironmentPreset['agentId'],
     themeId: EnvironmentPreset['themeId'],
+    wallpaperId?: EnvironmentPreset['wallpaperId'],
     name?: string,
     applyNow?: boolean,
   ) => Promise<{ preset: EnvironmentPreset | null; success: boolean }>;
-  deleteEnvironment: (presetId: string) => boolean;
-  duplicateEnvironment: (presetId: string, newName: string) => EnvironmentPreset | null;
-  renameEnvironment: (presetId: string, newName: string) => boolean;
+  deleteEnvironment: (presetId: string) => Promise<boolean>;
+  duplicateEnvironment: (presetId: string, newName: string) => Promise<EnvironmentPreset | null>;
+  renameEnvironment: (presetId: string, newName: string) => Promise<boolean>;
 
   // --- internal ---
   setSwitching: (value: boolean) => void;
@@ -89,8 +91,8 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   switching: false,
   error: null,
 
-  loadPresets: () => {
-    set({ presets: loadPresets() });
+  loadPresets: async () => {
+    set({ presets: await loadPresets() });
   },
 
   setSwitching: (switching) => set({ switching }),
@@ -98,6 +100,11 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
 
   // -------------------------------------------------------------------
   // switchEnvironment
+  //
+  // Applies the FULL environment in one shot: the bound theme AND the bound
+  // wallpaper. With no theme the agent is restored to native; with no
+  // wallpaper any previously-injected wallpaper is removed. Together this is
+  // a true "apply/restore the whole environment" (strategic audit P0-3).
   // -------------------------------------------------------------------
 
   switchEnvironment: async (env) => {
@@ -105,41 +112,55 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
     set({ switching: true, error: null });
 
     try {
+      const wallpaperId = env.wallpaperId ?? null;
+
       // Auto-create preset if none exists for this agent+theme combo.
       const presets = get().presets;
       const hasPreset = presets.some(
         (p) => p.agentId === env.agent.id && p.themeId === env.theme?.id,
       );
       if (!hasPreset) {
-        const newPreset = createPreset(env.agent.id, env.theme?.id ?? null, env.name);
-        const saved = savePresets([...presets, newPreset], (error) => {
+        const newPreset = createPreset(env.agent.id, env.theme?.id ?? null, wallpaperId, env.name);
+        const saved = await savePresets([...presets, newPreset], (error) => {
           useNotificationStore.getState().fail(error);
         });
         if (!saved) {
-          // Continue with apply — the theme still takes effect, just without a
-          // persisted preset. The user can retry saving later.
+          // Continue with apply — the environment still takes effect, just
+          // without a persisted preset. The user can retry saving later.
         }
         set({ presets: [...presets, newPreset] });
       }
       if (myEpoch !== switchEpoch) return false;
 
-      // Apply the theme via themeStore.
+      // --- Theme half ---
       if (env.theme) {
         const ok = await useThemeStore
           .getState()
           .applyToApp(env.theme.id, env.theme.name, env.agent.id as AgentId);
         if (myEpoch !== switchEpoch) return false;
-        if (ok) {
-          useNotificationStore.getState().showToast(currentT().switchSuccess(env.name));
-          return true;
-        }
-        return false;
+        if (!ok) return false;
+      } else {
+        // No theme = restore native theme.
+        await useThemeStore.getState().restoreApp(env.agent.id as AgentId);
+        if (myEpoch !== switchEpoch) return false;
       }
 
-      // No theme = restore default.
-      await useThemeStore.getState().restoreApp(env.agent.id as AgentId);
-      if (myEpoch !== switchEpoch) return false;
-      useNotificationStore.getState().showToast(currentT().nativeRestored(env.agent.displayName));
+      // --- Wallpaper half ---
+      if (wallpaperId) {
+        const wp = await api.applyWallpaperToAgent(wallpaperId, env.agent.id as AgentId);
+        if (myEpoch !== switchEpoch) return false;
+        if (!wp.ok) {
+          useNotificationStore
+            .getState()
+            .fail(new Error(wp.detail ?? wp.reason ?? 'wallpaper apply failed'));
+        }
+      } else {
+        // No wallpaper bound — clear any previously injected wallpaper.
+        await api.removeWallpaperFromAgent(env.agent.id as AgentId);
+        if (myEpoch !== switchEpoch) return false;
+      }
+
+      useNotificationStore.getState().showToast(currentT().switchSuccess(env.name));
       return true;
     } catch (err) {
       const msg = toMessage(err) || currentT().switchFailure;
@@ -156,24 +177,27 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   // createEnvironment
   // -------------------------------------------------------------------
 
-  createEnvironment: async (agentId, themeId, name, applyNow = false) => {
+  createEnvironment: async (agentId, themeId, wallpaperId = null, name, applyNow = false) => {
     try {
       const presets = get().presets;
-      const preset = createPreset(agentId, themeId, name);
-      const updated = upsertPreset(presets, agentId, themeId, name);
-      const saved = savePresets(updated);
+      const preset = createPreset(agentId, themeId, wallpaperId, name);
+      const updated = upsertPreset(presets, agentId, themeId, wallpaperId, name);
+      const saved = await savePresets(updated);
       if (!saved) {
         set({ error: currentT().environmentCreationFailed });
         return { preset: null, success: false };
       }
       set({ presets: updated });
 
-      // Optionally apply the theme immediately through themeStore.
+      // Optionally apply the full environment immediately.
       if (applyNow && themeId) {
         const theme = useThemeStore.getState().installed.find((th) => th.id === themeId);
         if (theme) {
           const ok = await useThemeStore.getState().applyToApp(themeId, theme.name, agentId);
           if (!ok) return { preset, success: false };
+        }
+        if (wallpaperId) {
+          await api.applyWallpaperToAgent(wallpaperId, agentId);
         }
       }
 
@@ -195,11 +219,11 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   // deleteEnvironment
   // -------------------------------------------------------------------
 
-  deleteEnvironment: (presetId) => {
+  deleteEnvironment: async (presetId) => {
     try {
       const presets = get().presets;
       const updated = removePreset(presets, presetId);
-      const saved = savePresets(updated);
+      const saved = await savePresets(updated);
       if (saved) {
         set({ presets: updated });
         useNotificationStore.getState().showToast(currentT().environmentDeleted);
@@ -216,7 +240,7 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   // duplicateEnvironment
   // -------------------------------------------------------------------
 
-  duplicateEnvironment: (presetId, newName) => {
+  duplicateEnvironment: async (presetId, newName) => {
     try {
       const presets = get().presets;
       const source = presets.find((p) => p.id === presetId);
@@ -224,9 +248,14 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
         set({ error: currentT().environmentNotFound });
         return null;
       }
-      const newPreset = createPreset(source.agentId, source.themeId, newName);
+      const newPreset = createPreset(
+        source.agentId,
+        source.themeId,
+        source.wallpaperId ?? null,
+        newName,
+      );
       const updated = [...presets, newPreset];
-      const saved = savePresets(updated);
+      const saved = await savePresets(updated);
       if (!saved) {
         set({ error: currentT().environmentSaveFailed });
         return null;
@@ -244,11 +273,11 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   // renameEnvironment
   // -------------------------------------------------------------------
 
-  renameEnvironment: (presetId, newName) => {
+  renameEnvironment: async (presetId, newName) => {
     try {
       const presets = get().presets;
       const updated = updatePreset(presets, presetId, { name: newName });
-      const saved = savePresets(updated);
+      const saved = await savePresets(updated);
       if (saved) {
         set({ presets: updated });
         useNotificationStore.getState().showToast(currentT().environmentRenamed);

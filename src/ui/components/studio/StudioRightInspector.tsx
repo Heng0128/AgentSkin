@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { useMemo } from 'react';
+import { api } from '@/api/agentSkinClient';
 import { CascadeView } from '@/components/studio/CascadeView';
 import { ImageToThemePanel } from '@/components/studio/ImageToThemePanel';
 import { Kicker } from '@/components/studio/kicker';
 import { PresetThemePicker } from '@/components/studio/PresetThemePicker';
-import type { StudioExportState } from '@/components/studio/StudioHeader';
 import {
   computeSignature,
   fingerprintFromSnapshot,
   ToolboxPanel,
-  type ToolOverride,
 } from '@/components/studio/Toolbox';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { Spinner } from '@/components/ui/spinner';
-import type { AppController } from '@/hooks/useAppController';
+import { useStudioStore } from '@/stores/studioStore';
 
 import {
   Download01Icon,
@@ -22,102 +22,60 @@ import {
   Package01Icon,
   SlidersHorizontalIcon,
 } from '@hugeicons/core-free-icons';
-import type {
-  AgentId,
-  InspectedNode,
-  NodeCascade,
-  ThemeCatalogItem,
-  ThemeVisualSnapshot,
-} from '@shared/types';
+import type { UiMessages } from '@shared/i18n';
 import { AGENT_META } from '@shared/types';
-
-type SnapshotState = {
-  snapshot: ThemeVisualSnapshot | null;
-  loading: boolean;
-  error: string | null;
-  themeName: string;
-};
 
 /**
  * Studio right inspector — landmark inspector + live inspect + signature +
- * node tree + preset/image-to-theme/toolbox/export.
- * Controlled presentational component.
+ * node tree + preset/image-to-theme/toolbox/export. Reads shared studio state
+ * directly from {@link useStudioStore}.
  */
-export function StudioRightInspector({
-  t,
-  activeAgent,
-  installedThemes,
-  snapshotState,
-  inspectingLandmark,
-  inspectingIdx,
-  hoveredIdx,
-  setInspectingIdx,
-  setHoveredIdx,
-  pseudoView,
-  setPseudoView,
-  schemeView,
-  setSchemeView,
-  activePseudo,
-  activeScheme,
-  landmarkSearch,
-  allLandmarks,
-  inspectMode,
-  liveNode,
-  liveError,
-  pinnedSelectors,
-  setPinnedSelectors,
-  toolOverrides,
-  setOverride,
-  resetOverrides,
-  exportName,
-  setExportName,
-  exportAuthor,
-  setExportAuthor,
-  exportState,
-  handleExport,
-  onRefresh,
-  onToast,
-  onPaletteLoaded,
-  onImageThemeGenerated,
-  onShowInFolder,
-}: {
-  t: AppController['t'];
-  activeAgent: AgentId | null;
-  installedThemes: ThemeCatalogItem[];
-  snapshotState: SnapshotState;
-  inspectingLandmark: ThemeVisualSnapshot['landmarks'][number] | null;
-  inspectingIdx: number | null;
-  hoveredIdx: number | null;
-  setInspectingIdx: (v: number) => void;
-  setHoveredIdx: (v: number | null) => void;
-  pseudoView: string | null;
-  setPseudoView: (v: string | null) => void;
-  schemeView: 'light' | 'dark' | null;
-  setSchemeView: (v: 'light' | 'dark' | null) => void;
-  activePseudo: NodeCascade | undefined;
-  activeScheme: { styles: Array<{ property: string; value: string }> } | undefined;
-  landmarkSearch: ThemeVisualSnapshot['landmarks'];
-  allLandmarks: ThemeVisualSnapshot['landmarks'];
-  inspectMode: boolean;
-  liveNode: InspectedNode | null;
-  liveError: string | null;
-  pinnedSelectors: string[];
-  setPinnedSelectors: React.Dispatch<React.SetStateAction<string[]>>;
-  toolOverrides: ToolOverride | null;
-  setOverride: (key: keyof ToolOverride, value: string | number | boolean | undefined) => void;
-  resetOverrides: () => void;
-  exportName: string;
-  setExportName: (v: string) => void;
-  exportAuthor: string;
-  setExportAuthor: (v: string) => void;
-  exportState: StudioExportState;
-  handleExport: () => void;
-  onRefresh: () => void;
-  onToast: (msg: string, type?: 'default' | 'destructive') => void;
-  onPaletteLoaded: (palette: Record<string, string>) => void;
-  onImageThemeGenerated: (palette: Record<string, string>) => void;
-  onShowInFolder: (dir: string) => void;
-}) {
+export function StudioRightInspector({ t }: { t: UiMessages }) {
+  const snapshot = useStudioStore((s) => s.snapshot);
+  const snapshotLoading = useStudioStore((s) => s.snapshotLoading);
+  const activeProject = useStudioStore((s) => s.getActiveProject());
+  const activeAgent = activeProject?.agentId ?? null;
+  const installedThemes = useStudioStore((s) => s.installedThemes);
+  const inspectingIdx = useStudioStore((s) => s.inspectingIdx);
+  const hoveredIdx = useStudioStore((s) => s.hoveredIdx);
+  const setInspectingIdx = useStudioStore((s) => s.setInspectingIdx);
+  const setHoveredIdx = useStudioStore((s) => s.setHoveredIdx);
+  const pseudoView = useStudioStore((s) => s.pseudoView);
+  const setPseudoView = useStudioStore((s) => s.setPseudoView);
+  const schemeView = useStudioStore((s) => s.schemeView);
+  const setSchemeView = useStudioStore((s) => s.setSchemeView);
+  const searchQuery = useStudioStore((s) => s.searchQuery);
+  const inspectMode = useStudioStore((s) => s.inspectMode);
+  const liveNode = useStudioStore((s) => s.liveNode);
+  const liveError = useStudioStore((s) => s.liveError);
+  const pinnedSelectors = useStudioStore((s) => s.pinnedSelectors);
+  const pinSelector = useStudioStore((s) => s.pinSelector);
+  const toolOverrides = useStudioStore((s) => s.toolOverrides);
+  const setOverride = useStudioStore((s) => s.setOverride);
+  const resetOverrides = useStudioStore((s) => s.resetOverrides);
+  const exportName = useStudioStore((s) => s.exportName);
+  const setExportName = useStudioStore((s) => s.setExportName);
+  const exportAuthor = useStudioStore((s) => s.exportAuthor);
+  const setExportAuthor = useStudioStore((s) => s.setExportAuthor);
+  const exportState = useStudioStore((s) => s.exportState);
+  const exportTheme = useStudioStore((s) => s.exportTheme);
+  const refreshThemeLibrary = useStudioStore((s) => s.refreshThemeLibrary);
+  const setPaletteLoaded = useStudioStore((s) => s.setPaletteLoaded);
+  const setOverrideColors = useStudioStore((s) => s.setOverrideColors);
+
+  const allLandmarks = snapshot?.landmarks ?? [];
+  const inspectingLandmark = snapshot?.landmarks[inspectingIdx ?? -1] ?? null;
+  const activePseudo = pseudoView ? inspectingLandmark?.pseudo?.[pseudoView] : undefined;
+  const activeScheme = schemeView ? inspectingLandmark?.scheme?.[schemeView] : undefined;
+
+  const landmarkSearch = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return allLandmarks;
+    return allLandmarks.filter(
+      (lm) => lm.selector.toLowerCase().includes(q) || lm.tag.toLowerCase().includes(q),
+    );
+  }, [allLandmarks, searchQuery]);
+
   return (
     <div
       className="overflow-y-auto border-l border-border px-3 pt-3"
@@ -370,11 +328,7 @@ export function StudioRightInspector({
               </div>
               <button
                 type="button"
-                onClick={() =>
-                  setPinnedSelectors((prev) =>
-                    prev.includes(liveNode.path) ? prev : [...prev, liveNode.path],
-                  )
-                }
+                onClick={() => pinSelector(liveNode.path)}
                 className="mb-2 flex items-center gap-1 border border-border bg-muted px-2 py-1 font-mono text-[9.5px] uppercase"
                 style={{
                   letterSpacing: '0.06em',
@@ -402,7 +356,7 @@ export function StudioRightInspector({
       )}
 
       {/* Dimension fingerprint card */}
-      {snapshotState.snapshot && (
+      {snapshot && (
         <>
           <Kicker>维度 · SIGNATURE</Kicker>
           <div
@@ -422,14 +376,14 @@ export function StudioRightInspector({
               className="mt-1 break-all font-mono text-[9px] leading-tight"
               style={{ color: 'var(--muted-foreground)' }}
             >
-              {fingerprintFromSnapshot(snapshotState.snapshot)}
+              {fingerprintFromSnapshot(snapshot)}
             </p>
           </div>
         </>
       )}
 
       {/* Landmark list — compact node tree */}
-      {snapshotState.snapshot && (
+      {snapshot && (
         <>
           <Kicker>节点 · LANDMARKS</Kicker>
           <div className="mt-1 mb-2 flex items-baseline justify-between">
@@ -446,7 +400,7 @@ export function StudioRightInspector({
             </p>
           ) : (
             <div className="space-y-0.5 mb-3">
-              {landmarkSearch.map((lm, _idx) => {
+              {landmarkSearch.map((lm) => {
                 const realIdx = allLandmarks.indexOf(lm);
                 return (
                   <button
@@ -491,7 +445,7 @@ export function StudioRightInspector({
         </>
       )}
 
-      {!inspectingLandmark && !snapshotState.loading && snapshotState.snapshot && (
+      {!inspectingLandmark && !snapshotLoading && snapshot && (
         <p
           className="mt-2 text-center font-mono text-[10px]"
           style={{ color: 'var(--dim, var(--muted-foreground))' }}
@@ -505,21 +459,18 @@ export function StudioRightInspector({
         <PresetThemePicker
           activeAgent={activeAgent}
           themes={installedThemes}
-          onPaletteLoaded={onPaletteLoaded}
-          onToast={onToast}
-          onRefresh={onRefresh}
+          onPaletteLoaded={setPaletteLoaded}
+          onRefresh={() => void refreshThemeLibrary()}
         />
       </div>
 
       {/* P2b: Image → Theme workflow */}
-      {snapshotState.snapshot && (
-        <ImageToThemePanel onThemeGenerated={onImageThemeGenerated} compact />
-      )}
+      {snapshot && <ImageToThemePanel onThemeGenerated={setOverrideColors} compact />}
       {/* P3: Toolbox */}
-      {snapshotState.snapshot && (
+      {snapshot && (
         <ToolboxPanel
           t={t}
-          originalSig={computeSignature(snapshotState.snapshot)}
+          originalSig={computeSignature(snapshot)}
           overrides={toolOverrides}
           onOverride={setOverride}
           onReset={resetOverrides}
@@ -527,7 +478,7 @@ export function StudioRightInspector({
       )}
 
       {/* P4: Export */}
-      {snapshotState.snapshot && (
+      {snapshot && (
         <div
           className="mt-4 border border-border bg-card p-3"
           style={{ borderRadius: 'var(--radius)' }}
@@ -566,7 +517,7 @@ export function StudioRightInspector({
             <Button
               size="sm"
               disabled={exportState.loading || !activeAgent}
-              onClick={handleExport}
+              onClick={() => void exportTheme()}
               className="h-6 w-full gap-1 font-mono text-[9.5px] uppercase"
               style={{ letterSpacing: '0.08em', borderRadius: 'var(--radius)' }}
             >
@@ -593,7 +544,7 @@ export function StudioRightInspector({
                 </p>
                 <Button
                   size="sm"
-                  onClick={() => onShowInFolder(exportState.dir!)}
+                  onClick={() => api.showInFolder(exportState.dir!)}
                   className="mt-1 h-5 gap-1 font-mono text-[9px] uppercase"
                   style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
                 >

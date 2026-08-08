@@ -14,12 +14,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { hexMix, lumOf, toRgba } from '@/components/studio/palette';
+import { buildSkinTokens } from '@/components/studio/palette';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { contrastRatio, generatePalettes } from '@/utils/color-theory';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { contrastRatio, generatePalettes, textOn } from '@/utils/color-theory';
 
 import {
   BlocksIcon,
@@ -28,6 +29,7 @@ import {
   StarIcon,
   SwatchIcon,
 } from '@hugeicons/core-free-icons';
+import { toMessage } from '@shared/errors';
 import { AGENT_IDS, AGENT_META, type AgentId } from '@shared/types';
 import { Kicker } from './kicker';
 
@@ -105,17 +107,6 @@ function scoreColor(total: number): { label: string; cls: string; dot: string } 
   if (total >= 70) return { label: 'AAA', cls: 'text-[#2ED573]', dot: 'bg-[#2ED573]' };
   if (total >= 50) return { label: 'AA', cls: 'text-[#FFD240]', dot: 'bg-[#FFD240]' };
   return { label: 'LOW', cls: 'text-[#FF453A]', dot: 'bg-[#FF453A]' };
-}
-
-function textOn(hex: string): string {
-  if (!hex) return '#ffffff';
-  const m = hex.replace('#', '');
-  if (m.length < 6) return '#ffffff';
-  const r = parseInt(m.slice(0, 2), 16);
-  const g = parseInt(m.slice(2, 4), 16);
-  const b = parseInt(m.slice(4, 6), 16);
-  if ([r, g, b].some((n) => Number.isNaN(n))) return '#ffffff';
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5 ? '#000000' : '#ffffff';
 }
 
 // ---------------------------------------------------------------------------
@@ -265,7 +256,6 @@ interface FitGeneratorPanelProps {
   onClose?: () => void;
   onPreviewPalette?: (agentId: string, palette: Record<string, string>) => void;
   onPaletteApply?: (agentId: string, palette: Record<string, string>) => void;
-  onToast?: (msg: string, type?: 'default' | 'destructive') => void;
   embedded?: boolean;
 }
 
@@ -273,40 +263,22 @@ interface FitGeneratorPanelProps {
 // token namespace the theme package builder expects. Mirrors
 // `buildStudioPalette` in palette.ts so the recolor takes effect on the agent.
 function paletteToAgentSkinRoot(palette: Record<string, string>): Record<string, string> {
+  // Map a visual-analysis palette (10 semantic keys) onto the `--agentskin-*`
+  // token namespace. Token math lives in buildSkinTokens (shared with the
+  // snapshot export path) so both pipelines produce identical results.
   const bg = palette.background || '#201a40';
   const fg = palette.foreground || '#e8e2ff';
   const accent = palette.accent || '#9d8bff';
-  const surface = palette.surface || bg;
-  const muted = palette.muted || fg;
-  const dark = lumOf(bg) < 0.5;
-  const surfaceElev = dark ? hexMix(surface, '#ffffff', 0.2) : hexMix(surface, '#000000', 0.1);
-  const codeBg = dark ? hexMix(bg, '#000000', 0.3) : hexMix(bg, '#ffffff', 0.55);
-  const inputBg = dark ? hexMix(surface, '#ffffff', 0.06) : hexMix(surface, '#000000', 0.04);
-  return {
-    '--agentskin-accent': accent,
-    '--agentskin-secondary': accent,
-    '--agentskin-bg': bg,
-    '--agentskin-surface': surface,
-    '--agentskin-surface-elevated': surfaceElev,
-    '--agentskin-text': fg,
-    '--agentskin-muted': muted,
-    '--agentskin-border': toRgba(accent, dark ? 0.18 : 0.3),
-    '--agentskin-code-bg': codeBg,
-    '--agentskin-code-fg': fg,
-    '--agentskin-input-bg': inputBg,
-    '--agentskin-button-bg': accent,
-    '--agentskin-focus-ring': toRgba(accent, dark ? 0.38 : 0.5),
-    '--agentskin-selection': toRgba(accent, 0.32),
-  };
+  return buildSkinTokens({ bg, fg, accent });
 }
 
 export function FitGeneratorPanel({
   onClose,
   onPreviewPalette,
   onPaletteApply,
-  onToast,
   embedded,
 }: FitGeneratorPanelProps) {
+  const showToast = useNotificationStore((s) => s.showToast);
   const [selectedAgent, setSelectedAgent] = useState<AgentId>(FIT_AGENT_IDS[0] ?? 'codex');
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -390,15 +362,15 @@ export function FitGeneratorPanel({
       try {
         const res = await api.exportVisualAnalysisTheme(agentId, themeData);
         if (res.ok && res.path) {
-          onToast?.(`已导出主题包到 ${res.path}`, 'default');
+          showToast(`已导出主题包到 ${res.path}`, 'default');
         } else {
-          onToast?.('导出失败：未生成主题包', 'destructive');
+          showToast('导出失败：未生成主题包', 'destructive');
         }
       } catch (e) {
-        onToast?.(`导出失败：${e instanceof Error ? e.message : String(e)}`, 'destructive');
+        showToast(`导出失败：${toMessage(e)}`, 'destructive');
       }
     },
-    [onToast],
+    [showToast],
   );
 
   // --- Preview handler ---
@@ -565,28 +537,31 @@ export function FitGeneratorPanel({
             <div className="grid grid-cols-2 gap-x-3 gap-y-1">
               {[
                 [
-                  'CSS',
+                  'CSS变量',
                   String(
-                    (profile.tokens as Record<string, unknown>)?.light
-                      ? ((
-                          (profile.tokens as Record<string, unknown>).light as Record<
-                            string,
-                            unknown
-                          >
-                        )?.varCount ?? '—')
-                      : '—',
+                    (profile.stats as { rootVars?: { default?: number } } | undefined)?.rootVars
+                      ?.default ?? '—',
                   ),
                 ],
                 [
-                  '节点',
+                  'DOM节点',
                   String(
-                    (profile.stats as Record<string, unknown>)?.domNodes !== undefined
-                      ? typeof (profile.stats as Record<string, unknown>).domNodes === 'object'
-                        ? Object.keys(
-                            profile.stats as Record<string, unknown> as Record<string, unknown>,
-                          ).length
-                        : (profile.stats as Record<string, unknown>)?.domNodes
-                      : ((profile as Record<string, unknown>)?.nodeCount ?? '—'),
+                    (profile.stats as { domNodes?: { default?: number } } | undefined)?.domNodes
+                      ?.default ?? '—',
+                  ),
+                ],
+                [
+                  '样式变量',
+                  String(
+                    (profile.stats as { styleVars?: { neutral?: number } } | undefined)?.styleVars
+                      ?.neutral ?? '—',
+                  ),
+                ],
+                [
+                  '采样点',
+                  String(
+                    (profile.stats as { computedSamples?: { default?: number } } | undefined)
+                      ?.computedSamples?.default ?? '—',
                   ),
                 ],
               ].map(([label, val]) => (

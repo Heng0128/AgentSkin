@@ -10,210 +10,224 @@
  *   - PICK:    live CDP element picker with cascade display
  *   - PROFILE: agent cards showing core identity as mini swatches
  *
+ * Live-inspect state (mode + picked node + errors) lives in the shared
+ * {@link useStudioStore} — the page-level subscription routes `onInspectResult`
+ * into the store, so this tab and the right inspector see the same node.
  * Pinned selectors are always visible at the bottom as a chip row so the user
  * can review what feeds the next snapshot.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { appStatusFor } from '@/stores/agentStore';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useStudioStore } from '@/stores/studioStore';
 
 import { Copy01Icon, EyeIcon, Search01Icon } from '@hugeicons/core-free-icons';
-import {
-  AGENT_IDS,
-  AGENT_META,
-  type AgentId,
-  type CssMatchedRule,
-  type InspectedNode,
-} from '@shared/types';
+import { toMessage } from '@shared/errors';
+import { AGENT_META, type AgentId, type VisualAnalysisSummary } from '@shared/types';
+import { CascadeView } from './CascadeView';
 import { Kicker } from './kicker';
-
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
-
-interface InspectStudioTabProps {
-  activeAgent: AgentId | null;
-  pinnedSelectors: string[];
-  onPinSelector: (sel: string) => void;
-  onToast: (msg: string, variant?: 'default' | 'destructive') => void;
-}
 
 type Mode = 'pick' | 'profile';
 
 // ---------------------------------------------------------------------------
-// CascadeView — inline (simplified from ThemeStudioPage)
+// Agent Profile Card — real crawled visual-analysis data
 // ---------------------------------------------------------------------------
 
-function CascadeView({ cascade }: { cascade: InspectedNode['cascade'] }) {
-  const boxModel = cascade.boxModel;
-  return (
-    <div className="space-y-1.5">
-      {/* Render fonts */}
-      {cascade.platformFonts.length > 0 && (
-        <div
-          className="border border-border bg-card p-1.5"
-          style={{ borderRadius: 'var(--radius)' }}
-        >
-          <Kicker>RENDER FONTS</Kicker>
-          <div className="mt-1 flex flex-wrap gap-1">
-            {cascade.platformFonts.map((f) => (
-              <span
-                key={f}
-                className="bg-muted px-1 py-0.5 font-mono text-[8px]"
-                style={{ color: 'var(--foreground)', borderRadius: 'var(--radius)' }}
-              >
-                {f}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+/** Pull normalized hex swatches from a tokenTree category/scheme (best-effort). */
+function samplesFromTokenTree(
+  tokenTree: Record<string, unknown> | undefined,
+  category: string,
+  scheme: 'dark' | 'light' | 'neutral',
+  max = 8,
+): string[] {
+  const bucket = (tokenTree?.[category] as Record<string, unknown> | undefined)?.[scheme];
+  if (!Array.isArray(bucket)) return [];
+  const out: string[] = [];
+  for (const entry of bucket) {
+    const norm = (entry as { normalized?: string })?.normalized;
+    if (norm && /^[0-9a-fA-F]{6}$/.test(norm)) out.push(`#${norm}`);
+    if (out.length >= max) break;
+  }
+  return out;
+}
 
-      {/* Box model badge */}
-      {boxModel && (boxModel.width !== undefined || boxModel.height !== undefined) && (
-        <div className="flex items-center gap-1">
+function StatCell({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div>
+      <span
+        className="font-mono text-[7.5px] uppercase tracking-wider"
+        style={{ color: 'var(--muted-foreground)', opacity: 0.75 }}
+      >
+        {label}
+      </span>
+      <span
+        className="ml-1 font-mono text-[9px] font-medium"
+        style={{ color: 'var(--foreground)', opacity: 0.85 }}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function AgentProfileCard({
+  summary,
+  expanded,
+  onToggle,
+  profile,
+  profileLoading,
+}: {
+  summary: VisualAnalysisSummary;
+  expanded: boolean;
+  onToggle: () => void;
+  profile: Record<string, unknown> | null;
+  profileLoading: boolean;
+}) {
+  const meta = AGENT_META[summary.id];
+  const brand = summary.brandDark || summary.brandLight;
+  const tokenTree = (profile?.tokenTree as Record<string, unknown> | undefined) ?? undefined;
+  const accentSwatches =
+    expanded && tokenTree ? samplesFromTokenTree(tokenTree, 'accent', 'dark', 8) : [];
+  const semanticSwatches =
+    expanded && tokenTree ? samplesFromTokenTree(tokenTree, 'semantic', 'dark', 6) : [];
+  const bgSwatches =
+    expanded && tokenTree ? samplesFromTokenTree(tokenTree, 'backgrounds', 'dark', 4) : [];
+
+  return (
+    <div className="border border-border bg-card" style={{ borderRadius: 'var(--radius)' }}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-2.5 py-2 text-left"
+      >
+        <div className="flex items-center gap-2">
           <span
-            className="bg-muted px-1 py-0.5 font-mono text-[8px]"
-            style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
+            className="size-5 shrink-0 border border-border"
+            style={{ background: brand || 'var(--muted)', borderRadius: '1px' }}
+            title={brand ?? 'unknown brand'}
+          />
+          <span
+            className="font-mono text-[9.5px] font-semibold uppercase"
+            style={{ letterSpacing: '0.1em', color: 'var(--foreground)' }}
           >
-            {boxModel.width ?? '?'} × {boxModel.height ?? '?'}
+            {meta?.displayName ?? summary.id}
           </span>
-          {boxModel.left !== undefined && boxModel.top !== undefined && (
+          <Badge variant="outline" className="h-4 px-1 text-[7.5px] tracking-wider">
+            {meta?.region}
+          </Badge>
+        </div>
+        <span className="font-mono text-[8px] text-muted-foreground">{expanded ? '−' : '+'}</span>
+      </button>
+
+      {/* Stats row (always visible — real crawled numbers) */}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1 border-t border-border px-2.5 py-1.5">
+        <StatCell label="tokens" value={`${summary.tokensLight}/${summary.tokensDark}`} />
+        <StatCell label="css变量" value={summary.stats.rootVars.default} />
+        <StatCell label="dom节点" value={summary.stats.domNodes.default} />
+        <StatCell label="样式变量" value={summary.stats.styleVars.neutral} />
+        <StatCell label="采样" value={summary.stats.computedSamples.default} />
+        <StatCell label="分类" value={summary.categories.length} />
+      </div>
+
+      {/* Category chips (real token categories from the crawl) */}
+      {summary.categories.length > 0 && (
+        <div className="flex flex-wrap gap-1 border-t border-border px-2.5 py-1.5">
+          {summary.categories.slice(0, 8).map((c) => (
             <span
-              className="bg-muted px-1 py-0.5 font-mono text-[8px]"
-              style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
+              key={c}
+              className="border border-border bg-muted px-1 py-0.5 font-mono text-[7px] uppercase"
+              style={{ color: 'var(--muted-foreground)' }}
             >
-              @ {boxModel.left}, {boxModel.top}
+              {c}
+            </span>
+          ))}
+          {summary.categories.length > 8 && (
+            <span
+              className="px-1 py-0.5 font-mono text-[7px]"
+              style={{ color: 'var(--muted-foreground)' }}
+            >
+              +{summary.categories.length - 8}
             </span>
           )}
         </div>
       )}
 
-      {/* Matched CSS rules */}
-      <div className="border border-border bg-card p-1.5" style={{ borderRadius: 'var(--radius)' }}>
-        <Kicker>CASCADE</Kicker>
-        {cascade.matchedRules.length === 0 ? (
-          <p className="font-mono text-[9px]" style={{ color: 'var(--muted-foreground)' }}>
-            无（CDP CSS 域不可用）
-          </p>
-        ) : (
-          <div className="mt-1 space-y-1">
-            {cascade.matchedRules.slice(0, 8).map((rule, idx) => {
-              const declKey = rule.declarations[0]
-                ? `${rule.declarations[0].name}:${rule.declarations[0].value}`
-                : 'empty';
-              const stableKey = `${rule.origin}::${rule.selector ?? ''}::${declKey}::${idx}`;
-              return <CSSRuleRow key={stableKey} rule={rule} />;
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CSSRuleRow({ rule }: { rule: CssMatchedRule }) {
-  return (
-    <div className="border border-border bg-muted p-1" style={{ borderRadius: 'var(--radius)' }}>
-      <div className="flex items-center gap-1">
-        <span
-          className="px-1 py-0.5 font-mono text-[8px]"
-          style={{
-            borderRadius: 'var(--radius)',
-            color: 'var(--primary)',
-            background: 'var(--accent)',
-          }}
-        >
-          {rule.origin}
-        </span>
-        <span
-          className="truncate font-mono text-[8.5px]"
-          style={{ color: 'var(--foreground)' }}
-          title={rule.selector ?? ''}
-        >
-          {rule.selector ?? '(inline style)'}
-        </span>
-      </div>
-      {rule.declarations.length > 0 && (
-        <div className="mt-1 space-y-px">
-          {rule.declarations.slice(0, 12).map((d) => (
-            <div
-              key={`${d.name}:${d.value}${d.important ? '!important' : ''}`}
-              className="flex items-baseline gap-1 px-0.5 font-mono text-[8.5px]"
-            >
-              <span
-                className="w-[100px] shrink-0 truncate"
-                style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}
-              >
-                {d.name}
-              </span>
-              <span className="truncate" style={{ color: 'var(--foreground)' }}>
-                {d.value}
-                {d.important ? ' !important' : ''}
-              </span>
-            </div>
-          ))}
+      {/* Expanded: real color samples from the crawled profile */}
+      {expanded && (
+        <div className="space-y-2 border-t border-border px-2.5 py-2">
+          {profileLoading && (
+            <p className="font-mono text-[8px]" style={{ color: 'var(--muted-foreground)' }}>
+              加载完整 profile…
+            </p>
+          )}
+          {!profileLoading && !profile && (
+            <p className="font-mono text-[8px]" style={{ color: 'var(--muted-foreground)' }}>
+              无法加载 profile
+            </p>
+          )}
+          {!profileLoading && profile && (
+            <>
+              {accentSwatches.length > 0 && (
+                <div>
+                  <Kicker>ACCENT</Kicker>
+                  <div className="flex flex-wrap gap-1">
+                    {accentSwatches.map((c) => (
+                      <span
+                        key={`a-${c}`}
+                        className="size-4 border border-border"
+                        style={{ background: c, borderRadius: '1px' }}
+                        title={c}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {semanticSwatches.length > 0 && (
+                <div>
+                  <Kicker>SEMANTIC</Kicker>
+                  <div className="flex flex-wrap gap-1">
+                    {semanticSwatches.map((c) => (
+                      <span
+                        key={`s-${c}`}
+                        className="size-4 border border-border"
+                        style={{ background: c, borderRadius: '1px' }}
+                        title={c}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {bgSwatches.length > 0 && (
+                <div>
+                  <Kicker>BACKGROUND</Kicker>
+                  <div className="flex flex-wrap gap-1">
+                    {bgSwatches.map((c) => (
+                      <span
+                        key={`b-${c}`}
+                        className="size-4 border border-border"
+                        style={{ background: c, borderRadius: '1px' }}
+                        title={c}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {accentSwatches.length === 0 &&
+                semanticSwatches.length === 0 &&
+                bgSwatches.length === 0 && (
+                  <p className="font-mono text-[8px]" style={{ color: 'var(--muted-foreground)' }}>
+                    该 profile 未提供可展示的色彩样本
+                  </p>
+                )}
+            </>
+          )}
         </div>
       )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Agent Profile Card
-// ---------------------------------------------------------------------------
-
-/** Derive a few representative swatches from AGENT_META identity.
- *  In a real implementation these would come from a theme engine, but for
- *  the profile browser we use stable stand-in colors per-agent derived
- *  from a hash of the agent id so the swatches are consistent across renders. */
-function swatchesForAgent(agentId: AgentId): string[] {
-  // Simple deterministic hash → hue
-  let hash = 0;
-  for (let i = 0; i < agentId.length; i++) hash = agentId.charCodeAt(i) + ((hash << 5) - hash);
-  const h1 = Math.abs(hash % 360);
-  const h2 = (h1 + 30) % 360;
-  const h3 = (h1 + 330) % 360;
-  return [`hsl(${h1}, 70%, 55%)`, `hsl(${h2}, 60%, 45%)`, `hsl(${h3}, 65%, 50%)`];
-}
-
-function AgentProfileCard({ agentId }: { agentId: AgentId }) {
-  const meta = AGENT_META[agentId];
-  const swatches = swatchesForAgent(agentId);
-  return (
-    <div className="border border-border bg-card p-2" style={{ borderRadius: 'var(--radius)' }}>
-      <div className="flex items-center justify-between">
-        <span
-          className="font-mono text-[9.5px] font-semibold uppercase"
-          style={{ letterSpacing: '0.1em', color: 'var(--foreground)' }}
-        >
-          {meta.displayName}
-        </span>
-        <Badge variant="outline" className="h-4 px-1 text-[7.5px] tracking-wider">
-          {meta.region}
-        </Badge>
-      </div>
-      <div className="mt-1.5 flex items-center gap-1">
-        {swatches.map((c) => (
-          <div
-            key={c}
-            className="size-5"
-            style={{
-              background: c,
-              borderRadius: '1px',
-              border: '1px solid var(--border)',
-            }}
-          />
-        ))}
-        <span className="ml-1 font-mono text-[7.5px]" style={{ color: 'var(--muted-foreground)' }}>
-          {meta.officialName}
-        </span>
-      </div>
     </div>
   );
 }
@@ -222,93 +236,83 @@ function AgentProfileCard({ agentId }: { agentId: AgentId }) {
 // InspectStudioTab — main export
 // ---------------------------------------------------------------------------
 
-export function InspectStudioTab({
-  activeAgent,
-  pinnedSelectors,
-  onPinSelector,
-  onToast,
-}: InspectStudioTabProps) {
+export function InspectStudioTab() {
   const [mode, setMode] = useState<Mode>('pick');
-  const [inspecting, setInspecting] = useState(false);
-  const [inspectBusy, setInspectBusy] = useState(false);
-  const [liveNode, setLiveNode] = useState<InspectedNode | null>(null);
-  const [liveError, setLiveError] = useState<string | null>(null);
-  const mountedRef = useRef(true);
+  const activeProject = useStudioStore((s) => s.getActiveProject());
+  const activeAgent = activeProject?.agentId ?? null;
+  const inspectMode = useStudioStore((s) => s.inspectMode);
+  const liveNode = useStudioStore((s) => s.liveNode);
+  const liveError = useStudioStore((s) => s.liveError);
+  const pinnedSelectors = useStudioStore((s) => s.pinnedSelectors);
+  const pinSelector = useStudioStore((s) => s.pinSelector);
+  const toggleInspect = useStudioStore((s) => s.toggleInspect);
+  const showToast = useNotificationStore((s) => s.showToast);
 
-  // Track mounted state to avoid state updates after unmount
+  // --- Visual Analyzer summaries (real crawled data) ---
+  const [summaries, setSummaries] = useState<VisualAnalysisSummary[]>([]);
+  const [summariesLoading, setSummariesLoading] = useState(false);
+  const [expandedId, setExpandedId] = useState<AgentId | null>(null);
+  const [expandedProfile, setExpandedProfile] = useState<Record<string, unknown> | null>(null);
+  const [expandedLoading, setExpandedLoading] = useState(false);
+
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
-  }, []);
-
-  // Subscribe to picked-node results (only meaningful in 'pick' mode,
-  // but the subscription is harmless in 'profile' mode and avoids stale
-  // closures when the user switches back).
-  useEffect(() => {
-    const off = api.onInspectResult((node) => {
-      if (!mountedRef.current) return;
-      if (!node) return;
-      if ('error' in node) {
-        setLiveError(node.error);
-        setLiveNode(null);
-        return;
+    if (mode !== 'profile') return;
+    let cancelled = false;
+    async function load() {
+      setSummariesLoading(true);
+      try {
+        const data = await api.listVisualAnalysisSummaries();
+        if (!cancelled) setSummaries(data);
+      } catch (e) {
+        if (!cancelled) showToast(`加载视觉分析数据失败：${toMessage(e)}`, 'destructive');
+      } finally {
+        if (!cancelled) setSummariesLoading(false);
       }
-      setLiveError(null);
-      setLiveNode(node);
-    });
-    return off;
-  }, []);
-
-  // Cleanup inspect session on unmount.
-  useEffect(() => {
-    return () => {
-      if (inspecting) {
-        api.stopInspect().catch(() => {});
-      }
-    };
-  }, [inspecting]);
-
-  const togglePick = useCallback(async () => {
-    if (inspectBusy) return;
-    setInspectBusy(true);
-    try {
-      if (inspecting) {
-        await api.stopInspect().catch(() => {});
-        if (mountedRef.current) setInspecting(false);
-        return;
-      }
-      if (!activeAgent) {
-        onToast('请先选择一个 Agent', 'destructive');
-        return;
-      }
-      await api.startInspect(activeAgent);
-      if (!mountedRef.current) return;
-      setInspecting(true);
-      setLiveNode(null);
-      setLiveError(null);
-      setMode('pick');
-    } catch (e) {
-      if (mountedRef.current)
-        onToast(`进入检查模式失败：${e instanceof Error ? e.message : String(e)}`, 'destructive');
-    } finally {
-      if (mountedRef.current) setInspectBusy(false);
     }
-  }, [inspectBusy, inspecting, activeAgent, onToast]);
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, showToast]);
+
+  const toggleExpand = useCallback(
+    async (id: AgentId) => {
+      if (expandedId === id) {
+        setExpandedId(null);
+        setExpandedProfile(null);
+        return;
+      }
+      setExpandedId(id);
+      setExpandedProfile(null);
+      setExpandedLoading(true);
+      try {
+        const prof = await api.getVisualAnalysisTarget(id);
+        setExpandedProfile(prof);
+      } catch {
+        setExpandedProfile(null);
+      } finally {
+        setExpandedLoading(false);
+      }
+    },
+    [expandedId],
+  );
+
+  const togglePick = useCallback(() => {
+    void toggleInspect();
+  }, [toggleInspect]);
 
   const copyPath = useCallback(
     (path: string) => {
       if (!navigator.clipboard) {
-        onToast('当前环境不支持剪贴板', 'destructive');
+        showToast('当前环境不支持剪贴板', 'destructive');
         return;
       }
       navigator.clipboard.writeText(path).then(
-        () => onToast('已复制选择器'),
-        () => onToast('复制失败', 'destructive'),
+        () => showToast('已复制选择器'),
+        () => showToast('复制失败', 'destructive'),
       );
     },
-    [onToast],
+    [showToast],
   );
 
   return (
@@ -377,9 +381,9 @@ export function InspectStudioTab({
                     title={activeAgent ? undefined : '选择 Agent 以启用'}
                   >
                     <span
-                      className={`size-[5px] rounded-full ${inspecting ? 'animate-pulse' : ''}`}
+                      className={`size-[5px] rounded-full ${inspectMode ? 'animate-pulse' : ''}`}
                       style={{
-                        background: inspecting ? 'var(--primary)' : 'var(--muted-foreground)',
+                        background: inspectMode ? 'var(--primary)' : 'var(--muted-foreground)',
                         opacity: 0.6,
                       }}
                     />
@@ -387,18 +391,18 @@ export function InspectStudioTab({
                       className="font-mono text-[8px] uppercase"
                       style={{ color: 'var(--muted-foreground)' }}
                     >
-                      {inspecting ? 'ACTIVE' : 'IDLE'}
+                      {inspectMode ? 'ACTIVE' : 'IDLE'}
                     </span>
                   </div>
                 </div>
                 <Button
                   size="lg"
-                  variant={inspecting ? 'destructive' : 'primary'}
-                  disabled={inspectBusy || (!inspecting && !activeAgent)}
+                  variant={inspectMode ? 'destructive' : 'primary'}
+                  disabled={!inspectMode && !activeAgent}
                   onClick={togglePick}
                   className="mt-2"
                 >
-                  {inspecting ? (
+                  {inspectMode ? (
                     <>停止拾取</>
                   ) : (
                     <>
@@ -464,7 +468,7 @@ export function InspectStudioTab({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => onPinSelector(liveNode.path)}
+                        onClick={() => pinSelector(liveNode.path)}
                         className="flex items-center gap-1 border border-border bg-muted px-2 py-1 font-mono text-[9.5px] uppercase"
                         style={{
                           letterSpacing: '0.06em',
@@ -486,7 +490,7 @@ export function InspectStudioTab({
                   className="font-mono text-[9px]"
                   style={{ color: 'var(--dim, var(--muted-foreground))' }}
                 >
-                  {inspecting
+                  {inspectMode
                     ? '已为真实 Agent 开启放大镜，点击任意元素即可抓取它的完整级联。'
                     : '点击上方按钮开启检查模式。扫描完成后将列出完整的 CSS 级联。'}
                 </p>
@@ -494,13 +498,30 @@ export function InspectStudioTab({
             </>
           )}
 
-          {/* ---- PROFILE mode ---- */}
+          {/* ---- PROFILE mode (real crawled visual-analysis data) ---- */}
           {mode === 'profile' && (
             <>
-              <Kicker>AGENT PROFILES</Kicker>
+              <Kicker count={summaries.length}>AGENT PROFILES · 真实爬取</Kicker>
+              {summariesLoading && (
+                <p className="font-mono text-[9px]" style={{ color: 'var(--muted-foreground)' }}>
+                  加载视觉分析摘要…
+                </p>
+              )}
+              {!summariesLoading && summaries.length === 0 && (
+                <p className="font-mono text-[9px]" style={{ color: 'var(--muted-foreground)' }}>
+                  未找到任何 agent 视觉 profile
+                </p>
+              )}
               <div className="space-y-1.5">
-                {AGENT_IDS.filter((id) => Boolean(appStatusFor(id)?.installed)).map((id) => (
-                  <AgentProfileCard key={id} agentId={id} />
+                {summaries.map((s) => (
+                  <AgentProfileCard
+                    key={s.id}
+                    summary={s}
+                    expanded={expandedId === s.id}
+                    onToggle={() => void toggleExpand(s.id)}
+                    profile={expandedId === s.id ? expandedProfile : null}
+                    profileLoading={expandedId === s.id ? expandedLoading : false}
+                  />
                 ))}
               </div>
             </>

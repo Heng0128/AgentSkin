@@ -1,20 +1,25 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/app-mark';
 import { cn } from '@/lib/utils';
 import { useEnvironmentStore } from '@/stores/environmentStore';
 
+import type { WallpaperInfo } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
 
 /**
  * # QuickEnvironmentCreate
  *
  * Inline quick-create form for spawning a new environment preset.
- * Mirrors the "创建工程" dialog: project name, optional author, agent picker.
+ * Mirrors the "创建工程" dialog: project name, optional author, agent picker,
+ * and an optional wallpaper binding.
  *
- * On confirm: calls environmentStore.createEnvironment(agentId, null, name, false)
- * to persist a preset without applying a theme immediately.
+ * On confirm: calls environmentStore.createEnvironment(agentId, null, wallpaperId,
+ * name, false) to persist a preset (Agent + Theme + Wallpaper) without applying
+ * immediately. The wallpaper half makes the environment a full environment
+ * definition (strategic audit P0-3).
  */
 
 export function QuickEnvironmentCreate({
@@ -27,9 +32,24 @@ export function QuickEnvironmentCreate({
   const [projectName, setProjectName] = useState('');
   const [author, setAuthor] = useState('');
   const [selectedAgent, setSelectedAgent] = useState<string | null>('traework');
+  const [wallpaperId, setWallpaperId] = useState<string | null>(null);
+  const [wallpapers, setWallpapers] = useState<WallpaperInfo[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const createEnvironment = useEnvironmentStore((s) => s.createEnvironment);
+
+  useEffect(() => {
+    let alive = true;
+    api
+      .listWallpapers()
+      .then((list) => {
+        if (alive) setWallpapers(list);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const canSubmit = selectedAgent != null && projectName.trim().length > 0 && !submitting;
 
@@ -40,6 +60,7 @@ export function QuickEnvironmentCreate({
       const result = await createEnvironment(
         selectedAgent as import('@shared/types').AgentId,
         null,
+        wallpaperId,
         projectName.trim(),
         false,
       );
@@ -76,6 +97,22 @@ export function QuickEnvironmentCreate({
         value={author}
         onChange={(e) => setAuthor(e.target.value)}
       />
+
+      {/* 壁纸绑定（可选） */}
+      <select
+        className="h-6 w-full border border-border bg-muted px-1 font-mono text-[10px] outline-none focus:border-primary/60"
+        style={{ borderRadius: 'var(--radius)' }}
+        value={wallpaperId ?? ''}
+        onChange={(e) => setWallpaperId(e.target.value || null)}
+        title="绑定壁纸（可选）"
+      >
+        <option value="">无壁纸</option>
+        {wallpapers.map((w) => (
+          <option key={w.id} value={w.id}>
+            {w.title}
+          </option>
+        ))}
+      </select>
 
       {/* Agent 选择器 */}
       <div className="flex flex-wrap gap-1 pt-1">

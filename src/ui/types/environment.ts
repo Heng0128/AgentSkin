@@ -42,6 +42,8 @@ export interface EnvironmentModel {
     preview: string | null;
     icon: string | null;
   } | null;
+  /** Bound wallpaper id (from preset), or null when the environment has no wallpaper. */
+  wallpaperId?: string | null;
   /** Current status of this environment */
   status: EnvironmentStatus;
   /** Whether the agent app is currently running */
@@ -66,7 +68,9 @@ export interface EnvironmentModel {
  * A user-defined, persistable environment definition.
  *
  * An EnvironmentPreset is the "what" — the desired combination of
- * Agent + Theme that the user wants to work with.
+ * Agent + Theme + Wallpaper that the user wants to work with. A preset
+ * is a full environment definition: applying it injects the bound theme
+ * AND the bound wallpaper into the target agent in one shot.
  *
  * Runtime status (isRunning, themeApplied, etc.) is derived separately
  * from the live AppController status. Presets are static; environments
@@ -77,12 +81,19 @@ export interface EnvironmentModel {
  *   name        — human label ("Frontend Studio")
  *   agentId     — which AI agent this preset targets
  *   themeId     — which theme to apply (null = default/native)
+ *   wallpaperId — which wallpaper to inject (null = none)
  *   createdAt   — when the preset was created (ISO string)
  *   updatedAt   — last modification time (ISO string)
  *
- * Storage:
- *   localStorage key: "agentskin:environment-presets"
- *   Format: JSON array of EnvironmentPreset objects.
+ * Storage (v2+):
+ *   Persisted by the MAIN process at `<userData>/env-presets.json`.
+ *   The renderer talks to it through `api.getEnvironmentPresets()` /
+ *   `api.saveEnvironmentPresets()`. No renderer-localStorage dependency.
+ *
+ *   `ENV_PRESETS_STORAGE_KEY` is retained ONLY as a legacy migration key:
+ *   on first run after the v1→v2 migration, the renderer reads any v1
+ *   presets left in localStorage, back-fills `wallpaperId: null`, writes
+ *   them to the main process, then clears the legacy key.
  */
 export interface EnvironmentPreset {
   /** Stable unique identifier. */
@@ -93,14 +104,16 @@ export interface EnvironmentPreset {
   agentId: AgentId;
   /** Theme to apply. null = native/default. */
   themeId: string | null;
+  /** Wallpaper to inject into the agent. null = none. */
+  wallpaperId: string | null;
   /** Creation timestamp (ISO 8601). */
   createdAt: string;
   /** Last updated timestamp (ISO 8601). */
   updatedAt: string;
 }
 
-/** Schema version for future migration safety. */
-export const PRESET_SCHEMA_VERSION = 1;
+/** Schema version for future migration safety. Bumped 1→2 when `wallpaperId` was added. */
+export const PRESET_SCHEMA_VERSION = 2;
 
-/** localStorage key for environment presets. */
+/** Legacy localStorage key (v1 only). Retained for one-time migration; do not write to it. */
 export const ENV_PRESETS_STORAGE_KEY = 'agentskin:environment-presets';
