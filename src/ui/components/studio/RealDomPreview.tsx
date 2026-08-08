@@ -272,7 +272,7 @@ function RealDomPreview({
     const w = iframeRef.current?.contentWindow;
     if (w) {
       try {
-        w.postMessage({ type: 'as-ov', css: overrideCss }, window.location.origin);
+        w.postMessage({ type: 'as-ov', css: overrideCss }, '*');
       } catch {
         /* ignore cross-origin postMessage races */
       }

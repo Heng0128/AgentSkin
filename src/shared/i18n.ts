@@ -153,6 +153,7 @@ export const uiMessages = {
     restartReasonNoCdp: '该应用未开启调试端口，需要重启以启用',
     restartReasonSpawnFailed: '应用启动失败，请尝试手动启动',
     restartReasonSingletonLock: '应用被单例锁占用，请先关闭已运行的实例',
+    restartReasonKillDenied: '无法自动关闭该应用（可能以管理员权限运行），请手动关闭后再试',
     statusActiveTheme: (name: string) => `使用中：${name}`,
     statusNoTheme: '未应用主题',
     cdpPortLabel: '启动端口',
@@ -658,6 +659,8 @@ export const uiMessages = {
     restartReasonSpawnFailed: 'App failed to launch. Try starting it manually.',
     restartReasonSingletonLock:
       'App is held by a singleton lock. Please close the running instance first.',
+    restartReasonKillDenied:
+      'AgentSkin could not close this app (it may be running as administrator). Please close it manually and try again.',
     statusActiveTheme: (name: string) => `Active: ${name}`,
     statusNoTheme: 'No theme applied',
     cdpPortLabel: 'Launch port',

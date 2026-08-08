@@ -39,9 +39,21 @@ export function useBoot(deps: UseBootDeps): void {
     const bootTimeoutPromise = new Promise<never>((_, reject) => {
       bootTimeout = setTimeout(() => reject(new Error('Bootstrap timeout after 15s')), 15000);
     });
+    // The whole IIFE is deferred via setTimeout(0) to a macrotask. React 19's
+    // useSyncExternalStore tears if the store changes between render-time
+    // snapshot and passive-commit. An async/await continuation from
+    // `await api.getBootstrap()` runs in a MICROTASK inside the same task as
+    // passive effects, so the synchronous setLocaleState/setAppVersion/setBooting
+    // would land inside the tearing window → forceStoreRerender → error #185.
+    // setTimeout(0) pushes the entire IIFE into a separate macrotask that runs
+    // AFTER passive-commit + tearing-check, making store updates safe.
     void (async () => {
       try {
         const boot = await Promise.race([api.getBootstrap(), bootTimeoutPromise]);
+        if (disposed) return;
+        // Extra microtask hop inside the macrotask: ensures the snapshot check
+        // fires before these sync sets, so they land as normal re-renders.
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
         if (disposed) return;
         setLocaleState(boot.locale);
         setAppVersion(boot.appVersion);
@@ -51,7 +63,9 @@ export function useBoot(deps: UseBootDeps): void {
         }
       } finally {
         if (bootTimeout !== undefined) clearTimeout(bootTimeout);
-        if (!disposed) setBooting(false);
+        setTimeout(() => {
+          if (!disposed) setBooting(false);
+        }, 0);
       }
     })();
     const offLog = api.onRuntimeLog((line) => {
@@ -91,7 +105,17 @@ export function useBoot(deps: UseBootDeps): void {
         isPollingRef.current = false;
       });
     };
-    triggerPoll();
+    // Defer the initial passive-mount poll to a rAF (macrotask), NOT a
+    // microtask. React 19's useSyncExternalStore tearing check runs during the
+    // passive-commit phase. A microtask queued from useEffect runs BEFORE that
+    // check completes, so the synchronous `set({ isRefreshing: true })` in
+    // refreshStatus is detected as tearing → forceStoreRerender → excessive
+    // re-render loop → error #185. A macrotask (rAF) runs at the start of the
+    // next frame, AFTER all passive-commit and tearing-check work finishes,
+    // letting the store update land as a normal scheduled re-render.
+    const initRafId = requestAnimationFrame(() => {
+      if (!disposed) triggerPoll();
+    });
     const poll = window.setInterval(() => {
       if (document.hidden) return;
       triggerPoll();
@@ -102,6 +126,7 @@ export function useBoot(deps: UseBootDeps): void {
     window.addEventListener('focus', onFocus);
     return () => {
       disposed = true;
+      cancelAnimationFrame(initRafId);
       if (bootTimeout !== undefined) clearTimeout(bootTimeout);
       offLog();
       offStatusChanged();

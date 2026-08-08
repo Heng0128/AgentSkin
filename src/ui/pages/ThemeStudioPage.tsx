@@ -102,7 +102,11 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
         }
         const next = { ...project, palette, updatedAt: new Date().toISOString() };
         setProjects((prev) => prev.map((p) => (p.id === next.id ? next : p)));
-        void api.saveStudioProject(next).catch(() => {});
+        void api
+          .saveStudioProject(next)
+          .catch((e) =>
+            showToast(`保存失败：${e instanceof Error ? e.message : String(e)}`, 'destructive'),
+          );
         showToast(`已从「${item.name}」加载调色板`);
       } catch {
         showToast('加载主题调色板失败', 'destructive');
@@ -116,10 +120,12 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
       const list = await api.listStudioProjects();
       setProjects(list);
       setActiveProjectId((cur) => cur ?? list[0]?.id ?? null);
-    } catch {
-      /* ignore */
+    } catch (e) {
+      // Surface the failure so the user can tell "no projects yet" apart from
+      // "the project list failed to load" (e.g. disk/permission errors).
+      showToast(`加载工程列表失败：${e instanceof Error ? e.message : String(e)}`, 'destructive');
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     void refreshProjects();
@@ -187,9 +193,13 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
       if (!activeProject) return;
       const next = { ...activeProject, ...patch, updatedAt: new Date().toISOString() };
       setProjects((prev) => prev.map((p) => (p.id === next.id ? next : p)));
-      void api.saveStudioProject(next).catch(() => {});
+      void api
+        .saveStudioProject(next)
+        .catch((e) =>
+          showToast(`保存失败：${e instanceof Error ? e.message : String(e)}`, 'destructive'),
+        );
     },
-    [activeProject],
+    [activeProject, showToast],
   );
 
   const [snapshotState, setSnapshotState] = useState<SnapshotState>({
@@ -265,9 +275,21 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
       .then((snap) => {
         if (cancelled) return;
         setBaselines((prev) => ({ ...prev, [activeAgent]: snap }));
-        return api.saveStudioSnapshot(activeProject.id, snap, 'baseline').catch(() => {});
+        return api.saveStudioSnapshot(activeProject.id, snap, 'baseline').catch((e) => {
+          if (cancelled) return;
+          setBaselineErrorMap((prev) => ({
+            ...prev,
+            [activeAgent]: `基线保存失败：${e instanceof Error ? e.message : String(e)}`,
+          }));
+        });
       })
-      .catch(() => {})
+      .catch((e) => {
+        if (cancelled) return;
+        setBaselineErrorMap((prev) => ({
+          ...prev,
+          [activeAgent]: `基线抓取失败：${e instanceof Error ? e.message : String(e)}`,
+        }));
+      })
       .finally(() => {
         if (cancelled) return;
         setBaselineLoadingMap((prev: Record<AgentId, boolean>) => ({
@@ -357,8 +379,8 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
       setNewName('');
       setNewAuthor('');
       setCreatingProject(false);
-    } catch {
-      showToast('创建工程失败', 'destructive');
+    } catch (e) {
+      showToast(`创建工程失败：${e instanceof Error ? e.message : String(e)}`, 'destructive');
     }
   }, [newName, newAuthor, newAgent, showToast]);
 
@@ -382,10 +404,18 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
     async (id: string) => {
       try {
         await api.deleteStudioProject(id);
-        setProjects((prev) => prev.filter((p) => p.id !== id));
-        setActiveProjectId((cur) => (cur === id ? null : cur));
-      } catch {
-        showToast('删除工程失败', 'destructive');
+        setProjects((prev) => {
+          const next = prev.filter((p) => p.id !== id);
+          // If the deleted project was active, switch to the first remaining
+          // one so the panel isn't left in a dead "no active project" state.
+          setActiveProjectId((cur) => (cur === id ? (next[0]?.id ?? null) : cur));
+          return next;
+        });
+      } catch (err) {
+        showToast(
+          `删除工程失败：${err instanceof Error ? err.message : String(err)}`,
+          'destructive',
+        );
       }
     },
     [showToast],
@@ -416,6 +446,7 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
     (agentId: AgentId) => {
       saveActiveProject({ agentId });
       setSnapshotState((prev) => ({ ...prev, snapshot: null }));
+      if (previewView === 'generator') setPreviewView('theme');
       if (inspectMode || inspectBusyRef.current) {
         inspectBusyRef.current = true;
         api
@@ -429,7 +460,7 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
           });
       }
     },
-    [saveActiveProject, inspectMode],
+    [saveActiveProject, inspectMode, previewView],
   );
 
   const addPinnedSelector = useCallback(() => {
@@ -608,7 +639,10 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
       <div
         className="min-h-0 flex-1 grid"
         style={{
-          gridTemplateColumns: previewView === 'theme' ? '240px 1fr 260px' : '240px 1fr',
+          gridTemplateColumns:
+            previewView === 'theme' || previewView === 'generator' || previewView === 'raw'
+              ? '240px 1fr 260px'
+              : '240px 1fr',
           background: 'var(--bg, var(--background))',
         }}
       >
@@ -672,10 +706,16 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
           toolOverrides={toolOverrides}
           studioColorSets={studioColorSets}
           onToast={showToast}
+          onPaletteApply={(palette, action) => {
+            setToolOverrides((prev) => ({ ...(prev ?? {}), ...palette }) as ToolOverride);
+            if (action === 'apply') {
+              setPreviewView('theme');
+            }
+          }}
         />
 
         {/* RIGHT PANEL (260px) — inspector + image-to-theme + toolbox + export */}
-        {previewView === 'theme' && (
+        {(previewView === 'theme' || previewView === 'generator' || previewView === 'raw') && (
           <StudioRightInspector
             t={t}
             activeAgent={activeAgent}

@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { AppController } from '@/hooks/useAppController';
+import { appStatusFor } from '@/stores/agentStore';
 
 import { Download01Icon, RefreshIcon } from '@hugeicons/core-free-icons';
 import type { AgentId, StudioProject } from '@shared/types';
@@ -107,11 +108,13 @@ export function StudioHeader({
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="rounded-[2px] border-border bg-card">
-              {AGENT_IDS.map((agentId) => (
-                <SelectItem key={agentId} value={agentId} className="font-mono text-[10px]">
-                  {AGENT_META[agentId].displayName}
-                </SelectItem>
-              ))}
+              {AGENT_IDS.filter((agentId) => Boolean(appStatusFor(agentId)?.installed)).map(
+                (agentId) => (
+                  <SelectItem key={agentId} value={agentId} className="font-mono text-[10px]">
+                    {AGENT_META[agentId].displayName}
+                  </SelectItem>
+                ),
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -121,7 +124,8 @@ export function StudioHeader({
       <div className="ml-auto flex items-center gap-1">
         <button
           type="button"
-          className="flex h-7 items-center gap-1 border border-border px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent disabled:opacity-30"
+          disabled
+          className="flex h-7 items-center gap-1 border border-border px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent disabled:opacity-30 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           title="撤销"
         >
@@ -129,7 +133,8 @@ export function StudioHeader({
         </button>
         <button
           type="button"
-          className="flex h-7 items-center gap-1 border border-border px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent"
+          disabled
+          className="flex h-7 items-center gap-1 border border-border px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           title="灵感"
         >

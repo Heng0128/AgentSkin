@@ -105,13 +105,17 @@ export function BundleStudioTab({ onToast }: Props) {
     [onToast],
   );
 
-  const handleReveal = useCallback(async (id: string) => {
-    try {
-      await api.showInFolder(`bundles/${id}`);
-    } catch {
-      /* folder may not exist yet */
-    }
-  }, []);
+  const handleReveal = useCallback(
+    async (id: string) => {
+      try {
+        await api.showInFolder(`bundles/${id}`);
+      } catch (e) {
+        // Folder may not exist yet (never exported), or the OS reveal failed.
+        onToast(`无法在文件夹中显示：${e instanceof Error ? e.message : String(e)}`, 'destructive');
+      }
+    },
+    [onToast],
+  );
 
   const handleDelete = useCallback(
     async (id: string) => {

@@ -1,0 +1,475 @@
+// SPDX-License-Identifier: MPL-2.0
+//
+// # theme-utils.mjs — pure CSS utility functions for theme generation (no I/O).
+//
+// Extracted from theme-generators.mjs so the per-agent generators and this
+// utility module can be imported separately. All functions are pure:
+// colors in, CSS string out.
+
+export function parseColor(input) {
+  const raw = String(input ?? '').trim();
+  let m = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(raw);
+  if (m) {
+    return {
+      r: parseInt(m[1].slice(0, 2), 16),
+      g: parseInt(m[1].slice(2, 4), 16),
+      b: parseInt(m[1].slice(4, 6), 16),
+      a: m[2] ? parseInt(m[2], 16) / 255 : 1,
+    };
+  }
+  m = /^#([0-9a-f]{3})$/i.exec(raw);
+  if (m) {
+    return {
+      r: parseInt(m[1][0] + m[1][0], 16),
+      g: parseInt(m[1][1] + m[1][1], 16),
+      b: parseInt(m[1][2] + m[1][2], 16),
+      a: 1,
+    };
+  }
+  m = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)$/i.exec(raw);
+  if (m) {
+    return { r: +m[1], g: +m[2], b: +m[3], a: m[4] !== undefined ? +m[4] : 1 };
+  }
+  throw new Error(`Unsupported color value: ${input}`);
+}
+
+/** rgba() string from any supported color notation, overriding alpha. */
+export function alpha(input, a) {
+  const c = parseColor(input);
+  return `rgba(${c.r}, ${c.g}, ${c.b}, ${Number((c.a * a).toFixed(3))})`;
+}
+
+/** Pre-mixed rgb string: mix(color, white|black, amount) for subtle tints. */
+export function shade(input, target, a) {
+  const c = parseColor(input);
+  const t = target === 'white' ? 255 : 0;
+  const mix = (v) => Math.round(v + (t - v) * a);
+  return `rgb(${mix(c.r)}, ${mix(c.g)}, ${mix(c.b)})`;
+}
+
+/** Raw "R, G, B" string for Doubao's -raw variable pattern. */
+export function rawRgb(input) {
+  const c = parseColor(input);
+  return `${c.r}, ${c.g}, ${c.b}`;
+}
+
+// ---------------------------------------------------------------------------
+// Per-theme art overlay parameters (derived from color characteristics)
+// ---------------------------------------------------------------------------
+
+/** Relative luminance (0–1) from a parsed color. */
+export function luminance(input) {
+  const c = parseColor(input);
+  const [rs, gs, bs] = [c.r / 255, c.g / 255, c.b / 255].map((v) =>
+    v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+/** HSL saturation (0–1) from a parsed color. */
+export function saturation(input) {
+  const c = parseColor(input);
+  const r = c.r / 255, g = c.g / 255, b = c.b / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return 0;
+  const d = max - min;
+  return l > 0.5 ? d / (2 - max - min) : d / (max + min);
+}
+
+/**
+ * Compute per-theme art overlay parameters.
+ * - Dark themes with very dark bg → less wash (hero blends naturally)
+ * - Light themes → more wash (protect readability)
+ * - High accent saturation → stronger radial glow
+ * - Secondary used for glow when it contrasts with accent hue
+ */
+export function computeArtParams(t) {
+  const c = t.colors;
+  const bgLum = luminance(c.background);
+  const accentSat = saturation(c.accent);
+
+  // Wash opacity: left-side (strongest) and bottom fade.
+  // Kept deliberately low so the hero art stays visible and the color
+  // overlay feels like a tint rather than a solid block.
+  let washLeft, washMid, washBottom;
+  if (t.isLight) {
+    washLeft = 42; washMid = 14; washBottom = 38;
+  } else if (bgLum < 0.012) {
+    // Very dark bg (arina, gothic, midnight-aurora): hero dominates
+    washLeft = 26; washMid = 8; washBottom = 20;
+  } else if (bgLum < 0.03) {
+    // Dark colored bg (naruto, sasuke, wuthering, deepspace-star): light wash
+    washLeft = 32; washMid = 12; washBottom = 26;
+  } else {
+    // Moderate dark bg
+    washLeft = 38; washMid = 14; washBottom = 32;
+  }
+
+  // Radial glow strength: pushed higher for strong visual impact
+  const glowStrength = t.isLight
+    ? Math.round(14 + accentSat * 12)   // 14–26% for light
+    : Math.round(16 + accentSat * 20);  // 16–36% for dark
+
+  // Glow color: use secondary if it has different hue from accent (contrast)
+  const glowColor = saturation(c.secondary) > 0.3 && c.secondary !== c.accent
+    ? 'var(--agentskin-secondary)'
+    : 'var(--agentskin-accent)';
+
+  return { washLeft, washMid, washBottom, glowStrength, glowColor };
+}
+
+/** Generate the shared art-layer CSS block for a given host selector.
+ *  Uses #root::before with position:fixed instead of background-attachment:fixed
+ *  to avoid duplication when child elements have CSS transform (new containing block). */
+export function artLayerCss(host, t) {
+  const p = computeArtParams(t);
+  return `${host} #root {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+${host} #root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--agentskin-surface) ${p.washLeft}%, transparent) 0 16%,
+      color-mix(in srgb, var(--agentskin-surface) ${p.washMid}%, transparent) 44%,
+      transparent 70%),
+    linear-gradient(180deg, transparent 0 50%,
+      color-mix(in srgb, var(--agentskin-surface) ${p.washBottom}%, transparent) 86% 100%),
+    radial-gradient(120% 80% at 84% 14%,
+      color-mix(in srgb, ${p.glowColor} ${p.glowStrength}%, transparent), transparent 60%),
+    var(--agentskin-art, none) right center / cover no-repeat !important;
+}`;
+}
+
+// ---------------------------------------------------------------------------
+// Shared token block (parsed by theme-library extractColors / detectMode)
+// ---------------------------------------------------------------------------
+
+export function tokenBlock(t) {
+  const c = t.colors;
+  return `:root {
+  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+  --agentskin-accent: ${c.accent};
+  --agentskin-secondary: ${c.secondary};
+  --agentskin-bg: ${c.background};
+  --agentskin-surface: ${c.surface};
+  --agentskin-surface-elevated: ${c.surfaceElevated};
+  --agentskin-text: ${c.foreground};
+  --agentskin-muted: ${c.muted};
+  --agentskin-border: ${c.border};
+  --agentskin-code-bg: ${c.codeBackground};
+  --agentskin-code-fg: ${c.codeForeground};
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 45%, transparent);
+  --agentskin-button-bg: ${c.accent};
+  --agentskin-focus-ring: ${c.focusRing};
+  --agentskin-selection: ${alpha(c.accent, 0.32)};
+  --agentskin-text-shadow: ${t.isLight ? '0 1px 2px rgba(255,255,255,0.6)' : '0 1px 3px rgba(0,0,0,0.5)'};
+  text-shadow: var(--agentskin-text-shadow);
+}`;
+}
+
+/** Scoped generic rules shared by the two shell-style agents. */
+export function sharedChromeRules(host, t) {
+  const c = t.colors;
+  const textShadow = t.isLight
+    ? '0 1px 2px rgba(255,255,255,0.6)'
+    : '0 1px 3px rgba(0,0,0,0.5)';
+  return `
+/* Text readability on frosted glass */
+${host} body {
+  text-shadow: ${textShadow} !important;
+}
+
+${host} input,
+${host} textarea,
+${host} [contenteditable="true"] {
+  text-shadow: ${textShadow} !important;
+}
+
+/* Links */
+${host} a {
+  color: var(--agentskin-accent) !important;
+}
+
+/* Selection */
+${host} ::selection {
+  background: var(--agentskin-selection) !important;
+}
+
+/* Generic inputs */
+${host} input,
+${host} textarea,
+${host} select {
+  background: var(--agentskin-input-bg) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
+}
+
+${host} input:focus,
+${host} textarea:focus,
+${host} select:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px var(--agentskin-focus-ring) !important;
+}
+
+/* Inline code & code blocks */
+${host} code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid ${alpha(c.border, 0.6)} !important;
+  border-radius: 6px !important;
+}
+
+${host} pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid ${alpha(c.border, 0.6)} !important;
+  border-left: 3px solid ${alpha(c.accent, 0.5)} !important;
+  border-radius: 10px !important;
+}
+
+${host} pre code {
+  border: none !important;
+}
+
+/* Scrollbars */
+${host} ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+${host} ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+${host} ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, ${alpha(c.accent, 0.3)} 0%, ${alpha(c.secondary, 0.3)} 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+${host} ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, ${alpha(c.accent, 0.5)} 0%, ${alpha(c.secondary, 0.5)} 100%) !important;
+  background-clip: padding-box !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  ${host} *,
+  ${host} *::before,
+  ${host} *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}`;
+}
+
+// ---------------------------------------------------------------------------
+// ZCode / Codex (generic --text-*/--bg-* design-token shells)
+// ---------------------------------------------------------------------------
+
+/** Native design-token override block shared by the two shell-style agents.
+ *  Both ZCode and Codex expose a flat text/bg/accent CSS-variable system;
+ *  overriding the variables on :root (they inherit everywhere) is cheaper
+ *  than the historical per-element `host *` scoping. */
+export function shellTokenOverrides(host, t) {
+  const c = t.colors;
+  const accentHover = shade(c.accent, 'white', 0.15);
+  const accentPressed = shade(c.accent, 'white', 0.25);
+  const buttonPrimaryFg = t.isLight ? '#ffffff' : shade(c.background, 'black', 0.85);
+  const inputMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 45%, transparent)`;
+  const sidebarMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 22%, transparent)`;
+  const panelBg = `color-mix(in srgb, ${c.surface} 14%, transparent)`;
+  return `${host} {
+  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+
+  /* Text hierarchy */
+  --text-primary: ${c.foreground} !important;
+  --text-secondary: ${c.muted} !important;
+  --text-tertiary: ${alpha(c.foreground, 0.55)} !important;
+  --text-quaternary: ${alpha(c.foreground, 0.4)} !important;
+
+  /* Backgrounds — transparent for art punch-through */
+  --bg-primary: transparent !important;
+  --bg-secondary: ${shade(c.surface, 'black', 0.1)} !important;
+  --bg-tertiary: color-mix(in srgb, ${c.surfaceElevated} 85%, ${c.accent} 15%) !important;
+  --bg-elevated: ${c.surfaceElevated} !important;
+  --bg-base: transparent !important;
+  --bg-canvas: transparent !important;
+  --bg-surface: color-mix(in srgb, ${c.surface} 80%, transparent) !important;
+  --bg-hover: ${alpha(c.accent, 0.1)} !important;
+  --bg-active: ${alpha(c.accent, 0.16)} !important;
+  --bg-selected: ${alpha(c.accent, 0.14)} !important;
+
+  /* Borders */
+  --border-xsubtle: ${alpha(c.accent, 0.045)} !important;
+  --border-subtle: ${alpha(c.accent, 0.09)} !important;
+  --border-medium: ${alpha(c.accent, 0.18)} !important;
+  --border-strong: ${alpha(c.accent, 0.144)} !important;
+
+  /* Accent / brand */
+  --accent: ${c.accent} !important;
+  --accent-hover: ${accentHover} !important;
+  --accent-pressed: ${accentPressed} !important;
+  --accent-soft: ${alpha(c.accent, 0.12)} !important;
+  --accent-soft-hover: ${alpha(c.accent, 0.18)} !important;
+
+  /* Buttons */
+  --button-primary-bg: ${c.accent} !important;
+  --button-primary-fg: ${buttonPrimaryFg} !important;
+  --button-primary-hover: ${accentHover} !important;
+  --button-secondary-bg: ${alpha(c.foreground, 0.12)} !important;
+  --button-secondary-fg: ${c.foreground} !important;
+
+  /* Links */
+  --link: ${c.accent} !important;
+  --link-hover: ${accentHover} !important;
+
+  /* Input / composer */
+  --input-bg: ${inputMix} !important;
+  --input-border: ${alpha(c.accent, 0.18)} !important;
+  --input-focus-ring: ${alpha(c.accent, 0.4)} !important;
+
+  /* Sidebar / panels */
+  --sidebar-bg: ${sidebarMix} !important;
+  --panel-bg: ${panelBg} !important;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.24) !important;
+
+  /* Selection */
+  --selection-bg: ${alpha(c.accent, 0.28)} !important;
+
+  /* Code blocks */
+  --code-bg: ${c.codeBackground} !important;
+  --code-fg: ${c.codeForeground} !important;
+}`;
+}
+
+/** Structural chrome shared by the shell-style agents (art layer, frosted
+ *  sidebar/composer, popovers). Selectors are the heuristic L5 landmarks the
+ *  per-agent adapter additionally positions via JS. */
+export function shellStructureCss(host, t) {
+  const c = t.colors;
+  const inputMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 45%, transparent)`;
+  const sidebarMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 22%, transparent)`;
+  const popoverBg = `color-mix(in srgb, ${c.surfaceElevated} 94%, transparent)`;
+  const buttonPrimaryFg = t.isLight ? '#ffffff' : shade(c.background, 'black', 0.85);
+  return `/* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
+${artLayerCss(host, t)}
+
+/* Root + main surfaces transparent so #root art shows through */
+${host} #root,
+${host} main,
+${host} [role="main"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* Sidebar: frosted glass over art */
+${host} aside,
+${host} nav {
+  background: ${sidebarMix} !important;
+  border-right: 1px solid ${alpha(c.accent, 0.1)} !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+
+${host} aside [class*="item"]:hover,
+${host} nav [class*="item"]:hover {
+  background: var(--bg-hover) !important;
+}
+
+${host} aside [class*="active"],
+${host} nav [class*="active"] {
+  background: var(--bg-active) !important;
+  box-shadow: inset 3px 0 0 0 var(--accent) !important;
+}
+
+/* Composer / input: frosted glass */
+${host} [contenteditable="true"],
+${host} textarea {
+  background: ${inputMix} !important;
+  backdrop-filter: blur(14px) saturate(1.1) !important;
+  color: var(--agentskin-text) !important;
+  caret-color: var(--agentskin-accent) !important;
+  border: 1px solid ${alpha(c.accent, 0.25)} !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+${host} [contenteditable="true"]:focus,
+${host} [contenteditable="true"]:focus-within,
+${host} textarea:focus {
+  border-color: ${alpha(c.accent, 0.5)} !important;
+  box-shadow: 0 0 0 2px ${alpha(c.accent, 0.1)}, 0 4px 18px ${alpha(c.secondary, 0.12)} !important;
+}
+
+/* Buttons */
+${host} button[class*="primary"],
+${host} button[class*="send"],
+${host} button[class*="submit"] {
+  background: linear-gradient(135deg, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 62%, var(--agentskin-secondary) 38%) 100%) !important;
+  color: ${buttonPrimaryFg} !important;
+  border: none !important;
+  box-shadow: 0 2px 10px var(--agentskin-focus-ring) !important;
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
+}
+
+${host} button[class*="primary"]:hover,
+${host} button[class*="send"]:hover,
+${host} button[class*="submit"]:hover {
+  filter: brightness(1.07) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Message text */
+${host} [class*="message"],
+${host} article {
+  color: var(--agentskin-text);
+}
+
+/* Popovers / modals: frosted glass */
+${host} [role="dialog"],
+${host} [role="menu"],
+${host} [role="tooltip"],
+${host} [class*="popover"],
+${host} [class*="modal"] {
+  background: ${popoverBg} !important;
+  border: none !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}`;
+}
+
+// ---------------------------------------------------------------------------
+// Context builder
+// ---------------------------------------------------------------------------
+
+export function buildContext(id, manifest, scheme = null) {
+  const colors = scheme?.colors ?? manifest.colors ?? {};
+  const required = ['accent', 'secondary', 'background', 'foreground', 'muted', 'surface',
+    'surfaceElevated', 'border', 'codeBackground', 'codeForeground', 'inputBackground',
+    'buttonBackground', 'buttonForeground', 'focusRing'];
+  for (const key of required) {
+    if (!colors[key]) throw new Error(`themes/${id}: missing colors.${key}`);
+  }
+  const mode = (scheme?.mode ?? manifest.mode) === 'light' ? 'light' : 'dark'; // auto → dark (dark canvas)
+  return {
+    id,
+    name: manifest.displayName || manifest.name,
+    mode,
+    isLight: mode === 'light',
+    colors,
+  };
+}

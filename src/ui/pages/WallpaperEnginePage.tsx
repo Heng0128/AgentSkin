@@ -540,122 +540,126 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                     <div className="h-4 w-px bg-border" />
 
                     {/* Agent apply buttons — 5-state precision */}
-                    {AGENT_IDS.map((agentId) => {
-                      const agentSetting = agentWallpapers[agentId] ?? {
-                        enabled: false,
-                        id: null,
-                      };
-                      const isApplied = agentSetting.enabled && agentSetting.id === selected.id;
-                      const isApplying = applyingTo === agentId;
-                      const status = appStatusFor(agentId);
-                      const isInstalled = status?.installed ?? false;
-                      const isRunning = status?.running ?? false;
-                      const isReady = status?.debugReady ?? false;
-                      const lastResult = injectResults[agentId];
-                      const isFail = lastResult?.status === 'fail';
-                      // Determine precise state label
-                      const stateLabel = isApplying
-                        ? t.weStatusInjecting
-                        : isApplied
-                          ? t.weStatusApplied
-                          : isFail
-                            ? t.weStatusFailed
-                            : !isInstalled
-                              ? t.weStatusNotInstalled
-                              : !isRunning
-                                ? t.weStatusOffline
-                                : isReady
-                                  ? t.weStatusReady
-                                  : t.weStatusRunning;
-                      // Can inject if running — if CDP isn't ready, the
-                      // apply will return 'requires-restart' and the user
-                      // will be prompted for explicit restart consent.
-                      const canInject = isRunning && !isApplying && !selected.previewOnly;
-                      // Tooltip includes the failure detail (verdicts) so the
-                      // user can see WHY injection failed without opening logs.
-                      const failDetail =
-                        isFail && lastResult?.detail ? `\n${lastResult.detail}` : '';
-                      return (
-                        <div key={agentId} className="flex flex-col items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              isApplied ? handleRemove(agentId) : handleApply(selected.id, agentId)
-                            }
-                            disabled={!canInject && !isApplied}
-                            title={`${AGENT_META[agentId].displayName} · ${stateLabel}${status?.port ? ` · :${status.port}` : ''}${failDetail}`}
-                            className={cn(
-                              'relative flex size-8 items-center justify-center rounded-[2px] border transition-all duration-slow',
-                              isApplied
-                                ? 'border-cr-success/60 bg-cr-success/10'
-                                : isFail
-                                  ? 'border-destructive/50 bg-destructive/5'
+                    {AGENT_IDS.filter((agentId) => appStatusFor(agentId)?.installed).map(
+                      (agentId) => {
+                        const agentSetting = agentWallpapers[agentId] ?? {
+                          enabled: false,
+                          id: null,
+                        };
+                        const isApplied = agentSetting.enabled && agentSetting.id === selected.id;
+                        const isApplying = applyingTo === agentId;
+                        const status = appStatusFor(agentId);
+                        const isInstalled = status?.installed ?? false;
+                        const isRunning = status?.running ?? false;
+                        const isReady = status?.debugReady ?? false;
+                        const lastResult = injectResults[agentId];
+                        const isFail = lastResult?.status === 'fail';
+                        // Determine precise state label
+                        const stateLabel = isApplying
+                          ? t.weStatusInjecting
+                          : isApplied
+                            ? t.weStatusApplied
+                            : isFail
+                              ? t.weStatusFailed
+                              : !isInstalled
+                                ? t.weStatusNotInstalled
+                                : !isRunning
+                                  ? t.weStatusOffline
                                   : isReady
-                                    ? 'border-cr-info/50 bg-cr-info/5 hover:border-cr-info/70 hover:bg-cr-info/10'
-                                    : isRunning
-                                      ? 'border-border bg-muted/30 hover:bg-muted'
-                                      : isInstalled
-                                        ? 'border-cr-warning/30 bg-cr-warning/5 opacity-60'
-                                        : 'border-border/40 bg-muted/20 opacity-35 cursor-not-allowed',
-                              isApplying && 'opacity-60 scale-95',
-                            )}
-                          >
-                            {isApplying ? (
-                              <div className="size-3.5 animate-spin rounded-full border-[1.5px] border-muted-foreground/30 border-t-foreground" />
-                            ) : isApplied ? (
-                              <HugeIcon
-                                icon={CheckmarkCircle02Icon}
-                                className="size-4.5 text-cr-success"
-                              />
-                            ) : (
-                              <AppMark appId={agentId} size={18} />
-                            )}
-                            {/* Multi-state status dot */}
-                            {!isApplying && (
-                              <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
-                                {/* Ping animation only for CDP-ready (not yet applied) */}
-                                {isReady && !isApplied && !isFail && (
-                                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-cyan-400 opacity-60" />
-                                )}
-                                <span
-                                  className={cn(
-                                    'relative inline-flex size-2.5 rounded-full ring-2 ring-background transition-colors duration-slower',
-                                    isApplied
-                                      ? 'bg-cr-success'
-                                      : isFail
-                                        ? 'bg-destructive'
-                                        : isReady
-                                          ? 'bg-cyan-400'
-                                          : isRunning
-                                            ? 'bg-cr-info'
-                                            : isInstalled
-                                              ? 'bg-cr-warning/70'
-                                              : 'bg-transparent',
-                                  )}
+                                    ? t.weStatusReady
+                                    : t.weStatusRunning;
+                        // Can inject if running — if CDP isn't ready, the
+                        // apply will return 'requires-restart' and the user
+                        // will be prompted for explicit restart consent.
+                        const canInject = isRunning && !isApplying && !selected.previewOnly;
+                        // Tooltip includes the failure detail (verdicts) so the
+                        // user can see WHY injection failed without opening logs.
+                        const failDetail =
+                          isFail && lastResult?.detail ? `\n${lastResult.detail}` : '';
+                        return (
+                          <div key={agentId} className="flex flex-col items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                isApplied
+                                  ? handleRemove(agentId)
+                                  : handleApply(selected.id, agentId)
+                              }
+                              disabled={!canInject && !isApplied}
+                              title={`${AGENT_META[agentId].displayName} · ${stateLabel}${status?.port ? ` · :${status.port}` : ''}${failDetail}`}
+                              className={cn(
+                                'relative flex size-8 items-center justify-center rounded-[2px] border transition-all duration-slow',
+                                isApplied
+                                  ? 'border-cr-success/60 bg-cr-success/10'
+                                  : isFail
+                                    ? 'border-destructive/50 bg-destructive/5'
+                                    : isReady
+                                      ? 'border-cr-info/50 bg-cr-info/5 hover:border-cr-info/70 hover:bg-cr-info/10'
+                                      : isRunning
+                                        ? 'border-border bg-muted/30 hover:bg-muted'
+                                        : isInstalled
+                                          ? 'border-cr-warning/30 bg-cr-warning/5 opacity-60'
+                                          : 'border-border/40 bg-muted/20 opacity-35 cursor-not-allowed',
+                                isApplying && 'opacity-60 scale-95',
+                              )}
+                            >
+                              {isApplying ? (
+                                <div className="size-3.5 animate-spin rounded-full border-[1.5px] border-muted-foreground/30 border-t-foreground" />
+                              ) : isApplied ? (
+                                <HugeIcon
+                                  icon={CheckmarkCircle02Icon}
+                                  className="size-4.5 text-cr-success"
                                 />
-                              </span>
-                            )}
-                          </button>
-                          {/* Precise state label (Swiss mono) */}
-                          <span
-                            className={cn(
-                              'max-w-[3.5rem] truncate text-center font-mono text-[8px] tracking-wider leading-tight transition-colors duration-slower',
-                              isApplied
-                                ? 'text-cr-success'
-                                : isFail
-                                  ? 'text-destructive'
-                                  : isReady
-                                    ? 'text-cr-info'
-                                    : isRunning
-                                      ? 'text-muted-foreground'
-                                      : 'text-muted-foreground/60',
-                            )}
-                          >
-                            {stateLabel}
-                          </span>
-                        </div>
-                      );
-                    })}
+                              ) : (
+                                <AppMark appId={agentId} size={18} />
+                              )}
+                              {/* Multi-state status dot */}
+                              {!isApplying && (
+                                <span className="absolute -right-0.5 -top-0.5 flex size-2.5">
+                                  {/* Ping animation only for CDP-ready (not yet applied) */}
+                                  {isReady && !isApplied && !isFail && (
+                                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-cyan-400 opacity-60" />
+                                  )}
+                                  <span
+                                    className={cn(
+                                      'relative inline-flex size-2.5 rounded-full ring-2 ring-background transition-colors duration-slower',
+                                      isApplied
+                                        ? 'bg-cr-success'
+                                        : isFail
+                                          ? 'bg-destructive'
+                                          : isReady
+                                            ? 'bg-cyan-400'
+                                            : isRunning
+                                              ? 'bg-cr-info'
+                                              : isInstalled
+                                                ? 'bg-cr-warning/70'
+                                                : 'bg-transparent',
+                                    )}
+                                  />
+                                </span>
+                              )}
+                            </button>
+                            {/* Precise state label (Swiss mono) */}
+                            <span
+                              className={cn(
+                                'max-w-[3.5rem] truncate text-center font-mono text-[8px] tracking-wider leading-tight transition-colors duration-slower',
+                                isApplied
+                                  ? 'text-cr-success'
+                                  : isFail
+                                    ? 'text-destructive'
+                                    : isReady
+                                      ? 'text-cr-info'
+                                      : isRunning
+                                        ? 'text-muted-foreground'
+                                        : 'text-muted-foreground/60',
+                              )}
+                            >
+                              {stateLabel}
+                            </span>
+                          </div>
+                        );
+                      },
+                    )}
 
                     {/* Apply to all running agents */}
                     <button

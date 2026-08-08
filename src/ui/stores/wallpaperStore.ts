@@ -100,16 +100,20 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   initialize: async () => {
     try {
       const [list, settings] = await Promise.all([api.listWallpapers(), api.getSettings()]);
+      // Single set() to avoid two rapid re-renders (one for data, one for
+      // loading:false). React 18+ batches them, but a single update eliminates
+      // any risk of contributing to a burst that could trip React 19's
+      // useSyncExternalStore max-update-depth guard (error #185).
       set({
         wallpapers: list,
         enabled: settings.wallpaper.enabled,
         selectedId: settings.wallpaper.id,
         render: settings.wallpaper.render,
         agentWallpapers: settings.wallpaper.agents ?? emptyAgentWallpapers(),
+        loading: false,
       });
     } catch {
       // Wallpaper Engine may be absent — fail soft with an empty list.
-    } finally {
       set({ loading: false });
     }
   },

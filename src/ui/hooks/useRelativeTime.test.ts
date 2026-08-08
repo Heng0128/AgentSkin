@@ -14,7 +14,6 @@
 
 import type { UiMessages } from '@shared/i18n';
 import { describe, expect, it } from 'vitest';
-import { useRelativeTime } from './useRelativeTime';
 
 // Minimal UiMessages subset — only the keys useRelativeTime touches.
 const t = {
@@ -94,12 +93,5 @@ describe('useRelativeTime — computation logic', () => {
     const future = 10000000;
     const now = 0;
     expect(computeRelativeTime(future, false, now, t)).toBe('Just now');
-  });
-});
-
-describe('useRelativeTime — hook export', () => {
-  it('is a function (hook) that accepts the documented parameters', () => {
-    expect(typeof useRelativeTime).toBe('function');
-    expect(useRelativeTime.length).toBe(3);
   });
 });

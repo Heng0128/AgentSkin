@@ -55,6 +55,8 @@ export function DialogsHost({ controller }: { controller: AppController }) {
         return t.restartReasonSpawnFailed;
       case 'singleton-lock':
         return t.restartReasonSingletonLock;
+      case 'kill-denied':
+        return t.restartReasonKillDenied;
       case 'cdp-timeout':
         return t.restartDescription(name);
       default:
@@ -75,6 +77,8 @@ export function DialogsHost({ controller }: { controller: AppController }) {
         return t.restartReasonSpawnFailed;
       case 'singleton-lock':
         return t.restartReasonSingletonLock;
+      case 'kill-denied':
+        return t.restartReasonKillDenied;
       case 'no-cdp':
         return t.restartReasonNoCdp;
       case 'cdp-timeout':

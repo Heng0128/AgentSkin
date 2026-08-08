@@ -39,6 +39,7 @@ import {
   UploadSquareIcon,
 } from '@hugeicons/core-free-icons';
 import type { ImagePaletteKey } from '@shared/types';
+import { Kicker } from './kicker';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -212,23 +213,6 @@ function referenceBg(key: ImagePaletteKey, palette: Record<string, string>): str
   return palette.foreground || '#ffffff';
 }
 
-/** Swiss kicker — section label with primary-dot prefix. */
-function Kicker({ children, count }: { children: React.ReactNode; count?: number }) {
-  return (
-    <div className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase">
-      <span className="size-[3px] rounded-full" style={{ background: 'var(--primary)' }} />
-      <span style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)', opacity: 0.75 }}>
-        {children}
-      </span>
-      {count !== undefined && count > 0 && (
-        <Badge className="ml-1 h-[12px] rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[7px] font-medium text-white/30">
-          {count}
-        </Badge>
-      )}
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
@@ -370,6 +354,11 @@ function rgbToHsv(r: number, g: number, b: number): { h: number; s: number; v: n
 
 function SwatchDetailPanel({ hex }: { hex: string }) {
   const [copied, setCopied] = useState<string | null>(null);
+  useEffect(() => {
+    if (!copied) return;
+    const id = setTimeout(() => setCopied(null), 1200);
+    return () => clearTimeout(id);
+  }, [copied]);
   const rgb = hexToRgb(hex);
   if (!rgb) return null;
   const { r, g, b } = rgb;
@@ -385,7 +374,6 @@ function SwatchDetailPanel({ hex }: { hex: string }) {
     navigator.clipboard.writeText(val).then(
       () => {
         setCopied(label);
-        setTimeout(() => setCopied(null), 1200);
       },
       () => {},
     );

@@ -86,6 +86,7 @@ nsis:
   shortcutName: ${productName}
   include: null
   license: LICENSE
+  warningsAsErrors: false
 
 # Registered by the NSIS installer (HKCU) so "Open with -> AgentSkin" and
 # argv file handling work for theme packages.

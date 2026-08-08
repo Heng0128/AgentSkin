@@ -14,6 +14,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
+import { hexMix, lumOf, toRgba } from '@/components/studio/palette';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
@@ -28,6 +29,7 @@ import {
   SwatchIcon,
 } from '@hugeicons/core-free-icons';
 import { AGENT_IDS, AGENT_META, type AgentId } from '@shared/types';
+import { Kicker } from './kicker';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -160,6 +162,7 @@ function ProposalCard({
   isRecommended,
   onPreview,
   onExport,
+  onApply,
 }: {
   proposal: Proposal;
   agentId: AgentId;
@@ -167,6 +170,7 @@ function ProposalCard({
   isRecommended: boolean;
   onPreview: (agentId: string, palette: Record<string, string>) => void;
   onExport: (agentId: string, palette: Record<string, string>) => void;
+  onApply?: (agentId: string, palette: Record<string, string>) => void;
 }) {
   const harmonyLabel = HARMONY_LABELS[proposal.harmony] || proposal.harmony;
   const meta = AGENT_META[agentId];
@@ -227,6 +231,17 @@ function ProposalCard({
             <HugeIcon icon={ContrastIcon} className="size-2.5" />
             预览
           </Button>
+          {onApply && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => onApply(agentId, proposal.palette)}
+              className="h-5 gap-1 rounded-[2px] px-1.5 font-mono text-[8px] font-medium uppercase text-white/50 hover:bg-white/[0.06] hover:text-white/80"
+            >
+              <HugeIcon icon={SwatchIcon} className="size-2.5" />
+              应用
+            </Button>
+          )}
           <Button
             size="sm"
             variant="ghost"
@@ -243,35 +258,55 @@ function ProposalCard({
 }
 
 // ---------------------------------------------------------------------------
-// Section header (kicker)
-// ---------------------------------------------------------------------------
-
-function Kicker({ children, count }: { children: React.ReactNode; count?: number }) {
-  return (
-    <div className="mb-2 flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase">
-      <span className="size-[3px] rounded-full bg-[#FF453A]" />
-      <span style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)', opacity: 0.75 }}>
-        {children}
-      </span>
-      {count !== undefined && (
-        <Badge className="ml-1 h-[12px] rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[7px] text-white/30">
-          {count}
-        </Badge>
-      )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
 interface FitGeneratorPanelProps {
   onClose?: () => void;
   onPreviewPalette?: (agentId: string, palette: Record<string, string>) => void;
+  onPaletteApply?: (agentId: string, palette: Record<string, string>) => void;
+  onToast?: (msg: string, type?: 'default' | 'destructive') => void;
+  embedded?: boolean;
 }
 
-export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPanelProps) {
+// Map a visual-analysis palette (10 semantic keys) onto the `--agentskin-*`
+// token namespace the theme package builder expects. Mirrors
+// `buildStudioPalette` in palette.ts so the recolor takes effect on the agent.
+function paletteToAgentSkinRoot(palette: Record<string, string>): Record<string, string> {
+  const bg = palette.background || '#201a40';
+  const fg = palette.foreground || '#e8e2ff';
+  const accent = palette.accent || '#9d8bff';
+  const surface = palette.surface || bg;
+  const muted = palette.muted || fg;
+  const dark = lumOf(bg) < 0.5;
+  const surfaceElev = dark ? hexMix(surface, '#ffffff', 0.2) : hexMix(surface, '#000000', 0.1);
+  const codeBg = dark ? hexMix(bg, '#000000', 0.3) : hexMix(bg, '#ffffff', 0.55);
+  const inputBg = dark ? hexMix(surface, '#ffffff', 0.06) : hexMix(surface, '#000000', 0.04);
+  return {
+    '--agentskin-accent': accent,
+    '--agentskin-secondary': accent,
+    '--agentskin-bg': bg,
+    '--agentskin-surface': surface,
+    '--agentskin-surface-elevated': surfaceElev,
+    '--agentskin-text': fg,
+    '--agentskin-muted': muted,
+    '--agentskin-border': toRgba(accent, dark ? 0.18 : 0.3),
+    '--agentskin-code-bg': codeBg,
+    '--agentskin-code-fg': fg,
+    '--agentskin-input-bg': inputBg,
+    '--agentskin-button-bg': accent,
+    '--agentskin-focus-ring': toRgba(accent, dark ? 0.38 : 0.5),
+    '--agentskin-selection': toRgba(accent, 0.32),
+  };
+}
+
+export function FitGeneratorPanel({
+  onClose,
+  onPreviewPalette,
+  onPaletteApply,
+  onToast,
+  embedded,
+}: FitGeneratorPanelProps) {
   const [selectedAgent, setSelectedAgent] = useState<AgentId>(FIT_AGENT_IDS[0] ?? 'codex');
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -344,17 +379,27 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
   }, [profile, count, scheme]);
 
   // --- Export handler ---
-  const handleExport = useCallback((agentId: string, palette: Record<string, string>) => {
-    const payload = {
-      agentId,
-      palette,
-      generatedAt: new Date().toISOString(),
-      generator: 'fit-harmony-v1',
-    };
-    navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).catch(() => {
-      /* best-effort */
-    });
-  }, []);
+  const handleExport = useCallback(
+    async (agentId: string, palette: Record<string, string>) => {
+      const root = paletteToAgentSkinRoot(palette);
+      const metaName = AGENT_META[agentId as AgentId]?.displayName || agentId;
+      const themeData = {
+        meta: { name: `${metaName} 搭配`, author: 'AgentSkin Studio' },
+        root,
+      };
+      try {
+        const res = await api.exportVisualAnalysisTheme(agentId, themeData);
+        if (res.ok && res.path) {
+          onToast?.(`已导出主题包到 ${res.path}`, 'default');
+        } else {
+          onToast?.('导出失败：未生成主题包', 'destructive');
+        }
+      } catch (e) {
+        onToast?.(`导出失败：${e instanceof Error ? e.message : String(e)}`, 'destructive');
+      }
+    },
+    [onToast],
+  );
 
   // --- Preview handler ---
   const handlePreview = useCallback(
@@ -364,26 +409,76 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
     [onPreviewPalette],
   );
 
+  // --- Apply handler ---
+  const handleApply = useCallback(
+    (agentId: string, palette: Record<string, string>) => {
+      onPaletteApply?.(agentId, palette);
+      onPreviewPalette?.(agentId, palette); // apply also previews
+    },
+    [onPaletteApply, onPreviewPalette],
+  );
+
   // --- Recommended: top 5 ---
   const recommended = useMemo(() => proposals.slice(0, 5), [proposals]);
   const remaining = useMemo(() => proposals.slice(5), [proposals]);
 
+  // --- Embedded mode color tokens ---
+  // When embedded, use CSS variables and Tailwind semantic classes
+  // so the panel inherits the parent ThemeStudio theme.
+  const _v = embedded
+    ? {
+        bgMain: 'bg-[var(--background)]',
+        bgCard: 'bg-[var(--card)]',
+        bgCardH: 'hover:bg-[var(--muted)]',
+        border: 'border-[var(--border)]',
+        borderH: 'hover:border-[var(--border)]',
+        t90: 'text-[var(--foreground)] opacity-90',
+        t85: 'text-[var(--foreground)] opacity-85',
+        t80: 'text-[var(--foreground)] opacity-80',
+        t60: 'text-muted-foreground',
+        t50: 'text-muted-foreground opacity-80',
+        t40: 'text-muted-foreground opacity-80',
+        t30: 'text-muted-foreground opacity-70',
+        t25: 'text-muted-foreground opacity-65',
+        t20: 'text-muted-foreground opacity-60',
+        t10: 'text-muted-foreground opacity-50',
+      }
+    : {
+        bgMain: 'bg-[#141418]',
+        bgCard: 'bg-white/[0.02]',
+        bgCardH: 'hover:bg-white/[0.04]',
+        border: 'border-white/[0.06]',
+        borderH: 'hover:border-white/[0.12]',
+        t90: 'text-white/90',
+        t85: 'text-white/85',
+        t80: 'text-white/80',
+        t60: 'text-white/60',
+        t50: 'text-white/50',
+        t40: 'text-white/40',
+        t30: 'text-white/30',
+        t25: 'text-white/25',
+        t20: 'text-white/20',
+        t10: 'text-white/10',
+      };
+
   return (
-    <div className="flex h-full w-full bg-[#141418] text-white">
+    <div className={`flex h-full w-full ${_v.bgMain} text-[var(--foreground)]`}>
       {/* ================================================================
           LEFT COLUMN — Controls (250px)
           ================================================================ */}
-      <aside className="flex w-[250px] shrink-0 flex-col border-r border-white/[0.06]">
+      <aside className={`flex w-[250px] shrink-0 flex-col border-r ${_v.border}`}>
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-white/90">
+        <div className={`flex items-center justify-between border-b ${_v.border} px-4 py-3`}>
+          <span
+            className={`font-mono text-[11px] font-semibold uppercase tracking-[0.12em] ${_v.t90}`}
+          >
             主题搭配
           </span>
-          {onClose && (
+          {!embedded && onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="font-mono text-[10px] text-white/40 transition-colors hover:text-white"
+              className={`font-mono text-[10px] ${_v.t40} transition-colors hover:text-[var(--foreground)]`}
             >
               ✕
             </button>
@@ -404,18 +499,18 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
                   className={`flex w-full items-center gap-2 rounded-[2px] px-3 py-2 text-left transition-colors ${
                     isSelected
                       ? 'border border-[#FF453A]/30 bg-[#FF453A]/12'
-                      : 'border border-transparent hover:bg-white/[0.04]'
+                      : `border border-transparent ${_v.bgCardH}`
                   }`}
                 >
                   <HugeIcon
                     icon={BlocksIcon}
-                    className={`size-3 ${isSelected ? 'text-[#FF453A]' : 'text-white/25'}`}
+                    className={`size-3 ${isSelected ? 'text-[#FF453A]' : _v.t25}`}
                   />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-mono text-[10px] font-medium text-white/85">
+                    <span className={`block truncate font-mono text-[10px] font-medium ${_v.t85}`}>
                       {meta?.displayName ?? id}
                     </span>
-                    <span className="block truncate font-mono text-[8px] text-white/30">{id}</span>
+                    <span className={`block truncate font-mono text-[8px] ${_v.t30}`}>{id}</span>
                   </span>
                 </button>
               );
@@ -424,7 +519,7 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
         </ScrollArea>
 
         {/* Controls */}
-        <div className="border-t border-white/[0.06] p-3 space-y-2">
+        <div className={`border-t ${_v.border} p-3 space-y-2`}>
           {/* Count selector */}
           <div>
             <Kicker count={count}>方案数量</Kicker>
@@ -437,7 +532,9 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
                   className={`flex h-6 flex-1 items-center justify-center rounded-[2px] border font-mono text-[9px] font-medium transition-colors ${
                     count === n
                       ? 'border-[#FF453A]/40 bg-[#FF453A]/15 text-[#FF453A]'
-                      : 'border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/[0.15]'
+                      : embedded
+                        ? 'border-[var(--border)] bg-[var(--card)] text-muted-foreground opacity-80 hover:border-[var(--border)]'
+                        : 'border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/[0.15]'
                   }`}
                 >
                   {n}
@@ -464,7 +561,7 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
 
         {/* Agent stats footer */}
         {profile && (
-          <div className="border-t border-white/[0.06] px-3 py-2">
+          <div className={`border-t ${_v.border} px-3 py-2`}>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1">
               {[
                 [
@@ -483,22 +580,21 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
                 [
                   '节点',
                   String(
-                    (profile.stats as Record<string, unknown>)?.domNodes
-                      ? ((
-                          (profile.stats as Record<string, unknown>).domNodes as Record<
-                            string,
-                            unknown
-                          >
-                        )?.default ?? '—')
-                      : '—',
+                    (profile.stats as Record<string, unknown>)?.domNodes !== undefined
+                      ? typeof (profile.stats as Record<string, unknown>).domNodes === 'object'
+                        ? Object.keys(
+                            profile.stats as Record<string, unknown> as Record<string, unknown>,
+                          ).length
+                        : (profile.stats as Record<string, unknown>)?.domNodes
+                      : ((profile as Record<string, unknown>)?.nodeCount ?? '—'),
                   ),
                 ],
               ].map(([label, val]) => (
                 <div key={label}>
-                  <span className="font-mono text-[7.5px] uppercase tracking-wider text-white/25">
+                  <span className={`font-mono text-[7.5px] uppercase tracking-wider ${_v.t25}`}>
                     {label}
                   </span>
-                  <span className="ml-1 font-mono text-[9px] font-medium text-white/60">{val}</span>
+                  <span className={`ml-1 font-mono text-[9px] font-medium ${_v.t60}`}>{val}</span>
                 </div>
               ))}
             </div>
@@ -513,14 +609,14 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
         {/* Empty state */}
         {!loading && !profile && !error && (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-            <HugeIcon icon={SwatchIcon} className="size-10 text-white/10" />
-            <p className="font-mono text-[11px] text-white/30">左侧选择一个 Agent 生成搭配方案</p>
+            <HugeIcon icon={SwatchIcon} className={`size-10 ${_v.t10}`} />
+            <p className={`font-mono text-[11px] ${_v.t30}`}>左侧选择一个 Agent 生成搭配方案</p>
           </div>
         )}
 
         {loading && (
           <div className="flex h-full items-center justify-center">
-            <span className="font-mono text-[10px] text-white/30">加载 Profile 中…</span>
+            <span className={`font-mono text-[10px] ${_v.t30}`}>加载 Profile 中…</span>
           </div>
         )}
 
@@ -547,6 +643,7 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
                         rank={i + 1}
                         isRecommended={true}
                         onPreview={handlePreview}
+                        onApply={handleApply}
                         onExport={handleExport}
                       />
                     ))}
@@ -567,6 +664,7 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
                         rank={i + 6}
                         isRecommended={false}
                         onPreview={handlePreview}
+                        onApply={handleApply}
                         onExport={handleExport}
                       />
                     ))}
@@ -576,7 +674,9 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
 
               {/* Score breakdown */}
               {proposals.length > 0 && (
-                <section className="rounded-[2px] border border-white/[0.06] bg-white/[0.015] p-3">
+                <section
+                  className={`rounded-[2px] border ${_v.border} ${embedded ? 'bg-transparent' : 'bg-white/[0.015]'} p-3`}
+                >
                   <Kicker>评分算法</Kicker>
                   <div className="grid grid-cols-3 gap-3">
                     {[
@@ -600,10 +700,10 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
                       },
                     ].map((s) => (
                       <div key={s.name} className="text-center">
-                        <span className="font-mono text-[8px] uppercase tracking-wider text-white/25">
+                        <span className={`font-mono text-[8px] uppercase tracking-wider ${_v.t25}`}>
                           {s.name}
                         </span>
-                        <div className="mt-0.5 font-mono text-[13px] font-bold text-white/80">
+                        <div className={`mt-0.5 font-mono text-[13px] font-bold ${_v.t80}`}>
                           {Math.round(
                             s.name === '对比度'
                               ? s.score * 0.5
@@ -611,9 +711,9 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
                                 ? s.score * 0.3
                                 : s.score * 0.2,
                           )}
-                          <span className="text-[9px] text-white/30">/{s.weight}</span>
+                          <span className={`text-[9px] ${_v.t30}`}>/{s.weight}</span>
                         </div>
-                        <span className="font-mono text-[7.5px] text-white/20">{s.desc}</span>
+                        <span className={`font-mono text-[7.5px] ${_v.t20}`}>{s.desc}</span>
                       </div>
                     ))}
                   </div>
@@ -626,11 +726,11 @@ export function FitGeneratorPanel({ onClose, onPreviewPalette }: FitGeneratorPan
         {/* Has profile but no proposals yet */}
         {profile && proposals.length === 0 && !loading && !error && (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-            <HugeIcon icon={SwatchIcon} className="size-10 text-white/10" />
-            <p className="font-mono text-[11px] text-white/40">
+            <HugeIcon icon={SwatchIcon} className={`size-10 ${_v.t10}`} />
+            <p className={`font-mono text-[11px] ${_v.t40}`}>
               点击左侧「随机搭配」生成 {count} 套方案
             </p>
-            <p className="max-w-xs font-mono text-[9px] text-white/20">
+            <p className={`max-w-xs font-mono text-[9px] ${_v.t20}`}>
               从 {AGENT_META[selectedAgent]?.displayName} 的 CDP 爬取数据中 提取配色
               hue，基于互补、分裂互补、三元、类似、单色等 HSL 配色理论生成协调主题
             </p>

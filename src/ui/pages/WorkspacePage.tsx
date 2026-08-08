@@ -18,13 +18,20 @@ import { RenameDialog } from '@/components/rename-dialog';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { AgentDetailSheet } from '@/components/workspace/AgentDetailSheet';
 import { EnvironmentGrid } from '@/components/workspace/EnvironmentGrid';
+import { QuickEnvironmentCreate } from '@/components/workspace/QuickEnvironmentCreate';
 import type { AppController } from '@/hooks/useAppController';
 import { useEnvironments } from '@/hooks/useEnvironments';
 import { cn } from '@/lib/utils';
 import { useEnvironmentStore } from '@/stores/environmentStore';
 import type { EnvironmentModel } from '@/types/environment';
 
-import { Copy01Icon, Image02Icon, PackageIcon, Search01Icon } from '@hugeicons/core-free-icons';
+import {
+  Add01Icon,
+  Copy01Icon,
+  Image02Icon,
+  PackageIcon,
+  Search01Icon,
+} from '@hugeicons/core-free-icons';
 import type { HugeiconsIconProps } from '@hugeicons/react';
 
 /* ------------------------------------------------------------------ */
@@ -178,6 +185,13 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
     useEnvironmentStore.getState().deleteEnvironment(presetId);
   }, []);
 
+  // Quick create form visibility
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
+
+  const handleQuickCreateSuccess = useCallback(() => {
+    setShowQuickCreate(false);
+  }, []);
+
   // Quick actions (plain array — handlers are useCallback-stable, controller is stable)
   const hasActiveTheme = (controller.status?.apps ?? []).some((app) => app.activeThemeId);
   const quickActions: {
@@ -188,6 +202,13 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
     disabled?: boolean;
     onClick: () => void;
   }[] = [
+    {
+      id: 'new',
+      icon: Add01Icon,
+      label: '新建工程',
+      shortcut: '⌘N',
+      onClick: () => setShowQuickCreate(true),
+    },
     {
       id: 'browse',
       icon: Search01Icon,
@@ -236,6 +257,12 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
         <div className="grid grid-cols-12 gap-3.5">
           {/* Environment grid — full width */}
           <div className="col-span-12 flex flex-col gap-3.5">
+            {showQuickCreate && (
+              <QuickEnvironmentCreate
+                onCreated={handleQuickCreateSuccess}
+                onCancel={() => setShowQuickCreate(false)}
+              />
+            )}
             <EnvironmentGrid
               environments={environments}
               activeId={activeEnvironment?.id ?? null}

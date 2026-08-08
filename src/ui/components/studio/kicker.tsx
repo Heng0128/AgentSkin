@@ -1,14 +1,28 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { Badge } from '@/components/ui/badge';
+
 /** Swiss section label (kopf / section kicker) */
-export function Kicker({ children }: { children: React.ReactNode }) {
+export function Kicker({
+  children,
+  count,
+  dotColor = 'var(--primary)',
+}: {
+  children: React.ReactNode;
+  count?: number;
+  dotColor?: string;
+}) {
   return (
-    <div
-      className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase"
-      style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)', opacity: 0.75 }}
-    >
-      <span className="size-[3px] rounded-full" style={{ background: 'var(--primary)' }} />
-      <span>{children}</span>
+    <div className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase">
+      <span className="size-[3px] rounded-full" style={{ background: dotColor }} />
+      <span style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)', opacity: 0.75 }}>
+        {children}
+      </span>
+      {count !== undefined && count > 0 && (
+        <Badge className="ml-1 h-[12px] rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[7px] font-medium text-white/30">
+          {count}
+        </Badge>
+      )}
     </div>
   );
 }

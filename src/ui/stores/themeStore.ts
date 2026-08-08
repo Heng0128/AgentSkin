@@ -71,7 +71,11 @@ function currentT(): UiMessages {
  * different agents no longer block each other.
  */
 const busyKeys = new Set<BusyKey>();
-const MAX_CONCURRENCY = 4;
+// The product supports 6 agents; raising the global concurrency cap to 6 lets
+// "apply to all agents" inject every agent in parallel instead of dropping
+// the surplus ones (withBusy now queues rather than rejects, but a cap of < 6
+// would still serialize the last couple of applies unnecessarily).
+const MAX_CONCURRENCY = 6;
 
 // ---------------------------------------------------------------------------
 // state shape
@@ -319,19 +323,13 @@ async function withBusy<T>(key: BusyKey, fn: () => Promise<T>): Promise<T | unde
       .showToast(msg ?? 'This operation is already running — please wait.');
     return undefined;
   }
-  if (busyKeys.size >= MAX_CONCURRENCY) {
-    const msgFn = (t as Record<string, unknown>).busyConcurrencyLimit as
-      | ((n: number) => string)
-      | undefined;
-    useNotificationStore
-      .getState()
-      .showToast(
-        msgFn
-          ? msgFn(MAX_CONCURRENCY)
-          : `Too many operations running (max ${MAX_CONCURRENCY}) — please wait.`,
-        'destructive',
-      );
-    return undefined;
+  // If the concurrency limit is reached, WAIT for a slot instead of silently
+  // dropping the operation. Previously this returned `undefined` immediately,
+  // which made "apply to all agents" (6 applies) silently skip the 5th/6th
+  // agent whenever 4 were already in flight — the user saw no error and no
+  // injection. Waiting guarantees every queued operation eventually runs.
+  while (busyKeys.size >= MAX_CONCURRENCY) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
   }
   busyKeys.add(key);
   useThemeStore.setState({ busy: key });

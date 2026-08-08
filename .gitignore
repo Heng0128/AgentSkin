@@ -43,3 +43,12 @@ assets/probe-shots/
 # Consulting audit deliverables (not project source)
 项目审计报告.md
 战略审计报告.md
+
+# Local tool-run output captures (typecheck / lint / test / preview)
+.tsc-err.txt
+.tsc-out.txt
+tsc_output.txt
+biome-out.txt
+test-output.txt
+*test-output.txt
+splash-preview.png

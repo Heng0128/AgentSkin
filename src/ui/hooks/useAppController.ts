@@ -39,6 +39,7 @@ import { selectActiveWallpaper, useWallpaperStore } from '@/stores/wallpaperStor
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
 import { AGENT_META, type AgentId } from '@shared/types';
+import { useShallow } from 'zustand/react/shallow';
 import { useBoot } from './useBoot';
 import { type StructuredEvent, useBootProgress } from './useBootProgress';
 
@@ -212,14 +213,31 @@ export function useAppController() {
 
   // Boot-time catalog / data refresh — these call IPC so they stay in the
   // hook rather than inside store create().
+  //
+  // Defer via requestAnimationFrame (macrotask), NOT queueMicrotask (microtask).
+  // React 9's useSyncExternalStore tearing check runs during the passive-commit
+  // phase. A microtask queued from useEffect runs BEFORE that check completes,
+  // so any synchronous zustand set() in the microtask is detected as tearing →
+  // forceStoreRerender → excessive re-render loop → error #185. A macrotask
+  // (rAF) runs at the start of the next frame, AFTER all passive-commit and
+  // tearing-check work finishes. This lets store updates land as normal
+  // scheduled re-renders instead of tearing violations (fixes error #185).
   useEffect(() => {
-    void useThemeStore
-      .getState()
-      .refreshThemes()
-      .finally(() => useThemeStore.setState({ loading: false }));
-    void useWallpaperStore.getState().initialize();
-    void useAgentStore.getState().loadAgents();
-    useEnvironmentStore.getState().loadPresets();
+    let disposed = false;
+    const rafId = requestAnimationFrame(() => {
+      if (disposed) return;
+      void useThemeStore
+        .getState()
+        .refreshThemes()
+        .finally(() => useThemeStore.setState({ loading: false }));
+      void useWallpaperStore.getState().initialize();
+      void useAgentStore.getState().loadAgents();
+      useEnvironmentStore.getState().loadPresets();
+    });
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   // -----------------------------------------------------------------------
@@ -250,7 +268,7 @@ export function useAppController() {
   const cancelInstall = useInstallFlowStore((s) => s.cancelInstall);
   const setInstallSteps = useInstallFlowStore((s) => s.setSteps);
   const setFlowStateAction = useInstallFlowStore((s) => s.setFlowState);
-  const installFlags = useInstallFlowStore(selectInstallFlags);
+  const installFlags = useInstallFlowStore(useShallow(selectInstallFlags));
 
   // -----------------------------------------------------------------------
   // Settings slice
@@ -268,7 +286,17 @@ export function useAppController() {
   // -----------------------------------------------------------------------
   // Wallpaper slice
   // -----------------------------------------------------------------------
-  const wallpaperState = useWallpaperStore((s) => s);
+  // Individual field selectors instead of `(s) => s`. Subscribing to the whole
+  // store returns a new reference on every field change, which:
+  //   (a) forces unrelated consumers to re-render, and
+  //   (b) feeds burst re-renders into the mount-phase guard that React 19's
+  //       useSyncExternalStore installs (error #185).
+  const wpWallpapers = useWallpaperStore((s) => s.wallpapers);
+  const wpLoading = useWallpaperStore((s) => s.loading);
+  const wpEnabled = useWallpaperStore((s) => s.enabled);
+  const wpSelectedId = useWallpaperStore((s) => s.selectedId);
+  const wpAgentWallpapers = useWallpaperStore((s) => s.agentWallpapers);
+  const wpRender = useWallpaperStore((s) => s.render);
   const wallpaperActive = useWallpaperStore(selectActiveWallpaper);
 
   return {
@@ -359,13 +387,13 @@ export function useAppController() {
 
     // ── Dynamic wallpapers ───────────────────────────────────────────
     wallpaper: {
-      wallpapers: wallpaperState.wallpapers,
-      loading: wallpaperState.loading,
-      enabled: wallpaperState.enabled,
-      selectedId: wallpaperState.selectedId,
-      agentWallpapers: wallpaperState.agentWallpapers,
+      wallpapers: wpWallpapers,
+      loading: wpLoading,
+      enabled: wpEnabled,
+      selectedId: wpSelectedId,
+      agentWallpapers: wpAgentWallpapers,
       active: wallpaperActive,
-      render: wallpaperState.render,
+      render: wpRender,
       setWallpaper: useWallpaperStore.getState().setWallpaper,
       importWallpaper: useWallpaperStore.getState().importWallpaper,
       deleteWallpaper: useWallpaperStore.getState().deleteWallpaper,

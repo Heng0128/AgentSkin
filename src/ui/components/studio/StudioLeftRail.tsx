@@ -5,6 +5,7 @@ import { Kicker } from '@/components/studio/kicker';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
+import { appStatusFor } from '@/stores/agentStore';
 
 import {
   Add01Icon,
@@ -105,7 +106,7 @@ export function StudioLeftRail({
       <div className="mt-2 flex gap-1 pb-2">
         <button
           type="button"
-          onClick={() => setCreatingProject((v) => !v)}
+          onClick={() => setCreatingProject(true)}
           className="flex h-6 items-center gap-1 border border-border bg-muted px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent"
           style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
         >
@@ -131,6 +132,9 @@ export function StudioLeftRail({
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleCreateProject();
+            }}
             placeholder="工程名"
             className="h-6 w-full border border-border bg-muted px-2 font-mono text-[10px] outline-none focus:border-primary/60"
             style={{ borderRadius: 'var(--radius)' }}
@@ -144,25 +148,27 @@ export function StudioLeftRail({
           />
           {/* Agent chips */}
           <div className="flex flex-wrap gap-1 pt-1">
-            {AGENT_IDS.map((agentId) => (
-              <button
-                key={agentId}
-                type="button"
-                onClick={() => setNewAgent(agentId)}
-                className="flex items-center gap-1 px-2 py-0.5 font-mono text-[9px]"
-                style={{
-                  border:
-                    newAgent === agentId ? '1px solid var(--primary)' : '1px solid var(--border)',
-                  background: newAgent === agentId ? 'var(--accent)' : 'var(--muted)',
-                  color: newAgent === agentId ? 'var(--primary)' : 'var(--muted-foreground)',
-                  borderRadius: 'var(--radius)',
-                  letterSpacing: '0.05em',
-                }}
-              >
-                <AppMark appId={agentId} size={10} />
-                {AGENT_META[agentId].displayName.toUpperCase()}
-              </button>
-            ))}
+            {AGENT_IDS.filter((agentId) => Boolean(appStatusFor(agentId)?.installed)).map(
+              (agentId) => (
+                <button
+                  key={agentId}
+                  type="button"
+                  onClick={() => setNewAgent(agentId)}
+                  className="flex items-center gap-1 px-2 py-0.5 font-mono text-[9px]"
+                  style={{
+                    border:
+                      newAgent === agentId ? '1px solid var(--primary)' : '1px solid var(--border)',
+                    background: newAgent === agentId ? 'var(--accent)' : 'var(--muted)',
+                    color: newAgent === agentId ? 'var(--primary)' : 'var(--muted-foreground)',
+                    borderRadius: 'var(--radius)',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  <AppMark appId={agentId} size={10} />
+                  {AGENT_META[agentId].displayName.toUpperCase()}
+                </button>
+              ),
+            )}
           </div>
           <div className="flex gap-1.5 pt-1">
             <button

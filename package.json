@@ -1,7 +1,7 @@
 {
   "name": "agentskin-desktop",
   "productName": "AgentSkin",
-  "version": "1.3.2",
+  "version": "1.4.5",
   "description": "Agent theme management platform for domestic AI coding tools and extensible desktop agents.",
   "author": "AgentSkin",
   "license": "MPL-2.0",

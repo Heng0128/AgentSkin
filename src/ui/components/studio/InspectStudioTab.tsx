@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { appStatusFor } from '@/stores/agentStore';
 
 import { Copy01Icon, EyeIcon, Search01Icon } from '@hugeicons/core-free-icons';
 import {
@@ -29,6 +30,7 @@ import {
   type CssMatchedRule,
   type InspectedNode,
 } from '@shared/types';
+import { Kicker } from './kicker';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -44,22 +46,6 @@ interface InspectStudioTabProps {
 type Mode = 'pick' | 'profile';
 
 // ---------------------------------------------------------------------------
-// Swiss micro-label (kopf style — matches Toolbox .tbx-t)
-// ---------------------------------------------------------------------------
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="flex items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase"
-      style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)', opacity: 0.75 }}
-    >
-      <span className="size-[3px] rounded-full" style={{ background: 'var(--primary)' }} />
-      <span>{children}</span>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // CascadeView — inline (simplified from ThemeStudioPage)
 // ---------------------------------------------------------------------------
 
@@ -73,7 +59,7 @@ function CascadeView({ cascade }: { cascade: InspectedNode['cascade'] }) {
           className="border border-border bg-card p-1.5"
           style={{ borderRadius: 'var(--radius)' }}
         >
-          <SectionLabel>RENDER FONTS</SectionLabel>
+          <Kicker>RENDER FONTS</Kicker>
           <div className="mt-1 flex flex-wrap gap-1">
             {cascade.platformFonts.map((f) => (
               <span
@@ -110,7 +96,7 @@ function CascadeView({ cascade }: { cascade: InspectedNode['cascade'] }) {
 
       {/* Matched CSS rules */}
       <div className="border border-border bg-card p-1.5" style={{ borderRadius: 'var(--radius)' }}>
-        <SectionLabel>CASCADE</SectionLabel>
+        <Kicker>CASCADE</Kicker>
         {cascade.matchedRules.length === 0 ? (
           <p className="font-mono text-[9px]" style={{ color: 'var(--muted-foreground)' }}>
             无（CDP CSS 域不可用）
@@ -303,8 +289,9 @@ export function InspectStudioTab({
       setLiveNode(null);
       setLiveError(null);
       setMode('pick');
-    } catch {
-      if (mountedRef.current) onToast('进入检查模式失败', 'destructive');
+    } catch (e) {
+      if (mountedRef.current)
+        onToast(`进入检查模式失败：${e instanceof Error ? e.message : String(e)}`, 'destructive');
     } finally {
       if (mountedRef.current) setInspectBusy(false);
     }
@@ -434,7 +421,7 @@ export function InspectStudioTab({
 
               {liveNode && (
                 <>
-                  <SectionLabel>NODE</SectionLabel>
+                  <Kicker>NODE</Kicker>
                   <div className="space-y-1">
                     <div className="flex items-center gap-1">
                       <span
@@ -510,9 +497,9 @@ export function InspectStudioTab({
           {/* ---- PROFILE mode ---- */}
           {mode === 'profile' && (
             <>
-              <SectionLabel>AGENT PROFILES</SectionLabel>
+              <Kicker>AGENT PROFILES</Kicker>
               <div className="space-y-1.5">
-                {AGENT_IDS.map((id) => (
+                {AGENT_IDS.filter((id) => Boolean(appStatusFor(id)?.installed)).map((id) => (
                   <AgentProfileCard key={id} agentId={id} />
                 ))}
               </div>
@@ -524,7 +511,7 @@ export function InspectStudioTab({
       {/* Pinned selector chips — always visible */}
       {pinnedSelectors.length > 0 && (
         <div className="border-t border-border px-3 py-2">
-          <SectionLabel>PINNED · {pinnedSelectors.length}</SectionLabel>
+          <Kicker count={pinnedSelectors.length}>PINNED</Kicker>
           <div className="mt-1 flex flex-wrap gap-1">
             {pinnedSelectors.map((sel) => (
               <span
