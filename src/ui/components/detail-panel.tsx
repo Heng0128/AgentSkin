@@ -24,14 +24,11 @@ function AppActionList({
   controller,
   supportedAgents,
   installedThemeId,
-  schemeId,
   onApply,
 }: {
   controller: AppController;
   supportedAgents: AgentId[];
   installedThemeId: string | null;
-  /** Currently selected color-scheme id (undefined = default). */
-  schemeId?: string;
   onApply: (appId: AgentId) => Promise<unknown>;
 }) {
   const { t } = controller;
@@ -57,6 +54,12 @@ function AppActionList({
       supportedAgents.includes(appId) && Boolean(controller.appStatusFor(appId)?.installed),
   );
 
+  /** Agents actually installed on this machine — the list only shows these, so
+   *  a user who doesn't own all 6 agents isn't shown rows for absent ones. */
+  const installedApps = AGENT_IDS.filter((appId) =>
+    Boolean(controller.appStatusFor(appId)?.installed),
+  );
+
   /** When the first detection round has not returned yet, every apply button
    *  is replaced by a single "detecting" state instead of greyed-out rows. */
   const detecting = controller.statusStale;
@@ -68,7 +71,9 @@ function AppActionList({
     setPendingAll(true);
     try {
       const queue = [...eligibleApps];
-      const CONCURRENCY = 4;
+      // Up to 6 agents can apply in parallel — matches MAX_CONCURRENCY in
+      // themeStore so a full "apply to all" injects every agent concurrently.
+      const CONCURRENCY = 6;
       const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
         for (;;) {
           const appId = queue.shift();
@@ -114,7 +119,7 @@ function AppActionList({
       </Button>
 
       <div className="flex flex-col gap-1">
-        {AGENT_IDS.map((appId) => {
+        {installedApps.map((appId) => {
           const supported = supportedAgents.includes(appId);
           const appStatus = controller.appStatusFor(appId);
           const detected = Boolean(appStatus?.installed);
@@ -182,6 +187,9 @@ function AppActionList({
             </div>
           );
         })}
+        {!detecting && installedApps.length === 0 && (
+          <p className="px-1 py-2 text-[11px] text-muted-foreground">{t.statusNotInstalled}</p>
+        )}
       </div>
     </div>
   );
@@ -398,7 +406,6 @@ export function DetailPanel({
           controller={controller}
           supportedAgents={theme.supportedAgents}
           installedThemeId={theme.id}
-          schemeId={schemeId}
           onApply={(appId) => controller.applyToApp(theme.id, theme.name, appId, { schemeId })}
         />
 

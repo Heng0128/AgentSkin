@@ -22,9 +22,13 @@ describe('wallpaper settings (config/settings.ts)', () => {
   });
 
   afterEach(async () => {
-    process.env.APPDATA = savedAppdata;
-    vi.resetModules();
-    await fs.rm(tmpDir, { recursive: true, force: true });
+    try {
+      await fs.rm(tmpDir, { recursive: true, force: true });
+    } finally {
+      // Use finally to guarantee restoration even if cleanup throws.
+      process.env.APPDATA = savedAppdata;
+      vi.resetModules();
+    }
   });
 
   const settingsFile = (base: string) => path.join(base, 'AgentSkin', 'wallpaper-settings.json');
@@ -83,18 +87,30 @@ describe('wallpaper settings (config/settings.ts)', () => {
     );
     const { loadSettings } = await import('./settings');
     const result = loadSettings();
-    // The string value must not survive the type check — the field is removed.
-    expect(typeof result.imageBlobThresholdMB).not.toBe('string');
+    // The string value must not survive the type check — the field is dropped
+    // and replaced by the default finite number.
+    expect(result.imageBlobThresholdMB).toBe(20);
+    expect(Number.isFinite(result.imageBlobThresholdMB)).toBe(true);
   });
 
-  it('loadSettings clamps an out-of-range threshold back to the default', async () => {
-    await fs.mkdir(path.dirname(settingsFile(tmpDir)), { recursive: true });
-    for (const bad of [-5, 0, 1e10, Number.NaN]) {
+  it('loadSettings clamps out-of-range threshold back to default', async () => {
+    // Test each bad value separately to get clear failure diagnostics.
+    // NaN is intentionally excluded here because JSON.stringify(NaN) => null,
+    // so a file-based write cannot exercise the !Number.isFinite(NaN) branch.
+    // That branch requires a raw runtime value and must be tested separately.
+    const valuesToTest = [
+      { value: -5, label: '-5' },
+      { value: 0, label: '0' },
+      { value: 1e10, label: '1e10' },
+    ];
+
+    for (const { value } of valuesToTest) {
       // resetModules so each write is a fresh load
       vi.resetModules();
+      await fs.mkdir(path.dirname(settingsFile(tmpDir)), { recursive: true });
       await fs.writeFile(
         settingsFile(tmpDir),
-        JSON.stringify({ imageBlobThresholdMB: bad }, null, 2),
+        JSON.stringify({ imageBlobThresholdMB: value }, null, 2),
         'utf8',
       );
       const { getImageBlobThresholdBytes } = await import('./settings');

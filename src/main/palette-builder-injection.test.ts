@@ -17,7 +17,10 @@ vi.mock('./cdp/cdp-inject', () => ({
   injectThemeViaEngine: vi.fn(),
 }));
 
+import type { ResolvedThemeTarget, ThemeBundle } from '../legacy/agentskin-core-runtime';
+import type { CdpSession } from './cdp/cdp-client';
 import { injectThemeViaEngine } from './cdp/cdp-inject';
+import type { InjectEngineResult } from './cdp/injection/engine-strategy';
 import {
   type EngineInjectionDeps,
   resolveEngineDirDefault,
@@ -33,21 +36,30 @@ const VALID_THEME_CSS = [
   '--agentskin-bg: #000000;',
 ].join('\n');
 
-function makeBundle(id = 'test-theme') {
-  return { theme: { id, displayName: id, version: '1.0.0' } } as any;
+function makeBundle(id = 'test-theme'): ThemeBundle {
+  return { theme: { id, displayName: id, version: '1.0.0' } } as unknown as ThemeBundle;
 }
 
-function makeTarget(css = VALID_THEME_CSS) {
-  return { css, options: {}, verification: null, imageDataUrls: {}, artDataUrl: null } as any;
+function makeTarget(css = VALID_THEME_CSS): ResolvedThemeTarget {
+  return {
+    css,
+    options: {},
+    verification: null,
+    imageDataUrls: {},
+    artDataUrl: null,
+  } as unknown as ResolvedThemeTarget;
 }
 
 describe('resolveEngineDirDefault', () => {
-  const originalResourcesPath = (process as any).resourcesPath;
+  const originalResourcesPath = (process as unknown as { resourcesPath?: string }).resourcesPath;
 
   afterEach(() => {
     // Restore resourcesPath between tests.
-    if (originalResourcesPath === undefined) delete (process as any).resourcesPath;
-    else (process as any).resourcesPath = originalResourcesPath;
+    if (originalResourcesPath === undefined) {
+      delete (process as unknown as { resourcesPath?: string }).resourcesPath;
+    } else {
+      (process as unknown as { resourcesPath?: string }).resourcesPath = originalResourcesPath;
+    }
   });
 
   it('returns the packaged engine dir when adapter.mjs exists there', async () => {
@@ -57,7 +69,10 @@ describe('resolveEngineDirDefault', () => {
       const agentDir = path.join(enginesRoot, 'workbuddy');
       await fs.mkdir(agentDir, { recursive: true });
       await fs.writeFile(path.join(agentDir, 'adapter.mjs'), '// adapter');
-      (process as any).resourcesPath = path.join(tmp, 'resources');
+      (process as unknown as { resourcesPath?: string }).resourcesPath = path.join(
+        tmp,
+        'resources',
+      );
 
       const result = await resolveEngineDirDefault('workbuddy');
       expect(result).toBe(agentDir);
@@ -67,7 +82,7 @@ describe('resolveEngineDirDefault', () => {
   });
 
   it('falls back to the dev engine dir when the packaged adapter is missing', async () => {
-    (process as any).resourcesPath = os.tmpdir(); // exists but has no engines/<agent>/adapter.mjs
+    (process as unknown as { resourcesPath?: string }).resourcesPath = os.tmpdir(); // exists but has no engines/<agent>/adapter.mjs
     const result = await resolveEngineDirDefault('workbuddy');
     expect(result).toBe(path.join(__dirname, '..', '..', 'engines', 'workbuddy'));
   });
@@ -95,14 +110,15 @@ describe('tryEngineInjection', () => {
 
   afterEach(async () => {
     await fs.rm(tmpDir, { recursive: true, force: true });
+    vi.restoreAllMocks();
   });
 
   it('loads engine files, builds the palette, and delegates to injectThemeViaEngine', async () => {
-    const injected = { ok: true, layersApplied: 4 } as any;
+    const injected = { ok: true, layersApplied: 4 } as unknown as InjectEngineResult;
     vi.mocked(injectThemeViaEngine).mockResolvedValueOnce(injected);
 
     const result = await tryEngineInjection(
-      {} as any,
+      {} as unknown as CdpSession,
       'workbuddy',
       makeBundle(),
       makeTarget(),
@@ -125,8 +141,17 @@ describe('tryEngineInjection', () => {
   });
 
   it('uses "unknown" when the bundle has no theme id', async () => {
-    vi.mocked(injectThemeViaEngine).mockResolvedValueOnce({ ok: true } as any);
-    await tryEngineInjection({} as any, 'doubao', {} as any, makeTarget(), null, deps);
+    vi.mocked(injectThemeViaEngine).mockResolvedValueOnce({
+      ok: true,
+    } as unknown as InjectEngineResult);
+    await tryEngineInjection(
+      {} as unknown as CdpSession,
+      'doubao',
+      {} as unknown as ThemeBundle,
+      makeTarget(),
+      null,
+      deps,
+    );
     const payload = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
     expect(payload.themeId).toBe('unknown');
     expect(payload.heroDataUrl).toBeNull();
@@ -135,7 +160,7 @@ describe('tryEngineInjection', () => {
   it('returns null when any engine file is missing (legacy fallback)', async () => {
     await fs.unlink(path.join(engineDir, 'cosmetic.css'));
     const result = await tryEngineInjection(
-      {} as any,
+      {} as unknown as CdpSession,
       'workbuddy',
       makeBundle(),
       makeTarget(),
@@ -148,7 +173,7 @@ describe('tryEngineInjection', () => {
 
   it('returns null when the per-agent CSS cannot yield a palette (< 6 tokens)', async () => {
     const result = await tryEngineInjection(
-      {} as any,
+      {} as unknown as CdpSession,
       'workbuddy',
       makeBundle(),
       makeTarget('--agentskin-accent: #ff0000;'), // too few tokens
@@ -162,7 +187,7 @@ describe('tryEngineInjection', () => {
   it('logs and returns null when injectThemeViaEngine throws', async () => {
     vi.mocked(injectThemeViaEngine).mockRejectedValueOnce(new Error('CDP down'));
     const result = await tryEngineInjection(
-      {} as any,
+      {} as unknown as CdpSession,
       'workbuddy',
       makeBundle(),
       makeTarget(),
@@ -178,7 +203,7 @@ describe('tryEngineInjection', () => {
   it('logs and returns null when resolveEngineDir rejects', async () => {
     vi.mocked(deps.resolveEngineDir).mockRejectedValueOnce(new Error('no resources'));
     const result = await tryEngineInjection(
-      {} as any,
+      {} as unknown as CdpSession,
       'workbuddy',
       makeBundle(),
       makeTarget(),

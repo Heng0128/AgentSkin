@@ -98,6 +98,7 @@ afterEach(() => {
   _clearActiveMediaTokensForTest();
   vi.mocked(wallpaperMediaServer.unregister).mockClear();
   vi.mocked(wallpaperMediaServer.register).mockClear();
+  vi.restoreAllMocks();
 });
 
 // ---------------------------------------------------------------------------
@@ -398,7 +399,9 @@ describe('media token cleanup on early exits', () => {
     });
     // Override findAgentTargets to return a fake target so we get past
     // the no-page-target check and reach the isWeb branch
-    (deps as any).findAgentTargets = async () => [
+    (
+      deps as unknown as { findAgentTargets: (port: number) => Promise<unknown[]> }
+    ).findAgentTargets = async () => [
       { type: 'page', webSocketDebuggerUrl: 'ws://127.0.0.1:9222/page/1' },
     ];
     // webUrlFor returns null → triggers web-url-resolve-failed
@@ -430,7 +433,9 @@ describe('media token cleanup on early exits', () => {
     });
     // Override findAgentTargets to return a fake target so we get past
     // the no-page-target check and reach the isWeb branch.
-    (deps as any).findAgentTargets = async () => [
+    (
+      deps as unknown as { findAgentTargets: (port: number) => Promise<unknown[]> }
+    ).findAgentTargets = async () => [
       { type: 'page', webSocketDebuggerUrl: 'ws://127.0.0.1:9222/page/1' },
     ];
     // webUrlFor returns null → triggers the scene hard-failure path.
@@ -503,7 +508,9 @@ describe('media token cleanup on early exits', () => {
     });
     // Override findAgentTargets to return a fake target so we get past
     // the no-page-target check and reach the blob-path cleanup
-    (deps as any).findAgentTargets = async () => [
+    (
+      deps as unknown as { findAgentTargets: (port: number) => Promise<unknown[]> }
+    ).findAgentTargets = async () => [
       { type: 'page', webSocketDebuggerUrl: 'ws://127.0.0.1:9222/page/1' },
     ];
 
@@ -546,7 +553,9 @@ describe('GIF wallpaper dispatch', () => {
     // the no-page-target check. The injection will fail at connectCdp
     // (no real CDP), but the log line should show "image wallpaper"
     // (not "video wallpaper"), confirming correct type classification.
-    (deps as any).findAgentTargets = async () => [
+    (
+      deps as unknown as { findAgentTargets: (port: number) => Promise<unknown[]> }
+    ).findAgentTargets = async () => [
       { type: 'page', webSocketDebuggerUrl: 'ws://127.0.0.1:9222/page/1' },
     ];
 
@@ -572,7 +581,9 @@ describe('GIF wallpaper dispatch', () => {
       },
     });
 
-    (deps as any).findAgentTargets = async () => [
+    (
+      deps as unknown as { findAgentTargets: (port: number) => Promise<unknown[]> }
+    ).findAgentTargets = async () => [
       { type: 'page', webSocketDebuggerUrl: 'ws://127.0.0.1:9222/page/1' },
     ];
 

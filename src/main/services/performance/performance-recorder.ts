@@ -258,7 +258,12 @@ export class ApplyTraceBuilder {
 /**
  * Static entry point for creating theme-apply traces. Maintains a monotonically
  * increasing sequence counter and ensures only one trace is in-flight at a time.
+ *
+ * Intentionally a static-only class: it doubles as a module namespace and keeps
+ * the in-flight trace invariant in one obvious place. Consumers call
+ * `PerformanceRecorder.start(...)` / `.finishTrace(...)` without instantiation.
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: deliberate static singleton (see above)
 export class PerformanceRecorder {
   /** Monotonically increasing sequence for id generation. */
   private static sequence = 0;
