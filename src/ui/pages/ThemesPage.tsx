@@ -308,14 +308,14 @@ export function ThemesPage({ controller }: { controller: AppController }) {
       <Accordion type="single" collapsible className="mb-2">
         <AccordionItem value="guide" className="border-b-0">
           <AccordionTrigger className="py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground">
-            快速指南
+            {t.quickGuide}
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-1 pb-2 font-mono text-[10.5px] leading-relaxed text-muted-foreground/70">
-              <p>· 拖拽 .zip / .agentheme 文件到页面任意位置即可导入主题</p>
-              <p>· 点击主题卡片可在右侧预览详情并一键应用到 Agent</p>
-              <p>· DYNAMIC 标记的主题包含动态壁纸，应用后自动生效</p>
-              <p>· Theme Studio 提供完整的主题编辑与导出工作流</p>
+              <p>· {t.guideImport}</p>
+              <p>· {t.guidePreview}</p>
+              <p>· {t.guideDynamic}</p>
+              <p>· {t.guideStudio}</p>
             </div>
           </AccordionContent>
         </AccordionItem>

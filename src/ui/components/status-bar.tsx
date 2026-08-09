@@ -95,17 +95,9 @@ export function StatusBar() {
 
       {/* Center cluster: platform count · injected — visible only on lg+. */}
       <div className="hidden items-center gap-1.5 font-mono text-[10px] font-medium text-muted-foreground lg:flex">
-        <span>
-          平台{' '}
-          <span className="font-medium text-foreground">
-            {onlineCount}/{totalPlatforms}
-          </span>{' '}
-          在线
-        </span>
+        <span>{t.swissPlatformOnline(onlineCount, totalPlatforms)}</span>
         <span className="text-muted-foreground/40">·</span>
-        <span>
-          已注入 <span className="font-medium text-foreground">{injectedCount}</span>
-        </span>
+        <span>{t.swissInjected(injectedCount)}</span>
       </div>
 
       {/* Right cluster: inject dock · local · no upload · clock · version. */}
@@ -132,9 +124,15 @@ export function StatusBar() {
         <span className="font-mono tabular-nums text-[10px] font-medium text-muted-foreground/70">
           {clock}
         </span>
-        <span className="font-mono text-[10px] font-medium text-muted-foreground/50">
+        <button
+          type="button"
+          title={t.swissVersionTip}
+          aria-label={t.swissVersionTip}
+          onClick={() => void navigator.clipboard?.writeText(appVersion)}
+          className="font-mono text-[10px] font-medium text-muted-foreground/50 transition-colors duration-fast hover:text-foreground"
+        >
           v{appVersion}
-        </span>
+        </button>
       </div>
     </footer>
   );

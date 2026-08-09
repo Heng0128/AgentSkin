@@ -4,9 +4,12 @@ import type * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
+import { useShellStore } from '@/stores/shellStore';
 
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { Cancel01Icon } from '@hugeicons/core-free-icons';
+import type { UiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -45,6 +48,9 @@ function DialogContent({
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
 }) {
+  const locale = useShellStore((s) => s.locale);
+  const t: UiMessages = uiMessages[locale];
+
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -63,7 +69,7 @@ function DialogContent({
             render={<Button variant="ghost" className="absolute top-4 right-4" size="icon-sm" />}
           >
             <HugeIcon icon={Cancel01Icon} />
-            <span className="sr-only">关闭</span>
+            <span className="sr-only">{t.close}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>

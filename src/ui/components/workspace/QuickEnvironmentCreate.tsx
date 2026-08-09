@@ -5,7 +5,10 @@ import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/app-mark';
 import { cn } from '@/lib/utils';
 import { useEnvironmentStore } from '@/stores/environmentStore';
+import { useShellStore } from '@/stores/shellStore';
 
+import type { UiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
 import type { WallpaperInfo } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
 
@@ -37,6 +40,8 @@ export function QuickEnvironmentCreate({
   const [submitting, setSubmitting] = useState(false);
 
   const createEnvironment = useEnvironmentStore((s) => s.createEnvironment);
+  const locale = useShellStore((s) => s.locale);
+  const t: UiMessages = uiMessages[locale];
 
   useEffect(() => {
     let alive = true;
@@ -104,9 +109,9 @@ export function QuickEnvironmentCreate({
         style={{ borderRadius: 'var(--radius)' }}
         value={wallpaperId ?? ''}
         onChange={(e) => setWallpaperId(e.target.value || null)}
-        title="绑定壁纸（可选）"
+        title={t.bindWallpaper}
       >
-        <option value="">无壁纸</option>
+        <option value="">{t.noWallpaper}</option>
         {wallpapers.map((w) => (
           <option key={w.id} value={w.id}>
             {w.title}

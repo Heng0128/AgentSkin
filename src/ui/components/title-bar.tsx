@@ -70,13 +70,15 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
       ? t.navWorkspace
       : route === 'themes'
         ? t.navThemes
-        : route === 'studio'
-          ? t.navStudio
-          : route === 'wallpaper'
-            ? t.navWallpaperEngine
-            : route === 'settings'
-              ? t.navSettings
-              : 'AgentSkin';
+        : route === 'agents'
+          ? t.navAgents
+          : route === 'studio'
+            ? t.navStudio
+            : route === 'wallpaper'
+              ? t.navWallpaperEngine
+              : route === 'settings'
+                ? t.navSettings
+                : 'AgentSkin';
 
   const themeModes: Array<{ value: ThemeMode; icon: typeof Sun03Icon; label: string }> = [
     { value: 'dark', icon: Moon02Icon, label: t.themeDark },
