@@ -39,7 +39,8 @@ function isValidPreset(p: unknown): p is EnvironmentPreset {
     typeof r.name === 'string' &&
     typeof r.agentId === 'string' &&
     (typeof r.themeId === 'string' || r.themeId === null) &&
-    (typeof r.wallpaperId === 'string' || r.wallpaperId === null) &&
+    // wallpaperId may be absent (legacy v1 entries) — the loader back-fills null.
+    (r.wallpaperId === undefined || typeof r.wallpaperId === 'string' || r.wallpaperId === null) &&
     typeof r.createdAt === 'string' &&
     typeof r.updatedAt === 'string'
   );

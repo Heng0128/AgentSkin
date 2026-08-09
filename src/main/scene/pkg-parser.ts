@@ -57,6 +57,10 @@ export function parsePkgBuffer(buf: Buffer): PkgPackage | null {
   let magic: string;
   try {
     magic = reader.readStringI32();
+    // An empty magic string means this is not a real scene.pkg container — a
+    // length-prefix of 0 in the header is either a corrupt file or a different
+    // format. Reject it so callers treat it as "unparseable, skip" (null).
+    if (!magic) return null;
     const entryCount = reader.readInt32();
     if (entryCount < 0 || entryCount > 10000) return null;
 
