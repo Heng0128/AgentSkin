@@ -67,12 +67,10 @@ function migrateLegacyLocalStorage(): EnvironmentPreset[] {
     if (!raw) return [];
     const envelope = JSON.parse(raw) as PresetStorageEnvelope;
     const legacy = Array.isArray(envelope?.presets) ? envelope.presets : [];
-    const migrated = legacy
-      .filter(isValidPreset)
-      .map((p) => ({
-        ...p,
-        wallpaperId: (p as { wallpaperId?: string | null }).wallpaperId ?? null,
-      }));
+    const migrated = legacy.filter(isValidPreset).map((p) => ({
+      ...p,
+      wallpaperId: (p as { wallpaperId?: string | null }).wallpaperId ?? null,
+    }));
     window.localStorage.removeItem(ENV_PRESETS_STORAGE_KEY);
     return migrated;
   } catch {

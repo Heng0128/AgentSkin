@@ -39,7 +39,7 @@ import {
 import type { CdpSession } from '../cdp-client';
 import { injectCssLayer } from './css-inject';
 import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
-import { verifyTheme, waitForTheme } from './shared';
+import { waitForTheme } from './shared';
 import type { ThemeVerification } from './types';
 
 // ---------------------------------------------------------------------------
