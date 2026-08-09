@@ -226,6 +226,11 @@ export interface ToolOverride {
   opacity?: number; // 0-1 整体内容透明度
   // gradient (bakeable)
   gradientAccent?: boolean;
+  // Full semantic palette (e.g. image-to-theme / preset load) — kept so the
+  // export builder can bake the complete 14-token `--agentskin-*` set. The
+  // four role fields above (accent/background/foreground/surface) drive the
+  // live preview; `colors` is the source of truth for export.
+  colors?: Record<string, string>;
 }
 
 /** Original color roles extracted from the snapshot, used by the replica to

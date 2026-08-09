@@ -93,3 +93,84 @@ function paletteFromSnapshot(snapshot: ThemeVisualSnapshot): {
 export function buildStudioPalette(snapshot: ThemeVisualSnapshot): Record<string, string> {
   return buildSkinTokens(paletteFromSnapshot(snapshot));
 }
+
+// ---------------------------------------------------------------------------
+// P4 helpers — merge user overrides into the skin token set (for export)
+// ---------------------------------------------------------------------------
+
+/** Maps a semantic palette key (or `--agentskin-*` key) to its token CSS var. */
+const SKIN_TOKEN_MAP: Record<string, string> = {
+  accent: '--agentskin-accent',
+  secondary: '--agentskin-secondary',
+  background: '--agentskin-bg',
+  bg: '--agentskin-bg',
+  foreground: '--agentskin-text',
+  text: '--agentskin-text',
+  surface: '--agentskin-surface',
+  surfaceElevated: '--agentskin-surface-elevated',
+  'surface-elevated': '--agentskin-surface-elevated',
+  muted: '--agentskin-muted',
+  border: '--agentskin-border',
+  codeBackground: '--agentskin-code-bg',
+  'code-bg': '--agentskin-code-bg',
+  codeForeground: '--agentskin-code-fg',
+  'code-fg': '--agentskin-code-fg',
+  inputBackground: '--agentskin-input-bg',
+  'input-bg': '--agentskin-input-bg',
+  buttonBackground: '--agentskin-button-bg',
+  'button-bg': '--agentskin-button-bg',
+  focusRing: '--agentskin-focus-ring',
+  'focus-ring': '--agentskin-focus-ring',
+};
+
+/**
+ * Merge studio tool overrides into the base `--agentskin-*` token set produced
+ * by {@link buildStudioPalette}. This is what makes a user's image-to-theme
+ * palette, preset load, or toolbox tuning actually reach the exported
+ * `.agentskin-theme` package — previously the export used the snapshot-default
+ * palette and silently dropped every user edit.
+ *
+ * Priority: a full `colors` palette wins; otherwise the four role fields
+ * (accent/background/foreground/surface) rebuild the token set via
+ * {@link buildSkinTokens}.
+ */
+export function mergeOverridesToSkinTokens(
+  base: Record<string, string>,
+  overrides:
+    | {
+        colors?: Record<string, string>;
+        accent?: string;
+        background?: string;
+        foreground?: string;
+        surface?: string;
+      }
+    | null
+    | undefined,
+): Record<string, string> {
+  if (!overrides) return base;
+  const next = { ...base };
+
+  if (overrides.colors && Object.keys(overrides.colors).length > 0) {
+    for (const [rawKey, value] of Object.entries(overrides.colors)) {
+      if (!value) continue;
+      const norm = rawKey.startsWith('--agentskin-') ? rawKey.slice('--agentskin-'.length) : rawKey;
+      const cssVar =
+        SKIN_TOKEN_MAP[norm] ?? (rawKey.startsWith('--') ? rawKey : `--agentskin-${norm}`);
+      next[cssVar] = value;
+    }
+    return next;
+  }
+
+  const bg = overrides.background ?? base['--agentskin-bg'];
+  const fg = overrides.foreground ?? base['--agentskin-text'];
+  const accent = overrides.accent ?? base['--agentskin-accent'];
+  if (!bg && !fg && !accent) return base;
+  return {
+    ...base,
+    ...buildSkinTokens({
+      bg: bg || '#201a40',
+      fg: fg || '#e8e2ff',
+      accent: accent || bg || '#9d8bff',
+    }),
+  };
+}

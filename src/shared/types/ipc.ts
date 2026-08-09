@@ -448,7 +448,7 @@ export interface AgentSkinApi {
    *  Returns null if canceled. */
   importBundle(): Promise<{ id: string; name: string } | null>;
   /** Install an existing bundle by id (re-applies its theme). */
-  installBundleById(id: string): Promise<{ ok: boolean }>;
+  installBundleById(id: string): Promise<{ ok: boolean; error?: string }>;
   /** Delete an installed bundle by id (filesystem rm). */
   deleteBundle(id: string): Promise<{ ok: boolean }>;
   // --- Diagnostics (Performance panel) ---

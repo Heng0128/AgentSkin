@@ -27,6 +27,7 @@ import {
   Upload01Icon,
 } from '@hugeicons/core-free-icons';
 import { toMessage } from '@shared/errors';
+import { semanticColorsToPalette } from '@shared/theme-mapping';
 import type { WallpaperInfo } from '@shared/types';
 
 // ---------------------------------------------------------------------------
@@ -177,10 +178,22 @@ function WallpaperCard({
 export function WallpaperStudioPanel() {
   const activeProject = useStudioStore((s) => s.getActiveProject());
   const activeAgent = activeProject?.agentId ?? null;
+  const setPaletteLoaded = useStudioStore((s) => s.setPaletteLoaded);
+  const setPreviewView = useStudioStore((s) => s.setPreviewView);
   const showToast = useNotificationStore((s) => s.showToast);
   const [wallpapers, setWallpapers] = useState<WallpaperItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  // Tracks the wallpaper applied to the active agent this session so the
+  // "active" tick can reflect reality (the panel has no cross-session getter).
+  const [appliedId, setAppliedId] = useState<string | null>(null);
+
+  // The applied-wallpaper indicator is agent-scoped: clear it when the active
+  // agent changes so the tick never implies a stale cross-agent state.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset is keyed on agent change; the value is intentionally not read inside the body.
+  useEffect(() => {
+    setAppliedId(null);
+  }, [activeAgent]);
 
   // --- Load wallpaper list ---
   useEffect(() => {
@@ -218,14 +231,26 @@ export function WallpaperStudioPanel() {
       setBusy(wallpaperId);
       try {
         const result = await api.extractThemeFromWallpaper(wallpaperId);
-        showToast(`主题已生成: ${result.displayName || result.id || 'extracted-theme'}`);
+        // Closing the loop: the generated theme is now installed in the
+        // library — load its palette into the Studio editor (same path as
+        // PresetThemePicker's LOAD) so the user can preview/tweak/export it.
+        const palette = semanticColorsToPalette(result.colors);
+        if (Object.keys(palette).length > 0) {
+          setPaletteLoaded(palette);
+          setPreviewView('theme');
+          showToast(
+            `已从「${result.displayName || result.id}」提取配色并载入编辑器 → 见「主题」标签`,
+          );
+        } else {
+          showToast(`主题已生成: ${result.displayName || result.id || 'extracted-theme'}`);
+        }
       } catch (e) {
         showToast(`提取失败: ${toMessage(e)}`, 'destructive');
       } finally {
         setBusy(null);
       }
     },
-    [showToast],
+    [showToast, setPaletteLoaded, setPreviewView],
   );
 
   // --- Apply wallpaper to active agent ---
@@ -238,6 +263,7 @@ export function WallpaperStudioPanel() {
       setBusy(wallpaperId);
       try {
         await api.applyWallpaperToAgent(wallpaperId, activeAgent);
+        setAppliedId(wallpaperId);
         showToast('壁纸已应用');
       } catch (e) {
         showToast(`应用失败: ${toMessage(e)}`, 'destructive');
@@ -354,7 +380,7 @@ export function WallpaperStudioPanel() {
                   <WallpaperCard
                     key={wp.id}
                     wallpaper={wp}
-                    isActive={false}
+                    isActive={appliedId === wp.id}
                     busy={busy === wp.id}
                     onExtract={handleExtract}
                     onApply={handleApply}

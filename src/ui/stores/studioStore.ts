@@ -12,7 +12,7 @@
  */
 
 import { api } from '@/api/agentSkinClient';
-import { buildStudioPalette } from '@/components/studio/palette';
+import { buildStudioPalette, mergeOverridesToSkinTokens } from '@/components/studio/palette';
 import type { PreviewView } from '@/components/studio/StudioCenterPanel';
 import type { ToolOverride } from '@/components/studio/Toolbox';
 import { useNotificationStore } from '@/stores/notificationStore';
@@ -67,6 +67,8 @@ interface StudioStoreState {
   searchQuery: string;
   hoveredIdx: number | null;
   toolOverrides: ToolOverride | null;
+  /** Per-edit undo stack for `toolOverrides` (most recent first). */
+  undoStack: ToolOverride[];
   inspectMode: boolean;
   liveNode: InspectedNode | null;
   liveError: string | null;
@@ -111,6 +113,8 @@ interface StudioStoreState {
   toggleInspect(): Promise<void>;
   setOverride(key: keyof ToolOverride, value: string | number | boolean | undefined): void;
   resetOverrides(): void;
+  /** Undo the last `toolOverrides` edit. No-op when the stack is empty. */
+  undo(): void;
   addPinnedSelector(): void;
   removePinnedSelector(sel: string): void;
   togglePseudo(state: string): void;
@@ -147,6 +151,21 @@ interface StudioStoreState {
 const inspectBusy = { current: false };
 const autoBaselineBusy = { current: false };
 
+/**
+ * Undo coalescing: rapid edits to the *same* override key within this window
+ * (e.g. dragging a slider) collapse into a single undo step, so "undo" reverts
+ * the whole gesture rather than one pixel of a drag.
+ */
+const undoCoalesce = { key: null as keyof ToolOverride | null, at: 0 };
+const UNDO_COALESCE_MS = 700;
+const UNDO_LIMIT = 30;
+
+/** Push the previous `toolOverrides` onto the undo stack (capped). */
+function pushUndo(stack: ToolOverride[], prev: ToolOverride | null): ToolOverride[] {
+  const next = [...stack, prev];
+  return next.length > UNDO_LIMIT ? next.slice(next.length - UNDO_LIMIT) : next;
+}
+
 export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   projects: [],
   activeProjectId: null,
@@ -175,6 +194,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   searchQuery: '',
   hoveredIdx: null,
   toolOverrides: null,
+  undoStack: [],
   inspectMode: false,
   liveNode: null,
   liveError: null,
@@ -211,7 +231,8 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
 
   selectProject: (id) => {
     if (get().activeProjectId === id) return;
-    set({ activeProjectId: id });
+    undoCoalesce.key = null;
+    set({ activeProjectId: id, undoStack: [] });
     void get().loadProjectSnapshots();
   },
 
@@ -310,7 +331,8 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   changeAgent: async (agentId) => {
     const { saveActiveProject, previewView, inspectMode } = get();
     void saveActiveProject({ agentId });
-    set({ snapshot: null, inspectingIdx: null });
+    undoCoalesce.key = null;
+    set({ snapshot: null, inspectingIdx: null, undoStack: [] });
     if (previewView === 'generator') set({ previewView: 'theme' });
     if (inspectMode || inspectBusy.current) {
       inspectBusy.current = true;
@@ -541,14 +563,17 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     const { snapshot, toolOverrides, exportName, exportAuthor } = get();
     set({ exportState: { loading: true, dir: null, error: null } });
     try {
-      const root = snapshot != null ? buildStudioPalette(snapshot) : undefined;
+      const merged =
+        snapshot != null
+          ? mergeOverridesToSkinTokens(buildStudioPalette(snapshot), toolOverrides)
+          : undefined;
       const payload = {
         meta: {
           name: exportName.trim() || project.name,
           author: exportAuthor.trim() || project.author || 'AgentSkin Studio',
         },
         agentId: project.agentId,
-        root: root as Record<string, string> | undefined,
+        root: merged as Record<string, string> | undefined,
         signature: (toolOverrides ?? undefined) as unknown as Record<string, unknown> | undefined,
       };
       const res = await api.exportStudioTheme(payload);
@@ -556,7 +581,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       void get().saveActiveProject({
         hasSnapshot: true,
         exportedDir: res.packageDir,
-        palette: root,
+        palette: merged,
         signature: payload.signature,
         overrides: (toolOverrides ?? undefined) as Record<string, unknown> | undefined,
       });
@@ -600,17 +625,40 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
 
   setOverride: (key, value) => {
     set((s) => {
-      const next: Partial<ToolOverride> = { ...(s.toolOverrides ?? {}) };
+      const prev = s.toolOverrides;
+      const now = Date.now();
+      const coalesce = undoCoalesce.key === key && now - undoCoalesce.at < UNDO_COALESCE_MS;
+      undoCoalesce.key = key;
+      undoCoalesce.at = now;
+      const next: Partial<ToolOverride> = { ...(prev ?? {}) };
       if (value === undefined || value === '') {
         delete next[key];
       } else {
         (next as Record<keyof ToolOverride, string | number | boolean | undefined>)[key] = value;
       }
-      return { toolOverrides: Object.keys(next).length ? (next as ToolOverride) : null };
+      const toolOverrides = Object.keys(next).length ? (next as ToolOverride) : null;
+      return {
+        toolOverrides,
+        undoStack: coalesce ? s.undoStack : pushUndo(s.undoStack, prev),
+      };
     });
   },
 
-  resetOverrides: () => set({ toolOverrides: null }),
+  resetOverrides: () =>
+    set((s) => ({
+      undoStack: pushUndo(s.undoStack, s.toolOverrides),
+      toolOverrides: null,
+    })),
+
+  undo: () => {
+    set((s) => {
+      if (s.undoStack.length === 0) return {};
+      const stack = s.undoStack.slice();
+      const prev = stack.pop()!;
+      undoCoalesce.key = null;
+      return { toolOverrides: prev ?? null, undoStack: stack };
+    });
+  },
 
   addPinnedSelector: () => {
     const v = get().customSelectorInput.trim();
@@ -642,6 +690,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
 
   applyPalette: (palette, action) => {
     set((s) => ({
+      undoStack: pushUndo(s.undoStack, s.toolOverrides),
       toolOverrides: { ...(s.toolOverrides ?? {}), ...palette } as ToolOverride,
       previewView: action === 'apply' ? 'theme' : s.previewView,
     }));
@@ -649,13 +698,36 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
 
   setOverrideColors: (palette) =>
     set((s) => ({
-      toolOverrides: { ...(s.toolOverrides ?? {}), colors: palette } as ToolOverride,
+      // Map the semantic palette onto the four role fields the live preview
+      // (RealDomPreview) actually consumes, and keep the full palette in
+      // `colors` so export can bake the complete 14-token set.
+      undoStack: pushUndo(s.undoStack, s.toolOverrides),
+      toolOverrides: {
+        ...(s.toolOverrides ?? {}),
+        accent: palette.accent,
+        background: palette.background,
+        foreground: palette.foreground,
+        surface: palette.surface,
+        colors: palette,
+      } as ToolOverride,
+      previewView: 'theme',
     })),
 
   setPaletteLoaded: (palette) => {
     const showToast = useNotificationStore.getState().showToast;
     set((s) => ({
-      toolOverrides: { ...(s.toolOverrides ?? {}), colors: palette } as ToolOverride,
+      // Same mapping as setOverrideColors: role fields drive the live preview,
+      // `colors` preserves the full palette for export.
+      undoStack: pushUndo(s.undoStack, s.toolOverrides),
+      toolOverrides: {
+        ...(s.toolOverrides ?? {}),
+        accent: palette.accent,
+        background: palette.background,
+        foreground: palette.foreground,
+        surface: palette.surface,
+        colors: palette,
+      } as ToolOverride,
+      previewView: 'theme',
     }));
     const project = get().getActiveProject();
     if (project) {

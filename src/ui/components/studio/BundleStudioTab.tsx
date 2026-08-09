@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useStudioStore } from '@/stores/studioStore';
 
 import {
   Delete01Icon,
@@ -35,6 +36,7 @@ import {
   RefreshIcon,
 } from '@hugeicons/core-free-icons';
 import { toMessage } from '@shared/errors';
+import type { ApplyRequest } from '@shared/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -59,6 +61,7 @@ interface BundleStatus {
 
 export function BundleStudioTab() {
   const showToast = useNotificationStore((s) => s.showToast);
+  const activeAgent = useStudioStore((s) => s.getActiveProject()?.agentId ?? null);
   const [bundles, setBundles] = useState<BundleEntry[]>([]);
   const [status, setStatus] = useState<BundleStatus>({ loading: false, error: null });
 
@@ -94,14 +97,35 @@ export function BundleStudioTab() {
   const handleInstall = useCallback(
     async (id: string) => {
       try {
-        await api.installBundleById(id);
-        showToast(`Bundle ${id} 已安装并应用`);
+        const res = await api.installBundleById(id);
+        if (!res.ok) {
+          showToast(`安装失败: ${res.error ?? '未知错误'}`, 'destructive');
+          return;
+        }
+        // Install registers the theme into the library. If a studio project
+        // (and thus an agent) is active, push the apply so "安装" genuinely
+        // reaches the agent instead of only landing in the library.
+        if (activeAgent) {
+          try {
+            const applyRes = await api.applyTheme({
+              themeId: id,
+              appId: activeAgent,
+            } as ApplyRequest);
+            if (applyRes.status === 'applied' || applyRes.status === 'requires-restart') {
+              showToast(`Bundle ${id} 已安装并应用到 ${activeAgent}`);
+              return;
+            }
+          } catch {
+            /* fall through to the installed-only toast */
+          }
+        }
+        showToast(`Bundle ${id} 已安装到主题库`);
       } catch (e) {
         const msg = toMessage(e);
         showToast(`安装失败: ${msg}`, 'destructive');
       }
     },
-    [showToast],
+    [showToast, activeAgent],
   );
 
   const handleReveal = useCallback(
