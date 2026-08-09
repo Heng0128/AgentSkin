@@ -29,9 +29,9 @@
  *   - Material You / Material Design 3 color system
  *   - Adobe Leonardo's "themed color" generation
  *
- * Pure module — no I/O, no Electron deps. Runs identically in main and
- * renderer process (shared layer would be ideal, but lives under
- * src/main/profile alongside its sibling color-quantize.ts for cohesion).
+ * Pure module — no I/O, no Electron deps. Lives in the shared layer
+ * (src/shared) so both the main and renderer processes can import it
+ * without a `@main` path alias.
  */
 
 // ---------------------------------------------------------------------------
