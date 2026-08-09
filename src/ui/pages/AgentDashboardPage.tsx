@@ -6,19 +6,98 @@
  * 概览页面 — 替代原来的 Dashboard 仪表盘。
  *
  * 职责：
- *   - 最近活动时间线（近期将接入真实事件流）
+ *   - 最近活动时间线（已通过 api.getPerformanceHistory 接入真实事件流）
  *   - 统计卡（主题数 / Agent 支持数 / 已安装 Agent 数）
  *   - 快捷入口跳转到各功能页面
  *
  * 原「Connected Agents」区块已迁移至独立的 Agents 视图。
  */
 
+import { useEffect, useState } from 'react';
+import { api } from '@/api/agentSkinClient';
+import { APP_META } from '@/components/app-mark';
 import type { AppController } from '@/hooks/useAppController';
+
+import type { ThemeCatalogItem } from '@shared/types';
+import { AGENT_IDS } from '@shared/types';
+
+// --- Local types (mirror AgentSkinApi.getPerformanceHistory response) -----
+
+/** One theme-apply trace — mirrors IPC response inline type. */
+interface ThemeApplyTrace {
+  id: string;
+  agentId: string;
+  themeId?: string;
+  finishedAt: string;
+  duration: number;
+  success: boolean;
+  steps: Array<{ name: string; duration: number; success: boolean; error?: string }>;
+  error?: string;
+}
+
+// --- Constants -----------------------------------------------------------
+
+const POLL_MS = 10_000;
+const HISTORY_COUNT = 5;
+
+// --- Helper: relative time (e.g. "3 分钟前") ----------------------------
+
+function formatRelativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return '';
+
+  // Compute difference in whole seconds using UTC to avoid DST drift.
+  const diffSec = Math.floor((Date.now() - then) / 1000);
+  if (diffSec < 0) return '刚刚';
+  if (diffSec < 60) return `${diffSec} 秒前`;
+
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} 分钟前`;
+
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} 小时前`;
+
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 30) return `${diffDay} 天前`;
+
+  const diffMonth = Math.floor(diffDay / 30);
+  return `${diffMonth} 个月前`;
+}
+
+// --- Component -----------------------------------------------------------
 
 export default function AgentDashboardPage({ controller }: { controller: AppController }) {
   const { status, installed, setRoute, t } = controller;
-  const supportedCount = 6; // AGENT_IDS.length — formal product agents
+  const supportedCount = AGENT_IDS.length;
   const runningCount = status?.apps.filter((a) => a.running).length ?? 0;
+
+  const [traces, setTraces] = useState<ThemeApplyTrace[]>([]);
+
+  // Poll apply-trace history on mount and every 10 s.
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const fetchTraces = async () => {
+      try {
+        const res = await api.getPerformanceHistory(HISTORY_COUNT);
+        if (!cancelled) setTraces(res.recent);
+      } catch {
+        // Partial errors from one poll should not stop the dashboard surface.
+        // traces retain their previous value on failure.
+      }
+      if (!cancelled) {
+        timer = setTimeout(fetchTraces, POLL_MS);
+      }
+    };
+
+    void fetchTraces();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
@@ -49,16 +128,73 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
             <StatTile label={t.yourEnvironments} value="—" onClick={() => setRoute('workspace')} />
           </div>
 
-          {/* 最近活动 — 目前为占位状态，后续接入事件流 */}
+          {/* 最近活动 — 已接入真实 apply trace 数据 */}
           <section className="rounded-[2px] border border-border bg-card p-[14px]">
             <h2 className="mb-3 font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
               {t.recentActivity}
             </h2>
-            <p className="font-mono text-[11px] text-muted-foreground/70">{t.noActivity}</p>
+
+            {traces.length === 0 ? (
+              <p className="font-mono text-[11px] text-muted-foreground/70">{t.noActivity}</p>
+            ) : (
+              <ul className="flex flex-col gap-1.5">
+                {traces.map((trace) => (
+                  <ActivityRow key={trace.id} trace={trace} installed={installed} t={t} />
+                ))}
+              </ul>
+            )}
           </section>
         </div>
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* ActivityRow — 单条活动记录                                          */
+/* ------------------------------------------------------------------ */
+
+function ActivityRow({
+  trace,
+  installed,
+  t,
+}: {
+  trace: ThemeApplyTrace;
+  installed: ThemeCatalogItem[];
+  t: AppController['t'];
+}) {
+  const agentName = APP_META[trace.agentId as keyof typeof APP_META]?.name ?? trace.agentId;
+
+  // Build the activity description string.
+  let description: string;
+  if (trace.themeId) {
+    const themeName =
+      installed.find((th) => th.id === trace.themeId)?.name ??
+      (trace.themeId.length > 15 ? `${trace.themeId.slice(0, 15)}…` : trace.themeId);
+    description = t.activityApplied.replace('{agent}', agentName).replace('{theme}', themeName);
+  } else {
+    description = t.activityRestored.replace('{agent}', agentName);
+  }
+
+  const relativeTime = formatRelativeTime(trace.finishedAt);
+
+  return (
+    <li className="flex items-center gap-2 rounded-[2px] px-1.5 py-1">
+      <span className="font-mono text-[11px] text-foreground leading-tight">{description}</span>
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        <span className="font-mono text-[10px] text-muted-foreground/60 font-mono">
+          {relativeTime}
+        </span>
+        {!trace.success && (
+          <span
+            className="font-mono text-[10px] text-destructive"
+            title={trace.error ?? 'apply failed'}
+          >
+            ⚠
+          </span>
+        )}
+      </span>
+    </li>
   );
 }
 

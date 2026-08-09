@@ -140,10 +140,12 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
 export default function AgentsPage({ controller }: { controller: AppController }) {
   const { t } = controller;
 
-  // Load settings on mount so override cards have data
+  // Load settings on mount so override cards have data.
+  // Using loadSettings (not openSettings) to avoid mutating settingsSection
+  // as a side-effect of mounting the Agents page.
   useEffect(() => {
-    void controller.openSettings('general');
-  }, [controller.openSettings]);
+    void controller.loadSettings();
+  }, [controller.loadSettings]);
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
