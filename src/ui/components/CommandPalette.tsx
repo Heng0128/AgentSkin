@@ -46,7 +46,7 @@ export interface CommandPaletteProps {
 }
 
 export default function CommandPalette({ open, onOpenChange, controller }: CommandPaletteProps) {
-  const { route, setRoute, installed: themes, activeAgentId } = controller;
+  const { route, setRoute, installed: themes, activeAgentId, t } = controller;
 
   /** Toggle dark ↔ light using the persisted mode as the source of truth. */
   const toggleThemeMode = useCallback(() => {
@@ -78,34 +78,36 @@ export default function CommandPalette({ open, onOpenChange, controller }: Comma
   /** 主题 (Themes) — map installed catalog entries to palette items. */
   const themeItems = useMemo(
     () =>
-      themes.map((t: ThemeCatalogItem) => (
+      themes.map((theme: ThemeCatalogItem) => (
         <CommandItem
-          key={`theme:${t.id}`}
+          key={`theme:${theme.id}`}
           onSelect={() => {
-            void applyThemeByName(t.id, t.name);
+            void applyThemeByName(theme.id, theme.name);
             onOpenChange(false);
           }}
         >
           <PaletteIcon />
-          <span className="truncate">应用主题 → {t.name}</span>
+          <span className="truncate">
+            {t.cmdApplyThemePrefix} {theme.name}
+          </span>
         </CommandItem>
       )),
-    [themes, applyThemeByName, onOpenChange],
+    [themes, applyThemeByName, onOpenChange, t],
   );
 
   return (
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="命令面板"
-      description="输入命令或搜索"
+      title={t.cmdTitle}
+      description={t.cmdDescription}
     >
-      <CommandInput placeholder="输入命令或搜索..." />
+      <CommandInput placeholder={t.cmdSearchPlaceholder} />
       <CommandList>
-        <CommandEmpty>无结果</CommandEmpty>
+        <CommandEmpty>{t.cmdEmpty}</CommandEmpty>
 
         {/* ── 导航 ── */}
-        <CommandGroup heading="导航">
+        <CommandGroup heading={t.cmdGroupNavigation}>
           <CommandItem
             onSelect={() => {
               setRoute('dashboard');
@@ -114,7 +116,7 @@ export default function CommandPalette({ open, onOpenChange, controller }: Comma
             disabled={route === 'dashboard'}
           >
             <LayoutDashboardIcon />
-            <span>仪表盘</span>
+            <span>{t.cmdGoDashboard}</span>
             <CommandShortcut>⌘ D</CommandShortcut>
           </CommandItem>
           <CommandItem
@@ -125,7 +127,7 @@ export default function CommandPalette({ open, onOpenChange, controller }: Comma
             disabled={route === 'themes'}
           >
             <PaletteIcon />
-            <span>主题库</span>
+            <span>{t.cmdGoThemes}</span>
             <CommandShortcut>⌘ T</CommandShortcut>
           </CommandItem>
           <CommandItem
@@ -136,7 +138,7 @@ export default function CommandPalette({ open, onOpenChange, controller }: Comma
             disabled={route === 'settings'}
           >
             <SettingsIcon />
-            <span>设置</span>
+            <span>{t.cmdGoSettings}</span>
             <CommandShortcut>⌘ ,</CommandShortcut>
           </CommandItem>
           <CommandItem
@@ -147,7 +149,7 @@ export default function CommandPalette({ open, onOpenChange, controller }: Comma
             disabled={route === 'workspace'}
           >
             <AppWindowIcon />
-            <span>工作空间</span>
+            <span>{t.cmdGoWorkspace}</span>
             <CommandShortcut>⌘ W</CommandShortcut>
           </CommandItem>
           <CommandItem
@@ -158,7 +160,7 @@ export default function CommandPalette({ open, onOpenChange, controller }: Comma
             disabled={route === 'wallpaper'}
           >
             <ImageIcon />
-            <span>壁纸引擎</span>
+            <span>{t.cmdGoWallpaper}</span>
             <CommandShortcut>⌘ I</CommandShortcut>
           </CommandItem>
         </CommandGroup>
@@ -166,24 +168,24 @@ export default function CommandPalette({ open, onOpenChange, controller }: Comma
         <CommandSeparator />
 
         {/* ── 主题 ── */}
-        {themes.length > 0 && <CommandGroup heading="主题">{themeItems}</CommandGroup>}
+        {themes.length > 0 && <CommandGroup heading={t.cmdGroupThemes}>{themeItems}</CommandGroup>}
 
         <CommandSeparator />
 
         {/* ── 操作 ── */}
-        <CommandGroup heading="操作">
+        <CommandGroup heading={t.cmdGroupActions}>
           <CommandItem onSelect={toggleThemeMode}>
             <SunIcon className="dark:hidden" />
             <MoonIcon className="hidden dark:block" />
-            <span>切换主题模式</span>
+            <span>{t.cmdToggleThemeMode}</span>
           </CommandItem>
           <CommandItem disabled>
             <RotateCcwIcon />
-            <span>重新扫描 Agent</span>
+            <span>{t.cmdScanAgents}</span>
           </CommandItem>
           <CommandItem disabled>
             <BugIcon />
-            <span>开发者工具</span>
+            <span>{t.cmdDevTools}</span>
             <CommandShortcut>⌘ ⌥ I</CommandShortcut>
           </CommandItem>
         </CommandGroup>

@@ -264,7 +264,7 @@ export function EnvironmentCard({
         <div className="mt-2.5 font-mono">
           <div className="grid grid-cols-3 gap-1.5 rounded-[2px] bg-secondary px-2.5 py-[10px]">
             <div>
-              <i className="mb-0.5 block text-[8px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
+              <i className="mb-0.5 block text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
                 {t.detailVersion}
               </i>
               <b className="block text-[10.5px] font-semibold text-foreground/80">
@@ -272,13 +272,13 @@ export function EnvironmentCard({
               </b>
             </div>
             <div>
-              <i className="mb-0.5 block text-[8px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
+              <i className="mb-0.5 block text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
                 {t.agentDetailStatus}
               </i>
               {statusLabel}
             </div>
             <div>
-              <i className="mb-0.5 block text-[8px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
+              <i className="mb-0.5 block text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
                 {t.capTheme}
               </i>
               <b className="block truncate text-[10.5px] font-semibold text-foreground/80">
@@ -292,7 +292,7 @@ export function EnvironmentCard({
         {env.wallpaperId && (
           <div className="mt-1.5 flex items-center gap-1 font-mono text-[9px] text-muted-foreground">
             <HugeIcon icon={Image02Icon} className="size-3" />
-            <span>壁纸已绑定</span>
+            <span>{t.envWallpaperBound}</span>
           </div>
         )}
 

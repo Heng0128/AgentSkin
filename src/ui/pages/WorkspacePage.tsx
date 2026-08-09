@@ -103,7 +103,7 @@ function QuickButton({
       <span className="absolute left-0 top-0 h-0 w-[3px] bg-primary transition-all duration-250 group-hover/qbtn:h-full" />
       <HugeIcon icon={Icon} size={14} className="text-muted-foreground/70" />
       <b className="text-[12px]">{label}</b>
-      <span className="font-mono text-[9px] text-[var(--dim)]">{shortcut}</span>
+      {shortcut && <span className="font-mono text-[9px] text-[var(--dim)]">{shortcut}</span>}
     </button>
   );
 }
@@ -220,14 +220,14 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
       id: 'import',
       icon: PackageIcon,
       label: t.importTheme,
-      shortcut: '⌘I',
+      shortcut: '',
       onClick: () => void controller.importTheme(),
     },
     {
       id: 'wallpaper',
       icon: Image02Icon,
       label: t.actionWallpaperCenter,
-      shortcut: '⌘W',
+      shortcut: '',
       onClick: handleOpenWallpaperCenter,
     },
     {

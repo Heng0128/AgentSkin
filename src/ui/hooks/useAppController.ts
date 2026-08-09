@@ -279,6 +279,7 @@ export function useAppController() {
   const setSettingsOpen = useSettingsStore((s) => s.setSettingsOpen);
   const setSettingsSection = useSettingsStore((s) => s.setSettingsSection);
   const openSettings = useSettingsStore((s) => s.openSettings);
+  const loadSettings = useSettingsStore((s) => s.loadSettings);
   const chooseAppPath = useSettingsStore((s) => s.chooseAppPath);
   const clearAppPath = useSettingsStore((s) => s.clearAppPath);
   const saveAppPort = useSettingsStore((s) => s.saveAppPort);
@@ -381,6 +382,7 @@ export function useAppController() {
     setSettingsSection,
     settings,
     openSettings,
+    loadSettings,
     chooseAppPath,
     clearAppPath,
     saveAppPort,

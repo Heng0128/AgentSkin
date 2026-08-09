@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { APP_META } from '@/components/app-mark';
 import type { AppController } from '@/hooks/useAppController';
+import { useEnvironmentStore } from '@/stores/environmentStore';
 
 import type { ThemeCatalogItem } from '@shared/types';
 import { AGENT_IDS } from '@shared/types';
@@ -70,6 +71,12 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
   const { status, installed, setRoute, t } = controller;
   const supportedCount = AGENT_IDS.length;
   const runningCount = status?.apps.filter((a) => a.running).length ?? 0;
+  const presets = useEnvironmentStore((s) => s.presets);
+
+  // Most recently updated environments (top 3) for the quick-entry section.
+  const recentEnvs = [...presets]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 3);
 
   const [traces, setTraces] = useState<ThemeApplyTrace[]>([]);
 
@@ -127,6 +134,46 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
             />
             <StatTile label={t.yourEnvironments} value="—" onClick={() => setRoute('workspace')} />
           </div>
+
+          {/* 最近的环境 — 快捷入口 */}
+          <section className="mb-5 rounded-[2px] border border-border bg-card p-[14px]">
+            <h2 className="mb-3 font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
+              {t.recentEnvironments}
+            </h2>
+            {recentEnvs.length === 0 ? (
+              <button
+                type="button"
+                onClick={() => setRoute('workspace')}
+                className="cursor-pointer font-mono text-[11px] text-muted-foreground/70 transition-colors duration-fast hover:text-foreground"
+              >
+                {t.noEnvironments}
+              </button>
+            ) : (
+              <ul className="grid grid-cols-3 gap-2">
+                {recentEnvs.map((env) => (
+                  <li key={env.id}>
+                    <button
+                      type="button"
+                      onClick={() => setRoute('workspace')}
+                      className="group flex w-full items-center gap-2 rounded-[2px] border border-border/60 bg-background px-3 py-2 text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
+                    >
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-[2px] bg-card2 text-[12px] font-semibold text-muted-foreground">
+                        {(env.name || env.agentId).charAt(0).toUpperCase()}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-[12px] font-semibold text-foreground">
+                          {env.name}
+                        </span>
+                        <span className="block truncate font-mono text-[10px] text-muted-foreground">
+                          {APP_META[env.agentId as keyof typeof APP_META]?.name ?? env.agentId}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
 
           {/* 最近活动 — 已接入真实 apply trace 数据 */}
           <section className="rounded-[2px] border border-border bg-card p-[14px]">

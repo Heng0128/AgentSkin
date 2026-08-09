@@ -106,16 +106,20 @@ export default function App() {
                       </div>
                     }
                   >
-                    {controller.route === 'dashboard' && (
-                      <AgentDashboardPage controller={controller} />
-                    )}
-                    {controller.route === 'workspace' && <WorkspacePage controller={controller} />}
-                    {controller.route === 'agents' && <AgentsPage controller={controller} />}
-                    {controller.route === 'themes' && <ThemesPage controller={controller} />}
-                    {controller.route === 'wallpaper' && (
-                      <WallpaperEnginePage controller={controller} />
-                    )}
-                    {controller.route === 'settings' && <SettingsPage controller={controller} />}
+                    <ErrorBoundary inline>
+                      {controller.route === 'dashboard' && (
+                        <AgentDashboardPage controller={controller} />
+                      )}
+                      {controller.route === 'workspace' && (
+                        <WorkspacePage controller={controller} />
+                      )}
+                      {controller.route === 'agents' && <AgentsPage controller={controller} />}
+                      {controller.route === 'themes' && <ThemesPage controller={controller} />}
+                      {controller.route === 'wallpaper' && (
+                        <WallpaperEnginePage controller={controller} />
+                      )}
+                      {controller.route === 'settings' && <SettingsPage controller={controller} />}
+                    </ErrorBoundary>
                   </Suspense>
                 </div>
               </div>

@@ -28,7 +28,7 @@ function currentT() {
   return uiMessages[locale];
 }
 
-export type SettingsSection = 'general' | 'system' | 'about' | 'advanced' | 'wallpaper';
+export type SettingsSection = 'general' | 'system' | 'about' | 'advanced';
 
 interface SettingsState {
   settingsOpen: boolean;
@@ -39,6 +39,8 @@ interface SettingsState {
   setSettingsSection: (section: SettingsSection) => void;
   /** Load settings so the page is ready when the route switches. */
   openSettings: (section?: SettingsSection) => Promise<void>;
+  /** Load settings data without mutating the active section. */
+  loadSettings: () => Promise<DesktopSettings | null>;
   chooseAppPath: (appId: AgentId) => Promise<void>;
   clearAppPath: (appId: AgentId) => Promise<void>;
   saveAppPort: (appId: AgentId, port: number | null) => Promise<boolean>;
@@ -58,6 +60,17 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       set({ settings: await api.getSettings() });
     } catch (error) {
       useNotificationStore.getState().fail(error);
+    }
+  },
+
+  loadSettings: async () => {
+    try {
+      const result = await api.getSettings();
+      set({ settings: result });
+      return result;
+    } catch (error) {
+      useNotificationStore.getState().fail(error);
+      return null;
     }
   },
 
