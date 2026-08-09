@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { useEffect, useState } from 'react';
 import { HugeIcon } from '@/components/ui/huge-icon';
+import type { PalettePreset } from '@/lib/palettePresets';
+import { deletePalettePreset, loadPalettePresets, savePalettePreset } from '@/lib/palettePresets';
+import { useStudioStore } from '@/stores/studioStore';
 
 import { SlidersHorizontalIcon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
@@ -540,6 +544,31 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 // ---------------------------------------------------------------------------
 
 function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: ToolboxPanelProps) {
+  // ===== 我的调色板预设库（localStorage） =====
+  const setPaletteLoaded = useStudioStore((s) => s.setPaletteLoaded);
+  const toolOverrides = useStudioStore((s) => s.toolOverrides);
+  const [presets, setPresets] = useState<PalettePreset[]>([]);
+  const [presetName, setPresetName] = useState('');
+
+  const refreshPresets = () => setPresets(loadPalettePresets());
+  // 仅挂载时从 localStorage 读取一次；内联避免引用每次渲染重建的 refreshPresets
+  // （否则加入依赖数组会导致无限重渲染循环）。
+  useEffect(() => {
+    setPresets(loadPalettePresets());
+  }, []);
+
+  const handleSavePreset = () => {
+    const name = presetName.trim();
+    if (!name) return;
+    savePalettePreset(name, toolOverrides?.colors ?? {});
+    setPresetName('');
+    refreshPresets();
+  };
+  const handleDeletePreset = (id: string) => {
+    deletePalettePreset(id);
+    refreshPresets();
+  };
+
   // Resolve final values: override wins over original
   const finalRadius = overrides?.radius ?? originalSig.radius.primary;
   const finalSpacing = overrides?.spacing ?? originalSig.spacing.avgPadding;
@@ -623,6 +652,89 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         >
           ↺ 重置
         </button>
+      </div>
+
+      {/* Section: 我的调色板 / Presets */}
+      <SectionHeader>我的调色板</SectionHeader>
+      <div className="space-y-1.5 py-1">
+        <div className="flex items-center gap-1.5">
+          <input
+            type="text"
+            value={presetName}
+            onChange={(e) => setPresetName(e.target.value)}
+            placeholder="为当前调色板命名"
+            className="h-6 min-w-0 flex-1 border border-border bg-muted px-2 font-mono text-[10px] outline-none transition-colors focus:border-primary/60"
+            style={{ borderRadius: 'var(--radius)' }}
+          />
+          <button
+            type="button"
+            onClick={handleSavePreset}
+            disabled={!presetName.trim() || !toolOverrides?.colors}
+            className="h-6 shrink-0 border border-border px-2 font-mono text-[9px] uppercase transition-colors hover:bg-accent disabled:opacity-30"
+            style={{ borderRadius: 'var(--radius)', letterSpacing: '0.06em' }}
+            title="保存当前调色板为预设"
+          >
+            保存
+          </button>
+        </div>
+        {presets.length === 0 ? (
+          <p
+            className="font-mono text-[8.5px]"
+            style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}
+          >
+            暂无预设。先在数字调参区调整颜色，再点击「保存」。
+          </p>
+        ) : (
+          <div className="space-y-1">
+            {presets.map((p) => (
+              <div
+                key={p.id}
+                className="flex items-center gap-1.5 border border-border px-1.5 py-1"
+                style={{ borderRadius: 'var(--radius)' }}
+              >
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                  <span className="flex shrink-0 overflow-hidden rounded-[2px] border border-border">
+                    {['accent', 'background', 'foreground', 'surface'].map((k) =>
+                      p.colors[k] ? (
+                        <span
+                          key={k}
+                          className="block size-3"
+                          style={{ background: p.colors[k] }}
+                          title={p.colors[k]}
+                        />
+                      ) : null,
+                    )}
+                  </span>
+                  <span
+                    className="truncate font-mono text-[9.5px]"
+                    style={{ color: 'var(--foreground)' }}
+                    title={p.name}
+                  >
+                    {p.name}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPaletteLoaded(p.colors)}
+                  className="h-5 shrink-0 border border-border px-1.5 font-mono text-[8.5px] uppercase transition-colors hover:bg-accent"
+                  style={{ borderRadius: 'var(--radius)', letterSpacing: '0.04em' }}
+                  title="载入该预设到编辑器"
+                >
+                  载入
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeletePreset(p.id)}
+                  className="h-5 shrink-0 border border-border px-1.5 font-mono text-[8.5px] uppercase transition-colors hover:bg-accent"
+                  style={{ borderRadius: 'var(--radius)', letterSpacing: '0.04em' }}
+                  title="删除该预设"
+                >
+                  删除
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Section: 配色 / Color */}

@@ -39,6 +39,7 @@ import {
   RefreshIcon,
   UploadSquareIcon,
 } from '@hugeicons/core-free-icons';
+import { deriveTonalPalette, TONAL_STEPS } from '@shared/tonal-palette';
 import type { ImagePaletteKey } from '@shared/types';
 import { Kicker } from './kicker';
 
@@ -341,6 +342,9 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
     () => new Set(PALETTE_GROUPS.filter((g) => g.defaultOpen === false).map((g) => g.id)),
   );
 
+  const [tonalOpen, setTonalOpen] = useState(false);
+  const [tonal, setTonal] = useState<ReturnType<typeof deriveTonalPalette> | null>(null);
+
   const toggleGroup = useCallback((groupId: string) => {
     setCollapsedGroups((prev) => {
       const next = new Set(prev);
@@ -475,6 +479,21 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
     setError(null);
     setRawBase64(null);
   }, []);
+
+  // --- 把某个色阶 tone 作为新强调色载入到编辑器 ---
+  const applyTone = useCallback(
+    (tone: string) => {
+      if (!palette) return;
+      const normalized: Record<string, string> = {};
+      for (const key of PALETTE_KEYS) {
+        const cssVar = `--agentskin-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+        normalized[key] = palette[key] ?? palette[cssVar] ?? '';
+      }
+      normalized.accent = tone;
+      onThemeGenerated(normalized);
+    },
+    [palette, onThemeGenerated],
+  );
 
   // ---------------------------------------------------------------------------
   // Render
@@ -649,6 +668,62 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
 
           {/* Wide color stripe */}
           <PaletteStripe palette={palette as Record<string, string>} />
+
+          {/* 衍生色阶 (Material You) —— 由强调色派生 11 阶 tonal */}
+          <div className="space-y-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                const tp = deriveTonalPalette(palette.accent);
+                setTonal(tp);
+                setTonalOpen((v) => !v);
+              }}
+              className="flex h-7 w-full items-center gap-2 rounded-[2px] border border-white/[0.08] px-2 font-mono text-[9px] font-semibold uppercase tracking-wider transition-colors hover:bg-white/[0.04]"
+              style={{ color: 'var(--foreground)', letterSpacing: '0.1em' }}
+            >
+              <span className="size-2 rounded-[1px]" style={{ background: palette.accent }} />
+              衍生色阶 {tonalOpen ? '▴' : '▾'}
+            </button>
+            {tonalOpen && tonal && (
+              <div className="space-y-0.5 border border-white/[0.06] bg-black/20 p-1.5">
+                <p
+                  className="font-mono text-[8px] uppercase"
+                  style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)', opacity: 0.6 }}
+                >
+                  点击任一色阶将其设为强调色
+                </p>
+                {TONAL_STEPS.map((step) => {
+                  const hex = tonal[step];
+                  return (
+                    <button
+                      key={step}
+                      type="button"
+                      onClick={() => applyTone(hex)}
+                      className="flex w-full items-center gap-2 rounded-[1px] px-1 py-[3px] text-left transition-colors hover:bg-white/[0.04]"
+                      title={`tone ${step} · ${hex}`}
+                    >
+                      <span
+                        className="size-4 shrink-0 rounded-[1px] border border-white/[0.06]"
+                        style={{ background: hex }}
+                      />
+                      <span
+                        className="font-mono text-[8.5px]"
+                        style={{ color: 'var(--foreground)' }}
+                      >
+                        {step}
+                      </span>
+                      <span
+                        className="ml-auto font-mono text-[8px]"
+                        style={{ color: 'var(--muted-foreground)' }}
+                      >
+                        {hex.toUpperCase()}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           {/* Individual swatches — grouped by semantic role (Tokens Studio style) */}
           <ScrollArea className="max-h-[280px] pr-1">
