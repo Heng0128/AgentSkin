@@ -88,26 +88,10 @@ node -v >nul 2>&1 || (
   pause & exit /b 1
 )
 
-REM --- Parse args: patch (default) / minor / major / --no-bump / --set X.Y.Z ---
-set "BUMP=patch"
-if "%~1"=="minor" set "BUMP=minor"
-if "%~1"=="major" set "BUMP=major"
-if "%~1"=="--no-bump" set "BUMP=--no-bump"
-if "%~1"=="--set" (
-  if "%~2"=="" (echo   [ERROR] --set needs a version & pause & exit /b 1)
-  set "BUMP=--set"
-  set "SETVER=%~2"
-)
-
-REM --- Bump version ---
-echo   [1/7] bump version (!BUMP!) ...
-if "!BUMP!"=="--set" (
-  for /f "delims=" %%v in ('node scripts\bump-version.mjs !BUMP! !SETVER!') do set "VER=%%v"
-) else (
-  for /f "delims=" %%v in ('node scripts\bump-version.mjs !BUMP!') do set "VER=%%v"
-)
-if "!VER!"=="" (echo   FAIL & pause & exit /b 1)
-echo     !VER!
+REM --- Read version from package.json (fixed, no auto-bump) ---
+for /f "delims=" %%v in ('node -p "require('./package.json').version"') do set "VER=%%v"
+if "!VER!"=="" (echo   [ERROR] Cannot read version from package.json & pause & exit /b 1)
+echo   [1/7] version: !VER!
 
 REM --- China mirrors ---
 set "ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/"
