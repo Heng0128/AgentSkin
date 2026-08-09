@@ -65,3 +65,39 @@ export async function verifyTheme(session: CdpSession): Promise<ThemeVerificatio
 export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/**
+ * Poll `verifyTheme` until it succeeds or `timeoutMs` is reached.
+ *
+ * Replaces the pattern of `await delay(fixedMs); verifyTheme()` with a
+ * smarter approach: returns as soon as the theme is verified (fast path)
+ * and waits up to `timeoutMs` if the theme takes longer to apply (slow path).
+ *
+ * The `minDelayMs` parameter (default 0) can be used to enforce a minimum
+ * wait before starting to poll, which is useful when the caller knows the
+ * theme takes at least that long to apply.
+ *
+ * Returns the first non-null `ThemeVerification`, or null if timeout is reached.
+ */
+export async function waitForTheme(
+  session: CdpSession,
+  options: { timeoutMs?: number; intervalMs?: number; minDelayMs?: number } = {},
+): Promise<ThemeVerification | null> {
+  const { timeoutMs = 3000, intervalMs = 100, minDelayMs = 0 } = options;
+
+  if (minDelayMs > 0) {
+    await delay(minDelayMs);
+  }
+
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const verification = await verifyTheme(session);
+    if (verification && verification.adoptedSheetCount > 0) {
+      return verification;
+    }
+    await delay(intervalMs);
+  }
+
+  // Final attempt after timeout
+  return verifyTheme(session);
+}

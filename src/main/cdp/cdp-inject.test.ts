@@ -9,16 +9,15 @@ import type { CdpSession } from './cdp-client';
 // pure functions, keeping the test close to actual behavior.
 // ---------------------------------------------------------------------------
 
-vi.mock('node:fs', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('node:fs')>();
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
   return {
     ...actual,
-    existsSync: vi.fn(),
-    readFileSync: vi.fn(),
+    readFile: vi.fn(),
   };
 });
 
-const { existsSync, readFileSync } = await import('node:fs');
+const { readFile } = await import('node:fs/promises');
 const { injectThemeViaCdp, removeEngineInjection } = await import('./cdp-inject');
 
 // ---------------------------------------------------------------------------
@@ -130,8 +129,7 @@ function smartEvaluate(
 // Reset mocks between tests.
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(existsSync).mockReturnValue(false);
-  vi.mocked(readFileSync).mockReturnValue(Buffer.from('fake-hero-data'));
+  vi.mocked(readFile).mockResolvedValue(Buffer.from('fake-hero-data'));
 });
 
 // ===========================================================================
@@ -196,8 +194,7 @@ describe('injectThemeViaCdp', () => {
   });
 
   it('injects hero from file path when heroPath is provided and file exists', async () => {
-    vi.mocked(existsSync).mockReturnValue(true);
-    vi.mocked(readFileSync).mockReturnValue(Buffer.from('fake-hero-binary'));
+    vi.mocked(readFile).mockResolvedValue(Buffer.from('fake-hero-binary'));
     const evaluate = vi.fn(smartEvaluate());
     const session = makeMockSession(evaluate);
     const result = await injectThemeViaCdp(session, {
@@ -205,8 +202,7 @@ describe('injectThemeViaCdp', () => {
       heroPath: '/fake/path/hero.webp',
       verifyDelayMs: 0,
     });
-    expect(existsSync).toHaveBeenCalledWith('/fake/path/hero.webp');
-    expect(readFileSync).toHaveBeenCalledWith('/fake/path/hero.webp');
+    expect(readFile).toHaveBeenCalledWith('/fake/path/hero.webp');
     expect(result.heroInjected).toBe(true);
   });
 
@@ -224,7 +220,7 @@ describe('injectThemeViaCdp', () => {
   });
 
   it('skips hero from path when file does not exist', async () => {
-    vi.mocked(existsSync).mockReturnValue(false);
+    vi.mocked(readFile).mockRejectedValue(new Error('ENOENT'));
     const evaluate = vi.fn(smartEvaluate());
     const session = makeMockSession(evaluate);
     const result = await injectThemeViaCdp(session, {

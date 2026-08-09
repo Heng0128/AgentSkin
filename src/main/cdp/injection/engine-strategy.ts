@@ -25,7 +25,7 @@
  * {@link ./cdp-strategy}.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import {
   DEFAULT_VERIFY_DELAY_MS,
   RENDERER_CONFIG_GLOBAL,
@@ -39,7 +39,7 @@ import {
 import type { CdpSession } from '../cdp-client';
 import { injectCssLayer } from './css-inject';
 import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
-import { delay, verifyTheme } from './shared';
+import { verifyTheme, waitForTheme } from './shared';
 import type { ThemeVerification } from './types';
 
 // ---------------------------------------------------------------------------
@@ -217,7 +217,7 @@ export async function injectThemeViaEngine(
           `getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '')`,
         )) || '';
     }
-  } else if (heroPath && existsSync(heroPath)) {
+  } else if (heroPath) {
     heroInjected = await injectHeroBlob(session, heroPath);
     if (heroInjected) {
       heroBlobUrl =
@@ -270,9 +270,12 @@ export async function injectThemeViaEngine(
   // files stay "applied" for the lifetime of the CDP target.
   await registerEnginePersistence(session, options);
 
-  // --- Step 6: Verify ---
-  await delay(verifyDelayMs);
-  const verification = await verifyTheme(session);
+  // --- Step 6: Verify (polling with timeout) ---
+  const verification = await waitForTheme(session, {
+    timeoutMs: 3000,
+    intervalMs: 100,
+    minDelayMs: verifyDelayMs,
+  });
 
   const success = layersInjected >= 2 && adapterApplied && verification !== null;
 
@@ -318,9 +321,9 @@ async function registerEnginePersistence(
   // --agentskin-art without re-reading the file (which it can't do from a
   // page context). If a heroPath was given instead, read it now.
   let resolvedHeroDataUrl = heroDataUrl ?? null;
-  if (!resolvedHeroDataUrl && heroPath && existsSync(heroPath)) {
+  if (!resolvedHeroDataUrl && heroPath) {
     try {
-      const data = readFileSync(heroPath);
+      const data = await readFile(heroPath);
       const mime = heroPath.endsWith('.png')
         ? 'image/png'
         : heroPath.endsWith('.jpg') || heroPath.endsWith('.jpeg')

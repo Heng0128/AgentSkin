@@ -16,12 +16,11 @@
  * + theme + adapter), see {@link ./engine-strategy}.
  */
 
-import { existsSync } from 'node:fs';
 import { DEFAULT_VERIFY_DELAY_MS } from '../../../shared/injection-constants';
 import type { CdpSession } from '../cdp-client';
 import { injectCssAdopted } from './css-inject';
 import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
-import { delay, verifyTheme } from './shared';
+import { delay, verifyTheme, waitForTheme } from './shared';
 import type { ThemeVerification } from './types';
 
 // ---------------------------------------------------------------------------
@@ -96,23 +95,26 @@ export async function injectThemeViaCdp(
   let heroInjected = false;
   if (heroDataUrl) {
     heroInjected = await injectHeroFromDataUrl(session, heroDataUrl);
-  } else if (heroPath && existsSync(heroPath)) {
+  } else if (heroPath) {
     heroInjected = await injectHeroBlob(session, heroPath);
   }
 
   // --- Step 3: CSS via adoptedStyleSheets ---
   let cssInjected = await injectCssAdopted(session, css);
 
-  // --- Step 4: Verify (+ retry) ---
-  await delay(verifyDelayMs);
-  let verification = await verifyTheme(session);
+  // --- Step 4: Verify (+ retry with polling) ---
+  let verification = await waitForTheme(session, {
+    timeoutMs: 3000,
+    intervalMs: 100,
+    minDelayMs: verifyDelayMs,
+  });
 
   if (!verification?.heroBlobActive && heroInjected) {
     // Hero might have been GC'd or page re-rendered; retry once.
     for (let i = 0; i < retries && !verification?.heroBlobActive; i++) {
       if (heroDataUrl) {
         await injectHeroFromDataUrl(session, heroDataUrl);
-      } else if (heroPath && existsSync(heroPath)) {
+      } else if (heroPath) {
         await injectHeroBlob(session, heroPath);
       }
       if (!cssInjected) {

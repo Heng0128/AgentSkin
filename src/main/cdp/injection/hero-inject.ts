@@ -9,7 +9,7 @@
  * Extracted from the split of {@link ./shared}.
  */
 
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { toMessage } from '../../../shared/errors';
 import { HERO_CHUNKS_GLOBAL, WALLPAPER_CHUNK_SIZE } from '../../../shared/injection-constants';
 import { mainWarn } from '../../logger';
@@ -138,7 +138,7 @@ export async function transferHeroBase64(
 
 export async function injectHeroBlob(session: CdpSession, heroPath: string): Promise<boolean> {
   try {
-    const data = readFileSync(heroPath);
+    const data = await readFile(heroPath);
     const base64 = data.toString('base64');
     const mime = heroPath.endsWith('.png')
       ? 'image/png'
