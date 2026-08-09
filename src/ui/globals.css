@@ -117,10 +117,6 @@
   --sidebar-border: rgba(255, 255, 255, 0.09);
   --sidebar-ring: #ff453a;
 
-  /* Brand shorthands */
-  --cr-brand-violet: #ff453a;
-  --cr-brand-violet-hover: #ff6b61;
-  --cr-brand-amber: #ffb020;
   --cr-success: var(--green-11, #2ed573);
   --cr-warning: var(--amber-11, #ffb020);
   --cr-info: var(--blue-11, #4da3ff);
@@ -165,6 +161,7 @@
   --popover-foreground: #141416;
   --surface: var(--slate-1, #fafaf8);
   --dot: rgba(0, 0, 0, 0.08);
+  --shadow-xs: 0 1px 2px rgba(15, 15, 18, 0.04);
   --shadow: 0 1px 2px rgba(15, 15, 18, 0.06), 0 12px 32px rgba(15, 15, 18, 0.1);
   --shadow-sm: 0 1px 2px rgba(15, 15, 18, 0.04), 0 2px 8px rgba(15, 15, 18, 0.08);
   --shadow-md: 0 1px 2px rgba(15, 15, 18, 0.04), 0 10px 28px rgba(15, 15, 18, 0.1);
@@ -185,9 +182,11 @@
   --accent: rgba(227, 6, 19, 0.08);
 
   /* Semantic color shortcuts (mirrors A.html reference) */
+  --brand-red: #e30613;
+  --brand-red-hover: #b00510;
   --dim: #8a8f96;
-  --red: #e30613;
-  --red2: #b00510;
+  --red: var(--brand-red);
+  --red2: var(--brand-red-hover);
   --redbg: rgba(227, 6, 19, 0.08);
   --grn: var(--green-11, #149457);
   --amb: var(--amber-11, #b26a00);
@@ -402,9 +401,6 @@
   --color-card2: var(--card2);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --color-cr-brand-violet: var(--cr-brand-violet);
-  --color-cr-brand-violet-hover: var(--cr-brand-violet-hover);
-  --color-cr-brand-amber: var(--cr-brand-amber);
   --color-cr-success: var(--cr-success);
   --color-cr-warning: var(--cr-warning);
   --color-cr-info: var(--cr-info);
