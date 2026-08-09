@@ -30,6 +30,7 @@ import { pathToFileURL } from 'node:url';
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { type AgentId, isAgentId, type VisualAnalysisSummary } from '../../shared/types';
+import { withTimeout } from '../../shared/withTimeout';
 
 const PROFILE_FILE_SUFFIX = '-profile.json';
 
@@ -164,14 +165,20 @@ function buildVisualAnalysisSummaries(): VisualAnalysisSummary[] {
 export function registerVisualAnalyzerIpc(): void {
   // List agent ids that have a bundled profile on disk (known AgentIds only).
   ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_LIST, async () => {
-    let entries: string[] = [];
-    try {
-      entries = await fsPromises.readdir(getProfilesDir());
-    } catch {
-      return [] as string[];
-    }
-    const ids = entries.map(agentIdFromProfileFile).filter((id): id is AgentId => id !== null);
-    return [...new Set(ids)].sort();
+    return withTimeout(
+      IpcChannel.VISUAL_ANALYSIS_LIST,
+      10000,
+      (async () => {
+        let entries: string[] = [];
+        try {
+          entries = await fsPromises.readdir(getProfilesDir());
+        } catch {
+          return [] as string[];
+        }
+        const ids = entries.map(agentIdFromProfileFile).filter((id): id is AgentId => id !== null);
+        return [...new Set(ids)].sort();
+      })(),
+    );
   });
 
   // Compact per-agent summary for the Studio profile browser. The renderer
@@ -186,8 +193,14 @@ export function registerVisualAnalyzerIpc(): void {
   // Get a single agent profile by id. Input is validated as a known AgentId
   // before it is used in any path (no traversal surface).
   ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_GET, async (_event, agentName: unknown) => {
-    if (typeof agentName !== 'string' || !isAgentId(agentName)) return null;
-    return readProfile(agentName);
+    return withTimeout(
+      IpcChannel.VISUAL_ANALYSIS_GET,
+      10000,
+      (async () => {
+        if (typeof agentName !== 'string' || !isAgentId(agentName)) return null;
+        return readProfile(agentName);
+      })(),
+    );
   });
 
   // Detect whether an agent process is currently running.
@@ -226,56 +239,64 @@ export function registerVisualAnalyzerIpc(): void {
       agentName: unknown,
       themeData: unknown,
     ): Promise<{ ok: boolean; path?: string }> => {
-      if (typeof agentName !== 'string' || !isAgentId(agentName)) {
-        return { ok: false };
-      }
-      if (!themeData || typeof themeData !== 'object' || Array.isArray(themeData)) {
-        return { ok: false };
-      }
-      const request = themeData as Record<string, unknown>;
-      // Normalize the payload so the shared builder can consume it.
-      const normalized = {
-        agentId: agentName,
-        meta:
-          request.meta && typeof request.meta === 'object' && !Array.isArray(request.meta)
-            ? (request.meta as Record<string, unknown>)
-            : undefined,
-        root:
-          request.root && typeof request.root === 'object' && !Array.isArray(request.root)
-            ? (request.root as Record<string, string>)
-            : undefined,
-        signature:
-          request.signature &&
-          typeof request.signature === 'object' &&
-          !Array.isArray(request.signature)
-            ? (request.signature as Record<string, unknown>)
-            : undefined,
-      };
-      // Refuse to export when no palette is supplied — an empty export would
-      // silently fall back to the builder's default tokens and confuse users.
-      if (
-        !normalized.root ||
-        Object.keys(normalized.root).filter((k) => k.startsWith('--agentskin-')).length === 0
-      ) {
-        return { ok: false };
-      }
+      return withTimeout(
+        IpcChannel.VISUAL_ANALYSIS_EXPORT_THEME,
+        30000,
+        (async () => {
+          if (typeof agentName !== 'string' || !isAgentId(agentName)) {
+            return { ok: false };
+          }
+          if (!themeData || typeof themeData !== 'object' || Array.isArray(themeData)) {
+            return { ok: false };
+          }
+          const request = themeData as Record<string, unknown>;
+          // Normalize the payload so the shared builder can consume it.
+          const normalized = {
+            agentId: agentName,
+            meta:
+              request.meta && typeof request.meta === 'object' && !Array.isArray(request.meta)
+                ? (request.meta as Record<string, unknown>)
+                : undefined,
+            root:
+              request.root && typeof request.root === 'object' && !Array.isArray(request.root)
+                ? (request.root as Record<string, string>)
+                : undefined,
+            signature:
+              request.signature &&
+              typeof request.signature === 'object' &&
+              !Array.isArray(request.signature)
+                ? (request.signature as Record<string, unknown>)
+                : undefined,
+          };
+          // Refuse to export when no palette is supplied — an empty export would
+          // silently fall back to the builder's default tokens and confuse users.
+          if (
+            !normalized.root ||
+            Object.keys(normalized.root).filter((k) => k.startsWith('--agentskin-')).length === 0
+          ) {
+            return { ok: false };
+          }
 
-      const root = app.getAppPath();
-      const scriptUrl = pathToFileURL(path.join(root, 'scripts', 'build-theme-package.mjs')).href;
-      let mod: { buildThemePackage(req: unknown, outDir: string): Promise<string> };
-      try {
-        mod = await import(scriptUrl);
-      } catch {
-        return { ok: false };
-      }
-      // Write to a writable per-user dir (appPath is read-only inside asar).
-      const outDir = path.join(app.getPath('userData'), 'theme-workbench', 'out');
-      try {
-        const pkgDir = await mod.buildThemePackage(normalized, outDir);
-        return { ok: true, path: pkgDir };
-      } catch {
-        return { ok: false };
-      }
+          const root = app.getAppPath();
+          const scriptUrl = pathToFileURL(
+            path.join(root, 'scripts', 'build-theme-package.mjs'),
+          ).href;
+          let mod: { buildThemePackage(req: unknown, outDir: string): Promise<string> };
+          try {
+            mod = await import(scriptUrl);
+          } catch {
+            return { ok: false };
+          }
+          // Write to a writable per-user dir (appPath is read-only inside asar).
+          const outDir = path.join(app.getPath('userData'), 'theme-workbench', 'out');
+          try {
+            const pkgDir = await mod.buildThemePackage(normalized, outDir);
+            return { ok: true, path: pkgDir };
+          } catch {
+            return { ok: false };
+          }
+        })(),
+      );
     },
   );
 }

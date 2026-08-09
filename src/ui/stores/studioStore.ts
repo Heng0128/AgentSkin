@@ -67,8 +67,8 @@ interface StudioStoreState {
   searchQuery: string;
   hoveredIdx: number | null;
   toolOverrides: ToolOverride | null;
-  /** Per-edit undo stack for `toolOverrides` (most recent first). */
-  undoStack: ToolOverride[];
+  /** Per-edit undo stack for `toolOverrides` (most recent first). May contain null representing a "cleared to default" state. */
+  undoStack: (ToolOverride | null)[];
   inspectMode: boolean;
   liveNode: InspectedNode | null;
   liveError: string | null;
@@ -160,8 +160,11 @@ const undoCoalesce = { key: null as keyof ToolOverride | null, at: 0 };
 const UNDO_COALESCE_MS = 700;
 const UNDO_LIMIT = 30;
 
-/** Push the previous `toolOverrides` onto the undo stack (capped). */
-function pushUndo(stack: ToolOverride[], prev: ToolOverride | null): ToolOverride[] {
+/** Push the previous `toolOverrides` onto the undo stack (capped). `prev` may be null (cleared state). */
+function pushUndo(
+  stack: (ToolOverride | null)[],
+  prev: ToolOverride | null,
+): (ToolOverride | null)[] {
   const next = [...stack, prev];
   return next.length > UNDO_LIMIT ? next.slice(next.length - UNDO_LIMIT) : next;
 }

@@ -23,6 +23,7 @@ import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { isSafeThemeId } from '../../shared/theme-id';
 import type { InstalledTheme } from '../../shared/types';
+import { withTimeout } from '../../shared/withTimeout';
 import type { MainContext } from '../main-context';
 import { deriveThemeFromImage } from '../theme/theme-from-image';
 import { sampleFromBitmap } from '../theme/wallpaper-theme';
@@ -96,11 +97,18 @@ function mapProjectTypeToStudio(
 
 export function registerStudioWorkspaceIpc(ctx: MainContext): void {
   // ── studio:image:extract-theme ─────────────────────────────────────────
-  ipcMain.handle(IpcChannel.STUDIO_IMAGE_EXTRACT_THEME, async (_event, dataUrl: unknown) => {
-    if (typeof dataUrl !== 'string') throw new Error('dataUrl must be a base64 data URL string');
-    const sampled = decodeAndSample(dataUrl);
-    const palette = deriveThemeFromImage({ colors: sampled });
-    return { palette, mode: palette.mode };
+  ipcMain.handle(IpcChannel.STUDIO_IMAGE_EXTRACT_THEME, async (_event, dataUrl) => {
+    return withTimeout(
+      IpcChannel.STUDIO_IMAGE_EXTRACT_THEME,
+      15000,
+      (async () => {
+        if (typeof dataUrl !== 'string')
+          throw new Error('dataUrl must be a base64 data URL string');
+        const sampled = decodeAndSample(dataUrl);
+        const palette = deriveThemeFromImage({ colors: sampled });
+        return { palette, mode: palette.mode };
+      })(),
+    );
   });
 
   // ── studio:wallpaper:list ──────────────────────────────────────────────
@@ -125,100 +133,124 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
   // ── studio:bundle:list ──────────────────────────────────────────────────
   // List installed bundles by scanning userData/bundles/<id>/ directories.
   ipcMain.handle(IpcChannel.STUDIO_BUNDLE_LIST, async () => {
-    const { promises: fs } = await import('node:fs');
-    const dir = bundlesDir(ctx.userDataRoot);
-    try {
-      const entries = await fs.readdir(dir, { withFileTypes: true });
-      const results: Array<{
-        id: string;
-        name: string;
-        themeId?: string;
-        hasWallpaper: boolean;
-        createdAt: string;
-      }> = [];
-      for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        // Check whether the bundle contains a video wallpaper (manifest probe).
-        let hasWallpaper = false;
+    return withTimeout(
+      IpcChannel.STUDIO_BUNDLE_LIST,
+      15000,
+      (async () => {
+        const { promises: fs } = await import('node:fs');
+        const dir = bundlesDir(ctx.userDataRoot);
         try {
-          const manifestRaw = await fs.readFile(
-            path.join(dir, entry.name, 'manifest.json'),
-            'utf8',
-          );
-          const manifest = JSON.parse(manifestRaw) as { wallpaper?: unknown };
-          hasWallpaper = !!manifest.wallpaper;
+          const entries = await fs.readdir(dir, { withFileTypes: true });
+          const results: Array<{
+            id: string;
+            name: string;
+            themeId?: string;
+            hasWallpaper: boolean;
+            createdAt: string;
+          }> = [];
+          for (const entry of entries) {
+            if (!entry.isDirectory()) continue;
+            // Check whether the bundle contains a video wallpaper (manifest probe).
+            let hasWallpaper = false;
+            try {
+              const manifestRaw = await fs.readFile(
+                path.join(dir, entry.name, 'manifest.json'),
+                'utf8',
+              );
+              const manifest = JSON.parse(manifestRaw) as { wallpaper?: unknown };
+              hasWallpaper = !!manifest.wallpaper;
+            } catch {
+              // No manifest → treat as theme-only bundle.
+            }
+            results.push({
+              id: entry.name,
+              name: entry.name,
+              themeId: entry.name,
+              hasWallpaper,
+              createdAt: '',
+            });
+          }
+          return results;
         } catch {
-          // No manifest → treat as theme-only bundle.
+          return [];
         }
-        results.push({
-          id: entry.name,
-          name: entry.name,
-          themeId: entry.name,
-          hasWallpaper,
-          createdAt: '',
-        });
-      }
-      return results;
-    } catch {
-      return [];
-    }
+      })(),
+    );
   });
 
   // ── studio:bundle:install ───────────────────────────────────────────────
   // Install a bundle by id (already unpacked in userData/bundles/<id>/).
   // Loads the package via ThemePackageLoader + ThemeInstaller (no dialog, no tar).
-  ipcMain.handle(IpcChannel.STUDIO_BUNDLE_INSTALL_BY_ID, async (_event, id: unknown) => {
-    if (typeof id !== 'string' || !isSafeThemeId(id)) {
-      throw new Error('id must be a valid theme id');
-    }
-    const { promises: fs } = await import('node:fs');
-    const bundleDir = path.join(bundlesDir(ctx.userDataRoot), id);
-    try {
-      await fs.access(bundleDir);
-    } catch {
-      return { ok: false, error: `Bundle ${id} not found` };
-    }
-    try {
-      const loader = new (await import('../catalog/theme-package-loader')).ThemePackageLoader(
-        bundlesDir(ctx.userDataRoot),
-      );
-      const pkg = await loader.load(id);
-      const installer = new (await import('../catalog/theme-installer')).ThemeInstaller(
-        ctx.library,
-      );
-      await installer.install(pkg, bundlesDir(ctx.userDataRoot));
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: e instanceof Error ? e.message : String(e) };
-    }
+  ipcMain.handle(IpcChannel.STUDIO_BUNDLE_INSTALL_BY_ID, async (_event, id) => {
+    return withTimeout(
+      IpcChannel.STUDIO_BUNDLE_INSTALL_BY_ID,
+      15000,
+      (async () => {
+        if (typeof id !== 'string' || !isSafeThemeId(id)) {
+          throw new Error('id must be a valid theme id');
+        }
+        const { promises: fs } = await import('node:fs');
+        const bundleDir = path.join(bundlesDir(ctx.userDataRoot), id);
+        try {
+          await fs.access(bundleDir);
+        } catch {
+          return { ok: false, error: `Bundle ${id} not found` };
+        }
+        try {
+          const loader = new (await import('../catalog/theme-package-loader')).ThemePackageLoader(
+            bundlesDir(ctx.userDataRoot),
+          );
+          const pkg = await loader.load(id);
+          const installer = new (await import('../catalog/theme-installer')).ThemeInstaller(
+            ctx.library,
+          );
+          await installer.install(pkg, bundlesDir(ctx.userDataRoot));
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : String(e) };
+        }
+      })(),
+    );
   });
 
   // ── studio:bundle:import ────────────────────────────────────────────────
   // Reuse the existing install flow (handles unpack → validate → install).
   ipcMain.handle(IpcChannel.STUDIO_BUNDLE_IMPORT, async () => {
-    const copy = getMainMessages();
-    const { filePaths } = await dialog.showOpenDialog({
-      title: copy.bundleInstallDialogTitle ?? '导入 .agentskin-bundle',
-      filters: [{ name: 'Bundle', extensions: ['agentskin-bundle'] }],
-      properties: ['openFile'],
-    });
-    if (filePaths.length === 0) return null;
-    const installed: InstalledTheme = await installBundleFromPath(ctx, filePaths[0]);
-    return { id: installed.id, name: installed.displayName };
+    return withTimeout(
+      IpcChannel.STUDIO_BUNDLE_IMPORT,
+      60000,
+      (async () => {
+        const copy = getMainMessages();
+        const { filePaths } = await dialog.showOpenDialog({
+          title: copy.bundleInstallDialogTitle ?? '导入 .agentskin-bundle',
+          filters: [{ name: 'Bundle', extensions: ['agentskin-bundle'] }],
+          properties: ['openFile'],
+        });
+        if (filePaths.length === 0) return null;
+        const installed: InstalledTheme = await installBundleFromPath(ctx, filePaths[0]);
+        return { id: installed.id, name: installed.displayName };
+      })(),
+    );
   });
 
   // ── studio:bundle:delete ─────────────────────────────────────────────────
   // Filesystem-level: remove the entire userData/bundles/<id>/ directory.
-  ipcMain.handle(IpcChannel.STUDIO_BUNDLE_DELETE, async (_event, id: unknown) => {
-    if (typeof id !== 'string' || !isSafeThemeId(id)) {
-      throw new Error('id must be a valid theme id');
-    }
-    const dir = path.join(bundlesDir(ctx.userDataRoot), id);
-    try {
-      await rm(dir, { recursive: true, force: true });
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, error: e instanceof Error ? e.message : String(e) };
-    }
+  ipcMain.handle(IpcChannel.STUDIO_BUNDLE_DELETE, async (_event, id) => {
+    return withTimeout(
+      IpcChannel.STUDIO_BUNDLE_DELETE,
+      15000,
+      (async () => {
+        if (typeof id !== 'string' || !isSafeThemeId(id)) {
+          throw new Error('id must be a valid theme id');
+        }
+        const dir = path.join(bundlesDir(ctx.userDataRoot), id);
+        try {
+          await rm(dir, { recursive: true, force: true });
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, error: e instanceof Error ? e.message : String(e) };
+        }
+      })(),
+    );
   });
 }

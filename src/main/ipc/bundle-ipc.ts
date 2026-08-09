@@ -21,6 +21,7 @@ import { app, dialog, ipcMain } from 'electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { InstalledTheme } from '../../shared/types';
+import { withTimeout } from '../../shared/withTimeout';
 import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
 import { extractTarGz, packDirToTarGz } from '../fs/tar-pack';
@@ -84,54 +85,66 @@ export async function installBundleFromPath(
 export function registerBundleIpc(deps: MainContext, updateTrayMenu: () => Promise<void>): void {
   const copy = getMainMessages();
 
-  ipcMain.handle(
-    IpcChannel.BUNDLE_CREATE,
-    async (_event, themeId: unknown): Promise<{ canceled: boolean; path?: string }> => {
-      assertSafeThemeId(themeId);
-      const dir = findPackageDir(deps.userDataRoot, themeId);
-      if (!dir) throw new Error(copy.bundleNoSource(themeId));
-      const saveOpts = {
-        title: copy.bundleExportDialogTitle,
-        defaultPath: `${themeId}${BUNDLE_EXTENSION}`,
-        filters: [{ name: copy.bundleFilter, extensions: ['agentskin-bundle'] }],
-      };
-      const selection = deps.mainWindow
-        ? await dialog.showSaveDialog(deps.mainWindow, saveOpts)
-        : await dialog.showSaveDialog(saveOpts);
-      if (selection.canceled || !selection.filePath) return { canceled: true };
-      await packDirToTarGz(dir, selection.filePath);
-      return { canceled: false, path: selection.filePath };
-    },
-  );
+  ipcMain.handle(IpcChannel.BUNDLE_CREATE, async (_event, themeId) => {
+    return withTimeout(
+      IpcChannel.BUNDLE_CREATE,
+      60000,
+      (async () => {
+        assertSafeThemeId(themeId);
+        const dir = findPackageDir(deps.userDataRoot, themeId);
+        if (!dir) throw new Error(copy.bundleNoSource(themeId));
+        const saveOpts = {
+          title: copy.bundleExportDialogTitle,
+          defaultPath: `${themeId}${BUNDLE_EXTENSION}`,
+          filters: [{ name: copy.bundleFilter, extensions: ['agentskin-bundle'] }],
+        };
+        const selection = deps.mainWindow
+          ? await dialog.showSaveDialog(deps.mainWindow, saveOpts)
+          : await dialog.showSaveDialog(saveOpts);
+        if (selection.canceled || !selection.filePath) return { canceled: true };
+        await packDirToTarGz(dir, selection.filePath);
+        return { canceled: false, path: selection.filePath };
+      })(),
+    );
+  });
 
-  ipcMain.handle(
-    IpcChannel.BUNDLE_INSTALL,
-    async (): Promise<{ canceled: boolean; theme?: InstalledTheme }> => {
-      const selection = await dialog.showOpenDialog({
-        title: copy.bundleInstallDialogTitle,
-        properties: ['openFile'],
-        filters: [{ name: copy.bundleFilter, extensions: ['agentskin-bundle'] }],
-      });
-      if (selection.canceled || !selection.filePaths[0]) return { canceled: true };
-      const theme = await installBundleFromPath(deps, selection.filePaths[0]);
-      void updateTrayMenu();
-      notifyStatusChanged();
-      return { canceled: false, theme };
-    },
-  );
+  ipcMain.handle(IpcChannel.BUNDLE_INSTALL, async () => {
+    return withTimeout(
+      IpcChannel.BUNDLE_INSTALL,
+      60000,
+      (async () => {
+        const selection = await dialog.showOpenDialog({
+          title: copy.bundleInstallDialogTitle,
+          properties: ['openFile'],
+          filters: [{ name: copy.bundleFilter, extensions: ['agentskin-bundle'] }],
+        });
+        if (selection.canceled || !selection.filePaths[0]) return { canceled: true };
+        const theme = await installBundleFromPath(deps, selection.filePaths[0]);
+        void updateTrayMenu();
+        notifyStatusChanged();
+        return { canceled: false, theme };
+      })(),
+    );
+  });
 
   // 供 file-open 分流：bundle 扩展名走这里（断言在调用方已做）。
-  ipcMain.handle(IpcChannel.BUNDLE_OPEN_FILE, async (_event, filePath: unknown) => {
-    assertNonEmptyString(filePath, copy.invalidBundle);
-    if (typeof filePath !== 'string' || !filePath.endsWith(BUNDLE_EXTENSION)) {
-      throw new Error(copy.invalidBundle);
-    }
-    const theme = await installBundleFromPath(deps, filePath);
-    void updateTrayMenu();
-    notifyStatusChanged();
-    deps.mainWindow?.webContents.send(IpcChannel.FILE_IMPORTED, {
-      theme,
-      themes: await deps.library.summaries(),
-    });
+  ipcMain.handle(IpcChannel.BUNDLE_OPEN_FILE, async (_event, filePath) => {
+    return withTimeout(
+      IpcChannel.BUNDLE_OPEN_FILE,
+      60000,
+      (async () => {
+        assertNonEmptyString(filePath, copy.invalidBundle);
+        if (typeof filePath !== 'string' || !filePath.endsWith(BUNDLE_EXTENSION)) {
+          throw new Error(copy.invalidBundle);
+        }
+        const theme = await installBundleFromPath(deps, filePath);
+        void updateTrayMenu();
+        notifyStatusChanged();
+        deps.mainWindow?.webContents.send(IpcChannel.FILE_IMPORTED, {
+          theme,
+          themes: await deps.library.summaries(),
+        });
+      })(),
+    );
   });
 }
