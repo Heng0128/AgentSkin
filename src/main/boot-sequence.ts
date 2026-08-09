@@ -51,12 +51,13 @@ import { getThemesDir, pruneRemovedBuiltInThemes, seedBuiltInThemes } from './ca
 import { extractThemeFilesFromArgv } from './file-open';
 import { registerIpc } from './ipc';
 import { loadLocalePreference } from './locale-preferences';
-import { brandingRoot, ctx, sendLog } from './main-context';
+import { brandingRoot, ctx, registerDisposable, sendLog } from './main-context';
 import { SettingsService } from './settings-service';
 import { ThemeLibrary } from './theme-library';
 import { createTrayManager, type TrayManager } from './tray-manager';
 import { registerThemeWallpaperForInstalled } from './wallpaper/theme-wallpaper';
 import { registerWallpaperLifecycle } from './wallpaper-lifecycle';
+import { wallpaperMediaServer } from './wallpaper-server';
 import { WallpaperService } from './wallpaper-service';
 import { runWarmUp } from './warm-up/index';
 
@@ -302,7 +303,22 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
         onApplyRequest: deps.onApplyRequest,
       });
       registerIpc(ctx, mgr.updateTrayMenu);
-      registerWallpaperLifecycle();
+      const cleanupWallpaperLifecycle = registerWallpaperLifecycle();
+      registerDisposable(cleanupWallpaperLifecycle);
+      registerDisposable(() => {
+        try {
+          wallpaperMediaServer.stop();
+        } catch {
+          // swallow — never block quit on cleanup failure
+        }
+      });
+      registerDisposable(() => {
+        try {
+          ctx.tray?.destroy();
+        } catch {
+          // swallow — tray may already be destroyed
+        }
+      });
 
       for (const filePath of extractThemeFilesFromArgv(process.argv))
         ctx.fileOpens.handlePath(filePath);

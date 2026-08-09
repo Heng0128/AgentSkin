@@ -43,6 +43,9 @@ export interface MainContext {
    *  leak past the window's lifetime. Set during IPC registration; null when
    *  no cleanup is needed. */
   onStudioWindowClosed: (() => void) | null;
+  /** One-shot teardown callbacks registered during boot (lifecycle cleanup,
+   *  media server stop, tray destroy). Drained in before-quit. */
+  disposables: Array<() => void>;
   tray: Tray | null;
   isQuitting: boolean;
   /** True after `runBootSequence` completes successfully. IPC handlers and
@@ -74,6 +77,7 @@ export const ctx: MainContext = {
   splashWindow: null,
   studioWindow: null,
   onStudioWindowClosed: null,
+  disposables: [] as Array<() => void>,
   tray: null,
   isQuitting: false,
   bootComplete: false,
@@ -82,6 +86,37 @@ export const ctx: MainContext = {
   locale: DEFAULT_LOCALE,
   userDataRoot: '',
 } as MainContext;
+
+// ---------------------------------------------------------------------------
+// Disposable registry — one-shot teardown callbacks for boot-registered
+// cleanups. main.ts before-quit drains these; boot-sequence registers them.
+// ---------------------------------------------------------------------------
+
+/**
+ * Register a one-shot teardown callback. Callers (e.g. boot-sequence) store
+ * cleanup functions here during boot; before-quit drains them in order.
+ *
+ * Idempotent drain: after invocation the array is cleared, so re-entrant
+ * before-quit does not double-invoke.
+ */
+export function registerDisposable(fn: () => void): void {
+  ctx.disposables.push(fn);
+}
+
+/**
+ * Drain all registered disposables. Called from main.ts before-quit.
+ * Each fn is try/catch wrapped so a throwing cleanup never blocks quit.
+ */
+export function drainDisposables(): void {
+  const pending = ctx.disposables.splice(0);
+  for (const fn of pending) {
+    try {
+      fn();
+    } catch {
+      // swallow — never block quit on cleanup failure
+    }
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Helpers that operate on ctx (kept here so all main-process modules share

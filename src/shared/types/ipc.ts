@@ -471,6 +471,13 @@ export interface AgentSkinApi {
       perAgentAvg: Record<string, number>;
     };
   }>;
+  // --- Diagnostics: IPC timeout events ---
+  /** Fetch recent IPC timeout events for the Diagnostics tab. `count` caps at 50; defaults to 10. */
+  getPerformanceTimeouts(
+    count?: number,
+  ): Promise<Array<{ id: string; channel: string; ms: number; timestamp: number }>>;
+  /** Clear all stored IPC timeout events. Returns `{ ok: true }`. */
+  clearPerformanceTimeouts(): Promise<{ ok: true }>;
   // --- Theme Studio: Wallpaper picker (workspace-scoped) ---
   /** List wallpapers for the Studio WALLPAPER tab. */
   listWallpapersForStudio(): Promise<

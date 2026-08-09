@@ -20,7 +20,7 @@ import { app, BrowserWindow, dialog } from 'electron';
 import { runBootSequence } from './main/boot-sequence';
 import { extractThemeFilesFromArgv } from './main/file-open';
 import { flushLocalePreference } from './main/locale-preferences';
-import { ctx } from './main/main-context';
+import { ctx, drainDisposables } from './main/main-context';
 import { disposeAudioBroadcast } from './main/wallpaper-injector';
 import { createMainWindow } from './main/window-manager';
 import { toMessage } from './shared/errors';
@@ -370,6 +370,15 @@ app.on('before-quit', () => {
   } catch (error) {
     console.warn('[before-quit] core.dispose() failed:', error);
   }
+
+  // Release any live CDP inspect session if Theme Studio window is still
+  // open at quit time — otherwise the WS outlives the app until next start.
+  ctx.onStudioWindowClosed?.();
+
+  // Drain teardown callbacks registered during boot (lifpaper lifecycle,
+  // wallpaper media server, tray). Each wrapped in try/catch so quit
+  // is never blocked by a throwing cleanup.
+  drainDisposables();
 
   // Kill the long-lived PowerShell audio sampler if it is running (audio-
   // responsive scene/web wallpapers). Without this the child process outlives

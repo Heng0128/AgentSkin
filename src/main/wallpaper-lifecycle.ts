@@ -21,18 +21,34 @@ import type { CdpSession } from './cdp/cdp-client';
 import { getActiveWallpaperAgents, openAgentWallpaperSession } from './wallpaper-injector';
 
 let registered = false;
+
+/**
+ * Production cleanup returned by {@link registerWallpaperLifecycle}.
+ * Callers (e.g. boot-sequence disposable registry) store this and invoke
+ * it on app teardown to remove all registered power-monitor / app listeners.
+ */
+let registeredCleanup: (() => void) | null = null;
+
 /**
  * References to the listeners installed by {@link registerWallpaperLifecycle}.
- * Kept so `_resetWallpaperLifecycleForTest()` can remove them (tests and
- * hot-reload need a way to register → reset → re-register).
+ * Kept so the returned production cleanup function can remove them by name.
+ *
+ * Declared as `let` because the cleanup function resets it to `{}`,
+ * guaranteeing a clean slate on hot-reload re-register.
  *
  * Keys are the electron event name used with on()/off().
  */
-const installedListeners: Partial<Record<string, (...args: unknown[]) => void>> = {};
+let installedListeners: Partial<Record<string, (...args: unknown[]) => void>> = {};
 
-/** Register system-level pause/resume for agent-injected video wallpapers. */
-export function registerWallpaperLifecycle(): void {
-  if (registered) return;
+/**
+ * Register system-level pause/resume for agent-injected video wallpapers.
+ *
+ * Returns a cleanup function that removes all registered listeners and
+ * resets the internal state, allowing re-registration (e.g. hot-reload).
+ * Callers should store this and invoke it when tearing down.
+ */
+export function registerWallpaperLifecycle(): () => void {
+  if (registered) return registeredCleanup ?? (() => {});
   registered = true;
 
   const broadcast = async (paused: boolean): Promise<void> => {
@@ -80,6 +96,32 @@ export function registerWallpaperLifecycle(): void {
   // prevented, so it reliably indicates the app is actually shutting down.
   app.on('will-quit', onWillQuit);
   installedListeners['will-quit'] = onWillQuit;
+
+  // Build the production cleanup function. It removes every listener
+  // keyed in installedListeners, then resets state so a later call to
+  // registerWallpaperLifecycle() re-registers cleanly (hot-reload safe).
+  registeredCleanup = () => {
+    // Remove every listener keyed in installedListeners. PowerMonitor's .off()
+    // has per-event overloads but the handlers stored here are contextually
+    // typed by registration site; cast to the common handler signature.
+    const pmOff = powerMonitor.off as (
+      event: string,
+      listener: (...args: unknown[]) => void,
+    ) => void;
+    for (const [key, fn] of Object.entries(installedListeners)) {
+      if (!fn) continue;
+      if (key === 'will-quit') {
+        app.off('will-quit', fn);
+      } else {
+        pmOff(key, fn);
+      }
+    }
+    installedListeners = {};
+    registered = false;
+    registeredCleanup = null;
+  };
+
+  return registeredCleanup;
 }
 
 /**
@@ -93,19 +135,7 @@ export function registerWallpaperLifecycle(): void {
  * real usage — the name explicitly flags it as a test-only helper.
  */
 export function _resetWallpaperLifecycleForTest(): void {
-  const suspend = installedListeners.suspend;
-  if (suspend) powerMonitor.off('suspend', suspend);
-  const onBattery = installedListeners['on-battery'];
-  if (onBattery) powerMonitor.off('on-battery', onBattery);
-  const resume = installedListeners.resume;
-  if (resume) powerMonitor.off('resume', resume);
-  const onAc = installedListeners['on-ac'];
-  if (onAc) powerMonitor.off('on-ac', onAc);
-  const willQuit = installedListeners['will-quit'];
-  if (willQuit) app.off('will-quit', willQuit);
-
-  for (const k of Object.keys(installedListeners)) {
-    delete installedListeners[k as keyof typeof installedListeners];
-  }
-  registered = false;
+  // Delegate to the production cleanup so test reset and a real teardown
+  // share identical logic (single source of truth for listener removal).
+  registeredCleanup?.();
 }

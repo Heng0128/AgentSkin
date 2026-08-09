@@ -24,8 +24,14 @@ import { api } from '@/api/agentSkinClient';
 import { APP_META } from '@/components/app-mark';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
+import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 
-import { Activity02Icon, HourglassIcon, PieChartIcon } from '@hugeicons/core-free-icons';
+import {
+  Activity02Icon,
+  Delete02Icon,
+  HourglassIcon,
+  PieChartIcon,
+} from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import { format } from 'date-fns';
 
@@ -74,6 +80,20 @@ function parseDate(iso: string): Date | null {
 export function PerformancePanel({ t }: { t: UiMessages }) {
   const [data, setData] = useState<PerfHistory | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const timeoutEvents = useDiagnosticsStore((s) => s.timeoutEvents);
+  const timeoutsLoading = useDiagnosticsStore((s) => s.timeoutsLoading);
+  const storeLoadTimeouts = useDiagnosticsStore((s) => s.loadTimeouts);
+  const storeClearTimeouts = useDiagnosticsStore((s) => s.clearTimeouts);
+
+  // Timeouts: auto-poll on the same 5s cadence as trace history.
+  useEffect(() => {
+    void storeLoadTimeouts();
+    const timer = setInterval(() => {
+      void storeLoadTimeouts();
+    }, POLL_MS);
+    return () => clearInterval(timer);
+  }, [storeLoadTimeouts]);
 
   useEffect(() => {
     let cancelled = false;
@@ -170,6 +190,53 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
               <tbody>
                 {traces.map((trace) => (
                   <TraceRow key={trace.id} trace={trace} t={t} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Recent IPC timeouts */}
+      <div className="rounded-[2px] border border-border overflow-hidden">
+        <div className="flex items-center justify-between border-b border-border bg-card2 px-3 py-2">
+          <div className="flex items-center gap-2">
+            <HugeIcon icon={Delete02Icon} className="size-3.5 text-muted-foreground" />
+            <span className="font-mono text-[11px] font-semibold tracking-wide text-foreground">
+              {t.settingsPerfTimeoutTitle}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void storeClearTimeouts()}
+            disabled={timeoutsLoading}
+            className="inline-flex items-center gap-1 rounded-[2px] border border-border bg-muted/30 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:bg-muted disabled:opacity-50"
+            title={t.settingsPerfTimeoutClear}
+          >
+            {timeoutsLoading ? t.settingsPerfTimeoutClearing : t.settingsPerfTimeoutClear}
+          </button>
+        </div>
+
+        {timeoutEvents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+            <div className="flex size-9 items-center justify-center rounded-[2px] bg-muted/60">
+              <HugeIcon icon={Delete02Icon} className="size-4 text-muted-foreground/50" />
+            </div>
+            <p className="text-[11px] text-muted-foreground/70">{t.settingsPerfTimeoutEmpty}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px]">
+              <thead>
+                <tr className="border-b border-border bg-muted/20">
+                  <TH>{t.settingsPerfTimeoutColTime}</TH>
+                  <TH>{t.settingsPerfTimeoutColChannel}</TH>
+                  <TH className="text-right">{t.settingsPerfTimeoutColMs}</TH>
+                </tr>
+              </thead>
+              <tbody>
+                {timeoutEvents.map((ev) => (
+                  <TimeoutRow key={ev.id} event={ev} />
                 ))}
               </tbody>
             </table>
@@ -317,6 +384,33 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
 }
 
 // --- Tiny table-cell wrappers (keep markup DRY) --------------------------
+
+function TimeoutRow({
+  event,
+}: {
+  event: { id: string; channel: string; ms: number; timestamp: number };
+}) {
+  const date = new Date(event.timestamp);
+  const timeLabel = Number.isNaN(date.getTime()) ? '—' : format(date, 'HH:mm:ss');
+
+  return (
+    <tr className="border-b border-border/60 last:border-b-0 hover:bg-muted/20">
+      <TD>
+        <span className="font-mono text-[10px] text-muted-foreground/70">{timeLabel}</span>
+      </TD>
+      <TD>
+        <span className="font-mono text-[10.5px] text-foreground truncate max-w-[200px]">
+          {event.channel}
+        </span>
+      </TD>
+      <TD className="text-right">
+        <span className="font-mono text-[11px] font-semibold tabular-nums text-cr-warning">
+          {event.ms}ms
+        </span>
+      </TD>
+    </tr>
+  );
+}
 
 function TH({ children, className }: { children: React.ReactNode; className?: string }) {
   return (

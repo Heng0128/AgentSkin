@@ -375,8 +375,8 @@ describe('THEME_STUDIO_SNAPSHOT_BASELINE regression', () => {
     deps.getActiveThemeId.mockResolvedValue('graphite-code');
     deps.restoreApp.mockResolvedValue({});
     // Multi-step CDP mock: snapshotThemeVisuals never settles → triggers the 60s timeout.
-    // The finally-block re-apply (applyTheme) will NOT run because withTimeout rejects
-    // the outer promise before the inner async function completes.
+    // After the fix, the outer watchdog fires the compensation re-apply immediately
+    // without waiting for the inner pending function to settle.
     snapshotThemeVisuals.mockReturnValue(new Promise<never>(() => {}));
     registerStudioIpc(deps);
 
@@ -384,6 +384,26 @@ describe('THEME_STUDIO_SNAPSHOT_BASELINE regression', () => {
     const assertion = expect(promise).rejects.toSatisfy((r: unknown) => isIpcTimeoutError(r));
     await vi.runAllTimersAsync();
     await assertion;
+    vi.useRealTimers();
+  });
+
+  it('re-applies the previous theme even when snapshot baseline times out', async () => {
+    vi.useFakeTimers();
+    const deps = makeDeps();
+    deps.getActiveThemeId.mockResolvedValue('graphite-code');
+    deps.restoreApp.mockResolvedValue({});
+    // snapshotThemeVisuals never settles → triggers the 60s timeout.
+    snapshotThemeVisuals.mockReturnValue(new Promise<never>(() => {}));
+    registerStudioIpc(deps);
+
+    const promise = call<ThemeVisualSnapshot>('studio:snapshot:baseline', { agentId: 'traework' });
+    const assertion = expect(promise).rejects.toSatisfy((r: unknown) => isIpcTimeoutError(r));
+    await vi.runAllTimersAsync();
+    await assertion;
+
+    // The watchdog compensation path must fire — applyTheme is called with the
+    // previously active theme, even though the inner snapshot function is still pending.
+    expect(deps.applyTheme).toHaveBeenCalledWith({ themeId: 'graphite-code', appId: 'traework' });
     vi.useRealTimers();
   });
 });

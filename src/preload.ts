@@ -220,6 +220,13 @@ const api: AgentSkinApi = {
         thumbUrl?: string;
       }>
     >,
+  // --- Diagnostics: IPC timeout events ---
+  getPerformanceTimeouts: (count?: number) =>
+    ipcRenderer.invoke(IpcChannel.PERFORMANCE_GET_TIMEOUTS, count) as Promise<
+      Array<{ id: string; channel: string; ms: number; timestamp: number }>
+    >,
+  clearPerformanceTimeouts: () =>
+    ipcRenderer.invoke(IpcChannel.PERFORMANCE_CLEAR_TIMEOUTS) as Promise<{ ok: true }>,
   // --- Diagnostics: performance trace history ---
   getPerformanceHistory: (count?: number) =>
     ipcRenderer.invoke(IpcChannel.PERFORMANCE_GET, count) as Promise<{

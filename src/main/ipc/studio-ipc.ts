@@ -21,6 +21,7 @@ import { pathToFileURL } from 'node:url';
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { AgentId, StudioSnapshotOptions, ThemeVisualSnapshot } from '../../shared/types';
+import { isIpcTimeoutError } from '../../shared/withTimeout';
 import { findDomTargets } from '../cdp/cdp-targets';
 import { type InspectController, startInspect } from '../cdp/inspect-session';
 import { snapshotThemeVisuals } from '../cdp/snapshot-theme';
@@ -175,8 +176,13 @@ export function registerStudioIpc(deps: {
    *   3. capture the live DOM with no theme re-applied (`themeId: undefined`)
    *   4. re-apply the previously active theme so the agent is left unchanged
    *
-   * Step 4 is in a `finally` block to guarantee the agent is never left in a
-   * theme-less state if the snapshot capture throws.
+   * Step 2 is performed BEFORE the timeout clock starts so that the 60s budget
+   * is spent purely on CDP capture. Steps 1 + 2 are also outside the
+   * `withMonitoredTimeout` wrapper so that a timeout during step 3 does not
+   * leave the agent in a theme-less state: the outer watchdog (`catch` below)
+   * fires the compensation re-apply immediately without waiting for the inner
+   * function to settle (JS promises are not cancellable — the inner `finally`
+   * is paper protection for the non-timeout error path only).
    */
   ipcMain.handle(
     IpcChannel.THEME_STUDIO_SNAPSHOT_BASELINE,
@@ -184,48 +190,71 @@ export function registerStudioIpc(deps: {
       _event,
       request: { agentId: unknown; options?: unknown },
     ): Promise<ThemeVisualSnapshot> => {
-      return withMonitoredTimeout(
-        IpcChannel.THEME_STUDIO_SNAPSHOT_BASELINE,
-        60000,
-        (async () => {
-          const agentId = request.agentId as AgentId;
-          assertAgentId(agentId);
+      const agentId = request.agentId as AgentId;
+      assertAgentId(agentId);
 
-          const prevThemeId = await deps.getActiveThemeId(agentId);
-          if (prevThemeId) {
-            deps.log(`[studio] restoring ${agentId} to native look for baseline capture`);
+      // Step 1: capture the currently-applied theme id (before timeout clock).
+      const capturedPrevThemeId = await deps.getActiveThemeId(agentId);
+      let needsReapply = false;
+
+      // Step 2: restore to native look (before timeout clock).
+      if (capturedPrevThemeId) {
+        deps.log(`[studio] restoring ${agentId} to native look for baseline capture`);
+        try {
+          await deps.restoreApp(agentId);
+          needsReapply = true;
+        } catch (error) {
+          deps.log(`[studio] restore failed (continuing): ${String(error)}`);
+        }
+      }
+
+      try {
+        // Step 3: capture with a 60s timeout. The inner `finally` handles the
+        // non-timeout error path (snapshotThemeVisuals rejects but settles).
+        return await withMonitoredTimeout(
+          IpcChannel.THEME_STUDIO_SNAPSHOT_BASELINE,
+          60000,
+          (async () => {
             try {
-              await deps.restoreApp(agentId);
-            } catch (error) {
-              deps.log(`[studio] restore failed (continuing): ${String(error)}`);
-            }
-          }
-
-          // Always re-apply the previous theme, even if snapshotThemeVisuals throws.
-          try {
-            return await snapshotThemeVisuals(
-              agentId,
-              undefined,
-              {
-                applyTheme: deps.applyTheme,
-                findPortForAgent: deps.resolveLivePort,
-                adapter: () => null, // not used in this minimal path
-                log: deps.log,
-              },
-              (request.options as StudioSnapshotOptions | undefined) ?? undefined,
-            );
-          } finally {
-            if (prevThemeId) {
-              try {
-                await deps.applyTheme({ themeId: prevThemeId, appId: agentId });
-                deps.log(`[studio] re-applied theme ${prevThemeId} to ${agentId}`);
-              } catch (error) {
-                deps.log(`[studio] CRITICAL: re-apply failed: ${String(error)}`);
+              return await snapshotThemeVisuals(
+                agentId,
+                undefined,
+                {
+                  applyTheme: deps.applyTheme,
+                  findPortForAgent: deps.resolveLivePort,
+                  adapter: () => null, // not used in this minimal path
+                  log: deps.log,
+                },
+                (request.options as StudioSnapshotOptions | undefined) ?? undefined,
+              );
+            } finally {
+              // Paper protection: only runs if the inner async function settles.
+              // On timeout the inner function is still pending → finally is unreachable.
+              if (capturedPrevThemeId) {
+                try {
+                  await deps.applyTheme({ themeId: capturedPrevThemeId, appId: agentId });
+                  deps.log(`[studio] re-applied theme ${capturedPrevThemeId} to ${agentId}`);
+                } catch (error) {
+                  deps.log(`[studio] CRITICAL: re-apply failed: ${String(error)}`);
+                }
               }
             }
-          }
-        })(),
-      );
+          })(),
+        );
+      } catch (error) {
+        // WATCHDOG: if the capture timed out, the inner `finally` is unreachable
+        // (the inner async function is still pending). We cannot wait for it —
+        // immediately compensate so the agent is never left in a theme-less state.
+        if (isIpcTimeoutError(error) && needsReapply && capturedPrevThemeId) {
+          deps.log(
+            `[studio] SNAPSHOT_BASELINE timed out — forcing re-apply of ${capturedPrevThemeId}`,
+          );
+          await deps.applyTheme({ themeId: capturedPrevThemeId, appId: agentId }).catch((e) => {
+            deps.log(`[studio] CRITICAL: forced re-apply failed: ${String(e)}`);
+          });
+        }
+        throw error; // continue propagating the timeout error to the renderer
+      }
     },
   );
 
