@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { describe, expect, it } from 'vitest';
-import { IpcTimeoutError, withTimeout } from './withTimeout';
+import { IpcTimeoutError, isIpcTimeoutError, serializeForIpc, withTimeout } from './withTimeout';
 
 describe('withTimeout', () => {
   // --- resolve / reject passthrough -----------------------------------
@@ -35,15 +35,22 @@ describe('withTimeout', () => {
       /* never settles */
     });
 
-    await expect(withTimeout('SLOW_OP', 30, slow)).rejects.toBeInstanceOf(IpcTimeoutError);
+    await expect(withTimeout('SLOW_OP', 30, slow)).rejects.toSatisfy((reason: unknown) =>
+      isIpcTimeoutError(reason),
+    );
   });
 
-  it('rejects with an Error (not just a plain object)', async () => {
+  it('rejects with a plain object that carries code/channel/ms', async () => {
     const slow = new Promise<never>(() => {
       /* never settles */
     });
 
-    await expect(withTimeout('SLOW_OP', 30, slow)).rejects.toBeInstanceOf(Error);
+    const reason = await withTimeout('SLOW_OP', 30, slow).catch((r) => r);
+    expect(reason).toBeInstanceOf(Object);
+    expect((reason as { code?: unknown }).code).toBe('IPC_TIMEOUT');
+    expect((reason as { channel?: unknown }).channel).toBe('SLOW_OP');
+    expect((reason as { ms?: unknown }).ms).toBe(30);
+    expect((reason as { name?: unknown }).name).toBe('IpcTimeoutError');
   });
 
   it('does not resolve after timeout fires', async () => {
@@ -92,8 +99,8 @@ describe('withTimeout', () => {
     });
 
     const start = Date.now();
-    await expect(withTimeout('ABORTED', 10000, never, controller.signal)).rejects.toBeInstanceOf(
-      IpcTimeoutError,
+    await expect(withTimeout('ABORTED', 10000, never, controller.signal)).rejects.toSatisfy(
+      (reason: unknown) => isIpcTimeoutError(reason),
     );
     // Should return almost instantly, not wait 10 s.
     expect(Date.now() - start).toBeLessThan(100);
@@ -108,7 +115,28 @@ describe('withTimeout', () => {
     const race = withTimeout('ABORT_RACE', 5000, never, controller.signal);
     setTimeout(() => controller.abort(), 5);
 
-    await expect(race).rejects.toBeInstanceOf(IpcTimeoutError);
+    await expect(race).rejects.toSatisfy((reason: unknown) => isIpcTimeoutError(reason));
+  });
+
+  it('serialized output round-trips through isIpcTimeoutError', () => {
+    const err = new IpcTimeoutError('TEST_CH', 5000);
+    const serialized = serializeForIpc(err);
+    expect(isIpcTimeoutError(serialized)).toBe(true);
+    expect(serialized).toEqual({
+      name: 'IpcTimeoutError',
+      message: "channel 'TEST_CH' timed out after 5000ms",
+      code: 'IPC_TIMEOUT',
+      channel: 'TEST_CH',
+      ms: 5000,
+    });
+  });
+
+  it('isIpcTimeoutError returns false for non-timeout errors', () => {
+    expect(isIpcTimeoutError(new Error('regular error'))).toBe(false);
+    expect(isIpcTimeoutError(null)).toBe(false);
+    expect(isIpcTimeoutError(undefined)).toBe(false);
+    expect(isIpcTimeoutError('string')).toBe(false);
+    expect(isIpcTimeoutError({ name: 'SomeOtherError' })).toBe(false);
   });
 
   // --- ms <= 0 — no timeout ------------------------------------------
@@ -128,7 +156,9 @@ describe('withTimeout', () => {
     const target = 80;
     const start = Date.now();
 
-    await expect(withTimeout('TIMING', target, slow)).rejects.toBeInstanceOf(IpcTimeoutError);
+    await expect(withTimeout('TIMING', target, slow)).rejects.toSatisfy((reason: unknown) =>
+      isIpcTimeoutError(reason),
+    );
 
     const elapsed = Date.now() - start;
     expect(elapsed).toBeGreaterThanOrEqual(target - 100);
@@ -148,7 +178,9 @@ describe('withTimeout', () => {
     const slow = new Promise<never>(() => {
       /* never settles */
     });
-    await expect(withTimeout('CLEANUP', 40, slow)).rejects.toBeInstanceOf(IpcTimeoutError);
+    await expect(withTimeout('CLEANUP', 40, slow)).rejects.toSatisfy((reason: unknown) =>
+      isIpcTimeoutError(reason),
+    );
 
     // Allow any stray async cleanup to complete.
     await new Promise((r) => setTimeout(r, 10));
@@ -169,7 +201,7 @@ describe('withTimeout', () => {
     for (const r of results) {
       expect(r.status).toBe('rejected');
       if (r.status === 'rejected') {
-        expect(r.reason).toBeInstanceOf(IpcTimeoutError);
+        expect(isIpcTimeoutError(r.reason)).toBe(true);
       }
     }
   });

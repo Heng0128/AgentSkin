@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ThemeVisualSnapshot } from '../../shared/types';
+import { isIpcTimeoutError } from '../../shared/withTimeout';
 
 // ---------------------------------------------------------------------------
 // Mocks — must be set BEFORE importing the module under test.
@@ -330,5 +331,59 @@ describe('registerStudioIpc', () => {
       registerStudioIpc(makeDeps());
       await expect(call('studio:snapshot:baseline', { agentId: 'nope' })).rejects.toThrow();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression: THEME_STUDIO_SNAPSHOT_BASELINE — dependency passthrough + timeout
+// ---------------------------------------------------------------------------
+
+describe('THEME_STUDIO_SNAPSHOT_BASELINE regression', () => {
+  beforeEach(() => {
+    handlers.clear();
+    vi.clearAllMocks();
+    // Default mocks so registerStudioIpc can complete without errors.
+    snapshotThemeVisuals.mockResolvedValue(makeSnapshot());
+    startInspect.mockResolvedValue(makeInspectController());
+    findDomTargets.mockResolvedValue([{ webSocketDebuggerUrl: 'ws://127.0.0.1:9336/devtools' }]);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('dependency failure passes through original error (not wrapped as IpcTimeoutError)', async () => {
+    const deps = makeDeps();
+    deps.getActiveThemeId.mockResolvedValue(null); // skip restore / re-apply path
+    snapshotThemeVisuals.mockRejectedValue(new Error('CDP capture boom'));
+    registerStudioIpc(deps);
+
+    await expect(call('studio:snapshot:baseline', { agentId: 'traework' })).rejects.toThrow(
+      'CDP capture boom',
+    );
+    try {
+      await call('studio:snapshot:baseline', { agentId: 'traework' });
+    } catch (err) {
+      expect(isIpcTimeoutError(err)).toBe(false);
+    }
+  });
+
+  it('rejects with IpcTimeoutError when the handler exceeds 60s', async () => {
+    vi.useFakeTimers();
+    const deps = makeDeps();
+    deps.getActiveThemeId.mockResolvedValue('graphite-code');
+    deps.restoreApp.mockResolvedValue({});
+    // Multi-step CDP mock: snapshotThemeVisuals never settles → triggers the 60s timeout.
+    // The finally-block re-apply (applyTheme) will NOT run because withTimeout rejects
+    // the outer promise before the inner async function completes.
+    snapshotThemeVisuals.mockReturnValue(new Promise<never>(() => {}));
+    registerStudioIpc(deps);
+
+    const promise = call<ThemeVisualSnapshot>('studio:snapshot:baseline', { agentId: 'traework' });
+    const assertion = expect(promise).rejects.toSatisfy((r: unknown) => isIpcTimeoutError(r));
+    await vi.runAllTimersAsync();
+    await assertion;
+    vi.useRealTimers();
   });
 });

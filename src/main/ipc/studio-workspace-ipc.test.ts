@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { isIpcTimeoutError } from '../../shared/withTimeout';
 import type { MainContext } from '../main-context';
 
 // ---------------------------------------------------------------------------
@@ -281,5 +282,54 @@ describe('registerStudioWorkspaceIpc', () => {
       expect(result.ok).toBe(true);
       expect(fs.existsSync(path.join(bundles, 'doomed'))).toBe(false);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression: STUDIO_BUNDLE_IMPORT — dependency passthrough + timeout
+// ---------------------------------------------------------------------------
+
+describe('STUDIO_BUNDLE_IMPORT regression', () => {
+  beforeEach(() => {
+    handlers.clear();
+    vi.clearAllMocks();
+    bundlesDir.mockReturnValue(path.join(TEST_USER_DATA, 'bundles'));
+    createFromBuffer.mockReturnValue(makeFakeImage());
+    sampleFromBitmap.mockReturnValue(['#101018', '#e8e2ff']);
+    deriveThemeFromImage.mockReturnValue({
+      palette: { primary: '#101018' },
+      mode: 'dark',
+    });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('dependency failure passes through original error (not wrapped as IpcTimeoutError)', async () => {
+    showOpenDialog.mockResolvedValue({ canceled: false, filePaths: ['C:\\x.agentskin-bundle'] });
+    installBundleFromPath.mockRejectedValue(new Error('tar extract boom'));
+    registerStudioWorkspaceIpc(makeCtx());
+
+    await expect(call('studio:bundle:import')).rejects.toThrow('tar extract boom');
+    try {
+      await call('studio:bundle:import');
+    } catch (err) {
+      expect(isIpcTimeoutError(err)).toBe(false);
+    }
+  });
+
+  it('rejects with IpcTimeoutError when the handler exceeds 60s', async () => {
+    vi.useFakeTimers();
+    showOpenDialog.mockResolvedValue({ canceled: false, filePaths: ['C:\\x.agentskin-bundle'] });
+    installBundleFromPath.mockReturnValue(new Promise<never>(() => {}));
+    registerStudioWorkspaceIpc(makeCtx());
+
+    const promise = call<{ id: string; name: string }>('studio:bundle:import');
+    const assertion = expect(promise).rejects.toSatisfy((r: unknown) => isIpcTimeoutError(r));
+    await vi.runAllTimersAsync();
+    await assertion;
+    vi.useRealTimers();
   });
 });

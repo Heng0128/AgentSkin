@@ -33,10 +33,13 @@
  * reset state between cases.
  */
 
-import type { ThemeApplyTrace } from './types';
+import type { IpcTimeoutEvent, ThemeApplyTrace } from './types';
 
 /** Maximum number of completed traces retained in memory. */
 const MAX_HISTORY = 50;
+
+/** Maximum number of IPC timeout events retained in the ring buffer. */
+const MAX_TIMEOUTS = 20;
 
 /** Aggregate statistics derived from the stored trace history. */
 export interface PerformanceStats {
@@ -63,10 +66,22 @@ export interface PerformanceLoggerApi {
   getStats(): PerformanceStats;
   getHistory(count: number): PerformanceHistoryResponse;
   clear(): void;
+  /** Record an IPC handler timeout event into the ring buffer. */
+  logTimeout(event: Omit<IpcTimeoutEvent, 'id'>): void;
+  /** Return the most recent `count` timeout events (default 10). */
+  getRecentTimeouts(count?: number): IpcTimeoutEvent[];
+  /** Return all stored timeout events in chronological order. */
+  getAllTimeouts(): IpcTimeoutEvent[];
+  /** Clear all timeout events and reset the sequence counter. */
+  clearTimeouts(): void;
 }
 
 function createPerformanceLogger(): PerformanceLoggerApi {
   let buffer: ThemeApplyTrace[] = [];
+
+  // --- IPC timeout ring buffer ---
+  let timeouts: IpcTimeoutEvent[] = [];
+  let timeoutSeq = 0;
 
   function getRecent(count: number): ThemeApplyTrace[] {
     const n = Math.max(0, Math.min(count, buffer.length));
@@ -120,6 +135,28 @@ function createPerformanceLogger(): PerformanceLoggerApi {
     },
     clear(): void {
       buffer = [];
+      timeouts = [];
+      timeoutSeq = 0;
+    },
+    logTimeout(event: Omit<IpcTimeoutEvent, 'id'>): void {
+      timeoutSeq += 1;
+      timeouts.push({
+        id: `timeout_${String(timeoutSeq).padStart(3, '0')}`,
+        ...event,
+      });
+      if (timeouts.length > MAX_TIMEOUTS) {
+        timeouts = timeouts.slice(-MAX_TIMEOUTS);
+      }
+    },
+    getRecentTimeouts(count = 10): IpcTimeoutEvent[] {
+      return timeouts.slice(-count);
+    },
+    getAllTimeouts(): IpcTimeoutEvent[] {
+      return [...timeouts];
+    },
+    clearTimeouts(): void {
+      timeouts = [];
+      timeoutSeq = 0;
     },
   };
 }

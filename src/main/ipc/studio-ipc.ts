@@ -21,11 +21,11 @@ import { pathToFileURL } from 'node:url';
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { AgentId, StudioSnapshotOptions, ThemeVisualSnapshot } from '../../shared/types';
-import { withTimeout } from '../../shared/withTimeout';
 import { findDomTargets } from '../cdp/cdp-targets';
 import { type InspectController, startInspect } from '../cdp/inspect-session';
 import { snapshotThemeVisuals } from '../cdp/snapshot-theme';
 import { assertAgentId, assertSafeThemeId } from './ipc-validators';
+import { withMonitoredTimeout } from './with-monitored-timeout';
 
 export function registerStudioIpc(deps: {
   applyTheme: (request: { themeId: string; appId: AgentId }) => Promise<unknown>;
@@ -60,7 +60,7 @@ export function registerStudioIpc(deps: {
       _event,
       request: { agentId: unknown; themeId: unknown; options?: unknown },
     ): Promise<ThemeVisualSnapshot> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.THEME_STUDIO_SNAPSHOT,
         45000,
         (async () => {
@@ -95,7 +95,7 @@ export function registerStudioIpc(deps: {
   ipcMain.handle(
     IpcChannel.THEME_STUDIO_EXPORT,
     async (_event, request: unknown): Promise<{ packageDir: string }> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.THEME_STUDIO_EXPORT,
         30000,
         (async () => {
@@ -124,7 +124,7 @@ export function registerStudioIpc(deps: {
   ipcMain.handle(
     IpcChannel.THEME_STUDIO_INSPECT_START,
     async (_event, request: { agentId: unknown }): Promise<{ ok: boolean }> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.THEME_STUDIO_INSPECT_START,
         30000,
         (async () => {
@@ -157,7 +157,7 @@ export function registerStudioIpc(deps: {
   );
 
   ipcMain.handle(IpcChannel.THEME_STUDIO_INSPECT_STOP, async (_event): Promise<{ ok: boolean }> => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.THEME_STUDIO_INSPECT_STOP,
       15000,
       (async () => {
@@ -184,7 +184,7 @@ export function registerStudioIpc(deps: {
       _event,
       request: { agentId: unknown; options?: unknown },
     ): Promise<ThemeVisualSnapshot> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.THEME_STUDIO_SNAPSHOT_BASELINE,
         60000,
         (async () => {

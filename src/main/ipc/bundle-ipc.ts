@@ -21,13 +21,13 @@ import { app, dialog, ipcMain } from 'electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { InstalledTheme } from '../../shared/types';
-import { withTimeout } from '../../shared/withTimeout';
 import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
 import { extractTarGz, packDirToTarGz } from '../fs/tar-pack';
 import { type MainContext, notifyStatusChanged } from '../main-context';
 import { registerThemeWallpaperForInstalled } from '../wallpaper/theme-wallpaper';
 import { assertNonEmptyString, assertSafeThemeId } from './ipc-validators';
+import { withMonitoredTimeout } from './with-monitored-timeout';
 
 export const BUNDLE_EXTENSION = '.agentskin-bundle';
 
@@ -86,7 +86,7 @@ export function registerBundleIpc(deps: MainContext, updateTrayMenu: () => Promi
   const copy = getMainMessages();
 
   ipcMain.handle(IpcChannel.BUNDLE_CREATE, async (_event, themeId) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.BUNDLE_CREATE,
       60000,
       (async () => {
@@ -109,7 +109,7 @@ export function registerBundleIpc(deps: MainContext, updateTrayMenu: () => Promi
   });
 
   ipcMain.handle(IpcChannel.BUNDLE_INSTALL, async () => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.BUNDLE_INSTALL,
       60000,
       (async () => {
@@ -129,7 +129,7 @@ export function registerBundleIpc(deps: MainContext, updateTrayMenu: () => Promi
 
   // 供 file-open 分流：bundle 扩展名走这里（断言在调用方已做）。
   ipcMain.handle(IpcChannel.BUNDLE_OPEN_FILE, async (_event, filePath) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.BUNDLE_OPEN_FILE,
       60000,
       (async () => {

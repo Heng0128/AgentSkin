@@ -166,6 +166,11 @@ export const IpcChannel = {
   /** Renderer asks for performance trace history. Returns the most recent
    *  `count` traces plus aggregate stats. */
   PERFORMANCE_GET: 'performance:get',
+  /** Renderer asks for recently recorded IPC handler timeout events.
+   *  Returns up to `count` events (default 10, max 50). */
+  PERFORMANCE_GET_TIMEOUTS: 'performance:get-timeouts',
+  /** Renderer asks to clear all stored IPC timeout events. */
+  PERFORMANCE_CLEAR_TIMEOUTS: 'performance:clear-timeouts',
 
   // --- Visual Analysis ---
   VISUAL_ANALYSIS_LIST: 'visual-analysis:list',

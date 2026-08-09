@@ -69,6 +69,23 @@ export interface DeviceInfo {
   electronVersion: string;
 }
 
+/**
+ * IPC handler timeout event — a standalone record distinct from a full
+ * {@link ThemeApplyTrace}. Captures the moment an IPC invoke exceeded its
+ * configured threshold so diagnostics can surface handler health without
+ * scanning the full apply history.
+ */
+export interface IpcTimeoutEvent {
+  /** Monotonically incremented identifier, e.g. "timeout_001". */
+  id: string;
+  /** The IPC channel literal that timed out (e.g. "THEME_APPLY"). */
+  channel: string;
+  /** Actual timeout threshold (ms) configured for the handler. */
+  ms: number;
+  /** Monotonic timestamp ({@link Date.now}) when the timeout fired. */
+  timestamp: number;
+}
+
 /** Full record of a single theme-apply or theme-restore operation. */
 export interface ThemeApplyTrace {
   /** Unique trace identifier, monotonically incremented (e.g. "apply_001"). */

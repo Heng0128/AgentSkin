@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
+import { isIpcTimeoutError } from '../../shared/withTimeout';
 import type { MainContext } from '../main-context';
 
 // ---------------------------------------------------------------------------
@@ -261,5 +262,71 @@ describe('theme-ipc parameter validation', () => {
       const handler = handlers.get(IpcChannel.THEME_OPEN_FILE)!;
       expect(() => handler({}, '/tmp/not-a-theme.txt')).toThrow(getMainMessages().invalidPackage);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression: THEME_APPLY / THEME_RESTORE — dependency passthrough + timeout
+// ---------------------------------------------------------------------------
+
+describe('THEME_APPLY regression', () => {
+  it('dependency failure passes through original error (not wrapped as IpcTimeoutError)', async () => {
+    const deps = makeMockDeps();
+    (deps.core.apply as Mock).mockRejectedValue(new Error('core apply boom'));
+    registerThemeIpc(deps, updateTrayMenu);
+
+    const handler = handlers.get(IpcChannel.THEME_APPLY)!;
+    await expect(handler({}, { appId: 'workbuddy', themeId: 'dark' })).rejects.toThrow(
+      'core apply boom',
+    );
+    try {
+      await handler({}, { appId: 'workbuddy', themeId: 'dark' });
+    } catch (err) {
+      expect(isIpcTimeoutError(err)).toBe(false);
+    }
+  });
+
+  it('rejects with IpcTimeoutError when the handler exceeds 30s', async () => {
+    vi.useFakeTimers();
+    const deps = makeMockDeps();
+    (deps.core.apply as Mock).mockReturnValue(new Promise<never>(() => {}));
+    registerThemeIpc(deps, updateTrayMenu);
+
+    const handler = handlers.get(IpcChannel.THEME_APPLY)!;
+    const promise = handler({}, { appId: 'workbuddy', themeId: 'dark' });
+    const assertion = expect(promise).rejects.toSatisfy((r: unknown) => isIpcTimeoutError(r));
+    await vi.runAllTimersAsync();
+    await assertion;
+    vi.useRealTimers();
+  });
+});
+
+describe('THEME_RESTORE regression', () => {
+  it('dependency failure passes through original error (not wrapped as IpcTimeoutError)', async () => {
+    const deps = makeMockDeps();
+    (deps.core.restore as Mock).mockRejectedValue(new Error('core restore boom'));
+    registerThemeIpc(deps, updateTrayMenu);
+
+    const handler = handlers.get(IpcChannel.THEME_RESTORE)!;
+    await expect(handler({}, 'workbuddy')).rejects.toThrow('core restore boom');
+    try {
+      await handler({}, 'workbuddy');
+    } catch (err) {
+      expect(isIpcTimeoutError(err)).toBe(false);
+    }
+  });
+
+  it('rejects with IpcTimeoutError when the handler exceeds 30s', async () => {
+    vi.useFakeTimers();
+    const deps = makeMockDeps();
+    (deps.core.restore as Mock).mockReturnValue(new Promise<never>(() => {}));
+    registerThemeIpc(deps, updateTrayMenu);
+
+    const handler = handlers.get(IpcChannel.THEME_RESTORE)!;
+    const promise = handler({}, 'workbuddy');
+    const assertion = expect(promise).rejects.toSatisfy((r: unknown) => isIpcTimeoutError(r));
+    await vi.runAllTimersAsync();
+    await assertion;
+    vi.useRealTimers();
   });
 });

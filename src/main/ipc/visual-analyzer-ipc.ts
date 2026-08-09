@@ -30,7 +30,7 @@ import { pathToFileURL } from 'node:url';
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { type AgentId, isAgentId, type VisualAnalysisSummary } from '../../shared/types';
-import { withTimeout } from '../../shared/withTimeout';
+import { withMonitoredTimeout } from './with-monitored-timeout';
 
 const PROFILE_FILE_SUFFIX = '-profile.json';
 
@@ -165,7 +165,7 @@ function buildVisualAnalysisSummaries(): VisualAnalysisSummary[] {
 export function registerVisualAnalyzerIpc(): void {
   // List agent ids that have a bundled profile on disk (known AgentIds only).
   ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_LIST, async () => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.VISUAL_ANALYSIS_LIST,
       10000,
       (async () => {
@@ -193,7 +193,7 @@ export function registerVisualAnalyzerIpc(): void {
   // Get a single agent profile by id. Input is validated as a known AgentId
   // before it is used in any path (no traversal surface).
   ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_GET, async (_event, agentName: unknown) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.VISUAL_ANALYSIS_GET,
       10000,
       (async () => {
@@ -239,7 +239,7 @@ export function registerVisualAnalyzerIpc(): void {
       agentName: unknown,
       themeData: unknown,
     ): Promise<{ ok: boolean; path?: string }> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.VISUAL_ANALYSIS_EXPORT_THEME,
         30000,
         (async () => {

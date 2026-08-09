@@ -23,13 +23,13 @@ import type {
   WallpaperInfo,
   WallpaperSettings,
 } from '../../shared/types';
-import { withTimeout } from '../../shared/withTimeout';
 import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
 import { type MainContext, settingsDto } from '../main-context';
 import { buildWallpaperTheme, removeWallpaperTheme } from '../theme/wallpaper-theme';
 import { registerThemeWallpaperForInstalled } from '../wallpaper/theme-wallpaper';
 import { assertAgentId, assertNonEmptyString } from './ipc-validators';
+import { withMonitoredTimeout } from './with-monitored-timeout';
 
 export function registerWallpaperIpc(deps: MainContext): void {
   /** Guard: wallpaper service may be null if its initialization failed during
@@ -53,7 +53,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
   });
 
   ipcMain.handle(IpcChannel.WALLPAPER_IMPORT, async (_event) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.WALLPAPER_IMPORT,
       60000,
       (async () => {
@@ -99,7 +99,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.WALLPAPER_DELETE,
     async (_event, id: unknown): Promise<WallpaperInfo[]> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.WALLPAPER_DELETE,
         10000,
         (async () => {
@@ -128,7 +128,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.WALLPAPER_APPLY_AGENT,
     async (_event, appId: unknown, options?: unknown) => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.WALLPAPER_APPLY_AGENT,
         30000,
         (async () => {
@@ -145,7 +145,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.WALLPAPER_APPLY_TO_AGENT,
     async (_event, wallpaperId: unknown, appId: unknown, options?: unknown) => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.WALLPAPER_APPLY_TO_AGENT,
         30000,
         (async () => {
@@ -161,7 +161,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
   );
 
   ipcMain.handle(IpcChannel.WALLPAPER_REMOVE_FROM_AGENT, async (_event, appId: unknown) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.WALLPAPER_REMOVE_FROM_AGENT,
       15000,
       (async () => {
@@ -190,7 +190,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.WALLPAPER_EXTRACT_THEME,
     async (_event, wallpaperId: unknown): Promise<InstalledTheme> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.WALLPAPER_EXTRACT_THEME,
         30000,
         (async () => {
@@ -234,7 +234,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
   );
 
   ipcMain.handle(IpcChannel.WE_DETECT, async (_event) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.WE_DETECT,
       15000,
       (async () => {

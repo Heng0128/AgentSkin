@@ -23,11 +23,11 @@ import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { isSafeThemeId } from '../../shared/theme-id';
 import type { InstalledTheme } from '../../shared/types';
-import { withTimeout } from '../../shared/withTimeout';
 import type { MainContext } from '../main-context';
 import { deriveThemeFromImage } from '../theme/theme-from-image';
 import { sampleFromBitmap } from '../theme/wallpaper-theme';
 import { bundlesDir, installBundleFromPath } from './bundle-ipc';
+import { withMonitoredTimeout } from './with-monitored-timeout';
 
 // --- helpers ---------------------------------------------------------------
 
@@ -98,7 +98,7 @@ function mapProjectTypeToStudio(
 export function registerStudioWorkspaceIpc(ctx: MainContext): void {
   // ── studio:image:extract-theme ─────────────────────────────────────────
   ipcMain.handle(IpcChannel.STUDIO_IMAGE_EXTRACT_THEME, async (_event, dataUrl) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.STUDIO_IMAGE_EXTRACT_THEME,
       15000,
       (async () => {
@@ -133,7 +133,7 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
   // ── studio:bundle:list ──────────────────────────────────────────────────
   // List installed bundles by scanning userData/bundles/<id>/ directories.
   ipcMain.handle(IpcChannel.STUDIO_BUNDLE_LIST, async () => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.STUDIO_BUNDLE_LIST,
       15000,
       (async () => {
@@ -182,7 +182,7 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
   // Install a bundle by id (already unpacked in userData/bundles/<id>/).
   // Loads the package via ThemePackageLoader + ThemeInstaller (no dialog, no tar).
   ipcMain.handle(IpcChannel.STUDIO_BUNDLE_INSTALL_BY_ID, async (_event, id) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.STUDIO_BUNDLE_INSTALL_BY_ID,
       15000,
       (async () => {
@@ -216,7 +216,7 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
   // ── studio:bundle:import ────────────────────────────────────────────────
   // Reuse the existing install flow (handles unpack → validate → install).
   ipcMain.handle(IpcChannel.STUDIO_BUNDLE_IMPORT, async () => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.STUDIO_BUNDLE_IMPORT,
       60000,
       (async () => {
@@ -236,7 +236,7 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
   // ── studio:bundle:delete ─────────────────────────────────────────────────
   // Filesystem-level: remove the entire userData/bundles/<id>/ directory.
   ipcMain.handle(IpcChannel.STUDIO_BUNDLE_DELETE, async (_event, id) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.STUDIO_BUNDLE_DELETE,
       15000,
       (async () => {

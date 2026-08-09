@@ -20,10 +20,10 @@ import { agentThemeExtension } from '../../legacy/agentskin-core-runtime';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { type ApplyRequest, isAgentId } from '../../shared/types';
-import { withTimeout } from '../../shared/withTimeout';
 import { isThemePackagePath } from '../file-open';
 import { type MainContext, notifyStatusChanged, wrapCatalog } from '../main-context';
 import { assertAgentId, assertNonEmptyString, assertSafeThemeId } from './ipc-validators';
+import { withMonitoredTimeout } from './with-monitored-timeout';
 
 // Single source of truth for max theme package size — shared with the engine layer.
 const THEME_PACKAGE_EXTENSIONS = ['agenttheme', 'agentskin-theme', 'codex-theme'];
@@ -51,7 +51,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
 
   // --- Apply / restore ---
   ipcMain.handle(IpcChannel.THEME_APPLY, async (_event, request: ApplyRequest) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.THEME_APPLY,
       30000,
       (async () => {
@@ -67,7 +67,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
   });
 
   ipcMain.handle(IpcChannel.THEME_RESTORE, async (_event, appId: unknown) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.THEME_RESTORE,
       30000,
       (async () => {
@@ -82,7 +82,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
 
   // --- Package import / export / delete ---
   ipcMain.handle(IpcChannel.THEME_IMPORT, async () => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.THEME_IMPORT,
       30000,
       (async () => {
@@ -109,7 +109,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
   ipcMain.handle(
     IpcChannel.THEME_IMPORT_BYTES,
     async (_event, bytes: unknown, suggestedId: unknown) => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.THEME_IMPORT_BYTES,
         15000,
         (async () => {
@@ -130,7 +130,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
   );
 
   ipcMain.handle(IpcChannel.THEME_IMPORT_PATH, async (_event, filePath: unknown) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.THEME_IMPORT_PATH,
       30000,
       (async () => {
@@ -152,7 +152,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
   });
 
   ipcMain.handle(IpcChannel.THEME_EXPORT, async (_event, themeId: unknown) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.THEME_EXPORT,
       30000,
       (async () => {
@@ -175,7 +175,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
   });
 
   ipcMain.handle(IpcChannel.THEME_DELETE, async (_event, themeId: unknown) => {
-    return withTimeout(
+    return withMonitoredTimeout(
       IpcChannel.THEME_DELETE,
       60000,
       (async () => {

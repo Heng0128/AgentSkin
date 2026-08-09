@@ -18,9 +18,9 @@ import { dialog, ipcMain } from 'electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { SettingsUpdateResult } from '../../shared/types';
-import { withTimeout } from '../../shared/withTimeout';
 import { type MainContext, settingsDto } from '../main-context';
 import { assertAgentId, assertPortOrNull } from './ipc-validators';
+import { withMonitoredTimeout } from './with-monitored-timeout';
 
 export function registerSettingsIpc(deps: MainContext): void {
   ipcMain.handle(IpcChannel.SETTINGS_GET, () => settingsDto(deps));
@@ -28,7 +28,7 @@ export function registerSettingsIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.SETTINGS_PICK_APP_PATH,
     async (_event, appId: unknown): Promise<SettingsUpdateResult & { canceled: boolean }> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.SETTINGS_PICK_APP_PATH,
         30000,
         (async () => {
@@ -63,7 +63,7 @@ export function registerSettingsIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.SETTINGS_CLEAR_APP_PATH,
     async (_event, appId: unknown): Promise<SettingsUpdateResult> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.SETTINGS_CLEAR_APP_PATH,
         30000,
         (async () => {
@@ -78,7 +78,7 @@ export function registerSettingsIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.SETTINGS_SET_APP_PORT,
     async (_event, appId: unknown, port: unknown): Promise<SettingsUpdateResult> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.SETTINGS_SET_APP_PORT,
         30000,
         (async () => {
@@ -96,7 +96,7 @@ export function registerSettingsIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.SETTINGS_SET_CUSTOM_CSS,
     async (_event, css: unknown): Promise<SettingsUpdateResult> => {
-      return withTimeout(
+      return withMonitoredTimeout(
         IpcChannel.SETTINGS_SET_CUSTOM_CSS,
         15000,
         (async () => {

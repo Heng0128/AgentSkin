@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
+import { isIpcTimeoutError } from '../../shared/withTimeout';
 import type { MainContext } from '../main-context';
 
 // ---------------------------------------------------------------------------
@@ -135,5 +136,39 @@ describe('wallpaper-ipc parameter validation', () => {
       await expect(handler({}, 123)).rejects.toThrow(getMainMessages().invalidAgentId);
       await expect(handler({}, null)).rejects.toThrow(getMainMessages().invalidAgentId);
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression: WALLPAPER_APPLY_TO_AGENT — dependency passthrough + timeout
+// ---------------------------------------------------------------------------
+
+describe('WALLPAPER_APPLY_TO_AGENT regression', () => {
+  it('dependency failure passes through original error (not wrapped as IpcTimeoutError)', async () => {
+    const deps = makeMockDeps();
+    (deps.core.applyWallpaperToAgent as Mock).mockRejectedValue(new Error('wallpaper engine gone'));
+    registerWallpaperIpc(deps);
+
+    const handler = handlers.get(IpcChannel.WALLPAPER_APPLY_TO_AGENT)!;
+    await expect(handler({}, 'wp-1', 'workbuddy')).rejects.toThrow('wallpaper engine gone');
+    try {
+      await handler({}, 'wp-1', 'workbuddy');
+    } catch (err) {
+      expect(isIpcTimeoutError(err)).toBe(false);
+    }
+  });
+
+  it('rejects with IpcTimeoutError when the handler exceeds 30s', async () => {
+    vi.useFakeTimers();
+    const deps = makeMockDeps();
+    (deps.core.applyWallpaperToAgent as Mock).mockReturnValue(new Promise<never>(() => {}));
+    registerWallpaperIpc(deps);
+
+    const handler = handlers.get(IpcChannel.WALLPAPER_APPLY_TO_AGENT)!;
+    const promise = handler({}, 'wp-1', 'workbuddy');
+    const assertion = expect(promise).rejects.toSatisfy((r: unknown) => isIpcTimeoutError(r));
+    await vi.runAllTimersAsync();
+    await assertion;
+    vi.useRealTimers();
   });
 });

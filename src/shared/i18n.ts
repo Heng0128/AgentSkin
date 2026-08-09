@@ -490,6 +490,8 @@ export const uiMessages = {
     studioRestoreDefault: '恢复默认',
     studioToolboxTitle: '调参面板',
     studioToolboxDesc: '实时修改模拟骨架的视觉参数，不影响真实应用。',
+    studioTimeoutTitle: '操作超时',
+    studioTimeoutDesc: '「{channel}」未在 {ms/1000} 秒内完成，请稍后重试',
     studioUndo: '撤销',
     studioInspire: '灵感',
     studioInspireTitle: '调色板灵感',
@@ -982,6 +984,8 @@ export const uiMessages = {
     studioToolboxTitle: 'Toolbox',
     studioToolboxDesc:
       'Adjust visual parameters of the mock replica in real time. Does not affect the real app.',
+    studioTimeoutTitle: 'Operation Timed Out',
+    studioTimeoutDesc: '"{channel}" did not complete in {ms/1000}s. Please retry.',
     studioUndo: 'Undo',
     studioInspire: 'Inspire',
     studioInspireTitle: 'Palette Inspiration',

@@ -64,7 +64,7 @@ export function withTimeout<T>(
 
   // Already aborted — reject before allocating any timer.
   if (signal?.aborted) {
-    return Promise.reject(new IpcTimeoutError(channel, ms));
+    return Promise.reject(serializeForIpc(new IpcTimeoutError(channel, ms)));
   }
 
   return new Promise<T>((resolve, reject) => {
@@ -85,14 +85,14 @@ export function withTimeout<T>(
     const onAbort = () => {
       if (settled) return;
       cleanup();
-      reject(new IpcTimeoutError(channel, ms));
+      reject(serializeForIpc(new IpcTimeoutError(channel, ms)));
     };
 
     // Start the timeout timer.
     timer = setTimeout(() => {
       if (settled) return;
       cleanup();
-      reject(new IpcTimeoutError(channel, ms));
+      reject(serializeForIpc(new IpcTimeoutError(channel, ms)));
     }, ms);
 
     // Listen for external abort.
@@ -116,4 +116,35 @@ export function withTimeout<T>(
       },
     );
   });
+}
+
+// --- Serialization helpers ---------------------------------------------
+
+/** Electron 结构化克隆后只保留 { name, message }。主动序列化为 plain object 让渲染端能完整拿到 code/channel/ms。 */
+export interface SerializedIpcTimeoutError {
+  name: 'IpcTimeoutError';
+  message: string;
+  code: 'IPC_TIMEOUT';
+  channel: string;
+  ms: number;
+}
+
+export function serializeForIpc(err: IpcTimeoutError): SerializedIpcTimeoutError {
+  return {
+    name: 'IpcTimeoutError',
+    message: err.message,
+    code: 'IPC_TIMEOUT',
+    channel: err.channel,
+    ms: err.ms,
+  };
+}
+
+/**
+ * 渲染端类型守卫。跨 IPC 后 Error 自有属性丢失，仅剩 name。
+ * 同时也兼容序列化后的 SerializedIpcTimeoutError 对象。
+ */
+export function isIpcTimeoutError(error: unknown): error is IpcTimeoutError {
+  if (typeof error !== 'object' || error === null) return false;
+  const e = error as { name?: unknown };
+  return e.name === 'IpcTimeoutError';
 }
