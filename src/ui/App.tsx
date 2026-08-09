@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 // the main window paints faster and the user reaches the first interactive
 // state sooner. Subsequent route switches are instant (chunk already cached).
 const AgentDashboardPage = lazy(() => import('@/pages/AgentDashboardPage'));
+const AgentsPage = lazy(() => import('@/pages/AgentsPage'));
 const SettingsPage = lazy(() =>
   import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
@@ -109,6 +110,7 @@ export default function App() {
                       <AgentDashboardPage controller={controller} />
                     )}
                     {controller.route === 'workspace' && <WorkspacePage controller={controller} />}
+                    {controller.route === 'agents' && <AgentsPage controller={controller} />}
                     {controller.route === 'themes' && <ThemesPage controller={controller} />}
                     {controller.route === 'wallpaper' && (
                       <WallpaperEnginePage controller={controller} />

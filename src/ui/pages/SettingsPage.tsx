@@ -2,7 +2,6 @@
 
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { APP_META, AppMark } from '@/components/app-mark';
 import { PerformancePanel } from '@/components/diagnostics/PerformancePanel';
 import {
   Accordion,
@@ -12,7 +11,6 @@ import {
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -20,26 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ThemeMode } from '@/design/theme-mode';
 import type { AppController, SettingsSection } from '@/hooks/useAppController';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
 
 import {
-  Activity01Icon,
   CheckmarkCircle02Icon,
   Copy01Icon,
   DashboardSquare01Icon,
   File01Icon,
-  Folder01Icon,
   InformationCircleIcon,
   Settings01Icon,
 } from '@hugeicons/core-free-icons';
-import { AGENT_IDS, type AgentId } from '@shared/types';
-import { toast } from 'sonner';
 
 function SettingRow({
   title,
@@ -94,7 +86,6 @@ function CustomCssEditor({
     try {
       await api.setCustomThemeCss(value);
       showToast(t.settingsCustomCssSaved);
-      toast.success('设置已保存');
     } finally {
       setSaving(false);
     }
@@ -133,96 +124,18 @@ function CustomCssEditor({
   );
 }
 
-function AppOverrideCard({ controller, appId }: { controller: AppController; appId: AgentId }) {
-  const { t, settings } = controller;
-  const override = settings?.apps[appId] ?? { appPath: null, port: null };
-  const defaultPort = settings?.defaultPorts[appId] ?? controller.appStatusFor(appId)?.port ?? 0;
-  const [portDraft, setPortDraft] = useState('');
-
-  useEffect(() => {
-    setPortDraft(override.port === null ? '' : String(override.port));
-  }, [override.port]);
-
-  const commitPort = async () => {
-    const trimmed = portDraft.trim();
-    if (trimmed === (override.port === null ? '' : String(override.port))) return;
-    const parsed = trimmed === '' ? null : Number(trimmed);
-    const saved = await controller.saveAppPort(appId, parsed);
-    if (!saved) setPortDraft(override.port === null ? '' : String(override.port));
-  };
-
-  return (
-    <div className="rounded-[2px] border border-border bg-card overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-border px-3.5 py-2.5">
-        <AppMark appId={appId} size={18} />
-        <span className="font-display text-[13px] font-bold tracking-[-.01em]">
-          {APP_META[appId].name}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-4 border-b border-border px-3.5 py-2.5">
-        <div className="min-w-0">
-          <p className="font-mono text-[11px] tracking-wide text-foreground">
-            {t.settingsPathLabel}
-          </p>
-          <p
-            className="mt-0.5 truncate font-mono text-[10px] tracking-wider text-muted-foreground/70"
-            title={override.appPath ?? undefined}
-          >
-            {override.appPath ?? t.settingsPathAuto}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {override.appPath && (
-            <Button variant="ghost" size="xs" onClick={() => void controller.clearAppPath(appId)}>
-              {t.settingsClearPath}
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={() => void controller.chooseAppPath(appId)}>
-            <HugeIcon icon={Folder01Icon} data-icon="inline-start" />
-            {t.settingsChoosePath}
-          </Button>
-        </div>
-      </div>
-      <div className="flex items-center justify-between gap-4 px-3.5 py-2.5">
-        <div>
-          <p className="font-mono text-[11px] tracking-wide text-foreground">
-            {t.settingsPortLabel}
-          </p>
-          <p className="mt-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
-            {t.settingsPortHint(defaultPort)}
-          </p>
-        </div>
-        <Input
-          value={portDraft}
-          inputMode="numeric"
-          placeholder={defaultPort > 0 ? String(defaultPort) : t.settingsPortHint(0)}
-          className="h-[30px] w-24 rounded-[2px] border-border bg-muted font-mono text-[11px] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25"
-          onChange={(event) => setPortDraft(event.target.value)}
-          onBlur={() => void commitPort()}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') void commitPort();
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
 /**
  * # SettingsPage
  *
  * In-page settings — no separate dialog. Sits alongside Workspace and Themes
- * in the sidebar. A left section rail (General / Apps / Wallpaper) switches
- * the right-hand content, mirroring the old dialog layout but embedded.
+ * in the sidebar. A left section rail (General / System / About / Advanced)
+ * switches the right-hand content, mirroring the old dialog layout but embedded.
  */
 export function SettingsPage({ controller }: { controller: AppController }) {
   const { t, appVersion, logs, showToast } = controller;
   const { mode, setMode } = useThemeMode();
   const section = controller.settingsSection;
   const setSection = controller.setSettingsSection;
-
-  // Demo boolean toggle for shadcn/ui Switch integration
-  const [compactMode, setCompactMode] = useState(false);
 
   // Copy logs to clipboard — moved from the old LogDrawer sheet.
   const [copied, setCopied] = useState(false);
@@ -264,22 +177,20 @@ export function SettingsPage({ controller }: { controller: AppController }) {
     }
   }, [logs, showToast, t]);
 
-  // Load settings data on mount so AppOverrideCard has real overrides.
+  // Load settings data on mount.
   // P3-2: controller.openSettings is already stable (useCallback with empty
   // deps in useSettings.ts — identity never changes). The explicit section
-  // dep means we also reload data when the user switches the settings rail
-  // (General / Apps / Wallpaper), so per-section caches are refreshed and
-  // stale overrides don't linger. eslint-disable can be removed safely
-  // because the dep list now exactly matches what the effect body uses.
+  // dep means we also reload data when the user switches the settings rail,
+  // so per-section caches are refreshed and stale data doesn't linger.
   useEffect(() => {
     void controller.openSettings(section);
   }, [section, controller.openSettings]);
 
   const sections: Array<{ id: SettingsSection; label: string; icon: typeof Settings01Icon }> = [
     { id: 'general', label: t.settingsGeneralTitle, icon: Settings01Icon },
-    { id: 'apps', label: t.settingsAppsTitle, icon: DashboardSquare01Icon },
     { id: 'system', label: t.settingsSystemTitle, icon: File01Icon },
-    { id: 'diagnostics', label: t.settingsDiagnosticsTitle, icon: Activity01Icon },
+    { id: 'about', label: t.settingsAbout, icon: InformationCircleIcon },
+    { id: 'advanced', label: t.settingsAdvancedTitle, icon: DashboardSquare01Icon },
   ];
   const activeSection = sections.find((item) => item.id === section) ?? sections[0];
 
@@ -322,74 +233,6 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               <h2 className="font-display text-[13px] font-bold tracking-tight">
                 {activeSection.label}
               </h2>
-              {section === 'general' && (
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex size-4 cursor-help items-center justify-center rounded-full bg-muted">
-                        <HugeIcon
-                          icon={InformationCircleIcon}
-                          className="size-3 text-muted-foreground"
-                        />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-[220px] text-[10.5px]">
-                      主题模式决定整体配色走向。Light 白色、Dark 深色、System 跟随系统设置。
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              {section === 'apps' && (
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex size-4 cursor-help items-center justify-center rounded-full bg-muted">
-                        <HugeIcon
-                          icon={InformationCircleIcon}
-                          className="size-3 text-muted-foreground"
-                        />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-[220px] text-[10.5px]">
-                      覆盖各 Agent 的执行文件路径和通讯端口，便于调试或运行多个实例。
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              {section === 'system' && (
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex size-4 cursor-help items-center justify-center rounded-full bg-muted">
-                        <HugeIcon
-                          icon={InformationCircleIcon}
-                          className="size-3 text-muted-foreground"
-                        />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-[220px] text-[10.5px]">
-                      应用运行日志，可用于排查主题注入 / CDP 连接 / DPI 相关故障。
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              {section === 'diagnostics' && (
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex size-4 cursor-help items-center justify-center rounded-full bg-muted">
-                        <HugeIcon
-                          icon={InformationCircleIcon}
-                          className="size-3 text-muted-foreground"
-                        />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-[220px] text-[10.5px]">
-                      {t.settingsDiagnosticsDesc}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
             </div>
             {section === 'system' && logs.length > 0 && (
               <Button
@@ -408,51 +251,20 @@ export function SettingsPage({ controller }: { controller: AppController }) {
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3.5 py-2.5">
             {section === 'general' && (
-              <>
-                <SettingRow title={t.themeModeLabel}>
-                  <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
-                    <SelectTrigger className="h-7 w-[140px] rounded-[2px] border-border bg-muted text-[11px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-[2px] border-border bg-card">
-                      {themeOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </SettingRow>
-                <SettingRow title={t.settingsAbout} description={t.settingsAboutDesc}>
-                  <span className="font-mono text-[10px] tracking-wider text-muted-foreground/70">
-                    v{appVersion}
-                  </span>
-                </SettingRow>
-                {/* Switch demo: compact layout toggle */}
-                <SettingRow title="紧凑布局" description="减少页面间距和元素尺寸，提升信息密度">
-                  <Switch checked={compactMode} onCheckedChange={setCompactMode} size="sm" />
-                </SettingRow>
-                <Accordion type="single" collapsible>
-                  <AccordionItem value="custom-css" className="border-b-0">
-                    <AccordionTrigger className="py-2.5 text-[12px] font-semibold text-foreground">
-                      {t.settingsCustomCssTitle}
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <CustomCssEditor t={t} showToast={showToast} />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </>
-            )}
-            {section === 'apps' && (
-              <>
-                <p className="font-mono text-[11px] tracking-wider text-muted-foreground/70">
-                  {t.settingsAppsHint}
-                </p>
-                {AGENT_IDS.map((appId) => (
-                  <AppOverrideCard key={appId} controller={controller} appId={appId} />
-                ))}
-              </>
+              <SettingRow title={t.themeModeLabel}>
+                <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
+                  <SelectTrigger className="h-7 w-[140px] rounded-[2px] border-border bg-muted text-[11px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-[2px] border-border bg-card">
+                    {themeOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </SettingRow>
             )}
             {section === 'system' &&
               (logs.length === 0 ? (
@@ -482,7 +294,40 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                   </div>
                 </div>
               ))}
-            {section === 'diagnostics' && <PerformancePanel t={t} />}
+            {section === 'about' && (
+              <SettingRow title={t.settingsAbout} description={t.settingsAboutDesc}>
+                <span className="font-mono text-[10px] tracking-wider text-muted-foreground/70">
+                  v{appVersion}
+                </span>
+              </SettingRow>
+            )}
+            {section === 'advanced' && (
+              <>
+                <p className="font-mono text-[11px] tracking-wider text-muted-foreground/70">
+                  {t.settingsAdvancedDesc}
+                </p>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="diagnostics" className="border-b-0">
+                    <AccordionTrigger className="py-2.5 text-[12px] font-semibold text-foreground">
+                      {t.settingsDiagnosticsTitle}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <PerformancePanel t={t} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="custom-css" className="border-b-0">
+                    <AccordionTrigger className="py-2.5 text-[12px] font-semibold text-foreground">
+                      {t.settingsCustomCssTitle}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <CustomCssEditor t={t} showToast={showToast} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </>
+            )}
           </div>
         </div>
       </div>

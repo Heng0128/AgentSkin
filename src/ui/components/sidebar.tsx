@@ -13,6 +13,7 @@ import {
   Home02Icon,
   Image02Icon,
   PaintBoardIcon,
+  Robot01Icon,
   Settings01Icon,
 } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
@@ -79,6 +80,7 @@ export function Sidebar() {
       items: [
         { route: 'dashboard', icon: DashboardSquare01Icon, label: t.navDashboard },
         { route: 'workspace', icon: Home02Icon, label: t.navWorkspace },
+        { route: 'agents', icon: Robot01Icon, label: t.navAgents },
         { route: 'themes', icon: PaintBoardIcon, label: t.navThemes },
         { route: 'wallpaper', icon: Image02Icon, label: t.navWallpaperEngine },
       ],

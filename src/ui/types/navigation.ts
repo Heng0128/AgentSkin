@@ -6,8 +6,9 @@
  * AgentSkin is an Agent management platform, not a theme store. The primary
  * navigation reflects this:
  *
- *   🏠 Workspace  · my AI programming environment: agents, recent themes, activity
- *   🤖 Agents     · agent list + per-agent environment detail
+ *   🏠 Dashboard  · overview of system status
+ *   🤖 Workspace  · my AI programming environment: agents, recent themes, activity
+ *   🧩 Agents     · agent list + per-agent environment detail
  *   🎨 Themes     · local theme library (not a store)
  *   🔬 Studio     · theme visual replica + mock DOM preview
  *   ⚙️ Settings   · preferences, app paths
@@ -15,4 +16,11 @@
  * The old 'store' / 'installed' views are merged into Themes.
  */
 
-export type Route = 'dashboard' | 'workspace' | 'themes' | 'studio' | 'wallpaper' | 'settings';
+export type Route =
+  | 'dashboard'
+  | 'workspace'
+  | 'agents'
+  | 'themes'
+  | 'studio'
+  | 'wallpaper'
+  | 'settings';

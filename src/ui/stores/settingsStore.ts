@@ -28,7 +28,7 @@ function currentT() {
   return uiMessages[locale];
 }
 
-export type SettingsSection = 'general' | 'apps' | 'wallpaper' | 'system' | 'diagnostics';
+export type SettingsSection = 'general' | 'system' | 'about' | 'advanced' | 'wallpaper';
 
 interface SettingsState {
   settingsOpen: boolean;

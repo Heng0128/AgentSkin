@@ -1,30 +1,24 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
- * # AgentDashboardPage
+ * # AgentDashboardPage → Overview
  *
- * Compact overview page for AgentSkin — shows connected agents, theme
- * count, injection engine state, and the total number of supported agents.
+ * 概览页面 — 替代原来的 Dashboard 仪表盘。
  *
- * Reads live data from the AppController (status poll every 3s).
- * No charts, no mock generators, no setInterval.
+ * 职责：
+ *   - 最近活动时间线（近期将接入真实事件流）
+ *   - 统计卡（主题数 / Agent 支持数 / 已安装 Agent 数）
+ *   - 快捷入口跳转到各功能页面
  *
- * Swiss/International styling: rounded-[2px] corners, CSS-variable colors,
- * font-mono labels, max-w-[1240px] container.
+ * 原「Connected Agents」区块已迁移至独立的 Agents 视图。
  */
 
 import type { AppController } from '@/hooks/useAppController';
 
-import type { AgentId } from '@shared/types';
-import { AGENT_META } from '@shared/types';
-
-/* ------------------------------------------------------------------ */
-/* Component                                                           */
-/* ------------------------------------------------------------------ */
-
 export default function AgentDashboardPage({ controller }: { controller: AppController }) {
-  const { status, installed, booting } = controller;
+  const { status, installed, setRoute, t } = controller;
   const supportedCount = 6; // AGENT_IDS.length — formal product agents
+  const runningCount = status?.apps.filter((a) => a.running).length ?? 0;
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
@@ -33,63 +27,35 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
           {/* Page header */}
           <header className="mb-5">
             <h1 className="font-display text-[22px] font-bold tracking-tight text-foreground">
-              AgentSkin Overview
+              {t.navOverview}
             </h1>
             <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-              System status · {new Date().toLocaleTimeString()}
+              {new Date().toLocaleDateString()} · {new Date().toLocaleTimeString()}
             </p>
           </header>
 
-          {/* Connected Agents */}
-          <section className="mb-5 rounded-[2px] border border-border bg-card p-[14px]">
-            <h2 className="mb-3 font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
-              Connected Agents
-            </h2>
-            <ul className="space-y-1.5">
-              {status?.apps.map((app) => {
-                const meta = AGENT_META[app.appId as AgentId];
-                const displayName = meta?.displayName ?? app.displayName;
-                return (
-                  <li key={app.appId} className="flex items-center gap-2">
-                    <span
-                      className={
-                        app.running
-                          ? 'inline-block size-[7px] rounded-full bg-[var(--grn)]'
-                          : 'inline-block size-[7px] rounded-full bg-[var(--muted-foreground)] opacity-25'
-                      }
-                    />
-                    <span className="font-mono text-[11px] text-foreground">{displayName}</span>
-                    <span className="ml-auto font-mono text-[9.5px] text-muted-foreground">
-                      {app.running ? 'Running' : 'Offline'}
-                    </span>
-                  </li>
-                );
-              }) ?? (
-                <li className="font-mono text-[10px] text-muted-foreground">
-                  {booting ? 'Loading...' : 'No status available'}
-                </li>
-              )}
-            </ul>
-          </section>
-
-          {/* Quick stats row */}
-          <div className="grid grid-cols-3 gap-3.5">
-            <StatTile label="Themes" value={installed.length} />
+          {/* Stats row — 可点击跳转 */}
+          <div className="grid grid-cols-3 gap-3.5 mb-5">
             <StatTile
-              label="Engine"
-              value={booting ? 'Booting' : 'Ready'}
-              indicator={
-                <span
-                  className={
-                    booting
-                      ? 'inline-block size-[7px] rounded-full bg-[var(--amb)] animate-pulse'
-                      : 'inline-block size-[7px] rounded-full bg-[var(--grn)]'
-                  }
-                />
-              }
+              label={t.installedTitle}
+              value={installed.length}
+              onClick={() => setRoute('themes')}
             />
-            <StatTile label="Supported Agents" value={supportedCount} />
+            <StatTile
+              label={t.dashboardAgents}
+              value={`${runningCount}/${supportedCount}`}
+              onClick={() => setRoute('agents')}
+            />
+            <StatTile label={t.yourEnvironments} value="—" onClick={() => setRoute('workspace')} />
           </div>
+
+          {/* 最近活动 — 目前为占位状态，后续接入事件流 */}
+          <section className="rounded-[2px] border border-border bg-card p-[14px]">
+            <h2 className="mb-3 font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
+              {t.recentActivity}
+            </h2>
+            <p className="font-mono text-[11px] text-muted-foreground/70">{t.noActivity}</p>
+          </section>
         </div>
       </div>
     </div>
@@ -97,22 +63,25 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
 }
 
 /* ------------------------------------------------------------------ */
-/* StatTile                                                            */
+/* StatTile — 可点击统计卡                                             */
 /* ------------------------------------------------------------------ */
 
 function StatTile({
   label,
   value,
-  indicator,
+  onClick,
 }: {
   label: string;
   value: string | number;
-  indicator?: React.ReactNode;
+  onClick: () => void;
 }) {
   return (
-    <div className="cursor-default rounded-[2px] border border-border bg-card p-[14px] transition-colors duration-fast hover:border-border-strong hover:bg-card2">
-      <div className="mb-2 flex items-center gap-1.5">
-        {indicator}
+    <button
+      type="button"
+      onClick={onClick}
+      className="cursor-pointer rounded-[2px] border border-border bg-card p-[14px] text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
+    >
+      <div className="mb-2">
         <span className="font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
           {label}
         </span>
@@ -120,6 +89,6 @@ function StatTile({
       <span className="font-display text-[28px] font-bold tracking-tight text-foreground">
         {value}
       </span>
-    </div>
+    </button>
   );
 }
