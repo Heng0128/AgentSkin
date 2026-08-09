@@ -115,6 +115,10 @@ interface StudioStoreState {
   resetOverrides(): void;
   /** Undo the last `toolOverrides` edit. No-op when the stack is empty. */
   undo(): void;
+  /** Redo the last undone `toolOverrides` edit. No-op when the stack is empty. */
+  redo(): void;
+  /** Per-edit redo stack for `toolOverrides` (most recent first). */
+  redoStack: (ToolOverride | null)[];
   addPinnedSelector(): void;
   removePinnedSelector(sel: string): void;
   togglePseudo(state: string): void;
@@ -198,6 +202,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   hoveredIdx: null,
   toolOverrides: null,
   undoStack: [],
+  redoStack: [],
   inspectMode: false,
   liveNode: null,
   liveError: null,
@@ -235,7 +240,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   selectProject: (id) => {
     if (get().activeProjectId === id) return;
     undoCoalesce.key = null;
-    set({ activeProjectId: id, undoStack: [] });
+    set({ activeProjectId: id, undoStack: [], redoStack: [] });
     void get().loadProjectSnapshots();
   },
 
@@ -335,7 +340,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     const { saveActiveProject, previewView, inspectMode } = get();
     void saveActiveProject({ agentId });
     undoCoalesce.key = null;
-    set({ snapshot: null, inspectingIdx: null, undoStack: [] });
+    set({ snapshot: null, inspectingIdx: null, undoStack: [], redoStack: [] });
     if (previewView === 'generator') set({ previewView: 'theme' });
     if (inspectMode || inspectBusy.current) {
       inspectBusy.current = true;
@@ -643,6 +648,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       return {
         toolOverrides,
         undoStack: coalesce ? s.undoStack : pushUndo(s.undoStack, prev),
+        redoStack: [],
       };
     });
   },
@@ -650,6 +656,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   resetOverrides: () =>
     set((s) => ({
       undoStack: pushUndo(s.undoStack, s.toolOverrides),
+      redoStack: [],
       toolOverrides: null,
     })),
 
@@ -659,7 +666,25 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       const stack = s.undoStack.slice();
       const prev = stack.pop()!;
       undoCoalesce.key = null;
-      return { toolOverrides: prev ?? null, undoStack: stack };
+      return {
+        toolOverrides: prev ?? null,
+        undoStack: stack,
+        redoStack: [...s.redoStack, s.toolOverrides],
+      };
+    });
+  },
+
+  redo: () => {
+    set((s) => {
+      if (s.redoStack.length === 0) return {};
+      const stack = s.redoStack.slice();
+      const next = stack.pop()!;
+      undoCoalesce.key = null;
+      return {
+        toolOverrides: next ?? null,
+        redoStack: stack,
+        undoStack: [...s.undoStack, s.toolOverrides],
+      };
     });
   },
 
@@ -694,6 +719,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   applyPalette: (palette, action) => {
     set((s) => ({
       undoStack: pushUndo(s.undoStack, s.toolOverrides),
+      redoStack: [],
       toolOverrides: { ...(s.toolOverrides ?? {}), ...palette } as ToolOverride,
       previewView: action === 'apply' ? 'theme' : s.previewView,
     }));
@@ -705,6 +731,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       // (RealDomPreview) actually consumes, and keep the full palette in
       // `colors` so export can bake the complete 14-token set.
       undoStack: pushUndo(s.undoStack, s.toolOverrides),
+      redoStack: [],
       toolOverrides: {
         ...(s.toolOverrides ?? {}),
         accent: palette.accent,
@@ -722,6 +749,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       // Same mapping as setOverrideColors: role fields drive the live preview,
       // `colors` preserves the full palette for export.
       undoStack: pushUndo(s.undoStack, s.toolOverrides),
+      redoStack: [],
       toolOverrides: {
         ...(s.toolOverrides ?? {}),
         accent: palette.accent,
