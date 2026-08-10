@@ -63,14 +63,14 @@ export function StudioHeader({ t }: { t: AppController['t'] }) {
           Theme Studio
         </span>
         <span
-          className="rounded px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase"
+          className="rounded px-1.5 py-0.5 font-mono text-[9.5px] font-bold uppercase"
           style={{
             background: 'var(--primary)',
             color: 'var(--primary-foreground)',
             letterSpacing: '0.1em',
           }}
         >
-          BETA
+          {t.studioHeaderBeta}
         </span>
         {activeProject && (
           <span className="ml-1 font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
@@ -83,10 +83,10 @@ export function StudioHeader({ t }: { t: AppController['t'] }) {
       {activeProject && (
         <div className="ml-6 flex items-center gap-1.5">
           <span
-            className="font-mono text-[9px] uppercase"
+            className="font-mono text-[10px] uppercase"
             style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
           >
-            代理
+            {t.studioHeaderAgent}
           </span>
           <Select
             value={activeAgent ?? undefined}
@@ -177,7 +177,7 @@ export function StudioHeader({ t }: { t: AppController['t'] }) {
                     ))}
                   </span>
                   <span className="font-mono text-[10px]" style={{ color: 'var(--foreground)' }}>
-                    {p.label}
+                    {t[p.labelKey]}
                   </span>
                 </button>
               ))}
@@ -204,7 +204,7 @@ export function StudioHeader({ t }: { t: AppController['t'] }) {
           disabled={!snapshot || exportState.loading}
         >
           <HugeIcon icon={Download01Icon} className="size-3" />
-          导出
+          {t.studioExportButton}
         </button>
       </div>
     </div>

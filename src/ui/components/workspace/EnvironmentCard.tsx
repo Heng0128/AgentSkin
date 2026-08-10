@@ -38,19 +38,19 @@ import { AgentStatusDot, envToDotVariant } from './AgentStatusDot';
  *   - Dropdown menu (…) for rename/duplicate/delete
  */
 
-/** Status → accent color mapping */
+/** Status → accent ring mapping (Swiss: minimal ring, no colored glow) */
 const statusAccent: Record<EnvironmentModel['status'], { ring: string }> = {
   active: {
-    ring: 'ring-cr-success/30 hover:ring-cr-success/50',
+    ring: '',
   },
   available: {
-    ring: 'ring-sky-500/20 hover:ring-sky-500/40',
+    ring: '',
   },
   offline: {
-    ring: 'ring-border/50 hover:ring-border',
+    ring: '',
   },
   detecting: {
-    ring: 'ring-amber-500/25 hover:ring-amber-500/40',
+    ring: '',
   },
 };
 
@@ -118,14 +118,18 @@ export function EnvironmentCard({
   progress?: AgentProgress | null;
 }) {
   const hasActions = env.presetId && (onRename || onDuplicate || onDelete);
-  const accent = statusAccent[env.status];
+  const _accent = statusAccent[env.status];
 
   const statusLabel = (() => {
     switch (env.status) {
       case 'active':
         return <b className="text-[10.5px] font-semibold text-cr-success">{t.envStatusActive}</b>;
       case 'available':
-        return <b className="text-[10.5px] font-semibold text-sky-500">{t.envStatusAvailable}</b>;
+        return (
+          <b className="text-[10.5px] font-semibold text-muted-foreground">
+            {t.envStatusAvailable}
+          </b>
+        );
       case 'offline':
         return (
           <b className="text-[10.5px] font-semibold text-muted-foreground">{t.envStatusOffline}</b>
@@ -141,11 +145,9 @@ export function EnvironmentCard({
     <div
       className={cn(
         'group/card relative flex flex-col overflow-hidden rounded-[2px] border border-border bg-card text-card-foreground',
-        'transition-all duration-base ease-out',
-        'hover:-translate-y-[3px] hover:shadow-md',
-        isActive
-          ? `ring-2 ring-primary/40 shadow-sm shadow-primary/10 ${accent.ring}`
-          : `ring-1 ${accent.ring}`,
+        'transition-[background-color,border-color,box-shadow] duration-base ease-out',
+        'hover:border-border-strong',
+        isActive ? 'border-2 border-primary' : 'border border-border',
         onClick && 'cursor-pointer',
       )}
       onClick={onClick}
@@ -178,7 +180,7 @@ export function EnvironmentCard({
       />
 
       {/* === Card content === */}
-      <div className="relative z-10 flex flex-1 flex-col p-3.5">
+      <div className="relative z-10 flex flex-1 flex-col p-4">
         {/* Top row: icon + title + menu */}
         <div className="flex items-start gap-2.5">
           {/* Agent icon — shadcn Avatar (image + fallback) */}
@@ -204,7 +206,7 @@ export function EnvironmentCard({
             <div className="flex items-center gap-1.5">
               <p className="truncate font-display text-sm font-bold">{env.name}</p>
               {isActive && (
-                <span className="shrink-0 rounded-full bg-cr-success/15 px-1.5 py-px text-[10px] font-semibold text-cr-success">
+                <span className="shrink-0 rounded-[2px] bg-cr-success/15 px-1.5 py-px text-[10px] font-semibold text-cr-success">
                   {t.activeBadge}
                 </span>
               )}
@@ -262,26 +264,26 @@ export function EnvironmentCard({
 
         {/* Meta grid: version / status / theme */}
         <div className="mt-2.5 font-mono">
-          <div className="grid grid-cols-3 gap-1.5 rounded-[2px] bg-secondary px-2.5 py-[10px]">
+          <div className="grid grid-cols-3 gap-1.5 rounded-[2px] bg-secondary px-2.5 py-2">
             <div>
-              <i className="mb-0.5 block text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
+              <i className="mb-0.5 block text-[10px] font-mono opacity-70 uppercase tracking-[0.1em] not-italic">
                 {t.detailVersion}
               </i>
-              <b className="block text-[10.5px] font-semibold text-foreground/80">
+              <b className="block text-[11.5px] font-semibold tabular-nums text-foreground/80">
                 {env.detectedVersion || '—'}
               </b>
             </div>
             <div>
-              <i className="mb-0.5 block text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
+              <i className="mb-0.5 block text-[10px] font-mono opacity-70 uppercase tracking-[0.1em] not-italic">
                 {t.agentDetailStatus}
               </i>
               {statusLabel}
             </div>
             <div>
-              <i className="mb-0.5 block text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground/60 not-italic">
+              <i className="mb-0.5 block text-[10px] font-mono opacity-70 uppercase tracking-[0.1em] not-italic">
                 {t.capTheme}
               </i>
-              <b className="block truncate text-[10.5px] font-semibold text-foreground/80">
+              <b className="block truncate text-[11.5px] tabular-nums text-foreground/80">
                 {env.theme?.name || '—'}
               </b>
             </div>
@@ -290,7 +292,7 @@ export function EnvironmentCard({
 
         {/* Wallpaper binding indicator (P0-3: environment = theme + wallpaper) */}
         {env.wallpaperId && (
-          <div className="mt-1.5 flex items-center gap-1 font-mono text-[9px] text-muted-foreground">
+          <div className="mt-1.5 flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
             <HugeIcon icon={Image02Icon} className="size-3" />
             <span>{t.envWallpaperBound}</span>
           </div>
@@ -338,9 +340,9 @@ export function EnvironmentCard({
         </div>
         {progress && isPhaseActive(progress.phase) && (
           <div className="px-3 pb-2">
-            <div className="h-0.5 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-0.5 w-full overflow-hidden rounded-[2px] bg-muted">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-slow"
+                className="h-full rounded-[2px] bg-primary transition-all duration-slow"
                 style={{ width: `${progress.progress}%` }}
               />
             </div>

@@ -97,6 +97,12 @@ export function _getActiveMediaTokenForTest(appId: AgentId): string | undefined 
   return activeMediaTokens.get(appId);
 }
 
+/** Read the tracked token for an agent WITHOUT modifying it — production
+ *  helper used by wallpaper-injector for epoch-cancellation token restore. */
+export function getActiveMediaToken(appId: AgentId): string | null {
+  return activeMediaTokens.get(appId) ?? null;
+}
+
 /** Clear all entries from {@link activeMediaTokens} — for test cleanup only. */
 export function _clearActiveMediaTokensForTest(): void {
   activeMediaTokens.clear();

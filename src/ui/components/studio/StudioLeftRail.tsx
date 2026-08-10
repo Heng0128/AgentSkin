@@ -16,6 +16,7 @@ import {
   FolderAddIcon,
   RefreshIcon,
 } from '@hugeicons/core-free-icons';
+import type { UiMessages } from '@shared/i18n';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
 
 /**
@@ -23,7 +24,7 @@ import { AGENT_IDS, AGENT_META } from '@shared/types';
  * capture controls (pinned selectors / pseudo states / dark-light schemes).
  * Reads shared studio state directly from {@link useStudioStore}.
  */
-export function StudioLeftRail() {
+export function StudioLeftRail({ t }: { t: UiMessages }) {
   const projects = useStudioStore((s) => s.projects);
   const activeProjectId = useStudioStore((s) => s.activeProjectId);
   const creatingProject = useStudioStore((s) => s.creatingProject);
@@ -67,7 +68,7 @@ export function StudioLeftRail() {
       style={{ background: 'var(--bg, var(--background))' }}
     >
       {/* Section: Projects */}
-      <Kicker>工程 · PROJECT</Kicker>
+      <Kicker>{t.studioProjectTitle}</Kicker>
       <div className="mt-2 flex gap-1 pb-2">
         <button
           type="button"
@@ -75,7 +76,7 @@ export function StudioLeftRail() {
           className="flex h-6 items-center gap-1 border border-border bg-muted px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent"
           style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
         >
-          <HugeIcon icon={Add01Icon} className="size-3" /> 新建
+          <HugeIcon icon={Add01Icon} className="size-3" /> {t.studioProjectNew}
         </button>
         <button
           type="button"
@@ -84,7 +85,7 @@ export function StudioLeftRail() {
           className="flex h-6 items-center gap-1 border border-border bg-muted px-2 font-mono text-[9.5px] uppercase transition-colors hover:bg-accent disabled:opacity-40"
           style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
         >
-          <HugeIcon icon={FolderAddIcon} className="size-3" /> 导入
+          <HugeIcon icon={FolderAddIcon} className="size-3" /> {t.studioProjectImport}
         </button>
       </div>
 
@@ -95,19 +96,21 @@ export function StudioLeftRail() {
           style={{ borderRadius: 'var(--radius)' }}
         >
           <input
+            aria-label={t.studioProjectNameAria}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') void createProject();
             }}
-            placeholder="工程名"
+            placeholder={t.studioProjectPlaceholder}
             className="h-6 w-full border border-border bg-muted px-2 font-mono text-[10px] outline-none focus:border-primary/60"
             style={{ borderRadius: 'var(--radius)' }}
           />
           <input
+            aria-label={t.studioProjectAuthorAria}
             value={newAuthor}
             onChange={(e) => setNewAuthor(e.target.value)}
-            placeholder="作者（可选）"
+            placeholder={t.studioProjectAuthorPlaceholder}
             className="h-6 w-full border border-border bg-muted px-2 font-mono text-[10px] outline-none focus:border-primary/60"
             style={{ borderRadius: 'var(--radius)' }}
           />
@@ -119,7 +122,7 @@ export function StudioLeftRail() {
                   key={agentId}
                   type="button"
                   onClick={() => setNewAgent(agentId)}
-                  className="flex items-center gap-1 px-2 py-0.5 font-mono text-[9px]"
+                  className="flex items-center gap-1 px-2 py-0.5 font-mono text-[10px]"
                   style={{
                     border:
                       newAgent === agentId ? '1px solid var(--primary)' : '1px solid var(--border)',
@@ -142,7 +145,7 @@ export function StudioLeftRail() {
               className="h-6 flex-1 border border-border bg-primary px-2 font-mono text-[9.5px] font-bold uppercase text-primary-foreground"
               style={{ letterSpacing: '0.08em', borderRadius: 'var(--radius)' }}
             >
-              创建
+              {t.studioProjectCreate}
             </button>
             <button
               type="button"
@@ -150,7 +153,7 @@ export function StudioLeftRail() {
               className="h-6 border border-border bg-muted px-2 font-mono text-[9.5px] uppercase"
               style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
             >
-              取消
+              {t.cancel}
             </button>
           </div>
         </div>
@@ -160,10 +163,10 @@ export function StudioLeftRail() {
       <div className="mt-2 space-y-1">
         {projects.length === 0 && !creatingProject && (
           <p
-            className="font-mono text-[9px] leading-relaxed"
+            className="font-mono text-[10px] leading-relaxed"
             style={{ color: 'var(--dim, var(--muted-foreground))', opacity: 0.7 }}
           >
-            还没有工程。点「NEW」从零设计，或「IMPORT」载入一个 .agentskin-theme。
+            {t.studioProjectEmpty}
           </p>
         )}
         {[...projects]
@@ -181,48 +184,48 @@ export function StudioLeftRail() {
               {editingId === p.id ? (
                 <div className="min-w-0 flex-1 space-y-1">
                   <input
-                    aria-label="工程名称"
+                    aria-label={t.studioProjectNameAria}
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') void renameProject(p, editName, editAuthor);
                       if (e.key === 'Escape') setEditingId(null);
                     }}
-                    placeholder="工程名"
+                    placeholder={t.studioProjectPlaceholder}
                     className="h-5 w-full border border-border bg-muted px-1.5 font-mono text-[10px] text-foreground outline-none focus:border-primary"
                     style={{ borderRadius: 'var(--radius)' }}
                   />
                   <input
-                    aria-label="作者"
+                    aria-label={t.studioProjectAuthorAria}
                     value={editAuthor}
                     onChange={(e) => setEditAuthor(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') void renameProject(p, editName, editAuthor);
                       if (e.key === 'Escape') setEditingId(null);
                     }}
-                    placeholder="作者"
-                    className="h-5 w-full border border-border bg-muted px-1.5 font-mono text-[9px] outline-none focus:border-primary"
+                    placeholder={t.studioProjectAuthorPlaceholder}
+                    className="h-5 w-full border border-border bg-muted px-1.5 font-mono text-[10px] outline-none focus:border-primary"
                     style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
                   />
                   <div className="flex gap-1">
                     <button
                       type="button"
                       onClick={() => void renameProject(p, editName, editAuthor)}
-                      className="bg-primary px-1.5 py-0.5 font-mono text-[8px] font-bold uppercase text-primary-foreground"
+                      className="bg-primary px-1.5 py-0.5 font-mono text-[9.5px] font-bold uppercase text-primary-foreground"
                       style={{ borderRadius: 'var(--radius)' }}
                     >
-                      保存
+                      {t.studioProjectSave}
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditingId(null)}
-                      className="px-1.5 py-0.5 font-mono text-[8px] uppercase"
+                      className="px-1.5 py-0.5 font-mono text-[9.5px] uppercase"
                       style={{
                         color: 'var(--muted-foreground)',
                         borderRadius: 'var(--radius)',
                       }}
                     >
-                      取消
+                      {t.cancel}
                     </button>
                   </div>
                 </div>
@@ -245,33 +248,33 @@ export function StudioLeftRail() {
                     {p.hasSnapshot ? (
                       <Badge
                         variant="outline"
-                        className="gap-1 px-1 py-0.5 font-mono text-[7px] font-bold uppercase text-cr-success border-cr-success/45"
+                        className="gap-1 px-1 py-0.5 font-mono text-[9.5px] font-bold uppercase text-cr-success border-cr-success/45"
                       >
-                        <span className="inline-block size-[5px] rounded-full bg-cr-success animate-breathe" />
-                        已快照
+                        <span className="inline-block size-[5px] rounded-[1px] bg-cr-success" />
+                        {t.studioProjectSnapshotted}
                       </Badge>
                     ) : (
                       <Badge
                         variant="outline"
-                        className="px-1 py-0.5 font-mono text-[7px] uppercase text-muted-foreground border-border"
+                        className="px-1 py-0.5 font-mono text-[9.5px] uppercase text-muted-foreground border-border"
                       >
-                        空闲
+                        {t.studioProjectIdle}
                       </Badge>
                     )}
                     {p.exportedDir && (
                       <Badge
                         variant="red"
-                        className="px-1 py-0.5 font-mono text-[7px] font-bold uppercase"
+                        className="px-1 py-0.5 font-mono text-[9.5px] font-bold uppercase"
                       >
-                        已导出
+                        {t.studioProjectExported}
                       </Badge>
                     )}
                     {p.author && (
                       <span
-                        className="truncate font-mono text-[8px]"
+                        className="truncate font-mono text-[9.5px]"
                         style={{ color: 'var(--muted-foreground)' }}
                       >
-                        作者：{p.author}
+                        {t.studioProjectAuthor(p.author)}
                       </span>
                     )}
                   </div>
@@ -286,18 +289,18 @@ export function StudioLeftRail() {
                       setEditName(p.name);
                       setEditAuthor(p.author || '');
                     }}
-                    className="p-0.5 text-[9px] transition-opacity opacity-0 group-hover:opacity-100"
+                    className="p-0.5 text-[10px] transition-opacity opacity-0 group-hover:opacity-100"
                     style={{ color: 'var(--muted-foreground)' }}
-                    aria-label="编辑工程"
+                    aria-label={t.studioProjectAriaEdit}
                   >
                     <HugeIcon icon={Edit01Icon} className="size-3" />
                   </button>
                   <button
                     type="button"
                     onClick={() => void deleteProject(p.id)}
-                    className="p-0.5 text-[9px] transition-opacity opacity-0 group-hover:opacity-100 hover:!text-[var(--primary)]"
+                    className="p-0.5 text-[10px] transition-opacity opacity-0 group-hover:opacity-100 hover:!text-[var(--primary)]"
                     style={{ color: 'var(--muted-foreground)' }}
-                    aria-label="删除工程"
+                    aria-label={t.studioProjectAriaDelete}
                   >
                     <HugeIcon icon={Delete01Icon} className="size-3" />
                   </button>
@@ -310,15 +313,15 @@ export function StudioLeftRail() {
       {/* Section: Installed theme library linkage */}
       <div className="mt-4 space-y-2 border-t border-border pt-3">
         <div className="flex items-center justify-between">
-          <Kicker>主题库 · LIBRARY</Kicker>
+          <Kicker>{t.studioLibraryTitle}</Kicker>
           <button
             type="button"
             onClick={() => setThemeLibraryOpen(!themeLibraryOpen)}
-            className="flex h-5 items-center gap-1 border border-border bg-muted px-1.5 font-mono text-[8.5px] uppercase transition-colors hover:bg-accent"
+            className="flex h-5 items-center gap-1 border border-border bg-muted px-1.5 font-mono text-[10px] uppercase transition-colors hover:bg-accent"
             style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           >
             <HugeIcon icon={themeLibraryOpen ? RefreshIcon : Folder01Icon} className="size-2.5" />
-            {themeLibraryOpen ? '关闭' : '打开'}
+            {themeLibraryOpen ? t.studioLibraryToggleClose : t.studioLibraryToggleOpen}
           </button>
         </div>
 
@@ -329,10 +332,10 @@ export function StudioLeftRail() {
           >
             {installedThemes.length === 0 ? (
               <p
-                className="px-1 py-1 font-mono text-[8.5px]"
+                className="px-1 py-1 font-mono text-[10px]"
                 style={{ color: 'var(--muted-foreground)' }}
               >
-                暂无已安装主题
+                {t.studioLibraryEmpty}
               </p>
             ) : (
               installedThemes.map((theme) => (
@@ -343,7 +346,9 @@ export function StudioLeftRail() {
                   onClick={() => void loadThemeIntoProject(theme.id)}
                   className="flex w-full items-center gap-1.5 rounded-[2px] px-1.5 py-1 text-left transition-colors hover:bg-accent disabled:opacity-40"
                   title={
-                    activeProjectId ? `加载「${theme.name}」调色板到当前工程` : '先新建/选择工程'
+                    activeProjectId
+                      ? t.studioLibraryLoadTooltip(theme.name)
+                      : t.studioLibraryCreateProjectFirst
                   }
                 >
                   {theme.icon ? (
@@ -355,7 +360,7 @@ export function StudioLeftRail() {
                     />
                   )}
                   <span
-                    className="min-w-0 flex-1 truncate font-mono text-[9px]"
+                    className="min-w-0 flex-1 truncate font-mono text-[10px]"
                     style={{ color: 'var(--foreground)' }}
                   >
                     {theme.name}
@@ -374,21 +379,21 @@ export function StudioLeftRail() {
 
       {/* Section: Custom capture controls */}
       <div className="mt-4 space-y-2 border-t border-border pt-3">
-        <Kicker>选择器</Kicker>
+        <Kicker>{t.studioSelectorTitle}</Kicker>
 
         {pinnedSelectors.length === 0 ? (
           <p
-            className="font-mono text-[9px]"
+            className="font-mono text-[10px]"
             style={{ color: 'var(--dim, var(--muted-foreground))', opacity: 0.7 }}
           >
-            点选元素后「加入快照」，或手动添加选择器。
+            {t.studioSelectorIdle}
           </p>
         ) : (
           <div className="flex flex-wrap gap-1">
             {pinnedSelectors.map((sel) => (
               <span
                 key={sel}
-                className="flex items-center gap-1 border border-border bg-muted px-1.5 py-0.5 font-mono text-[8.5px]"
+                className="flex items-center gap-1 border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]"
                 style={{ color: 'var(--foreground)', borderRadius: 'var(--radius)' }}
               >
                 {sel.length > 22 ? `${sel.slice(0, 22)}…` : sel}
@@ -397,7 +402,7 @@ export function StudioLeftRail() {
                   onClick={() => removePinnedSelector(sel)}
                   className="hover:text-primary"
                   style={{ color: 'var(--muted-foreground)' }}
-                  aria-label="移除"
+                  aria-label={t.studioSelectorRemove}
                 >
                   ×
                 </button>
@@ -413,7 +418,7 @@ export function StudioLeftRail() {
             onKeyDown={(e) => {
               if (e.key === 'Enter') addPinnedSelector();
             }}
-            placeholder=".class 或 #id"
+            placeholder={t.studioSelectorPlaceholder}
             className="h-6 min-w-0 flex-1 border border-border bg-muted px-2 font-mono text-[10px] outline-none focus:border-primary/60"
             style={{ borderRadius: 'var(--radius)' }}
           />
@@ -424,14 +429,14 @@ export function StudioLeftRail() {
             className="h-6 px-2 font-mono text-[9.5px] uppercase"
             style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           >
-            添加
+            {t.studioSelectorAdd}
           </Button>
         </div>
 
         {/* Pseudo-state tags */}
         <div className="flex flex-wrap items-center gap-1">
           <span
-            className="font-mono text-[9px] uppercase"
+            className="font-mono text-[10px] uppercase"
             style={{ letterSpacing: '0.08em', color: 'var(--muted-foreground)' }}
           >
             PSEUDO：
@@ -441,7 +446,7 @@ export function StudioLeftRail() {
               key={p}
               type="button"
               onClick={() => togglePseudo(p)}
-              className="border px-1.5 py-0.5 font-mono text-[8.5px]"
+              className="border px-1.5 py-0.5 font-mono text-[10px]"
               style={{
                 borderColor: pseudoStates.includes(p) ? 'var(--primary)' : 'var(--border)',
                 background: pseudoStates.includes(p) ? 'var(--accent)' : 'var(--muted)',
@@ -466,16 +471,16 @@ export function StudioLeftRail() {
             color: captureSchemes ? 'var(--primary)' : 'var(--muted-foreground)',
           }}
         >
-          <span>深浅色变体</span>
+          <span>{t.studioSchemeVariants}</span>
           <span
-            className="px-1 py-0.5 font-mono text-[8px] font-bold uppercase"
+            className="px-1 py-0.5 font-mono text-[9.5px] font-bold uppercase"
             style={{
               background: captureSchemes ? 'var(--primary)' : 'var(--border)',
               color: captureSchemes ? 'var(--primary-foreground)' : 'var(--muted-foreground)',
               borderRadius: 'var(--radius)',
             }}
           >
-            {captureSchemes ? '开' : '关'}
+            {captureSchemes ? t.studioToggleOn : t.studioToggleOff}
           </span>
         </button>
       </div>

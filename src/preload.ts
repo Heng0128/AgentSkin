@@ -207,9 +207,15 @@ const api: AgentSkinApi = {
       name: string;
     } | null>,
   installBundleById: (id: string) =>
-    ipcRenderer.invoke(IpcChannel.STUDIO_BUNDLE_INSTALL_BY_ID, id) as Promise<{ ok: boolean }>,
+    ipcRenderer.invoke(IpcChannel.STUDIO_BUNDLE_INSTALL_BY_ID, id) as Promise<{
+      ok: boolean;
+      error?: string;
+    }>,
   deleteBundle: (id: string) =>
-    ipcRenderer.invoke(IpcChannel.STUDIO_BUNDLE_DELETE, id) as Promise<{ ok: boolean }>,
+    ipcRenderer.invoke(IpcChannel.STUDIO_BUNDLE_DELETE, id) as Promise<{
+      ok: boolean;
+      error?: string;
+    }>,
   // --- Theme Studio: Wallpaper picker ---
   listWallpapersForStudio: () =>
     ipcRenderer.invoke(IpcChannel.STUDIO_WALLPAPER_LIST) as Promise<
@@ -246,6 +252,23 @@ const api: AgentSkinApi = {
         perAgentAvg: Record<string, number>;
       };
     }>,
+  onDiagnosticsConcurrencyMetrics: (listener) =>
+    subscribe<{
+      companionBusyByAgent: number;
+      inflightOperations: number;
+      selfHealingAgents: number;
+      capturedTokens: number;
+      persistChainDepth: number;
+      deferredSelfHeals: number;
+      switchEpochByAgent: number;
+    }>(IpcChannel.DIAGNOSTICS_CONCURRENCY_METRICS, listener),
+  /** Fire-and-forget push of renderer-side primitive sizes so the main
+   *  process can include them in the unified metrics broadcast. */
+  sendRendererConcurrencyMetrics: (companionBusy: number, switchEpoch: number) =>
+    ipcRenderer.send(IpcChannel.DIAGNOSTICS_UPDATE_RENDERER_CONCURRENCY, {
+      companionBusy,
+      switchEpoch,
+    }),
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);

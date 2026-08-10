@@ -84,8 +84,8 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: ${productName}
-  include: null
-  license: LICENSE
+  include: build/installer.nsh
+  license: null
   warningsAsErrors: false
 
 # Registered by the NSIS installer (HKCU) so "Open with -> AgentSkin" and

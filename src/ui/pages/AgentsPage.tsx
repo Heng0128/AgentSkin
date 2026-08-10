@@ -49,7 +49,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
   return (
     <div className="rounded-[2px] border border-border bg-card overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-border px-3.5 py-2.5">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-2">
         <AppMark appId={appId} size={18} />
         <span className="font-display text-[13px] font-bold tracking-[-.01em]">
           {APP_META[appId].name}
@@ -76,7 +76,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
       </div>
 
       {/* Path override */}
-      <div className="flex items-center justify-between gap-4 border-b border-border px-3.5 py-2.5">
+      <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-2">
         <div className="min-w-0">
           <p className="font-mono text-[11px] tracking-wide text-foreground">
             {t.settingsPathLabel}
@@ -102,7 +102,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
       </div>
 
       {/* Port override */}
-      <div className="flex items-center justify-between gap-4 px-3.5 py-2.5">
+      <div className="flex items-center justify-between gap-4 px-4 py-2">
         <div>
           <p className="font-mono text-[11px] tracking-wide text-foreground">
             {t.settingsPortLabel}
@@ -125,7 +125,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
       </div>
 
       {/* Status footer */}
-      <div className="flex items-center justify-between border-t border-border bg-card2 px-3.5 py-2">
+      <div className="flex items-center justify-between border-t border-border bg-card2 px-4 py-2">
         <span className="font-mono text-[10px] text-muted-foreground/70">
           CDP: {isDebugReady ? t.agentsDebugReady : t.agentsStatusStopped}
         </span>
@@ -150,7 +150,7 @@ export default function AgentsPage({ controller }: { controller: AppController }
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[1240px] px-[30px] py-[22px] pb-[70px]">
+        <div className="mx-auto max-w-[1240px] px-8 py-6 pb-[70px]">
           {/* Page header */}
           <header className="mb-5">
             <h1 className="font-display text-[22px] font-bold tracking-tight text-foreground">

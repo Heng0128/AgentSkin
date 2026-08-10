@@ -40,6 +40,7 @@ import type {
   WallpaperAgentSetting,
   WallpaperSettings,
 } from '../../shared/types';
+import type { ConcurrencyMetrics } from '../agent-engine-service';
 import type { ThemeBundle } from './theme-bundle';
 
 // ---------------------------------------------------------------------------
@@ -307,6 +308,27 @@ export interface AgentEngineServiceApi {
   ): Promise<{ ok: boolean; reason?: string; detail?: string }>;
   /** Remove the wallpaper from a specific agent. */
   removeWallpaperFromAgent(appId: AgentId): Promise<{ ok: boolean }>;
+
+  /**
+   * Collect current concurrency metrics from all main-process sources
+   * (inflightOperations, persistChain depth, selfHealingAgents,
+   * capturedTokens, deferredSelfHeals) plus the two cached renderer-side
+   * values (companionBusyByAgent, switchEpochByAgent).
+   */
+  collectConcurrencyMetrics(): ConcurrencyMetrics;
+  /**
+   * Update the cached sizes of renderer-side concurrency primitives so the
+   * next metrics broadcast includes them. Fire-and-forget from the renderer
+   * via IPC.
+   */
+  updateConcurrencyMetricsFromRenderer(companionBusy: number, switchEpoch: number): void;
+  /**
+   * Start the 5-second periodic broadcast of concurrency metrics to the
+   * renderer. The `sender` callback delivers each payload. Idempotent.
+   */
+  startConcurrencyMetricsTimer(sender: (metrics: ConcurrencyMetrics) => void): void;
+  /** Stop the periodic metrics broadcast. Safe to call multiple times. */
+  stopConcurrencyMetricsTimer(): void;
 
   /**
    * Release all module-scoped state retained by sub-modules (CDP

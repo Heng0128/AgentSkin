@@ -117,6 +117,15 @@ export type FindAgentTargets = (appId: AgentId, port: number) => Promise<CdpTarg
 /** Persist a per-agent wallpaper preference. */
 export type SetAgentWallpaper = (appId: AgentId, setting: WallpaperAgentSetting) => Promise<void>;
 
+/**
+ * Check whether an apply/restore operation is currently in-flight for an
+ * agent. Used by the self-heal deferred-queue to serialise with concurrent
+ * operations instead of racing them. Optional — when absent, the self-heal
+ * thunk is invoked immediately (legacy behavior); when present, the caller
+ * can defer execution until the in-flight op releases its lock.
+ */
+export type IsApplyingTheme = (appId: AgentId) => boolean;
+
 /** Re-exported from `services/contracts.ts` for backward compatibility — new
  *  consumers should import `LogCallback` directly from `./services/contracts`. */
 export type { LogCallback };
@@ -141,4 +150,20 @@ export interface WallpaperInjectorDeps {
   findAgentTargets: FindAgentTargets;
   setAgentWallpaper: SetAgentWallpaper;
   log: LogCallback;
+  /**
+   * True when an apply/restore operation is currently in-flight for an agent.
+   * When present, the self-heal deferred-queue uses it to delay self-heal
+   * execution until the in-flight op releases its lock. Optional for backward
+   * compatibility — consumers that don't wire it (e.g. unit-test mocks) fall
+   * back to the legacy immediate-invoke behavior.
+   */
+  isApplyingTheme?: IsApplyingTheme;
+  /**
+   * True when the parent AgentEngineService has been disposed (app shutdown).
+   * When present and self-dealed, self-heal / inject paths short-circuit
+   * instead of operating on already-disposed CDP sessions / media tokens,
+   * which would throw "Attempt to use disposed session". Optional — callers
+   * that don't wire it (unit-test mocks) skip the guard entirely.
+   */
+  isDisposed?: () => boolean;
 }

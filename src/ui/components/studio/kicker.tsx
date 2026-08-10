@@ -19,7 +19,7 @@ export function Kicker({
         {children}
       </span>
       {count !== undefined && count > 0 && (
-        <Badge className="ml-1 h-[12px] rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[7px] font-medium text-white/30">
+        <Badge className="ml-1 h-[12px] rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[9.5px] font-medium text-white/30">
           {count}
         </Badge>
       )}

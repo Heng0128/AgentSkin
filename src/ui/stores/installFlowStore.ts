@@ -27,6 +27,7 @@ import { useThemeStore } from '@/stores/themeStore';
 import { toMessage } from '@shared/errors';
 import { type UiMessages, uiMessages } from '@shared/i18n';
 import { create } from 'zustand';
+import { withImportLock } from './import-guard';
 
 export type InstallStepStatus = 'pending' | 'active' | 'done' | 'error' | 'cancelled';
 
@@ -202,8 +203,13 @@ export const useInstallFlowStore = create<InstallFlowState_>((set, _get) => {
         useNotificationStore.getState().showToast(t.importedTheme(themeName));
         set({ flowState: 'completed' });
       } else {
-        const fileResult = await api.importThemeFromPath(path);
+        let fileResult: Awaited<ReturnType<typeof api.importThemeFromPath>> | undefined;
+        const didAcquire = await withImportLock(path, async () => {
+          fileResult = await api.importThemeFromPath(path);
+        });
+        if (!didAcquire) return;
         if (myEpoch !== installEpoch) return;
+        if (!fileResult) return;
         const themeName = fileResult.theme.displayName;
         set({ currentTheme: themeName });
         markAllDone();
@@ -277,8 +283,13 @@ export const useInstallFlowStore = create<InstallFlowState_>((set, _get) => {
       list[0] = { ...list[0], status: 'done' as const, timestamp: Date.now() - 100 };
       set({ steps: list });
       try {
-        const result = await api.importThemeFromPath(path);
+        let result: Awaited<ReturnType<typeof api.importThemeFromPath>> | undefined;
+        const didAcquire = await withImportLock(path, async () => {
+          result = await api.importThemeFromPath(path);
+        });
+        if (!didAcquire) return;
         if (myEpoch !== installEpoch) return;
+        if (!result) return;
         set({ currentTheme: result.theme.displayName });
         markAllDone();
         await useThemeStore.getState().refreshThemes();

@@ -28,6 +28,7 @@ import { useStudioStore } from '@/stores/studioStore';
 
 import { Copy01Icon, EyeIcon, Search01Icon } from '@hugeicons/core-free-icons';
 import { toMessage } from '@shared/errors';
+import type { UiMessages } from '@shared/i18n';
 import { AGENT_META, type AgentId, type VisualAnalysisSummary } from '@shared/types';
 import { CascadeView } from './CascadeView';
 import { Kicker } from './kicker';
@@ -60,13 +61,13 @@ function StatCell({ label, value }: { label: string; value: string | number }) {
   return (
     <div>
       <span
-        className="font-mono text-[7.5px] uppercase tracking-wider"
+        className="font-mono text-[9.5px] uppercase tracking-wider"
         style={{ color: 'var(--muted-foreground)', opacity: 0.75 }}
       >
         {label}
       </span>
       <span
-        className="ml-1 font-mono text-[9px] font-medium"
+        className="ml-1 font-mono text-[10px] font-medium"
         style={{ color: 'var(--foreground)', opacity: 0.85 }}
       >
         {value}
@@ -81,12 +82,14 @@ function AgentProfileCard({
   onToggle,
   profile,
   profileLoading,
+  t,
 }: {
   summary: VisualAnalysisSummary;
   expanded: boolean;
   onToggle: () => void;
   profile: Record<string, unknown> | null;
   profileLoading: boolean;
+  t: UiMessages;
 }) {
   const meta = AGENT_META[summary.id];
   const brand = summary.brandDark || summary.brandLight;
@@ -117,21 +120,24 @@ function AgentProfileCard({
           >
             {meta?.displayName ?? summary.id}
           </span>
-          <Badge variant="outline" className="h-4 px-1 text-[7.5px] tracking-wider">
+          <Badge variant="outline" className="h-4 px-1 text-[9.5px] tracking-wider">
             {meta?.region}
           </Badge>
         </div>
-        <span className="font-mono text-[8px] text-muted-foreground">{expanded ? '−' : '+'}</span>
+        <span className="font-mono text-[9.5px] text-muted-foreground">{expanded ? '−' : '+'}</span>
       </button>
 
       {/* Stats row (always visible — real crawled numbers) */}
       <div className="grid grid-cols-2 gap-x-3 gap-y-1 border-t border-border px-2.5 py-1.5">
         <StatCell label="tokens" value={`${summary.tokensLight}/${summary.tokensDark}`} />
-        <StatCell label="css变量" value={summary.stats.rootVars.default} />
-        <StatCell label="dom节点" value={summary.stats.domNodes.default} />
-        <StatCell label="样式变量" value={summary.stats.styleVars.neutral} />
-        <StatCell label="采样" value={summary.stats.computedSamples.default} />
-        <StatCell label="分类" value={summary.categories.length} />
+        <StatCell label={t.studioInspectStatCssVar} value={summary.stats.rootVars.default} />
+        <StatCell label={t.studioInspectStatDomNodes} value={summary.stats.domNodes.default} />
+        <StatCell label={t.studioInspectStatStyleVars} value={summary.stats.styleVars.neutral} />
+        <StatCell
+          label={t.studioInspectStatSamples}
+          value={summary.stats.computedSamples.default}
+        />
+        <StatCell label={t.studioInspectStatCategories} value={summary.categories.length} />
       </div>
 
       {/* Category chips (real token categories from the crawl) */}
@@ -140,7 +146,7 @@ function AgentProfileCard({
           {summary.categories.slice(0, 8).map((c) => (
             <span
               key={c}
-              className="border border-border bg-muted px-1 py-0.5 font-mono text-[7px] uppercase"
+              className="border border-border bg-muted px-1 py-0.5 font-mono text-[9.5px] uppercase"
               style={{ color: 'var(--muted-foreground)' }}
             >
               {c}
@@ -148,7 +154,7 @@ function AgentProfileCard({
           ))}
           {summary.categories.length > 8 && (
             <span
-              className="px-1 py-0.5 font-mono text-[7px]"
+              className="px-1 py-0.5 font-mono text-[9.5px]"
               style={{ color: 'var(--muted-foreground)' }}
             >
               +{summary.categories.length - 8}
@@ -161,13 +167,13 @@ function AgentProfileCard({
       {expanded && (
         <div className="space-y-2 border-t border-border px-2.5 py-2">
           {profileLoading && (
-            <p className="font-mono text-[8px]" style={{ color: 'var(--muted-foreground)' }}>
-              加载完整 profile…
+            <p className="font-mono text-[9.5px]" style={{ color: 'var(--muted-foreground)' }}>
+              {t.studioInspectLoadProfile}
             </p>
           )}
           {!profileLoading && !profile && (
-            <p className="font-mono text-[8px]" style={{ color: 'var(--muted-foreground)' }}>
-              无法加载 profile
+            <p className="font-mono text-[9.5px]" style={{ color: 'var(--muted-foreground)' }}>
+              {t.studioInspectProfileLoadFailed}
             </p>
           )}
           {!profileLoading && profile && (
@@ -220,8 +226,11 @@ function AgentProfileCard({
               {accentSwatches.length === 0 &&
                 semanticSwatches.length === 0 &&
                 bgSwatches.length === 0 && (
-                  <p className="font-mono text-[8px]" style={{ color: 'var(--muted-foreground)' }}>
-                    该 profile 未提供可展示的色彩样本
+                  <p
+                    className="font-mono text-[9.5px]"
+                    style={{ color: 'var(--muted-foreground)' }}
+                  >
+                    {t.studioInspectNoProfileColors}
                   </p>
                 )}
             </>
@@ -236,7 +245,7 @@ function AgentProfileCard({
 // InspectStudioTab — main export
 // ---------------------------------------------------------------------------
 
-export function InspectStudioTab() {
+export function InspectStudioTab({ t }: { t: UiMessages }) {
   const [mode, setMode] = useState<Mode>('pick');
   const activeProject = useStudioStore((s) => s.getActiveProject());
   const activeAgent = activeProject?.agentId ?? null;
@@ -264,7 +273,7 @@ export function InspectStudioTab() {
         const data = await api.listVisualAnalysisSummaries();
         if (!cancelled) setSummaries(data);
       } catch (e) {
-        if (!cancelled) showToast(`加载视觉分析数据失败：${toMessage(e)}`, 'destructive');
+        if (!cancelled) showToast(t.studioInspectLoadSummariesFailed(toMessage(e)), 'destructive');
       } finally {
         if (!cancelled) setSummariesLoading(false);
       }
@@ -273,7 +282,7 @@ export function InspectStudioTab() {
     return () => {
       cancelled = true;
     };
-  }, [mode, showToast]);
+  }, [mode, showToast, t]);
 
   const toggleExpand = useCallback(
     async (id: AgentId) => {
@@ -304,15 +313,15 @@ export function InspectStudioTab() {
   const copyPath = useCallback(
     (path: string) => {
       if (!navigator.clipboard) {
-        showToast('当前环境不支持剪贴板', 'destructive');
+        showToast(t.studioInspectClipboardUnsupported, 'destructive');
         return;
       }
       navigator.clipboard.writeText(path).then(
-        () => showToast('已复制选择器'),
-        () => showToast('复制失败', 'destructive'),
+        () => showToast(t.studioInspectCopied),
+        () => showToast(t.studioInspectCopyFailed, 'destructive'),
       );
     },
-    [showToast],
+    [showToast, t],
   );
 
   return (
@@ -329,7 +338,7 @@ export function InspectStudioTab() {
           <button
             type="button"
             onClick={() => setMode('pick')}
-            className="h-5 px-2.5 font-mono text-[9px] font-semibold uppercase"
+            className="h-5 px-2.5 font-mono text-[10px] font-semibold uppercase"
             style={{
               letterSpacing: '0.1em',
               borderRadius: '1px',
@@ -342,7 +351,7 @@ export function InspectStudioTab() {
           <button
             type="button"
             onClick={() => setMode('profile')}
-            className="h-5 px-2.5 font-mono text-[9px] font-semibold uppercase"
+            className="h-5 px-2.5 font-mono text-[10px] font-semibold uppercase"
             style={{
               letterSpacing: '0.1em',
               borderRadius: '1px',
@@ -373,12 +382,12 @@ export function InspectStudioTab() {
                       className="font-mono text-[10px] font-semibold uppercase"
                       style={{ letterSpacing: '0.1em', color: 'var(--foreground)' }}
                     >
-                      元素拾取器
+                      {t.studioInspectElementPicker}
                     </span>
                   </div>
                   <div
                     className="flex items-center gap-1.5"
-                    title={activeAgent ? undefined : '选择 Agent 以启用'}
+                    title={activeAgent ? undefined : t.studioInspectSelectAgentFirst}
                   >
                     <span
                       className={`size-[5px] rounded-full ${inspectMode ? 'animate-pulse' : ''}`}
@@ -388,7 +397,7 @@ export function InspectStudioTab() {
                       }}
                     />
                     <span
-                      className="font-mono text-[8px] uppercase"
+                      className="font-mono text-[9.5px] uppercase"
                       style={{ color: 'var(--muted-foreground)' }}
                     >
                       {inspectMode ? 'ACTIVE' : 'IDLE'}
@@ -403,11 +412,11 @@ export function InspectStudioTab() {
                   className="mt-2"
                 >
                   {inspectMode ? (
-                    <>停止拾取</>
+                    t.studioInspectStopPicking
                   ) : (
                     <>
                       <HugeIcon icon={Search01Icon} className="-ml-0.5 size-3.5" />
-                      开启拾取
+                      {t.studioInspectStartPicking}
                     </>
                   )}
                 </Button>
@@ -416,7 +425,7 @@ export function InspectStudioTab() {
               {/* Live node cascade */}
               {liveError && (
                 <p
-                  className="border border-destructive/30 bg-destructive/10 px-2 py-1 font-mono text-[9px] text-destructive"
+                  className="border border-destructive/30 bg-destructive/10 px-2 py-1 font-mono text-[10px] text-destructive"
                   style={{ borderRadius: 'var(--radius)' }}
                 >
                   {liveError}
@@ -429,7 +438,7 @@ export function InspectStudioTab() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-1">
                       <span
-                        className="bg-muted px-1 py-0.5 font-mono text-[8px]"
+                        className="bg-muted px-1 py-0.5 font-mono text-[9.5px]"
                         style={{
                           color: 'var(--foreground)',
                           borderRadius: 'var(--radius)',
@@ -438,7 +447,7 @@ export function InspectStudioTab() {
                         {liveNode.path}
                       </span>
                       <span
-                        className="bg-muted px-1 py-0.5 font-mono text-[8px]"
+                        className="bg-muted px-1 py-0.5 font-mono text-[9.5px]"
                         style={{
                           color: 'var(--muted-foreground)',
                           borderRadius: 'var(--radius)',
@@ -449,21 +458,21 @@ export function InspectStudioTab() {
                       <button
                         type="button"
                         onClick={() => copyPath(liveNode.path)}
-                        className="ml-auto flex items-center gap-0.5 border border-border bg-muted px-1 py-0.5 font-mono text-[8px] uppercase"
+                        className="ml-auto flex items-center gap-0.5 border border-border bg-muted px-1 py-0.5 font-mono text-[9.5px] uppercase"
                         style={{
                           letterSpacing: '0.06em',
                           borderRadius: 'var(--radius)',
                           color: 'var(--muted-foreground)',
                         }}
-                        title="复制选择器"
+                        title={t.studioInspectCopySelector}
                       >
                         <HugeIcon icon={Copy01Icon} className="size-2.5" />
                         COPY
                       </button>
                     </div>
                     {pinnedSelectors.includes(liveNode.path) ? (
-                      <Badge variant="red" className="text-[7.5px]">
-                        已 PIN
+                      <Badge variant="red" className="text-[9.5px]">
+                        {t.studioInspectPinned}
                       </Badge>
                     ) : (
                       <button
@@ -481,18 +490,16 @@ export function InspectStudioTab() {
                     )}
                   </div>
 
-                  <CascadeView cascade={liveNode.cascade} />
+                  <CascadeView cascade={liveNode.cascade} t={t} />
                 </>
               )}
 
               {!liveNode && !liveError && (
                 <p
-                  className="font-mono text-[9px]"
+                  className="font-mono text-[10px]"
                   style={{ color: 'var(--dim, var(--muted-foreground))' }}
                 >
-                  {inspectMode
-                    ? '已为真实 Agent 开启放大镜，点击任意元素即可抓取它的完整级联。'
-                    : '点击上方按钮开启检查模式。扫描完成后将列出完整的 CSS 级联。'}
+                  {inspectMode ? t.studioLiveInspectEmpty : t.studioInspectIdleHint}
                 </p>
               )}
             </>
@@ -501,15 +508,17 @@ export function InspectStudioTab() {
           {/* ---- PROFILE mode (real crawled visual-analysis data) ---- */}
           {mode === 'profile' && (
             <>
-              <Kicker count={summaries.length}>AGENT PROFILES · 真实爬取</Kicker>
+              <Kicker count={summaries.length}>
+                AGENT PROFILES · {t.studioAgentProfilesRealCrawled}
+              </Kicker>
               {summariesLoading && (
-                <p className="font-mono text-[9px]" style={{ color: 'var(--muted-foreground)' }}>
-                  加载视觉分析摘要…
+                <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+                  {t.studioInspectLoadingSummaries}
                 </p>
               )}
               {!summariesLoading && summaries.length === 0 && (
-                <p className="font-mono text-[9px]" style={{ color: 'var(--muted-foreground)' }}>
-                  未找到任何 agent 视觉 profile
+                <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+                  {t.studioInspectNoAgentProfiles}
                 </p>
               )}
               <div className="space-y-1.5">
@@ -521,6 +530,7 @@ export function InspectStudioTab() {
                     onToggle={() => void toggleExpand(s.id)}
                     profile={expandedId === s.id ? expandedProfile : null}
                     profileLoading={expandedId === s.id ? expandedLoading : false}
+                    t={t}
                   />
                 ))}
               </div>
@@ -537,7 +547,7 @@ export function InspectStudioTab() {
             {pinnedSelectors.map((sel) => (
               <span
                 key={sel}
-                className="border border-border bg-muted px-1.5 py-0.5 font-mono text-[8.5px]"
+                className="border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px]"
                 style={{
                   color: 'var(--foreground)',
                   borderRadius: 'var(--radius)',

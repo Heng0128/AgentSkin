@@ -18,7 +18,7 @@ export function Progress({ value, className, fillClassName }: ProgressProps) {
       aria-valuenow={clamped}
       aria-valuemin={0}
       aria-valuemax={100}
-      className={cn('relative h-2 w-full overflow-hidden rounded-full bg-muted', className)}
+      className={cn('relative h-2 w-full overflow-hidden rounded-[2px] bg-muted', className)}
     >
       <div
         className={cn('h-full bg-primary transition-all duration-slower ease-out', fillClassName)}

@@ -99,7 +99,9 @@ async function runStep<T>(
   // Capped at 0.95 so completion still shows a small, honest step-up.
   const estimateMs = estimateStepMs(label, baselineCache ?? {});
   const stepStart = Date.now();
+  let isDone = false;
   const ticker = setInterval(() => {
+    if (isDone) return;
     const pct = (Date.now() - stepStart) / estimateMs;
     reporter.advance(label, Math.min(0.95, pct));
   }, 33);
@@ -107,18 +109,24 @@ async function runStep<T>(
   try {
     const value = await fn();
     profiler.end();
+    isDone = true;
     reporter.completeStep(label);
     return { ok: true, value };
   } catch (error) {
     profiler.end();
     const warning = `${warnMsg}: ${toMessage(error)}`;
     sendLog(`[boot] ${warning}`);
-    reporter.completeStep(label);
-    // Surface the degraded step on the splash ("… (跳过)") so the user sees
-    // the failure instead of a silently skipped step.
+    isDone = true;
+    clearInterval(ticker);
+    // Do NOT call completeStep here — skipped() reports the step as degraded
+    // ("… (跳过)") at the current (in-progress) percentage. Calling completeStep
+    // first would briefly push the bar to the step's full completion percentage
+    // then regress back to the in-progress value with the "(跳过)" suffix,
+    // causing a visible flash on the splash.
     reporter.skipped(label);
     return { ok: false, warning };
   } finally {
+    isDone = true;
     clearInterval(ticker);
   }
 }

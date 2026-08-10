@@ -121,10 +121,7 @@ export function Sidebar() {
           collapsed && 'justify-center px-0',
         )}
       >
-        <Logo
-          variant="color"
-          className="size-7 shrink-0 transition-transform duration-250 ease-[cubic-bezier(.34,1.56,.64,1)] hover:rotate-[-4deg] hover:scale-105"
-        />
+        <Logo variant="color" className="size-7 shrink-0" />
         {!collapsed && (
           <span className="min-w-0 truncate font-display text-[13px] font-semibold tracking-[-0.01em] text-[var(--foreground)]">
             AgentSkin
@@ -137,7 +134,7 @@ export function Sidebar() {
         {navGroups.map((group) => (
           <div key={group.label} className="mb-1">
             {!collapsed && (
-              <div className="px-[18px] pt-1 pb-1 font-mono text-[8.5px] font-semibold tracking-[.18em] uppercase text-[var(--muted-foreground)]">
+              <div className="px-[18px] pt-1 pb-1 font-mono text-[10px] font-semibold tracking-[.18em] uppercase text-[var(--muted-foreground)]">
                 {group.label}
               </div>
             )}

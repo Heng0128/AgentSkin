@@ -109,7 +109,7 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-[1240px] px-[30px] py-[22px] pb-[70px]">
+        <div className="mx-auto max-w-[1240px] px-8 py-6 pb-[70px]">
           {/* Page header */}
           <header className="mb-5">
             <h1 className="font-display text-[22px] font-bold tracking-tight text-foreground">
@@ -121,7 +121,7 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
           </header>
 
           {/* Stats row — 可点击跳转 */}
-          <div className="grid grid-cols-3 gap-3.5 mb-5">
+          <div className="grid grid-cols-3 gap-4 mb-5">
             <StatTile
               label={t.installedTitle}
               value={installed.length}
@@ -136,7 +136,7 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
           </div>
 
           {/* 最近的环境 — 快捷入口 */}
-          <section className="mb-5 rounded-[2px] border border-border bg-card p-[14px]">
+          <section className="mb-5 rounded-[2px] border border-border bg-card p-4">
             <h2 className="mb-3 font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
               {t.recentEnvironments}
             </h2>
@@ -176,7 +176,7 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
           </section>
 
           {/* 最近活动 — 已接入真实 apply trace 数据 */}
-          <section className="rounded-[2px] border border-border bg-card p-[14px]">
+          <section className="rounded-[2px] border border-border bg-card p-4">
             <h2 className="mb-3 font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
               {t.recentActivity}
             </h2>
@@ -262,7 +262,7 @@ function StatTile({
     <button
       type="button"
       onClick={onClick}
-      className="cursor-pointer rounded-[2px] border border-border bg-card p-[14px] text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
+      className="cursor-pointer rounded-[2px] border border-border bg-card p-4 text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
     >
       <div className="mb-2">
         <span className="font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">

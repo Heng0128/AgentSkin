@@ -66,10 +66,16 @@ import {
 import {
   applyAgentWallpaperNow as applyAgentWallpaperNowImpl,
   applyWallpaperToAgent as applyWallpaperToAgentImpl,
+  getCapturedTokensSize,
+  getDeferredSelfHealsSize,
   removeWallpaperFromAgent as removeWallpaperFromAgentImpl,
   type WallpaperInjectorDeps,
 } from './wallpaper-injector';
-import { cleanupSelfHealForAgent, disposeSelfHealState } from './wallpaper-self-heal';
+import {
+  cleanupSelfHealForAgent,
+  disposeSelfHealState,
+  getSelfHealingAgentsSize,
+} from './wallpaper-self-heal';
 
 /**
  * Canonical product display names for each AgentId, derived from AGENT_META
@@ -166,6 +172,24 @@ function platform(): Platform {
 }
 
 /**
+ * Concurrency-subsystem runtime metrics. Each field is a snapshot of the
+ * underlying Map/Set size (or derived depth) at collection time.
+ * Pushed to the renderer every 5s via the
+ * `diagnostics:concurrency-metrics` IPC channel so the Diagnostics tab can
+ * visualise apply/restore pressure, self-heal activity, and persist-queue
+ * health in real time.
+ */
+export interface ConcurrencyMetrics {
+  companionBusyByAgent: number;
+  inflightOperations: number;
+  selfHealingAgents: number;
+  capturedTokens: number;
+  persistChainDepth: number;
+  deferredSelfHeals: number;
+  switchEpochByAgent: number;
+}
+
+/**
  * Merge two render option sets with a per-field precedence: `base` supplies
  * defaults, `override` wins on any field it sets. Used to resolve the
  * per-agent → global → theme render chain so a partially-configured
@@ -257,6 +281,12 @@ export class AgentEngineService implements AgentEngineServiceApi {
    * correct result instead of a stale snapshot.
    */
   private readonly applyingTheme = new Set<AgentId>();
+  /**
+   * Set to true during dispose() to short-circuit any inflight callbacks
+   * (especially fire-and-forget self-heal thunks) that try to operate on
+   * already-disposed CDP sessions / media tokens.
+   */
+  private disposed = false;
 
   /**
    * Unified in-flight operations per agent. Replaces the previous pair of
@@ -277,11 +307,55 @@ export class AgentEngineService implements AgentEngineServiceApi {
    * this queue only serialises the top-level apply/restore orchestration so
    * the user-visible result of "what's the state of this agent after my
    * click" is deterministic regardless of event-loop timing.
+   *
+   * P0-CONCURRENCY-FIX: each entry now carries a `cleanup` promise that only
+   * settles after ALL background follow-ups (hardening, wallpaper, scheme
+   * sync) have completed.  The old code deleted the entry in apply's `finally`
+   * immediately after `applyTheme` returned, while the .then() chains for
+   * hardening→wallpaper and scheme-sync were still fire-and-forget in the
+   * background.  This allowed a concurrent `restore` to acquire the lock and
+   * run in parallel with those still-flying self-heal/wallpaper tasks,
+   * producing CDP target corruption.  Now:
+   *   - `promise` resolves/rejects when the user-visible result is ready;
+   *     this is what the caller receives and same-kind deduplication shares.
+   *   - `cleanup` resolves after promise settles AND all background tasks
+   *     have settled; the inflight entry is deleted only when cleanup
+   *     resolves, preventing opposite-kind ops from racing background work.
    */
   private readonly inflightOperations = new Map<
     AgentId,
-    { kind: 'apply' | 'restore'; promise: Promise<unknown> }
+    {
+      kind: 'apply' | 'restore';
+      promise: Promise<unknown>;
+      cleanup: Promise<void>;
+    }
   >();
+
+  /**
+   * Serialisation chain for all persistence writes.
+   *
+   * Every `persist()` call is routed through `persistSafe()`, which appends
+   * to this chain. This guarantees that `writeJsonAtomic` operations never
+   * overlap — even when `reconcileZombiePorts` (fire-and-forget from
+   * `initialize()`) and `reconcileActiveThemes` run concurrently during
+   * the boot phase, their serialised writes cannot overwrite each other's
+   * mutations (e.g. zombie clearing ports vs. theme reconciler clearing
+   * activeThemeId). Without this, the tmp+rename pattern in writeJsonAtomic
+   * would allow the later-started write to clobber the earlier one.
+   *
+   * `persistSafe` appends `result.catch(() => {})` so a single failed write
+   * does not break the chain (following writes would stall forever on a
+   * rejected promise).
+   */
+  private persistChain: Promise<void> = Promise.resolve();
+  /**
+   * Tracks the number of writes currently queued or in-flight on
+   * {@link persistChain}. Incremented in `persistSafe()` before the write
+   * is appended, decremented when the write settles (resolution OR rejection).
+   * Exposed as `persistChainDepth` in the concurrency metrics so operators
+   * can detect a persist backlog before it becomes a data-loss risk.
+   */
+  private persistChainPending = 0;
 
   /**
    * Monotonic epoch per agent — bumped at the start of every apply / restore
@@ -298,6 +372,32 @@ export class AgentEngineService implements AgentEngineServiceApi {
    * self-terminate the moment a newer operation supersedes them.
    */
   private readonly epochs = new EpochManager();
+
+  // -------------------------------------------------------------------------
+  // Concurrency-metrics broadcast state
+  // -------------------------------------------------------------------------
+  //
+  // Two concurrency primitives live on the renderer side (wallpaperStore's
+  // `companionBusyByAgent` and environmentStore's `switchEpochByAgent`).
+  // The main process cannot read them directly, so the renderer pushes their
+  // sizes back to us via the `updateConcurrencyMetricsFromRenderer` method.
+  // Those cached values are then included in the periodic broadcast.
+  //
+  // All other metrics are collected from main-process module state at
+  // broadcast time.
+
+  /** Cached size of wallpaperStore's `companionBusyByAgent` Set (renderer-side). */
+  private cachedCompanionBusySize = 0;
+  /** Cached size of environmentStore's `switchEpochByAgent` Map (renderer-side). */
+  private cachedSwitchEpochSize = 0;
+  /** Handle for the 5-second metrics broadcast interval (null when stopped). */
+  private concurrencyMetricsTimer: ReturnType<typeof setInterval> | null = null;
+  /**
+   * Callback used to deliver the metrics payload to the renderer. Injected at
+   * start time so the service does not depend on main-context's `ctx` singleton
+   * (avoids a circular import and keeps the service testable).
+   */
+  private sendMetricsToRenderer: ((metrics: ConcurrencyMetrics) => void) | null = null;
 
   constructor(
     private readonly library: ThemeLibraryApi,
@@ -531,7 +631,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
         const s = this.state.apps[appId];
         if (s) s.detectedPath = path;
       },
-      persist: () => this.persist(),
+      persist: () => this.persistSafe(() => this.persist()),
       activeThemeId: (appId) => this.activeThemeId(appId),
       activeSchemeId: (appId) => this.activeSchemeId(appId),
     };
@@ -563,7 +663,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
         const s = this.state.apps[appId];
         if (s) s.schemeSnapshot = snapshot;
       },
-      persist: () => this.persist(),
+      persist: () => this.persistSafe(() => this.persist()),
       isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
       resolveLivePort: (appId) => resolveLivePort(appId, this.discoveryDeps()),
       log: (line) => this.log(line),
@@ -595,6 +695,11 @@ export class AgentEngineService implements AgentEngineServiceApi {
         inferRestartReason(appId, this.discoveryDeps(), cdpFailureReason ?? null),
       findAgentTargets: (appId, port) => this.adapter(appId).findTargets(port, 1200),
       setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
+      // Shared concurrency-lock check with apply/restore flows. Lets the
+      // self-heal deferred-queue serialise with in-flight operations instead
+      // of racing them — see wallpaper-self-heal.ts v2 callback contract.
+      isApplyingTheme: (appId) => this.applyingTheme.has(appId),
+      isDisposed: () => this.disposed,
       log: (line) => this.log(line),
     };
   }
@@ -647,7 +752,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
           schemeSnapshot: null,
         };
       },
-      persist: () => this.persist(),
+      persist: () => this.persistSafe(() => this.persist()),
       setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
       hardeningRemove: (appId, port, epoch) =>
         hardeningRemove(appId, port, epoch, this.fanoutDeps()),
@@ -702,7 +807,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
           schemeSnapshot: this.state.apps[appId]?.schemeSnapshot ?? null,
         };
       },
-      persist: () => this.persist(),
+      persist: () => this.persistSafe(() => this.persist()),
       getAppPath: (appId) => this.settings.overridesFor(appId).appPath,
       setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
       injectSecondaryTargets: (appId, port, bundle, epoch) =>
@@ -752,7 +857,31 @@ export class AgentEngineService implements AgentEngineServiceApi {
         dirty = true;
       }
     }
-    if (dirty) await this.persist();
+    if (dirty) await this.persistSafe(() => this.persist());
+  }
+
+  /**
+   * Serialise a persistence write onto {@link persistChain}.
+   *
+   * Every write operation (whether fire-and-forget from deps callbacks or
+   * awaited from `reconcileActiveThemes`) passes through here. The chain
+   * guarantees FIFO ordering and mutual exclusion for the underlying
+   * `writeJsonAtomic` call.
+   *
+   * @returns A promise that settles when THIS write completes (not just
+   * when it is queued). The returned promise rejects if the update throws,
+   * but the chain itself always continues (see `persistChain` field).
+   */
+  private persistSafe(update: () => Promise<void> | void): Promise<void> {
+    this.persistChainPending++;
+    const result = this.persistChain.then(() => update());
+    // Swallow rejection so a single failed write does not poison the chain.
+    this.persistChain = result.catch(() => {});
+    // Decrement the pending counter when this write settles (success OR failure).
+    void result.finally(() => {
+      this.persistChainPending = Math.max(0, this.persistChainPending - 1);
+    });
+    return result;
   }
 
   private async persist(): Promise<void> {
@@ -877,12 +1006,13 @@ export class AgentEngineService implements AgentEngineServiceApi {
     if (existing && existing.kind === 'apply') {
       return existing.promise as Promise<ApplyResponse>;
     }
-    // (2) Opposite-kind ordering: wait for any in-flight restore to settle
-    // before starting the apply, so the post-apply state is deterministic.
+    // (2) Opposite-kind ordering: wait for the in-flight restore's *cleanup*
+    // (not just its promise) so all background follow-ups from that restore
+    // have also settled before this apply touches the CDP target.
     if (existing && existing.kind === 'restore') {
       this.log(`[apply] ${appId}: restore in progress — queued behind in-flight restore`);
       try {
-        await existing.promise;
+        await existing.cleanup;
       } catch (error) {
         this.log(
           `[apply] ${appId}: queued restore failed — proceeding anyway: ${toMessage(error)}`,
@@ -892,21 +1022,51 @@ export class AgentEngineService implements AgentEngineServiceApi {
       // recurse so we chain onto it instead of racing it.
       return this.apply(request);
     }
+    // Create a cleanup promise that settles only after the response AND all
+    // fire-and-forget follow-ups (hardening, wallpaper, scheme sync) have
+    // settled.  The inflight entry is deleted only when this resolves.
+    let cleanupResolve!: () => void;
+    const cleanup = new Promise<void>((resolve) => {
+      cleanupResolve = resolve;
+    });
+    // Chain the inflight-entry deletion onto cleanup: only delete once the
+    // full chain (including background) has settled, not when the response
+    // alone is ready.
+    void cleanup.finally(() => {
+      if (this.inflightOperations.get(appId)?.cleanup === cleanup) {
+        this.inflightOperations.delete(appId);
+      }
+    });
+    // biome-ignore lint/style/useConst: deferred assignment pattern
     let promise!: Promise<ApplyResponse>;
     promise = (async () => {
       try {
-        return await this.applyInternal(request);
-      } finally {
-        if (this.inflightOperations.get(appId)?.promise === promise) {
-          this.inflightOperations.delete(appId);
+        const { response, background } = await this.applyInternal(request);
+        // Attach the background settle to cleanup: if there are background
+        // tasks, wait for them; otherwise resolve cleanup immediately.
+        if (background) {
+          void background.catch(() => undefined).finally(cleanupResolve);
+        } else {
+          cleanupResolve();
         }
+        return response;
+      } catch (error) {
+        // Error path: resolve cleanup immediately so the inflight entry is
+        // cleared (any background tasks that did start will still best-effort
+        // run via applyThemeFlow's epoch cancellation, but we don't block
+        // cleanup on them — an errored apply has no meaningful background).
+        cleanupResolve();
+        throw error;
       }
     })();
-    this.inflightOperations.set(appId, { kind: 'apply', promise });
+    this.inflightOperations.set(appId, { kind: 'apply', promise, cleanup });
     return promise;
   }
 
-  private async applyInternal(request: ApplyRequest): Promise<ApplyResponse> {
+  private async applyInternal(request: ApplyRequest): Promise<{
+    response: ApplyResponse;
+    background: Promise<void>;
+  }> {
     this.statusCache = null; // Invalidate cache — apply changes app state
     return applyThemeFlowImpl(request, this.applyFlowDeps());
   }
@@ -920,7 +1080,10 @@ export class AgentEngineService implements AgentEngineServiceApi {
     if (existing && existing.kind === 'apply') {
       this.log(`[restore] ${appId}: apply in progress — queued behind in-flight apply`);
       try {
-        await existing.promise;
+        // Wait for cleanup (not just promise) so background follow-ups from
+        // the in-flight apply (hardening→wallpaper, scheme sync, self-heal)
+        // have also settled before restore touches the CDP target.
+        await existing.cleanup;
       } catch (error) {
         this.log(
           `[restore] ${appId}: queued apply failed — proceeding anyway: ${toMessage(error)}`,
@@ -928,17 +1091,30 @@ export class AgentEngineService implements AgentEngineServiceApi {
       }
       return this.restore(appId);
     }
+    let cleanupResolve!: () => void;
+    const cleanup = new Promise<void>((resolve) => {
+      cleanupResolve = resolve;
+    });
+    void cleanup.finally(() => {
+      if (this.inflightOperations.get(appId)?.cleanup === cleanup) {
+        this.inflightOperations.delete(appId);
+      }
+    });
+    // biome-ignore lint/style/useConst: deferred assignment pattern
     let promise!: Promise<SystemStatus>;
     promise = (async () => {
       try {
-        return await this.restoreInternal(appId);
-      } finally {
-        if (this.inflightOperations.get(appId)?.promise === promise) {
-          this.inflightOperations.delete(appId);
-        }
+        const status = await this.restoreInternal(appId);
+        // resolve cleanup immediately — restoreThemeFlow is sequential
+        // (no fire-and-forget chains that outlive the response).
+        cleanupResolve();
+        return status;
+      } catch (error) {
+        cleanupResolve();
+        throw error;
       }
     })();
-    this.inflightOperations.set(appId, { kind: 'restore', promise });
+    this.inflightOperations.set(appId, { kind: 'restore', promise, cleanup });
     return promise;
   }
 
@@ -965,6 +1141,91 @@ export class AgentEngineService implements AgentEngineServiceApi {
     );
   }
 
+  // -------------------------------------------------------------------------
+  // Concurrency-metrics broadcast
+  // -------------------------------------------------------------------------
+
+  /**
+   * Collect current concurrency metrics from all main-process sources.
+   *
+   * - `inflightOperations`, `persistChainPending` — read directly from the
+   *   service's own state.
+   * - `selfHealingAgents`, `capturedTokens`, `deferredSelfHeals` — obtained
+   *   from the corresponding module-scoped getters in wallpaper-self-heal
+   *   and wallpaper-injector.
+   * - `companionBusyByAgent`, `switchEpochByAgent` — cached from the latest
+   *   `updateConcurrencyMetricsFromRenderer` call (these maps live on the
+   *   renderer side and cannot be read directly from the main process).
+   */
+  collectConcurrencyMetrics(): ConcurrencyMetrics {
+    return {
+      companionBusyByAgent: this.cachedCompanionBusySize,
+      inflightOperations: this.inflightOperations.size,
+      selfHealingAgents: getSelfHealingAgentsSize(),
+      capturedTokens: getCapturedTokensSize(),
+      persistChainDepth: this.persistChainPending,
+      deferredSelfHeals: getDeferredSelfHealsSize(),
+      switchEpochByAgent: this.cachedSwitchEpochSize,
+    };
+  }
+
+  /**
+   * Update the cached sizes of renderer-side concurrency primitives.
+   * Called by the IPC layer when the renderer reports changes to its
+   * `companionBusyByAgent` Set and `switchEpochByAgent` Map.
+   *
+   * These cached values are included in the next periodic broadcast.
+   */
+  updateConcurrencyMetricsFromRenderer(companionBusy: number, switchEpoch: number): void {
+    this.cachedCompanionBusySize = Math.max(0, companionBusy);
+    this.cachedSwitchEpochSize = Math.max(0, switchEpoch);
+  }
+
+  /**
+   * Send the current concurrency metrics payload to the renderer via the
+   * injected send callback. No-op if the timer has not been started.
+   */
+  private broadcastConcurrencyMetrics(): void {
+    if (!this.sendMetricsToRenderer) return;
+    try {
+      this.sendMetricsToRenderer(this.collectConcurrencyMetrics());
+    } catch (error) {
+      this.log(`[metrics] broadcast failed: ${toMessage(error)}`);
+    }
+  }
+
+  /**
+   * Start the 5-second periodic broadcast of concurrency metrics to the
+   * renderer. The `sender` callback delivers the payload (typically via
+   * `webContents.send(IpcChannel.DIAGNOSTICS_CONCURRENCY_METRICS, ...)`).
+   *
+   * A one-shot immediate broadcast fires on start so the renderer does not
+   * have to wait up to 5s for the first data point.
+   *
+   * Idempotent: calling start() again while already running is a no-op.
+   */
+  startConcurrencyMetricsTimer(sender: (metrics: ConcurrencyMetrics) => void): void {
+    if (this.concurrencyMetricsTimer !== null) return;
+    this.sendMetricsToRenderer = sender;
+    this.concurrencyMetricsTimer = setInterval(() => {
+      this.broadcastConcurrencyMetrics();
+    }, 5000);
+    // Immediate first broadcast so the renderer has data without waiting.
+    this.broadcastConcurrencyMetrics();
+  }
+
+  /**
+   * Stop the periodic metrics broadcast. Safe to call multiple times and
+   * from within `dispose()`.
+   */
+  stopConcurrencyMetricsTimer(): void {
+    if (this.concurrencyMetricsTimer !== null) {
+      clearInterval(this.concurrencyMetricsTimer);
+      this.concurrencyMetricsTimer = null;
+    }
+    this.sendMetricsToRenderer = null;
+  }
+
   /**
    * Release ALL module-scoped state retained by sub-modules. Intended to be
    * called once at app shutdown (before-quit) so the process does not exit
@@ -972,6 +1233,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
    * maps retaining references for every agent/theme that was ever touched.
    *
    * Ordering notes:
+   *   - The metrics timer must be stopped before the send callback's
+   *     webContents reference (captured in `sender`) becomes invalid.
    *   - Wallpapers first so media tokens are unregistered before the maps
    *     are cleared (server.handle needs the token to look up the stream).
    *   - CDP engine injection next so persistence-script identifiers are
@@ -979,6 +1242,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
    *   - Self-heal + UI caches last (purely in-memory, no side effects).
    */
   dispose(): void {
+    this.stopConcurrencyMetricsTimer();
+    this.disposed = true;
     disposeWallpaperInjectionState();
     disposeEngineInjectionState();
     disposeSelfHealState();

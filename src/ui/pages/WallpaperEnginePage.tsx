@@ -325,7 +325,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
       {(installed !== false || wallpapers.length > 0) && (
         <>
           {/* Toolbar: search + sort + segmented type filter (WE-style sub-bar) */}
-          <div className="we-sub flex items-center gap-[8px] border-b border-border px-[14px] py-[10px]">
+          <div className="we-sub flex items-center gap-[8px] border-b border-border px-4 py-2">
             <div className="relative max-w-[240px] flex-1">
               <HugeIcon
                 icon={Search01Icon}
@@ -357,7 +357,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                   className={cn(
                     'flex items-center gap-1 rounded-[2px] px-[12px] py-[5px] font-medium text-[11px] transition-colors duration-fast',
                     filter === f
-                      ? 'bg-card text-foreground font-semibold shadow-sm'
+                      ? 'bg-card text-foreground font-semibold'
                       : 'text-muted-foreground/70 hover:text-foreground',
                   )}
                 >
@@ -432,7 +432,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
               <aside className="flex w-[280px] shrink-0 flex-col border-l border-border bg-card2">
                 {/* 侧栏头 — 壁纸标题 + 类型徽章 + 关闭（取代"PREVIEW · DETAILS"标签） */}
                 <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-                  <span className="shrink-0 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
+                  <span className="shrink-0 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
                     {selected.type === 'video'
                       ? t.weFilterVideo
                       : selected.type === 'image'
@@ -457,9 +457,9 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                   {/* Batch progress bar */}
                   {batchProgress && (
                     <div className="flex items-center gap-2">
-                      <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className="h-[3px] flex-1 overflow-hidden rounded-[2px] bg-muted">
                         <div
-                          className="h-full rounded-full bg-primary transition-all duration-slow"
+                          className="h-full rounded-[2px] bg-primary transition-all duration-slow"
                           style={{ width: `${(batchProgress.done / batchProgress.total) * 100}%` }}
                         />
                       </div>
@@ -642,7 +642,7 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
                             {/* Precise state label (Swiss mono) */}
                             <span
                               className={cn(
-                                'max-w-[3.5rem] truncate text-center font-mono text-[8px] tracking-wider leading-tight transition-colors duration-slower',
+                                'max-w-[3.5rem] truncate text-center font-mono text-[9.5px] tracking-wider leading-tight transition-colors duration-slower',
                                 isApplied
                                   ? 'text-cr-success'
                                   : isFail
@@ -801,7 +801,7 @@ function RenderSettingsPanel({
         step={step}
         value={typeof r[key] === 'number' ? (r[key] as number) : min}
         onChange={(e) => set({ [key]: Number(e.target.value) } as Partial<WallpaperRenderOptions>)}
-        className="we-range h-[3px] flex-1 cursor-pointer appearance-none rounded-full bg-[var(--border2)] [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:ring-2 [&::-webkit-slider-thumb]:ring-card [&::-webkit-slider-thumb]:shadow-sm"
+        className="we-range h-[3px] flex-1 cursor-pointer appearance-none rounded-[2px] bg-[var(--border2)] [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-[2px] [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:ring-2 [&::-webkit-slider-thumb]:ring-card"
       />
       <span className="w-[42px] text-right font-mono text-[10px] font-bold tabular-nums text-foreground">
         {display ?? (typeof r[key] === 'number' ? String(r[key]) : '默认')}
@@ -819,7 +819,7 @@ function RenderSettingsPanel({
         <button
           type="button"
           onClick={() => onChange(undefined)}
-          className="font-mono text-[9px] tracking-[.08em] text-muted-foreground/60 hover:text-primary"
+          className="font-mono text-[10px] tracking-[.08em] text-muted-foreground/60 hover:text-primary"
         >
           RESET
         </button>
@@ -1109,8 +1109,8 @@ function WallpaperCard({
       style={{ animationDelay: `${Math.min(index * 40, 320)}ms` }}
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-colors duration-fast animate-card-enter',
-        'hover:border-primary/40 hover:bg-card2 hover:shadow-sm',
-        selected && 'border-primary/60 shadow-sm',
+        'hover:border-primary/40 hover:bg-card2',
+        selected && 'border-primary/60',
       )}
     >
       <button type="button" onClick={onSelect} className="flex flex-1 flex-col">
@@ -1122,7 +1122,7 @@ function WallpaperCard({
             mediaUrl={mediaUrl}
             previewUrl={wallpaper.previewUrl}
             loading={mediaLoading}
-            className="size-full object-cover transition-transform duration-slow group-hover:scale-[1.03]"
+            className="size-full object-cover"
             loadingNode={
               <div className="flex size-full items-center justify-center">
                 <Spinner className="size-5 text-muted-foreground/50" />
@@ -1157,7 +1157,7 @@ function WallpaperCard({
           {/* Type badge (Swiss mono) */}
           <span
             className={cn(
-              'absolute bottom-1 right-1 flex items-center gap-0.5 rounded-[2px] px-1 py-0.5 font-mono text-[9px] tracking-wider',
+              'absolute bottom-1 right-1 flex items-center gap-0.5 rounded-[2px] px-1 py-0.5 font-mono text-[10px] tracking-wider',
               wallpaper.type === 'video'
                 ? 'bg-primary/85 text-primary-foreground'
                 : wallpaper.type === 'image'
@@ -1181,19 +1181,19 @@ function WallpaperCard({
           </span>
           {/* UI background indicator (Swiss) */}
           {isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-[2px] bg-primary px-1 py-0.5 font-mono text-[8px] tracking-wider text-primary-foreground">
+            <span className="absolute left-1 top-1 rounded-[2px] bg-primary px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-primary-foreground">
               UI
             </span>
           )}
           {/* Preview-only badge (Swiss warning) */}
           {previewOnly && !isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-[2px] bg-cr-warning px-1 py-0.5 font-mono text-[8px] tracking-wider text-yellow-950">
+            <span className="absolute left-1 top-1 rounded-[2px] bg-cr-warning px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-yellow-950">
               PREVIEW
             </span>
           )}
           {/* Source badge for local imports (Swiss) */}
           {wallpaper.source === 'local' && (
-            <span className="absolute right-1 top-1 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[8px] tracking-wider text-muted-foreground">
+            <span className="absolute right-1 top-1 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-muted-foreground">
               LOCAL
             </span>
           )}
@@ -1202,7 +1202,7 @@ function WallpaperCard({
         {/* Title (Swiss mono info) */}
         <div className="px-2 py-1.5">
           <p className="truncate font-display text-[11px] font-bold">{wallpaper.title}</p>
-          <p className="mt-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
+          <p className="mt-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
             {formatSize(wallpaper.sizeBytes)}
           </p>
         </div>
@@ -1212,7 +1212,7 @@ function WallpaperCard({
       {deletable && (
         <div className="absolute left-1 bottom-1 opacity-0 transition-opacity duration-fast group-hover:opacity-100">
           {confirming ? (
-            <div className="flex items-center gap-0.5 rounded-[2px] bg-card px-1 py-0.5 shadow-md">
+            <div className="flex items-center gap-0.5 rounded-[2px] bg-card px-1 py-0.5">
               <button
                 type="button"
                 onClick={(e) => {
@@ -1221,7 +1221,7 @@ function WallpaperCard({
                   setConfirming(false);
                 }}
                 disabled={isDeleting}
-                className="rounded-[2px] px-1 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                className="rounded-[2px] px-1 py-0.5 font-mono text-[10px] font-semibold tracking-wider text-destructive hover:bg-destructive/10 disabled:opacity-50"
               >
                 {isDeleting ? '…' : confirmLabel}
               </button>
@@ -1231,7 +1231,7 @@ function WallpaperCard({
                   e.stopPropagation();
                   setConfirming(false);
                 }}
-                className="rounded-[2px] px-1 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground hover:bg-muted"
+                className="rounded-[2px] px-1 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground hover:bg-muted"
               >
                 ✕
               </button>
@@ -1243,7 +1243,7 @@ function WallpaperCard({
                 e.stopPropagation();
                 setConfirming(true);
               }}
-              className="rounded-[2px] bg-card px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-[2px] bg-card px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
               {deleteLabel}
             </button>

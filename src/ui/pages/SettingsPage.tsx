@@ -44,11 +44,13 @@ function SettingRow({
 }) {
   return (
     <div
-      className="setrow flex items-center justify-between gap-4 rounded-[2px] border border-border px-3.5 py-2.5 transition-colors duration-fast hover:bg-card2"
+      className="setrow flex items-center justify-between gap-4 p-4 py-2 rounded-[2px] border border-border transition-colors duration-fast hover:bg-card2"
       style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
     >
       <div className="min-w-0">
-        <p className="text-[12.5px] font-semibold text-foreground">{title}</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+          {title}
+        </p>
         {description && (
           <p className="mt-0.5 text-[10.5px] text-muted-foreground/70">{description}</p>
         )}
@@ -96,7 +98,7 @@ function CustomCssEditor({
   return (
     <div className="flex flex-col gap-2">
       <div
-        className="flex items-center justify-between gap-4 rounded-[2px] border border-border px-3.5 py-2.5"
+        className="flex items-center justify-between gap-4 rounded-[2px] border border-border px-4 py-2"
         style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
       >
         <div className="min-w-0">
@@ -205,7 +207,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
       <div className="grid min-h-0 flex-1 grid-cols-[180px_minmax(0,1fr)]">
         {/* Section rail (Swiss) */}
         <aside className="set-rail flex min-h-0 flex-col gap-[3px] overflow-y-auto border-r border-border bg-card2 p-2">
-          <p className="px-3 pb-1 font-mono text-[8.5px] font-semibold uppercase tracking-[.18em] text-muted-foreground/60">
+          <p className="px-3 pb-1 font-mono text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground/60">
             {t.settingsTitle.toUpperCase()}
           </p>
           {sections.map((item) => (
@@ -228,7 +230,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
 
         {/* Content */}
         <div className="flex min-h-0 flex-col">
-          <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
+          <div className="flex items-center justify-between border-b border-border px-4 py-2">
             <div className="flex items-center gap-2">
               <h2 className="font-display text-[13px] font-bold tracking-tight">
                 {activeSection.label}
@@ -249,7 +251,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               </Button>
             )}
           </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3.5 py-2.5">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-2">
             {section === 'general' && (
               <SettingRow title={t.themeModeLabel}>
                 <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>

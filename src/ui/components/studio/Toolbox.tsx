@@ -246,13 +246,17 @@ export interface StudioColorSets {
   accents: string[];
 }
 
-const shadowLevels: Array<{ label: string; value: 'none' | 'sm' | 'md' | 'lg' | 'xl' }> = [
-  { label: '无', value: 'none' },
-  { label: '小', value: 'sm' },
-  { label: '中', value: 'md' },
-  { label: '大', value: 'lg' },
-  { label: '超大', value: 'xl' },
-];
+function shadowLevels(
+  t: UiMessages,
+): Array<{ label: string; value: 'none' | 'sm' | 'md' | 'lg' | 'xl' }> {
+  return [
+    { label: t.studioToolboxShadowNone, value: 'none' },
+    { label: t.studioToolboxShadowSm, value: 'sm' },
+    { label: t.studioToolboxShadowMd, value: 'md' },
+    { label: t.studioToolboxShadowLg, value: 'lg' },
+    { label: t.studioToolboxShadowXl, value: 'xl' },
+  ];
+}
 
 const easingOptions = [
   'ease',
@@ -306,7 +310,7 @@ function SliderRow({
       <div className="relative h-4 flex items-center">
         {/* Track background (Swiss: thin + flat) */}
         <div
-          className="absolute inset-x-0 h-[3px] rounded-full"
+          className="absolute inset-x-0 h-[3px] rounded-[2px]"
           style={{ background: 'var(--border)' }}
         />
         {/* Filled portion (primary red) */}
@@ -331,7 +335,7 @@ function SliderRow({
         />
         {/* Thumb indicator */}
         <div
-          className="pointer-events-none absolute size-[11px] -translate-x-1/2 rounded-full border-2"
+          className="pointer-events-none absolute size-[11px] -translate-x-1/2 rounded-[2px] border-2"
           style={{
             left: `${pct}%`,
             borderColor: 'var(--primary)',
@@ -632,14 +636,14 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
           </span>
           {activeCount > 0 && (
             <span
-              className="rounded px-1.5 py-0.5 font-mono text-[8px] font-bold"
+              className="rounded px-1.5 py-0.5 font-mono text-[9.5px] font-bold"
               style={{
                 background: 'var(--primary)',
                 color: 'var(--primary-foreground)',
                 letterSpacing: '0.06em',
               }}
             >
-              {activeCount} 项
+              {t.studioToolboxActiveCount(activeCount)}
             </span>
           )}
         </div>
@@ -647,22 +651,22 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
           type="button"
           onClick={onReset}
           disabled={!overrides}
-          className="font-mono text-[9px] uppercase tracking-wider disabled:opacity-30"
+          className="font-mono text-[10px] uppercase tracking-wider disabled:opacity-30"
           style={{ color: 'var(--muted-foreground)' }}
         >
-          ↺ 重置
+          ↺ {t.studioToolboxReset}
         </button>
       </div>
 
       {/* Section: 我的调色板 / Presets */}
-      <SectionHeader>我的调色板</SectionHeader>
+      <SectionHeader>{t.studioToolboxMyPalette}</SectionHeader>
       <div className="space-y-1.5 py-1">
         <div className="flex items-center gap-1.5">
           <input
             type="text"
             value={presetName}
             onChange={(e) => setPresetName(e.target.value)}
-            placeholder="为当前调色板命名"
+            placeholder={t.studioToolboxPresetNamePlaceholder}
             className="h-6 min-w-0 flex-1 border border-border bg-muted px-2 font-mono text-[10px] outline-none transition-colors focus:border-primary/60"
             style={{ borderRadius: 'var(--radius)' }}
           />
@@ -670,19 +674,19 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
             type="button"
             onClick={handleSavePreset}
             disabled={!presetName.trim() || !toolOverrides?.colors}
-            className="h-6 shrink-0 border border-border px-2 font-mono text-[9px] uppercase transition-colors hover:bg-accent disabled:opacity-30"
+            className="h-6 shrink-0 border border-border px-2 font-mono text-[10px] uppercase transition-colors hover:bg-accent disabled:opacity-30"
             style={{ borderRadius: 'var(--radius)', letterSpacing: '0.06em' }}
-            title="保存当前调色板为预设"
+            title={t.studioToolboxSavePresetHint}
           >
-            保存
+            {t.studioToolboxSavePreset}
           </button>
         </div>
         {presets.length === 0 ? (
           <p
-            className="font-mono text-[8.5px]"
+            className="font-mono text-[10px]"
             style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}
           >
-            暂无预设。先在数字调参区调整颜色，再点击「保存」。
+            {t.studioToolboxNoPresets}
           </p>
         ) : (
           <div className="space-y-1">
@@ -716,20 +720,20 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
                 <button
                   type="button"
                   onClick={() => setPaletteLoaded(p.colors)}
-                  className="h-5 shrink-0 border border-border px-1.5 font-mono text-[8.5px] uppercase transition-colors hover:bg-accent"
+                  className="h-5 shrink-0 border border-border px-1.5 font-mono text-[10px] uppercase transition-colors hover:bg-accent"
                   style={{ borderRadius: 'var(--radius)', letterSpacing: '0.04em' }}
-                  title="载入该预设到编辑器"
+                  title={t.studioToolboxLoadPresetHint}
                 >
-                  载入
+                  {t.studioToolboxLoadPreset}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDeletePreset(p.id)}
-                  className="h-5 shrink-0 border border-border px-1.5 font-mono text-[8.5px] uppercase transition-colors hover:bg-accent"
+                  className="h-5 shrink-0 border border-border px-1.5 font-mono text-[10px] uppercase transition-colors hover:bg-accent"
                   style={{ borderRadius: 'var(--radius)', letterSpacing: '0.04em' }}
-                  title="删除该预设"
+                  title={t.studioToolboxDeletePresetHint}
                 >
-                  删除
+                  {t.studioToolboxDeletePreset}
                 </button>
               </div>
             ))}
@@ -738,40 +742,40 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       </div>
 
       {/* Section: 配色 / Color */}
-      <SectionHeader>配色</SectionHeader>
+      <SectionHeader>{t.studioToolboxColorSection}</SectionHeader>
       <ColorRow
-        label="强调色"
-        hint="复刻中原本带强调色的元素（边框/链接/高亮）会重染为此色"
+        label={t.studioToolboxAccentColor}
+        hint={t.studioToolboxAccentColorHint}
         value={finalAccent}
         onChange={(v) => onOverride('accent', v)}
       />
       <ColorRow
-        label="背景色"
-        hint="应用主背景（通常为根背景）"
+        label={t.studioToolboxBgColor}
+        hint={t.studioToolboxBgColorHint}
         value={finalBg}
         onChange={(v) => onOverride('background', v)}
       />
       <ColorRow
-        label="前景色"
-        hint="正文与主要文字颜色"
+        label={t.studioToolboxFgColor}
+        hint={t.studioToolboxFgColorHint}
         value={finalFg}
         onChange={(v) => onOverride('foreground', v)}
       />
       <ColorRow
-        label="表面色"
-        hint="面板/卡片等次级表面背景"
+        label={t.studioToolboxSurfaceColor}
+        hint={t.studioToolboxSurfaceColorHint}
         value={finalSurface}
         onChange={(v) => onOverride('surface', v)}
       />
       <ToggleRow
-        label="渐变背景"
-        hint="开启后主背景以「强调色→背景色」渐变铺底（会烘焙进导出主题）"
+        label={t.studioToolboxGradientBg}
+        hint={t.studioToolboxGradientBgHint}
         checked={finalGrad}
         onChange={(v) => onOverride('gradientAccent', v)}
       />
 
       {/* Section: 形状与边框 / Shape */}
-      <SectionHeader>形状</SectionHeader>
+      <SectionHeader>{t.studioToolboxShapeSection}</SectionHeader>
       <SliderRow
         label={`${t.studioDimRadius} (${finalRadius})`}
         hint={t.studioToolboxRadiusHint}
@@ -794,7 +798,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         label={`${t.studioDimShadow} (${finalShadow.toUpperCase()})`}
         hint={t.studioToolboxShadowHint}
         value={finalShadow}
-        options={shadowLevels.map((s) => ({ label: s.label, value: s.value }))}
+        options={shadowLevels(t).map((s) => ({ label: s.label, value: s.value }))}
         onChange={(v) => onOverride('shadowLevel', v as ToolOverride['shadowLevel'])}
       />
       <SliderRow
@@ -807,8 +811,8 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('blurPx', Number(v))}
       />
       <SliderRow
-        label={`线宽 (${finalBorder}px)`}
-        hint="重设原有边框的粗细（仅影响原本就有边框的元素）"
+        label={t.studioToolboxLineWidth(finalBorder)}
+        hint={t.studioToolboxLineWidthHint}
         value={finalBorder}
         min={0}
         max={4}
@@ -816,14 +820,14 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('borderWidth', Number(v))}
       />
       <ToggleRow
-        label="分割线"
-        hint="关闭后隐藏细分割线（边框透明）"
+        label={t.studioToolboxSeparator}
+        hint={t.studioToolboxSeparatorHint}
         checked={finalSep}
         onChange={(v) => onOverride('separators', v)}
       />
 
       {/* Section: 字体 / Typography */}
-      <SectionHeader>字体</SectionHeader>
+      <SectionHeader>{t.studioToolboxFontSection}</SectionHeader>
       <SliderRow
         label={`${t.studioDimFont} (${finalFontSize}px)`}
         hint={t.studioToolboxFontHint}
@@ -834,14 +838,14 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('fontSize', Number(v))}
       />
       <TextRow
-        label="字体"
+        label={t.studioToolboxFontFamily}
         value={finalFontFam || ''}
         onChange={(v) => onOverride('fontFam', v)}
-        placeholder="system-ui, sans-serif"
+        placeholder={t.studioToolboxFontFamilyPlaceholder}
       />
       <SliderRow
-        label="行高"
-        hint="正文行高，影响阅读密度"
+        label={t.studioToolboxLineHeight}
+        hint={t.studioToolboxLineHeightHint}
         value={finalLh}
         min={1}
         max={2.2}
@@ -850,16 +854,16 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       />
 
       {/* Section: 动效 / Motion */}
-      <SectionHeader>动效</SectionHeader>
+      <SectionHeader>{t.studioToolboxMotionSection}</SectionHeader>
       <div className="grid grid-cols-2 gap-2 py-1">
         <TextRow
-          label={`${t.studioDimMotion} 时长`}
+          label={`${t.studioDimMotion} ${t.studioToolboxMotionDuration}`}
           value={finalDuration}
           onChange={(v) => onOverride('duration', v)}
-          placeholder="0.2s"
+          placeholder={t.studioToolboxMotionDurationPlaceholder}
         />
         <SelectRow
-          label={`${t.studioDimMotion} 缓动`}
+          label={`${t.studioDimMotion} ${t.studioToolboxMotionEasing}`}
           value={finalTiming}
           options={easingOptions.map((e) => ({ label: e, value: e }))}
           onChange={(v) => onOverride('timing', v)}
@@ -867,10 +871,10 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       </div>
 
       {/* Section: 密度与滤镜 / Filter (preview only) */}
-      <SectionHeader>滤镜</SectionHeader>
+      <SectionHeader>{t.studioToolboxFilterSection}</SectionHeader>
       <SliderRow
-        label="缩放"
-        hint="仅缩放复刻预览，不影响真实应用"
+        label={t.studioToolboxScale}
+        hint={t.studioToolboxScaleHint}
         value={finalScale}
         min={0.6}
         max={1.2}
@@ -878,14 +882,14 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('scale', Number(v))}
       />
       <ToggleRow
-        label="反相"
-        hint="基于原明暗一键反转（预览）"
+        label={t.studioToolboxInvert}
+        hint={t.studioToolboxInvertHint}
         checked={finalInvert}
         onChange={(v) => onOverride('invert', v)}
       />
       <SliderRow
-        label="对比度"
-        hint="仅预览"
+        label={t.studioToolboxContrast}
+        hint={t.studioToolboxContrastHint}
         value={finalContrast}
         min={0.5}
         max={2}
@@ -893,8 +897,8 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('contrast', Number(v))}
       />
       <SliderRow
-        label="饱和度"
-        hint="仅预览"
+        label={t.studioToolboxSaturate}
+        hint={t.studioToolboxSaturateHint}
         value={finalSaturate}
         min={0}
         max={2}
@@ -903,10 +907,10 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       />
 
       {/* Section: 视觉效果 / Effects (new in P0-1) */}
-      <SectionHeader>视觉效果</SectionHeader>
+      <SectionHeader>{t.studioToolboxEffectsSection}</SectionHeader>
       <SliderRow
-        label="暗化"
-        hint="叠加半透明黑色遮罩（仅预览，模拟暗色氛围）"
+        label={t.studioToolboxDim}
+        hint={t.studioToolboxDimHint}
         value={finalDim}
         min={0}
         max={0.85}
@@ -914,8 +918,8 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         onChange={(v) => onOverride('dim', Number(v))}
       />
       <SliderRow
-        label="不透明度"
-        hint="整体内容透明度（仅预览，检查层级对比）"
+        label={t.studioToolboxContentOpacity}
+        hint={t.studioToolboxContentOpacityHint}
         value={finalOpacity}
         min={0.1}
         max={1}
@@ -926,10 +930,10 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       {/* Summary of effective values */}
       <div className="mt-2 border border-border p-2" style={{ background: 'var(--muted)' }}>
         <p
-          className="mb-1.5 font-mono text-[9px] font-semibold uppercase"
+          className="mb-1.5 font-mono text-[10px] font-semibold uppercase"
           style={{ letterSpacing: '0.12em', color: 'var(--muted-foreground)' }}
         >
-          当前属性
+          {t.studioToolboxCurrentProps}
         </p>
         <div className="space-y-0.5">
           {[
@@ -949,7 +953,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
               `opacity: ${(finalOpacity * 100).toFixed(0)}%`,
             ],
           ].map(([k, v]) => (
-            <p key={k} className="flex items-center justify-between font-mono text-[9px]">
+            <p key={k} className="flex items-center justify-between font-mono text-[10px]">
               <span style={{ color: 'var(--muted-foreground)' }}>{k}</span>
               <span className="ml-2 truncate" style={{ color: 'var(--foreground)' }}>
                 {v}
@@ -961,10 +965,10 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
 
       {Object.keys(overrides ?? {}).length > 0 && (
         <p
-          className="mt-1 font-mono text-[9px]"
+          className="mt-1 font-mono text-[10px]"
           style={{ color: 'var(--dim, var(--muted-foreground))' }}
         >
-          配色/形状/字体/动效/渐变背景会烘焙进导出主题；内容缩放·分隔线·明暗反转·对比度·饱和度·暗化·不透明度仅作用于模拟预览。
+          {t.studioToolboxExportNote}
         </p>
       )}
     </div>

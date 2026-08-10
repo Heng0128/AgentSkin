@@ -88,7 +88,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
 
   // Swiss-style icon button class — transparent by default, reveals bg + border on hover.
   const swissBtn =
-    'flex h-[27px] w-[27px] items-center justify-center rounded-[2px] border border-transparent text-muted-foreground transition-all duration-150 hover:scale-[1.05] hover:border-border hover:bg-card2 hover:text-foreground active:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent disabled:hover:scale-100';
+    'flex h-[27px] w-[27px] items-center justify-center rounded-[2px] border border-transparent text-muted-foreground transition-[background-color,border-color,color] duration-150 hover:border-border hover:bg-card2 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent';
 
   return (
     <header
@@ -97,7 +97,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
         'border-b border-border',
         // Surface solid default; glass switch when wallpaper active.
         hasWallpaper
-          ? 'bg-[var(--glass)] backdrop-blur-[20px] backdrop-saturate-[1.2]'
+          ? 'bg-[color-mix(in_srgb,var(--surface)_55%,transparent)]'
           : 'bg-[var(--surface)]',
         // The whole bar is a drag region; interactive elements opt out below.
         '[-webkit-app-region:drag]',
@@ -134,7 +134,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
               onClick={() => setMode(opt.value)}
               className={cn(
                 'flex h-6 w-6 items-center justify-center rounded-[1px] text-muted-foreground transition-all duration-150',
-                mode === opt.value ? 'bg-card text-foreground shadow-xs' : 'hover:text-foreground',
+                mode === opt.value ? 'bg-card text-foreground' : 'hover:text-foreground',
               )}
             >
               <HugeIcon icon={opt.icon} className="size-3" />

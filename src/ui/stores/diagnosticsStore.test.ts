@@ -37,6 +37,15 @@ describe('diagnosticsStore — timeout events', () => {
       timeoutEvents: [],
       timeoutsLoading: false,
       timeoutsError: null,
+      concurrencyMetrics: {
+        companionBusyByAgent: 0,
+        inflightOperations: 0,
+        selfHealingAgents: 0,
+        capturedTokens: 0,
+        persistChainDepth: 0,
+        deferredSelfHeals: 0,
+        switchEpochByAgent: 0,
+      },
     });
     mockGetTimeouts.mockReset();
     mockClearTimeouts.mockReset();

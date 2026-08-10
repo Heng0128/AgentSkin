@@ -46,18 +46,15 @@ function useTick(): string {
   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
-const LED_STYLE: Record<LedState['variant'], { dot: string; glow: string }> = {
+const LED_STYLE: Record<LedState['variant'], { dot: string }> = {
   running: {
     dot: 'bg-cr-success',
-    glow: 'shadow-[0_0_7px_var(--cr-success)]',
   },
   standby: {
     dot: 'bg-cr-warning',
-    glow: 'shadow-[0_0_7px_var(--cr-warning)]',
   },
   offline: {
     dot: 'bg-muted-foreground/30',
-    glow: '',
   },
 };
 
@@ -86,10 +83,10 @@ export function StatusBar() {
   const injectedCount = status?.apps.filter((app) => app.activeThemeId !== null).length ?? 0;
 
   return (
-    <footer className="flex h-[28px] shrink-0 items-center justify-between gap-[14px] border-t border-border bg-[var(--surface)] px-3 [-webkit-app-region:drag] transition-[background] duration-400">
+    <footer className="flex h-[28px] shrink-0 items-center justify-between gap-4 border-t border-border bg-[var(--surface)] px-3 [-webkit-app-region:drag] transition-[background] duration-400">
       {/* Left cluster: LED + CDP status. */}
       <div className="flex items-center gap-1.5 [-webkit-app-region:no-drag]">
-        <span className={cn('size-[7px] shrink-0 rounded-full', led.dot, led.glow)} aria-hidden />
+        <span className={cn('size-[7px] shrink-0 rounded-full', led.dot)} aria-hidden />
         <span className="font-mono text-[10px] font-medium text-muted-foreground">{cdpLabel}</span>
       </div>
 

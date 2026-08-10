@@ -26,22 +26,19 @@ export function Logo({
   className?: string;
   title?: string;
 }) {
-  const svgClass = cn(
-    'block shrink-0 drop-shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-transform duration-[250ms] ease-[cubic-bezier(.34,1.56,.64,1)] hover:-rotate-[4deg] hover:scale-[1.06]',
-    className,
-  );
+  const svgClass = cn('block shrink-0', className);
 
   if (variant === 'mono') {
     return (
       <svg viewBox="0 0 48 48" className={svgClass} role="img" aria-label={title} fill="none">
         {/* White rounded-square background */}
-        <rect x="1" y="1" width="46" height="46" rx="11.5" fill="currentColor" fillOpacity="0.08" />
+        <rect x="1" y="1" width="46" height="46" rx="2" fill="currentColor" fillOpacity="0.08" />
         <rect
           x="1.3"
           y="1.3"
           width="45.4"
           height="45.4"
-          rx="11.2"
+          rx="2"
           stroke="currentColor"
           strokeOpacity="0.12"
           strokeWidth="0.6"
@@ -59,7 +56,7 @@ export function Logo({
   return (
     <svg viewBox="0 0 48 48" className={svgClass} role="img" aria-label={title} fill="none">
       {/* White rounded-square background */}
-      <rect x="1" y="1" width="46" height="46" rx="11.5" fill="#FFFFFF" />
+      <rect x="1" y="1" width="46" height="46" rx="2" fill="#FFFFFF" />
       {/* "A" triangle — the main body of the letter */}
       <path d="M24 8.5L39.5 39.5h-7.6L24 22.4l-7.9 17.1H8.5Z" fill="#E30613" />
       {/* Baseline bar — sits under the "A" crossbar area */}

@@ -59,7 +59,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
     <div
       className={cn(
         'fixed bottom-11 left-1/2 z-[90] -translate-x-1/2',
-        'flex items-center gap-2.5 rounded-full border border-border bg-[var(--pop)] px-3.5 py-2 shadow-lg backdrop-blur-xl',
+        'flex items-center gap-2.5 rounded-[2px] border border-border bg-[var(--pop)] px-3.5 py-2 shadow-float backdrop-blur-none',
         'transition-[opacity,filter] duration-300',
         dimmed && 'opacity-40 saturate-[0.6]',
       )}
@@ -76,7 +76,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
           void restoreAll();
           setInjectDockOpen(false);
         }}
-        className="rounded-full border border-border-strong bg-card2 px-2.5 py-1 font-mono text-[10px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+        className="rounded-[2px] border border-border-strong bg-card2 px-2.5 py-1 font-mono text-[10px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
       >
         ↺ {t.restoreAllAction}
       </button>
@@ -84,7 +84,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
         type="button"
         onClick={() => setInjectDockOpen(false)}
         aria-label={t.close}
-        className="flex size-5 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="flex size-5 items-center justify-center rounded-[2px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         ✕
       </button>

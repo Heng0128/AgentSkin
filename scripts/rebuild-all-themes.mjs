@@ -1,13 +1,16 @@
 /**
- * rebuild-all-themes.mjs — Batch rebuild all 18 .agentskin-theme packages
- * from their manifest.json + assets/css/*.css (already regenerated).
+ * rebuild-all-themes.mjs — Batch rebuild all .agentskin-theme packages
+ * from their manifest.json (already regenerated).
+ *
+ * Reuses scripts/build-theme-package.mjs (the Studio export builder) to
+ * produce directory-based packages with consistent extension and layout.
  *
  * Usage: node scripts/rebuild-all-themes.mjs [outputDir]
- * Default output: themes/{id}/{id}.agentskin-theme
+ * Default output: themes/{id}/*.agentskin-theme/
  */
-import { readdirSync, existsSync, mkdirSync } from 'node:fs';
+import { readdirSync, existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { writeThemePackage } from '../src/engine/src/theme/package.mjs';
+import { buildThemePackage } from './build-theme-package.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const THEMES_DIR = join(ROOT, 'themes');
@@ -27,14 +30,41 @@ for (const id of dirs) {
     continue;
   }
 
-  const outFile = OUT_DIR
-    ? join(OUT_DIR, `${id}.codedrobe-theme`)
-    : join(themeDir, `${id}.codedrobe-theme`);
-
   try {
-    const res = await writeThemePackage(manifestPath, outFile, { force: true });
-    const sizeKB = (res.bundle ? JSON.stringify(res.bundle).length : 0) / 1024;
-    console.log(`[ok] ${id} → ${res.output} (~${sizeKB.toFixed(0)} KB)`);
+    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    const c = manifest.colors || {};
+    const agentId = Object.keys(manifest.targets ?? {})[0] || 'traework';
+    const tokens = {
+      '--agentskin-accent': c.accent,
+      '--agentskin-secondary': c.secondary,
+      '--agentskin-bg': c.background,
+      '--agentskin-surface': c.surface,
+      '--agentskin-surface-elevated': c.surfaceElevated,
+      '--agentskin-text': c.foreground,
+      '--agentskin-muted': c.muted,
+      '--agentskin-border': c.border,
+      '--agentskin-code-bg': c.codeBackground,
+      '--agentskin-code-fg': c.codeForeground,
+      '--agentskin-input-bg': c.inputBackground,
+      '--agentskin-button-bg': c.buttonBackground,
+      '--agentskin-focus-ring': c.focusRing,
+    };
+    // Remove undefined entries so build-theme-package.mjs falls back to defaults
+    for (const k of Object.keys(tokens)) {
+      if (tokens[k] == null) delete tokens[k];
+    }
+    const request = {
+      agentId,
+      root: tokens,
+      meta: {
+        id: manifest.id || id,
+        name: manifest.name || manifest.displayName || id,
+        author: manifest.author?.name || 'AgentSkin',
+      },
+    };
+    const outBase = OUT_DIR || themeDir;
+    const pkgDir = await buildThemePackage(request, outBase);
+    console.log(`[ok] ${id} → ${pkgDir}`);
     ok++;
   } catch (err) {
     console.error(`[FAIL] ${id}: ${err.message}`);

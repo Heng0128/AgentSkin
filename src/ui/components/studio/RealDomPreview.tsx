@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 
+import type { UiMessages } from '@shared/i18n';
 import type { DomTreeNode } from '@shared/types';
 import type { StudioColorSets, ToolOverride } from './Toolbox';
 
@@ -16,6 +17,104 @@ const VOID_TAGS = new Set([
   'embed',
   'source',
   'track',
+  'wbr',
+]);
+
+/**
+ * Tags allowed to be replayed into the srcdoc iframe. The DOM snapshot comes
+ * from a live agent page and may contain script-carrying tags (script, iframe,
+ * object, embed…). Combined with the iframe's `allow-same-origin
+ * allow-scripts` sandbox, replaying those would let untrusted markup escape the
+ * sandbox and reach the parent context. We allow only inert content tags.
+ */
+const SAFE_TAGS = new Set([
+  'a',
+  'abbr',
+  'address',
+  'article',
+  'aside',
+  'b',
+  'bdi',
+  'bdo',
+  'blockquote',
+  'br',
+  'button',
+  'caption',
+  'cite',
+  'code',
+  'col',
+  'colgroup',
+  'data',
+  'dd',
+  'del',
+  'details',
+  'dfn',
+  'div',
+  'dl',
+  'dt',
+  'em',
+  'fieldset',
+  'figcaption',
+  'figure',
+  'footer',
+  'form',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'header',
+  'hr',
+  'i',
+  'img',
+  'input',
+  'ins',
+  'kbd',
+  'label',
+  'legend',
+  'li',
+  'main',
+  'mark',
+  'meter',
+  'nav',
+  'ol',
+  'optgroup',
+  'option',
+  'output',
+  'p',
+  'picture',
+  'pre',
+  'progress',
+  'q',
+  'rp',
+  'rt',
+  'ruby',
+  's',
+  'samp',
+  'section',
+  'select',
+  'small',
+  'source',
+  'span',
+  'strong',
+  'sub',
+  'summary',
+  'sup',
+  'table',
+  'tbody',
+  'td',
+  'textarea',
+  'tfoot',
+  'th',
+  'thead',
+  'time',
+  'tr',
+  'track',
+  'u',
+  'ul',
+  'var',
+  'video',
   'wbr',
 ]);
 
@@ -151,20 +250,28 @@ function nodeStyleToCss(
 }
 
 function nodeToHtml(n: DomTreeNode, colorSets?: StudioColorSets, gradientAccent = false): string {
+  // Drop any tag not on the SAFE_TAGS allowlist (script, iframe, object,
+  // embed, link, meta, style, …). These carry script/trust boundaries and
+  // must never be replayed into the sandboxed srcdoc. The node's children
+  // are still walked so a blocked wrapper doesn't silently hide nested nodes.
+  if (!SAFE_TAGS.has(n.tag.toLowerCase())) {
+    return n.children.map((c) => nodeToHtml(c, colorSets, gradientAccent)).join('');
+  }
   const style = nodeStyleToCss(n, colorSets, gradientAccent);
   const cls = n.cls ? ` class="${escapeAttr(n.cls)}"` : '';
   const styleAttr = style ? ` style="${escapeAttr(style)}"` : '';
   const attrs = safeAttrs(n);
-  if (VOID_TAGS.has(n.tag)) {
+  const tag = n.tag.toLowerCase();
+  if (VOID_TAGS.has(tag)) {
     const src =
       n.imgSrc && !/^\s*(javascript|vbscript|data:text\/html)/i.test(n.imgSrc)
         ? ` src="${escapeAttr(n.imgSrc)}"`
         : '';
-    return `<${n.tag}${cls}${styleAttr}${attrs}${src}>`;
+    return `<${tag}${cls}${styleAttr}${attrs}${src}>`;
   }
   const text = n.text ? escapeHtml(n.text) : '';
   const children = n.children.map((c) => nodeToHtml(c, colorSets, gradientAccent)).join('');
-  return `<${n.tag}${cls}${styleAttr}${attrs}>${text}${children}</${n.tag}>`;
+  return `<${tag}${cls}${styleAttr}${attrs}>${text}${children}</${tag}>`;
 }
 
 function shadowCssFromLevel(level?: ToolOverride['shadowLevel']): string {
@@ -235,13 +342,12 @@ function overridesToCss(o: ToolOverride | null): string {
 }
 
 function buildSrcDoc(
-  domTree?: DomTreeNode,
-  colorSets?: StudioColorSets,
-  gradientAccent = false,
+  domTree: DomTreeNode | undefined,
+  colorSets: StudioColorSets | undefined,
+  gradientAccent: boolean,
+  fallbackHtml: string,
 ): string {
-  const body = domTree
-    ? nodeToHtml(domTree, colorSets, gradientAccent)
-    : '<p style="padding:24px;color:#888;font-family:sans-serif">（无 DOM 数据，请重新抓取）</p>';
+  const body = domTree ? nodeToHtml(domTree, colorSets, gradientAccent) : fallbackHtml;
   return (
     '<!doctype html><html><head><meta charset="utf-8">' +
     '<style>html,body{margin:0}*{box-sizing:border-box}' +
@@ -258,14 +364,20 @@ function RealDomPreview({
   domTree,
   overrides,
   colorSets,
+  t,
 }: {
   domTree?: DomTreeNode;
   overrides: ToolOverride | null;
   colorSets?: StudioColorSets;
+  t: UiMessages;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const grad = Boolean(overrides?.gradientAccent);
-  const srcDoc = useMemo(() => buildSrcDoc(domTree, colorSets, grad), [domTree, colorSets, grad]);
+  const fallbackHtml = `<p style="padding:24px;color:#888;font-family:sans-serif">${t.studioRealDomNoData}</p>`;
+  const srcDoc = useMemo(
+    () => buildSrcDoc(domTree, colorSets, grad, fallbackHtml),
+    [domTree, colorSets, grad, fallbackHtml],
+  );
   const overrideCss = useMemo(() => overridesToCss(overrides), [overrides]);
 
   const pushOverrides = useCallback(() => {
@@ -309,7 +421,7 @@ function RealDomPreview({
         </span>
         {domTree && (
           <span
-            className="ml-auto font-mono text-[9px]"
+            className="ml-auto font-mono text-[10px]"
             style={{ color: 'var(--dim, var(--muted-foreground))' }}
           >
             LIVE
@@ -332,4 +444,4 @@ function RealDomPreview({
 // Helpers
 // ---------------------------------------------------------------------------
 
-export { RealDomPreview };
+export { nodeToHtml, RealDomPreview };

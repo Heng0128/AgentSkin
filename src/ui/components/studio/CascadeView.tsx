@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { UiMessages } from '@shared/i18n';
 import type { CssMatchedRule } from '@shared/types';
 
 // ---------------------------------------------------------------------------
@@ -15,6 +16,7 @@ const MAX_DECLARATIONS = 12;
 
 export function CascadeView({
   cascade,
+  t,
 }: {
   cascade: {
     matchedRules: CssMatchedRule[];
@@ -22,6 +24,7 @@ export function CascadeView({
     boxModel: { width?: number; height?: number; left?: number; top?: number } | null;
     computed?: Array<{ property: string; value: string }>;
   };
+  t: UiMessages;
 }) {
   const boxModel = cascade.boxModel;
   return (
@@ -33,7 +36,7 @@ export function CascadeView({
           style={{ borderRadius: 'var(--radius)' }}
         >
           <div
-            className="mb-1 font-mono text-[9px] uppercase"
+            className="mb-1 font-mono text-[10px] uppercase"
             style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)', opacity: 0.7 }}
           >
             RENDER FONTS
@@ -42,7 +45,7 @@ export function CascadeView({
             {cascade.platformFonts.map((f) => (
               <span
                 key={f}
-                className="bg-muted px-1 py-0.5 font-mono text-[8px]"
+                className="bg-muted px-1 py-0.5 font-mono text-[9.5px]"
                 style={{ color: 'var(--foreground)', borderRadius: 'var(--radius)' }}
               >
                 {f}
@@ -56,14 +59,14 @@ export function CascadeView({
       {boxModel && (boxModel.width !== undefined || boxModel.height !== undefined) && (
         <div className="flex items-center gap-1">
           <span
-            className="bg-muted px-1 py-0.5 font-mono text-[8px]"
+            className="bg-muted px-1 py-0.5 font-mono text-[9.5px]"
             style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
           >
             {boxModel.width ?? '?'} × {boxModel.height ?? '?'}
           </span>
           {boxModel.left !== undefined && boxModel.top !== undefined && (
             <span
-              className="bg-muted px-1 py-0.5 font-mono text-[8px]"
+              className="bg-muted px-1 py-0.5 font-mono text-[9.5px]"
               style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
             >
               @ {boxModel.left}, {boxModel.top}
@@ -75,14 +78,14 @@ export function CascadeView({
       {/* Matched CSS rules */}
       <div className="border border-border bg-card p-1.5" style={{ borderRadius: 'var(--radius)' }}>
         <div
-          className="mb-1 font-mono text-[9px] uppercase"
+          className="mb-1 font-mono text-[10px] uppercase"
           style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)', opacity: 0.7 }}
         >
           CASCADE
         </div>
         {cascade.matchedRules.length === 0 ? (
-          <p className="font-mono text-[9px]" style={{ color: 'var(--muted-foreground)' }}>
-            无（CDP CSS 域不可用）
+          <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+            {t.studioCascadeNoRules}
           </p>
         ) : (
           <div className="space-y-1.5">
@@ -105,7 +108,7 @@ function CssRuleRow({ rule }: { rule: CssMatchedRule }) {
     <div className="border border-border bg-muted p-1" style={{ borderRadius: 'var(--radius)' }}>
       <div className="flex items-center gap-1">
         <span
-          className="px-1 py-0.5 font-mono text-[8px]"
+          className="px-1 py-0.5 font-mono text-[9.5px]"
           style={{
             borderRadius: 'var(--radius)',
             color: 'var(--primary)',
@@ -115,7 +118,7 @@ function CssRuleRow({ rule }: { rule: CssMatchedRule }) {
           {rule.origin}
         </span>
         <span
-          className="truncate font-mono text-[8.5px]"
+          className="truncate font-mono text-[10px]"
           style={{ color: 'var(--foreground)' }}
           title={rule.selector ?? ''}
         >
@@ -127,7 +130,7 @@ function CssRuleRow({ rule }: { rule: CssMatchedRule }) {
           {rule.declarations.slice(0, MAX_DECLARATIONS).map((d) => (
             <div
               key={`${d.name}:${d.value}${d.important ? '!important' : ''}`}
-              className="flex items-baseline gap-1 px-0.5 font-mono text-[8.5px]"
+              className="flex items-baseline gap-1 px-0.5 font-mono text-[10px]"
             >
               <span
                 className="w-[100px] shrink-0 truncate"

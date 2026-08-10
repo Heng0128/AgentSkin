@@ -30,6 +30,7 @@ import {
   SwatchIcon,
 } from '@hugeicons/core-free-icons';
 import { toMessage } from '@shared/errors';
+import type { UiMessages } from '@shared/i18n';
 import { AGENT_IDS, AGENT_META, type AgentId } from '@shared/types';
 import { Kicker } from './kicker';
 
@@ -86,13 +87,13 @@ const PALETTE_LABELS: Record<PaletteKey, string> = {
   info: 'INFO',
 };
 
-const HARMONY_LABELS: Record<string, string> = {
-  complementary: '互补',
-  splitComplementary: '分裂互补',
-  triadic: '三元',
-  analogous: '类似',
-  tetradic: '四边',
-  monochromatic: '单色',
+const HARMONY_T_KEYS: Record<string, keyof UiMessages> = {
+  complementary: 'harmonyComplementary',
+  splitComplementary: 'harmonySplitComplementary',
+  triadic: 'harmonyTriadic',
+  analogous: 'harmonyAnalogous',
+  tetradic: 'harmonyTetradic',
+  monochromatic: 'harmonyMonochromatic',
 };
 
 const FIT_AGENT_IDS: AgentId[] = AGENT_IDS.filter((id) =>
@@ -118,8 +119,8 @@ function ScoreBadge({ score }: { score: Proposal['score'] }) {
   return (
     <div className="flex items-center gap-1.5">
       <span className={`size-[6px] rounded-full ${dot}`} />
-      <span className={`font-mono text-[9px] font-bold ${cls}`}>{label}</span>
-      <span className="font-mono text-[8px] text-white/30">{score.total}</span>
+      <span className={`font-mono text-[10px] font-bold ${cls}`}>{label}</span>
+      <span className="font-mono text-[10px] text-white/30">{score.total}</span>
     </div>
   );
 }
@@ -135,7 +136,7 @@ function PaletteStrip({ palette }: { palette: Record<string, string> }) {
           title={`${PALETTE_LABELS[key]}: ${palette[key]}`}
         >
           <span
-            className="mb-0.5 hidden font-mono text-[7px] font-bold group-hover:block"
+            className="mb-0.5 hidden font-mono text-[9.5px] font-bold group-hover:block"
             style={{ color: textOn(palette[key] || '#333') }}
           >
             {PALETTE_LABELS[key]}
@@ -154,6 +155,7 @@ function ProposalCard({
   onPreview,
   onExport,
   onApply,
+  t,
 }: {
   proposal: Proposal;
   agentId: AgentId;
@@ -162,8 +164,10 @@ function ProposalCard({
   onPreview: (agentId: string, palette: Record<string, string>) => void;
   onExport: (agentId: string, palette: Record<string, string>) => void;
   onApply?: (agentId: string, palette: Record<string, string>) => void;
+  t: UiMessages;
 }) {
-  const harmonyLabel = HARMONY_LABELS[proposal.harmony] || proposal.harmony;
+  const harmonyTKey = HARMONY_T_KEYS[proposal.harmony];
+  const harmonyLabel = harmonyTKey ? String(t[harmonyTKey]) : proposal.harmony;
   const meta = AGENT_META[agentId];
   const fgBgContrast = contrastRatio(
     proposal.palette.foreground,
@@ -181,11 +185,11 @@ function ProposalCard({
       {/* Top row: rank + score + harmony */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[9px] font-bold text-white/20">
+          <span className="font-mono text-[10px] font-bold text-white/20">
             #{rank.toString().padStart(2, '0')}
           </span>
           {isRecommended && <HugeIcon icon={StarIcon} className="size-3 text-[#FFD240]" />}
-          <Badge className="h-[14px] rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[8px] font-medium text-white/40">
+          <Badge className="h-[14px] rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[10px] font-medium text-white/40">
             {harmonyLabel}
           </Badge>
         </div>
@@ -198,14 +202,14 @@ function ProposalCard({
       {/* Meta row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Badge className="h-[14px] rounded-[2px] bg-[#FF453A]/10 border border-[#FF453A]/25 px-1.5 font-mono text-[8px] font-medium text-[#FF453A]">
+          <Badge className="h-[14px] rounded-[2px] bg-[#FF453A]/10 border border-[#FF453A]/25 px-1.5 font-mono text-[10px] font-medium text-[#FF453A]">
             {meta?.displayName || agentId}
           </Badge>
-          <span className="font-mono text-[8px] text-white/25">
+          <span className="font-mono text-[10px] text-white/25">
             <span className="text-white/40">C:</span>
             {fgBgContrast}:1
           </span>
-          <span className="font-mono text-[8px] text-white/25">
+          <span className="font-mono text-[10px] text-white/25">
             <span className="text-white/40">H:</span>
             {Math.round(proposal.sourceHue)}°
           </span>
@@ -217,30 +221,30 @@ function ProposalCard({
             size="sm"
             variant="ghost"
             onClick={() => onPreview(agentId, proposal.palette)}
-            className="h-5 gap-1 rounded-[2px] px-1.5 font-mono text-[8px] font-medium uppercase text-white/50 hover:bg-white/[0.06] hover:text-white/80"
+            className="h-5 gap-1 rounded-[2px] px-1.5 font-mono text-[10px] font-medium uppercase text-white/50 hover:bg-white/[0.06] hover:text-white/80"
           >
             <HugeIcon icon={ContrastIcon} className="size-2.5" />
-            预览
+            {t.studioFitPreview}
           </Button>
           {onApply && (
             <Button
               size="sm"
               variant="ghost"
               onClick={() => onApply(agentId, proposal.palette)}
-              className="h-5 gap-1 rounded-[2px] px-1.5 font-mono text-[8px] font-medium uppercase text-white/50 hover:bg-white/[0.06] hover:text-white/80"
+              className="h-5 gap-1 rounded-[2px] px-1.5 font-mono text-[10px] font-medium uppercase text-white/50 hover:bg-white/[0.06] hover:text-white/80"
             >
               <HugeIcon icon={SwatchIcon} className="size-2.5" />
-              应用
+              {t.studioFitApply}
             </Button>
           )}
           <Button
             size="sm"
             variant="ghost"
             onClick={() => onExport(agentId, proposal.palette)}
-            className="h-5 gap-1 rounded-[2px] px-1.5 font-mono text-[8px] font-medium uppercase text-white/50 hover:bg-white/[0.06] hover:text-white/80"
+            className="h-5 gap-1 rounded-[2px] px-1.5 font-mono text-[10px] font-medium uppercase text-white/50 hover:bg-white/[0.06] hover:text-white/80"
           >
             <HugeIcon icon={SwatchIcon} className="size-2.5" />
-            导出
+            {t.studioFitExport}
           </Button>
         </div>
       </div>
@@ -253,6 +257,7 @@ function ProposalCard({
 // ---------------------------------------------------------------------------
 
 interface FitGeneratorPanelProps {
+  t: UiMessages;
   onClose?: () => void;
   onPreviewPalette?: (agentId: string, palette: Record<string, string>) => void;
   onPaletteApply?: (agentId: string, palette: Record<string, string>) => void;
@@ -273,6 +278,7 @@ function paletteToAgentSkinRoot(palette: Record<string, string>): Record<string,
 }
 
 export function FitGeneratorPanel({
+  t,
   onClose,
   onPreviewPalette,
   onPaletteApply,
@@ -289,6 +295,7 @@ export function FitGeneratorPanel({
   const [generating, setGenerating] = useState(false);
 
   // --- Load profile when agent changes ---
+  // biome-ignore lint(correctness/useExhaustiveDependencies): t is a stable i18n table reference
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -301,7 +308,7 @@ export function FitGeneratorPanel({
           setProposals([]);
         }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : '加载 Profile 失败');
+        if (!cancelled) setError(e instanceof Error ? e.message : t.studioFitLoadProfileFailed);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -313,39 +320,40 @@ export function FitGeneratorPanel({
   }, [selectedAgent]);
 
   // --- Generate palettes ---
-  const cancelGenRef = useRef(false);
+  const generationIdRef = useRef(0);
   const genTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Cleanup timer on unmount or before new generation
+  // Cleanup timer + invalidate any pending generation on unmount
   useEffect(() => {
     return () => {
-      cancelGenRef.current = true;
+      generationIdRef.current++; // invalidate pending generation
       if (genTimerRef.current) clearTimeout(genTimerRef.current);
     };
   }, []);
 
+  // biome-ignore lint(correctness/useExhaustiveDependencies): t is a stable i18n table reference
   const handleGenerate = useCallback(() => {
     if (!profile) return;
-    // Cancel any previous pending generation
-    cancelGenRef.current = true;
+    // Increment generationId so any previous pending generation is stale
+    const thisGen = ++generationIdRef.current;
     if (genTimerRef.current) clearTimeout(genTimerRef.current);
-    // Start fresh
-    cancelGenRef.current = false;
     setGenerating(true);
     // Use setTimeout to allow UI to update before heavy computation
     genTimerRef.current = setTimeout(() => {
-      if (cancelGenRef.current) return;
+      if (thisGen !== generationIdRef.current) return; // stale
       try {
         const result = generatePalettes(profile as Parameters<typeof generatePalettes>[0], {
           count,
           scheme,
           seed: Math.floor(Math.random() * 2 ** 31),
         });
-        if (!cancelGenRef.current) setProposals(result);
+        if (thisGen !== generationIdRef.current) return; // stale after compute
+        setProposals(result);
       } catch (e) {
-        if (!cancelGenRef.current) setError(e instanceof Error ? e.message : '生成失败');
+        if (thisGen !== generationIdRef.current) return; // stale
+        setError(e instanceof Error ? e.message : t.studioFitGenerateFailed);
       } finally {
-        if (!cancelGenRef.current) setGenerating(false);
+        if (thisGen === generationIdRef.current) setGenerating(false);
       }
     }, 30);
   }, [profile, count, scheme]);
@@ -356,21 +364,21 @@ export function FitGeneratorPanel({
       const root = paletteToAgentSkinRoot(palette);
       const metaName = AGENT_META[agentId as AgentId]?.displayName || agentId;
       const themeData = {
-        meta: { name: `${metaName} 搭配`, author: 'AgentSkin Studio' },
+        meta: { name: `${metaName} ${t.studioFitThemeNameSuffix}`, author: 'AgentSkin Studio' },
         root,
       };
       try {
         const res = await api.exportVisualAnalysisTheme(agentId, themeData);
         if (res.ok && res.path) {
-          showToast(`已导出主题包到 ${res.path}`, 'default');
+          showToast(t.studioFitExportSuccess(res.path), 'default');
         } else {
-          showToast('导出失败：未生成主题包', 'destructive');
+          showToast(t.studioFitExportFailed, 'destructive');
         }
       } catch (e) {
-        showToast(`导出失败：${toMessage(e)}`, 'destructive');
+        showToast(t.studioFitExportError(toMessage(e)), 'destructive');
       }
     },
-    [showToast],
+    [showToast, t],
   );
 
   // --- Preview handler ---
@@ -444,7 +452,7 @@ export function FitGeneratorPanel({
           <span
             className={`font-mono text-[11px] font-semibold uppercase tracking-[0.12em] ${_v.t90}`}
           >
-            主题搭配
+            {t.studioFitTitle}
           </span>
           {!embedded && onClose && (
             <button
@@ -482,7 +490,7 @@ export function FitGeneratorPanel({
                     <span className={`block truncate font-mono text-[10px] font-medium ${_v.t85}`}>
                       {meta?.displayName ?? id}
                     </span>
-                    <span className={`block truncate font-mono text-[8px] ${_v.t30}`}>{id}</span>
+                    <span className={`block truncate font-mono text-[10px] ${_v.t30}`}>{id}</span>
                   </span>
                 </button>
               );
@@ -494,14 +502,14 @@ export function FitGeneratorPanel({
         <div className={`border-t ${_v.border} p-3 space-y-2`}>
           {/* Count selector */}
           <div>
-            <Kicker count={count}>方案数量</Kicker>
+            <Kicker count={count}>{t.studioFitCount}</Kicker>
             <div className="flex gap-1">
               {[3, 6, 9, 12].map((n) => (
                 <button
                   key={n}
                   type="button"
                   onClick={() => setCount(n)}
-                  className={`flex h-6 flex-1 items-center justify-center rounded-[2px] border font-mono text-[9px] font-medium transition-colors ${
+                  className={`flex h-6 flex-1 items-center justify-center rounded-[2px] border font-mono text-[10px] font-medium transition-colors ${
                     count === n
                       ? 'border-[#FF453A]/40 bg-[#FF453A]/15 text-[#FF453A]'
                       : embedded
@@ -527,7 +535,7 @@ export function FitGeneratorPanel({
             ) : (
               <HugeIcon icon={RefreshIcon} className="size-3" />
             )}
-            {generating ? '生成中…' : '随机搭配'}
+            {generating ? t.studioFitGenerating : t.studioFitRandom}
           </Button>
         </div>
 
@@ -536,40 +544,46 @@ export function FitGeneratorPanel({
           <div className={`border-t ${_v.border} px-3 py-2`}>
             <div className="grid grid-cols-2 gap-x-3 gap-y-1">
               {[
-                [
-                  'CSS变量',
-                  String(
+                {
+                  key: 'cssVars',
+                  label: t.studioFitCssVars,
+                  value: String(
                     (profile.stats as { rootVars?: { default?: number } } | undefined)?.rootVars
                       ?.default ?? '—',
                   ),
-                ],
-                [
-                  'DOM节点',
-                  String(
+                },
+                {
+                  key: 'domNodes',
+                  label: t.studioFitDomNodes,
+                  value: String(
                     (profile.stats as { domNodes?: { default?: number } } | undefined)?.domNodes
                       ?.default ?? '—',
                   ),
-                ],
-                [
-                  '样式变量',
-                  String(
+                },
+                {
+                  key: 'styleVars',
+                  label: t.studioFitStyleVars,
+                  value: String(
                     (profile.stats as { styleVars?: { neutral?: number } } | undefined)?.styleVars
                       ?.neutral ?? '—',
                   ),
-                ],
-                [
-                  '采样点',
-                  String(
+                },
+                {
+                  key: 'samples',
+                  label: t.studioFitSamples,
+                  value: String(
                     (profile.stats as { computedSamples?: { default?: number } } | undefined)
                       ?.computedSamples?.default ?? '—',
                   ),
-                ],
-              ].map(([label, val]) => (
-                <div key={label}>
-                  <span className={`font-mono text-[7.5px] uppercase tracking-wider ${_v.t25}`}>
+                },
+              ].map(({ key, label, value }) => (
+                <div key={key}>
+                  <span className={`font-mono text-[10px] uppercase tracking-wider ${_v.t25}`}>
                     {label}
                   </span>
-                  <span className={`ml-1 font-mono text-[9px] font-medium ${_v.t60}`}>{val}</span>
+                  <span className={`ml-1 font-mono text-[10px] font-medium ${_v.t60}`}>
+                    {value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -585,13 +599,13 @@ export function FitGeneratorPanel({
         {!loading && !profile && !error && (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
             <HugeIcon icon={SwatchIcon} className={`size-10 ${_v.t10}`} />
-            <p className={`font-mono text-[11px] ${_v.t30}`}>左侧选择一个 Agent 生成搭配方案</p>
+            <p className={`font-mono text-[11px] ${_v.t30}`}>{t.studioFitEmptyHint}</p>
           </div>
         )}
 
         {loading && (
           <div className="flex h-full items-center justify-center">
-            <span className={`font-mono text-[10px] ${_v.t30}`}>加载 Profile 中…</span>
+            <span className={`font-mono text-[10px] ${_v.t30}`}>{t.studioFitLoading}</span>
           </div>
         )}
 
@@ -608,7 +622,9 @@ export function FitGeneratorPanel({
               {/* Recommended */}
               {recommended.length > 0 && (
                 <section>
-                  <Kicker count={recommended.length}>推荐方案 · TOP {recommended.length}</Kicker>
+                  <Kicker count={recommended.length}>
+                    {t.studioFitRecommendedTopN(recommended.length)}
+                  </Kicker>
                   <div className="grid grid-cols-1 gap-2.5 xl:grid-cols-2">
                     {recommended.map((p, i) => (
                       <ProposalCard
@@ -620,6 +636,7 @@ export function FitGeneratorPanel({
                         onPreview={handlePreview}
                         onApply={handleApply}
                         onExport={handleExport}
+                        t={t}
                       />
                     ))}
                   </div>
@@ -629,7 +646,7 @@ export function FitGeneratorPanel({
               {/* Remaining */}
               {remaining.length > 0 && (
                 <section>
-                  <Kicker count={remaining.length}>更多方案</Kicker>
+                  <Kicker count={remaining.length}>{t.studioFitMoreOptions}</Kicker>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                     {remaining.map((p, i) => (
                       <ProposalCard
@@ -641,6 +658,7 @@ export function FitGeneratorPanel({
                         onPreview={handlePreview}
                         onApply={handleApply}
                         onExport={handleExport}
+                        t={t}
                       />
                     ))}
                   </div>
@@ -652,43 +670,49 @@ export function FitGeneratorPanel({
                 <section
                   className={`rounded-[2px] border ${_v.border} ${embedded ? 'bg-transparent' : 'bg-white/[0.015]'} p-3`}
                 >
-                  <Kicker>评分算法</Kicker>
+                  <Kicker>{t.studioFitScoringAlgorithm}</Kicker>
                   <div className="grid grid-cols-3 gap-3">
                     {[
                       {
-                        name: '对比度',
+                        key: 'contrast',
                         weight: '50%',
-                        desc: '前景/背景 WCAG ≥ 4.5',
+                        desc: t.studioFitContrastDesc,
                         score: proposals[0]?.score.contrast ?? 0,
                       },
                       {
-                        name: '和谐度',
+                        key: 'harmony',
                         weight: '30%',
-                        desc: 'HSL 配色理论一致性',
+                        desc: t.studioFitHarmonyDesc,
                         score: proposals[0]?.score.harmony ?? 0,
                       },
                       {
-                        name: '语义',
+                        key: 'semantic',
                         weight: '20%',
-                        desc: 'error=red / success=green / info=blue',
+                        desc: t.studioFitSemanticDesc,
                         score: proposals[0]?.score.semantic ?? 0,
                       },
                     ].map((s) => (
-                      <div key={s.name} className="text-center">
-                        <span className={`font-mono text-[8px] uppercase tracking-wider ${_v.t25}`}>
-                          {s.name}
+                      <div key={s.key} className="text-center">
+                        <span
+                          className={`font-mono text-[10px] uppercase tracking-wider ${_v.t25}`}
+                        >
+                          {s.key === 'contrast'
+                            ? t.studioFitContrast
+                            : s.key === 'harmony'
+                              ? t.studioFitHarmony
+                              : t.studioFitSemantic}
                         </span>
                         <div className={`mt-0.5 font-mono text-[13px] font-bold ${_v.t80}`}>
                           {Math.round(
-                            s.name === '对比度'
+                            s.key === 'contrast'
                               ? s.score * 0.5
-                              : s.name === '和谐度'
+                              : s.key === 'harmony'
                                 ? s.score * 0.3
                                 : s.score * 0.2,
                           )}
-                          <span className={`text-[9px] ${_v.t30}`}>/{s.weight}</span>
+                          <span className={`text-[10px] ${_v.t30}`}>/{s.weight}</span>
                         </div>
-                        <span className={`font-mono text-[7.5px] ${_v.t20}`}>{s.desc}</span>
+                        <span className={`font-mono text-[10px] ${_v.t20}`}>{s.desc}</span>
                       </div>
                     ))}
                   </div>
@@ -702,12 +726,9 @@ export function FitGeneratorPanel({
         {profile && proposals.length === 0 && !loading && !error && (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
             <HugeIcon icon={SwatchIcon} className={`size-10 ${_v.t10}`} />
-            <p className={`font-mono text-[11px] ${_v.t40}`}>
-              点击左侧「随机搭配」生成 {count} 套方案
-            </p>
-            <p className={`max-w-xs font-mono text-[9px] ${_v.t20}`}>
-              从 {AGENT_META[selectedAgent]?.displayName} 的 CDP 爬取数据中 提取配色
-              hue，基于互补、分裂互补、三元、类似、单色等 HSL 配色理论生成协调主题
+            <p className={`font-mono text-[11px] ${_v.t40}`}>{t.studioFitClickToGenerate(count)}</p>
+            <p className={`max-w-xs font-mono text-[10px] ${_v.t20}`}>
+              {t.studioFitExtractionDesc}
             </p>
           </div>
         )}

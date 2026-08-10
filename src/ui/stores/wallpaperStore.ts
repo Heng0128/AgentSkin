@@ -18,8 +18,9 @@
  * re-apply the wallpaper (theme apply clears per-agent wallpaper per
  * "last applied wins"). Previously this ran through a `wallpaperCompanionRef`
  * hack wired by useAppController; now wallpaperStore drives it directly via
- * `useThemeStore.getState()`. A module-level `companionBusy` flag guards
- * against the recursion that the re-apply would otherwise trigger.
+ * `useThemeStore.getState()`. A module-level `companionBusyByAgent` Set
+ * guards against the recursion that the re-apply would otherwise trigger,
+ * scoped per AgentId so concurrent agents do not steal each other's guard.
  */
 
 import { api } from '@/api/agentSkinClient';
@@ -51,8 +52,8 @@ function emptyAgentWallpapers(): Record<AgentId, WallpaperAgentSetting> {
   return result;
 }
 
-/** Recursion guard for the wallpaper → theme → wallpaper companion loop. */
-let companionBusy = false;
+/** Recursion guard for the wallpaper → theme → wallpaper companion loop (per-agent). */
+const companionBusyByAgent = new Set<AgentId>();
 
 interface WallpaperState {
   wallpapers: WallpaperInfo[];
@@ -198,25 +199,25 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
     }
     const result = await get().applyAgentWallpaper(appId, options);
 
-    if (result?.ok && nextEnabled && nextId && !companionBusy) {
+    if (result?.ok && nextEnabled && nextId && !companionBusyByAgent.has(appId)) {
       // pywal-style wallpaper→theme linkage: auto-extract a matching theme,
       // apply it, then re-apply the wallpaper (theme apply clears per-agent
       // wallpaper per "last applied wins"). Fire-and-forget: failures inside
       // never roll back the wallpaper apply, only reported via notification.
       try {
-        companionBusy = true;
+        companionBusyByAgent.add(appId);
         const theme = await api.extractThemeFromWallpaper(nextId);
         const applied = await useThemeStore
           .getState()
           .applyToApp(theme.id, theme.displayName, appId);
         if (applied) {
-          // Re-apply the wallpaper. companionBusy prevents re-entry.
+          // Re-apply the wallpaper. companionBusyByAgent prevents re-entry.
           await get().setAndApplyAgentWallpaper(appId, true, nextId, { render: options?.render });
         }
       } catch (error) {
         useNotificationStore.getState().fail(error);
       } finally {
-        companionBusy = false;
+        companionBusyByAgent.delete(appId);
       }
     }
 

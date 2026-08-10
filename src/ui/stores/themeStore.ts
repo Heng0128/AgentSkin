@@ -32,6 +32,7 @@ import type { AgentId, ThemeCatalogItem } from '@shared/types';
 import { create } from 'zustand';
 import { handleApplyResult } from '../hooks/apply-result';
 import type { RestartPrompt } from './dialogStore';
+import { withImportLock } from './import-guard';
 
 export type Selection = { kind: 'installed'; theme: ThemeCatalogItem } | null;
 
@@ -266,11 +267,20 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       const { fileImportPrompt, setFileImportPrompt } = useDialogStore.getState();
       const t = currentT();
       if (!fileImportPrompt) return;
+      const targetPath = fileImportPrompt.path;
       setFileImportPrompt(null);
-      const result = await withBusy('import', () => api.importThemeFromPath(fileImportPrompt.path));
-      if (!result) return;
-      await get().refreshThemes();
-      useNotificationStore.getState().showToast(t.importedTheme(result.theme.displayName));
+      const didAcquire = await withImportLock(targetPath, async () => {
+        const result = await withBusy('import', () => api.importThemeFromPath(targetPath));
+        if (!result) return;
+        await get().refreshThemes();
+        useNotificationStore.getState().showToast(t.importedTheme(result.theme.displayName));
+      });
+      if (!didAcquire) {
+        // Another store is already importing this same path — refresh the
+        // catalog in case the other side finished before we checked, but
+        // skip the IPC and the toast to avoid duplicate entries / alerts.
+        void get().refreshThemes();
+      }
     },
 
     dropThemeFiles: (files) => {

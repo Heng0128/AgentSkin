@@ -129,7 +129,7 @@ export function QuickEnvironmentCreate({
               key={id}
               type="button"
               className={cn(
-                'flex items-center gap-1 px-2 py-0.5 font-mono text-[9px]',
+                'flex items-center gap-1 px-2 py-0.5 font-mono text-[10px]',
                 isSelected
                   ? 'border border-primary bg-primary/10 text-primary'
                   : 'border border-border bg-muted text-muted-foreground',

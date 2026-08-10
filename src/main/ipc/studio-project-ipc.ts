@@ -83,6 +83,10 @@ function readProjectFile(file: string): StudioProject | null {
 function writeProject(project: StudioProject): void {
   ensureDir();
   const dir = path.join(PROJECTS_DIR, project.id);
+  // R6-1: 路径归属校验 — 防止 project.id 包含 ".." 或绝对路径导致写入
+  // PROJECTS_DIR 之外的任意位置（如被 XSS 利用写入系统目录）。
+  if (!dir.startsWith(`${PROJECTS_DIR}${path.sep}`))
+    throw new Error('Invalid project id: path traversal detected');
   fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, 'project.json');
   const tmp = `${file}.tmp`;

@@ -478,6 +478,26 @@ export interface AgentSkinApi {
   ): Promise<Array<{ id: string; channel: string; ms: number; timestamp: number }>>;
   /** Clear all stored IPC timeout events. Returns `{ ok: true }`. */
   clearPerformanceTimeouts(): Promise<{ ok: true }>;
+  /** Subscribe to live concurrency metrics pushed from the main process
+   *  every 5 seconds. The payload covers all 7 concurrency-subsystem maps/sets
+   *  (see ConcurrencyMetrics in diagnosticsStore / agent-engine-service).
+   *  Returns an unsubscribe function. No ipcMain.handle is registered —
+   *  this is a main->renderer push event sent via webContents.send. */
+  onDiagnosticsConcurrencyMetrics(
+    listener: (metrics: {
+      companionBusyByAgent: number;
+      inflightOperations: number;
+      selfHealingAgents: number;
+      capturedTokens: number;
+      persistChainDepth: number;
+      deferredSelfHeals: number;
+      switchEpochByAgent: number;
+    }) => void,
+  ): () => void;
+  /** Push renderer-side concurrency primitive sizes to the main process so
+   *  it can include them in the unified metrics broadcast. Fire-and-forget
+   *  (no ack). Called by the renderer's periodic self-report timer. */
+  sendRendererConcurrencyMetrics(companionBusy: number, switchEpoch: number): void;
   // --- Theme Studio: Wallpaper picker (workspace-scoped) ---
   /** List wallpapers for the Studio WALLPAPER tab. */
   listWallpapersForStudio(): Promise<

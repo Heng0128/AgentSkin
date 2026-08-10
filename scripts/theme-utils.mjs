@@ -54,6 +54,46 @@ export function rawRgb(input) {
 }
 
 // ---------------------------------------------------------------------------
+// Color fallbacks — used by buildContext to substitute missing/invalid colors
+// so downstream generators (tokenBlock, shellTokenOverrides, …) never crash
+// on a malformed value (H-6).
+// ---------------------------------------------------------------------------
+
+const COLOR_FALLBACKS = {
+  accent: '#4a90d9',
+  secondary: '#7a8a99',
+  background: '#1e1e1e',
+  foreground: '#e0e0e0',
+  muted: '#888888',
+  surface: '#2a2a2a',
+  surfaceElevated: '#333333',
+  border: '#4a90d92e',
+  codeBackground: '#161616',
+  codeForeground: '#cdd6e0',
+  inputBackground: '#2a2a2a',
+  buttonBackground: '#4a90d918',
+  buttonForeground: '#4a90d9',
+  focusRing: '#4a90d960',
+};
+
+const COLOR_KEYS = Object.keys(COLOR_FALLBACKS);
+
+/**
+ * Try to parse a color value, returning the parsed object on success or
+ * null on failure (logging a diagnostic warning).  Lets buildContext
+ * detect invalid colors and substitute a safe fallback instead of
+ * propagating the throw into the CSS generators.
+ */
+function tryParseColor(input, ctx) {
+  try {
+    return parseColor(input);
+  } catch {
+    console.warn(`theme-utils: ${ctx} invalid color "${input}", using fallback`);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Per-theme art overlay parameters (derived from color characteristics)
 // ---------------------------------------------------------------------------
 
@@ -457,13 +497,24 @@ ${host} [class*="modal"] {
 // ---------------------------------------------------------------------------
 
 export function buildContext(id, manifest, scheme = null) {
-  const colors = scheme?.colors ?? manifest.colors ?? {};
-  const required = ['accent', 'secondary', 'background', 'foreground', 'muted', 'surface',
-    'surfaceElevated', 'border', 'codeBackground', 'codeForeground', 'inputBackground',
-    'buttonBackground', 'buttonForeground', 'focusRing'];
-  for (const key of required) {
-    if (!colors[key]) throw new Error(`themes/${id}: missing colors.${key}`);
+  const inputColors = scheme?.colors ?? manifest.colors ?? {};
+
+  // H-7: only background + foreground are required (per THEME_SPEC).
+  if (!inputColors.background) throw new Error(`themes/${id}: missing colors.background (required)`);
+  if (!inputColors.foreground) throw new Error(`themes/${id}: missing colors.foreground (required)`);
+
+  // H-6: validate every color; missing or invalid values fall back to
+  // COLOR_FALLBACKS so no generator ever sees a malformed input.
+  const colors = {};
+  for (const key of COLOR_KEYS) {
+    const val = inputColors[key];
+    if (val && tryParseColor(val, `${id}/colors.${key}`)) {
+      colors[key] = val;
+    } else {
+      colors[key] = COLOR_FALLBACKS[key];
+    }
   }
+
   const mode = (scheme?.mode ?? manifest.mode) === 'light' ? 'light' : 'dark'; // auto → dark (dark canvas)
   return {
     id,

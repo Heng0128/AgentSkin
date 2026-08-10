@@ -529,6 +529,8 @@ async function getRootVariablesForTheme(client, scheme) {
   `;
   
   // 注入临时样式来模拟 prefers-color-scheme
+  // 安全转义：scheme 通过 JSON.stringify 注入，避免引号/特殊字符导致 JS 注入
+  const safeScheme = JSON.stringify(scheme);
   const injectExpr = `
     (() => {
       const id = '__as_temp_scheme__';
@@ -540,7 +542,7 @@ async function getRootVariablesForTheme(client, scheme) {
       }
       // 用 override 方式强制设置 data-theme 或类
       const html = document.documentElement;
-      if ('${scheme}' === 'dark') {
+      if (${safeScheme} === 'dark') {
         html.setAttribute('data-agentskin-scheme', 'dark');
         html.classList.add('__as_temp_dark__');
         html.classList.remove('__as_temp_light__');

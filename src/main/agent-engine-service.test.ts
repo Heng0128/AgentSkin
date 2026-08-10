@@ -139,7 +139,10 @@ describe('AgentEngineService (orchestration)', () => {
     vi.clearAllMocks();
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
     vi.mocked(probeAppStatus).mockImplementation(async (appId: AgentId) => makeAppStatus(appId));
-    vi.mocked(applyThemeFlow).mockResolvedValue(APPLY_RESPONSE);
+    vi.mocked(applyThemeFlow).mockResolvedValue({
+      response: APPLY_RESPONSE,
+      background: Promise.resolve(),
+    });
     vi.mocked(restoreThemeFlow).mockResolvedValue(STATUS);
     vi.mocked(writeJsonAtomic).mockResolvedValue(undefined);
     tmpDir = await mkdtemp(path.join(os.tmpdir(), 'agent-engine-svc-test-'));
@@ -267,7 +270,7 @@ describe('AgentEngineService (orchestration)', () => {
 
   describe('apply/restore concurrency', () => {
     it('deduplicates same-kind applies onto one in-flight flow', async () => {
-      const gate = deferred<ApplyResponse>();
+      const gate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
       vi.mocked(applyThemeFlow).mockReturnValue(gate.promise);
       const svc = makeService();
 
@@ -276,7 +279,7 @@ describe('AgentEngineService (orchestration)', () => {
       // 两个调用必须共享同一个 in-flight Promise，而不是触发第二次执行。
       expect(applyThemeFlow).toHaveBeenCalledTimes(1);
 
-      gate.resolve(APPLY_RESPONSE);
+      gate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
       const [r1, r2] = await Promise.all([p1, p2]);
       expect(r1).toBe(APPLY_RESPONSE);
       expect(r2).toBe(APPLY_RESPONSE);
@@ -288,7 +291,7 @@ describe('AgentEngineService (orchestration)', () => {
     });
 
     it('propagates a shared rejection to all deduplicated callers', async () => {
-      const gate = deferred<ApplyResponse>();
+      const gate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
       vi.mocked(applyThemeFlow).mockReturnValue(gate.promise);
       const svc = makeService();
 
@@ -299,13 +302,16 @@ describe('AgentEngineService (orchestration)', () => {
       await expect(p2).rejects.toThrow('boom');
 
       // 失败后 in-flight 必须已清理，新调用重新执行。
-      vi.mocked(applyThemeFlow).mockResolvedValue(APPLY_RESPONSE);
+      vi.mocked(applyThemeFlow).mockResolvedValue({
+        response: APPLY_RESPONSE,
+        background: Promise.resolve(),
+      });
       await expect(svc.apply(APPLY_REQUEST)).resolves.toBe(APPLY_RESPONSE);
       expect(applyThemeFlow).toHaveBeenCalledTimes(2);
     });
 
     it('queues restore behind an in-flight apply and keeps ordering deterministic', async () => {
-      const gate = deferred<ApplyResponse>();
+      const gate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
       vi.mocked(applyThemeFlow).mockReturnValue(gate.promise);
       const svc = makeService();
       const lines: string[] = [];
@@ -314,11 +320,11 @@ describe('AgentEngineService (orchestration)', () => {
       const applyPromise = svc.apply(APPLY_REQUEST);
       const restorePromise = svc.restore(TEST_APP);
 
-      // restore 必须等待，不能在 apply 完成前执行。
+      // restore 必须等待 apply cleanup（含 background），不能在 apply 完成前执行。
       expect(restoreThemeFlow).not.toHaveBeenCalled();
       expect(lines.some((l) => l.includes('queued behind'))).toBe(true);
 
-      gate.resolve(APPLY_RESPONSE);
+      gate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
       await applyPromise;
       await restorePromise;
 
@@ -469,6 +475,115 @@ describe('AgentEngineService (orchestration)', () => {
       // dispose 后仍可继续服务新请求（地图已清空，不会误判 in-flight）。
       await svc.apply(APPLY_REQUEST);
       expect(applyThemeFlow).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('cleanup 双 Promise 架构', () => {
+    it('apply 返回后 inflightOperations 条目仍存在，等待 background settle 后才清除', async () => {
+      // 使用真实定时器（其他测试可能用 fake timers，必须显式还原）
+      vi.useRealTimers();
+
+      // mock: response 立即 resolve，background 需要 50ms 才 settle
+      const backgroundPromise = new Promise<void>((resolve) => setTimeout(resolve, 50));
+      vi.mocked(applyThemeFlow).mockResolvedValue({
+        response: APPLY_RESPONSE,
+        background: backgroundPromise,
+      });
+
+      const svc = makeService();
+      const applyResult = await svc.apply(APPLY_REQUEST);
+
+      // apply 返回的必须是 response 对象本身
+      expect(applyResult).toBe(APPLY_RESPONSE);
+
+      // apply 刚 resolve，background 尚未 settle → inflightOperations 条目仍存在
+      // 通过再次 apply 触发相同 kind 去重来间接检查（若条目未清除，会走到 same-kind 分支）
+      const probePromise = svc.apply(APPLY_REQUEST);
+      // 去重分支直接共享原 promise，不会再次调用 applyThemeFlow
+      expect(applyThemeFlow).toHaveBeenCalledTimes(1);
+      // 共享的 promise resolve 后结果应该相同
+      expect(await probePromise).toBe(APPLY_RESPONSE);
+
+      // 清理这次 apply 触发的新条目（background 还是同一个）
+      // 实际验证：等待 background settle 后 + cleanup 微任务 flush  → 条目被删除
+      await backgroundPromise;
+      // flush 微任务：cleanup.finally() 需要在 background settle 后执行
+      await new Promise<void>(queueMicrotask);
+
+      // 现在 inflightOperations 已清除：下一次 apply 会触发全新的 applyThemeFlow 调用
+      vi.mocked(applyThemeFlow).mockClear();
+      await svc.apply(APPLY_REQUEST);
+      expect(applyThemeFlow).toHaveBeenCalledTimes(1);
+    });
+
+    it('background 异常抛出后 cleanup 仍 resolve (.catch + .finally 保证)', async () => {
+      vi.useRealTimers();
+
+      // mock: background 在 20ms 后 reject
+      const backgroundPromise = new Promise<void>((_, reject) =>
+        setTimeout(() => reject(new Error('background failure')), 20),
+      );
+      vi.mocked(applyThemeFlow).mockResolvedValue({
+        response: APPLY_RESPONSE,
+        background: backgroundPromise,
+      });
+
+      const svc = makeService();
+      const applyResult = await svc.apply(APPLY_REQUEST);
+
+      // promise 部分正常返回（background 的异常不应影响主 response）
+      expect(applyResult).toBe(APPLY_RESPONSE);
+
+      // 等待足够时间让 background reject + cleanup 链执行
+      await new Promise<void>((resolve) => setTimeout(resolve, 60));
+      // flush cleanup.finally() 微任务
+      await new Promise<void>(queueMicrotask);
+
+      // cleanup 已 resolve → inflightOperations 清除 → 下一次 apply 触发全新执行
+      vi.mocked(applyThemeFlow).mockClear();
+      await svc.apply(APPLY_REQUEST);
+      expect(applyThemeFlow).toHaveBeenCalledTimes(1);
+    });
+
+    it('same-kind 去重仍共享 promise 而非 cleanup', async () => {
+      vi.useRealTimers();
+
+      // mock: response 立即 resolve，background 50ms 后 settle
+      const backgroundPromise = new Promise<void>((resolve) => setTimeout(resolve, 50));
+      let callCount = 0;
+      vi.mocked(applyThemeFlow).mockImplementation(async () => {
+        callCount++;
+        return { response: APPLY_RESPONSE, background: backgroundPromise };
+      });
+
+      const svc = makeService();
+
+      // 第一次 apply → 调用 applyThemeFlow
+      const p1 = svc.apply(APPLY_REQUEST);
+      // 第二次相同 kind 的 apply → 必须共享同一个 promise，不触发新调用
+      const p2 = svc.apply(APPLY_REQUEST);
+      expect(callCount).toBe(1);
+
+      // 两者都必须 resolve 到同一个 response
+      const [r1, r2] = await Promise.all([p1, p2]);
+      expect(r1).toBe(APPLY_RESPONSE);
+      expect(r2).toBe(APPLY_RESPONSE);
+
+      // 去重语义验证：apply 是 async 函数，每次调用返回新包装 Promise，
+      // 但去重分支直接返回 existing.promise（resolve 到同一个 response）。
+      // 通过 applyThemeFlow 仅调用一次 + 两者 resolve 相同 response 来间接证明。
+      // 同时验证：background 尚未 settle 时，条目仍存在于 inflightOperations，
+      // 后续相同 kind 的 apply 仍触发去重路径（不触发新 applyThemeFlow）。
+      const p3 = svc.apply(APPLY_REQUEST);
+      expect(callCount).toBe(1);
+      expect(await p3).toBe(APPLY_RESPONSE);
+
+      // 等待 background + cleanup 完全 settle
+      await backgroundPromise;
+      await new Promise<void>(queueMicrotask);
+      // 清理微任务后再次 apply 触发全新调用
+      await svc.apply(APPLY_REQUEST);
+      expect(callCount).toBe(2);
     });
   });
 });

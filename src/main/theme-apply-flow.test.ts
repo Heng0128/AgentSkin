@@ -149,7 +149,7 @@ describe('applyThemeFlow', () => {
   describe('success path', () => {
     it('returns status=applied on successful adapter.applyTheme', async () => {
       const deps = makeDeps();
-      const response = await applyThemeFlow(makeRequest(), deps);
+      const { response } = await applyThemeFlow(makeRequest(), deps);
       expect(response.status).toBe('applied');
       expect(response.system).toBe(STATUS);
     });
@@ -237,7 +237,7 @@ describe('applyThemeFlow', () => {
     it('skips apply when isApplyingTheme returns true', async () => {
       const applyTheme = vi.fn(async () => makeApplySkinResult());
       const deps = makeDeps({ isApplyingTheme: true, applyThemeImpl: applyTheme });
-      const response = await applyThemeFlow(makeRequest(), deps);
+      const { response } = await applyThemeFlow(makeRequest(), deps);
       expect(response.status).toBe('applied');
       expect(applyTheme).not.toHaveBeenCalled();
       expect(deps.lockAgent).not.toHaveBeenCalled();
@@ -262,7 +262,7 @@ describe('applyThemeFlow', () => {
 
     it('returns requires-restart when resolveLivePort returns null', async () => {
       const deps = makeDeps({ resolveLivePort: null });
-      const response = await applyThemeFlow(
+      const { response } = await applyThemeFlow(
         makeRequest({ port: undefined, restartExisting: false }),
         deps,
       );
@@ -273,7 +273,7 @@ describe('applyThemeFlow', () => {
 
     it('uses ensureCdpReady when restartExisting is true', async () => {
       const deps = makeDeps({ ensureCdpPort: 9555 });
-      const response = await applyThemeFlow(
+      const { response } = await applyThemeFlow(
         makeRequest({ port: undefined, restartExisting: true }),
         deps,
       );
@@ -288,7 +288,7 @@ describe('applyThemeFlow', () => {
         ensureCdpPort: null,
         ensureCdpReason: 'singleton-lock',
       });
-      const response = await applyThemeFlow(
+      const { response } = await applyThemeFlow(
         makeRequest({ port: undefined, restartExisting: true }),
         deps,
       );
@@ -305,7 +305,7 @@ describe('applyThemeFlow', () => {
         });
       });
       const deps = makeDeps({ applyThemeImpl: applyTheme });
-      const response = await applyThemeFlow(makeRequest(), deps);
+      const { response } = await applyThemeFlow(makeRequest(), deps);
       expect(response.status).toBe('requires-restart');
       // Lock must still be released via the finally block.
       expect(deps.unlockAgent).toHaveBeenCalledTimes(1);
@@ -333,7 +333,7 @@ describe('applyThemeFlow', () => {
         });
       });
       const deps = makeDeps({ applyThemeImpl: applyTheme });
-      const response = await applyThemeFlow(makeRequest(), deps);
+      const { response } = await applyThemeFlow(makeRequest(), deps);
       expect(response.status).toBe('port-occupied');
       expect(deps.unlockAgent).toHaveBeenCalledTimes(1);
     });

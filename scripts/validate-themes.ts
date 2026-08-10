@@ -25,8 +25,9 @@ for (const d of dirs) {
   }
 }
 if (failed.length) {
-  console.log('FAILED validation:');
-  for (const f of failed) console.log('  ' + f);
+  console.error('FAILED validation:');
+  for (const f of failed) console.error('  ' + f);
+  process.exit(1);
 } else {
   console.log('All theme dirs pass validation.');
 }

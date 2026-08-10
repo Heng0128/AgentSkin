@@ -36,6 +36,7 @@ import {
   RefreshIcon,
 } from '@hugeicons/core-free-icons';
 import { toMessage } from '@shared/errors';
+import type { UiMessages } from '@shared/i18n';
 import type { ApplyRequest } from '@shared/types';
 
 // ---------------------------------------------------------------------------
@@ -59,7 +60,7 @@ interface BundleStatus {
 // Component
 // ---------------------------------------------------------------------------
 
-export function BundleStudioTab() {
+export function BundleStudioTab({ t }: { t: UiMessages }) {
   const showToast = useNotificationStore((s) => s.showToast);
   const activeAgent = useStudioStore((s) => s.getActiveProject()?.agentId ?? null);
   const [bundles, setBundles] = useState<BundleEntry[]>([]);
@@ -85,21 +86,24 @@ export function BundleStudioTab() {
     try {
       const result = await api.importBundle();
       if (result) {
-        showToast(`已安装 Bundle: ${result.name}`);
+        showToast(t.studioBundleInstalled(result.name));
         await refresh();
       }
     } catch (e) {
       const msg = toMessage(e);
-      showToast(`导入失败: ${msg}`, 'destructive');
+      showToast(t.studioBundleImportFailed(msg), 'destructive');
     }
-  }, [showToast, refresh]);
+  }, [showToast, refresh, t]);
 
   const handleInstall = useCallback(
     async (id: string) => {
       try {
         const res = await api.installBundleById(id);
         if (!res.ok) {
-          showToast(`安装失败: ${res.error ?? '未知错误'}`, 'destructive');
+          showToast(
+            t.studioBundleInstallFailed(res.error ?? t.studioBundleUnknownError),
+            'destructive',
+          );
           return;
         }
         // Install registers the theme into the library. If a studio project
@@ -112,20 +116,20 @@ export function BundleStudioTab() {
               appId: activeAgent,
             } as ApplyRequest);
             if (applyRes.status === 'applied' || applyRes.status === 'requires-restart') {
-              showToast(`Bundle ${id} 已安装并应用到 ${activeAgent}`);
+              showToast(t.studioBundleInstalledAndApplied(id, activeAgent));
               return;
             }
           } catch {
             /* fall through to the installed-only toast */
           }
         }
-        showToast(`Bundle ${id} 已安装到主题库`);
+        showToast(t.studioBundleInstalledToLibrary(id));
       } catch (e) {
         const msg = toMessage(e);
-        showToast(`安装失败: ${msg}`, 'destructive');
+        showToast(t.studioBundleInstallFailed(msg), 'destructive');
       }
     },
-    [showToast, activeAgent],
+    [showToast, activeAgent, t],
   );
 
   const handleReveal = useCallback(
@@ -134,24 +138,24 @@ export function BundleStudioTab() {
         await api.showInFolder(`bundles/${id}`);
       } catch (e) {
         // Folder may not exist yet (never exported), or the OS reveal failed.
-        showToast(`无法在文件夹中显示：${toMessage(e)}`, 'destructive');
+        showToast(t.studioBundleRevealFailed(toMessage(e)), 'destructive');
       }
     },
-    [showToast],
+    [showToast, t],
   );
 
   const handleDelete = useCallback(
     async (id: string) => {
       try {
         await api.deleteBundle(id);
-        showToast(`已删除: ${id}`);
+        showToast(t.studioBundleDeleted(id));
         await refresh();
       } catch (e) {
         const msg = toMessage(e);
-        showToast(`删除失败: ${msg}`, 'destructive');
+        showToast(t.studioBundleDeleteFailed(msg), 'destructive');
       }
     },
-    [showToast, refresh],
+    [showToast, refresh, t],
   );
 
   return (
@@ -163,7 +167,7 @@ export function BundleStudioTab() {
           className="font-mono text-[9.5px] font-semibold uppercase"
           style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)', opacity: 0.75 }}
         >
-          主题包 · BUNDLE WORKSPACE
+          {t.studioBundleKicker}
         </span>
       </div>
 
@@ -177,7 +181,7 @@ export function BundleStudioTab() {
           style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
         >
           <HugeIcon icon={Download01Icon} className="size-3" />
-          导入 .agentskin-bundle
+          {t.studioBundleImport}
         </Button>
         <Button
           size="sm"
@@ -188,24 +192,22 @@ export function BundleStudioTab() {
           style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
         >
           <HugeIcon icon={RefreshIcon} className="size-3" />
-          刷新
+          {t.studioBundleRefresh}
         </Button>
       </div>
 
       {/* Hint */}
       <p
-        className="px-4 pb-2 font-mono text-[9px] leading-relaxed"
+        className="px-4 pb-2 font-mono text-[10px] leading-relaxed"
         style={{ color: 'var(--muted-foreground)' }}
       >
-        Bundle 是主题 + 壁纸的组合包 (
-        <code style={{ color: 'var(--primary)' }}>.agentskin-bundle</code>)。 在 THEME
-        标签中导出主题后可在管理这里安装/分享。
+        {t.studioBundleHint}
       </p>
 
       {/* Error */}
       {status.error && (
         <div
-          className="mx-4 mb-2 border border-border bg-card p-2 font-mono text-[9px]"
+          className="mx-4 mb-2 border border-border bg-card p-2 font-mono text-[10px]"
           style={{ borderRadius: 'var(--radius)', color: 'var(--primary)' }}
         >
           {status.error}
@@ -217,10 +219,10 @@ export function BundleStudioTab() {
         {status.loading ? (
           <div className="flex h-20 items-center justify-center">
             <span
-              className="font-mono text-[9px] uppercase"
+              className="font-mono text-[10px] uppercase"
               style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
             >
-              加载中…
+              {t.studioBundleLoading}
             </span>
           </div>
         ) : bundles.length === 0 ? (
@@ -234,16 +236,16 @@ export function BundleStudioTab() {
               style={{ color: 'var(--muted-foreground)', opacity: 0.4 }}
             />
             <p
-              className="font-mono text-[9px] uppercase"
+              className="font-mono text-[10px] uppercase"
               style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
             >
-              暂无 Bundle
+              {t.studioBundleEmpty}
             </p>
             <p
-              className="mt-1 font-mono text-[8px]"
+              className="mt-1 font-mono text-[9.5px]"
               style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}
             >
-              点击「导入」添加 .agentskin-bundle 文件
+              {t.studioBundleEmptyHint}
             </p>
           </div>
         ) : (
@@ -267,42 +269,42 @@ export function BundleStudioTab() {
                     </div>
                     <div className="mt-1 flex items-center gap-2">
                       <span
-                        className="font-mono text-[8px]"
+                        className="font-mono text-[9.5px]"
                         style={{ color: 'var(--muted-foreground)' }}
                       >
                         {b.id}
                       </span>
                       {b.themeId && (
                         <span
-                          className="border border-border px-1 py-0 font-mono text-[7.5px] uppercase"
+                          className="border border-border px-1 py-0 font-mono text-[9.5px] uppercase"
                           style={{
                             borderRadius: '2px',
                             color: 'var(--muted-foreground)',
                             letterSpacing: '0.05em',
                           }}
-                          title="包含主题"
+                          title={t.studioBundleTagThemeTooltip}
                         >
-                          主题
+                          {t.studioBundleTagTheme}
                         </span>
                       )}
                       {b.hasWallpaper && (
                         <span
-                          className="border border-border px-1 py-0 font-mono text-[7.5px] uppercase"
+                          className="border border-border px-1 py-0 font-mono text-[9.5px] uppercase"
                           style={{
                             borderRadius: '2px',
                             color: 'var(--muted-foreground)',
                             letterSpacing: '0.05em',
                           }}
-                          title="包含壁纸"
+                          title={t.studioBundleTagWallpaperTooltip}
                         >
-                          壁纸
+                          {t.studioBundleTagWallpaper}
                         </span>
                       )}
                     </div>
                   </div>
                   {b.createdAt && (
                     <span
-                      className="shrink-0 font-mono text-[8px]"
+                      className="shrink-0 font-mono text-[9.5px]"
                       style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}
                     >
                       {new Date(b.createdAt).toLocaleDateString()}
@@ -316,25 +318,25 @@ export function BundleStudioTab() {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleInstall(b.id)}
-                    className="h-6 gap-1 px-1.5 font-mono text-[8.5px] uppercase"
+                    className="h-6 gap-1 px-1.5 font-mono text-[10px] uppercase"
                     style={{ letterSpacing: '0.05em', borderRadius: '2px' }}
                   >
-                    安装
+                    {t.studioBundleActionInstall}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleReveal(b.id)}
-                    className="h-6 gap-1 px-1.5 font-mono text-[8.5px] uppercase"
+                    className="h-6 gap-1 px-1.5 font-mono text-[10px] uppercase"
                     style={{ letterSpacing: '0.05em', borderRadius: '2px' }}
                   >
-                    定位
+                    {t.studioBundleActionReveal}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleDelete(b.id)}
-                    className="ml-auto h-6 gap-1 px-1.5 font-mono text-[8.5px] uppercase"
+                    className="ml-auto h-6 gap-1 px-1.5 font-mono text-[10px] uppercase"
                     style={{
                       letterSpacing: '0.05em',
                       borderRadius: '2px',
@@ -342,7 +344,7 @@ export function BundleStudioTab() {
                     }}
                   >
                     <HugeIcon icon={Delete01Icon} className="size-2.5" />
-                    删除
+                    {t.studioBundleActionDelete}
                   </Button>
                 </div>
               </div>

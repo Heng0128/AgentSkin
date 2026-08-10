@@ -179,7 +179,7 @@ export function InstallWizard({
     .slice(-50); // last 50 entries
 
   return (
-    <div className="animate-page-enter fixed bottom-4 left-1/2 z-[110] w-[480px] -translate-x-1/2 rounded-[2px] border bg-popover shadow-xl">
+    <div className="animate-page-enter fixed bottom-4 left-1/2 z-[110] w-[480px] -translate-x-1/2 rounded-[2px] border bg-popover shadow-float">
       {/* Header */}
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <img src={appIcon} alt="" className="size-6 rounded" draggable={false} />

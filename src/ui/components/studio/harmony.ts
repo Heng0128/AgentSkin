@@ -9,11 +9,19 @@
  * to feed straight into {@link setPaletteLoaded} so the editor preview updates.
  */
 
+/** i18n key in {@link UiMessages} used to render this harmony rule's name. */
+export type HarmonyName =
+  | 'harmonyComplementary'
+  | 'harmonyAnalogous'
+  | 'harmonyTriadic'
+  | 'harmonySplitComplementary'
+  | 'harmonyMonochromatic';
+
 export interface HarmonyPalette {
   /** Stable id (harmony name key). */
   id: string;
-  /** Human label, e.g. "互补". */
-  label: string;
+  /** i18n key — resolve via {@link UiMessages}[labelKey] at the call site. */
+  labelKey: HarmonyName;
   accent: string;
   background: string;
   foreground: string;
@@ -87,7 +95,12 @@ export function isDark(hex: string): boolean {
   return l < 50;
 }
 
-function buildPalette(id: string, label: string, accentHsl: Hsl, dark: boolean): HarmonyPalette {
+function buildPalette(
+  id: string,
+  labelKey: HarmonyName,
+  accentHsl: Hsl,
+  dark: boolean,
+): HarmonyPalette {
   const accent = hslToHex({
     ...accentHsl,
     s: clamp(accentHsl.s, 60, 92),
@@ -96,7 +109,7 @@ function buildPalette(id: string, label: string, accentHsl: Hsl, dark: boolean):
   if (dark) {
     return {
       id,
-      label,
+      labelKey,
       accent,
       background: '#0e0e13',
       foreground: '#ededf2',
@@ -105,7 +118,7 @@ function buildPalette(id: string, label: string, accentHsl: Hsl, dark: boolean):
   }
   return {
     id,
-    label,
+    labelKey,
     accent,
     background: '#f7f7fa',
     foreground: '#16161c',
@@ -121,10 +134,15 @@ function buildPalette(id: string, label: string, accentHsl: Hsl, dark: boolean):
 export function generateInspirations(baseAccent: string, dark: boolean): HarmonyPalette[] {
   const base = hexToHsl(baseAccent);
   return [
-    buildPalette('complementary', '互补', rotate(base, 180), dark),
-    buildPalette('analogous', '类似', rotate(base, 30), dark),
-    buildPalette('triadic', '三角', rotate(base, 120), dark),
-    buildPalette('split', '分裂互补', rotate(base, 150), dark),
-    buildPalette('monochrome', '单色', { ...base, s: clamp(base.s * 0.55, 20, 70) }, dark),
+    buildPalette('complementary', 'harmonyComplementary', rotate(base, 180), dark),
+    buildPalette('analogous', 'harmonyAnalogous', rotate(base, 30), dark),
+    buildPalette('triadic', 'harmonyTriadic', rotate(base, 120), dark),
+    buildPalette('split', 'harmonySplitComplementary', rotate(base, 150), dark),
+    buildPalette(
+      'monochrome',
+      'harmonyMonochromatic',
+      { ...base, s: clamp(base.s * 0.55, 20, 70) },
+      dark,
+    ),
   ];
 }

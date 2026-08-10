@@ -52,3 +52,6 @@ biome-out.txt
 test-output.txt
 *test-output.txt
 splash-preview.png
+
+# Blueprint — static HTML/CSS/JS visual reference (outside build/test scope)
+blueprint/

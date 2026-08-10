@@ -61,13 +61,13 @@ function SwissPanel({
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-border px-[14px] py-[9px]">
+      <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
         <span className="flex items-center gap-2 whitespace-nowrap font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
           {label}
         </span>
         {action}
       </div>
-      <div className="p-[14px]">{children}</div>
+      <div className="p-4">{children}</div>
     </div>
   );
 }
@@ -93,9 +93,9 @@ function QuickButton({
       disabled={disabled}
       className={cn(
         'group/qbtn relative flex flex-col items-start gap-1.5 overflow-hidden',
-        'rounded-[2px] border border-border bg-card2 px-3 py-[12px] pb-[10px]',
-        'text-left text-foreground transition-all duration-[180ms]',
-        'hover:-translate-y-0.5 hover:border-border-strong hover:shadow',
+        'rounded-[2px] border border-border bg-card2 px-3 py-3 pb-2',
+        'text-left text-foreground transition-[background-color,border-color] duration-[180ms]',
+        'hover:border-border-strong',
         disabled && 'pointer-events-none opacity-40',
       )}
     >
@@ -103,7 +103,7 @@ function QuickButton({
       <span className="absolute left-0 top-0 h-0 w-[3px] bg-primary transition-all duration-250 group-hover/qbtn:h-full" />
       <HugeIcon icon={Icon} size={14} className="text-muted-foreground/70" />
       <b className="text-[12px]">{label}</b>
-      {shortcut && <span className="font-mono text-[9px] text-[var(--dim)]">{shortcut}</span>}
+      {shortcut && <span className="font-mono text-[10px] text-[var(--dim)]">{shortcut}</span>}
     </button>
   );
 }
@@ -254,9 +254,9 @@ export function WorkspacePage({ controller }: { controller: AppController }) {
       {/* Content — EnvironmentGrid full-width (removed the hero banner and
           the demo DASHBOARD / ENGINE / LIVE FEED panels). */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="grid grid-cols-12 gap-3.5">
+        <div className="grid grid-cols-12 gap-4">
           {/* Environment grid — full width */}
-          <div className="col-span-12 flex flex-col gap-3.5">
+          <div className="col-span-12 flex flex-col gap-4">
             {showQuickCreate && (
               <QuickEnvironmentCreate
                 onCreated={handleQuickCreateSuccess}

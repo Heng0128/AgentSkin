@@ -131,8 +131,8 @@ export function WallpaperCard({
       style={{ animationDelay: `${Math.min(index * 40, 320)}ms` }}
       className={cn(
         'group relative flex flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-colors duration-fast animate-card-enter',
-        'hover:border-primary/40 hover:bg-card2 hover:shadow-sm',
-        selected && 'border-primary/60 shadow-sm',
+        'hover:border-primary/40 hover:bg-card2',
+        selected && 'border-primary/60',
       )}
     >
       <button type="button" onClick={onSelect} className="flex flex-1 flex-col">
@@ -144,7 +144,7 @@ export function WallpaperCard({
             mediaUrl={mediaUrl}
             previewUrl={wallpaper.previewUrl}
             loading={mediaLoading}
-            className="size-full object-cover transition-transform duration-slow group-hover:scale-[1.03]"
+            className="size-full object-cover"
             loadingNode={
               <div className="flex size-full items-center justify-center">
                 <Spinner className="size-5 text-muted-foreground/50" />
@@ -164,7 +164,7 @@ export function WallpaperCard({
             className="pointer-events-none absolute inset-0 flex items-end opacity-0 transition-opacity duration-fast group-hover:opacity-100"
             aria-hidden
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <div className="absolute inset-0 bg-black/60" />
             <span className="relative flex w-full items-center justify-between px-2.5 pb-2 font-mono text-[10px] tracking-wider text-popover-foreground/90">
               {wallpaper.type === 'video'
                 ? t.weTypeVideo
@@ -179,7 +179,7 @@ export function WallpaperCard({
           {/* Type badge (Swiss mono) */}
           <span
             className={cn(
-              'absolute bottom-1 right-1 flex items-center gap-0.5 rounded-[2px] px-1 py-0.5 font-mono text-[9px] tracking-wider',
+              'absolute bottom-1 right-1 flex items-center gap-0.5 rounded-[2px] px-1 py-0.5 font-mono text-[10px] tracking-wider',
               wallpaper.type === 'video'
                 ? 'bg-primary/85 text-primary-foreground'
                 : wallpaper.type === 'image'
@@ -203,19 +203,19 @@ export function WallpaperCard({
           </span>
           {/* UI background indicator (Swiss) */}
           {isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-[2px] bg-primary px-1 py-0.5 font-mono text-[8px] tracking-wider text-primary-foreground">
+            <span className="absolute left-1 top-1 rounded-[2px] bg-primary px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-primary-foreground">
               UI
             </span>
           )}
           {/* Preview-only badge (Swiss warning) */}
           {previewOnly && !isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-[2px] bg-cr-warning px-1 py-0.5 font-mono text-[8px] tracking-wider text-yellow-950">
+            <span className="absolute left-1 top-1 rounded-[2px] bg-cr-warning px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-yellow-950">
               PREVIEW
             </span>
           )}
           {/* Source badge for local imports (Swiss) */}
           {wallpaper.source === 'local' && (
-            <span className="absolute right-1 top-1 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[8px] tracking-wider text-muted-foreground">
+            <span className="absolute right-1 top-1 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-muted-foreground">
               LOCAL
             </span>
           )}
@@ -224,7 +224,7 @@ export function WallpaperCard({
         {/* Title (Swiss mono info) */}
         <div className="px-2 py-1.5">
           <p className="truncate font-display text-[11px] font-bold">{wallpaper.title}</p>
-          <p className="mt-0.5 font-mono text-[9px] tracking-wider text-muted-foreground">
+          <p className="mt-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
             {formatSize(wallpaper.sizeBytes)}
           </p>
         </div>
@@ -234,7 +234,7 @@ export function WallpaperCard({
       {deletable && (
         <div className="absolute left-1 bottom-1 opacity-0 transition-opacity duration-fast group-hover:opacity-100">
           {confirming ? (
-            <div className="flex items-center gap-0.5 rounded-[2px] bg-card px-1 py-0.5 shadow-md">
+            <div className="flex items-center gap-0.5 rounded-[2px] bg-card px-1 py-0.5">
               <button
                 type="button"
                 onClick={(e) => {
@@ -243,7 +243,7 @@ export function WallpaperCard({
                   setConfirming(false);
                 }}
                 disabled={isDeleting}
-                className="rounded-[2px] px-1 py-0.5 font-mono text-[9px] font-semibold tracking-wider text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                className="rounded-[2px] px-1 py-0.5 font-mono text-[10px] font-semibold tracking-wider text-destructive hover:bg-destructive/10 disabled:opacity-50"
               >
                 {isDeleting ? '…' : confirmLabel}
               </button>
@@ -253,7 +253,7 @@ export function WallpaperCard({
                   e.stopPropagation();
                   setConfirming(false);
                 }}
-                className="rounded-[2px] px-1 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground hover:bg-muted"
+                className="rounded-[2px] px-1 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground hover:bg-muted"
               >
                 ✕
               </button>
@@ -265,7 +265,7 @@ export function WallpaperCard({
                 e.stopPropagation();
                 setConfirming(true);
               }}
-              className="rounded-[2px] bg-card px-1.5 py-0.5 font-mono text-[9px] tracking-wider text-muted-foreground shadow-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-[2px] bg-card px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
               {deleteLabel}
             </button>

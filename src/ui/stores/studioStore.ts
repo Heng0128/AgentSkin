@@ -16,8 +16,10 @@ import { buildStudioPalette, mergeOverridesToSkinTokens } from '@/components/stu
 import type { PreviewView } from '@/components/studio/StudioCenterPanel';
 import type { ToolOverride } from '@/components/studio/Toolbox';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useShellStore } from '@/stores/shellStore';
 
 import { toMessage } from '@shared/errors';
+import { type UiMessages, uiMessages } from '@shared/i18n';
 import { semanticColorsToPalette } from '@shared/theme-mapping';
 import {
   AGENT_META,
@@ -28,6 +30,11 @@ import {
   type ThemeVisualSnapshot,
 } from '@shared/types';
 import { create } from 'zustand';
+
+/** Read current i18n message table (project-standard pattern from installFlowStore / environmentStore). */
+function currentT(): UiMessages {
+  return uiMessages[useShellStore.getState().locale];
+}
 
 export type ExportState = {
   loading: boolean;
@@ -152,8 +159,31 @@ interface StudioStoreState {
 }
 
 /** Async-lock guards: module-scoped (single studio window), not reactive state. */
-const inspectBusy = { current: false };
-const autoBaselineBusy = { current: false };
+const busyLocks = new Set<string>();
+
+/**
+ * Module-level cache for `getActiveProject` reference stability.
+ *
+ * `projects.find()` returns the same object reference when the projects array
+ * and activeProjectId are unchanged, but every `set()` call forces zustand
+ * to re-run subscribed selectors. By tracking the inputs and short-circuiting
+ * when they match, we guarantee a stable return identity, eliminating
+ * re-renders in downstream consumers that subscribe via
+ * `useStudioStore((s) => s.getActiveProject())`.
+ */
+let _projectsRef: StudioProject[] | undefined;
+let _lastActiveId: string | null | undefined;
+let _lastResult: StudioProject | null = null;
+
+function tryAcquireLock(key: string): boolean {
+  if (busyLocks.has(key)) return false;
+  busyLocks.add(key);
+  return true;
+}
+
+function releaseLock(key: string): void {
+  busyLocks.delete(key);
+}
 
 /**
  * Undo coalescing: rapid edits to the *same* override key within this window
@@ -220,7 +250,13 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
 
   getActiveProject: () => {
     const { projects, activeProjectId } = get();
-    return projects.find((p) => p.id === activeProjectId) ?? null;
+    if (projects === _projectsRef && activeProjectId === _lastActiveId) {
+      return _lastResult;
+    }
+    _projectsRef = projects;
+    _lastActiveId = activeProjectId;
+    _lastResult = projects.find((p) => p.id === activeProjectId) ?? null;
+    return _lastResult;
   },
 
   // ------------------------------------------------------------------
@@ -233,14 +269,24 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       const list = await api.listStudioProjects();
       set({ projects: list, activeProjectId: get().activeProjectId ?? list[0]?.id ?? null });
     } catch (e) {
-      showToast(`加载工程列表失败：${toMessage(e)}`, 'destructive');
+      showToast(currentT().studioLoadProjectsFailed(toMessage(e)), 'destructive');
     }
   },
 
   selectProject: (id) => {
     if (get().activeProjectId === id) return;
     undoCoalesce.key = null;
-    set({ activeProjectId: id, undoStack: [], redoStack: [] });
+    set({
+      activeProjectId: id,
+      undoStack: [],
+      redoStack: [],
+      pinnedSelectors: [],
+      pseudoStates: [],
+      customSelectorInput: '',
+      pseudoView: null,
+      schemeView: null,
+      inspectingIdx: null,
+    });
     void get().loadProjectSnapshots();
   },
 
@@ -263,7 +309,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       }));
       void get().loadProjectSnapshots();
     } catch (e) {
-      showToast(`创建工程失败：${toMessage(e)}`, 'destructive');
+      showToast(currentT().studioCreateProjectFailed(toMessage(e)), 'destructive');
     }
   },
 
@@ -277,11 +323,11 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
           projects: [p, ...s.projects.filter((x) => x.id !== p.id)],
           activeProjectId: p.id,
         }));
-        showToast(`已导入工程「${p.name}」`);
+        showToast(currentT().studioImportProjectSuccess(p.name));
         void get().loadProjectSnapshots();
       }
     } catch (err) {
-      showToast(`导入失败：${toMessage(err)}`, 'destructive');
+      showToast(currentT().studioImportProjectFailed(toMessage(err)), 'destructive');
     } finally {
       set({ importing: false });
     }
@@ -300,24 +346,35 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       });
       void get().loadProjectSnapshots();
     } catch (err) {
-      showToast(`删除工程失败：${toMessage(err)}`, 'destructive');
+      showToast(currentT().studioDeleteProjectFailed(toMessage(err)), 'destructive');
     }
   },
 
   renameProject: async (p, name, author) => {
     const showToast = useNotificationStore.getState().showToast;
+    // Snapshot rollback baseline before optimistic update.
+    const nameOut = name.trim() || p.name;
+    const authorOut = author.trim();
+    const prevName = p.name;
+    const prevAuthor = p.author;
     const next: StudioProject = {
       ...p,
-      name: name.trim() || p.name,
-      author: author.trim(),
+      name: nameOut,
+      author: authorOut,
       updatedAt: new Date().toISOString(),
     };
     set((s) => ({ projects: s.projects.map((x) => (x.id === p.id ? next : x)) }));
     try {
       await api.saveStudioProject(next);
-      showToast('已保存工程信息');
-    } catch {
-      showToast('保存失败', 'destructive');
+      showToast(currentT().studioProjectInfoSaved);
+    } catch (e) {
+      // Roll back optimistic mutation so the UI stays in sync with disk.
+      set((s) => ({
+        projects: s.projects.map((x) =>
+          x.id === p.id ? { ...x, name: prevName, author: prevAuthor } : x,
+        ),
+      }));
+      showToast(currentT().studioRenameFailed(toMessage(e)), 'destructive');
     } finally {
       set({ editingId: null });
     }
@@ -332,7 +389,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     try {
       await api.saveStudioProject(next);
     } catch (e) {
-      showToast(`保存失败：${toMessage(e)}`, 'destructive');
+      showToast(currentT().studioSaveFailed(toMessage(e)), 'destructive');
     }
   },
 
@@ -342,14 +399,14 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     undoCoalesce.key = null;
     set({ snapshot: null, inspectingIdx: null, undoStack: [], redoStack: [] });
     if (previewView === 'generator') set({ previewView: 'theme' });
-    if (inspectMode || inspectBusy.current) {
-      inspectBusy.current = true;
+    if (inspectMode || busyLocks.has('inspect')) {
+      busyLocks.add('inspect');
       try {
         await api.stopInspect();
       } catch {
         /* ignore */
       } finally {
-        inspectBusy.current = false;
+        releaseLock('inspect');
         set({ inspectMode: false, liveNode: null, liveError: null });
       }
     }
@@ -370,12 +427,12 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     try {
       const item = await api.catalog.themes.get(themeId);
       if (!item?.colors) {
-        showToast('该主题不包含可加载的调色板', 'destructive');
+        showToast(currentT().studioNoPalette, 'destructive');
         return;
       }
       const palette = semanticColorsToPalette(item.colors);
       if (Object.keys(palette).length === 0) {
-        showToast('该主题不包含可加载的调色板', 'destructive');
+        showToast(currentT().studioNoPalette, 'destructive');
         return;
       }
       const next = { ...project, palette, updatedAt: new Date().toISOString() };
@@ -383,11 +440,11 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       try {
         await api.saveStudioProject(next);
       } catch (e) {
-        showToast(`保存失败：${toMessage(e)}`, 'destructive');
+        showToast(currentT().studioSaveFailed(toMessage(e)), 'destructive');
       }
-      showToast(`已从「${item.name}」加载调色板`);
+      showToast(currentT().studioPaletteLoaded(item.name));
     } catch {
-      showToast('加载主题调色板失败', 'destructive');
+      showToast(currentT().studioLoadPaletteFailed, 'destructive');
     }
   },
 
@@ -405,6 +462,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       });
       return;
     }
+    const capturedId = project.id;
     const { id, agentId, name, author } = project;
     set((s) => ({
       snapshot: null,
@@ -421,6 +479,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
         api.loadStudioSnapshot(id, 'current'),
         api.loadStudioSnapshot(id, 'baseline'),
       ]);
+      if (get().activeProjectId !== capturedId) return;
       set((s) => ({
         snapshot: snap,
         snapshotLoading: false,
@@ -446,8 +505,8 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     const { agentId, id: projectId } = project;
     const { baselines, pseudoStates, captureSchemes } = get();
     if (baselines[agentId]) return;
-    if (autoBaselineBusy.current) return;
-    autoBaselineBusy.current = true;
+    if (busyLocks.has('baseline')) return;
+    busyLocks.add('baseline');
     set((s) => ({
       baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: true },
       baselineErrorMap: { ...s.baselineErrorMap, [agentId]: '' },
@@ -469,7 +528,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       }));
     } finally {
       set((s) => ({ baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: false } }));
-      autoBaselineBusy.current = false;
+      releaseLock('baseline');
     }
   },
 
@@ -515,7 +574,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
         snapshotError: `Snapshot failed: ${msg}`,
         snapshotThemeName: liveName,
       });
-      showToast('主题快照失败', 'destructive');
+      showToast(currentT().studioSnapshotFailed, 'destructive');
     }
   },
 
@@ -548,7 +607,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
         baselineErrorMap: { ...s.baselineErrorMap, [agentId]: `基线抓取失败：${msg}` },
         baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: false },
       }));
-      showToast('基线快照失败', 'destructive');
+      showToast(currentT().studioBaselineFailed, 'destructive');
     }
   },
 
@@ -558,9 +617,9 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     if (!project) return;
     try {
       await api.restoreApp(project.agentId);
-      showToast(`已恢复 ${AGENT_META[project.agentId].displayName} 原生界面`);
+      showToast(currentT().studioAgentRestored(AGENT_META[project.agentId].displayName));
     } catch {
-      showToast('恢复失败', 'destructive');
+      showToast(currentT().studioRestoreFailed, 'destructive');
     }
   },
 
@@ -593,18 +652,17 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
         signature: payload.signature,
         overrides: (toolOverrides ?? undefined) as Record<string, unknown> | undefined,
       });
-      showToast('主题包已导出');
+      showToast(currentT().studioExportDone);
     } catch (err) {
       const msg = toMessage(err);
       set({ exportState: { loading: false, dir: null, error: msg } });
-      showToast('导出失败', 'destructive');
+      showToast(currentT().studioExportFailed, 'destructive');
     }
   },
 
   toggleInspect: async () => {
     const showToast = useNotificationStore.getState().showToast;
-    if (inspectBusy.current) return;
-    inspectBusy.current = true;
+    if (!tryAcquireLock('inspect')) return;
     try {
       if (get().inspectMode) {
         try {
@@ -617,17 +675,17 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       }
       const project = get().getActiveProject();
       if (!project) {
-        showToast('进入检查模式失败', 'destructive');
+        showToast(currentT().studioEnterInspectFailed, 'destructive');
         return;
       }
       try {
         await api.startInspect(project.agentId);
         set({ inspectMode: true, liveNode: null, liveError: null });
       } catch {
-        showToast('进入检查模式失败', 'destructive');
+        showToast(currentT().studioEnterInspectFailed, 'destructive');
       }
     } finally {
-      inspectBusy.current = false;
+      releaseLock('inspect');
     }
   },
 
@@ -760,16 +818,18 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       } as ToolOverride,
       previewView: 'theme',
     }));
-    const project = get().getActiveProject();
-    if (project) {
-      void (async () => {
-        try {
-          await api.saveStudioProject({ ...project, palette });
-        } catch (e) {
-          showToast(`保存失败：${toMessage(e)}`, 'destructive');
-        }
-      })();
-    }
+    const capturedActiveId = get().activeProjectId;
+    void (async () => {
+      try {
+        const current = get().activeProjectId;
+        if (current !== capturedActiveId) return; // user switched away, abort save
+        const currentProject = get().getActiveProject();
+        if (!currentProject) return;
+        await api.saveStudioProject({ ...currentProject, palette });
+      } catch (e) {
+        showToast(currentT().studioSaveFailed(toMessage(e)), 'destructive');
+      }
+    })();
   },
 
   // ------------------------------------------------------------------

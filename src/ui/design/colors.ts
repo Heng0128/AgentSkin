@@ -33,14 +33,12 @@ export const semanticColors = {
   sidebarForeground: 'var(--sidebar-foreground)',
 } as const;
 
-/** Static brand palette — used where CSS variables don't reach (canvas, charts). */
+/** Static brand palette — used where CSS variables don't reach (canvas, charts).
+ *  Swiss rule: only brand red + semantic aliases. No violet/amber/rainbow. */
 export const brandColors = {
-  violet: '#7C3AED',
-  violetHover: '#6D28D9',
-  violetSoft: '#C4B5FD',
-  amber: '#F2B84B',
-  success: '#22C55E',
-  danger: '#EF4444',
+  amber: 'var(--cr-warning)',
+  success: 'var(--cr-success)',
+  danger: 'var(--destructive)',
 } as const;
 
 export type SemanticColor = keyof typeof semanticColors;

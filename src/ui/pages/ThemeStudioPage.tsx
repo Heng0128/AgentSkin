@@ -70,7 +70,7 @@ export function ThemeStudioPage({ t }: { t: UiMessages }) {
         }}
       >
         {/* LEFT PANEL (240px) — project rail + capture controls */}
-        <StudioLeftRail />
+        <StudioLeftRail t={t} />
 
         {/* CENTER PANEL (flex-1) — tabs + canvas + fingerprint */}
         <StudioCenterPanel t={t} />

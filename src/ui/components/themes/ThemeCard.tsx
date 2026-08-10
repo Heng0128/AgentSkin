@@ -34,7 +34,7 @@ export function ThemeCard({
         'group flex h-full flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-all duration-fast ease-out',
         selected
           ? 'border-primary/60 shadow-[inset_3px_0_0_var(--primary)]'
-          : 'hover:border-border-strong hover:-translate-y-0.5 hover:shadow-md',
+          : 'hover:border-border-strong',
       )}
     >
       {/* Preview — 16:9 aspect ratio */}
@@ -45,13 +45,13 @@ export function ThemeCard({
             alt={theme.name}
             loading="lazy"
             decoding="async"
-            className="size-full object-cover transition-transform duration-slower ease-out group-hover:scale-[1.02]"
+            className="size-full object-cover"
             onError={() => setImgError(true)}
           />
         ) : null}
         <div
           className={cn(
-            'absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/8 via-muted to-card text-muted-foreground',
+            'absolute inset-0 flex items-center justify-center bg-card2 text-muted-foreground',
             theme.preview && !imgError ? 'hidden' : 'flex',
           )}
         >
@@ -73,11 +73,11 @@ export function ThemeCard({
         {theme.mode && theme.mode !== 'auto' && (
           <span
             className={cn(
-              'absolute top-1.5 rounded-[2px] px-1 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider',
+              'absolute top-1.5 rounded-[2px] px-1 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider',
               isActive ? 'left-1.5' : 'right-1.5',
               theme.mode === 'dark'
                 ? 'bg-gray-900/80 text-gray-300'
-                : 'bg-amber-50/90 text-amber-900',
+                : 'bg-muted text-muted-foreground',
             )}
           >
             {theme.mode === 'dark' ? t.themeModeDark : t.themeModeLight}
@@ -98,7 +98,7 @@ export function ThemeCard({
 
         {/* Dynamic wallpaper indicator — bottom-right */}
         {theme.hasWallpaper && (
-          <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 rounded-[2px] bg-violet-500/80 px-1 py-0.5 font-mono text-[9px] font-medium text-violet-50">
+          <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 rounded-[2px] bg-card2 px-1 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
             <span className="relative flex size-1">
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-white/60" />
               <span className="relative inline-flex size-1 rounded-full bg-white" />
@@ -114,7 +114,7 @@ export function ThemeCard({
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="min-w-0 truncate text-[12px] font-medium tracking-[-0.01em]">{theme.name}</h3>
           {theme.version && (
-            <span className="shrink-0 font-mono text-[9px] tabular-nums text-muted-foreground/50">
+            <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground/50">
               v{theme.version}
             </span>
           )}
@@ -141,7 +141,7 @@ export function ThemeCard({
                 className={cn(
                   'flex size-[16px] items-center justify-center rounded-[2px] transition-all',
                   agentActive
-                    ? 'bg-cr-success/15 ring-1 ring-cr-success/30'
+                    ? 'bg-cr-success/15'
                     : 'ring-1 ring-border',
                 )}
               >
@@ -152,7 +152,7 @@ export function ThemeCard({
           {theme.tags.length > 0 && (
             <div className="ml-auto flex gap-0.5">
               {theme.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="outline" className="rounded-[2px] px-1.5 py-0.5 font-mono text-[9px] font-medium uppercase tracking-wider">{tag}</Badge>
+                <Badge key={tag} variant="outline" className="rounded-[2px] px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider">{tag}</Badge>
               ))}
             </div>
           )}

@@ -59,6 +59,7 @@ import type { ThemeEntry } from './theme-library';
 import {
   clearActiveWallpaperAgent,
   clearLastSuccessfulWallpaper,
+  getActiveMediaToken,
   getLastSuccessfulWallpaper,
   removeAllWallpapersFromAllTargets,
   setActiveMediaToken,
@@ -68,6 +69,7 @@ import {
 } from './wallpaper/injection-state';
 // Sub-module imports (types, target discovery, state management)
 import type { WallpaperApplyOptions, WallpaperInjectorDeps } from './wallpaper/injector-types';
+import { withExclusive } from './wallpaper/mutex';
 import {
   IMAGE_BLOB_FALLBACK_CAP,
   resolvePageTargets,
@@ -150,6 +152,182 @@ export function disposeAudioBroadcast(): void {
 }
 
 // ---------------------------------------------------------------------------
+// Deferred self-heal queue
+// ---------------------------------------------------------------------------
+//
+// When self-heal is triggered while another apply/restore operation is
+// in-flight for the same agent (deps.isApplyingTheme === true), the thunk
+// returned by recordInjectionFailure is enqueued here instead of being
+// executed immediately. A polling drain mechanism waits for the in-flight
+// operation to release its lock before executing.
+//
+// This prevents the zombie-state race: a self-heal thunk calling
+// restoreThemeFlow → removeAgentVideoWallpaper AFTER the real restore has
+// already cleared activeThemeId, which leaves CSS/钩子残留 in the DOM while
+// the UI falsely reports "no theme".
+
+/**
+ * appId → deferred self-heal thunk. Latest wins: a re-trigger for the same
+ * agent replaces the stale thunk rather than stacking duplicate work.
+ */
+const deferredSelfHeals = new Map<AgentId, () => Promise<void>>();
+
+/**
+ * appId → deps reference, captured at schedule time so the drain loop can
+ * re-check `isApplyingTheme` without a module-level singleton deps.
+ */
+const deferredSelfHealDeps = new Map<AgentId, WallpaperInjectorDeps>();
+
+/**
+ * appIds that currently have an active drain timer. Prevents duplicate
+ * polling timers for the same agent when multiple triggers arrive during
+ * a single in-flight window.
+ */
+const deferredSelfHealTimers = new Set<AgentId>();
+
+/** Polling interval while waiting for the in-flight op to release. */
+const DEFERRED_POLL_INTERVAL_MS = 100;
+/** Safety bound: stop polling after this many ms and execute anyway. */
+const DEFERRED_MAX_WAIT_MS = 10_000;
+
+/**
+ * Enqueue a self-heal thunk that should execute only when no apply/restore
+ * is in-flight for the given agent. If the current op releases before this
+ * fires, the thunk runs immediately.
+ */
+export function scheduleDeferredSelfHeal(
+  appId: AgentId,
+  action: () => Promise<void>,
+  deps: WallpaperInjectorDeps,
+): void {
+  deferredSelfHeals.set(appId, action);
+  deferredSelfHealDeps.set(appId, deps);
+
+  if (deferredSelfHealTimers.has(appId)) return; // drain already scheduled
+  deferredSelfHealTimers.add(appId);
+
+  const startedAt = Date.now();
+
+  const poll = async (): Promise<void> => {
+    const elapsed = Date.now() - startedAt;
+    const d = deferredSelfHealDeps.get(appId);
+
+    // Still under lock AND we haven't exceeded the safety bound → re-poll.
+    if (d && d.isApplyingTheme?.(appId) && elapsed < DEFERRED_MAX_WAIT_MS) {
+      setTimeout(poll, DEFERRED_POLL_INTERVAL_MS);
+      return;
+    }
+
+    // Either the lock has been released, deps is gone (cleanup), or we've
+    // waited long enough — drain this agent's pending thunk.
+    deferredSelfHealTimers.delete(appId);
+    const pending = deferredSelfHeals.get(appId);
+    if (!pending) return; // already drained by another path (e.g. explicit drain)
+    deferredSelfHeals.delete(appId);
+    deferredSelfHealDeps.delete(appId);
+
+    try {
+      await pending();
+    } catch {
+      // best-effort; the self-heal callback has its own internal error handling
+    }
+  };
+
+  // Start with setTimeout(0) so the current synchronous call stack can finish
+  // (the caller may still be mid-way through apply setup before locking).
+  setTimeout(poll, 0);
+}
+
+/**
+ * Drain ALL pending deferred self-heals immediately. Useful when callers
+ * know the in-flight operations have completed (e.g. after restoreAll, or
+ * on app shutdown). Best-effort — each thunk swallows its own errors.
+ */
+export function drainAllDeferredSelfHeals(): void {
+  for (const [appId] of deferredSelfHeals) {
+    deferredSelfHealTimers.delete(appId);
+    const pending = deferredSelfHeals.get(appId);
+    if (!pending) continue;
+    deferredSelfHeals.delete(appId);
+    deferredSelfHealDeps.delete(appId);
+    void pending().catch(() => {});
+  }
+}
+
+/**
+ * Test-only: clear all deferred self-heal state (maps + timers) without
+ * executing pending thunks. Ensures a clean slate between test cases.
+ */
+export function _resetDeferredSelfHealsForTest(): void {
+  deferredSelfHeals.clear();
+  deferredSelfHealDeps.clear();
+  deferredSelfHealTimers.clear();
+}
+
+// ---------------------------------------------------------------------------
+// Size getters for concurrency-metrics broadcast
+// ---------------------------------------------------------------------------
+//
+// These read-only accessors let the AgentEngineService collect observable
+// sizes from module-scoped Maps/Sets without breaking encapsulation.
+// Called every 5s by the periodic metrics timer (see agent-engine-service.ts).
+
+/** Number of agents with a pending deferred self-heal thunk awaiting lock release. */
+export function getDeferredSelfHealsSize(): number {
+  return deferredSelfHeals.size;
+}
+
+/** Number of agents whose media tokens have been captured for epoch-restore. */
+export function getCapturedTokensSize(): number {
+  return capturedTokens.size;
+}
+
+// ---------------------------------------------------------------------------
+// Token snapshot for epoch-cancellation restore
+// ---------------------------------------------------------------------------
+//
+// When injectAgentWallpaper starts, the current activeMediaToken is saved into
+// capturedTokens. If the injection is later cancelled by a new epoch AFTER a
+// setActiveMediaToken call has already cleared or replaced the old token
+// (mid-flight), the snapshot is restored so the old token isn't lost
+// irreversibly.
+//
+// Without this, the dangerous sequence is:
+//   1. waitForTargets → epoch check passes
+//   2. setActiveMediaToken(appId, null) clears old token (unregisters from media server)
+//   3. webUrlFor / register async call — user bumps epoch during this gap
+//   4. epoch check fails → return epoch-cancelled
+// The old token is gone from the map AND unregistered from the media server.
+// No newer operation can recover it, so the wallpaper session state is lost
+// and the media-server entry leaks (the unregister removed it from `entries`).
+//
+// With the snapshot: step 4 restores the old token via setActiveMediaToken,
+// ensuring the map is consistent and the next operation's setActiveMediaToken
+// call properly sees and unregisters the old token.
+
+/** appId → snapshot of activeMediaToken captured at injection start (before
+ *  any setActiveMediaToken call inside injectAgentWallpaper). `null` means
+ *  no token existed at snapshot time. Always deleted after use (either
+ *  restore or cleanup). */
+const capturedTokens = new Map<AgentId, string | null>();
+
+/**
+ * Restore the snapshot token captured at injection start, then remove the
+ * snapshot. Idempotent: if no snapshot exists (already restored, never
+ * captured, or cleaned up), this is a safe no-op.
+ *
+ * The restore uses setActiveMediaToken so that:
+ *   - If a new token was set during injection, it gets unregistered.
+ *   - If the old token was cleared, it's put back in the map.
+ */
+function restoreCapturedToken(appId: AgentId): void {
+  const snapshot = capturedTokens.get(appId);
+  if (snapshot === undefined) return; // no-op: idemopotent guard
+  setActiveMediaToken(appId, snapshot);
+  capturedTokens.delete(appId);
+}
+
+// ---------------------------------------------------------------------------
 // injectAgentWallpaper
 // ---------------------------------------------------------------------------
 
@@ -172,10 +350,22 @@ export async function injectAgentWallpaper(
   epoch: number,
   deps: WallpaperInjectorDeps,
 ): Promise<{ ok: boolean; detail?: string }> {
+  if (deps.isDisposed?.()) return { ok: false, detail: 'disposed' };
   if (!deps.wallpaperService) return { ok: false, detail: 'wallpaper-service-unavailable' };
   if (!deps.isEpochCurrent(appId, epoch)) return { ok: false, detail: 'epoch-cancelled' };
   // 非空局部：injectOne 闭包内 TypeScript 无法保持 narrowing，用这个引用。
   const _wallpaperService = deps.wallpaperService;
+
+  // SNAPSHOT the current activeMediaToken BEFORE any setActiveMediaToken call
+  // modifies it mid-injection. If epoch is cancelled AFTER a token-clearing
+  // step (lines ~336/397), restoreCapturedToken uses this snapshot to undo
+  // the modification — preventing the "epoch escape + token leak" race.
+  // Wrapped in withExclusive so a concurrent new-epoch setActiveMediaToken
+  // cannot interleave between our getActiveMediaToken read and our
+  // capturedTokens write (check-then-act on the shared appId key).
+  await withExclusive(appId, () => {
+    capturedTokens.set(appId, getActiveMediaToken(appId));
+  });
 
   // Resolve the media file path and type via the wallpaper service
   const info = await deps.wallpaperService.mediaInfoFor(wallpaperId);
@@ -206,7 +396,9 @@ export async function injectAgentWallpaper(
     // No page targets means no wallpaper can be displayed — release any
     // token held from a previous wallpaper so it doesn't leak in the
     // loopback server's entries Map.
-    setActiveMediaToken(appId, null);
+    await withExclusive(appId, () => {
+      setActiveMediaToken(appId, null);
+    });
     return { ok: false, detail: 'no-page-target' };
   }
   // Epoch cancelled: a newer apply/restore started during waitForTargets.
@@ -230,7 +422,9 @@ export async function injectAgentWallpaper(
     // wallpaper BEFORE attempting to resolve the web URL — if webUrlFor
     // fails or epoch is cancelled below, the previous token would leak
     // in the loopback server's entries Map forever.
-    setActiveMediaToken(appId, null);
+    await withExclusive(appId, () => {
+      setActiveMediaToken(appId, null);
+    });
     webUrl = await deps.wallpaperService.webUrlFor(wallpaperId);
     if (!webUrl) {
       // Scene wallpapers whose scene.pkg cannot be parsed/rendered (parse
@@ -240,9 +434,20 @@ export async function injectAgentWallpaper(
       // a failed render is a hard failure here. (Web wallpapers always
       // resolve a URL since index.html is served directly.)
       deps.log(`[wallpaper] ${appId}: failed to resolve web URL for "${wallpaperId}"`);
+      await withExclusive(appId, () => {
+        capturedTokens.delete(appId); // snapshot cleanup: token intentionally cleared at line 389
+      });
       return { ok: false, detail: 'web-url-resolve-failed' };
     }
-    if (!deps.isEpochCurrent(appId, epoch)) return { ok: false, detail: 'epoch-cancelled' };
+    // CRITICAL FIX: setActiveMediaToken(appId, null) at line 389 cleared the old
+    // token BEFORE this async webUrlFor awaited. If epoch was bumped during that
+    // await, the old token is now gone forever — restore it from the snapshot.
+    if (!deps.isEpochCurrent(appId, epoch)) {
+      await withExclusive(appId, () => {
+        restoreCapturedToken(appId);
+      });
+      return { ok: false, detail: 'epoch-cancelled' };
+    }
   }
 
   // GIF files are image-type wallpapers — browsers render animated GIFs
@@ -275,7 +480,9 @@ export async function injectAgentWallpaper(
     const mime = imageMimeForPath(info.path);
     const registered = await wallpaperMediaServer.register(info.path, mime);
     if (registered) {
-      setActiveMediaToken(appId, registered.token);
+      await withExclusive(appId, () => {
+        setActiveMediaToken(appId, registered.token);
+      });
       httpUrl = registered.url;
       httpMime = mime;
     }
@@ -283,7 +490,9 @@ export async function injectAgentWallpaper(
     const mime = videoMimeForPath(info.path);
     const registered = await wallpaperMediaServer.register(info.path, mime);
     if (registered) {
-      setActiveMediaToken(appId, registered.token);
+      await withExclusive(appId, () => {
+        setActiveMediaToken(appId, registered.token);
+      });
       httpUrl = registered.url;
       httpMime = mime;
     }
@@ -291,7 +500,9 @@ export async function injectAgentWallpaper(
     // Blob-only path (no HTTP token issued). Release any token held from a
     // previous HTTP-streamed wallpaper so the entries Map does not outlive
     // the wallpaper it serves.
-    setActiveMediaToken(appId, null);
+    await withExclusive(appId, () => {
+      setActiveMediaToken(appId, null);
+    });
   }
 
   // Inject into a single target's session. Returns { ok, verdict }.
@@ -428,6 +639,13 @@ export async function injectAgentWallpaper(
     try {
       await waitForPageReady(session, 10000, deps.log);
       if (!deps.isEpochCurrent(appId, epoch)) {
+        // Wrap in withExclusive so parallel targets' restoreCapturedToken
+        // calls (all triggered by the same epoch bump) are serialized —
+        // the check-then-act of get + setActiveMediaToken + delete must not
+        // interleave with another restore or a new epoch's setActiveMediaToken.
+        await withExclusive(appId, () => {
+          restoreCapturedToken(appId); // token may have been cleared/set during injection setup
+        });
         return { ok: false, verdict: 'epoch-cancelled' };
       }
       let { ok, verdict } = await injectOne(session);
@@ -437,6 +655,9 @@ export async function injectAgentWallpaper(
         );
         await new Promise((r) => setTimeout(r, 2000));
         if (!deps.isEpochCurrent(appId, epoch)) {
+          await withExclusive(appId, () => {
+            restoreCapturedToken(appId); // token may have been cleared/set during injection setup
+          });
           return { ok: false, verdict: 'epoch-cancelled' };
         }
         await waitForPageReady(session, 5000, deps.log);
@@ -495,13 +716,35 @@ export async function injectAgentWallpaper(
   // in the server. (Web/scene tokens are cached by the wallpaper service, not
   // here, so they are not released on injection failure — they'll be reused
   // on retry.)
-  if (!primaryOk && !isWeb && (useHttpImage || useHttpVideo)) setActiveMediaToken(appId, null);
+  if (!primaryOk && !isWeb && (useHttpImage || useHttpVideo)) {
+    await withExclusive(appId, () => {
+      setActiveMediaToken(appId, null);
+    });
+  }
 
   // Track video wallpapers for lifecycle pause/resume broadcast.
   // Web/scene wallpapers don't have a <video> element to pause, so they're
   // not tracked here (the iframe keeps running independently).
-  if (primaryOk && !isImage && !isWeb) setActiveWallpaperAgent(appId, port);
-  else clearActiveWallpaperAgent(appId);
+  if (primaryOk && !isImage && !isWeb) {
+    await withExclusive(appId, () => {
+      setActiveWallpaperAgent(appId, port);
+    });
+  } else {
+    await withExclusive(appId, () => {
+      clearActiveWallpaperAgent(appId);
+    });
+  }
+
+  // Injection settled — the current token state IS the correct state (either
+  // set by a successful injection, cleared by a failed-or-blob path at
+  // line ~654, or never touched). Discard the snapshot; no restore needed.
+  // Wrapped in withExclusive so this delete serializes with a parallel
+  // restoreCapturedToken still in flight from an epoch-cancelled target —
+  // prevents the final-clear from winning the race against a legitimate
+  // restore (which would re-clear the token to null and leak the new token).
+  await withExclusive(appId, () => {
+    capturedTokens.delete(appId);
+  });
 
   deps.log(
     `[wallpaper] ${appId}: ${info.type} wallpaper ${primaryOk ? 'injected' : 'failed'} [${verdicts.join(', ')}] (${path.basename(info.path)}, ${pageTargets.length} target${pageTargets.length === 1 ? '' : 's'})`,
@@ -556,17 +799,36 @@ export async function injectWithFallback(
 
   if (result.ok) {
     // Success — record this as the last successful wallpaper for fallback.
-    setLastSuccessfulWallpaper(appId, wallpaperId, options);
-    recordInjectionSuccess(appId);
+    // Wrapped in withExclusive so a concurrent removeWallpaperFromAgent
+    // cannot clear the entry between set and the next fallback read.
+    await withExclusive(appId, () => {
+      setLastSuccessfulWallpaper(appId, wallpaperId, options);
+      recordInjectionSuccess(appId);
+    });
     return result;
   }
 
   // Failure — attempt fallback to the last successful wallpaper.
-  const last = getLastSuccessfulWallpaper(appId);
+  // Read under the same lock so a concurrent clear cannot tear down the
+  // entry between our get and the subsequent injectAgentWallpaper fallback.
+  const last = await withExclusive(appId, () => getLastSuccessfulWallpaper(appId));
   if (!last || last.wallpaperId === wallpaperId) {
     // No previous wallpaper to fall back to, or it's the same wallpaper
     // that just failed (re-injecting the same thing won't help).
-    recordInjectionFailure(appId);
+    // Self-heal now returns a deferred thunk instead of fire-and-forget.
+    // If an apply/restore is in-flight for this agent, defer to the
+    // delayed queue to avoid racing the in-flight op (restore could have
+    // already cleared activeThemeId by the time self-heal runs).
+    // recordInjectionFailure mutates consecutiveFailures — wrap so concurrent
+    // calls cannot corrupt the read-modify-write.
+    const selfHealAction = await withExclusive(appId, () => recordInjectionFailure(appId));
+    if (selfHealAction && !deps.isDisposed?.()) {
+      if (deps.isApplyingTheme?.(appId)) {
+        scheduleDeferredSelfHeal(appId, selfHealAction, deps);
+      } else {
+        void selfHealAction().catch(() => {});
+      }
+    }
     return result;
   }
   if (!deps.isEpochCurrent(appId, epoch)) {
@@ -585,7 +847,9 @@ export async function injectWithFallback(
       deps.log(
         `[wallpaper] ${appId}: fallback wallpaper "${last.wallpaperId}" no longer exists, cannot recover`,
       );
-      clearLastSuccessfulWallpaper(appId);
+      await withExclusive(appId, () => {
+        clearLastSuccessfulWallpaper(appId);
+      });
       return result;
     }
   }
@@ -605,13 +869,24 @@ export async function injectWithFallback(
     deps.log(
       `[wallpaper] ${appId}: fallback to "${last.wallpaperId}" succeeded — agent page recovered from black screen`,
     );
-    recordInjectionSuccess(appId);
+    await withExclusive(appId, () => {
+      recordInjectionSuccess(appId);
+    });
     return { ok: true, detail: `fallback:${last.wallpaperId}` };
   }
   deps.log(
     `[wallpaper] ${appId}: fallback to "${last.wallpaperId}" also failed — agent page may be black`,
   );
-  recordInjectionFailure(appId);
+  // Self-heal returns a deferred thunk; same inflight-op guard as above.
+  // consecutiveFailures is mutated inside — wrap for the same reason.
+  const selfHealAction = await withExclusive(appId, () => recordInjectionFailure(appId));
+  if (selfHealAction && !deps.isDisposed?.()) {
+    if (deps.isApplyingTheme?.(appId)) {
+      scheduleDeferredSelfHeal(appId, selfHealAction, deps);
+    } else {
+      void selfHealAction().catch(() => {});
+    }
+  }
   return result;
 }
 
@@ -636,15 +911,26 @@ export async function injectAgentWallpaperFromApply(
   const resolved = await deps.resolveAgentWallpaperId(appId, entry);
   setWallpaperDeps(deps);
   if (!resolved.id) {
+    // [P1-FIX] Clear active wallpaper agent BEFORE async removal. If
+    // broadcast(true) (e.g. system resume) fires during removeAllWallpapers
+    // it must NOT see this agent in activeWallpaperAgents — otherwise it
+    // will try to openAgentWallpaperSession on a target being torn down,
+    // leaving a stale session reference.
+    await withExclusive(appId, () => {
+      clearActiveWallpaperAgent(appId);
+    });
     // No wallpaper configured — remove any stale wallpaper from ALL targets.
     // Injection iterates every compatible target, so removal must too.
     await removeAllWallpapersFromAllTargets(deps, appId, port);
     if (!deps.isEpochCurrent(appId, epoch)) return;
     // No wallpaper resolved for this apply → any previously-issued HTTP
     // token for this agent is now stale. Release it.
-    setActiveMediaToken(appId, null);
-    clearActiveWallpaperAgent(appId);
-    clearLastSuccessfulWallpaper(appId);
+    // Batch-wrapped so a concurrent apply cannot observe a partial clear
+    // (e.g. lastSuccessfulWallpaper cleared but activeMediaTokens not yet).
+    await withExclusive(appId, () => {
+      setActiveMediaToken(appId, null);
+      clearLastSuccessfulWallpaper(appId);
+    });
     return;
   }
   await injectWithFallback(
@@ -674,6 +960,14 @@ export async function removeAgentVideoWallpaper(
   deps: WallpaperInjectorDeps,
 ): Promise<void> {
   if (!deps.isEpochCurrent(appId, epoch)) return;
+  // [P1-FIX] Clear active wallpaper agent BEFORE async removal. If
+  // broadcast(true) (e.g. system resume) fires during removeAllWallpapers
+  // it must NOT see this agent in activeWallpaperAgents — otherwise it
+  // will try to openAgentWallpaperSession on a target being torn down,
+  // leaving a stale session reference.
+  await withExclusive(appId, () => {
+    clearActiveWallpaperAgent(appId);
+  });
   // Remove from ALL targets (injection iterates every compatible target,
   // so removal must too — otherwise wallpaper elements linger on secondary
   // targets like Doubao's background page or WorkBuddy's webviews).
@@ -683,9 +977,12 @@ export async function removeAgentVideoWallpaper(
   // underlying file path is no longer referenced. Without this, the
   // entries Map would accumulate one token per apply across the agent's
   // lifetime — see the `activeMediaTokens` docblock above.
-  setActiveMediaToken(appId, null);
-  clearActiveWallpaperAgent(appId);
-  clearLastSuccessfulWallpaper(appId);
+  // Batch-wrapped: a concurrent apply that just called setLastSuccessfulWallpaper
+  // must not see a partially-cleared state.
+  await withExclusive(appId, () => {
+    setActiveMediaToken(appId, null);
+    clearLastSuccessfulWallpaper(appId);
+  });
   deps.log(
     `[wallpaper] ${appId}: removed all wallpapers during restore (${cleaned} target${cleaned === 1 ? '' : 's'})`,
   );
@@ -743,6 +1040,14 @@ export async function applyAgentWallpaperNow(
 
   // No wallpaper → remove any existing wallpaper from ALL targets.
   if (!resolved.id) {
+    // [P1-FIX] Clear active wallpaper agent BEFORE async removal. If
+    // broadcast(true) (e.g. system resume) fires during removeAllWallpapers
+    // it must NOT see this agent in activeWallpaperAgents — otherwise it
+    // will try to openAgentWallpaperSession on a target being torn down,
+    // leaving a stale session reference.
+    await withExclusive(appId, () => {
+      clearActiveWallpaperAgent(appId);
+    });
     const cleaned = await removeAllWallpapersFromAllTargets(deps, appId, port);
     if (cleaned === 0) {
       // No targets found at all — check if any targets exist for a better error.
@@ -750,9 +1055,12 @@ export async function applyAgentWallpaperNow(
       if (targets.length === 0) return { ok: false, reason: 'no-page-target' };
     }
     // No wallpaper configured → any previously-issued HTTP token is stale.
-    setActiveMediaToken(appId, null);
-    clearActiveWallpaperAgent(appId);
-    clearLastSuccessfulWallpaper(appId);
+    // Batch-wrapped so a concurrent apply that set a new wallpaper cannot be
+    // partially wiped by these two clears racing its set.
+    await withExclusive(appId, () => {
+      setActiveMediaToken(appId, null);
+      clearLastSuccessfulWallpaper(appId);
+    });
     deps.log(`[wallpaper] ${appId}: removed (no wallpaper configured)`);
     return { ok: true };
   }
@@ -865,8 +1173,12 @@ export async function removeWallpaperFromAgent(
   const port = await deps.resolveLivePort(appId);
   if (!port) return { ok: true }; // Agent not running — preference cleared, done.
 
-  clearActiveWallpaperAgent(appId);
-  clearLastSuccessfulWallpaper(appId);
+  // Batch-wrapped: these clears race injectWithFallback's set path which
+  // calls setLastSuccessfulWallpaper for the same appId concurrently.
+  await withExclusive(appId, () => {
+    clearActiveWallpaperAgent(appId);
+    clearLastSuccessfulWallpaper(appId);
+  });
   const epoch = deps.bumpEpoch(appId);
   await removeAgentVideoWallpaper(appId, port, epoch, deps);
   return { ok: true };

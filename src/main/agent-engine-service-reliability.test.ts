@@ -27,6 +27,7 @@ import type {
 } from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
+import type { WallpaperInjectorDeps } from './wallpaper/injector-types';
 
 // ---------------------------------------------------------------------------
 // Mock modules (consistent with main test suite)
@@ -57,14 +58,22 @@ vi.mock('./cdp/injection/engine-strategy', () => ({
   cleanupEngineInjectionForAgent: vi.fn(),
   disposeEngineInjectionState: vi.fn(),
 }));
-vi.mock('./wallpaper/injection-state', () => ({
-  cleanupWallpaperStateForAgent: vi.fn(),
-  disposeWallpaperInjectionState: vi.fn(),
-}));
-vi.mock('./wallpaper-self-heal', () => ({
-  cleanupSelfHealForAgent: vi.fn(),
-  disposeSelfHealState: vi.fn(),
-}));
+vi.mock('./wallpaper/injection-state', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./wallpaper/injection-state')>();
+  return {
+    ...actual,
+    cleanupWallpaperStateForAgent: vi.fn(actual.cleanupWallpaperStateForAgent),
+    disposeWallpaperInjectionState: vi.fn(actual.disposeWallpaperInjectionState),
+  };
+});
+vi.mock('./wallpaper-self-heal', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./wallpaper-self-heal')>();
+  return {
+    ...actual,
+    cleanupSelfHealForAgent: vi.fn(actual.cleanupSelfHealForAgent),
+    disposeSelfHealState: vi.fn(actual.disposeSelfHealState),
+  };
+});
 vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
 
 // ---------------------------------------------------------------------------
@@ -100,6 +109,19 @@ function makeSettings(
   } as unknown as SettingsServiceApi & { logStructured?: (event: StructuredLogEvent) => void };
 }
 
+// Flush the microtask + macrotask queue so that the async cleanup chain
+// (`cleanup.finally` → `Map.delete`) has a chance to execute before any
+// assertion inspects the inflight map.
+//
+// Background: agent-engine-service deletes `inflightOperations` entries from
+// a `.finally()` attached to an internal `cleanup` promise that only resolves
+// after background follow-ups settle. A bare `await svc.apply()` resolves
+// the response promise but does NOT drain the follow-up finally-chain, so an
+// immediately-following assertion can still see a stale entry.
+function flushMicrotasks(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 function deferred<T>() {
   let resolve!: (v: T) => void;
   let reject!: (e: unknown) => void;
@@ -121,7 +143,10 @@ describe('AgentEngineService Reliability Verification', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
-    vi.mocked(applyThemeFlow).mockResolvedValue(APPLY_RESPONSE);
+    vi.mocked(applyThemeFlow).mockResolvedValue({
+      response: APPLY_RESPONSE,
+      background: Promise.resolve(),
+    });
     vi.mocked(restoreThemeFlow).mockResolvedValue(STATUS);
     tmpDir = await mkdtemp(path.join(os.tmpdir(), 'agent-rel-'));
     stateFile = path.join(tmpDir, 'state.json');
@@ -206,7 +231,7 @@ describe('AgentEngineService Reliability Verification', () => {
 
   describe('Concurrency final consistency', () => {
     it('deduplicates same-kind concurrent applies into one execution', async () => {
-      const gate = deferred<ApplyResponse>();
+      const gate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
       vi.mocked(applyThemeFlow).mockImplementation(() => gate.promise);
       const svc = makeService();
 
@@ -214,7 +239,7 @@ describe('AgentEngineService Reliability Verification', () => {
       const p2 = svc.apply(APPLY_REQUEST);
 
       // Both promises should resolve to the same result
-      gate.resolve(APPLY_RESPONSE);
+      gate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
 
       const [r1, r2] = await Promise.all([p1, p2]);
       expect(r1.status).toBe('applied');
@@ -225,17 +250,17 @@ describe('AgentEngineService Reliability Verification', () => {
     });
 
     it('queues restore behind in-flight apply with deterministic ordering', async () => {
-      const gate = deferred<ApplyResponse>();
+      const gate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
       vi.mocked(applyThemeFlow).mockImplementation(() => gate.promise);
       const svc = makeService();
 
       const applyPromise = svc.apply(APPLY_REQUEST);
       const restorePromise = svc.restore(TEST_APP);
 
-      // restore should wait for apply to complete
+      // restore should wait for apply cleanup (background follow-ups) to finish
       expect(restoreThemeFlow).not.toHaveBeenCalled();
 
-      gate.resolve(APPLY_RESPONSE);
+      gate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
       await applyPromise;
       await restorePromise;
 
@@ -271,12 +296,17 @@ describe('AgentEngineService Reliability Verification', () => {
 
       await svc.apply(APPLY_REQUEST);
 
-      // After completion, no in-flight operations should remain
+      // Wait for the async cleanup promise chain (.finally → Map.delete)
+      // to settle so the inflight entry is actually removed before we assert.
+      await flushMicrotasks();
+
+      // After completion (including background cleanup), no in-flight
+      // operations should remain
       const inflight = (
         svc as unknown as {
           inflightOperations: Map<
             AgentId,
-            { kind: 'apply' | 'restore'; promise: Promise<unknown> }
+            { kind: 'apply' | 'restore'; promise: Promise<unknown>; cleanup: Promise<void> }
           >;
         }
       ).inflightOperations;
@@ -294,7 +324,7 @@ describe('AgentEngineService Reliability Verification', () => {
         svc as unknown as {
           inflightOperations: Map<
             AgentId,
-            { kind: 'apply' | 'restore'; promise: Promise<unknown> }
+            { kind: 'apply' | 'restore'; promise: Promise<unknown>; cleanup: Promise<void> }
           >;
         }
       ).inflightOperations;
@@ -383,15 +413,27 @@ describe('AgentEngineService Reliability Verification', () => {
       const svc = makeService();
 
       // First apply succeeds
-      vi.mocked(applyThemeFlow).mockResolvedValueOnce(APPLY_RESPONSE);
+      vi.mocked(applyThemeFlow).mockResolvedValueOnce({
+        response: APPLY_RESPONSE,
+        background: Promise.resolve(),
+      });
       await svc.apply(APPLY_REQUEST);
+
+      // Flush the cleanup microtask chain so the inflight entry from the
+      // first apply is actually removed. Otherwise the second apply() will
+      // match the still-present entry via same-kind dedup and return the
+      // first apply's resolved promise instead of executing the failing mock.
+      await flushMicrotasks();
 
       // Second apply fails with an error
       vi.mocked(applyThemeFlow).mockRejectedValueOnce(new Error('CDP connection lost'));
       await expect(svc.apply({ ...APPLY_REQUEST, themeId: 't2' })).rejects.toThrow('CDP');
 
       // Service should still be operational after failure
-      vi.mocked(applyThemeFlow).mockResolvedValue(APPLY_RESPONSE);
+      vi.mocked(applyThemeFlow).mockResolvedValue({
+        response: APPLY_RESPONSE,
+        background: Promise.resolve(),
+      });
       await expect(svc.apply({ ...APPLY_REQUEST, themeId: 't3' })).resolves.toBeDefined();
     });
 
@@ -514,7 +556,10 @@ describe('AgentEngineService Reliability Verification', () => {
     it('allows service to track operations without error', async () => {
       const svc = makeService();
 
-      vi.mocked(applyThemeFlow).mockResolvedValue(APPLY_RESPONSE);
+      vi.mocked(applyThemeFlow).mockResolvedValue({
+        response: APPLY_RESPONSE,
+        background: Promise.resolve(),
+      });
       await svc.apply(APPLY_REQUEST);
 
       // Service should complete successfully
@@ -529,7 +574,10 @@ describe('AgentEngineService Reliability Verification', () => {
       await expect(svc.apply(APPLY_REQUEST)).rejects.toThrow();
 
       // Service should still be usable
-      vi.mocked(applyThemeFlow).mockResolvedValue(APPLY_RESPONSE);
+      vi.mocked(applyThemeFlow).mockResolvedValue({
+        response: APPLY_RESPONSE,
+        background: Promise.resolve(),
+      });
       await expect(svc.apply(APPLY_REQUEST)).resolves.toBeDefined();
     });
 
@@ -541,6 +589,143 @@ describe('AgentEngineService Reliability Verification', () => {
       expect(typeof svc.apply).toBe('function');
       expect(typeof svc.restore).toBe('function');
       expect(typeof svc.status).toBe('function');
+    });
+  });
+
+  // =========================================================================
+  // Section 8: Disposed Three-Layer Guard (Batch B)
+  // =========================================================================
+
+  describe('Disposed three-layer guard (Batch B)', () => {
+    let realInjectAgentWallpaper: typeof import('./wallpaper-injector')['injectAgentWallpaper'];
+    let realInjectWithFallback: typeof import('./wallpaper-injector')['injectWithFallback'];
+    let realRecordInjectionFailure: typeof import('./wallpaper-self-heal')['recordInjectionFailure'];
+    let realSetSelfHealCallback: typeof import('./wallpaper-self-heal')['setSelfHealCallback'];
+    let realDisposeSelfHealState: typeof import('./wallpaper-self-heal')['disposeSelfHealState'];
+    let realResetDeferredSelfHealsForTest: () => void;
+
+    beforeEach(async () => {
+      // importActual bypasses the vi.mock factory loaded above so we get the
+      // real guard code paths (the vi.mock stubs replace the whole module,
+      // erasing injectAgentWallpaper / injectWithFallback / recordInjectionFailure).
+      realInjectAgentWallpaper = (
+        await vi.importActual<typeof import('./wallpaper-injector')>('./wallpaper-injector')
+      ).injectAgentWallpaper;
+      realInjectWithFallback = (
+        await vi.importActual<typeof import('./wallpaper-injector')>('./wallpaper-injector')
+      ).injectWithFallback;
+      const selfHeal =
+        await vi.importActual<typeof import('./wallpaper-self-heal')>('./wallpaper-self-heal');
+      realRecordInjectionFailure = selfHeal.recordInjectionFailure;
+      realSetSelfHealCallback = selfHeal.setSelfHealCallback;
+      realDisposeSelfHealState = selfHeal.disposeSelfHealState;
+      realResetDeferredSelfHealsForTest = (
+        await vi.importActual<typeof import('./wallpaper-injector')>('./wallpaper-injector')
+      )._resetDeferredSelfHealsForTest;
+      // Reset module-scoped maps so FAILURE_THRESHOLD starts cold.
+      realDisposeSelfHealState();
+      realResetDeferredSelfHealsForTest();
+    });
+
+    afterEach(() => {
+      realDisposeSelfHealState();
+      realResetDeferredSelfHealsForTest();
+      realSetSelfHealCallback(async () => null);
+    });
+
+    it('injectAgentWallpaper returns { ok: false, detail: disposed } immediately when disposed', async () => {
+      // The isDisposed guard is line 1 in injectAgentWallpaper -- it must
+      // short-circuit BEFORE any wallpaperService / epoch / CDP interaction.
+      const result = await realInjectAgentWallpaper(TEST_APP, 9222, 'some-wallpaper-id', {}, 1, {
+        isDisposed: () => true,
+      } as unknown as WallpaperInjectorDeps);
+
+      expect(result.ok).toBe(false);
+      expect(result.detail).toBe('disposed');
+    });
+
+    it('injectWithFallback skips self-heal trigger when disposed even after 3 consecutive failures', async () => {
+      vi.useFakeTimers();
+      try {
+        let selfHealThunkExecuted = false;
+        realSetSelfHealCallback(async () => async () => {
+          selfHealThunkExecuted = true;
+        });
+
+        // Pre-seed 2 failures so the next call (issued internally by
+        // injectWithFallback) crosses FAILURE_THRESHOLD=3 and would
+        // normally produce a non-null selfHealAction thunk.
+        await realRecordInjectionFailure(TEST_APP); // count = 1
+        await realRecordInjectionFailure(TEST_APP); // count = 2
+
+        const deps = {
+          isDisposed: () => true,
+          isApplyingTheme: () => false,
+          isEpochCurrent: () => true,
+          wallpaperService: null, // -> 'wallpaper-service-unavailable'
+          bumpEpoch: () => 1,
+          resolveAgentWallpaperId: async () => ({ id: null }),
+          ensureCdpReady: async () => ({ port: 0, reason: 'test' }),
+          resolveLivePort: async () => null,
+          inferRestartReason: async () => 'no-cdp' as const,
+          findAgentTargets: async () => [],
+          setAgentWallpaper: async () => {},
+          log: () => {},
+        } as unknown as WallpaperInjectorDeps;
+
+        // injectWithFallback flow for a non-existent wallpaper id:
+        //   1. injectAgentWallpaper -> { ok: false, detail: 'disposed' }
+        //   2. No last-successful fallback -> recordInjectionFailure
+        //      (internal count crosses 3 -> returns a non-null thunk)
+        //   3. Guard !deps.isDisposed?.() -> false -> skip self-heal entirely
+        await realInjectWithFallback(TEST_APP, 9222, 'failing-wallpaper', {}, 1, deps);
+        await vi.advanceTimersByTimeAsync(50);
+
+        // The disposed guard must suppress the self-heal action entirely.
+        expect(selfHealThunkExecuted).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('does not crash when dispose interrupts in-flight background cleanup', async () => {
+      vi.useFakeTimers();
+      try {
+        const svc = makeService();
+
+        // Hand-gate the background follow-up promise so dispose() can fire
+        // while it is still in-flight (settlement deferred to us).
+        const backgroundGate = deferred<void>();
+        vi.mocked(applyThemeFlow).mockResolvedValue({
+          response: APPLY_RESPONSE,
+          background: backgroundGate.promise,
+        });
+
+        // applyResponse is resolved immediately; the internal cleanup promise
+        // stays pending until the background follow-up settles.
+        const applyPromise = svc.apply(APPLY_REQUEST);
+        await vi.advanceTimersByTimeAsync(0);
+
+        // Dispose now -- mid-flight (cleanup has NOT yet observed background).
+        svc.dispose();
+        const disposedFlag = (svc as unknown as { disposed: boolean }).disposed;
+        expect(disposedFlag).toBe(true);
+
+        // Settle the originally-pending background. The
+        //   void background.catch(() => undefined).finally(cleanupResolve)
+        // chain must be safe: dispose() already dropped the inflightOperations
+        // entry, so cleanup's Map.delete must be a no-op, not a crash.
+        backgroundGate.resolve();
+        await vi.advanceTimersByTimeAsync(0);
+
+        // apply() itself had already resolved with the response before dispose.
+        await expect(applyPromise).resolves.toBeDefined();
+
+        // Drain remaining timers -- any unhandledRejection surfaces here.
+        await vi.advanceTimersByTimeAsync(100);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 });

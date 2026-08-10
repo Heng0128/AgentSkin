@@ -70,13 +70,28 @@ export interface StartInspectOptions {
 export async function startInspect(opts: StartInspectOptions): Promise<InspectController> {
   const session = await connectEventCdp(opts.webSocketDebuggerUrl);
 
-  await session.send('DOM.enable');
-  await session.send('CSS.enable');
-  await session.send('Overlay.enable');
-  await session.send('Overlay.setInspectMode', {
-    mode: 'searchForNode',
-    highlightConfig: highlightConfig(),
-  });
+  // Race the CDP domain-enable sequence against an 8s timeout so a
+  // half-open WebSocket cannot hang the main process indefinitely. On
+  // timeout we close the session and let the error propagate to the caller.
+  const enablePromise = async (): Promise<void> => {
+    await session.send('DOM.enable');
+    await session.send('CSS.enable');
+    await session.send('Overlay.enable');
+    await session.send('Overlay.setInspectMode', {
+      mode: 'searchForNode',
+      highlightConfig: highlightConfig(),
+    });
+  };
+  const timeoutPromise = <T>(): Promise<T> =>
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('CDP domain enable timed out (8000ms)')), 8000),
+    );
+  try {
+    await Promise.race([enablePromise(), timeoutPromise<void>()]);
+  } catch (error) {
+    session.close();
+    throw error;
+  }
 
   const pickHandler = async (params: unknown) => {
     const backendNodeId = (params as { backendNodeId?: number }).backendNodeId;

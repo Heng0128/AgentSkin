@@ -26,6 +26,7 @@ import {
   updatePreset,
   upsertPreset,
 } from '@/storage/environment-store';
+import { useDialogStore } from '@/stores/dialogStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';
 import { useThemeStore } from '@/stores/themeStore';
@@ -50,7 +51,7 @@ function currentT() {
  * an older (slower) flow's `finally` clear the busy state while a newer flow
  * is still in flight, nor let the older apply after a newer supersedes it.
  */
-let switchEpoch = 0;
+const switchEpochByAgent = new Map<string, number>();
 
 // ---------------------------------------------------------------------------
 // State shape
@@ -108,7 +109,9 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   // -------------------------------------------------------------------
 
   switchEnvironment: async (env) => {
-    const myEpoch = ++switchEpoch;
+    const appId = env.agent.id;
+    const myEpoch = (switchEpochByAgent.get(appId) ?? 0) + 1;
+    switchEpochByAgent.set(appId, myEpoch);
     set({ switching: true, error: null });
 
     try {
@@ -130,25 +133,25 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
         }
         set({ presets: [...presets, newPreset] });
       }
-      if (myEpoch !== switchEpoch) return false;
+      if (myEpoch !== (switchEpochByAgent.get(appId) ?? 0)) return false;
 
       // --- Theme half ---
       if (env.theme) {
         const ok = await useThemeStore
           .getState()
           .applyToApp(env.theme.id, env.theme.name, env.agent.id as AgentId);
-        if (myEpoch !== switchEpoch) return false;
+        if (myEpoch !== (switchEpochByAgent.get(appId) ?? 0)) return false;
         if (!ok) return false;
       } else {
         // No theme = restore native theme.
         await useThemeStore.getState().restoreApp(env.agent.id as AgentId);
-        if (myEpoch !== switchEpoch) return false;
+        if (myEpoch !== (switchEpochByAgent.get(appId) ?? 0)) return false;
       }
 
       // --- Wallpaper half ---
       if (wallpaperId) {
         const wp = await api.applyWallpaperToAgent(wallpaperId, env.agent.id as AgentId);
-        if (myEpoch !== switchEpoch) return false;
+        if (myEpoch !== (switchEpochByAgent.get(appId) ?? 0)) return false;
         if (!wp.ok) {
           useNotificationStore
             .getState()
@@ -157,7 +160,15 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
       } else {
         // No wallpaper bound — clear any previously injected wallpaper.
         await api.removeWallpaperFromAgent(env.agent.id as AgentId);
-        if (myEpoch !== switchEpoch) return false;
+        if (myEpoch !== (switchEpochByAgent.get(appId) ?? 0)) return false;
+      }
+
+      // Clear any stale restart prompts from a superseded switch. Guarded
+      // by epoch so we never wipe a newer switch's prompt mid-flight.
+      if (myEpoch === (switchEpochByAgent.get(appId) ?? 0)) {
+        const { setRestartPrompt, setWallpaperRestartPrompt } = useDialogStore.getState();
+        setRestartPrompt(null);
+        setWallpaperRestartPrompt(null);
       }
 
       useNotificationStore.getState().showToast(currentT().switchSuccess(env.name));
@@ -169,7 +180,10 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
       return false;
     } finally {
       // Only the most recent switch may clear the busy state.
-      if (myEpoch === switchEpoch) set({ switching: false });
+      if (myEpoch === (switchEpochByAgent.get(appId) ?? 0)) {
+        set({ switching: false });
+        switchEpochByAgent.delete(appId);
+      }
     }
   },
 

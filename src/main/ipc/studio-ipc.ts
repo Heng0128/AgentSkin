@@ -21,7 +21,7 @@ import { pathToFileURL } from 'node:url';
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { AgentId, StudioSnapshotOptions, ThemeVisualSnapshot } from '../../shared/types';
-import { isIpcTimeoutError } from '../../shared/withTimeout';
+import { isIpcTimeoutError, withTimeout } from '../../shared/withTimeout';
 import { findDomTargets } from '../cdp/cdp-targets';
 import { type InspectController, startInspect } from '../cdp/inspect-session';
 import { snapshotThemeVisuals } from '../cdp/snapshot-theme';
@@ -249,8 +249,12 @@ export function registerStudioIpc(deps: {
           deps.log(
             `[studio] SNAPSHOT_BASELINE timed out — forcing re-apply of ${capturedPrevThemeId}`,
           );
-          await deps.applyTheme({ themeId: capturedPrevThemeId, appId: agentId }).catch((e) => {
-            deps.log(`[studio] CRITICAL: forced re-apply failed: ${String(e)}`);
+          await withTimeout(
+            'compensatory applyTheme',
+            5000,
+            deps.applyTheme({ themeId: capturedPrevThemeId, appId: agentId }),
+          ).catch((e) => {
+            deps.log(`[studio] CRITICAL: forced re-apply failed/timed out: ${String(e)}`);
           });
         }
         throw error; // continue propagating the timeout error to the renderer

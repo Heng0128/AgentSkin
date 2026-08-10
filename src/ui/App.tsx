@@ -173,7 +173,7 @@ export default function App() {
           <div
             key={toast.id}
             className={cn(
-              'fixed bottom-4 left-1/2 z-[100] -translate-x-1/2 rounded-full border px-4 py-2 text-sm shadow-lg',
+              'fixed bottom-4 left-1/2 z-[100] -translate-x-1/2 rounded-[2px] border px-4 py-2 text-sm shadow-float',
               toast.tone === 'destructive'
                 ? 'border-destructive/30 bg-destructive/10 text-destructive'
                 : 'border-border bg-popover text-popover-foreground',

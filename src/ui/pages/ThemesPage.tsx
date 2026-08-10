@@ -138,7 +138,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                 </SelectTrigger>
               </TooltipTrigger>
               <TooltipContent side="bottom" className="text-[10.5px]">
-                按名称、作者、分类或版本号排序
+                {t.studioSortHint}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -167,7 +167,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             aria-pressed={tc.sortOrder === 'asc'}
             className={cn(
               'h-[26px] rounded-[2px] px-2.5 text-xs font-medium transition-all duration-150',
-              'bg-card text-foreground shadow-sm',
+              'bg-card text-foreground',
             )}
           >
             <span className="font-mono">{tc.sortOrder === 'asc' ? '↑' : '↓'}</span>
@@ -178,7 +178,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         <Button
           size="sm"
           variant="ghost"
-          className="h-[30px] rounded-[2px] border border-border2 bg-card2 text-foreground transition-[border-color,color,transform] duration-150 hover:border-primary hover:text-primary hover:scale-[1.02]"
+          className="h-[30px] rounded-[2px] border border-border2 bg-card2 text-foreground transition-[border-color,color] duration-150 hover:border-primary hover:text-primary"
           disabled={controller.isInstalling}
           onClick={() => void controller.importTheme()}
         >
@@ -213,7 +213,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
               className={cn(
                 'h-[26px] rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
                 tc.selectedCategory === null
-                  ? 'bg-card text-foreground shadow-sm'
+                  ? 'bg-card text-foreground'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -227,7 +227,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                 className={cn(
                   'h-[26px] rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
                   tc.selectedCategory === cat
-                    ? 'bg-card text-foreground shadow-sm'
+                    ? 'bg-card text-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
               >
@@ -247,7 +247,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
               className={cn(
                 'h-[26px] rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
                 tc.modeFilter === m
-                  ? 'bg-card text-foreground shadow-sm'
+                  ? 'bg-card text-foreground'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
@@ -265,7 +265,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             className={cn(
               'inline-flex h-[26px] items-center gap-1 rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
               tc.dynamicFilter === 'dynamic'
-                ? 'bg-card text-foreground shadow-sm border border-border'
+                ? 'bg-card text-foreground border border-border'
                 : 'bg-muted text-muted-foreground hover:text-foreground border border-border',
             )}
           >
@@ -297,7 +297,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             </Badge>
           )}
           {activeThemeCount > 0 && (
-            <Badge variant="grn" data-icon="inline-start" className="gap-1">
+            <Badge variant="default" data-icon="inline-start" className="gap-1">
               {activeThemeCount} ACTIVE
             </Badge>
           )}
@@ -323,7 +323,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
 
       {/* Swiss metadata row — theme count + active palette info */}
       <div className="flex items-center gap-3 py-2">
-        <span className="font-mono text-[8.5px] uppercase tracking-[.18em] text-muted-foreground">
+        <span className="font-mono text-[10px] uppercase tracking-[.18em] text-muted-foreground">
           Library
         </span>
         <span className="font-mono text-xs tabular-nums text-foreground">

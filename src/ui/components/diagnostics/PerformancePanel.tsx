@@ -161,7 +161,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
               {t.settingsPerfRecentHistory}
             </span>
           </div>
-          <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/50">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/50">
             {traces.length}/{HISTORY_COUNT}
           </span>
         </div>
@@ -210,7 +210,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
             type="button"
             onClick={() => void storeClearTimeouts()}
             disabled={timeoutsLoading}
-            className="inline-flex items-center gap-1 rounded-[2px] border border-border bg-muted/30 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground hover:bg-muted disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-[2px] border border-border bg-muted/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-muted disabled:opacity-50"
             title={t.settingsPerfTimeoutClear}
           >
             {timeoutsLoading ? t.settingsPerfTimeoutClearing : t.settingsPerfTimeoutClear}
@@ -267,7 +267,7 @@ function StatCard({
     >
       <div className="flex items-center gap-1.5">
         <HugeIcon icon={icon} className="size-3 text-muted-foreground/70" />
-        <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
           {label}
         </span>
       </div>
@@ -275,7 +275,7 @@ function StatCard({
         <span className="font-display text-[20px] font-bold tabular-nums text-foreground">
           {value}
         </span>
-        {suffix && <span className="font-mono text-[9px] text-muted-foreground/50">{suffix}</span>}
+        {suffix && <span className="font-mono text-[10px] text-muted-foreground/50">{suffix}</span>}
       </div>
     </div>
   );
@@ -299,7 +299,7 @@ function PerAgentCard({
     >
       <div className="flex items-center gap-1.5">
         <HugeIcon icon={icon} className="size-3 text-muted-foreground/70" />
-        <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground/60">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
           {label}
         </span>
       </div>
@@ -312,7 +312,7 @@ function PerAgentCard({
               <span className="truncate font-mono text-[10px] text-muted-foreground/70">
                 {APP_META[agentId as keyof typeof APP_META]?.name ?? agentId}
               </span>
-              <span className="shrink-0 font-mono text-[11px] font-semibold tabular-nums text-foreground">
+              <span className="shrink-0 font-display text-[11px] font-semibold tabular-nums text-foreground">
                 {avgMs}ms
               </span>
             </div>
@@ -330,7 +330,7 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
   const agentName = APP_META[trace.agentId as keyof typeof APP_META]?.name ?? trace.agentId;
 
   return (
-    <tr className="border-b border-border/60 last:border-b-0 hover:bg-muted/20">
+    <tr className="border-b border-border last:border-b-0">
       <TD>
         <span className="font-mono text-[10px] text-muted-foreground/70" title={fullDate}>
           {timeLabel}
@@ -353,7 +353,7 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
             <span
               key={step.name}
               className={cn(
-                'inline-flex items-center rounded-[2px] border px-1 py-0 font-mono text-[9px] leading-4',
+                'inline-flex items-center rounded-[2px] border px-1 py-0 font-mono text-[10px] leading-4',
                 step.success
                   ? 'border-border bg-muted/30 text-muted-foreground/80'
                   : 'border-destructive/30 bg-destructive/10 text-destructive',
@@ -367,12 +367,12 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
       </TD>
       <TD className="text-center">
         {trace.success ? (
-          <span className="inline-flex size-4 items-center justify-center rounded-[2px] bg-cr-success/15 font-mono text-[9px] text-cr-success">
+          <span className="inline-flex size-4 items-center justify-center rounded-[2px] bg-cr-success/15 font-mono text-[10px] text-cr-success">
             ✓
           </span>
         ) : (
           <span
-            className="inline-flex size-4 items-center justify-center rounded-[2px] bg-destructive/15 font-mono text-[9px] text-destructive"
+            className="inline-flex size-4 items-center justify-center rounded-[2px] bg-destructive/15 font-mono text-[10px] text-destructive"
             title={trace.error ?? t.settingsPerfStatusFailed}
           >
             ✗
@@ -394,7 +394,7 @@ function TimeoutRow({
   const timeLabel = Number.isNaN(date.getTime()) ? '—' : format(date, 'HH:mm:ss');
 
   return (
-    <tr className="border-b border-border/60 last:border-b-0 hover:bg-muted/20">
+    <tr className="border-b border-border last:border-b-0">
       <TD>
         <span className="font-mono text-[10px] text-muted-foreground/70">{timeLabel}</span>
       </TD>
@@ -416,7 +416,7 @@ function TH({ children, className }: { children: React.ReactNode; className?: st
   return (
     <th
       className={cn(
-        'px-2 py-1.5 text-left font-mono text-[9px] uppercase tracking-wider text-muted-foreground/50',
+        'px-3 py-2 text-left text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground',
         className,
       )}
     >
@@ -441,7 +441,7 @@ function DurationBadge({ ms, success }: { ms: number; success: boolean }) {
         : 'text-cr-warning';
 
   return (
-    <span className={cn('font-mono text-[11px] font-semibold tabular-nums', tone)}>{ms}ms</span>
+    <span className={cn('font-display text-[11px] font-semibold tabular-nums', tone)}>{ms}ms</span>
   );
 }
 
@@ -462,7 +462,7 @@ function AppMarkSmall({ appId }: { appId: keyof typeof APP_META }) {
     return <img src={iconUrl} className="size-3.5 rounded-[2px]" width={14} height={14} alt="" />;
   }
   return (
-    <span className="inline-flex size-3.5 items-center justify-center rounded-[2px] bg-muted font-mono text-[7px] text-muted-foreground/50">
+    <span className="inline-flex size-3.5 items-center justify-center rounded-[2px] bg-muted font-mono text-[9.5px] text-muted-foreground/50">
       ?
     </span>
   );

@@ -129,7 +129,7 @@ export function AgentStatusBar({
         <h2 className="text-xs font-semibold tracking-tight text-muted-foreground uppercase">
           {t.workspaceAgentStrip}
         </h2>
-        <span className="inline-flex size-4 items-center justify-center rounded-md bg-secondary text-[9px] font-semibold text-muted-foreground">
+        <span className="inline-flex size-4 items-center justify-center rounded-md bg-secondary text-[11px] font-semibold text-muted-foreground">
           {environments.length}
         </span>
         {/* Live refresh indicator — relative timestamp + pulsing dot */}
@@ -137,10 +137,10 @@ export function AgentStatusBar({
           {isRefreshing ? (
             <>
               <span className="relative flex size-1.5">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-sky-400 opacity-75" />
-                <span className="relative inline-flex size-1.5 rounded-full bg-sky-400" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-muted-foreground/30 opacity-75" />
+                <span className="relative inline-flex size-1.5 rounded-full bg-muted-foreground/50" />
               </span>
-              <span className="text-sky-500">{t.statusDetecting}</span>
+              <span className="text-muted-foreground">{t.statusDetecting}</span>
             </>
           ) : agoLabel ? (
             <>
@@ -176,9 +176,9 @@ export function AgentStatusBar({
               : isDone
                 ? 'bg-cr-success'
                 : isActive
-                  ? 'bg-cr-success animate-breathe'
+                  ? 'bg-cr-success'
                   : isRunning
-                    ? 'bg-sky-400 animate-pulse'
+                    ? 'bg-muted-foreground/50'
                     : isDetecting
                       ? 'bg-cr-warning animate-pulse'
                       : isInstalled
@@ -198,19 +198,19 @@ export function AgentStatusBar({
               type="button"
               onClick={() => onSelectAgent?.(env)}
               className={cn(
-                'group/pill relative flex items-center gap-2 overflow-hidden rounded-lg border bg-card p-2 text-left',
-                'transition-all duration-base ease-out',
-                'hover:-translate-y-0.5 hover:shadow-sm hover:border-border/80',
-                hasLivePhase && 'border-cr-warning/30 ring-1 ring-cr-warning/15',
-                isFailed && 'border-destructive/30 ring-1 ring-destructive/15',
-                isActive && !hasLivePhase && 'border-cr-success/30 ring-1 ring-cr-success/15',
+                'group/pill relative flex items-center gap-2 overflow-hidden rounded-[2px] border bg-card p-2 text-left',
+                'transition-[border-color] duration-base ease-out',
+                'hover:border-border/80',
+                hasLivePhase && 'border-cr-warning/30',
+                isFailed && 'border-destructive/30',
+                isActive && !hasLivePhase && 'border-cr-success/30',
               )}
             >
               {/* App icon */}
               <div
                 className={cn(
                   'relative flex size-8 shrink-0 items-center justify-center rounded-md',
-                  'bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/10',
+                  'bg-accent',
                   'transition-transform duration-base group-hover/pill:scale-105',
                 )}
               >

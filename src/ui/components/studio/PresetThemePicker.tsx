@@ -37,6 +37,7 @@ import {
   Search01Icon,
 } from '@hugeicons/core-free-icons';
 import { toMessage } from '@shared/errors';
+import type { UiMessages } from '@shared/i18n';
 import { semanticColorsToPalette } from '@shared/theme-mapping';
 import type { AgentId, ApplyRequest, ThemeCatalogItem } from '@shared/types';
 
@@ -45,6 +46,8 @@ import type { AgentId, ApplyRequest, ThemeCatalogItem } from '@shared/types';
 // ---------------------------------------------------------------------------
 
 interface PresetThemePickerProps {
+  /** i18n messages object. */
+  t: UiMessages;
   /** Currently selected agent — APPLY injects the theme into this agent. */
   activeAgent: AgentId | null;
   /** Installed themes (from `catalog.themes.list()`). */
@@ -84,6 +87,7 @@ function swatchesFromTheme(theme: ThemeCatalogItem, n = 4): string[] {
 // ---------------------------------------------------------------------------
 
 export function PresetThemePicker({
+  t,
   activeAgent,
   themes,
   onPaletteLoaded,
@@ -113,20 +117,20 @@ export function PresetThemePicker({
     (theme: ThemeCatalogItem) => {
       const palette = semanticColorsToPalette(theme.colors as Record<string, unknown>);
       if (Object.keys(palette).length === 0) {
-        showToast(`「${theme.name}」无可载入的调色板`, 'destructive');
+        showToast(t.studioPresetNoPalette(theme.name), 'destructive');
         return;
       }
       onPaletteLoaded(palette);
-      showToast(`已载入「${theme.name}」的调色板`);
+      showToast(t.studioPresetPaletteLoaded(theme.name));
     },
-    [onPaletteLoaded, showToast],
+    [t, onPaletteLoaded, showToast],
   );
 
   // --- Apply theme to active agent ---
   const handleApply = useCallback(
     async (theme: ThemeCatalogItem) => {
       if (!activeAgent) {
-        showToast('请先选择一个 Agent', 'destructive');
+        showToast(t.studioPresetSelectAgentFirst, 'destructive');
         return;
       }
       setBusy(theme.id);
@@ -134,17 +138,17 @@ export function PresetThemePicker({
         const request: ApplyRequest = { themeId: theme.id, appId: activeAgent };
         const res = await api.applyTheme(request);
         if (res.status === 'applied') {
-          showToast(`「${theme.name}」已应用到 ${activeAgent}`);
+          showToast(t.studioPresetApplied(theme.name, activeAgent));
         } else if (res.status === 'requires-restart') {
-          showToast(`「${theme.name}」已排队 — 重启 ${activeAgent} 后生效`);
+          showToast(t.studioPresetQueued(theme.name, activeAgent));
         }
       } catch (e) {
-        showToast(`应用失败: ${toMessage(e)}`, 'destructive');
+        showToast(t.studioPresetApplyFailed(toMessage(e)), 'destructive');
       } finally {
         setBusy(null);
       }
     },
-    [activeAgent, showToast],
+    [t, activeAgent, showToast],
   );
 
   return (
@@ -157,10 +161,10 @@ export function PresetThemePicker({
             className="font-mono text-[9.5px] font-semibold uppercase"
             style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)', opacity: 0.75 }}
           >
-            预设主题 · PRESETS
+            {t.studioPresetTitle}
           </span>
           <span
-            className="ml-1 rounded-[2px] border border-white/[0.08] px-1 font-mono text-[7px] text-white/30"
+            className="ml-1 rounded-[2px] border border-white/[0.08] px-1 font-mono text-[9.5px] text-white/30"
             style={{ letterSpacing: '0.05em' }}
           >
             {filtered.length}
@@ -169,11 +173,11 @@ export function PresetThemePicker({
         <button
           type="button"
           onClick={onRefresh}
-          className="flex h-5 items-center gap-1 border border-border px-1.5 font-mono text-[8.5px] uppercase transition-colors hover:bg-accent"
+          className="flex h-5 items-center gap-1 border border-border px-1.5 font-mono text-[10px] uppercase transition-colors hover:bg-accent"
           style={{ letterSpacing: '0.06em', borderRadius: '2px', color: 'var(--muted-foreground)' }}
         >
           <HugeIcon icon={RefreshIcon} className="size-2.5" />
-          刷新
+          {t.studioPresetRefresh}
         </button>
       </div>
 
@@ -188,8 +192,8 @@ export function PresetThemePicker({
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="搜索主题 / 标签…"
-          className="h-5 flex-1 bg-transparent font-mono text-[9px] outline-none placeholder:text-white/20"
+          placeholder={t.studioPresetSearchPlaceholder}
+          className="h-5 flex-1 bg-transparent font-mono text-[10px] outline-none placeholder:text-white/20"
           style={{ color: 'var(--foreground)' }}
         />
       </div>
@@ -201,7 +205,7 @@ export function PresetThemePicker({
             key={m}
             type="button"
             onClick={() => setModeFilter(m)}
-            className="h-[18px] px-2 font-mono text-[8px] font-semibold uppercase"
+            className="h-[18px] px-2 font-mono text-[9.5px] font-semibold uppercase"
             style={{
               letterSpacing: '0.1em',
               borderRadius: '1px',
@@ -222,8 +226,8 @@ export function PresetThemePicker({
             style={{ borderRadius: 'var(--radius)' }}
           >
             <HugeIcon icon={AiMagicIcon} className="size-4 text-white/10" />
-            <span className="font-mono text-[8.5px]" style={{ color: 'var(--muted-foreground)' }}>
-              {themes.length === 0 ? '暂无已安装主题' : '无匹配主题'}
+            <span className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+              {themes.length === 0 ? t.studioPresetNoThemes : t.studioPresetNoMatch}
             </span>
           </div>
         ) : (
@@ -231,6 +235,7 @@ export function PresetThemePicker({
             {filtered.map((theme) => (
               <PresetCard
                 key={theme.id}
+                t={t}
                 theme={theme}
                 busy={busy === theme.id}
                 canApply={!!activeAgent}
@@ -250,6 +255,7 @@ export function PresetThemePicker({
 // ---------------------------------------------------------------------------
 
 interface PresetCardProps {
+  t: UiMessages;
   theme: ThemeCatalogItem;
   busy: boolean;
   canApply: boolean;
@@ -257,7 +263,7 @@ interface PresetCardProps {
   onApply: (theme: ThemeCatalogItem) => void;
 }
 
-function PresetCard({ theme, busy, canApply, onLoad, onApply }: PresetCardProps) {
+function PresetCard({ t, theme, busy, canApply, onLoad, onApply }: PresetCardProps) {
   const swatches = swatchesFromTheme(theme, 4);
   const isInstalled = theme.installed;
 
@@ -278,7 +284,7 @@ function PresetCard({ theme, busy, canApply, onLoad, onApply }: PresetCardProps)
         )}
         {/* Mode badge */}
         <span
-          className="absolute right-1 top-1 rounded-[2px] border border-white/[0.08] bg-black/50 px-1 font-mono text-[7px] uppercase"
+          className="absolute right-1 top-1 rounded-[2px] border border-white/[0.08] bg-black/50 px-1 font-mono text-[9.5px] uppercase"
           style={{ letterSpacing: '0.06em', color: 'white' }}
         >
           {theme.mode === 'dark' ? 'D' : theme.mode === 'light' ? 'L' : 'A'}
@@ -286,8 +292,8 @@ function PresetCard({ theme, busy, canApply, onLoad, onApply }: PresetCardProps)
         {/* Installed indicator */}
         {isInstalled && (
           <span
-            className="absolute left-1 top-1 flex size-3.5 items-center justify-center rounded-full bg-[#2ED573]/80"
-            title="已安装"
+            className="absolute left-1 top-1 flex size-3.5 items-center justify-center rounded-[2px] bg-[#2ED573]/80"
+            title={t.studioPresetInstalled}
           >
             <HugeIcon icon={CheckIcon} className="size-2 text-black/70" />
           </span>
@@ -297,7 +303,7 @@ function PresetCard({ theme, busy, canApply, onLoad, onApply }: PresetCardProps)
       {/* Info row */}
       <div className="flex flex-1 flex-col gap-1 p-1.5">
         <span
-          className="truncate font-mono text-[8.5px] font-medium"
+          className="truncate font-mono text-[10px] font-medium"
           style={{ color: 'var(--foreground)' }}
           title={theme.name}
         >
@@ -310,23 +316,23 @@ function PresetCard({ theme, busy, canApply, onLoad, onApply }: PresetCardProps)
             type="button"
             onClick={() => onLoad(theme)}
             disabled={busy}
-            className="flex h-[18px] flex-1 items-center justify-center gap-0.5 rounded-[2px] bg-[var(--primary)]/[0.08] font-mono text-[7.5px] font-medium uppercase transition-colors hover:bg-[var(--primary)]/15 disabled:opacity-40"
+            className="flex h-[18px] flex-1 items-center justify-center gap-0.5 rounded-[2px] bg-[var(--primary)]/[0.08] font-mono text-[9.5px] font-medium uppercase transition-colors hover:bg-[var(--primary)]/15 disabled:opacity-40"
             style={{ letterSpacing: '0.05em', color: 'var(--primary)' }}
-            title="载入调色板到编辑器"
+            title={t.studioPresetLoadTooltip}
           >
             <HugeIcon icon={Add01Icon} className="size-2" />
-            载入
+            {t.studioPresetLoad}
           </button>
           <button
             type="button"
             onClick={() => onApply(theme)}
             disabled={busy || !canApply}
-            className="flex h-[18px] flex-1 items-center justify-center gap-0.5 rounded-[2px] border border-white/[0.08] font-mono text-[7.5px] font-medium uppercase transition-colors hover:bg-white/[0.04] disabled:opacity-40"
+            className="flex h-[18px] flex-1 items-center justify-center gap-0.5 rounded-[2px] border border-white/[0.08] font-mono text-[9.5px] font-medium uppercase transition-colors hover:bg-white/[0.04] disabled:opacity-40"
             style={{ letterSpacing: '0.05em', color: 'var(--muted-foreground)' }}
-            title={canApply ? '应用主题到当前 Agent' : '请先选择 Agent'}
+            title={canApply ? t.studioPresetApplyTooltip : t.studioPresetApplySelectAgentFirst}
           >
             <HugeIcon icon={PaintBrushIcon} className="size-2" />
-            {busy ? '…' : '应用'}
+            {busy ? '…' : t.studioPresetApply}
           </button>
         </div>
       </div>

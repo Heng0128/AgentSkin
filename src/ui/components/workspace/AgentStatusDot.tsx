@@ -35,13 +35,12 @@ const DOT_STYLES: Record<AgentDotVariant, { dot: string; ping?: string }> = {
   },
   active: {
     dot: 'bg-cr-success',
-    // No ping — uses animate-breathe on the dot itself for a calmer feel.
   },
   available: {
-    dot: 'bg-sky-400 animate-pulse',
+    dot: 'bg-muted-foreground/50',
   },
   detecting: {
-    dot: 'bg-cr-warning animate-pulse',
+    dot: 'bg-cr-warning',
   },
   offline: {
     dot: 'bg-muted-foreground/25',

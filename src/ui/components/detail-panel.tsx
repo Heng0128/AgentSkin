@@ -240,7 +240,7 @@ function ColorSchemePicker({
               className={cn(
                 'flex items-center gap-1.5 rounded-[2px] border px-2 py-1 text-[11px] transition-colors',
                 selected
-                  ? 'border-primary bg-card text-foreground shadow-sm'
+                  ? 'border-primary bg-card text-foreground'
                   : 'border-border bg-background/50 text-muted-foreground hover:bg-background/80',
               )}
             >
@@ -328,7 +328,7 @@ export function DetailPanel({
         ) : theme.preview ? (
           <img src={theme.preview} alt={theme.name} className="size-full object-contain" />
         ) : (
-          <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-accent text-muted-foreground">
+          <div className="flex size-full items-center justify-center bg-muted text-muted-foreground">
             <HugeIcon icon={PaintBoardIcon} className="size-8 opacity-50" />
           </div>
         )}
@@ -343,7 +343,7 @@ export function DetailPanel({
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold tracking-[-0.015em]">{theme.name}</h2>
             {isDynamic && (
-              <Badge className="bg-violet-500/15 text-violet-600 dark:text-violet-400 px-1.5 py-0 text-[10px]">
+              <Badge className="bg-muted text-muted-foreground px-1.5 py-0 text-[10px]">
                 {t.themeDynamicBadge}
               </Badge>
             )}

@@ -60,10 +60,10 @@ function StatusRefreshLabel({
     return (
       <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/60">
         <span className="relative flex size-1.5">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-sky-400 opacity-75" />
-          <span className="relative inline-flex size-1.5 rounded-full bg-sky-400" />
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-muted-foreground/30 opacity-75" />
+          <span className="relative inline-flex size-1.5 rounded-full bg-muted-foreground/50" />
         </span>
-        <span className="text-sky-500">{t.statusDetecting}</span>
+        <span className="text-muted-foreground">{t.statusDetecting}</span>
       </span>
     );
   }

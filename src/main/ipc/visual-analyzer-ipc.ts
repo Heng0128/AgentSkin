@@ -217,10 +217,13 @@ export function registerVisualAnalyzerIpc(): void {
 
   // Subscribe to extraction progress events. Stub: no-op registration.
   //
-  // NOTE: The preload API subscribes via `ipcRenderer.on(IpcChannel.VISUAL_ANALYSIS_STATUS, ...)`
+  // ⟪SEND_ONLY⟫ — see the centralized annotation on IpcChannel.VISUAL_ANALYSIS_STATUS
+  // in src/shared/ipc-channels.ts. The preload API subscribes via
+  // `ipcRenderer.on(IpcChannel.VISUAL_ANALYSIS_STATUS, ...)`,
   // which expects main-process PUSH events (webContents.send), not invoke/handle request/response.
   // Registering `ipcMain.handle` here creates a channel direction mismatch — the renderer's
-  // subscription will never fire. The full implementation should emit progress via:
+  // subscription will never fire and any invoke() call hangs until timeout.
+  // The full implementation should emit progress via:
   //   webContents.send(IpcChannel.VISUAL_ANALYSIS_STATUS, { agent, step, progress })
   // Intentionally NO handle registered for this channel. The subscription stub lives in
   // the preload layer (returns a no-op unsubscribe) so renderer code does not crash.

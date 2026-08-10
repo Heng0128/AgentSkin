@@ -39,6 +39,7 @@ import {
   RefreshIcon,
   UploadSquareIcon,
 } from '@hugeicons/core-free-icons';
+import type { UiMessages } from '@shared/i18n';
 import { deriveTonalPalette, TONAL_STEPS } from '@shared/tonal-palette';
 import type { ImagePaletteKey } from '@shared/types';
 import { Kicker } from './kicker';
@@ -48,6 +49,8 @@ import { Kicker } from './kicker';
 // ---------------------------------------------------------------------------
 
 interface ImageToThemePanelProps {
+  /** Translation function — UiMessages from '@shared/i18n'. */
+  t: UiMessages;
   /** Called when the user accepts the generated palette. */
   onThemeGenerated: (palette: Record<string, string>) => void;
   /** Tightens padding/spacing for dense right-rail embed (default: false). */
@@ -84,37 +87,47 @@ const PALETTE_KEYS: ImagePaletteKey[] = [
 /** Token groups with Swiss mono labels — inspired by Tokens Studio for Figma */
 const PALETTE_GROUPS: Array<{
   id: string;
-  label: string;
+  labelKey: keyof UiMessages;
   keys: ImagePaletteKey[];
   defaultOpen: boolean;
 }> = [
   {
     id: 'core',
-    label: 'CORE · 核心',
+    labelKey: 'studioImageToThemeGroupCore',
     keys: ['accent', 'secondary', 'background', 'foreground'],
     defaultOpen: true,
   },
   {
     id: 'surface',
-    label: 'SURFACE · 表面',
+    labelKey: 'studioImageToThemeGroupSurface',
     keys: ['surface', 'surfaceElevated', 'border'],
     defaultOpen: true,
   },
-  { id: 'text', label: 'TEXT · 文本', keys: ['muted'], defaultOpen: true },
+  { id: 'text', labelKey: 'studioImageToThemeGroupText', keys: ['muted'], defaultOpen: true },
   {
     id: 'code',
-    label: 'CODE · 代码',
+    labelKey: 'studioImageToThemeGroupCode',
     keys: ['codeBackground', 'codeForeground'],
     defaultOpen: false,
   },
-  { id: 'input', label: 'INPUT · 输入', keys: ['inputBackground'], defaultOpen: false },
+  {
+    id: 'input',
+    labelKey: 'studioImageToThemeGroupInput',
+    keys: ['inputBackground'],
+    defaultOpen: false,
+  },
   {
     id: 'button',
-    label: 'BUTTON · 按钮',
+    labelKey: 'studioImageToThemeGroupButton',
     keys: ['buttonBackground', 'buttonForeground'],
     defaultOpen: false,
   },
-  { id: 'interaction', label: 'INTERACTION · 交互', keys: ['focusRing'], defaultOpen: false },
+  {
+    id: 'interaction',
+    labelKey: 'studioImageToThemeGroupInteraction',
+    keys: ['focusRing'],
+    defaultOpen: false,
+  },
 ];
 
 const PALETTE_LABELS: Record<ImagePaletteKey, string> = {
@@ -186,12 +199,14 @@ function SwatchRow({
   contrastLevel,
   expanded,
   onToggle,
+  expandTitle,
 }: {
   hex: string;
   label: string;
   contrastLevel?: WcagLevel;
   expanded?: boolean;
   onToggle?: () => void;
+  expandTitle?: string;
 }) {
   const safe = hex || '#333333';
   const badgeBg = contrastLevel ? WCAG_BG[contrastLevel] : undefined;
@@ -200,7 +215,7 @@ function SwatchRow({
       type="button"
       className={`flex w-full cursor-pointer items-center gap-2 border-0 py-[3px] text-left transition-colors ${expanded ? 'bg-white/[0.04]' : 'bg-transparent hover:bg-white/[0.02]'}`}
       onClick={onToggle}
-      title="点击展开颜色详情"
+      title={expandTitle}
     >
       <div
         className="size-[22px] shrink-0 rounded-[2px] border border-white/[0.06]"
@@ -208,13 +223,13 @@ function SwatchRow({
       />
       <div className="min-w-0 flex-1">
         <span
-          className="block truncate font-mono text-[9px] font-medium uppercase"
+          className="block truncate font-mono text-[10px] font-medium uppercase"
           style={{ letterSpacing: '0.06em', color: 'var(--foreground)' }}
         >
           {safe}
         </span>
         <span
-          className="block truncate font-mono text-[8px]"
+          className="block truncate font-mono text-[9.5px]"
           style={{ color: 'var(--muted-foreground)', opacity: 0.65 }}
         >
           {label}
@@ -222,7 +237,7 @@ function SwatchRow({
       </div>
       {contrastLevel && badgeBg && (
         <span
-          className="shrink-0 rounded-[2px] px-1 py-[1px] font-mono text-[7px] font-bold uppercase"
+          className="shrink-0 rounded-[2px] px-1 py-[1px] font-mono text-[9.5px] font-bold uppercase"
           style={{
             letterSpacing: '0.05em',
             color: '#000',
@@ -234,7 +249,7 @@ function SwatchRow({
           {contrastLevel}
         </span>
       )}
-      <span className="font-mono text-[8px]" style={{ color: textOn(safe), opacity: 0.5 }}>
+      <span className="font-mono text-[9.5px]" style={{ color: textOn(safe), opacity: 0.5 }}>
         {expanded ? '▴' : '●'}
       </span>
     </button>
@@ -245,7 +260,13 @@ function SwatchRow({
 // Color format converters (P0-3)
 // ---------------------------------------------------------------------------
 
-function SwatchDetailPanel({ hex }: { hex: string }) {
+function SwatchDetailPanel({
+  hex,
+  copyTitle,
+}: {
+  hex: string;
+  copyTitle?: (label: string) => string;
+}) {
   const [copied, setCopied] = useState<string | null>(null);
   useEffect(() => {
     if (!copied) return;
@@ -287,15 +308,18 @@ function SwatchDetailPanel({ hex }: { hex: string }) {
             onClick={() => handleCopy(f.value, f.label)}
             className="flex items-center justify-between gap-1 border border-white/[0.06] bg-white/[0.02] px-1.5 py-1 transition-colors hover:bg-white/[0.06]"
             style={{ borderRadius: '2px' }}
-            title={`复制 ${f.label}`}
+            title={copyTitle?.(f.label)}
           >
             <span
-              className="font-mono text-[7.5px] font-bold uppercase"
+              className="font-mono text-[9.5px] font-bold uppercase"
               style={{ letterSpacing: '0.06em', color: 'var(--muted-foreground)' }}
             >
               {f.label}
             </span>
-            <span className="truncate font-mono text-[8px]" style={{ color: 'var(--foreground)' }}>
+            <span
+              className="truncate font-mono text-[9.5px]"
+              style={{ color: 'var(--foreground)' }}
+            >
               {copied === f.label ? '✓' : f.value}
             </span>
           </button>
@@ -325,7 +349,11 @@ function PaletteStripe({ palette }: { palette: Record<string, string> }) {
 // Main component
 // ---------------------------------------------------------------------------
 
-export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageToThemePanelProps) {
+export function ImageToThemePanel({
+  t,
+  onThemeGenerated,
+  compact = false,
+}: ImageToThemePanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -379,9 +407,10 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
   }, [imagePreview]);
 
   // --- Core pipeline: file → base64 → IPC extract ---
+  // biome-ignore lint(correctness/useExhaustiveDependencies): t is a stable i18n table reference
   const processFile = useCallback((file: File) => {
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError('不支持的格式。请上传 PNG / JPEG / WebP / BMP / AVIF。');
+      setError(t.studioImageToThemeErrorInvalidFormat);
       return;
     }
     setError(null);
@@ -397,7 +426,7 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
       const base64 = dataUrl.split(',')[1] ?? '';
       setRawBase64(base64);
     };
-    reader.onerror = () => setError('图片读取失败');
+    reader.onerror = () => setError(t.studioImageToThemeErrorReadFailed);
     reader.readAsDataURL(file);
   }, []);
 
@@ -441,6 +470,7 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
   );
 
   // --- Trigger main-process extraction ---
+  // biome-ignore lint(correctness/useExhaustiveDependencies): t is a stable i18n table reference
   const handleExtract = useCallback(async () => {
     if (!rawBase64) return;
     setExtracting(true);
@@ -452,7 +482,7 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
       setPalette(result.palette);
       setMode(result.mode);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '颜色提取失败');
+      setError(err instanceof Error ? err.message : t.studioImageToThemeErrorExtractFailed);
     } finally {
       setExtracting(false);
     }
@@ -516,11 +546,11 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
             className="font-mono text-[10px] font-semibold uppercase"
             style={{ letterSpacing: '0.12em', color: 'var(--foreground)' }}
           >
-            图片主题
+            {t.studioImageToThemePanelTitle}
           </span>
           {mode && (
-            <Badge className="h-[14px] rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[8px] font-medium text-white/40">
-              {mode === 'dark' ? '暗色' : '亮色'}
+            <Badge className="h-[14px] rounded-[2px] border border-white/[0.08] bg-transparent px-1 font-mono text-[9.5px] font-medium text-white/40">
+              {mode === 'dark' ? t.studioImageToThemeModeDark : t.studioImageToThemeModeLight}
             </Badge>
           )}
         </div>
@@ -528,10 +558,10 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
           <button
             type="button"
             onClick={handleReset}
-            className="font-mono text-[9px] uppercase tracking-wider transition-colors hover:text-white/70"
+            className="font-mono text-[10px] uppercase tracking-wider transition-colors hover:text-white/70"
             style={{ color: 'var(--muted-foreground)' }}
           >
-            清除
+            {t.studioImageToThemeClear}
           </button>
         )}
       </div>
@@ -567,13 +597,13 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
               opacity: 0.85,
             }}
           >
-            {dragging ? '以上传图片' : '拖拽或点击上传'}
+            {dragging ? t.studioImageToThemeDropToUpload : t.studioImageToThemeDragOrClick}
           </span>
           <span
-            className="font-mono text-[8px]"
+            className="font-mono text-[9.5px]"
             style={{ color: 'var(--muted-foreground)', opacity: 0.55 }}
           >
-            PNG · JPG · WebP · BMP · AVIF
+            {t.studioImageToThemeSupportedFormats}
           </span>
         </button>
       ) : (
@@ -591,7 +621,7 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
           </div>
           {fileName && (
             <span
-              className="block max-w-full truncate font-mono text-[8px]"
+              className="block max-w-full truncate font-mono text-[9.5px]"
               style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}
               title={fileName}
             >
@@ -613,7 +643,7 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
       {/* ===== Error display ===== */}
       {error && (
         <div
-          className="border border-[#FF453A]/30 bg-[#FF453A]/8 p-2 font-mono text-[9px]"
+          className="border border-[#FF453A]/30 bg-[#FF453A]/8 p-2 font-mono text-[10px]"
           style={{
             borderRadius: '2px',
             color: '#FF453A',
@@ -631,7 +661,7 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
             className="h-8 w-full gap-2 rounded-[2px] border border-white/[0.06] bg-white/[0.03] font-mono text-[9.5px] font-semibold uppercase tracking-wider text-white/40"
           >
             <Spinner className="size-3" />
-            提取中…
+            {t.studioImageToThemeExtracting}
           </Button>
         ) : (
           <Button
@@ -644,7 +674,7 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
             }}
           >
             <HugeIcon icon={RefreshIcon} className="size-3" />
-            提取配色方案
+            {t.studioImageToThemeExtractButton}
           </Button>
         ))}
 
@@ -653,10 +683,10 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
         <div className="flex items-center justify-center gap-2 py-2">
           <Spinner className="size-3" />
           <span
-            className="font-mono text-[9px] uppercase"
+            className="font-mono text-[10px] uppercase"
             style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
           >
-            提取中…
+            {t.studioImageToThemeExtracting}
           </span>
         </div>
       )}
@@ -664,7 +694,7 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
       {/* ===== Generated palette ===== */}
       {hasResult && (
         <>
-          <Kicker count={PALETTE_KEYS.length}>生成色板</Kicker>
+          <Kicker count={PALETTE_KEYS.length}>{t.studioImageToThemeGeneratedPalette}</Kicker>
 
           {/* Wide color stripe */}
           <PaletteStripe palette={palette as Record<string, string>} />
@@ -678,19 +708,19 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
                 setTonal(tp);
                 setTonalOpen((v) => !v);
               }}
-              className="flex h-7 w-full items-center gap-2 rounded-[2px] border border-white/[0.08] px-2 font-mono text-[9px] font-semibold uppercase tracking-wider transition-colors hover:bg-white/[0.04]"
+              className="flex h-7 w-full items-center gap-2 rounded-[2px] border border-white/[0.08] px-2 font-mono text-[10px] font-semibold uppercase tracking-wider transition-colors hover:bg-white/[0.04]"
               style={{ color: 'var(--foreground)', letterSpacing: '0.1em' }}
             >
               <span className="size-2 rounded-[1px]" style={{ background: palette.accent }} />
-              衍生色阶 {tonalOpen ? '▴' : '▾'}
+              {t.studioImageToThemeTonalDerivative} {tonalOpen ? '▴' : '▾'}
             </button>
             {tonalOpen && tonal && (
               <div className="space-y-0.5 border border-white/[0.06] bg-black/20 p-1.5">
                 <p
-                  className="font-mono text-[8px] uppercase"
+                  className="font-mono text-[9.5px] uppercase"
                   style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)', opacity: 0.6 }}
                 >
-                  点击任一色阶将其设为强调色
+                  {t.studioImageToThemeTonalHint}
                 </p>
                 {TONAL_STEPS.map((step) => {
                   const hex = tonal[step];
@@ -707,13 +737,13 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
                         style={{ background: hex }}
                       />
                       <span
-                        className="font-mono text-[8.5px]"
+                        className="font-mono text-[10px]"
                         style={{ color: 'var(--foreground)' }}
                       >
                         {step}
                       </span>
                       <span
-                        className="ml-auto font-mono text-[8px]"
+                        className="ml-auto font-mono text-[9.5px]"
                         style={{ color: 'var(--muted-foreground)' }}
                       >
                         {hex.toUpperCase()}
@@ -744,16 +774,16 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
                         className={`size-2 text-white/40 transition-transform duration-150 ${isCollapsed ? '' : 'rotate-90'}`}
                       />
                       <span
-                        className="font-mono text-[8px] font-semibold uppercase"
+                        className="font-mono text-[9.5px] font-semibold uppercase"
                         style={{
                           letterSpacing: '0.12em',
                           color: 'var(--muted-foreground)',
                           opacity: 0.7,
                         }}
                       >
-                        {group.label}
+                        {String(t[group.labelKey])}
                       </span>
-                      <span className="ml-auto rounded-[2px] border border-white/[0.06] px-1 font-mono text-[7px] text-white/20">
+                      <span className="ml-auto rounded-[2px] border border-white/[0.06] px-1 font-mono text-[9.5px] text-white/20">
                         {group.keys.length}
                       </span>
                     </button>
@@ -774,8 +804,14 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
                                 contrastLevel={level}
                                 expanded={isExpanded}
                                 onToggle={() => setExpandedKey(isExpanded ? null : key)}
+                                expandTitle={t.studioImageToThemeSwatchExpand}
                               />
-                              {isExpanded && <SwatchDetailPanel hex={hex} />}
+                              {isExpanded && (
+                                <SwatchDetailPanel
+                                  hex={hex}
+                                  copyTitle={t.studioImageToThemeCopyFormat}
+                                />
+                              )}
                             </div>
                           );
                         })}
@@ -798,18 +834,17 @@ export function ImageToThemePanel({ onThemeGenerated, compact = false }: ImageTo
             }}
           >
             <HugeIcon icon={PaintBucketIcon} className="size-3" />
-            应用到工程
+            {t.studioImageToThemeApplyToProject}
           </Button>
         </>
       )}
 
       {/* ===== Hint text ===== */}
       <p
-        className="font-mono text-[8px] leading-relaxed"
+        className="font-mono text-[9.5px] leading-relaxed"
         style={{ color: 'var(--muted-foreground)', opacity: 0.45 }}
       >
-        建议使用高饱和度、主体突出的图片。主进程将运行 median-cut 量化 + Rec.709 亮度平衡，输出 14
-        个 --agentskin-* 设计 token。
+        {t.studioImageToThemeHintText}
       </p>
     </div>
   );

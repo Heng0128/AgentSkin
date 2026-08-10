@@ -15,12 +15,8 @@ const badgeVariants = cva(
           'bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20',
         outline: 'border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground',
         ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
-        link: 'text-primary underline-offset-4 hover:underline',
-        /* Swiss color tags */
+        /* Swiss color tag — only brand red Remix residue cleanup */
         red: 'text-primary border-primary/45 bg-accent',
-        grn: 'text-cr-success border-cr-success/45 bg-transparent',
-        amb: 'text-warning border-warning/45 bg-transparent',
-        blu: 'text-info border-info/45 bg-transparent',
       },
     },
     defaultVariants: {

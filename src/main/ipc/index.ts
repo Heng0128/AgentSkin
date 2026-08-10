@@ -20,6 +20,7 @@ import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
 import { createStudioWindow } from '../window-manager';
 import { registerBundleIpc } from './bundle-ipc';
+import { registerConcurrencyMetricsIpc } from './concurrency-metrics-ipc';
 import { registerCoreIpc } from './core-ipc';
 import { registerEnvironmentIpc } from './environment-ipc';
 import { registerPerformanceIpc } from './performance-ipc';
@@ -39,6 +40,9 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
   registerSettingsIpc(ctx);
   registerWallpaperIpc(ctx);
   registerPerformanceIpc();
+  // Concurrency-metrics push (main → renderer via webContents.send every 5s)
+  // + the renderer→main update path for renderer-side primitive sizes.
+  registerConcurrencyMetricsIpc(ctx);
   registerWindowIpc();
   registerVisualAnalyzerIpc();
   registerEnvironmentIpc(ctx);

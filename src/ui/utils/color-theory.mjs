@@ -253,7 +253,10 @@ export function scorePalette(palette) {
   const contrast = scoreContrast(palette);
   const harmony = scoreHarmony(palette);
   const semantic = scoreSemantic(palette);
-  const total = Math.min(100, Math.round(contrast * 0.5 + harmony * 0.3 + semantic * 0.2));
+  // Components are already weighted (contrast 0-50, harmony 0-30, semantic
+  // 0-20 → max 100). Summing — NOT re-weighting by 0.5/0.3/0.2 — keeps the
+  // documented 100-point scale so the AAA/AA/LOW badges are reachable.
+  const total = Math.min(100, Math.round(contrast + harmony + semantic));
   return { contrast, harmony, semantic, total };
 }
 
@@ -344,11 +347,11 @@ function scoreSemantic(p) {
 export function assemblePalette({ baseHue, scheme, semanticOverrides = {}, accentHint }) {
   const dark = scheme === 'dark';
 
-  const bg = hslToHex(baseHue, dark ? 0.06 : 0.04, dark ? 0.07 : 0.97);
-  const fg = hslToHex(baseHue, dark ? 0.08 : 0.06, dark ? 0.92 : 0.12);
-  const surface = hslToHex(baseHue, dark ? 0.07 : 0.05, dark ? 0.12 : 0.94);
-  const border = hslToHex(baseHue, dark ? 0.08 : 0.06, dark ? 0.22 : 0.85);
-  const muted = hslToHex(baseHue, dark ? 0.06 : 0.05, dark ? 0.55 : 0.5);
+  const bg = hslToHex(baseHue, dark ? 0.12 : 0.1, dark ? 0.07 : 0.97);
+  const fg = hslToHex(baseHue, dark ? 0.12 : 0.1, dark ? 0.92 : 0.12);
+  const surface = hslToHex(baseHue, dark ? 0.13 : 0.11, dark ? 0.12 : 0.94);
+  const border = hslToHex(baseHue, dark ? 0.14 : 0.12, dark ? 0.22 : 0.85);
+  const muted = hslToHex(baseHue, dark ? 0.1 : 0.09, dark ? 0.55 : 0.5);
 
   // Accent — use hint if provided, otherwise a vivid shift from background hue
   const accentHue = accentHint ? hexToHsl(accentHint)[0] : (baseHue + 30) % 360;
@@ -403,40 +406,43 @@ export function generatePalettes(profile, opts = {}) {
 
   const rng = mulberry32(seed ?? Math.floor(Math.random() * 2 ** 31));
 
-  // Collect candidate accent hues from the profile
+  // Candidate accent hues harvested from the profile. These only anchor the
+  // START hue; proposals are then spread evenly across the wheel so we always
+  // emit `count` DISTINCT, visibly different palettes.
   const hues = extractHueCandidates(profile);
-  if (hues.length === 0) hues.push(rng() * 360);
+  const startHue = hues.length ? hues[Math.floor(rng() * hues.length)] : rng() * 360;
 
   const results = [];
   const seen = new Set();
 
-  let attempts = 0;
-  const maxAttempts = count * 12;
+  // Guarantee exactly `count` distinct proposals by spacing base hues evenly
+  // (step = 360/count) with sub-step jitter. The old collision loop let the
+  // near-grayscale background dominate the dedup key, so it could only ever
+  // emit as many palettes as there were distinct candidate accents — usually
+  // just 2 — no matter what `count` was requested.
+  const step = 360 / Math.max(1, count);
+  for (let i = 0; i < count; i++) {
+    const baseHue = (startHue + i * step + (rng() - 0.5) * step * 0.8 + 360) % 360;
 
-  while (results.length < count && attempts < maxAttempts) {
-    attempts++;
-    const baseHue = hues[Math.floor(rng() * hues.length)];
     const harmony = HARMONY_KEYS[Math.floor(rng() * HARMONY_KEYS.length)];
-    const accentHint = hslToHex(baseHue, 0.6, scheme === 'dark' ? 0.6 : 0.5);
-
-    // Slight jitter for variety
-    const jitteredHue = (baseHue + (rng() - 0.5) * 30 + 360) % 360;
+    const accentHint = hslToHex(baseHue, 0.65, scheme === 'dark' ? 0.62 : 0.5);
 
     const semanticOverrides = extractSemanticColors(profile, scheme);
     const palette = assemblePalette({
-      baseHue: jitteredHue,
+      baseHue,
       scheme,
       semanticOverrides,
       accentHint,
     });
 
-    // Deduplicate (exact same background+accent)
-    const key = palette.background + palette.accent;
+    // Dedup safety net (rare now that hues are spread); key on the three
+    // hue-bearing roles so near-identical palettes don't double up.
+    const key = `${palette.background}|${palette.surface}|${palette.accent}`;
     if (seen.has(key)) continue;
     seen.add(key);
 
     const s = scorePalette(palette);
-    results.push({ palette, score: s, harmony, sourceHue: jitteredHue });
+    results.push({ palette, score: s, harmony, sourceHue: baseHue });
   }
 
   return results.sort((a, b) => b.score.total - a.score.total);

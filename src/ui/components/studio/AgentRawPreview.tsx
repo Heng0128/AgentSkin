@@ -308,14 +308,14 @@ export function AgentRawDualPreview(props: AgentRawDualPreviewProps) {
             type="button"
             key={m}
             onClick={() => setMode(m)}
-            className={`h-5 rounded-[2px] px-2 font-mono text-[9px] uppercase transition-colors ${
+            className={`h-5 rounded-[2px] px-2 font-mono text-[10px] uppercase transition-colors ${
               mode === m ? 'bg-[#FF453A] text-white' : 'text-white/60 hover:bg-white/[0.04]'
             }`}
           >
             {m}
           </button>
         ))}
-        <span className="ml-auto font-mono text-[8.5px] text-white/30">
+        <span className="ml-auto font-mono text-[10px] text-white/30">
           raw native · {mode.toUpperCase()}
         </span>
       </div>

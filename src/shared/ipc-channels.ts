@@ -151,6 +151,11 @@ export const IpcChannel = {
   FILE_IMPORT_FAILED: 'file:import-failed',
   TRAY_APPLY: 'tray:apply',
   WINDOW_MAXIMIZE_CHANGE: 'window:maximize-change',
+  // SEND_ONLY — main → renderer event, DO NOT register ipcMain.handle
+  // Subscribed via ipcRenderer.on in preload. Emitted with webContents.send
+  // for visual-analysis extraction progress ({ agent, step, progress }).
+  // Registering ipcMain.handle here would cause invoke() to hang forever.
+  VISUAL_ANALYSIS_STATUS: 'visual-analysis:status',
   /** Pushed once after the main window is ready, with the list of boot steps
    *  that were degraded (skipped) during startup. The renderer surfaces them
    *  as toasts so the user knows what didn't initialize. */
@@ -171,13 +176,24 @@ export const IpcChannel = {
   PERFORMANCE_GET_TIMEOUTS: 'performance:get-timeouts',
   /** Renderer asks to clear all stored IPC timeout events. */
   PERFORMANCE_CLEAR_TIMEOUTS: 'performance:clear-timeouts',
+  // SEND_ONLY — main → renderer event, DO NOT register ipcMain.handle
+  // Subscribed via ipcRenderer.on in preload. Emitted with webContents.send
+  // to push live concurrency metrics ({ active, queued, max }) to the
+  // Diagnostics tab. Registering ipcMain.handle here would cause invoke()
+  // to hang forever.
+  DIAGNOSTICS_CONCURRENCY_METRICS: 'diagnostics:concurrency-metrics',
+  // FIRE_AND_FORGET — renderer → main (ipcMain.on, NOT ipcMain.handle).
+  // Renderer pushes the sizes of its two module-scoped concurrency primitives
+  // (wallpaperStore.companionBusyByAgent, environmentStore.switchEpochByAgent)
+  // so the main process can include them in the unified metrics payload.
+  DIAGNOSTICS_UPDATE_RENDERER_CONCURRENCY: 'diagnostics:update-renderer-concurrency',
 
   // --- Visual Analysis ---
   VISUAL_ANALYSIS_LIST: 'visual-analysis:list',
   VISUAL_ANALYSIS_GET: 'visual-analysis:get',
   VISUAL_ANALYSIS_DETECT: 'visual-analysis:detect',
   VISUAL_ANALYSIS_CDP_EXTRACT: 'visual-analysis:cdp-extract',
-  VISUAL_ANALYSIS_STATUS: 'visual-analysis:status',
+  // VISUAL_ANALYSIS_STATUS moved to // --- Main→renderer events --- section above (SEND_ONLY).
   VISUAL_ANALYSIS_EXPORT_THEME: 'visual-analysis:export-theme',
   VISUAL_ANALYSIS_LIST_SUMMARY: 'visual-analysis:list-summary',
 } as const;

@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
         return (
           <div className="flex h-full min-h-[200px] items-center justify-center bg-background text-foreground">
             <div className="flex flex-col items-center gap-3 text-center max-w-sm px-4">
-              <div className="flex size-10 items-center justify-center rounded-full bg-destructive/10">
+              <div className="flex size-10 items-center justify-center rounded-[2px] bg-destructive/10">
                 <HugeIcon icon={AlertCircleIcon} className="size-5 text-destructive" />
               </div>
               <div>
@@ -87,7 +87,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <main className="flex h-svh items-center justify-center bg-background text-foreground">
           <div className="flex flex-col items-center gap-4 text-center max-w-sm px-4">
-            <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
+            <div className="flex size-12 items-center justify-center rounded-[2px] bg-destructive/10">
               <HugeIcon icon={AlertCircleIcon} className="size-6 text-destructive" />
             </div>
             <div>

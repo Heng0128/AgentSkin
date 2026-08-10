@@ -78,12 +78,12 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
           <TabsList variant="line" className="h-7 gap-0.5 rounded-[2px] bg-transparent p-0">
             {(
               [
-                ['theme', '主题', !snapshot],
-                ['wallpaper', '壁纸', false],
-                ['bundle', '打包', false],
-                ['inspect', '检查', false],
-                ['generator', '搭配', false],
-                ['raw', '原貌', !(baseline || snapshot)],
+                ['theme', t.studioTabTheme, !snapshot],
+                ['wallpaper', t.studioTabWallpaper, false],
+                ['bundle', t.studioTabBundle, false],
+                ['inspect', t.studioTabInspect, false],
+                ['generator', t.studioTabGenerator, false],
+                ['raw', t.studioTabRaw, !(baseline || snapshot)],
               ] as const
             ).map(([view, label, disabled]) => (
               <TabsTrigger
@@ -105,8 +105,8 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
             <InputGroupInput
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="筛选节点…"
-              aria-label="筛选节点"
+              placeholder={t.studioFilterNodes}
+              aria-label={t.studioFilterNodes}
               className="h-6 font-mono text-[10px]"
             />
             <InputGroupAddon align="inline-start">
@@ -126,7 +126,7 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
             style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
           >
             <HugeIcon icon={Search01Icon} className="size-2.5" />
-            {inspectMode ? '停止' : '检查'}
+            {inspectMode ? t.studioStop : t.studioCheck}
           </Button>
           <Button
             size="sm"
@@ -149,14 +149,14 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
             onClick={() => void baselineSnapshot()}
             className="h-6 gap-1 px-2 font-mono text-[9.5px] uppercase"
             style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
-            title="还原 agent 到无主题原生态后抓取，抓完自动重上原主题"
+            title={t.studioBaselineTooltip}
           >
             {baselineLoading ? (
               <Spinner data-icon="inline-start" className="size-2.5" />
             ) : (
               <HugeIcon icon={RefreshIcon} className="size-2.5" />
             )}
-            BASELINE
+            {t.studioBaseline}
           </Button>
         </div>
       </div>
@@ -181,14 +181,13 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
                   className="font-mono text-[11px] font-medium"
                   style={{ color: 'var(--foreground)' }}
                 >
-                  请先新建或导入一个工程
+                  {t.studioEmptyNoProject}
                 </p>
                 <p
                   className="max-w-xs font-mono text-[10px] leading-relaxed"
                   style={{ color: 'var(--muted-foreground)' }}
                 >
-                  工作室不再依赖已安装主题。左侧「NEW」从零设计，或「IMPORT」载入一个
-                  .agentskin-theme。
+                  {t.studioEmptyNoProjectHint}
                 </p>
               </>
             ) : (
@@ -197,13 +196,13 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
                   className="font-mono text-[11px] font-medium"
                   style={{ color: 'var(--foreground)' }}
                 >
-                  点击「SNAP」复刻 {activeProject.name} 的真实界面
+                  {t.studioEmptySnapPrompt(activeProject.name)}
                 </p>
                 <p
                   className="max-w-xs font-mono text-[10px] leading-relaxed"
                   style={{ color: 'var(--muted-foreground)' }}
                 >
-                  可抓取「CURRENT」（带主题）或「RAW」（无主题）两种状态，切换上方标签对照查看。
+                  {t.studioEmptySnapHint}
                 </p>
               </>
             )}
@@ -215,24 +214,26 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
             domTree={snapshot.domTree}
             overrides={toolOverrides}
             colorSets={studioColorSets}
+            t={t}
           />
         )}
         {previewView === 'theme' && !snapshot && (
           <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2">
             <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
-              点击「SNAP」抓取主题快照后在此编辑
+              {t.studioThemeEmpty}
             </p>
           </div>
         )}
         {/* WALLPAPER */}
-        {previewView === 'wallpaper' && <WallpaperStudioPanel />}
+        {previewView === 'wallpaper' && <WallpaperStudioPanel t={t} />}
         {/* BUNDLE */}
-        {previewView === 'bundle' && <BundleStudioTab />}
+        {previewView === 'bundle' && <BundleStudioTab t={t} />}
         {/* INSPECT */}
-        {previewView === 'inspect' && <InspectStudioTab />}
+        {previewView === 'inspect' && <InspectStudioTab t={t} />}
         {/* GENERATOR */}
         {previewView === 'generator' && activeProject && (
           <FitGeneratorPanel
+            t={t}
             embedded
             onPreviewPalette={(_agentId, palette) => applyPalette({ ...palette }, 'preview')}
             onPaletteApply={(_agentId, palette) => applyPalette({ ...palette }, 'apply')}
@@ -241,7 +242,7 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
         {previewView === 'generator' && !activeProject && (
           <div className="flex h-full min-h-64 flex-col items-center justify-center gap-2">
             <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
-              新建或导入工程后可使用生成器
+              {t.studioGeneratorEmpty}
             </p>
           </div>
         )}
@@ -260,14 +261,14 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
       {/* Fingerprint bar */}
       {snapshot && (
         <div
-          className="flex h-6 shrink-0 items-center border-t border-border px-3 font-mono text-[9px]"
+          className="flex h-6 shrink-0 items-center border-t border-border px-3 font-mono text-[10px]"
           style={{
             background: 'var(--muted)',
             color: 'var(--muted-foreground)',
             letterSpacing: '0.1em',
           }}
         >
-          <span>指纹</span>
+          <span>{t.studioFingerprint}</span>
           <span className="mx-2" style={{ color: 'var(--border)' }}>
             |
           </span>

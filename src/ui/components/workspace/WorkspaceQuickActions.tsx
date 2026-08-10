@@ -32,9 +32,9 @@ export function WorkspaceQuickActions({ items }: { items: WorkspaceQuickActionIt
             onClick={item.onClick}
             disabled={item.disabled}
             className={cn(
-              'group/action flex items-center gap-3 rounded-[2px] border border-border bg-card p-3 text-left shadow-xs',
-              'transition-all duration-base ease-out',
-              !item.disabled && 'hover:-translate-y-0.5 hover:shadow-md',
+              'group/action flex items-center gap-3 rounded-[2px] border border-border bg-card p-3 text-left',
+              'transition-[border-color] duration-base ease-out',
+              !item.disabled && 'hover:border-border-strong',
               item.disabled && 'cursor-not-allowed opacity-50',
               item.primary && !item.disabled && 'border-primary/25 hover:border-primary/40',
             )}
@@ -44,8 +44,8 @@ export function WorkspaceQuickActions({ items }: { items: WorkspaceQuickActionIt
               className={cn(
                 'flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-base group-hover/action:scale-105',
                 item.primary
-                  ? 'bg-gradient-to-br from-primary/15 to-primary/5 text-primary ring-1 ring-primary/10'
-                  : 'bg-gradient-to-br from-primary/15 to-primary/5 text-muted-foreground ring-1 ring-primary/10 group-hover/action:text-foreground',
+                  ? 'bg-accent text-primary'
+                  : 'bg-accent text-muted-foreground group-hover/action:text-foreground',
               )}
             >
               <HugeIcon icon={item.icon} size={16} />

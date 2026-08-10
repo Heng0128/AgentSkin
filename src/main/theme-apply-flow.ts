@@ -199,7 +199,12 @@ export interface ApplyFlowDeps {
 export async function applyThemeFlow(
   request: ApplyRequest,
   deps: ApplyFlowDeps,
-): Promise<ApplyResponse> {
+): Promise<{ response: ApplyResponse; background: Promise<void> }> {
+  // Collect fire-and-forget follow-up promises so the caller can track when
+  // the entire chain (applyTheme + hardening + wallpaper + scheme sync) has
+  // fully settled.  These were previously detached `void` chains that kept
+  // executing after the ApplyResponse returned — racing restore operations.
+  const backgroundTasks: Promise<unknown>[] = [];
   const copy = getMainMessages();
 
   // Platform guard
@@ -231,7 +236,10 @@ export async function applyThemeFlow(
     if (deps.isApplyingTheme(appId)) {
       deps.log(`[apply] ${appId}: already applying, skipping concurrent call`);
       finishTrace();
-      return { status: 'applied', message: '', system: await deps.status() };
+      return {
+        response: { status: 'applied', message: '', system: await deps.status() },
+        background: Promise.resolve(),
+      };
     }
 
     // CDP discovery + (conditional) restart policy — unified with the wallpaper
@@ -281,10 +289,13 @@ export async function applyThemeFlow(
         );
         finishTrace();
         return {
-          status: 'requires-restart',
-          message: copy.cdpNotDetectedMessage,
-          system: await deps.status(),
-          restartReason: cdp.restartReason,
+          response: {
+            status: 'requires-restart',
+            message: copy.cdpNotDetectedMessage,
+            system: await deps.status(),
+            restartReason: cdp.restartReason,
+          },
+          background: Promise.resolve(),
         };
       }
       port = cdp.port;
@@ -361,9 +372,12 @@ export async function applyThemeFlow(
       if (code === ERROR_CODES.RESTART_REQUIRED) {
         finishTrace();
         return {
-          status: 'requires-restart',
-          message: copy.restartRequiredMessage,
-          system: await deps.status(),
+          response: {
+            status: 'requires-restart',
+            message: copy.restartRequiredMessage,
+            system: await deps.status(),
+          },
+          background: Promise.resolve(),
         };
       }
       // An occupied port is not fixed by restarting the target app, so it must
@@ -372,9 +386,12 @@ export async function applyThemeFlow(
         const occupiedPort = (error as { port?: number }).port ?? port;
         finishTrace();
         return {
-          status: 'port-occupied',
-          message: copy.portOccupiedMessage(occupiedPort),
-          system: await deps.status(),
+          response: {
+            status: 'port-occupied',
+            message: copy.portOccupiedMessage(occupiedPort),
+            system: await deps.status(),
+          },
+          background: Promise.resolve(),
         };
       }
       throw error;
@@ -392,7 +409,7 @@ export async function applyThemeFlow(
     // iframes) that the core's matchTarget/preflight filter out. Non-blocking
     // and best-effort — the main page is already themed, the response can
     // return immediately while embedded content is themed a moment later.
-    void deps.injectSecondaryTargets(appId, port, entry.bundle, epoch).catch(() => undefined);
+    backgroundTasks.push(deps.injectSecondaryTargets(appId, port, entry.bundle, epoch));
 
     // Wallpaper: "last applied wins". Sync per-agent setting to match the
     // theme's wallpaper state so restarts restore the correct wallpaper.
@@ -426,13 +443,12 @@ export async function applyThemeFlow(
     // → wallpaper container create → nothing else touches adoptedStyleSheets.
     // Both operations stay non-blocking (fire-and-forget); the caller does
     // not await them so the "applied" response still returns promptly.
-    void deps
-      .hardeningPass(appId, port, entry.bundle, epoch)
-      .then(() => {
+    backgroundTasks.push(
+      deps.hardeningPass(appId, port, entry.bundle, epoch).then(() => {
         if (!deps.isEpochCurrent(appId, epoch)) return;
         return deps.injectAgentWallpaperFromApply(appId, port, entry, epoch);
-      })
-      .catch(() => undefined);
+      }),
+    );
 
     // Match the agent's internal light/dark scheme to the theme so users do
     // not have to toggle dark mode by hand in each agent (best-effort). The
@@ -452,7 +468,7 @@ export async function applyThemeFlow(
       // scheme is matched a moment later. After the initial sync, a stability
       // window re-checks at 2s/5s/10s to catch apps that overwrite our mode
       // setting during their own render cycle.
-      void deps.syncSchemeWithStability(appId, livePort, schemeMode, epoch).catch(() => undefined);
+      backgroundTasks.push(deps.syncSchemeWithStability(appId, livePort, schemeMode, epoch));
     }
 
     deps.log(`[apply] ${entry.bundle.theme.id} applied to ${appId}`);
@@ -472,9 +488,12 @@ export async function applyThemeFlow(
     });
     finishTrace();
     return {
-      status: 'applied',
-      message: copy.themeApplied(entry.bundle.theme.displayName, deps.displayName(appId)),
-      system: await deps.status(),
+      response: {
+        status: 'applied',
+        message: copy.themeApplied(entry.bundle.theme.displayName, deps.displayName(appId)),
+        system: await deps.status(),
+      },
+      background: Promise.allSettled(backgroundTasks).then(() => undefined),
     };
   } catch (error) {
     finishTrace();

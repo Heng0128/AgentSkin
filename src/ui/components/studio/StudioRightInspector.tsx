@@ -24,6 +24,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import { AGENT_META } from '@shared/types';
+import { useShallow } from 'zustand/react/shallow';
 
 /**
  * Studio right inspector — landmark inspector + live inspect + signature +
@@ -31,42 +32,83 @@ import { AGENT_META } from '@shared/types';
  * directly from {@link useStudioStore}.
  */
 export function StudioRightInspector({ t }: { t: UiMessages }) {
-  const snapshot = useStudioStore((s) => s.snapshot);
-  const snapshotLoading = useStudioStore((s) => s.snapshotLoading);
-  const activeProject = useStudioStore((s) => s.getActiveProject());
+  // ---- Selector strategy: 17 data selectors merged into 3 shallow subscriptions ----
+  // (Eliminates redundant store-listener callbacks and cross-selector tearing.)
+  const {
+    snapshot,
+    snapshotLoading,
+    inspectingIdx,
+    hoveredIdx,
+    searchQuery,
+    inspectMode,
+    liveNode,
+    liveError,
+    pinnedSelectors,
+    toolOverrides,
+    pseudoView,
+    schemeView,
+  } = useStudioStore(
+    useShallow((s) => ({
+      snapshot: s.snapshot,
+      snapshotLoading: s.snapshotLoading,
+      inspectingIdx: s.inspectingIdx,
+      hoveredIdx: s.hoveredIdx,
+      searchQuery: s.searchQuery,
+      inspectMode: s.inspectMode,
+      liveNode: s.liveNode,
+      liveError: s.liveError,
+      pinnedSelectors: s.pinnedSelectors,
+      toolOverrides: s.toolOverrides,
+      pseudoView: s.pseudoView,
+      schemeView: s.schemeView,
+    })),
+  );
+
+  const { activeProject, installedThemes } = useStudioStore(
+    useShallow((s) => ({
+      activeProject: s.getActiveProject(),
+      installedThemes: s.installedThemes,
+    })),
+  );
   const activeAgent = activeProject?.agentId ?? null;
-  const installedThemes = useStudioStore((s) => s.installedThemes);
-  const inspectingIdx = useStudioStore((s) => s.inspectingIdx);
-  const hoveredIdx = useStudioStore((s) => s.hoveredIdx);
+
+  const { exportName, exportAuthor, exportState } = useStudioStore(
+    useShallow((s) => ({
+      exportName: s.exportName,
+      exportAuthor: s.exportAuthor,
+      exportState: s.exportState,
+    })),
+  );
+
+  // Actions — zustand guarantees stable refs, no re-render cost.
   const setInspectingIdx = useStudioStore((s) => s.setInspectingIdx);
   const setHoveredIdx = useStudioStore((s) => s.setHoveredIdx);
-  const pseudoView = useStudioStore((s) => s.pseudoView);
   const setPseudoView = useStudioStore((s) => s.setPseudoView);
-  const schemeView = useStudioStore((s) => s.schemeView);
   const setSchemeView = useStudioStore((s) => s.setSchemeView);
-  const searchQuery = useStudioStore((s) => s.searchQuery);
-  const inspectMode = useStudioStore((s) => s.inspectMode);
-  const liveNode = useStudioStore((s) => s.liveNode);
-  const liveError = useStudioStore((s) => s.liveError);
-  const pinnedSelectors = useStudioStore((s) => s.pinnedSelectors);
   const pinSelector = useStudioStore((s) => s.pinSelector);
-  const toolOverrides = useStudioStore((s) => s.toolOverrides);
   const setOverride = useStudioStore((s) => s.setOverride);
   const resetOverrides = useStudioStore((s) => s.resetOverrides);
-  const exportName = useStudioStore((s) => s.exportName);
   const setExportName = useStudioStore((s) => s.setExportName);
-  const exportAuthor = useStudioStore((s) => s.exportAuthor);
   const setExportAuthor = useStudioStore((s) => s.setExportAuthor);
-  const exportState = useStudioStore((s) => s.exportState);
   const exportTheme = useStudioStore((s) => s.exportTheme);
   const refreshThemeLibrary = useStudioStore((s) => s.refreshThemeLibrary);
   const setPaletteLoaded = useStudioStore((s) => s.setPaletteLoaded);
   const setOverrideColors = useStudioStore((s) => s.setOverrideColors);
 
-  const allLandmarks = snapshot?.landmarks ?? [];
-  const inspectingLandmark = snapshot?.landmarks[inspectingIdx ?? -1] ?? null;
-  const activePseudo = pseudoView ? inspectingLandmark?.pseudo?.[pseudoView] : undefined;
-  const activeScheme = schemeView ? inspectingLandmark?.scheme?.[schemeView] : undefined;
+  // ---- Derived values (memoized to avoid recompute on unrelated re-renders) ----
+  const allLandmarks = useMemo(() => snapshot?.landmarks ?? [], [snapshot]);
+  const inspectingLandmark = useMemo(
+    () => snapshot?.landmarks[inspectingIdx ?? -1] ?? null,
+    [snapshot, inspectingIdx],
+  );
+  const activePseudo = useMemo(
+    () => (pseudoView ? inspectingLandmark?.pseudo?.[pseudoView] : undefined),
+    [pseudoView, inspectingLandmark],
+  );
+  const activeScheme = useMemo(
+    () => (schemeView ? inspectingLandmark?.scheme?.[schemeView] : undefined),
+    [schemeView, inspectingLandmark],
+  );
 
   const landmarkSearch = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -76,6 +118,12 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
     );
   }, [allLandmarks, searchQuery]);
 
+  // computeSignature iterates all visible landmarks — hot path; only recompute when snapshot changes.
+  const computeSignatureMemo = useMemo(
+    () => (snapshot ? computeSignature(snapshot) : null),
+    [snapshot],
+  );
+
   return (
     <div
       className="overflow-y-auto border-l border-border px-3 pt-3"
@@ -84,7 +132,7 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
       {/* Inspector section */}
       {inspectingLandmark && (
         <>
-          <Kicker>检视器</Kicker>
+          <Kicker>{t.studioInspector}</Kicker>
           <div className="mt-2 mb-3 space-y-1.5">
             <div className="flex items-center gap-1.5">
               <span
@@ -94,14 +142,14 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
                 {inspectingLandmark.selector}
               </span>
               <span
-                className="shrink-0 rounded-sm bg-muted px-1 py-0.5 font-mono text-[8px]"
+                className="shrink-0 rounded-sm bg-muted px-1 py-0.5 font-mono text-[9.5px]"
                 style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
               >
                 {inspectingLandmark.tag}
               </span>
               {inspectingLandmark.boxModel && (
                 <span
-                  className="shrink-0 rounded-sm bg-muted px-1 py-0.5 font-mono text-[8px]"
+                  className="shrink-0 rounded-sm bg-muted px-1 py-0.5 font-mono text-[9.5px]"
                   style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
                 >
                   {inspectingLandmark.boxModel.width}×{inspectingLandmark.boxModel.height}
@@ -133,23 +181,14 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
             {/* P5: pseudo-state variants */}
             {inspectingLandmark.pseudo && (
               <div className="mt-2 space-y-1">
-                <div
-                  className="font-mono text-[9px] uppercase"
-                  style={{
-                    letterSpacing: '0.1em',
-                    color: 'var(--muted-foreground)',
-                    opacity: 0.7,
-                  }}
-                >
-                  伪状态
-                </div>
+                {t.studioPseudo}
                 <div className="flex flex-wrap gap-1">
                   {Object.keys(inspectingLandmark.pseudo).map((p) => (
                     <button
                       key={p}
                       type="button"
                       onClick={() => setPseudoView(p === pseudoView ? null : p)}
-                      className="px-1.5 py-0.5 font-mono text-[8.5px]"
+                      className="px-1.5 py-0.5 font-mono text-[10px]"
                       style={{
                         background: pseudoView === p ? 'var(--primary)' : 'var(--muted)',
                         color:
@@ -169,15 +208,15 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
                     style={{ borderRadius: 'var(--radius)' }}
                   >
                     <div
-                      className="mb-1 font-mono text-[9px] font-medium"
+                      className="mb-1 font-mono text-[10px] font-medium"
                       style={{ color: 'var(--foreground)' }}
                     >
-                      :{pseudoView} 计算样式
+                      {t.studioPseudoComputed(pseudoView)}
                     </div>
                     {activePseudo.computed.map((s) => (
                       <div
                         key={s.property}
-                        className="flex items-baseline gap-1 px-0.5 py-0.5 font-mono text-[9px]"
+                        className="flex items-baseline gap-1 px-0.5 py-0.5 font-mono text-[10px]"
                       >
                         <span
                           className="w-[120px] truncate"
@@ -190,7 +229,7 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
                         </span>
                       </div>
                     ))}
-                    <CascadeView cascade={activePseudo} />
+                    <CascadeView cascade={activePseudo} t={t} />
                   </div>
                 )}
               </div>
@@ -199,23 +238,14 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
             {/* P5: light/dark scheme variants */}
             {inspectingLandmark.scheme && (
               <div className="mt-2 space-y-1">
-                <div
-                  className="font-mono text-[9px] uppercase"
-                  style={{
-                    letterSpacing: '0.1em',
-                    color: 'var(--muted-foreground)',
-                    opacity: 0.7,
-                  }}
-                >
-                  明暗变体
-                </div>
+                {t.studioScheme}
                 <div className="flex gap-1">
                   {(['light', 'dark'] as const).map((sc) => (
                     <button
                       key={sc}
                       type="button"
                       onClick={() => setSchemeView(sc)}
-                      className="px-1.5 py-0.5 font-mono text-[8.5px]"
+                      className="px-1.5 py-0.5 font-mono text-[10px]"
                       style={{
                         background: schemeView === sc ? 'var(--primary)' : 'var(--muted)',
                         color:
@@ -225,7 +255,7 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
                         borderRadius: 'var(--radius)',
                       }}
                     >
-                      {sc === 'light' ? '亮' : '暗'}
+                      {sc === 'light' ? t.studioSchemeLight : t.studioSchemeDark}
                     </button>
                   ))}
                 </div>
@@ -235,15 +265,17 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
                     style={{ borderRadius: 'var(--radius)' }}
                   >
                     <div
-                      className="mb-1 font-mono text-[9px] font-medium"
+                      className="mb-1 font-mono text-[10px] font-medium"
                       style={{ color: 'var(--foreground)' }}
                     >
-                      {schemeView === 'light' ? '亮' : '暗'} 计算样式
+                      {t.studioSchemeComputed(
+                        schemeView === 'light' ? t.studioSchemeLight : t.studioSchemeDark,
+                      )}
                     </div>
                     {activeScheme.styles.map((s) => (
                       <div
                         key={s.property}
-                        className="flex items-baseline gap-1 px-0.5 py-0.5 font-mono text-[9px]"
+                        className="flex items-baseline gap-1 px-0.5 py-0.5 font-mono text-[10px]"
                       >
                         <span
                           className="w-[120px] truncate"
@@ -263,6 +295,7 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
 
             {inspectingLandmark.matchedRules?.length > 0 && (
               <CascadeView
+                t={t}
                 cascade={{
                   matchedRules: inspectingLandmark.matchedRules,
                   platformFonts: inspectingLandmark.platformFonts,
@@ -288,14 +321,14 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
               className="font-mono text-[10px] font-semibold uppercase"
               style={{ color: 'var(--primary)', letterSpacing: '0.08em' }}
             >
-              ● 实时检查
+              ● {t.studioLiveInspect}
             </span>
-            <span className="font-mono text-[9px]" style={{ color: 'var(--muted-foreground)' }}>
+            <span className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
               {activeAgent ? AGENT_META[activeAgent].displayName : ''}
             </span>
           </div>
           {liveError && (
-            <p className="mt-1 font-mono text-[9px]" style={{ color: 'var(--primary)' }}>
+            <p className="mt-1 font-mono text-[10px]" style={{ color: 'var(--primary)' }}>
               {liveError}
             </p>
           )}
@@ -309,14 +342,14 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
                   {liveNode.path}
                 </span>
                 <span
-                  className="shrink-0 bg-muted px-1 py-0.5 font-mono text-[8px]"
+                  className="shrink-0 bg-muted px-1 py-0.5 font-mono text-[9.5px]"
                   style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
                 >
                   {liveNode.tag}
                 </span>
                 {liveNode.cascade.boxModel && (
                   <span
-                    className="shrink-0 bg-muted px-1 py-0.5 font-mono text-[8px]"
+                    className="shrink-0 bg-muted px-1 py-0.5 font-mono text-[9.5px]"
                     style={{
                       color: 'var(--muted-foreground)',
                       borderRadius: 'var(--radius)',
@@ -340,15 +373,15 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
               >
                 {pinnedSelectors.includes(liveNode.path) ? '✓ PINNED' : '+ PIN TO SNAPSHOT'}
               </button>
-              <CascadeView cascade={liveNode.cascade} />
+              <CascadeView cascade={liveNode.cascade} t={t} />
             </div>
           )}
           {!liveNode && !liveError && (
             <p
-              className="mt-2 font-mono text-[9px]"
+              className="mt-2 font-mono text-[10px]"
               style={{ color: 'var(--dim, var(--muted-foreground))' }}
             >
-              已为真实 Agent 开启放大镜，点击任意元素即可抓取它的完整级联。
+              {t.studioLiveInspectEmpty}
             </p>
           )}
           <div className="mt-2 border-t border-border" />
@@ -358,7 +391,7 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
       {/* Dimension fingerprint card */}
       {snapshot && (
         <>
-          <Kicker>维度 · SIGNATURE</Kicker>
+          <Kicker>{t.studioDimensions} · SIGNATURE</Kicker>
           <div
             className="mt-1.5 mb-3 border border-border bg-card p-2"
             style={{ borderRadius: 'var(--radius)' }}
@@ -373,7 +406,7 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
               </span>
             </div>
             <p
-              className="mt-1 break-all font-mono text-[9px] leading-tight"
+              className="mt-1 break-all font-mono text-[10px] leading-tight"
               style={{ color: 'var(--muted-foreground)' }}
             >
               {fingerprintFromSnapshot(snapshot)}
@@ -385,18 +418,20 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
       {/* Landmark list — compact node tree */}
       {snapshot && (
         <>
-          <Kicker>节点 · LANDMARKS</Kicker>
+          <Kicker>
+            {t.studioLandmark} · {t.studioNodeLandmarks}
+          </Kicker>
           <div className="mt-1 mb-2 flex items-baseline justify-between">
             <span
-              className="font-mono text-[9px]"
+              className="font-mono text-[10px]"
               style={{ color: 'var(--dim, var(--muted-foreground))' }}
             >
-              {landmarkSearch.length} / {allLandmarks.length}
+              {t.studioLandmarkCount(landmarkSearch.length, allLandmarks.length)}
             </span>
           </div>
           {landmarkSearch.length === 0 ? (
             <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
-              无匹配节点
+              {t.studioNoMatch}
             </p>
           ) : (
             <div className="space-y-0.5 mb-3">
@@ -432,7 +467,7 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
                   >
                     <span className="truncate">{lm.selector}</span>
                     <span
-                      className="ml-auto shrink-0 rounded-sm bg-muted px-1 py-0.5 text-[8px] uppercase"
+                      className="ml-auto shrink-0 rounded-sm bg-muted px-1 py-0.5 text-[9.5px] uppercase"
                       style={{ borderRadius: 'var(--radius)' }}
                     >
                       {lm.tag}
@@ -457,6 +492,7 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
       {/* P2a: Preset themes grid */}
       <div className="mb-4 border-b border-border pb-4">
         <PresetThemePicker
+          t={t}
           activeAgent={activeAgent}
           themes={installedThemes}
           onPaletteLoaded={setPaletteLoaded}
@@ -465,12 +501,12 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
       </div>
 
       {/* P2b: Image → Theme workflow */}
-      {snapshot && <ImageToThemePanel onThemeGenerated={setOverrideColors} compact />}
+      {snapshot && <ImageToThemePanel t={t} onThemeGenerated={setOverrideColors} compact />}
       {/* P3: Toolbox */}
       {snapshot && (
         <ToolboxPanel
           t={t}
-          originalSig={computeSignature(snapshot)}
+          originalSig={computeSignatureMemo!}
           overrides={toolOverrides}
           onOverride={setOverride}
           onReset={resetOverrides}
@@ -489,28 +525,27 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
               className="font-mono text-[10px] font-semibold uppercase"
               style={{ letterSpacing: '0.1em', color: 'var(--foreground)' }}
             >
-              导出 · EXPORT
+              {t.studioLandmark} · {t.studioExport}
             </span>
           </div>
           <p
-            className="mb-2 font-mono text-[9px] leading-relaxed"
+            className="mb-2 font-mono text-[10px] leading-relaxed"
             style={{ color: 'var(--muted-foreground)' }}
           >
-            将当前调色板与工具箱微调导出为可导入的{' '}
-            <code style={{ color: 'var(--primary)' }}>.agentskin-theme</code> 包。
+            {t.studioExportDesc('.agentskin-theme')}
           </p>
           <div className="space-y-1.5">
             <input
               value={exportName}
               onChange={(e) => setExportName(e.target.value)}
-              placeholder="主题名"
+              placeholder={t.studioExportNamePlaceholder}
               className="h-6 w-full border border-border bg-muted px-2 font-mono text-[10px] outline-none focus:border-primary/60"
               style={{ borderRadius: 'var(--radius)' }}
             />
             <input
               value={exportAuthor}
               onChange={(e) => setExportAuthor(e.target.value)}
-              placeholder="作者（可选）"
+              placeholder={t.studioExportAuthorPlaceholder}
               className="h-6 w-full border border-border bg-muted px-2 font-mono text-[10px] outline-none focus:border-primary/60"
               style={{ borderRadius: 'var(--radius)' }}
             />
@@ -526,18 +561,18 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
               ) : (
                 <HugeIcon icon={Download01Icon} className="size-3" />
               )}
-              {exportState.loading ? '导出中…' : '导出主题包'}
+              {exportState.loading ? t.studioExporting : t.studioExportButton}
             </Button>
             {exportState.dir && (
               <div
                 className="border border-border bg-muted p-2"
                 style={{ borderRadius: 'var(--radius)' }}
               >
-                <p className="font-mono text-[9px]" style={{ color: 'var(--muted-foreground)' }}>
-                  已导出到：
+                <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+                  {t.studioExportedTo}
                 </p>
                 <p
-                  className="break-all font-mono text-[9px]"
+                  className="break-all font-mono text-[10px]"
                   style={{ color: 'var(--foreground)' }}
                 >
                   {exportState.dir}
@@ -545,7 +580,7 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
                 <Button
                   size="sm"
                   onClick={() => api.showInFolder(exportState.dir!)}
-                  className="mt-1 h-5 gap-1 font-mono text-[9px] uppercase"
+                  className="mt-1 h-5 gap-1 font-mono text-[10px] uppercase"
                   style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
                 >
                   <HugeIcon icon={Folder01Icon} className="size-2.5" />
@@ -554,8 +589,8 @@ export function StudioRightInspector({ t }: { t: UiMessages }) {
               </div>
             )}
             {exportState.error && (
-              <p className="font-mono text-[9px]" style={{ color: 'var(--primary)' }}>
-                导出失败：{exportState.error}
+              <p className="font-mono text-[10px]" style={{ color: 'var(--primary)' }}>
+                {t.studioExportError(exportState.error)}
               </p>
             )}
           </div>

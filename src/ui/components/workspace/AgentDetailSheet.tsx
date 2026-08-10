@@ -102,8 +102,8 @@ export function AgentDetailSheet({
             <SheetFooter className="border-t border-border/60">
               <Button
                 className={cn(
-                  'w-full gap-1.5 rounded-[2px] bg-primary text-primary-foreground shadow-md',
-                  'hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/20',
+                  'w-full gap-1.5 rounded-[2px] bg-primary text-primary-foreground',
+                  'hover:bg-primary/90',
                 )}
                 onClick={() => {
                   onApply(env);
