@@ -147,27 +147,103 @@ function luminance(hex) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** Map a native agent token name to a crafted palette value (CSS expression). */
+/**
+ * 优先级规则数组 — 先命中先返回。按语义特异性递减排序。
+ *
+ * 设计原则（修复 P1）：
+ *   1. sideBar / titleBar 等半透明 surface 优先于 bg/background 泛化分支，
+ *      避免 --vscode-sideBar-background 被错误映射到 --agentskin-bg（不透明），
+ *      破坏 hand-authored 的 color-mix 透 hero 效果。
+ *   2. description / muted 优先于 text/foreground 泛化分支，
+ *      避免 --vscode-descriptionForeground 被误映射到 --agentskin-text。
+ *   3. surface/panel 优先于 bg/background，因为侧栏背景本质是微透明 surface。
+ */
+const TOKEN_RULES = [
+  // --- hover 类（最具体） ---
+  {
+    pattern: (t) => t.includes('hover'),
+    result: (t, v) => {
+      if (t.includes('button') || t.includes('accent') || t.includes('brand') || t.includes('primary'))
+        return 'color-mix(in srgb, var(--agentskin-accent) 85%, #000)';
+      if (t.includes('text') || t.includes('link'))
+        return 'color-mix(in srgb, var(--agentskin-accent) 80%, #fff)';
+      return null; // 非匹配 hover -> 继续
+    },
+  },
+  // --- 侧边栏/标题栏：半透明 surface，必须在 bg/background 之前 ---
+  {
+    pattern: (t) => t.includes('sidebar') || t.includes('titlebar') || t.includes('statusbar') || t.includes('activitybar'),
+    result: (_t, _v) => 'color-mix(in srgb, var(--agentskin-surface) 15%, transparent)',
+  },
+  // --- elevated / overlay ---
+  {
+    pattern: (t) => t.includes('elevated') || t.includes('overlay'),
+    result: (_t, v) => v('--agentskin-surface-elevated'),
+  },
+  // --- surface / panel ---
+  {
+    pattern: (t) => t.includes('surface') || t.includes('panel'),
+    result: (_t, v) => v('--agentskin-surface'),
+  },
+  // --- muted / disabled / description（必须在 text/foreground 之前） ---
+  {
+    pattern: (t) => t.includes('muted') || t.includes('disabled') || t.includes('description'),
+    result: (_t, v) => v('--agentskin-muted'),
+  },
+  // --- secondary ---
+  {
+    pattern: (t) => t.includes('secondary'),
+    result: (_t, v) => v('--agentskin-secondary'),
+  },
+  // --- border / line / stroke / divider / widget ---
+  {
+    pattern: (t) =>
+      t.includes('border') || t.includes('line') || t.includes('stroke') || t.includes('divider') || t.includes('widget'),
+    result: (_t, v) => v('--agentskin-border'),
+  },
+  // --- input / fill ---
+  {
+    pattern: (t) => t.includes('input') || t.includes('fill'),
+    result: (_t, v) => v('--agentskin-input-bg'),
+  },
+  // --- code boundaries (-code- 或尾部 -code-bg/-code-fg) ---
+  {
+    pattern: (t) => t.includes('-code-') || /-code(?:-bg|-fg)$/.test(t),
+    result: (t, v) => (/code-fg/.test(t) ? v('--agentskin-code-fg') : v('--agentskin-code-bg')),
+  },
+  // --- scrollbar / focus / selection / ring ---
+  {
+    pattern: (t) => t.includes('scrollbar') || t.includes('focus') || t.includes('selection') || t.includes('ring'),
+    result: (_t, v) => v('--agentskin-focus-ring'),
+  },
+  // --- text / foreground / fg（泛化） ---
+  {
+    pattern: (t) => t.includes('text') || t.includes('foreground') || t.includes('fg'),
+    result: (_t, v) => v('--agentskin-text'),
+  },
+  // --- accent / brand / link / primary / button ---
+  {
+    pattern: (t) => t.includes('accent') || t.includes('brand') || t.includes('link') || t.includes('primary') || t.includes('button'),
+    result: (_t, v) => v('--agentskin-accent'),
+  },
+  // --- bg / background（最终 fallback） ---
+  {
+    pattern: (t) => t.includes('bg') || t.includes('background'),
+    result: (_t, v) => v('--agentskin-bg'),
+  },
+];
+
+/** Map a native agent token name to a crafted palette value (CSS expression).
+ *  @see TOKEN_RULES 优先级规则数组。 */
 function valueForToken(token) {
   const t = token.toLowerCase();
   const v = (name) => `var(${name})`;
-  if (t.includes('hover')) {
-    if (t.includes('button') || t.includes('accent') || t.includes('brand') || t.includes('primary'))
-      return 'color-mix(in srgb, var(--agentskin-accent) 85%, #000)';
-    if (t.includes('text') || t.includes('link'))
-      return 'color-mix(in srgb, var(--agentskin-accent) 80%, #fff)';
+  for (const rule of TOKEN_RULES) {
+    if (rule.pattern(t)) {
+      const out = rule.result(t, v);
+      if (out !== null) return out;
+    }
   }
-  if (t.includes('secondary')) return v('--agentskin-secondary');
-  if (t.includes('muted') || t.includes('disabled')) return v('--agentskin-muted');
-  if (t.includes('border') || t.includes('line') || t.includes('stroke') || t.includes('divider')) return v('--agentskin-border');
-  if (t.includes('input') || t.includes('fill')) return v('--agentskin-input-bg');
-  if (t.includes('code')) return t.includes('fg') ? v('--agentskin-code-fg') : v('--agentskin-code-bg');
-  if (t.includes('scrollbar') || t.includes('focus') || t.includes('selection') || t.includes('ring')) return v('--agentskin-focus-ring');
-  if (t.includes('elevated') || t.includes('overlay')) return v('--agentskin-surface-elevated');
-  if (t.includes('surface') || t.includes('panel')) return v('--agentskin-surface');
-  if (t.includes('text') || t.includes('foreground') || t.includes('fg')) return v('--agentskin-text');
-  if (t.includes('accent') || t.includes('brand') || t.includes('link') || t.includes('primary') || t.includes('button')) return v('--agentskin-accent');
-  if (t.includes('bg') || t.includes('background')) return v('--agentskin-bg');
   return v('--agentskin-bg');
 }
 
@@ -237,13 +313,29 @@ function deriveTokens(root) {
       }
     }
   }
+  // --- P1 fix: selection / focus-ring 从 accent 派生，避免 DEFAULT 紫色泄漏 ---
+  // 与 build-palette.mjs 行为一致：selection = color-mix(accent 32%), focus-ring = color-mix(accent 40%)。
+  // 调用方传入 explicit 值时保留；DEFAULT_TOKENS 仅作回退基线。
+  const rootSelection = root && typeof root === 'object' ? root['--agentskin-selection'] : undefined;
+  const rootFocusRing = root && typeof root === 'object' ? root['--agentskin-focus-ring'] : undefined;
+  if (rootSelection === undefined || rootSelection === DEFAULT_TOKENS['--agentskin-selection']) {
+    tokens['--agentskin-selection'] = `color-mix(in srgb, ${tokens['--agentskin-accent']} 32%, transparent)`;
+  }
+  if (rootFocusRing === undefined || rootFocusRing === DEFAULT_TOKENS['--agentskin-focus-ring']) {
+    tokens['--agentskin-focus-ring'] = `color-mix(in srgb, ${tokens['--agentskin-accent']} 40%, transparent)`;
+  }
   const mode = luminance(tokens['--agentskin-bg']) < 0.5 ? 'dark' : 'light';
   return { tokens, mode };
 }
 
 function manifestColors(tokens) {
+  const accent = tokens['--agentskin-accent'];
+  const buttonBg = tokens['--agentskin-button-bg'] || accent;
+  // buttonForeground: 基于按钮背景亮度决定文字色（暗色背景 -> 白字，亮色背景 -> 近黑）。
+  // 替代硬编码 '#ffffff'，与源主题 buttonForeground 语义一致。
+  const buttonFg = luminance(buttonBg) < 0.5 ? '#ffffff' : '#1a1a2e';
   return {
-    accent: tokens['--agentskin-accent'],
+    accent,
     secondary: tokens['--agentskin-secondary'],
     background: tokens['--agentskin-bg'],
     foreground: tokens['--agentskin-text'],
@@ -255,8 +347,9 @@ function manifestColors(tokens) {
     codeForeground: tokens['--agentskin-code-fg'],
     inputBackground: tokens['--agentskin-input-bg'],
     buttonBackground: tokens['--agentskin-button-bg'],
-    buttonForeground: '#ffffff',
+    buttonForeground: buttonFg,
     focusRing: tokens['--agentskin-focus-ring'],
+    selection: tokens['--agentskin-selection'],
   };
 }
 
