@@ -21,6 +21,7 @@ import { createRoot } from 'react-dom/client';
 import { applyThemeMode, getStoredThemeMode } from './ui/design/theme-mode';
 import StudioApp from './ui/StudioApp';
 import './ui/globals.css';
+import './ui/styles/workspace.css';
 
 // Apply the persisted theme before the first paint to avoid a flash.
 applyThemeMode(getStoredThemeMode());

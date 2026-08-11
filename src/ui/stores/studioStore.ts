@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
- * # Studio Store — Theme Studio 共享状态（P1-4 减重）
+ * # Studio Store — Studio 共享状态（P1-4 减重）
  *
  * 收敛 ThemeStudioPage 的 30+ useState + 回调，让 Studio 四个面板
  * （Header / LeftRail / CenterPanel / RightInspector）直读 store，
@@ -13,10 +13,10 @@
 
 import { api } from '@/api/agentSkinClient';
 import { buildStudioPalette, mergeOverridesToSkinTokens } from '@/components/studio/palette';
-import type { PreviewView } from '@/components/studio/StudioCenterPanel';
-import type { ToolOverride } from '@/components/studio/Toolbox';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';
+import type { ToolOverride } from '@/types/override';
+import type { PreviewView } from '@/types/workspace';
 
 import { toMessage } from '@shared/errors';
 import { type UiMessages, uiMessages } from '@shared/i18n';
@@ -58,6 +58,16 @@ interface StudioStoreState {
   // --- Installed-theme library linkage ---
   installedThemes: ThemeCatalogItem[];
   themeLibraryOpen: boolean;
+
+  // --- Bundles (workspace-scoped) ---
+  bundles: Array<{
+    id: string;
+    name: string;
+    themeId?: string;
+    hasWallpaper: boolean;
+    createdAt: string;
+  }>;
+  bundlesLoading: boolean;
 
   // --- Snapshot / baseline ---
   snapshot: ThemeVisualSnapshot | null;
@@ -107,6 +117,14 @@ interface StudioStoreState {
   changeAgent(agentId: AgentId): Promise<void>;
   refreshThemeLibrary(): Promise<void>;
   loadThemeIntoProject(themeId: string): Promise<void>;
+  /** Refresh installed bundles list from disk. */
+  refreshBundles(): Promise<void>;
+  /** Open file dialog, import and install a .agentskin-bundle. Returns the imported bundle id. */
+  importAndInstallBundle(): Promise<string | null>;
+  /** Install an already-stored bundle by id. Applies both theme and wallpaper. */
+  installBundle(id: string): Promise<void>;
+  /** Delete a bundle by id. */
+  deleteBundle(id: string): Promise<void>;
   /** Reload the persisted current/baseline snapshots for the active project. */
   loadProjectSnapshots(): Promise<void>;
   /** Auto-capture the agent's native baseline once per agent (switching agents). */
@@ -217,6 +235,10 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
 
   installedThemes: [],
   themeLibraryOpen: false,
+
+  // --- Bundles (workspace-scoped) ---
+  bundles: [],
+  bundlesLoading: false,
 
   snapshot: null,
   snapshotLoading: false,
@@ -529,6 +551,72 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     } finally {
       set((s) => ({ baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: false } }));
       releaseLock('baseline');
+    }
+  },
+
+  // ------------------------------------------------------------------
+  // Bundle actions
+  // ------------------------------------------------------------------
+
+  refreshBundles: async () => {
+    const showToast = useNotificationStore.getState().showToast;
+    set({ bundlesLoading: true });
+    try {
+      const list = await api.listBundles();
+      set({ bundles: list, bundlesLoading: false });
+    } catch (e) {
+      set({ bundlesLoading: false });
+      showToast(`刷新 Bundles 失败：${toMessage(e)}`, 'destructive');
+    }
+  },
+
+  importAndInstallBundle: async () => {
+    const showToast = useNotificationStore.getState().showToast;
+    set({ bundlesLoading: true });
+    try {
+      const result = await api.importBundle();
+      if (!result) {
+        set({ bundlesLoading: false });
+        return null;
+      }
+      // listBundles returns summaries; install wants id.
+      await get().installBundle(result.id);
+      await get().refreshBundles();
+      showToast(`已导入并安装Bundle：${result.name}`);
+      return result.id;
+    } catch (e) {
+      set({ bundlesLoading: false });
+      showToast(`导入Bundle失败：${toMessage(e)}`, 'destructive');
+      return null;
+    }
+  },
+
+  installBundle: async (id) => {
+    const showToast = useNotificationStore.getState().showToast;
+    try {
+      const res = await api.installBundleById(id);
+      if (!res.ok) {
+        showToast(`安装Bundle失败：${res.error ?? 'unknown'}`, 'destructive');
+      } else {
+        showToast('Bundle 已安装');
+      }
+    } catch (e) {
+      showToast(`安装Bundle失败：${toMessage(e)}`, 'destructive');
+    }
+  },
+
+  deleteBundle: async (id) => {
+    const showToast = useNotificationStore.getState().showToast;
+    try {
+      const res = await api.deleteBundle(id);
+      if (!res.ok) {
+        showToast(`删除Bundle失败：${res.error ?? 'unknown'}`, 'destructive');
+        return;
+      }
+      set((s) => ({ bundles: s.bundles.filter((b) => b.id !== id) }));
+      showToast('Bundle 已删除');
+    } catch (e) {
+      showToast(`删除Bundle失败：${toMessage(e)}`, 'destructive');
     }
   },
 

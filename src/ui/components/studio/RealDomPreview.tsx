@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
+import type { StudioColorSets, ToolOverride } from '@/types/override';
 
 import type { UiMessages } from '@shared/i18n';
 import type { DomTreeNode } from '@shared/types';
-import type { StudioColorSets, ToolOverride } from './Toolbox';
 
 const VOID_TAGS = new Set([
   'img',
@@ -444,4 +444,4 @@ function RealDomPreview({
 // Helpers
 // ---------------------------------------------------------------------------
 
-export { nodeToHtml, RealDomPreview };
+export { buildSrcDoc, nodeToHtml, overridesToCss, RealDomPreview };

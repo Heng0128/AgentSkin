@@ -9,11 +9,9 @@ import { useShellStore } from '@/stores/shellStore';
 import type { Route } from '@/types/navigation';
 
 import {
-  DashboardSquare01Icon,
   Home02Icon,
   Image02Icon,
   PaintBoardIcon,
-  Robot01Icon,
   Settings01Icon,
 } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
@@ -78,9 +76,7 @@ export function Sidebar() {
     {
       label: t.navGroupCore,
       items: [
-        { route: 'dashboard', icon: DashboardSquare01Icon, label: t.navDashboard },
         { route: 'workspace', icon: Home02Icon, label: t.navWorkspace },
-        { route: 'agents', icon: Robot01Icon, label: t.navAgents },
         { route: 'themes', icon: PaintBoardIcon, label: t.navThemes },
         { route: 'wallpaper', icon: Image02Icon, label: t.navWallpaperEngine },
       ],
@@ -155,7 +151,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="shrink-0 border-t border-[var(--border)] p-2 flex flex-col gap-1.5">
-        {/* Theme Studio — dashed border, hover red */}
+        {/* Studio — dashed border, hover red */}
         <button
           type="button"
           onClick={() => void api.openStudioWindow()}

@@ -22,8 +22,6 @@ import { cn } from '@/lib/utils';
 // shrinks by the combined size of all 4 pages (~40% of business code), so
 // the main window paints faster and the user reaches the first interactive
 // state sooner. Subsequent route switches are instant (chunk already cached).
-const AgentDashboardPage = lazy(() => import('@/pages/AgentDashboardPage'));
-const AgentsPage = lazy(() => import('@/pages/AgentsPage'));
 const SettingsPage = lazy(() =>
   import('@/pages/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
@@ -33,8 +31,8 @@ const ThemesPage = lazy(() =>
 const WallpaperEnginePage = lazy(() =>
   import('@/pages/WallpaperEnginePage').then((m) => ({ default: m.WallpaperEnginePage })),
 );
-const WorkspacePage = lazy(() =>
-  import('@/pages/WorkspacePage').then((m) => ({ default: m.WorkspacePage })),
+const UnifiedWorkspacePage = lazy(() =>
+  import('@/pages/UnifiedWorkspacePage').then((m) => ({ default: m.UnifiedWorkspacePage })),
 );
 
 export default function App() {
@@ -80,12 +78,14 @@ export default function App() {
         <div
           className={cn(
             'grid min-h-0 transition-[grid-template-columns] duration-slow ease-out',
-            controller.sidebarCollapsed
-              ? 'grid-cols-[62px_minmax(0,1fr)]'
-              : 'grid-cols-[224px_minmax(0,1fr)]',
+            controller.route === 'settings'
+              ? 'grid-cols-[1fr]'
+              : controller.sidebarCollapsed
+                ? 'grid-cols-[62px_minmax(0,1fr)]'
+                : 'grid-cols-[224px_minmax(0,1fr)]',
           )}
         >
-          <Sidebar />
+          {controller.route !== 'settings' && <Sidebar />}
 
           <section className="relative flex min-h-0 min-w-0 flex-col">
             <div className="min-h-0 flex-1 overflow-y-auto">
@@ -97,7 +97,12 @@ export default function App() {
                   Padding kept minimal (12 top / 20 sides / 16 bottom) so pages
                   use nearly the full viewport — the sidebar/title/status bars
                   already frame the edges, and the inject dock floats above. */}
-              <div className="mx-auto h-full w-full max-w-[1240px] p-[12px_20px_16px]">
+              <div
+                className={cn(
+                  'mx-auto h-full w-full p-[12px_20px_16px]',
+                  controller.route !== 'settings' && 'max-w-[1240px]',
+                )}
+              >
                 <div className="h-full animate-page-enter">
                   <Suspense
                     fallback={
@@ -107,13 +112,11 @@ export default function App() {
                     }
                   >
                     <ErrorBoundary inline>
-                      {controller.route === 'dashboard' && (
-                        <AgentDashboardPage controller={controller} />
+                      {(controller.route === 'dashboard' ||
+                        controller.route === 'workspace' ||
+                        controller.route === 'agents') && (
+                        <UnifiedWorkspacePage controller={controller} />
                       )}
-                      {controller.route === 'workspace' && (
-                        <WorkspacePage controller={controller} />
-                      )}
-                      {controller.route === 'agents' && <AgentsPage controller={controller} />}
                       {controller.route === 'themes' && <ThemesPage controller={controller} />}
                       {controller.route === 'wallpaper' && (
                         <WallpaperEnginePage controller={controller} />

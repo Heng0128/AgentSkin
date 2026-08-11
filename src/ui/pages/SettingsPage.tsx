@@ -25,6 +25,7 @@ import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
 
 import {
+  ArrowLeft01Icon,
   CheckmarkCircle02Icon,
   Copy01Icon,
   DashboardSquare01Icon,
@@ -232,6 +233,15 @@ export function SettingsPage({ controller }: { controller: AppController }) {
         <div className="flex min-h-0 flex-col">
           <div className="flex items-center justify-between border-b border-border px-4 py-2">
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => controller.setRoute('workspace')}
+                className="h-7 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+              >
+                <HugeIcon icon={ArrowLeft01Icon} className="size-3.5" />
+                {t.settingsBack}
+              </Button>
               <h2 className="font-display text-[13px] font-bold tracking-tight">
                 {activeSection.label}
               </h2>

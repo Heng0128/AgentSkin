@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
+ * @deprecated Merged into UnifiedWorkspacePage. Retained for reference only.
+ *
  * # AgentsPage
  *
  * Agent 管理视图 — 聚合所有 Agent 的状态、安装路径、调试端口配置。

@@ -5,6 +5,7 @@ import { HugeIcon } from '@/components/ui/huge-icon';
 import type { PalettePreset } from '@/lib/palettePresets';
 import { deletePalettePreset, loadPalettePresets, savePalettePreset } from '@/lib/palettePresets';
 import { useStudioStore } from '@/stores/studioStore';
+import type { ToolOverride } from '@/types/override';
 
 import { SlidersHorizontalIcon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
@@ -197,53 +198,6 @@ interface ToolboxPanelProps {
   overrides?: ToolOverride | null;
   onOverride: (key: keyof ToolOverride, value: string | number | boolean | undefined) => void;
   onReset: () => void;
-}
-
-export interface ToolOverride {
-  // shape
-  radius?: string;
-  spacing?: number;
-  shadowLevel?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  blurPx?: number;
-  borderWidth?: number;
-  // color (re-themed by role in the replica)
-  accent?: string;
-  background?: string;
-  foreground?: string;
-  surface?: string;
-  // typography
-  fontSize?: number;
-  fontFam?: string;
-  lineHeight?: number;
-  // motion
-  duration?: string;
-  timing?: string;
-  // layout / density (preview-only)
-  scale?: number;
-  separators?: boolean;
-  // filter (preview-only)
-  invert?: boolean;
-  contrast?: number;
-  saturate?: number;
-  // visual effects (preview-only, inspired by HeiGe/WorkBuddy)
-  dim?: number; // 0-1 暗化叠加层
-  opacity?: number; // 0-1 整体内容透明度
-  // gradient (bakeable)
-  gradientAccent?: boolean;
-  // Full semantic palette (e.g. image-to-theme / preset load) — kept so the
-  // export builder can bake the complete 14-token `--agentskin-*` set. The
-  // four role fields above (accent/background/foreground/surface) drive the
-  // live preview; `colors` is the source of truth for export.
-  colors?: Record<string, string>;
-}
-
-/** Original color roles extracted from the snapshot, used by the replica to
- *  rebind each element's color to a `--as-*` var by its semantic role. */
-export interface StudioColorSets {
-  primaryBg: string | null;
-  surfaceBgs: string[];
-  texts: string[];
-  accents: string[];
 }
 
 function shadowLevels(

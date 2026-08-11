@@ -3,7 +3,7 @@
 /**
  * # StudioApp
  *
- * Trimmed application shell for the standalone Theme Studio window. Unlike
+ * Trimmed application shell for the standalone Studio window. Unlike
  * the main `App`, it has:
  *   - no sidebar / workspace navigation (the studio is reached via its own
  *     dedicated {@link BrowserWindow}, opened from the main window's sidebar)
@@ -17,16 +17,12 @@
  * the main process push events back to this window's webContents.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { TitleBar } from '@/components/title-bar';
-import { cn } from '@/lib/utils';
-import { ThemeStudioPage } from '@/pages/ThemeStudioPage';
+import { WorkspacePage } from '@/pages/WorkspacePage';
 import { useShellStore } from '@/stores/shellStore';
+import { useStatusStore } from '@/stores/statusStore';
 import { useStudioStore } from '@/stores/studioStore';
-
-import type { UiMessages } from '@shared/i18n';
-import { uiMessages } from '@shared/i18n';
 
 export default function StudioApp() {
   const locale = useShellStore((s) => s.locale);
@@ -37,12 +33,27 @@ export default function StudioApp() {
     setRoute('studio');
   }, [setRoute]);
 
-  const t: UiMessages = uiMessages[locale];
-
-  // 全局 Undo/Redo 快捷键：Ctrl/Cmd+Z 撤销，Ctrl/Cmd+Shift+Z 或 Ctrl+Y 重做。
-  // 输入框/文本域/下拉聚焦时跳过，避免与输入框原生撤销冲突。
   const undo = useStudioStore((s) => s.undo);
   const redo = useStudioStore((s) => s.redo);
+  const refreshStatus = useStatusStore((s) => s.refreshStatus);
+  const isRefreshing = useStatusStore((s) => s.isRefreshing);
+
+  // Poll system status
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    const triggerPoll = () => {
+      if (isRefreshing) return;
+      void refreshStatus();
+    };
+    const initRafId = requestAnimationFrame(triggerPoll);
+    pollRef.current = setInterval(triggerPoll, 5000);
+    return () => {
+      cancelAnimationFrame(initRafId);
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [refreshStatus, isRefreshing]);
+
+  // Undo/Redo shortcuts
   useEffect(() => {
     const isEditable = (el: EventTarget | null): boolean => {
       if (!(el instanceof HTMLElement)) return false;
@@ -68,17 +79,7 @@ export default function StudioApp() {
 
   return (
     <ErrorBoundary locale={locale}>
-      <main
-        className={cn(
-          'relative z-10 flex h-svh flex-col overflow-hidden font-sans text-foreground bg-background',
-        )}
-      >
-        <TitleBar />
-
-        <section className="min-h-0 min-w-0 flex-1 overflow-hidden">
-          <ThemeStudioPage t={t} />
-        </section>
-      </main>
+      <WorkspacePage />
     </ErrorBoundary>
   );
 }

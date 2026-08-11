@@ -3,12 +3,6 @@
 import { type DragEvent, useMemo, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { VirtualThemeGrid } from '@/components/themes/VirtualThemeGrid';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
@@ -190,7 +184,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           {controller.isInstalling ? t.importing : t.importTheme}
         </Button>
 
-        {/* Theme Studio — btn-red */}
+        {/* Studio — btn-red */}
         <Button
           size="sm"
           className="h-[30px] rounded-[2px] bg-primary text-primary-foreground border border-primary transition-[background-color,transform] duration-150 hover:bg-primary/90 active:translate-y-px active:scale-[.99]"
@@ -198,7 +192,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             void api.openStudioWindow();
           }}
         >
-          Theme Studio
+          {t.navStudio}
         </Button>
       </div>
 
@@ -293,49 +287,32 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         <div className="ml-auto flex items-center gap-2">
           {dynamicCount > 0 && (
             <Badge variant="red" data-icon="inline-start" className="gap-1">
-              {dynamicCount} DYNAMIC
+              {dynamicCount} {t.themeDynamic}
             </Badge>
           )}
           {activeThemeCount > 0 && (
             <Badge variant="default" data-icon="inline-start" className="gap-1">
-              {activeThemeCount} ACTIVE
+              {activeThemeCount} {t.themeActive}
             </Badge>
           )}
         </div>
       </div>
 
-      {/* Quick guide accordion — collapsible usage instructions */}
-      <Accordion type="single" collapsible className="mb-2">
-        <AccordionItem value="guide" className="border-b-0">
-          <AccordionTrigger className="py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground">
-            {t.quickGuide}
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-1 pb-2 font-mono text-[10.5px] leading-relaxed text-muted-foreground/70">
-              <p>· {t.guideImport}</p>
-              <p>· {t.guidePreview}</p>
-              <p>· {t.guideDynamic}</p>
-              <p>· {t.guideStudio}</p>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-
       {/* Swiss metadata row — theme count + active palette info */}
       <div className="flex items-center gap-3 py-2">
         <span className="font-mono text-[10px] uppercase tracking-[.18em] text-muted-foreground">
-          Library
+          {t.themeLibrary}
         </span>
         <span className="font-mono text-xs tabular-nums text-foreground">
           {tc.themes.length === tc.allCount
-            ? `${tc.allCount} themes`
-            : `${tc.themes.length} / ${tc.allCount} themes`}
+            ? t.themeCount(tc.allCount)
+            : `${tc.themes.length} / ${tc.allCount}`}
         </span>
         {dynamicCount > 0 && (
           <>
             <span className="size-0.5 rounded-full bg-muted-foreground/30" />
             <span className="font-mono text-[10px] text-muted-foreground">
-              {dynamicCount} dynamic
+              {dynamicCount} {t.themeDynamic}
             </span>
           </>
         )}
@@ -343,7 +320,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           <>
             <span className="size-0.5 rounded-full bg-muted-foreground/30" />
             <span className="font-mono text-[10px] text-muted-foreground">
-              {activeThemeCount} active
+              {activeThemeCount} {t.themeActive}
             </span>
           </>
         )}
@@ -374,7 +351,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             className="text-xs font-medium text-muted-foreground"
             style={{ letterSpacing: '0.1em', fontFamily: 'var(--f-mono, monospace)' }}
           >
-            {tc.query ? 'NO RESULTS' : 'LIBRARY EMPTY'}
+            {tc.query ? t.themeNoResults : t.themeLibraryEmpty}
           </p>
           <p className="mt-2 max-w-52 text-xs leading-relaxed text-muted-foreground/70">
             {tc.query || tc.selectedCategory ? t.noSearchResultsHint : t.emptyInstalledHint}

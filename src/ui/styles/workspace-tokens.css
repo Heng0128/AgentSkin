@@ -1,0 +1,195 @@
+/* =================================================================
+ * AgentSkin Workspace — Design Tokens (CSS Custom Properties)
+ *
+ * Layered bg: 0 (stage farthest) → 4 (highest elevation)
+ * Layered fg: 0 (primary)       → 3 (disabled / most muted)
+ *
+ * 5 -bg layers support the docked / floating-ui overlap model:
+ *   bg-0: stage backplate (darkest)
+ *   bg-1: page root / status bar
+ *   bg-2: panel / drawer / inspector / dock
+ *   bg-3: card / input / raised element
+ *   bg-4: hover / selected subtle
+ *
+ * Reference palette:
+ *   · bg-0 is darker than globals --background to push the
+ *     iframe window forward (contrast between canvas and window)
+ *   · accent is redefined here to align with workspace color
+ *     (globals --primary is blue for app-chrome; workspace
+ *     accent is red for preview-ops)
+ * ================================================================= */
+
+:root {
+  /* ----------------------------------------------------------
+   * Background layers (dark → light)
+   * ---------------------------------------------------------- */
+  --bg-0: #0c0c10; /* stage backplate (iframes sit on this) */
+  --bg-1: #121216; /* page root · status bar */
+  --bg-2: #18181c; /* panels · drawer · inspector · dock */
+  --bg-3: #1e1e22; /* card · input · raised element */
+  --bg-4: #262630; /* hover / selected subtle */
+
+  /* ----------------------------------------------------------
+   * Foreground layers (high → low contrast)
+   * ---------------------------------------------------------- */
+  --fg-0: rgba(255, 255, 255, 0.92); /* primary text */
+  --fg-1: rgba(255, 255, 255, 0.62); /* secondary */
+  --fg-2: rgba(255, 255, 255, 0.38); /* tertiary / placeholder */
+  --fg-3: rgba(255, 255, 255, 0.22); /* disabled */
+
+  /* ----------------------------------------------------------
+   * Borders (subtle → strong)
+   * ---------------------------------------------------------- */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  /* ----------------------------------------------------------
+   * Accent (red — preview operations, selection, branding in workspace)
+   * ---------------------------------------------------------- */
+  --accent: #ff453a;
+  --accent-hover: #ff6b61;
+  --accent-subtle: rgba(255, 69, 58, 0.12);
+  --accent-ghost: rgba(255, 69, 58, 0.06);
+
+  /* ----------------------------------------------------------
+   * Semantic colors
+   * ---------------------------------------------------------- */
+  --cr-ok: #2ed573;
+  --cr-warn: #ffd240;
+  --cr-info: #3b82f6;
+
+  /* ----------------------------------------------------------
+   * Radius
+   * ---------------------------------------------------------- */
+  --r-micro: 2px; /* badge, tiny chip */
+  --r-xs: 3px; /* button, chip, input */
+  --r-sm: 4px; /* card, input standalone */
+  --r-md: 6px; /* dialog, elevated card */
+  --r-lg: 8px; /* floating toolbar, dock */
+
+  /* ----------------------------------------------------------
+   * Spacing
+   * ---------------------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* ----------------------------------------------------------
+   * Heights
+   * ---------------------------------------------------------- */
+  --h-topbar: 52px;
+  --h-status: 24px;
+  --h-tab: 32px;
+  --h-input: 32px;
+  --h-btn: 32px;
+  --h-btn-sm: 28px;
+
+  /* ----------------------------------------------------------
+   * Widths
+   * ---------------------------------------------------------- */
+  --w-drawer: 200px;
+  --w-drawer-collapsed: 48px;
+  --w-inspector: 240px;
+  --w-inspector-collapsed: 4px;
+
+  /* ----------------------------------------------------------
+   * Dock (height is mutable — only set defaults here)
+   * ---------------------------------------------------------- */
+  --dock-h: 0px;
+  --dock-h-open: 260px;
+
+  /* ----------------------------------------------------------
+   * Z-index scale
+   * ---------------------------------------------------------- */
+  --z-stage: 1;
+  --z-toolbar: 50;
+  --z-dock: 100;
+  --z-topbar: 110;
+  --z-status: 120;
+  --z-dialog: 200;
+
+  /* ----------------------------------------------------------
+   * Shadows
+   * ---------------------------------------------------------- */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-float: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-dialog: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+  /* ----------------------------------------------------------
+   * Motion
+   * ---------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-mid: 180ms;
+  --dur-slow: 240ms;
+}
+
+/* =================================================================
+ * Swiss / International Design System — Workspace Token Aliases
+ *
+ * The --ws-* variables are the canonical, prefixed token set for
+ * workspace UI. They align with the bare bg and fg tokens above
+ * but provide a single, namespace-safe source of truth so that
+ * components can reference workspace tokens without colliding with globals.
+ * ================================================================= */
+
+:root {
+  /* ----------------------------------------------------------
+   * Background layers (dark → light)
+   * ---------------------------------------------------------- */
+  --ws-bg-0: #09090b; /* stage backplate */
+  --ws-bg-1: #121216; /* page root · status bar */
+  --ws-bg-2: #18181c; /* panels · drawer · inspector · dock */
+  --ws-bg-3: #1e1e22; /* card · input · raised element */
+  --ws-bg-4: #262630; /* hover / selected subtle */
+
+  /* ----------------------------------------------------------
+   * Foreground layers (high → low contrast)
+   * ---------------------------------------------------------- */
+  --ws-fg-0: rgba(255, 255, 255, 0.92); /* primary text */
+  --ws-fg-1: rgba(255, 255, 255, 0.62); /* secondary */
+  --ws-fg-2: rgba(255, 255, 255, 0.38); /* tertiary / placeholder */
+  --ws-fg-3: rgba(255, 255, 255, 0.22); /* disabled */
+
+  /* ----------------------------------------------------------
+   * Borders
+   * ---------------------------------------------------------- */
+  --ws-border-subtle: rgba(255, 255, 255, 0.05);
+  --ws-border-default: rgba(255, 255, 255, 0.08);
+
+  /* ----------------------------------------------------------
+   * Accent
+   * ---------------------------------------------------------- */
+  --ws-accent: #ff453a;
+  --ws-accent-muted: rgba(255, 69, 58, 0.12);
+
+  /* ----------------------------------------------------------
+   * Typography scale
+   * ---------------------------------------------------------- */
+  --ws-text-xs: 10px;
+  --ws-text-sm: 11px;
+  --ws-text-base: 13px;
+  --ws-text-lg: 16px;
+
+  /* ----------------------------------------------------------
+   * Radius
+   * ---------------------------------------------------------- */
+  --ws-radius-sm: 2px;
+  --ws-radius-md: 6px;
+
+  /* ----------------------------------------------------------
+   * Shadow (single float tier)
+   * ---------------------------------------------------------- */
+  --ws-shadow-float: 0 16px 64px rgba(0, 0, 0, 0.5);
+
+  /* ----------------------------------------------------------
+   * Font families
+   * ---------------------------------------------------------- */
+  --ws-font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --ws-font-sans: "Space Grotesk", system-ui, sans-serif;
+}

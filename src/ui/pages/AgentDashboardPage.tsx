@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
+ * @deprecated Merged into UnifiedWorkspacePage. Retained for reference only.
+ *
  * # AgentDashboardPage → Overview
  *
  * 概览页面 — 替代原来的 Dashboard 仪表盘。
