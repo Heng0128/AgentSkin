@@ -599,7 +599,9 @@ export function FitGeneratorPanel({
         {!loading && !profile && !error && (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
             <HugeIcon icon={SwatchIcon} className={`size-10 ${_v.t10}`} />
-            <p className={`font-mono text-[11px] ${_v.t30}`}>{t.studioFitEmptyHint}</p>
+            <p className={`font-mono text-[length:var(--font-size-caption)] ${_v.t30}`}>
+              {t.studioFitEmptyHint}
+            </p>
           </div>
         )}
 
@@ -702,7 +704,9 @@ export function FitGeneratorPanel({
                               ? t.studioFitHarmony
                               : t.studioFitSemantic}
                         </span>
-                        <div className={`mt-0.5 font-mono text-[13px] font-bold ${_v.t80}`}>
+                        <div
+                          className={`mt-0.5 font-mono text-[length:var(--font-size-body)] font-bold ${_v.t80}`}
+                        >
                           {Math.round(
                             s.key === 'contrast'
                               ? s.score * 0.5
@@ -726,7 +730,9 @@ export function FitGeneratorPanel({
         {profile && proposals.length === 0 && !loading && !error && (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
             <HugeIcon icon={SwatchIcon} className={`size-10 ${_v.t10}`} />
-            <p className={`font-mono text-[11px] ${_v.t40}`}>{t.studioFitClickToGenerate(count)}</p>
+            <p className={`font-mono text-[length:var(--font-size-caption)] ${_v.t40}`}>
+              {t.studioFitClickToGenerate(count)}
+            </p>
             <p className={`max-w-xs font-mono text-[10px] ${_v.t20}`}>
               {t.studioFitExtractionDesc}
             </p>

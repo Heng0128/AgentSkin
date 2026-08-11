@@ -1,0 +1,70 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "format": "agentskin-theme",
+  "id": "terminal-green",
+  "name": "Terminal Green",
+  "displayName": "Terminal Green",
+  "version": "1.0.0",
+  "description": "由 AgentSkin 工作室导出（traework）",
+  "author": {
+    "name": "AgentSkin Team"
+  },
+  "mode": "dark",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#6fd97f",
+    "secondary": "#8fbf94",
+    "background": "#0a0e0a",
+    "foreground": "#d5e8d5",
+    "muted": "#77887a",
+    "surface": "#101810",
+    "surfaceElevated": "#172017",
+    "border": "rgba(111, 217, 127, 0.18)",
+    "codeBackground": "#060a06",
+    "codeForeground": "#c0d8c0",
+    "inputBackground": "#131c13",
+    "buttonBackground": "rgba(111, 217, 127, 0.14)",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#6fd97f60"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "studio",
+  "tags": [
+    "studio",
+    "custom",
+    "dark"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework"
+  ],
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-",
+      "--wb-",
+      "--text-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

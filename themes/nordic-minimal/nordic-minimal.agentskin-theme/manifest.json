@@ -1,0 +1,70 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "format": "agentskin-theme",
+  "id": "nordic-minimal",
+  "name": "Nordic Minimal",
+  "displayName": "Nordic Minimal",
+  "version": "1.0.0",
+  "description": "由 AgentSkin 工作室导出（traework）",
+  "author": {
+    "name": "AgentSkin Team"
+  },
+  "mode": "dark",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#7fa8bd",
+    "secondary": "#9fb8c4",
+    "background": "#0f1419",
+    "foreground": "#d8dee9",
+    "muted": "#7a8a99",
+    "surface": "#171e26",
+    "surfaceElevated": "#1e2830",
+    "border": "rgba(127, 168, 189, 0.18)",
+    "codeBackground": "#0a0e12",
+    "codeForeground": "#c3ccd8",
+    "inputBackground": "#1a222b",
+    "buttonBackground": "rgba(127, 168, 189, 0.14)",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#7fa8bd60"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "studio",
+  "tags": [
+    "studio",
+    "custom",
+    "dark"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework"
+  ],
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-",
+      "--wb-",
+      "--text-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "format": "agentskin-theme",
+  "id": "rose-quartz",
+  "name": "Rose Quartz",
+  "displayName": "Rose Quartz",
+  "version": "1.0.0",
+  "description": "由 AgentSkin 工作室导出（traework）",
+  "author": {
+    "name": "AgentSkin Team"
+  },
+  "mode": "light",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#c4708f",
+    "secondary": "#b08296",
+    "background": "#f8f3f4",
+    "foreground": "#3a2a30",
+    "muted": "#8a7078",
+    "surface": "#ffffff",
+    "surfaceElevated": "#fdf9fa",
+    "border": "rgba(40, 42, 54, 0.14)",
+    "codeBackground": "#f0e8ea",
+    "codeForeground": "#4a3a40",
+    "inputBackground": "#f5eef0",
+    "buttonBackground": "rgba(196, 112, 143, 0.16)",
+    "buttonForeground": "#ffffff",
+    "focusRing": "rgba(196, 112, 143, 0.4)"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "studio",
+  "tags": [
+    "studio",
+    "custom",
+    "light"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework"
+  ],
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-",
+      "--wb-",
+      "--text-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

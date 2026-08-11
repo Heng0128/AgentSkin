@@ -1,0 +1,70 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "format": "agentskin-theme",
+  "id": "ocean-tide",
+  "name": "Ocean Tide",
+  "displayName": "Ocean Tide",
+  "version": "1.0.0",
+  "description": "由 AgentSkin 工作室导出（traework）",
+  "author": {
+    "name": "AgentSkin Team"
+  },
+  "mode": "dark",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#6fc3d9",
+    "secondary": "#8fa8bf",
+    "background": "#0a1218",
+    "foreground": "#d8e4ea",
+    "muted": "#7a8b94",
+    "surface": "#101c26",
+    "surfaceElevated": "#172531",
+    "border": "rgba(111, 195, 217, 0.18)",
+    "codeBackground": "#060c10",
+    "codeForeground": "#c0d2da",
+    "inputBackground": "#132028",
+    "buttonBackground": "rgba(111, 195, 217, 0.14)",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#6fc3d960"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "studio",
+  "tags": [
+    "studio",
+    "custom",
+    "dark"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework"
+  ],
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-",
+      "--wb-",
+      "--text-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

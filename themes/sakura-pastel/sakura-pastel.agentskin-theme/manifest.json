@@ -1,0 +1,70 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "format": "agentskin-theme",
+  "id": "sakura-pastel",
+  "name": "Sakura Pastel",
+  "displayName": "Sakura Pastel",
+  "version": "1.0.0",
+  "description": "由 AgentSkin 工作室导出（traework）",
+  "author": {
+    "name": "AgentSkin Team"
+  },
+  "mode": "light",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#e08aa8",
+    "secondary": "#d9b8c8",
+    "background": "#faf4f0",
+    "foreground": "#4a3f45",
+    "muted": "#9a8b92",
+    "surface": "#ffffff",
+    "surfaceElevated": "#fffdfb",
+    "border": "rgba(224, 138, 168, 0.25)",
+    "codeBackground": "#f3e9e5",
+    "codeForeground": "#6b5a63",
+    "inputBackground": "#ffffff",
+    "buttonBackground": "rgba(224, 138, 168, 0.18)",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#e08aa866"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "studio",
+  "tags": [
+    "studio",
+    "custom",
+    "light"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework"
+  ],
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-",
+      "--wb-",
+      "--text-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

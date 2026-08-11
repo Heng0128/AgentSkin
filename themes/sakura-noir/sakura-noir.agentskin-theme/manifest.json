@@ -1,0 +1,70 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "format": "agentskin-theme",
+  "id": "sakura-noir",
+  "name": "Sakura Noir",
+  "displayName": "Sakura Noir",
+  "version": "1.0.0",
+  "description": "由 AgentSkin 工作室导出（traework）",
+  "author": {
+    "name": "AgentSkin Team"
+  },
+  "mode": "dark",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#e8a0b8",
+    "secondary": "#c9a0b0",
+    "background": "#141014",
+    "foreground": "#eadfe4",
+    "muted": "#96868e",
+    "surface": "#1e181e",
+    "surfaceElevated": "#272026",
+    "border": "rgba(232, 160, 184, 0.18)",
+    "codeBackground": "#0e0b0e",
+    "codeForeground": "#d8ccd2",
+    "inputBackground": "#221b22",
+    "buttonBackground": "rgba(232, 160, 184, 0.14)",
+    "buttonForeground": "#ffffff",
+    "focusRing": "#e8a0b860"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "studio",
+  "tags": [
+    "studio",
+    "custom",
+    "dark"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework"
+  ],
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-",
+      "--wb-",
+      "--text-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

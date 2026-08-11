@@ -1,0 +1,70 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "format": "agentskin-theme",
+  "id": "bamboo-mist",
+  "name": "Bamboo Mist",
+  "displayName": "Bamboo Mist",
+  "version": "1.0.0",
+  "description": "由 AgentSkin 工作室导出（traework）",
+  "author": {
+    "name": "AgentSkin Team"
+  },
+  "mode": "light",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#6f9480",
+    "secondary": "#8a9a84",
+    "background": "#f5f4ef",
+    "foreground": "#2c302a",
+    "muted": "#767c70",
+    "surface": "#ffffff",
+    "surfaceElevated": "#fbfaf7",
+    "border": "rgba(40, 42, 54, 0.14)",
+    "codeBackground": "#ecEde8",
+    "codeForeground": "#3c403a",
+    "inputBackground": "#f1f2ec",
+    "buttonBackground": "rgba(111, 148, 128, 0.16)",
+    "buttonForeground": "#ffffff",
+    "focusRing": "rgba(111, 148, 128, 0.4)"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "studio",
+  "tags": [
+    "studio",
+    "custom",
+    "light"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework"
+  ],
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-",
+      "--wb-",
+      "--text-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}
