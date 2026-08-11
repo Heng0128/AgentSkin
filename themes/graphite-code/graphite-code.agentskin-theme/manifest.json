@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "graphite-code",
-  "name": "Graphite Code",
-  "displayName": "Graphite Code",
+  "name": "石墨工坊",
+  "displayName": "石墨工坊",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#363a40",
     "inputBackground": "#f0f2f4",
     "buttonBackground": "rgba(91, 122, 153, 0.16)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "rgba(91, 122, 153, 0.4)"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #5b7a99 40%, transparent)",
+    "selection": "color-mix(in srgb, #5b7a99 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

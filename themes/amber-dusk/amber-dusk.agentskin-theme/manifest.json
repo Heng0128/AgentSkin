@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "amber-dusk",
-  "name": "Amber Dusk",
-  "displayName": "Amber Dusk",
+  "name": "琥珀暮色",
+  "displayName": "琥珀暮色",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#d8cbb8",
     "inputBackground": "#241d18",
     "buttonBackground": "rgba(217, 162, 107, 0.14)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "#d9a26b60"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #d9a26b 40%, transparent)",
+    "selection": "color-mix(in srgb, #d9a26b 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

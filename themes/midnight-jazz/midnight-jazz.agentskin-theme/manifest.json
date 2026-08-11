@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "midnight-jazz",
-  "name": "Midnight Jazz",
-  "displayName": "Midnight Jazz",
+  "name": "午夜爵士",
+  "displayName": "午夜爵士",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#d0ccc2",
     "inputBackground": "#181c29",
     "buttonBackground": "rgba(217, 162, 107, 0.14)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "#d9a26b60"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #d9a26b 40%, transparent)",
+    "selection": "color-mix(in srgb, #d9a26b 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

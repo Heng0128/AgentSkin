@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "forest-pine",
-  "name": "Forest Pine",
-  "displayName": "Forest Pine",
+  "name": "松林雾霭",
+  "displayName": "松林雾霭",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#c2d4c6",
     "inputBackground": "#16241e",
     "buttonBackground": "rgba(143, 191, 159, 0.14)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "#8fbf9f60"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #8fbf9f 40%, transparent)",
+    "selection": "color-mix(in srgb, #8fbf9f 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

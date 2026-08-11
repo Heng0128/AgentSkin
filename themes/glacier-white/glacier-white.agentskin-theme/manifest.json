@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "glacier-white",
-  "name": "Glacier White",
-  "displayName": "Glacier White",
+  "name": "冰川白",
+  "displayName": "冰川白",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#34383c",
     "inputBackground": "#f2f4f6",
     "buttonBackground": "rgba(91, 143, 191, 0.16)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "rgba(91, 143, 191, 0.4)"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #5b8fbf 40%, transparent)",
+    "selection": "color-mix(in srgb, #5b8fbf 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

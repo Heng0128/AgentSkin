@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "sakura-noir",
-  "name": "Sakura Noir",
-  "displayName": "Sakura Noir",
+  "name": "夜樱",
+  "displayName": "夜樱",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#d8ccd2",
     "inputBackground": "#221b22",
     "buttonBackground": "rgba(232, 160, 184, 0.14)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "#e8a0b860"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #e8a0b8 40%, transparent)",
+    "selection": "color-mix(in srgb, #e8a0b8 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

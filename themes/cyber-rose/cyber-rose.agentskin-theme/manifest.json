@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "cyber-rose",
-  "name": "Cyber Rose",
-  "displayName": "Cyber Rose",
+  "name": "赛博蔷薇",
+  "displayName": "赛博蔷薇",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#d6cad2",
     "inputBackground": "#1f1824",
     "buttonBackground": "rgba(232, 127, 168, 0.14)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "#e87fa860"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #e87fa8 40%, transparent)",
+    "selection": "color-mix(in srgb, #e87fa8 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

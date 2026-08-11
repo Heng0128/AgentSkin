@@ -13,8 +13,8 @@
   --agentskin-code-fg: #c1b8dc;
   --agentskin-input-bg: #181329;
   --agentskin-button-bg: rgba(139, 124, 247, 0.15);
-  --agentskin-focus-ring: #8b7cf760;
-  --agentskin-selection: rgba(157, 139, 255, 0.32);
+  --agentskin-focus-ring: color-mix(in srgb, #8b7cf7 40%, transparent);
+  --agentskin-selection: color-mix(in srgb, #8b7cf7 32%, transparent);
 }
 
 /* Redirect traework native design tokens onto the crafted palette */
@@ -23,12 +23,12 @@ html.agentskin-host-traework body, html.agentskin-host-traework body * {
   --vscode-editor-background: var(--agentskin-bg) !important;
   --vscode-foreground: var(--agentskin-text) !important;
   --vscode-editor-foreground: var(--agentskin-text) !important;
-  --vscode-sideBar-background: var(--agentskin-bg) !important;
-  --vscode-activityBar-background: var(--agentskin-bg) !important;
-  --vscode-statusBar-background: var(--agentskin-bg) !important;
-  --vscode-titleBar-activeBackground: var(--agentskin-bg) !important;
-  --vscode-titleBar-activeForeground: var(--agentskin-text) !important;
-  --vscode-titleBar-inactiveBackground: var(--agentskin-bg) !important;
+  --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-activityBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-statusBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-titleBar-activeBackground: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-titleBar-activeForeground: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-titleBar-inactiveBackground: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
   --vscode-tab-activeBackground: var(--agentskin-bg) !important;
   --vscode-input-background: var(--agentskin-input-bg) !important;
   --vscode-dropdown-background: var(--agentskin-bg) !important;
@@ -39,11 +39,13 @@ html.agentskin-host-traework body, html.agentskin-host-traework body * {
   --vscode-button-foreground: var(--agentskin-text) !important;
   --vscode-button-hoverBackground: color-mix(in srgb, var(--agentskin-accent) 85%, #000) !important;
   --vscode-focusBorder: var(--agentskin-border) !important;
-  --vscode-panel-border: var(--agentskin-border) !important;
+  --vscode-panel-border: var(--agentskin-surface) !important;
   --vscode-widget-border: var(--agentskin-border) !important;
   --vscode-scrollbarSlider-background: var(--agentskin-focus-ring) !important;
   --vscode-scrollbarSlider-hoverBackground: var(--agentskin-focus-ring) !important;
-  --vscode-descriptionForeground: var(--agentskin-text) !important;
+  --vscode-descriptionForeground: var(--agentskin-muted) !important;
   --vscode-icube-bg: var(--agentskin-bg) !important;
   --vscode-icube-fg: var(--agentskin-text) !important;
 }
+
+/* Craft overrides — Studio toolbox dimensions */

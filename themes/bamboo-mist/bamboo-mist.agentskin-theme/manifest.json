@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "bamboo-mist",
-  "name": "Bamboo Mist",
-  "displayName": "Bamboo Mist",
+  "name": "竹雾茶烟",
+  "displayName": "竹雾茶烟",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#3c403a",
     "inputBackground": "#f1f2ec",
     "buttonBackground": "rgba(111, 148, 128, 0.16)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "rgba(111, 148, 128, 0.4)"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #6f9480 40%, transparent)",
+    "selection": "color-mix(in srgb, #6f9480 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

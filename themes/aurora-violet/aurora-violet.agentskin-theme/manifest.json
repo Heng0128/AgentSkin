@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "aurora-violet",
-  "name": "Aurora Violet",
-  "displayName": "Aurora Violet",
+  "name": "极光紫",
+  "displayName": "极光紫",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#cfcadd",
     "inputBackground": "#191429",
     "buttonBackground": "rgba(169, 143, 232, 0.14)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "#a98fe860"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #a98fe8 40%, transparent)",
+    "selection": "color-mix(in srgb, #a98fe8 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

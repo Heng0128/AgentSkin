@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "rose-quartz",
-  "name": "Rose Quartz",
-  "displayName": "Rose Quartz",
+  "name": "蔷薇石英",
+  "displayName": "蔷薇石英",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#4a3a40",
     "inputBackground": "#f5eef0",
     "buttonBackground": "rgba(196, 112, 143, 0.16)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "rgba(196, 112, 143, 0.4)"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #c4708f 40%, transparent)",
+    "selection": "color-mix(in srgb, #c4708f 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

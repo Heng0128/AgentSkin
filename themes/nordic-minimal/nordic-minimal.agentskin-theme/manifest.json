@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "nordic-minimal",
-  "name": "Nordic Minimal",
-  "displayName": "Nordic Minimal",
+  "name": "极简北欧",
+  "displayName": "极简北欧",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#c3ccd8",
     "inputBackground": "#1a222b",
     "buttonBackground": "rgba(127, 168, 189, 0.14)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "#7fa8bd60"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #7fa8bd 40%, transparent)",
+    "selection": "color-mix(in srgb, #7fa8bd 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",

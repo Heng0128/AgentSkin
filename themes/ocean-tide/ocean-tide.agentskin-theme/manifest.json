@@ -3,8 +3,8 @@
   "schemaVersion": 2,
   "format": "agentskin-theme",
   "id": "ocean-tide",
-  "name": "Ocean Tide",
-  "displayName": "Ocean Tide",
+  "name": "深海潮汐",
+  "displayName": "深海潮汐",
   "version": "1.0.0",
   "description": "由 AgentSkin 工作室导出（traework）",
   "author": {
@@ -40,8 +40,9 @@
     "codeForeground": "#c0d2da",
     "inputBackground": "#132028",
     "buttonBackground": "rgba(111, 195, 217, 0.14)",
-    "buttonForeground": "#ffffff",
-    "focusRing": "#6fc3d960"
+    "buttonForeground": "#1a1a2e",
+    "focusRing": "color-mix(in srgb, #6fc3d9 40%, transparent)",
+    "selection": "color-mix(in srgb, #6fc3d9 32%, transparent)"
   },
   "preview": "preview.png",
   "icon": "icon.png",
