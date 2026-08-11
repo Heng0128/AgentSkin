@@ -27,6 +27,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const THEMES_DIR = path.resolve(process.cwd(), 'themes');
+const ENGINES_DIR = path.resolve(process.cwd(), 'engines');
 
 /** The 14 required design tokens every agent CSS must declare (no hero art —
  *  `--agentskin-art` is injected at runtime, not authored in the theme). */
@@ -56,6 +57,44 @@ const REQUIRED_TOKENS = [
 const PALETTE_TOKENS = REQUIRED_TOKENS.filter(
   (t) => t !== '--agentskin-button-bg' && t !== '--agentskin-input-bg',
 );
+
+/**
+ * RGB-raw companion tokens — derived in `build-palette.mjs` from their parent
+ * color tokens. Per-agent CSS in the engines directory uses
+ * `rgba(var(--agentskin-muted-raw), alpha)` for translucent surfaces; if the
+ * palette omits the `-raw` token the browser sees an invalid value, collapsing
+ * the alpha layer. We require every palette to carry these.
+ */
+const RAW_TOKENS = [
+  '--agentskin-accent-raw',
+  '--agentskin-secondary-raw',
+  '--agentskin-text-raw',
+  '--agentskin-muted-raw',
+  '--agentskin-surface-raw',
+  '--agentskin-surface-elevated-raw',
+  '--agentskin-bg-raw',
+  '--agentskin-border-raw',
+];
+
+const ALL_PALETTE_TOKENS = [...PALETTE_TOKENS, ...RAW_TOKENS];
+
+/** Detect `var(--x, fallback)` where fallback is hardcoded (e.g. 128,128,128).
+ *  These indicate tokens that the palette may not declare, risking silent
+ *  fallback drift at runtime. */
+function findRawFallbacks(css) {
+  const out = [];
+  const re = /var\(\s*(--agentskin-[\w-]+)\s*,\s*([^)]+)\)/g;
+  let m;
+  while ((m = re.exec(css)) !== null) {
+    const token = m[1];
+    const fallback = m[2].trim();
+    // Only flag *-raw with neutral fallback (the known drift pattern)
+    if (token.endsWith('-raw') && /128,\s*128,\s*128|#\d\d\d\d\d\d|rgba?\(\s*128/.test(fallback)) {
+      out.push(`${token} → fallback ${fallback}`);
+    }
+  }
+  return out;
+}
 
 function tokenPattern(token) {
   // Match a declaration inside any block: `--agentskin-bg: <value>;`
@@ -179,9 +218,39 @@ async function main() {
       if (
         (await fs.stat(palettePath).then(() => true).catch(() => false)) === true
       ) {
-        await checkTokenCoverage(palettePath, `${entry.name}/${paletteName}`, errors, PALETTE_TOKENS);
+        await checkTokenCoverage(palettePath, `${entry.name}/${paletteName}`, errors, ALL_PALETTE_TOKENS);
       }
     }
+  }
+
+  // 3) P2 guard: scan engines/*/tokens.css for *-raw fallback to neutral gray.
+  //    These indicate defensive fallbacks that exist in engine CSS. They should
+  //    never fire when the palette properly declares the *-raw tokens (which
+  //    `build-palette.mjs` does). Reported as non-blocking warnings so operators
+  //    can see drift observations without CI failure.
+  const rawWarnings = [];
+  try {
+    const engineDirs = await fs.readdir(ENGINES_DIR, { withFileTypes: true });
+    for (const ed of engineDirs) {
+      if (!ed.isDirectory()) continue;
+      const tokensPath = path.join(ENGINES_DIR, ed.name, 'tokens.css');
+      let engineCss;
+      try {
+        engineCss = await fs.readFile(tokensPath, 'utf8');
+      } catch {
+        continue;
+      }
+      for (const hit of findRawFallbacks(engineCss)) {
+        rawWarnings.push(`engines/${ed.name}/tokens.css: *-raw neutral fallback — ${hit}`);
+      }
+    }
+  } catch {
+    // engines/ may not exist in minimal checkouts — non-fatal
+  }
+
+  if (rawWarnings.length > 0) {
+    console.warn(`check-themes: ${rawWarnings.length} *-raw fallback observation(s) (non-blocking):`);
+    for (const w of rawWarnings) console.warn(`  ⚠ ${w}`);
   }
 
   if (errors.length > 0) {
