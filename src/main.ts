@@ -212,7 +212,7 @@ app
         // the always-on-top splash lingered on top of an already-visible main
         // window (the window was shown twice — once by createMainWindow and
         // again by fadeOutSplash).
-        createWindow: () =>
+        createWindow: (warnings) =>
           createMainWindow({
             rendererUrl: process.env.ELECTRON_RENDERER_URL,
             onReadyToShow: () => void handleSplashTransition(warnings),

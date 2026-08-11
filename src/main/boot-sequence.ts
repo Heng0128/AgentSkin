@@ -62,7 +62,7 @@ import { WallpaperService } from './wallpaper-service';
 import { runWarmUp } from './warm-up/index';
 
 export interface BootDeps {
-  createWindow: () => Promise<void>;
+  createWindow: (warnings: string[]) => Promise<void>;
   onQuit: () => void;
   onApplyRequest: (themeId: string, themeName: string, appId: AgentId) => void;
 }
@@ -348,7 +348,7 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
     '打开主窗口...',
     10,
     async () => {
-      await deps.createWindow();
+      await deps.createWindow(warnings);
     },
     '创建主窗口失败',
   );

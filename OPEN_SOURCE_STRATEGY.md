@@ -137,7 +137,7 @@ AgentSkin/
 ### 5.1 入站许可
 
 - 向本仓库提交代码即表示同意以该文件既有许可（默认 MPL-2.0）授权项目使用。MPL 自带专利授权条款（§2.1），**无需额外 CLA**。
-- 新增文件必须包含 SPDX 头：`// SPDX-License-Identifier: MPL-2.0`（现状覆盖率 100%，314 个源文件均已携带，CI 应维持该门禁）。
+- 新增文件必须包含 SPDX 头：`// SPDX-License-Identifier: MPL-2.0`（现状覆盖率 100%，395 个源文件均已携带，CI 应维持该门禁）。
 
 ### 5.2 贡献准入
 
@@ -190,7 +190,7 @@ AgentSkin Premium（付费）
 | ASSETS_LICENSE.md / TRADEMARKS.md | ✅ | 已按 AgentSkin 品牌改写 |
 | SOURCE_CODE.md | ✅ | 满足 MPL 源码提供义务；建议补一句指向 NOTICE 的衍生说明（可选） |
 | THIRD_PARTY_NOTICES.md | ✅ | 含 vendored 引擎登记 |
-| SPDX 头覆盖率 | ✅ | 314/312 源文件（含测试），100% |
+| SPDX 头覆盖率 | ✅ | 395/395 源文件（含测试），100% |
 | licenses/Apache-2.0.txt | ✅ | vendored 引擎许可文本 |
 | `src/engine/` 目录内许可文件副本 | ⚠️ 缺口 | 目录内无 LICENSE/NOTICE 文件，仅 package.json 声明；建议放置副本或符号链接 |
 | CONTRIBUTING.md | ⚠️ 缺口 | 贡献规则目前仅存在于本文档第 5 节；建议增加指向本文档的入口文件 |

@@ -94,7 +94,7 @@ themes/<id>/manifest.json（14 语义 token + 元数据 + targets 验证选择�
 
 ## UI（src/ui/）
 
-- 状态管理：React Hooks 组合（useAppController 聚合 useBoot/useThemes/useWallpaper 等），无外部状态库；IPC 统一经 `api/agentSkinClient.ts`。
+- 状态管理：UI 状态管理使用 17 个 Zustand stores（src/ui/stores/），useAppController 作为兼容聚合层为新旧组件提供统一接口；IPC 统一经 `api/agentSkinClient.ts`。
 - 页面：dashboard / workspace / themes / wallpaper / settings + 独立 Studio 窗口。
 - 组件：shadcn 风格（components.json），约 60 个组件。
 - i18n：自研双语（zh-CN 默认 / en），src/shared/i18n.ts。
@@ -104,15 +104,15 @@ themes/<id>/manifest.json（14 语义 token + 元数据 + targets 验证选择�
 
 | 目录 | 内容 |
 |------|------|
-| `themes/` | 3 个内置主题（manifest + 生成 CSS + 配色方案 + 图片） |
+| `themes/` | 15 个内置主题（manifest + 生成 CSS + 配色方案 + 图片） |
 | `engines/` | 6 个目标应用的运行时三件套 |
 | `agents-profiles/` | 目标应用 DOM/CSS 分析 profile（Visual Analyzer 的待接通数据资产） |
 | `agents-raw-data/` | CDP 全量提取原始数据 |
-| `scripts/` | 构建/校验/生成/探测脚本（28 个） |
+| `scripts/` | 构建/校验/生成/探测脚本（30 个） |
 
 ## 质量门禁
 
 - `npm run check` = typecheck + biome + vitest + check-injection-contract（四源一致）+ check-themes（14-token 契约）+ theme-staleness（palette/CSS 与 manifest 同步）。
 - CI：tag 触发完整构建发布流水线；PR/push 触发 validate 门禁（`.github/workflows/pr.yml`）。
 - pre-commit：husky + lint-staged（biome 修复 + themes 校验）。
-- 测试：83 个测试文件，集中于 CDP / 主题 / IPC / 壁纸 / Scene；`agent-engine-service.ts` 测试补齐中（ROADMAP P0-2）。
+- 测试：103 个测试文件，集中于 CDP / 主题 / IPC / 壁纸 / Scene；`agent-engine-service.ts` 测试补齐中（ROADMAP P0-2）。

@@ -1,0 +1,118 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-08-11",
+  "scan_id": "Task-2K-20260811-1500",
+  "direct_competitors": [
+    {
+      "name": "Ant Design",
+      "repo": "ant-design/ant-design",
+      "focus": ["theme", "token"],
+      "status": "tracked"
+    },
+    {
+      "name": "MUI",
+      "repo": "mui/material-ui",
+      "focus": ["theming", "css-vars"],
+      "latest_version": "v9.2.0",
+      "latest_release_date": "2026-07-03",
+      "stars": 98734,
+      "status": "active",
+      "key_signals": [
+        "CSS Theme Variables 成为默认方案",
+        "cssVarPrefix 可自定义或清空前缀",
+        "colorSchemeSelector 支持 class/data/custom 策略",
+        "useColorScheme Hook 替代传统 toggle",
+        "React 20 beta 已适配"
+      ]
+    },
+    {
+      "name": "Chakra UI",
+      "repo": "chakra-ui/chakra-ui",
+      "focus": ["token", "color-mode"],
+      "status": "active",
+      "key_signals": [
+        "semanticTokens 支持 _dark 后缀分组",
+        "useColorModeValue 自动处理 SSR 闪烁",
+        "运行时切换平均 < 17ms (M1 Mac)",
+        "CSS 变量深度集成"
+      ]
+    }
+  ],
+  "token_engines": [
+    {
+      "name": "Style Dictionary",
+      "repo": "style-dictionary/style-dictionary",
+      "focus": ["transform", "format"],
+      "latest_release_date": "2026-08-07",
+      "stars": 4764,
+      "status": "active",
+      "key_signals": [
+        "4764 stars, Apache 2.0",
+        "跨平台 Token 构建系统核心稳定",
+        "Tokens Studio studio-example-minimal 集成模板已上线"
+      ]
+    },
+    {
+      "name": "Tokens Studio",
+      "repo": "tokens-studio/figma-plugin",
+      "focus": ["figma-sync"],
+      "status": "active",
+      "key_signals": [
+        "penpot-github-sync-plugin 上线 (May 2026)",
+        "tokenscript-interpreter (TypeScript) — 基于 DTCG 的表达式语言",
+        "tokenscript-schemas — Schema registry 标准化",
+        "tokenscript-compliance-suite 合规测试套件 (Python)",
+        "studio-cli-releases — Figma CLI 同步工具"
+      ]
+    }
+  ],
+  "runtime_themes": [
+    {
+      "name": "vanilla-extract",
+      "repo": "vanilla-extract-css/vanilla-extract",
+      "focus": ["css-in-js", "theming"],
+      "status": "active",
+      "key_signals": [
+        "零运行时 CSS-in-JS 标杆",
+        "createThemeContract + createTheme 类型安全主题系统",
+        "sprinkles 原子化 CSS 框架",
+        "recipes 组件样式配方",
+        "支持 Webpack / Vite / Rollup / ESBuild / Next.js"
+      ]
+    },
+    {
+      "name": "Panda CSS",
+      "repo": "chakra-ui/panda",
+      "focus": ["token", "runtime"],
+      "status": "active",
+      "key_signals": [
+        "v1.11.x 活跃更新 (2026-07)",
+        "类型安全的 CSS-in-JS",
+        "与 Chakra UI 生态深度集成"
+      ]
+    }
+  ],
+  "a11y_rtl": [
+    {
+      "name": "DTCG",
+      "url": "https://www.designtokens.org/",
+      "focus": ["spec", "standard"],
+      "status": "tracked",
+      "note": "W3C Design Tokens Community Group — $type/$value 格式 2026 年已成为行业标准"
+    },
+    {
+      "name": "WAI-ARIA",
+      "url": "https://www.w3.org/WAI/ARIA/apg/",
+      "focus": ["patterns"],
+      "status": "tracked"
+    }
+  ],
+  "monitoring_focus": [
+    "DTCG $type/$value 标准化进程",
+    "TokenScript Tokens Studio 表达语言成熟度",
+    "MUI CSS Theme Variables 配置方案 (colorSchemeSelector 策略)",
+    "零运行时 CSS-in-JS 趋势 (vanilla-extract 模式 vs styled-components 衰退)",
+    "暗色模式 SSR 水合闪烁解决方案 (React 19 RSC 环境)",
+    "AI-Driven Token 管理 (design-extract + MCP 集成)"
+  ]
+}

@@ -40,6 +40,12 @@ export default defineConfig({
           testTimeout: 15000,
           pool: 'forks',
         },
+        resolve: {
+          alias: {
+            '@shared': path.resolve(root, 'src/shared'),
+            '@': path.resolve(root, 'src/ui'),
+          },
+        },
       },
     ],
     coverage: {

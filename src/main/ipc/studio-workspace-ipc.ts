@@ -23,6 +23,8 @@ import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { isSafeThemeId } from '../../shared/theme-id';
 import type { InstalledTheme } from '../../shared/types';
+import { ThemeInstaller } from '../catalog/theme-installer';
+import { ThemePackageLoader } from '../catalog/theme-package-loader';
 import type { MainContext } from '../main-context';
 import { deriveThemeFromImage } from '../theme/theme-from-image';
 import { sampleFromBitmap } from '../theme/wallpaper-theme';
@@ -197,13 +199,9 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
           return { ok: false, error: `Bundle ${id} not found` };
         }
         try {
-          const loader = new (await import('../catalog/theme-package-loader')).ThemePackageLoader(
-            bundlesDir(ctx.userDataRoot),
-          );
+          const loader = new ThemePackageLoader(bundlesDir(ctx.userDataRoot));
           const pkg = await loader.load(id);
-          const installer = new (await import('../catalog/theme-installer')).ThemeInstaller(
-            ctx.library,
-          );
+          const installer = new ThemeInstaller(ctx.library);
           await installer.install(pkg, bundlesDir(ctx.userDataRoot));
           return { ok: true };
         } catch (e) {

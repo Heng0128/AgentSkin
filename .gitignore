@@ -8,6 +8,12 @@ coverage/
 .env.*
 *.p12
 *.p8
+*.pem
+*.pfx
+*.key
+credentials.json
+id_rsa
+id_rsa.pub
 .tsbuildinfo
 
 # Standalone vite build output (verification runs)

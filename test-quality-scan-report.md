@@ -1,5 +1,7 @@
 # AgentSkin desktop-main Test Quality Scan Report
 
+> ⚠ 本扫描执行于 2025-07-14，覆盖 81 个文件；当前仓库已有 103 个测试文件，新增文件不在本报告范围内。
+
 **Scan Date:** 2025-07-14
 **Scope:** `src/main/**/*.test.ts` (74 files), `src/shared/**/*.test.ts` (4 files), `src/ui/**/*.test.ts` (3 files)
 **Tech Stack:** Vitest 4

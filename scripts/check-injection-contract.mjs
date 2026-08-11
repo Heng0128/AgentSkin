@@ -9,7 +9,7 @@
  * Asserts the cross-process injection contract stays in sync across four
  * structural sources:
  *
- * 1. src/shared/types.ts `AgentId` union
+ * 1. src/shared/types/agent.ts `AgentId` union
  *    (the canonical agent list — every other source must match this set)
  * 2. src/shared/injection-constants.ts HOST_CLASS_PREFIX
  *    (the main-process source of truth for the host class prefix)
@@ -71,17 +71,33 @@ function buildScopeSelectors(prefix, agents) {
 }
 
 // ---------------------------------------------------------------------------
-// 1. Extract the canonical AgentId union from src/shared/types.ts
+// 1. Extract the canonical AgentId union from src/shared/types/agent.ts
+//    (types.ts is now a barrel re-export; the canonical union lives in
+//    src/shared/types/agent.ts. We tolerate the legacy location as a fallback)
 // ---------------------------------------------------------------------------
 
-const typesPath = join(root, 'src/shared/types.ts');
-const typesSrc = readFileSync(typesPath, 'utf8');
-const agentIdMatch = /export type AgentId = ([^;]+);/.exec(typesSrc);
-if (!agentIdMatch) {
-  fail(`Could not extract AgentId union from ${typesPath}`);
+function findAgentIdUnion() {
+  const candidates = [
+    join(root, 'src/shared/types/agent.ts'),
+    join(root, 'src/shared/types.ts'),
+  ];
+  for (const p of candidates) {
+    if (!existsSync(p)) continue;
+    const src = readFileSync(p, 'utf8');
+    const m = /export type AgentId = ([^;]+);/.exec(src);
+    if (m) return { path: p, union: m[1] };
+  }
+  return null;
+}
+
+const agentIdFound = findAgentIdUnion();
+if (!agentIdFound) {
+  fail('Could not extract AgentId union from src/shared/types/agent.ts or src/shared/types.ts');
+  console.error('\n--- Injection Contract FAIL ---');
+  for (const e of errors) console.error('[FAIL]', e);
   process.exit(1);
 }
-const CANONICAL_AGENTS = agentIdMatch[1]
+const CANONICAL_AGENTS = agentIdFound.union
   .split('|')
   .map((s) => s.trim().replace(/^['"]|['"]$/g, ''))
   .filter(Boolean);
@@ -96,6 +112,8 @@ const constantsSrc = readFileSync(constantsPath, 'utf8');
 const prefixMatch = /export const HOST_CLASS_PREFIX = '([^']+)';/.exec(constantsSrc);
 if (!prefixMatch) {
   fail(`Could not extract HOST_CLASS_PREFIX from ${constantsPath}`);
+  console.error('\n--- Injection Contract FAIL ---');
+  for (const e of errors) console.error('[FAIL]', e);
   process.exit(1);
 }
 const HOST_CLASS_PREFIX = prefixMatch[1];

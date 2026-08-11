@@ -178,7 +178,7 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
             {!activeProject ? (
               <>
                 <p
-                  className="font-mono text-[11px] font-medium"
+                  className="font-mono text-[length:var(--font-size-caption)] font-medium"
                   style={{ color: 'var(--foreground)' }}
                 >
                   {t.studioEmptyNoProject}
@@ -193,7 +193,7 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
             ) : (
               <>
                 <p
-                  className="font-mono text-[11px] font-medium"
+                  className="font-mono text-[length:var(--font-size-caption)] font-medium"
                   style={{ color: 'var(--foreground)' }}
                 >
                   {t.studioEmptySnapPrompt(activeProject.name)}
