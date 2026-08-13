@@ -32,8 +32,9 @@
  * ## Integration points
  *
  *   1. ImageToThemePanel's "自定义 CSS" textarea — call `sanitizeCSS` on blur.
- *   2. StudioProject `palette.customCSS` — call `sanitizeCSS` on persist.
- *   3. RealDomPreview overridesToCss — call `sanitizeCSS` before postMessage.
+ *   2. ~~StudioProject `palette.customCSS`~~ — removed; no such field exists.
+ *   3. RealDomPreview / PreviewWindow `overridesToCss` — sanitized since
+ *      inspection-2026-08-13-1900 (before postMessage to the preview iframe).
  *
  * Inspired by: Codex-Dream-Skin's Safe-CSS guard, DOMPurify's CSS path,
  * CSP3 `style-src 'unsafe-inline'` threat model.
