@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { sanitizeCSS } from '../../../main/profile/safe-css';
-
 /**
  * # PreviewWindow
  *
@@ -31,6 +29,7 @@ import type { PreviewWindowState } from '@/types/workspace';
 import { Cancel01Icon, Copy01Icon, ExpandIcon } from '@hugeicons/core-free-icons';
 import type { DomTreeNode } from '@shared/types';
 import { AGENT_META } from '@shared/types';
+import { sanitizeCSS } from '../../../main/profile/safe-css';
 
 interface PreviewWindowProps {
   win: PreviewWindowState;
