@@ -13,7 +13,6 @@ import {
 import { HugeIcon } from '@/components/ui/huge-icon';
 import type { AgentProgress, BootPhase } from '@/hooks/useBootProgress';
 import { cn } from '@/lib/utils';
-import type { EnvironmentModel } from '@/types/environment';
 
 import {
   Copy01Icon,
@@ -23,6 +22,7 @@ import {
   MoreVerticalIcon,
 } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
+import type { EnvironmentModel } from '@shared/types/environment';
 import { AgentStatusDot, envToDotVariant } from './AgentStatusDot';
 
 /**

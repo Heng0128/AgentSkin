@@ -15,8 +15,8 @@
 
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import type { EnvironmentPreset } from '../ui/types/environment';
-import { PRESET_SCHEMA_VERSION } from '../ui/types/environment';
+import type { EnvironmentPreset } from '../shared/types/environment';
+import { PRESET_SCHEMA_VERSION } from '../shared/types/environment';
 
 const FILENAME = 'env-presets.json';
 

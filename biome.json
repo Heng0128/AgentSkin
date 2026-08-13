@@ -8,19 +8,19 @@
   "files": {
     "includes": [
       "**",
-      "!**/node_modules/**",
-      "!**/out/**",
-      "!**/dist/**",
-      "!**/.vite/**",
-      "!**/coverage/**",
+      "!**/node_modules",
+      "!**/out",
+      "!**/dist",
+      "!**/.vite",
+      "!**/coverage",
       "!**/engines/**/*.mjs",
-      "!**/src/engine/**",
+      "!**/src/engine",
       "!**/src/legacy/agentskin-core-runtime.ts",
-      "!**/themes/**",
-      "!**/build/**",
-      "!**/assets/**",
-      "!**/.build-tmp/**",
-      "!**/out_make_trash_*/**"
+      "!**/themes",
+      "!**/build",
+      "!**/assets",
+      "!**/.build-tmp",
+      "!**/out_make_trash_*"
     ]
   },
   "formatter": {

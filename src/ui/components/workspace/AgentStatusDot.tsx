@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { cn } from '@/lib/utils';
-import type { EnvironmentModel } from '@/types/environment';
+
+import type { EnvironmentModel } from '@shared/types/environment';
 
 /**
  * # AgentStatusDot

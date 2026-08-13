@@ -23,9 +23,9 @@ import { useAgentStore } from '@/stores/agentStore';
 import { useEnvironmentStore } from '@/stores/environmentStore';
 import { useStatusStore } from '@/stores/statusStore';
 import { useThemeStore } from '@/stores/themeStore';
-import type { EnvironmentModel, EnvironmentPreset } from '@/types/environment';
 
 import type { AgentId } from '@shared/types';
+import type { EnvironmentModel, EnvironmentPreset } from '@shared/types/environment';
 
 /** Build an environment id from agent + theme. */
 function envId(agentId: string, themeId: string | null): string {

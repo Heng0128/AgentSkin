@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { EnvironmentPreset } from '../ui/types/environment';
+import type { EnvironmentPreset } from '../shared/types/environment';
 import { envPresetsPath, loadEnvPresets, saveEnvPresets } from './env-preset-store';
 
 function makePreset(over: Partial<EnvironmentPreset> = {}): EnvironmentPreset {

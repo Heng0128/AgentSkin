@@ -13,10 +13,10 @@ import {
 } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import type { EnvironmentModel } from '@/types/environment';
 
 import { Rocket01Icon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
+import type { EnvironmentModel } from '@shared/types/environment';
 import { AgentStatusDot, envToDotVariant } from './AgentStatusDot';
 
 interface AgentDetailSheetProps {

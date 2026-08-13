@@ -17,6 +17,7 @@ import { CascadeView } from '@/components/studio/CascadeView';
 import { InspectorDetails } from '@/components/studio/InspectorDetails';
 import { InspectorFingerprint } from '@/components/studio/InspectorFingerprint';
 import { InspectorLandmarks } from '@/components/studio/InspectorLandmarks';
+import { InspectorProfile } from '@/components/studio/InspectorProfile';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { INSPECTOR_TABS, type InspectorTabId } from '@/types/workspace';
@@ -85,6 +86,7 @@ export function StudioInspector({ t }: { t: UiMessages }) {
         {inspector.activeTab === 'computed' && <InspectorDetails t={t} />}
         {inspector.activeTab === 'cascade' && <InspectorCascadeTab t={t} snapshot={snapshot} />}
         {inspector.activeTab === 'fingerprint' && <InspectorFingerprint t={t} />}
+        {inspector.activeTab === 'profile' && <InspectorProfile t={t} />}
       </div>
     </aside>
   );

@@ -19,7 +19,7 @@ import type {
   WallpaperAgentSetting,
   WallpaperSettings,
 } from './shared/types';
-import type { EnvironmentPreset } from './ui/types/environment';
+import type { EnvironmentPreset } from './shared/types/environment';
 
 function subscribe<T>(channel: string, listener: (payload: T) => void): () => void {
   const handler = (_event: Electron.IpcRendererEvent, payload: T) => listener(payload);
@@ -262,6 +262,27 @@ const api: AgentSkinApi = {
       deferredSelfHeals: number;
       switchEpochByAgent: number;
     }>(IpcChannel.DIAGNOSTICS_CONCURRENCY_METRICS, listener),
+  // --- Secondary target injection trace ---
+  // Per-target progress: { agent, targetId, targetType, title, success, error, elapsed }.
+  onSecondaryInjectProgress: (listener) =>
+    subscribe<{
+      agent: string;
+      targetId: string;
+      targetType: string;
+      title?: string;
+      success: boolean;
+      error?: string;
+      elapsed: number;
+    }>(IpcChannel.THEME_SECONDARY_INJECT_PROGRESS, listener),
+  // Summary: { agent, injected, failed, total, duration }.
+  onSecondaryInjectSummary: (listener) =>
+    subscribe<{
+      agent: string;
+      injected: number;
+      failed: number;
+      total: number;
+      duration: number;
+    }>(IpcChannel.THEME_SECONDARY_INJECT_SUMMARY, listener),
   /** Fire-and-forget push of renderer-side primitive sizes so the main
    *  process can include them in the unified metrics broadcast. */
   sendRendererConcurrencyMetrics: (companionBusy: number, switchEpoch: number) =>

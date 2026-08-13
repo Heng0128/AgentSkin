@@ -30,11 +30,11 @@ import { useDialogStore } from '@/stores/dialogStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';
 import { useThemeStore } from '@/stores/themeStore';
-import type { EnvironmentModel, EnvironmentPreset } from '@/types/environment';
 
 import { toMessage } from '@shared/errors';
 import { uiMessages } from '@shared/i18n';
 import type { AgentId } from '@shared/types';
+import type { EnvironmentModel, EnvironmentPreset } from '@shared/types/environment';
 import { create } from 'zustand';
 
 function currentT() {

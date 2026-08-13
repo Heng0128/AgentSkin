@@ -3,6 +3,7 @@
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { PerformancePanel } from '@/components/diagnostics/PerformancePanel';
+import { SecondaryInjectTrace } from '@/components/diagnostics/SecondaryInjectTrace';
 import {
   Accordion,
   AccordionContent,
@@ -325,6 +326,16 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                     </AccordionTrigger>
                     <AccordionContent>
                       <PerformancePanel t={t} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="secondary-inject" className="border-b-0">
+                    <AccordionTrigger className="py-2.5 text-[12px] font-semibold text-foreground">
+                      {t.settingsSecondaryInjectTitle}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <SecondaryInjectTrace t={t} />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

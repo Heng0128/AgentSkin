@@ -68,6 +68,26 @@ import { buildSecondaryInjectExpression, buildSecondaryRemoveExpression } from '
  * directly) so this module doesn't need to know about engine-dir
  * resolution — the facade owns that concern via `palette-builder`.
  */
+/** Per-target secondary-injection progress event. */
+export interface SecondaryInjectProgressEvent {
+  agent: string;
+  targetId: string;
+  targetType: string;
+  title?: string;
+  success: boolean;
+  error?: string;
+  elapsed: number;
+}
+
+/** Summary event emitted after all secondary targets have been attempted. */
+export interface SecondaryInjectSummaryEvent {
+  agent: string;
+  injected: number;
+  failed: number;
+  total: number;
+  duration: number;
+}
+
 export interface CdpFanoutDeps {
   /** Resolve the adapter for an app (from the registry). */
   adapter: (appId: AgentId) => ApplicationAdapter;
@@ -90,6 +110,12 @@ export interface CdpFanoutDeps {
   log: (line: string) => void;
   /** Main window reference for pushing health reports to the renderer via IPC. */
   mainWindow?: BrowserWindow | null;
+  /**
+   * Optional callback invoked after each secondary-target injection attempt
+   * (progress) and once after all targets have been attempted (summary).
+   * When provided, the UI can render a real-time per-target injection timeline.
+   */
+  onSecondaryProgress?: (event: SecondaryInjectProgressEvent | SecondaryInjectSummaryEvent) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -177,6 +203,7 @@ export async function injectSecondaryTargets(
   const expression = buildSecondaryInjectExpression(appId, targetTheme);
   let injected = 0;
   let failed = 0;
+  const loopStart = Date.now();
   for (const target of secondary) {
     // Abort if a newer apply/restore superseded this one mid-loop.
     if (!deps.isEpochCurrent(appId, epoch)) {
@@ -185,10 +212,14 @@ export async function injectSecondaryTargets(
       );
       return;
     }
+    const targetStart = Date.now();
+    let targetSuccess = false;
+    let targetError: string | undefined;
     try {
       const session = await connectWithRetry(target.webSocketDebuggerUrl!, 3000);
       if (!session) {
         failed++;
+        targetError = 'connect failed after retries';
         deps.log(
           `[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" connect failed after retries`,
         );
@@ -198,8 +229,10 @@ export async function injectSecondaryTargets(
         const result = await session.evaluate(expression);
         if (result.includes('"installed":true')) {
           injected++;
+          targetSuccess = true;
         } else {
           failed++;
+          targetError = `unexpected result: ${result}`;
           deps.log(
             `[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" returned: ${result}`,
           );
@@ -209,16 +242,35 @@ export async function injectSecondaryTargets(
       }
     } catch (error) {
       failed++;
+      targetError = toMessage(error);
       deps.log(
-        `[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" evaluate failed: ${toMessage(error)}`,
+        `[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" evaluate failed: ${targetError}`,
       );
     }
+    // Emit per-target progress event for the renderer UI.
+    deps.onSecondaryProgress?.({
+      agent: appId,
+      targetId: target.id ?? `${target.type}-${injected + failed}`,
+      targetType: target.type ?? 'unknown',
+      title: target.title,
+      success: targetSuccess,
+      error: targetError,
+      elapsed: Date.now() - targetStart,
+    });
   }
   deps.log(
     `[secondary] ${appId}: injected CSS into ${injected}/${secondary.length} secondary target(s)` +
       (failed ? ` (${failed} failed)` : '') +
       ` — webviews/iframes on port ${port}`,
   );
+  // Emit summary event for the renderer UI.
+  deps.onSecondaryProgress?.({
+    agent: appId,
+    injected,
+    failed,
+    total: secondary.length,
+    duration: Date.now() - loopStart,
+  });
 }
 
 /**

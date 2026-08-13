@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { EnvironmentPreset } from '../../ui/types/environment';
 import type { AppLocale } from '../i18n';
 import type { AgentCatalogItem, AgentId, InstallState, Platform } from './agent';
+import type { EnvironmentPreset } from './environment';
 import type {
   CatalogResult,
   InstalledTheme,
@@ -501,9 +501,37 @@ export interface AgentSkinApi {
     }) => void,
   ): () => void;
   /** Push renderer-side concurrency primitive sizes to the main process so
-   *  it can include them in the unified metrics broadcast. Fire-and-forget
-   *  (no ack). Called by the renderer's periodic self-report timer. */
+   * it can include them in the unified metrics broadcast. Fire-and-forget
+   * (no ack). Called by the renderer's periodic self-report timer. */
   sendRendererConcurrencyMetrics(companionBusy: number, switchEpoch: number): void;
+  // --- Secondary target injection trace ---
+  /** Subscribe to per-target secondary-injection progress events. Pushed after
+   * each webview/iframe completes (success or fail) during theme apply.
+   * Returns an unsubscribe function. No ipcMain.handle is registered —
+   * this is a main→renderer push event sent via webContents.send. */
+  onSecondaryInjectProgress(
+    listener: (event: {
+      agent: string;
+      targetId: string;
+      targetType: string;
+      title?: string;
+      success: boolean;
+      error?: string;
+      elapsed: number;
+    }) => void,
+  ): () => void;
+  /** Subscribe to the secondary-injection summary event. Pushed once after
+   * all targets have been attempted for an apply. Returns an unsubscribe
+   * function. */
+  onSecondaryInjectSummary(
+    listener: (event: {
+      agent: string;
+      injected: number;
+      failed: number;
+      total: number;
+      duration: number;
+    }) => void,
+  ): () => void;
   // --- Theme Studio: Wallpaper picker (workspace-scoped) ---
   /** List wallpapers for the Studio WALLPAPER tab. */
   listWallpapersForStudio(): Promise<

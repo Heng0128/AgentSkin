@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { api } from '@/api/agentSkinClient';
-import type { EnvironmentPreset } from '@/types/environment';
-import { ENV_PRESETS_STORAGE_KEY } from '@/types/environment';
 import { rWarn } from '@/utils/renderer-log';
+
+import type { EnvironmentPreset } from '@shared/types/environment';
+import { ENV_PRESETS_STORAGE_KEY } from '@shared/types/environment';
 
 /**
  * # EnvironmentStore

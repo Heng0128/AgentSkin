@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
 import { Spinner } from '@/components/ui/spinner';
 import type { ProgressMap } from '@/hooks/useBootProgress';
-import type { EnvironmentModel } from '@/types/environment';
 
 import { BotIcon, RefreshIcon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
+import type { EnvironmentModel } from '@shared/types/environment';
 import { EnvironmentCard } from './EnvironmentCard';
 
 /**

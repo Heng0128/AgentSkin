@@ -128,8 +128,7 @@ vi.mock('@/stores/shellStore', () => ({
   },
 }));
 
-import type { EnvironmentModel } from '@/types/environment';
-
+import type { EnvironmentModel } from '@shared/types/environment';
 // Import AFTER all mocks are in place
 import { useEnvironmentStore } from './environmentStore';
 

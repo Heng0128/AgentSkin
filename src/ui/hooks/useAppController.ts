@@ -30,6 +30,7 @@ import { useDialogStore } from '@/stores/dialogStore';
 import { useEnvironmentStore } from '@/stores/environmentStore';
 import { selectInstallFlags, useInstallFlowStore } from '@/stores/installFlowStore';
 import { useNotificationStore } from '@/stores/notificationStore';
+import { useSecondaryInjectStore } from '@/stores/secondaryInjectStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';
@@ -239,6 +240,13 @@ export function useAppController() {
       disposed = true;
       cancelAnimationFrame(rafId);
     };
+  }, []);
+
+  // -----------------------------------------------------------------------
+  // Secondary-injection trace — wire IPC subscriptions once at boot.
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    useSecondaryInjectStore.getState().init();
   }, []);
 
   // -----------------------------------------------------------------------

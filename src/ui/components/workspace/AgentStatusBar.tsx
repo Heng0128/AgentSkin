@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import { AppMark } from '@/components/app-mark';
 import type { AgentProgress, BootPhase } from '@/hooks/useBootProgress';
 import { cn } from '@/lib/utils';
-import type { EnvironmentModel } from '@/types/environment';
 
 import type { UiMessages } from '@shared/i18n';
+import type { EnvironmentModel } from '@shared/types/environment';
 
 /**
  * # AgentStatusBar

@@ -13,7 +13,7 @@
 
 import { ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
-import type { EnvironmentPreset } from '../../ui/types/environment';
+import type { EnvironmentPreset } from '../../shared/types/environment';
 import { loadEnvPresets, saveEnvPresets } from '../env-preset-store';
 import type { MainContext } from '../main-context';
 

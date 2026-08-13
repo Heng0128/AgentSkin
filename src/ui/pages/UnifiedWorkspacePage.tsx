@@ -29,7 +29,6 @@ import { useEnvironments } from '@/hooks/useEnvironments';
 import { cn } from '@/lib/utils';
 import { useEnvironmentStore } from '@/stores/environmentStore';
 import { useStatusStore } from '@/stores/statusStore';
-import type { EnvironmentModel } from '@/types/environment';
 
 import {
   Folder01Icon,
@@ -40,6 +39,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import type { HugeiconsIconProps } from '@hugeicons/react';
 import { AGENT_IDS, type AgentId } from '@shared/types';
+import type { EnvironmentModel } from '@shared/types/environment';
 
 /* ------------------------------------------------------------------ */
 /* StatTile — copied from AgentDashboardPage                           */

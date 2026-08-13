@@ -202,6 +202,16 @@ export const IpcChannel = {
   // --- Theme health check ---
   /** Theme health check report — pushed from main to renderer on each probe cycle */
   THEME_HEALTH_REPORT: 'theme:health-report',
+
+  // --- Secondary target injection trace ---
+  // SEND_ONLY — main → renderer event. Pushed once per secondary target
+  // (webview/iframe) after the theme has been applied to the main page, so the
+  // UI can show a real-time per-target injection timeline.
+  // Payload: { appId, targetId, targetType, title, success, error?, elapsed }.
+  THEME_SECONDARY_INJECT_PROGRESS: 'theme:secondary-inject-progress',
+  // SEND_ONLY — main → renderer event. Pushed once after all secondary targets
+  // have been attempted. Payload: { appId, injected, failed, total, duration }.
+  THEME_SECONDARY_INJECT_SUMMARY: 'theme:secondary-inject-summary',
 } as const;
 
 /** Union of all IPC channel names (for type-level validation in callers). */

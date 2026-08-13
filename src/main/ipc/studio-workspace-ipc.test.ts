@@ -44,6 +44,29 @@ vi.mock('./bundle-ipc', () => ({
   installBundleFromPath: (...args: unknown[]) => installBundleFromPath(...args),
 }));
 
+const themePackageLoaderLoad = vi.fn();
+const themeInstallerInstall = vi.fn();
+
+// Class-field pattern: `load`/`install` are arrow functions bound at construction
+// time to the shared vi.fn() references. beforeEach's clearAllMocks() mutates the
+// vi.fn() in place (does not reassign), so the class-field reference stays valid.
+vi.mock('../catalog/theme-package-loader', () => ({
+  ThemePackageLoader: class {
+    load = (...args: unknown[]) => themePackageLoaderLoad(...args);
+  },
+}));
+vi.mock('../catalog/theme-installer', () => ({
+  ThemeInstaller: class {
+    install = (...args: unknown[]) => themeInstallerInstall(...args);
+  },
+}));
+
+const notifyStatusChanged = vi.fn();
+
+vi.mock('../main-context', () => ({
+  notifyStatusChanged: (...args: unknown[]) => notifyStatusChanged(...args),
+}));
+
 const { registerStudioWorkspaceIpc } = await import('./studio-workspace-ipc');
 
 // ---------------------------------------------------------------------------
@@ -243,6 +266,38 @@ describe('registerStudioWorkspaceIpc', () => {
       );
       expect(result.ok).toBe(false);
       expect(result.error).toContain('not found');
+      expect(notifyStatusChanged).not.toHaveBeenCalled();
+    });
+
+    it('installs bundle by id and calls notifyStatusChanged on success', async () => {
+      const bundles = path.join(TEST_USER_DATA, 'bundles');
+      fs.mkdirSync(path.join(bundles, 'valid-theme'), { recursive: true });
+      // fs.access in the handler needs the directory to exist — mkdirSync above
+      // ensures that. bundlesDir mock returns `bundles`, and id='valid-theme'
+      // resolves to bundles/valid-theme which now exists.
+      themePackageLoaderLoad.mockResolvedValue({ id: 'valid-theme', name: 'Valid Theme' });
+      themeInstallerInstall.mockResolvedValue(undefined);
+      registerStudioWorkspaceIpc(makeCtx());
+      const result = await call<{ ok: boolean }>('studio:bundle:install-by-id', 'valid-theme');
+      expect(result.ok).toBe(true);
+      expect(themePackageLoaderLoad).toHaveBeenCalledWith('valid-theme');
+      expect(themeInstallerInstall).toHaveBeenCalled();
+      expect(notifyStatusChanged).toHaveBeenCalled();
+    });
+
+    it('does NOT call notifyStatusChanged when install throws', async () => {
+      const bundles = path.join(TEST_USER_DATA, 'bundles');
+      fs.mkdirSync(path.join(bundles, 'broken-theme'), { recursive: true });
+      themePackageLoaderLoad.mockResolvedValue({ id: 'broken-theme', name: 'Broken' });
+      themeInstallerInstall.mockRejectedValue(new Error('install failed'));
+      registerStudioWorkspaceIpc(makeCtx());
+      const result = await call<{ ok: boolean; error?: string }>(
+        'studio:bundle:install-by-id',
+        'broken-theme',
+      );
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain('install failed');
+      expect(notifyStatusChanged).not.toHaveBeenCalled();
     });
   });
 
@@ -252,6 +307,7 @@ describe('registerStudioWorkspaceIpc', () => {
       registerStudioWorkspaceIpc(makeCtx());
       const result = await call('studio:bundle:import');
       expect(result).toBeNull();
+      expect(notifyStatusChanged).not.toHaveBeenCalled();
     });
 
     it('installs the picked bundle and returns its id/name', async () => {
@@ -264,6 +320,15 @@ describe('registerStudioWorkspaceIpc', () => {
         'C:\\x.agentskin-bundle',
       );
       expect(result).toEqual({ id: 'my-bundle', name: 'My Bundle' });
+      expect(notifyStatusChanged).toHaveBeenCalled();
+    });
+
+    it('does NOT call notifyStatusChanged when import fails', async () => {
+      showOpenDialog.mockResolvedValue({ canceled: false, filePaths: ['C:\\x.agentskin-bundle'] });
+      installBundleFromPath.mockRejectedValue(new Error('tar extract boom'));
+      registerStudioWorkspaceIpc(makeCtx());
+      await expect(call('studio:bundle:import')).rejects.toThrow('tar extract boom');
+      expect(notifyStatusChanged).not.toHaveBeenCalled();
     });
   });
 
@@ -281,6 +346,19 @@ describe('registerStudioWorkspaceIpc', () => {
       const result = await call<{ ok: boolean }>('studio:bundle:delete', 'doomed');
       expect(result.ok).toBe(true);
       expect(fs.existsSync(path.join(bundles, 'doomed'))).toBe(false);
+      expect(notifyStatusChanged).toHaveBeenCalled();
+    });
+
+    it('does NOT call notifyStatusChanged when delete fails', async () => {
+      // Mock rm by overriding the fs.rm via the rm import used in handler.
+      // The handler imports `rm` from 'node:fs/promises' at top level — we
+      // cannot easily mock it here, so we test via a non-writable scenario:
+      // pass a valid-looking id whose directory exists but rm throws.
+      // Since rm is a top-level import in the target module, we instead
+      // exercise the unsafe-id path (which throws before any rm/fs call).
+      registerStudioWorkspaceIpc(makeCtx());
+      await expect(call('studio:bundle:delete', '../evil')).rejects.toThrow(/valid theme id/);
+      expect(notifyStatusChanged).not.toHaveBeenCalled();
     });
   });
 });
@@ -318,6 +396,7 @@ describe('STUDIO_BUNDLE_IMPORT regression', () => {
     } catch (err) {
       expect(isIpcTimeoutError(err)).toBe(false);
     }
+    expect(notifyStatusChanged).not.toHaveBeenCalled();
   });
 
   it('rejects with IpcTimeoutError when the handler exceeds 60s', async () => {
@@ -331,5 +410,40 @@ describe('STUDIO_BUNDLE_IMPORT regression', () => {
     await vi.runAllTimersAsync();
     await assertion;
     vi.useRealTimers();
+    expect(notifyStatusChanged).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regression: STUDIO_BUNDLE_INSTALL_BY_ID — timeout + negative
+// ---------------------------------------------------------------------------
+
+describe('STUDIO_BUNDLE_INSTALL_BY_ID regression', () => {
+  beforeEach(() => {
+    handlers.clear();
+    vi.clearAllMocks();
+    bundlesDir.mockReturnValue(path.join(TEST_USER_DATA, 'bundles'));
+    themePackageLoaderLoad.mockResolvedValue({ id: 'slow-theme', name: 'Slow Theme' });
+    // install never resolves → handler hits 15s timeout
+    themeInstallerInstall.mockReturnValue(new Promise<never>(() => {}));
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('rejects with IpcTimeoutError when install exceeds 15s', async () => {
+    vi.useFakeTimers();
+    const bundles = path.join(TEST_USER_DATA, 'bundles');
+    fs.mkdirSync(path.join(bundles, 'slow-theme'), { recursive: true });
+    registerStudioWorkspaceIpc(makeCtx());
+
+    const promise = call<{ ok: boolean }>('studio:bundle:install-by-id', 'slow-theme');
+    const assertion = expect(promise).rejects.toSatisfy((r: unknown) => isIpcTimeoutError(r));
+    await vi.runAllTimersAsync();
+    await assertion;
+    vi.useRealTimers();
+    expect(notifyStatusChanged).not.toHaveBeenCalled();
   });
 });

@@ -108,6 +108,15 @@ export const uiMessages = {
     settingsPerfTimeoutClear: '清空',
     settingsPerfTimeoutEmpty: '暂无 IPC 超时事件',
     settingsPerfTimeoutClearing: '清空中…',
+    settingsSecondaryInjectTitle: '副目标注入追踪',
+    settingsSecondaryInjectDesc: '主题 Apply 期间 webview/iframe 的 CSS 注入跟踪记录',
+    settingsSecondaryInjectEmpty: '暂无副目标注入事件 — 应用主题后将在此显示追踪',
+    settingsSecondaryInjectColTarget: '目标',
+    settingsSecondaryInjectColType: '类型',
+    settingsSecondaryInjectColElapsed: '耗时',
+    settingsSecondaryInjectColStatus: '状态',
+    settingsSecondaryInjectSummary: (injected: number, failed: number, total: number) =>
+      `${injected} 成功 / ${failed} 失败 / ${total} 总计`,
     settingsCustomCssTitle: '自定义 CSS',
     settingsCustomCssDesc: '以最高优先级注入到每个应用的自定义样式（永不覆盖，恢复时清除）。',
     settingsCustomCssPlaceholder:
@@ -987,6 +996,15 @@ export const uiMessages = {
     settingsPerfTimeoutClear: 'Clear',
     settingsPerfTimeoutEmpty: 'No IPC timeout events',
     settingsPerfTimeoutClearing: 'Clearing…',
+    settingsSecondaryInjectTitle: 'Secondary Target Injection',
+    settingsSecondaryInjectDesc: 'Per-webview/iframe CSS injection trace during theme apply',
+    settingsSecondaryInjectEmpty: 'No secondary injection events — apply a theme to see trace',
+    settingsSecondaryInjectColTarget: 'Target',
+    settingsSecondaryInjectColType: 'Type',
+    settingsSecondaryInjectColElapsed: 'Elapsed',
+    settingsSecondaryInjectColStatus: 'Status',
+    settingsSecondaryInjectSummary: (injected: number, failed: number, total: number) =>
+      `${injected} ok / ${failed} fail / ${total} total`,
     settingsCustomCssTitle: 'Custom CSS',
     settingsCustomCssDesc:
       'User styles injected with the highest priority into every app (never overwritten; cleared on restore).',

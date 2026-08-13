@@ -1077,7 +1077,7 @@ body {
 .btn-load-preset:hover { background: rgba(255,69,58,0.15); }
 .btn-apply-preset {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.08);
   color: var(--muted-foreground);
 }
 .btn-apply-preset:hover { background: rgba(255,255,255,0.04); }
@@ -2991,7 +2991,7 @@ const tabTriggers = document.querySelectorAll('.tab-trigger');
 const tabContents = document.querySelectorAll('.tab-content');
 const studioBody = document.getElementById('studioBody');
 const rightInspector = document.getElementById('rightInspector');
-const previewFrame = document.getElementById('previewFrame');
+const _previewFrame = document.getElementById('previewFrame');
 
 // Tabs that show right inspector
 const withRightPanel = ['theme', 'generator', 'raw'];
@@ -3005,7 +3005,7 @@ tabTriggers.forEach(trigger => {
     // Show target tab content
     const target = trigger.dataset.tab;
     tabContents.forEach(tc => tc.classList.remove('active'));
-    const targetEl = document.getElementById('tab-' + target);
+    const targetEl = document.getElementById(`tab-${target}`);
     if (targetEl) targetEl.classList.add('active');
 
     // Toggle right panel visibility (matches conditional render: previewView === 'theme' || 'generator' || 'raw')
@@ -3068,7 +3068,7 @@ rawModeBtns.forEach(btn => {
     const mode = btn.dataset.mode;
     currentRawMode = mode;
     const label = document.querySelector('.raw-mode-label');
-    label.textContent = 'raw native · ' + mode.toUpperCase();
+    label.textContent = `raw native · ${mode.toUpperCase()}`;
 
     const grid = document.getElementById('rawGrid');
     if (mode === 'split') {

@@ -63,6 +63,11 @@ export default function StudioApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshStatus]);
 
+  // Visual analysis progress — wire IPC subscription once at Studio boot.
+  useEffect(() => {
+    useStudioStore.getState().initAnalysisProgressSubscription();
+  }, []);
+
   // Undo/Redo shortcuts
   useEffect(() => {
     const isEditable = (el: EventTarget | null): boolean => {

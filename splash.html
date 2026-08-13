@@ -19,7 +19,7 @@
         const sysLang = (navigator.language || 'zh-CN').toLowerCase();
         // 标准化为 zh-CN / en-US 等 BCP 47 格式（Electron 的 navigator.language 已符合）
         document.documentElement.lang = sysLang.startsWith('zh') ? 'zh-CN' : (sysLang.startsWith('en') ? 'en-US' : sysLang);
-      } catch (e) { /* ignore — lang attribute fallback to zh-CN */ }
+      } catch (_e) { /* ignore — lang attribute fallback to zh-CN */ }
     </script>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
-import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import react from '@vitejs/plugin-react';
+import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 
 /**
  * Unified Electron + Vite build configuration (replaces forge.config.ts +
