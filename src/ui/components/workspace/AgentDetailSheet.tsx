@@ -117,7 +117,7 @@ export function AgentDetailSheet({
                 }}
               >
                 {isApplying ? <Spinner size={15} /> : <HugeIcon icon={Rocket01Icon} size={15} />}
-                {isApplying ? t.detailApplying || 'Applying…' : t.detailApply}
+                {isApplying ? 'Applying…' : t.detailApply}
               </Button>
             </SheetFooter>
           </>
