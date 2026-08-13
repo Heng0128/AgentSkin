@@ -220,7 +220,7 @@ export function scheduleDeferredSelfHeal(
     const d = deferredSelfHealDeps.get(appId);
 
     // Still under lock AND we haven't exceeded the safety bound → re-poll.
-    if (d && d.isApplyingTheme?.(appId) && elapsed < DEFERRED_MAX_WAIT_MS) {
+    if (d?.isApplyingTheme?.(appId) && elapsed < DEFERRED_MAX_WAIT_MS) {
       // Progressive backoff: 100ms for the first 5 attempts, then
       // 200, 400, 800, 1600 (capped). Avoids bombarding an unresponsive
       // lock-holder with fixed 100ms probes while staying responsive

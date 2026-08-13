@@ -47,8 +47,8 @@ import {
   hostClassFor,
   WALLPAPER_PUNCH_GLOBAL,
 } from '../../shared/injection-constants';
-import type { AgentId } from '../../shared/types';
 import { IpcChannel } from '../../shared/ipc-channels';
+import type { AgentId } from '../../shared/types';
 import { checkThemeHealth } from '../theme-health-check';
 import { type CdpSession, connectCdp } from './cdp-client';
 import { type InjectEngineResult, injectThemeViaCdp, removeEngineInjection } from './cdp-inject';
