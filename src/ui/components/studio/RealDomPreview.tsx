@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { StudioColorSets, ToolOverride } from '@/types/override';
+import { sanitizeCSS } from '../../../main/profile/safe-css';
 
 import type { UiMessages } from '@shared/i18n';
 import type { DomTreeNode } from '@shared/types';
@@ -378,7 +379,7 @@ function RealDomPreview({
     () => buildSrcDoc(domTree, colorSets, grad, fallbackHtml),
     [domTree, colorSets, grad, fallbackHtml],
   );
-  const overrideCss = useMemo(() => overridesToCss(overrides), [overrides]);
+  const overrideCss = useMemo(() => sanitizeCSS(overridesToCss(overrides)).clean, [overrides]);
 
   const pushOverrides = useCallback(() => {
     const w = iframeRef.current?.contentWindow;
