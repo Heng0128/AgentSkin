@@ -25,7 +25,7 @@ import { isSafeThemeId } from '../../shared/theme-id';
 import type { InstalledTheme } from '../../shared/types';
 import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
-import type { MainContext } from '../main-context';
+import { type MainContext, notifyStatusChanged } from '../main-context';
 import { deriveThemeFromImage } from '../theme/theme-from-image';
 import { sampleFromBitmap } from '../theme/wallpaper-theme';
 import { bundlesDir, installBundleFromPath } from './bundle-ipc';
@@ -207,6 +207,7 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
           const pkg = await loader.load(id);
           const installer = new ThemeInstaller(ctx.library);
           await installer.install(pkg, bundlesDir(ctx.userDataRoot));
+          notifyStatusChanged();
           return { ok: true };
         } catch (e) {
           return { ok: false, error: e instanceof Error ? e.message : String(e) };
@@ -230,6 +231,7 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
         });
         if (filePaths.length === 0) return null;
         const installed: InstalledTheme = await installBundleFromPath(ctx, filePaths[0]);
+        notifyStatusChanged();
         return { id: installed.id, name: installed.displayName };
       })(),
     );
@@ -248,6 +250,7 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
         const dir = path.join(bundlesDir(ctx.userDataRoot), id);
         try {
           await rm(dir, { recursive: true, force: true });
+          notifyStatusChanged();
           return { ok: true };
         } catch (e) {
           return { ok: false, error: e instanceof Error ? e.message : String(e) };

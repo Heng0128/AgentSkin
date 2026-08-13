@@ -92,6 +92,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
         });
         if (result.canceled || result.filePaths.length === 0) return deps.wallpapers.list();
         await deps.wallpapers.importMedia(result.filePaths[0]);
+        notifyStatusChanged();
         return deps.wallpapers.list();
       })(),
     );
@@ -106,6 +107,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
         (async () => {
           assertNonEmptyString(id, getMainMessages().invalidPath);
           await wp().deleteWallpaper(id);
+          notifyStatusChanged();
           return wp().list();
         })(),
       );
@@ -162,9 +164,11 @@ export function registerWallpaperIpc(deps: MainContext): void {
           assertNonEmptyString(wallpaperId, getMainMessages().invalidPath);
           assertAgentId(appId);
           const opts = (options ?? {}) as { restartExisting?: boolean };
-          return deps.core.applyWallpaperToAgent(wallpaperId, appId, {
+          const result = await deps.core.applyWallpaperToAgent(wallpaperId, appId, {
             restartExisting: opts.restartExisting === true,
           });
+          notifyStatusChanged();
+          return result;
         })(),
       );
     },
@@ -239,6 +243,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
           // 主题自带视频壁纸 → 注册为 theme:<id>，使 UI/apply 可解析（pywal
           // 主题在 userData 下，boot 的 themesDir 路径拼接不适用）。
           await registerThemeWallpaperForInstalled(deps, installed, outRoot);
+          notifyStatusChanged();
           return installed;
         })(),
       );
