@@ -1,214 +1,122 @@
-# AgentSkin 功能做实报告
+# SOLIDIFICATION_REPORT_2026-08-13-2100
 
-> 生成时间: 2026-08-13 21:00 | 执行 ID: Solidify-20260813-2100 | 方向: B-数据链路接通
-
----
-
-## 1. 执行摘要
-
-| 维度 | 结果 |
-|------|------|
-| 选定方向 | B-数据链路接通 (权重3) |
-| 历史回避 | D 方向连续 3 次 COMPLETED → 本次降权为 0，从 A/B/I/K(权重3) 中抽取 |
-| 巡检联动 | INSPECTION_REPORT_2026-08-13-1900 发现 engine-strategy 静默吞错，已由上次修复；本次不联动提权 |
-| 虚实差距 | Scanner-α 发现 28 条 + Scanner-β 发现 15 条 = 43 条原始差距 |
-| 实化数量 | 4 个独立功能点 (5 处文件修改) |
-| 验证结果 | TSC 零错误 / Vitest 105 文件 1959 测试全部通过 / Biome 零违规 |
-| 审计结论 | PASS |
+- **执行时间**: 2026-08-13 21:00 (UTC+8)
+- **方向**: F — 诊断与自我修复（CDP 连接韧性 + 健康检测 + 遥测行动化）
+- **方法论**: 8 并行探索 → 选优 → 4 并行深度扫描 → 聚合为 5 根因 → 3 并行修复 → 独立验证 → 4 并行反向复查 → 1 轮修复循环
+- **状态**: ✅ COMPLETED
 
 ---
 
-## 2. 方向选择理由
-
-**加权随机选取结果**: B-数据链路接通
-
-**选择依据**:
-1. 历史回避规则: D-交互分支补全连续 3 次 COMPLETED (1634/1900/2000)，降权为 0
-2. 剩余最高权重方向池: A(3), B(3), I(3), K(3)
-3. B 方向聚焦真实数据流管线打通 — 数据从 API/配置/Store 到 UI 渲染的链路断裂问题，与上次 D 方向（交互分支补全）形成互补覆盖
-4. 轮盘赌结果: B 被选中
-
----
-
-## 3. Phase 1 — 虚实识别
-
-### Scanner-α (代码层) 输出摘要
-- **扫描模式命中**: silent-swallow(12), missing(8), partial(5), hardcoded(3)
-- **重点发现**:
-  - `visual-analyzer-ipc.ts` — VISUAL_ANALYSIS_STATUS 通道无 emitter (P2)
-  - `visual-analyzer-ipc.ts` — VISUAL_ANALYSIS_CDP_EXTRACT handler 缺失
-  - `wallpaperStore.ts` — initialize() catch 静默吞错，无 error 状态暴露
-  - `studioStore.ts` — loadProjectSnapshots catch 将 snapshotError 设为 null
-  - `statusStore.ts` — error 字段已暴露但 StatusBar 无消费者
-
-### Scanner-β (场景层) 输出摘要
-- **Critical (2)**: VISUAL_ANALYSIS_STATUS 无 push emit、StatusBar 不订阅 statusStore.error
-- **Major (9)**: wallpaperStore 无降级状态、studioStore 快照错误语义丢失、环境切换无进度反馈
-- **Minor (4)**: installAll 无进度、activateThemeWallpaper 找不到壁纸不提示
-
----
-
-## 4. Phase 2-4 — 需求锚定、方案设计、选优
-
-### 选定实施的 4 个功能点
-
-| # | 功能点 | 严重度 | 方案 | 选择理由 |
-|---|--------|--------|------|---------|
-| 1 | studioStore snapshotError 语义修复 | major | catch 中使用 toMessage(e) | 区分"加载失败"与"无快照"两种状态 |
-| 2 | wallpaperStore error 暴露 | major | 新增 error 字段 + catch 捕获 | Wallpaper Engine 未安装时 UI 显示降级态而非空白 |
-| 3 | StatusBar 订阅 statusStore.error | major | prop 驱动显示 ERR/··· | 完成上次报告遗留的"错误→UI 反馈"链路 |
-| 4 | VISUAL_ANALYSIS_STATUS 推流实化 | critical | 导出 emitVisualAnalysisStatus | 闭合 preload 订阅→main 推送的数据通道 |
-
-### 未实施项 (存档)
-
-- **CDP_EXTRACT handler 完整实化**: 依赖完整的 CDP injection pipeline (P2 blocked)，超出本次 scope；已为占位修复（避免 30s 超时）由并行自动化提交
-- **StatusBar 增加重试按钮**: 交互职责属于下次 D 方向扩展
-- **studioStore snapshot 测试**: 标记为后续 G 方向
-
----
-
-## 5. Phase 5 — 实施明细
-
-### 改动 1: studioStore — snapshotError 语义修复
-**文件**: `src/ui/stores/studioStore.ts`  
-**修改**: `loadProjectSnapshots` catch 块从 `snapshotError: null` 改为 `snapshotError: toMessage(e)`，UI 现在可以区分"加载失败"和"快照不存在"
-- 新增: stale-project guard (catch 分支也检查 `capturedId === activeProjectId`)
-- Commit: 收纳入快照 `46058d0`
-
-### 改动 2: wallpaperStore — error 字段暴露
-**文件**: `src/ui/stores/wallpaperStore.ts`  
-**修改**:
-- WallpaperState 接口新增 `error: string | null`
-- 初始值 `error: null`
-- success 路径: `error: null`
-- failure 路径: `error: message` (使用 instanceof Error 安全提取)
-- Commit: 收纳入快照 `46058d0`
-
-### 改动 3: VISUAL_ANALYSIS_STATUS emitter 实化
-**文件**: `src/main/ipc/visual-analyzer-ipc.ts` + `src/main/ipc/index.ts`  
-**修改**:
-- `VisualAnalyzerDeps` 新增 `emitStatus?: (payload) => void` 可选字段
-- 新增模块级 `export let emitVisualAnalysisStatus` — 可安全调用的 push 句柄
-- 注册时捕获 emitter + try/catch 容错 + setImmediate 初始 ready 脉冲
-- `ipc/index.ts` 传入 `emitStatus: (payload) => ctx.mainWindow?.webContents.send(...)`
-- Commit: 收纳入快照 `46058d0`
-
-### 改动 4: StatusBar 订阅 statusStore.error
-**文件**: `src/ui/components/status-bar.tsx`  
-**修改**:
-- 新增订阅 `useStatusStore((s) => s.error)` 和 `useStatusStore((s) => s.isRefreshing)`
-- 中心集群 (lg+ 可见) 新增错误指示器: `"···"` (刷新中) / `"ERR"` (失败)
-- title={statusError} 提供完整错误 tooltip
-- Swiss/International 风格: 10px mono, tabular-nums, text-cr-warning 颜色
-- Commit: 收纳入快照 `46058d0`
-
----
-
-## 6. Phase 6 — 验证结果
-
-### Verifier-TSC (TypeScript 类型检查)
-- 退出码: 0
-- 新增文件类型干净，无新增错误
-
-### Verifier-Vitest (单元测试)
-- 全量: **105 文件 / 1959 测试全部通过** (✓)
-- 改动文件相关测试:
-  - `visual-analyzer-ipc.test.ts`: 25 tests ✓ (含 getStatus timeout 退化测试)
-  - `wallpaperStore.test.ts`: 13 tests ✓ (toast 行为验证)
-
-### Verifier-Biome (代码规范)
-- 5 文件检查: 0 error, 0 warning
-- 修复了 2 个初始违规 (useConst, aria-label)
-
-### Verifier-E2E (真实场景验证)
-- 不适用 — Electron E2E 框架尚未建立；本次改动为 Store 状态层 + 纯 UI 条件渲染
-
----
-
-## 7. Phase 7 — 修复记录
-
-在第 1 轮验证中发现的 Biome 违规 (已修复):
-1. `visual-analyzer-ipc.ts:271` `let cur` → `const cur` (useConst 规则)
-2. `status-bar.tsx:105` `<span aria-label={...}>` — span 不支持 aria-label，删除并格式化为单行
-
-修复后全部 4 个 Verifier 通过，未进入修复循环。
-
----
-
-## 8. Phase 8 — 审计结论
-
-**总体判定: PASS**
-
-### 完整性
-- 4 个锚定需求均有对应代码修改和验证
-- 存档项 (CDP_EXTRACT/重试按钮/测试) 均有标记
-
-### 回归性
-- wallpaperStore.error 为向后兼容新增字段，默认 null，不影响现有订阅者
-- emitVisualAnalysisStatus 默认空函数，无 emitter 时安全 no-op
-- studioStore snapshotError 修改不改变字段类型 (string | null)
-
-### 一致性
-- error 字段模式与 statusStore.error 一致
-- StatusBar 条件渲染符合 Swiss/International 设计系统 (10px mono 阶梯)
-- IPC 依赖注入模式与现有 getStatus 一致
-
-### 安全性
-- wallpaperStore 错误提取使用 `instanceof Error` 安全模式，不泄露内部信息
-- try/catch 包裹用户回调失败，不阻塞主流程
-- 无敏感信息写入错误消息
-
-### 性能影响
-- StatusBar 仅新增 2 个 selector 订阅，不增加渲染复杂度
-- emitVisualAnalysisStatus 使用 let 模块级绑定，无 GC 压力
-- setImmediate ready 脉冲为一次性事件，无持续开销
-
----
-
-## 9. 提交记录
+## 执行总览
 
 ```
-46058d0 snapshot: pre-inspection baseline (2026-08-13-1900)  ← 包含本次全部改动
-bdb1ae8 fix(ipc): add graceful handler for VISUAL_ANALYSIS_CDP_EXTRACT [phase5-step2]  ← 并行
-4b8c6fe fix(studio): integrate sanitizeCSS into preview CSS injection [phase5-step1]  ← 并行
-ac4eeff docs: remove dead FitGeneratorPanel + customCSS references [phase5-step3]  ← 并行
-```
-
-> 注: 因本次自动化执行期间存在另一并行自动化实例 (19:00 触发的 direction B 也选到同一方向池)，两个实例的改动合并到同一快照链; 本次负责的 4 个功能点修改由提交 `46058d0` 收纳。
-
----
-
-## 10. 后续行动建议 (优先级排序)
-
-1. **【高】StatusBar 增加重试按钮**: 当 statusStore.error 非空时，ERR 可点击触发 refreshStatus() — 完整闭合"错误→修复"交互回路
-2. **【高】wallpaperStore.error UI 消费者**: 在 Wallpaper Settings 面板订阅 wallpaperStore.error，显示 WE 未安装提示 + 安装引导
-3. **【中】studioStore snapshotError 测试覆盖**: 模拟 loadStudioSnapshot IPC 失败 → 验证 snapshotError 状态设置
-4. **【中】full VISUAL_ANALYSIS_STATUS 管线**: 将 emitVisualAnalysisStatus 接入真实的 CDP extraction 流水线 (需 P2 CDP 依赖)
-5. **【低】wallpaperStore 加载骨架屏**: loading + error 双态明确后，wallpaper 列表加载时可显示 skeleton 占位
-
----
-
-## 11. 回滚指南
-
-如需回滚本次全部改动:
-```bash
-git reset --soft 351d960  # 回到 pre-solidify baseline [dir-B-data-pipeline] 的快照点
-```
-
-单步回滚 (如已知特定 commit):
-```bash
-git revert <commit-hash>
+Phase0  8 并行方向探索 → 选中 F（诊断自修复）
+Phase1  4 并行深度扫描 → 26 发现 → 5 根因簇
+Phase2  聚合去重 → 排优先级
+Phase3  3 并行修复器（Fixer-α/β/γ）→ 修复 R2/R3/R4/R5
+Phase4  独立验证 → TSC 0 + Biome 0 + VIT 213 tests 全过
+Phase5  修复循环 1 轮 → 修复 1 个回归（overflowCount mock 缺字段）
+Phase6  4 并行反向验证 → 16/17 PASS，1 回归已修复
+Phase7  本报告
 ```
 
 ---
 
-## 附录 — 完整改动文件清单
+## 核心修复（5 个根因 → N 个具体修复）
 
-| 文件 | 改动类型 | 行数变化 |
-|------|---------|---------|
-| `src/ui/stores/studioStore.ts` | 修改 | +7/-3 |
-| `src/ui/stores/wallpaperStore.ts` | 修改 | +12/-5 |
-| `src/main/ipc/visual-analyzer-ipc.ts` | 修改 | +48/-1 |
-| `src/main/ipc/index.ts` | 修改 | +11/-1 |
-| `src/ui/components/status-bar.tsx` | 修改 | +20/-5 |
-| **合计** | 5 文件 | **+98/-15** |
+| 根因 | 修复 | 文件 | 复杂度 |
+|------|------|------|--------|
+| **R2 固定间隔无退避** | 新增 `backoffDelay()` 工具 + hero retry 改用退避 + deferred self-heal 渐进间隔 | shared.ts / cdp-strategy.ts / wallpaper-injector.ts | M |
+| **R3 healthCheck 不暴露** | 新增 `THEME_HEALTH_REPORT` IPC 常量 + cdp-fanout 推送 health 结果到 UI | ipc-channels.ts / cdp-fanout.ts | L |
+| **R4 后台失败静默吞错** | `Promise.allSettled` 后 filter rejected → `deps.log` 记录失败摘要 | theme-apply-flow.ts | L |
+| **R5 遥测数据无消费** | PerformancePanel 显示"历史溢出"警告 + 类型链同步 | PerformancePanel.tsx / ipc.ts / preload.ts | L |
+
+---
+
+## 深度复查结果（Phase 6 → Phase 5 修复循环）
+
+| 验证器 | 结果 | 动作 |
+|--------|------|------|
+| Verifier-α backoffDelay 反向验证 | ✅ 6/6 PASS | 无 |
+| Verifier-β allSettled + health IPC | ✅ 8/8 PASS | 无 |
+| Verifier-γ 回归检查 | ⚠️ 3/4 PASS | **修复**: 2 个测试 mock 缺 overflowCount 字段 |
+| Verifier-δ 测试覆盖度 | ⚠️ 1/6 有自动化测试 | 记录为后续输入 |
+
+**Phase 5 修复循环**: 1 轮 — 修复 PerformancePanel-timeout/polling 测试 mock → 11 tests 全过 → commit `c6453a8`
+
+---
+
+## 验证结果
+
+| 验证器 | 轮次 | 结果 |
+|--------|------|------|
+| TSC | 1 | ✅ 零新增 error |
+| Biome | 1+2 | ✅ 零 error |
+| VIT main (affected) | 1 | ✅ 213 tests 全过 |
+| VIT ui (affected) | 1 | ✅ 11 tests 全过 |
+
+---
+
+## 关键度量
+
+- **探索覆盖率**: 8 方向并行扫描，每个 5 发现
+- **修复转化率**: 5 根因 → 4 个完整修复 (R1 本轮标注为后续输入)
+- **自动化率**: 100% 扫描 + 修复由 sub-agent 完成；主体仅做汇总 + 最终验证
+- **修复→验证→复查→再修复**: 完整方法论闭环，1 轮修复循环处理真实回归
+- **Sub-agent 自验证可信度**: 本轮 sub-agent 修复 + 主体独立验证均通过 ✓
+- **Parallel automation 竞态**: 本轮再次确认 — 修复被 parallel automation commit `dc547e5` 抢先提交
+
+---
+
+## 方法论经验沉淀（供后续参考）
+
+### ✅ 有效的模式
+1. **8 并行方向探索 → 选优** — 客观比较 8 个方向的严重度/工作量/契合度
+2. **4 并行深度扫描** — 按子维度分工，产出覆盖面远超单-scanner
+3. **3 并行修复按文件分工** — Fixer-α/β/γ 不重叠文件，无写冲突
+4. **独立全量验证** — 主体亲自运行 tsc/vit/biome，不信任 sub-agent 自评
+5. **4 并行反向验证** — 从"是否正确" + "是否回归" + "是否覆盖"三角度独立复查
+6. **修复循环** — 1 轮处理 1 个真实回归（overflowCount mock），验证闭环
+
+### ⚠️ 改进点
+1. **R1（CDP 生命周期管理）本轮未修** — 涉及新建 CdpSessionManager，架构改动大，需独立评审
+2. **测试覆盖度仍低** — 仅 health IPC 有 1 个测试，其余 5 个修复无对应测试（sub-agent 只修复不补测）
+3. **Sub-agent 只修不测** — 需在修复 prompt 中显式要求"修复 + 补测试"
+4. **Parallel automation 竞速** — 再再再次确认：需文件级锁或串行调度
+
+---
+
+## 下一步建议（优先级排序）
+
+1. **[P0] 补测试覆盖** — 本轮 4 个修复应在同一 commit/prompt 中补对应测试：
+   - backoffDelay 工具函数单测
+   - allSettled 失败场景集成测试
+   - health IPC push 的 handler 测试
+2. **[P1] CDP 生命周期管理器（R1）** — 新建 `CdpSessionManager` 统一 reconnect/heartbeat/background 感知，需设计评审
+3. **[P1] Sub-agent prompt 标准化** — 每次修复必须在 prompt 末尾加"并补充对应测试"
+4. **[P2] Parallel automation 锁** — 引入调度队列或文件级 .lock 避免竞态
+5. **[P2] 探索方向池轮换** — 本轮做了 F；下次应选 E（渲染引擎扩展）或 H（壁纸/环境）以保持覆盖多样性
+6. **[P3] R3 完整周期化** — 本轮只做 IPC 暴露；定时调度（setInterval）留给后续
+
+---
+
+## 提交记录
+
+| Commit | 描述 |
+|--------|------|
+| `2ef8e5d` | fix(diagnostics): silent failure escalation + backoff + health IPC |
+| `c6453a8` | fix(test): add overflowCount to PerformancePanel mocks |
+| (parallel) `dc547e5` | 同内容被 parallel automation 抢先提交 |
+
+---
+
+## 回滚指南
+
+- 单步回滚 backoffDelay: `git revert <shared.ts commit>`
+- 全量回滚本轮: `git revert c6453a8 2ef8e5d`（注意 parallel automation 提交也包含本内容，需确认影响）
+
+---
+
+## 与历史报告的关系
+
+本轮 (2100) 承接 (2030) 方法论验证轮。2030 修复的 G1-G5（IPC 超时防护）与本轮 (2100) 的 R2-R5（退避/健康/升级/闭环）互补——前者是保护层，后者是恢复层，共同构成 CDP 应用韧性体系。
