@@ -25,7 +25,7 @@ import type {
 } from '../../shared/types';
 import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
-import { type MainContext, settingsDto } from '../main-context';
+import { type MainContext, notifyStatusChanged, settingsDto } from '../main-context';
 import { buildWallpaperTheme, removeWallpaperTheme } from '../theme/wallpaper-theme';
 import { registerThemeWallpaperForInstalled } from '../wallpaper/theme-wallpaper';
 import { assertAgentId, assertNonEmptyString } from './ipc-validators';
@@ -49,6 +49,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
       id: typeof candidate.id === 'string' && candidate.id ? candidate.id : null,
       render: candidate.render,
     });
+    notifyStatusChanged();
     return settingsDto(deps);
   });
 
@@ -125,6 +126,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
             id: typeof s.id === 'string' && s.id ? s.id : null,
             render: s.render,
           });
+          notifyStatusChanged();
           return settingsDto(deps);
         })(),
       );
@@ -140,9 +142,11 @@ export function registerWallpaperIpc(deps: MainContext): void {
         (async () => {
           assertAgentId(appId);
           const opts = (options ?? {}) as { restartExisting?: boolean };
-          return deps.core.applyAgentWallpaperNow(appId, {
+          const result = await deps.core.applyAgentWallpaperNow(appId, {
             restartExisting: opts.restartExisting === true,
           });
+          notifyStatusChanged();
+          return result;
         })(),
       );
     },
@@ -172,7 +176,9 @@ export function registerWallpaperIpc(deps: MainContext): void {
       15000,
       (async () => {
         assertAgentId(appId);
-        return deps.core.removeWallpaperFromAgent(appId);
+        const result = await deps.core.removeWallpaperFromAgent(appId);
+        notifyStatusChanged();
+        return result;
       })(),
     );
   });

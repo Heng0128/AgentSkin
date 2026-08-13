@@ -18,7 +18,7 @@ import { dialog, ipcMain } from 'electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { SettingsUpdateResult } from '../../shared/types';
-import { type MainContext, settingsDto } from '../main-context';
+import { type MainContext, notifyStatusChanged, settingsDto } from '../main-context';
 import { assertAgentId, assertPortOrNull } from './ipc-validators';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
@@ -54,6 +54,7 @@ export function registerSettingsIpc(deps: MainContext): void {
             };
           }
           await deps.settings.setAppPath(appId, selection.filePaths[0]);
+          notifyStatusChanged();
           return { canceled: false, settings: settingsDto(deps), status: await deps.core.status() };
         })(),
       );
@@ -69,6 +70,7 @@ export function registerSettingsIpc(deps: MainContext): void {
         (async () => {
           assertAgentId(appId);
           await deps.settings.setAppPath(appId, null);
+          notifyStatusChanged();
           return { settings: settingsDto(deps), status: await deps.core.status() };
         })(),
       );
@@ -85,6 +87,7 @@ export function registerSettingsIpc(deps: MainContext): void {
           assertAgentId(appId);
           assertPortOrNull(port);
           await deps.settings.setAppPort(appId, port as number | null);
+          notifyStatusChanged();
           return { settings: settingsDto(deps), status: await deps.core.status() };
         })(),
       );
@@ -104,6 +107,7 @@ export function registerSettingsIpc(deps: MainContext): void {
             throw new Error(getMainMessages().invalidCustomCss);
           }
           await deps.settings.setCustomThemeCss(css);
+          notifyStatusChanged();
           return { settings: settingsDto(deps), status: await deps.core.status() };
         })(),
       );
