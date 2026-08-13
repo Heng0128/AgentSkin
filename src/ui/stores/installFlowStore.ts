@@ -102,13 +102,6 @@ interface InstallFlowState_ {
   currentTheme: string | null;
   lastError: string | null;
 
-  // Derived flags (kept on the store so consumers read them directly).
-  isInstalling: boolean;
-  isComplete: boolean;
-  isFailed: boolean;
-  isCancelled: boolean;
-  progress: number;
-
   // --- Controls ---
   setSteps: (steps: InstallStep[]) => void;
   setFlowState: (state: InstallFlowState) => void;
@@ -234,12 +227,6 @@ export const useInstallFlowStore = create<InstallFlowState_>((set, _get) => {
     flowState: 'idle',
     currentTheme: null,
     lastError: null,
-
-    isInstalling: false,
-    isComplete: false,
-    isFailed: false,
-    isCancelled: false,
-    progress: 0,
 
     setSteps: (steps) => set({ steps }),
     setFlowState: (flowState) => set({ flowState }),
