@@ -39,7 +39,7 @@ import { useStatusStore } from '@/stores/statusStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
-import type { LucideProps } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Maximize2, Minus, Monitor, Moon, Sun, X } from 'lucide-react';
 
 export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
@@ -75,7 +75,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
 
   const themeModes: Array<{
     value: ThemeMode;
-    icon: React.ComponentType<LucideProps>;
+    icon: LucideIcon;
     label: string;
   }> = [
     { value: 'dark', icon: Moon, label: t.themeDark },
@@ -134,7 +134,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
                 mode === opt.value ? 'bg-card text-foreground' : 'hover:text-foreground',
               )}
             >
-              {React.createElement(opt.icon, { className: 'size-3' })}
+              <opt.icon className="size-3" />
             </button>
           ))}
         </div>

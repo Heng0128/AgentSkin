@@ -80,13 +80,6 @@ vi.mock('@/components/app-mark', () => ({
   },
 }));
 
-vi.mock('@hugeicons/core-free-icons', () => ({
-  Activity02Icon: { name: 'Activity02Icon' },
-  Delete02Icon: { name: 'Delete02Icon' },
-  HourglassIcon: { name: 'HourglassIcon' },
-  PieChartIcon: { name: 'PieChartIcon' },
-}));
-
 import { PerformancePanel } from './PerformancePanel';
 
 // --- Minimal mock UiMessages -------------------------------------------

@@ -22,18 +22,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { APP_META } from '@/components/app-mark';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
 import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 
-import {
-  Activity02Icon,
-  Delete02Icon,
-  HourglassIcon,
-  PieChartIcon,
-} from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import { format } from 'date-fns';
+import { Activity, Hourglass, PieChart, Trash2 } from 'lucide-react';
 
 // --- Types (mirror AgentSkinApi.getPerformanceHistory response) ---------
 
@@ -140,19 +134,19 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
       {/* Stat cards */}
       <div className="grid grid-cols-3 gap-2">
         <StatCard
-          icon={Activity02Icon}
+          icon={Activity}
           label={t.settingsPerfTotalApplies}
           value={String(stats.totalApplies)}
           suffix=""
         />
         <StatCard
-          icon={HourglassIcon}
+          icon={Hourglass}
           label={t.settingsPerfAvg}
           value={stats.avgDurationMs > 0 ? String(stats.avgDurationMs) : '—'}
           suffix={stats.avgDurationMs > 0 ? 'ms' : ''}
         />
         <PerAgentCard
-          icon={PieChartIcon}
+          icon={PieChart}
           label={t.settingsPerfAgentAvg}
           perAgentAvg={stats.perAgentAvg}
         />
@@ -162,7 +156,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
       <div className="rounded-[2px] border border-border overflow-hidden">
         <div className="flex items-center justify-between border-b border-border bg-card2 px-3 py-2">
           <div className="flex items-center gap-2">
-            <HugeIcon icon={HourglassIcon} className="size-3.5 text-muted-foreground" />
+            <Hourglass className="size-3.5 text-muted-foreground" />
             <span className="font-mono text-[11px] font-semibold tracking-wide text-foreground">
               {t.settingsPerfRecentHistory}
             </span>
@@ -177,7 +171,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
         ) : traces.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
             <div className="flex size-9 items-center justify-center rounded-[2px] bg-muted/60">
-              <HugeIcon icon={Activity02Icon} className="size-4 text-muted-foreground/50" />
+              <Activity className="size-4 text-muted-foreground/50" />
             </div>
             <p className="text-[11px] text-muted-foreground/70">{t.settingsPerfEmpty}</p>
           </div>
@@ -216,7 +210,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
       <div className="rounded-[2px] border border-border overflow-hidden">
         <div className="flex items-center justify-between border-b border-border bg-card2 px-3 py-2">
           <div className="flex items-center gap-2">
-            <HugeIcon icon={Delete02Icon} className="size-3.5 text-muted-foreground" />
+            <Trash2 className="size-3.5 text-muted-foreground" />
             <span className="font-mono text-[11px] font-semibold tracking-wide text-foreground">
               {t.settingsPerfTimeoutTitle}
             </span>
@@ -235,7 +229,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
         {timeoutEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
             <div className="flex size-9 items-center justify-center rounded-[2px] bg-muted/60">
-              <HugeIcon icon={Delete02Icon} className="size-4 text-muted-foreground/50" />
+              <Trash2 className="size-4 text-muted-foreground/50" />
             </div>
             <p className="text-[11px] text-muted-foreground/70">{t.settingsPerfTimeoutEmpty}</p>
           </div>

@@ -16,7 +16,7 @@
 import { FloatingToolbar } from '@/components/studio/FloatingToolbar';
 import { PreviewWindow } from '@/components/studio/PreviewWindow';
 import { useStudioStore } from '@/stores/studioStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore}';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 import type { DomTreeNode } from '@shared/types';
 import { FlaskConical } from 'lucide-react';
