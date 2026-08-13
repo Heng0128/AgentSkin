@@ -52,7 +52,7 @@
         "noNonNullAssertion": "off"
       },
       "complexity": {
-        "useOptionalChain": "off"
+        "useOptionalChain": "warn"
       }
     }
   },
