@@ -16,6 +16,7 @@ import { type Dispatch, type SetStateAction, useEffect, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
 
 import type { AppLocale } from '@shared/i18n';
+import { useConcurrencyReporter } from './useConcurrencyReporter';
 
 interface UseBootDeps {
   fail: (error: unknown) => void;
@@ -32,6 +33,11 @@ export function useBoot(deps: UseBootDeps): void {
   // effect so it survives effect re-runs (and so we don't call useRef inside
   // the effect, which would violate the rules of hooks).
   const isPollingRef = useRef(false);
+
+  // Start the renderer-side concurrency reporter as part of boot. It pushes
+  // companionBusyByAgent.size and switchEpochByAgent.size to the main process
+  // every 5s so Diagnostics can show complete concurrency state.
+  useConcurrencyReporter();
 
   useEffect(() => {
     let disposed = false;

@@ -53,6 +53,12 @@ function currentT() {
  */
 const switchEpochByAgent = new Map<string, number>();
 
+/** Current size of the switch-epoch guard map — used by the concurrency
+ *  reporter to push live diagnostics to the main process. */
+export function getSwitchEpochSize(): number {
+  return switchEpochByAgent.size;
+}
+
 // ---------------------------------------------------------------------------
 // State shape
 // ---------------------------------------------------------------------------

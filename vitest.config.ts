@@ -47,6 +47,15 @@ export default defineConfig({
           },
         },
       },
+      {
+        test: {
+          name: 'visual-regression',
+          environment: 'node',
+          include: ['tests/visual-regression/**/*.test.ts'],
+          testTimeout: 30000,
+          pool: 'forks',
+        },
+      },
     ],
     coverage: {
       provider: 'v8',

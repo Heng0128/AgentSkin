@@ -5,9 +5,13 @@ import { BinaryReader } from './binary-reader';
 import {
   boxDownscaleRgba,
   cappedTextureDim,
+  decompressDxt,
+  MAX_SCENE_DECODE_BYTES,
+  MAX_SCENE_DECODE_DIM,
   MAX_SCENE_TEXTURE_DIM,
   parseTex,
   pickMipmapForDisplay,
+  rgbaToPngDataUrl,
   TEX_FORMAT,
   type TexMipmap,
   texFramesToDataUrls,
@@ -411,5 +415,89 @@ describe('BinaryReader 边界（读越界抛错）', () => {
     // 3 字节不足一个 int32（4 字节）→ Buffer.readInt32LE 抛 RangeError。
     const reader = new BinaryReader(Buffer.from([1, 2, 3]));
     expect(() => reader.readInt32()).toThrow();
+  });
+});
+
+describe('decompressDxt — 鲁棒性（损坏/恶意尺寸不崩）', () => {
+  it('returns null (not throw/OOM) on absurd dimensions', () => {
+    // 65535² DXT1 would try to allocate ~16 GiB — must bail out cleanly.
+    expect(decompressDxt(TEX_FORMAT.DXT1, 65535, 65535, Buffer.alloc(8))).toBeNull();
+    expect(decompressDxt(TEX_FORMAT.DXT5, 1 << 20, 1 << 20, Buffer.alloc(16))).toBeNull();
+  });
+
+  it('returns null on non-positive / non-finite dimensions', () => {
+    expect(decompressDxt(TEX_FORMAT.DXT1, 0, 4, Buffer.alloc(8))).toBeNull();
+    expect(decompressDxt(TEX_FORMAT.DXT1, -1, 4, Buffer.alloc(8))).toBeNull();
+    expect(decompressDxt(TEX_FORMAT.DXT1, 4, Number.NaN, Buffer.alloc(8))).toBeNull();
+  });
+
+  it('returns null when the source buffer is too short for the block layout', () => {
+    // 4×4 DXT1 needs 8 bytes; provide fewer → no out-of-bounds read.
+    expect(decompressDxt(TEX_FORMAT.DXT1, 4, 4, Buffer.alloc(4))).toBeNull();
+    // 8×8 DXT1 needs 2×2×8 = 32 bytes.
+    expect(decompressDxt(TEX_FORMAT.DXT1, 8, 8, Buffer.alloc(16))).toBeNull();
+    // 4×4 DXT5 needs 16 bytes.
+    expect(decompressDxt(TEX_FORMAT.DXT5, 4, 4, Buffer.alloc(8))).toBeNull();
+  });
+
+  it('returns null for uncompressed formats whose buffer is too short', () => {
+    expect(decompressDxt(TEX_FORMAT.RGBA8888, 4, 4, Buffer.alloc(10))).toBeNull();
+    expect(decompressDxt(TEX_FORMAT.R8, 4, 4, Buffer.alloc(10))).toBeNull();
+    expect(decompressDxt(TEX_FORMAT.RG88, 4, 4, Buffer.alloc(20))).toBeNull();
+  });
+
+  it('still decodes a valid small texture normally', () => {
+    // 4×4 DXT1 = 8 bytes; all-zero block decodes to a 64-byte RGBA buffer.
+    const out = decompressDxt(TEX_FORMAT.DXT1, 4, 4, Buffer.alloc(8));
+    expect(out).not.toBeNull();
+    expect(out!.length).toBe(4 * 4 * 4);
+  });
+});
+
+describe('parseTex — 截断/损坏头鲁棒性', () => {
+  it('returns null for a header truncated right after the magic', () => {
+    // Magic + a couple of bytes, not enough for the 11 int32 header fields.
+    const buf = Buffer.concat([Buffer.from('TEXV0005\0TEXI0001\0'), Buffer.from([1, 2, 3, 4])]);
+    expect(parseTex(buf)).toBeNull();
+  });
+
+  it('returns null when the image count claims more entries than the buffer', () => {
+    // Build a minimal header that claims 1 image but no mipmap data follows.
+    const header = Buffer.concat([
+      Buffer.from('TEXV0005\0TEXI0001\0'),
+      Buffer.alloc(4 * 8), // 8 int32: format, flags, texW, texH, imgW, imgH, unk, flags2
+      Buffer.from('TEXB0001\0'), // container magic
+      i32(1), // imageCount = 1
+      i32(1), // mipmapCount = 1
+      i32(64), // width
+      i32(64), // height
+      i32(4), // byteCount = 4 (far too few for 64×64, but valid length field)
+      Buffer.alloc(4),
+    ]);
+    // The single 64×64 mipmap claims 4 bytes → decode will fail and the
+    // texture is dropped, but parseTex itself must not throw.
+    const tex = parseTex(header);
+    expect(tex).toBeNull();
+  });
+});
+
+describe('rgbaToPngDataUrl — 输入校验', () => {
+  it('throws a labelled RangeError on a too-small buffer', () => {
+    const rgba = Buffer.alloc(4); // enough for 1×1, but we claim 2×2 (needs 16)
+    expect(() => rgbaToPngDataUrl(rgba, 2, 2)).toThrow(/too small/);
+  });
+
+  it('throws on non-positive dimensions', () => {
+    expect(() => rgbaToPngDataUrl(Buffer.alloc(4), 0, 1)).toThrow(/non-positive/);
+  });
+
+  it('throws when dimensions exceed the decode cap', () => {
+    const big = MAX_SCENE_DECODE_DIM + 1;
+    expect(() => rgbaToPngDataUrl(Buffer.alloc(big * big * 4), big, big)).toThrow(/exceed max/);
+  });
+
+  it('still produces a valid data URL for a well-formed 1×1 buffer', () => {
+    const url = rgbaToPngDataUrl(Buffer.from([255, 0, 0, 255]), 1, 1);
+    expect(url).toMatch(/^data:image\/png;base64,/);
   });
 });

@@ -24,6 +24,25 @@ import { deflateSync } from 'node:zlib';
 import { lz4DecodeBlock } from '../lz4-decoder';
 import { BinaryReader } from './binary-reader';
 
+/**
+ * Hard limits that keep a corrupt or hostile `.tex`/`.pkg` from crashing the
+ * renderer with an out-of-memory allocation or an out-of-bounds read.
+ *
+ * NOTE: `MAX_SCENE_TEXTURE_DIM` (exported below as 2048) is the *display* cap
+ * used by `cappedTextureDim`/`pickMipmapForDisplay`. These two constants are
+ * the *raw decode* safety limits and are intentionally larger.
+ *
+ * - `MAX_SCENE_DECODE_DIM`: a single decoded side larger than this is treated
+ *   as corrupt (legitimate Wallpaper Engine textures cap at 8192; 16384 leaves
+ *   headroom for non-square oddities). Anything far beyond is an attack/garbage
+ *   value and would allocate gigabytes via `Buffer.alloc(w*h*4)`.
+ * - `MAX_SCENE_DECODE_BYTES`: the most memory a single mipmap decode may
+ *   allocate. ~512 MiB comfortably covers an 8192² RGBA texture while rejecting
+ *   absurd `decompressedBytesCount` claims from a broken LZ4 header.
+ */
+export const MAX_SCENE_DECODE_DIM = 16384;
+export const MAX_SCENE_DECODE_BYTES = 512 * 1024 * 1024;
+
 // ---------------------------------------------------------------------------
 // Constants & Types
 // ---------------------------------------------------------------------------
@@ -205,90 +224,104 @@ export function parseTex(buf: Buffer): TexData | null {
   }
   if (magic1 !== 'TEXV0005' || magic2 !== 'TEXI0001') return null;
 
-  const format = reader.readInt32();
-  const flags = reader.readInt32();
-  const textureWidth = reader.readInt32();
-  const textureHeight = reader.readInt32();
-  const imageWidth = reader.readInt32();
-  const imageHeight = reader.readInt32();
-  /* unkInt0 */ reader.readUint32();
+  // Slurp the entire body in one guarded block: a truncated header, a corrupt
+  // frame table, or any out-of-bounds scalar read now degrades to a clean
+  // `null` (the function's documented contract) instead of surfacing an opaque
+  // RangeError to the caller. `extractTextures` already treats a thrown error
+  // the same way, but returning null keeps the contract explicit and avoids a
+  // confusing stack trace for the common "partially downloaded .tex" case.
+  try {
+    const format = reader.readInt32();
+    const flags = reader.readInt32();
+    const textureWidth = reader.readInt32();
+    const textureHeight = reader.readInt32();
+    const imageWidth = reader.readInt32();
+    const imageHeight = reader.readInt32();
+    /* unkInt0 */ reader.readUint32();
 
-  const isGif = (flags & TEX_FLAGS.IS_GIF) !== 0;
+    const isGif = (flags & TEX_FLAGS.IS_GIF) !== 0;
 
-  // Image container
-  const containerMagic = reader.readNullTerminatedString();
-  const imageCount = reader.readInt32();
-  const version = parseInt(containerMagic.replace('TEXB', ''), 10) || 1;
+    // Image container
+    const containerMagic = reader.readNullTerminatedString();
+    // A corrupt length field could claim an enormous image count; cap it so the
+    // loop stays bounded even when the container carries trailing padding bytes.
+    const imageCount = Math.max(0, Math.min(reader.readInt32(), 4096));
+    const version = parseInt(containerMagic.replace('TEXB', ''), 10) || 1;
 
-  let imageFormat = -1;
-  if (containerMagic === 'TEXB0003') {
-    imageFormat = reader.readInt32();
-  } else if (containerMagic === 'TEXB0004') {
-    const fmt = reader.readInt32();
-    const isVideoMp4 = reader.readInt32();
-    imageFormat = fmt === -1 && isVideoMp4 === 1 ? 7 : fmt; // VideoMp4 = 7
-  }
-
-  const images: TexImage[] = [];
-  for (let i = 0; i < imageCount; i++) {
-    const mipmapCount = reader.readInt32();
-    const mipmaps: TexMipmap[] = [];
-    for (let j = 0; j < mipmapCount; j++) {
-      mipmaps.push(readMipmap(reader, version));
+    let imageFormat = -1;
+    if (containerMagic === 'TEXB0003') {
+      imageFormat = reader.readInt32();
+    } else if (containerMagic === 'TEXB0004') {
+      const fmt = reader.readInt32();
+      const isVideoMp4 = reader.readInt32();
+      imageFormat = fmt === -1 && isVideoMp4 === 1 ? 7 : fmt; // VideoMp4 = 7
     }
-    images.push({ mipmaps });
-  }
 
-  // Frame info (GIF only)
-  const frames: TexFrameInfo[] = [];
-  if (isGif && reader.remaining > 20) {
-    try {
-      const frameMagic = reader.readNullTerminatedString();
-      const frameCount = reader.readInt32();
-      for (let i = 0; i < frameCount; i++) {
-        const imageId = reader.readInt32();
-        const frametime = reader.readFloat32();
-        if (frameMagic === 'TEXS0001') {
-          frames.push({
-            imageId,
-            frametime,
-            x: reader.readInt32(),
-            y: reader.readInt32(),
-            width: reader.readInt32(),
-            height: reader.readInt32(),
-          });
-          reader.readInt32(); // widthY (unused)
-          reader.readInt32(); // heightX (unused)
-        } else {
-          frames.push({
-            imageId,
-            frametime,
-            x: reader.readFloat32(),
-            y: reader.readFloat32(),
-            width: reader.readFloat32(),
-            height: reader.readFloat32(),
-          });
-          reader.readFloat32(); // widthY
-          reader.readFloat32(); // heightX
-        }
+    const images: TexImage[] = [];
+    for (let i = 0; i < imageCount; i++) {
+      // Cap per-image mipmap count the same way as imageCount.
+      const mipmapCount = Math.max(0, Math.min(reader.readInt32(), 1 << 16));
+      const mipmaps: TexMipmap[] = [];
+      for (let j = 0; j < mipmapCount; j++) {
+        mipmaps.push(readMipmap(reader, version));
       }
-    } catch {
-      // Frame info parsing failed — treat as non-animated
+      images.push({ mipmaps });
     }
-  }
 
-  return {
-    format,
-    flags,
-    textureWidth,
-    textureHeight,
-    imageWidth,
-    imageHeight,
-    images,
-    isGif,
-    frames,
-    imageFormat,
-  };
+    // Frame info (GIF only)
+    const frames: TexFrameInfo[] = [];
+    if (isGif && reader.remaining > 20) {
+      try {
+        const frameMagic = reader.readNullTerminatedString();
+        const frameCount = reader.readInt32();
+        for (let i = 0; i < frameCount; i++) {
+          const imageId = reader.readInt32();
+          const frametime = reader.readFloat32();
+          if (frameMagic === 'TEXS0001') {
+            frames.push({
+              imageId,
+              frametime,
+              x: reader.readInt32(),
+              y: reader.readInt32(),
+              width: reader.readInt32(),
+              height: reader.readInt32(),
+            });
+            reader.readInt32(); // widthY (unused)
+            reader.readInt32(); // heightX (unused)
+          } else {
+            frames.push({
+              imageId,
+              frametime,
+              x: reader.readFloat32(),
+              y: reader.readFloat32(),
+              width: reader.readFloat32(),
+              height: reader.readFloat32(),
+            });
+            reader.readFloat32(); // widthY
+            reader.readFloat32(); // heightX
+          }
+        }
+      } catch {
+        // Frame info parsing failed — treat as non-animated
+      }
+    }
+
+    return {
+      format,
+      flags,
+      textureWidth,
+      textureHeight,
+      imageWidth,
+      imageHeight,
+      images,
+      isGif,
+      frames,
+      imageFormat,
+    };
+  } catch {
+    // Truncated/corrupt header or frame table → the whole file is unparseable.
+    return null;
+  }
 }
 
 function readMipmap(reader: BinaryReader, version: number): TexMipmap {
@@ -314,21 +347,34 @@ function readMipmap(reader: BinaryReader, version: number): TexMipmap {
   let bytes = reader.readBytes(byteCount);
 
   if (isLz4Compressed && decompressedBytesCount > 0) {
-    const output = Buffer.alloc(decompressedBytesCount);
-    try {
-      lz4DecodeBlock(bytes, output);
-      bytes = output;
-    } catch (error) {
-      // LZ4 decode failed — leave compressed data in place. Downstream DXT
-      // decode will then also fail and the texture is dropped by the caller,
-      // but log here so a corrupt/compressed mipmap is diagnosable instead
-      // of producing silently garbage pixels. Compression ratio + error
-      // message are enough to identify whether this is a truncated file,
-      // an unsupported LZ4 variant, or a malformed header.
+    // Reject absurd decompressed-size claims (corrupt/attacker-controlled
+    // header) *before* attempting the allocation. Buffer.alloc accepts values
+    // up to ~2 GB and would otherwise OOM the renderer or throw a cryptic
+    // RangeError. Above the decode budget we leave the (still-compressed)
+    // bytes in place so downstream decode fails gracefully and the texture is
+    // dropped by the caller.
+    if (decompressedBytesCount > MAX_SCENE_DECODE_BYTES) {
       console.warn(
-        `[tex-parser] LZ4 decode failed (compressed=${bytes.length}B, ` +
-          `expected=${decompressedBytesCount}B): ${(error as Error)?.message ?? error}`,
+        `[tex-parser] LZ4 decompressed size ${decompressedBytesCount}B exceeds budget ` +
+          `${MAX_SCENE_DECODE_BYTES}B — skipping decompression.`,
       );
+    } else {
+      const output = Buffer.alloc(decompressedBytesCount);
+      try {
+        lz4DecodeBlock(bytes, output);
+        bytes = output;
+      } catch (error) {
+        // LZ4 decode failed — leave compressed data in place. Downstream DXT
+        // decode will then also fail and the texture is dropped by the caller,
+        // but log here so a corrupt/compressed mipmap is diagnosable instead
+        // of producing silently garbage pixels. Compression ratio + error
+        // message are enough to identify whether this is a truncated file,
+        // an unsupported LZ4 variant, or a malformed header.
+        console.warn(
+          `[tex-parser] LZ4 decode failed (compressed=${bytes.length}B, ` +
+            `expected=${decompressedBytesCount}B): ${(error as Error)?.message ?? error}`,
+        );
+      }
     }
   }
 
@@ -346,12 +392,51 @@ export function decompressDxt(
   height: number,
   src: Buffer,
 ): Buffer | null {
-  if (format === TEX_FORMAT.RGBA8888 || format === TEX_FORMAT.R8 || format === TEX_FORMAT.RG88) {
-    return src; // Already uncompressed
+  // Dimension safety: a corrupt header can report gigantic textures. Without a
+  // guard, decompressDxt1/3/5 would call `Buffer.alloc(width*height*4)` and try
+  // to read `src` well past its end (OOM + out-of-bounds reads). Reject up front.
+  if (
+    !Number.isFinite(width) ||
+    !Number.isFinite(height) ||
+    width <= 0 ||
+    height <= 0 ||
+    width > MAX_SCENE_DECODE_DIM ||
+    height > MAX_SCENE_DECODE_DIM
+  ) {
+    return null;
   }
-  if (format === TEX_FORMAT.DXT1) return decompressDxt1(width, height, src);
-  if (format === TEX_FORMAT.DXT3) return decompressDxt3(width, height, src);
-  if (format === TEX_FORMAT.DXT5) return decompressDxt5(width, height, src);
+
+  const blockW = Math.ceil(width / 4);
+  const blockH = Math.ceil(height / 4);
+  // Alloc budget for the decoded RGBA buffer — rejects dimensions that would
+  // allocate hundreds of MiB+ while still allowing a legitimate 8192² texture.
+  const withinBudget = width * height * 4 <= MAX_SCENE_DECODE_BYTES;
+
+  if (format === TEX_FORMAT.RGBA8888) {
+    // Already uncompressed; only guard against indexing out of `src`.
+    return src.length >= width * height * 4 ? src : null;
+  }
+  if (format === TEX_FORMAT.R8) {
+    return src.length >= width * height ? src : null;
+  }
+  if (format === TEX_FORMAT.RG88) {
+    return src.length >= width * height * 2 ? src : null;
+  }
+  if (format === TEX_FORMAT.DXT1) {
+    return blockW * blockH * 8 <= src.length && withinBudget
+      ? decompressDxt1(width, height, src)
+      : null;
+  }
+  if (format === TEX_FORMAT.DXT3) {
+    return blockW * blockH * 16 <= src.length && withinBudget
+      ? decompressDxt3(width, height, src)
+      : null;
+  }
+  if (format === TEX_FORMAT.DXT5) {
+    return blockW * blockH * 16 <= src.length && withinBudget
+      ? decompressDxt5(width, height, src)
+      : null;
+  }
   return null;
 }
 
@@ -787,6 +872,25 @@ function renderTexFrame(
 
 /** Encode raw RGBA bytes as a base64 PNG data URL (pure TS, no canvas dep). */
 export function rgbaToPngDataUrl(rgba: Buffer, width: number, height: number): string {
+  // Guard against degenerate or hostile inputs. A corrupt decode can hand us a
+  // zero/negative/huge size, which would either build a malformed PNG or
+  // allocate hundreds of MiB via `Buffer.alloc`. Callers (texToDataUrl) already
+  // wrap this in try/catch and fall back to null, so throwing is the correct
+  // "give up on this texture" signal rather than emitting a broken data URL.
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0) {
+    throw new RangeError(`rgbaToPngDataUrl: non-positive dimensions ${width}x${height}`);
+  }
+  if (width > MAX_SCENE_DECODE_DIM || height > MAX_SCENE_DECODE_DIM) {
+    throw new RangeError(
+      `rgbaToPngDataUrl: dimensions ${width}x${height} exceed max ${MAX_SCENE_TEXTURE_DIM}`,
+    );
+  }
+  if (rgba.length < width * height * 4) {
+    throw new RangeError(
+      `rgbaToPngDataUrl: buffer ${rgba.length}B too small for ${width}x${height} RGBA`,
+    );
+  }
+
   // Build PNG manually: signature + IHDR + IDAT + IEND
   const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 

@@ -55,6 +55,12 @@ function emptyAgentWallpapers(): Record<AgentId, WallpaperAgentSetting> {
 /** Recursion guard for the wallpaper → theme → wallpaper companion loop (per-agent). */
 const companionBusyByAgent = new Set<AgentId>();
 
+/** Current size of the companion-busy guard set — used by the concurrency
+ *  reporter to push live diagnostics to the main process. */
+export function getCompanionBusySize(): number {
+  return companionBusyByAgent.size;
+}
+
 interface WallpaperState {
   wallpapers: WallpaperInfo[];
   enabled: boolean;
