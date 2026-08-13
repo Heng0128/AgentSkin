@@ -6,7 +6,6 @@ import {
   boxDownscaleRgba,
   cappedTextureDim,
   decompressDxt,
-  MAX_SCENE_DECODE_BYTES,
   MAX_SCENE_DECODE_DIM,
   MAX_SCENE_TEXTURE_DIM,
   parseTex,

@@ -88,7 +88,10 @@ export function PreviewWindow({
   }, [domTree, rootVars, meta.displayName]);
 
   // Convert tool overrides to CSS (same pipeline as RealDomPreview).
-  const overrideCss = useMemo(() => sanitizeCSS(overridesToCss(toolOverrides)).clean, [toolOverrides]);
+  const overrideCss = useMemo(
+    () => sanitizeCSS(overridesToCss(toolOverrides)).clean,
+    [toolOverrides],
+  );
 
   // Push override CSS whenever it changes or the iframe reloads.
   // Uses the `as-ov` protocol (RealDomPreview runtime bridge) so edits

@@ -136,12 +136,16 @@ export class PersistChain {
   safe(update: () => Promise<void> | void): Promise<void> {
     this.pending++;
     const result = this.chain.then(() => update());
-    // Swallow rejection so a single failed write does not poison the chain.
-    this.chain = result.catch(() => {});
-    // Decrement the pending counter when this write settles (success OR failure).
-    void result.finally(() => {
-      this.pending = Math.max(0, this.pending - 1);
-    });
+    // Swallow rejection so a single failed write does not poison the chain,
+    // and decrement the pending counter when this write settles (success OR
+    // failure). Chaining `finally` onto the swallowing branch — rather than
+    // discarding `result.finally(...)` with `void` — prevents an unhandled
+    // rejection from leaking into the process when a write fails.
+    this.chain = result
+      .catch(() => {})
+      .finally(() => {
+        this.pending = Math.max(0, this.pending - 1);
+      });
     return result;
   }
 
