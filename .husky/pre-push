@@ -1,2 +1,14 @@
+#!/usr/bin/env sh
+
+# Prevent accidental direct pushes to main branch
+BRANCH=$(git symbolic-ref --short HEAD)
+if [ "$BRANCH" = "main" ]; then
+  echo "⚠️  Direct push to main is blocked."
+  echo "   Create a feature branch: git checkout -b feature/your-feature-name"
+  echo "   Or use: git push --no-verify (not recommended)"
+  exit 1
+fi
+
+# Run quality gates before push
 npm run typecheck
 npm run test
