@@ -124,9 +124,12 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
       const wallpaperId = env.wallpaperId ?? null;
 
       // Auto-create preset if none exists for this agent+theme combo.
+      // Use `?? null` so that no-theme environments (env.theme === null)
+      // compare against `null` rather than `undefined` — otherwise
+      // `null === undefined` is false and a duplicate preset is created.
       const presets = get().presets;
       const hasPreset = presets.some(
-        (p) => p.agentId === env.agent.id && p.themeId === env.theme?.id,
+        (p) => p.agentId === env.agent.id && p.themeId === (env.theme?.id ?? null),
       );
       if (!hasPreset) {
         const newPreset = createPreset(env.agent.id, env.theme?.id ?? null, wallpaperId, env.name);

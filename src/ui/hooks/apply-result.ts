@@ -23,7 +23,12 @@ export type ApplyOutcome =
       appId: AgentId;
       restartReason?: ApplyResponse['restartReason'];
     }
-  | { kind: 'port-occupied'; message: string };
+  | { kind: 'port-occupied'; message: string }
+  /**
+   * Unknown/unexpected status from main process. Treated as a transient
+   * failure — never silently classified as success to avoid misleading UI.
+   */
+  | { kind: 'unknown-status'; status: string; message: string };
 
 /**
  * Map an IPC ApplyResponse to a typed ApplyOutcome.
@@ -45,9 +50,13 @@ export function handleApplyResult(
     default:
       // Exhaustiveness guard: an unknown status from a future main process
       // must not crash the renderer with a TypeError on outcome.kind.
-      // Log the unknown status so it's detectable in dev tools, but don't
-      // silently treat it as success (which might mislead the UI).
+      // Never silently treat it as success — return a distinct outcome so
+      // the UI can show a generic error and the unknown status is logged.
       console.warn(`[apply-result] unknown status from main process: ${result.status as string}`);
-      return { kind: 'success' };
+      return {
+        kind: 'unknown-status',
+        status: result.status as string,
+        message: 'Unknown apply result status',
+      };
   }
 }

@@ -150,6 +150,20 @@ export const useBootProgressStore = create<BootProgressState>((set) => {
           if (existing.phase === 'done' || existing.phase === 'failed') return s;
         }
 
+        // Skip update if nothing actually changed — prevents unnecessary
+        // re-renders in consumers subscribed to `progress`. The Map reference
+        // stays identical so useSyncExternalStore / zustand shallow compare
+        // short-circuits the subscription notification entirely.
+        if (
+          existing &&
+          existing.phase === phase &&
+          existing.progress === (event.progress ?? existing.progress) &&
+          existing.reason === event.reason &&
+          existing.subPhase === event.phase
+        ) {
+          return s;
+        }
+
         const next = new Map(s.progress);
         next.set(appId, {
           phase,

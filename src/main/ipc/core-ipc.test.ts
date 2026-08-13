@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
@@ -36,6 +36,13 @@ vi.mock('../main-context', () => ({
 
 vi.mock('../locale-preferences', () => ({
   saveLocalePreference: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../services/performance', () => ({
+  performanceLogger: {
+    logTimeout: vi.fn(),
+    log: vi.fn(),
+  },
 }));
 
 const { registerCoreIpc } = await import('./core-ipc');
@@ -127,8 +134,7 @@ describe('core-ipc parameter validation', () => {
       expect(result).toHaveProperty('name', 'IpcTimeoutError');
       expect(result).toHaveProperty('channel', IpcChannel.SYSTEM_STATUS);
       expect(result).toHaveProperty('ms', 15000);
-    }, // The IPC timeout is 15s; give the test 25s so the timeout has time
-    // to fire before vitest's own timeout kills the test.
+    }, // to fire before vitest's own timeout kills the test. // The IPC timeout is 15s; give the test 25s so the timeout has time
     25000);
   });
 

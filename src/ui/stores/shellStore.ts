@@ -80,7 +80,16 @@ export const useShellStore = create<ShellState>((set) => ({
       /* ignore persistence failures */
     }
   },
-  toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+  toggleSidebar: () =>
+    set((s) => {
+      const next = !s.sidebarCollapsed;
+      try {
+        window.localStorage.setItem(SIDEBAR_KEY, next ? '1' : '0');
+      } catch {
+        /* ignore persistence failures */
+      }
+      return { sidebarCollapsed: next };
+    }),
   setInjectDockOpen: (open) =>
     set((s) => ({
       injectDockOpen:

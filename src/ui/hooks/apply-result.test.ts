@@ -90,4 +90,19 @@ describe('handleApplyResult', () => {
       }
     }
   });
+
+  it('returns "unknown-status" (not success) for unrecognized status', () => {
+    // Simulate a future main process returning an unknown status.
+    const result = {
+      status: 'new-unrecognized-status',
+      message: 'Something unexpected',
+      system: baseStatus,
+    } as unknown as ApplyResponse;
+    const outcome = handleApplyResult(result, ctx);
+    expect(outcome.kind).toBe('unknown-status');
+    if (outcome.kind === 'unknown-status') {
+      expect(outcome.status).toBe('new-unrecognized-status');
+      expect(outcome.message).toBeTruthy();
+    }
+  });
 });

@@ -157,9 +157,15 @@ export async function waitForPageReady(
   session: CdpSession,
   timeoutMs: number,
   log?: (line: string) => void,
+  isAborted?: () => boolean,
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    // Allow callers to abort early (e.g. epoch changed because the window was
+    // closed) so we don't hold the CDP session until the full timeout (RC3).
+    if (isAborted?.()) {
+      return;
+    }
     try {
       const state = await session.evaluate('document.readyState');
       if (state === 'complete') return;

@@ -147,6 +147,15 @@ export function unsubscribeAudioSession(session: CdpSession): void {
 
 /** Drop all audio subscribers + stop the sampler (app shutdown). */
 export function disposeAudioBroadcast(): void {
+  // Close every held session so the underlying WebSocket is released instead
+  // of leaking until process exit (RC3: dispose only cleared the Set).
+  for (const session of audioBroadcastSessions) {
+    try {
+      session.close();
+    } catch {
+      /* already closed */
+    }
+  }
   audioBroadcastSessions.clear();
   stopAudioLevelPolling();
 }
@@ -631,13 +640,14 @@ export async function injectAgentWallpaper(
   ): Promise<{ ok: boolean; verdict: string }> => {
     const pageWsUrl = pageTarget.webSocketDebuggerUrl;
     let session: CdpSession;
+    let audioSubscribed = false;
     try {
       session = await connectCdp(pageWsUrl, 4000, 30000);
     } catch (error) {
       return { ok: false, verdict: `cdp-connect-failed:${toMessage(error)}` };
     }
     try {
-      await waitForPageReady(session, 10000, deps.log);
+      await waitForPageReady(session, 10000, deps.log, () => !deps.isEpochCurrent(appId, epoch));
       if (!deps.isEpochCurrent(appId, epoch)) {
         // Wrap in withExclusive so parallel targets' restoreCapturedToken
         // calls (all triggered by the same epoch bump) are serialized —
@@ -660,7 +670,7 @@ export async function injectAgentWallpaper(
           });
           return { ok: false, verdict: 'epoch-cancelled' };
         }
-        await waitForPageReady(session, 5000, deps.log);
+        await waitForPageReady(session, 5000, deps.log, () => !deps.isEpochCurrent(appId, epoch));
         ({ ok, verdict } = await injectOne(session));
         if (ok) verdict = `${verdict}|retry:ok`;
       }
@@ -668,9 +678,15 @@ export async function injectAgentWallpaper(
       // the main process can push the system audio level into the iframe.
       if (ok && isWeb && options.render?.audioLevel && options.render.audioLevel > 0) {
         subscribeAudioSession(session);
+        audioSubscribed = true;
       }
       return { ok, verdict };
     } catch (error) {
+      // If we subscribed this session for audio broadcast but the rest of
+      // injection failed, release it so it doesn't leak as a zombie (RC3).
+      if (audioSubscribed) {
+        unsubscribeAudioSession(session);
+      }
       return { ok: false, verdict: `error:${toMessage(error)}` };
     } finally {
       // Non-audio sessions close immediately; audio sessions are tracked for
