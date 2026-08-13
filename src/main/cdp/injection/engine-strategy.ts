@@ -36,7 +36,7 @@ import {
   buildClearEngineInjectionExpression,
   CLEAR_ADAPTERS_BODY,
 } from '../../../shared/injection-runtime';
-import { mainWarn } from '../../logger';
+import { mainWarnFromCatch } from '../../logger';
 import type { CdpSession } from '../cdp-client';
 import { injectCssLayer } from './css-inject';
 import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
@@ -191,9 +191,10 @@ export async function injectThemeViaEngine(
   try {
     await session.send('Runtime.enable');
   } catch (err) {
-    mainWarn(
+    mainWarnFromCatch(
       'cdp/engine',
-      `Runtime.enable failed for agent=${agent ?? 'unknown'} theme=${themeId ?? 'unknown'}: ${err instanceof Error ? err.message : String(err)}`,
+      err,
+      `Runtime.enable failed for agent=${agent ?? 'unknown'} theme=${themeId ?? 'unknown'}`,
     );
     return {
       layersInjected: 0,
@@ -209,9 +210,10 @@ export async function injectThemeViaEngine(
     await session.evaluate(`(() => { ${CLEAR_ADAPTERS_BODY}; return 'cleaned'; })()`);
   } catch (err) {
     // Non-fatal — stale adapter cleanup is best-effort. Log for diagnostics.
-    mainWarn(
+    mainWarnFromCatch(
       'cdp/engine',
-      `cleanup previous adapter failed for agent=${agent ?? 'unknown'}: ${err instanceof Error ? err.message : String(err)}`,
+      err,
+      `cleanup previous adapter failed for agent=${agent ?? 'unknown'}`,
     );
   }
 
@@ -242,10 +244,7 @@ export async function injectThemeViaEngine(
     await session.evaluate(`window.${RENDERER_CONFIG_GLOBAL} = ${configJson}; 'ok'`);
   } catch (err) {
     // Non-fatal — adapter will run with defaults. Log for diagnostics.
-    mainWarn(
-      'cdp/engine',
-      `set config failed for agent=${agent ?? 'unknown'}: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    mainWarnFromCatch('cdp/engine', err, `set config failed for agent=${agent ?? 'unknown'}`);
   }
 
   // --- Step 4: Inject CSS layers as separate adoptedStyleSheets ---
@@ -272,9 +271,10 @@ export async function injectThemeViaEngine(
     adapterApplied = adapterResult === 'applied' || adapterResult === 'already-applied';
   } catch (err) {
     adapterApplied = false;
-    mainWarn(
+    mainWarnFromCatch(
       'cdp/engine',
-      `adapter evaluate failed for agent=${agent ?? 'unknown'} theme=${themeId ?? 'unknown'}: ${err instanceof Error ? err.message : String(err)}`,
+      err,
+      `adapter evaluate failed for agent=${agent ?? 'unknown'} theme=${themeId ?? 'unknown'}`,
     );
   }
 
@@ -349,10 +349,7 @@ async function registerEnginePersistence(
       resolvedHeroDataUrl = `data:${mime};base64,${data.toString('base64')}`;
     } catch (err) {
       resolvedHeroDataUrl = null;
-      mainWarn(
-        'cdp/engine',
-        `read hero file failed for agent=${agent ?? 'unknown'}: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      mainWarnFromCatch('cdp/engine', err, `read hero file failed for agent=${agent ?? 'unknown'}`);
     }
   }
 
@@ -513,9 +510,10 @@ async function registerEnginePersistence(
     // Best-effort — the current document is already themed by the
     // synchronous Runtime.evaluate pass. Persistence only affects future
     // navigations, so a failure here is non-fatal. Log for diagnostics.
-    mainWarn(
+    mainWarnFromCatch(
       'cdp/engine',
-      `register persistence failed for agent=${agent ?? 'unknown'}: ${err instanceof Error ? err.message : String(err)}`,
+      err,
+      `register persistence failed for agent=${agent ?? 'unknown'}`,
     );
   }
 }
