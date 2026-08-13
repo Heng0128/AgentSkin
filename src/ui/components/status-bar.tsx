@@ -66,6 +66,7 @@ export function StatusBar() {
   const status = useStatusStore((s) => s.status);
   const statusError = useStatusStore((s) => s.error);
   const statusRefreshing = useStatusStore((s) => s.isRefreshing);
+  const refreshStatus = useStatusStore((s) => s.refreshStatus);
   const t: UiMessages = uiMessages[locale];
 
   const variant = deriveCdpState(status);
@@ -92,8 +93,8 @@ export function StatusBar() {
         <span className="font-mono text-[10px] font-medium text-muted-foreground">{cdpLabel}</span>
       </div>
 
-      {/* Center cluster: platform count · injected · status error (if any). */}
-      <div className="hidden items-center gap-1.5 font-mono text-[10px] font-medium lg:flex">
+      {/* Center cluster: platform count · injected · status error with retry. */}
+      <div className="hidden items-center gap-1.5 font-mono text-[10px] font-medium lg:flex [-webkit-app-region:no-drag]">
         <span className="text-muted-foreground">
           {t.swissPlatformOnline(onlineCount, totalPlatforms)}
         </span>
@@ -102,9 +103,21 @@ export function StatusBar() {
         {statusError ? (
           <>
             <span className="text-muted-foreground/40">·</span>
-            <span className="text-cr-warning" title={statusError}>
-              {statusRefreshing ? '···' : 'ERR'}
-            </span>
+            <button
+              type="button"
+              disabled={statusRefreshing}
+              onClick={() => void refreshStatus()}
+              title={statusError}
+              className={cn(
+                'inline-flex items-center gap-0.5 rounded-[2px] border border-destructive/30 bg-card2 px-1.5 py-0.5',
+                'font-mono text-[10px] leading-tight text-destructive transition-colors duration-fast',
+                statusRefreshing
+                  ? 'cursor-not-allowed opacity-50'
+                  : 'hover:bg-destructive/10 active:translate-y-[1px]',
+              )}
+            >
+              {statusRefreshing ? '···' : '↻'}
+            </button>
           </>
         ) : null}
       </div>
