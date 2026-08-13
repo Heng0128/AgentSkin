@@ -22,6 +22,7 @@
     "build:installer:maj": "build.bat",
     "build:installer:nobump": "build.bat",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
@@ -40,6 +41,9 @@
     ],
     "src/**/*.css": [
       "biome format --write"
+    ],
+    "scripts/**/*.mjs": [
+      "biome check --write --no-errors-on-unmatched"
     ],
     "themes/**": [
       "node scripts/check-themes.mjs"
