@@ -56,6 +56,67 @@ rm -f "$LOCK_FILE"
 - [ ] Timeout + retry with exponential backoff
 - [ ] Integration with CatPaw's automation framework
 
+## Usage
+
+### CLI
+
+```bash
+# Check current lock status
+node scripts/automation-lock.mjs status
+
+# Acquire the lock (returns exit code 0 on success, 1 if held)
+node scripts/automation-lock.mjs acquire <automation-name>
+
+# Release the lock (only if held by this PID)
+node scripts/automation-lock.mjs release
+
+# Force-remove the lock regardless of owner
+node scripts/automation-lock.mjs force-release
+
+# Show help
+node scripts/automation-lock.mjs --help
+```
+
+### Programmatic API
+
+```js
+import { acquireLock, releaseLock, isLockHeld } from '../scripts/automation-lock.mjs';
+
+const ok = acquireLock('my-automation');
+if (!ok) {
+  console.error('Another automation is running');
+  process.exit(1);
+}
+
+try {
+  // ... perform git operations ...
+} finally {
+  releaseLock();
+}
+```
+
+### Typical Automation Flow
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Acquire
+node scripts/automation-lock.mjs acquire "solidify" || {
+  echo "Lock held, retrying in 30s..."
+  sleep 30
+  node scripts/automation-lock.mjs acquire "solidify"
+}
+
+# Perform git operations
+git add -A
+git commit -m "auto: solidify"
+git push origin main
+
+# Release
+node scripts/automation-lock.mjs release
+```
+
 ## Safety Net: pre-push Hook
 
 As a partial mitigation, `.husky/pre-push` blocks direct pushes to `main`. Automations should:
