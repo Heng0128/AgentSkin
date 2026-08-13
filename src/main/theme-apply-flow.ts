@@ -258,29 +258,16 @@ export async function applyThemeFlow(
     let port: number | null | undefined = request.port;
     if (!port) {
       const cdp = await trace.step('cdpDiscovery', (addSubStep) => {
-        // -- findExistingPort: probe for a live CDP endpoint on the agent --
+        // findExistingPort probes for a live CDP endpoint on the agent.
+        // The CDP handshake and target enumeration are internal to
+        // ensureAgentCdpReady today; per-phase decomposition will be added
+        // when that module exposes granular timing hooks.
         const t0 = performance.now();
-        const probe = ensureAgentCdpReady(appId, deps, {
+        return ensureAgentCdpReady(appId, deps, {
           restartExisting: request.restartExisting === true,
         }).then((r) => {
           addSubStep('findExistingPort', performance.now() - t0);
           return r;
-        });
-        // -- scanProcess / resolvePort / connectWebSocket / listTargets --
-        // These four sub-phases live inside the CDP handshake and target
-        // enumeration. They are recorded as individual sub-steps after the
-        // probe resolves so that future structural decomposition of the
-        // CDP discovery layer can swap in per-phase timing without requiring
-        // a second refactor of this flow.
-        return probe.then((result) => {
-          // The remaining four phases are combined into the single probe
-          // today; record their durations as ~0 placeholders so the trace
-          // schema is populated for downstream tooling that keys on step name.
-          addSubStep('scanProcess', 0);
-          addSubStep('resolvePort', 0);
-          addSubStep('connectWebSocket', 0);
-          addSubStep('listTargets', 0);
-          return result;
         });
       });
       if (cdp.status === 'requires-restart') {
