@@ -11,13 +11,16 @@
  *   - a custom title bar with window controls + theme-mode toggle
  *   - the full {@link ThemeStudioPage} (snapshot / inspect / export)
  *
- * It reuses `useAppController` so the studio window gets the same bootstrap
- * (locale, system status, studio projects) and the same `agentSkin` IPC
- * surface as the main window — the studio's CDP snapshot/inspect handlers in
- * the main process push events back to this window's webContents.
+ * It does NOT call `useAppController` — the Studio window consumes status
+ * via a dedicated `onStatusChanged` subscription in this file, and uses
+ * the shared `useStatusStore` as the single source of truth for status.
+ * A fallback poll is intentionally omitted: all status mutations originate
+ * from the main process (apply/restore/delete/tray), which already fans-out
+ * STATUS_CHANGED to both windows via `notifyStatusChanged()`.
  */
 
 import { useEffect, useRef } from 'react';
+import { api } from '@/api/agentSkinClient';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { WorkspacePage } from '@/pages/WorkspacePage';
 import { useShellStore } from '@/stores/shellStore';
@@ -36,22 +39,29 @@ export default function StudioApp() {
   const undo = useStudioStore((s) => s.undo);
   const redo = useStudioStore((s) => s.redo);
   const refreshStatus = useStatusStore((s) => s.refreshStatus);
-  const isRefreshing = useStatusStore((s) => s.isRefreshing);
 
-  // Poll system status
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Subscribe to STATUS_CHANGED push from main process (cross-window fan-out).
+  // Drops the legacy 5s poll — all status mutations originate from the main
+  // process which broadcasts to both windows via notifyStatusChanged().
+  // isPollingRef prevents overlap if a push fires mid-refresh; mirrors the
+  // guard pattern used in useBoot (main window) to avoid IPC/ CDP stacking.
+  const isPollingRef = useRef(false);
   useEffect(() => {
-    const triggerPoll = () => {
-      if (isRefreshing) return;
-      void refreshStatus();
+    const triggerRefresh = () => {
+      if (isPollingRef.current) return;
+      isPollingRef.current = true;
+      void refreshStatus().finally(() => {
+        isPollingRef.current = false;
+      });
     };
-    const initRafId = requestAnimationFrame(triggerPoll);
-    pollRef.current = setInterval(triggerPoll, 5000);
+    const offStatusChanged = api.onStatusChanged(triggerRefresh);
+    const initRafId = requestAnimationFrame(triggerRefresh);
     return () => {
+      offStatusChanged();
       cancelAnimationFrame(initRafId);
-      if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [refreshStatus, isRefreshing]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshStatus]);
 
   // Undo/Redo shortcuts
   useEffect(() => {
