@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Spinner } from '@/components/ui/spinner';
 import type { ProgressMap } from '@/hooks/useBootProgress';
 
-import { BotIcon, RefreshIcon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import type { EnvironmentModel } from '@shared/types/environment';
+import { Bot, RefreshCw } from 'lucide-react';
 import { EnvironmentCard } from './EnvironmentCard';
 
 /**
@@ -116,11 +115,7 @@ function StatusErrorBanner({
         disabled={isRefreshing}
         className="inline-flex shrink-0 items-center gap-1 rounded-[2px] border border-destructive/30 bg-card2 px-2 py-1 font-mono text-[10px] text-destructive transition-colors duration-fast hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-45"
       >
-        {isRefreshing ? (
-          <Spinner className="size-3" />
-        ) : (
-          <HugeIcon icon={RefreshIcon} className="size-3" />
-        )}
+        {isRefreshing ? <Spinner className="size-3" /> : <RefreshCw className="size-3" />}
         {t.statusRetry}
       </button>
     </div>
@@ -194,7 +189,7 @@ export function EnvironmentGrid({
         />
         <div className="rounded-[2px] border-2 border-dashed border-border/40 py-10 text-center dark:border-border/30">
           <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-[2px] bg-card2">
-            <HugeIcon icon={BotIcon} className="size-5 text-muted-foreground/50" />
+            <Bot className="size-5 text-muted-foreground/50" />
           </div>
           <p className="font-mono text-[11px] text-muted-foreground">{t.emptyEnvironmentsHint}</p>
           {onBrowseThemes && (

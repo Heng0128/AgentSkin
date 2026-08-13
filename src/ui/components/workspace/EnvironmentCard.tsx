@@ -10,19 +10,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import type { AgentProgress, BootPhase } from '@/hooks/useBootProgress';
 import { cn } from '@/lib/utils';
 
-import {
-  Copy01Icon,
-  Delete02Icon,
-  Edit02Icon,
-  Image02Icon,
-  MoreVerticalIcon,
-} from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import type { EnvironmentModel } from '@shared/types/environment';
+import { Copy, Edit, Image, MoreVertical, Trash2 } from 'lucide-react';
 import { AgentStatusDot, envToDotVariant } from './AgentStatusDot';
 
 /**
@@ -229,18 +222,18 @@ export function EnvironmentCard({
                     <Button variant="ghost" size="icon-sm" aria-label={t.environmentDelete} />
                   }
                 >
-                  <HugeIcon icon={MoreVerticalIcon} className="size-3.5 text-muted-foreground" />
+                  <MoreVertical className="size-3.5 text-muted-foreground" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-32">
                   {onRename && env.presetId && (
                     <DropdownMenuItem onClick={() => onRename(env.presetId!)}>
-                      <HugeIcon icon={Edit02Icon} className="size-4" />
+                      <Edit className="size-4" />
                       {t.environmentRename}
                     </DropdownMenuItem>
                   )}
                   {onDuplicate && env.presetId && (
                     <DropdownMenuItem onClick={() => onDuplicate(env.presetId!)}>
-                      <HugeIcon icon={Copy01Icon} className="size-4" />
+                      <Copy className="size-4" />
                       {t.environmentDuplicate}
                     </DropdownMenuItem>
                   )}
@@ -251,7 +244,7 @@ export function EnvironmentCard({
                         variant="destructive"
                         onClick={() => onDelete(env.presetId!)}
                       >
-                        <HugeIcon icon={Delete02Icon} className="size-4" />
+                        <Trash2 className="size-4" />
                         {t.environmentDelete}
                       </DropdownMenuItem>
                     </>
@@ -293,7 +286,7 @@ export function EnvironmentCard({
         {/* Wallpaper binding indicator (P0-3: environment = theme + wallpaper) */}
         {env.wallpaperId && (
           <div className="mt-1.5 flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
-            <HugeIcon icon={Image02Icon} className="size-3" />
+            <Image className="size-3" />
             <span>{t.envWallpaperBound}</span>
           </div>
         )}

@@ -22,13 +22,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppMark } from '@/components/app-mark';
 import { buildSrcDoc, overridesToCss } from '@/components/studio/RealDomPreview';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { useStudioStore } from '@/stores/studioStore';
 import type { PreviewWindowState } from '@/types/workspace';
 
-import { Cancel01Icon, Copy01Icon, ExpandIcon } from '@hugeicons/core-free-icons';
 import type { DomTreeNode } from '@shared/types';
 import { AGENT_META } from '@shared/types';
+import { Copy, Maximize, X } from 'lucide-react';
 import { sanitizeCSS } from '../../../main/profile/safe-css';
 
 interface PreviewWindowProps {
@@ -131,14 +130,14 @@ export function PreviewWindow({
         </button>
         <span className="pw__spacer" />
         <button type="button" className="pw__icon-btn" title="Duplicate window">
-          <HugeIcon icon={Copy01Icon} className="size-3" />
+          <Copy className="size-3" />
         </button>
         <button type="button" className="pw__icon-btn" title="Fullscreen">
-          <HugeIcon icon={ExpandIcon} className="size-3" />
+          <Maximize className="size-3" />
         </button>
         {onClose && (
           <button type="button" className="pw__icon-btn" onClick={onClose} title="Close">
-            <HugeIcon icon={Cancel01Icon} className="size-3" />
+            <X className="size-3" />
           </button>
         )}
       </div>

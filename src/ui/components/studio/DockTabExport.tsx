@@ -13,12 +13,11 @@ import { useEffect } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { Kicker } from '@/components/studio/kicker';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Spinner } from '@/components/ui/spinner';
 import { useStudioStore } from '@/stores/studioStore';
 
-import { Download01Icon, Folder01Icon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
+import { Download, FolderOpen } from 'lucide-react';
 
 export function DockTabExport({ t }: { t: UiMessages }) {
   const snapshot = useStudioStore((s) => s.snapshot);
@@ -78,7 +77,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
               {exportState.loading ? (
                 <Spinner data-icon="inline-start" className="size-3" />
               ) : (
-                <HugeIcon icon={Download01Icon} className="size-3" />
+                <Download className="size-3" />
               )}
               {exportState.loading ? t.studioExporting : t.studioExportButton}
             </Button>
@@ -97,7 +96,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
                   onClick={() => api.showInFolder(exportState.dir!)}
                   className="mt-1"
                 >
-                  <HugeIcon icon={Folder01Icon} className="size-2.5" />
+                  <FolderOpen className="size-2.5" />
                   {t.studioReveal}
                 </Button>
               </div>

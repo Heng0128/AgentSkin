@@ -31,23 +31,16 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import type { ThemeMode } from '@/design/theme-mode';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
 import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';
 
-import {
-  Cancel01Icon,
-  ComputerIcon,
-  Maximize02Icon,
-  Minimize01Icon,
-  Moon02Icon,
-  Sun03Icon,
-} from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
+import type { LucideProps } from 'lucide-react';
+import { Maximize2, Minus, Monitor, Moon, Sun, X } from 'lucide-react';
 
 export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
   const locale = useShellStore((s) => s.locale);
@@ -80,10 +73,14 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
                 ? t.navSettings
                 : 'AgentSkin';
 
-  const themeModes: Array<{ value: ThemeMode; icon: typeof Sun03Icon; label: string }> = [
-    { value: 'dark', icon: Moon02Icon, label: t.themeDark },
-    { value: 'light', icon: Sun03Icon, label: t.themeLight },
-    { value: 'system', icon: ComputerIcon, label: t.themeSystem },
+  const themeModes: Array<{
+    value: ThemeMode;
+    icon: React.ComponentType<LucideProps>;
+    label: string;
+  }> = [
+    { value: 'dark', icon: Moon, label: t.themeDark },
+    { value: 'light', icon: Sun, label: t.themeLight },
+    { value: 'system', icon: Monitor, label: t.themeSystem },
   ];
 
   // Swiss-style icon button class — transparent by default, reveals bg + border on hover.
@@ -137,7 +134,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
                 mode === opt.value ? 'bg-card text-foreground' : 'hover:text-foreground',
               )}
             >
-              <HugeIcon icon={opt.icon} className="size-3" />
+              {React.createElement(opt.icon, { className: 'size-3' })}
             </button>
           ))}
         </div>
@@ -153,7 +150,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
               onClick={() => api.windowMinimize()}
               className={swissBtn}
             >
-              <HugeIcon icon={Minimize01Icon} className="size-3.5" />
+              <Minus className="size-3.5" />
             </button>
             <button
               type="button"
@@ -162,7 +159,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
               onClick={() => void api.windowToggleMaximize()}
               className={swissBtn}
             >
-              <HugeIcon icon={Maximize02Icon} className="size-3" />
+              <Maximize2 className="size-3" />
             </button>
             <button
               type="button"
@@ -174,7 +171,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
                 'hover:bg-[var(--brand-red)] hover:text-white hover:border-[var(--brand-red)]',
               )}
             >
-              <HugeIcon icon={Cancel01Icon} className="size-3.5" />
+              <X className="size-3.5" />
             </button>
           </>
         )}

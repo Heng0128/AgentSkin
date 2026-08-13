@@ -2,13 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import type { InstallStep } from '@/stores/installFlowStore';
 
-import { AlertCircleIcon, CheckIcon, LoadingIcon, RotateIcon, X } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
+import { AlertCircle, Check, Loader2, RotateCw, X } from 'lucide-react';
 import appIcon from '../../../assets/branding/app-icon.png';
 
 // ---------------------------------------------------------------------------
@@ -29,13 +28,13 @@ function StepRow({ step }: { step: InstallStep }) {
   const statusIcon = (() => {
     switch (step.status) {
       case 'done':
-        return <HugeIcon icon={CheckIcon} className="size-3.5 text-cr-success" />;
+        return <Check className="size-3.5 text-cr-success" />;
       case 'active':
-        return <HugeIcon icon={LoadingIcon} className="size-3.5 animate-spin text-primary" />;
+        return <Loader2 className="size-3.5 animate-spin text-primary" />;
       case 'error':
-        return <HugeIcon icon={AlertCircleIcon} className="size-3.5 text-destructive" />;
+        return <AlertCircle className="size-3.5 text-destructive" />;
       case 'cancelled':
-        return <HugeIcon icon={X} className="size-3.5 text-muted-foreground" />;
+        return <X className="size-3.5 text-muted-foreground" />;
       default:
         return <span className="size-3.5 rounded-full border border-muted-foreground/30" />;
     }
@@ -191,7 +190,7 @@ export function InstallWizard({
         </div>
         {(isComplete || isFailed || isCancelled) && (
           <Button size="sm" variant="ghost" className="size-6 p-0" onClick={onClose}>
-            <HugeIcon icon={X} className="size-3.5" />
+            <X className="size-3.5" />
           </Button>
         )}
       </div>
@@ -235,13 +234,13 @@ export function InstallWizard({
       <div className="flex items-center gap-2 border-t px-4 py-3">
         {isFailed && onRetry && (
           <Button size="sm" variant="outline" onClick={onRetry}>
-            <HugeIcon icon={RotateIcon} className="size-3.5" />
+            <RotateCw className="size-3.5" />
             {t?.restartAndApply ?? '重试'}
           </Button>
         )}
         {isInstalling && onCancel && (
           <Button size="sm" variant="outline" onClick={onCancel}>
-            <HugeIcon icon={X} className="size-3.5" />
+            <X className="size-3.5" />
             {t?.cancel ?? '取消'}
           </Button>
         )}

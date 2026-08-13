@@ -5,7 +5,6 @@ import { api } from '@/api/agentSkinClient';
 import { VirtualThemeGrid } from '@/components/themes/VirtualThemeGrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import {
   Select,
@@ -21,8 +20,8 @@ import type { ThemeSortKey } from '@/hooks/useThemeCenter';
 import { useThemeCenter } from '@/hooks/useThemeCenter';
 import { cn } from '@/lib/utils';
 
-import { PackageIcon, Search01Icon, UploadSquareIcon } from '@hugeicons/core-free-icons';
 import type { AgentId } from '@shared/types';
+import { Package, Search, UploadCloud } from 'lucide-react';
 
 export function ThemesPage({ controller }: { controller: AppController }) {
   const { t } = controller;
@@ -115,7 +114,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             aria-label={t.searchInstalled}
           />
           <InputGroupAddon align="inline-start">
-            <HugeIcon icon={Search01Icon} />
+            <Search />
           </InputGroupAddon>
         </InputGroup>
 
@@ -179,7 +178,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           {controller.isInstalling ? (
             <Spinner data-icon="inline-start" />
           ) : (
-            <HugeIcon icon={PackageIcon} data-icon="inline-start" />
+            <Package data-icon="inline-start" />
           )}
           {controller.isInstalling ? t.importing : t.importTheme}
         </Button>
@@ -386,11 +385,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
               className="flex size-14 items-center justify-center rounded-[2px]"
               style={{ background: 'var(--redbg, rgba(255,69,58,0.13))' }}
             >
-              <HugeIcon
-                icon={UploadSquareIcon}
-                className="size-7"
-                style={{ color: 'var(--red, #FF453A)' }}
-              />
+              <UploadCloud className="size-7" style={{ color: 'var(--red, #FF453A)' }} />
             </div>
             <p className="text-sm font-semibold text-foreground">{t.dropThemeHere}</p>
             <p className="max-w-60 text-xs leading-relaxed text-muted-foreground">

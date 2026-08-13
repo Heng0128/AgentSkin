@@ -2,10 +2,9 @@
 
 import { Component, type ErrorInfo, Fragment, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { rError } from '@/utils/renderer-log';
 
-import { AlertCircleIcon } from '@hugeicons/core-free-icons';
+import { AlertCircle } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -63,7 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="flex h-full min-h-[200px] items-center justify-center bg-background text-foreground">
             <div className="flex flex-col items-center gap-3 text-center max-w-sm px-4">
               <div className="flex size-10 items-center justify-center rounded-[2px] bg-destructive/10">
-                <HugeIcon icon={AlertCircleIcon} className="size-5 text-destructive" />
+                <AlertCircle className="size-5 text-destructive" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
@@ -88,7 +87,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <main className="flex h-svh items-center justify-center bg-background text-foreground">
           <div className="flex flex-col items-center gap-4 text-center max-w-sm px-4">
             <div className="flex size-12 items-center justify-center rounded-[2px] bg-destructive/10">
-              <HugeIcon icon={AlertCircleIcon} className="size-6 text-destructive" />
+              <AlertCircle className="size-6 text-destructive" />
             </div>
             <div>
               <h1 className="text-lg font-semibold tracking-tight">{title}</h1>

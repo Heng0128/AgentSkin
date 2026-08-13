@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { formatSize } from '@/lib/wallpaperUtils';
 import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 
-import { Image02Icon, Video01Icon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import type { WallpaperInfo } from '@shared/types';
+import { Image, Video } from 'lucide-react';
 
 export interface WallpaperCardProps {
   wallpaper: WallpaperInfo;
@@ -152,10 +151,11 @@ export function WallpaperCard({
             }
             emptyNode={
               <div className="flex size-full items-center justify-center">
-                <HugeIcon
-                  icon={wallpaper.type === 'video' ? Video01Icon : Image02Icon}
-                  className="size-8 text-muted-foreground/40"
-                />
+                {wallpaper.type === 'video' ? (
+                  <Video className="size-8 text-muted-foreground/40" />
+                ) : (
+                  <Image className="size-8 text-muted-foreground/40" />
+                )}
               </div>
             }
           />
@@ -189,10 +189,11 @@ export function WallpaperCard({
                     : 'bg-cr-warning/85 text-white',
             )}
           >
-            <HugeIcon
-              icon={wallpaper.type === 'video' ? Video01Icon : Image02Icon}
-              className="size-2"
-            />
+            {wallpaper.type === 'video' ? (
+              <Video className="size-2" />
+            ) : (
+              <Image className="size-2" />
+            )}
             {wallpaper.type === 'video'
               ? 'VID'
               : wallpaper.type === 'image'

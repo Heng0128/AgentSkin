@@ -17,20 +17,14 @@
 
 import { useState } from 'react';
 import { WorkspaceSwitcher } from '@/components/studio/WorkspaceSwitcher';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
-import {
-  ArrowLeftDoubleIcon,
-  ArrowRightDoubleIcon,
-  Download01Icon,
-  RefreshIcon,
-} from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
+import { ChevronsLeft, ChevronsRight, Download, RefreshCw } from 'lucide-react';
 import { ExportDialog } from './ExportDialog';
 
 function currentT(): UiMessages {
@@ -141,7 +135,7 @@ export function StudioTopBar() {
             className="ws-btn ws-btn--sm"
             title="Undo"
           >
-            <HugeIcon icon={ArrowLeftDoubleIcon} className="size-3" />
+            <ChevronsLeft className="size-3" />
           </button>
           <button
             type="button"
@@ -150,7 +144,7 @@ export function StudioTopBar() {
             className="ws-btn ws-btn--sm"
             title="Redo"
           >
-            <HugeIcon icon={ArrowRightDoubleIcon} className="size-3" />
+            <ChevronsRight className="size-3" />
           </button>
         </div>
 
@@ -209,7 +203,7 @@ export function StudioTopBar() {
             onClick={handleRestore}
             title="Restore agent to native baseline"
           >
-            <HugeIcon icon={RefreshIcon} className="size-3" />
+            <RefreshCw className="size-3" />
             Restore
           </button>
         )}
@@ -221,7 +215,7 @@ export function StudioTopBar() {
           disabled={!snapshot || exportState.loading}
           onClick={handleExport}
         >
-          <HugeIcon icon={Download01Icon} className="size-3" />
+          <Download className="size-3" />
           {exportState.loading ? 'Exporting…' : 'Export'}
         </button>
       </div>

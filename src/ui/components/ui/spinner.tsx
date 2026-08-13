@@ -1,12 +1,11 @@
-import { HugeIcon, type HugeIconProps } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
 
-import { Loading03Icon } from '@hugeicons/core-free-icons';
+import type { LucideProps } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
-function Spinner({ className, ...props }: Omit<HugeIconProps, 'icon'>) {
+function Spinner({ className, ...props }: LucideProps) {
   return (
-    <HugeIcon
-      icon={Loading03Icon}
+    <Loader2
       data-slot="spinner"
       role="status"
       aria-label="加载中"

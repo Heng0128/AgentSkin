@@ -17,13 +17,12 @@ import { useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { appStatusFor } from '@/stores/agentStore';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
-import { GridIcon, Image01Icon, LayersIcon, Package01Icon } from '@hugeicons/core-free-icons';
 import { AGENT_IDS, AGENT_META, type AgentId } from '@shared/types';
+import { Image, Layers, LayoutGrid, Package } from 'lucide-react';
 
 export function StudioDrawer() {
   const { drawer, setDrawerCollapsed } = useWorkspaceStore();
@@ -86,7 +85,7 @@ export function StudioDrawer() {
             onClick={() => setDrawerCollapsed(false)}
             title="Expand"
           >
-            <HugeIcon icon={GridIcon} className="size-4" />
+            <LayoutGrid className="size-4" />
           </button>
         </div>
       </aside>
@@ -216,7 +215,7 @@ export function StudioDrawer() {
               {/* Theme library */}
               <div>
                 <div className="flex items-center gap-[var(--space-1)] mb-[var(--space-1)]">
-                  <HugeIcon icon={LayersIcon} className="size-3" style={{ color: 'var(--fg-2)' }} />
+                  <Layers className="size-3" style={{ color: 'var(--fg-2)' }} />
                   <span className="font-mono text-[length:10px] text-[var(--fg-2)]">
                     Theme Library
                   </span>
@@ -248,11 +247,7 @@ export function StudioDrawer() {
               {/* Wallpapers (P1 — IPC-backed list) */}
               <div>
                 <div className="flex items-center gap-[var(--space-1)] mb-[var(--space-1)]">
-                  <HugeIcon
-                    icon={Image01Icon}
-                    className="size-3"
-                    style={{ color: 'var(--fg-2)' }}
-                  />
+                  <Image className="size-3" style={{ color: 'var(--fg-2)' }} />
                   <span className="font-mono text-[length:10px] text-[var(--fg-2)]">
                     Wallpapers
                   </span>
@@ -268,11 +263,7 @@ export function StudioDrawer() {
                         key={wp.id}
                         className="flex items-center gap-[var(--space-1)] p-[2px] rounded-[var(--r-micro)] hover:bg-[var(--bg-3)]"
                       >
-                        <HugeIcon
-                          icon={Image01Icon}
-                          className="size-2.5"
-                          style={{ color: 'var(--fg-3)' }}
-                        />
+                        <Image className="size-2.5" style={{ color: 'var(--fg-3)' }} />
                         <span className="font-mono text-[length:10px] text-[var(--fg-0)] truncate flex-1">
                           {wp.name}
                         </span>
@@ -285,11 +276,7 @@ export function StudioDrawer() {
               {/* Bundles */}
               <div>
                 <div className="flex items-center gap-[var(--space-1)] mb-[var(--space-1)]">
-                  <HugeIcon
-                    icon={Package01Icon}
-                    className="size-3"
-                    style={{ color: 'var(--fg-2)' }}
-                  />
+                  <Package className="size-3" style={{ color: 'var(--fg-2)' }} />
                   <span className="font-mono text-[length:10px] text-[var(--fg-2)]">Bundles</span>
                 </div>
                 <Button

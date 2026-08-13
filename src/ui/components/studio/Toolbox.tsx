@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useState } from 'react';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import type { PalettePreset } from '@/lib/palettePresets';
 import { deletePalettePreset, loadPalettePresets, savePalettePreset } from '@/lib/palettePresets';
 import { useStudioStore } from '@/stores/studioStore';
 import type { ToolOverride } from '@/types/override';
 
-import { SlidersHorizontalIcon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import type { ThemeVisualSnapshot } from '@shared/types';
+import { SlidersHorizontal } from 'lucide-react';
 
 function computeSignature(snap: ThemeVisualSnapshot) {
   const landmarks = snap.landmarks.filter((lm) => lm.visible);
@@ -581,7 +580,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       {/* Panel header */}
       <div className="flex items-center justify-between border-b border-border pb-1.5">
         <div className="flex items-center gap-2">
-          <HugeIcon icon={SlidersHorizontalIcon} className="size-3 text-primary" />
+          <SlidersHorizontal className="size-3 text-primary" />
           <span
             className="font-mono text-[10px] font-semibold uppercase"
             style={{ letterSpacing: '0.12em', color: 'var(--foreground)' }}

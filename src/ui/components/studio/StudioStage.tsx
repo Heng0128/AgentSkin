@@ -15,12 +15,11 @@
 
 import { FloatingToolbar } from '@/components/studio/FloatingToolbar';
 import { PreviewWindow } from '@/components/studio/PreviewWindow';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { useStudioStore } from '@/stores/studioStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore}';
 
-import { BeakerIcon } from '@hugeicons/core-free-icons';
 import type { DomTreeNode } from '@shared/types';
+import { FlaskConical } from 'lucide-react';
 
 export function StudioStage() {
   const { viewMode, windows, activeWindowId, setActiveWindow, updateWindow, removeWindow } =
@@ -38,7 +37,7 @@ export function StudioStage() {
         <div className="ws-stage__inner">
           <div className="ws-stage__placeholder">
             <div className="ws-stage__placeholder-icon">
-              <HugeIcon icon={BeakerIcon} className="size-6 text-fg-3" />
+              <FlaskConical className="size-6 text-fg-3" />
             </div>
             <p className="ws-stage__placeholder-title">No preview windows</p>
             <p className="ws-stage__placeholder-hint">

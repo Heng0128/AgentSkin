@@ -270,18 +270,19 @@ function StatCard({
   value,
   suffix,
 }: {
-  icon: typeof Activity02Icon;
+  icon: typeof Activity;
   label: string;
   value: string;
   suffix: string;
 }) {
+  const Icon = icon;
   return (
     <div
       className="flex flex-col gap-1.5 rounded-[2px] border border-border px-3 py-2.5"
       style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
     >
       <div className="flex items-center gap-1.5">
-        <HugeIcon icon={icon} className="size-3 text-muted-foreground/70" />
+        <Icon className="size-3 text-muted-foreground/70" />
         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
           {label}
         </span>
@@ -301,10 +302,11 @@ function PerAgentCard({
   label,
   perAgentAvg,
 }: {
-  icon: typeof PieChartIcon;
+  icon: typeof PieChart;
   label: string;
   perAgentAvg: Record<string, number>;
 }) {
+  const Icon = icon;
   const entries = Object.entries(perAgentAvg);
 
   return (
@@ -313,7 +315,7 @@ function PerAgentCard({
       style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
     >
       <div className="flex items-center gap-1.5">
-        <HugeIcon icon={icon} className="size-3 text-muted-foreground/70" />
+        <Icon className="size-3 text-muted-foreground/70" />
         <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
           {label}
         </span>

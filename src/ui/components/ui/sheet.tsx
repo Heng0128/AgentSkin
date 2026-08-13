@@ -2,14 +2,13 @@
 
 import type * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
 import { useShellStore } from '@/stores/shellStore';
 
 import { Dialog as SheetPrimitive } from '@base-ui/react/dialog';
-import { Cancel01Icon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
+import { X } from 'lucide-react';
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -77,7 +76,7 @@ function SheetContent({
               />
             }
           >
-            <HugeIcon icon={Cancel01Icon} />
+            <X />
             <span className="sr-only">{t.close}</span>
           </SheetPrimitive.Close>
         )}

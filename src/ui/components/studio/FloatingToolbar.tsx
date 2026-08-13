@@ -13,15 +13,14 @@
 
 import { useState } from 'react';
 import { captureAgentSnapshot } from '@/components/studio/actions/capturePipeline';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { ViewMode } from '@/types/workspace';
 import { VIEW_MODE_LABELS } from '@/types/workspace';
 
-import { EyeIcon, RefreshIcon, Search01Icon } from '@hugeicons/core-free-icons';
 import type { AgentId } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
+import { Eye, RefreshCw, Search } from 'lucide-react';
 
 const VIEW_MODE_GROUPS: { id: ViewMode; label: string }[] = [
   { id: 'single', label: '×1' },
@@ -135,7 +134,7 @@ export function FloatingToolbar() {
         disabled={snapshotLoading}
         className="ws-btn ws-btn--sm ws-btn--primary"
       >
-        <HugeIcon icon={EyeIcon} className="size-3" />
+        <Eye className="size-3" />
         Snapshot
       </button>
       <button
@@ -144,7 +143,7 @@ export function FloatingToolbar() {
         className="ws-btn ws-btn--sm"
         title="Capture baseline (restore agent to vanilla state)"
       >
-        <HugeIcon icon={RefreshIcon} className="size-3" />
+        <RefreshCw className="size-3" />
       </button>
       <button
         type="button"
@@ -153,7 +152,7 @@ export function FloatingToolbar() {
         className="ws-btn ws-btn--sm"
         title={inspectMode ? 'Stop inspect' : 'Inspect pick mode'}
       >
-        <HugeIcon icon={Search01Icon} className="size-3" />
+        <Search className="size-3" />
       </button>
 
       <div className="h-5 w-px bg-[var(--border-default)]" />

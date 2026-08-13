@@ -17,13 +17,12 @@
 import { useEffect, useState } from 'react';
 import { APP_META, AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Input } from '@/components/ui/input';
 import type { AppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
 
-import { Folder01Icon } from '@hugeicons/core-free-icons';
 import { AGENT_IDS, type AgentId } from '@shared/types';
+import { Folder } from 'lucide-react';
 
 function AgentConfigCard({ controller, appId }: { controller: AppController; appId: AgentId }) {
   const { t, settings } = controller;
@@ -97,7 +96,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => void controller.chooseAppPath(appId)}>
-            <HugeIcon icon={Folder01Icon} data-icon="inline-start" />
+            <Folder size={14} className="text-muted-foreground/70" />
             {t.settingsChoosePath}
           </Button>
         </div>

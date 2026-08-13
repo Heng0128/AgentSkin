@@ -4,20 +4,14 @@ import { useEffect, useRef, useState } from 'react';
 import { APP_META, AppMark } from '@/components/app-mark';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import type { AppController, Selection } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
 import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 
-import {
-  Delete02Icon,
-  Package01Icon,
-  PaintBoardIcon,
-  Share05Icon,
-} from '@hugeicons/core-free-icons';
 import { AGENT_IDS, type AgentId } from '@shared/types';
+import { Package, PaintBucket, Share2, Trash2 } from 'lucide-react';
 
 /** Per-app apply rows: the drawer chooses the target app, not a global picker. */
 function AppActionList({
@@ -295,7 +289,7 @@ export function DetailPanel({
     return (
       <div className="flex min-h-48 items-center justify-center p-6 text-center">
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <HugeIcon icon={PaintBoardIcon} className="size-8 opacity-40" />
+          <PaintBucket className="size-8 opacity-40" />
           <p className="text-sm">{t.selectThemeHint}</p>
         </div>
       </div>
@@ -329,7 +323,7 @@ export function DetailPanel({
           <img src={theme.preview} alt={theme.name} className="size-full object-contain" />
         ) : (
           <div className="flex size-full items-center justify-center bg-muted text-muted-foreground">
-            <HugeIcon icon={PaintBoardIcon} className="size-8 opacity-50" />
+            <PaintBucket className="size-8 opacity-50" />
           </div>
         )}
         {/* Subtle inner shadow for depth */}
@@ -417,7 +411,7 @@ export function DetailPanel({
             className="flex-1"
             onClick={() => void controller.exportTheme(theme.id)}
           >
-            <HugeIcon icon={Share05Icon} data-icon="inline-start" />
+            <Share2 size={14} className="text-muted-foreground/70" />
             {t.exportTheme}
           </Button>
           {theme.wallpaper && (
@@ -428,7 +422,7 @@ export function DetailPanel({
               disabled={controller.busy !== null}
               onClick={() => void controller.createBundle(theme.id)}
             >
-              <HugeIcon icon={Package01Icon} data-icon="inline-start" />
+              <Package size={14} className="text-muted-foreground/70" />
               {t.bundleExport}
             </Button>
           )}
@@ -439,7 +433,7 @@ export function DetailPanel({
             disabled={controller.busy !== null}
             onClick={() => controller.setDeletePrompt(theme)}
           >
-            <HugeIcon icon={Delete02Icon} data-icon="inline-start" />
+            <Trash2 size={14} className="text-muted-foreground/70" />
             {t.deleteTheme}
           </Button>
         </div>

@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
 
-import type { HugeiconsIconProps } from '@hugeicons/react';
+import type { LucideIcon } from 'lucide-react';
 
 export interface WorkspaceQuickActionItem {
   id: string;
   label: string;
   description?: string;
-  icon: HugeiconsIconProps['icon'];
+  icon: LucideIcon;
   primary?: boolean;
   disabled?: boolean;
   onClick: () => void;
@@ -48,7 +47,7 @@ export function WorkspaceQuickActions({ items }: { items: WorkspaceQuickActionIt
                   : 'bg-accent text-muted-foreground group-hover/action:text-foreground',
               )}
             >
-              <HugeIcon icon={item.icon} size={16} />
+              <item.icon size={16} />
             </div>
 
             {/* Text */}

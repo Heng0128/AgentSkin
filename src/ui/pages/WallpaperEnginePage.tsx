@@ -7,7 +7,6 @@
  * 状态/副作用/handler 全部委托给 useWallpaperPageController hook。
  */
 
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Switch } from '@/components/ui/switch';
 import { InjectResultsPanel } from '@/components/wallpaper/InjectResultsPanel';
 import { WallpaperGrid } from '@/components/wallpaper/WallpaperGrid';
@@ -15,8 +14,8 @@ import type { AppController, useAppController } from '@/hooks/useAppController';
 import { useWallpaperPageController } from '@/hooks/useWallpaperPageController';
 import { cn } from '@/lib/utils';
 
-import { Download01Icon, Image02Icon, Search01Icon, Video01Icon } from '@hugeicons/core-free-icons';
 import type { WallpaperInfo } from '@shared/types';
+import { Download, Image, Search, Video } from 'lucide-react';
 
 /** 页面 wrapper — 持有 AppController (由上层注入)。 */
 export function WallpaperEnginePage({ controller }: { controller: AppController }) {
@@ -99,7 +98,7 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
       <div className="flex h-full items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex size-14 items-center justify-center rounded-[2px] bg-destructive/10">
-            <HugeIcon icon={Image02Icon} className="size-6 text-destructive" />
+            <Image className="size-6 text-destructive" />
           </div>
           <div>
             <p className="font-display text-sm font-bold text-destructive">{t.weLoadFailed}</p>
@@ -123,7 +122,7 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
       <div className="flex h-full items-center justify-center">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className="flex size-14 items-center justify-center rounded-[2px] bg-card2">
-            <HugeIcon icon={Image02Icon} className="size-6 text-muted-foreground" />
+            <Image className="size-6 text-muted-foreground" />
           </div>
           <div>
             <p className="font-display text-sm font-bold">{t.weNotInstalled}</p>
@@ -234,10 +233,7 @@ function Toolbar({
   return (
     <div className="we-sub flex items-center gap-[8px] border-b border-border px-4 py-2">
       <div className="relative max-w-[240px] flex-1">
-        <HugeIcon
-          icon={Search01Icon}
-          className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60"
-        />
+        <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
         <input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
@@ -267,8 +263,8 @@ function Toolbar({
                 : 'text-muted-foreground/70 hover:text-foreground',
             )}
           >
-            {f === 'video' && <HugeIcon icon={Video01Icon} className="size-2.5" />}
-            {f === 'image' && <HugeIcon icon={Image02Icon} className="size-2.5" />}
+            {f === 'video' && <Video className="size-2.5" />}
+            {f === 'image' && <Image className="size-2.5" />}
             {f === 'all'
               ? t.weFilterAll
               : f === 'video'
@@ -287,7 +283,7 @@ function Toolbar({
           onClick={onImport}
           className="flex items-center gap-1.5 rounded-[2px] border border-[var(--border2)] bg-card2 px-2.5 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
         >
-          <HugeIcon icon={Download01Icon} className="size-3" />
+          <Download className="size-3" />
           {t.wallpaperImport}
         </button>
         <div className="flex items-center gap-2">

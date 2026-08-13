@@ -1,8 +1,22 @@
-import { HugeiconsIcon, type HugeiconsIconProps } from '@hugeicons/react';
+import type { LucideProps } from 'lucide-react';
 
-function HugeIcon({ strokeWidth = 1.8, ...props }: HugeiconsIconProps) {
-  return <HugeiconsIcon strokeWidth={strokeWidth} {...props} />;
+export type HugeIconProps = LucideProps;
+
+export function HugeIcon(props: LucideProps) {
+  const { className, ...rest } = props;
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={24}
+      height={24}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...rest}
+    />
+  );
 }
-
-export type { HugeiconsIconProps as HugeIconProps };
-export { HugeIcon };

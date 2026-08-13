@@ -11,7 +11,6 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import {
   Select,
   SelectContent,
@@ -26,14 +25,14 @@ import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
 
 import {
-  ArrowLeft01Icon,
-  CheckmarkCircle02Icon,
-  Copy01Icon,
-  DashboardSquare01Icon,
-  File01Icon,
-  InformationCircleIcon,
-  Settings01Icon,
-} from '@hugeicons/core-free-icons';
+  ArrowLeft,
+  CheckCircle2,
+  Copy,
+  FileText,
+  Info,
+  LayoutDashboard,
+  Settings,
+} from 'lucide-react';
 
 function SettingRow({
   title,
@@ -190,11 +189,11 @@ export function SettingsPage({ controller }: { controller: AppController }) {
     void controller.openSettings(section);
   }, [section, controller.openSettings]);
 
-  const sections: Array<{ id: SettingsSection; label: string; icon: typeof Settings01Icon }> = [
-    { id: 'general', label: t.settingsGeneralTitle, icon: Settings01Icon },
-    { id: 'system', label: t.settingsSystemTitle, icon: File01Icon },
-    { id: 'about', label: t.settingsAbout, icon: InformationCircleIcon },
-    { id: 'advanced', label: t.settingsAdvancedTitle, icon: DashboardSquare01Icon },
+  const sections: Array<{ id: SettingsSection; label: string; icon: typeof Settings }> = [
+    { id: 'general', label: t.settingsGeneralTitle, icon: Settings },
+    { id: 'system', label: t.settingsSystemTitle, icon: FileText },
+    { id: 'about', label: t.settingsAbout, icon: Info },
+    { id: 'advanced', label: t.settingsAdvancedTitle, icon: LayoutDashboard },
   ];
   const activeSection = sections.find((item) => item.id === section) ?? sections[0];
 
@@ -224,7 +223,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               )}
               onClick={() => setSection(item.id)}
             >
-              <HugeIcon icon={item.icon} data-icon="inline-start" />
+              <item.icon size={14} className="text-muted-foreground/70" />
               {item.label}
             </Button>
           ))}
@@ -240,7 +239,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 onClick={() => controller.setRoute('workspace')}
                 className="h-7 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
               >
-                <HugeIcon icon={ArrowLeft01Icon} className="size-3.5" />
+                <ArrowLeft className="size-3.5" />
                 {t.settingsBack}
               </Button>
               <h2 className="font-display text-[13px] font-bold tracking-tight">
@@ -254,10 +253,11 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 onClick={() => void handleCopy()}
                 className="h-7 shrink-0 gap-1.5 px-2.5 text-[11px]"
               >
-                <HugeIcon
-                  icon={copied ? CheckmarkCircle02Icon : Copy01Icon}
-                  className={cn('size-3.5', copied && 'text-cr-success')}
-                />
+                {copied ? (
+                  <CheckCircle2 className={cn('size-3.5', 'text-cr-success')} />
+                ) : (
+                  <Copy className="size-3.5" />
+                )}
                 {copied ? t.copyLogsDone : t.copyLogs}
               </Button>
             )}
@@ -283,7 +283,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               (logs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
                   <div className="flex size-10 items-center justify-center rounded-[2px] bg-muted/60">
-                    <HugeIcon icon={File01Icon} className="size-4 text-muted-foreground/50" />
+                    <FileText className="size-4 text-muted-foreground/50" />
                   </div>
                   <p className="text-xs text-muted-foreground">{t.noLogs}</p>
                 </div>

@@ -22,14 +22,13 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
 import { useShellStore } from '@/stores/shellStore';
 import { useStudioStore } from '@/stores/studioStore';
 
-import { Cancel01Icon, Maximize02Icon, Minimize01Icon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
+import { Maximize2, Minus, X } from 'lucide-react';
 
 export function StudioTitleBar() {
   const locale = useShellStore((s) => s.locale);
@@ -90,7 +89,7 @@ export function StudioTitleBar() {
           onClick={() => api.windowMinimize()}
           className={studioBtn}
         >
-          <HugeIcon icon={Minimize01Icon} className="size-3" />
+          <Minus className="size-3" />
         </button>
         <button
           type="button"
@@ -99,7 +98,7 @@ export function StudioTitleBar() {
           onClick={() => void api.windowToggleMaximize()}
           className={studioBtn}
         >
-          <HugeIcon icon={Maximize02Icon} className="size-3" />
+          <Maximize2 className="size-3" />
         </button>
         <button
           type="button"
@@ -111,7 +110,7 @@ export function StudioTitleBar() {
             'hover:bg-[var(--brand-red)] hover:text-white hover:border-[var(--brand-red)]',
           )}
         >
-          <HugeIcon icon={Cancel01Icon} className="size-3" />
+          <X className="size-3" />
         </button>
       </div>
     </header>

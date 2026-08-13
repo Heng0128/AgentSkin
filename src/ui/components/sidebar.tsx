@@ -3,23 +3,17 @@
 import { api } from '@/api/agentSkinClient';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { cn } from '@/lib/utils';
 import { useShellStore } from '@/stores/shellStore';
 import type { Route } from '@/types/navigation';
 
-import {
-  Home02Icon,
-  Image02Icon,
-  PaintBoardIcon,
-  Settings01Icon,
-} from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
+import { Home, Image, PaintBucket, Settings } from 'lucide-react';
 
 interface NavEntry {
   route: Route;
-  icon: typeof Home02Icon;
+  icon: typeof Home;
   label: string;
 }
 
@@ -45,7 +39,10 @@ const NavButton = ({ item, active, collapsed, onClick }: NavButtonProps) => {
         active && '[&_svg]:text-primary',
       )}
     >
-      <HugeIcon icon={item.icon} className="w-4 h-4 shrink-0" />
+      {(() => {
+        const Icon = item.icon;
+        return <Icon className="w-4 h-4 shrink-0" />;
+      })()}
       {!collapsed && <span className="text-[12.5px] truncate">{item.label}</span>}
     </Button>
   );
@@ -76,14 +73,14 @@ export function Sidebar() {
     {
       label: t.navGroupCore,
       items: [
-        { route: 'workspace', icon: Home02Icon, label: t.navWorkspace },
-        { route: 'themes', icon: PaintBoardIcon, label: t.navThemes },
-        { route: 'wallpaper', icon: Image02Icon, label: t.navWallpaperEngine },
+        { route: 'workspace', icon: Home, label: t.navWorkspace },
+        { route: 'themes', icon: PaintBucket, label: t.navThemes },
+        { route: 'wallpaper', icon: Image, label: t.navWallpaperEngine },
       ],
     },
     {
       label: t.navGroupSystem,
-      items: [{ route: 'settings', icon: Settings01Icon, label: t.navSettings }],
+      items: [{ route: 'settings', icon: Settings, label: t.navSettings }],
     },
   ];
 
@@ -162,7 +159,7 @@ export function Sidebar() {
             collapsed && 'px-0',
           )}
         >
-          <HugeIcon icon={PaintBoardIcon} className="size-3.5 shrink-0" />
+          <PaintBucket className="size-3.5 shrink-0" />
           {!collapsed && <span>{t.navStudio}</span>}
         </button>
       </div>

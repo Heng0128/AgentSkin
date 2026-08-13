@@ -12,16 +12,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Spinner } from '@/components/ui/spinner';
 import { AgentStatusDot } from '@/components/workspace/AgentStatusDot';
 import { cn } from '@/lib/utils';
 import { formatSize } from '@/lib/wallpaperUtils';
 
-import { CheckmarkCircle02Icon, Image02Icon, Video01Icon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import type { AgentId, AppStatus, WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
+import { CheckCircle2, Image, Video } from 'lucide-react';
 import { RenderSettingsPanel } from './RenderSettingsPanel';
 import { WallpaperPreview } from './WallpaperCard';
 
@@ -135,10 +134,11 @@ export function InjectResultsPanel({
             }
             emptyNode={
               <div className="flex size-full items-center justify-center">
-                <HugeIcon
-                  icon={selected.type === 'video' ? Video01Icon : Image02Icon}
-                  className="size-8 text-muted-foreground"
-                />
+                {selected.type === 'video' ? (
+                  <Video className="size-8 text-muted-foreground" />
+                ) : (
+                  <Image className="size-8 text-muted-foreground" />
+                )}
               </div>
             }
           />
@@ -233,7 +233,7 @@ export function InjectResultsPanel({
                   {isApplying ? (
                     <div className="size-3.5 animate-spin rounded-full border-[1.5px] border-muted-foreground/30 border-t-foreground" />
                   ) : isApplied ? (
-                    <HugeIcon icon={CheckmarkCircle02Icon} className="size-4.5 text-cr-success" />
+                    <CheckCircle2 className="size-4.5 text-cr-success" />
                   ) : (
                     <AppMark appId={agentId} size={18} />
                   )}

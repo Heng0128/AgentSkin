@@ -2,7 +2,6 @@
 
 import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import {
   Sheet,
   SheetContent,
@@ -14,9 +13,9 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 
-import { Rocket01Icon } from '@hugeicons/core-free-icons';
 import type { UiMessages } from '@shared/i18n';
 import type { EnvironmentModel } from '@shared/types/environment';
+import { Rocket } from 'lucide-react';
 import { AgentStatusDot, envToDotVariant } from './AgentStatusDot';
 
 interface AgentDetailSheetProps {
@@ -116,7 +115,7 @@ export function AgentDetailSheet({
                   onOpenChange(false);
                 }}
               >
-                {isApplying ? <Spinner size={15} /> : <HugeIcon icon={Rocket01Icon} size={15} />}
+                {isApplying ? <Spinner size={15} /> : <Rocket size={15} />}
                 {isApplying ? t.applying : t.detailApply}
               </Button>
             </SheetFooter>

@@ -19,7 +19,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { APP_META, AppMark } from '@/components/app-mark';
 import { RenameDialog } from '@/components/rename-dialog';
 import { Button } from '@/components/ui/button';
-import { HugeIcon } from '@/components/ui/huge-icon';
 import { Input } from '@/components/ui/input';
 import { AgentDetailSheet } from '@/components/workspace/AgentDetailSheet';
 import { EnvironmentGrid } from '@/components/workspace/EnvironmentGrid';
@@ -30,16 +29,9 @@ import { cn } from '@/lib/utils';
 import { useEnvironmentStore } from '@/stores/environmentStore';
 import { useStatusStore } from '@/stores/statusStore';
 
-import {
-  Folder01Icon,
-  Image02Icon,
-  PaintBoardIcon,
-  RefreshIcon,
-  UploadSquare01Icon,
-} from '@hugeicons/core-free-icons';
-import type { HugeiconsIconProps } from '@hugeicons/react';
 import { AGENT_IDS, type AgentId } from '@shared/types';
 import type { EnvironmentModel } from '@shared/types/environment';
+import { Folder, Image, PaintBucket, RotateCw, Upload } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
 /* StatTile — copied from AgentDashboardPage                           */
@@ -148,7 +140,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => void controller.chooseAppPath(appId)}>
-            <HugeIcon icon={Folder01Icon} data-icon="inline-start" />
+            <Folder size={14} className="text-muted-foreground/70" />
             {t.settingsChoosePath}
           </Button>
         </div>
@@ -231,7 +223,7 @@ function QuickButton({
   disabled,
   onClick,
 }: {
-  icon: HugeiconsIconProps['icon'];
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   shortcut: string;
   disabled?: boolean;
@@ -252,7 +244,7 @@ function QuickButton({
     >
       {/* Red bar grows from top to bottom on hover */}
       <span className="absolute left-0 top-0 h-0 w-[3px] bg-primary transition-all duration-250 group-hover/qbtn:h-full" />
-      <HugeIcon icon={Icon} size={14} className="text-muted-foreground/70" />
+      <Icon size={14} className="text-muted-foreground/70" />
       <b className="text-[12px]">{label}</b>
       {shortcut && <span className="font-mono text-[10px] text-[var(--dim)]">{shortcut}</span>}
     </button>
@@ -355,7 +347,7 @@ export function UnifiedWorkspacePage({ controller }: { controller: AppController
   const hasActiveTheme = (controller.status?.apps ?? []).some((app) => app.activeThemeId);
   const quickActions: {
     id: string;
-    icon: HugeiconsIconProps['icon'];
+    icon: React.ComponentType<{ size?: number; className?: string }>;
     label: string;
     shortcut: string;
     disabled?: boolean;
@@ -363,28 +355,28 @@ export function UnifiedWorkspacePage({ controller }: { controller: AppController
   }[] = [
     {
       id: 'browseThemes',
-      icon: PaintBoardIcon,
+      icon: PaintBucket,
       label: t.browseThemes,
       shortcut: '⌘T',
       onClick: handleBrowseThemes,
     },
     {
       id: 'importTheme',
-      icon: UploadSquare01Icon,
+      icon: Upload,
       label: t.importTheme,
       shortcut: '',
       onClick: () => void controller.importTheme(),
     },
     {
       id: 'wallpaper',
-      icon: Image02Icon,
+      icon: Image,
       label: t.actionWallpaperCenter,
       shortcut: '',
       onClick: handleOpenWallpaperCenter,
     },
     {
       id: 'restoreAll',
-      icon: RefreshIcon,
+      icon: RotateCw,
       label: t.actionRestoreAll,
       shortcut: 'ESC',
       disabled: !hasActiveTheme,
