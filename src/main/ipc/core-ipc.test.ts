@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
@@ -108,7 +108,7 @@ describe('core-ipc parameter validation', () => {
     // is a vi.fn() we control.
     function registerWith(statusMock: ReturnType<typeof vi.fn>): void {
       const localDeps = makeMockDeps();
-      (localDeps.core as { status: ReturnType<typeof vi.fn> }).status = statusMock;
+      (localDeps.core as unknown as { status: ReturnType<typeof vi.fn> }).status = statusMock;
       registerCoreIpc(localDeps, updateTrayMenu);
     }
 
@@ -134,8 +134,7 @@ describe('core-ipc parameter validation', () => {
       expect(result).toHaveProperty('name', 'IpcTimeoutError');
       expect(result).toHaveProperty('channel', IpcChannel.SYSTEM_STATUS);
       expect(result).toHaveProperty('ms', 15000);
-    }, // to fire before vitest's own timeout kills the test. // The IPC timeout is 15s; give the test 25s so the timeout has time
-    25000);
+    }, 25000); // IPC timeout is 15s; 25s lets it fire before vitest's own timeout
   });
 
   describe('SHELL_SHOW_ITEM', () => {
