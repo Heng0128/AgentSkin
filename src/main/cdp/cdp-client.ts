@@ -121,7 +121,11 @@ function openCdpSocket(
   let seq = 0;
   const pending = new Map<
     number,
-    { resolve: (value: unknown) => void; reject: (error: Error) => void }
+    {
+      timer?: ReturnType<typeof setTimeout>;
+      resolve: (value: unknown) => void;
+      reject: (error: Error) => void;
+    }
   >();
   const listeners = new Map<string, Set<(params: unknown) => void>>();
   // Guard flag: once the session is closing/closed, ignore further onerror /
@@ -176,12 +180,20 @@ function openCdpSocket(
   // Reject all pending commands immediately when the socket closes
   // unexpectedly (agent crash, network issue). Without this, callers'
   // awaits hang until their individual command timeouts fire.
+  const rejectAllPending = (error: Error): void => {
+    // Clear every command-timeout timer so it cannot dangle in the event
+    // loop after the session is gone (RC1: timer leak on close).
+    for (const waiter of pending.values()) {
+      if (waiter.timer) clearTimeout(waiter.timer);
+      waiter.reject(error);
+    }
+    pending.clear();
+  };
+
   ws.onclose = () => {
     if (closed) return; // Already handled — prevent re-entrant stack overflow
     closed = true;
-    const error = new Error('CDP WebSocket closed unexpectedly');
-    for (const waiter of pending.values()) waiter.reject(error);
-    pending.clear();
+    rejectAllPending(new Error('CDP WebSocket closed unexpectedly'));
   };
 
   const send = <T = unknown>(method: string, params: Record<string, unknown> = {}): Promise<T> => {
@@ -199,6 +211,7 @@ function openCdpSocket(
         }
       }, commandTimeoutMs);
       pending.set(id, {
+        timer,
         resolve: (value) => {
           clearTimeout(timer);
           resolve(value as T);
@@ -221,10 +234,12 @@ function openCdpSocket(
   const close = (): void => {
     if (closed) return; // Already closed — prevent re-entrant stack overflow
     closed = true;
-    // Reject all pending commands so callers' await throws instead of hanging.
-    const error = new Error('CDP session closed.');
-    for (const waiter of pending.values()) waiter.reject(error);
-    pending.clear();
+    // Reject all pending commands so callers' await throws instead of hanging,
+    // and clear every command-timeout timer to avoid dangling handles (RC1).
+    rejectAllPending(new Error('CDP session closed.'));
+    // Drop all event subscriptions so handlers (and the closures they
+    // capture) can be reclaimed as soon as the socket is gone (RC1).
+    listeners.clear();
     try {
       ws.close();
     } catch {

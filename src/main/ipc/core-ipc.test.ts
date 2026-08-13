@@ -96,20 +96,33 @@ describe('core-ipc parameter validation', () => {
   });
 
   describe('SYSTEM_STATUS', () => {
+    // SYSTEM_STATUS handler closes over `deps` at registration time. To control
+    // the core.status() mock, we re-register with a fresh deps whose core.status
+    // is a vi.fn() we control.
+    function registerWith(statusMock: ReturnType<typeof vi.fn>): void {
+      const localDeps = makeMockDeps();
+      (localDeps.core as { status: ReturnType<typeof vi.fn> }).status = statusMock;
+      registerCoreIpc(localDeps, updateTrayMenu);
+    }
+
     it('resolves with core.status() payload on happy path', async () => {
-      const handler = handlers.get(IpcChannel.SYSTEM_STATUS)!;
+      const statusMock = vi.fn();
       const payload = {
         apps: [{ appId: 'vscode', installed: true, running: false, debugReady: true }],
         platform: 'win32',
       };
-      (deps.core.status as ReturnType<typeof vi.fn>).mockResolvedValue(payload);
+      statusMock.mockResolvedValue(payload);
+      registerWith(statusMock);
+      const handler = handlers.get(IpcChannel.SYSTEM_STATUS)!;
       const result = await handler({}, {});
       expect(result).toEqual(payload);
     });
 
     it('rejects with IpcTimeoutError when core.status() hangs', async () => {
+      const statusMock = vi.fn();
+      statusMock.mockReturnValue(new Promise(() => {})); // never settles
+      registerWith(statusMock);
       const handler = handlers.get(IpcChannel.SYSTEM_STATUS)!;
-      (deps.core.status as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {})); // never settles
       const result = await (handler({}, {}) as Promise<unknown>).catch((e: unknown) => e);
       expect(result).toHaveProperty('name', 'IpcTimeoutError');
       expect(result).toHaveProperty('channel', IpcChannel.SYSTEM_STATUS);
