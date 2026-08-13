@@ -188,20 +188,20 @@
     }
   },
   "colors": {
-    "accent": "#be4673",
+    "accent": "#9a2d56",
     "secondary": "#d9b8c8",
     "background": "#faf4f0",
     "foreground": "#4a3f45",
-    "muted": "#9a8b92",
+    "muted": "#7a6b72",
     "surface": "#ffffff",
     "surfaceElevated": "#fffdfb",
-    "border": "rgba(190, 70, 115, 0.25)",
+    "border": "rgba(154, 45, 86, 0.25)",
     "codeBackground": "#f3e9e5",
     "codeForeground": "#6b5a63",
     "inputBackground": "#ffffff",
-    "buttonBackground": "rgba(190, 70, 115, 0.18)",
-    "buttonForeground": "#be4673",
-    "focusRing": "#be467366"
+    "buttonBackground": "rgba(154, 45, 86, 0.18)",
+    "buttonForeground": "#9a2d56",
+    "focusRing": "#9a2d5666"
   },
   "colorSchemes": [
     "mint",

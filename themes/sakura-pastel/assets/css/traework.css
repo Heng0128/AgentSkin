@@ -5,20 +5,20 @@
    touches on stable solo-lite landmarks. */
 :root {
   color-scheme: light !important;
-  --agentskin-accent: #e08aa8;
+  --agentskin-accent: #9a2d56;
   --agentskin-secondary: #d9b8c8;
   --agentskin-bg: #faf4f0;
   --agentskin-surface: #ffffff;
   --agentskin-surface-elevated: #fffdfb;
   --agentskin-text: #4a3f45;
-  --agentskin-muted: #9a8b92;
-  --agentskin-border: rgba(224, 138, 168, 0.25);
+  --agentskin-muted: #7a6b72;
+  --agentskin-border: rgba(154, 45, 86, 0.25);
   --agentskin-code-bg: #f3e9e5;
   --agentskin-code-fg: #6b5a63;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #e08aa8 18%) 45%, transparent);
-  --agentskin-button-bg: #e08aa8;
-  --agentskin-focus-ring: #e08aa866;
-  --agentskin-selection: rgba(224, 138, 168, 0.32);
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #9a2d56 18%) 45%, transparent);
+  --agentskin-button-bg: #9a2d56;
+  --agentskin-focus-ring: #9a2d5666;
+  --agentskin-selection: rgba(154, 45, 86, 0.32);
   --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
   text-shadow: var(--agentskin-text-shadow);
 }
@@ -32,36 +32,36 @@ html.agentskin-host-traework body {
   --vscode-icube-colorDefaultText: #4a3f45 !important;
   --vscode-icube--text-text-default: #4a3f45 !important;
   --vscode-icube-colorHighlightText: #4a3f45 !important;
-  --vscode-descriptionForeground: #9a8b92 !important;
-  --vscode-icube-colorGrayText: #9a8b92 !important;
+  --vscode-descriptionForeground: #7a6b72 !important;
+  --vscode-icube-colorGrayText: #7a6b72 !important;
   --vscode-icube-colorDisableText: rgba(74, 63, 69, 0.42) !important;
 
   /* Brand / links / buttons */
-  --vscode-textLink-foreground: #e08aa8 !important;
+  --vscode-textLink-foreground: #9a2d56 !important;
   --vscode-textLink-activeForeground: #d9b8c8 !important;
-  --vscode-button-background: #e08aa8 !important;
+  --vscode-button-background: #9a2d56 !important;
   --vscode-button-foreground: #ffffff !important;
-  --vscode-button-hoverBackground: rgba(224, 138, 168, 0.85) !important;
-  --vscode-icube-colorBrand: #e08aa8 !important;
-  --vscode-focusBorder: rgba(224, 138, 168, 0.6) !important;
+  --vscode-button-hoverBackground: rgba(154, 45, 86, 0.85) !important;
+  --vscode-icube-colorBrand: #9a2d56 !important;
+  --vscode-focusBorder: rgba(154, 45, 86, 0.6) !important;
 
   /* Lines / borders */
-  --vscode-icube-colorLine1: rgba(224, 138, 168, 0.18) !important;
-  --vscode-icube-colorLine2: rgba(224, 138, 168, 0.32) !important;
-  --vscode-icube--border-border-neutral-l1: rgba(224, 138, 168, 0.18) !important;
-  --vscode-chat-requestBorder: rgba(224, 138, 168, 0.25) !important;
-  --vscode-widget-border: rgba(224, 138, 168, 0.18) !important;
-  --vscode-panel-border: rgba(224, 138, 168, 0.18) !important;
+  --vscode-icube-colorLine1: rgba(154, 45, 86, 0.18) !important;
+  --vscode-icube-colorLine2: rgba(154, 45, 86, 0.32) !important;
+  --vscode-icube--border-border-neutral-l1: rgba(154, 45, 86, 0.18) !important;
+  --vscode-chat-requestBorder: rgba(154, 45, 86, 0.25) !important;
+  --vscode-widget-border: rgba(154, 45, 86, 0.18) !important;
+  --vscode-panel-border: rgba(154, 45, 86, 0.18) !important;
 
   /* Fills / hovers */
-  --vscode-toolbar-hoverBackground: rgba(224, 138, 168, 0.12) !important;
-  --vscode-icube-colorBtnHover: rgba(224, 138, 168, 0.12) !important;
-  --vscode-icube-colorBtnHover2: rgba(224, 138, 168, 0.18) !important;
-  --vscode-list-hoverBackground: rgba(224, 138, 168, 0.12) !important;
-  --vscode-list-activeSelectionBackground: rgba(224, 138, 168, 0.18) !important;
-  --vscode-icube--bg-bg-overlay-l2: rgba(224, 138, 168, 0.12) !important;
-  --vscode-icube--bg-bg-overlay-l3: rgba(224, 138, 168, 0.18) !important;
-  --vscode-input-background: rgba(224, 138, 168, 0.07) !important;
+  --vscode-toolbar-hoverBackground: rgba(154, 45, 86, 0.12) !important;
+  --vscode-icube-colorBtnHover: rgba(154, 45, 86, 0.12) !important;
+  --vscode-icube-colorBtnHover2: rgba(154, 45, 86, 0.18) !important;
+  --vscode-list-hoverBackground: rgba(154, 45, 86, 0.12) !important;
+  --vscode-list-activeSelectionBackground: rgba(154, 45, 86, 0.18) !important;
+  --vscode-icube--bg-bg-overlay-l2: rgba(154, 45, 86, 0.12) !important;
+  --vscode-icube--bg-bg-overlay-l3: rgba(154, 45, 86, 0.18) !important;
+  --vscode-input-background: rgba(154, 45, 86, 0.07) !important;
 
   /* Surfaces */
   --vscode-editor-background: #faf4f0 !important;
@@ -70,19 +70,19 @@ html.agentskin-host-traework body {
   --vscode-icube-colorBg3: #fffdfb !important;
   --vscode-editorWidget-background: #ffffff !important;
   --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
-  --vscode-widget-shadow: rgba(224, 138, 168, 0.15) !important;
-  --vscode-badge-background: rgba(224, 138, 168, 0.65) !important;
+  --vscode-widget-shadow: rgba(154, 45, 86, 0.15) !important;
+  --vscode-badge-background: rgba(154, 45, 86, 0.65) !important;
   --vscode-badge-foreground: #ffffff !important;
-  --vscode-scrollbarSlider-background: rgba(224, 138, 168, 0.22) !important;
-  --vscode-scrollbarSlider-hoverBackground: rgba(224, 138, 168, 0.38) !important;
-  --vscode-scrollbarSlider-activeBackground: rgba(224, 138, 168, 0.52) !important;
+  --vscode-scrollbarSlider-background: rgba(154, 45, 86, 0.22) !important;
+  --vscode-scrollbarSlider-hoverBackground: rgba(154, 45, 86, 0.38) !important;
+  --vscode-scrollbarSlider-activeBackground: rgba(154, 45, 86, 0.52) !important;
 
   /* App-level surface variables → transparent for art punch-through */
   --bg-bg-base-default: transparent !important;
 
   /* Selection */
-  --vscode-editor-selectionBackground: rgba(224, 138, 168, 0.18) !important;
-  --vscode-selection-background: rgba(224, 138, 168, 0.24) !important;
+  --vscode-editor-selectionBackground: rgba(154, 45, 86, 0.18) !important;
+  --vscode-selection-background: rgba(154, 45, 86, 0.24) !important;
 
   background: transparent !important;
   color: var(--agentskin-text) !important;
@@ -149,13 +149,13 @@ html.agentskin-host-traework .task-list-panel {
 
 html.agentskin-host-traework .task-list-base [class*="item"]:hover,
 html.agentskin-host-traework .task-list-panel [class*="item"]:hover {
-  background: rgba(224, 138, 168, 0.12) !important;
+  background: rgba(154, 45, 86, 0.12) !important;
 }
 
 html.agentskin-host-traework .task-list-base [class*="active"],
 html.agentskin-host-traework .task-list-panel [class*="active"] {
-  background: rgba(224, 138, 168, 0.18) !important;
-  box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px rgba(224, 138, 168, 0.32) !important;
+  background: rgba(154, 45, 86, 0.18) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px rgba(154, 45, 86, 0.32) !important;
 }
 
 /* ---- composer ---- */
@@ -164,7 +164,7 @@ html.agentskin-host-traework .chat-input-v2-input-box-editable {
   backdrop-filter: blur(14px) saturate(1.1) !important;
   color: var(--agentskin-text) !important;
   caret-color: var(--agentskin-accent) !important;
-  border: 1px solid rgba(224, 138, 168, 0.25) !important;
+  border: 1px solid rgba(154, 45, 86, 0.25) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
   transition: border-color 160ms ease, box-shadow 160ms ease !important;
@@ -172,8 +172,8 @@ html.agentskin-host-traework .chat-input-v2-input-box-editable {
 
 html.agentskin-host-traework .chat-input-v2-input-box-editable:focus,
 html.agentskin-host-traework .chat-input-v2-input-box-editable:focus-within {
-  border-color: rgba(224, 138, 168, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(224, 138, 168, 0.1), 0 4px 18px rgba(217, 184, 200, 0.12) !important;
+  border-color: rgba(154, 45, 86, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(154, 45, 86, 0.1), 0 4px 18px rgba(217, 184, 200, 0.12) !important;
 }
 
 html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
@@ -184,13 +184,13 @@ html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
 html.agentskin-host-traework [class*="chat-input-primary-glow"] {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 40%, transparent) !important;
   backdrop-filter: blur(14px) saturate(1.1) !important;
-  border: 1px solid rgba(224, 138, 168, 0.2) !important;
+  border: 1px solid rgba(154, 45, 86, 0.2) !important;
   box-shadow: none !important;
 }
 
 html.agentskin-host-traework [class*="chat-input-primary-glow"]:focus-within {
-  border-color: rgba(224, 138, 168, 0.45) !important;
-  box-shadow: 0 0 0 2px rgba(224, 138, 168, 0.08), 0 4px 16px rgba(217, 184, 200, 0.1) !important;
+  border-color: rgba(154, 45, 86, 0.45) !important;
+  box-shadow: 0 0 0 2px rgba(154, 45, 86, 0.08), 0 4px 16px rgba(217, 184, 200, 0.1) !important;
 }
 
 /* ---- buttons ---- */
@@ -265,7 +265,7 @@ html.agentskin-host-traework [class*="chat-file"],
 html.agentskin-host-traework [class*="chatFile"] {
   background: transparent !important;
   background-color: transparent !important;
-  border-color: rgba(224, 138, 168, 0.15) !important;
+  border-color: rgba(154, 45, 86, 0.15) !important;
 }
 html.agentskin-host-traework [class*="file-change"]:hover,
 html.agentskin-host-traework [class*="fileChange"]:hover,
@@ -318,7 +318,7 @@ html.agentskin-host-traework [class*="mode-switcher"] [class*="active"],
 html.agentskin-host-traework [class*="tab-item"][class*="active"],
 html.agentskin-host-traework [class*="segmented"] [class*="active"] {
   color: var(--agentskin-accent) !important;
-  background: rgba(224, 138, 168, 0.12) !important;
+  background: rgba(154, 45, 86, 0.12) !important;
 }
 
 /* Text readability on frosted glass */
@@ -363,15 +363,15 @@ html.agentskin-host-traework select:focus {
 html.agentskin-host-traework code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(224, 138, 168, 0.15) !important;
+  border: 1px solid rgba(154, 45, 86, 0.15) !important;
   border-radius: 6px !important;
 }
 
 html.agentskin-host-traework pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(224, 138, 168, 0.15) !important;
-  border-left: 3px solid rgba(224, 138, 168, 0.5) !important;
+  border: 1px solid rgba(154, 45, 86, 0.15) !important;
+  border-left: 3px solid rgba(154, 45, 86, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -390,14 +390,14 @@ html.agentskin-host-traework ::-webkit-scrollbar-track {
 }
 
 html.agentskin-host-traework ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(224, 138, 168, 0.3) 0%, rgba(217, 184, 200, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(154, 45, 86, 0.3) 0%, rgba(217, 184, 200, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 html.agentskin-host-traework ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(224, 138, 168, 0.5) 0%, rgba(217, 184, 200, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(154, 45, 86, 0.5) 0%, rgba(217, 184, 200, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 

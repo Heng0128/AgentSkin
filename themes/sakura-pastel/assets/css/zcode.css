@@ -1,20 +1,20 @@
 /* 樱花粉 — ZCode (generic --text-*/--bg-* design tokens) */
 :root {
   color-scheme: light !important;
-  --agentskin-accent: #e08aa8;
+  --agentskin-accent: #9a2d56;
   --agentskin-secondary: #d9b8c8;
   --agentskin-bg: #faf4f0;
   --agentskin-surface: #ffffff;
   --agentskin-surface-elevated: #fffdfb;
   --agentskin-text: #4a3f45;
-  --agentskin-muted: #9a8b92;
-  --agentskin-border: rgba(224, 138, 168, 0.25);
+  --agentskin-muted: #7a6b72;
+  --agentskin-border: rgba(154, 45, 86, 0.25);
   --agentskin-code-bg: #f3e9e5;
   --agentskin-code-fg: #6b5a63;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #e08aa8 18%) 45%, transparent);
-  --agentskin-button-bg: #e08aa8;
-  --agentskin-focus-ring: #e08aa866;
-  --agentskin-selection: rgba(224, 138, 168, 0.32);
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #9a2d56 18%) 45%, transparent);
+  --agentskin-button-bg: #9a2d56;
+  --agentskin-focus-ring: #9a2d5666;
+  --agentskin-selection: rgba(154, 45, 86, 0.32);
   --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
   text-shadow: var(--agentskin-text-shadow);
 }
@@ -25,53 +25,53 @@ html.agentskin-host-zcode {
 
   /* Text hierarchy */
   --text-primary: #4a3f45 !important;
-  --text-secondary: #9a8b92 !important;
+  --text-secondary: #7a6b72 !important;
   --text-tertiary: rgba(74, 63, 69, 0.55) !important;
   --text-quaternary: rgba(74, 63, 69, 0.4) !important;
 
   /* Backgrounds — transparent for art punch-through */
   --bg-primary: transparent !important;
   --bg-secondary: rgb(230, 230, 230) !important;
-  --bg-tertiary: color-mix(in srgb, #fffdfb 85%, #e08aa8 15%) !important;
+  --bg-tertiary: color-mix(in srgb, #fffdfb 85%, #9a2d56 15%) !important;
   --bg-elevated: #fffdfb !important;
   --bg-base: transparent !important;
   --bg-canvas: transparent !important;
   --bg-surface: color-mix(in srgb, #ffffff 80%, transparent) !important;
-  --bg-hover: rgba(224, 138, 168, 0.1) !important;
-  --bg-active: rgba(224, 138, 168, 0.16) !important;
-  --bg-selected: rgba(224, 138, 168, 0.14) !important;
+  --bg-hover: rgba(154, 45, 86, 0.1) !important;
+  --bg-active: rgba(154, 45, 86, 0.16) !important;
+  --bg-selected: rgba(154, 45, 86, 0.14) !important;
 
   /* Borders */
-  --border-xsubtle: rgba(224, 138, 168, 0.045) !important;
-  --border-subtle: rgba(224, 138, 168, 0.09) !important;
-  --border-medium: rgba(224, 138, 168, 0.18) !important;
-  --border-strong: rgba(224, 138, 168, 0.144) !important;
+  --border-xsubtle: rgba(154, 45, 86, 0.045) !important;
+  --border-subtle: rgba(154, 45, 86, 0.09) !important;
+  --border-medium: rgba(154, 45, 86, 0.18) !important;
+  --border-strong: rgba(154, 45, 86, 0.144) !important;
 
   /* Accent / brand */
-  --accent: #e08aa8 !important;
+  --accent: #9a2d56 !important;
   --accent-hover: rgb(229, 156, 181) !important;
   --accent-pressed: rgb(232, 167, 190) !important;
-  --accent-soft: rgba(224, 138, 168, 0.12) !important;
-  --accent-soft-hover: rgba(224, 138, 168, 0.18) !important;
+  --accent-soft: rgba(154, 45, 86, 0.12) !important;
+  --accent-soft-hover: rgba(154, 45, 86, 0.18) !important;
 
   /* Buttons */
-  --button-primary-bg: #e08aa8 !important;
+  --button-primary-bg: #9a2d56 !important;
   --button-primary-fg: #ffffff !important;
   --button-primary-hover: rgb(229, 156, 181) !important;
   --button-secondary-bg: rgba(74, 63, 69, 0.12) !important;
   --button-secondary-fg: #4a3f45 !important;
 
   /* Links */
-  --link: #e08aa8 !important;
+  --link: #9a2d56 !important;
   --link-hover: rgb(229, 156, 181) !important;
 
   /* Input / composer */
-  --input-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #e08aa8 18%) 45%, transparent) !important;
-  --input-border: rgba(224, 138, 168, 0.18) !important;
-  --input-focus-ring: rgba(224, 138, 168, 0.4) !important;
+  --input-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #9a2d56 18%) 45%, transparent) !important;
+  --input-border: rgba(154, 45, 86, 0.18) !important;
+  --input-focus-ring: rgba(154, 45, 86, 0.4) !important;
 
   /* Sidebar / panels */
-  --sidebar-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #e08aa8 18%) 22%, transparent) !important;
+  --sidebar-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #9a2d56 18%) 22%, transparent) !important;
   --panel-bg: color-mix(in srgb, #ffffff 14%, transparent) !important;
 
   /* Shadows */
@@ -81,7 +81,7 @@ html.agentskin-host-zcode {
   --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.24) !important;
 
   /* Selection */
-  --selection-bg: rgba(224, 138, 168, 0.28) !important;
+  --selection-bg: rgba(154, 45, 86, 0.28) !important;
 
   /* Code blocks */
   --code-bg: #f3e9e5 !important;
@@ -123,8 +123,8 @@ html.agentskin-host-zcode [role="main"] {
 /* Sidebar: frosted glass over art */
 html.agentskin-host-zcode aside,
 html.agentskin-host-zcode nav {
-  background: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #e08aa8 18%) 22%, transparent) !important;
-  border-right: 1px solid rgba(224, 138, 168, 0.1) !important;
+  background: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #9a2d56 18%) 22%, transparent) !important;
+  border-right: 1px solid rgba(154, 45, 86, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
@@ -142,11 +142,11 @@ html.agentskin-host-zcode nav [class*="active"] {
 /* Composer / input: frosted glass */
 html.agentskin-host-zcode [contenteditable="true"],
 html.agentskin-host-zcode textarea {
-  background: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #e08aa8 18%) 45%, transparent) !important;
+  background: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #9a2d56 18%) 45%, transparent) !important;
   backdrop-filter: blur(14px) saturate(1.1) !important;
   color: var(--agentskin-text) !important;
   caret-color: var(--agentskin-accent) !important;
-  border: 1px solid rgba(224, 138, 168, 0.25) !important;
+  border: 1px solid rgba(154, 45, 86, 0.25) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
 }
@@ -154,8 +154,8 @@ html.agentskin-host-zcode textarea {
 html.agentskin-host-zcode [contenteditable="true"]:focus,
 html.agentskin-host-zcode [contenteditable="true"]:focus-within,
 html.agentskin-host-zcode textarea:focus {
-  border-color: rgba(224, 138, 168, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(224, 138, 168, 0.1), 0 4px 18px rgba(217, 184, 200, 0.12) !important;
+  border-color: rgba(154, 45, 86, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(154, 45, 86, 0.1), 0 4px 18px rgba(217, 184, 200, 0.12) !important;
 }
 
 /* Buttons */
@@ -235,15 +235,15 @@ html.agentskin-host-zcode select:focus {
 html.agentskin-host-zcode code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(224, 138, 168, 0.15) !important;
+  border: 1px solid rgba(154, 45, 86, 0.15) !important;
   border-radius: 6px !important;
 }
 
 html.agentskin-host-zcode pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(224, 138, 168, 0.15) !important;
-  border-left: 3px solid rgba(224, 138, 168, 0.5) !important;
+  border: 1px solid rgba(154, 45, 86, 0.15) !important;
+  border-left: 3px solid rgba(154, 45, 86, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -262,14 +262,14 @@ html.agentskin-host-zcode ::-webkit-scrollbar-track {
 }
 
 html.agentskin-host-zcode ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(224, 138, 168, 0.3) 0%, rgba(217, 184, 200, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(154, 45, 86, 0.3) 0%, rgba(217, 184, 200, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 html.agentskin-host-zcode ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(224, 138, 168, 0.5) 0%, rgba(217, 184, 200, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(154, 45, 86, 0.5) 0%, rgba(217, 184, 200, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
