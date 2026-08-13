@@ -32,7 +32,7 @@ try {
     console.warn('[tray-icon-gen] No image library available, creating placeholder tray icons');
     const placeholder = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-      'base64'
+      'base64',
     );
     fs.writeFileSync(path.join(OUTPUT_DIR, 'tray-icon.png'), placeholder);
     fs.writeFileSync(path.join(OUTPUT_DIR, 'trayTemplate.png'), placeholder);
@@ -59,7 +59,10 @@ try {
   macCtx.drawImage(img, 0, 0, 16, 16);
   const macImageData = macCtx.getImageData(0, 0, 16, 16);
   for (let i = 0; i < macImageData.data.length; i += 4) {
-    const avg = macImageData.data[i] * 0.299 + macImageData.data[i + 1] * 0.587 + macImageData.data[i + 2] * 0.114;
+    const avg =
+      macImageData.data[i] * 0.299 +
+      macImageData.data[i + 1] * 0.587 +
+      macImageData.data[i + 2] * 0.114;
     macImageData.data[i] = avg;
     macImageData.data[i + 1] = avg;
     macImageData.data[i + 2] = avg;
@@ -74,14 +77,16 @@ try {
 // Use sharp
 const src = fs.readFileSync(ICON_PATH);
 
-const winTray = await sharp.default(src)
+const winTray = await sharp
+  .default(src)
   .resize(16, 16, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
   .png()
   .toBuffer();
 fs.writeFileSync(path.join(OUTPUT_DIR, 'tray-icon.png'), winTray);
 console.log('[tray-icon-gen] Written tray-icon.png (16x16)');
 
-const macTray = await sharp.default(src)
+const macTray = await sharp
+  .default(src)
   .resize(16, 16, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
   .grayscale()
   .png()

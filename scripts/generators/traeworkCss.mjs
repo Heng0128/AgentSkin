@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-import { tokenBlock, sharedChromeRules, alpha, shade, artLayerCss } from '../theme-utils.mjs';
+import { alpha, artLayerCss, shade, sharedChromeRules, tokenBlock } from '../theme-utils.mjs';
 
 function traeworkCss(t) {
   const c = t.colors;

@@ -1,10 +1,10 @@
 // Complexity hotspot analyzer for AgentSkin
 // Identifies high-complexity files based on nesting, function length, and file size
 
-import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
-import { join, dirname, resolve, relative } from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
-import { execSync } from 'child_process';
+import { execSync } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -34,7 +34,7 @@ function analyzeFile(filePath) {
   let maxNesting = 0;
   let currentNesting = 0;
   let functionCount = 0;
-  let longFunctions = [];
+  const longFunctions = [];
   let anyTypeCount = 0;
   let currentFunctionStart = -1;
   let currentFunctionLines = 0;
@@ -90,7 +90,7 @@ function analyzeFile(filePath) {
   }
 
   // Detect deeply nested patterns (>4 levels)
-  const deepNestingPatterns = lines.filter(line => {
+  const deepNestingPatterns = lines.filter((line) => {
     const indent = line.match(/^(\s*)/)?.[1]?.length || 0;
     return indent >= 16; // 4+ levels of 4-space indentation
   }).length;
@@ -106,14 +106,15 @@ function analyzeFile(filePath) {
 }
 
 // Get git change frequency
-function getGitFrequency(filePath) {
+function _getGitFrequency(filePath) {
   try {
     const relPath = relative(root, filePath);
-    const result = execSync(
-      `git log --oneline -- "${relPath}" 2>/dev/null | wc -l`,
-      { encoding: 'utf8', cwd: root, shell: 'powershell.exe' }
-    );
-    return parseInt(result.trim()) || 0;
+    const result = execSync(`git log --oneline -- "${relPath}" 2>/dev/null | wc -l`, {
+      encoding: 'utf8',
+      cwd: root,
+      shell: 'powershell.exe',
+    });
+    return parseInt(result.trim(), 10) || 0;
   } catch {
     return 0;
   }
@@ -234,14 +235,15 @@ for (const h of hotspots) {
 // Export results
 const results = {
   summary: severityCount,
-  hotspots: hotspots.map(h => ({
+  hotspots: hotspots.map((h) => ({
     ...h,
     stats: undefined, // Remove raw stats from output
     ...h.stats,
   })),
-  timestamp: new Date().toISOString()
+  timestamp: new Date().toISOString(),
 };
 
-import { writeFileSync } from 'fs';
+import { writeFileSync } from 'node:fs';
+
 writeFileSync(join(root, '.quality', 'complexity-analysis.json'), JSON.stringify(results, null, 2));
 console.log(`\nResults saved to .quality/complexity-analysis.json`);

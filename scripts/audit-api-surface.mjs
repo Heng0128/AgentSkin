@@ -1,9 +1,9 @@
 // API Surface Auditor for AgentSkin
 // Extracts exported symbols and validates against documentation
 
-import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
-import { join, dirname, resolve, relative } from 'path';
-import { fileURLToPath } from 'url';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -33,7 +33,7 @@ function extractExports(filePath) {
     interfaces: [],
     constants: [],
     enums: [],
-    reexports: []
+    reexports: [],
   };
 
   // Match export declarations
@@ -51,7 +51,7 @@ function extractExports(filePath) {
       continue;
     }
     if (inJsdoc) {
-      jsdocComment += '\n' + line;
+      jsdocComment += `\n${line}`;
       if (line.includes('*/')) {
         inJsdoc = false;
       }
@@ -73,7 +73,8 @@ function extractExports(filePath) {
         deprecated: tags.deprecated !== undefined,
         returnsAny: line.includes(': any') || line.includes(': any;'),
         paramsHaveAny: /\(\s*[^)]*\bany\b/.test(line),
-        hasReturnType: /:\s*(?!void)/.test(line.split('{')[0]) || /:\s*(?!void)/.test(line.split('=>')[0]),
+        hasReturnType:
+          /:\s*(?!void)/.test(line.split('{')[0]) || /:\s*(?!void)/.test(line.split('=>')[0]),
       });
       jsdocComment = '';
       continue;
@@ -185,7 +186,8 @@ for (const file of files) {
     totalExported++;
     if (!fn.documented) undocumented.push({ ...fn, file: relPath });
     if (fn.deprecated) deprecated.push({ ...fn, file: relPath });
-    if (fn.returnsAny || fn.paramsHaveAny) anyTypes.push({ ...fn, file: relPath, issue: 'has any params/return' });
+    if (fn.returnsAny || fn.paramsHaveAny)
+      anyTypes.push({ ...fn, file: relPath, issue: 'has any params/return' });
   }
 
   for (const cls of fileExports.classes) {
@@ -268,14 +270,15 @@ const results = {
     undocumented: undocumented.length,
     deprecated: deprecated.length,
     anyTyped: anyTypes.length,
-    stabilityIndex: parseFloat(stabilityIndex)
+    stabilityIndex: parseFloat(stabilityIndex),
   },
   undocumented: undocumented.slice(0, 50),
   deprecated,
   anyTyped: anyTypes.slice(0, 50),
-  timestamp: new Date().toISOString()
+  timestamp: new Date().toISOString(),
 };
 
-import { writeFileSync } from 'fs';
+import { writeFileSync } from 'node:fs';
+
 writeFileSync(join(root, '.quality', 'api-audit.json'), JSON.stringify(results, null, 2));
 console.log(`\nResults saved to .quality/api-audit.json`);

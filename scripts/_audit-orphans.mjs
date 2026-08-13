@@ -1,11 +1,16 @@
 // --- TEMP orphan scanner ---
 import fs from 'node:fs';
 import path from 'node:path';
+
 const THEMES_DIR = 'themes';
 
 function walk(dir, cb) {
   let entries;
-  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
   for (const e of entries) {
     const full = path.join(dir, e.name);
     if (e.isDirectory() && !e.name.startsWith('.') && !e.name.startsWith('_')) walk(full, cb);
@@ -13,8 +18,10 @@ function walk(dir, cb) {
   }
 }
 
-const dirs = fs.readdirSync(THEMES_DIR, { withFileTypes: true })
-  .filter(d => d.isDirectory()).map(d => d.name);
+const dirs = fs
+  .readdirSync(THEMES_DIR, { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => d.name);
 
 console.log('=== ORPHANED CSS / RESOURCE FILES ===\n');
 
@@ -28,12 +35,13 @@ for (const dir of dirs) {
 
   // Build set of all referenced CSS paths (absolute)
   const referencedCss = new Set();
-  for (const [agentId, cfg] of Object.entries(targets)) {
+  for (const [_agentId, cfg] of Object.entries(targets)) {
     if (!cfg?.css) continue;
     for (const sid of schemes) {
-      const p = sid === 'default'
-        ? path.join(themeDir, cfg.css)
-        : path.join(themeDir, 'assets', 'css', sid, path.basename(cfg.css));
+      const p =
+        sid === 'default'
+          ? path.join(themeDir, cfg.css)
+          : path.join(themeDir, 'assets', 'css', sid, path.basename(cfg.css));
       referencedCss.add(path.resolve(p));
     }
   }
@@ -64,9 +72,10 @@ for (const dir of dirs) {
     const cfg = targets[agentId];
     if (!cfg?.css) continue;
     for (const sid of schemes) {
-      const p = sid === 'default'
-        ? path.join(themeDir, cfg.css)
-        : path.join(themeDir, 'assets', 'css', sid, path.basename(cfg.css));
+      const p =
+        sid === 'default'
+          ? path.join(themeDir, cfg.css)
+          : path.join(themeDir, 'assets', 'css', sid, path.basename(cfg.css));
       if (!fs.existsSync(p)) {
         issues.push(`  MISSING CSS: ${path.relative(THEMES_DIR, p)}`);
       }
@@ -81,7 +90,9 @@ for (const dir of dirs) {
       // check if css dir references scheme
       const schemeCssDir = path.join(themeDir, 'assets', 'css', sid);
       if (fs.existsSync(schemeCssDir)) {
-        issues.push(`  MISSING PALETTE: ${paletteName} (color-schemes/${sid}.json exists but no ${paletteName})`);
+        issues.push(
+          `  MISSING PALETTE: ${paletteName} (color-schemes/${sid}.json exists but no ${paletteName})`,
+        );
       }
     }
   }
@@ -104,7 +115,7 @@ for (const dir of dirs) {
   const pkgManifest = JSON.parse(fs.readFileSync(pkgManifestPath, 'utf8'));
   const targets = pkgManifest.targets || {};
   const issues = [];
-  for (const [agentId, cfg] of Object.entries(targets)) {
+  for (const [_agentId, cfg] of Object.entries(targets)) {
     if (!cfg?.css) continue;
     const cssPath = path.join(pkgDir, cfg.css);
     if (!fs.existsSync(cssPath)) {
@@ -112,7 +123,13 @@ for (const dir of dirs) {
     } else {
       // Read CSS and check for agentskin-* values
       const css = fs.readFileSync(cssPath, 'utf8');
-      const requiredTokens = ['--agentskin-accent','--agentskin-bg','--agentskin-surface','--agentskin-text','--agentskin-border'];
+      const requiredTokens = [
+        '--agentskin-accent',
+        '--agentskin-bg',
+        '--agentskin-surface',
+        '--agentskin-text',
+        '--agentskin-border',
+      ];
       for (const t of requiredTokens) {
         if (!css.includes(t)) {
           issues.push(`  PKG TOKEN MISSING: ${path.relative(THEMES_DIR, cssPath)} lacks ${t}`);

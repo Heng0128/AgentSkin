@@ -30,18 +30,14 @@ const THEMES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.
  */
 const VERIFICATION = {
   traework: {
-    required: [
-      { name: 'solo-shell', any: ['.panel-container', '.solo-lite-layout'] },
-    ],
+    required: [{ name: 'solo-shell', any: ['.panel-container', '.solo-lite-layout'] }],
     recommended: [
       { name: 'task-sidebar', any: ['.task-list-base', '.task-list-panel'] },
       { name: 'composer', any: [".chat-input-v2-input-box-editable[contenteditable='true']"] },
     ],
   },
   qoderwork: {
-    required: [
-      { name: 'agents-root', any: ['.agents-layout-root'] },
-    ],
+    required: [{ name: 'agents-root', any: ['.agents-layout-root'] }],
     recommended: [
       { name: 'sidebar', any: ['.agents-sidebar', '[data-resizable-sidebar]'] },
       { name: 'workspace', any: ['.agents-content-area', '.agents-layout-body'] },
@@ -49,13 +45,17 @@ const VERIFICATION = {
     ],
   },
   workbuddy: {
-    required: [
-      { name: 'teams-root', any: ['.teams-container'] },
-    ],
+    required: [{ name: 'teams-root', any: ['.teams-container'] }],
     recommended: [
       { name: 'sidebar', any: ['.conversation-sidebar', '.conversation-list'] },
       { name: 'workspace', any: ['.teams-main-content', '.main-content', '.chat-container'] },
-      { name: 'composer', any: ["[role='textbox'][contenteditable='true']", ".wb-home-composer [contenteditable='true']"] },
+      {
+        name: 'composer',
+        any: [
+          "[role='textbox'][contenteditable='true']",
+          ".wb-home-composer [contenteditable='true']",
+        ],
+      },
     ],
   },
 };

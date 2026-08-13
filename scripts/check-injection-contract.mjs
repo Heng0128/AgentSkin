@@ -32,8 +32,8 @@
  * script makes such drift a build error.
  */
 
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -41,8 +41,12 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const errors = [];
 const warnings = [];
 
-function fail(msg) { errors.push(msg); }
-function warn(msg) { warnings.push(msg); }
+function fail(msg) {
+  errors.push(msg);
+}
+function warn(msg) {
+  warnings.push(msg);
+}
 
 // ---------------------------------------------------------------------------
 // Scope selectors per agent (declared early so engine + theme checks share it)
@@ -77,10 +81,7 @@ function buildScopeSelectors(prefix, agents) {
 // ---------------------------------------------------------------------------
 
 function findAgentIdUnion() {
-  const candidates = [
-    join(root, 'src/shared/types/agent.ts'),
-    join(root, 'src/shared/types.ts'),
-  ];
+  const candidates = [join(root, 'src/shared/types/agent.ts'), join(root, 'src/shared/types.ts')];
   for (const p of candidates) {
     if (!existsSync(p)) continue;
     const src = readFileSync(p, 'utf8');
@@ -92,7 +93,9 @@ function findAgentIdUnion() {
 
 const agentIdFound = findAgentIdUnion();
 if (!agentIdFound) {
-  fail('Could not extract AgentId union from src/shared/types/agent.ts or src/shared/types.ts');
+  fail(
+    "Could not extract AgentId union from src/shared/types/agent.ts or src/shared/types.ts\n    Fix: Ensure src/shared/types/agent.ts contains \"export type AgentId = 'agent1' | 'agent2';\"; check for syntax errors if the file was recently edited",
+  );
   console.error('\n--- Injection Contract FAIL ---');
   for (const e of errors) console.error('[FAIL]', e);
   process.exit(1);
@@ -111,7 +114,9 @@ const constantsPath = join(root, 'src/shared/injection-constants.ts');
 const constantsSrc = readFileSync(constantsPath, 'utf8');
 const prefixMatch = /export const HOST_CLASS_PREFIX = '([^']+)';/.exec(constantsSrc);
 if (!prefixMatch) {
-  fail(`Could not extract HOST_CLASS_PREFIX from ${constantsPath}`);
+  fail(
+    `Could not extract HOST_CLASS_PREFIX from ${constantsPath}\n    Fix: Ensure src/shared/injection-constants.ts contains "export const HOST_CLASS_PREFIX = 'codedrobe-host';" or similar valid declaration`,
+  );
   console.error('\n--- Injection Contract FAIL ---');
   for (const e of errors) console.error('[FAIL]', e);
   process.exit(1);
@@ -126,14 +131,18 @@ const enginesDir = join(root, 'engines');
 const REQUIRED_ENGINE_FILES = ['adapter.mjs', 'tokens.css', 'cosmetic.css'];
 let engineAgents = [];
 if (!existsSync(enginesDir)) {
-  fail(`engines/ directory missing at ${enginesDir}`);
+  fail(
+    `engines/ directory missing at ${enginesDir}\n    Fix: Create the engines/ directory at the project root and add one subdirectory per agent (e.g. engines/catdesk/, engines/workbuddy/) each containing adapter.mjs, tokens.css, cosmetic.css`,
+  );
 } else {
   engineAgents = readdirSync(enginesDir, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name);
 
   if (engineAgents.length === 0) {
-    fail('engines/ has no agent subdirectories');
+    fail(
+      'engines/ has no agent subdirectories\n    Fix: Create at least one agent engine directory (e.g. engines/catdesk/) containing adapter.mjs, tokens.css, cosmetic.css. The agent name must match an entry in the AgentId union in src/shared/types/agent.ts',
+    );
   }
 
   // Structural assertion: engines/ agent set must match the canonical AgentId union.
@@ -142,7 +151,7 @@ if (!existsSync(enginesDir)) {
     if (!engineAgentSet.has(agent)) {
       fail(
         `engines/${agent}/ missing — AgentId union in src/shared/types.ts declares '${agent}' ` +
-        `but no engine directory exists. Add engines/${agent}/ with adapter.mjs, tokens.css, cosmetic.css.`,
+          `but no engine directory exists.\n    Fix: Create engines/${agent}/ directory with adapter.mjs (containing const HOST_CLASS = 'codedrobe-host-${agent}'), tokens.css, and cosmetic.css`,
       );
     }
   }
@@ -150,7 +159,7 @@ if (!existsSync(enginesDir)) {
     if (!CANONICAL_AGENT_SET.has(agent)) {
       fail(
         `engines/${agent}/ exists but '${agent}' is not in the AgentId union ` +
-        `(src/shared/types.ts). Either add it to the union or remove the directory.`,
+          `(src/shared/types.ts).\n    Fix: Either add '${agent}' to the AgentId union in src/shared/types/agent.ts, or remove the engines/${agent}/ directory if it is no longer needed`,
       );
     }
   }
@@ -160,7 +169,9 @@ if (!existsSync(enginesDir)) {
     for (const requiredFile of REQUIRED_ENGINE_FILES) {
       const requiredPath = join(enginesDir, agent, requiredFile);
       if (!existsSync(requiredPath)) {
-        fail(`engines/${agent}/${requiredFile} missing — every engine must define all three: ${REQUIRED_ENGINE_FILES.join(', ')}`);
+        fail(
+          `engines/${agent}/${requiredFile} missing — every engine must define all three: ${REQUIRED_ENGINE_FILES.join(', ')}\n    Fix: Create engines/${agent}/${requiredFile} — copy from another agent's ${requiredFile} as a starting template if unsure of the expected structure`,
+        );
       }
     }
 
@@ -176,13 +187,17 @@ if (!existsSync(enginesDir)) {
     // and may not define HOST_CLASS. Skip the strict check for agents that
     // have a documented alternative scope.
     const SCOPE_SELECTORS = buildScopeSelectors(HOST_CLASS_PREFIX, CANONICAL_AGENTS);
-    const hasAltScope = (SCOPE_SELECTORS[agent] || []).some((s) => !s.startsWith(HOST_CLASS_PREFIX));
+    const hasAltScope = (SCOPE_SELECTORS[agent] || []).some(
+      (s) => !s.startsWith(HOST_CLASS_PREFIX),
+    );
     const hostClassMatch = /const\s+HOST_CLASS\s*=\s*['"]([^'"]+)['"]/.exec(adapterSrc);
     if (!hostClassMatch) {
       if (hasAltScope) {
         // Acceptable — this agent uses a non-host-class scope (e.g. WorkBuddy).
       } else {
-        fail(`engines/${agent}/adapter.mjs: no const HOST_CLASS = '...' found`);
+        fail(
+          `engines/${agent}/adapter.mjs: no const HOST_CLASS = '...' found\n    Fix: Add 'const HOST_CLASS = "codedrobe-host-${agent}";' at the top of engines/${agent}/adapter.mjs — the value must match '<HOST_CLASS_PREFIX><agentId>' from src/shared/injection-constants.ts`,
+        );
         continue;
       }
     } else {
@@ -191,7 +206,7 @@ if (!existsSync(enginesDir)) {
       if (actual !== expected) {
         fail(
           `engines/${agent}/adapter.mjs: HOST_CLASS='${actual}' but expected '${expected}' ` +
-          `(must be ${HOST_CLASS_PREFIX}<agentId> to match injection-constants.ts)`,
+            `(must be ${HOST_CLASS_PREFIX}<agentId> to match injection-constants.ts)\n    Fix: Change HOST_CLASS in engines/${agent}/adapter.mjs from '${actual}' to '${expected}' (the value must be '<HOST_CLASS_PREFIX><agentId>')`,
         );
       }
     }
@@ -199,13 +214,15 @@ if (!existsSync(enginesDir)) {
     // Also verify the engine's safeHostClass equivalent (if present) matches
     // the regex sanitization in hostClassFor(). The adapter typically uses a
     // literal host class, but if it has a safeHostClass function, check it.
-    const safeFnMatch = /function\s+safeHostClass\s*\([^)]*\)\s*\{[^}]*`([^`]+)`[^}]*\}/.exec(adapterSrc);
+    const safeFnMatch = /function\s+safeHostClass\s*\([^)]*\)\s*\{[^}]*`([^`]+)`[^}]*\}/.exec(
+      adapterSrc,
+    );
     if (safeFnMatch) {
       const template = safeFnMatch[1];
       if (!template.startsWith(HOST_CLASS_PREFIX)) {
         warn(
           `engines/${agent}/adapter.mjs: safeHostClass template '${template}' ` +
-          `does not start with HOST_CLASS_PREFIX '${HOST_CLASS_PREFIX}'`,
+            `does not start with HOST_CLASS_PREFIX '${HOST_CLASS_PREFIX}'\n    Fix: Ensure the template literal in safeHostClass() starts with '${HOST_CLASS_PREFIX}' to maintain scope selector consistency`,
         );
       }
     }
@@ -219,12 +236,16 @@ const SCOPE_SELECTORS = buildScopeSelectors(HOST_CLASS_PREFIX, CANONICAL_AGENTS)
 const scopeSelectorAgents = new Set(Object.keys(SCOPE_SELECTORS));
 for (const agent of CANONICAL_AGENT_SET) {
   if (!scopeSelectorAgents.has(agent)) {
-    fail(`SCOPE_SELECTORS missing entry for '${agent}' — every AgentId must have a scope selector list.`);
+    fail(
+      `SCOPE_SELECTORS missing entry for '${agent}' — every AgentId must have a scope selector list.\n    Fix: Add a scope selector entry for '${agent}' in buildScopeSelectors() (or SCOPE_SELECTORS map) — typically ['${HOST_CLASS_PREFIX}${agent}'], or include 'data-application-name="${agent}"' if it uses an alternative scope`,
+    );
   }
 }
 for (const agent of scopeSelectorAgents) {
   if (!CANONICAL_AGENT_SET.has(agent)) {
-    fail(`SCOPE_SELECTORS has entry for '${agent}' but it is not in the AgentId union.`);
+    fail(
+      `SCOPE_SELECTORS has entry for '${agent}' but it is not in the AgentId union.\n    Fix: Remove '${agent}' from the scope selectors in buildScopeSelectors(), or add '${agent}' to the AgentId union in src/shared/types/agent.ts if it is a valid agent`,
+    );
   }
 }
 
@@ -269,7 +290,7 @@ if (!existsSync(themesDir)) {
         if (!cssAgents.has(agent)) {
           fail(
             `themes/${theme}/${label}/${agent}.css missing — every theme must ship CSS ` +
-            `for every AgentId (expected: ${[...CANONICAL_AGENT_SET].sort().join(', ')}).`,
+              `for every AgentId (expected: ${[...CANONICAL_AGENT_SET].sort().join(', ')}).\n    Fix: Create themes/${theme}/${label}/${agent}.css with the appropriate scope selector (e.g. 'html.${HOST_CLASS_PREFIX}${agent}') and required design tokens — copy from another agent's CSS in the same theme as a template`,
           );
         }
       }
@@ -278,7 +299,7 @@ if (!existsSync(themesDir)) {
         if (!CANONICAL_AGENT_SET.has(agent)) {
           fail(
             `themes/${theme}/${label}/${agent}.css exists but '${agent}' is not in the AgentId union ` +
-            `(src/shared/types.ts). Either add it to the union or remove the file.`,
+              `(src/shared/types.ts).\n    Fix: Either add '${agent}' to the AgentId union in src/shared/types/agent.ts, or delete themes/${theme}/${label}/${agent}.css if it is a leftover from a renamed/removed agent`,
           );
         }
       }
@@ -299,19 +320,21 @@ if (!existsSync(themesDir)) {
         if (!hasAnyScope) {
           fail(
             `themes/${theme}/${label}/${cssFile}: no recognized scope selector found ` +
-            `(expected one of: ${acceptedScopes.join(', ')}) — scope drift will silent-break this theme`,
+              `(expected one of: ${acceptedScopes.join(', ')}) — scope drift will silent-break this theme\n    Fix: Ensure the CSS root selector in themes/${theme}/${label}/${cssFile} matches one of the expected scope selectors (e.g. add 'html.${HOST_CLASS_PREFIX}${agent}{ ... }' or the correct host class to the file)`,
           );
         }
 
         // Warn if CSS references a host class for a *different* agent
         // (copy-paste mistake between theme files).
         const expectedHostClass = htmlHostClass(agent, HOST_CLASS_PREFIX);
-        const allHostClassRefs = new Set(cssSrc.match(new RegExp(`${escapeRegex(HOST_CLASS_PREFIX)}[a-z]+`, 'g')) || []);
+        const allHostClassRefs = new Set(
+          cssSrc.match(new RegExp(`${escapeRegex(HOST_CLASS_PREFIX)}[a-z]+`, 'g')) || [],
+        );
         for (const ref of allHostClassRefs) {
           if (ref !== expectedHostClass) {
             warn(
               `themes/${theme}/${label}/${cssFile}: references '${ref}' ` +
-              `(expected only '${expectedHostClass}' for this agent)`,
+                `(expected only '${expectedHostClass}' for this agent)\n    Fix: Replace '${ref}' with '${expectedHostClass}' in themes/${theme}/${label}/${cssFile} — this is likely a copy-paste error from another agent's CSS`,
             );
           }
         }
@@ -332,14 +355,16 @@ if (warnings.length > 0) {
 if (errors.length > 0) {
   console.error('✖ Injection contract violations:');
   for (const e of errors) console.error(`  - ${e}`);
-  console.error(`\n${errors.length} violation(s). Fix the above or update src/shared/types.ts / src/shared/injection-constants.ts.`);
+  console.error(
+    `\n${errors.length} violation(s). Fix the above or update src/shared/types.ts / src/shared/injection-constants.ts.`,
+  );
   process.exit(1);
 }
 
 console.log(
   `✓ Injection contract OK — HOST_CLASS_PREFIX='${HOST_CLASS_PREFIX}', ` +
-  `${engineAgents.length} engines verified, ` +
-  `agents=[${CANONICAL_AGENTS.sort().join(', ')}].`,
+    `${engineAgents.length} engines verified, ` +
+    `agents=[${CANONICAL_AGENTS.sort().join(', ')}].`,
 );
 
 function escapeRegex(s) {

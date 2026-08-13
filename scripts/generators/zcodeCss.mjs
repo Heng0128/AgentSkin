@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
-import { tokenBlock, shellTokenOverrides, shellStructureCss, sharedChromeRules } from '../theme-utils.mjs';
+import {
+  sharedChromeRules,
+  shellStructureCss,
+  shellTokenOverrides,
+  tokenBlock,
+} from '../theme-utils.mjs';
 
 function zcodeCss(t) {
   const host = 'html.agentskin-host-zcode';

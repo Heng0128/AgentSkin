@@ -1,6 +1,6 @@
 /**
  * CDP Full Extract - 完整 Agent 样式探针
- * 
+ *
  * 功能：
  * 1. 通过 CDP CSS Domain 获取所有样式表文本
  * 2. 解析亮/暗主题下的 CSS 变量原始定义
@@ -8,13 +8,13 @@
  * 4. 采样计算样式（颜色、字体、间距、阴影、圆角）
  * 5. 切换 prefers-color-scheme 捕获双主题数据
  * 6. 输出结构化 JSON 供 Theme Studio 使用
- * 
+ *
  * 用法：
  *   node scripts/cdp-full-extract.mjs --port 58360 --name codex --out agents-raw-data
  *   node scripts/cdp-full-extract.mjs --all  --out agents-raw-data
  */
 
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 // ============== 配置 ==============
@@ -32,75 +32,139 @@ const DEFAULT_MAX_DEPTH = 12;
 const THEME_SWITCH_WAIT = 600; // ms to wait after theme switch
 const ORDERED_STYLE_PROPS = [
   // 颜色类
-  'color', 'background-color', 'border-color', 'border-top-color', 'border-right-color',
-  'border-bottom-color', 'border-left-color', 'outline-color', 'text-decoration-color',
-  'column-rule-color', 'fill', 'stroke',
+  'color',
+  'background-color',
+  'border-color',
+  'border-top-color',
+  'border-right-color',
+  'border-bottom-color',
+  'border-left-color',
+  'outline-color',
+  'text-decoration-color',
+  'column-rule-color',
+  'fill',
+  'stroke',
   // 背景类
-  'background-image', 'background-position', 'background-size', 'background-repeat',
+  'background-image',
+  'background-position',
+  'background-size',
+  'background-repeat',
   // 字体类
-  'font-family', 'font-size', 'font-weight', 'font-style', 'font-variant',
-  'line-height', 'letter-spacing', 'word-spacing', 'text-indent',
+  'font-family',
+  'font-size',
+  'font-weight',
+  'font-style',
+  'font-variant',
+  'line-height',
+  'letter-spacing',
+  'word-spacing',
+  'text-indent',
   // 间距类
-  'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
-  'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+  'margin',
+  'margin-top',
+  'margin-right',
+  'margin-bottom',
+  'margin-left',
+  'padding',
+  'padding-top',
+  'padding-right',
+  'padding-bottom',
+  'padding-left',
   // 边框/圆角
-  'border-width', 'border-style', 'border-radius', 'border-top-left-radius',
-  'border-top-right-radius', 'border-bottom-left-radius', 'border-bottom-right-radius',
-  'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width',
+  'border-width',
+  'border-style',
+  'border-radius',
+  'border-top-left-radius',
+  'border-top-right-radius',
+  'border-bottom-left-radius',
+  'border-bottom-right-radius',
+  'border-top-width',
+  'border-right-width',
+  'border-bottom-width',
+  'border-left-width',
   // 阴影
-  'box-shadow', 'text-shadow',
+  'box-shadow',
+  'text-shadow',
   // 尺寸
-  'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
+  'width',
+  'height',
+  'min-width',
+  'min-height',
+  'max-width',
+  'max-height',
   // 布局
-  'display', 'position', 'flex-direction', 'justify-content', 'align-items',
-  'gap', 'grid-template-columns', 'grid-template-rows',
+  'display',
+  'position',
+  'flex-direction',
+  'justify-content',
+  'align-items',
+  'gap',
+  'grid-template-columns',
+  'grid-template-rows',
   // 透明度/混合
-  'opacity', 'mix-blend-mode', 'isolation',
+  'opacity',
+  'mix-blend-mode',
+  'isolation',
   // 滤镜
-  'filter', 'backdrop-filter',
+  'filter',
+  'backdrop-filter',
   // 变换/动效
-  'transform', 'transition', 'transition-duration', 'transition-timing-function',
-  'animation', 'animation-duration',
+  'transform',
+  'transition',
+  'transition-duration',
+  'transition-timing-function',
+  'animation',
+  'animation-duration',
   // 溢出/滚动
-  'overflow', 'overflow-x', 'overflow-y',
+  'overflow',
+  'overflow-x',
+  'overflow-y',
   // 光标/指针
-  'cursor', 'pointer-events', 'user-select',
+  'cursor',
+  'pointer-events',
+  'user-select',
   // 裁剪
-  'clip-path', 'mask', 'mask-image',
+  'clip-path',
+  'mask',
+  'mask-image',
   // 表格
-  'border-collapse', 'border-spacing',
+  'border-collapse',
+  'border-spacing',
   // 列表
-  'list-style', 'list-style-type',
+  'list-style',
+  'list-style-type',
 ];
 
 // ============== CSS 解析器 ==============
 
 /**
  * 从 CSS 文本中提取变量定义，按作用域分组
- * @param {string} cssText 
+ * @param {string} cssText
  * @returns {Object} { selector: [{ name, value, important }] }
  */
 function extractVariablesFromCss(cssText) {
   const result = {};
   // 匹配 :root 规则块和其他包含 --var 的规则
   const ruleRegex = /([^{}]+)\{([^{}]+)\}/g;
-  let match;
-  
-  while ((match = ruleRegex.exec(cssText)) !== null) {
+  let match = ruleRegex.exec(cssText);
+
+  while (match !== null) {
     const selector = match[1].trim();
     const body = match[2];
-    
+
     // 提取变量声明
     const varDeclRegex = /(--[a-zA-Z_][\w-]*)\s*:\s*([^;]+);/g;
-    let varMatch;
-    while ((varMatch = varDeclRegex.exec(body)) !== null) {
+    let varMatch = varDeclRegex.exec(body);
+    while (varMatch !== null) {
       const name = varMatch[1];
       const value = varMatch[2].trim();
       if (!result[selector]) result[selector] = [];
       result[selector].push({ name, value });
+      varMatch = varDeclRegex.exec(body);
     }
+    match = ruleRegex.exec(cssText);
   }
-  
+
   return result;
 }
 
@@ -108,26 +172,30 @@ function extractVariablesFromCss(cssText) {
  * 判断选择器属于哪个主题 scheme
  */
 function classifyScheme(selector, parentMedia = '') {
-  const combined = (parentMedia + ' ' + selector).toLowerCase();
-  
+  const combined = `${parentMedia} ${selector}`.toLowerCase();
+
   // 暗色判断
-  if (combined.includes('prefers-color-scheme: dark') || 
-      combined.includes('[data-theme="dark"]') ||
-      combined.includes('.dark') ||
-      combined.includes('[data-mode="dark"]') ||
-      combined.includes('.theme-dark')) {
+  if (
+    combined.includes('prefers-color-scheme: dark') ||
+    combined.includes('[data-theme="dark"]') ||
+    combined.includes('.dark') ||
+    combined.includes('[data-mode="dark"]') ||
+    combined.includes('.theme-dark')
+  ) {
     return 'dark';
   }
-  
+
   // 亮色判断
-  if (combined.includes('prefers-color-scheme: light') ||
-      combined.includes('[data-theme="light"]') ||
-      combined.includes('.light') ||
-      combined.includes('[data-mode="light"]') ||
-      combined.includes('.theme-light')) {
+  if (
+    combined.includes('prefers-color-scheme: light') ||
+    combined.includes('[data-theme="light"]') ||
+    combined.includes('.light') ||
+    combined.includes('[data-mode="light"]') ||
+    combined.includes('.theme-light')
+  ) {
     return 'light';
   }
-  
+
   return 'neutral'; // 不区分主题的默认变量
 }
 
@@ -136,19 +204,20 @@ function classifyScheme(selector, parentMedia = '') {
  */
 function extractVariablesWithMedia(cssText) {
   const result = { light: {}, dark: {}, neutral: {} };
-  
+
   // 处理 @media 块
   const mediaRegex = /@media\s+([^{]+)\s*\{([\s\S]*?)(?=\n@media|\n\.[a-z]|\n:[a-z]|\n\}|$)/gi;
   let mediaMatch;
   let lastIndex = 0;
   const nonMediaParts = [];
-  
-  while ((mediaMatch = mediaRegex.exec(cssText)) !== null) {
+
+  mediaMatch = mediaRegex.exec(cssText);
+  while (mediaMatch !== null) {
     nonMediaParts.push(cssText.slice(lastIndex, mediaMatch.index));
     const mediaQuery = mediaMatch[1].trim();
     const mediaBody = mediaMatch[2];
     const scheme = classifyScheme('', mediaQuery);
-    
+
     // 递归处理媒体块内部
     const innerVars = extractVariablesFromCss(mediaBody);
     for (const [sel, vars] of Object.entries(innerVars)) {
@@ -157,19 +226,20 @@ function extractVariablesWithMedia(cssText) {
       result[scheme][key].push(...vars);
     }
     lastIndex = mediaRegex.lastIndex;
+    mediaMatch = mediaRegex.exec(cssText);
   }
-  
+
   // 处理非媒体部分的 CSS
   nonMediaParts.push(cssText.slice(lastIndex));
   const plainCss = nonMediaParts.join('\n');
   const plainVars = extractVariablesFromCss(plainCss);
-  
+
   for (const [sel, vars] of Object.entries(plainVars)) {
     const scheme = classifyScheme(sel);
     if (!result[scheme][sel]) result[scheme][sel] = [];
     result[scheme][sel].push(...vars);
   }
-  
+
   return result;
 }
 
@@ -181,23 +251,44 @@ function extractAllColors(value) {
   const hexRegex = /#([0-9a-fA-F]{3,8})\b/g;
   const rgbRegex = /rgba?\([^)]+\)/g;
   const hslRegex = /hsla?\([^)]+\)/g;
-  const namedColors = [
-    'transparent', 'inherit', 'initial', 'unset', 'currentColor',
-    'white', 'black', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta',
-    'grey', 'gray', 'orange', 'purple', 'pink', 'brown',
+  const _namedColors = [
+    'transparent',
+    'inherit',
+    'initial',
+    'unset',
+    'currentColor',
+    'white',
+    'black',
+    'red',
+    'green',
+    'blue',
+    'yellow',
+    'cyan',
+    'magenta',
+    'grey',
+    'gray',
+    'orange',
+    'purple',
+    'pink',
+    'brown',
   ];
-  
-  let m;
-  while ((m = hexRegex.exec(value)) !== null) {
+
+  let m = hexRegex.exec(value);
+  while (m !== null) {
     colors.push(m[0]);
+    m = hexRegex.exec(value);
   }
-  while ((m = rgbRegex.exec(value)) !== null) {
+  m = rgbRegex.exec(value);
+  while (m !== null) {
     colors.push(m[0]);
+    m = rgbRegex.exec(value);
   }
-  while ((m = hslRegex.exec(value)) !== null) {
+  m = hslRegex.exec(value);
+  while (m !== null) {
     colors.push(m[0]);
+    m = hslRegex.exec(value);
   }
-  
+
   return colors;
 }
 
@@ -211,7 +302,7 @@ class CdpClient {
     this.pending = new Map();
     this.eventHandlers = new Map();
   }
-  
+
   async connect() {
     return new Promise((resolve, reject) => {
       this.ws = new WebSocket(this.wsUrl);
@@ -221,13 +312,15 @@ class CdpClient {
       setTimeout(() => reject(new Error('WS connect timeout')), 8000);
     });
   }
-  
+
   _handleMessage(data) {
     let msg;
     try {
       msg = JSON.parse(data);
-    } catch { return; }
-    
+    } catch {
+      return;
+    }
+
     if (msg.id && this.pending.has(msg.id)) {
       const { resolve, reject } = this.pending.get(msg.id);
       this.pending.delete(msg.id);
@@ -238,7 +331,7 @@ class CdpClient {
       for (const h of handlers) h(msg.params);
     }
   }
-  
+
   send(method, params = {}) {
     return new Promise((resolve, reject) => {
       const id = ++this.msgId;
@@ -252,12 +345,12 @@ class CdpClient {
       }, 10000);
     });
   }
-  
+
   on(event, handler) {
     if (!this.eventHandlers.has(event)) this.eventHandlers.set(event, []);
     this.eventHandlers.get(event).push(handler);
   }
-  
+
   close() {
     if (this.ws) this.ws.close();
   }
@@ -359,20 +452,20 @@ async function captureDomTree(client, maxNodes = 2000, maxDepth = 12) {
       return JSON.stringify({ root, total: count });
     })()
   `;
-  
+
   try {
     const { result } = await client.send('Runtime.evaluate', {
       expression: extractExpr,
       returnByValue: true,
       timeout: 15000,
     });
-    
+
     if (result.value) {
       const parsed = JSON.parse(result.value);
       // Normalize: ensure totalNodes property exists
       return { root: parsed.root, totalNodes: parsed.total || 0 };
     }
-    
+
     // Fallback
     return { root: { t: 'html', d: 0 }, totalNodes: 1 };
   } catch (e) {
@@ -418,12 +511,12 @@ async function sampleComputedStyles(client, maxNodes = 200) {
       return JSON.stringify(results);
     })()
   `;
-  
+
   const { result } = await client.send('Runtime.evaluate', {
     expression: expr,
     returnByValue: true,
   });
-  
+
   try {
     return JSON.parse(result.value);
   } catch {
@@ -468,12 +561,12 @@ async function captureAllStylesheets(client) {
       return JSON.stringify(sheets);
     })()
   `;
-  
+
   const { result } = await client.send('Runtime.evaluate', {
     expression: expr,
     returnByValue: true,
   });
-  
+
   try {
     return JSON.parse(result.value);
   } catch {
@@ -502,12 +595,12 @@ async function getRootComputedVariables(client) {
       return JSON.stringify(vars);
     })()
   `;
-  
+
   const { result } = await client.send('Runtime.evaluate', {
     expression: expr,
     returnByValue: true,
   });
-  
+
   try {
     return JSON.parse(result.value);
   } catch {
@@ -518,7 +611,7 @@ async function getRootComputedVariables(client) {
 /**
  * 获取指定主题下 :root 的 CSS 变量值（先切换，再读，再恢复）
  */
-async function getRootVariablesForTheme(client, scheme) {
+async function _getRootVariablesForTheme(client, scheme) {
   // 先记录当前 prefers-color-scheme
   const resetExpr = `
     (() => {
@@ -527,7 +620,7 @@ async function getRootVariablesForTheme(client, scheme) {
       return 'ok';
     })()
   `;
-  
+
   // 注入临时样式来模拟 prefers-color-scheme
   // 安全转义：scheme 通过 JSON.stringify 注入，避免引号/特殊字符导致 JS 注入
   const safeScheme = JSON.stringify(scheme);
@@ -554,7 +647,7 @@ async function getRootVariablesForTheme(client, scheme) {
       return 'injected';
     })()
   `;
-  
+
   try {
     await client.send('Runtime.evaluate', { expression: injectExpr, returnByValue: true });
     await sleep(50);
@@ -575,7 +668,7 @@ async function setColorScheme(client, scheme) {
   try {
     await client.send('Emulation.enable');
   } catch {}
-  
+
   try {
     await client.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-color-scheme', value: scheme }],
@@ -596,7 +689,7 @@ async function resetEmulatedMedia(client) {
 // ============== 工具函数 ==============
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function flattenVars(varGroups) {
@@ -626,8 +719,9 @@ function categorizeVars(flatVars) {
     input: [],
     other: [],
   };
-  
-  const colorPattern = /color|bg|background|fill|stroke|surface|elevated|card|panel|modal|popover|tooltip|overlay|backdrop/i;
+
+  const colorPattern =
+    /color|bg|background|fill|stroke|surface|elevated|card|panel|modal|popover|tooltip|overlay|backdrop/i;
   const textPattern = /text|foreground|fg|label|muted|placeholder/i;
   const borderPattern = /border|separator|divider/i;
   const accentPattern = /accent|primary|brand|theme|focus|selection/i;
@@ -636,14 +730,17 @@ function categorizeVars(flatVars) {
   const fontPattern = /font|family/i;
   const buttonPattern = /button|btn/i;
   const inputPattern = /input|editor|field/i;
-  
+
   for (const [name, data] of Object.entries(flatVars)) {
     const entry = { name, value: data.value, selectors: data.selectors };
-    
+
     if (colorPattern.test(name)) {
       if (textPattern.test(name)) categories.text.push(entry);
       else if (borderPattern.test(name)) categories.border.push(entry);
-      else if (accentPattern.test(name) || (/#|rgb|hsl/.test(data.value) && accentPattern.test(name))) {
+      else if (
+        accentPattern.test(name) ||
+        (/#|rgb|hsl/.test(data.value) && accentPattern.test(name))
+      ) {
         categories.accent.push(entry);
       } else if (fontPattern.test(name)) {
         categories.font.push(entry);
@@ -662,13 +759,13 @@ function categorizeVars(flatVars) {
       categories.other.push(entry);
     }
   }
-  
+
   return categories;
 }
 
 function analyzeColorPalette(flatVars) {
   const colorFreq = {};
-  
+
   for (const [name, data] of Object.entries(flatVars)) {
     const colors = extractAllColors(data.value);
     for (const c of colors) {
@@ -678,31 +775,31 @@ function analyzeColorPalette(flatVars) {
       colorFreq[normalized].vars.push(name);
     }
   }
-  
+
   // 排序
   const sorted = Object.entries(colorFreq)
     .sort((a, b) => b[1].count - a[1].count)
     .slice(0, 60)
     .map(([color, data]) => ({ color, ...data }));
-  
+
   return sorted;
 }
 
 // ============== 主爬取流程 ==============
 
 async function extractAgent(port, agentName, outputDir) {
-  const wsUrl = `ws://127.0.0.1:${port}/json`;
+  const _wsUrl = `ws://127.0.0.1:${port}/json`;
   let wsDebugUrl = null;
-  
+
   console.log(`\n--- 提取 ${agentName} (port: ${port}) ---`);
-  
+
   // 先获取 websocket URL
   try {
     const http = await fetch(`http://127.0.0.1:${port}/json`);
     const targets = await http.json();
     // 找 page 类型 target
-    const pageTarget = targets.find(t => t.type === 'page');
-    if (pageTarget && pageTarget.webSocketDebuggerUrl) {
+    const pageTarget = targets.find((t) => t.type === 'page');
+    if (pageTarget?.webSocketDebuggerUrl) {
       wsDebugUrl = pageTarget.webSocketDebuggerUrl;
       console.log(`  找到 target: ${pageTarget.title || 'untitled'}`);
     }
@@ -710,30 +807,30 @@ async function extractAgent(port, agentName, outputDir) {
     console.error(`  ✗ 无法获取 target 列表: ${e.message}`);
     return null;
   }
-  
+
   if (!wsDebugUrl) {
     console.error(`  ✗ 没有可用的 page target`);
     return null;
   }
-  
+
   const client = new CdpClient(wsDebugUrl);
-  
+
   try {
     await client.connect();
     console.log(`  ✓ CDP 连接成功`);
-    
+
     // 启用必要域
     await client.send('Runtime.enable').catch(() => {});
-    
+
     // ====== 1. 捕获所有样式表 ======
     console.log(`  → 提取样式表...`);
     const stylesheets = await captureAllStylesheets(client);
     console.log(`  ✓ 获取 ${stylesheets.length} 个样式表`);
-    
+
     // 解析每个样式表的变量
     const allVarsByScheme = { dark: {}, light: {}, neutral: {} };
     const allCssTexts = [];
-    
+
     for (const sheet of stylesheets) {
       if (sheet.cssText && !sheet.error) {
         allCssTexts.push(sheet.cssText);
@@ -746,26 +843,28 @@ async function extractAgent(port, agentName, outputDir) {
         }
       }
     }
-    
+
     // ====== 2. 根元素变量提取（当前主题） ======
     console.log(`  → 提取根元素 CSS 变量（当前主题）...`);
     const rootVarsDefault = await getRootComputedVariables(client);
     console.log(`  ✓ 当前主题根变量: ${Object.keys(rootVarsDefault).length} 个`);
-    
+
     // ====== 3. 当前主题（默认态）的 DOM 和计算样式 ======
     console.log(`  → 捕获 DOM 树（默认态）...`);
     const domDefault = await captureDomTree(client, DEFAULT_MAX_DOM_NODES, DEFAULT_MAX_DEPTH);
     console.log(`  ✓ 默认态 DOM: ${domDefault.totalNodes} 节点`);
-    
+
     console.log(`  → 采样计算样式（默认态）...`);
     const computedDefault = await sampleComputedStyles(client, 300);
     console.log(`  ✓ 默认态采样: ${computedDefault.length} 节点`);
-    
+
     // ====== 4. 切换暗色主题 ======
     console.log(`  → 切换到暗色主题...`);
     const darkOk = await setColorScheme(client, 'dark');
-    let domDark = null, computedDark = null, rootVarsDark = {};
-    
+    let domDark = null,
+      computedDark = null,
+      rootVarsDark = {};
+
     if (darkOk) {
       console.log(`  ✓ 切换到暗色成功`);
       rootVarsDark = await getRootComputedVariables(client);
@@ -777,12 +876,14 @@ async function extractAgent(port, agentName, outputDir) {
     } else {
       console.log(`  ⚠ 暗色切换失败（可能 Agent 不响应 prefers-color-scheme）`);
     }
-    
+
     // ====== 5. 切换亮色主题 ======
     console.log(`  → 切换到亮色主题...`);
     const lightOk = await setColorScheme(client, 'light');
-    let domLight = null, computedLight = null, rootVarsLight = {};
-    
+    let domLight = null,
+      computedLight = null,
+      rootVarsLight = {};
+
     if (lightOk) {
       console.log(`  ✓ 切换到亮色成功`);
       rootVarsLight = await getRootComputedVariables(client);
@@ -794,27 +895,36 @@ async function extractAgent(port, agentName, outputDir) {
     } else {
       console.log(`  ⚠ 亮色切换失败（可能 Agent 不响应 prefers-color-scheme）`);
     }
-    
+
     // 重置
     await resetEmulatedMedia(client);
-    
+
     // ====== 5. 构建输出 ======
     // 合并根变量（root computed）到变量集合中，作为 "runtime" 数据
     const allVarsDark = { ...allVarsByScheme.dark };
     const allVarsLight = { ...allVarsByScheme.light };
     const allVarsNeutral = { ...allVarsByScheme.neutral };
-    
+
     // 根变量用 ":root@runtime" 作为选择器
     if (Object.keys(rootVarsDefault).length > 0) {
-      allVarsNeutral[':root@runtime'] = Object.entries(rootVarsDefault).map(([name, value]) => ({ name, value }));
+      allVarsNeutral[':root@runtime'] = Object.entries(rootVarsDefault).map(([name, value]) => ({
+        name,
+        value,
+      }));
     }
     if (Object.keys(rootVarsDark).length > 0) {
-      allVarsDark[':root@runtime:dark'] = Object.entries(rootVarsDark).map(([name, value]) => ({ name, value }));
+      allVarsDark[':root@runtime:dark'] = Object.entries(rootVarsDark).map(([name, value]) => ({
+        name,
+        value,
+      }));
     }
     if (Object.keys(rootVarsLight).length > 0) {
-      allVarsLight[':root@runtime:light'] = Object.entries(rootVarsLight).map(([name, value]) => ({ name, value }));
+      allVarsLight[':root@runtime:light'] = Object.entries(rootVarsLight).map(([name, value]) => ({
+        name,
+        value,
+      }));
     }
-    
+
     const result = {
       meta: {
         agent: agentName,
@@ -853,7 +963,7 @@ async function extractAgent(port, agentName, outputDir) {
       },
       stylesheets: {
         count: stylesheets.length,
-        sheets: stylesheets.map(s => ({
+        sheets: stylesheets.map((s) => ({
           href: s.href,
           type: s.type,
           ruleCount: s.ruleCount,
@@ -863,10 +973,12 @@ async function extractAgent(port, agentName, outputDir) {
         // Preserve ALL CSS text (inline <style> + same-origin stylesheets) for Raw Preview reconstruction.
         // Electron apps often use document.adoptedStyleSheets (CSSStyleSheet API) rather than <style> tags.
         styleBlocks: stylesheets
-          .filter(s => s.cssText && s.cssText.length > 50 && !s.error)
-          .map(s => s.cssText)
+          .filter((s) => s.cssText && s.cssText.length > 50 && !s.error)
+          .map((s) => s.cssText)
           // De-duplicate by first 200 chars (some apps duplicate critical rules across sheets)
-          .filter((txt, i, arr) => arr.findIndex(x => x.slice(0, 200) === txt.slice(0, 200)) === i)
+          .filter(
+            (txt, i, arr) => arr.findIndex((x) => x.slice(0, 200) === txt.slice(0, 200)) === i,
+          )
           .slice(0, 50), // cap at 50 blocks per theme
       },
       dom: {
@@ -902,15 +1014,16 @@ async function extractAgent(port, agentName, outputDir) {
         },
       },
     };
-    
+
     // 保存
     const outPath = join(outputDir, `${agentName}-full-extract.json`);
     writeFileSync(outPath, JSON.stringify(result, null, 2));
     console.log(`  💾 已保存到 ${outPath}`);
-    console.log(`  📊 统计: vars(dark=${result.stats.styleVars.dark}, light=${result.stats.styleVars.light}, neutral=${result.stats.styleVars.neutral}) | rootVars(default=${result.stats.rootVars.default}, dark=${result.stats.rootVars.dark}, light=${result.stats.rootVars.light})`);
-    
+    console.log(
+      `  📊 统计: vars(dark=${result.stats.styleVars.dark}, light=${result.stats.styleVars.light}, neutral=${result.stats.styleVars.neutral}) | rootVars(default=${result.stats.rootVars.default}, dark=${result.stats.rootVars.dark}, light=${result.stats.rootVars.light})`,
+    );
+
     return result;
-    
   } catch (e) {
     console.error(`  ✗ 提取失败: ${e.message}`);
     return null;
@@ -926,39 +1039,41 @@ async function main() {
   const outIdx = args.indexOf('--out');
   const outputDir = outIdx >= 0 ? args[outIdx + 1] : 'agents-raw-data';
   const useAll = args.includes('--all');
-  
+
   const resolvedOut = resolve(outputDir);
   if (!existsSync(resolvedOut)) {
     mkdirSync(resolvedOut, { recursive: true });
   }
-  
+
   let agentsToExtract = {};
-  
+
   if (useAll) {
     agentsToExtract = AGENT_PORTS;
   } else {
     const portArg = args.indexOf('--port');
     const nameArg = args.indexOf('--name');
     if (portArg >= 0 && nameArg >= 0) {
-      agentsToExtract[args[nameArg + 1]] = parseInt(args[portArg + 1]);
+      agentsToExtract[args[nameArg + 1]] = parseInt(args[portArg + 1], 10);
     } else {
       console.log('用法:');
       console.log('  node scripts/cdp-full-extract.mjs --all --out agents-raw-data');
-      console.log('  node scripts/cdp-full-extract.mjs --port 58360 --name codex --out agents-raw-data');
+      console.log(
+        '  node scripts/cdp-full-extract.mjs --port 58360 --name codex --out agents-raw-data',
+      );
       process.exit(1);
     }
   }
-  
+
   console.log('=== CDP Full Extract ===');
   console.log(`目标: ${Object.keys(agentsToExtract).join(', ')}`);
   console.log(`输出: ${resolvedOut}`);
   console.log('');
-  
+
   const results = {};
   for (const [name, port] of Object.entries(agentsToExtract)) {
     results[name] = await extractAgent(port, name, resolvedOut);
   }
-  
+
   // 生成汇总
   const summary = {
     extractedAt: new Date().toISOString(),
@@ -979,13 +1094,13 @@ async function main() {
       summary.agents[name] = { status: 'failed' };
     }
   }
-  
+
   writeFileSync(join(resolvedOut, '_extract-summary.json'), JSON.stringify(summary, null, 2));
   console.log('\n=== 提取完成 ===');
   console.log(`汇总: ${join(resolvedOut, '_extract-summary.json')}`);
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error('Fatal:', e);
   process.exit(1);
 });

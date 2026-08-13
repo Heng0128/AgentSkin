@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-import { tokenBlock, artLayerCss, alpha, shade } from '../theme-utils.mjs';
+import { alpha, artLayerCss, tokenBlock } from '../theme-utils.mjs';
 
 function workbuddyCss(t) {
   const c = t.colors;

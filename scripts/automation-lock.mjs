@@ -123,7 +123,8 @@ export function getLockStatus() {
 // --- CLI ---
 
 function printUsage() {
-  console.log(`automation-lock.mjs — Automation Lock Helper
+  console.log(
+    `automation-lock.mjs — Automation Lock Helper
 
 Usage:
   node scripts/automation-lock.mjs <command> [options]
@@ -133,10 +134,13 @@ Commands:
   release             Release the lock (only if held by this PID)
   status              Show current lock status
   force-release       Remove the lock regardless of owner
+  check-exists        exit(0) if lock FREE, exit(1) if HELD (for shell ` &&
+      `)
 
 Options:
   --help, -h          Show this help message
-`);
+`,
+  );
 }
 
 function printStatus() {
@@ -192,6 +196,18 @@ function runCli() {
       forceReleaseLock();
       console.log('Lock forcibly removed');
       break;
+
+    case 'check-exists': {
+      const held = isLockHeld();
+      if (held) {
+        const { lock } = getLockStatus();
+        console.error(`Lock held by "${lock?.automation ?? 'unknown'}" (pid ${lock?.pid ?? '?'})`);
+        process.exit(1);
+      }
+      console.log('Lock is free');
+      process.exit(0);
+      break;
+    }
 
     case 'status':
     case '--status':

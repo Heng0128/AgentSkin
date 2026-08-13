@@ -1,5 +1,5 @@
-import { readFileSync, readdirSync, statSync, existsSync } from 'fs';
-import { join, relative } from 'path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
 
 const ROOT = 'C:/Users/snowb/Desktop/work/desktop-main';
 
@@ -21,11 +21,17 @@ for (const cfg of themeConfigs) {
   for (const scheme of cfg.schemes) {
     const dir = scheme ? join(baseDir, scheme) : baseDir;
     let files = [];
-    try { files = readdirSync(dir).filter(f => f.endsWith('.css')); } catch { files = []; }
-    const expected = agents.filter(a => !['zcode'].includes(a) || true); // all 6
-    const missing = expected.filter(a => !files.includes(`${a}.css`));
-    const extra = files.filter(f => !expected.some(a => f === `${a}.css`));
-    console.log(`  ${scheme || '(default)'}/ => ${files.length} files. Missing: [${missing.join(', ') || 'none'}]. Extra: [${extra.join(', ') || 'none'}]`);
+    try {
+      files = readdirSync(dir).filter((f) => f.endsWith('.css'));
+    } catch {
+      files = [];
+    }
+    const expected = agents.filter((a) => !['zcode'].includes(a) || true); // all 6
+    const missing = expected.filter((a) => !files.includes(`${a}.css`));
+    const extra = files.filter((f) => !expected.some((a) => f === `${a}.css`));
+    console.log(
+      `  ${scheme || '(default)'}/ => ${files.length} files. Missing: [${missing.join(', ') || 'none'}]. Extra: [${extra.join(', ') || 'none'}]`,
+    );
   }
   console.log('');
 }
@@ -39,16 +45,20 @@ const fallbackIssues = [];
 
 function scanDir(dir, depth = 0) {
   let entries;
-  try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
   for (const entry of entries) {
     if (entry.isDirectory() && depth < 3) {
       scanDir(join(dir, entry.name), depth + 1);
     } else if (entry.isFile() && entry.name.endsWith('.css')) {
       const filePath = join(dir, entry.name);
       const content = readFileSync(filePath, 'utf-8');
-      let match;
+      let match = fallbackPattern.exec(content);
       const seen = new Set();
-      while ((match = fallbackPattern.exec(content)) !== null) {
+      while (match !== null) {
         const key = match[1].trim().substring(0, 60);
         if (!seen.has(key)) {
           seen.add(key);
@@ -56,6 +66,7 @@ function scanDir(dir, depth = 0) {
           const relPath = relative(ROOT, filePath);
           fallbackIssues.push({ file: relPath, line: lineNum, fallback: match[0] });
         }
+        match = fallbackPattern.exec(content);
       }
     }
   }
@@ -85,19 +96,24 @@ const csIssues = [];
 
 function scanColorScheme(dir, depth = 0) {
   let entries;
-  try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
   for (const entry of entries) {
     if (entry.isDirectory() && depth < 3) {
       scanColorScheme(join(dir, entry.name), depth + 1);
     } else if (entry.isFile() && entry.name.endsWith('.css')) {
       const filePath = join(dir, entry.name);
       const content = readFileSync(filePath, 'utf-8');
-      let match;
-      while ((match = csPattern.exec(content)) !== null) {
+      let match = csPattern.exec(content);
+      while (match !== null) {
         const value = match[1].trim();
         const lineNum = content.substring(0, match.index).split('\n').length;
         const relPath = relative(ROOT, filePath);
         csIssues.push({ file: relPath, line: lineNum, value });
+        match = csPattern.exec(content);
       }
     }
   }
@@ -109,7 +125,7 @@ for (const cfg of themeConfigs) {
 }
 
 const validSchemes = ['dark', 'light', 'normal'];
-const invalidCS = csIssues.filter(i => !validSchemes.includes(i.value));
+const invalidCS = csIssues.filter((i) => !validSchemes.includes(i.value));
 const darkLightConflict = []; // look for themes that have both dark and light in same theme dir
 
 if (invalidCS.length > 0) {
@@ -121,11 +137,13 @@ if (invalidCS.length > 0) {
 
 // Check for conflicting color-scheme within same theme
 for (const cfg of themeConfigs) {
-  const themeCS = csIssues.filter(i => i.file.startsWith(`themes/${cfg.name}/`));
-  const values = new Set(themeCS.map(i => i.value));
+  const themeCS = csIssues.filter((i) => i.file.startsWith(`themes/${cfg.name}/`));
+  const values = new Set(themeCS.map((i) => i.value));
   if (values.has('dark') && values.has('light')) {
     darkLightConflict.push(cfg.name);
-    console.log(`  [WARNING] Theme "${cfg.name}" has BOTH color-scheme: dark AND light declarations across schemes`);
+    console.log(
+      `  [WARNING] Theme "${cfg.name}" has BOTH color-scheme: dark AND light declarations across schemes`,
+    );
   }
 }
 if (darkLightConflict.length === 0) console.log('  No dark/light conflicts within themes. PASS');
@@ -152,7 +170,12 @@ const requiredRequired = [
   '--agentskin-shadow',
 ];
 
-const runtimeInjection = ['--agentskin-art', '--agentskin-text-shadow', '--agentskin-font', '--agentskin-brand'];
+const runtimeInjection = [
+  '--agentskin-art',
+  '--agentskin-text-shadow',
+  '--agentskin-font',
+  '--agentskin-brand',
+];
 
 const varIssues = [];
 
@@ -162,32 +185,57 @@ for (const cfg of themeConfigs) {
   if (existsSync(twPath)) {
     const content = readFileSync(twPath, 'utf-8');
     const vars = new Set();
-    let m;
-    while ((m = agentVarPattern.exec(content)) !== null) vars.add(m[0]);
+    let m = agentVarPattern.exec(content);
+    while (m !== null) {
+      vars.add(m[0]);
+      m = agentVarPattern.exec(content);
+    }
     const varsArr = Array.from(vars).sort();
-    const missing = requiredRequired.filter(v => !varsArr.includes(v));
-    const runtime = runtimeInjection.filter(v => varsArr.includes(v));
+    const missing = requiredRequired.filter((v) => !varsArr.includes(v));
+    const runtime = runtimeInjection.filter((v) => varsArr.includes(v));
     console.log(`  ${cfg.name}/traework.css: ${vars} defined`);
-    console.log(`    Total: ${varsArr.length}. Missing required: [${missing.join(', ') || 'none'}]. Runtime tokens: [${runtime.join(', ') || 'none'}]`);
-    varIssues.push({ file: `themes/${cfg.name}/assets/css/traework.css`, total: varsArr.length, missing, runtime, all: varsArr });
+    console.log(
+      `    Total: ${varsArr.length}. Missing required: [${missing.join(', ') || 'none'}]. Runtime tokens: [${runtime.join(', ') || 'none'}]`,
+    );
+    varIssues.push({
+      file: `themes/${cfg.name}/assets/css/traework.css`,
+      total: varsArr.length,
+      missing,
+      runtime,
+      all: varsArr,
+    });
   }
 
   // color-scheme traework files
-  const schemes = cfg.name === 'amber-dusk' ? ['ember', 'dune'] :
-                  cfg.name === 'aurora-violet' ? ['ember', 'ice'] :
-                  ['coral', 'abyss'];
+  const schemes =
+    cfg.name === 'amber-dusk'
+      ? ['ember', 'dune']
+      : cfg.name === 'aurora-violet'
+        ? ['ember', 'ice']
+        : ['coral', 'abyss'];
   for (const scheme of schemes) {
     const twSchemePath = join(ROOT, 'themes', cfg.name, 'assets/css', scheme, 'traework.css');
     if (existsSync(twSchemePath)) {
       const content = readFileSync(twSchemePath, 'utf-8');
       const vars = new Set();
-      let m;
-      while ((m = agentVarPattern.exec(content)) !== null) vars.add(m[0]);
+      let m = agentVarPattern.exec(content);
+      while (m !== null) {
+        vars.add(m[0]);
+        m = agentVarPattern.exec(content);
+      }
       const varsArr = Array.from(vars).sort();
-      const missing = requiredRequired.filter(v => !varsArr.includes(v));
-      const runtime = runtimeInjection.filter(v => varsArr.includes(v));
-      console.log(`  ${cfg.name}/${scheme}/traework.css: ${varsArr.length} vars. Missing required: [${missing.join(', ') || 'none'}]`);
-      varIssues.push({ file: `themes/${cfg.name}/assets/css/${scheme}/traework.css`, total: varsArr.length, missing, runtime, all: varsArr });
+      const missing = requiredRequired.filter((v) => !varsArr.includes(v));
+      const runtime = runtimeInjection.filter((v) => varsArr.includes(v));
+      console.log(
+        `  ${cfg.name}/${scheme}/traework.css: ${varsArr.length} vars. Missing required: [${missing.join(', ') || 'none'}]`,
+      );
+      varIssues.push({
+        file: `themes/${cfg.name}/assets/css/${scheme}/traework.css`,
+        total: varsArr.length,
+        missing,
+        runtime,
+        all: varsArr,
+      });
     }
   }
 }
@@ -200,13 +248,17 @@ const pkgDir = join(ROOT, 'themes/amber-dusk/amber-dusk.agentskin-theme');
 if (existsSync(pkgDir)) {
   function listRecursive(dir, indent = '') {
     let entries;
-    try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
     for (const entry of entries) {
       const path = join(dir, entry.name);
-      const relPath = relative(ROOT, path);
+      const _relPath = relative(ROOT, path);
       if (entry.isDirectory()) {
         console.log(`${indent}[DIR]  ${entry.name}/`);
-        listRecursive(path, indent + '  ');
+        listRecursive(path, `${indent}  `);
       } else {
         const size = statSync(path).size;
         console.log(`${indent}${entry.name} (${size} bytes)`);
@@ -229,8 +281,11 @@ if (existsSync(pkgDir)) {
   if (existsSync(twPkg)) {
     const twContent = readFileSync(twPkg, 'utf-8');
     const agentVarsInPkg = new Set();
-    let m2;
-    while ((m2 = agentVarPattern.exec(twContent)) !== null) agentVarsInPkg.add(m2[0]);
+    let m2 = agentVarPattern.exec(twContent);
+    while (m2 !== null) {
+      agentVarsInPkg.add(m2[0]);
+      m2 = agentVarPattern.exec(twContent);
+    }
     console.log(`\n  Package traework.css --agentskin-* vars: ${agentVarsInPkg.size}`);
     console.log(`  Vars: ${Array.from(agentVarsInPkg).sort().join(', ')}`);
 
@@ -239,10 +294,13 @@ if (existsSync(pkgDir)) {
     if (existsSync(srcTw)) {
       const srcContent = readFileSync(srcTw, 'utf-8');
       const srcVars = new Set();
-      let m3;
-      while ((m3 = agentVarPattern.exec(srcContent)) !== null) srcVars.add(m3[0]);
-      const missingInPkg = Array.from(srcVars).filter(v => !agentVarsInPkg.has(v));
-      const extraInPkg = Array.from(agentVarsInPkg).filter(v => !srcVars.has(v));
+      let m3 = agentVarPattern.exec(srcContent);
+      while (m3 !== null) {
+        srcVars.add(m3[0]);
+        m3 = agentVarPattern.exec(srcContent);
+      }
+      const missingInPkg = Array.from(srcVars).filter((v) => !agentVarsInPkg.has(v));
+      const extraInPkg = Array.from(agentVarsInPkg).filter((v) => !srcVars.has(v));
       console.log(`\n  Package vs Source comparison:`);
       console.log(`    Source vars: ${srcVars.size}, Package vars: ${agentVarsInPkg.size}`);
       console.log(`    Missing in package: [${missingInPkg.join(', ') || 'none'}]`);

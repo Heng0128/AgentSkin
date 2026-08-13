@@ -33,4 +33,4 @@ export const hexToRgb = (hex) => {
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
 };
 
-export const hexToNsis = (hex) => '0x' + hex.replace('#', '').toUpperCase();
+export const hexToNsis = (hex) => `0x${hex.replace('#', '').toUpperCase()}`;

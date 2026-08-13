@@ -8,7 +8,7 @@
  * Usage: node scripts/rebuild-all-themes.mjs [outputDir]
  * Default output: themes/{id}/*.agentskin-theme/
  */
-import { readdirSync, existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { buildThemePackage } from './build-theme-package.mjs';
 
@@ -17,10 +17,11 @@ const THEMES_DIR = join(ROOT, 'themes');
 const OUT_DIR = process.argv[2] ? resolve(process.argv[2]) : null;
 
 const dirs = readdirSync(THEMES_DIR, { withFileTypes: true })
-  .filter(d => d.isDirectory() && !d.name.startsWith('_') && !d.name.startsWith('.'))
-  .map(d => d.name);
+  .filter((d) => d.isDirectory() && !d.name.startsWith('_') && !d.name.startsWith('.'))
+  .map((d) => d.name);
 
-let ok = 0, fail = 0;
+let ok = 0,
+  fail = 0;
 
 for (const id of dirs) {
   const themeDir = join(THEMES_DIR, id);

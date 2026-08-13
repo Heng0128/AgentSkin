@@ -17,7 +17,7 @@
  * gradient stop for light themes (see sakura-pastel).
  */
 
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -77,7 +77,11 @@ async function themeConfig(themeDir) {
 
 function hexToRgbTriple(hex) {
   let h = (hex || '').replace('#', '');
-  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  if (h.length === 3)
+    h = h
+      .split('')
+      .map((c) => c + c)
+      .join('');
   if (h.length !== 6) return '136, 136, 255';
   return `${parseInt(h.slice(0, 2), 16)}, ${parseInt(h.slice(2, 4), 16)}, ${parseInt(h.slice(4, 6), 16)}`;
 }
@@ -107,10 +111,21 @@ async function renderAssets(themeId) {
 </svg>`;
 
   await mkdir(themeDir, { recursive: true });
-  await writeFile(path.join(themeDir, 'icon.png'), await sharp(Buffer.from(iconSvg)).png().toBuffer());
-  await writeFile(path.join(themeDir, 'preview.png'), await sharp(Buffer.from(previewSvg)).png().toBuffer());
-  await writeFile(path.join(themeDir, 'hero.webp'), await sharp(Buffer.from(heroSvg)).webp({ quality: 90 }).toBuffer());
-  console.log(`[theme-assets] ${config.id} → icon.png, preview.png, hero.webp (${config.isLight ? 'light' : 'dark'})`);
+  await writeFile(
+    path.join(themeDir, 'icon.png'),
+    await sharp(Buffer.from(iconSvg)).png().toBuffer(),
+  );
+  await writeFile(
+    path.join(themeDir, 'preview.png'),
+    await sharp(Buffer.from(previewSvg)).png().toBuffer(),
+  );
+  await writeFile(
+    path.join(themeDir, 'hero.webp'),
+    await sharp(Buffer.from(heroSvg)).webp({ quality: 90 }).toBuffer(),
+  );
+  console.log(
+    `[theme-assets] ${config.id} → icon.png, preview.png, hero.webp (${config.isLight ? 'light' : 'dark'})`,
+  );
 }
 
 const args = process.argv.slice(2);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-import { tokenBlock, artLayerCss, alpha, shade } from '../theme-utils.mjs';
+import { alpha, artLayerCss, shade, tokenBlock } from '../theme-utils.mjs';
 
 function qoderworkCss(t) {
   const c = t.colors;
@@ -23,8 +23,12 @@ function qoderworkCss(t) {
   const fillQuaternary = alpha(c.foreground, t.isLight ? 0.02 : 0.03);
   const bgContainer = c.background;
   const bgElevated = `color-mix(in srgb, ${c.surfaceElevated} 85%, ${c.accent} 15%)`;
-  const bgLayout = t.isLight ? shade(c.background, 'white', 0.02) : shade(c.background, 'black', 0.04);
-  const bgSpotlight = t.isLight ? shade(c.background, 'white', 0.04) : shade(c.background, 'black', 0.08);
+  const bgLayout = t.isLight
+    ? shade(c.background, 'white', 0.02)
+    : shade(c.background, 'black', 0.04);
+  const bgSpotlight = t.isLight
+    ? shade(c.background, 'white', 0.04)
+    : shade(c.background, 'black', 0.08);
   const shadowBase = t.isLight ? '0, 0, 0' : '0, 0, 0';
   const highlightBase = t.isLight ? '255, 255, 255' : '255, 255, 255';
 

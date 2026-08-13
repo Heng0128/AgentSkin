@@ -34,7 +34,9 @@ function loadColorSchemes(id, themeDir, manifest) {
   for (const schemeId of manifest.colorSchemes ?? []) {
     const schemePath = path.join(themeDir, 'color-schemes', `${schemeId}.json`);
     if (!fs.existsSync(schemePath)) {
-      throw new Error(`themes/${id}: declared color scheme "${schemeId}" has no color-schemes/${schemeId}.json`);
+      throw new Error(
+        `themes/${id}: declared color scheme "${schemeId}" has no color-schemes/${schemeId}.json`,
+      );
     }
     const scheme = JSON.parse(fs.readFileSync(schemePath, 'utf8').replace(/^\uFEFF/, ''));
     schemes.push({ id: schemeId, mode: scheme.mode, colors: scheme.colors });
@@ -70,7 +72,9 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
       const cssPath = path.join(cssDir, `${agent}.css`);
       if (verifyMode) {
         if (!fs.existsSync(cssPath)) {
-          console.error(`[generate-theme-css:verify] ${id}/${scheme.id}/${agent}.css MISSING — run 'npm run generate:theme-css'`);
+          console.error(
+            `[generate-theme-css:verify] ${id}/${scheme.id}/${agent}.css MISSING — run 'npm run generate:theme-css'`,
+          );
           stale++;
           continue;
         }
@@ -79,7 +83,9 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
         // writing (writeFileSync appends '\n' when the template lacks one).
         const expected = css.endsWith('\n') ? css : `${css}\n`;
         if (actual !== expected) {
-          console.error(`[generate-theme-css:verify] ${id}/${scheme.id}/${agent}.css STALE — run 'npm run generate:theme-css'`);
+          console.error(
+            `[generate-theme-css:verify] ${id}/${scheme.id}/${agent}.css STALE — run 'npm run generate:theme-css'`,
+          );
           stale++;
         }
       } else {
@@ -88,7 +94,9 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
       }
     }
     if (!verifyMode) {
-      console.log(`[generate-theme-css] ${id}/${scheme.id} (${ctx.mode})${manifest.dynamic ? ` [dynamic:${manifest.dynamic}]` : ''}`);
+      console.log(
+        `[generate-theme-css] ${id}/${scheme.id} (${ctx.mode})${manifest.dynamic ? ` [dynamic:${manifest.dynamic}]` : ''}`,
+      );
     }
   }
 }

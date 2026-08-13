@@ -101,15 +101,19 @@ function tryParseColor(input, ctx) {
 export function luminance(input) {
   const c = parseColor(input);
   const [rs, gs, bs] = [c.r / 255, c.g / 255, c.b / 255].map((v) =>
-    v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+    v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4,
+  );
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
 /** HSL saturation (0–1) from a parsed color. */
 export function saturation(input) {
   const c = parseColor(input);
-  const r = c.r / 255, g = c.g / 255, b = c.b / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const r = c.r / 255,
+    g = c.g / 255,
+    b = c.b / 255;
+  const max = Math.max(r, g, b),
+    min = Math.min(r, g, b);
   const l = (max + min) / 2;
   if (max === min) return 0;
   const d = max - min;
@@ -133,27 +137,36 @@ export function computeArtParams(t) {
   // overlay feels like a tint rather than a solid block.
   let washLeft, washMid, washBottom;
   if (t.isLight) {
-    washLeft = 42; washMid = 14; washBottom = 38;
+    washLeft = 42;
+    washMid = 14;
+    washBottom = 38;
   } else if (bgLum < 0.012) {
     // Very dark bg (arina, gothic, midnight-aurora): hero dominates
-    washLeft = 26; washMid = 8; washBottom = 20;
+    washLeft = 26;
+    washMid = 8;
+    washBottom = 20;
   } else if (bgLum < 0.03) {
     // Dark colored bg (naruto, sasuke, wuthering, deepspace-star): light wash
-    washLeft = 32; washMid = 12; washBottom = 26;
+    washLeft = 32;
+    washMid = 12;
+    washBottom = 26;
   } else {
     // Moderate dark bg
-    washLeft = 38; washMid = 14; washBottom = 32;
+    washLeft = 38;
+    washMid = 14;
+    washBottom = 32;
   }
 
   // Radial glow strength: pushed higher for strong visual impact
   const glowStrength = t.isLight
-    ? Math.round(14 + accentSat * 12)   // 14–26% for light
-    : Math.round(16 + accentSat * 20);  // 16–36% for dark
+    ? Math.round(14 + accentSat * 12) // 14–26% for light
+    : Math.round(16 + accentSat * 20); // 16–36% for dark
 
   // Glow color: use secondary if it has different hue from accent (contrast)
-  const glowColor = saturation(c.secondary) > 0.3 && c.secondary !== c.accent
-    ? 'var(--agentskin-secondary)'
-    : 'var(--agentskin-accent)';
+  const glowColor =
+    saturation(c.secondary) > 0.3 && c.secondary !== c.accent
+      ? 'var(--agentskin-secondary)'
+      : 'var(--agentskin-accent)';
 
   return { washLeft, washMid, washBottom, glowStrength, glowColor };
 }
@@ -216,9 +229,7 @@ export function tokenBlock(t) {
 /** Scoped generic rules shared by the two shell-style agents. */
 export function sharedChromeRules(host, t) {
   const c = t.colors;
-  const textShadow = t.isLight
-    ? '0 1px 2px rgba(255,255,255,0.6)'
-    : '0 1px 3px rgba(0,0,0,0.5)';
+  const textShadow = t.isLight ? '0 1px 2px rgba(255,255,255,0.6)' : '0 1px 3px rgba(0,0,0,0.5)';
   return `
 /* Text readability on frosted glass */
 ${host} body {
@@ -500,8 +511,10 @@ export function buildContext(id, manifest, scheme = null) {
   const inputColors = scheme?.colors ?? manifest.colors ?? {};
 
   // H-7: only background + foreground are required (per THEME_SPEC).
-  if (!inputColors.background) throw new Error(`themes/${id}: missing colors.background (required)`);
-  if (!inputColors.foreground) throw new Error(`themes/${id}: missing colors.foreground (required)`);
+  if (!inputColors.background)
+    throw new Error(`themes/${id}: missing colors.background (required)`);
+  if (!inputColors.foreground)
+    throw new Error(`themes/${id}: missing colors.foreground (required)`);
 
   // H-6: validate every color; missing or invalid values fall back to
   // COLOR_FALLBACKS so no generator ever sees a malformed input.

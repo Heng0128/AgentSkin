@@ -68,46 +68,125 @@ const HOST_SELECTOR = {
 // the crafted palette via valueForToken() so the recolor is visible.
 const AGENT_REMAP = {
   traework: [
-    '--vscode-editor-background', '--vscode-foreground', '--vscode-editor-foreground',
-    '--vscode-sideBar-background', '--vscode-activityBar-background', '--vscode-statusBar-background',
-    '--vscode-titleBar-activeBackground', '--vscode-titleBar-activeForeground',
-    '--vscode-titleBar-inactiveBackground', '--vscode-tab-activeBackground',
-    '--vscode-input-background', '--vscode-dropdown-background', '--vscode-list-hoverBackground',
-    '--vscode-toolbar-hoverBackground', '--vscode-textLink-foreground', '--vscode-button-background',
-    '--vscode-button-foreground', '--vscode-button-hoverBackground', '--vscode-focusBorder',
-    '--vscode-panel-border', '--vscode-widget-border', '--vscode-scrollbarSlider-background',
-    '--vscode-scrollbarSlider-hoverBackground', '--vscode-descriptionForeground',
-    '--vscode-icube-bg', '--vscode-icube-fg',
+    '--vscode-editor-background',
+    '--vscode-foreground',
+    '--vscode-editor-foreground',
+    '--vscode-sideBar-background',
+    '--vscode-activityBar-background',
+    '--vscode-statusBar-background',
+    '--vscode-titleBar-activeBackground',
+    '--vscode-titleBar-activeForeground',
+    '--vscode-titleBar-inactiveBackground',
+    '--vscode-tab-activeBackground',
+    '--vscode-input-background',
+    '--vscode-dropdown-background',
+    '--vscode-list-hoverBackground',
+    '--vscode-toolbar-hoverBackground',
+    '--vscode-textLink-foreground',
+    '--vscode-button-background',
+    '--vscode-button-foreground',
+    '--vscode-button-hoverBackground',
+    '--vscode-focusBorder',
+    '--vscode-panel-border',
+    '--vscode-widget-border',
+    '--vscode-scrollbarSlider-background',
+    '--vscode-scrollbarSlider-hoverBackground',
+    '--vscode-descriptionForeground',
+    '--vscode-icube-bg',
+    '--vscode-icube-fg',
   ],
   qoderwork: [
-    '--color-bg-primary', '--color-bg-secondary', '--color-bg-tertiary', '--color-bg-overlay',
-    '--color-text-primary', '--color-text-secondary', '--color-text-disabled', '--color-text-link',
-    '--color-accent', '--color-accent-hover', '--color-brand', '--color-brand-hover',
-    '--color-fill-input', '--color-fill-secondary', '--color-line-border', '--color-line-divider',
-    '--color-code-bg', '--color-code-fg', '--color-focus-ring', '--color-selection',
+    '--color-bg-primary',
+    '--color-bg-secondary',
+    '--color-bg-tertiary',
+    '--color-bg-overlay',
+    '--color-text-primary',
+    '--color-text-secondary',
+    '--color-text-disabled',
+    '--color-text-link',
+    '--color-accent',
+    '--color-accent-hover',
+    '--color-brand',
+    '--color-brand-hover',
+    '--color-fill-input',
+    '--color-fill-secondary',
+    '--color-line-border',
+    '--color-line-divider',
+    '--color-code-bg',
+    '--color-code-fg',
+    '--color-focus-ring',
+    '--color-selection',
   ],
   workbuddy: [
-    '--wb-accent', '--wb-secondary', '--wb-surface', '--wb-text',
-    '--cb-bg-primary', '--cb-bg-secondary', '--cb-bg-tertiary', '--cb-panel-bg-primary',
-    '--cb-panel-bg-secondary', '--cb-text-primary', '--cb-text-secondary', '--cb-text-disabled',
-    '--cb-text-link', '--cb-text-tertiary', '--cb-vscode-editor-background', '--cb-vscode-foreground',
-    '--cb-vscode-titleBar-activeBackground', '--cb-vscode-titleBar-activeForeground',
-    '--cb-vscode-input-background', '--cb-vscode-dropdown-background', '--cb-vscode-button-background',
-    '--cb-vscode-button-foreground', '--cb-vscode-button-hoverBackground', '--cb-vscode-list-hoverBackground',
-    '--cb-vscode-focusBorder', '--cb-vscode-scrollbarSlider-background', '--cb-stroke-secondary',
-    '--cb-button-dark-background', '--cb-button-dark-foreground', '--cb-vscode-textLink-foreground',
+    '--wb-accent',
+    '--wb-secondary',
+    '--wb-surface',
+    '--wb-text',
+    '--cb-bg-primary',
+    '--cb-bg-secondary',
+    '--cb-bg-tertiary',
+    '--cb-panel-bg-primary',
+    '--cb-panel-bg-secondary',
+    '--cb-text-primary',
+    '--cb-text-secondary',
+    '--cb-text-disabled',
+    '--cb-text-link',
+    '--cb-text-tertiary',
+    '--cb-vscode-editor-background',
+    '--cb-vscode-foreground',
+    '--cb-vscode-titleBar-activeBackground',
+    '--cb-vscode-titleBar-activeForeground',
+    '--cb-vscode-input-background',
+    '--cb-vscode-dropdown-background',
+    '--cb-vscode-button-background',
+    '--cb-vscode-button-foreground',
+    '--cb-vscode-button-hoverBackground',
+    '--cb-vscode-list-hoverBackground',
+    '--cb-vscode-focusBorder',
+    '--cb-vscode-scrollbarSlider-background',
+    '--cb-stroke-secondary',
+    '--cb-button-dark-background',
+    '--cb-button-dark-foreground',
+    '--cb-vscode-textLink-foreground',
   ],
   doubao: [
-    '--dbx-bg-primary', '--dbx-bg-secondary', '--dbx-bg-tertiary', '--dbx-bg-overlay',
-    '--dbx-text-primary', '--dbx-text-secondary', '--dbx-text-disabled', '--dbx-text-link',
-    '--dbx-brand', '--dbx-brand-hover', '--dbx-fill-input', '--dbx-fill-secondary',
-    '--dbx-line-border', '--dbx-line-divider', '--dbx-code-bg', '--dbx-code-fg', '--dbx-focus-ring',
+    '--dbx-bg-primary',
+    '--dbx-bg-secondary',
+    '--dbx-bg-tertiary',
+    '--dbx-bg-overlay',
+    '--dbx-text-primary',
+    '--dbx-text-secondary',
+    '--dbx-text-disabled',
+    '--dbx-text-link',
+    '--dbx-brand',
+    '--dbx-brand-hover',
+    '--dbx-fill-input',
+    '--dbx-fill-secondary',
+    '--dbx-line-border',
+    '--dbx-line-divider',
+    '--dbx-code-bg',
+    '--dbx-code-fg',
+    '--dbx-focus-ring',
   ],
   codex: [
-    '--text-primary', '--text-secondary', '--text-disabled', '--text-link',
-    '--bg-primary', '--bg-secondary', '--bg-tertiary', '--fill-input', '--line-border',
-    '--brand', '--brand-hover', '--code-bg', '--code-fg', '--focus-ring',
-    '--codex-bg-primary', '--codex-bg-secondary', '--codex-text-primary', '--codex-brand',
+    '--text-primary',
+    '--text-secondary',
+    '--text-disabled',
+    '--text-link',
+    '--bg-primary',
+    '--bg-secondary',
+    '--bg-tertiary',
+    '--fill-input',
+    '--line-border',
+    '--brand',
+    '--brand-hover',
+    '--code-bg',
+    '--code-fg',
+    '--focus-ring',
+    '--codex-bg-primary',
+    '--codex-bg-secondary',
+    '--codex-text-primary',
+    '--codex-brand',
   ],
 };
 
@@ -134,7 +213,11 @@ const SHADOWS = {
 
 function hexToRgb(hex) {
   let h = (hex || '').replace('#', '');
-  if (h.length === 3 || h.length === 4) h = h.split('').map((c) => c + c).join('');
+  if (h.length === 3 || h.length === 4)
+    h = h
+      .split('')
+      .map((c) => c + c)
+      .join('');
   if (h.length === 8) h = h.slice(0, 6);
   if (h.length !== 6) return null;
   return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
@@ -162,8 +245,13 @@ const TOKEN_RULES = [
   // --- hover 类（最具体） ---
   {
     pattern: (t) => t.includes('hover'),
-    result: (t, v) => {
-      if (t.includes('button') || t.includes('accent') || t.includes('brand') || t.includes('primary'))
+    result: (t, _v) => {
+      if (
+        t.includes('button') ||
+        t.includes('accent') ||
+        t.includes('brand') ||
+        t.includes('primary')
+      )
         return 'color-mix(in srgb, var(--agentskin-accent) 85%, #000)';
       if (t.includes('text') || t.includes('link'))
         return 'color-mix(in srgb, var(--agentskin-accent) 80%, #fff)';
@@ -172,7 +260,11 @@ const TOKEN_RULES = [
   },
   // --- 侧边栏/标题栏：半透明 surface，必须在 bg/background 之前 ---
   {
-    pattern: (t) => t.includes('sidebar') || t.includes('titlebar') || t.includes('statusbar') || t.includes('activitybar'),
+    pattern: (t) =>
+      t.includes('sidebar') ||
+      t.includes('titlebar') ||
+      t.includes('statusbar') ||
+      t.includes('activitybar'),
     result: (_t, _v) => 'color-mix(in srgb, var(--agentskin-surface) 15%, transparent)',
   },
   // --- elevated / overlay ---
@@ -198,7 +290,11 @@ const TOKEN_RULES = [
   // --- border / line / stroke / divider / widget ---
   {
     pattern: (t) =>
-      t.includes('border') || t.includes('line') || t.includes('stroke') || t.includes('divider') || t.includes('widget'),
+      t.includes('border') ||
+      t.includes('line') ||
+      t.includes('stroke') ||
+      t.includes('divider') ||
+      t.includes('widget'),
     result: (_t, v) => v('--agentskin-border'),
   },
   // --- input / fill ---
@@ -213,7 +309,11 @@ const TOKEN_RULES = [
   },
   // --- scrollbar / focus / selection / ring ---
   {
-    pattern: (t) => t.includes('scrollbar') || t.includes('focus') || t.includes('selection') || t.includes('ring'),
+    pattern: (t) =>
+      t.includes('scrollbar') ||
+      t.includes('focus') ||
+      t.includes('selection') ||
+      t.includes('ring'),
     result: (_t, v) => v('--agentskin-focus-ring'),
   },
   // --- text / foreground / fg（泛化） ---
@@ -223,7 +323,12 @@ const TOKEN_RULES = [
   },
   // --- accent / brand / link / primary / button ---
   {
-    pattern: (t) => t.includes('accent') || t.includes('brand') || t.includes('link') || t.includes('primary') || t.includes('button'),
+    pattern: (t) =>
+      t.includes('accent') ||
+      t.includes('brand') ||
+      t.includes('link') ||
+      t.includes('primary') ||
+      t.includes('button'),
     result: (_t, v) => v('--agentskin-accent'),
   },
   // --- bg / background（最终 fallback） ---
@@ -297,14 +402,19 @@ function makePng(width, height, pixelFn) {
     }
   }
   const idat = zlib.deflateSync(raw, { level: 9 });
-  return Buffer.concat([sig, pngChunk('IHDR', ihdr), pngChunk('IDAT', idat), pngChunk('IEND', Buffer.alloc(0))]);
+  return Buffer.concat([
+    sig,
+    pngChunk('IHDR', ihdr),
+    pngChunk('IDAT', idat),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ]);
 }
 
 // ---------------------------------------------------------------------------
 // Palette assembly
 // ---------------------------------------------------------------------------
 
-function deriveTokens(root) {
+export function deriveTokens(root) {
   const tokens = { ...DEFAULT_TOKENS };
   if (root && typeof root === 'object') {
     for (const [k, val] of Object.entries(root)) {
@@ -316,13 +426,30 @@ function deriveTokens(root) {
   // --- P1 fix: selection / focus-ring 从 accent 派生，避免 DEFAULT 紫色泄漏 ---
   // 与 build-palette.mjs 行为一致：selection = color-mix(accent 32%), focus-ring = color-mix(accent 40%)。
   // 调用方传入 explicit 值时保留；DEFAULT_TOKENS 仅作回退基线。
-  const rootSelection = root && typeof root === 'object' ? root['--agentskin-selection'] : undefined;
-  const rootFocusRing = root && typeof root === 'object' ? root['--agentskin-focus-ring'] : undefined;
+  const rootSelection =
+    root && typeof root === 'object' ? root['--agentskin-selection'] : undefined;
+  const rootFocusRing =
+    root && typeof root === 'object' ? root['--agentskin-focus-ring'] : undefined;
   if (rootSelection === undefined || rootSelection === DEFAULT_TOKENS['--agentskin-selection']) {
-    tokens['--agentskin-selection'] = `color-mix(in srgb, ${tokens['--agentskin-accent']} 32%, transparent)`;
+    tokens['--agentskin-selection'] =
+      `color-mix(in srgb, ${tokens['--agentskin-accent']} 32%, transparent)`;
   }
   if (rootFocusRing === undefined || rootFocusRing === DEFAULT_TOKENS['--agentskin-focus-ring']) {
-    tokens['--agentskin-focus-ring'] = `color-mix(in srgb, ${tokens['--agentskin-accent']} 40%, transparent)`;
+    tokens['--agentskin-focus-ring'] =
+      `color-mix(in srgb, ${tokens['--agentskin-accent']} 40%, transparent)`;
+  }
+  // --- P2 fix: input-bg / button-bg post-override 派生，与 tokenBlock() 一致 ---
+  // input-bg = color-mix(surface 82% + accent 18%) 45% + transparent（theme-utils.mjs L220）。
+  // button-bg = accent（theme-utils.mjs L208）。
+  // 避免 deriveTokens() 在 accent/surface 被 override 后仍回退到 DEFAULT 硬编码值。
+  const rootInputBg = root && typeof root === 'object' ? root['--agentskin-input-bg'] : undefined;
+  const rootButtonBg = root && typeof root === 'object' ? root['--agentskin-button-bg'] : undefined;
+  if (rootInputBg === undefined || rootInputBg === DEFAULT_TOKENS['--agentskin-input-bg']) {
+    tokens['--agentskin-input-bg'] =
+      `color-mix(in srgb, color-mix(in srgb, ${tokens['--agentskin-surface']} 82%, ${tokens['--agentskin-accent']} 18%) 45%, transparent)`;
+  }
+  if (rootButtonBg === undefined || rootButtonBg === DEFAULT_TOKENS['--agentskin-button-bg']) {
+    tokens['--agentskin-button-bg'] = tokens['--agentskin-accent'];
   }
   const mode = luminance(tokens['--agentskin-bg']) < 0.5 ? 'dark' : 'light';
   return { tokens, mode };
@@ -367,7 +494,9 @@ function buildAgentCss(agentId, palette, signature) {
   lines.push('}');
   lines.push('');
 
-  const host = HOST_SELECTOR[agentId] || `html.agentskin-host-${agentId} body, html.agentskin-host-${agentId} body *`;
+  const host =
+    HOST_SELECTOR[agentId] ||
+    `html.agentskin-host-${agentId} body, html.agentskin-host-${agentId} body *`;
   const remap = AGENT_REMAP[agentId] || [];
   lines.push(`/* Redirect ${agentId} native design tokens onto the crafted palette */`);
   lines.push(`${host} {`);
@@ -389,36 +518,46 @@ function buildCraft(agentId, signature) {
   const el = `html.agentskin-host-${agentId}`;
   const out = ['/* Craft overrides — Studio toolbox dimensions */'];
   if (signature.radius) {
-    out.push(`${el} button, ${el} input, ${el} textarea, ${el} select, ${el} [role="textbox"], ${el} [class*="panel"], ${el} [class*="Panel"], ${el} [class*="card"] { border-radius: ${signature.radius} !important; }`);
-    out.push(':root { --as-radius: ' + signature.radius + '; }');
+    out.push(
+      `${el} button, ${el} input, ${el} textarea, ${el} select, ${el} [role="textbox"], ${el} [class*="panel"], ${el} [class*="Panel"], ${el} [class*="card"] { border-radius: ${signature.radius} !important; }`,
+    );
+    out.push(`:root { --as-radius: ${signature.radius}; }`);
   }
   if (signature.spacing != null) {
-    out.push(`${el} [class*="panel"], ${el} [class*="sidebar"], ${el} [class*="Panel"], ${el} [class*="Sidebar"] { padding: ${signature.spacing}px !important; }`);
-    out.push(':root { --as-spacing: ' + signature.spacing + 'px; }');
+    out.push(
+      `${el} [class*="panel"], ${el} [class*="sidebar"], ${el} [class*="Panel"], ${el} [class*="Sidebar"] { padding: ${signature.spacing}px !important; }`,
+    );
+    out.push(`:root { --as-spacing: ${signature.spacing}px; }`);
   }
   if (signature.shadowLevel && signature.shadowLevel !== 'none' && SHADOWS[signature.shadowLevel]) {
-    out.push(`${el} [class*="panel"], ${el} [class*="card"], ${el} [class*="elevated"], ${el} [class*="surface"] { box-shadow: ${SHADOWS[signature.shadowLevel]} !important; }`);
-    out.push(':root { --as-shadow-level: ' + signature.shadowLevel + '; }');
+    out.push(
+      `${el} [class*="panel"], ${el} [class*="card"], ${el} [class*="elevated"], ${el} [class*="surface"] { box-shadow: ${SHADOWS[signature.shadowLevel]} !important; }`,
+    );
+    out.push(`:root { --as-shadow-level: ${signature.shadowLevel}; }`);
   }
   if (signature.blurPx != null && signature.blurPx > 0) {
-    out.push(`${el} [class*="sidebar"], ${el} [class*="overlay"], ${el} [class*="modal"], ${el} [class*="navbar"], ${el} [class*="topbar"], ${el} header { backdrop-filter: blur(${signature.blurPx}px) !important; }`);
-    out.push(':root { --as-blur: ' + signature.blurPx + 'px; }');
+    out.push(
+      `${el} [class*="sidebar"], ${el} [class*="overlay"], ${el} [class*="modal"], ${el} [class*="navbar"], ${el} [class*="topbar"], ${el} header { backdrop-filter: blur(${signature.blurPx}px) !important; }`,
+    );
+    out.push(`:root { --as-blur: ${signature.blurPx}px; }`);
   }
   if (signature.fontSize != null) {
     out.push(`${el} body { font-size: ${signature.fontSize}px !important; }`);
-    out.push(':root { --as-font-size: ' + signature.fontSize + 'px; }');
+    out.push(`:root { --as-font-size: ${signature.fontSize}px; }`);
   }
   if (signature.fontFam) {
     out.push(`${el} body { font-family: ${signature.fontFam} !important; }`);
-    out.push(':root { --as-font-family: ' + signature.fontFam + '; }');
+    out.push(`:root { --as-font-family: ${signature.fontFam}; }`);
   }
   if (signature.duration) {
     out.push(`${el} body, ${el} body * { transition-duration: ${signature.duration} !important; }`);
-    out.push(':root { --as-transition-duration: ' + signature.duration + '; }');
+    out.push(`:root { --as-transition-duration: ${signature.duration}; }`);
   }
   if (signature.timing) {
-    out.push(`${el} body, ${el} body * { transition-timing-function: ${signature.timing} !important; }`);
-    out.push(':root { --as-transition-timing: ' + signature.timing + '; }');
+    out.push(
+      `${el} body, ${el} body * { transition-timing-function: ${signature.timing} !important; }`,
+    );
+    out.push(`:root { --as-transition-timing: ${signature.timing}; }`);
   }
   // color (re-themed by role)
   if (signature.accent) {
@@ -428,21 +567,31 @@ function buildCraft(agentId, signature) {
     out.push(
       `${el} [class*="accent"], ${el} [class*="Accent"], ${el} [class*="primary"], ${el} [class*="Primary"], ${el} [class*="selected"], ${el} [class*="Selected"] { background-color: ${signature.accent} !important; }`,
     );
-    out.push(':root { --agentskin-accent: ' + signature.accent + '; --as-accent: ' + signature.accent + '; }');
+    out.push(
+      `:root { --agentskin-accent: ${signature.accent}; --as-accent: ${signature.accent}; }`,
+    );
   }
   if (signature.background) {
-    out.push(`${el} body, ${el} [class*="root"], ${el} [class*="Root"] { background-color: ${signature.background} !important; }`);
-    out.push(':root { --agentskin-background: ' + signature.background + '; --as-bg: ' + signature.background + '; }');
+    out.push(
+      `${el} body, ${el} [class*="root"], ${el} [class*="Root"] { background-color: ${signature.background} !important; }`,
+    );
+    out.push(
+      `:root { --agentskin-background: ${signature.background}; --as-bg: ${signature.background}; }`,
+    );
   }
   if (signature.foreground) {
     out.push(`${el} body, ${el} body * { color: ${signature.foreground} !important; }`);
-    out.push(':root { --agentskin-foreground: ' + signature.foreground + '; --as-fg: ' + signature.foreground + '; }');
+    out.push(
+      `:root { --agentskin-foreground: ${signature.foreground}; --as-fg: ${signature.foreground}; }`,
+    );
   }
   if (signature.surface) {
     out.push(
       `${el} [class*="panel"], ${el} [class*="Panel"], ${el} [class*="card"], ${el} [class*="Card"], ${el} [class*="surface"], ${el} [class*="Surface"] { background-color: ${signature.surface} !important; }`,
     );
-    out.push(':root { --agentskin-surface: ' + signature.surface + '; --as-surface: ' + signature.surface + '; }');
+    out.push(
+      `:root { --agentskin-surface: ${signature.surface}; --as-surface: ${signature.surface}; }`,
+    );
   }
   // gradient accent background (bakeable)
   if (signature.gradientAccent) {
@@ -450,8 +599,10 @@ function buildCraft(agentId, signature) {
       signature.accent && signature.background
         ? `linear-gradient(135deg, ${signature.accent} 0%, ${signature.background} 72%)`
         : 'linear-gradient(135deg, var(--agentskin-accent) 0%, var(--agentskin-bg) 72%)';
-    out.push(`${el} body, ${el} [class*="root"], ${el} [class*="Root"] { background-image: ${g} !important; }`);
-    out.push(':root { --as-grad: ' + g + '; }');
+    out.push(
+      `${el} body, ${el} [class*="root"], ${el} [class*="Root"] { background-image: ${g} !important; }`,
+    );
+    out.push(`:root { --as-grad: ${g}; }`);
   }
   // structure
   if (signature.borderWidth != null) {
@@ -470,14 +621,19 @@ function buildCraft(agentId, signature) {
 // ---------------------------------------------------------------------------
 
 function slugify(name) {
-  return (name || 'studio-theme')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'studio-theme';
+  return (
+    (name || 'studio-theme')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'studio-theme'
+  );
 }
 
 function buildManifest(request, agentId, palette) {
-  const id = (request.meta?.id && slugify(request.meta.id)) || slugify(request.meta?.name) || `${agentId}-studio-${new Date().toISOString().slice(0, 10)}`;
+  const id =
+    (request.meta?.id && slugify(request.meta.id)) ||
+    slugify(request.meta?.name) ||
+    `${agentId}-studio-${new Date().toISOString().slice(0, 10)}`;
   const name = request.meta?.name || 'Studio Theme';
   const author = request.meta?.author || 'AgentSkin Studio';
   const mode = palette.mode;
@@ -496,9 +652,7 @@ function buildManifest(request, agentId, palette) {
     targets: {
       [agentId]: {
         css: `assets/css/${agentId}.css`,
-        verification: verify
-          ? { required: [{ name: verify.name, any: verify.any }] }
-          : undefined,
+        verification: verify ? { required: [{ name: verify.name, any: verify.any }] } : undefined,
       },
     },
     colors: manifestColors(palette.tokens),
@@ -509,7 +663,15 @@ function buildManifest(request, agentId, palette) {
     unofficial: true,
     supportedAgents: [agentId],
     probe: {
-      tokenNamespaces: ['--agentskin-', '--cb-', '--vscode-', '--color-', '--dbx-', '--wb-', '--text-'],
+      tokenNamespaces: [
+        '--agentskin-',
+        '--cb-',
+        '--vscode-',
+        '--color-',
+        '--dbx-',
+        '--wb-',
+        '--text-',
+      ],
       styleContract: 'THEME_SPEC.md#探针样式契约',
     },
   };
@@ -531,7 +693,7 @@ function buildPreview(palette) {
     const g = Math.round(bg[1] + (surface[1] - bg[1]) * t);
     const b = Math.round(bg[2] + (surface[2] - bg[2]) * t);
     // accent rounded bar near bottom
-    const inBar = y > H - 70 && x > 40 && x < W - 40 && (y - (H - 70)) < 36;
+    const inBar = y > H - 70 && x > 40 && x < W - 40 && y - (H - 70) < 36;
     if (inBar) return accent;
     return [r, g, b];
   });
@@ -567,7 +729,11 @@ export async function buildThemePackage(request, outDir) {
   const pkgDir = path.join(outDir, `${manifest.id}.agentskin-theme`);
   fs.mkdirSync(path.join(pkgDir, 'assets', 'css'), { recursive: true });
 
-  fs.writeFileSync(path.join(pkgDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  fs.writeFileSync(
+    path.join(pkgDir, 'manifest.json'),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+    'utf8',
+  );
   fs.writeFileSync(path.join(pkgDir, 'assets', 'css', `${agentId}.css`), css, 'utf8');
   fs.writeFileSync(path.join(pkgDir, 'preview.png'), buildPreview(palette));
   fs.writeFileSync(path.join(pkgDir, 'icon.png'), buildIcon(palette));
@@ -579,7 +745,12 @@ export async function buildThemePackage(request, outDir) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const out = process.argv[2] || path.join(process.cwd(), 'theme-workbench', 'out');
   const dir = await buildThemePackage(
-    { agentId: 'workbuddy', meta: { name: 'CLI Test', author: 'tester' }, root: {}, signature: { radius: '14px', shadowLevel: 'md' } },
+    {
+      agentId: 'workbuddy',
+      meta: { name: 'CLI Test', author: 'tester' },
+      root: {},
+      signature: { radius: '14px', shadowLevel: 'md' },
+    },
     out,
   );
   console.log('wrote', dir);

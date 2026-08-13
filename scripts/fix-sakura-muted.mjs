@@ -13,8 +13,8 @@ const REPLACEMENTS = [
 
 const FILES = [
   join(ROOT, 'themes/sakura-pastel/manifest.json'),
-  ...['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'].map(
-    (a) => join(ROOT, `themes/sakura-pastel/assets/css/${a}.css`),
+  ...['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'].map((a) =>
+    join(ROOT, `themes/sakura-pastel/assets/css/${a}.css`),
   ),
 ];
 
@@ -34,7 +34,7 @@ for (const file of FILES) {
   if (fileCount > 0) {
     writeFileSync(file, out, 'utf8');
     totalReplacements += fileCount;
-    const rel = file.replace(ROOT + '/', '');
+    const rel = file.replace(`${ROOT}/`, '');
     console.log(`  ${rel}: ${fileCount} replacements`);
   }
 }

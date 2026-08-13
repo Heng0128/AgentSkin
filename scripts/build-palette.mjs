@@ -16,7 +16,7 @@
  * This replaces the 72-file generation step: engines/ provides the shared
  * structure, palette.css provides the per-theme color identity.
  */
-import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 // Note: readFileSync is already imported above; verify mode reuses it.
 import { join, resolve } from 'node:path';
 
@@ -33,7 +33,10 @@ function toRgbTriple(input) {
   }
   m = /^#([0-9a-f]{3})$/i.exec(raw);
   if (m) {
-    const full = m[1].split('').map((c) => c + c).join('');
+    const full = m[1]
+      .split('')
+      .map((c) => c + c)
+      .join('');
     const n = parseInt(full, 16);
     return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
   }
@@ -72,7 +75,7 @@ function buildPaletteCss(colors, themeId, meta = {}) {
     `  --agentskin-border-raw: ${toRgbTriple(c.border || c.accent)};`,
     `}`,
   ];
-  return lines.join('\n') + '\n';
+  return `${lines.join('\n')}\n`;
 }
 
 function loadManifest(themeDir) {
@@ -136,7 +139,9 @@ function processTheme(themeId) {
     const css = buildPaletteCss(palette.colors, themeId, meta);
     const outPath = join(themeDir, paletteFileName(palette.id));
     writeFileSync(outPath, css, 'utf8');
-    console.log(`[build-palette] ${themeId}/${palette.id} → ${paletteFileName(palette.id)} (${css.length} bytes)`);
+    console.log(
+      `[build-palette] ${themeId}/${palette.id} → ${paletteFileName(palette.id)} (${css.length} bytes)`,
+    );
   }
   return true;
 }
@@ -160,13 +165,17 @@ function verifyTheme(themeId) {
     const fileName = paletteFileName(palette.id);
     const outPath = join(themeDir, fileName);
     if (!existsSync(outPath)) {
-      console.error(`[build-palette:verify] ${themeId}: ${fileName} MISSING — run 'npm run generate:palette'`);
+      console.error(
+        `[build-palette:verify] ${themeId}: ${fileName} MISSING — run 'npm run generate:palette'`,
+      );
       ok = false;
       continue;
     }
     const actual = readFileSync(outPath, 'utf8');
     if (actual !== expected) {
-      console.error(`[build-palette:verify] ${themeId}: ${fileName} STALE — run 'npm run generate:palette'`);
+      console.error(
+        `[build-palette:verify] ${themeId}: ${fileName} STALE — run 'npm run generate:palette'`,
+      );
       ok = false;
     }
   }
@@ -193,11 +202,13 @@ if (verifyMode) {
   console.log(`[build-palette:verify] all ${dirs.length} palette(s) up-to-date.`);
 } else if (themeArg === 'all') {
   const dirs = readdirSync(THEMES_DIR, { withFileTypes: true })
-    .filter(d => d.isDirectory() && !d.name.startsWith('_') && !d.name.startsWith('.'))
-    .map(d => d.name);
-  let ok = 0, fail = 0;
+    .filter((d) => d.isDirectory() && !d.name.startsWith('_') && !d.name.startsWith('.'))
+    .map((d) => d.name);
+  let ok = 0,
+    fail = 0;
   for (const id of dirs) {
-    if (processTheme(id)) ok++; else fail++;
+    if (processTheme(id)) ok++;
+    else fail++;
   }
   console.log(`\n[build-palette] done: ${ok} ok, ${fail} failed, ${dirs.length} total`);
 } else {

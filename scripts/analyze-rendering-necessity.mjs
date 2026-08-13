@@ -1,13 +1,13 @@
 /**
  * Rendering Necessity Analyzer
- * 
+ *
  * Reads each agent's full-extract.json, recursively traverses the DOM tree,
  * and classifies nodes into categories:
  *   - coreRendered: visible content nodes
  *   - hiddenNotRendered: display:none, opacity:0, hidden classes
  *   - decorativeOnly: svg/path/g/defs/use/symbol
  *   - placeholderSkeleton: skeleton/shimmer/loading/placeholder/pulse classes
- * 
+ *
  * Output: agents-raw-data/_rendering-analysis.json
  */
 
@@ -25,13 +25,15 @@ const AGENTS = ['codex', 'doubao', 'traework', 'qoderwork', 'workbuddy', 'zcode'
 // ── Classification Constants ────────────────────────────────────────────────
 
 // Must match "hidden" as a standalone class token, not as part of "overflow-hidden" etc.
-const HIDDEN_CLASSES_RE = /(?:^|\s)(?:hidden|invisible|sr-only|a11y-hidden|a11y-hidden-group)(?:\s|$)/i;
+const HIDDEN_CLASSES_RE =
+  /(?:^|\s)(?:hidden|invisible|sr-only|a11y-hidden|a11y-hidden-group)(?:\s|$)/i;
 const SKELETON_CLASSES_RE = /\b(skeleton|shimmer|loading|placeholder|pulse)\b/i;
 const ANIMATING_CLASSES_RE = /\b(transitioning|animating)\b/i;
 const OFFSCREEN_CLASSES_RE = /\b(offscreen|skip-to-content)\b/i;
 const DECORATIVE_TAG_RE = /^(svg|path|g|defs|use|symbol)$/;
 const INTERACTIVE_ROLES_RE = /^(menu|listbox|dialog|tooltip|popover)$/;
-const CONTENT_TAGS_RE = /^(h[1-6]|p|a|button|input|textarea|select|label|img|video|audio|canvas|table|ul|ol|li|pre|code|blockquote|form|fieldset|figcaption|figure|article|section|main|header|footer|nav|aside|details|summary|meter|progress)$/;
+const _CONTENT_TAGS_RE =
+  /^(h[1-6]|p|a|button|input|textarea|select|label|img|video|audio|canvas|table|ul|ol|li|pre|code|blockquote|form|fieldset|figcaption|figure|article|section|main|header|footer|nav|aside|details|summary|meter|progress)$/;
 
 // ── Node Classification ─────────────────────────────────────────────────────
 
@@ -163,9 +165,8 @@ function analyzeTree(rootNode) {
 
   walk(rootNode);
 
-  stats.renderEfficiency = stats.totalNodes > 0
-    ? parseFloat((stats.coreRendered / stats.totalNodes).toFixed(3))
-    : 0;
+  stats.renderEfficiency =
+    stats.totalNodes > 0 ? parseFloat((stats.coreRendered / stats.totalNodes).toFixed(3)) : 0;
 
   return stats;
 }
@@ -232,8 +233,8 @@ for (const agent of AGENTS) {
 
   console.log(
     `  total=${stats.totalNodes} core=${stats.coreRendered} ` +
-    `hidden=${stats.hiddenNotRendered} decorative=${stats.decorativeOnly} ` +
-    `skeleton=${stats.placeholderSkeleton} efficiency=${stats.renderEfficiency}`
+      `hidden=${stats.hiddenNotRendered} decorative=${stats.decorativeOnly} ` +
+      `skeleton=${stats.placeholderSkeleton} efficiency=${stats.renderEfficiency}`,
   );
 }
 

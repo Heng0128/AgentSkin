@@ -1,8 +1,9 @@
 // CDP Probe Screenshot v2 — Use browser-level sessions for reliability
-import { writeFileSync, mkdirSync, existsSync, unlinkSync, readFileSync } from 'node:fs';
+
+import { execSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -15,12 +16,16 @@ const AGENTS = [
   { id: 'zcode', port: 65142, name: 'ZCode' },
   { id: 'codex', port: 58360, name: 'Codex' },
 ];
-const TRAE = { id: 'trae', name: 'TRAE SOLO CN' };
+const _TRAE = { id: 'trae', name: 'TRAE SOLO CN' };
 
 if (!existsSync(OUTPUT_DIR)) mkdirSync(OUTPUT_DIR, { recursive: true });
 
 class CDP {
-  constructor(ws) { this.ws = ws; this.id = 0; this.pending = new Map(); }
+  constructor(ws) {
+    this.ws = ws;
+    this.id = 0;
+    this.pending = new Map();
+  }
   static async connect(url) {
     const c = new CDP(new WebSocket(url));
     await new Promise((res, rej) => {
@@ -43,10 +48,19 @@ class CDP {
     return new Promise((res, rej) => {
       this.pending.set(id, { res, rej });
       this.ws.send(JSON.stringify({ id, method, params }));
-      setTimeout(() => this.pending.has(id) && (this.pending.delete(id), rej(new Error('timeout:' + method))), 15000);
+      setTimeout(() => {
+        if (this.pending.has(id)) {
+          this.pending.delete(id);
+          rej(new Error(`timeout:${method}`));
+        }
+      }, 15000);
     });
   }
-  close() { try { this.ws.close() } catch {} }
+  close() {
+    try {
+      this.ws.close();
+    } catch {}
+  }
 }
 
 async function probeViaCDP(agent) {
@@ -64,7 +78,12 @@ async function probeViaCDP(agent) {
     // Get targets
     const tResp = await fetch(`http://127.0.0.1:${agent.port}/json`);
     const targets = await tResp.json();
-    const pages = targets.filter(t => t.type === 'page' && !/^(devtools|chrome|about:)$/i.test(t.url || '') && t.webSocketDebuggerUrl);
+    const pages = targets.filter(
+      (t) =>
+        t.type === 'page' &&
+        !/^(devtools|chrome|about:)$/i.test(t.url || '') &&
+        t.webSocketDebuggerUrl,
+    );
 
     if (!pages.length) throw new Error('No pages');
 
@@ -72,7 +91,10 @@ async function probeViaCDP(agent) {
     const page = pages[0];
 
     // Attach to target via browser-level (creating a session)
-    const { sessionId } = await browser.send('Target.attachToTarget', { targetId: page.id, flatten: true });
+    const { sessionId: _sessionId } = await browser.send('Target.attachToTarget', {
+      targetId: page.id,
+      flatten: true,
+    });
     browser.close();
 
     // Connect to the page's own WS (simpler, more reliable)
@@ -84,10 +106,12 @@ async function probeViaCDP(agent) {
 
     // Navigate to force a fresh paint (optional — helps if page is idle)
     // Just capture current state
-    await new Promise(res => setTimeout(res, 200));
+    await new Promise((res) => setTimeout(res, 200));
 
     const shot = await pageClient.send('Page.captureScreenshot', {
-      format: 'png', fromSurface: true, captureBeyondViewport: false,
+      format: 'png',
+      fromSurface: true,
+      captureBeyondViewport: false,
     });
     pageClient.close();
 
@@ -100,7 +124,9 @@ async function probeViaCDP(agent) {
     } else {
       throw new Error('No data');
     }
-  } catch (e) { r.error = e.message; }
+  } catch (e) {
+    r.error = e.message;
+  }
   return r;
 }
 
@@ -142,40 +168,59 @@ public static class WinCap {
     const psFile = join(OUTPUT_DIR, '_trae.ps1');
     writeFileSync(psFile, ps);
     try {
-      execSync(`powershell -NoProfile -ExecutionPolicy Bypass -File "${psFile}"`, { timeout: 15000 });
+      execSync(`powershell -NoProfile -ExecutionPolicy Bypass -File "${psFile}"`, {
+        timeout: 15000,
+      });
     } finally {
-      try { unlinkSync(psFile); } catch { /* ignore cleanup errors */ }
+      try {
+        unlinkSync(psFile);
+      } catch {
+        /* ignore cleanup errors */
+      }
     }
 
-    const result = (existsSync(join(OUTPUT_DIR, '_result.txt')) ? readFileSync(join(OUTPUT_DIR, '_result.txt'), 'utf8') : '').trim();
+    const result = (
+      existsSync(join(OUTPUT_DIR, '_result.txt'))
+        ? readFileSync(join(OUTPUT_DIR, '_result.txt'), 'utf8')
+        : ''
+    ).trim();
     if (existsSync(join(OUTPUT_DIR, '_result.txt'))) unlinkSync(join(OUTPUT_DIR, '_result.txt'));
 
     if (result.startsWith('OK')) {
       // Rename to standard name
       const src = join(OUTPUT_DIR, 'traae.png');
       const dst = join(OUTPUT_DIR, 'trae.png');
-      if (existsSync(src)) { writeFileSync(dst, readFileSync(src)); unlinkSync(src); }
+      if (existsSync(src)) {
+        writeFileSync(dst, readFileSync(src));
+        unlinkSync(src);
+      }
       r.file = dst;
       r.ok = true;
     } else {
       r.error = result;
     }
-  } catch (e) { r.error = e.message; }
+  } catch (e) {
+    r.error = e.message;
+  }
   return r;
 }
 
 // Main
 console.log('=== Agent CDP Probe v2 ===\n');
 const results = await Promise.allSettled([
-  ...AGENTS.map(a => probeViaCDP(a).then(r => {
-    console.log(`${r.ok ? '✅' : '❌'} ${r.name || a.name} ${r.ok ? '→ ' + r.file.split('\\').pop() : '→ ' + r.error}`);
-    return r;
-  })),
-  captureTRAE().then(r => {
-    console.log(`${r.ok ? '✅' : '❌'} TRAE SOLO CN ${r.ok ? '→ trae.png' : '→ ' + r.error}`);
+  ...AGENTS.map((a) =>
+    probeViaCDP(a).then((r) => {
+      console.log(
+        `${r.ok ? '✅' : '❌'} ${r.name || a.name} ${r.ok ? `→ ${r.file.split('\\').pop()}` : `→ ${r.error}`}`,
+      );
+      return r;
+    }),
+  ),
+  captureTRAE().then((r) => {
+    console.log(`${r.ok ? '✅' : '❌'} TRAE SOLO CN ${r.ok ? '→ trae.png' : `→ ${r.error}`}`);
     return r;
   }),
 ]);
 
-const okCount = results.filter(r => r.status === 'fulfilled' && r.value.ok).length;
+const okCount = results.filter((r) => r.status === 'fulfilled' && r.value.ok).length;
 console.log(`\n=== Done: ${okCount}/6 captured ===`);

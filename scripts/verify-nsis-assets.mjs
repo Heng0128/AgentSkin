@@ -11,7 +11,7 @@
 //
 // Run:  node scripts/verify-nsis-assets.mjs
 
-import { readFile, access } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,7 +38,9 @@ for (const e of EXPECT) {
   try {
     await access(p);
   } catch {
-    console.error(`[verify-nsis-assets] MISSING: ${path.relative(ROOT, p)} — run "npm run icons:nsis" first`);
+    console.error(
+      `[verify-nsis-assets] MISSING: ${path.relative(ROOT, p)} — run "npm run icons:nsis" first`,
+    );
     failed = true;
     continue;
   }
@@ -50,7 +52,9 @@ for (const e of EXPECT) {
     continue;
   }
   if (size.w !== e.w || size.h !== e.h) {
-    console.error(`[verify-nsis-assets] SIZE MISMATCH ${e.name}.bmp: expected ${e.w}x${e.h}, got ${size.w}x${size.h}`);
+    console.error(
+      `[verify-nsis-assets] SIZE MISMATCH ${e.name}.bmp: expected ${e.w}x${e.h}, got ${size.w}x${size.h}`,
+    );
     failed = true;
     continue;
   }
@@ -61,7 +65,9 @@ try {
   await access(BRAND_NSH);
   console.log(`[verify-nsis-assets] ok ${path.relative(ROOT, BRAND_NSH)}`);
 } catch {
-  console.error(`[verify-nsis-assets] MISSING: ${path.relative(ROOT, BRAND_NSH)} — run "npm run icons:nsis" first`);
+  console.error(
+    `[verify-nsis-assets] MISSING: ${path.relative(ROOT, BRAND_NSH)} — run "npm run icons:nsis" first`,
+  );
   failed = true;
 }
 

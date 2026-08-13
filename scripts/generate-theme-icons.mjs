@@ -4,7 +4,6 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-
 // ---------- minimal PNG encoder (RGBA, colortype 6) ----------
 import zlib from 'node:zlib';
 
@@ -25,32 +24,56 @@ function crc32(buf) {
 }
 
 function chunk(type, data) {
-  const len = Buffer.alloc(4); len.writeUInt32BE(data.length, 0);
+  const len = Buffer.alloc(4);
+  len.writeUInt32BE(data.length, 0);
   const typeBuf = Buffer.from(type, 'ascii');
   const combined = Buffer.concat([typeBuf, data]);
-  const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(combined), 0);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(combined), 0);
   return Buffer.concat([len, typeBuf, data, crc]);
 }
 
 function makePng(width, height, rgba) {
   const sig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0); ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; ihdr[9] = 6; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = 6;
+  ihdr[10] = 0;
+  ihdr[11] = 0;
+  ihdr[12] = 0;
   const raw = Buffer.alloc((width * 4 + 1) * height);
   for (let y = 0; y < height; y++) {
     raw[y * (width * 4 + 1)] = 0;
     rgba(y, raw.subarray(y * (width * 4 + 1) + 1, y * (width * 4 + 1) + 1 + width * 4));
   }
   const idat = zlib.deflateSync(raw);
-  return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', idat), chunk('IEND', Buffer.alloc(0))]);
+  return Buffer.concat([
+    sig,
+    chunk('IHDR', ihdr),
+    chunk('IDAT', idat),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
 }
 
-function lerp(a, b, t) { return a + (b - a) * t; }
-function mix(c1, c2, t) {
-  return [Math.round(lerp(c1[0], c2[0], t)), Math.round(lerp(c1[1], c2[1], t)), Math.round(lerp(c1[2], c2[2], t)), 255];
+function lerp(a, b, t) {
+  return a + (b - a) * t;
 }
-function setPx(buf, i, c) { buf[i] = c[0]; buf[i + 1] = c[1]; buf[i + 2] = c[2]; buf[i + 3] = c[3]; }
+function mix(c1, c2, t) {
+  return [
+    Math.round(lerp(c1[0], c2[0], t)),
+    Math.round(lerp(c1[1], c2[1], t)),
+    Math.round(lerp(c1[2], c2[2], t)),
+    255,
+  ];
+}
+function setPx(buf, i, c) {
+  buf[i] = c[0];
+  buf[i + 1] = c[1];
+  buf[i + 2] = c[2];
+  buf[i + 3] = c[3];
+}
 
 // ---------- Icon generators ----------
 
@@ -72,11 +95,13 @@ function generateIcon(size, drawFn) {
 
 // Arctic White: geometric "A" shape in blue on transparent bg
 function arcticWhiteIcon(y, row, size) {
-  const cx = size / 2, cy = size / 2;
+  const cx = size / 2,
+    cy = size / 2;
   const r = size * 0.38; // main radius
   for (let x = 0; x < size; x++) {
     const i = x * 4;
-    const dx = (x - cx) / r, dy = (y - cy) / r;
+    const dx = (x - cx) / r,
+      dy = (y - cy) / r;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     // Draw a stylized "A" shape
@@ -105,11 +130,13 @@ function arcticWhiteIcon(y, row, size) {
 
 // Cyber Neon: glowing cyan/magenta circle on transparent bg
 function cyberNeonIcon(y, row, size) {
-  const cx = size / 2, cy = size / 2;
+  const cx = size / 2,
+    cy = size / 2;
   const r = size * 0.35;
   for (let x = 0; x < size; x++) {
     const i = x * 4;
-    const dx = (x - cx) / r, dy = (y - cy) / r;
+    const dx = (x - cx) / r,
+      dy = (y - cy) / r;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist < 0.95) {
@@ -132,11 +159,13 @@ function cyberNeonIcon(y, row, size) {
 
 // Sakura: soft pink circle with purple accent on transparent bg
 function sakuraIcon(y, row, size) {
-  const cx = size / 2, cy = size / 2;
+  const cx = size / 2,
+    cy = size / 2;
   const r = size * 0.35;
   for (let x = 0; x < size; x++) {
     const i = x * 4;
-    const dx = (x - cx) / r, dy = (y - cy) / r;
+    const dx = (x - cx) / r,
+      dy = (y - cy) / r;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist < 0.9) {

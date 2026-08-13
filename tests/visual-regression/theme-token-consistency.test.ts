@@ -447,7 +447,9 @@ describe('required agent CSS coverage', () => {
       for (const agent of AGENTS) {
         expect(t.targets[agent], `${t.id} missing target for agent "${agent}"`).toBeDefined();
         const cssPath = join(THEMES_DIR, t.id, t.targets[agent].css);
-        expect(existsSync(cssPath), `${t.id}/${agent}: CSS file not found at ${cssPath}`).toBe(true);
+        expect(existsSync(cssPath), `${t.id}/${agent}: CSS file not found at ${cssPath}`).toBe(
+          true,
+        );
       }
     });
   }

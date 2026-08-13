@@ -36,11 +36,7 @@ async function compose(baseFile, outFile, overlay) {
 
 async function main() {
   // Windows coloured tray icon: 32x32, emerald dot with a dark contrast ring.
-  await compose(
-    'tray-icon.png',
-    'tray-icon-active.png',
-    dotSvg(32, 24, 24, 8, 5.5, EMERALD, RING),
-  );
+  await compose('tray-icon.png', 'tray-icon-active.png', dotSvg(32, 24, 24, 8, 5.5, EMERALD, RING));
 
   // macOS template images are alpha masks (system-tinted), so the badge is a
   // plain monochrome dot in the free bottom-right corner.

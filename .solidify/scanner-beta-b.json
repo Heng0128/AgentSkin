@@ -9,24 +9,15 @@
       "DETECT (running check, wired to status)",
       "EXPORT_THEME (package builder)"
     ],
-    "missingStates": [
-      "CDP_EXTRACT (live token extraction from running agent via CDP)"
-    ],
+    "missingStates": ["CDP_EXTRACT (live token extraction from running agent via CDP)"],
     "userImpact": "Visual Analyzer's core CDP extraction flow is completely non-functional. User sees a hang and opaque timeout instead of a clear 'not implemented' message. The entire Scanner->Palette->Theme pipeline cannot start from a live agent.",
     "severity": "critical"
   },
   {
     "scenario": "User initiates a Visual Analysis extraction but receives NO progress events on VISUAL_ANALYSIS_STATUS. The channel is correctly declared SEND_ONLY and no ipcMain.handle is registered, but the main process never calls webContents.send(VISUAL_ANALYSIS_STATUS, ...) anywhere. The comment in visual-analyzer-ipc.ts describes the intended push pattern but nothing implements it.",
     "componentPath": "src/main/ipc/visual-analyzer-ipc.ts",
-    "supportedStates": [
-      "LIST",
-      "GET",
-      "DETECT",
-      "EXPORT_THEME (all request/response)"
-    ],
-    "missingStates": [
-      "EXTRACTION_PROGRESS (pushed events during multi-step extract)"
-    ],
+    "supportedStates": ["LIST", "GET", "DETECT", "EXPORT_THEME (all request/response)"],
+    "missingStates": ["EXTRACTION_PROGRESS (pushed events during multi-step extract)"],
     "userImpact": "During a long-running extraction, the UI shows an indeterminate spinner with no step-level feedback. User cannot tell if the process is working or stalled, violating the progress-must-hook-to-real-cost principle.",
     "severity": "critical"
   },
@@ -38,9 +29,7 @@
       "isRefreshing (spinner)",
       "lastStatusAt (timestamp)"
     ],
-    "missingStates": [
-      "error (last refresh failure message)"
-    ],
+    "missingStates": ["error (last refresh failure message)"],
     "userImpact": "A global error state lives in a global store but has no global UI surface. Users on non-Workspace pages get no indication that agent detection is failing.",
     "severity": "major"
   },
@@ -61,10 +50,7 @@
   {
     "scenario": "User applies a per-agent wallpaper. The preference is persisted first (setAgentWallpaper), then injection is attempted (applyAgentWallpaper). If injection fails, the function returns {ok:false} but the preference was already persisted with enabled:true. The UI shows the wallpaper as active for that agent even though nothing was injected.",
     "componentPath": "src/ui/stores/wallpaperStore.ts",
-    "supportedStates": [
-      "setAgentWallpaper (persist)",
-      "applyAgentWallpaper (inject)"
-    ],
+    "supportedStates": ["setAgentWallpaper (persist)", "applyAgentWallpaper (inject)"],
     "missingStates": [
       "rollback_preference_on_inject_failure (revert persisted state when injection fails)"
     ],
@@ -74,10 +60,7 @@
   {
     "scenario": "User clicks 'Apply to all agents' in the detail panel. The runAll function fires up to 6 concurrent apply workers, but run() only adds to pendingApps on start and removes on finish. The display shows pendingApps.size/eligibleApps.length which counts how many have STARTED, not completed. All 6 show as pending within milliseconds while actual applies take seconds.",
     "componentPath": "src/ui/components/detail-panel.tsx",
-    "supportedStates": [
-      "per-agent pending state (set per-agent click)",
-      "global pendingAll flag"
-    ],
+    "supportedStates": ["per-agent pending state (set per-agent click)", "global pendingAll flag"],
     "missingStates": [
       "per-agent completion tracking (done count)",
       "per-agent error state (which agents failed)"
@@ -88,13 +71,8 @@
   {
     "scenario": "User creates a new environment preset with 'Apply Now'. createEnvironment calls applyToApp for the theme, then calls api.applyWallpaperToAgent(wallpaperId, agentId). If the wallpaper apply fails (wp.ok === false), the result is silently ignored - no error check, no notification.",
     "componentPath": "src/ui/stores/environmentStore.ts",
-    "supportedStates": [
-      "theme apply (with error check)",
-      "preset persistence (with error check)"
-    ],
-    "missingStates": [
-      "wallpaper_apply_error_check (verify wp.ok and report failure)"
-    ],
+    "supportedStates": ["theme apply (with error check)", "preset persistence (with error check)"],
+    "missingStates": ["wallpaper_apply_error_check (verify wp.ok and report failure)"],
     "userImpact": "Environment creation reports success even though the wallpaper half failed. The user sees the new environment card but the wallpaper is not applied. No notification surfaces the partial failure.",
     "severity": "major"
   },
@@ -132,9 +110,7 @@
       "per-package install (sequential await)",
       "per-package error catch (log + continue)"
     ],
-    "missingStates": [
-      "batch_progress_callback (report completed/total during seeding)"
-    ],
+    "missingStates": ["batch_progress_callback (report completed/total during seeding)"],
     "userImpact": "Boot progress stalls at the seeding phase with no sub-step granularity. On slow disks or first-run with many themes, the user sees a static spinner and may think the app hung.",
     "severity": "minor"
   },
@@ -167,11 +143,7 @@
   {
     "scenario": "User runs Visual Analyzer EXPORT_THEME with a valid palette. The handler dynamically imports scripts/build-theme-package.mjs via pathToFileURL(app.getAppPath()). In a packaged Electron app, scripts/ is inside asar (read-only). The dynamic import of a .mjs from within asar may fail, causing EXPORT_THEME to return {ok:false} with no error detail.",
     "componentPath": "src/main/ipc/visual-analyzer-ipc.ts",
-    "supportedStates": [
-      "empty palette refusal",
-      "non-object refusal",
-      "dynamic import attempt"
-    ],
+    "supportedStates": ["empty palette refusal", "non-object refusal", "dynamic import attempt"],
     "missingStates": [
       "asar_path_verification (verify build-theme-package.mjs is accessible in packaged context)",
       "import_error_detail (surface why dynamic import failed)"
@@ -182,9 +154,7 @@
   {
     "scenario": "User deletes a wallpaper that is currently assigned as a per-agent wallpaper. deleteWallpaper correctly clears the global selectedId, but does NOT clear agentWallpapers[appId] entries pointing to the deleted wallpaper. Agents still show enabled in settings but injection silently fails on next apply.",
     "componentPath": "src/ui/stores/wallpaperStore.ts",
-    "supportedStates": [
-      "global selection cleanup (selectedId cleared on delete)"
-    ],
+    "supportedStates": ["global selection cleanup (selectedId cleared on delete)"],
     "missingStates": [
       "per-agent cleanup (clear agentWallpapers entries pointing to deleted wallpaper)"
     ],
@@ -194,9 +164,7 @@
   {
     "scenario": "User selects an alternative color scheme in the DetailPanel's ColorSchemePicker. The schemeId is stored in local useState and used when Apply is clicked. If the user switches schemes, navigates away (unmounts DetailPanel), and returns, the schemeId is lost (reset by the selection-change useEffect). The user must re-select their preferred scheme every time they view the theme.",
     "componentPath": "src/ui/components/detail-panel.tsx",
-    "supportedStates": [
-      "scheme selection (local useState, reset on theme switch)"
-    ],
+    "supportedStates": ["scheme selection (local useState, reset on theme switch)"],
     "missingStates": [
       "scheme persistence across navigation (restore last-selected scheme per theme)"
     ],

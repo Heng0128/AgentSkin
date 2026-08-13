@@ -2,10 +2,10 @@
 // Fallback: Windows GDI for non-CDP agents (TRAE)
 // Usage: node scripts/cdp-probe-screenshot.mjs
 
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { execSync } from 'node:child_process';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -13,15 +13,40 @@ const OUTPUT_DIR = join(ROOT, 'assets', 'probe-shots');
 
 // Agent endpoints (browser-level CDP ports verified via /json/version)
 const AGENTS = [
-  { id: 'workbuddy',  port: 52743, name: 'WorkBuddy',    wsPath: '/devtools/browser/39562fe2-8212-4135-9d26-d1cfe7c17a5c' },
-  { id: 'doubao',     port: 61607, name: 'Doubao',       wsPath: '/devtools/browser/f4dc9f9a-12d7-4be5-81b1-62cd09a9a511' },
-  { id: 'qoderwork',  port: 61996, name: 'QoderWork CN', wsPath: '/devtools/browser/df2c19c6-638a-43b9-b4dd-02e801ea9ca7' },
-  { id: 'zcode',      port: 65142, name: 'ZCode',        wsPath: '/devtools/browser/33592e93-be76-41a2-bf64-665139cafe58' },
-  { id: 'codex',      port: 58360, name: 'Codex',         wsPath: '/devtools/browser/d5a2c72f-e3ef-4d98-a499-54e8997dbad3' },
+  {
+    id: 'workbuddy',
+    port: 52743,
+    name: 'WorkBuddy',
+    wsPath: '/devtools/browser/39562fe2-8212-4135-9d26-d1cfe7c17a5c',
+  },
+  {
+    id: 'doubao',
+    port: 61607,
+    name: 'Doubao',
+    wsPath: '/devtools/browser/f4dc9f9a-12d7-4be5-81b1-62cd09a9a511',
+  },
+  {
+    id: 'qoderwork',
+    port: 61996,
+    name: 'QoderWork CN',
+    wsPath: '/devtools/browser/df2c19c6-638a-43b9-b4dd-02e801ea9ca7',
+  },
+  {
+    id: 'zcode',
+    port: 65142,
+    name: 'ZCode',
+    wsPath: '/devtools/browser/33592e93-be76-41a2-bf64-665139cafe58',
+  },
+  {
+    id: 'codex',
+    port: 58360,
+    name: 'Codex',
+    wsPath: '/devtools/browser/d5a2c72f-e3ef-4d98-a499-54e8997dbad3',
+  },
 ];
 
 // TRAE: no standard CDP — use Windows GDI fallback
-const TRAE = { id: 'trae', name: 'TRAE SOLO CN', windowTitle: 'TRAE SOLO CN' };
+const _TRAE = { id: 'trae', name: 'TRAE SOLO CN', windowTitle: 'TRAE SOLO CN' };
 
 if (!existsSync(OUTPUT_DIR)) {
   mkdirSync(OUTPUT_DIR, { recursive: true });
@@ -44,22 +69,8 @@ class CdpClient {
     return new Promise((resolve, reject) => {
       this.ws = new WebSocket(this.wsUrl);
       this.ws.addEventListener('open', resolve, { once: true });
-      this.ws.addEventListener('error', (e) => reject(new Error('WS error')), { once: true });
+      this.ws.addEventListener('error', (_e) => reject(new Error('WS error')), { once: true });
     });
-  }
-
-  #onMessage(raw) {
-    let msg;
-    try { msg = JSON.parse(raw); } catch { return; }
-    if (msg.id !== undefined && this.pending.has(msg.id)) {
-      const { resolve, reject } = this.pending.get(msg.id);
-      this.pending.delete(msg.id);
-      if (msg.error) reject(new Error(JSON.stringify(msg.error)));
-      else resolve(msg.result);
-    } else if (msg.method) {
-      const handlers = this.eventHandlers.get(msg.method);
-      if (handlers) for (const h of handlers) h(msg.params);
-    }
   }
 
   send(method, params = {}) {
@@ -76,7 +87,9 @@ class CdpClient {
     });
   }
 
-  close() { if (this.ws) this.ws.close(); }
+  close() {
+    if (this.ws) this.ws.close();
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -84,7 +97,14 @@ class CdpClient {
 // ---------------------------------------------------------------------------
 
 async function probeAgent(agent) {
-  const result = { id: agent.id, name: agent.name, ok: false, error: null, screenshot: null, target: null };
+  const result = {
+    id: agent.id,
+    name: agent.name,
+    ok: false,
+    error: null,
+    screenshot: null,
+    target: null,
+  };
 
   try {
     // Connect to browser-level CDP
@@ -97,12 +117,13 @@ async function probeAgent(agent) {
     const targets = await targetsResp.json();
 
     // Find the best page target
-    const pageTargets = targets.filter(t =>
-      t.type === 'page' &&
-      !/^(devtools|chrome-extension|about):/i.test(t.url || '') &&
-      !/DevTools/i.test(t.title || '')
+    const pageTargets = targets.filter(
+      (t) =>
+        t.type === 'page' &&
+        !/^(devtools|chrome-extension|about):/i.test(t.url || '') &&
+        !/DevTools/i.test(t.title || ''),
     );
-    let target = pageTargets[0] || targets.find(t => t.type === 'page');
+    const target = pageTargets[0] || targets.find((t) => t.type === 'page');
     if (!target) throw new Error('No page target');
 
     result.target = { title: target.title?.slice(0, 80), url: target.url?.slice(0, 80) };
@@ -115,12 +136,17 @@ async function probeAgent(agent) {
 
     await page.send('Page.enable');
     await page.send('Emulation.setDeviceMetricsOverride', {
-      width: 1280, height: 800, deviceScaleFactor: 1, mobile: false,
+      width: 1280,
+      height: 800,
+      deviceScaleFactor: 1,
+      mobile: false,
     });
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 400));
 
     const screenshot = await page.send('Page.captureScreenshot', {
-      format: 'png', fromSurface: true, captureBeyondViewport: false,
+      format: 'png',
+      fromSurface: true,
+      captureBeyondViewport: false,
     });
     page.close();
 
@@ -188,7 +214,7 @@ Write-Output "OK ${w}x${h}"
       timeout: 10000,
       encoding: 'utf8',
     });
-    import('node:fs').then(fs => fs.unlinkSync(psPath));
+    import('node:fs').then((fs) => fs.unlinkSync(psPath));
 
     if (output.includes('OK')) {
       const filePath = join(OUTPUT_DIR, 'trae.png');
@@ -209,17 +235,26 @@ Write-Output "OK ${w}x${h}"
 
 console.log('=== Agent CDP Probe & Screenshot ===\n');
 
-const cdpResults = await Promise.allSettled(AGENTS.map(a =>
-  probeAgent(a).then(r => {
-    console.log(`${r.ok ? '✅' : '❌'} ${r.name.padEnd(14)} port=${a.port} ${r.ok ? '→ ' + r.id + '.png' : '→ ' + r.error}`);
-    return r;
-  })
-));
+const cdpResults = await Promise.allSettled(
+  AGENTS.map((a) =>
+    probeAgent(a).then((r) => {
+      console.log(
+        `${r.ok ? '✅' : '❌'} ${r.name.padEnd(14)} port=${a.port} ${r.ok ? `→ ${r.id}.png` : `→ ${r.error}`}`,
+      );
+      return r;
+    }),
+  ),
+);
 
 console.log('\n--- TRAE SOLO CN (WinAPI fallback) ---');
 const traeResult = await captureTraeWindows();
-console.log(`${traeResult.ok ? '✅' : '❌'} TRAE SOLO CN ${traeResult.ok ? '→ trae.png' : '→ ' + traeResult.error}\n`);
+console.log(
+  `${traeResult.ok ? '✅' : '❌'} TRAE SOLO CN ${traeResult.ok ? '→ trae.png' : `→ ${traeResult.error}`}\n`,
+);
 
-const succeeded = [...cdpResults.filter(r => r.status === 'fulfilled' && r.value.ok), ...(traeResult.ok ? [{ value: traeResult }] : [])];
+const succeeded = [
+  ...cdpResults.filter((r) => r.status === 'fulfilled' && r.value.ok),
+  ...(traeResult.ok ? [{ value: traeResult }] : []),
+];
 console.log(`=== Done: ${succeeded.length}/6 windows captured ===`);
 console.log(`Output: ${OUTPUT_DIR}/`);

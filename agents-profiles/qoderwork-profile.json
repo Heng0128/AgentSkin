@@ -50,429 +50,297 @@
         {
           "color": "#8ee5a1",
           "count": 3,
-          "vars": [
-            "--color-primary",
-            "--color-link",
-            "--color-success-hover"
-          ]
+          "vars": ["--color-primary", "--color-link", "--color-success-hover"]
         },
         {
           "color": "#fff",
           "count": 3,
-          "vars": [
-            "--color-bg-container",
-            "--color-bg-base",
-            "--color-black-opacity"
-          ]
+          "vars": ["--color-bg-container", "--color-bg-base", "--color-black-opacity"]
         },
         {
           "color": "#fdfdfd",
           "count": 2,
-          "vars": [
-            "--color-text-on-primary",
-            "--color-bg-layout"
-          ]
+          "vars": ["--color-text-on-primary", "--color-bg-layout"]
         },
         {
           "color": "#f1faf3",
           "count": 2,
-          "vars": [
-            "--color-primary-bg",
-            "--color-success-bg"
-          ]
+          "vars": ["--color-primary-bg", "--color-success-bg"]
         },
         {
           "color": "#e6f7ec",
           "count": 2,
-          "vars": [
-            "--color-primary-bg-hover",
-            "--color-success-bg-hover"
-          ]
+          "vars": ["--color-primary-bg-hover", "--color-success-bg-hover"]
         },
         {
           "color": "#cdefd9",
           "count": 2,
-          "vars": [
-            "--color-primary-border",
-            "--color-success-border"
-          ]
+          "vars": ["--color-primary-border", "--color-success-border"]
         },
         {
           "color": "#b3e6c7",
           "count": 2,
-          "vars": [
-            "--color-primary-border-hover",
-            "--color-success-border-hover"
-          ]
+          "vars": ["--color-primary-border-hover", "--color-success-border-hover"]
         },
         {
           "color": "#141414",
           "count": 2,
-          "vars": [
-            "--color-primary-text",
-            "--color-text"
-          ]
+          "vars": ["--color-primary-text", "--color-text"]
         },
         {
           "color": "#f9f9f9",
           "count": 2,
-          "vars": [
-            "--color-fill-tertiary",
-            "--color-bg-elevated"
-          ]
+          "vars": ["--color-fill-tertiary", "--color-bg-elevated"]
         },
         {
           "color": "#080807",
           "count": 2,
-          "vars": [
-            "--color-bg-highlight",
-            "--color-bg-highlight-hover"
-          ]
+          "vars": ["--color-bg-highlight", "--color-bg-highlight-hover"]
         },
         {
           "color": "#5ebcff",
           "count": 2,
-          "vars": [
-            "--color-info-hover",
-            "--color-info-bg-hover"
-          ]
+          "vars": ["--color-info-hover", "--color-info-bg-hover"]
         },
         {
           "color": "#ffd666",
           "count": 2,
-          "vars": [
-            "--color-warning-hover",
-            "--color-warning-border-hover"
-          ]
+          "vars": ["--color-warning-hover", "--color-warning-border-hover"]
         },
         {
           "color": "#ffffff",
           "count": 1,
-          "vars": [
-            "--loading-bg"
-          ]
+          "vars": ["--loading-bg"]
         },
         {
           "color": "#09090b",
           "count": 1,
-          "vars": [
-            "--loading-text"
-          ]
+          "vars": ["--loading-text"]
         },
         {
           "color": "#a1a1aa",
           "count": 1,
-          "vars": [
-            "--loading-logo"
-          ]
+          "vars": ["--loading-logo"]
         },
         {
           "color": "#ebebeb",
           "count": 1,
-          "vars": [
-            "--color-fill-secondary"
-          ]
+          "vars": ["--color-fill-secondary"]
         },
         {
           "color": "#636261",
           "count": 1,
-          "vars": [
-            "--color-text-secondary"
-          ]
+          "vars": ["--color-text-secondary"]
         },
         {
           "color": "#838280",
           "count": 1,
-          "vars": [
-            "--color-text-tertiary"
-          ]
+          "vars": ["--color-text-tertiary"]
         },
         {
           "color": "#8e8c8b",
           "count": 1,
-          "vars": [
-            "--color-text-quaternary"
-          ]
+          "vars": ["--color-text-quaternary"]
         },
         {
           "color": "#bcbbba",
           "count": 1,
-          "vars": [
-            "--color-border"
-          ]
+          "vars": ["--color-border"]
         },
         {
           "color": "#ddd",
           "count": 1,
-          "vars": [
-            "--color-border-secondary"
-          ]
+          "vars": ["--color-border-secondary"]
         },
         {
           "color": "#e6e6e6",
           "count": 1,
-          "vars": [
-            "--color-border-tertiary"
-          ]
+          "vars": ["--color-border-tertiary"]
         },
         {
           "color": "#dfdfdf",
           "count": 1,
-          "vars": [
-            "--color-fill"
-          ]
+          "vars": ["--color-fill"]
         },
         {
           "color": "#fcfcfc",
           "count": 1,
-          "vars": [
-            "--color-fill-quaternary"
-          ]
+          "vars": ["--color-fill-quaternary"]
         },
         {
           "color": "#dad9d8",
           "count": 1,
-          "vars": [
-            "--color-fill-disable"
-          ]
+          "vars": ["--color-fill-disable"]
         },
         {
           "color": "#fafafa",
           "count": 1,
-          "vars": [
-            "--color-bg-spotlight"
-          ]
+          "vars": ["--color-bg-spotlight"]
         },
         {
           "color": "#959594",
           "count": 1,
-          "vars": [
-            "--color-bg-mask"
-          ]
+          "vars": ["--color-bg-mask"]
         },
         {
           "color": "#0f0d0c",
           "count": 1,
-          "vars": [
-            "--color-text-base"
-          ]
+          "vars": ["--color-text-base"]
         },
         {
           "color": "#000",
           "count": 1,
-          "vars": [
-            "--color-white-opacity"
-          ]
+          "vars": ["--color-white-opacity"]
         },
         {
           "color": "#ff4d4f",
           "count": 1,
-          "vars": [
-            "--color-error"
-          ]
+          "vars": ["--color-error"]
         },
         {
           "color": "#ff7875",
           "count": 1,
-          "vars": [
-            "--color-error-hover"
-          ]
+          "vars": ["--color-error-hover"]
         },
         {
           "color": "#fff2f0",
           "count": 1,
-          "vars": [
-            "--color-error-bg"
-          ]
+          "vars": ["--color-error-bg"]
         },
         {
           "color": "#fff1f0",
           "count": 1,
-          "vars": [
-            "--color-error-bg-hover"
-          ]
+          "vars": ["--color-error-bg-hover"]
         },
         {
           "color": "#ffccc7",
           "count": 1,
-          "vars": [
-            "--color-error-border"
-          ]
+          "vars": ["--color-error-border"]
         },
         {
           "color": "#ffa39e",
           "count": 1,
-          "vars": [
-            "--color-error-border-hover"
-          ]
+          "vars": ["--color-error-border-hover"]
         },
         {
           "color": "#0b83f1",
           "count": 1,
-          "vars": [
-            "--color-info"
-          ]
+          "vars": ["--color-info"]
         },
         {
           "color": "#e6f7ff",
           "count": 1,
-          "vars": [
-            "--color-info-bg"
-          ]
+          "vars": ["--color-info-bg"]
         },
         {
           "color": "#b0e3ff",
           "count": 1,
-          "vars": [
-            "--color-info-border"
-          ]
+          "vars": ["--color-info-border"]
         },
         {
           "color": "#87d1ff",
           "count": 1,
-          "vars": [
-            "--color-info-border-hover"
-          ]
+          "vars": ["--color-info-border-hover"]
         },
         {
           "color": "#faad14",
           "count": 1,
-          "vars": [
-            "--color-warning"
-          ]
+          "vars": ["--color-warning"]
         },
         {
           "color": "#fffbe6",
           "count": 1,
-          "vars": [
-            "--color-warning-bg"
-          ]
+          "vars": ["--color-warning-bg"]
         },
         {
           "color": "#fff1b8",
           "count": 1,
-          "vars": [
-            "--color-warning-bg-hover"
-          ]
+          "vars": ["--color-warning-bg-hover"]
         },
         {
           "color": "#ffe5bf",
           "count": 1,
-          "vars": [
-            "--color-warning-border"
-          ]
+          "vars": ["--color-warning-border"]
         },
         {
           "color": "#a6dcba",
           "count": 1,
-          "vars": [
-            "--color-diff-insert"
-          ]
+          "vars": ["--color-diff-insert"]
         },
         {
           "color": "#d9ebe0",
           "count": 1,
-          "vars": [
-            "--color-diff-insert-bg"
-          ]
+          "vars": ["--color-diff-insert-bg"]
         },
         {
           "color": "#fc6b83",
           "count": 1,
-          "vars": [
-            "--color-diff-remove"
-          ]
+          "vars": ["--color-diff-remove"]
         },
         {
           "color": "#e3d1d5",
           "count": 1,
-          "vars": [
-            "--color-diff-remove-bg"
-          ]
+          "vars": ["--color-diff-remove-bg"]
         },
         {
           "color": "#ec4899",
           "count": 1,
-          "vars": [
-            "--color-pink"
-          ]
+          "vars": ["--color-pink"]
         },
         {
           "color": "#f9e3f3",
           "count": 1,
-          "vars": [
-            "--color-pink-bg"
-          ]
+          "vars": ["--color-pink-bg"]
         },
         {
           "color": "#e593bc",
           "count": 1,
-          "vars": [
-            "--color-pink-hover"
-          ]
+          "vars": ["--color-pink-hover"]
         },
         {
           "color": "#615ced",
           "count": 1,
-          "vars": [
-            "--color-purple"
-          ]
+          "vars": ["--color-purple"]
         },
         {
           "color": "#ebe9ff",
           "count": 1,
-          "vars": [
-            "--color-purple-bg"
-          ]
+          "vars": ["--color-purple-bg"]
         },
         {
           "color": "#8080ff",
           "count": 1,
-          "vars": [
-            "--color-purple-hover"
-          ]
+          "vars": ["--color-purple-hover"]
         },
         {
           "color": "#fac414",
           "count": 1,
-          "vars": [
-            "--color-yellow"
-          ]
+          "vars": ["--color-yellow"]
         },
         {
           "color": "#fff3cf",
           "count": 1,
-          "vars": [
-            "--color-yellow-bg"
-          ]
+          "vars": ["--color-yellow-bg"]
         },
         {
           "color": "#f1d372",
           "count": 1,
-          "vars": [
-            "--color-yellow-hover"
-          ]
+          "vars": ["--color-yellow-hover"]
         },
         {
           "color": "#fa8125",
           "count": 1,
-          "vars": [
-            "--color-orange"
-          ]
+          "vars": ["--color-orange"]
         },
         {
           "color": "#ffefde",
           "count": 1,
-          "vars": [
-            "--color-orange-bg"
-          ]
+          "vars": ["--color-orange-bg"]
         },
         {
           "color": "#e88c45",
           "count": 1,
-          "vars": [
-            "--color-orange-hover"
-          ]
+          "vars": ["--color-orange-hover"]
         }
       ]
     },
@@ -493,20 +361,12 @@
         {
           "color": "#000",
           "count": 3,
-          "vars": [
-            "--color-popover",
-            "--color-bg-base",
-            "--color-white-opacity"
-          ]
+          "vars": ["--color-popover", "--color-bg-base", "--color-white-opacity"]
         },
         {
           "color": "#14261c",
           "count": 3,
-          "vars": [
-            "--color-primary-bg",
-            "--color-success-bg",
-            "--color-diff-insert-bg"
-          ]
+          "vars": ["--color-primary-bg", "--color-success-bg", "--color-diff-insert-bg"]
         },
         {
           "color": "#9be6b3",
@@ -520,410 +380,282 @@
         {
           "color": "#73cd94",
           "count": 3,
-          "vars": [
-            "--color-primary-active",
-            "--color-success",
-            "--color-diff-insert"
-          ]
+          "vars": ["--color-primary-active", "--color-success", "--color-diff-insert"]
         },
         {
           "color": "#71717a",
           "count": 2,
-          "vars": [
-            "--loading-logo",
-            "--base-color"
-          ]
+          "vars": ["--loading-logo", "--base-color"]
         },
         {
           "color": "#0000004d",
           "count": 2,
-          "vars": [
-            "--tw-shadow",
-            "--color-shadow-3xl"
-          ]
+          "vars": ["--tw-shadow", "--color-shadow-3xl"]
         },
         {
           "color": "#ffffff1a",
           "count": 2,
-          "vars": [
-            "--tw-shadow",
-            "--tw-ring-color"
-          ]
+          "vars": ["--tw-shadow", "--tw-ring-color"]
         },
         {
           "color": "#fff",
           "count": 2,
-          "vars": [
-            "--base-gradient-color",
-            "--color-black-opacity"
-          ]
+          "vars": ["--base-gradient-color", "--color-black-opacity"]
         },
         {
           "color": "#0000",
           "count": 2,
-          "vars": [
-            "--bg",
-            "--bg"
-          ]
+          "vars": ["--bg", "--bg"]
         },
         {
           "color": "#0d0d0d",
           "count": 2,
-          "vars": [
-            "--color-text-on-primary",
-            "--color-bg-container"
-          ]
+          "vars": ["--color-text-on-primary", "--color-bg-container"]
         },
         {
           "color": "#262626",
           "count": 2,
-          "vars": [
-            "--color-muted",
-            "--color-border-tertiary"
-          ]
+          "vars": ["--color-muted", "--color-border-tertiary"]
         },
         {
           "color": "#1a2e21",
           "count": 2,
-          "vars": [
-            "--color-primary-bg-hover",
-            "--color-success-bg-hover"
-          ]
+          "vars": ["--color-primary-bg-hover", "--color-success-bg-hover"]
         },
         {
           "color": "#335942",
           "count": 2,
-          "vars": [
-            "--color-primary-border",
-            "--color-success-border"
-          ]
+          "vars": ["--color-primary-border", "--color-success-border"]
         },
         {
           "color": "#407354",
           "count": 2,
-          "vars": [
-            "--color-primary-border-hover",
-            "--color-success-border-hover"
-          ]
+          "vars": ["--color-primary-border-hover", "--color-success-border-hover"]
         },
         {
           "color": "#1a1a1a",
           "count": 2,
-          "vars": [
-            "--color-fill-tertiary",
-            "--color-fill-quaternary"
-          ]
+          "vars": ["--color-fill-tertiary", "--color-fill-quaternary"]
         },
         {
           "color": "#080808",
           "count": 2,
-          "vars": [
-            "--color-bg-elevated",
-            "--color-bg-spotlight"
-          ]
+          "vars": ["--color-bg-elevated", "--color-bg-spotlight"]
         },
         {
           "color": "#5ebcff",
           "count": 2,
-          "vars": [
-            "--color-info-hover",
-            "--color-info-bg-hover"
-          ]
+          "vars": ["--color-info-hover", "--color-info-bg-hover"]
         },
         {
           "color": "#ffd666",
           "count": 2,
-          "vars": [
-            "--color-warning-hover",
-            "--color-warning-border-hover"
-          ]
+          "vars": ["--color-warning-hover", "--color-warning-border-hover"]
         },
         {
           "color": "#09090b",
           "count": 1,
-          "vars": [
-            "--loading-bg"
-          ]
+          "vars": ["--loading-bg"]
         },
         {
           "color": "#fafafa",
           "count": 1,
-          "vars": [
-            "--loading-text"
-          ]
+          "vars": ["--loading-text"]
         },
         {
           "color": "#fff3",
           "count": 1,
-          "vars": [
-            "--tw-shadow"
-          ]
+          "vars": ["--tw-shadow"]
         },
         {
           "color": "#363636",
           "count": 1,
-          "vars": [
-            "--color-fill-secondary"
-          ]
+          "vars": ["--color-fill-secondary"]
         },
         {
           "color": "#737373",
           "count": 1,
-          "vars": [
-            "--color-muted-foreground"
-          ]
+          "vars": ["--color-muted-foreground"]
         },
         {
           "color": "#faf9f5",
           "count": 1,
-          "vars": [
-            "--color-text"
-          ]
+          "vars": ["--color-text"]
         },
         {
           "color": "#9c9d9e",
           "count": 1,
-          "vars": [
-            "--color-text-secondary"
-          ]
+          "vars": ["--color-text-secondary"]
         },
         {
           "color": "#7c7d7f",
           "count": 1,
-          "vars": [
-            "--color-text-tertiary"
-          ]
+          "vars": ["--color-text-tertiary"]
         },
         {
           "color": "#717374",
           "count": 1,
-          "vars": [
-            "--color-text-quaternary"
-          ]
+          "vars": ["--color-text-quaternary"]
         },
         {
           "color": "#404040",
           "count": 1,
-          "vars": [
-            "--color-border"
-          ]
+          "vars": ["--color-border"]
         },
         {
           "color": "#2a2a2a",
           "count": 1,
-          "vars": [
-            "--color-border-secondary"
-          ]
+          "vars": ["--color-border-secondary"]
         },
         {
           "color": "#454545",
           "count": 1,
-          "vars": [
-            "--color-fill"
-          ]
+          "vars": ["--color-fill"]
         },
         {
           "color": "#525252",
           "count": 1,
-          "vars": [
-            "--color-fill-disable"
-          ]
+          "vars": ["--color-fill-disable"]
         },
         {
           "color": "#050505",
           "count": 1,
-          "vars": [
-            "--color-bg-layout"
-          ]
+          "vars": ["--color-bg-layout"]
         },
         {
           "color": "#4d4d4d",
           "count": 1,
-          "vars": [
-            "--color-bg-mask"
-          ]
+          "vars": ["--color-bg-mask"]
         },
         {
           "color": "#f0f2f3",
           "count": 1,
-          "vars": [
-            "--color-text-base"
-          ]
+          "vars": ["--color-text-base"]
         },
         {
           "color": "#d0d0d0",
           "count": 1,
-          "vars": [
-            "--color-bg-highlight"
-          ]
+          "vars": ["--color-bg-highlight"]
         },
         {
           "color": "#e0e0e0",
           "count": 1,
-          "vars": [
-            "--color-bg-highlight-hover"
-          ]
+          "vars": ["--color-bg-highlight-hover"]
         },
         {
           "color": "#ff4d4f",
           "count": 1,
-          "vars": [
-            "--color-error"
-          ]
+          "vars": ["--color-error"]
         },
         {
           "color": "#ff7875",
           "count": 1,
-          "vars": [
-            "--color-error-hover"
-          ]
+          "vars": ["--color-error-hover"]
         },
         {
           "color": "#4a1a1b",
           "count": 1,
-          "vars": [
-            "--color-error-bg"
-          ]
+          "vars": ["--color-error-bg"]
         },
         {
           "color": "#4a1c1b",
           "count": 1,
-          "vars": [
-            "--color-error-bg-hover"
-          ]
+          "vars": ["--color-error-bg-hover"]
         },
         {
           "color": "#663338",
           "count": 1,
-          "vars": [
-            "--color-error-border"
-          ]
+          "vars": ["--color-error-border"]
         },
         {
           "color": "#5c292e",
           "count": 1,
-          "vars": [
-            "--color-error-border-hover"
-          ]
+          "vars": ["--color-error-border-hover"]
         },
         {
           "color": "#0b83f1",
           "count": 1,
-          "vars": [
-            "--color-info"
-          ]
+          "vars": ["--color-info"]
         },
         {
           "color": "#19080e",
           "count": 1,
-          "vars": [
-            "--color-info-bg"
-          ]
+          "vars": ["--color-info-bg"]
         },
         {
           "color": "#4f1c0e",
           "count": 1,
-          "vars": [
-            "--color-info-border"
-          ]
+          "vars": ["--color-info-border"]
         },
         {
           "color": "#782e0e",
           "count": 1,
-          "vars": [
-            "--color-info-border-hover"
-          ]
+          "vars": ["--color-info-border-hover"]
         },
         {
           "color": "#faad14",
           "count": 1,
-          "vars": [
-            "--color-warning"
-          ]
+          "vars": ["--color-warning"]
         },
         {
           "color": "#4a4019",
           "count": 1,
-          "vars": [
-            "--color-warning-bg"
-          ]
+          "vars": ["--color-warning-bg"]
         },
         {
           "color": "#4a401f",
           "count": 1,
-          "vars": [
-            "--color-warning-bg-hover"
-          ]
+          "vars": ["--color-warning-bg-hover"]
         },
         {
           "color": "#664d19",
           "count": 1,
-          "vars": [
-            "--color-warning-border"
-          ]
+          "vars": ["--color-warning-border"]
         },
         {
           "color": "#fc6b83",
           "count": 1,
-          "vars": [
-            "--color-diff-remove"
-          ]
+          "vars": ["--color-diff-remove"]
         },
         {
           "color": "#1c2e2a",
           "count": 1,
-          "vars": [
-            "--color-diff-remove-bg"
-          ]
+          "vars": ["--color-diff-remove-bg"]
         },
         {
           "color": "#ec4899",
           "count": 1,
-          "vars": [
-            "--color-pink"
-          ]
+          "vars": ["--color-pink"]
         },
         {
           "color": "#4a1c31",
           "count": 1,
-          "vars": [
-            "--color-pink-bg"
-          ]
+          "vars": ["--color-pink-bg"]
         },
         {
           "color": "#e593bc",
           "count": 1,
-          "vars": [
-            "--color-pink-hover"
-          ]
+          "vars": ["--color-pink-hover"]
         },
         {
           "color": "#615ced",
           "count": 1,
-          "vars": [
-            "--color-purple"
-          ]
+          "vars": ["--color-purple"]
         },
         {
           "color": "#14160e",
           "count": 1,
-          "vars": [
-            "--color-purple-bg"
-          ]
+          "vars": ["--color-purple-bg"]
         },
         {
           "color": "#8080ff",
           "count": 1,
-          "vars": [
-            "--color-purple-hover"
-          ]
+          "vars": ["--color-purple-hover"]
         },
         {
           "color": "#fac414",
           "count": 1,
-          "vars": [
-            "--color-yellow"
-          ]
+          "vars": ["--color-yellow"]
         }
       ]
     }
@@ -3673,10 +3405,7 @@
   },
   "dom": {
     "structure": {
-      "components": [
-        "button",
-        "chat"
-      ],
+      "components": ["button", "chat"],
       "topTags": [
         {
           "tag": "div",
@@ -3732,19 +3461,10 @@
         }
       ],
       "totalTags": 13,
-      "samples": [
-        "div",
-        "span",
-        "button",
-        "path",
-        "svg"
-      ]
+      "samples": ["div", "span", "button", "path", "svg"]
     },
     "structureLight": {
-      "components": [
-        "button",
-        "chat"
-      ],
+      "components": ["button", "chat"],
       "topTags": [
         {
           "tag": "div",
@@ -3800,19 +3520,10 @@
         }
       ],
       "totalTags": 13,
-      "samples": [
-        "div",
-        "span",
-        "button",
-        "path",
-        "svg"
-      ]
+      "samples": ["div", "span", "button", "path", "svg"]
     },
     "structureDark": {
-      "components": [
-        "button",
-        "chat"
-      ],
+      "components": ["button", "chat"],
       "topTags": [
         {
           "tag": "div",
@@ -3868,13 +3579,7 @@
         }
       ],
       "totalTags": 13,
-      "samples": [
-        "div",
-        "span",
-        "button",
-        "path",
-        "svg"
-      ]
+      "samples": ["div", "span", "button", "path", "svg"]
     },
     "samples": {
       "default": {

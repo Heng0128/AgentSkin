@@ -17,9 +17,9 @@
 // Usage:  node scripts/normalize-hero-images.mjs
 
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const sharp = require('sharp');
@@ -74,6 +74,6 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
   const after = fs.statSync(outPath).size;
   console.log(
     `[normalize-hero-images] ${id}: ${path.basename(outPath)} ` +
-    `${(before / 1024).toFixed(0)}KB → ${(after / 1024).toFixed(0)}KB (${action})`,
+      `${(before / 1024).toFixed(0)}KB → ${(after / 1024).toFixed(0)}KB (${action})`,
   );
 }

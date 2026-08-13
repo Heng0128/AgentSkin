@@ -62,7 +62,11 @@ for (const id of dirs.sort()) {
     const pkgDir = await buildThemePackage(
       {
         agentId: AGENT_ID,
-        meta: { id, name: manifest.displayName || manifest.name || id, author: manifest.author?.name || 'AgentSkin Studio' },
+        meta: {
+          id,
+          name: manifest.displayName || manifest.name || id,
+          author: manifest.author?.name || 'AgentSkin Studio',
+        },
         root: colorsToRootTokens(manifest.colors),
         signature: {},
       },

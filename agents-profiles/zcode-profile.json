@@ -589,21 +589,12 @@
         {
           "color": "#202020",
           "count": 4,
-          "vars": [
-            "--color-tab",
-            "--color-header",
-            "--color-panel",
-            "--color-popover-header"
-          ]
+          "vars": ["--color-tab", "--color-header", "--color-panel", "--color-popover-header"]
         },
         {
           "color": "rgba(0, 0, 0, 0)",
           "count": 3,
-          "vars": [
-            "--tw-gradient-from",
-            "--tw-gradient-to",
-            "--tw-gradient-via"
-          ]
+          "vars": ["--tw-gradient-from", "--tw-gradient-to", "--tw-gradient-via"]
         },
         {
           "color": "#ffffff26",
@@ -626,260 +617,182 @@
         {
           "color": "#7b5ce5",
           "count": 3,
-          "vars": [
-            "--color-usage-chart-3",
-            "--color-terminal-magenta",
-            "--color-idle-task"
-          ]
+          "vars": ["--color-usage-chart-3", "--color-terminal-magenta", "--color-idle-task"]
         },
         {
           "color": "#42c8c8",
           "count": 2,
-          "vars": [
-            "--color-usage-chart-6",
-            "--color-terminal-cyan"
-          ]
+          "vars": ["--color-usage-chart-6", "--color-terminal-cyan"]
         },
         {
           "color": "#adadad",
           "count": 2,
-          "vars": [
-            "--color-tooltip-tag-foreground",
-            "--color-terminal-white"
-          ]
+          "vars": ["--color-tooltip-tag-foreground", "--color-terminal-white"]
         },
         {
           "color": "#001d3d",
           "count": 2,
-          "vars": [
-            "--color-accent",
-            "--color-interaction-ask-surface"
-          ]
+          "vars": ["--color-accent", "--color-interaction-ask-surface"]
         },
         {
           "color": "#87d9a4",
           "count": 2,
-          "vars": [
-            "--color-terminal-bright-green",
-            "--color-interaction-confirmation-foreground"
-          ]
+          "vars": ["--color-terminal-bright-green", "--color-interaction-confirmation-foreground"]
         },
         {
           "color": "#9aa6b433",
           "count": 1,
-          "vars": [
-            "--color-command-node-hover"
-          ]
+          "vars": ["--color-command-node-hover"]
         },
         {
           "color": "#ffb26b",
           "count": 1,
-          "vars": [
-            "--color-terminal-bright-yellow"
-          ]
+          "vars": ["--color-terminal-bright-yellow"]
         },
         {
           "color": "#b7bd7538",
           "count": 1,
-          "vars": [
-            "--color-subagent-node-hover"
-          ]
+          "vars": ["--color-subagent-node-hover"]
         },
         {
           "color": "#4099ff47",
           "count": 1,
-          "vars": [
-            "--color-terminal-selection"
-          ]
+          "vars": ["--color-terminal-selection"]
         },
         {
           "color": "#e4f1ff",
           "count": 1,
-          "vars": [
-            "--color-context-breakdown-7"
-          ]
+          "vars": ["--color-context-breakdown-7"]
         },
         {
           "color": "#c8cd90",
           "count": 1,
-          "vars": [
-            "--color-subagent-node-foreground"
-          ]
+          "vars": ["--color-subagent-node-foreground"]
         },
         {
           "color": "#46bf7229",
           "count": 1,
-          "vars": [
-            "--color-interaction-confirmation-surface"
-          ]
+          "vars": ["--color-interaction-confirmation-surface"]
         },
         {
           "color": "#93d8d2",
           "count": 1,
-          "vars": [
-            "--color-session-node-foreground"
-          ]
+          "vars": ["--color-session-node-foreground"]
         },
         {
           "color": "#747474",
           "count": 1,
-          "vars": [
-            "--color-terminal-bright-black"
-          ]
+          "vars": ["--color-terminal-bright-black"]
         },
         {
           "color": "#f99",
           "count": 1,
-          "vars": [
-            "--color-terminal-bright-red"
-          ]
+          "vars": ["--color-terminal-bright-red"]
         },
         {
           "color": "#46bf723d",
           "count": 1,
-          "vars": [
-            "--color-interaction-ask-fill"
-          ]
+          "vars": ["--color-interaction-ask-fill"]
         },
         {
           "color": "#ffffff38",
           "count": 1,
-          "vars": [
-            "--animated-gradient-text-soft"
-          ]
+          "vars": ["--animated-gradient-text-soft"]
         },
         {
           "color": "#66adff",
           "count": 1,
-          "vars": [
-            "--color-context-breakdown-2"
-          ]
+          "vars": ["--color-context-breakdown-2"]
         },
         {
           "color": "#8fc5ef",
           "count": 1,
-          "vars": [
-            "--color-file-node-foreground"
-          ]
+          "vars": ["--color-file-node-foreground"]
         },
         {
           "color": "#8ee5e5",
           "count": 1,
-          "vars": [
-            "--color-terminal-bright-cyan"
-          ]
+          "vars": ["--color-terminal-bright-cyan"]
         },
         {
           "color": "#a689da29",
           "count": 1,
-          "vars": [
-            "--color-skill-node"
-          ]
+          "vars": ["--color-skill-node"]
         },
         {
           "color": "#a888f2",
           "count": 1,
-          "vars": [
-            "--color-terminal-bright-magenta"
-          ]
+          "vars": ["--color-terminal-bright-magenta"]
         },
         {
           "color": "#d0e8ff",
           "count": 1,
-          "vars": [
-            "--color-context-breakdown-6"
-          ]
+          "vars": ["--color-context-breakdown-6"]
         },
         {
           "color": "#68c4bc38",
           "count": 1,
-          "vars": [
-            "--color-session-node-hover"
-          ]
+          "vars": ["--color-session-node-hover"]
         },
         {
           "color": "#68c4bc29",
           "count": 1,
-          "vars": [
-            "--color-session-node"
-          ]
+          "vars": ["--color-session-node"]
         },
         {
           "color": "#70aee029",
           "count": 1,
-          "vars": [
-            "--color-file-node"
-          ]
+          "vars": ["--color-file-node"]
         },
         {
           "color": "#b7bd7529",
           "count": 1,
-          "vars": [
-            "--color-subagent-node"
-          ]
+          "vars": ["--color-subagent-node"]
         },
         {
           "color": "#70aee038",
           "count": 1,
-          "vars": [
-            "--color-file-node-hover"
-          ]
+          "vars": ["--color-file-node-hover"]
         },
         {
           "color": "#9aa6b424",
           "count": 1,
-          "vars": [
-            "--color-command-node"
-          ]
+          "vars": ["--color-command-node"]
         },
         {
           "color": "#542500",
           "count": 1,
-          "vars": [
-            "--color-find-highlight"
-          ]
+          "vars": ["--color-find-highlight"]
         },
         {
           "color": "#bda5e6",
           "count": 1,
-          "vars": [
-            "--color-skill-node-foreground"
-          ]
+          "vars": ["--color-skill-node-foreground"]
         },
         {
           "color": "#160d38",
           "count": 1,
-          "vars": [
-            "--color-idle-task-surface"
-          ]
+          "vars": ["--color-idle-task-surface"]
         },
         {
           "color": "#a689da38",
           "count": 1,
-          "vars": [
-            "--color-skill-node-hover"
-          ]
+          "vars": ["--color-skill-node-hover"]
         },
         {
           "color": "#b5c0cc",
           "count": 1,
-          "vars": [
-            "--color-command-node-foreground"
-          ]
+          "vars": ["--color-command-node-foreground"]
         },
         {
           "color": "#9dceff",
           "count": 1,
-          "vars": [
-            "--color-context-breakdown-4"
-          ]
+          "vars": ["--color-context-breakdown-4"]
         },
         {
           "color": "#b9ddff",
           "count": 1,
-          "vars": [
-            "--color-context-breakdown-5"
-          ]
+          "vars": ["--color-context-breakdown-5"]
         }
       ]
     },
@@ -1290,104 +1203,72 @@
         {
           "color": "#fff",
           "count": 3,
-          "vars": [
-            "--animated-gradient-text-strong",
-            "--color-white",
-            "--tw-ring-offset-color"
-          ]
+          "vars": ["--animated-gradient-text-strong", "--color-white", "--tw-ring-offset-color"]
         },
         {
           "color": "rgba(0, 0, 0, 0)",
           "count": 3,
-          "vars": [
-            "--tw-gradient-from",
-            "--tw-gradient-to",
-            "--tw-gradient-via"
-          ]
+          "vars": ["--tw-gradient-from", "--tw-gradient-to", "--tw-gradient-via"]
         },
         {
           "color": "#e4001466",
           "count": 1,
-          "vars": [
-            "--tw-ring-color"
-          ]
+          "vars": ["--tw-ring-color"]
         },
         {
           "color": "#fff3",
           "count": 1,
-          "vars": [
-            "--animated-gradient-text-soft"
-          ]
+          "vars": ["--animated-gradient-text-soft"]
         },
         {
           "color": "#052f4a80",
           "count": 1,
-          "vars": [
-            "--color-accent"
-          ]
+          "vars": ["--color-accent"]
         },
         {
           "color": "#713f12",
           "count": 1,
-          "vars": [
-            "--color-find-highlight"
-          ]
+          "vars": ["--color-find-highlight"]
         },
         {
           "color": "#a16207",
           "count": 1,
-          "vars": [
-            "--color-find-highlight-active"
-          ]
+          "vars": ["--color-find-highlight-active"]
         },
         {
           "color": "#fafafa1a",
           "count": 1,
-          "vars": [
-            "--color-border"
-          ]
+          "vars": ["--color-border"]
         },
         {
           "color": "#ffffff1a",
           "count": 1,
-          "vars": [
-            "--color-selected"
-          ]
+          "vars": ["--color-selected"]
         },
         {
           "color": "#ffffff0d",
           "count": 1,
-          "vars": [
-            "--color-surface"
-          ]
+          "vars": ["--color-surface"]
         },
         {
           "color": "#00bcfe2e",
           "count": 1,
-          "vars": [
-            "--color-file-node"
-          ]
+          "vars": ["--color-file-node"]
         },
         {
           "color": "#b7bd75",
           "count": 1,
-          "vars": [
-            "--color-subagent-node-foreground"
-          ]
+          "vars": ["--color-subagent-node-foreground"]
         },
         {
           "color": "#363636",
           "count": 1,
-          "vars": [
-            "--color-markdown-inline-code"
-          ]
+          "vars": ["--color-markdown-inline-code"]
         },
         {
           "color": "#000",
           "count": 1,
-          "vars": [
-            "--color-black"
-          ]
+          "vars": ["--color-black"]
         }
       ]
     }
@@ -4774,9 +4655,7 @@
   },
   "dom": {
     "structure": {
-      "components": [
-        "button"
-      ],
+      "components": ["button"],
       "topTags": [
         {
           "tag": "div",
@@ -4836,18 +4715,10 @@
         }
       ],
       "totalTags": 14,
-      "samples": [
-        "div",
-        "button",
-        "svg",
-        "path",
-        "aside"
-      ]
+      "samples": ["div", "button", "svg", "path", "aside"]
     },
     "structureLight": {
-      "components": [
-        "button"
-      ],
+      "components": ["button"],
       "topTags": [
         {
           "tag": "div",
@@ -4907,18 +4778,10 @@
         }
       ],
       "totalTags": 14,
-      "samples": [
-        "div",
-        "button",
-        "svg",
-        "path",
-        "aside"
-      ]
+      "samples": ["div", "button", "svg", "path", "aside"]
     },
     "structureDark": {
-      "components": [
-        "button"
-      ],
+      "components": ["button"],
       "topTags": [
         {
           "tag": "div",
@@ -4978,13 +4841,7 @@
         }
       ],
       "totalTags": 14,
-      "samples": [
-        "div",
-        "button",
-        "svg",
-        "path",
-        "aside"
-      ]
+      "samples": ["div", "button", "svg", "path", "aside"]
     },
     "samples": {
       "default": {

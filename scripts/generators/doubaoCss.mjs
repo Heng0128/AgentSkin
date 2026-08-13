@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
-import { tokenBlock, computeArtParams, alpha, shade, rawRgb } from '../theme-utils.mjs';
+import { alpha, computeArtParams, rawRgb, shade, tokenBlock } from '../theme-utils.mjs';
 
 function doubaoCss(t) {
   const c = t.colors;

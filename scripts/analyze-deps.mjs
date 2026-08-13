@@ -1,9 +1,9 @@
 // Custom dependency graph analyzer for AgentSkin
 // Detects circular dependencies without relying on madge
 
-import { readFileSync, readdirSync, statSync } from 'fs';
-import { join, dirname, resolve, relative, extname } from 'path';
-import { fileURLToPath } from 'url';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, extname, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..');
@@ -23,7 +23,7 @@ function resolvePathAlias(importPath) {
       const rest = importPath.slice(aliasPrefix.length).replace(/^\//, '');
       for (const mapping of mappings) {
         const resolvedPath = mapping.replace('/*', '');
-        return resolvedPath + (rest ? '/' + rest : '');
+        return resolvedPath + (rest ? `/${rest}` : '');
       }
     }
   }
@@ -145,7 +145,7 @@ for (const file of files) {
 
   for (const imp of imports) {
     const resolved = resolveImport(file, imp);
-    if (resolved && resolved.startsWith(srcDir)) {
+    if (resolved?.startsWith(srcDir)) {
       const depRelPath = relative(srcDir, resolved).replace(/\\/g, '/');
       if (!fileToId.has(depRelPath)) {
         fileToId.set(depRelPath, idCounter++);
@@ -159,9 +159,11 @@ for (const file of files) {
 
 // Detect cycles using DFS
 console.log('Detecting circular dependencies...');
-const WHITE = 0, GRAY = 1, BLACK = 2;
+const WHITE = 0,
+  GRAY = 1,
+  BLACK = 2;
 const color = new Map();
-const parent = new Map();
+const _parent = new Map();
 const cycles = [];
 
 for (const file of graph.keys()) {
@@ -198,10 +200,11 @@ for (const file of graph.keys()) {
 
 // Deduplicate cycles
 function normalizeCycle(cycle) {
-  const minIndex = cycle.slice(0, -1).reduce((minIdx, item, idx, arr) =>
-    item < arr[minIdx] ? idx : minIdx, 0);
+  const minIndex = cycle
+    .slice(0, -1)
+    .reduce((minIdx, item, idx, arr) => (item < arr[minIdx] ? idx : minIdx), 0);
   const rotated = [...cycle.slice(minIndex, -1), ...cycle.slice(0, minIndex)];
-  return rotated.join(' -> ') + ' -> ' + rotated[0];
+  return `${rotated.join(' -> ')} -> ${rotated[0]}`;
 }
 
 const uniqueCycles = new Set();
@@ -222,7 +225,7 @@ if (dedupedCycles.length === 0) {
   console.log(`❌ Found ${dedupedCycles.length} circular dependencies:\\n`);
   dedupedCycles.forEach((cycle, i) => {
     console.log(`Cycle ${i + 1}:`);
-    console.log('  ' + cycle.slice(0, -1).join(' → ') + ' → [' + cycle[cycle.length - 1] + ']');
+    console.log(`  ${cycle.slice(0, -1).join(' → ')} → [${cycle[cycle.length - 1]}]`);
     console.log();
   });
 }
@@ -248,7 +251,11 @@ for (const [file, deps] of graph.entries()) {
       violations.push({ type: 'UI→API', from: file, to: dep });
     }
     // Shared importing from business logic
-    if (file.startsWith('shared/') && !dep.startsWith('shared/') && !dep.startsWith('node_modules')) {
+    if (
+      file.startsWith('shared/') &&
+      !dep.startsWith('shared/') &&
+      !dep.startsWith('node_modules')
+    ) {
       const depModule = dep.split('/')[0];
       if (['main', 'adapters', 'engine', 'ui'].includes(depModule)) {
         violations.push({ type: 'Shared→Business', from: file, to: dep });
@@ -270,12 +277,14 @@ if (violations.length === 0) {
 const results = {
   modules: graph.size,
   edges: totalEdges,
-  circularDeps: dedupedCycles.map(cycle => cycle.slice(0, -1)),
+  circularDeps: dedupedCycles.map((cycle) => cycle.slice(0, -1)),
   violations,
-  timestamp: new Date().toISOString()
+  timestamp: new Date().toISOString(),
 };
 
 const outputPath = join(root, '.quality', 'dep-analysis.json');
-import { writeFileSync } from 'fs';
+
+import { writeFileSync } from 'node:fs';
+
 writeFileSync(outputPath, JSON.stringify(results, null, 2));
 console.log(`\\nResults saved to ${outputPath}`);
