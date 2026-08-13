@@ -26,6 +26,7 @@ const {
   mockFail,
   mockSetRestartPrompt,
   mockSetWallpaperRestartPrompt,
+  mockSavePresets,
 } = vi.hoisted(() => ({
   mockApplyToApp: vi.fn(),
   mockRestoreApp: vi.fn(),
@@ -35,6 +36,7 @@ const {
   mockFail: vi.fn(),
   mockSetRestartPrompt: vi.fn(),
   mockSetWallpaperRestartPrompt: vi.fn(),
+  mockSavePresets: vi.fn(),
 }));
 
 vi.mock('@/api/agentSkinClient', () => ({
@@ -46,7 +48,7 @@ vi.mock('@/api/agentSkinClient', () => ({
 
 vi.mock('@/storage/environment-store', () => ({
   loadPresets: vi.fn(async () => []),
-  savePresets: vi.fn((_presets, _onFailure?) => Promise.resolve(true)),
+  savePresets: mockSavePresets,
   createPreset: vi.fn(
     (
       agentId: string,
@@ -285,7 +287,34 @@ describe('environmentStore — switchEnvironment', () => {
   });
 
   // -----------------------------------------------------------------------
-  // MUST-HAVE 6: wallpaper-only path applies wallpaper correctly
+  // MUST-HAVE 6: no-theme preset dedup — `env.theme?.id ?? null` prevents
+  // duplicate presets when switching to a no-theme env repeatedly.
+  // -----------------------------------------------------------------------
+
+  it('no-theme environment does not create duplicate preset on repeated switches', async () => {
+    // savePresets is only called when a new preset is auto-created.
+    // With the dedup fix in place, switching twice to the same no-theme
+    // env must call savePresets exactly once (1 preset, not 2).
+    mockSavePresets.mockResolvedValue(true);
+
+    const env = makeEnv({ theme: null });
+
+    // First switch: creates preset (themeId = null).
+    const r1 = await useEnvironmentStore.getState().switchEnvironment(env);
+    expect(r1).toBe(true);
+    expect(useEnvironmentStore.getState().presets).toHaveLength(1);
+
+    // Second switch to the same no-theme env: must NOT create another preset.
+    const r2 = await useEnvironmentStore.getState().switchEnvironment(env);
+    expect(r2).toBe(true);
+    expect(useEnvironmentStore.getState().presets).toHaveLength(1);
+
+    // savePresets called exactly once — proves dedup works.
+    expect(mockSavePresets).toHaveBeenCalledTimes(1);
+  });
+
+  // -----------------------------------------------------------------------
+  // MUST-HAVE 7: wallpaper-only path applies wallpaper correctly
   // -----------------------------------------------------------------------
 
   it('applies wallpaper when wallpaperId is set', async () => {
@@ -302,7 +331,7 @@ describe('environmentStore — switchEnvironment', () => {
   });
 
   // -----------------------------------------------------------------------
-  // MUST-HAVE 7: error from applyWallpaper shows notification but still succeeds
+  // MUST-HAVE 8: error from applyWallpaper shows notification but still succeeds
   // -----------------------------------------------------------------------
 
   it('wallpaper apply failure does not fail the overall switch', async () => {

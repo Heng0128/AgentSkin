@@ -39,6 +39,7 @@ export default defineConfig({
           include: ['src/ui/**/*.test.ts', 'src/ui/**/*.test.tsx'],
           testTimeout: 15000,
           pool: 'forks',
+          setupFiles: ['vitest.setup.ui.ts'],
         },
         resolve: {
           alias: {

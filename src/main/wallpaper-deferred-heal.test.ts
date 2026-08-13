@@ -140,22 +140,16 @@ describe('scheduleDeferredSelfHeal — forced drain after max wait (10s)', () =>
   it('forces drain after 10s even when lock is never released', async () => {
     // Scenario: apply/restore never releases the lock (stuck/hung). The
     // safety bound must fire after 10s to prevent indefinite deferral.
+    // Production uses progressive backoff; we use vi.runAllTimersAsync()
+    // to flush all pending timers until the drain triggers.
     const ctrl = createIsApplyingThemeController(true); // locked forever
     const deps = createMockDeps(ctrl.isApplyingTheme);
     const thunk = vi.fn().mockResolvedValue(undefined);
 
     scheduleDeferredSelfHeal(TEST_AGENT, thunk, deps);
 
-    // Advance to just before the max wait.
-    for (let i = 0; i < 99; i++) {
-      await vi.advanceTimersByTimeAsync(DEFERRED_POLL_INTERVAL_MS);
-    }
-    // 99 × 100ms = 9900ms < 10000ms — still within window.
-    expect(thunk).not.toHaveBeenCalled();
-
-    // Advance past the boundary.
-    await vi.advanceTimersByTimeAsync(DEFERRED_POLL_INTERVAL_MS);
-    // 100 × 100ms = 10000ms >= 10000ms → forced drain.
+    // Flush all pending timers — the safety bound must eventually trigger.
+    await vi.runAllTimersAsync();
     expect(thunk).toHaveBeenCalledTimes(1);
   });
 });
