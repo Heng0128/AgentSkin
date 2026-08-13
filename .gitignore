@@ -54,10 +54,31 @@ assets/probe-shots/
 .tsc-err.txt
 .tsc-out.txt
 tsc_output.txt
+tsc-out.txt
+tsc_out.txt
+tsc-output.txt
 biome-out.txt
+biome_output.txt
 test-output.txt
 *test-output.txt
+vit-*.txt
+srcdiff.txt
+stderr.txt
 splash-preview.png
+
+# Orphaned temp captures (numbered / ad-hoc / diff dumps)
+headsrc.txt
+bio*.txt
+tsc-out*.txt
+tsc-output*.txt
+tsc_out*.txt
+tsc_result.txt
+biome_result.txt
+
+# Tool-run artifacts in subdirectories (local-only)
+.quality/*.txt
+.quality/*.log
+test-output/
 
 # Blueprint — static HTML/CSS/JS visual reference (outside build/test scope)
 blueprint/

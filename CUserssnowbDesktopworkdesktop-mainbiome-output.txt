@@ -1,0 +1,25 @@
+src\ui\pages\WallpaperEnginePage.tsx format ━━━━━━━━━━━━━━━━━━━━━━━━━Checked 4 files in 49ms. No fixes applied.━
+Found 1 error.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     16  16 │   import { cn } from '@/lib/utils';
+     17  17 │   
+     18     │ - import·{
+     19     │ - ··Download01Icon,
+     20     │ - ··Image02Icon,
+     21     │ - ··Search01Icon,
+     22     │ - ··Video01Icon,
+     23     │ - }·from·'@hugeicons/core-free-icons';
+         18 │ + import·{·Download01Icon,·Image02Icon,·Search01Icon,·Video01Icon·}·from·'@hugeicons/core-free-icons';
+     24  19 │   import type { WallpaperInfo } from '@shared/types';
+     25  20 │   
+  
+
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
+EXIT=0
