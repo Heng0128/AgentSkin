@@ -29,6 +29,10 @@
 
 ### Fixed
 
+- **CI 门禁强化**：添加 `test:coverage` 脚本 + pre-push hook (typecheck + test)；覆盖率阈值从 25% 提升至 30-35%；添加 lcov/json coverage reporter
+- **lint-staged 覆盖扩展**：`scripts/**/*.mjs` 纳入 biome check
+- **弱断言修复**：`agent-engine-service-reliability.test.ts` 核心 apply 路径的 tautological 断言替换为精确的 `result.status` 校验
+- **biome useOptionalChain**：从 `off` 提升至 `warn`，渐进式推进代码风格一致性
 - **React Error #185**（Maximum update depth exceeded）：`useSyncExternalStore` tearing 导致启动后无限循环崩溃。根因是 `queueMicrotask` 在 React passive-commit 阶段触发同步 `store.set()`；改用 `requestAnimationFrame` 将初始化推迟到 commit 之后
 - drawer 动画闪烁（CSS transition 与 React commit 时序冲突）
 - Theme Studio i18n 残留硬编码 + 安全修复 + 架构优化
