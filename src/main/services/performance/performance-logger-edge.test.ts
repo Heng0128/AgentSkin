@@ -26,7 +26,10 @@ import type { ThemeApplyTrace } from './types';
 /*  helpers                                                           */
 /* ------------------------------------------------------------------ */
 
-/** Build a minimal but type-safe ThemeApplyTrace for tests. */
+/** Build a minimal ThemeApplyTrace for tests. Uses `as unknown as`
+ *  because source code in the tested paths never accesses id/startedAt/
+ *  finishedAt/device sub-fields — the mock supplies only what the tests *
+ *  actually read (agentId, duration, steps). */
 const makeTrace = (agentId: string, duration = 100): ThemeApplyTrace =>
   ({
     agentId,
@@ -36,7 +39,7 @@ const makeTrace = (agentId: string, duration = 100): ThemeApplyTrace =>
     steps: [{ name: 's1', duration: 50, success: true }],
     device: { platform: 'win32', hostname: 'test' },
     timestamp: new Date().toISOString(),
-  }) as ThemeApplyTrace;
+  }) as unknown as ThemeApplyTrace;
 
 /** Insert `n` traces with sequential agentIds (trace_001 … trace_NN). */
 function fillTraces(n: number): void {
@@ -377,6 +380,58 @@ describe('logTimeout id monotonicity', () => {
     // New ids restart from 001
     performanceLogger.logTimeout({ channel: 'AFTER_1', ms: 100, timestamp: Date.now() });
     expect(performanceLogger.getAllTimeouts()[0]!.id).toBe('timeout_001');
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  getStats perAgentAvg rounding (independent code path)              */
+/* ------------------------------------------------------------------ */
+
+describe('perAgentAvg rounding', () => {
+  it('rounds per-agent average independently via Math.round', () => {
+    // Agent A: durations 100 + 101 = 201 / 2 = 100.5 → Math.round → 101
+    performanceLogger.log(makeTrace('agent-a', 100));
+    performanceLogger.log(makeTrace('agent-a', 101));
+    // Agent B: single trace 200 → avg = 200 (exact, no rounding needed)
+    performanceLogger.log(makeTrace('agent-b', 200));
+
+    const stats = performanceLogger.getStats();
+    expect(stats.perAgentAvg['agent-a']).toBe(101); // proves Math.round applied
+    expect(stats.perAgentAvg['agent-b']).toBe(200);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  logTimeout field propagation                                       */
+/* ------------------------------------------------------------------ */
+
+describe('logTimeout field propagation', () => {
+  it('spreads all event fields into the stored record', () => {
+    const fixedTs = 1786615200000; // 2026-08-13T18:00:00Z as Date.now()
+    const event = { channel: 'theme:apply', ms: 5200, timestamp: fixedTs };
+    performanceLogger.logTimeout(event);
+
+    const all = performanceLogger.getAllTimeouts();
+    expect(all).toHaveLength(1);
+    expect(all[0].id).toBe('timeout_001');
+    expect(all[0].channel).toBe('theme:apply');
+    expect(all[0].ms).toBe(5200);
+    expect(all[0].timestamp).toBe(fixedTs);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  success:false trace handling                                       */
+/* ------------------------------------------------------------------ */
+
+describe('log() with success:false traces', () => {
+  it('records failed traces without filtering — totalApplies still increments', () => {
+    const failed = makeTrace('agent-fail', 50);
+    // Override success via cast (makeTrace hardcodes true)
+    (failed as { success: boolean }).success = false;
+    performanceLogger.log(failed);
+
+    expect(performanceLogger.getStats().totalApplies).toBe(1);
   });
 });
 
