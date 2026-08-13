@@ -10,9 +10,8 @@
  * ## Design
  *
  * - Delegates all timeout logic to `withTimeout()` (single source of truth).
- * - Uses optional-chain (`logTimeout?.()`) because `logTimeout` does not yet
- *   exist on `PerformanceLoggerApi` — avoids a hard dependency on the
- *   performance-logger refactor landing first.
+ * - Records timeout events to `performanceLogger.logTimeout()` so the
+ *   Diagnostics UI can surface which IPC channels time out and how often.
  * - Re-throws the original reason so callers see no behaviour change.
  */
 
@@ -37,9 +36,7 @@ export function withMonitoredTimeout<T>(
 ): Promise<T> {
   return withTimeout(channel, ms, promise, signal).catch((reason) => {
     if (isIpcTimeoutError(reason)) {
-      // `logTimeout` will be added to PerformanceLoggerApi in a follow-up.
-      // Optional chaining keeps us compilable until then.
-      (performanceLogger as { logTimeout?: (event: PerfTimeoutEvent) => void }).logTimeout?.({
+      performanceLogger.logTimeout({
         channel: reason.channel,
         ms: reason.ms,
         timestamp: Date.now(),
@@ -47,11 +44,4 @@ export function withMonitoredTimeout<T>(
     }
     throw reason; // continue propagating
   });
-}
-
-/** Minimal shape of a recorded timeout event. */
-export interface PerfTimeoutEvent {
-  channel: string;
-  ms: number;
-  timestamp: number;
 }
