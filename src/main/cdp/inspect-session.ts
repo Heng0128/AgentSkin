@@ -82,16 +82,25 @@ export async function startInspect(opts: StartInspectOptions): Promise<InspectCo
       highlightConfig: highlightConfig(),
     });
   };
+  // Keep the timeout handle so we can cancel it once the domain-enable
+  // sequence completes — otherwise the 8s timer dangles in the event loop
+  // after enable succeeds (RC2: dangling timeout timer).
+  let enableTimeout: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = <T>(): Promise<T> =>
-    new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('CDP domain enable timed out (8000ms)')), 8000),
-    );
+    new Promise((_, reject) => {
+      enableTimeout = setTimeout(
+        () => reject(new Error('CDP domain enable timed out (8000ms)')),
+        8000,
+      );
+    });
   try {
     await Promise.race([enablePromise(), timeoutPromise<void>()]);
   } catch (error) {
+    if (enableTimeout) clearTimeout(enableTimeout);
     session.close();
     throw error;
   }
+  if (enableTimeout) clearTimeout(enableTimeout);
 
   const pickHandler = async (params: unknown) => {
     const backendNodeId = (params as { backendNodeId?: number }).backendNodeId;
@@ -120,8 +129,12 @@ export async function startInspect(opts: StartInspectOptions): Promise<InspectCo
 
   session.on('Overlay.inspectNodeRequested', pickHandler);
 
+  let stopped = false;
   return {
     async stop() {
+      if (stopped) return; // idempotent: never double-disable / double-close
+      stopped = true;
+      if (enableTimeout) clearTimeout(enableTimeout);
       try {
         await session.send('Overlay.setInspectMode', { mode: 'none' });
       } catch {

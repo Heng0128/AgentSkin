@@ -127,7 +127,9 @@ describe('core-ipc parameter validation', () => {
       expect(result).toHaveProperty('name', 'IpcTimeoutError');
       expect(result).toHaveProperty('channel', IpcChannel.SYSTEM_STATUS);
       expect(result).toHaveProperty('ms', 15000);
-    });
+    }, // The IPC timeout is 15s; give the test 25s so the timeout has time
+    // to fire before vitest's own timeout kills the test.
+    25000);
   });
 
   describe('SHELL_SHOW_ITEM', () => {
