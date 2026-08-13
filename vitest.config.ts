@@ -70,10 +70,10 @@ export default defineConfig({
         'src/ui/**/*.d.ts',
       ],
       thresholds: {
-        statements: 35,
-        branches: 35,
-        functions: 30,
-        lines: 35,
+        statements: 45,
+        branches: 40,
+        functions: 35,
+        lines: 45,
       },
     },
     server: {
