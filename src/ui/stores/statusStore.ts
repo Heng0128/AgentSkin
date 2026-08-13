@@ -20,23 +20,31 @@ interface StatusState {
   status: SystemStatus | null;
   lastStatusAt: number | null;
   isRefreshing: boolean;
+  /** Error message from the last failed refresh, null when last refresh succeeded. */
+  error: string | null;
 
   setStatus: (status: SystemStatus | null) => void;
   refreshStatus: () => Promise<void>;
+  /** Clear the error state (e.g., on user-initiated retry). */
+  clearError: () => void;
 }
 
 export const useStatusStore = create<StatusState>((set) => ({
   status: null,
   lastStatusAt: null,
   isRefreshing: false,
+  error: null,
 
   setStatus: (status) => set({ status }),
+  clearError: () => set({ error: null }),
   refreshStatus: async () => {
-    set({ isRefreshing: true });
+    set({ isRefreshing: true, error: null });
     try {
-      set({ status: await api.refreshStatus(), lastStatusAt: Date.now() });
-    } catch {
-      /* transient */
+      set({ status: await api.refreshStatus(), lastStatusAt: Date.now(), error: null });
+    } catch (err) {
+      // Capture the error message so the UI can display a retry prompt.
+      const message = err instanceof Error ? err.message : String(err);
+      set({ error: message });
     } finally {
       set({ isRefreshing: false });
     }
