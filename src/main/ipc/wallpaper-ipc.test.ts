@@ -29,6 +29,7 @@ vi.mock('../main-context', () => ({
     defaultPorts: {},
     wallpaper: { enabled: false, id: null, agents: {} },
   })),
+  notifyStatusChanged: vi.fn(),
 }));
 
 const { registerWallpaperIpc } = await import('./wallpaper-ipc');

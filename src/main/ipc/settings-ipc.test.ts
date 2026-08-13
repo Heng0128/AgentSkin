@@ -28,6 +28,7 @@ vi.mock('../main-context', () => ({
     defaultPorts: {},
     wallpaper: { enabled: false, id: null, agents: {} },
   })),
+  notifyStatusChanged: vi.fn(),
 }));
 
 const { registerSettingsIpc } = await import('./settings-ipc');
