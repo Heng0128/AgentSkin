@@ -172,19 +172,74 @@
 
 ---
 
-## 11. 回滚指南
+## 11. 批次 A 补充实施（多子智能体并行）
 
-如需回滚本次全部改动:
+### 批次 A-P1: 并行实施（4 个子智能体）
+
+| 子智能体 | 任务 | 文件 | Commit | 状态 |
+|---------|------|------|--------|------|
+| frontend-developer | statusStore.error 接入 UI | EnvironmentGrid.tsx + UnifiedWorkspacePage.tsx + i18n.ts | 95bd288 | ✅ |
+| senior-developer #1 | statusStore.error 测试覆盖 | statusStore.test.ts (11 tests) | a7f2821 | ✅ |
+| senior-developer #2 | engine-strategy mainWarnFromCatch 重构 | engine-strategy.ts | 3e64521 | ✅ |
+| senior-developer #3 | themeStore unknown-status 测试 | themeStore.test.ts (1 test) | 63e343a | ✅ |
+
+### 批次 A-P2: 并行验证（3 个子智能体）
+
+| 验证器 | 工具 | 结果 |
+|--------|------|------|
+| Verifier-TSC | `tsc --noEmit` | PASS (0 errors) |
+| Verifier-VIT | `vitest run` | PASS (105 files / 1959 tests) |
+| Verifier-BIO | `biome check` | 1 warning → 修复 → PASS |
+
+修复: 移除 EnvironmentGrid.tsx 未使用的 HugeiconsIconProps 导入 (commit 17fbad5)
+
+### 批次 B: 深度审计
+
+| 维度 | 结论 |
+|------|------|
+| 完整性 | PASS — 所有 MUST-FIX 已覆盖 |
+| 回归 | PASS — 无新缺陷 |
+| 一致性 | 2 个 LOW 建议（不阻塞）|
+| 测试覆盖 | PASS |
+| i18n | PASS |
+| 安全性 | PASS |
+| 可访问性 | PASS |
+
+### 批次 A 补充提交记录
+
+```
+17fbad5 fix(EnvironmentGrid): remove unused import [batch-a2-fix]
+63e343a test(themeStore): cover unknown-status branch [batch-a1-p4]
+3e64521 refactor(cdp/engine): use mainWarnFromCatch for consistency [batch-a1-p3]
+a7f2821 test(status): add error state coverage [batch-a1-p2]
+95bd288 feat(status): wire error state to AgentCard UI [batch-a1-p1]
+```
+
+---
+
+## 12. 回滚指南
+
+如需回滚本次全部改动（含批次 A）:
 ```bash
-git reset --soft 56eb4b1^  # 回到 engine-strategy 改动前的状态
-# 或
-git revert 1bdb738 63b9426 1c0b860 30a2c88 45e3aad 56eb4b1 --no-commit
+git reset --soft fa2b220^  # 回到快照点前状态
+# 或选择回滚
+git revert 17fbad5 63e343a 3e64521 a7f2821 95bd288 --no-commit
 ```
 
 单步回滚:
 ```bash
-git revert 56eb4b1  # 回滚 engine-strategy 日志
-git revert 45e3aad  # 回滚 statusStore 错误状态
-git revert 30a2c88  # 回滚 apply-result 安全 fallback
-git revert 1c0b860  # 回滚 AgentDetailSheet loading
+git revert 3e64521  # 回滚 mainWarnFromCatch 重构
+git revert a7f2821  # 回滚 statusStore 测试
+git revert 95bd288  # 回滚 UI error 接入
+git revert 63e343a  # 回滚 themeStore unknown-status 测试
 ```
+
+---
+
+## 13. 下一步行动建议
+
+1. **【中】统一 `toMessage()` 使用**: 将 `statusStore.ts` 的 inline 错误提取替换为 `toMessage(err)` — 统一 IPC 超时渲染格式
+2. **【中】VisusalAnalyzer CDP 实化**: `VISUAL_ANALYSIS_CDP_EXTRACT` handler 从 stub 到真实实现（P2 → P1 升级）
+3. **【低】logger 双重前缀清理**: `mainWarnFromCatch` 中对已含 "Error:" 的 `toMessage` 结果去重
+4. **【低】theme-installer 异常路径测试**: 补充 minAppVersion / bundleMissingId / noSchemes 的负面测试
+5. **【低】方向池巡检**: 巡检 B-数据链路接通、F-事件流闭环 — 项目中仍有 24 个 Scanner-β 发现的 Major 差距待处理
