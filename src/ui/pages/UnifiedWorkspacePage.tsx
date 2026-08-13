@@ -28,6 +28,7 @@ import type { AppController } from '@/hooks/useAppController';
 import { useEnvironments } from '@/hooks/useEnvironments';
 import { cn } from '@/lib/utils';
 import { useEnvironmentStore } from '@/stores/environmentStore';
+import { useStatusStore } from '@/stores/statusStore';
 import type { EnvironmentModel } from '@/types/environment';
 
 import {
@@ -266,6 +267,9 @@ export function UnifiedWorkspacePage({ controller }: { controller: AppController
   const { activeEnvironment, environments } = useEnvironments();
   const { t, status, installed, setRoute } = controller;
   const isSwitching = useEnvironmentStore((s) => s.switching);
+  const statusError = useStatusStore((s) => s.error);
+  const isStatusRefreshing = useStatusStore((s) => s.isRefreshing);
+  const refreshStatus = useStatusStore((s) => s.refreshStatus);
 
   const supportedCount = AGENT_IDS.length;
   const runningCount = status?.apps.filter((a) => a.running).length ?? 0;
@@ -458,7 +462,9 @@ export function UnifiedWorkspacePage({ controller }: { controller: AppController
                 onBrowseThemes={handleBrowseThemes}
                 progress={controller.bootProgress}
                 lastStatusAt={controller.lastStatusAt}
-                isRefreshing={controller.isRefreshing}
+                isRefreshing={isStatusRefreshing}
+                error={statusError}
+                onRetry={() => void refreshStatus()}
               />
             </div>
           </section>

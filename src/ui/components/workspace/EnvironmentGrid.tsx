@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { HugeIcon } from '@/components/ui/huge-icon';
+import { Spinner } from '@/components/ui/spinner';
 import type { ProgressMap } from '@/hooks/useBootProgress';
 import type { EnvironmentModel } from '@/types/environment';
 
-import { BotIcon } from '@hugeicons/core-free-icons';
+import { BotIcon, RefreshIcon } from '@hugeicons/core-free-icons';
+import type { HugeiconsIconProps } from '@hugeicons/react';
 import type { UiMessages } from '@shared/i18n';
 import { EnvironmentCard } from './EnvironmentCard';
 
@@ -76,6 +78,57 @@ function StatusRefreshLabel({
   );
 }
 /**
+ * # StatusErrorBanner
+ *
+ * Conditionally rendered when the last status refresh failed. Shows the error
+ * message in muted/destructive tone with a retry button that triggers
+ * `onRetry` (the caller wires this to `useStatusStore.refreshStatus`).
+ *
+ *  - Only mounts when `error` is a non-empty string.
+ *  - Disables the retry button while `isRefreshing` to prevent duplicate calls.
+ *  - Swiss style: rounded-[2px], mono label, destructive left border accent.
+ */
+function StatusErrorBanner({
+  error,
+  isRefreshing,
+  onRetry,
+  t,
+}: {
+  error: string | null;
+  isRefreshing: boolean;
+  onRetry: () => void;
+  t: UiMessages;
+}) {
+  if (!error) return null;
+
+  return (
+    <div
+      role="alert"
+      className="mb-3 flex items-center gap-3 rounded-[2px] border border-destructive/25 bg-destructive/5 px-3 py-2"
+    >
+      {/* Left accent bar */}
+      <span className="h-5 w-[3px] shrink-0 rounded-[1px] bg-destructive" aria-hidden />
+      <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-muted-foreground">
+        {error}
+      </span>
+      <button
+        type="button"
+        onClick={onRetry}
+        disabled={isRefreshing}
+        className="inline-flex shrink-0 items-center gap-1 rounded-[2px] border border-destructive/30 bg-card2 px-2 py-1 font-mono text-[10px] text-destructive transition-colors duration-fast hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-45"
+      >
+        {isRefreshing ? (
+          <Spinner className="size-3" />
+        ) : (
+          <HugeIcon icon={RefreshIcon} className="size-3" />
+        )}
+        {t.statusRetry}
+      </button>
+    </div>
+  );
+}
+
+/**
  * Adaptive grid columns based on environment count:
  *   1 → 1 col, 2 → 2 cols, 3 → 3 cols (single row),
  *   4 → 2 cols (2×2), 5–6 → 3 cols, 7+ → 4 cols.
@@ -103,6 +156,8 @@ export function EnvironmentGrid({
   progress,
   lastStatusAt,
   isRefreshing,
+  error,
+  onRetry,
 }: {
   environments: EnvironmentModel[];
   activeId: string | null;
@@ -118,6 +173,10 @@ export function EnvironmentGrid({
   lastStatusAt?: number | null;
   /** True while a status refresh is in flight (drives the live pulse). */
   isRefreshing?: boolean;
+  /** Error message from the last failed refresh; null when last refresh succeeded. */
+  error?: string | null;
+  /** Callback invoked when the user clicks the retry button in the error banner. */
+  onRetry?: () => void;
 }) {
   if (environments.length === 0) {
     return (
@@ -128,6 +187,12 @@ export function EnvironmentGrid({
             {title}
           </span>
         </div>
+        <StatusErrorBanner
+          error={error ?? null}
+          isRefreshing={isRefreshing ?? false}
+          onRetry={onRetry ?? (() => {})}
+          t={t}
+        />
         <div className="rounded-[2px] border-2 border-dashed border-border/40 py-10 text-center dark:border-border/30">
           <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-[2px] bg-card2">
             <HugeIcon icon={BotIcon} className="size-5 text-muted-foreground/50" />
@@ -161,6 +226,12 @@ export function EnvironmentGrid({
         {/* Live refresh indicator — isolated ticker so the grid doesn't re-render every second. */}
         <StatusRefreshLabel lastStatusAt={lastStatusAt} isRefreshing={isRefreshing} t={t} />
       </div>
+      <StatusErrorBanner
+        error={error ?? null}
+        isRefreshing={isRefreshing ?? false}
+        onRetry={onRetry ?? (() => {})}
+        t={t}
+      />
       <div className={`grid gap-2.5 ${gridColsClass(environments.length)}`}>
         {environments.map((env) => (
           <EnvironmentCard
