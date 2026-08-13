@@ -220,9 +220,15 @@ export const useThemeStore = create<ThemeState>((set, get) => {
           }
           return true;
         }
+        case 'unknown-status':
+          // Unknown status from main process — treat as transient failure.
+          useNotificationStore
+            .getState()
+            .showToast(`Theme apply returned unexpected status: ${outcome.status}`, 'destructive');
+          return false;
       }
-      // Exhaustiveness fallback — handleApplyResult only returns the three
-      // kinds above, but TS control flow across await boundaries needs this.
+      // Exhaustiveness fallback — handleApplyResult returns all kinds above,
+      // but TS control flow across await boundaries needs this.
       return false as never;
     },
 
