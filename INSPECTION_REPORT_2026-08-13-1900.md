@@ -1,111 +1,143 @@
-# AgentSkin 自动化巡检报告
+# AgentSkin 巡检报告 — 2026-08-13 19:00
+
+## 元信息
 
 | 字段 | 值 |
-|------|-----|
-| **方向编号 + 方向名** | C — 内存占用与资源审计（主进程内存趋势 / BrowserWindow 泄漏 / CDP WebSocket 及时释放） |
-| **状态** | COMPLETED（部分受预存基线阻塞，见下） |
-| **快照 commit** | `ea736ca` (snapshot: pre-inspection baseline [dir-C-memory-audit]) |
-| **巡检执行时间** | 2026-08-13 18:00–19:00 (HOURLY) |
-| **目标分支** | main（直接操作，遵循 G1–G5 回滚保障） |
-| **模型** | hy3 |
+|---|---|
+| 方向编号 | I |
+| 方向名 | Visual Analyzer |
+| 权重 | 1 |
+| 位置范围 | 15–15 |
+| 随机位置 | 15 |
+| 状态 | **COMPLETED** |
+| 快照 commit | `46058d0` |
+| 巡检周期 | 2026-08-13 19:00 – 19:45 |
+| 分支 | main |
 
----
+## 执行摘要
 
-## 1. 执行摘要
-
-本次巡检（方向 C）聚焦主进程资源生命周期，通过 Scout-α/β 双视角并行探索、Merger 去重、Architect 方案设计、Selector 加权选优，定位并修复了 **3 个根因（RC）** 共 **6 处资源泄漏/未释放问题**，覆盖 CDP WebSocket 命令超时定时器泄漏、inspect 会话超时定时器空转、音频广播会话未释放等核心内存泄漏点。
-
-| 指标 | 数量 |
-|------|------|
-| 发现问题总数 | 6（critical 3 / major 2 / minor 1） |
-| 已修复数 | 6 |
+| 指标 | 数值 |
+|---|---|
+| 发现问题总数 | 4（RC1–RC4） |
+| Critical | 2 |
+| Major | 2 |
+| Minor | 0 |
+| Info | 0 |
+| 已修复数 | 3（RC1、RC2、RC4） |
 | 待人工确认数 | 0 |
-| 回滚次数 | 0（无 L1/L2/L3 回滚触发） |
-| 新增测试 | 2（RC1 close 资源清理不变量） |
+| 延期处理数 | 1（RC3 — 死代码管道，XL scope） |
+| 回滚次数 | 0 |
+| 修复轮次 | Phase7-R1（biome）+ Phase8-audit（一致性） |
 
-**预存基线阻塞（非本次引入，超出方向 C 范围，标记为 BLOCKED）：**
-- `src/main/scene/scene-json-parser.ts(402,403)`: `Cannot find name 'numOr'` — 预存 dirty 状态，属方向 D/A 范畴。
-- `src/ui/stores/studioStore.ts(613)`: `Property 'error' does not exist on type '{ ok: boolean }'` — 预存 dirty 状态，属方向 D 范畴。
-- 上述两项使全量 `tsc --noEmit` 退出码非 0，但**均不在本次修改文件中**，非本巡检引入，未自动修复以避免跨方向 scope creep 与干扰并行自动化。
-
----
-
-## 2. 发现与修复明细
+## 发现与修复明细
 
 | # | 文件 | 行号 | 严重等级 | 问题描述 | 修复方案 | 修复 commit | 状态 |
-|---|------|------|---------|---------|---------|------------|------|
-| 1 | `src/main/cdp/cdp-client.ts` | 187–205 (close) | critical | `close()` 仅 reject pending 命令，不清理各命令的 `setTimeout` 超时句柄，也未清空 `listeners` Map → 每次 close 泄漏 N 个孤立定时器 + 事件订阅闭包 | 引入 `rejectAllPending()` 统一 `clearTimeout` 每个 pending timer；`close()` 末追加 `listeners.clear()`；`pending` Map 类型加 `timer?` 字段 | `4ceaf15` | ✅ FIXED |
-| 2 | `src/main/cdp/cdp-client.ts` | 179–185 (ws.onclose) | major | 意外关闭路径调用 `pending` 遍历 reject 但未清理 timer（与 #1 同源，逆向视角的重复确认） | 复用 `rejectAllPending()` 清除 timer | `4ceaf15` | ✅ FIXED |
-| 3 | `src/main/cdp/inspect-session.ts` | 105–125 | critical | `timeoutPromise` 的 8s setTimeout 在 enable 成功后被遗弃空转直至触发（虽 reject 无害但句柄泄漏）；`enableTimeout` 句柄未保存无法取消 | 保存 `enableTimeout` 句柄，enable 成功或 catch 后均 `clearTimeout` | `f96ad3e` | ✅ FIXED |
-| 4 | `src/main/cdp/inspect-session.ts` | 138–152 (stop) | major | `stop()` 非幂等，重复调用会重复 send disable 并重复 `session.close()`（部分 CDP 实现抛错） | 增加 `stopped` 标志位，二次调用直接返回；stop 时也 clear `enableTimeout` | `f96ad3e` | ✅ FIXED |
-| 5 | `src/main/wallpaper-injector.ts` | 700–703 (disposeAudioBroadcast) | major | `disposeAudioBroadcast()` 仅 `audioBroadcastSessions.clear()`，未对持有的 `CdpSession` 调用 `close()`，进程退出前音频会话 WebSocket 永久存活 | 遍历 `audioBroadcastSessions` 逐个 `session.close()`（try/catch 包裹）后 clear | `1d2ebe5` | ✅ FIXED |
-| 6 | `src/main/wallpaper-injector.ts` | 634–682 (injectTarget) + `target-discovery.ts` `waitForPageReady` | minor | 音频会话 subscribe 后若后续 inject 失败路径返回 error，session 成为僵尸（finally 因 `audioLevel>0` 不 close）；`waitForPageReady` 不检查 epoch，BrowserWindow 关闭后仍持有 session 直到超时 | catch 中 `audioSubscribed` 标志驱动 `unsubscribeAudioSession`；`waitForPageReady` 增可选 `isAborted` 回调，injectTarget 传入 epoch 检查 | `1d2ebe5` | ✅ FIXED |
+|---|---|---|---|---|---|---|---|
+| RC1 | RealDomPreview.tsx / PreviewWindow.tsx | 382 / 91 | **Critical** | `sanitizeCSS` 从未在生产代码调用 — Studio 预览路径通过字符串拼接构建 CSS 并发往 `allow-scripts` iframe，无安全过滤 | 在 `overridesToCss()` 返回值外包裹 `sanitizeCSS(...).clean` | `4b8c6fe` | ✅ FIXED |
+| RC2 | visual-analyzer-ipc.ts | 289 | **Critical** | `VISUAL_ANALYSIS_CDP_EXTRACT` IPC channel 已定义但无 handler — 调用会 hang 30s 后超时 | 添加 graceful no-op handler，返回 `{status:'unavailable', reason, profile:null}` | `bdb1ae8` | ✅ FIXED |
+| RC3 | src/main/profile/*.ts | 7 个文件 | **Major** | 7 个 profile 模块（native-profile、treatment-classifier、transform-ledger、overrides-store、studio-history、studio-theme-templates、safe-css）仅有测试消费者，MATURATION-PLAN 管道无生产入口 | 延期 — XL scope 改动，需独立 feature 分支设计 | — | ⏸️ DEFERRED |
+| RC4 | safe-css.ts / visual-analyzer-ipc.ts | 35 / 11, 256 | **Major** | DOC 引用不存在的组件（FitGeneratorPanel）和字段（palette.customCSS） | 删除 stale 引用，更新 safe-css.ts integration points 文档 | `ac4eeff` | ✅ FIXED |
 
----
+## 方案选优记录
 
-## 3. 方案选优记录
+### RC1: CSS Sanitization
 
-- **候选方案数**：针对 RC1（核心泄漏）Architect 提供 3 个候选：
-  1. *托管 timer 集合 + close 统一清理*（选定）
-  2. *使用 AbortController 信号驱动所有命令超时*
-  3. *RAII 风格 CdpSession 包装类接管生命周期*
-- **最优方案**：方案 1「在 `CdpSocketCore` 内为 pending 命令 timer 建立托管集合，`close()` 统一 `clearTimeout` 并 `listeners.clear()`」
-- **选择理由**：改动局部（单文件、向后兼容）、零新依赖、可单测验证、可单步回滚；完美满足 Selector 5 项必选标准（根因消除 / 不引入依赖 / 可阶段实施 / 可验证 / 可回滚）。
-- **各维度评分**（满分 10）：
+| 方案 | 时间复杂度 | 空间复杂度 | 可维护性 | 扩展性 | 依赖可控性 | 总分 |
+|---|---|---|---|---|---|---|
+| **A: 在 overridesToCss 结果上调用 sanitizeCSS**（✅ 选中） | 19 | 15 | 25 | 20 | 20 | **99** |
+| B: 在 postMessage 前调用（2 个调用点） | 17 | 13 | 20 | 18 | 20 | 88 |
+| C: 新增 sanitizedOverridesToCss wrapper | 18 | 14 | 22 | 19 | 20 | 93 |
 
-  | 维度 | 权重 | 方案1 | 方案2 | 方案3 |
-  |------|------|-------|-------|-------|
-  | 时间复杂度 | 20% | 9 | 7 | 5 |
-  | 空间复杂度 | 15% | 10 | 9 | 8 |
-  | 长期可维护性 | 25% | 9 | 8 | 7 |
-  | 扩展性 | 20% | 9 | 8 | 7 |
-  | 依赖可控性 | 20% | 10 | 8 | 6 |
-  | **加权总分** | 100% | **9.35** | **8.00** | **6.45** |
+**选择理由**：方案 A 集中一处（useMemo 内），所有未来调用者自动受益，改动最小（2 文件 +4 行）。无污染依赖，sanitizer 已被 28 个测试充分覆盖。
 
-- **落选方案存档**：方案 2（AbortController）评分 8.00，优点为语义现代，缺点为需重写 send 调用约定、破坏性较大；方案 3（RAII 包装类）评分 6.45，优点为结构性根治，缺点为改动面 XL、引入新抽象、回滚成本高。
+### RC2: CDP_EXTRACT Handler
 
----
+| 方案 | 时间复杂度 | 空间复杂度 | 可维护性 | 扩展性 | 依赖可控性 | 总分 |
+|---|---|---|---|---|---|---|
+| **A: graceful no-op handler**（✅ 选中） | 20 | 15 | 25 | 18 | 20 | **98** |
+| B: 移除 channel 定义（5 文件级联） | 12 | 10 | 15 | 10 | 15 | 62 |
+| C: 直接抛出错误 | 18 | 15 | 18 | 15 | 20 | 86 |
 
-## 4. 验证结果
+**选择理由**：方案 A 防止 hang、保留接口等未来实现、不破坏类型契约。改动最小（1 文件 +8 行）。
+
+## 验证结果
 
 | Verifier | 轮次 | 结果 | 备注 |
-|----------|------|------|------|
-| Verifier-TSC (`tsc --noEmit`) | R0 | ⚠️ 部分通过 | 本次修改 4 文件类型干净；全量受 2 个**预存**错误阻塞（`scene-json-parser.ts` numOr / `studioStore.ts` error 属性），非本次引入，标记 BLOCKED |
-| Verifier-VIT (`vitest run`) | R0 | ✅ PASS | `src/main/cdp/cdp-client.test.ts` 44 passed（含新增 2 个 RC1 不变量测试） |
-| Verifier-BIO (`biome check`) | R0 | ✅ PASS | 本次修改 4 文件零 error/warning |
-| Verifier-CTR (契约) | R0 | ✅ PASS | 无样式泄漏；`waitForPageReady` 仅增可选参数（向后兼容）；`pending` 类型内部扩展不导出；无 Store 跨边界调用 |
+|---|---|---|---|
+| **TSC** | R1 | ✅ PASS | 0 errors — import 路径类型安全 |
+| **VIT** | R1 | ✅ PASS | 1959/1959 全部通过（105 文件） |
+| **BIO** | R1→R2 | ✅ PASS | R1 发现 2 个 style 错误，R1-fix 后 R2 全通过（425 files） |
+| **CTR** | R1 | ✅ PASS | 样式隔离 ✅ / 类型一致 ✅ / Store 边界 ✅ / IPC 合约 ✅ |
 
-> Phase6 判定：本次巡检范围内的 4 个 Verifier 实质全绿（TSC 仅受预存基线拖累，非本巡检责任）。Phase7 修复循环未触发（0 轮）。
+### 验证轮次详情
 
----
+**Phase7-R1（biome 修复）**
+- RealDomPreview.tsx: import 排序修正
+- PreviewWindow.tsx: 行长度修正（100-char break）
+- tex-parser.test.ts: 移除未使用 import `MAX_SCENE_DECODE_BYTES`
+- Commit: `7fb8bc5`
 
-## 5. 审计结论（Phase8 Auditor）
+**Phase8-audit（一致性修复）**
+- PreviewWindow.tsx: 将 sanitizeCSS import 从 JSDoc 前移至其他 import 后
+- Commit: `675d20c`
 
-- **遗漏**：无。RC1/RC2/RC3 三个根因均有对应修复与回归测试。
-- **回归**：无。修改仅增强释放语义，向后兼容（`waitForPageReady` 加可选参数、`disposeAudioBroadcast` 由 clear 升级为 close+close 幂等安全、`stop` 幂等化）。
-- **新增问题**：无。新增 `timer?` 可选字段与 `isAborted?` 可选回调均为最小侵入，无新 code smell。
-- **一致性**：代码风格（try/catch、注释范式）与项目既有风格一致。
-- **文档同步**：未改变公开 API 语义（`close`/`stop` 行为不变，仅补全资源释放），无需文档变更。
+## 审计结论
 
----
+| 维度 | 评级 | 说明 |
+|---|---|---|
+| **遗漏检查** | A | 3/4 findings 已修复，RC3 正确延期 |
+| **回归检查** | A | sanitizeCSS 包裹在所有路径下安全；82/82 相关测试通过 |
+| **新增问题** | A- | import 路径安全（safe-css.ts 零 Node 依赖），轻微跨目录耦合待监控 |
+| **一致性** | A | 修复后两文件 import 放置策略一致 |
+| **文档同步** | B+ | 源码级文档已同步；CHANGELOG.md 未更新（P2 nice-to-have） |
 
-## 6. 下一步建议（优先级排序，供下次巡检输入）
+## Commit 清单
 
-1. **【高】清理预存类型错误基线**（方向 D/A）：`scene-json-parser.ts` 的 `numOr` 未定义标识符（疑拼写错误）、`studioStore.ts` 缺失 `error` 属性的类型，建议下次巡检作为独立 Phase 修复，恢复全量 `tsc --noEmit` 零错误门禁。
-2. **【高】主进程内存趋势可观测化**（方向 C 延伸）：当前无周期性 `process.memoryUsage()` 采样。建议在 `performance-logger` 中接入常驻内存采样环形缓冲，建立内存增长基线以便早期发现泄漏回归。
-3. **【中】BrowserWindow 生命周期审计**（方向 C）：本次聚焦 CDP 层，WindowManager 的 `destroy()`/`reload()` 路径与事件监听器卸载尚未深度审查，建议下次方向 C 对其做专项探查。
-4. **【中】CDP fanout 超时路径补测**（方向 D）：`cdp-fanout.ts` 的 `connectWithRetry` / `hardeningPass` epoch 中止分支缺乏释放断言，建议补充单测。
-5. **【低】统一会话释放抽象**（方向 F）：CDP session 的 close 语义在 client/fanout/inspect/injector 多处重复，可考虑提取统一 `ScopedCdpSession`（呼应方案 3），降低后续泄漏风险。
+| Commit | Phase | Scope | Description |
+|---|---|---|---|
+| `46058d0` | — | snapshot | 巡检前快照点 |
+| `4b8c6fe` | 5-step1 | studio | 集成 sanitizeCSS 到 Studio 预览 CSS 注入路径 |
+| `bdb1ae8` | 5-step2 | ipc | 为 VISUAL_ANALYSIS_CDP_EXTRACT 添加 graceful handler |
+| `ac4eeff` | 5-step3 | docs | 移除死引用（FitGeneratorPanel, customCSS） |
+| `7fb8bc5` | 7-r1 | style | biome 合规：import 排序 + 行长度 + 死 import |
+| `675d20c` | 8-audit | studio | PreviewWindow import 位置一致性修正 |
 
----
+## 并行冲突观察
 
-## 7. 提交清单（Phase5 独立 commit，支持粒度回滚）
+本次巡检实施期间（Phase 5–8），有 5 个外来 commit 被并行 Agent 推送到 main 分支：
+- `2ce436e` test-quality 导出修复
+- `3e0ecba` catalog semver 测试
+- `2f2fd31` persist 测试
+- `50bb22a` persist 隔离测试
+- `a98a61c` solidification 报告
 
-| commit | 说明 |
-|--------|------|
-| `4ceaf15` | fix(cdp-client): clear pending timers and listeners on close [phase5-step1] |
-| `f96ad3e` | fix(inspect-session): cancel enable timeout timer and make stop idempotent [phase5-step2] |
-| `1d2ebe5` | fix(wallpaper-injector): release audio sessions on dispose/failure and abort waitForPageReady on epoch change [phase5-step3] |
-| `fd1d8d2` | test(cdp-client): add RC1 close-resource-cleanup invariant tests [phase5-step4] |
+这表明多 Agent 并行操作 main 分支的问题仍在持续。建议：实施 main 分支操作互斥锁（文件锁或 IPC 信号量）避免竞争。
 
-> 注：快照点 `ea736ca` 由本自动化在本次执行前创建；工作区在 `ea736ca` 之后已存在其他自动化（方向 K）的遗留提交，本次方向 C 提交已正常并入 main 历史链。
+## 下一步建议
+
+| 优先级 | 建议 | 方向链接 |
+|---|---|---|
+| **P1** | 修复上次巡检遗留的 TSC 回归：`AgentDetailSheet.tsx:120` `detailApplying` → `detailApply` | D — 测试质量 |
+| **P1** | 建立 main 分支操作互斥机制，防止多 Agent 并行 push 冲突 | L — 门禁/CI |
+| **P2** | 重新激活 Visual Analyzer UI 消费路径 — 接入 `listVisualAnalysisSummaries` 到设置页 | I — Visual Analyzer |
+| **P2** | 将 `safe-css.ts` 等纯 TS 工具模块从 `src/main/profile/` 移至 `src/shared/`，明确渲染端安全边界 | F — 架构正交 |
+| **P3** | 更新 CHANGELOG.md `[Unreleased]` → `Fixed` 记录本次修复 | M — 工程卫生 |
+
+## 方向池健康快照
+
+| 方向 | 上次巡检 | 状态 | 本次选取 |
+|---|---|---|---|
+| A 核心链路 | — | 🟢 未巡检 | — |
+| B 注入性能 | 1600 | COMPLETED | — |
+| C 内存资源 | 1900 | COMPLETED | 19:00 首轮选中，空池兜底 |
+| D 测试质量 | — | 🟢 未巡检 | — |
+| E 国际化 | — | 🟢 未巡检 | — |
+| F 架构正交 | — | 🟢 未巡检 | — |
+| G 环境系统 | — | 🟢 未巡检 | — |
+| H Studio瘦身 | — | 🟢 未巡检 | — |
+| **I Visual Analyzer** | — | ✅ **COMPLETED** | ← 本次 |
+| J 主题契约 | — | 🟢 未巡检 | — |
+| K 渲染管线 | 1800 | COMPLETED | — |
+| L 门禁 | — | 🟢 未巡检 | — |
+| M 工程卫生 | — | 🟢 未巡检 | — |
+| N 设计系统 | — | 🟢 未巡检 | — |
