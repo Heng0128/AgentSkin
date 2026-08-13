@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
+import { notifyStatusChanged } from '../main-context';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -123,6 +124,7 @@ describe('settings-ipc parameter validation', () => {
       const handler = handlers.get(IpcChannel.SETTINGS_SET_APP_PORT)!;
       await expect(handler({}, 'workbuddy', null)).resolves.toBeDefined();
       expect(vi.mocked(mockDeps.settings.setAppPort)).toHaveBeenCalledWith('workbuddy', null);
+      expect(notifyStatusChanged).toHaveBeenCalled();
     });
   });
 });

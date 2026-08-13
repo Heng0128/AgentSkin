@@ -330,3 +330,5 @@ describe('THEME_RESTORE regression', () => {
     vi.useRealTimers();
   });
 });
+
+// THEME_APPLY / THEME_IMPORT 无 success-path 可附加断言，需独立测试

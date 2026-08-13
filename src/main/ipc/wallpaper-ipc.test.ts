@@ -173,3 +173,5 @@ describe('WALLPAPER_APPLY_TO_AGENT regression', () => {
     vi.useRealTimers();
   });
 });
+
+// WALLPAPER_REMOVE_FROM_AGENT 无 success-path 可附加断言，需独立测试
