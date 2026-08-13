@@ -389,6 +389,11 @@ function parseColor3(v: unknown): SceneColor | null {
   return null;
 }
 
+/** Return `v` if it is a finite number, otherwise the fallback (default 0). */
+function numOr(v: unknown, fallback = 0): number {
+  return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+}
+
 /** Parse a 2-component vector string "x y" or object {x,y}. */
 function parseVec2(v: unknown): SceneVec2 | null {
   if (v == null) return null;

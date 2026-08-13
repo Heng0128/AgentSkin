@@ -450,7 +450,7 @@ export interface AgentSkinApi {
   /** Install an existing bundle by id (re-applies its theme). */
   installBundleById(id: string): Promise<{ ok: boolean; error?: string }>;
   /** Delete an installed bundle by id (filesystem rm). */
-  deleteBundle(id: string): Promise<{ ok: boolean }>;
+  deleteBundle(id: string): Promise<{ ok: boolean; error?: string }>;
   // --- Diagnostics (Performance panel) ---
   /** Fetch recent theme-apply traces and aggregate statistics for the
    *  Diagnostics tab. `count` caps at 50; defaults to 10. */
@@ -478,6 +478,11 @@ export interface AgentSkinApi {
   ): Promise<Array<{ id: string; channel: string; ms: number; timestamp: number }>>;
   /** Clear all stored IPC timeout events. Returns `{ ok: true }`. */
   clearPerformanceTimeouts(): Promise<{ ok: true }>;
+  /** Fetch main-process memory trend samples (oldest-first). Each sample
+   *  carries `ts` (epoch ms) and byte counts for `heapUsed`/`rss`/`external`. */
+  getPerformanceMemory(): Promise<
+    Array<{ ts: number; heapUsed: number; rss: number; external: number }>
+  >;
   /** Subscribe to live concurrency metrics pushed from the main process
    *  every 5 seconds. The payload covers all 7 concurrency-subsystem maps/sets
    *  (see ConcurrencyMetrics in diagnosticsStore / agent-engine-service).
@@ -529,8 +534,6 @@ export interface AgentSkinApi {
   detectVisualAnalysisAgent(
     agentName: string,
   ): Promise<{ running: boolean; port?: number; title?: string }>;
-  /** Trigger a CDP-based extraction of visual analysis tokens from a running agent. */
-  extractVisualAnalysisCdp(agentName: string): Promise<{ ok: boolean; message: string }>;
   /** Subscribe to progress updates for an ongoing visual analysis extraction. */
   onVisualAnalysisProgress(
     cb: (progress: { agent: string; step: string; progress: number }) => void,
