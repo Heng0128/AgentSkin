@@ -28,6 +28,7 @@ import path from 'node:path';
 import type { ApplicationAdapter } from '../adapters/base';
 import { requireAdapter } from '../adapters/registry';
 import { toMessage } from '../shared/errors';
+import { IpcChannel } from '../shared/ipc-channels';
 import {
   AGENT_IDS,
   AGENT_META,
@@ -64,6 +65,7 @@ import {
 } from './cdp/injection/engine-strategy';
 import { EpochManager } from './epoch-manager';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
+import { ctx } from './main-context';
 import { resolveEngineDirDefault } from './palette-builder';
 import type { SchemeSyncDeps } from './scheme-sync';
 import { mergeRenderOptions, themeRenderOptions } from './services/agent-engine-options';
@@ -466,6 +468,19 @@ export class AgentEngineService implements AgentEngineServiceApi {
           customThemeCss: () => this.settings.customThemeCss(),
         }),
       log: (line) => this.log(line),
+      // Forward secondary-injection progress/summary to the renderer so the UI
+      // can render a per-target injection timeline. The discriminator ('targetId'
+      // vs 'injected') distinguishes progress events from the summary event.
+      onSecondaryProgress: (event) => {
+        const win = ctx.mainWindow;
+        if (win && !win.isDestroyed()) {
+          const channel =
+            'targetId' in event
+              ? IpcChannel.THEME_SECONDARY_INJECT_PROGRESS
+              : IpcChannel.THEME_SECONDARY_INJECT_SUMMARY;
+          win.webContents.send(channel, event);
+        }
+      },
     };
   }
 

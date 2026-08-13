@@ -154,6 +154,14 @@ interface StudioStoreState {
   /** Add a fully-qualified selector (e.g. from live inspect) to pinned selectors. */
   pinSelector(sel: string): void;
 
+  // --- Visual analysis progress ---
+  /** Current visual-analysis progress (from main process via IPC). Null when idle. */
+  analysisProgress: { agent: string; step: string; progress: number } | null;
+  /** Guard flag so initAnalysisProgressSubscription is idempotent across HMR. */
+  _analysisProgressSubscribed: boolean;
+  /** Subscribe to visual-analysis progress events from main process. Idempotent. */
+  initAnalysisProgressSubscription(): void;
+
   // --- Simple setters (form fields, UI flags) ---
   setCreatingProject(v: boolean): void;
   setNewName(v: string): void;
@@ -270,6 +278,10 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   exportAuthor: '',
   exportState: { loading: false, dir: null, error: null },
 
+  // --- Visual analysis progress ---
+  analysisProgress: null,
+  _analysisProgressSubscribed: false,
+
   getActiveProject: () => {
     const { projects, activeProjectId } = get();
     if (projects === _projectsRef && activeProjectId === _lastActiveId) {
@@ -279,6 +291,19 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     _lastActiveId = activeProjectId;
     _lastResult = projects.find((p) => p.id === activeProjectId) ?? null;
     return _lastResult;
+  },
+
+  // ------------------------------------------------------------------
+  // Visual analysis progress subscription
+  // ------------------------------------------------------------------
+  // Idempotent: guarded by _analysisProgressSubscribed flag so HMR / repeated
+  // init calls don't accumulate listeners.
+  initAnalysisProgressSubscription: () => {
+    if (get()._analysisProgressSubscribed) return;
+    set({ _analysisProgressSubscribed: true });
+    api.onVisualAnalysisProgress((payload) => {
+      set({ analysisProgress: payload });
+    });
   },
 
   // ------------------------------------------------------------------

@@ -281,6 +281,83 @@ describe('wallpaperStore — Toast notification behavior', () => {
   });
 
   // -----------------------------------------------------------------------
+  // 6b. activateThemeWallpaper — theme-apply linkage (appId)
+  // -----------------------------------------------------------------------
+
+  it('activateThemeWallpaper persists per-agent preference and injects when appId is provided', async () => {
+    // listWallpapers returns the bundled wallpaper for this theme.
+    mockListWallpapers.mockResolvedValueOnce([
+      { id: 'theme:theme-amber', title: 'Amber', projectType: 'video' },
+    ]);
+    mockSetWallpaper.mockResolvedValueOnce(
+      mockSettings({ enabled: true, id: 'theme:theme-amber' }),
+    );
+    mockSetAgentWallpaper.mockResolvedValueOnce(mockSettings());
+    mockApplyAgentWallpaper.mockResolvedValueOnce({ ok: true });
+
+    const result = await useWallpaperStore
+      .getState()
+      .activateThemeWallpaper('theme-amber', undefined, 'traework');
+
+    // Global preference set (api.setWallpaper receives { enabled, id, render }).
+    expect(mockSetWallpaper).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true, id: 'theme:theme-amber' }),
+    );
+    // Per-agent preference persisted (api.setAgentWallpaper(appId, { enabled, id, render })).
+    expect(mockSetAgentWallpaper).toHaveBeenCalledWith(
+      'traework',
+      expect.objectContaining({ enabled: true, id: 'theme:theme-amber' }),
+    );
+    // CDP injection triggered (api.applyAgentWallpaper(appId, options?)).
+    expect(mockApplyAgentWallpaper).toHaveBeenCalledWith('traework', undefined);
+    // Returns the apply result.
+    expect(result).toEqual({ ok: true });
+    // No failure reported.
+    expect(mockFail).not.toHaveBeenCalled();
+  });
+
+  it('activateThemeWallpaper does NOT inject when per-agent persist fails', async () => {
+    mockListWallpapers.mockResolvedValueOnce([
+      { id: 'theme:theme-amber', title: 'Amber', projectType: 'video' },
+    ]);
+    mockSetWallpaper.mockResolvedValueOnce(
+      mockSettings({ enabled: true, id: 'theme:theme-amber' }),
+    );
+    // Per-agent persist fails.
+    mockSetAgentWallpaper.mockRejectedValueOnce(new Error('disk full'));
+
+    await useWallpaperStore.getState().activateThemeWallpaper('theme-amber', undefined, 'traework');
+
+    // Global preference still set.
+    expect(mockSetWallpaper).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true, id: 'theme:theme-amber' }),
+    );
+    // Injection must NOT happen without a persisted setting.
+    expect(mockApplyAgentWallpaper).not.toHaveBeenCalled();
+    // Failure reported.
+    expect(mockFail).toHaveBeenCalledTimes(1);
+  });
+
+  it('activateThemeWallpaper backward-compatible: no appId → only global preference', async () => {
+    mockListWallpapers.mockResolvedValueOnce([
+      { id: 'theme:theme-amber', title: 'Amber', projectType: 'video' },
+    ]);
+    mockSetWallpaper.mockResolvedValueOnce(
+      mockSettings({ enabled: true, id: 'theme:theme-amber' }),
+    );
+
+    await useWallpaperStore.getState().activateThemeWallpaper('theme-amber');
+
+    // Only global preference set — no per-agent calls.
+    expect(mockSetWallpaper).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true, id: 'theme:theme-amber' }),
+    );
+    expect(mockSetAgentWallpaper).not.toHaveBeenCalled();
+    expect(mockApplyAgentWallpaper).not.toHaveBeenCalled();
+    expect(mockFail).not.toHaveBeenCalled();
+  });
+
+  // -----------------------------------------------------------------------
   // 7. Companion flow — theme extract failure reports via fail()
   // -----------------------------------------------------------------------
 

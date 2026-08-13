@@ -96,7 +96,11 @@ interface WallpaperState {
     nextId: string | null,
     options?: { restartExisting?: boolean; render?: WallpaperRenderOptions },
   ) => Promise<ApplyAgentWallpaperResult>;
-  activateThemeWallpaper: (themeId: string, workshopId?: string) => Promise<void>;
+  activateThemeWallpaper: (
+    themeId: string,
+    workshopId?: string,
+    appId?: AgentId,
+  ) => Promise<ApplyAgentWallpaperResult | undefined>;
 }
 
 export const useWallpaperStore = create<WallpaperState>((set, get) => ({
@@ -243,13 +247,36 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
     return result;
   },
 
-  activateThemeWallpaper: async (themeId, workshopId) => {
+  /**
+   * Activate a theme's bundled wallpaper.
+   *
+   * Two call modes:
+   *  - Standalone (no appId): writes global wallpaper preference via `setWallpaper`.
+   *    Used by settings UI manual trigger.
+   *  - Theme-apply linkage (with appId): after global preference, also persists
+   *    the per-agent wallpaper setting (`setAgentWallpaper`) and triggers CDP
+   *    injection (`applyAgentWallpaper`). Called by `themeStore.applyToApp`
+   *    success branch so the wallpaper follows the theme automatically.
+   *
+   * Failures are reported via notification but never throw — a wallpaper
+   * activation failure must not roll back a successful theme apply.
+   */
+  activateThemeWallpaper: async (themeId, workshopId, appId) => {
     try {
       const list = await api.listWallpapers();
       set({ wallpapers: list });
       const targetId = workshopId ?? `theme:${themeId}`;
       if (list.some((w) => w.id === targetId)) {
         await get().setWallpaper(true, targetId);
+        if (appId) {
+          // Theme-apply linkage: persist per-agent preference and inject.
+          // Failure to persist → don't inject (would succeed without setting).
+          const persisted = await get().setAgentWallpaper(appId, true, targetId);
+          if (persisted) {
+            const result = await get().applyAgentWallpaper(appId);
+            return result;
+          }
+        }
       }
     } catch (error) {
       // Best-effort: a theme apply shouldn't fail because the wallpaper
