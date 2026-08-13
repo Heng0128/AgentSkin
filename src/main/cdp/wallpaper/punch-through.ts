@@ -155,7 +155,7 @@ export const WALLPAPER_PUNCH_JS = `
     var hasWp=false;
     for(var i=0;i<3;i++){ if(document.getElementById(IDS[i])){ hasWp=true; break; } }
     if(!hasWp){
-      if(window[G+'_mo']){ try{ window[G+'_mo'].disconnect(); }catch(e){} delete window[G+'_mo']; }
+      if(window[G+'_mo']){ try{ window[G+'_mo'].disconnect(); }catch(e){ console.warn('[wallpaper-punch] observer disconnect failed:', e); } delete window[G+'_mo']; }
       return;
     }
     // html and body are ALWAYS full-bleed and are the #1 opaque blocker.

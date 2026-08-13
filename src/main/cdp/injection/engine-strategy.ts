@@ -482,7 +482,7 @@ async function registerEnginePersistence(
     // so the script's first execution (on the next navigation) sees no flag.
     try {
       await session.evaluate(
-        `(() => { try { sessionStorage.removeItem('${SESSION_DISABLED_KEY}'); } catch (e) {} return 'ok'; })()`,
+        `(() => { try { sessionStorage.removeItem('${SESSION_DISABLED_KEY}'); } catch (e) { console.warn('[engine-strategy] sessionStorage.removeItem failed:', e); } return 'ok'; })()`,
       );
     } catch {
       // sessionStorage may not be available yet — non-fatal, the script
@@ -553,7 +553,7 @@ export async function removeEngineInjection(session: CdpSession, agent?: string)
   try {
     await session.send('Runtime.enable');
     await session.evaluate(`(() => {
-      try { sessionStorage.setItem('${SESSION_DISABLED_KEY}', '1'); } catch (e) {}
+      try { sessionStorage.setItem('${SESSION_DISABLED_KEY}', '1'); } catch (e) { console.warn('[engine-strategy] sessionStorage.setItem failed:', e); }
       return 'ok';
     })()`);
   } catch {

@@ -116,7 +116,7 @@ export async function transferHeroBase64(
         document.documentElement.style.setProperty('--agentskin-art', 'url(' + url + ')');
         return 'ok';
       } catch(e) {
-        try { delete window.${HERO_CHUNKS_GLOBAL}; } catch (_) {}
+        try { delete window.${HERO_CHUNKS_GLOBAL}; } catch (e) { console.warn('[hero-inject] cleanup chunks failed:', e); }
         return 'err:' + e.message;
       }
     })()`);
@@ -128,7 +128,9 @@ export async function transferHeroBase64(
     mainWarn('Inject.Hero', `chunked-hero CDP transfer failed: ${toMessage(error)}`);
     // Best-effort cleanup of the accumulator on failure.
     try {
-      await session.evaluate(`try { delete window.${HERO_CHUNKS_GLOBAL}; } catch(e) {} 'cleanup';`);
+      await session.evaluate(
+        `try { delete window.${HERO_CHUNKS_GLOBAL}; } catch (e) { console.warn('[hero-inject] cleanup chunks failed:', e); } 'cleanup';`,
+      );
     } catch {
       // ignore cleanup errors (already logging primary failure above)
     }

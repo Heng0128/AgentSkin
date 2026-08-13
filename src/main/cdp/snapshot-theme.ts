@@ -293,7 +293,7 @@ async function captureLandmarkFallback(
       try {
         var r = el.getBoundingClientRect();
         bm = { width: Math.round(r.width), height: Math.round(r.height), left: Math.round(r.left), top: Math.round(r.top) };
-      } catch(e) {}
+      } catch(e) { console.warn('[snapshot-theme] getBoundingClientRect failed:', e); }
       return { styles: styles, boxModel: bm, visible: style.display !== 'none' && parseFloat(style.opacity) > 0 };
     })()`;
 

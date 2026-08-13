@@ -135,7 +135,7 @@ function storageEventLines(writes: Record<string, string>): string {
   return Object.keys(writes)
     .map(
       (key) =>
-        `try { window.dispatchEvent(new StorageEvent('storage', { key: ${JSON.stringify(key)}, newValue: ${JSON.stringify(writes[key])}, storageArea: localStorage })); } catch (e) {}`,
+        `try { window.dispatchEvent(new StorageEvent('storage', { key: ${JSON.stringify(key)}, newValue: ${JSON.stringify(writes[key])}, storageArea: localStorage })); } catch (e) { console.warn('[agent-scheme] dispatchStorageEvent failed:', e); }`,
     )
     .join('\n      ');
 }

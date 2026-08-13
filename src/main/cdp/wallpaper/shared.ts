@@ -276,7 +276,7 @@ export function buildWpSignalBridgeJs(): string {
     try{
       var f=document.getElementById('${WEB_WALLPAPER_ID}');
       if(f&&f.contentWindow)f.contentWindow.postMessage({${JSON.stringify(WALLPAPER_MESSAGE_NS)}:true,type:type,data:data},'*');
-    }catch(e){}
+    }catch(e){ console.warn('[wallpaper-bridge] postMessage failed:', e); }
   }
   window.addEventListener('mousemove',function(e){
     send('pointer',{x:e.clientX/(window.innerWidth||1),y:e.clientY/(window.innerHeight||1)});

@@ -89,7 +89,7 @@ export function buildWallpaperGuardJs(
     ensureStyle();
     wp.style.setProperty('opacity','1','important');
     if(sc)sc.style.setProperty('opacity','1','important');
-    ${isVideo ? "try{if(wp.tagName==='VIDEO'){wp.play().catch(function(){});}}catch(e){}" : ''}
+    ${isVideo ? "try{if(wp.tagName==='VIDEO'){wp.play().catch(function(){});}}catch(e){ console.warn('[wallpaper-guard] video play failed:', e); }" : ''}
   }
   var obs=new MutationObserver(function(muts){
     for(var m of muts){
@@ -112,7 +112,7 @@ export function buildWallpaperGuardJs(
       var sop=parseFloat(scs.opacity);
       if(isNaN(sop)||sop<=0){currentSc.style.setProperty('opacity','1','important');}
     }
-    ${isVideo ? "if(currentWp&&currentWp.tagName==='VIDEO'&&currentWp.paused){try{currentWp.play().catch(function(){});}catch(e){}}" : ''}
+    ${isVideo ? "if(currentWp&&currentWp.tagName==='VIDEO'&&currentWp.paused){try{currentWp.play().catch(function(){});}catch(e){ console.warn('[wallpaper-guard] heal video play failed:', e); }}" : ''}
   },${RENDERER_SELF_HEAL_INTERVAL_MS});
   window.${WALLPAPER_HEAL_GLOBAL}=healInterval;
   // Re-enforce container positioning on window resize / DPI change.
