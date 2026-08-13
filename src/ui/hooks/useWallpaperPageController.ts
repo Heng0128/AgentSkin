@@ -19,9 +19,7 @@ import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 import { describeWallpaperFailure } from '@/pages/wallpaper/describeWallpaperFailure';
 import { useNotificationStore } from '@/stores/notificationStore';
-import { useWallpaperStore } from '@/stores/wallpaperStore';
 
-import type { UiMessages } from '@shared/i18n';
 import type { AgentId, WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
 import type { AppController } from './useAppController';
@@ -76,8 +74,6 @@ export function useWallpaperPageController(controller: AppController): Wallpaper
   const { t, wallpaper, appStatusFor, setWallpaperRestartPrompt } = controller;
   const showToast = useNotificationStore((s) => s.showToast);
   const {
-    selectedId,
-    setWallpaper,
     importWallpaper: _importWallpaper,
     deleteWallpaper,
     setAndApplyAgentWallpaper,

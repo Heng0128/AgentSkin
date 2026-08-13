@@ -205,7 +205,7 @@ app
     }, 15_000);
 
     try {
-      const { warnings } = await runBootSequence({
+      await runBootSequence({
         // Boot path: hand the main window's ready-to-show to a single
         // transition handler (splash fade-out + main window fade-in) instead
         // of letting createMainWindow auto-show it. This fixes the race where

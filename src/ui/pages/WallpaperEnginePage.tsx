@@ -15,13 +15,7 @@ import type { AppController, useAppController } from '@/hooks/useAppController';
 import { useWallpaperPageController } from '@/hooks/useWallpaperPageController';
 import { cn } from '@/lib/utils';
 
-import {
-  CheckmarkCircle02Icon,
-  Download01Icon,
-  Image02Icon,
-  Search01Icon,
-  Video01Icon,
-} from '@hugeicons/core-free-icons';
+import { Download01Icon, Image02Icon, Search01Icon, Video01Icon } from '@hugeicons/core-free-icons';
 import type { WallpaperInfo } from '@shared/types';
 
 /** 页面 wrapper — 持有 AppController (由上层注入)。 */

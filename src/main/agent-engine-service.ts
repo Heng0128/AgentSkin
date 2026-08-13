@@ -56,8 +56,7 @@ import {
   type WithPageSessionDeps,
   withPageSession,
 } from './agent-engine/delegates';
-import type { SchemeSnapshot } from './agent-scheme';
-import type { AppPortState, DiscoveryDeps } from './app-discovery';
+import type { DiscoveryDeps } from './app-discovery';
 import type { CdpFanoutDeps } from './cdp/cdp-fanout';
 import {
   cleanupEngineInjectionForAgent,
