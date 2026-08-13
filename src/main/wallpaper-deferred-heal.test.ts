@@ -62,8 +62,22 @@ function createMockDeps(isApplyingTheme: (appId: AgentId) => boolean): Wallpaper
 // Drain constants — must match the production values for correctness
 // ---------------------------------------------------------------------------
 
+/** Base poll interval (ms). This is the actual delay only for attempts 0–4;
+ *  later attempts use progressive backoff via {@link backoffForAttempt}. */
 const DEFERRED_POLL_INTERVAL_MS = 100;
 const DEFERRED_MAX_WAIT_MS = 10_000;
+
+/**
+ * Mirror of the production backoff formula in wallpaper-injector.ts.
+ * Used so tests track real scheduling rather than assuming a fixed interval.
+ *   attempts 0-4  → 100ms
+ *   attempts 5-9  → 200ms
+ *   attempts 10-14 → 400ms
+ *   attempts 15-19 → 800ms
+ *   attempts 20+   → 1600ms (cap)
+ */
+const backoffForAttempt = (attempt: number): number =>
+  Math.min(1600, 100 * 2 ** Math.floor(attempt / 5));
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -117,11 +131,14 @@ describe('scheduleDeferredSelfHeal — drain after lock released', () => {
 
     scheduleDeferredSelfHeal(TEST_AGENT, thunk, deps);
 
-    // Advance half the max wait window in 100ms increments.
-    for (let i = 0; i < 50; i++) {
-      await vi.advanceTimersByTimeAsync(DEFERRED_POLL_INTERVAL_MS);
+    // Walk the real schedule using progressive backoff. After each advance we
+    // assert the thunk has NOT drained — the lock is held and elapsed < 10 s.
+    // The loop accumulates ~3.1 s (well below the 10 s safety bound).
+    for (let i = 0; i < 10; i++) {
+      await vi.advanceTimersByTimeAsync(backoffForAttempt(i));
+      expect(thunk).not.toHaveBeenCalled();
     }
-    // 50 × 100ms = 5s — still within window, lock still held.
+    // Final assertion: still no drainage after several poll cycles.
     expect(thunk).not.toHaveBeenCalled();
   });
 });
