@@ -27,6 +27,7 @@ import { api } from '@/api/agentSkinClient';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useThemeStore } from '@/stores/themeStore';
 
+import { toMessage } from '@shared/errors';
 import type {
   AgentId,
   RestartReason,
@@ -126,8 +127,9 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
     } catch (err) {
       // Wallpaper Engine may be absent — fail soft with an empty list,
       // but retain the error message so the UI can show a degraded state.
-      const message = err instanceof Error ? err.message : String(err);
-      set({ loading: false, error: message });
+      // Use toMessage() to match studioStore pattern for consistent
+      // timeout formatting ('[Timeout: <channel>]' vs raw IPC message).
+      set({ loading: false, error: toMessage(err) });
     }
   },
 
