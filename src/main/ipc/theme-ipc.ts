@@ -98,6 +98,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
         if (selection.canceled || !selection.filePaths[0]) return { canceled: true };
         const theme = await deps.library.importPackage(selection.filePaths[0]);
         void updateTrayMenu();
+        notifyStatusChanged();
         return { canceled: false, path: selection.filePaths[0], theme };
       })(),
     );
@@ -123,6 +124,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
           if (typeof suggestedId !== 'string') throw new Error(getMainMessages().invalidPackage);
           const theme = await deps.library.installBytes(buffer, suggestedId);
           void updateTrayMenu();
+          notifyStatusChanged();
           return { theme, themes: await deps.library.summaries() };
         })(),
       );
@@ -139,6 +141,7 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
         }
         const theme = await deps.library.importPackage(filePath);
         void updateTrayMenu();
+        notifyStatusChanged();
         return { theme, themes: await deps.library.summaries() };
       })(),
     );
