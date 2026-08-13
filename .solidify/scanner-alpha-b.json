@@ -1,0 +1,309 @@
+[
+  {
+    "filePath": "src/shared/ipc-channels.ts",
+    "lineNumber": 197,
+    "currentStatus": "missing",
+    "missingPoints": [
+      "VISUAL_ANALYSIS_CDP_EXTRACT channel is declared in the IpcChannel enum but no ipcMain.handle is registered anywhere in main/ipc/*.ts",
+      "Renderer preload calls ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_CDP_EXTRACT) but Electron will reject with 'No handler registered' after ~30s timeout",
+      "No consumer code in src/ui/ currently invokes this channel, but the type contract exists and may be called by Studio modules in future — currently a channel-definition-with-no-handler"
+    ],
+    "severity": "major",
+    "affectedModules": ["visual-analyzer-ipc", "preload.ts", "ipc-channels.ts"]
+  },
+  {
+    "filePath": "src/ui/stores/agentStore.ts",
+    "lineNumber": 58,
+    "currentStatus": "mock",
+    "missingPoints": [
+      "Initial state seeds agents: FALLBACK_AGENTS — a synchronous derivation from AGENT_META with description: '' (empty), capabilities: ACTIVE_CAPS (hardcoded {theme:true,hotReload:true,extension:false}), status: {installed:false,running:false,debugReady:false}",
+      "Until loadAgents() resolves, the UI shows agents with empty descriptions and hardcoded false availability flags",
+      "loadAgents() failure path leaves fallback data in place silently — no loading/error state in the store to flag degraded data"
+    ],
+    "severity": "minor",
+    "affectedModules": ["agentStore", "AgentsPage", "AgentDashboardPage"]
+  },
+  {
+    "filePath": "src/ui/stores/agentStore.ts",
+    "lineNumber": 61,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "loadAgents() calls api.catalog.agents.list() which triggers core.status() IPC with a 15s timeout — under heavy load this can fail and leave stale fallback data",
+      "No retry mechanism and no error state exposed to UI — the console.error is the only signal"
+    ],
+    "severity": "minor",
+    "affectedModules": ["agentStore"]
+  },
+  {
+    "filePath": "src/ui/stores/agentStore.ts",
+    "lineNumber": 52,
+    "currentStatus": "missing",
+    "missingPoints": [
+      "Store exposes no loading flag separate from loaded: false — components cannot differentiate 'not yet loaded' from 'loaded but empty'",
+      "loadAgents is called in useAppController's boot effect, but if the component unmounts before IPC resolves, the set() call hits a stale closure"
+    ],
+    "severity": "minor",
+    "affectedModules": ["agentStore", "useAppController"]
+  },
+  {
+    "filePath": "src/main/ipc/visual-analyzer-ipc.ts",
+    "lineNumber": 241,
+    "currentStatus": "stub",
+    "missingPoints": [
+      "VISUAL_ANALYSIS_STATUS channel has NO push emitter registered — the comment at lines 242-252 is a no-op stub",
+      "Preload subscribes onVisualAnalysisProgress via ipcRenderer.on but main never calls webContents.send for this channel",
+      "Studio FitGeneratorPanel or any progress consumer will see zero progress events during extraction"
+    ],
+    "severity": "major",
+    "affectedModules": ["visual-analyzer-ipc", "preload.ts"]
+  },
+  {
+    "filePath": "src/main/ipc/visual-analyzer-ipc.ts",
+    "lineNumber": 217,
+    "currentStatus": "stub",
+    "missingPoints": [
+      "VISUAL_ANALYSIS_DETECT handler returns {running:false, port:undefined, title:undefined} when deps.getStatus is unavailable (line 221-223) — silently degrades without signaling to UI",
+      "When running in test/standalone mode, this is expected, but no log warning surfaces the degraded operation"
+    ],
+    "severity": "minor",
+    "affectedModules": ["visual-analyzer-ipc"]
+  },
+  {
+    "filePath": "src/ui/pages/AgentDashboardPage.tsx",
+    "lineNumber": 137,
+    "currentStatus": "hardcoded",
+    "missingPoints": [
+      "StatTile for 'yourEnvironments' is hardcoded to value='\u2014' (line 137) instead of showing envCount from useEnvironmentStore",
+      "Comment confirms intentional omission '\u73b0\u5728\u8fd9\u4e2a\u9875\u9762 \u2014 \u65e0-op' but no corresponding data wiring exists"
+    ],
+    "severity": "minor",
+    "affectedModules": ["AgentDashboardPage"]
+  },
+  {
+    "filePath": "src/main/ipc/studio-workspace-ipc.ts",
+    "lineNumber": 176,
+    "currentStatus": "stub",
+    "missingPoints": [
+      "STUDIO_BUNDLE_LIST returns createdAt: '' (empty string) for all bundles (line 176) — no filesystem stat call to populate real creation timestamp",
+      "name field falls back to entry.name (directory name) rather than reading manifest.json for a human-readable name"
+    ],
+    "severity": "minor",
+    "affectedModules": ["studio-workspace-ipc", "studioStore"]
+  },
+  {
+    "filePath": "src/ui/stores/themeStore.ts",
+    "lineNumber": 156,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "refreshThemes() catches errors and reports via notification but does NOT set empty state on failure — UI retains last successful list which may be stale",
+      "No lastError or stale flag for the theme catalog in the store"
+    ],
+    "severity": "minor",
+    "affectedModules": ["themeStore", "ThemesPage"]
+  },
+  {
+    "filePath": "src/ui/stores/wallpaperStore.ts",
+    "lineNumber": 107,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "initialize() catches all errors silently (line 122-124) and just sets loading:false with empty wallpaper list — UI shows 'no wallpapers' even when Wallpaper Engine is installed but scanning failed",
+      "No error/degraded state to communicate initialization failure to the user"
+    ],
+    "severity": "major",
+    "affectedModules": ["wallpaperStore", "WallpaperEnginePage"]
+  },
+  {
+    "filePath": "src/ui/stores/wallpaperStore.ts",
+    "lineNumber": 213,
+    "currentStatus": "stub",
+    "missingPoints": [
+      "setAndApplyAgentWallpaper companion loop (wallpaper -> theme extract -> re-apply) is fire-and-forget with no status tracking — theme.extractThemeFromWallpaper and applyToApp failures inside the try block are only caught via notification, no store state update"
+    ],
+    "severity": "minor",
+    "affectedModules": ["wallpaperStore", "environmentStore"]
+  },
+  {
+    "filePath": "src/main/ipc/studio-project-ipc.ts",
+    "lineNumber": 330,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "STUDIO_SNAPSHOT_LOAD returns raw JSON.parse result cast directly to ThemeVisualSnapshot (line 330) without schema validation",
+      "Malformed snapshot.json from version mismatch or corruption will produce a runtime crash in downstream consumers expecting structured snapshot data"
+    ],
+    "severity": "minor",
+    "affectedModules": ["studio-project-ipc", "studioStore"]
+  },
+  {
+    "filePath": "src/main/ipc/studio-project-ipc.ts",
+    "lineNumber": 297,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "STUDIO_SNAPSHOT_SAVE uses JSON.stringify(req.snapshot) directly (line 297) with no schema validation — any object shape can be persisted, risking future deserialization failures"
+    ],
+    "severity": "minor",
+    "affectedModules": ["studio-project-ipc", "studioStore"]
+  },
+  {
+    "filePath": "src/main/ipc/core-ipc.ts",
+    "lineNumber": 33,
+    "currentStatus": "hardcoded",
+    "missingPoints": [
+      "APP_BOOTSTRAP returns {themes: [], status: {apps: [], ...}} with empty arrays (lines 33-35) — intentionally defers to separate refresh calls per the comment, but UI has no bootstrap-phase loading state to differentiate 'bootstrapping' from 'bootstrapped with zero data'",
+      "Consumers receive a structurally complete but empty SystemStatus until the first status poll resolves"
+    ],
+    "severity": "minor",
+    "affectedModules": ["core-ipc", "useBoot", "shellStore"]
+  },
+  {
+    "filePath": "src/ui/stores/statusStore.ts",
+    "lineNumber": 33,
+    "currentStatus": "missing",
+    "missingPoints": [
+      "Initial state status: null (line 33) — components must null-check every status field",
+      "No initial auto-refresh triggered from within the store; relies entirely on useBoot's polling and STATUS_CHANGED push events"
+    ],
+    "severity": "minor",
+    "affectedModules": ["statusStore", "useBoot"]
+  },
+  {
+    "filePath": "src/ui/stores/diagnosticsStore.ts",
+    "lineNumber": 99,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "updateConcurrencyMetrics merges partial metrics (line 99-103) but the store has no staleness indicator — if main process stops broadcasting metrics (e.g., crash), UI shows last-known values indefinitely",
+      "No TTL or last-updated timestamp on ConcurrencyMetrics to detect stale diagnostics"
+    ],
+    "severity": "minor",
+    "affectedModules": ["diagnosticsStore", "PerformancePanel"]
+  },
+  {
+    "filePath": "src/ui/stores/studioStore.ts",
+    "lineNumber": 473,
+    "currentStatus": "stub",
+    "missingPoints": [
+      "loadProjectSnapshots catches errors (line 513-521) but sets snapshotError: null (line 516) instead of an error message — UI shows no feedback on snapshot load failure",
+      "baselines map is only partially populated for the current agentId; switching agents requires ensureBaseline to succeed but has no user-visible failure state"
+    ],
+    "severity": "major",
+    "affectedModules": ["studioStore", "StudioStage"]
+  },
+  {
+    "filePath": "src/ui/stores/workspaceStore.ts",
+    "lineNumber": 115,
+    "currentStatus": "hardcoded",
+    "missingPoints": [
+      "DEFAULT_AGENT: AgentId = 'codex' (line 115) hardcodes the initial preview window agent — if codex adapter is unavailable, the preview still renders for a non-functional agent",
+      "windowsForMode() creates windows with Date.now()-based IDs (line 108) which are non-deterministic and prevent reliable test assertions"
+    ],
+    "severity": "minor",
+    "affectedModules": ["workspaceStore", "StudioStage"]
+  },
+  {
+    "filePath": "src/ui/stores/studioStore.ts",
+    "lineNumber": 732,
+    "currentStatus": "stub",
+    "missingPoints": [
+      "exportTheme() passes (toolOverrides ?? undefined) as unknown as Record<string,unknown> (line 732) — double cast hides type mismatch; signature field may be undefined when toolOverrides are empty but the builder expects an object",
+      "buildStudioPalette(snapshot) can return undefined when snapshot.landmarks is empty, then mergeOverridesToSkinTokens(undefined, ...) is called with no null-guard"
+    ],
+    "severity": "major",
+    "affectedModules": ["studioStore", "studio-ipc"]
+  },
+  {
+    "filePath": "src/ui/stores/studioStore.ts",
+    "lineNumber": 718,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "exportTheme checks `if (!project) return` (line 717) but the StudioProject | null type of getActiveProject() means a null project silently aborts export with no user feedback"
+    ],
+    "severity": "minor",
+    "affectedModules": ["studioStore"]
+  },
+  {
+    "filePath": "src/ui/stores/studioStore.ts",
+    "lineNumber": 513,
+    "currentStatus": "stub",
+    "missingPoints": [
+      "loadProjectSnapshots catch block (line 513-521) sets snapshot to null and snapshotError to null + snapshotThemeName to '' — complete silent failure with no store-level error indication",
+      "UI cannot distinguish 'loading failed' from 'no snapshot exists'"
+    ],
+    "severity": "major",
+    "affectedModules": ["studioStore", "StudioStage"]
+  },
+  {
+    "filePath": "src/ui/pages/SettingsPage.tsx",
+    "lineNumber": 74,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "loading state initialized to true (line 74) but the CSS textarea renders immediately regardless — no visual loading indicator for the custom CSS fetch",
+      "textarea placeholder text represents the only visible state; content appears only after async fetchCustomThemeCss resolves, but the text area appears empty during loading with no spinner"
+    ],
+    "severity": "minor",
+    "affectedModules": ["SettingsPage"]
+  },
+  {
+    "filePath": "src/ui/hooks/useAppController.ts",
+    "lineNumber": 225,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "Boot-time catalog refresh (lines 225-241) runs inside requestAnimationFrame — if rAF is throttled (background tab), the deferred loadAgents/refreshThemes/initialize can be delayed indefinitely",
+      "No fallback timeout if rAF never fires"
+    ],
+    "severity": "minor",
+    "affectedModules": ["useAppController"]
+  },
+  {
+    "filePath": "src/ui/components/workspace/EnvironmentGrid.tsx",
+    "lineNumber": 199,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "Empty state fallback `onRetry ?? (() => {})` (line 193, 232) provides no-op handler for retry when not passed — error banner's retry button does nothing if parent doesn't wire the callback",
+      "StatusErrorBanner renders with a literal no-op function, meaning the retry button calls an empty function"
+    ],
+    "severity": "minor",
+    "affectedModules": ["EnvironmentGrid"]
+  },
+  {
+    "filePath": "src/ui/stores/installFlowStore.ts",
+    "lineNumber": 1,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "installFlowStore orchestrates theme installation via IPC but has no explicit 'rollback on failure' state for partial installations — if a step fails mid-flow, the store retains step progress without compensating cleanup"
+    ],
+    "severity": "minor",
+    "affectedModules": ["installFlowStore", "InstallProgress"]
+  },
+  {
+    "filePath": "src/main/ipc/environment-ipc.ts",
+    "lineNumber": 27,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "ENV_PRESET_GET returns [] on any error (line 27-29) — an unreadable/corrupt env-presets.json yields identical result to 'no presets exist', UI cannot communicate data loss vs empty",
+      "Renderer-side environment-store.ts local loadPresets() has a legacy localStorage migration (lines 64-80) that runs only when main returns empty — on a genuinely fresh install with no presets, this legacy path is wasted effort"
+    ],
+    "severity": "minor",
+    "affectedModules": ["environment-ipc", "environmentStore"]
+  },
+  {
+    "filePath": "src/ui/storage/environment-store.ts",
+    "lineNumber": 83,
+    "currentStatus": "partial",
+    "missingPoints": [
+      "loadPresets() silently returns [] on failure (line 94-96) — same 'indistinguishable from empty' problem as the IPC layer",
+      "rWarn is the only error signal, no store-level error flag"
+    ],
+    "severity": "minor",
+    "affectedModules": ["environment-store", "environmentStore"]
+  },
+  {
+    "filePath": "src/ui/stores/agentStore.ts",
+    "lineNumber": 28,
+    "currentStatus": "hardcoded",
+    "missingPoints": [
+      "ACTIVE_CAPS is hardcoded to {theme:true, hotReload:true, extension:false} for ALL agents (line 28) — capabilities should be derived from actual adapter support but are instead a static constant",
+      "Fallback capabilities do not vary by agent despite real differences (e.g., some agents may not support hot-reload)"
+    ],
+    "severity": "minor",
+    "affectedModules": ["agentStore"]
+  }
+]

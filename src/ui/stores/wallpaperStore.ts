@@ -68,6 +68,8 @@ interface WallpaperState {
   agentWallpapers: Record<AgentId, WallpaperAgentSetting>;
   render: WallpaperRenderOptions | undefined;
   loading: boolean;
+  /** Error message when wallpaper listing fails (e.g., WE not installed, IPC timeout). */
+  error: string | null;
 
   initialize: () => Promise<void>;
   setWallpaper: (
@@ -103,6 +105,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   agentWallpapers: emptyAgentWallpapers(),
   render: undefined,
   loading: true,
+  error: null,
 
   initialize: async () => {
     try {
@@ -118,10 +121,13 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
         render: settings.wallpaper.render,
         agentWallpapers: settings.wallpaper.agents ?? emptyAgentWallpapers(),
         loading: false,
+        error: null,
       });
-    } catch {
-      // Wallpaper Engine may be absent — fail soft with an empty list.
-      set({ loading: false });
+    } catch (err) {
+      // Wallpaper Engine may be absent — fail soft with an empty list,
+      // but retain the error message so the UI can show a degraded state.
+      const message = err instanceof Error ? err.message : String(err);
+      set({ loading: false, error: message });
     }
   },
 

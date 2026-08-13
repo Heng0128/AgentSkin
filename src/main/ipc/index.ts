@@ -45,7 +45,16 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
   // + the renderer→main update path for renderer-side primitive sizes.
   registerConcurrencyMetricsIpc(ctx);
   registerWindowIpc();
-  registerVisualAnalyzerIpc({ getStatus: () => ctx.core.status() });
+  registerVisualAnalyzerIpc({
+    getStatus: () => ctx.core.status(),
+    emitStatus: (payload) => {
+      // Push progress events to the main window. Both get and emit paths are
+      // optional — `setImmediate`-driven initial pulse fires after the window
+      // is fully initialized; if the window is not yet ready, the webContents
+      // call simply no-ops.
+      ctx.mainWindow?.webContents.send(IpcChannel.VISUAL_ANALYSIS_STATUS, payload);
+    },
+  });
   registerEnvironmentIpc(ctx);
 
   // Open (or focus) the dedicated Theme Studio window on demand. The renderer

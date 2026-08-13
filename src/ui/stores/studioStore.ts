@@ -510,11 +510,14 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
         baselines: base && agentId ? { ...s.baselines, [agentId]: base } : s.baselines,
         baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: false },
       }));
-    } catch {
+    } catch (e) {
+      if (get().activeProjectId !== capturedId) return;
+      // Capture the error so the UI can distinguish "load failed" from
+      // "no snapshot yet". Previously this silently reset snapshotError to null.
       set((s) => ({
         snapshot: null,
         snapshotLoading: false,
-        snapshotError: null,
+        snapshotError: toMessage(e),
         snapshotThemeName: '',
         baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: false },
       }));

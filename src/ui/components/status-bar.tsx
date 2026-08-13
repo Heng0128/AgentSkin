@@ -64,6 +64,8 @@ export function StatusBar() {
   const injectDockOpen = useShellStore((s) => s.injectDockOpen);
   const setInjectDockOpen = useShellStore((s) => s.setInjectDockOpen);
   const status = useStatusStore((s) => s.status);
+  const statusError = useStatusStore((s) => s.error);
+  const statusRefreshing = useStatusStore((s) => s.isRefreshing);
   const t: UiMessages = uiMessages[locale];
 
   const variant = deriveCdpState(status);
@@ -90,11 +92,21 @@ export function StatusBar() {
         <span className="font-mono text-[10px] font-medium text-muted-foreground">{cdpLabel}</span>
       </div>
 
-      {/* Center cluster: platform count · injected — visible only on lg+. */}
-      <div className="hidden items-center gap-1.5 font-mono text-[10px] font-medium text-muted-foreground lg:flex">
-        <span>{t.swissPlatformOnline(onlineCount, totalPlatforms)}</span>
+      {/* Center cluster: platform count · injected · status error (if any). */}
+      <div className="hidden items-center gap-1.5 font-mono text-[10px] font-medium lg:flex">
+        <span className="text-muted-foreground">
+          {t.swissPlatformOnline(onlineCount, totalPlatforms)}
+        </span>
         <span className="text-muted-foreground/40">·</span>
-        <span>{t.swissInjected(injectedCount)}</span>
+        <span className="text-muted-foreground">{t.swissInjected(injectedCount)}</span>
+        {statusError ? (
+          <>
+            <span className="text-muted-foreground/40">·</span>
+            <span className="text-cr-warning" title={statusError}>
+              {statusRefreshing ? '···' : 'ERR'}
+            </span>
+          </>
+        ) : null}
       </div>
 
       {/* Right cluster: inject dock · local · no upload · clock · version. */}

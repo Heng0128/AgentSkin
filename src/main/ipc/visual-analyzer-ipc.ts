@@ -168,7 +168,24 @@ function buildVisualAnalysisSummaries(): VisualAnalysisSummary[] {
 
 export interface VisualAnalyzerDeps {
   getStatus: () => Promise<SystemStatus>;
+  /**
+   * Emit a visual analysis status event to any renderer subscribers.
+   * The implementation should forward to `webContents.send(IpcChannel.VISUAL_ANALYSIS_STATUS, payload)`.
+   * Optional — when absent, `emitVisualAnalysisStatus` is a safe no-op.
+   */
+  emitStatus?: (payload: { agent: string; step: string; progress: number }) => void;
 }
+
+/**
+ * Emit a visual analysis status event to renderer subscribers.
+ * Overwritten each time `registerVisualAnalyzerIpc` is called (single-window app).
+ * Safe no-op when no emitter is wired.
+ */
+export let emitVisualAnalysisStatus: (payload: {
+  agent: string;
+  step: string;
+  progress: number;
+}) => void = () => {};
 
 export function registerVisualAnalyzerIpc(deps?: VisualAnalyzerDeps): void {
   // List agent ids that have a bundled profile on disk (known AgentIds only).
@@ -238,18 +255,37 @@ export function registerVisualAnalyzerIpc(deps?: VisualAnalyzerDeps): void {
     }
   });
 
-  // Subscribe to extraction progress events. Stub: no-op registration.
-  //
   // ⟪SEND_ONLY⟫ — see the centralized annotation on IpcChannel.VISUAL_ANALYSIS_STATUS
   // in src/shared/ipc-channels.ts. The preload API subscribes via
   // `ipcRenderer.on(IpcChannel.VISUAL_ANALYSIS_STATUS, ...)`,
   // which expects main-process PUSH events (webContents.send), not invoke/handle request/response.
   // Registering `ipcMain.handle` here creates a channel direction mismatch — the renderer's
   // subscription will never fire and any invoke() call hangs until timeout.
-  // The full implementation should emit progress via:
-  //   webContents.send(IpcChannel.VISUAL_ANALYSIS_STATUS, { agent, step, progress })
-  // Intentionally NO handle registered for this channel. The subscription stub lives in
-  // the preload layer (returns a no-op unsubscribe) so renderer code does not crash.
+  //
+  // An emit callback is captured from deps so callers (e.g. the live analysis
+  // pipeline) can push progress without importing BrowserWindow. Tests inject
+  // no emitter — emitVisualAnalysisStatus becomes a safe no-op.
+  let _emitStatus: ((payload: { agent: string; step: string; progress: number }) => void) | null =
+    null;
+  if (deps?.emitStatus) {
+    const cur = deps.emitStatus;
+    _emitStatus = (p) => {
+      try {
+        cur(p);
+      } catch {
+        /* emitter failure must not break analysis — degrade to no-op */
+      }
+    };
+  }
+
+  // Emit a "ready" initial pulse once registration is complete. This confirms the
+  // SEND_ONLY channel is live and bridgeable before the full live analysis
+  // pipeline is wired. Subsequent calls emit as the pipeline advances.
+  setImmediate(() => _emitStatus?.({ agent: '*', step: 'ready', progress: 0 }));
+
+  // Module-level emit handle for the current registration. Safe no-op when no
+  // emitter was supplied. The next registration overwrites (single-window app).
+  emitVisualAnalysisStatus = (payload) => _emitStatus?.(payload);
 
   // Export a visual analysis theme as an .agentskin-theme package.
   //
