@@ -25,10 +25,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Hoisted mocks
 // ---------------------------------------------------------------------------
 
-const {
-  mockLoadStudioSnapshot,
-  mockShowToast,
-} = vi.hoisted(() => ({
+const { mockLoadStudioSnapshot, mockShowToast } = vi.hoisted(() => ({
   mockLoadStudioSnapshot: vi.fn(),
   mockShowToast: vi.fn(),
 }));
@@ -182,9 +179,7 @@ describe('studioStore — loadProjectSnapshots snapshotError', () => {
     expect(useStudioStore.getState().snapshotError).toBe('first failure');
 
     // Second call: success
-    mockLoadStudioSnapshot
-      .mockResolvedValueOnce(mockSnapshot)
-      .mockResolvedValueOnce(mockSnapshot);
+    mockLoadStudioSnapshot.mockResolvedValueOnce(mockSnapshot).mockResolvedValueOnce(mockSnapshot);
     await useStudioStore.getState().loadProjectSnapshots();
     expect(useStudioStore.getState().snapshotError).toBeNull();
   });
@@ -200,7 +195,7 @@ describe('studioStore — loadProjectSnapshots snapshotError', () => {
     });
 
     // Create a deferred promise so we can control resolution timing.
-    let rejectApi!: (reason: any) => void;
+    let rejectApi!: (reason: unknown) => void;
     mockLoadStudioSnapshot.mockImplementation(
       () =>
         new Promise((_resolve, reject) => {
@@ -271,9 +266,7 @@ describe('studioStore — loadProjectSnapshots snapshotError', () => {
       activeProjectId: mockProject.id,
     });
 
-    mockLoadStudioSnapshot
-      .mockResolvedValueOnce(mockSnapshot)
-      .mockResolvedValueOnce(mockSnapshot);
+    mockLoadStudioSnapshot.mockResolvedValueOnce(mockSnapshot).mockResolvedValueOnce(mockSnapshot);
 
     await useStudioStore.getState().loadProjectSnapshots();
 
