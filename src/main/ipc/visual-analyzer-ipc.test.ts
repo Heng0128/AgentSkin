@@ -252,5 +252,22 @@ describe('visual-analyzer-ipc', () => {
       };
       expect(result).toEqual({ running: false, port: undefined, title: undefined });
     });
+
+    it('returns not-running placeholder when getStatus times out (degrades via catch)', async () => {
+      // The DETECT handler wraps withMonitoredTimeout around deps.getStatus();
+      // when that promise never settles, the 15s timeout rejects and the
+      // surrounding try-catch degrades to the original placeholder.
+      registerVisualAnalyzerIpc({
+        getStatus: vi.fn().mockReturnValue(new Promise(() => {})), // never settles
+      });
+      const handler = handlers.get(IpcChannel.VISUAL_ANALYSIS_DETECT);
+      if (!handler) throw new Error('DETECT handler not registered');
+      const result = (await handler({}, 'zcode')) as {
+        running: boolean;
+        port?: number;
+        title?: string;
+      };
+      expect(result).toEqual({ running: false, port: undefined, title: undefined });
+    }, 25000); // IPC timeout is 15s; 25s lets it fire before vitest's own timeout
   });
 });

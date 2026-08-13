@@ -137,6 +137,29 @@ describe('core-ipc parameter validation', () => {
     }, 25000); // IPC timeout is 15s; 25s lets it fire before vitest's own timeout
   });
 
+  describe('AGENT_LIST', () => {
+    // AGENT_LIST handler calls withMonitoredTimeout(IpcChannel.AGENT_LIST, 15000,
+    // deps.core.status()). Controlling the core.status() mock requires a fresh
+    // deps — same registerWith() pattern as SYSTEM_STATUS.
+    function registerWith(statusMock: ReturnType<typeof vi.fn>): void {
+      const localDeps = makeMockDeps();
+      (localDeps.core as unknown as { status: ReturnType<typeof vi.fn> }).status = statusMock;
+      registerCoreIpc(localDeps, updateTrayMenu);
+    }
+
+    it('rejects with IpcTimeoutError when core.status() hangs', async () => {
+      const statusMock = vi.fn();
+      statusMock.mockReturnValue(new Promise(() => {})); // never settles
+      registerWith(statusMock);
+      const handler = handlers.get(IpcChannel.AGENT_LIST)!;
+      await expect(handler({}, {})).rejects.toMatchObject({
+        name: 'IpcTimeoutError',
+        channel: IpcChannel.AGENT_LIST,
+        ms: 15000,
+      });
+    }, 25000); // IPC timeout is 15s; 25s lets it fire before vitest's own timeout
+  });
+
   describe('SHELL_SHOW_ITEM', () => {
     // SHELL_SHOW_ITEM handler is synchronous (not async), so validation
     // throws synchronously rather than as a rejected promise.
