@@ -117,7 +117,7 @@ export function sanitizeCSS(input: string): SanitizeResult {
   const reasons: string[] = [];
 
   // Empty / whitespace-only is always safe.
-  if (!input || !input.trim()) return { clean: '', blocked: false, reasons };
+  if (!input?.trim()) return { clean: '', blocked: false, reasons };
 
   const struct = structuralCheck(input);
   if (!struct.ok) {

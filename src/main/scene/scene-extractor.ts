@@ -243,7 +243,7 @@ function extractModels(entries: PkgEntry[]): Map<string, SceneModel> {
     try {
       const modelJson = asJsonRecord<ModelRootJson>(JSON.parse(entry.bytes.toString('utf8')));
       // Only treat as model if it has a "material" field
-      if (!modelJson || !modelJson.material) continue;
+      if (!modelJson?.material) continue;
       const name = entry.fullPath.replace(/\.(json|model)$/i, '').replace(/\\/g, '/');
       models.set(name.toLowerCase(), {
         material: typeof modelJson.material === 'string' ? modelJson.material : '',

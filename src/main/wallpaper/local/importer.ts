@@ -89,7 +89,7 @@ export async function importMedia(
   if (!isVideo && !isImage) return null;
 
   const sourceStat = await fs.stat(sourcePath).catch(() => null);
-  if (!sourceStat || !sourceStat.isFile()) return null;
+  if (!sourceStat?.isFile()) return null;
   const maxBytes = isVideo ? MAX_IMPORT_VIDEO_BYTES : MAX_IMPORT_IMAGE_BYTES;
   if (sourceStat.size > maxBytes) return null;
 

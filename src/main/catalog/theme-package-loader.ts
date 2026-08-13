@@ -227,7 +227,7 @@ export class ThemePackageLoader {
     // 4. v2-specific validation for background assets.
     // assets.background is deprecated (hero is the canonical art source);
     // third-party manifests may still declare it, so validate but warn.
-    if (manifest.assets && manifest.assets.background) {
+    if (manifest.assets?.background) {
       mainWarn(
         'ThemePackageLoader',
         `theme "${themeId}" declares deprecated assets.background; use manifest.hero instead (embedded and exposed as --agentskin-art)`,

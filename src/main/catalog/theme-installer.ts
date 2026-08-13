@@ -280,7 +280,7 @@ async function resolvePerAgentCssChunks(
     seenCoreIds.add(coreId);
 
     let cssPath: string | null = null;
-    if (isV2Manifest(manifest) && manifest.targets && manifest.targets[agentId]) {
+    if (isV2Manifest(manifest) && manifest.targets?.[agentId]) {
       // Alternative schemes live at assets/css/<schemeId>/<basename>; the
       // default scheme keeps the manifest-referenced path.
       cssPath = schemeId
@@ -530,7 +530,7 @@ export class ThemeInstaller {
       // manifest-referenced path.
       let cssPath: string | null = null;
       let verification: unknown;
-      if (isV2Manifest(manifest) && manifest.targets && manifest.targets[agentId]) {
+      if (isV2Manifest(manifest) && manifest.targets?.[agentId]) {
         cssPath =
           scheme.id === 'default'
             ? path.join(packagePath, manifest.targets[agentId].css)

@@ -376,7 +376,7 @@ export const WALLPAPER_PUNCH_TEARDOWN_JS = `
         document.adoptedStyleSheets=Array.from(document.adoptedStyleSheets||[]).filter(function(s){return s!==window[G+'_sheet'];});
         delete window[G+'_sheet'];
       }
-      if(window[G+'_mo']){ try{ window[G+'_mo'].disconnect(); }catch(e){} delete window[G+'_mo']; }
+      if(window[G+'_mo']){ try{ window[G+'_mo'].disconnect(); }catch(e){ console.warn('[wallpaper-punch] teardown observer disconnect failed:', e); } delete window[G+'_mo']; }
       delete window[G];
       /* Clean up wallpaper guard self-heal interval */
       if(window.${WALLPAPER_HEAL_GLOBAL}){clearInterval(window.${WALLPAPER_HEAL_GLOBAL});delete window.${WALLPAPER_HEAL_GLOBAL};}
@@ -402,7 +402,7 @@ export const WALLPAPER_PUNCH_TEARDOWN_JS = `
             el.style.removeProperty('perspective');
             el.style.removeProperty('contain');
             el.style.removeProperty('will-change');
-          }catch(e){}
+          }catch(e){ console.warn('[wallpaper-punch] teardown style removal failed:', e); }
         });
         delete window[G+'_els'];
       }

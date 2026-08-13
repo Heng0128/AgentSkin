@@ -327,7 +327,7 @@ export function toInstalledTheme(entry: ThemeEntry): InstalledTheme {
         (x): x is AgentId => typeof x === 'string' && isAgentId(x),
       )
     : null;
-  const supported = copySupported && copySupported.length ? copySupported : supportedAgents(bundle);
+  const supported = copySupported?.length ? copySupported : supportedAgents(bundle);
 
   // Prefer colors extracted from embedded CSS; fall back to manifest colors.
   const colors =

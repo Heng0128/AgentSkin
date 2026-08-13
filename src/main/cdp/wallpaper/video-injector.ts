@@ -167,9 +167,9 @@ async function mountVideoWallpaper(
         document.documentElement.appendChild(guard);
 
         // 鼠标视差（render.parallax > 0 时注入）。
-        if (${JSON.stringify(!!(render && render.parallax && render.parallax > 0))}) {
+        if (${JSON.stringify(!!(render?.parallax && render.parallax > 0))}) {
           var ps = document.createElement('script');
-          ps.textContent = ${JSON.stringify(render && render.parallax && render.parallax > 0 ? buildParallaxJs(render.parallax / 100) : '')};
+          ps.textContent = ${JSON.stringify(render?.parallax && render.parallax > 0 ? buildParallaxJs(render.parallax / 100) : '')};
           document.documentElement.appendChild(ps);
         }
 

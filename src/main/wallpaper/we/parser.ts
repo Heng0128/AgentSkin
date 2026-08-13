@@ -51,12 +51,12 @@ async function findPreviewPath(dir: string, project: ProjectJson): Promise<strin
   if (typeof project.preview === 'string' && project.preview) {
     const p = path.join(dir, project.preview);
     const s = await fs.stat(p).catch(() => null);
-    if (s && s.isFile()) return p;
+    if (s?.isFile()) return p;
   }
   for (const candidate of PREVIEW_CANDIDATES) {
     const p = path.join(dir, candidate);
     const s = await fs.stat(p).catch(() => null);
-    if (s && s.isFile()) return p;
+    if (s?.isFile()) return p;
   }
   return null;
 }
@@ -109,7 +109,7 @@ export async function parseWorkshopProject(
   // otherwise starve the renderer IPC / timer queue.
   const indexHtmlPath = path.join(dir, 'index.html');
   const indexHtmlStat = await fs.stat(indexHtmlPath).catch(() => null);
-  if (indexHtmlStat && indexHtmlStat.isFile()) {
+  if (indexHtmlStat?.isFile()) {
     type = 'web';
     dirPath = dir;
     mediaPath = previewPath ?? indexHtmlPath;
@@ -119,7 +119,7 @@ export async function parseWorkshopProject(
   if (!type) {
     const scenePkgPath = path.join(dir, 'scene.pkg');
     const sceneStat = await fs.stat(scenePkgPath).catch(() => null);
-    if (sceneStat && sceneStat.isFile()) {
+    if (sceneStat?.isFile()) {
       type = 'scene';
       pkgPath = scenePkgPath;
       mediaPath = previewPath ?? scenePkgPath;
@@ -166,7 +166,7 @@ export async function parseWorkshopProject(
         if (!IMPORTABLE_EXTENSIONS.has(ext)) continue;
         const fp = path.join(dir, f);
         const st = await fs.stat(fp).catch(() => null);
-        if (st && st.isFile() && (!bestVideo || st.size > bestVideo.size)) {
+        if (st?.isFile() && (!bestVideo || st.size > bestVideo.size)) {
           bestVideo = { file: fp, size: st.size };
         }
       }
@@ -193,7 +193,7 @@ export async function parseWorkshopProject(
         if (!BROWSER_DECODABLE_IMAGE.has(ext)) continue;
         const fp = path.join(dir, f);
         const st = await fs.stat(fp).catch(() => null);
-        if (st && st.isFile() && st.size > bestImage.size) {
+        if (st?.isFile() && st.size > bestImage.size) {
           bestImage = { file: fp, size: st.size };
         }
       }
@@ -207,7 +207,7 @@ export async function parseWorkshopProject(
   if (!type || !mediaPath) return parseBareImageDir(dir, entry);
 
   const mediaStat = await fs.stat(mediaPath).catch(() => null);
-  if (!mediaStat || !mediaStat.isFile()) return null;
+  if (!mediaStat?.isFile()) return null;
   sizeBytes = mediaStat.size;
 
   // For image wallpapers, use the image itself as preview if no dedicated preview.
@@ -247,7 +247,7 @@ async function parseBareImageDir(dir: string, entry: string): Promise<Discovered
     if (imageFile) {
       const mediaPath = path.join(dir, imageFile);
       const mediaStat = await fs.stat(mediaPath).catch(() => null);
-      if (mediaStat && mediaStat.isFile()) {
+      if (mediaStat?.isFile()) {
         return {
           id: entry,
           title: entry,

@@ -64,7 +64,7 @@ export function useThemeCenter() {
         !theme.name.toLowerCase().includes(q) &&
         !theme.author.toLowerCase().includes(q) &&
         !theme.tags.some((t) => t.toLowerCase().includes(q)) &&
-        !(theme.category && theme.category.toLowerCase().includes(q))
+        !theme.category?.toLowerCase().includes(q)
       ) {
         return false;
       }

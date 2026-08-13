@@ -116,7 +116,7 @@ export function buildRenderLayers(scene: SceneData, weInstallRoot: string | null
 
     // --- 纹理层 ---
     const texture = resolveObjectTexture(obj, scene);
-    if (!texture || !texture.dataUrl) continue;
+    if (!texture?.dataUrl) continue;
 
     const quad = computeLayerDisplaySize(
       obj.size,

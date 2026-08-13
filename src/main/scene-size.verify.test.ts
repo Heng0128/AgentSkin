@@ -28,7 +28,7 @@ describe('post-fix scene draw size verification (real workshop data)', () => {
       for (const o of scene.objects) {
         if (!o.visible) continue;
         const tex = resolveObjectTexture(o, scene);
-        if (!tex || !tex.dataUrl) continue;
+        if (!tex?.dataUrl) continue;
         const quad = layerDisplaySize(o.size, { width: tex.width, height: tex.height });
         // A fullscreen background: quad ≈ projection size.
         const _nearProjection =
@@ -105,7 +105,7 @@ describe('post-fix scene draw size verification (real workshop data)', () => {
       for (const o of scene.objects) {
         if (!o.visible) continue;
         const tex = resolveObjectTexture(o, scene);
-        if (!tex || !tex.dataUrl) continue;
+        if (!tex?.dataUrl) continue;
         checked++;
         const quad = layerDisplaySize(o.size, { width: tex.width, height: tex.height });
         const dw = quad.width * Math.abs(o.scale.x || 1);

@@ -249,8 +249,8 @@ class WallpaperMediaServer {
     const range = req.headers.range;
     if (range) {
       const match = /bytes=(\d*)-(\d*)/.exec(range);
-      const start = match && match[1] ? parseInt(match[1], 10) : 0;
-      const end = match && match[2] ? parseInt(match[2], 10) : sizeNow - 1;
+      const start = match?.[1] ? parseInt(match[1], 10) : 0;
+      const end = match?.[2] ? parseInt(match[2], 10) : sizeNow - 1;
       if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= sizeNow) {
         res.writeHead(416, { 'Content-Range': `bytes */${sizeNow}` }).end();
         return;

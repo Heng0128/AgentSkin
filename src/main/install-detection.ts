@@ -183,7 +183,7 @@ export async function verifyInstallPath(
   hints: InstallHints,
   logFile?: string | null,
 ): Promise<{ path: string; version: string | null } | null> {
-  if (!dir || !dir.trim()) return null;
+  if (!dir?.trim()) return null;
   const found = await scanDirForExe(dir.trim(), hints, logFile).catch(() => null);
   if (!found) return null;
   return { path: dir.trim(), version: found.version };
@@ -203,7 +203,7 @@ function candidateRoots(): string[] {
   // ProgramFiles and ProgramW6432 are usually identical).
   const seen = new Set<string>();
   const push = (p?: string) => {
-    if (p && p.trim() && !seen.has(p.trim())) {
+    if (p?.trim() && !seen.has(p.trim())) {
       seen.add(p.trim());
       roots.push(p.trim());
     }
@@ -316,7 +316,7 @@ export async function detectInstallation(
   }
 
   // 1) Manual override wins.
-  if (appPath && appPath.trim()) {
+  if (appPath?.trim()) {
     const normalized = appPath.trim();
     let dir = normalized;
     try {
@@ -364,7 +364,7 @@ export async function detectInstallation(
       // InstallLocation is authoritative when present; otherwise derive the
       // install dir from DisplayIcon or UninstallString (common for Tencent-
       // installed apps whose InstallLocation is blank).
-      let regPath: string | null = il && il.trim() ? il.trim() : null;
+      let regPath: string | null = il?.trim() ? il.trim() : null;
       if (!regPath) {
         const probe = String(icon ?? uninst ?? '').trim();
         const m = probe.match(/^("[^"]+"|\S+)/);
@@ -380,7 +380,7 @@ export async function detectInstallation(
       }
       registryEntries.push({
         displayName: dn ?? '',
-        version: dv && dv.trim() ? dv.trim() : null,
+        version: dv?.trim() ? dv.trim() : null,
         location: regPath,
       });
     }

@@ -146,7 +146,7 @@ export function drawParticles(
       ctx.save();
       ctx.translate(pos.x, pos.y);
       ctx.rotate(cfg.rotation);
-      if (img && img.complete && img.naturalWidth > 0) {
+      if (img?.complete && img.naturalWidth > 0) {
         ctx.drawImage(img, -wd / 2, -hd / 2, wd, hd);
       } else {
         ctx.beginPath();
@@ -154,7 +154,7 @@ export function drawParticles(
         ctx.fill();
       }
       ctx.restore();
-    } else if (img && img.complete && img.naturalWidth > 0) {
+    } else if (img?.complete && img.naturalWidth > 0) {
       ctx.drawImage(img, pos.x - wd / 2, pos.y - hd / 2, wd, hd);
     } else {
       ctx.beginPath();

@@ -211,7 +211,7 @@ export class SettingsService implements SettingsServiceApi {
         apps?: unknown;
         wallpaper?: { enabled?: boolean; id?: string | null };
       };
-      if (parsed && parsed.apps && typeof parsed.apps === 'object') {
+      if (parsed?.apps && typeof parsed.apps === 'object') {
         // Migration v1 -> v2: drop all port overrides. The previous version
         // let users (and auto-fill) set ports like 9336/9337/9338, which were
         // stale assumptions about where each agent's CDP endpoint lives.

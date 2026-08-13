@@ -80,7 +80,7 @@ const persistenceScriptIds = new Map<string, Set<string>>();
  */
 async function removeOldPersistenceScripts(session: CdpSession, agent: string): Promise<void> {
   const ids = persistenceScriptIds.get(agent);
-  if (!ids || !ids.size) return;
+  if (!ids?.size) return;
   for (const identifier of ids) {
     try {
       await session.send('Page.removeScriptToEvaluateOnNewDocument', { identifier });
