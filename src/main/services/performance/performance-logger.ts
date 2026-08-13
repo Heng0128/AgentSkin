@@ -49,6 +49,10 @@ export interface PerformanceStats {
   avgDurationMs: number;
   /** Per-agent average duration (ms). Keyed by agent id. */
   perAgentAvg: Record<string, number>;
+  /** Total number of traces discarded due to ring buffer overflow.
+   *  A non-zero value indicates the buffer capacity (MAX_HISTORY) is
+   *  being exceeded and older records are being silently dropped. */
+  overflowCount: number;
 }
 
 /** Response payload returned to the renderer. */
@@ -78,6 +82,8 @@ export interface PerformanceLoggerApi {
 
 function createPerformanceLogger(): PerformanceLoggerApi {
   let buffer: ThemeApplyTrace[] = [];
+  let traceOverflowCount = 0;
+  let overflowWarned = false;
 
   // --- IPC timeout ring buffer ---
   let timeouts: IpcTimeoutEvent[] = [];
@@ -92,7 +98,7 @@ function createPerformanceLogger(): PerformanceLoggerApi {
     const totalApplies = buffer.length;
 
     if (totalApplies === 0) {
-      return { totalApplies: 0, avgDurationMs: 0, perAgentAvg: {} };
+      return { totalApplies: 0, avgDurationMs: 0, perAgentAvg: {}, overflowCount: traceOverflowCount };
     }
 
     let totalSum = 0;
@@ -118,6 +124,7 @@ function createPerformanceLogger(): PerformanceLoggerApi {
       totalApplies,
       avgDurationMs: Math.round(totalSum / totalApplies),
       perAgentAvg,
+      overflowCount: traceOverflowCount,
     };
   }
 
@@ -126,6 +133,15 @@ function createPerformanceLogger(): PerformanceLoggerApi {
       buffer.push(trace);
       if (buffer.length > MAX_HISTORY) {
         buffer.shift();
+        traceOverflowCount += 1;
+        if (!overflowWarned) {
+          overflowWarned = true;
+          console.warn(
+            `[PerformanceLogger] ring buffer overflow: MAX_HISTORY=${MAX_HISTORY} exceeded, ` +
+              'oldest trace discarded. Increase MAX_HISTORY or persist traces to disk ' +
+              'if historical data retention is required.',
+          );
+        }
       }
     },
     getRecent,
@@ -135,6 +151,8 @@ function createPerformanceLogger(): PerformanceLoggerApi {
     },
     clear(): void {
       buffer = [];
+      traceOverflowCount = 0;
+      overflowWarned = false;
       timeouts = [];
       timeoutSeq = 0;
     },
