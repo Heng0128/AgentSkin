@@ -176,6 +176,8 @@ export const IpcChannel = {
   PERFORMANCE_GET_TIMEOUTS: 'performance:get-timeouts',
   /** Renderer asks to clear all stored IPC timeout events. */
   PERFORMANCE_CLEAR_TIMEOUTS: 'performance:clear-timeouts',
+  /** Renderer asks for main-process memory trend samples (most-recent-first). */
+  PERFORMANCE_GET_MEMORY: 'performance:get-memory',
   // SEND_ONLY — main → renderer event, DO NOT register ipcMain.handle
   // Subscribed via ipcRenderer.on in preload. Emitted with webContents.send
   // to push live concurrency metrics ({ active, queued, max }) to the

@@ -52,6 +52,7 @@ import { extractThemeFilesFromArgv } from './file-open';
 import { registerIpc } from './ipc';
 import { loadLocalePreference } from './locale-preferences';
 import { brandingRoot, ctx, registerDisposable, sendLog } from './main-context';
+import { performanceLogger } from './services/performance';
 import { SettingsService } from './settings-service';
 import { ThemeLibrary } from './theme-library';
 import { createTrayManager, type TrayManager } from './tray-manager';
@@ -327,6 +328,10 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
           // swallow — tray may already be destroyed
         }
       });
+      // Main-process memory trend sampling (1h @ 30s). Started here and torn
+      // down on quit via registerDisposable so the interval never blocks exit.
+      performanceLogger.startMemorySampler();
+      registerDisposable(() => performanceLogger.stopMemorySampler());
 
       for (const filePath of extractThemeFilesFromArgv(process.argv))
         ctx.fileOpens.handlePath(filePath);

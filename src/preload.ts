@@ -169,11 +169,6 @@ const api: AgentSkinApi = {
       port?: number;
       title?: string;
     }>,
-  extractVisualAnalysisCdp: (agentName: string) =>
-    ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_CDP_EXTRACT, agentName) as Promise<{
-      ok: boolean;
-      message: string;
-    }>,
   onVisualAnalysisProgress: (listener) =>
     subscribe<{ agent: string; step: string; progress: number }>(
       IpcChannel.VISUAL_ANALYSIS_STATUS,
@@ -252,6 +247,10 @@ const api: AgentSkinApi = {
         perAgentAvg: Record<string, number>;
       };
     }>,
+  getPerformanceMemory: () =>
+    ipcRenderer.invoke(IpcChannel.PERFORMANCE_GET_MEMORY) as Promise<
+      Array<{ ts: number; heapUsed: number; rss: number; external: number }>
+    >,
   onDiagnosticsConcurrencyMetrics: (listener) =>
     subscribe<{
       companionBusyByAgent: number;

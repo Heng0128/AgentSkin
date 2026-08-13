@@ -17,6 +17,7 @@ import { ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import {
   type IpcTimeoutEvent,
+  type MemorySample,
   type PerformanceHistoryResponse,
   performanceLogger,
 } from '../services/performance';
@@ -54,5 +55,13 @@ export function registerPerformanceIpc(): void {
   ipcMain.handle(IpcChannel.PERFORMANCE_CLEAR_TIMEOUTS, (): { ok: true } => {
     performanceLogger.clearTimeouts();
     return { ok: true };
+  });
+
+  ipcMain.handle(IpcChannel.PERFORMANCE_GET_MEMORY, (_event, count: unknown): MemorySample[] => {
+    const all = performanceLogger.getMemorySamples();
+    if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
+      return all.slice(-Math.min(count, all.length));
+    }
+    return all;
   });
 }

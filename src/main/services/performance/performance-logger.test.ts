@@ -215,6 +215,67 @@ describe('PerformanceLogger — getStats()', () => {
   });
 });
 
+describe('PerformanceLogger — memory sampler', () => {
+  afterEach(() => {
+    performanceLogger.stopMemorySampler();
+    performanceLogger.clearMemorySamples();
+  });
+
+  it('getLatestMemory() is null before any sample is taken', () => {
+    performanceLogger.stopMemorySampler();
+    performanceLogger.clearMemorySamples();
+    expect(performanceLogger.getLatestMemory()).toBeNull();
+    expect(performanceLogger.getMemorySamples()).toEqual([]);
+  });
+
+  it('startMemorySampler() captures an immediate baseline sample then ticks', () => {
+    vi.useFakeTimers();
+    try {
+      performanceLogger.clearMemorySamples();
+      performanceLogger.startMemorySampler(1000);
+      // Immediate baseline sample on start.
+      expect(performanceLogger.getMemorySamples()).toHaveLength(1);
+      // Advance one tick → second sample.
+      vi.advanceTimersByTime(1000);
+      expect(performanceLogger.getMemorySamples()).toHaveLength(2);
+      const latest = performanceLogger.getLatestMemory();
+      expect(latest).not.toBeNull();
+      expect(typeof latest!.heapUsed).toBe('number');
+      expect(typeof latest!.rss).toBe('number');
+      expect(typeof latest!.external).toBe('number');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('stopMemorySampler() halts sampling (no new samples after stop)', () => {
+    vi.useFakeTimers();
+    try {
+      performanceLogger.clearMemorySamples();
+      performanceLogger.startMemorySampler(1000);
+      vi.advanceTimersByTime(1000); // 2 samples total
+      performanceLogger.stopMemorySampler();
+      vi.advanceTimersByTime(5000); // would be 5 more if still running
+      expect(performanceLogger.getMemorySamples()).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('caps the ring buffer at MEM_SAMPLE_MAX (120) retaining only the newest', () => {
+    vi.useFakeTimers();
+    try {
+      performanceLogger.clearMemorySamples();
+      performanceLogger.startMemorySampler(1);
+      vi.advanceTimersByTime(200); // 1 baseline + 200 ticks = 201 samples
+      const samples = performanceLogger.getMemorySamples();
+      expect(samples.length).toBeLessThanOrEqual(120);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe('PerformanceLogger — getHistory()', () => {
   it('returns a { recent, stats } object structure', () => {
     const history = performanceLogger.getHistory(10);

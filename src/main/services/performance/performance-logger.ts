@@ -41,6 +41,9 @@ const MAX_HISTORY = 50;
 /** Maximum number of IPC timeout events retained in the ring buffer. */
 const MAX_TIMEOUTS = 20;
 
+/** Maximum number of main-process memory samples retained (1h @ 30s). */
+const MEM_SAMPLE_MAX = 120;
+
 /** Aggregate statistics derived from the stored trace history. */
 export interface PerformanceStats {
   /** Number of completed apply operations currently stored. */
@@ -63,6 +66,18 @@ export interface PerformanceHistoryResponse {
   stats: PerformanceStats;
 }
 
+/** A single main-process memory sample (all values in bytes). */
+export interface MemorySample {
+  /** Epoch milliseconds when the sample was taken. */
+  ts: number;
+  /** `process.memoryUsage().heapUsed`. */
+  heapUsed: number;
+  /** `process.memoryUsage().rss`. */
+  rss: number;
+  /** `process.memoryUsage().external`. */
+  external: number;
+}
+
 /** Stateful handle to the performance ring buffer. */
 export interface PerformanceLoggerApi {
   log(trace: ThemeApplyTrace): void;
@@ -78,6 +93,17 @@ export interface PerformanceLoggerApi {
   getAllTimeouts(): IpcTimeoutEvent[];
   /** Clear all timeout events and reset the sequence counter. */
   clearTimeouts(): void;
+  /** Begin periodic main-process memory sampling. Idempotent: calling again
+   *  restarts the timer with the new interval. */
+  startMemorySampler(intervalMs?: number): void;
+  /** Stop periodic memory sampling. Idempotent: safe to call when not running. */
+  stopMemorySampler(): void;
+  /** Return a defensive copy of all retained memory samples (oldest first). */
+  getMemorySamples(): MemorySample[];
+  /** Return the most recent memory sample, or null if none taken yet. */
+  getLatestMemory(): MemorySample | null;
+  /** Clear all retained memory samples (does not stop the sampler). */
+  clearMemorySamples(): void;
 }
 
 function createPerformanceLogger(): PerformanceLoggerApi {
@@ -88,6 +114,23 @@ function createPerformanceLogger(): PerformanceLoggerApi {
   // --- IPC timeout ring buffer ---
   let timeouts: IpcTimeoutEvent[] = [];
   let timeoutSeq = 0;
+
+  // --- Main-process memory trend ring buffer ---
+  let memSamples: MemorySample[] = [];
+  let memoryTimer: ReturnType<typeof setInterval> | undefined;
+
+  function sampleMemory(): void {
+    const usage = process.memoryUsage();
+    memSamples.push({
+      ts: Date.now(),
+      heapUsed: usage.heapUsed,
+      rss: usage.rss,
+      external: usage.external,
+    });
+    if (memSamples.length > MEM_SAMPLE_MAX) {
+      memSamples = memSamples.slice(-MEM_SAMPLE_MAX);
+    }
+  }
 
   function getRecent(count: number): ThemeApplyTrace[] {
     const n = Math.max(0, Math.min(count, buffer.length));
@@ -180,6 +223,29 @@ function createPerformanceLogger(): PerformanceLoggerApi {
     clearTimeouts(): void {
       timeouts = [];
       timeoutSeq = 0;
+    },
+    startMemorySampler(intervalMs = 30_000): void {
+      // Restart cleanly if already running (idempotent).
+      if (memoryTimer !== undefined) clearInterval(memoryTimer);
+      sampleMemory(); // capture an immediate baseline sample
+      memoryTimer = setInterval(sampleMemory, intervalMs);
+      // Don't keep the event loop alive solely for sampling.
+      if (typeof memoryTimer.unref === 'function') memoryTimer.unref();
+    },
+    stopMemorySampler(): void {
+      if (memoryTimer !== undefined) {
+        clearInterval(memoryTimer);
+        memoryTimer = undefined;
+      }
+    },
+    getMemorySamples(): MemorySample[] {
+      return [...memSamples];
+    },
+    getLatestMemory(): MemorySample | null {
+      return memSamples.length > 0 ? memSamples[memSamples.length - 1]! : null;
+    },
+    clearMemorySamples(): void {
+      memSamples = [];
     },
   };
 }
