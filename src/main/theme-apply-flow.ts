@@ -329,34 +329,18 @@ export async function applyThemeFlow(
       progress: 60,
     });
     try {
-      await trace.step('applyTheme', (addSubStep) => {
+      await trace.step('applyTheme', () => {
         // The adapter's applyTheme is a single black-box call that internally
         // sequences: createStylesheet → injectPalette → injectTokens →
-        // injectCosmetic → injectTheme → verify. We segment the wall-clock
-        // time proportionally so the trace schema is populated; individual
-        // adapters may later expose per-phase callbacks for real timing.
-        const t0 = performance.now();
-        return adapter
-          .applyTheme(entry.bundle, {
-            port,
-            launch: false,
-            appPath: deps.getAppPath(appId),
-            restartExisting: false,
-          })
-          .then((r) => {
-            // Proportional split of the measured total across the six phases.
-            // Until adapters expose per-hook timing, each sub-phase gets an
-            // equal share so `children` durations sum to the parent total.
-            const total = performance.now() - t0;
-            const share = total / 6;
-            addSubStep('createStylesheet', share);
-            addSubStep('injectPalette', share);
-            addSubStep('injectTokens', share);
-            addSubStep('injectCosmetic', share);
-            addSubStep('injectTheme', share);
-            addSubStep('verify', share);
-            return r;
-          });
+        // injectCosmetic → injectTheme → verify. The parent step records the
+        // real wall-clock duration; per-phase decomposition is deferred until
+        // adapters expose per-hook timing callbacks.
+        return adapter.applyTheme(entry.bundle, {
+          port,
+          launch: false,
+          appPath: deps.getAppPath(appId),
+          restartExisting: false,
+        });
       });
     } catch (error) {
       const code = (error as { code?: string }).code;
