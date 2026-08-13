@@ -461,23 +461,27 @@ describe('parseTex — 截断/损坏头鲁棒性', () => {
     expect(parseTex(buf)).toBeNull();
   });
 
-  it('returns null when the image count claims more entries than the buffer', () => {
-    // Build a minimal header that claims 1 image but no mipmap data follows.
+  it('parses a header with a malformed short mipmap without throwing, and decode fails gracefully', () => {
+    // Minimal header claiming 1 image / 1 mipmap, but the mipmap body (4 bytes)
+    // is far too small for a 64×64 RGBA texture. parseTex must return a TexFile
+    // (it only validates structure, not pixel data) and the downstream decode
+    // must drop it rather than crash.
     const header = Buffer.concat([
       Buffer.from('TEXV0005\0TEXI0001\0'),
-      Buffer.alloc(4 * 8), // 8 int32: format, flags, texW, texH, imgW, imgH, unk, flags2
+      Buffer.alloc(4 * 7), // format, flags, texW, texH, imgW, imgH, unkInt0
       Buffer.from('TEXB0001\0'), // container magic
       i32(1), // imageCount = 1
       i32(1), // mipmapCount = 1
       i32(64), // width
       i32(64), // height
-      i32(4), // byteCount = 4 (far too few for 64×64, but valid length field)
+      i32(4), // byteCount = 4 (valid length field, far too few pixels)
       Buffer.alloc(4),
     ]);
-    // The single 64×64 mipmap claims 4 bytes → decode will fail and the
-    // texture is dropped, but parseTex itself must not throw.
     const tex = parseTex(header);
-    expect(tex).toBeNull();
+    expect(tex).not.toBeNull();
+    // 4 bytes can't back a 64×64 RGBA mipmap → decompressDxt returns null →
+    // texToDataUrl returns null instead of throwing.
+    expect(texToDataUrl(tex!)).toBeNull();
   });
 });
 
