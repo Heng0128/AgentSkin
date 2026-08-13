@@ -30,10 +30,23 @@
 - **报告**: FOLLOWUP_REPORT_2026-08-13-1930.md
 - **关键观察**: 多自动化并发导致工作区 dirty 文件互相干扰（EnvironmentGrid.tsx / 其他 tsx）。后续巡检执行 tsc 验证时应先 `git stash`/隔离非本任务 dirty 文件，或仅对本任务变更文件做类型聚焦，避免误判。
 
+### 2026-08-13 19:40 (HOURLY) — 方向 D：测试质量均衡
+- **状态**: COMPLETED
+- **快照点**: `ac4eeff`；**编排**: Scout-α(正向追踪零测试核心模块) + Scout-β(逆向扫描假断言) 并行 → Merger → Architect → Selector → Builder 串行(3 step) → Verifier×4 并行 → Fixer → Auditor 串行。
+- **关键发现**: 类型基线问题已在 follow-up(cc49ef0) 修复，`tsc --noEmit` 现零错误；测试质量整体良好（无假断言/空测试）。真正盲区=核心服务零测试，锁定 2 个纯函数/无依赖路径精准补测。
+- **修复/新增**:
+  - `theme-installer.ts` 导出 `parseSemver`/`compareSemver`（commit `2ce436e`）+ 9 例单测含 audit#19 prerelease 优先级回归（`3e0ecba`）。
+  - `agent-engine-persist.ts` 的 `isPersistedState`(R6-24) + `PersistChain` FIFO 隔离 11 例单测（`2f2fd31` + `50bb22a`）。
+  - **测试驱动发现的生产 bug**：`PersistChain.safe` 用 `void result.finally(...)` 丢弃 rejected promise → 写入失败泄漏未处理 rejection；改为 `result.catch(()=>{}).finally(...)`（commit 由并发自动化 `7fb8bc5` 代提交，含本修复）。
+- **验证**: TSC✅(0) VIT✅(20/20) BIO✅ CTR✅；首轮 VIT 暴露 1 未处理 rejection → 定位源 bug → 修复复验全绿。Auditor 全维度无问题。
+- **报告**: INSPECTION_REPORT_2026-08-13-1940.md
+- **关键环境观察**: 并发自动化 `7fb8bc5` 在本巡检 `git add` 暂存源码后提交，代提交了本巡检的 PersistChain 源修复（HEAD 已含，未被 clobber）。多自动化并发提交仍致 ref-lock，建议各 automation 用独立分支/串行锁。用户拒绝删除临时日志文件（tsc-out/vit-out 等），保留。
+
 ## 方向命中统计（近5次）
-B(1), K(1,残留), C(1), Followup(C建议) — 无方向连续2次 COMPLETED，历史回避规则未触发。
+B(1), K(1,残留), C(1), Followup(C建议), D(1) — 无方向连续2次 COMPLETED，历史回避规则未触发。
 
 ## 待办/已知问题（跨次延续）
-- 预存 tsc 错误（并发自动化遗留，非本任务）：`EnvironmentGrid.tsx` RefreshIcon/string|undefined；`studioStore.ts(613)` error 属性需确认是否仍在 —— 建议方向 D/A 下次统一清理。
-- 内存趋势数据已采集+经 IPC 暴露，但**尚无 UI 展示**（建议 #2 下轮做 Diagnostics 面板最小趋势图）。
+- 内存趋势数据已采集+经 IPC 暴露，但**尚无 UI 展示**（建议做 Diagnostics 面板最小趋势图）。
 - WindowManager BrowserWindow 生命周期尚未深度审计（原建议 #3）。
+- 本轮遗留零测试关键模块（未来工作）：`theme-installer` I/O 入口(install/buildBundle/computeThemeContentHash)、`agent-engine-service` reconcile/detect/apply 路径、`theme-apply-flow`/`theme-restore-flow` 全路径 —— 建议下轮方向 D 继续补测。
+- 多自动化并发提交 ref-lock 冲突：建议分配独立分支或串行锁。

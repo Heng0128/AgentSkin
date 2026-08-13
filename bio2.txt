@@ -1,0 +1,25 @@
+src\main\services\agent-engine-persist.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    142 142 │       // discarding `result.finally(...)` with `void` — prevents an unhandled
+    143 143 │       // rejection from leaking into the process when a write fails.
+    144     │ - ····this.chain·=·result.catch(()·=>·{}).finally(()·=>·{
+    145     │ - ······this.pending·=·Math.max(0,·this.pending·-·1);
+    146     │ - ····});
+        144 │ + ····this.chain·=·result
+        145 │ + ······.catch(()·=>·{})
+        146 │ + ······.finally(()·=>·{
+        147 │ + ········this.pending·=·Math.max(0,·this.pending·-·1);
+        148 │ + ······});
+    147 149 │       return result;
+    148 150 │     }
+  
+
+Checked 2 files in 19ms. No fixes applied.
+Found 1 error.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
