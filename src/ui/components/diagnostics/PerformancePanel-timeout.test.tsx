@@ -25,7 +25,7 @@ vi.mock('@/api/agentSkinClient', () => ({
   api: {
     getPerformanceHistory: vi.fn().mockResolvedValue({
       recent: [],
-      stats: { totalApplies: 0, avgDurationMs: 0, perAgentAvg: {} },
+      stats: { totalApplies: 0, avgDurationMs: 0, perAgentAvg: {}, overflowCount: 0 },
     }),
   },
 }));

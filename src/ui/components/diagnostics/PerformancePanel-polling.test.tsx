@@ -39,7 +39,7 @@ const { mockLoadTimeouts, mockClearTimeouts, mockGetPerformanceHistory } = vi.ho
   mockClearTimeouts: vi.fn().mockResolvedValue(undefined),
   mockGetPerformanceHistory: vi.fn().mockResolvedValue({
     recent: [],
-    stats: { totalApplies: 0, avgDurationMs: 0, perAgentAvg: {} },
+    stats: { totalApplies: 0, avgDurationMs: 0, perAgentAvg: {}, overflowCount: 0 },
   }),
 }));
 
