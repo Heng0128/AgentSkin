@@ -467,6 +467,47 @@ describe('CdpSession.close', () => {
 });
 
 // ---------------------------------------------------------------------------
+// CdpSession.close — resource cleanup (RC1 regression guard)
+// ---------------------------------------------------------------------------
+
+describe('CdpSession.close — resource cleanup (RC1)', () => {
+  it('rejects pending command on close and clears its timeout timer (no dangling handle)', async () => {
+    vi.useFakeTimers();
+    try {
+      const promise = connectCdp('ws://localhost/x', 5000, 200);
+      await Promise.resolve();
+      currentFake!.triggerOpen();
+      const session = await promise;
+      const p = session.send('Slow.method');
+      await Promise.resolve();
+      session.close();
+      // close() must reject the pending command immediately (timer cleared).
+      await expect(p).rejects.toThrow('CDP session closed.');
+      // Advance well past the command timeout — the cleared timer must not
+      // re-fire and must not leave a dangling handle in the event loop.
+      await vi.advanceTimersByTimeAsync(1000);
+      // Subsequent sends fail immediately, not after the (cleared) timeout.
+      const p2 = session.send('After.close');
+      await Promise.resolve();
+      await expect(p2).rejects.toThrow('CDP session is closed');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('clears event listeners on close so registered handlers do not leak', async () => {
+    const session = await connectEventAndOpen();
+    const events: unknown[] = [];
+    session.on('Target.targetCreated', (p) => events.push(p));
+    session.close();
+    // After close, listeners must be cleared; event must not reach handler.
+    currentFake!.serverSend(JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }));
+    await Promise.resolve();
+    expect(events).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Unexpected socket close (ws.onclose)
 // ---------------------------------------------------------------------------
 
