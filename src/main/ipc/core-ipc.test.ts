@@ -95,6 +95,28 @@ describe('core-ipc parameter validation', () => {
     });
   });
 
+  describe('SYSTEM_STATUS', () => {
+    it('resolves with core.status() payload on happy path', async () => {
+      const handler = handlers.get(IpcChannel.SYSTEM_STATUS)!;
+      const payload = {
+        apps: [{ appId: 'vscode', installed: true, running: false, debugReady: true }],
+        platform: 'win32',
+      };
+      (deps.core.status as ReturnType<typeof vi.fn>).mockResolvedValue(payload);
+      const result = await handler({}, {});
+      expect(result).toEqual(payload);
+    });
+
+    it('rejects with IpcTimeoutError when core.status() hangs', async () => {
+      const handler = handlers.get(IpcChannel.SYSTEM_STATUS)!;
+      (deps.core.status as ReturnType<typeof vi.fn>).mockReturnValue(new Promise(() => {})); // never settles
+      const result = await (handler({}, {}) as Promise<unknown>).catch((e: unknown) => e);
+      expect(result).toHaveProperty('name', 'IpcTimeoutError');
+      expect(result).toHaveProperty('channel', IpcChannel.SYSTEM_STATUS);
+      expect(result).toHaveProperty('ms', 15000);
+    });
+  });
+
   describe('SHELL_SHOW_ITEM', () => {
     // SHELL_SHOW_ITEM handler is synchronous (not async), so validation
     // throws synchronously rather than as a rejected promise.

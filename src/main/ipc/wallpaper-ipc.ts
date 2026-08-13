@@ -114,14 +114,20 @@ export function registerWallpaperIpc(deps: MainContext): void {
   ipcMain.handle(
     IpcChannel.WALLPAPER_SET_AGENT,
     async (_event, appId: unknown, setting: unknown) => {
-      assertAgentId(appId);
-      const s = (setting ?? {}) as Partial<WallpaperAgentSetting>;
-      await deps.settings.setAgentWallpaper(appId, {
-        enabled: s.enabled === true,
-        id: typeof s.id === 'string' && s.id ? s.id : null,
-        render: s.render,
-      });
-      return settingsDto(deps);
+      return withMonitoredTimeout(
+        IpcChannel.WALLPAPER_SET_AGENT,
+        10000,
+        (async () => {
+          assertAgentId(appId);
+          const s = (setting ?? {}) as Partial<WallpaperAgentSetting>;
+          await deps.settings.setAgentWallpaper(appId, {
+            enabled: s.enabled === true,
+            id: typeof s.id === 'string' && s.id ? s.id : null,
+            render: s.render,
+          });
+          return settingsDto(deps);
+        })(),
+      );
     },
   );
 

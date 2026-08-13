@@ -188,7 +188,12 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
   },
 
   applyAgentWallpaper: async (appId, options): Promise<ApplyAgentWallpaperResult> => {
-    return api.applyAgentWallpaper(appId, options) as Promise<ApplyAgentWallpaperResult>;
+    try {
+      return (await api.applyAgentWallpaper(appId, options)) as ApplyAgentWallpaperResult;
+    } catch (error) {
+      useNotificationStore.getState().fail(error);
+      return { ok: false, reason: 'ipc-error' };
+    }
   },
 
   setAndApplyAgentWallpaper: async (

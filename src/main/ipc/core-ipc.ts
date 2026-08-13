@@ -20,6 +20,7 @@ import { IpcChannel } from '../../shared/ipc-channels';
 import { saveLocalePreference } from '../locale-preferences';
 import { handleThemeFileOpen, type MainContext, wrapCatalog } from '../main-context';
 import { assertNonEmptyString } from './ipc-validators';
+import { withMonitoredTimeout } from './with-monitored-timeout';
 
 export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise<void>): void {
   ipcMain.handle(IpcChannel.APP_BOOTSTRAP, async () => {
@@ -52,7 +53,13 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
     void updateTrayMenu();
   });
 
-  ipcMain.handle(IpcChannel.SYSTEM_STATUS, () => deps.core.status());
+  ipcMain.handle(IpcChannel.SYSTEM_STATUS, async () => {
+    // core.status() triggers CDP probing for all agents; under heavy load or
+    // with unresponsive agents this can block indefinitely. The timeout ensures
+    // the renderer gets a timely error instead of hanging until Electron's
+    // built-in ~30s IPC timeout.
+    return withMonitoredTimeout(IpcChannel.SYSTEM_STATUS, 15000, deps.core.status());
+  });
 
   ipcMain.handle(IpcChannel.AGENT_LIST, async () => {
     const items = deps.agentCatalog.listAgents();

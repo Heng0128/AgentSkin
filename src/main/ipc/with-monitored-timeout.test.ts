@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { IpcTimeoutError } from '../../shared/withTimeout';
+import { isIpcTimeoutError } from '../../shared/withTimeout';
 import { performanceLogger } from '../services/performance';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
@@ -19,9 +19,7 @@ describe('withMonitoredTimeout', () => {
       setTimeout(() => resolve('done'), 100);
     });
 
-    await expect(withMonitoredTimeout(channel, ms, promise)).rejects.toBeInstanceOf(
-      IpcTimeoutError,
-    );
+    await expect(withMonitoredTimeout(channel, ms, promise)).rejects.toSatisfy(isIpcTimeoutError);
 
     const timeouts = performanceLogger.getAllTimeouts();
     expect(timeouts).toHaveLength(1);
@@ -58,8 +56,8 @@ describe('withMonitoredTimeout', () => {
       caught = err;
     }
 
-    expect(caught).toBeInstanceOf(IpcTimeoutError);
-    expect((caught as IpcTimeoutError).channel).toBe('THEME_APPLY');
+    expect(caught).toSatisfy(isIpcTimeoutError);
+    expect((caught as { channel: string }).channel).toBe('THEME_APPLY');
     expect(performanceLogger.getAllTimeouts()).toHaveLength(1);
   });
 });

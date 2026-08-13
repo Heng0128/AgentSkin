@@ -78,6 +78,11 @@ const busyKeys = new Set<BusyKey>();
 // would still serialize the last couple of applies unnecessarily).
 const MAX_CONCURRENCY = 6;
 
+/** Maximum time (ms) to wait for a concurrency slot in withBusy before giving
+ *  up and surfacing a notification. Prevents the queue from hanging forever if
+ *  a slot never frees (e.g. an apply that never settles). */
+const MAX_BUSY_WAIT_MS = 60_000;
+
 // ---------------------------------------------------------------------------
 // state shape
 // ---------------------------------------------------------------------------
@@ -338,8 +343,17 @@ async function withBusy<T>(key: BusyKey, fn: () => Promise<T>): Promise<T | unde
   // which made "apply to all agents" (6 applies) silently skip the 5th/6th
   // agent whenever 4 were already in flight — the user saw no error and no
   // injection. Waiting guarantees every queued operation eventually runs.
+  let elapsed = 0;
   while (busyKeys.size >= MAX_CONCURRENCY) {
+    if (elapsed >= MAX_BUSY_WAIT_MS) {
+      const msg = (t as Record<string, unknown>).busyTimeout as string | undefined;
+      useNotificationStore
+        .getState()
+        .fail(msg ?? 'Timed out waiting for a free operation slot — try again.');
+      return undefined;
+    }
     await new Promise((resolve) => setTimeout(resolve, 50));
+    elapsed += 50;
   }
   busyKeys.add(key);
   useThemeStore.setState({ busy: key });
