@@ -142,6 +142,8 @@ export function useWallpaperActions(params: WallpaperActionsParams): WallpaperAc
         return cleared;
       });
       const CONCURRENCY = 4;
+      // cursor++ is atomic in JS single-threaded execution — no true parallelism,
+      // so concurrent workers cannot get duplicate indices. Safe for this pattern.
       let cursor = 0;
       let okCount = 0;
       const worker = async (): Promise<void> => {

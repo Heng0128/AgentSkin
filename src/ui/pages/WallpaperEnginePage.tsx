@@ -59,10 +59,18 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
   } = page;
 
   // Derived forwarded callbacks
-  const handleSetUiBackground = () => void setWallpaper(true, selected!.id, renderDraft);
-  const handleApplyAgent = (agentId: Parameters<typeof handleApply>[1]) =>
-    void handleApply(selected!.id, agentId);
-  const handleApplyAllAgents = () => void handleApplyAll(selected!.id);
+  const handleSetUiBackground = () => {
+    if (!selected) return;
+    void setWallpaper(true, selected.id, renderDraft);
+  };
+  const handleApplyAgent = (agentId: Parameters<typeof handleApply>[1]) => {
+    if (!selected) return;
+    void handleApply(selected.id, agentId);
+  };
+  const handleApplyAllAgents = () => {
+    if (!selected) return;
+    void handleApplyAll(selected.id);
+  };
 
   // --- Loading state ---
   if (controller.wallpaper.loading) {

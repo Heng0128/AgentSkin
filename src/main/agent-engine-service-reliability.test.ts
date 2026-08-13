@@ -482,9 +482,10 @@ describe('AgentEngineService Reliability Verification', () => {
       const svc = new AgentEngineService({} as unknown as ThemeLibraryApi, stateFile, settings);
 
       // Verify callback mechanism works
-      await svc.apply(APPLY_REQUEST);
+      const result = await svc.apply(APPLY_REQUEST);
 
-      // Service completes without throwing
+      // Apply returned success and logger is available
+      expect(result.status).toBe('applied');
       expect(svc.asLogger()).toBeDefined();
     });
 
@@ -560,10 +561,10 @@ describe('AgentEngineService Reliability Verification', () => {
         response: APPLY_RESPONSE,
         background: Promise.resolve(),
       });
-      await svc.apply(APPLY_REQUEST);
+      const result = await svc.apply(APPLY_REQUEST);
 
-      // Service should complete successfully
-      expect(svc).toBeDefined();
+      // Service should complete successfully with applied status
+      expect(result.status).toBe('applied');
     });
 
     it('maintains operational state after failed operations', async () => {
