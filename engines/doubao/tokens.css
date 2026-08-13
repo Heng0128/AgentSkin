@@ -230,7 +230,7 @@ html.agentskin-host-doubao:root body {
   --s-color-bg-content-base: color-mix(in srgb, var(--agentskin-surface) 94%, var(--agentskin-bg)) !important;
   --s-color-bg-content-base-raw: var(--agentskin-surface-raw) !important;
   --s-color-bg-disable: color-mix(in srgb, var(--agentskin-muted) 35%, var(--agentskin-surface)) !important;
-  --s-color-bg-disable-raw: var(--agentskin-muted-raw, 128, 128, 128) !important;
+  --s-color-bg-disable-raw: var(--agentskin-muted-raw) !important;
   --s-color-bg-outlined-btn: var(--agentskin-surface) !important;
   --s-color-bg-outlined-btn-raw: var(--agentskin-surface-raw) !important;
   --s-color-bg-outlined-btn-hover: var(--agentskin-surface-elevated) !important;
@@ -283,7 +283,7 @@ html.agentskin-host-doubao:root body {
   --s-color-bg-inverse-quarternary: color-mix(in srgb, var(--agentskin-surface-elevated) 70%, var(--agentskin-bg)) !important;
   --s-color-bg-inverse-quarternary-raw: var(--agentskin-surface-elevated-raw) !important;
   --s-color-bg-inverse-disable: color-mix(in srgb, var(--agentskin-muted) 40%, var(--agentskin-surface)) !important;
-  --s-color-bg-inverse-disable-raw: var(--agentskin-muted-raw, 128, 128, 128) !important;
+  --s-color-bg-inverse-disable-raw: var(--agentskin-muted-raw) !important;
   --s-color-bg-inverse-trans: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
   --s-color-bg-inverse-trans-tertiary: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
   --s-color-bg-inverse-trans-quarternary: color-mix(in srgb, var(--agentskin-text) 2%, transparent) !important;
@@ -337,9 +337,9 @@ html.agentskin-host-doubao:root body {
 
   /* Accent palette — all tied to theme accent/secondary */
   --s-color-accents-grey-pale: color-mix(in srgb, var(--agentskin-muted) 15%, var(--agentskin-surface)) !important;
-  --s-color-accents-grey-pale-raw: var(--agentskin-muted-raw, 128, 128, 128) !important;
+  --s-color-accents-grey-pale-raw: var(--agentskin-muted-raw) !important;
   --s-color-accents-grey: var(--agentskin-muted) !important;
-  --s-color-accents-grey-raw: var(--agentskin-muted-raw, 128, 128, 128) !important;
+  --s-color-accents-grey-raw: var(--agentskin-muted-raw) !important;
   --s-color-accents-green: color-mix(in srgb, var(--agentskin-accent) 80%, #fff) !important;
   --s-color-accents-green-raw: var(--agentskin-accent-raw) !important;
   --s-color-accents-yellow: color-mix(in srgb, var(--agentskin-accent) 60%, #fff) !important;
