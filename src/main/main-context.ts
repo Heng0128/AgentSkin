@@ -147,8 +147,15 @@ export function sendLog(line: string): void {
  * so the UI reflects the new state without waiting for the next poll tick.
  */
 export function notifyStatusChanged(): void {
+  // Fan-out STATUS_CHANGED to both windows so Studio's status snapshot
+  // (activeThemeId, running, debugReady) stays in sync after apply/restore
+  // without waiting for its 5s poll tick. Cross-module integration fix:
+  // previously only mainWindow received the push, leaving Studio stale.
   if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
     ctx.mainWindow.webContents.send(IpcChannel.STATUS_CHANGED);
+  }
+  if (ctx.studioWindow && !ctx.studioWindow.isDestroyed()) {
+    ctx.studioWindow.webContents.send(IpcChannel.STATUS_CHANGED);
   }
 }
 
