@@ -90,7 +90,17 @@ describe('PersistChain', () => {
     const chain = new PersistChain();
     const spy = vi.fn();
     // A rejected write must not poison the chain for subsequent writes.
-    await chain.safe(() => Promise.reject(new Error('boom'))).catch(spy);
+    // Attach a catch to the returned promise so the rejection is observed
+    // (PersistChain swallows it internally, but `safe()` still returns the
+    // rejected promise for callers that want to know).
+    const rejected = chain
+      .safe(() => Promise.reject(new Error('boom')))
+      .catch((err) => {
+        spy(err);
+      });
+    // Ensure the rejected promise is fully settled before asserting, so no
+    // unhandled-rejection is reported outside this test.
+    await rejected;
     expect(spy).toHaveBeenCalledOnce();
     let ran = false;
     await chain.safe(() => {
