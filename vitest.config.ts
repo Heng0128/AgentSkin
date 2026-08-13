@@ -59,7 +59,7 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'text-summary'],
+      reporter: ['text', 'text-summary', 'lcov', 'json'],
       include: ['src/main/**/*.ts', 'src/shared/**/*.ts', 'src/ui/**/*.ts'],
       exclude: [
         '**/*.test.ts',
@@ -69,10 +69,10 @@ export default defineConfig({
         'src/ui/**/*.d.ts',
       ],
       thresholds: {
-        statements: 25,
-        branches: 28,
-        functions: 25,
-        lines: 25,
+        statements: 35,
+        branches: 35,
+        functions: 30,
+        lines: 35,
       },
     },
     server: {
