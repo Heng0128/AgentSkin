@@ -141,10 +141,10 @@ export function sendLog(line: string): void {
 }
 
 /**
- * Notify the renderer that SystemStatus changed outside the 3s poll cadence
- * (after apply/restore/delete, tray actions, or boot-restore). The renderer
- * subscribes via `onStatusChanged` and triggers an immediate `refreshStatus()`
- * so the UI reflects the new state without waiting for the next poll tick.
+ * Fan-out STATUS_CHANGED to mainWindow + studioWindow after any mutation
+ * (apply/restore/delete, tray actions, boot-restore). Keeps Studio's 5s-poll
+ * status snapshot in sync without waiting for its next tick. Renderer
+ * subscribes via `onStatusChanged` → immediate `refreshStatus()`.
  */
 export function notifyStatusChanged(): void {
   // Fan-out STATUS_CHANGED to both windows so Studio's status snapshot

@@ -57,6 +57,10 @@ UI（React 19）→ preload（contextBridge）→ IPC → 主进程服务层 →
 
 `visual-analyzer-ipc.ts` 当前为 stub（见 ROADMAP P1-5），UI 侧调用会降级。
 
+#### 状态同步（STATUS_CHANGED 推模式）
+
+mutation handler 成功后调用 `notifyStatusChanged()` → 推送 `STATUS_CHANGED` 到所有活跃窗口 → renderer 立即 `refreshStatus()` 刷新状态快照。与 3s/5s poll 互补：push 提供低延迟，poll 提供最终一致性兜底。
+
 ## 适配器（src/adapters/）
 
 `base.ts` 定义 ApplicationAdapter 契约：身份 + 委托，不重复实现注入逻辑。6 个 active 适配器：traework / qoderwork / workbuddy / doubao / codex / zcode（无 experimental）。安装检测走 installHints（目录名 / 可执行文件名 / 注册表 DisplayName）。
