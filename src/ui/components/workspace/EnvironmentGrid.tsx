@@ -8,7 +8,6 @@ import type { ProgressMap } from '@/hooks/useBootProgress';
 import type { EnvironmentModel } from '@/types/environment';
 
 import { BotIcon, RefreshIcon } from '@hugeicons/core-free-icons';
-import type { HugeiconsIconProps } from '@hugeicons/react';
 import type { UiMessages } from '@shared/i18n';
 import { EnvironmentCard } from './EnvironmentCard';
 
