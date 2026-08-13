@@ -265,6 +265,7 @@ function QuickButton({
 export function UnifiedWorkspacePage({ controller }: { controller: AppController }) {
   const { activeEnvironment, environments } = useEnvironments();
   const { t, status, installed, setRoute } = controller;
+  const isSwitching = useEnvironmentStore((s) => s.switching);
 
   const supportedCount = AGENT_IDS.length;
   const runningCount = status?.apps.filter((a) => a.running).length ?? 0;
@@ -527,6 +528,7 @@ export function UnifiedWorkspacePage({ controller }: { controller: AppController
         onOpenChange={(open) => {
           if (!open) setDetailEnv(null);
         }}
+        isApplying={isSwitching}
       />
     </div>
   );

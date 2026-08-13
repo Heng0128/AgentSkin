@@ -11,6 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import type { EnvironmentModel } from '@/types/environment';
 
@@ -24,6 +25,8 @@ interface AgentDetailSheetProps {
   t: UiMessages;
   onApply: (env: EnvironmentModel) => void;
   onOpenChange: (open: boolean) => void;
+  /** When true, the apply button shows a spinner and is disabled to prevent duplicate clicks. */
+  isApplying?: boolean;
 }
 
 function statusLabel(env: EnvironmentModel, t: UiMessages): string {
@@ -45,6 +48,7 @@ export function AgentDetailSheet({
   t,
   onApply,
   onOpenChange,
+  isApplying = false,
 }: AgentDetailSheetProps) {
   return (
     <Sheet open={env !== null} onOpenChange={onOpenChange}>
@@ -105,13 +109,15 @@ export function AgentDetailSheet({
                   'w-full gap-1.5 rounded-[2px] bg-primary text-primary-foreground',
                   'hover:bg-primary/90',
                 )}
+                disabled={isApplying}
                 onClick={() => {
+                  if (isApplying) return;
                   onApply(env);
                   onOpenChange(false);
                 }}
               >
-                <HugeIcon icon={Rocket01Icon} size={15} />
-                {t.detailApply}
+                {isApplying ? <Spinner size={15} /> : <HugeIcon icon={Rocket01Icon} size={15} />}
+                {isApplying ? t.detailApplying || 'Applying…' : t.detailApply}
               </Button>
             </SheetFooter>
           </>
