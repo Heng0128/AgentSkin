@@ -83,8 +83,11 @@ function semverGte(actual: string, required: string): boolean {
 
 /** Parse a semver string into { major, minor, patch, prerelease: string[] }.
  *  Returns null if the string doesn't look like semver (no dot-separated
- *  numeric core). */
-function parseSemver(v: string): {
+ *  numeric core).
+ *
+ * Exported for unit testing the documented precedence rules (see
+ * `compareSemver`) without re-implementing the parser in a test harness. */
+export function parseSemver(v: string): {
   major: number;
   minor: number;
   patch: number;
@@ -105,8 +108,10 @@ function parseSemver(v: string): {
 
 /** Compare two semver strings. Returns >0 if a>b, 0 if equal, <0 if a<b.
  *  Falls back to legacy numeric-split comparison if either input is not
- *  parseable semver, so we never regress on inputs the old code accepted. */
-function compareSemver(a: string, b: string): number {
+ *  parseable semver, so we never regress on inputs the old code accepted.
+ *
+ * Exported for unit testing the documented prerelease precedence rules. */
+export function compareSemver(a: string, b: string): number {
   const pa = parseSemver(a);
   const pb = parseSemver(b);
   // Legacy fallback: if either side isn't valid semver, use the old
