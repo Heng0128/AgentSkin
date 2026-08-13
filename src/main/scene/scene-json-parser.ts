@@ -399,8 +399,8 @@ function parseVec2(v: unknown): SceneVec2 | null {
   const o = asJsonObject(v);
   if (o) {
     return {
-      x: typeof o.x === 'number' ? o.x : 0,
-      y: typeof o.y === 'number' ? o.y : 0,
+      x: numOr(o.x, 0),
+      y: numOr(o.y, 0),
     };
   }
   return null;

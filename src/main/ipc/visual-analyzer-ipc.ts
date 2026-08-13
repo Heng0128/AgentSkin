@@ -13,10 +13,13 @@
  *           visual-analysis palette (via scripts/build-theme-package.mjs).
  *
  * Stub / not yet wired (P2, requires live CDP):
- *   - DETECT / CDP_EXTRACT return graceful placeholders (no renderer consumer
+ *   - DETECT: now wired to ctx.core.status() when `deps` is supplied;
+ *     falls back to a graceful no-running placeholder when running
+ *     without deps (e.g. unit tests).
+ *   - CDP_EXTRACT returns a graceful placeholder (no renderer consumer
  *     yet; CDP live extraction is not implemented).
  *
- * The stubs:
+ * The remaining stubs:
  *   1. Prevent renderer-side `ipcRenderer.invoke` calls from hanging
  *      indefinitely (Electron rejects with "No handler registered" after ~30s).
  *   2. Return empty/placeholder data so the UI degrades gracefully
@@ -29,6 +32,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
+import type { SystemStatus } from '../../shared/types';
 import { type AgentId, isAgentId, type VisualAnalysisSummary } from '../../shared/types';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
@@ -162,7 +166,12 @@ function buildVisualAnalysisSummaries(): VisualAnalysisSummary[] {
   return out;
 }
 
-export function registerVisualAnalyzerIpc(): void {
+export interface VisualAnalyzerDeps {
+  /** Return the latest per-agent status (running / port / displayName). */
+  getStatus: () => Promise<SystemStatus>;
+}
+
+export function registerVisualAnalyzerIpc(deps?: VisualAnalyzerDeps): void {
   // List agent ids that have a bundled profile on disk (known AgentIds only).
   ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_LIST, async () => {
     return withMonitoredTimeout(
@@ -204,9 +213,26 @@ export function registerVisualAnalyzerIpc(): void {
   });
 
   // Detect whether an agent process is currently running.
-  // Stub (P2): a real implementation needs the orchestrator's DiscoveryDeps.
-  ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_DETECT, (_event, _agentName: unknown) => {
-    return { running: false, port: undefined, title: undefined };
+  // Wired: queries ctx.core.status() for live running/port/displayName.
+  // Fallback (deps unavailable, e.g. tests): graceful not-running placeholder.
+  ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_DETECT, async (_event, agentName: unknown) => {
+    if (typeof agentName !== 'string' || !isAgentId(agentName)) {
+      return { running: false, port: undefined, title: undefined };
+    }
+    if (!deps?.getStatus) {
+      return { running: false, port: undefined, title: undefined };
+    }
+    try {
+      const status = await deps.getStatus();
+      const app = status.apps.find((a) => a.appId === agentName);
+      if (!app) {
+        return { running: false, port: undefined, title: undefined };
+      }
+      return { running: app.running, port: app.port ?? undefined, title: app.displayName };
+    } catch {
+      /* transient — degrade to not-running */
+      return { running: false, port: undefined, title: undefined };
+    }
   });
 
   // Trigger a live CDP-based extraction from a running agent.

@@ -98,7 +98,12 @@ function createPerformanceLogger(): PerformanceLoggerApi {
     const totalApplies = buffer.length;
 
     if (totalApplies === 0) {
-      return { totalApplies: 0, avgDurationMs: 0, perAgentAvg: {}, overflowCount: traceOverflowCount };
+      return {
+        totalApplies: 0,
+        avgDurationMs: 0,
+        perAgentAvg: {},
+        overflowCount: traceOverflowCount,
+      };
     }
 
     let totalSum = 0;
