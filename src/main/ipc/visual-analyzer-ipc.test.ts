@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { IpcChannel } from '../../shared/ipc-channels';
+import type { SystemStatus } from '../../shared/types';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -39,6 +40,28 @@ vi.mock('node:fs/promises', () => ({
 }));
 
 const { registerVisualAnalyzerIpc } = await import('./visual-analyzer-ipc');
+
+// ---------------------------------------------------------------------------
+// Mock deps helpers
+// ---------------------------------------------------------------------------
+
+function mockStatus(overrides: Partial<SystemStatus> = {}): SystemStatus {
+  return {
+    platform: 'win32',
+    apps: [
+      {
+        appId: 'zcode',
+        displayName: 'ZCode',
+        installed: true,
+        running: false,
+        debugReady: false,
+        port: null,
+        activeThemeId: null,
+      },
+    ],
+    ...overrides,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -124,7 +147,9 @@ describe('visual-analyzer-ipc', () => {
   });
 
   describe('visual analysis — detect / extract / export', () => {
-    it('DETECT reports not-running', async () => {
+    it('DETECT reports not-running without deps (graceful fallback)', async () => {
+      // beforeEach registers without deps() — the handler must degrade
+      // to the original placeholder behavior when no status source is wired.
       const result = (await invoke(IpcChannel.VISUAL_ANALYSIS_DETECT, 'zcode')) as {
         running: boolean;
         port?: number;
@@ -163,6 +188,78 @@ describe('visual-analyzer-ipc', () => {
         root: { '--agentskin-bg': '#201a40' },
       });
       expect(result).toEqual({ ok: false, path: undefined });
+    });
+  });
+
+  describe('VISUAL_ANALYSIS_DETECT — wired to status source', () => {
+    beforeEach(() => {
+      handlers.clear();
+      // Register WITH a mock status source so DETECT can return live data.
+      registerVisualAnalyzerIpc({ getStatus: vi.fn().mockResolvedValue(mockStatus()) });
+    });
+
+    it('returns running=true with port and displayName when the app is up', async () => {
+      // Override: zcode is running with CDP port 9222.
+      registerVisualAnalyzerIpc({
+        getStatus: vi.fn().mockResolvedValue(
+          mockStatus({
+            apps: [
+              {
+                appId: 'zcode',
+                displayName: 'ZCode',
+                installed: true,
+                running: true,
+                debugReady: true,
+                port: 9222,
+                activeThemeId: null,
+              },
+            ],
+          }),
+        ),
+      });
+      // Re-invoke with the freshly registered handler.
+      const handler = handlers.get(IpcChannel.VISUAL_ANALYSIS_DETECT);
+      if (!handler) throw new Error('DETECT handler not registered');
+      const result = (await handler({}, 'zcode')) as {
+        running: boolean;
+        port?: number;
+        title?: string;
+      };
+      expect(result).toEqual({ running: true, port: 9222, title: 'ZCode' });
+    });
+
+    it('returns running=false + port=undefined when app is installed but closed', async () => {
+      // Default mockStatus() has running=false / port=null → handler converts
+      // null to undefined for the wire format.
+      const result = (await invoke(IpcChannel.VISUAL_ANALYSIS_DETECT, 'zcode')) as {
+        running: boolean;
+        port?: number;
+        title?: string;
+      };
+      expect(result).toEqual({ running: false, port: undefined, title: 'ZCode' });
+    });
+
+    it('returns not-running placeholder for an unknown agent id', async () => {
+      const result = (await invoke(IpcChannel.VISUAL_ANALYSIS_DETECT, 'not-a-real-agent')) as {
+        running: boolean;
+        port?: number;
+        title?: string;
+      };
+      expect(result).toEqual({ running: false, port: undefined, title: undefined });
+    });
+
+    it('returns not-running placeholder when getStatus throws', async () => {
+      registerVisualAnalyzerIpc({
+        getStatus: vi.fn().mockRejectedValue(new Error('core unavailable')),
+      });
+      const handler = handlers.get(IpcChannel.VISUAL_ANALYSIS_DETECT);
+      if (!handler) throw new Error('DETECT handler not registered');
+      const result = (await handler({}, 'zcode')) as {
+        running: boolean;
+        port?: number;
+        title?: string;
+      };
+      expect(result).toEqual({ running: false, port: undefined, title: undefined });
     });
   });
 });

@@ -167,7 +167,6 @@ function buildVisualAnalysisSummaries(): VisualAnalysisSummary[] {
 }
 
 export interface VisualAnalyzerDeps {
-  /** Return the latest per-agent status (running / port / displayName). */
   getStatus: () => Promise<SystemStatus>;
 }
 

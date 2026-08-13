@@ -44,7 +44,7 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
   // + the renderer→main update path for renderer-side primitive sizes.
   registerConcurrencyMetricsIpc(ctx);
   registerWindowIpc();
-  registerVisualAnalyzerIpc();
+  registerVisualAnalyzerIpc({ getStatus: () => ctx.core.status() });
   registerEnvironmentIpc(ctx);
 
   // Open (or focus) the dedicated Theme Studio window on demand. The renderer
