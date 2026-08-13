@@ -198,6 +198,10 @@ export const IpcChannel = {
   // VISUAL_ANALYSIS_STATUS moved to // --- Main→renderer events --- section above (SEND_ONLY).
   VISUAL_ANALYSIS_EXPORT_THEME: 'visual-analysis:export-theme',
   VISUAL_ANALYSIS_LIST_SUMMARY: 'visual-analysis:list-summary',
+
+  // --- Theme health check ---
+  /** Theme health check report — pushed from main to renderer on each probe cycle */
+  THEME_HEALTH_REPORT: 'theme:health-report',
 } as const;
 
 /** Union of all IPC channel names (for type-level validation in callers). */

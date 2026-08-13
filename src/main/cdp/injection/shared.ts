@@ -67,6 +67,21 @@ export function delay(ms: number): Promise<void> {
 }
 
 /**
+ * Exponential backoff with jitter. Used by retry loops to avoid
+ * bombarding an unresponsive target with fixed-interval attempts.
+ *
+ * @param attempt  0-based attempt number
+ * @param base     base delay in ms (default 500)
+ * @param max      cap in ms (default 8000)
+ */
+export function backoffDelay(attempt: number, base = 500, max = 8000): Promise<void> {
+  const exp = Math.min(max, base * 2 ** attempt);
+  const jitter = Math.floor(Math.random() * exp * 0.3);
+  const ms = Math.min(max, exp + jitter);
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
  * Poll `verifyTheme` until it succeeds or `timeoutMs` is reached.
  *
  * Replaces the pattern of `await delay(fixedMs); verifyTheme()` with a

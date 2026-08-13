@@ -34,6 +34,7 @@
  *   AgentEngineService.restore → hardeningRemove + removeSecondaryTargets
  */
 
+import type { BrowserWindow } from 'electron';
 import type { ApplicationAdapter } from '../../adapters/base';
 import {
   type ResolvedThemeTarget,
@@ -47,6 +48,7 @@ import {
   WALLPAPER_PUNCH_GLOBAL,
 } from '../../shared/injection-constants';
 import type { AgentId } from '../../shared/types';
+import { IpcChannel } from '../../shared/ipc-channels';
 import { checkThemeHealth } from '../theme-health-check';
 import { type CdpSession, connectCdp } from './cdp-client';
 import { type InjectEngineResult, injectThemeViaCdp, removeEngineInjection } from './cdp-inject';
@@ -86,6 +88,8 @@ export interface CdpFanoutDeps {
   ) => Promise<InjectEngineResult | null>;
   /** Logger sink (usually `AgentEngineService.log`). */
   log: (line: string) => void;
+  /** Main window reference for pushing health reports to the renderer via IPC. */
+  mainWindow?: BrowserWindow | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -431,6 +435,9 @@ export async function hardeningPass(
           .join(', ');
         deps.log(`[hardening] ${appId}: top blockers: ${top}`);
       }
+      // Push health report to renderer via IPC (consumed by diagnostics/UI).
+      // Optional chaining skips the send when no main window is available.
+      deps.mainWindow?.webContents.send(IpcChannel.THEME_HEALTH_REPORT, health);
       // Re-append the wallpaper punch-through sheet to the END of
       // adoptedStyleSheets. The hardening pass's injectCssAdopted appends a
       // new theme sheet after the punch-through, which lets the adapter's

@@ -26,7 +26,16 @@ export function WallpaperEnginePage({ controller }: { controller: AppController 
 function WallpaperEnginePageInner({ controller }: { controller: AppController }) {
   const {
     t,
-    wallpaper: { enabled, selectedId, agentWallpapers, wallpapers, setWallpaper, importWallpaper },
+    wallpaper: {
+      enabled,
+      selectedId,
+      agentWallpapers,
+      wallpapers,
+      setWallpaper,
+      importWallpaper,
+      error,
+      initialize,
+    },
     appStatusFor,
     isRefreshing,
   } = controller;
@@ -79,6 +88,30 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <div className="size-8 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
           <p className="text-sm">{t.weDetecting}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Error state: WE installed but initial list failed (IPC timeout, permission, etc.) ---
+  if (error && wallpapers.length === 0) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="flex size-14 items-center justify-center rounded-[2px] bg-destructive/10">
+            <HugeIcon icon={Image02Icon} className="size-6 text-destructive" />
+          </div>
+          <div>
+            <p className="font-display text-sm font-bold text-destructive">{t.weLoadFailed}</p>
+            <p className="mt-1 max-w-[260px] text-xs text-muted-foreground">{error}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void initialize()}
+            className="rounded-[2px] border border-destructive/30 bg-card2 px-3 py-1.5 text-[11px] font-medium text-destructive transition-colors hover:bg-destructive/10"
+          >
+            {t.swissRetry}
+          </button>
         </div>
       </div>
     );

@@ -245,6 +245,7 @@ const api: AgentSkinApi = {
         totalApplies: number;
         avgDurationMs: number;
         perAgentAvg: Record<string, number>;
+        overflowCount: number;
       };
     }>,
   getPerformanceMemory: () =>

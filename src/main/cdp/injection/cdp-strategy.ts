@@ -20,7 +20,7 @@ import { DEFAULT_VERIFY_DELAY_MS } from '../../../shared/injection-constants';
 import type { CdpSession } from '../cdp-client';
 import { injectCssAdopted } from './css-inject';
 import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
-import { delay, verifyTheme, waitForTheme } from './shared';
+import { backoffDelay, verifyTheme, waitForTheme } from './shared';
 import type { ThemeVerification } from './types';
 
 // ---------------------------------------------------------------------------
@@ -120,7 +120,7 @@ export async function injectThemeViaCdp(
       if (!cssInjected) {
         cssInjected = await injectCssAdopted(session, css);
       }
-      await delay(verifyDelayMs);
+      await backoffDelay(i, verifyDelayMs, 8000);
       verification = await verifyTheme(session);
     }
   }

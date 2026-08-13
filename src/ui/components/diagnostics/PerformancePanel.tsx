@@ -59,6 +59,7 @@ interface PerfStats {
   totalApplies: number;
   avgDurationMs: number;
   perAgentAvg: Record<string, number>;
+  overflowCount: number;
 }
 
 interface PerfHistory {
@@ -126,7 +127,12 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
     };
   }, []);
 
-  const stats = data?.stats ?? { totalApplies: 0, avgDurationMs: 0, perAgentAvg: {} };
+  const stats = data?.stats ?? {
+    totalApplies: 0,
+    avgDurationMs: 0,
+    perAgentAvg: {},
+    overflowCount: 0,
+  };
   const traces = data?.recent ?? [];
 
   return (
@@ -196,6 +202,15 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
           </div>
         )}
       </div>
+
+      {/* Overflow warning — visible only when the ring buffer has discarded traces */}
+      {stats.overflowCount > 0 && (
+        <div className="flex items-center gap-2 rounded-[2px] border border-cr-warning/30 bg-cr-warning/10 px-3 py-2">
+          <span className="font-mono text-[11px] text-cr-warning">
+            ⚠ 历史记录已截断，较早的 trace 被丢弃 (overflow: {stats.overflowCount})
+          </span>
+        </div>
+      )}
 
       {/* Recent IPC timeouts */}
       <div className="rounded-[2px] border border-border overflow-hidden">

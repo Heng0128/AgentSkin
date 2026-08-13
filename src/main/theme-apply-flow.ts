@@ -464,7 +464,19 @@ export async function applyThemeFlow(
         message: copy.themeApplied(entry.bundle.theme.displayName, deps.displayName(appId)),
         system: await deps.status(),
       },
-      background: Promise.allSettled(backgroundTasks).then(() => undefined),
+      background: Promise.allSettled(backgroundTasks).then((results) => {
+        const failed = results.filter((r) => r.status === 'rejected');
+        if (failed.length > 0) {
+          const reasons = failed
+            .map(
+              (f) =>
+                (f as PromiseRejectedResult).reason?.message ??
+                String((f as PromiseRejectedResult).reason),
+            )
+            .join('; ');
+          deps.log(`[apply] ${appId}: ${failed.length} background task(s) failed: ${reasons}`);
+        }
+      }),
     };
   } catch (error) {
     finishTrace();

@@ -194,8 +194,6 @@ const deferredSelfHealDeps = new Map<AgentId, WallpaperInjectorDeps>();
  */
 const deferredSelfHealTimers = new Set<AgentId>();
 
-/** Polling interval while waiting for the in-flight op to release. */
-const DEFERRED_POLL_INTERVAL_MS = 100;
 /** Safety bound: stop polling after this many ms and execute anyway. */
 const DEFERRED_MAX_WAIT_MS = 10_000;
 
@@ -217,13 +215,18 @@ export function scheduleDeferredSelfHeal(
 
   const startedAt = Date.now();
 
-  const poll = async (): Promise<void> => {
+  const poll = async (attempt = 0): Promise<void> => {
     const elapsed = Date.now() - startedAt;
     const d = deferredSelfHealDeps.get(appId);
 
     // Still under lock AND we haven't exceeded the safety bound → re-poll.
     if (d && d.isApplyingTheme?.(appId) && elapsed < DEFERRED_MAX_WAIT_MS) {
-      setTimeout(poll, DEFERRED_POLL_INTERVAL_MS);
+      // Progressive backoff: 100ms for the first 5 attempts, then
+      // 200, 400, 800, 1600 (capped). Avoids bombarding an unresponsive
+      // lock-holder with fixed 100ms probes while staying responsive
+      // for the common short-lock case.
+      const backoffMs = Math.min(1600, 100 * 2 ** Math.floor(attempt / 5));
+      setTimeout(poll, backoffMs, attempt + 1);
       return;
     }
 

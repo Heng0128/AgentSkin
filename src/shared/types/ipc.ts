@@ -469,6 +469,7 @@ export interface AgentSkinApi {
       totalApplies: number;
       avgDurationMs: number;
       perAgentAvg: Record<string, number>;
+      overflowCount: number;
     };
   }>;
   // --- Diagnostics: IPC timeout events ---

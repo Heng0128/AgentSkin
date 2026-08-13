@@ -76,6 +76,7 @@ export function useAppController() {
   const setLocaleState = useShellStore((s) => s.setLocale);
   const setLogs = useShellStore((s) => s.setLogs);
   const setLogsOpen = useShellStore((s) => s.setLogsOpen);
+  const setInjectDockOpen = useShellStore((s) => s.setInjectDockOpen);
   const setSidebarCollapsed = useShellStore((s) => s.setSidebarCollapsed);
   const toggleSidebar = useShellStore((s) => s.toggleSidebar);
   const toggleInjectDock = useShellStore((s) => s.toggleInjectDock);
@@ -298,7 +299,23 @@ export function useAppController() {
   const wpSelectedId = useWallpaperStore((s) => s.selectedId);
   const wpAgentWallpapers = useWallpaperStore((s) => s.agentWallpapers);
   const wpRender = useWallpaperStore((s) => s.render);
+  const wpError = useWallpaperStore((s) => s.error);
   const wallpaperActive = useWallpaperStore(selectActiveWallpaper);
+
+  // Reactive subscriptions for values previously read via non-reactive
+  // getState() inside the return object below. Keeps render-body reads fresh.
+  const installedById = useThemeStore((s) => s.installedById);
+  const refreshThemes = useThemeStore((s) => s.refreshThemes);
+  const importTheme = useInstallFlowStore((s) => s.runImport);
+  const setWallpaperRestartPrompt = useDialogStore((s) => s.setWallpaperRestartPrompt);
+  const setWallpaper = useWallpaperStore((s) => s.setWallpaper);
+  const importWallpaper = useWallpaperStore((s) => s.importWallpaper);
+  const deleteWallpaper = useWallpaperStore((s) => s.deleteWallpaper);
+  const setAgentWallpaper = useWallpaperStore((s) => s.setAgentWallpaper);
+  const applyAgentWallpaper = useWallpaperStore((s) => s.applyAgentWallpaper);
+  const setAndApplyAgentWallpaper = useWallpaperStore((s) => s.setAndApplyAgentWallpaper);
+  const activateThemeWallpaper = useWallpaperStore((s) => s.activateThemeWallpaper);
+  const wpInitialize = useWallpaperStore((s) => s.initialize);
 
   return {
     // ── Shared / shell ─────────────────────────────────────────────────
@@ -322,7 +339,7 @@ export function useAppController() {
     logsOpen,
     setLogsOpen,
     injectDockOpen,
-    setInjectDockOpen: useShellStore.getState().setInjectDockOpen,
+    setInjectDockOpen,
     sidebarCollapsed,
     setSidebarCollapsed,
     toggleSidebar,
@@ -335,7 +352,7 @@ export function useAppController() {
 
     // ── Themes ───────────────────────────────────────────────────────
     installed,
-    installedById: useThemeStore.getState().installedById,
+    installedById,
     selection,
     setSelection,
     applyToApp,
@@ -346,11 +363,11 @@ export function useAppController() {
     confirmDelete,
     confirmFileImport,
     dropThemeFiles,
-    refreshThemes: useThemeStore.getState().refreshThemes,
+    refreshThemes,
     loading: themeLoading,
 
     // ── Import / install flow ────────────────────────────────────────
-    importTheme: useInstallFlowStore.getState().runImport,
+    importTheme,
     installSteps,
     setSteps: setInstallSteps,
     flowState,
@@ -369,7 +386,7 @@ export function useAppController() {
     restartPrompt,
     setRestartPrompt,
     wallpaperRestartPrompt,
-    setWallpaperRestartPrompt: useDialogStore.getState().setWallpaperRestartPrompt,
+    setWallpaperRestartPrompt,
     deletePrompt,
     setDeletePrompt,
     fileImportPrompt,
@@ -396,13 +413,15 @@ export function useAppController() {
       agentWallpapers: wpAgentWallpapers,
       active: wallpaperActive,
       render: wpRender,
-      setWallpaper: useWallpaperStore.getState().setWallpaper,
-      importWallpaper: useWallpaperStore.getState().importWallpaper,
-      deleteWallpaper: useWallpaperStore.getState().deleteWallpaper,
-      setAgentWallpaper: useWallpaperStore.getState().setAgentWallpaper,
-      applyAgentWallpaper: useWallpaperStore.getState().applyAgentWallpaper,
-      setAndApplyAgentWallpaper: useWallpaperStore.getState().setAndApplyAgentWallpaper,
-      activateThemeWallpaper: useWallpaperStore.getState().activateThemeWallpaper,
+      error: wpError,
+      initialize: wpInitialize,
+      setWallpaper,
+      importWallpaper,
+      deleteWallpaper,
+      setAgentWallpaper,
+      applyAgentWallpaper,
+      setAndApplyAgentWallpaper,
+      activateThemeWallpaper,
     },
   };
 }
