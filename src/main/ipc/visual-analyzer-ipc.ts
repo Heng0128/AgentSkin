@@ -7,8 +7,7 @@
  *
  * Wired (reads the bundled `agents-profiles/` data asset):
  *   - LIST: enumerate agent ids that have a profile on disk.
- *   - GET:  read + parse `<id>-profile.json` for the UI (Studio's
- *           FitGeneratorPanel consumes `tokens.*` and `stats.*`).
+ *   - GET:  read + parse `<id>-profile.json` for the UI.
  *   - EXPORT_THEME: build an installable `.agentskin-theme` package from a
  *           visual-analysis palette (via scripts/build-theme-package.mjs).
  *
@@ -287,9 +286,19 @@ export function registerVisualAnalyzerIpc(deps?: VisualAnalyzerDeps): void {
   // emitter was supplied. The next registration overwrites (single-window app).
   emitVisualAnalysisStatus = (payload) => _emitStatus?.(payload);
 
+  // Graceful no-op for CDP_EXTRACT — prevents renderer `invoke` from hanging
+  // 30s (Electron "No handler registered" timeout). Live CDP extraction is not
+  // yet implemented; callers receive a structured "unavailable" response so the
+  // UI can surface an empty state instead of triggering the IPC timeout path.
+  ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_CDP_EXTRACT, () => ({
+    status: 'unavailable' as const,
+    reason: 'live CDP extraction not implemented',
+    profile: null,
+  }));
+
   // Export a visual analysis theme as an .agentskin-theme package.
   //
-  // The renderer (FitGeneratorPanel) sends a `ThemeStudioExportRequest`-shaped
+  // The renderer sends a `ThemeStudioExportRequest`-shaped
   // payload ({ agentId, meta?, root?, signature? }). We reuse the same
   // directory-based package builder as the Theme Studio export
   // (scripts/build-theme-package.mjs) so the resulting package is byte-for-byte
