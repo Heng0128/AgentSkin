@@ -54,6 +54,8 @@ export async function fetchWallpaperVideoUrl(id: string): Promise<string | null>
 // Scene/web 渲染器 URL（wallpaper:web-url，与 agent 注入共用同一 loopback
 // 渲染器）。独立缓存：URL 有生命周期（scene HTML 注册后不可变），且数量远
 // 少于视频 URL —— 不占 video LRU 名额。
+// R6-17: webCache 同样需要 LRU 上限，防止 scene/web 壁纸长期累积。
+const MAX_WEB_CACHE_SIZE = 20;
 const webCache = new Map<string, string>();
 const webInflight = new Map<string, Promise<string | null>>();
 
@@ -67,7 +69,14 @@ export async function fetchWallpaperWebUrl(id: string): Promise<string | null> {
     .wallpaperWebUrl(id)
     .then((url) => {
       webInflight.delete(id);
-      if (url) webCache.set(id, url);
+      if (url) {
+        // R6-17: LRU 淘汰 — 超出上限时删除最旧条目，防止无界增长。
+        if (webCache.size >= MAX_WEB_CACHE_SIZE) {
+          const oldestKey = webCache.keys().next().value;
+          if (oldestKey !== undefined) webCache.delete(oldestKey);
+        }
+        webCache.set(id, url);
+      }
       return url;
     })
     .catch(() => {
