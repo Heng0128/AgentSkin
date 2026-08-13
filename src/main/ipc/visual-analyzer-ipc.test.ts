@@ -158,15 +158,6 @@ describe('visual-analyzer-ipc', () => {
       expect(result).toEqual({ running: false, port: undefined, title: undefined });
     });
 
-    it('CDP_EXTRACT reports not implemented', async () => {
-      const result = (await invoke(IpcChannel.VISUAL_ANALYSIS_CDP_EXTRACT, 'zcode')) as {
-        ok: boolean;
-        message: string;
-      };
-      expect(result.ok).toBe(false);
-      expect(typeof result.message).toBe('string');
-    });
-
     it('EXPORT_THEME refuses an empty palette', async () => {
       const result = await invoke(IpcChannel.VISUAL_ANALYSIS_EXPORT_THEME, 'zcode', {});
       expect(result).toEqual({ ok: false, path: undefined });

@@ -19,11 +19,23 @@ import type { MainContext } from '../main-context';
 
 export function registerEnvironmentIpc(ctx: MainContext): void {
   ipcMain.handle(IpcChannel.ENV_PRESET_GET, async () => {
-    return loadEnvPresets(ctx.userDataRoot);
+    try {
+      return loadEnvPresets(ctx.userDataRoot);
+    } catch (error) {
+      // Fail soft: an unreadable/corrupt preset file should not crash the
+      // renderer's environment panel. Return an empty array and log context.
+      console.error('[environment-ipc] ENV_PRESET_GET failed:', error);
+      return [];
+    }
   });
 
   ipcMain.handle(IpcChannel.ENV_PRESET_SET, async (_event, presets: EnvironmentPreset[]) => {
-    const ok = await saveEnvPresets(ctx.userDataRoot, Array.isArray(presets) ? presets : []);
-    return { ok };
+    try {
+      const ok = await saveEnvPresets(ctx.userDataRoot, Array.isArray(presets) ? presets : []);
+      return { ok };
+    } catch (error) {
+      console.error('[environment-ipc] ENV_PRESET_SET failed:', error);
+      return { ok: false, error: String(error) };
+    }
   });
 }

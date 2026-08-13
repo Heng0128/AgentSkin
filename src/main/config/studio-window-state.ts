@@ -194,8 +194,10 @@ export function createDefaultIO(
     },
     async getDisplays(): Promise<DisplayBounds[]> {
       // Real display detection happens in window-manager via electron's
-      // `screen.getAllDisplays()`. This stub is overridden by the caller.
-      return [{ x: 0, y: 0, width: 1920, height: 1080 }];
+      // `screen.getAllDisplays()`. This factory stub returns no displays
+      // so the caller (clampToNearestDisplay) keeps the state unchanged
+      // until a real io implementation is supplied.
+      return [];
     },
   };
 }

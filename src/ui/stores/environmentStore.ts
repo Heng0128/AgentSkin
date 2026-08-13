@@ -99,7 +99,14 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   error: null,
 
   loadPresets: async () => {
-    set({ presets: await loadPresets() });
+    try {
+      set({ presets: await loadPresets() });
+    } catch (error) {
+      // Underlying storage may fail (unreadable/corrupt). Report and fall
+      // back to an empty list so the UI can still render.
+      useNotificationStore.getState().fail(error);
+      set({ presets: [] });
+    }
   },
 
   setSwitching: (switching) => set({ switching }),

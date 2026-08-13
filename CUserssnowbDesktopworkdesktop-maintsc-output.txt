@@ -1,0 +1,9 @@
+src/ui/components/workspace/EnvironmentGrid.tsx(119,59): error TS2604: JSX element type 'RefreshIcon' does not have any construct or call signatures.
+src/ui/components/workspace/EnvironmentGrid.tsx(119,59): error TS2786: 'RefreshIcon' cannot be used as a JSX component.
+  Its type 'IconSvgObject' is not a valid JSX element type.
+    Type '[string, { [key: string]: string | number; }][]' is not assignable to type 'ElementType'.
+src/ui/components/workspace/EnvironmentGrid.tsx(120,12): error TS2339: Property 'statusRetry' does not exist on type '{ installedNav: string; navGroupCore: string; navGroupSystem: string; navDashboard: string; navWorkspace: string; navAgents: string; navThemes: string; navSettings: string; navWallpaperEngine: string; ... 794 more ...; swissVersionTip: string; }'.
+src/ui/components/workspace/EnvironmentGrid.tsx(185,28): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.
+src/ui/components/workspace/EnvironmentGrid.tsx(219,26): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | null'.
+  Type 'undefined' is not assignable to type 'string | null'.

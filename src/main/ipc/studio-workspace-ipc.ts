@@ -117,7 +117,11 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
   // Thin wrapper: the WallpaperService already owns the canonical list.
   ipcMain.handle(IpcChannel.STUDIO_WALLPAPER_LIST, async () => {
     try {
-      const list = await ctx.wallpapers?.list();
+      const list = await withMonitoredTimeout(
+        IpcChannel.STUDIO_WALLPAPER_LIST,
+        15000,
+        ctx.wallpapers?.list() ?? Promise.resolve([]),
+      );
       return (list ?? []).map((w) => ({
         id: w.id,
         name: w.title,

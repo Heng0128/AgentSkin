@@ -32,6 +32,7 @@ import { registerThemeIpc } from './theme-ipc';
 import { registerVisualAnalyzerIpc } from './visual-analyzer-ipc';
 import { registerWallpaperIpc } from './wallpaper-ipc';
 import { registerWindowIpc } from './window-ipc';
+import { withMonitoredTimeout } from './with-monitored-timeout';
 
 export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void>): void {
   registerCoreIpc(ctx, updateTrayMenu);
@@ -56,7 +57,11 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
   // rejection that silently swallows the error — the renderer would see "no
   // response" after a 30s timeout).
   ipcMain.handle(IpcChannel.STUDIO_OPEN, async () => {
-    await createStudioWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL });
+    await withMonitoredTimeout(
+      IpcChannel.STUDIO_OPEN,
+      30000,
+      createStudioWindow({ rendererUrl: process.env.ELECTRON_RENDERER_URL }),
+    );
     return { ok: true };
   });
 

@@ -222,7 +222,11 @@ export function registerVisualAnalyzerIpc(deps?: VisualAnalyzerDeps): void {
       return { running: false, port: undefined, title: undefined };
     }
     try {
-      const status = await deps.getStatus();
+      const status = await withMonitoredTimeout(
+        IpcChannel.VISUAL_ANALYSIS_DETECT,
+        15000,
+        deps.getStatus(),
+      );
       const app = status.apps.find((a) => a.appId === agentName);
       if (!app) {
         return { running: false, port: undefined, title: undefined };
@@ -232,12 +236,6 @@ export function registerVisualAnalyzerIpc(deps?: VisualAnalyzerDeps): void {
       /* transient — degrade to not-running */
       return { running: false, port: undefined, title: undefined };
     }
-  });
-
-  // Trigger a live CDP-based extraction from a running agent.
-  // Stub (P2): no renderer consumer yet.
-  ipcMain.handle(IpcChannel.VISUAL_ANALYSIS_CDP_EXTRACT, (_event, _agentName: unknown) => {
-    return { ok: false, message: 'Live CDP extraction is not yet implemented' };
   });
 
   // Subscribe to extraction progress events. Stub: no-op registration.

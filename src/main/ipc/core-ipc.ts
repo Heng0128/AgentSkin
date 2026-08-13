@@ -63,7 +63,7 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
 
   ipcMain.handle(IpcChannel.AGENT_LIST, async () => {
     const items = deps.agentCatalog.listAgents();
-    const sysStatus = await deps.core.status();
+    const sysStatus = await withMonitoredTimeout(IpcChannel.AGENT_LIST, 15000, deps.core.status());
     const merged = items.map((item) => {
       if (!item.supported) return item;
       const appStatus = sysStatus.apps.find((a) => a.appId === item.id);
