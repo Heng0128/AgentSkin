@@ -274,6 +274,21 @@ describe('PerformanceLogger — memory sampler', () => {
       vi.useRealTimers();
     }
   });
+
+  it('clear() also resets memory samples (symmetric with clearTimeouts)', () => {
+    vi.useFakeTimers();
+    try {
+      performanceLogger.clearMemorySamples();
+      performanceLogger.startMemorySampler(1);
+      vi.advanceTimersByTime(5);
+      expect(performanceLogger.getMemorySamples().length).toBeGreaterThan(0);
+      performanceLogger.clear();
+      expect(performanceLogger.getMemorySamples()).toEqual([]);
+      expect(performanceLogger.getLatestMemory()).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
 
 describe('PerformanceLogger — getHistory()', () => {

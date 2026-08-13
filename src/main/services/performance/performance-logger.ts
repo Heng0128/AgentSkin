@@ -7,6 +7,11 @@
  * in a ring buffer and computes aggregate statistics. Consumed by the
  * Diagnostics UI tab (renderer) via `performance:get` IPC.
  *
+ * It also runs an optional low-frequency main-process memory sampler
+ * (`startMemorySampler`/`stopMemorySampler`) that keeps a bounded ring of
+ * `process.memoryUsage()` snapshots (heapUsed/rss/external) for trend
+ * analysis, exposed to the renderer via `performance:get-memory` IPC.
+ *
  * ## Design
  *
  * - Ring buffer of capacity `MAX_HISTORY` (default 50) — oldest entries are
@@ -203,6 +208,7 @@ function createPerformanceLogger(): PerformanceLoggerApi {
       overflowWarned = false;
       timeouts = [];
       timeoutSeq = 0;
+      memSamples = []; // keep clear() symmetric with clearTimeouts/clearMemorySamples
     },
     logTimeout(event: Omit<IpcTimeoutEvent, 'id'>): void {
       timeoutSeq += 1;
