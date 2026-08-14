@@ -199,6 +199,20 @@ export const IpcChannel = {
   VISUAL_ANALYSIS_EXPORT_THEME: 'visual-analysis:export-theme',
   VISUAL_ANALYSIS_LIST_SUMMARY: 'visual-analysis:list-summary',
 
+  // --- Electron app discovery & launch (electron-ipc.ts) ---
+  ELECTRON_SCAN: 'electron:scan',
+  ELECTRON_LAUNCH: 'electron:launch',
+  /** Main→renderer: running status of scanned apps changed (launched / exited). */
+  ELECTRON_STATUS: 'electron:status',
+
+  // --- Workspace live tweak (core-ipc.ts) ---
+  /** Renderer→main: push override CSS to a running agent in real-time. */
+  WORKSPACE_TWEAK_PUSH: 'workspace:tweak:push',
+  /** Renderer→main: save current overrides as a custom.css preset. */
+  WORKSPACE_TWEAK_SAVE: 'workspace:tweak:save',
+  /** Renderer→main: discard overrides and reset to the applied theme. */
+  WORKSPACE_TWEAK_RESET: 'workspace:tweak:reset',
+
   // --- Theme health check ---
   /** Theme health check report — pushed from main to renderer on each probe cycle */
   THEME_HEALTH_REPORT: 'theme:health-report',

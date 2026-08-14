@@ -16,7 +16,14 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AgentId, ApplyRequest, ApplyResponse, SystemStatus } from '../shared/types';
+import type {
+  AgentId,
+  ApplyRequest,
+  ApplyResponse,
+  SystemStatus,
+  WallpaperAgentSetting,
+  WallpaperSettings,
+} from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
 import { EpochManager } from './epoch-manager';
 import type {
@@ -50,9 +57,12 @@ vi.mock('./fs-utils', () => ({
 vi.mock('./wallpaper-injector', () => ({
   applyAgentWallpaperNow: vi.fn(async () => ({ ok: true })),
   applyWallpaperToAgent: vi.fn(async () => ({ ok: true })),
+  injectAgentWallpaper: vi.fn(async () => ({ ok: true })),
   injectAgentWallpaperFromApply: vi.fn(async () => {}),
   removeAgentVideoWallpaper: vi.fn(async () => {}),
   removeWallpaperFromAgent: vi.fn(async () => ({ ok: true })),
+  getCapturedTokensSize: vi.fn(() => 0),
+  getDeferredSelfHealsSize: vi.fn(() => 0),
 }));
 vi.mock('./cdp/injection/engine-strategy', () => ({
   cleanupEngineInjectionForAgent: vi.fn(),
@@ -90,15 +100,21 @@ interface SettingsOverrides {
   wallpaperAgents?: AgentId[];
 }
 
-function makeSettings(
-  opts: SettingsOverrides = {},
-): SettingsServiceApi & { logStructured?: (event: StructuredLogEvent) => void } {
+function makeSettings(opts: SettingsOverrides = {}): SettingsServiceApi {
   const wallpaperAgents = opts.wallpaperAgents ?? [];
   return {
     initialize: vi.fn(async () => {}),
     overridesFor: vi.fn(() => ({ appPath: null, port: opts.port ?? null })),
-    wallpaper: vi.fn(() => ({ enabled: false, id: null, render: null })),
-    agentWallpaper: vi.fn((appId: AgentId) => ({ enabled: wallpaperAgents.includes(appId) })),
+    wallpaper: vi.fn(() => ({
+      enabled: false,
+      id: null,
+      render: { alignment: 'fill', speed: 1, loop: true, brightness: 100 },
+      agents: {} as Record<AgentId, WallpaperAgentSetting>,
+    })),
+    agentWallpaper: vi.fn((appId: AgentId) => ({
+      enabled: wallpaperAgents.includes(appId),
+      id: null,
+    })),
     toDto: vi.fn(() => ({})),
     setAppPath: vi.fn(async () => {}),
     setAppPort: vi.fn(async () => {}),
@@ -106,7 +122,7 @@ function makeSettings(
     setAgentWallpaper: vi.fn(async () => {}),
     customThemeCss: vi.fn(() => ''),
     setCustomThemeCss: vi.fn(async () => {}),
-  } as unknown as SettingsServiceApi & { logStructured?: (event: StructuredLogEvent) => void };
+  } as unknown as SettingsServiceApi;
 }
 
 // Flush the microtask + macrotask queue so that the async cleanup chain
@@ -474,19 +490,26 @@ describe('AgentEngineService Reliability Verification', () => {
       expect(typeof logger.logStructured).toBe('function');
     });
 
-    it('accepts log listener for structured event capture', async () => {
-      const events: unknown[] = [];
-      const settings = makeSettings();
-      settings.logStructured = (event: unknown) => events.push(event);
+    it('collects a full concurrency metrics snapshot', () => {
+      const svc = makeService();
+      const m = svc.collectConcurrencyMetrics();
 
-      const svc = new AgentEngineService({} as unknown as ThemeLibraryApi, stateFile, settings);
+      expect(m).toHaveProperty('companionBusyByAgent');
+      expect(m).toHaveProperty('inflightOperations');
+      expect(m).toHaveProperty('selfHealingAgents');
+      expect(m).toHaveProperty('capturedTokens');
+      expect(m).toHaveProperty('persistChainDepth');
+      expect(m).toHaveProperty('deferredSelfHeals');
+      expect(m).toHaveProperty('switchEpochByAgent');
+      expect(m.inflightOperations).toBe(0);
+    });
 
-      // Verify callback mechanism works
-      const result = await svc.apply(APPLY_REQUEST);
-
-      // Apply returned success and logger is available
-      expect(result.status).toBe('applied');
-      expect(svc.asLogger()).toBeDefined();
+    it('updates companionBusy and switchEpoch from renderer inputs', () => {
+      const svc = makeService();
+      svc.updateConcurrencyMetricsFromRenderer(7, 4);
+      const m = svc.collectConcurrencyMetrics();
+      expect(m.companionBusyByAgent).toBe(7);
+      expect(m.switchEpochByAgent).toBe(4);
     });
 
     it('includes timestamp structure in logger events', () => {
@@ -582,14 +605,10 @@ describe('AgentEngineService Reliability Verification', () => {
       await expect(svc.apply(APPLY_REQUEST)).resolves.toBeDefined();
     });
 
-    it('provides extensibility point for health metrics', () => {
+    it('stopConcurrencyMetricsTimer is safe to call without prior start', () => {
       const svc = makeService();
-
-      // The service structure should support adding health metrics
-      // Future implementation will add getHealthScore method
-      expect(typeof svc.apply).toBe('function');
-      expect(typeof svc.restore).toBe('function');
-      expect(typeof svc.status).toBe('function');
+      // Calling stop before start should be a no-op, not throw
+      expect(() => svc.stopConcurrencyMetricsTimer()).not.toThrow();
     });
   });
 
@@ -687,6 +706,78 @@ describe('AgentEngineService Reliability Verification', () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+
+    it('cross-kind: apply queues behind in-flight restore and proceeds after cleanup', async () => {
+      const restoreGate = deferred<SystemStatus>();
+      vi.mocked(restoreThemeFlow).mockImplementation(() => restoreGate.promise);
+      const svc = makeService();
+
+      // Start restore, then attempt apply while restore is in-flight
+      const restorePromise = svc.restore(TEST_APP);
+      const applyPromise = svc.apply(APPLY_REQUEST);
+
+      // apply must NOT execute until restore cleanup completes
+      expect(applyThemeFlow).not.toHaveBeenCalled();
+
+      // Restore completes normally — this triggers its cleanupResolve
+      restoreGate.resolve(STATUS);
+      await restorePromise;
+      await flushMicrotasks();
+
+      // Now apply should proceed
+      expect(applyThemeFlow).toHaveBeenCalledTimes(1);
+      const applyResult = await applyPromise;
+      expect(applyResult.status).toBe('applied');
+    });
+
+    it('cross-kind: restore queues behind in-flight apply and proceeds after cleanup', async () => {
+      const applyGate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
+      vi.mocked(applyThemeFlow).mockImplementation(() => applyGate.promise);
+      const svc = makeService();
+
+      // Start apply, then attempt restore while apply is in-flight
+      const applyPromise = svc.apply(APPLY_REQUEST);
+      const restorePromise = svc.restore(TEST_APP);
+
+      // restore must NOT execute until apply cleanup completes
+      expect(restoreThemeFlow).not.toHaveBeenCalled();
+
+      // Apply completes normally — triggers its cleanupResolve
+      applyGate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      await applyPromise;
+
+      // Ensure the cleanup chain (.finally → Map.delete) drains
+      await flushMicrotasks();
+      await flushMicrotasks();
+
+      // Now restore should proceed
+      expect(restoreThemeFlow).toHaveBeenCalledTimes(1);
+      const restoreResult = await restorePromise;
+      expect(restoreResult.platform).toBe('win32');
+    });
+
+    it('writeState swallows persist failures without throwing', async () => {
+      const { writeJsonAtomic } = await import('./fs-utils');
+      vi.mocked(writeJsonAtomic).mockRejectedValueOnce(new Error('EACCES: permission denied'));
+
+      const svc = makeService();
+      const logSpy = vi.spyOn(svc as unknown as { log: (line: string) => void }, 'log');
+
+      // Trigger a persist via the registry path that calls writeState
+      await (
+        svc as unknown as {
+          persist: { safe: (fn: () => Promise<void>) => void };
+        }
+      ).persist.safe(async () => {
+        await (svc as unknown as { writeState: () => Promise<void> }).writeState();
+      });
+
+      await flushMicrotasks();
+
+      // Should have logged the failure, not crashed
+      const logCalls = logSpy.mock.calls.flat();
+      expect(logCalls.some((line) => line.includes('persist failed'))).toBe(true);
     });
 
     it('does not crash when dispose interrupts in-flight background cleanup', async () => {

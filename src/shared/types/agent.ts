@@ -128,6 +128,43 @@ export function isAnyAgentId(value: unknown): value is AnyAgentId {
   return typeof value === 'string' && (ALL_AGENT_IDS as readonly string[]).includes(value);
 }
 
+// ---------------------------------------------------------------------------
+// Electron app discovery types (launcher feature)
+// ---------------------------------------------------------------------------
+
+/** 扫描发现的 Electron 应用 */
+export interface ScannedApp {
+  /** 唯一标识 = exePath 的 hash */
+  id: string;
+  exePath: string;
+  /** PE 版本信息中提取 */
+  productName: string;
+  companyName: string;
+  /** 应用图标路径（提取自 exe 或 ico） */
+  iconPath?: string;
+  /** 匹配到的 AgentId (null = 未适配) */
+  adapterMatch: AgentId | null;
+  /** 安装版本 */
+  version?: string;
+}
+
+export interface ElectronScanResult {
+  /** 已适配应用 = installHints 匹配到的 */
+  adapted: ScannedApp[];
+  /** 未适配的 Electron 应用 */
+  other: ScannedApp[];
+}
+
+/** 启动结果 */
+export interface LaunchResult {
+  ok: boolean;
+  pid?: number;
+  /** 实际可用的 CDP 端口 (null = 未适配或启动失败) */
+  port: number | null;
+  state: 'running' | 'launched' | 'needs-restart' | 'failed';
+  message: string;
+}
+
 export interface Agent {
   id: AgentId;
   name: string;
