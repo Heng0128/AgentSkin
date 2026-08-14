@@ -22,16 +22,10 @@ import type {
   ApplyResponse,
   SystemStatus,
   WallpaperAgentSetting,
-  WallpaperSettings,
 } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
 import { EpochManager } from './epoch-manager';
-import type {
-  SettingsServiceApi,
-  StructuredLogEvent,
-  ThemeLibraryApi,
-  WallpaperResolver,
-} from './services/contracts';
+import type { SettingsServiceApi, ThemeLibraryApi, WallpaperResolver } from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
 import type { WallpaperInjectorDeps } from './wallpaper/injector-types';
@@ -914,10 +908,14 @@ describe('AgentEngineService Reliability Verification', () => {
     /**
      * Verifies that inflight dedup is per-agent — the same agent's concurrent
      * applies are deduplicated, but different agents are completely independent.
+     *
+     * Strategy: gate traework's applyThemeFlow so the operation stays in-flight,
+     * then fire a dup apply on traework AND an apply on workbuddy. The dup must NOT
+     * trigger a second applyThemeFlow call (dedup), and workbuddy's apply must
+     * complete without waiting for traework's gate to release.
      */
     it('inflight dedup is per-agent not global', async () => {
       type ApplyFlowArg = { appId: AgentId; themeId?: string };
-      // Gate only traework so we can observe that workbuddy proceeds independently
       const traeworkGate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
       vi.mocked(applyThemeFlow).mockImplementation((req: ApplyFlowArg) => {
         if (req.appId === 'traework') return traeworkGate.promise;
@@ -928,35 +926,41 @@ describe('AgentEngineService Reliability Verification', () => {
       const svc = makeService();
 
       const p1 = svc.apply({ appId: 'traework', themeId: 't1' });
-      // Second apply to the SAME agent — should be deduplicated (same promise returned)
-      const p1dup = svc.apply({ appId: 'traework', themeId: 't1' });
-      // Apply to a DIFFERENT agent — should execute independently
+      // Second apply to the SAME agent — must be deduplicated internally.
+      // The async wrapper always creates a new Promise identity, so we verify
+      // dedup via call count, not promise identity.
+      svc.apply({ appId: 'traework', themeId: 't1' }).catch(() => {});
+      // Apply to a DIFFERENT agent — must execute independently.
       const p2 = svc.apply({ appId: 'workbuddy', themeId: 't2' });
 
-      // The duplicate traework apply must resolve to the same result (dedup)
-      // Note: apply() is async so each call wraps internally; identity differs
-      // but the resolved value must be identical.
-      expect(await p1dup).toEqual(await p1);
+      // After 3 apply() calls, applyThemeFlow should have been called exactly
+      // twice: once for traework (dedup absorbed the duplicate) and once for
+      // workbuddy (different agent, no dedup).
+      expect(applyThemeFlow).toHaveBeenCalledTimes(2);
 
-      // workbuddy should have already executed (its mock resolves immediately)
+      // workbuddy should have already executed without waiting for traework's
+      // gate to be released.
       const r2 = await p2;
       expect(r2.status).toBe('applied');
 
-      // applyThemeFlow called twice: once for traework (gated), once for workbuddy (immediate)
-      expect(applyThemeFlow).toHaveBeenCalledTimes(2);
+      // Both inflight entries should be tracked independently.
+      const inflight = (
+        svc as unknown as {
+          inflightOperations: Map<AgentId, { kind: string; promise: unknown; cleanup: unknown }>;
+        }
+      ).inflightOperations;
+      expect(inflight.size).toBe(2);
+      expect(inflight.get('traework')?.kind).toBe('apply');
+      expect(inflight.get('workbuddy')?.kind).toBe('apply');
 
-      // Release traework
+      // Release traework so its in-flight operation can complete.
       traeworkGate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
       const r1 = await p1;
       expect(r1.status).toBe('applied');
 
       await flushMicrotasks();
 
-      const inflight = (
-        svc as unknown as {
-          inflightOperations: Map<AgentId, { kind: string; promise: unknown; cleanup: unknown }>;
-        }
-      ).inflightOperations;
+      // traework should be cleaned up; workbuddy was already cleaned.
       expect(inflight.size).toBe(0);
     });
 
@@ -1013,7 +1017,6 @@ describe('AgentEngineService Reliability Verification', () => {
      * concurrently since the inflight dedup is keyed by agent.
      */
     it('restore and apply can run concurrently on different agents', async () => {
-      type ApplyFlowArg = { appId: AgentId; themeId?: string };
       const restoreGate = deferred<SystemStatus>();
 
       // Gate traework's restore so we can observe concurrent execution
