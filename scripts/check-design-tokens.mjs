@@ -588,7 +588,7 @@ if (violations.length > 0) {
     console.error(`  Guide: AGENTS.md §4 row C6 + docs/design-tokens.md`);
     console.error('');
   }
-  process.exit(1);
+  process.exitCode = 1;
 }
 
 console.log(`✓ Design tokens OK — checked ${checkedFiles} files, all within Swiss system`);
