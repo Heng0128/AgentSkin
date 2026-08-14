@@ -71,7 +71,8 @@ describe('writeJsonAtomic', () => {
   it('throws DiskFullError with Chinese message when writeFile hits ENOSPC', async () => {
     const enospcError = new Error('No space left on device') as NodeJS.ErrnoException;
     enospcError.code = 'ENOSPC';
-    vi.mocked(fs.writeFile).mockRejectedValueOnce(enospcError);
+    // Spy on writeFile (not rename) so only the write path is mocked.
+    const writeFileSpy = vi.spyOn(fs, 'writeFile').mockRejectedValueOnce(enospcError);
 
     const file = path.join(tmpDir, 'state.json');
     await expect(writeJsonAtomic(file, { v: 1 })).rejects.toThrow(DiskFullError);
@@ -84,11 +85,13 @@ describe('writeJsonAtomic', () => {
       expect((e as DiskFullError).message).toContain('磁盘空间不足');
       expect((e as DiskFullError).filePath).toBe(file);
     }
+    writeFileSpy.mockRestore();
   });
 
   it('throws DiskFullError when rename hits ENOSPC', async () => {
     const enospcError = new Error('No space left on device') as NodeJS.ErrnoException;
     enospcError.code = 'ENOSPC';
+    // The existing vi.mock for rename lets us use mockRejectedValueOnce.
     vi.mocked(fs.rename).mockRejectedValueOnce(enospcError);
 
     const file = path.join(tmpDir, 'state.json');
