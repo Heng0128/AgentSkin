@@ -29,7 +29,7 @@ const DOCK_TABS: { id: DockTabId; label: string }[] = [
 export function StudioDock({ t }: { t: UiMessages }) {
   const dock = useWorkspaceStore((s) => s.dock);
   const setDockTab = useWorkspaceStore((s) => s.setDockTab);
-  const setDockHeight = useStudioStoreRef_height();
+  const setDockHeight = useWorkspaceStore((s) => s.setDockHeight);
   const toggleDock = useWorkspaceStore((s) => s.toggleDock);
 
   const dragRef = useRef<{ startY: number; startH: number } | null>(null);
@@ -105,12 +105,4 @@ export function StudioDock({ t }: { t: UiMessages }) {
       )}
     </div>
   );
-}
-
-/**
- * Optimized height setter that reads the store once per render and
- * uses a single getState() call at mount to avoid hook-in-loop issues.
- */
-function useStudioStoreRef_height() {
-  return useWorkspaceStore((s) => s.setDockHeight);
 }

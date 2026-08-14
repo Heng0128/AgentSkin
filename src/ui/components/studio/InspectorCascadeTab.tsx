@@ -13,7 +13,6 @@ import { CascadeView } from '@/components/studio/CascadeView';
 import { useStudioStore } from '@/stores/studioStore';
 
 import type { UiMessages } from '@shared/i18n';
-import type { ThemeVisualSnapshot } from '@shared/types';
 
 export function InspectorCascadeTab({ t }: { t: UiMessages }) {
   const snapshot = useStudioStore((s) => s.snapshot);

@@ -113,10 +113,8 @@ export default function App() {
                     }
                   >
                     <ErrorBoundary inline>
-                      {controller.route === 'workspace' && (
-                        <WorkspacePage controller={controller} />
-                      )}
-                      {controller.route === 'apps' && <AppsPage controller={controller} />}
+                      {controller.route === 'workspace' && <WorkspacePage />}
+                      {controller.route === 'apps' && <AppsPage />}
                       {controller.route === 'themes' && <ThemesPage controller={controller} />}
                       {controller.route === 'wallpaper' && (
                         <WallpaperEnginePage controller={controller} />

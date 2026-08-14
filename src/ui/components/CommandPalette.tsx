@@ -110,10 +110,10 @@ export default function CommandPalette({ open, onOpenChange, controller }: Comma
         <CommandGroup heading={t.cmdGroupNavigation}>
           <CommandItem
             onSelect={() => {
-              setRoute('dashboard');
+              setRoute('workspace');
               onOpenChange(false);
             }}
-            disabled={route === 'dashboard'}
+            disabled={route === 'workspace'}
           >
             <LayoutDashboardIcon />
             <span>{t.cmdGoDashboard}</span>

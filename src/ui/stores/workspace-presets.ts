@@ -7,7 +7,7 @@
  * with a specific view mode and optional dock / inspector / drawer
  * configuration overrides.
  *
- * Consumed by workspaceStore.applyPreset() and WorkspaceSwitcher UI.
+ * Consumed by workspaceStore.applyPreset().
  */
 
 import type { DockState, DrawerState, InspectorState, ViewMode } from '@/types/workspace';

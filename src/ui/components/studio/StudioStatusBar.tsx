@@ -14,19 +14,13 @@
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
-/**
- * Find a CSS property value inside a landmark's `styles` array (best-effort).
- */
-function findStyle(
-  lm: { styles?: Array<{ property: string; value: string }> },
-  prop: string,
-): string | null {
-  return lm.styles?.find((s) => s.property === prop)?.value ?? null;
-}
+import { paletteFromSnapshot } from './palette';
 
 /**
- * Extract bg/fg/accent hex values from the snapshot's landmarks — best-effort;
- * returns nulls when the snapshot or its styles are unavailable.
+ * Extract bg/fg/accent hex values from the snapshot.
+ *
+ * Tries CSS custom properties on `:root` first (most reliable), then
+ * delegates to `paletteFromSnapshot` which scans landmark computed styles.
  */
 function extractFingerprintColors(
   snapshot: ReturnType<typeof useStudioStore.getState>['snapshot'],
@@ -47,22 +41,9 @@ function extractFingerprintColors(
     };
   }
 
-  // Fall back to first visible landmark's styles.
-  const visible = snapshot.landmarks?.filter((lm) => lm.visible) ?? [];
-  const first = visible[0] ?? snapshot.landmarks?.[0];
-  if (first) {
-    const bg = findStyle(first, 'background-color');
-    const fg = findStyle(first, 'color');
-    // accent: scan all landmarks for `accent-color`
-    const accentLandmark = snapshot.landmarks?.find((lm) => findStyle(lm, 'accent-color') != null);
-    return {
-      bg,
-      fg,
-      accent: accentLandmark ? findStyle(accentLandmark, 'accent-color') : null,
-    };
-  }
-
-  return { bg: null, fg: null, accent: null };
+  // Delegate to shared palette extractor.
+  const palette = paletteFromSnapshot(snapshot);
+  return palette;
 }
 
 export function StudioStatusBar() {

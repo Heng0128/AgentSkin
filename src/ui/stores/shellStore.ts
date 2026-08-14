@@ -60,7 +60,7 @@ export const useShellStore = create<ShellState>((set) => ({
   locale: DEFAULT_LOCALE,
   appVersion: '',
   booting: true,
-  route: 'dashboard',
+  route: 'workspace',
   activeAgentId: null,
   sidebarCollapsed: readSidebarPref(),
   injectDockOpen: false,

@@ -13,12 +13,12 @@
  * When `collapsed`, only the icon rail is shown (48px wide).
  */
 
-import { useEffect, useState } from 'react';
-import { api } from '@/api/agentSkinClient';
+import { useState } from 'react';
 import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
 import { appStatusFor } from '@/stores/agentStore';
 import { useStudioStore } from '@/stores/studioStore';
+import { useWallpaperStore } from '@/stores/wallpaperStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 import { AGENT_IDS, AGENT_META, type AgentId } from '@shared/types';
@@ -47,33 +47,8 @@ export function StudioDrawer() {
   const [projectsOpen, setProjectsOpen] = useState(true);
   const [agentsOpen, setAgentsOpen] = useState(false);
 
-  // Wallpaper list (loaded via IPC) — best-effort, non-blocking.
-  const [wallpapers, setWallpapers] = useState<Array<{ id: string; name: string }>>([]);
-  useEffect(() => {
-    let cancelled = false;
-    void api
-      .listWallpapers()
-      .then((list) => {
-        if (cancelled) return;
-        // Normalize to a minimal { id, name } shape.
-        const normalized = list.map((w) => {
-          const label = 'label' in w ? (w as { label?: string }).label : undefined;
-          const nameField = 'name' in w ? (w as { name?: string }).name : undefined;
-          return {
-            id: w.id,
-            // WallpaperInfo has `label` or `name` field.
-            name: label || nameField || w.id,
-          };
-        });
-        setWallpapers(normalized);
-      })
-      .catch(() => {
-        /* ignore — wallpaper list is best-effort */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // Wallpaper list — sourced from wallpaperStore (loaded once at app init).
+  const wallpapers = useWallpaperStore((s) => s.wallpapers);
 
   if (!drawer.open) {
     return (
@@ -265,7 +240,7 @@ export function StudioDrawer() {
                       >
                         <Image className="size-2.5" style={{ color: 'var(--fg-3)' }} />
                         <span className="font-mono text-[length:10px] text-[var(--fg-0)] truncate flex-1">
-                          {wp.name}
+                          {wp.title ?? wp.id}
                         </span>
                       </div>
                     ))}
