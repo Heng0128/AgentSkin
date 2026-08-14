@@ -90,7 +90,7 @@ let baselineCache: BootBaseline | null = null;
 // this step on a warm cache, so a cold Vite start blows past 15s and the boot
 // timed out + failed. 60s still catches a genuinely hung step, just with more
 // grace for slow cold starts.
-const STEP_TIMEOUT_MS = 60_000;
+export const STEP_TIMEOUT_MS = 60_000;
 
 /** Test hook: reset the cached baseline between boot simulations. */
 export function __resetBootBaselineCache(): void {

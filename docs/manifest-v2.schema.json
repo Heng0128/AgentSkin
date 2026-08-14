@@ -315,7 +315,7 @@
           "default": { "type": "boolean", "description": "是否为该主题的默认变体" }
         }
       },
-      "description": "(v2.5+) 声明主题可选的组件形态变体（圆角 / 字体 / 阴影 / 间距 / 材质）。每个 id 对应 variations/<id>.json。不声明时使用 Engine 默认 2px Swiss 形态。"
+      "description": "(v2.5+) 声明主题可选的组件形态变体（圆角 / 字体 / 阴影 / 间距 / 材质）。每个 id 对应 variations/<id>.json。不声明时使用 Engine 默认形态。"
     },
     "palettes": {
       "type": "object",

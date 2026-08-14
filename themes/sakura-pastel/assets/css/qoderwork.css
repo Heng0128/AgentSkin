@@ -25,15 +25,15 @@ html.agentskin-host-qoderwork:root {
 
   /* Primary / brand */
   --color-primary: #9a2d56 !important;
-  --color-primary-hover: rgb(190, 117, 143) !important;
-  --color-primary-active: rgb(168, 104, 126) !important;
+  --color-primary-hover: rgb(131, 38, 73) !important;
+  --color-primary-active: rgb(116, 34, 65) !important;
   --color-primary-bg: rgba(154, 45, 86, 0.08) !important;
   --color-primary-bg-hover: rgba(154, 45, 86, 0.14) !important;
   --color-primary-border: rgba(154, 45, 86, 0.35) !important;
   --color-primary-border-hover: rgba(154, 45, 86, 0.55) !important;
   --color-primary-text: #4a3f45 !important;
-  --color-primary-text-hover: rgb(190, 117, 143) !important;
-  --color-primary-text-active: rgb(168, 104, 126) !important;
+  --color-primary-text-hover: rgb(131, 38, 73) !important;
+  --color-primary-text-active: rgb(116, 34, 65) !important;
   --color-text-on-primary: #ffffff !important;
 
   /* Text hierarchy */
@@ -43,7 +43,7 @@ html.agentskin-host-qoderwork:root {
   --color-text-quaternary: rgba(74, 63, 69, 0.4) !important;
   --color-text-base: #4a3f45 !important;
   --color-muted: #7a6b72 !important;
-  --color-muted-foreground: rgba(154, 139, 146, 0.8) !important;
+  --color-muted-foreground: rgba(122, 107, 114, 0.8) !important;
 
   /* Backgrounds */
   --color-bg-container: #faf4f0 !important;
@@ -92,7 +92,7 @@ html.agentskin-host-qoderwork:root {
 
   /* Semantic: success (tied to accent) */
   --color-success: #9a2d56 !important;
-  --color-success-hover: rgb(190, 117, 143) !important;
+  --color-success-hover: rgb(131, 38, 73) !important;
   --color-success-bg: rgba(154, 45, 86, 0.08) !important;
   --color-success-bg-hover: rgba(154, 45, 86, 0.14) !important;
   --color-success-border: rgba(154, 45, 86, 0.35) !important;
@@ -116,31 +116,31 @@ html.agentskin-host-qoderwork:root {
   --color-pink: #d9b8c8 !important;
   --color-pink-bg: rgba(217, 184, 200, 0.1) !important;
   --color-pink-hover: rgb(225, 198, 211) !important;
-  --color-purple: rgb(179, 110, 134) !important;
+  --color-purple: rgb(123, 36, 69) !important;
   --color-purple-bg: rgba(154, 45, 86, 0.08) !important;
-  --color-purple-hover: rgb(230, 161, 185) !important;
+  --color-purple-hover: rgb(174, 87, 120) !important;
   --color-yellow: #fac414 !important;
   --color-yellow-bg: #fff3cf !important;
   --color-yellow-hover: #f1d372 !important;
   --color-orange: #fa8125 !important;
   --color-orange-bg: #ffefde !important;
   --color-orange-hover: #e88c45 !important;
-  --color-teal: rgb(202, 124, 151) !important;
+  --color-teal: rgb(139, 41, 77) !important;
   --color-teal-bg: rgba(154, 45, 86, 0.08) !important;
-  --color-teal-hover: rgb(229, 156, 181) !important;
+  --color-teal-hover: rgb(169, 77, 111) !important;
   --color-blue: #0090ff !important;
   --color-blue-bg: #deedff !important;
   --color-blue-hover: #72bcf5 !important;
-  --color-mauve: rgba(154, 139, 146, 0.7) !important;
-  --color-mauve-bg: rgba(154, 139, 146, 0.06) !important;
-  --color-mauve-hover: rgba(154, 139, 146, 0.4) !important;
+  --color-mauve: rgba(122, 107, 114, 0.7) !important;
+  --color-mauve-bg: rgba(122, 107, 114, 0.06) !important;
+  --color-mauve-hover: rgba(122, 107, 114, 0.4) !important;
   --color-slate: #1e293b !important;
   --color-slate-bg: #e2e8f0 !important;
   --color-slate-hover: #475569 !important;
   --color-lavender: rgb(228, 205, 217) !important;
   --color-lavender-bg: rgba(217, 184, 200, 0.08) !important;
   --color-lavender-hover: rgb(236, 220, 228) !important;
-  --color-sage: rgb(190, 117, 143) !important;
+  --color-sage: rgb(131, 38, 73) !important;
   --color-sage-bg: rgba(154, 45, 86, 0.06) !important;
   --color-sage-hover: rgba(154, 45, 86, 0.12) !important;
 

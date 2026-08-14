@@ -56,8 +56,8 @@ html.agentskin-host-doubao:root {
   /* Text hierarchy */
   --dbx-text-primary: #4a3f45 !important;
   --dbx-text-secondary: #7a6b72 !important;
-  --dbx-text-tertiary: rgba(154, 139, 146, 0.7) !important;
-  --dbx-text-disable: rgba(154, 139, 146, 0.4) !important;
+  --dbx-text-tertiary: rgba(122, 107, 114, 0.7) !important;
+  --dbx-text-disable: rgba(122, 107, 114, 0.4) !important;
   --dbx-text-markdown: rgba(74, 63, 69, 0.95) !important;
   --dbx-text-n00-primary: #faf4f0 !important;
   --dbx-text-n00-secondary: rgba(250, 244, 240, 0.8) !important;
@@ -76,7 +76,7 @@ html.agentskin-host-doubao:root {
   --dbx-fill-highlight-trans-10: rgba(154, 45, 86, 0.06) !important;
   --dbx-fill-highlight-trans-10-blank: rgba(154, 45, 86, 0.06) !important;
   --dbx-fill-primary-50: #9a2d56 !important;
-  --dbx-fill-primary-60: rgb(34, 21, 25) !important;
+  --dbx-fill-primary-60: rgb(23, 7, 13) !important;
   --dbx-fill-primary-transparent-1: rgba(154, 45, 86, 0.12) !important;
   --dbx-fill-banner: #fffdfb !important;
   --dbx-fill-trans-10: rgba(74, 63, 69, 0.03) !important;
@@ -109,7 +109,7 @@ html.agentskin-host-doubao:root {
   --dbx-function-info-disable: rgba(154, 45, 86, 0.3) !important;
 
   /* Switch */
-  --dbx-symbol-switch-toggle-disable: rgba(154, 139, 146, 0.3) !important;
+  --dbx-symbol-switch-toggle-disable: rgba(122, 107, 114, 0.3) !important;
 }
 
 /* ===== Real Doubao token system: Semi Design (--semi-color-*) =====
@@ -129,13 +129,13 @@ html.agentskin-host-doubao:root {
   /* Text hierarchy */
   --semi-color-text-0: #4a3f45 !important;
   --semi-color-text-1: #7a6b72 !important;
-  --semi-color-text-2: rgba(154, 139, 146, 0.75) !important;
-  --semi-color-text-3: rgba(154, 139, 146, 0.45) !important;
+  --semi-color-text-2: rgba(122, 107, 114, 0.75) !important;
+  --semi-color-text-3: rgba(122, 107, 114, 0.45) !important;
 
   /* Primary / brand */
   --semi-color-primary: #9a2d56 !important;
-  --semi-color-primary-hover: rgb(197, 121, 148) !important;
-  --semi-color-primary-active: rgb(170, 105, 128) !important;
+  --semi-color-primary-hover: rgb(136, 40, 76) !important;
+  --semi-color-primary-active: rgb(117, 34, 65) !important;
   --semi-color-primary-light-default: rgba(154, 45, 86, 0.12) !important;
   --semi-color-primary-light-hover: rgba(154, 45, 86, 0.18) !important;
   --semi-color-primary-light-active: rgba(154, 45, 86, 0.24) !important;
@@ -161,12 +161,12 @@ html.agentskin-host-doubao:root {
   --semi-color-disabled-bg: rgba(74, 63, 69, 0.04) !important;
   --semi-color-disabled-border: rgba(154, 45, 86, 0.125) !important;
   --semi-color-disabled-fill: rgba(74, 63, 69, 0.04) !important;
-  --semi-color-disabled-text: rgba(154, 139, 146, 0.4) !important;
+  --semi-color-disabled-text: rgba(122, 107, 114, 0.4) !important;
 
   /* Links / highlight / shadow / nav */
   --semi-color-link: #9a2d56 !important;
-  --semi-color-link-hover: rgb(197, 121, 148) !important;
-  --semi-color-link-active: rgb(170, 105, 128) !important;
+  --semi-color-link-hover: rgb(136, 40, 76) !important;
+  --semi-color-link-active: rgb(117, 34, 65) !important;
   --semi-color-link-visited: rgba(154, 45, 86, 0.7) !important;
   --semi-color-highlight: rgba(154, 45, 86, 0.18) !important;
   --semi-color-highlight-bg: rgba(154, 45, 86, 0.14) !important;
@@ -214,7 +214,7 @@ html.agentskin-host-doubao:root {
   --input-guidance-input-container-background: color-mix(in srgb, color-mix(in srgb, #ffffff 78%, #9a2d56 22%) 45%, transparent) !important;
   --input-guidance-input-container-border: rgba(154, 45, 86, 0.15) !important;
   --input-guidance-input-editor-color: #4a3f45 !important;
-  --input-guidance-input-editor-placeholder-color: rgba(154, 139, 146, 0.6) !important;
+  --input-guidance-input-editor-placeholder-color: rgba(122, 107, 114, 0.6) !important;
   --left-side: #ffffff !important;
 }
 
@@ -304,37 +304,37 @@ html.agentskin-host-doubao:root body {
 
   /* --s-color-brand-primary-* (drives ALL primary buttons, links, active states) */
   --s-color-brand-primary-default: var(--agentskin-accent) !important;
-  --s-color-brand-primary-default-raw: 224, 138, 168 !important;
-  --s-color-brand-primary-hover: rgb(190, 117, 143) !important;
-  --s-color-brand-primary-hover-raw: 190, 117, 143 !important;
-  --s-color-brand-primary-pressed: rgb(157, 97, 118) !important;
-  --s-color-brand-primary-pressed-raw: 157, 97, 118 !important;
+  --s-color-brand-primary-default-raw: 154, 45, 86 !important;
+  --s-color-brand-primary-hover: rgb(131, 38, 73) !important;
+  --s-color-brand-primary-hover-raw: 131, 38, 73 !important;
+  --s-color-brand-primary-pressed: rgb(108, 32, 60) !important;
+  --s-color-brand-primary-pressed-raw: 108, 32, 60 !important;
   --s-color-brand-primary-disable: rgba(154, 45, 86, 0.3) !important;
   --s-color-brand-primary-transparent-1: rgba(154, 45, 86, 0.06) !important;
   --s-color-brand-primary-transparent-2: rgba(154, 45, 86, 0.1) !important;
   --s-color-brand-primary-transparent-3: rgba(154, 45, 86, 0.15) !important;
 
   /* --s-color-ai-* (AI button gradients, AI text) */
-  --s-color-ai-button: radial-gradient(105.79% 117.52% at 9.98% 22.03%, var(--agentskin-accent) 0%, rgb(179, 110, 134) 100%) !important;
-  --s-color-ai-button-fill: radial-gradient(125.81% 83.73% at 21.13% 50%, var(--agentskin-accent) 0%, rgb(190, 117, 143) 100%) !important;
-  --s-color-ai-text: linear-gradient(301deg, rgb(233, 173, 194) 23.93%, var(--agentskin-accent) 92.76%) !important;
-  --s-color-ai-solid: radial-gradient(125.81% 83.73% at 21.13% 50%, var(--agentskin-accent) 0%, rgb(190, 117, 143) 100%) !important;
-  --s-color-ai-solid-disable: radial-gradient(125.81% 83.73% at 21.13% 50%, rgba(154, 45, 86, 0.4) 0%, rgba(190, 117, 143, 0.4) 100%) !important;
-  --s-color-ai-button-fill-disable: radial-gradient(163.38% 139.31% at 19.33% 22.04%, rgba(154, 45, 86, 0.3) 0%, rgba(179, 110, 134, 0.3) 100%) !important;
-  --s-color-ai-line: linear-gradient(301deg, rgb(235, 179, 198) 23.93%, var(--agentskin-accent) 92.76%) !important;
-  --s-color-ai-line-disable: linear-gradient(301deg, rgba(235, 179, 198, 0.3) 23.93%, rgba(154, 45, 86, 0.3) 92.76%) !important;
+  --s-color-ai-button: radial-gradient(105.79% 117.52% at 9.98% 22.03%, var(--agentskin-accent) 0%, rgb(123, 36, 69) 100%) !important;
+  --s-color-ai-button-fill: radial-gradient(125.81% 83.73% at 21.13% 50%, var(--agentskin-accent) 0%, rgb(131, 38, 73) 100%) !important;
+  --s-color-ai-text: linear-gradient(301deg, rgb(184, 108, 137) 23.93%, var(--agentskin-accent) 92.76%) !important;
+  --s-color-ai-solid: radial-gradient(125.81% 83.73% at 21.13% 50%, var(--agentskin-accent) 0%, rgb(131, 38, 73) 100%) !important;
+  --s-color-ai-solid-disable: radial-gradient(125.81% 83.73% at 21.13% 50%, rgba(154, 45, 86, 0.4) 0%, rgba(131, 38, 73, 0.4) 100%) !important;
+  --s-color-ai-button-fill-disable: radial-gradient(163.38% 139.31% at 19.33% 22.04%, rgba(154, 45, 86, 0.3) 0%, rgba(123, 36, 69, 0.3) 100%) !important;
+  --s-color-ai-line: linear-gradient(301deg, rgb(189, 119, 145) 23.93%, var(--agentskin-accent) 92.76%) !important;
+  --s-color-ai-line-disable: linear-gradient(301deg, rgba(189, 119, 145, 0.3) 23.93%, rgba(154, 45, 86, 0.3) 92.76%) !important;
 
   /* System / accent colors */
   --s-color-system-info: var(--agentskin-accent) !important;
-  --s-color-system-info-raw: 224, 138, 168 !important;
-  --s-color-system-info-lighten: rgb(250, 237, 242) !important;
-  --s-color-system-info-lighten-raw: 250, 237, 242 !important;
-  --s-color-system-info-darken: rgb(179, 110, 134) !important;
-  --s-color-system-info-darken-raw: 179, 110, 134 !important;
+  --s-color-system-info-raw: 154, 45, 86 !important;
+  --s-color-system-info-lighten: rgb(240, 224, 230) !important;
+  --s-color-system-info-lighten-raw: 240, 224, 230 !important;
+  --s-color-system-info-darken: rgb(123, 36, 69) !important;
+  --s-color-system-info-darken-raw: 123, 36, 69 !important;
   --s-color-accents-blue: var(--agentskin-accent) !important;
-  --s-color-accents-blue-raw: 224, 138, 168 !important;
-  --s-color-suggest: rgb(233, 173, 194) !important;
-  --s-color-suggest-raw: 233, 173, 194 !important;
+  --s-color-accents-blue-raw: 154, 45, 86 !important;
+  --s-color-suggest: rgb(184, 108, 137) !important;
+  --s-color-suggest-raw: 184, 108, 137 !important;
 
   /* Backgrounds (surfaces) */
   --s-color-bg-quaternary: color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-bg)) !important;
@@ -344,11 +344,11 @@ html.agentskin-host-doubao:root body {
   --s-color-bg-content-base: color-mix(in srgb, var(--agentskin-surface) 94%, var(--agentskin-bg)) !important;
   --s-color-bg-content-base-raw: 250, 250, 250 !important;
   --s-color-bg-disable: color-mix(in srgb, var(--agentskin-muted) 35%, var(--agentskin-surface)) !important;
-  --s-color-bg-disable-raw: 205, 197, 201 !important;
+  --s-color-bg-disable-raw: 189, 181, 185 !important;
   --s-color-bg-outlined-btn: transparent !important;
   --s-color-bg-outlined-btn-raw: 255, 255, 255 !important;
   --s-color-bg-outlined-btn-hover: rgba(154, 45, 86, 0.1) !important;
-  --s-color-bg-outlined-btn-hover-raw: 224, 138, 168 !important;
+  --s-color-bg-outlined-btn-hover-raw: 154, 45, 86 !important;
   --s-color-bg-native-dialog: color-mix(in srgb, var(--agentskin-surface) 92%, var(--agentskin-bg)) !important;
   --s-color-bg-native-dialog-raw: 247, 247, 247 !important;
   --s-color-bg-native-spotlight: color-mix(in srgb, var(--agentskin-surface) 60%, transparent) !important;
@@ -370,11 +370,11 @@ html.agentskin-host-doubao:root body {
 
   /* Borders */
   --s-color-border-primary: color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
-  --s-color-border-primary-raw: 224, 138, 168 !important;
+  --s-color-border-primary-raw: 154, 45, 86 !important;
   --s-color-border-card: var(--agentskin-border) !important;
-  --s-color-border-card-raw: 224, 138, 168 !important;
+  --s-color-border-card-raw: 154, 45, 86 !important;
   --s-color-border-quaternary: color-mix(in srgb, var(--agentskin-border) 30%, transparent) !important;
-  --s-color-border-quaternary-raw: 224, 138, 168 !important;
+  --s-color-border-quaternary-raw: 154, 45, 86 !important;
 
   /* Fills */
   --s-color-fill-secondary: color-mix(in srgb, var(--agentskin-border) 50%, var(--agentskin-surface)) !important;
@@ -399,7 +399,7 @@ html.agentskin-host-doubao:root body {
   --s-color-bg-inverse-quarternary: color-mix(in srgb, var(--agentskin-surface-elevated) 70%, var(--agentskin-bg)) !important;
   --s-color-bg-inverse-quarternary-raw: 217, 215, 213 !important;
   --s-color-bg-inverse-disable: color-mix(in srgb, var(--agentskin-muted) 40%, var(--agentskin-surface)) !important;
-  --s-color-bg-inverse-disable-raw: 194, 185, 190 !important;
+  --s-color-bg-inverse-disable-raw: 175, 166, 170 !important;
   --s-color-bg-inverse-trans: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
   --s-color-bg-inverse-trans-tertiary: color-mix(in srgb, var(--agentskin-text) 3%, transparent) !important;
   --s-color-bg-inverse-trans-quarternary: color-mix(in srgb, var(--agentskin-text) 2%, transparent) !important;
@@ -428,11 +428,11 @@ html.agentskin-host-doubao:root body {
 
   /* Invert borders */
   --s-color-border-invert-primary: color-mix(in srgb, var(--agentskin-border) 60%, transparent) !important;
-  --s-color-border-invert-primary-raw: 224, 138, 168 !important;
+  --s-color-border-invert-primary-raw: 154, 45, 86 !important;
   --s-color-border-invert-tertiary: color-mix(in srgb, var(--agentskin-border) 30%, transparent) !important;
-  --s-color-border-invert-tertiary-raw: 224, 138, 168 !important;
-  --s-color-border-secondary-raw: 224, 138, 168 !important;
-  --s-color-border-tertiary-raw: 224, 138, 168 !important;
+  --s-color-border-invert-tertiary-raw: 154, 45, 86 !important;
+  --s-color-border-secondary-raw: 154, 45, 86 !important;
+  --s-color-border-tertiary-raw: 154, 45, 86 !important;
 
   /* System status colors — fixed semantic hues independent of theme accent.
      Previously all derived from c.accent, making success/warning/error
@@ -446,9 +446,9 @@ html.agentskin-host-doubao:root body {
   --s-color-system-success-darken-raw: 47, 155, 107 !important;
   --s-color-system-alert: var(--agentskin-accent) !important;
   --s-color-system-alert-lighten: color-mix(in srgb, var(--agentskin-accent) 12%, var(--agentskin-bg)) !important;
-  --s-color-system-alert-lighten-raw: 224, 138, 168 !important;
-  --s-color-system-alert-darken: rgb(179, 110, 134) !important;
-  --s-color-system-alert-darken-raw: 179, 110, 134 !important;
+  --s-color-system-alert-lighten-raw: 154, 45, 86 !important;
+  --s-color-system-alert-darken: rgb(123, 36, 69) !important;
+  --s-color-system-alert-darken-raw: 123, 36, 69 !important;
   --s-color-system-warning: #f5a623 !important;
   --s-color-system-warning-raw: 245, 166, 35 !important;
   --s-color-system-warning-lighten: color-mix(in srgb, #f5a623 14%, var(--agentskin-bg)) !important;
@@ -459,9 +459,9 @@ html.agentskin-host-doubao:root body {
   /* Accent palette — grey stays theme-derived; green/yellow/red use fixed
      semantic hues so tags/badges keep their meaning across themes. */
   --s-color-accents-grey-pale: color-mix(in srgb, var(--agentskin-muted) 15%, var(--agentskin-surface)) !important;
-  --s-color-accents-grey-pale-raw: 184, 174, 179 !important;
+  --s-color-accents-grey-pale-raw: 162, 151, 156 !important;
   --s-color-accents-grey: var(--agentskin-muted) !important;
-  --s-color-accents-grey-raw: 154, 139, 146 !important;
+  --s-color-accents-grey-raw: 122, 107, 114 !important;
   --s-color-accents-green: #3ecf8e !important;
   --s-color-accents-green-raw: 62, 207, 142 !important;
   --s-color-accents-yellow: #f5a623 !important;
@@ -470,8 +470,8 @@ html.agentskin-host-doubao:root body {
   --s-color-accents-red-raw: 230, 73, 73 !important;
   --s-color-accents-purple: var(--agentskin-secondary) !important;
   --s-color-accents-purple-raw: 217, 184, 200 !important;
-  --s-color-accents-orange: rgb(202, 124, 151) !important;
-  --s-color-accents-orange-raw: 202, 124, 151 !important;
+  --s-color-accents-orange: rgb(139, 41, 77) !important;
+  --s-color-accents-orange-raw: 139, 41, 77 !important;
 
   /* Alert/warning/success semantic colors — fixed hues, independent of accent */
   --s-color-alert: var(--agentskin-accent) !important;
@@ -480,14 +480,14 @@ html.agentskin-host-doubao:root body {
   --s-color-success: #3ecf8e !important;
   --s-color-success-raw: 62, 207, 142 !important;
   --s-color-element-comment: rgba(154, 45, 86, 0.2) !important;
-  --s-color-element-comment-raw: 224, 138, 168 !important;
+  --s-color-element-comment-raw: 154, 45, 86 !important;
 
   /* Glow gradients — accent-driven */
-  --s-color-glow-grey: linear-gradient(283deg, rgba(154, 139, 146, 0.8) 0%, rgba(154, 139, 146, 0.6) 100%) !important;
+  --s-color-glow-grey: linear-gradient(283deg, rgba(122, 107, 114, 0.8) 0%, rgba(122, 107, 114, 0.6) 100%) !important;
   --s-color-glow-blue: linear-gradient(283deg, rgba(154, 45, 86, 0.8) 0%, rgba(217, 184, 200, 0.8) 100%) !important;
-  --s-color-glow-green: linear-gradient(283deg, rgba(230, 161, 185, 0.8) 0%, rgba(227, 150, 177, 0.8) 100%) !important;
-  --s-color-glow-yellow: linear-gradient(283deg, rgba(236, 185, 203, 0.8) 0%, rgba(230, 161, 185, 0.8) 100%) !important;
-  --s-color-glow-red: linear-gradient(283deg, rgba(179, 110, 134, 0.8) 0%, rgba(157, 97, 118, 0.8) 100%) !important;
+  --s-color-glow-green: linear-gradient(283deg, rgba(174, 87, 120, 0.8) 0%, rgba(164, 66, 103, 0.8) 100%) !important;
+  --s-color-glow-yellow: linear-gradient(283deg, rgba(194, 129, 154, 0.8) 0%, rgba(174, 87, 120, 0.8) 100%) !important;
+  --s-color-glow-red: linear-gradient(283deg, rgba(123, 36, 69, 0.8) 0%, rgba(108, 32, 60, 0.8) 100%) !important;
   --s-color-glow-purple: linear-gradient(283deg, rgba(217, 184, 200, 0.8) 0%, rgba(195, 166, 180, 0.8) 100%) !important;
   --s-color-glow-black: radial-gradient(64.76% 100% at 49.62% 100%, rgba(74, 63, 69, 0.15) 0%, transparent 70%) !important;
   --s-color-glow-black-hover: radial-gradient(64.76% 100% at 49.62% 100%, rgba(74, 63, 69, 0.25) 0%, transparent 70%) !important;
@@ -497,16 +497,16 @@ html.agentskin-host-doubao:root body {
   /* Gradient backgrounds — themed washes */
   --s-color-gradient-blue: linear-gradient(93deg, rgba(154, 45, 86, 0.06) -1.22%, rgba(217, 184, 200, 0.06) 101.66%) !important;
   --s-color-gradient-blue-hover: linear-gradient(93deg, rgba(154, 45, 86, 0.08) -1.22%, rgba(217, 184, 200, 0.08) 101.66%) !important;
-  --s-color-gradient-blue-orange: linear-gradient(87deg, rgba(154, 45, 86, 0.06) 5.11%, rgba(230, 161, 185, 0.06) 95.48%) !important;
+  --s-color-gradient-blue-orange: linear-gradient(87deg, rgba(154, 45, 86, 0.06) 5.11%, rgba(174, 87, 120, 0.06) 95.48%) !important;
   --s-color-gradient-blue-purple: linear-gradient(88deg, rgba(154, 45, 86, 0.06) 12.33%, rgba(217, 184, 200, 0.06) 102.89%) !important;
   --s-color-gradient-purple-trans: linear-gradient(283deg, rgba(217, 184, 200, 0.05) 0%, rgba(195, 166, 180, 0.05) 100%) !important;
 
   /* Horizon gradients — subtle themed washes on white */
   --s-color-horizon-gradient-blue: linear-gradient(109deg, var(--agentskin-bg) 45.34%, rgba(154, 45, 86, 0.08) 102.43%) !important;
-  --s-color-horizon-gradient-red: linear-gradient(109deg, var(--agentskin-bg) 45.34%, rgba(179, 110, 134, 0.08) 102.43%) !important;
+  --s-color-horizon-gradient-red: linear-gradient(109deg, var(--agentskin-bg) 45.34%, rgba(123, 36, 69, 0.08) 102.43%) !important;
   --s-color-horizon-gradient-purple: linear-gradient(109deg, var(--agentskin-bg) 45.34%, rgba(217, 184, 200, 0.08) 102.43%) !important;
-  --s-color-horizon-gradient-green: linear-gradient(109deg, var(--agentskin-bg) 45.34%, rgba(230, 161, 185, 0.08) 102.43%) !important;
-  --s-color-horizon-gradient-grey: linear-gradient(109deg, var(--agentskin-bg) 45.34%, rgba(154, 139, 146, 0.08) 102.43%) !important;
+  --s-color-horizon-gradient-green: linear-gradient(109deg, var(--agentskin-bg) 45.34%, rgba(174, 87, 120, 0.08) 102.43%) !important;
+  --s-color-horizon-gradient-grey: linear-gradient(109deg, var(--agentskin-bg) 45.34%, rgba(122, 107, 114, 0.08) 102.43%) !important;
 
   /* Chat-level token overrides (code blocks, task cards) */
   --chat-bg-color: transparent !important;
@@ -519,7 +519,7 @@ html.agentskin-host-doubao:root body {
   --ffc-static-black: var(--agentskin-bg) !important;
   --ffc-button-brand-icon-color: #ffffff !important;
   --ffc-neutral-00-60: rgba(74, 63, 69, 0.6) !important;
-  --ffc-neutral-1000-5: rgba(154, 139, 146, 0.05) !important;
+  --ffc-neutral-1000-5: rgba(122, 107, 114, 0.05) !important;
   --ffc-skeleton-start: rgba(74, 63, 69, 0.04) !important;
   --ffc-skeleton-middle: rgba(74, 63, 69, 0.08) !important;
 
@@ -813,7 +813,7 @@ html.agentskin-host-doubao button[class*="primary"]:hover,
 html.agentskin-host-doubao button[class*="send"]:hover,
 html.agentskin-host-doubao [class*="btn-primary"]:hover,
 html.agentskin-host-doubao [class*="btn-brand"]:hover {
-  background: rgb(197, 121, 148) !important;
+  background: rgb(136, 40, 76) !important;
   filter: brightness(1.05) !important;
 }
 
@@ -821,7 +821,7 @@ html.agentskin-host-doubao button[class*="primary"]:active,
 html.agentskin-host-doubao button[class*="send"]:active,
 html.agentskin-host-doubao [class*="btn-primary"]:active,
 html.agentskin-host-doubao [class*="btn-brand"]:active {
-  background: rgb(170, 105, 128) !important;
+  background: rgb(117, 34, 65) !important;
   filter: brightness(0.95) !important;
 }
 
@@ -877,7 +877,7 @@ html.agentskin-host-doubao button:disabled,
 html.agentskin-host-doubao button[class*="disabled"],
 html.agentskin-host-doubao [class*="btn"][class*="disabled"] {
   background: rgba(74, 63, 69, 0.08) !important;
-  color: rgba(154, 139, 146, 0.5) !important;
+  color: rgba(122, 107, 114, 0.5) !important;
   border: none !important;
   cursor: not-allowed !important;
   opacity: 1 !important;

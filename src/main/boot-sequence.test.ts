@@ -27,7 +27,7 @@ vi.mock('electron', () => ({
 
 import { BootProfiler } from './boot-profiler';
 import { BootProgressReporter } from './boot-reporter';
-import { runStep } from './boot-sequence';
+import { runStep, STEP_TIMEOUT_MS } from './boot-sequence';
 
 describe('runStep — ticker leak protection', () => {
   let reporter: BootProgressReporter;
@@ -50,11 +50,11 @@ describe('runStep — ticker leak protection', () => {
     // fn() returns a Promise that never settles — simulating a hung step.
     const fn = vi.fn().mockImplementation(() => new Promise(() => {}));
 
-    // Run the step; it will reject after STEP_TIMEOUT_MS (15s).
+    // Run the step; it will reject after STEP_TIMEOUT_MS.
     const stepPromise = runStep(reporter, profiler, 'mock-step', 100, fn, 'mock failure');
 
-    // Advance time past the 15s timeout.
-    await vi.advanceTimersByTimeAsync(15_000);
+    // Advance time past the hard timeout.
+    await vi.advanceTimersByTimeAsync(STEP_TIMEOUT_MS);
 
     // The step must reject (degrade) — not hang.
     const result = await stepPromise;
@@ -73,7 +73,7 @@ describe('runStep — ticker leak protection', () => {
 
     const stepPromise = runStep(reporter, profiler, 'mock-step', 100, fn, 'mock failure');
 
-    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.advanceTimersByTimeAsync(STEP_TIMEOUT_MS);
     await stepPromise;
 
     // clearInterval must have been called — both in catch (explicit) and
