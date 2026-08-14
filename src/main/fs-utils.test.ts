@@ -18,7 +18,7 @@ vi.mock('node:fs/promises', async (importOriginal) => {
 });
 
 import fs from 'node:fs/promises';
-import { appendLogLine, writeJsonAtomic } from './fs-utils';
+import { appendLogLine, DiskFullError, writeJsonAtomic } from './fs-utils';
 
 describe('writeJsonAtomic', () => {
   let tmpDir: string;
@@ -66,6 +66,33 @@ describe('writeJsonAtomic', () => {
       (name) => name.startsWith('.state.json.') && name.endsWith('.tmp'),
     );
     expect(leftoverTmp).toHaveLength(0);
+  });
+
+  it('throws DiskFullError with Chinese message when writeFile hits ENOSPC', async () => {
+    const enospcError = new Error('No space left on device') as NodeJS.ErrnoException;
+    enospcError.code = 'ENOSPC';
+    vi.mocked(fs.writeFile).mockRejectedValueOnce(enospcError);
+
+    const file = path.join(tmpDir, 'state.json');
+    await expect(writeJsonAtomic(file, { v: 1 })).rejects.toThrow(DiskFullError);
+
+    try {
+      await writeJsonAtomic(file, { v: 1 });
+    } catch (e) {
+      expect(e).toBeInstanceOf(DiskFullError);
+      expect((e as DiskFullError).code).toBe('ENOSPC');
+      expect((e as DiskFullError).message).toContain('磁盘空间不足');
+      expect((e as DiskFullError).filePath).toBe(file);
+    }
+  });
+
+  it('throws DiskFullError when rename hits ENOSPC', async () => {
+    const enospcError = new Error('No space left on device') as NodeJS.ErrnoException;
+    enospcError.code = 'ENOSPC';
+    vi.mocked(fs.rename).mockRejectedValueOnce(enospcError);
+
+    const file = path.join(tmpDir, 'state.json');
+    await expect(writeJsonAtomic(file, { v: 1 })).rejects.toThrow(DiskFullError);
   });
 });
 

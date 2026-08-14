@@ -267,31 +267,45 @@ describe('SettingsService.toDto', () => {
 // ---------------------------------------------------------------------------
 
 describe('SettingsService.setAppPath', () => {
-  it('persists a new appPath', async () => {
+  it('persists a new appPath that exists on disk', async () => {
+    // Create a real temp file so fs.access validation passes.
+    const realApp = path.join(tmpDir, 'FakeApp.exe');
+    await fs.writeFile(realApp, '');
+
     const svc = await makeService();
-    await svc.setAppPath('workbuddy', 'C:\\Apps\\WB.exe');
-    expect(svc.overridesFor('workbuddy').appPath).toBe('C:\\Apps\\WB.exe');
-    // port should remain null
+    await svc.setAppPath('workbuddy', realApp);
+    expect(svc.overridesFor('workbuddy').appPath).toBe(realApp);
     expect(svc.overridesFor('workbuddy').port).toBeNull();
   });
 
-  it('clears appPath with null', async () => {
+  it('throws a Chinese error when appPath does not exist on disk', async () => {
+    const svc = await makeService();
+    const bogus = path.join(tmpDir, 'NonExistent', 'App.exe');
+    await expect(svc.setAppPath('workbuddy', bogus)).rejects.toThrow('应用路径不存在');
+  });
+
+  it('clears appPath with null (no validation needed)', async () => {
+    const realApp = path.join(tmpDir, 'WB.exe');
+    await fs.writeFile(realApp, '');
+
     const svc = await makeService({
       version: 2,
-      apps: { workbuddy: { appPath: '/wb', port: 8080 } },
+      apps: { workbuddy: { appPath: realApp, port: 8080 } },
     });
     await svc.setAppPath('workbuddy', null);
     expect(svc.overridesFor('workbuddy').appPath).toBeNull();
-    // port should be preserved
     expect(svc.overridesFor('workbuddy').port).toBe(8080);
   });
 
   it('survives re-read from disk', async () => {
+    const realApp = path.join(tmpDir, 'trae.exe');
+    await fs.writeFile(realApp, '');
+
     const svc = await makeService();
-    await svc.setAppPath('traework', '/path/to/trae');
+    await svc.setAppPath('traework', realApp);
     const svc2 = new SettingsService(settingsFile);
     await svc2.initialize();
-    expect(svc2.overridesFor('traework').appPath).toBe('/path/to/trae');
+    expect(svc2.overridesFor('traework').appPath).toBe(realApp);
   });
 });
 

@@ -86,7 +86,7 @@ interface AppsState {
    * Add a user-specified exe to the launch list. Marks it as un-adapted
    * (`adapterMatch: null`) and appends it to `scanResult.other`.
    */
-  addCustomApp: (exePath: string, preferredPort?: number | null) => Promise<ScannedApp | null>;
+  addCustomApp: (exePath: string, _preferredPort?: number | null) => Promise<ScannedApp | null>;
 }
 
 export const useAppsStore = create<AppsState>((set, get) => {
@@ -166,7 +166,7 @@ export const useAppsStore = create<AppsState>((set, get) => {
       void get().scan();
     },
 
-    addCustomApp: async (exePath: string, preferredPort?: number | null) => {
+    addCustomApp: async (exePath: string, _preferredPort?: number | null) => {
       // Dedupe: skip if already added by path.
       if (customExePaths.has(exePath)) {
         const existing = get().scanResult?.other.find((a) => a.exePath === exePath);
