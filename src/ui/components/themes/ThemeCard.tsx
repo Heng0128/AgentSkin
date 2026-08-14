@@ -31,10 +31,10 @@ export function ThemeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'group flex h-full flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-all duration-fast ease-out',
+        'group flex h-full flex-col overflow-hidden rounded-md  bg-card text-left transition-all duration-fast ease-out',
         selected
           ? 'border-primary/60 shadow-[inset_3px_0_0_var(--primary)]'
-          : 'hover:border-border-strong',
+          : '',
       )}
     >
       {/* Preview — 16:9 aspect ratio */}
@@ -58,11 +58,11 @@ export function ThemeCard({
           <span className="text-sm font-medium opacity-20">{theme.name.slice(0, 2)}</span>
         </div>
 
-        {/* Active agent indicators — top-right, Swiss sharp pills */}
+        {/* Active agent indicators — top-right, sharp pills */}
         {isActive && (
-          <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-[2px] bg-cr-success/90 px-1 py-0.5">
+          <div className="absolute right-1 top-1 flex items-center gap-0 rounded-md bg-cr-success/90 px-1 py-0">
             {activeAgentIds.map((agentId) => (
-              <span key={agentId} className="flex size-3 items-center justify-center rounded-[1px] bg-popover/90">
+              <span key={agentId} className="flex size-3 items-center justify-center rounded-sm bg-popover/90">
                 <AppMark appId={agentId} size={8} />
               </span>
             ))}
@@ -73,8 +73,8 @@ export function ThemeCard({
         {theme.mode && theme.mode !== 'auto' && (
           <span
             className={cn(
-              'absolute top-1.5 rounded-[2px] px-1 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider',
-              isActive ? 'left-1.5' : 'right-1.5',
+              'absolute top-1 rounded-md px-1 py-0 text-[11px] font-medium  ',
+              isActive ? 'left-1' : 'right-1',
               theme.mode === 'dark'
                 ? 'bg-gray-900/80 text-gray-300'
                 : 'bg-muted text-muted-foreground',
@@ -86,19 +86,19 @@ export function ThemeCard({
 
         {/* Icon overlay — bottom-left */}
         {theme.icon && (
-          <div className="absolute bottom-1.5 left-1.5 opacity-80 transition-opacity group-hover:opacity-100">
+          <div className="absolute bottom-1 left-1 opacity-80 transition-opacity group-hover:opacity-100">
             <img
               src={theme.icon}
               alt=""
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              className="size-6 rounded-[2px] border border-white/10 bg-background/70 p-0.5"
+              className="size-6 rounded-md border border-white/10 bg-background/70 p-0.5"
             />
           </div>
         )}
 
         {/* Dynamic wallpaper indicator — bottom-right */}
         {theme.hasWallpaper && (
-          <span className="absolute bottom-1.5 right-1.5 inline-flex items-center gap-1 rounded-[2px] bg-card2 px-1 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
+          <span className="absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-md bg-card2 px-1 py-0 font-mono text-[10px] font-medium text-muted-foreground">
             <span className="relative flex size-1">
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-white/60" />
               <span className="relative inline-flex size-1 rounded-full bg-white" />
@@ -108,11 +108,11 @@ export function ThemeCard({
         )}
       </div>
 
-      {/* Info section — tight Swiss typography */}
+      {/* Info section — tight typography */}
       <div className="flex min-h-0 flex-1 flex-col gap-1 p-2.5">
-        {/* Name — font-medium, Swiss clean */}
+        {/* Name — font-medium, clean */}
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="min-w-0 truncate text-[12px] font-medium tracking-[-0.01em]">{theme.name}</h3>
+          <h3 className="min-w-0 truncate text-[13px] font-medium tracking-[-0.01em]">{theme.name}</h3>
           {theme.version && (
             <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground/50">
               v{theme.version}
@@ -121,7 +121,7 @@ export function ThemeCard({
         </div>
 
         {/* Author — font-mono 10px text-dim */}
-        <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted-foreground/60">
+        <div className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground/60">
           <span className="truncate">{theme.author}</span>
           {theme.category && (
             <>
@@ -131,7 +131,7 @@ export function ThemeCard({
           )}
         </div>
 
-        {/* Supported agents + tags — Swiss badges */}
+        {/* Supported agents + tags — badges */}
         <div className="flex items-center gap-1 pt-0.5">
           {theme.supportedAgents.map((agentId) => {
             const agentActive = activeAgentIds.includes(agentId);
@@ -139,7 +139,7 @@ export function ThemeCard({
               <span
                 key={agentId}
                 className={cn(
-                  'flex size-[16px] items-center justify-center rounded-[2px] transition-all',
+                  'flex size-[16px] items-center justify-center rounded-md transition-all',
                   agentActive
                     ? 'bg-cr-success/15'
                     : 'ring-1 ring-border',
@@ -150,9 +150,9 @@ export function ThemeCard({
             );
           })}
           {theme.tags.length > 0 && (
-            <div className="ml-auto flex gap-0.5">
+            <div className="ml-auto flex gap-0">
               {theme.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="outline" className="rounded-[2px] px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider">{tag}</Badge>
+                <Badge key={tag} variant="outline" className="rounded-md px-1 py-0 text-[11px] font-medium  ">{tag}</Badge>
               ))}
             </div>
           )}

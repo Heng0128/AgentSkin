@@ -12,6 +12,7 @@ import type {
   FileImportConfirmRequest,
   FileImportResult,
   InspectedNode,
+  ScannedApp,
   StudioProject,
   StudioSnapshotOptions,
   ThemeStudioExportRequest,
@@ -293,7 +294,7 @@ const api: AgentSkinApi = {
       switchEpoch,
     }),
   // --- Electron app discovery & launch ---
-  scanElectronApps: () => ipcRenderer.invoke(IpcChannel.ELECTRON_SCAN),
+  scanElectronApps: (force?: boolean) => ipcRenderer.invoke(IpcChannel.ELECTRON_SCAN, force),
   launchElectronApp: (request: LaunchRequest) =>
     ipcRenderer.invoke(IpcChannel.ELECTRON_LAUNCH, request),
   onElectronStatus: (cb) => {
@@ -303,6 +304,11 @@ const api: AgentSkinApi = {
     ) => cb(status);
     ipcRenderer.on(IpcChannel.ELECTRON_STATUS, handler);
     return () => ipcRenderer.off(IpcChannel.ELECTRON_STATUS, handler);
+  },
+  onElectronScanProgress: (cb) => {
+    const handler = (_event: Electron.IpcRendererEvent, app: ScannedApp) => cb(app);
+    ipcRenderer.on(IpcChannel.ELECTRON_SCAN_PROGRESS, handler);
+    return () => ipcRenderer.off(IpcChannel.ELECTRON_SCAN_PROGRESS, handler);
   },
 };
 

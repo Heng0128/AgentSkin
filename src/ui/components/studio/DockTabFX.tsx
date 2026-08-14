@@ -4,7 +4,7 @@
  * # DockTabFX
  *
  * Bottom dock "FX" tab — 8-dimension override controls rendered as
- * Swiss slider cards in a horizontal scrolling layout.
+ * slider cards in a horizontal scrolling layout.
  *
  * Sections: Color / Shape / Type / Motion / Filter / Effects
  *
@@ -79,12 +79,12 @@ export function DockTabFX({ t }: { t: UiMessages }) {
   const finalTiming = toolOverrides?.timing ?? sig.motion.defaultTiming;
 
   // <input type="color"> requires a valid hex string — CSS variables are
-  // invalid there.  These named constants are hex equivalents of the workspace
-  // design tokens (see workspace-tokens.css: --accent, --bg-0, --fg-0, --bg-2).
-  const FALLBACK_ACCENT_HEX = '#ff453a'; // matches workspace --accent
-  const FALLBACK_BG_HEX = '#121216'; // matches workspace --bg-0
-  const FALLBACK_FG_HEX = '#ffffff'; // matches workspace --fg-0 (white @ 92%)
-  const FALLBACK_SURFACE_HEX = '#18181c'; // matches workspace --bg-2
+  // invalid there.  These named constants are hex equivalents of the globals
+  // design tokens (see globals.css: --primary, --background, --foreground, --card).
+  const FALLBACK_ACCENT_HEX = '#F0574C'; // matches globals --primary
+  const FALLBACK_BG_HEX = '#0F1114'; // matches globals --background
+  const FALLBACK_FG_HEX = '#F0F2F4'; // matches globals --foreground
+  const FALLBACK_SURFACE_HEX = '#16181D'; // matches globals --card
 
   const finalAccent =
     toolOverrides?.accent ?? rgbToHex(sig.color.accents[0]) ?? FALLBACK_ACCENT_HEX;
@@ -155,7 +155,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             {presets.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center gap-[var(--space-1)] border border-[var(--border-subtle)] px-1.5 py-1"
+                className="flex items-center gap-[var(--space-1)] border border-[var(--border-subtle)] px-1 py-1"
                 style={{ borderRadius: 'var(--r-micro)' }}
               >
                 <div className="flex shrink-0 overflow-hidden rounded-[2px] border border-[var(--border-subtle)]">
@@ -165,13 +165,13 @@ export function DockTabFX({ t }: { t: UiMessages }) {
                     ) : null,
                   )}
                 </div>
-                <span className="flex-1 truncate font-mono text-[9.5px] text-[var(--fg-0)]">
+                <span className="flex-1 truncate font-mono text-[10px] text-[var(--fg-0)]">
                   {p.name}
                 </span>
                 <button
                   type="button"
                   onClick={() => setPaletteLoaded(p.colors)}
-                  className="h-5 border border-[var(--border-subtle)] px-1 font-mono text-[9px]"
+                  className="h-5 border border-[var(--border-subtle)] px-1 font-mono text-[10px]"
                   style={{ borderRadius: 'var(--r-micro)' }}
                 >
                   {t.studioToolboxLoadPreset}

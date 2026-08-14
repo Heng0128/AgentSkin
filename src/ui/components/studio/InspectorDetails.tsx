@@ -62,14 +62,14 @@ export function InspectorDetails({ t }: { t: UiMessages }) {
           {inspectingLandmark.selector}
         </span>
         <span
-          className="shrink-0 bg-[var(--bg-4)] px-1 py-0.5 font-mono text-[9.5px]"
+          className="shrink-0 bg-[var(--bg-4)] px-1 py-0 font-mono text-[10px]"
           style={{ color: 'var(--fg-2)', borderRadius: 'var(--r-micro)' }}
         >
           {inspectingLandmark.tag}
         </span>
         {inspectingLandmark.boxModel && (
           <span
-            className="shrink-0 bg-[var(--bg-4)] px-1 py-0.5 font-mono text-[9.5px] font-medium"
+            className="shrink-0 bg-[var(--bg-4)] px-1 py-0 font-mono text-[10px] font-medium"
             style={{
               color: 'var(--fg-2)',
               borderRadius: 'var(--r-micro)',
@@ -110,7 +110,7 @@ export function InspectorDetails({ t }: { t: UiMessages }) {
                 key={p}
                 type="button"
                 onClick={() => setPseudoView(p === pseudoView ? null : p)}
-                className="h-5 px-1.5 font-mono text-[10px]"
+                className="h-5 px-1 font-mono text-[10px]"
                 style={{
                   background: pseudoView === p ? 'var(--accent)' : 'var(--bg-4)',
                   color: pseudoView === p ? 'var(--primary-foreground)' : 'var(--fg-2)',
@@ -146,7 +146,7 @@ export function InspectorDetails({ t }: { t: UiMessages }) {
                 key={sc}
                 type="button"
                 onClick={() => setSchemeView(sc)}
-                className="h-5 px-1.5 font-mono text-[10px]"
+                className="h-5 px-1 font-mono text-[10px]"
                 style={{
                   background: schemeView === sc ? 'var(--accent)' : 'var(--bg-4)',
                   color: schemeView === sc ? 'var(--primary-foreground)' : 'var(--fg-2)',

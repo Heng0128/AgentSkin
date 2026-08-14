@@ -37,7 +37,7 @@ export function StudioStage() {
         <div className="ws-stage__inner">
           <div className="ws-stage__placeholder">
             <div className="ws-stage__placeholder-icon">
-              <FlaskConical className="size-6 text-fg-3" />
+              <FlaskConical className="size-6 text-[var(--fg-3)]" />
             </div>
             <p className="ws-stage__placeholder-title">No preview windows</p>
             <p className="ws-stage__placeholder-hint">

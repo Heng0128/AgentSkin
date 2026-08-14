@@ -3,7 +3,7 @@
 /**
  * # WorkspaceDialog
  *
- * Generic dialog shell for Studio workspace modals — provides a Swiss-styled
+ * Generic dialog shell for Studio workspace modals — provides a styled
  * title bar (title + description) and a normalized footer slot.
  *
  * Compound pattern:
@@ -45,14 +45,14 @@ function WorkspaceDialog({
       <DialogContent style={{ width, maxWidth: '90vw' }} className="gap-[var(--space-3)]">
         <div>
           <DialogTitle
-            className="font-mono text-[length:12px] font-semibold uppercase"
+            className="font-mono text-[13px] font-semibold "
             style={{ letterSpacing: '0.1em', color: 'var(--fg-0)' }}
           >
             {title}
           </DialogTitle>
           {description && (
             <DialogDescription
-              className="mt-[2px] font-mono text-[length:10px]"
+              className="mt-0 font-mono text-[length:10px]"
               style={{ color: 'var(--fg-2)' }}
             >
               {description}

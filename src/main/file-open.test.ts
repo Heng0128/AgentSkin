@@ -65,4 +65,16 @@ describe('FileOpenQueue', () => {
     expect(queue.handlePath('/tmp/note.txt')).toBe(false);
     expect(received).toEqual([]);
   });
+
+  it('re-registering a sink replaces the previous handler without error', () => {
+    const queue = new FileOpenQueue();
+    const first: string[] = [];
+    const second: string[] = [];
+    queue.setSink((filePath) => first.push(filePath));
+    // Duplicate registration (e.g. StrictMode double bootstrap) is idempotent.
+    queue.setSink((filePath) => second.push(filePath));
+    queue.handlePath('/tmp/d.agentskin-theme');
+    expect(first).toEqual([]);
+    expect(second).toEqual(['/tmp/d.agentskin-theme']);
+  });
 });

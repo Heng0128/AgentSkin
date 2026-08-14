@@ -9,7 +9,7 @@
  *     dedicated {@link BrowserWindow}, opened from the main window's sidebar)
  *   - no dynamic wallpaper background (a neutral `bg-background` surface)
  *   - a custom title bar with window controls + theme-mode toggle
- *   - the full {@link ThemeStudioPage} (snapshot / inspect / export)
+ *   - the full {@link WorkspacePage} (live tweak: snapshot / inspect / export)
  *
  * It does NOT call `useAppController` — the Studio window consumes status
  * via a dedicated `onStatusChanged` subscription in this file, and uses
@@ -22,7 +22,7 @@
 import { useEffect, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { WorkspacePage } from '@/pages/WorkspacePage';
+import { StudioPage } from '@/pages/StudioPage';
 import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';
 import { useStudioStore } from '@/stores/studioStore';
@@ -94,7 +94,7 @@ export default function StudioApp() {
 
   return (
     <ErrorBoundary locale={locale}>
-      <WorkspacePage />
+      <StudioPage />
     </ErrorBoundary>
   );
 }

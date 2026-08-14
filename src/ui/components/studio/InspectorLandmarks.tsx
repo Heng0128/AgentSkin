@@ -67,7 +67,7 @@ export function InspectorLandmarks({ t }: { t: UiMessages }) {
       {/* Count */}
       <div className="flex items-baseline justify-between px-1">
         <Kicker count={filtered.length}>{t.studioNodeLandmarks}</Kicker>
-        <span className="font-mono text-[9.5px] text-[var(--fg-3)]">
+        <span className="font-mono text-[10px] text-[var(--fg-3)]">
           {t.studioLandmarkCount(filtered.length, allLandmarks.length)}
         </span>
       </div>

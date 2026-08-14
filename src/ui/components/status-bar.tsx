@@ -10,10 +10,9 @@ import { uiMessages } from '@shared/i18n';
 import type { SystemStatus } from '@shared/types';
 
 /**
- * # StatusBar — Swiss Edition
+ * # StatusBar
  *
- * Fixed 28px strip pinned to the bottom of the window. Inspired by the Swiss
- * / International Typographic Style — minimal, mono-spaced, grid-aligned.
+ * Fixed 28px strip pinned to the bottom of the window.
  *
  *   Left   → LED + CDP status (running / standby / offline)
  *   Center → platform count · injected count
@@ -72,10 +71,10 @@ export function StatusBar() {
   const variant = deriveCdpState(status);
   const cdpLabel =
     variant === 'running'
-      ? t.swissLedRunning
+      ? t.statusLedRunning
       : variant === 'standby'
-        ? t.swissLedStandby
-        : t.swissLedOffline;
+        ? t.statusLedStandby
+        : t.statusLedOffline;
 
   const clock = useTick();
   const led = LED_STYLE[variant];
@@ -86,20 +85,20 @@ export function StatusBar() {
   const injectedCount = status?.apps.filter((app) => app.activeThemeId !== null).length ?? 0;
 
   return (
-    <footer className="flex h-[28px] shrink-0 items-center justify-between gap-4 border-t border-border bg-[var(--surface)] px-3 [-webkit-app-region:drag] transition-[background] duration-400">
+    <footer className="flex h-[28px] shrink-0 items-center justify-between gap-4  bg-[var(--surface)] px-3 [-webkit-app-region:drag] transition-[background] duration-400">
       {/* Left cluster: LED + CDP status. */}
-      <div className="flex items-center gap-1.5 [-webkit-app-region:no-drag]">
-        <span className={cn('size-[7px] shrink-0 rounded-full', led.dot)} aria-hidden />
-        <span className="font-mono text-[10px] font-medium text-muted-foreground">{cdpLabel}</span>
+      <div className="flex items-center gap-1 [-webkit-app-region:no-drag]">
+        <span className={cn('size-2 shrink-0 rounded-full', led.dot)} aria-hidden />
+        <span className="text-[11px] font-medium text-muted-foreground">{cdpLabel}</span>
       </div>
 
       {/* Center cluster: platform count · injected · status error with retry. */}
-      <div className="hidden items-center gap-1.5 font-mono text-[10px] font-medium lg:flex [-webkit-app-region:no-drag]">
+      <div className="hidden items-center gap-1 text-[11px] font-medium lg:flex [-webkit-app-region:no-drag]">
         <span className="text-muted-foreground">
-          {t.swissPlatformOnline(onlineCount, totalPlatforms)}
+          {t.statusPlatformOnline(onlineCount, totalPlatforms)}
         </span>
         <span className="text-muted-foreground/40">·</span>
-        <span className="text-muted-foreground">{t.swissInjected(injectedCount)}</span>
+        <span className="text-muted-foreground">{t.statusInjected(injectedCount)}</span>
         {statusError ? (
           <>
             <span className="text-muted-foreground/40">·</span>
@@ -109,8 +108,8 @@ export function StatusBar() {
               onClick={() => void refreshStatus()}
               title={statusError}
               className={cn(
-                'inline-flex items-center gap-0.5 rounded-[2px] border border-destructive/30 bg-card2 px-1.5 py-0.5',
-                'font-mono text-[10px] leading-tight text-destructive transition-colors duration-fast',
+                'inline-flex items-center gap-0 rounded-md border border-destructive/30 bg-card2 px-1 py-0',
+                'text-[11px] leading-tight text-destructive transition-colors duration-fast',
                 statusRefreshing
                   ? 'cursor-not-allowed opacity-50'
                   : 'hover:bg-destructive/10 active:translate-y-[1px]',
@@ -124,7 +123,7 @@ export function StatusBar() {
 
       {/* Right cluster: inject dock · local · no upload · clock · version. */}
       <div className="flex items-center gap-2 [-webkit-app-region:no-drag]">
-        {/* Inject dock — icon button (⏏ symbol, 27x2px rounded-[2px]). */}
+        {/* Inject dock — icon button (⏏ symbol, 27x27px rounded-md). */}
         <button
           type="button"
           title={t.injectDockTitle}
@@ -132,26 +131,26 @@ export function StatusBar() {
           aria-pressed={injectDockOpen}
           onClick={() => setInjectDockOpen((open) => !open)}
           className={cn(
-            'inline-grid place-items-center size-[27px] rounded-[2px] border bg-transparent text-[12px] transition-[background,border-color] duration-400 active:translate-y-[1px]',
+            'inline-grid place-items-center size-7 rounded-md border bg-transparent text-[11px] transition-[background,border-color] duration-400 active:translate-y-[1px]',
             injectDockOpen
               ? 'border-primary bg-card2 text-primary'
-              : 'border-border-strong text-muted-foreground hover:bg-card2 hover:text-foreground hover:border-border',
+              : 'text-muted-foreground hover:bg-card2 hover:text-foreground',
           )}
         >
           ⏏
         </button>
-        <span className="font-mono text-[10px] font-medium text-muted-foreground/60">
-          {t.swissLocal}
+        <span className="text-[11px] font-medium text-muted-foreground/60">
+          {t.statusLocalOnly}
         </span>
-        <span className="font-mono tabular-nums text-[10px] font-medium text-muted-foreground/70">
+        <span className="font-mono tabular-nums text-[11px] font-medium text-muted-foreground/70">
           {clock}
         </span>
         <button
           type="button"
-          title={t.swissVersionTip}
-          aria-label={t.swissVersionTip}
+          title={t.statusVersionTip}
+          aria-label={t.statusVersionTip}
           onClick={() => void navigator.clipboard?.writeText(appVersion)}
-          className="font-mono text-[10px] font-medium text-muted-foreground/50 transition-colors duration-fast hover:text-foreground"
+          className="text-[11px] font-medium text-muted-foreground/50 transition-colors duration-fast hover:text-foreground"
         >
           v{appVersion}
         </button>

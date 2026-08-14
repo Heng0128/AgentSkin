@@ -153,15 +153,15 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
       </div>
 
       {/* Recent history table */}
-      <div className="rounded-[2px] border border-border overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border bg-card2 px-3 py-2">
+      <div className="rounded-md  overflow-hidden">
+        <div className="flex items-center justify-between  bg-card2 px-3 py-2">
           <div className="flex items-center gap-2">
-            <Hourglass className="size-3.5 text-muted-foreground" />
-            <span className="font-mono text-[11px] font-semibold tracking-wide text-foreground">
+            <Hourglass className="size-4 text-muted-foreground" />
+            <span className="font-mono text-[11px] font-semibold  text-foreground">
               {t.settingsPerfRecentHistory}
             </span>
           </div>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/50">
+          <span className="text-[11px]   text-muted-foreground/50">
             {traces.length}/{HISTORY_COUNT}
           </span>
         </div>
@@ -170,7 +170,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
           <div className="px-3 py-4 text-[11px] text-destructive font-mono">{error}</div>
         ) : traces.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <div className="flex size-9 items-center justify-center rounded-[2px] bg-muted/60">
+            <div className="flex size-9 items-center justify-center rounded-md bg-muted/60">
               <Activity className="size-4 text-muted-foreground/50" />
             </div>
             <p className="text-[11px] text-muted-foreground/70">{t.settingsPerfEmpty}</p>
@@ -179,7 +179,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
           <div className="overflow-x-auto">
             <table className="w-full text-[11px]">
               <thead>
-                <tr className="border-b border-border bg-muted/20">
+                <tr className=" bg-muted/20">
                   <TH>{t.settingsPerfColTime}</TH>
                   <TH>{t.settingsPerfColAgent}</TH>
                   <TH className="text-right">{t.settingsPerfColTotal}</TH>
@@ -199,7 +199,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
 
       {/* Overflow warning — visible only when the ring buffer has discarded traces */}
       {stats.overflowCount > 0 && (
-        <div className="flex items-center gap-2 rounded-[2px] border border-cr-warning/30 bg-cr-warning/10 px-3 py-2">
+        <div className="flex items-center gap-2 rounded-md border border-cr-warning/30 bg-cr-warning/10 px-3 py-2">
           <span className="font-mono text-[11px] text-cr-warning">
             ⚠ 历史记录已截断，较早的 trace 被丢弃 (overflow: {stats.overflowCount})
           </span>
@@ -207,11 +207,11 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
       )}
 
       {/* Recent IPC timeouts */}
-      <div className="rounded-[2px] border border-border overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border bg-card2 px-3 py-2">
+      <div className="rounded-md  overflow-hidden">
+        <div className="flex items-center justify-between  bg-card2 px-3 py-2">
           <div className="flex items-center gap-2">
-            <Trash2 className="size-3.5 text-muted-foreground" />
-            <span className="font-mono text-[11px] font-semibold tracking-wide text-foreground">
+            <Trash2 className="size-4 text-muted-foreground" />
+            <span className="font-mono text-[11px] font-semibold  text-foreground">
               {t.settingsPerfTimeoutTitle}
             </span>
           </div>
@@ -219,7 +219,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
             type="button"
             onClick={() => void storeClearTimeouts()}
             disabled={timeoutsLoading}
-            className="inline-flex items-center gap-1 rounded-[2px] border border-border bg-muted/30 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground hover:bg-muted disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-md  bg-muted/30 px-2 py-0 text-[11px]   text-muted-foreground hover:bg-muted disabled:opacity-50"
             title={t.settingsPerfTimeoutClear}
           >
             {timeoutsLoading ? t.settingsPerfTimeoutClearing : t.settingsPerfTimeoutClear}
@@ -228,7 +228,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
 
         {timeoutEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <div className="flex size-9 items-center justify-center rounded-[2px] bg-muted/60">
+            <div className="flex size-9 items-center justify-center rounded-md bg-muted/60">
               <Trash2 className="size-4 text-muted-foreground/50" />
             </div>
             <p className="text-[11px] text-muted-foreground/70">{t.settingsPerfTimeoutEmpty}</p>
@@ -237,7 +237,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
           <div className="overflow-x-auto">
             <table className="w-full text-[11px]">
               <thead>
-                <tr className="border-b border-border bg-muted/20">
+                <tr className=" bg-muted/20">
                   <TH>{t.settingsPerfTimeoutColTime}</TH>
                   <TH>{t.settingsPerfTimeoutColChannel}</TH>
                   <TH className="text-right">{t.settingsPerfTimeoutColMs}</TH>
@@ -272,14 +272,12 @@ function StatCard({
   const Icon = icon;
   return (
     <div
-      className="flex flex-col gap-1.5 rounded-[2px] border border-border px-3 py-2.5"
+      className="flex flex-col gap-1 rounded-md  px-3 py-2"
       style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
     >
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <Icon className="size-3 text-muted-foreground/70" />
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
-          {label}
-        </span>
+        <span className="text-[11px]   text-muted-foreground/60">{label}</span>
       </div>
       <div className="flex items-baseline gap-1">
         <span className="font-display text-[20px] font-bold tabular-nums text-foreground">
@@ -305,19 +303,17 @@ function PerAgentCard({
 
   return (
     <div
-      className="flex flex-col gap-1.5 rounded-[2px] border border-border px-3 py-2.5"
+      className="flex flex-col gap-1 rounded-md  px-3 py-2"
       style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
     >
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <Icon className="size-3 text-muted-foreground/70" />
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/60">
-          {label}
-        </span>
+        <span className="text-[11px]   text-muted-foreground/60">{label}</span>
       </div>
       {entries.length === 0 ? (
         <span className="font-display text-[20px] font-bold text-muted-foreground/40">—</span>
       ) : (
-        <div className="flex flex-col gap-0.5">
+        <div className="flex flex-col gap-0">
           {entries.map(([agentId, avgMs]) => (
             <div key={agentId} className="flex items-center justify-between gap-2">
               <span className="truncate font-mono text-[10px] text-muted-foreground/70">
@@ -341,16 +337,16 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
   const agentName = APP_META[trace.agentId as keyof typeof APP_META]?.name ?? trace.agentId;
 
   return (
-    <tr className="border-b border-border last:border-b-0">
+    <tr className=" last:border-b-0">
       <TD>
         <span className="font-mono text-[10px] text-muted-foreground/70" title={fullDate}>
           {timeLabel}
         </span>
       </TD>
       <TD>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <AppMarkSmall appId={trace.agentId as keyof typeof APP_META} />
-          <span className="font-mono text-[10.5px] text-foreground truncate max-w-[80px]">
+          <span className="font-mono text-[10px] text-foreground truncate max-w-[80px]">
             {agentName}
           </span>
         </div>
@@ -364,9 +360,9 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
             <span
               key={step.name}
               className={cn(
-                'inline-flex items-center rounded-[2px] border px-1 py-0 font-mono text-[10px] leading-4',
+                'inline-flex items-center rounded-md border px-1 py-0 font-mono text-[10px] leading-4',
                 step.success
-                  ? 'border-border bg-muted/30 text-muted-foreground/80'
+                  ? 'bg-muted/30 text-muted-foreground/80'
                   : 'border-destructive/30 bg-destructive/10 text-destructive',
               )}
               title={step.error ?? `${step.name}: ${step.duration}ms ${step.success ? '✓' : '✗'}`}
@@ -378,12 +374,12 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
       </TD>
       <TD className="text-center">
         {trace.success ? (
-          <span className="inline-flex size-4 items-center justify-center rounded-[2px] bg-cr-success/15 font-mono text-[10px] text-cr-success">
+          <span className="inline-flex size-4 items-center justify-center rounded-md bg-cr-success/15 font-mono text-[10px] text-cr-success">
             ✓
           </span>
         ) : (
           <span
-            className="inline-flex size-4 items-center justify-center rounded-[2px] bg-destructive/15 font-mono text-[10px] text-destructive"
+            className="inline-flex size-4 items-center justify-center rounded-md bg-destructive/15 font-mono text-[10px] text-destructive"
             title={trace.error ?? t.settingsPerfStatusFailed}
           >
             ✗
@@ -405,12 +401,12 @@ function TimeoutRow({
   const timeLabel = Number.isNaN(date.getTime()) ? '—' : format(date, 'HH:mm:ss');
 
   return (
-    <tr className="border-b border-border last:border-b-0">
+    <tr className=" last:border-b-0">
       <TD>
         <span className="font-mono text-[10px] text-muted-foreground/70">{timeLabel}</span>
       </TD>
       <TD>
-        <span className="font-mono text-[10.5px] text-foreground truncate max-w-[200px]">
+        <span className="font-mono text-[10px] text-foreground truncate max-w-[200px]">
           {event.channel}
         </span>
       </TD>
@@ -426,10 +422,7 @@ function TimeoutRow({
 function TH({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <th
-      className={cn(
-        'px-3 py-2 text-left text-[10px] font-mono uppercase tracking-[0.12em] text-muted-foreground',
-        className,
-      )}
+      className={cn('px-3 py-2 text-left text-[10px] font-mono text-muted-foreground', className)}
     >
       {children}
     </th>
@@ -437,7 +430,7 @@ function TH({ children, className }: { children: React.ReactNode; className?: st
 }
 
 function TD({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <td className={cn('px-2 py-1.5', className)}>{children}</td>;
+  return <td className={cn('px-2 py-1', className)}>{children}</td>;
 }
 
 // --- Duration color-coded badge ------------------------------------------
@@ -470,10 +463,10 @@ const APP_ICONS: Record<string, string> = {
 function AppMarkSmall({ appId }: { appId: keyof typeof APP_META }) {
   const iconUrl = APP_ICONS[String(appId)];
   if (iconUrl) {
-    return <img src={iconUrl} className="size-3.5 rounded-[2px]" width={14} height={14} alt="" />;
+    return <img src={iconUrl} className="size-4 rounded-md" width={14} height={14} alt="" />;
   }
   return (
-    <span className="inline-flex size-3.5 items-center justify-center rounded-[2px] bg-muted font-mono text-[9.5px] text-muted-foreground/50">
+    <span className="inline-flex size-4 items-center justify-center rounded-md bg-muted font-mono text-[10px] text-muted-foreground/50">
       ?
     </span>
   );

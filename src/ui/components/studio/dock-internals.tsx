@@ -3,11 +3,11 @@
 /**
  * # dock-internals
  *
- * Shared Swiss-styled micro-components used by the Dock panels
+ * Shared styled micro-components used by the Dock panels
  * (DockTabFX color / slider / select / toggle cards).
  *
  * Each card targets 160×72px with 1px border and 6px radius
- * per the Swiss design spec.
+ * per the design spec.
  */
 
 import { useCallback } from 'react';

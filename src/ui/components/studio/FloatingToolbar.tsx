@@ -73,7 +73,7 @@ export function FloatingToolbar() {
     <div className="ws-float-toolbar">
       {/* View-mode chips */}
       <div
-        className="flex items-center gap-[2px] rounded-[var(--r-md)] p-[2px]"
+        className="flex items-center gap-0 rounded-[var(--r-md)] p-0"
         style={{ background: 'var(--bg-3)' }}
       >
         {VIEW_MODE_GROUPS.map(({ id, label }) => (
@@ -94,7 +94,7 @@ export function FloatingToolbar() {
       {multiWindow && (
         <>
           {/* Window selector chips */}
-          <div className="flex items-center gap-[2px]">
+          <div className="flex items-center gap-0">
             {windows.map((win, idx) => (
               <button
                 key={win.id}
@@ -113,7 +113,7 @@ export function FloatingToolbar() {
           <select
             value={activeAgentId ?? ''}
             onChange={(e) => handleAgentChange(e.target.value as AgentId)}
-            className="h-[22px] rounded-[var(--r-micro)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-1 font-mono text-[length:10px] text-[var(--fg-0)] outline-none"
+            className="h-5 rounded-[var(--r-micro)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-1 font-mono text-[length:10px] text-[var(--fg-0)] outline-none"
             title="Active window agent"
           >
             {AGENT_IDS.map((id) => (
@@ -168,13 +168,13 @@ export function FloatingToolbar() {
           {activeWin ? `${activeWin.scale}×` : 'zoom'} ▾
         </button>
         {zoomOpen && (
-          <div className="absolute bottom-full right-0 z-10 mb-[2px] flex flex-col gap-[2px] rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-[2px] shadow-[var(--shadow-float)]">
+          <div className="absolute bottom-full right-0 z-10 mb-[2px] flex flex-col gap-0 rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">
             {ZOOM_PRESETS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => handleZoom(s)}
-                className="whitespace-nowrap rounded-[var(--r-micro)] px-[var(--space-2)] py-[2px] text-left font-mono text-[length:10px] hover:bg-[var(--bg-3)]"
+                className="whitespace-nowrap rounded-[var(--r-micro)] px-[var(--space-2)] py-0 text-left font-mono text-[length:10px] hover:bg-[var(--bg-3)]"
                 style={{
                   background: activeWin?.scale === s ? 'var(--accent-ghost)' : 'transparent',
                   color: activeWin?.scale === s ? 'var(--accent)' : 'var(--fg-0)',

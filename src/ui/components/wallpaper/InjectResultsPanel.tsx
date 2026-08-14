@@ -77,10 +77,10 @@ export function InjectResultsPanel({
   t,
 }: InjectResultsPanelProps) {
   return (
-    <aside className="flex w-[280px] shrink-0 flex-col border-l border-border bg-card2">
+    <aside className="flex w-[280px] shrink-0 flex-col  bg-card2">
       {/* Header — type badge + title + close */}
-      <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-        <span className="shrink-0 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+      <div className="flex items-center gap-2  px-3 py-2">
+        <span className="shrink-0 rounded-md bg-muted px-1 py-0 font-mono text-[10px]  text-muted-foreground">
           {selected.type === 'video'
             ? t.weFilterVideo
             : selected.type === 'image'
@@ -89,14 +89,14 @@ export function InjectResultsPanel({
                 ? t.weFilterWeb
                 : t.weFilterScene}
         </span>
-        <span className="min-w-0 flex-1 truncate font-display text-[12.5px] font-bold tracking-tight">
+        <span className="min-w-0 flex-1 truncate font-display text-[13px] font-bold tracking-tight">
           {selected.title}
         </span>
         <button
           type="button"
           onClick={onClose}
           aria-label={t.close}
-          className="flex size-5 shrink-0 items-center justify-center rounded-[2px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           ✕
         </button>
@@ -106,20 +106,20 @@ export function InjectResultsPanel({
         {/* Batch progress bar */}
         {batchProgress && (
           <div className="flex items-center gap-2">
-            <div className="h-[3px] flex-1 overflow-hidden rounded-[2px] bg-muted">
+            <div className="h-[4px] flex-1 overflow-hidden rounded-md bg-muted">
               <div
-                className="h-full rounded-[2px] bg-primary transition-all duration-slow"
+                className="h-full rounded-md bg-primary transition-all duration-slow"
                 style={{ width: `${(batchProgress.done / batchProgress.total) * 100}%` }}
               />
             </div>
-            <span className="font-mono text-[10px] tracking-wider text-muted-foreground">
+            <span className="font-mono text-[10px]  text-muted-foreground">
               {t.weApplyingAll(batchProgress.done, batchProgress.total)}
             </span>
           </div>
         )}
 
         {/* Preview */}
-        <div className="aspect-video w-full shrink-0 overflow-hidden rounded-[2px] bg-card2">
+        <div className="aspect-video w-full shrink-0 overflow-hidden rounded-md bg-card2">
           <WallpaperPreview
             key={selected.id}
             playback={selected.playback}
@@ -145,7 +145,7 @@ export function InjectResultsPanel({
         </div>
 
         {/* Meta row */}
-        <div className="flex items-center gap-2 font-mono text-[10px] tracking-wider text-muted-foreground">
+        <div className="flex items-center gap-2 font-mono text-[10px]  text-muted-foreground">
           <span className="font-semibold text-foreground/80">{formatSize(selected.sizeBytes)}</span>
           <span className="text-muted-foreground/40">·</span>
           <span>{selected.source === 'workshop' ? 'WORKSHOP' : t.weFilterLocal.toUpperCase()}</span>
@@ -159,7 +159,7 @@ export function InjectResultsPanel({
 
         {/* Preview-only warning */}
         {selected.previewOnly && (
-          <p className="rounded-[2px] bg-cr-warning/10 px-2 py-1 font-mono text-[10px] leading-tight text-cr-warning">
+          <p className="rounded-md bg-cr-warning/10 px-2 py-1 font-mono text-[10px] leading-tight text-cr-warning">
             {t.wePreviewOnlyHint}
           </p>
         )}
@@ -170,7 +170,7 @@ export function InjectResultsPanel({
             type="button"
             onClick={onSetUiBackground}
             className={cn(
-              'rounded-[2px] px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-colors',
+              'rounded-md px-2 py-1 text-[10px] font-semibold  transition-colors',
               isUiBackground
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -215,7 +215,7 @@ export function InjectResultsPanel({
                   disabled={!canInject && !isApplied}
                   title={`${AGENT_META[agentId].displayName} · ${stateLabel}${status?.port ? ` · :${status.port}` : ''}${failDetail}`}
                   className={cn(
-                    'relative flex size-8 items-center justify-center rounded-[2px] border transition-all duration-slow',
+                    'relative flex size-8 items-center justify-center rounded-md border transition-all duration-slow',
                     isApplied
                       ? 'border-cr-success/60 bg-cr-success/10'
                       : isFail
@@ -223,15 +223,15 @@ export function InjectResultsPanel({
                         : isReady
                           ? 'border-cr-info/50 bg-cr-info/5 hover:border-cr-info/70 hover:bg-cr-info/10'
                           : isRunning
-                            ? 'border-border bg-muted/30 hover:bg-muted'
+                            ? 'bg-muted/30 hover:bg-muted'
                             : isInstalled
                               ? 'border-cr-warning/30 bg-cr-warning/5 opacity-60'
-                              : 'border-border/40 bg-muted/20 opacity-35 cursor-not-allowed',
+                              : 'bg-muted/20 opacity-35 cursor-not-allowed',
                     isApplying && 'opacity-60 scale-95',
                   )}
                 >
                   {isApplying ? (
-                    <div className="size-3.5 animate-spin rounded-full border-[1.5px] border-muted-foreground/30 border-t-foreground" />
+                    <div className="size-4 animate-spin rounded-full border-[1.5px] border-muted-foreground/30 border-t-foreground" />
                   ) : isApplied ? (
                     <CheckCircle2 className="size-4.5 text-cr-success" />
                   ) : (
@@ -263,7 +263,7 @@ export function InjectResultsPanel({
                 </button>
                 <span
                   className={cn(
-                    'max-w-[3.5rem] truncate text-center font-mono text-[9.5px] tracking-wider leading-tight transition-colors duration-slower',
+                    'max-w-[3.5rem] truncate text-center font-mono text-[10px]  leading-tight transition-colors duration-slower',
                     isApplied
                       ? 'text-cr-success'
                       : isFail
@@ -296,12 +296,12 @@ export function InjectResultsPanel({
                   : t.weNoRunningAgents
             }
             className={cn(
-              'flex items-center gap-1.5 rounded-[2px] border border-border px-2.5 py-1 text-[10px] font-semibold tracking-wide transition-colors',
+              'flex items-center gap-1 rounded-md  px-2 py-1 text-[10px] font-semibold  transition-colors',
               batchProgress || applyingTo || selected.previewOnly
                 ? 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-60'
                 : runningAgentCount > 0
                   ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
-                  : 'border-border/50 bg-muted/20 text-muted-foreground opacity-40 cursor-not-allowed',
+                  : 'bg-muted/20 text-muted-foreground opacity-40 cursor-not-allowed',
             )}
           >
             {batchProgress
@@ -311,7 +311,7 @@ export function InjectResultsPanel({
         </div>
 
         {/* Running agents hint */}
-        <p className="flex items-center gap-1.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+        <p className="flex items-center gap-1 font-mono text-[10px]  text-muted-foreground">
           <AgentStatusDot
             size="xs"
             variant={isRefreshing ? 'refreshing' : runningAgentCount > 0 ? 'active' : 'offline'}
@@ -325,7 +325,7 @@ export function InjectResultsPanel({
         {/* Render settings */}
         <Accordion type="single" collapsible defaultValue="render">
           <AccordionItem value="render" className="border-b-0">
-            <AccordionTrigger className="py-2 text-[10px] font-semibold tracking-[.14em] uppercase text-muted-foreground hover:text-foreground">
+            <AccordionTrigger className="py-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground">
               RENDER_SETTINGS
             </AccordionTrigger>
             <AccordionContent>

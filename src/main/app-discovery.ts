@@ -691,7 +691,7 @@ export async function probeAppStatus(
     installed: false,
     path: null as string | null,
     version: null as string | null,
-    source: null as 'path' | 'registry' | 'core' | null,
+    source: null as 'path' | 'registry' | 'msix' | 'core' | null,
   };
   const cachedPath = deps.getDetectedPath(appId);
   // `cacheHandled` is true once the cache path was either verified valid or

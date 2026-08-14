@@ -16,6 +16,7 @@
  */
 
 import { useState } from 'react';
+import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -55,9 +56,9 @@ function StatusDot({ state }: { state: AppRunningState }) {
   return (
     <span
       className={cn(
-        'inline-block size-[7px] rounded-full',
-        state === 'running' && 'bg-[var(--grn)]',
-        state === 'running-no-port' && 'bg-[var(--amb)]',
+        'inline-block size-2 rounded-full',
+        state === 'running' && 'bg-cr-success',
+        state === 'running-no-port' && 'bg-cr-warning',
         state === 'idle' && 'bg-[var(--muted-foreground)] opacity-25',
       )}
     />
@@ -78,41 +79,51 @@ export function AppCard({
   // Letter placeholder: first character of the product name (uppercase).
   const placeholder = app.productName.slice(0, 1).toUpperCase();
 
+  // Icon source: `iconPath` may be a data URL (extracted from the exe) or a
+  // filesystem path (legacy). Data URLs are passed through verbatim.
+  const iconSrc = app.iconPath?.startsWith('data:')
+    ? app.iconPath
+    : app.iconPath
+      ? `file://${app.iconPath}`
+      : null;
+
   return (
     <Button
       variant="ghost"
       onDoubleClick={onDoubleClick}
       className={cn(
-        'group flex h-auto w-full flex-col items-center gap-2 rounded-[2px] border border-border bg-card p-4 transition-all duration-fast ease-out',
-        'hover:border-border-strong hover:bg-card2',
+        'group flex h-auto w-full flex-col items-center gap-2 rounded-md p-2',
+        'transition-all duration-fast ease-out hover:bg-muted/40',
       )}
     >
-      {/* Icon area */}
-      <div className="relative flex size-12 items-center justify-center">
-        {app.iconPath && !imgError ? (
+      {/* Icon — rendered directly (desktop-shortcut style), no container block */}
+      <div className="relative">
+        {app.adapterMatch ? (
+          <AppMark appId={app.adapterMatch} size={48} className="rounded-none" />
+        ) : iconSrc && !imgError ? (
           <img
-            src={`file://${app.iconPath}`}
+            src={iconSrc}
             alt={app.productName}
-            className="size-10 rounded-[2px] object-contain"
+            className="size-12 object-contain"
             onError={() => setImgError(true)}
           />
         ) : (
-          <span className="flex size-10 items-center justify-center rounded-[2px] border border-border bg-card2 font-display text-[18px] font-bold tracking-tight text-muted-foreground">
+          <span className="flex size-12 items-center justify-center font-display text-[22px] font-bold tracking-tight text-muted-foreground">
             {placeholder}
           </span>
         )}
 
         {/* Status dot — overlaid on icon bottom-right */}
         {showRunningStatus && (
-          <span className="absolute -bottom-0.5 -right-0.5 flex size-[14px] items-center justify-center rounded-full bg-card">
+          <span className="absolute -bottom-0.5 -right-0.5 flex size-[14px] items-center justify-center rounded-full bg-background">
             <StatusDot state={runningState} />
           </span>
         )}
       </div>
 
       {/* Name + port */}
-      <div className="flex w-full flex-col items-center gap-0.5">
-        <span className="max-w-full truncate font-display text-[12px] font-bold tracking-[-.01em]">
+      <div className="flex w-full flex-col items-center gap-0">
+        <span className="max-w-full truncate font-display text-[13px] font-bold tracking-[-.01em]">
           {app.productName}
         </span>
         {showRunningStatus && port !== null && (

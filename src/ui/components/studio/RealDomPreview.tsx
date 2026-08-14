@@ -398,18 +398,15 @@ function RealDomPreview({
     pushOverrides();
   }, [pushOverrides]);
 
-  // Swiss-style: sharp corners, no shadow, mono label bar
+  // style: sharp corners, no shadow, mono label bar
   return (
     <div
-      className="mx-auto mt-2 min-h-0 w-full max-w-[840px] overflow-hidden border border-border"
+      className="mx-auto mt-2 min-h-0 w-full max-w-[840px] overflow-hidden "
       style={{ background: 'var(--surface)' }}
     >
-      {/* Swiss traffic-light status bar */}
-      <div
-        className="flex h-7 items-center gap-2 border-b border-border px-3"
-        style={{ background: 'var(--card)' }}
-      >
-        <div className="flex gap-1.5">
+      {/* traffic-light status bar */}
+      <div className="flex h-7 items-center gap-2  px-3" style={{ background: 'var(--card)' }}>
+        <div className="flex gap-1">
           <span className="size-[7px] rounded-full bg-[var(--destructive)]" />
           <span className="size-[7px] rounded-full bg-[var(--cr-warning)]" />
           <span className="size-[7px] rounded-full bg-[var(--cr-success)]" />
@@ -423,7 +420,7 @@ function RealDomPreview({
         {domTree && (
           <span
             className="ml-auto font-mono text-[10px]"
-            style={{ color: 'var(--dim, var(--muted-foreground))' }}
+            style={{ color: 'var(--muted-foreground)' }}
           >
             LIVE
           </span>

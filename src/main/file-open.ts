@@ -62,14 +62,11 @@ export class FileOpenQueue {
   }
 
   setSink(sink: (filePath: string) => void): void {
-    // R6-25: 防止重复注册 sink。多次调用 setSink 无警告时第二个替换第一个，
-    // 竞争时行为不确定。首次注册后再次调用视为异常并警告。
-    if (this.sink) {
-      console.warn(
-        '[FileOpenQueue] setSink called multiple times — ignoring duplicate registration',
-      );
-      return;
-    }
+    // Idempotent: re-registering a sink simply replaces the previous handler.
+    // This happens normally on every `app:bootstrap` (dev-mode React StrictMode
+    // double-invokes effects, and hot reload re-runs the bootstrap) — not an
+    // error, so we don't warn. Any pending paths are flushed on every attach
+    // (the queue is empty after the first attach, so this is a no-op later).
     this.sink = sink;
     for (const filePath of this.pending.splice(0)) sink(filePath);
   }

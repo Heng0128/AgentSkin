@@ -263,7 +263,8 @@ class WallpaperMediaServer {
       // under us, permission flip, I/O fault) would otherwise become an
       // unhandled EventEmitter error and crash the Electron main process.
       const stream = createReadStream(entry.filePath, { start, end: clampedEnd });
-      stream.on('error', () => {
+      stream.on('error', (err) => {
+        console.error(`[wallpaper-server] range stream error for ${entry.filePath}:`, err);
         if (!res.headersSent) res.writeHead(500).end();
         else res.destroy();
       });
@@ -273,8 +274,15 @@ class WallpaperMediaServer {
 
     headers['Content-Length'] = String(sizeNow);
     res.writeHead(200, headers);
-    const stream = createReadStream(entry.filePath);
-    stream.on('error', () => {
+    // Lock the read to exactly `sizeNow` bytes. A bare createReadStream reads
+    // to EOF; if the file grows between the stat above and this read (e.g. the
+    // media is still being written to disk), we'd stream more bytes than
+    // Content-Length declares and Chromium fails the load with
+    // net::ERR_CONTENT_LENGTH_MISMATCH. An explicit end keeps the byte count
+    // consistent even while the on-disk file is changing underneath us.
+    const stream = createReadStream(entry.filePath, { start: 0, end: sizeNow - 1 });
+    stream.on('error', (err) => {
+      console.error(`[wallpaper-server] stream error for ${entry.filePath}:`, err);
       if (!res.headersSent) res.writeHead(500).end();
       else res.destroy();
     });
@@ -342,8 +350,12 @@ class WallpaperMediaServer {
       // Directory assets are mutable on disk; let the browser revalidate.
       'Cache-Control': 'no-cache',
     });
-    const stream = createReadStream(absTarget);
-    stream.on('error', () => {
+    // Lock the read to exactly `size` bytes (same TOCTOU guard as the file
+    // route — prevents ERR_CONTENT_LENGTH_MISMATCH if the asset changes size
+    // between the stat and the read).
+    const stream = createReadStream(absTarget, { start: 0, end: size - 1 });
+    stream.on('error', (err) => {
+      console.error(`[wallpaper-server] stream error for ${absTarget}:`, err);
       if (!res.headersSent) res.writeHead(500).end();
       else res.destroy();
     });

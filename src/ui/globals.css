@@ -21,239 +21,300 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ------------------------------------------------------------------ */
-/* AgentSkin Notion-style Edition — Design Tokens                      */
-/* Inspiration: Notion — warm neutral background, low-saturation accent */
-/* ------------------------------------------------------------------ */
+/* =================================================================== */
+/* AgentSkin Design Tokens                                              */
+/*                                                                      */
+/* Product Identity: AI Agent Visual Customization Engine               */
+/* Design Language: Precision · Depth · Clarity                         */
+/*    — 精密 · 纵深 · 清晰                                              */
+/*                                                                      */
+/* Principles (derived from the product itself, not copied):            */
+/*   1. Signal over decoration — every pixel communicates state         */
+/*   2. Layered depth — surfaces distinguish by elevation, not just     */
+/*      color; shadows and borders work together to build hierarchy     */
+/*   3. Monochrome foundation with single accent — neutral grayscale    */
+/*      carries structure; brand red highlights action & critical state */
+/*   4. Compact data density — users manage agent configurations;      */
+/*      tight spacing and tabular fonts keep information legible        */
+/*   5. Deterministic motion — transitions are functional, never       */
+/*      gratuitous; fade for state change, slide for spatial change     */
+/* =================================================================== */
 
 :root {
-  /* Font stacks — Swiss edition. Latin display/label faces are bundled
-     locally (@fontsource); CJK uses high-quality system fonts (YaHei on
-     Windows, PingFang on macOS) instead of an unloaded web font. */
+  /* ------------------------------------------------------------------
+   * Typography — Precision Stack
+   * Latin display/UI: Space Grotesk (bundled locally via @fontsource)
+   * CJK: high-quality system fonts only (no web font payload)
+   * Data/code: IBM Plex Mono (bundled locally)
+   * ------------------------------------------------------------------ */
   --font-display:
     "Space Grotesk Variable", "Space Grotesk", "Microsoft YaHei UI", "PingFang SC", system-ui,
     sans-serif;
-  --font-ui: "Microsoft YaHei UI", "PingFang SC", -apple-system, "Segoe UI", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Microsoft YaHei UI", monospace;
+  --font-ui:
+    "Inter Variable", "Inter", "Microsoft YaHei UI", "PingFang SC", -apple-system, "Segoe UI",
+    system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Courier New", monospace;
 
-  /* Brand colors */
-  --brand-red: #ff453a;
-  --brand-red-hover: #ff6b61;
-  --success: var(--green-11, #2ed573);
-  --warning: var(--amber-11, #ffb020);
-  --info: var(--blue-11, #4da3ff);
-
-  /* Gray scale */
-  --gray-100: #f5f5f7;
-  --gray-200: #e8e8ea;
-  --gray-300: #d1d1d5;
-  --gray-400: #9ba0a8;
-  --gray-500: #6e737b;
-  --gray-600: #4a4e56;
-  --gray-700: #2c2f36;
-  --gray-800: #1b1b20;
-  --gray-900: #0a0a0c;
-
-  /* Radius — Notion: soft 6px base */
-  --radius: 6px;
+  /* ------------------------------------------------------------------
+   * Radius — single-source baseline; every elevation level derives from it.
+   * 6px base gives softly-rounded surfaces (gentle, not sharp-cornered),
+   * so cards/panels read as smooth planes rather than hard-edged tiles.
+   * The Tailwind utility bindings (--radius-sm/md/lg/xl/2xl) are declared
+   * once in the @theme inline block below, all derived from this variable.
+   * ------------------------------------------------------------------ */
+  --radius-base: 6px;
 }
 
-/* ------------------------------------------------------------------ */
-/* Dark theme — default at runtime                                     */
-/* ------------------------------------------------------------------ */
+/* =================================================================== */
+/* Dark theme — default runtime                                       */
+/* =================================================================== */
 :root,
 .dark {
-  /* Notion warm-neutral dark background */
-  --background: #19191a;
-  --foreground: #ffffff;
-  --card: #202021;
-  --card-foreground: #ffffff;
-  --card2: #252527;
-  --popover: #252527;
-  --popover-foreground: #ffffff;
+  /* ---- Background layers (deep cool black → elevated surface) ---- */
+  --background: hsl(220 14% 7%); /* page root / stage floor */
+  --foreground: hsl(215 15% 95%); /* primary text on background */
 
-  /* Notion blue primary (low saturation, calm) */
-  --primary: #529dd6;
-  --primary-foreground: #ffffff;
+  --card: hsl(220 14% 10%); /* standard card surface */
+  --card-foreground: hsl(215 15% 95%);
 
-  --secondary: #2f2f32;
-  --secondary-foreground: #dbdbd8;
+  --card2: hsl(220 14% 13%); /* raised card / sub-panel */
+  --popover: hsl(220 14% 13%);
+  --popover-foreground: hsl(215 15% 95%);
 
-  --muted: #252527;
-  --muted-foreground: #9b9b97;
+  --secondary: hsl(220 14% 10%);
+  --secondary-foreground: hsl(215 10% 70%);
 
-  --accent: rgba(64, 155, 209, 0.12);
-  --accent-foreground: #529dd6;
+  --muted: hsl(220 14% 8%);
+  --muted-foreground: hsl(215 8% 50%);
 
-  --destructive: #e5564b;
-  --destructive-foreground: #ffffff;
+  /* ---- Brand Accent — warm coral-red, distinctive identity -------- */
+  --primary: hsl(4 85% 62%); /* main action / focus / progress */
+  --primary-foreground: hsl(0 0% 100%);
 
-  /* Notion thin whisper borders */
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.13);
-  --input: rgba(255, 255, 255, 0.1);
-  --ring: rgba(64, 155, 209, 0.4);
+  --accent: hsla(4 85% 62% 13%); /* activated item bg tint */
+  --accent-foreground: hsl(4 75% 66%);
 
-  /* Surface aliases */
-  --surface: #19191a;
+  --destructive: hsl(4 76% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
 
-  /* Dot pattern */
-  --dot: rgba(255, 255, 255, 0.04);
+  /* ---- Borders — quiet signal lines; kept low-contrast so surfaces
+         separate by elevation, not by hard divider lines ----------- */
+  --border: hsla(220 13% 17% 55%);
+  --border-strong: hsla(220 13% 26% 60%);
+  --input: hsla(220 13% 18% 80%);
 
-  /* Notion shadows — soft, diffused */
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25);
-  --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.25);
+  /* ---- Focus ring — accent glow ----------------------------------- */
+  --ring: hsla(4 85% 62% 50%);
 
-  /* Chart colors — Notion muted blues/greens */
-  --chart-1: #529dd6;
-  --chart-2: #9b9b97;
-  --chart-3: #6b6b68;
-  --chart-4: #3d3d3e;
-  --chart-5: #dbdbd8;
+  /* ---- Surface alias (titlebar / sidebar / status bar base) ------- */
+  --surface: hsl(220 14% 9%);
 
-  /* Sidebar tokens */
-  --sidebar: #1f1f20;
-  --sidebar-foreground: #dbdbd8;
-  --sidebar-primary: #529dd6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(64, 155, 209, 0.12);
-  --sidebar-accent-foreground: #82bbe6;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: rgba(64, 155, 209, 0.4);
+  /* ---- Dot pattern (empty canvas background) ---------------------- */
+  --dot: rgba(255, 255, 255, 0.03);
 
-  /* Semantic status colors — Notion muted palette */
-  --cr-success: #4faf8a;
-  --cr-warning: #d8a75c;
-  --cr-info: #529dd6;
+  /* ---- Shadow elevation model (3 tiers + float) ------------------- */
+  --shadow-elev1: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-elev2: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-elev3: 0 10px 28px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.3);
+  --shadow-float: 0 16px 48px rgba(0, 0, 0, 0.5), 0 6px 16px rgba(0, 0, 0, 0.4);
 
-  /* Semantic color shortcuts */
-  --dim: #8a8a86;
-  --red: #e5564b;
-  --red2: #cc4a40;
-  --redbg: rgba(229, 86, 75, 0.12);
-  --grn: #4faf8a;
-  --amb: #d8a75c;
-  --blu: #529dd6;
-  --bg2: #2a2a2c;
-  --border2: rgba(255, 255, 255, 0.13);
-  --card2: #252527;
+  /* Alias for backward compatibility with shadcn components */
+  --shadow: var(--shadow-elev1);
+  --shadow-xs: var(--shadow-elev1);
+  --shadow-sm: var(--shadow-elev1);
+  --shadow-md: var(--shadow-elev2);
+  --shadow-lg: var(--shadow-elev3);
+  --shadow-xl: var(--shadow-float);
+
+  /* ---- Chart palette — distinct hues, calibrated for dark ground --- */
+  --chart-1: hsl(4 85% 62%); /* brand accent red  */
+  --chart-2: hsl(155 60% 48%); /* teal-green        */
+  --chart-3: hsl(38 85% 55%); /* amber             */
+  --chart-4: hsl(210 75% 60%); /* blue              */
+  --chart-5: hsl(270 60% 65%); /* violet            */
+
+  /* ---- Sidebar tokens (aligned with primary accent) --------------- */
+  --sidebar: hsl(220 14% 9%);
+  --sidebar-foreground: hsl(215 15% 90%);
+  --sidebar-primary: hsl(4 85% 62%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsla(4 85% 62% 13%);
+  --sidebar-accent-foreground: hsl(4 75% 66%);
+  --sidebar-border: hsla(220 13% 20% 80%);
+  --sidebar-ring: hsla(4 85% 62% 50%);
+
+  /* ---- Semantic status colors ------------------------------------ */
+  --cr-success: hsl(155 60% 48%); /* teal-green */
+  --cr-warning: hsl(38 85% 55%); /* amber      */
+  --cr-info: hsl(210 75% 60%); /* blue       */
+
+  /* ---- Shorthand aliases (used in component JSX) ----------------- */
+  --brand-red: hsl(4 76% 60%);
+  --brand-red-hover: hsl(4 70% 66%);
+  --dim: hsl(215 8% 50%);
+  --red: hsl(4 76% 60%);
+  --red2: hsl(4 70% 66%);
+  --redbg: hsla(4 76% 60% 12%);
+  --grn: hsl(155 60% 48%);
+  --amb: hsl(38 85% 55%);
+  --blu: hsl(210 75% 60%);
+  --bg2: hsl(220 14% 10%);
+  --border2: hsla(220 13% 30% 70%);
+  --card2: hsl(220 14% 13%);
 }
 
-/* ------------------------------------------------------------------ */
-/* Light theme — class-based for reliable manual switching              */
-/* ------------------------------------------------------------------ */
+/* =================================================================== */
+/* Light theme — class-based switching                                  */
+/* =================================================================== */
 :root:not(.dark),
 .light {
-  /* Notion warm off-white background */
-  --background: #f7f6f3;
-  --foreground: #37352f;
-  --card: #ffffff;
-  --card-foreground: #37352f;
-  --card2: #f1f0ee;
-  --popover: #ffffff;
-  --popover-foreground: #37352f;
+  /* ---- Background layers (warm white → subtle depth) ------------- */
+  --background: hsl(40 12% 96%);
+  --foreground: hsl(220 12% 14%);
 
-  /* Notion blue primary */
-  --primary: #2383e2;
-  --primary-foreground: #ffffff;
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(220 12% 14%);
 
-  --secondary: #e8e7e4;
-  --secondary-foreground: #37352f;
+  --card2: hsl(40 8% 94%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(220 12% 14%);
 
-  --muted: #f1f0ee;
-  --muted-foreground: #6b6b68;
+  --secondary: hsl(40 8% 94%);
+  --secondary-foreground: hsl(220 10% 28%);
 
-  --accent: rgba(35, 131, 226, 0.08);
-  --accent-foreground: #2383e2;
+  --muted: hsl(40 10% 97%);
+  --muted-foreground: hsl(220 6% 48%);
 
-  --destructive: #e5484d;
-  --destructive-foreground: #ffffff;
+  /* ---- Brand Accent — deeper red for light ground contrast -------- */
+  --primary: hsl(4 78% 52%);
+  --primary-foreground: hsl(0 0% 100%);
 
-  /* Notion whisper borders — thin and subtle */
-  --border: rgba(55, 53, 47, 0.09);
-  --border-strong: rgba(55, 53, 47, 0.16);
-  --input: rgba(55, 53, 47, 0.09);
-  --ring: rgba(35, 131, 226, 0.4);
+  --accent: hsla(4 78% 52% 10%);
+  --accent-foreground: hsl(4 72% 46%);
 
-  --surface: #f7f6f3;
-  --dot: rgba(55, 53, 47, 0.06);
+  --destructive: hsl(4 74% 48%);
+  --destructive-foreground: hsl(0 0% 100%);
 
-  /* Notion soft shadow */
-  --shadow: 0 1px 2px rgba(15, 15, 18, 0.04), 0 4px 12px rgba(15, 15, 18, 0.06);
-  --shadow-float: 0 8px 24px rgba(15, 15, 18, 0.08);
+  /* ---- Borders — barely-there warm gray lines -------------------- */
+  --border: hsla(220 10% 20% 7%);
+  --border-strong: hsla(220 10% 20% 13%);
+  --input: hsla(220 10% 20% 12%);
 
-  --chart-1: #2383e2;
-  --chart-2: #9b9a97;
-  --chart-3: #6b6b68;
-  --chart-4: #c4c3bf;
-  --chart-5: #37352f;
+  /* ---- Focus ring ----------------------------------------------- */
+  --ring: hsla(4 78% 52% 45%);
 
-  --sidebar: #f7f6f3;
-  --sidebar-foreground: #37352f;
-  --sidebar-primary: #2383e2;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(35, 131, 226, 0.08);
-  --sidebar-accent-foreground: #1a6bc2;
-  --sidebar-border: rgba(55, 53, 47, 0.09);
-  --sidebar-ring: rgba(35, 131, 226, 0.4);
-  --accent: rgba(35, 131, 226, 0.08);
+  --surface: hsl(40 12% 93%);
+  --dot: hsla(220 10% 20% 5%);
 
-  /* Notion muted semantic status colors */
-  --cr-success: #00896b;
-  --cr-warning: #bf5a2e;
-  --cr-info: #2383e2;
+  /* ---- Shadows — lighter diffusion for bright backgrounds -------- */
+  --shadow-elev1: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-elev2: 0 2px 6px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-elev3: 0 6px 16px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-float: 0 12px 36px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.07);
 
-  --brand-red: #e5484d;
-  --brand-red-hover: #cc4046;
-  --dim: #9b9a97;
-  --red: #e5484d;
-  --red2: #cc4046;
-  --redbg: rgba(229, 72, 77, 0.08);
-  --grn: #00896b;
-  --amb: #bf5a2e;
-  --blu: #2383e2;
-  --bg2: #e8e7e4;
-  --border2: rgba(55, 53, 47, 0.16);
-  --card2: #f1f0ee;
+  --shadow: var(--shadow-elev1);
+  --shadow-xs: var(--shadow-elev1);
+  --shadow-sm: var(--shadow-elev1);
+  --shadow-md: var(--shadow-elev2);
+  --shadow-lg: var(--shadow-elev3);
+  --shadow-xl: var(--shadow-float);
+
+  /* ---- Chart palette (darker for light ground) ------------------- */
+  --chart-1: hsl(4 78% 52%);
+  --chart-2: hsl(155 50% 38%);
+  --chart-3: hsl(38 80% 46%);
+  --chart-4: hsl(210 65% 44%);
+  --chart-5: hsl(270 50% 52%);
+
+  /* ---- Sidebar --------------------------------------------------- */
+  --sidebar: hsl(40 10% 97%);
+  --sidebar-foreground: hsl(220 12% 18%);
+  --sidebar-primary: hsl(4 78% 52%);
+  --sidebar-primary-foreground: hsl(0 0% 100%);
+  --sidebar-accent: hsla(4 78% 52% 10%);
+  --sidebar-accent-foreground: hsl(4 72% 46%);
+  --sidebar-border: hsla(220 10% 20% 11%);
+  --sidebar-ring: hsla(4 78% 52% 45%);
+
+  /* ---- Semantic status colors ------------------------------------ */
+  --cr-success: hsl(155 50% 38%);
+  --cr-warning: hsl(38 80% 46%);
+  --cr-info: hsl(210 65% 44%);
+
+  --brand-red: hsl(4 74% 48%);
+  --brand-red-hover: hsl(4 70% 54%);
+  --dim: hsl(220 6% 48%);
+  --red: hsl(4 74% 48%);
+  --red2: hsl(4 70% 44%);
+  --redbg: hsla(4 74% 48% 9%);
+  --grn: hsl(155 50% 38%);
+  --amb: hsl(38 80% 46%);
+  --blu: hsl(210 65% 44%);
+  --bg2: hsl(40 8% 94%);
+  --border2: hsla(220 10% 20% 20%);
+  --card2: hsl(40 8% 94%);
 }
 
-/* ------------------------------------------------------------------ */
+/* =================================================================== */
 /* Animation keyframes                                                 */
-/* ------------------------------------------------------------------ */
-/* Swiss motion philosophy: only informational transitions allowed. */
-/* Strict fade-only — no translate/slide per Swiss minimal-motion rules. */
+/* =================================================================== */
+/* AgentSkin motion rules:                                            */
+/*   · Fade for non-spatial transitions (open/close, appear/disappear)*/
+/*   · Slide for spatial movement (panel expand/collapse, drawer)     */
+/*   · No bounce, no overshoot beyond cubic-bezier(0.16, 1, 0.3, 1)  */
+/*   · Max duration 300ms unless complex layout shift                 */
+/* =================================================================== */
+
 @keyframes agentskin-page-enter {
   from {
     opacity: 0;
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
 @keyframes agentskin-card-enter {
   from {
     opacity: 0;
+    transform: translateY(-2px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shadow-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
   }
 }
 
 @theme {
-  --animate-page-enter: agentskin-page-enter 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-card-enter: agentskin-card-enter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-shadow-float: shadow-float;
-  --radius-micro: var(--radius-sm);
-  --radius-soft: calc(var(--radius) * 1.3);
+  --animate-page-enter: agentskin-page-enter 280ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-card-enter: agentskin-card-enter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-shadow-float: shadow-float 4s ease-in-out infinite;
+
+  --radius-micro: calc(var(--radius-base) * 0.6);
+  --radius-soft: calc(var(--radius-base) * 1.3);
   --radius-pill: 9999px;
 }
 
 @theme inline {
+  /* ---- Font family mappings ---- */
   --font-heading: var(--font-ui);
   --font-sans: var(--font-ui);
   --font-display: var(--font-display);
   --font-mono: var(--font-mono);
+
+  /* ---- Color remapping ---- */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -293,6 +354,8 @@
   --color-success: var(--cr-success);
   --color-warning: var(--cr-warning);
   --color-info: var(--cr-info);
+
+  /* ---- Typography scale ---- */
   --font-size-micro: 10px;
   --font-size-label: 11.5px;
   --font-size-body: 13px;
@@ -307,24 +370,31 @@
   --tracking-tight: -0.02em;
   --tracking-mid: 0.05em;
   --tracking-wide: 0.14em;
+
+  /* ---- Duration scale ---- */
   --duration-instant: 0ms;
-  --duration-fast: 150ms;
-  --duration-base: 200ms;
-  --duration-slow: 300ms;
-  --duration-slower: 500ms;
-  --radius-sm: calc(var(--radius) * 0.7);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) * 1.5);
-  --radius-xl: calc(var(--radius) * 2);
-  --radius-2xl: calc(var(--radius) * 3);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 260ms;
+  --duration-slower: 400ms;
+
+  /* ---- Radius derived scale (from --radius-base: 3px) ---- */
+  --radius-sm: calc(var(--radius-base) * 0.6);
+  --radius-md: var(--radius-base);
+  --radius-lg: calc(var(--radius-base) * 1.5);
+  --radius-xl: calc(var(--radius-base) * 2.5);
+  --radius-2xl: calc(var(--radius-base) * 4);
 }
 
+/* =================================================================== */
+/* Base Reset                                                           */
+/* =================================================================== */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
 
-  /* Accessibility — reduced motion (placed here for specificity ordering) */
+  /* Accessibility — reduced motion */
   @media (prefers-reduced-motion: reduce) {
     html {
       scroll-behavior: auto;
@@ -332,15 +402,15 @@
     *,
     *::before,
     *::after {
-      transition-duration: 0.01ms;
-      animation-duration: 0.01ms;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
     }
   }
   body.no-anim *,
   body.no-anim *::before,
   body.no-anim *::after {
-    transition: none;
-    animation: none;
+    transition: none !important;
+    animation: none !important;
   }
 
   html {
@@ -361,65 +431,67 @@
     @apply overflow-hidden bg-background text-foreground;
   }
   ::selection {
-    @apply bg-primary text-primary-foreground;
-  }
-
-  /* Custom scrollbar — Notion thin rounded */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-  *:hover {
-    scrollbar-color: var(--border-strong) transparent;
-  }
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 999px;
-    border: 3px solid transparent;
-    background-clip: content-box;
-    transition: background-color 0.2s;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--border-strong);
-  }
-  ::-webkit-scrollbar-thumb:active {
-    background: var(--border-strong);
-  }
-  ::-webkit-scrollbar-corner {
-    background: transparent;
+    @apply bg-primary/20 text-primary-foreground;
   }
 }
 
+/* =================================================================== */
+/* Global Scrollbar — AgentSkin refined                                 */
+/* Thin track, rounded thumb, transparent until hover                  */
+/* =================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+*:hover {
+  scrollbar-color: var(--border-strong) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-pill);
+  transition: background-color 0.15s;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* =================================================================== */
+/* Typography Utility Classes                                           */
+/* =================================================================== */
 @layer utilities {
-  /* Notion typography helper classes */
-  .note-label {
+  .as-label {
     font-weight: 500;
     font-size: 11px;
     letter-spacing: 0.02em;
     color: var(--muted-foreground);
   }
-  .note-micro {
-    font: 400 11px var(--font-ui);
+
+  .as-micro {
+    font: 400 10px var(--font-ui);
     letter-spacing: 0.01em;
     line-height: 1.5;
     color: var(--muted-foreground);
   }
-  .note-mono {
+
+  .as-mono {
     font-family: var(--font-mono);
     font-weight: 400;
     font-size: 11px;
     color: var(--muted-foreground);
   }
 
-  /* Notion key-value row */
-  .note-kv {
+  /* Key-value row */
+  .as-kv {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -428,59 +500,54 @@
     border-bottom: 1px solid var(--border);
     font-size: 13px;
   }
-  .note-kv-key {
+  .as-kv-key {
     font-size: 12px;
-    color: var(--dim);
+    color: var(--muted-foreground);
   }
-  .note-kv-val {
+  .as-kv-val {
     font-weight: 500;
     color: var(--foreground);
   }
 
-  /* Notion Big Number — hero stat */
-  .note-big-num {
+  /* Hero number display */
+  .as-big-num {
     font-family: var(--font-display);
-    font-size: 44px;
+    font-size: 48px;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     line-height: 1;
     color: var(--foreground);
     font-variant-numeric: tabular-nums;
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Additional element styles & utility classes                          */
-/* ------------------------------------------------------------------ */
-
-/* --- html / body full height (frame foundation) --- */
+/* =================================================================== */
+/* Layout Foundations                                                   */
+/* =================================================================== */
 html,
 body {
   height: 100%;
 }
 
-/* React root must participate in the height chain: `main` uses h-full
-   (height:100%) and the page grid-rows rely on it. Without this, #root
-   collapses to content height, main is as tall as its content, and the
-   fixed 38px/1fr/28px grid rows get pushed past the window edge (clipped
-   by overflow-hidden → black bands / inconsistent panel sizes). */
 #root {
   height: 100%;
 }
 
-/* --- Input focus ring (Swiss: border-only, no glow) --- */
+/* Input focus — clean border highlight, no glow halo */
 input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):focus,
 textarea:focus,
 select:focus {
   border-color: var(--primary);
 }
 
-/* --- Range slider — WebKit --- */
+/* =================================================================== */
+/* Range Slider                                                         */
+/* =================================================================== */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--border-strong);
   outline: none;
   cursor: pointer;
@@ -489,50 +556,52 @@ input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 14px;
   height: 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--foreground);
   border: 2px solid var(--card);
   cursor: pointer;
-  transition: background-color 0.15s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.12s;
 }
-
-/* --- Range slider — Firefox --- */
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
 input[type="range"]::-moz-range-track {
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--border-strong);
 }
 input[type="range"]::-moz-range-thumb {
   width: 14px;
   height: 14px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--foreground);
   border: 2px solid var(--card);
   cursor: pointer;
 }
 
-/* --- 12-column grid (Swiss-style layout grid) --- */
+/* =================================================================== */
+/* Grid System                                                          */
+/* =================================================================== */
 .g12 {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: 16px;
 }
 
-/* --- Toggle switch — Notion pill style --- */
+/* =================================================================== */
+/* Toggle Switch                                                        */
+/* =================================================================== */
 .sw {
   width: 36px;
   height: 20px;
-  border-radius: 999px;
-  background: #dddcd8;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
   position: relative;
   cursor: pointer;
   transition: background-color 0.18s ease;
   flex: none;
   border: none;
-}
-.dark .sw {
-  background: #3d3d3e;
 }
 .sw::after {
   content: "";
@@ -540,23 +609,23 @@ input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--card);
   top: 2px;
   left: 2px;
   transition: left 0.18s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 .sw.on {
-  background: #2383e2;
-}
-.dark .sw.on {
-  background: #529dd6;
+  background: var(--primary);
 }
 .sw.on::after {
   left: 18px;
+  background: var(--primary-foreground);
 }
 
-/* --- Tag badge — Notion chip style --- */
+/* =================================================================== */
+/* Tag Badge                                                            */
+/* =================================================================== */
 .tag {
   display: inline-flex;
   align-items: center;
@@ -564,21 +633,20 @@ input[type="range"]::-moz-range-thumb {
   font: 500 11px var(--font-ui);
   letter-spacing: 0.01em;
   padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.04);
-  color: var(--muted-foreground);
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-foreground);
   white-space: nowrap;
   border: 1px solid var(--border);
 }
-.dark .tag {
-  background: rgba(255, 255, 255, 0.06);
-}
 
-/* --- Status box — Notion icon-box style --- */
-.ring {
+/* =================================================================== */
+/* Status Ring                                                          */
+/* =================================================================== */
+.ring-box {
   width: 38px;
   height: 38px;
-  border-radius: 6px;
+  border-radius: var(--radius-lg);
   display: grid;
   place-items: center;
   font: 700 14px var(--font-display);
@@ -587,7 +655,7 @@ input[type="range"]::-moz-range-thumb {
   flex: none;
   background: var(--card);
 }
-.ring.st-active {
+.ring-box.st-active {
   border-color: var(--primary);
   color: var(--primary);
 }

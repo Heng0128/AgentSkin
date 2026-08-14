@@ -59,24 +59,24 @@ export function InjectDock({ controller }: { controller: AppController }) {
     <div
       className={cn(
         'fixed bottom-11 left-1/2 z-[90] -translate-x-1/2',
-        'flex items-center gap-2.5 rounded-[2px] border border-border bg-[var(--pop)] px-3.5 py-2 shadow-float backdrop-blur-none',
+        'flex items-center gap-2 rounded-md  bg-[var(--pop)] px-4 py-2 shadow-float backdrop-blur-none',
         'transition-[opacity,filter] duration-300',
         dimmed && 'opacity-40 saturate-[0.6]',
       )}
       role="dialog"
       aria-label={t.injectDockTitle}
     >
-      <span className="font-mono text-[11px] font-semibold tracking-wide text-foreground">
+      <span className="font-mono text-[11px] font-semibold  text-foreground">
         ⏏ {t.injectDockTitle}
       </span>
-      <span className="font-mono text-[10px] text-muted-foreground">{label}</span>
+      <span className="text-[11px] text-muted-foreground">{label}</span>
       <button
         type="button"
         onClick={() => {
           void restoreAll();
           setInjectDockOpen(false);
         }}
-        className="rounded-[2px] border border-border-strong bg-card2 px-2.5 py-1 font-mono text-[10px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+        className="rounded-md  bg-card2 px-2 py-1 font-mono text-[10px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
       >
         ↺ {t.restoreAllAction}
       </button>
@@ -84,7 +84,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
         type="button"
         onClick={() => setInjectDockOpen(false)}
         aria-label={t.close}
-        className="flex size-5 items-center justify-center rounded-[2px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         ✕
       </button>

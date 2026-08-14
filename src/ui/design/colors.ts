@@ -34,7 +34,7 @@ export const semanticColors = {
 } as const;
 
 /** Static brand palette — used where CSS variables don't reach (canvas, charts).
- *  Swiss rule: only brand red + semantic aliases. No violet/amber/rainbow. */
+ *  AgentSkin brand rule: only brand red + semantic aliases. No violet/amber/rainbow. */
 export const brandColors = {
   amber: 'var(--cr-warning)',
   success: 'var(--cr-success)',

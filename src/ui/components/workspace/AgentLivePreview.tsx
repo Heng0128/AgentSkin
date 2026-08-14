@@ -60,8 +60,8 @@ export function AgentLivePreview({
 
   if (loading) {
     return (
-      <div className="flex h-[280px] items-center justify-center border border-border rounded-[2px] bg-card">
-        <span className="font-mono text-[11px] text-muted-foreground uppercase tracking-tight">
+      <div className="flex h-[280px] items-center justify-center  rounded-md bg-card">
+        <span className="font-mono text-[11px] text-muted-foreground">
           {t.workspacePreviewLoading}
         </span>
       </div>
@@ -69,7 +69,7 @@ export function AgentLivePreview({
   }
 
   return (
-    <div className="overflow-hidden rounded-[2px] border border-border">
+    <div className="overflow-hidden rounded-md ">
       <RealDomPreview domTree={domTree} overrides={overrides} t={t} />
     </div>
   );

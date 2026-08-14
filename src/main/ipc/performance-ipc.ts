@@ -56,9 +56,8 @@ export function registerPerformanceIpc(): void {
 
   ipcMain.handle(IpcChannel.PERFORMANCE_GET_MEMORY, (_event, count: unknown): MemorySample[] => {
     const all = performanceLogger.getMemorySamples();
-    const n = clampCount(count, all.length);
-    // clampCount floors at 1; 0 / negatives mean "return all" for this channel.
-    if (n >= all.length || n <= 0) return all;
-    return all.slice(-n);
+    // This channel floors at 0 (not 1): count <= 0 or non-numeric means "all".
+    if (typeof count !== 'number' || !Number.isFinite(count) || count <= 0) return all;
+    return all.slice(-Math.min(count, all.length));
   });
 }

@@ -28,7 +28,7 @@ import { useStudioStore } from '@/stores/studioStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
-import { Maximize2, Minus, X } from 'lucide-react';
+import { Maximize, Minimize2, Minus, X } from 'lucide-react';
 
 export function StudioTitleBar() {
   const locale = useShellStore((s) => s.locale);
@@ -44,11 +44,11 @@ export function StudioTitleBar() {
   }, []);
 
   /**
-   * Swiss-style icon button — transparent default, ghost background on hover.
+   * style icon button — transparent default, ghost background on hover.
    * 24×24 px for the compact 32 px bar (vs 27×27 in the main TitleBar).
    */
   const studioBtn =
-    'flex h-6 w-6 items-center justify-center rounded-[2px] border border-transparent text-muted-foreground transition-[background-color,border-color,color] duration-150 hover:border-border hover:bg-card2 hover:text-foreground';
+    'flex h-6 w-6 items-center justify-center rounded-[2px] border border-transparent text-muted-foreground transition-[background-color,border-color,color] duration-150 hover:bg-card2 hover:text-foreground';
 
   const projectName = activeProject?.name;
 
@@ -56,7 +56,7 @@ export function StudioTitleBar() {
     <header
       className={cn(
         'relative flex h-8 shrink-0 items-center justify-between gap-2 px-3',
-        'border-b border-border bg-[var(--surface)]',
+        ' bg-[var(--surface)]',
         // The entire bar is a drag region; interactive controls opt out below.
         '[-webkit-app-region:drag]',
       )}
@@ -64,9 +64,7 @@ export function StudioTitleBar() {
       {/* Left: brand + active project */}
       <div className="pointer-events-none flex items-center gap-2">
         <span className="font-display text-sm font-bold text-[var(--primary)]">✦</span>
-        <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-foreground">
-          Studio
-        </span>
+        <span className="font-mono text-[11px] font-semibold   text-foreground">Studio</span>
         {projectName && (
           <>
             <span className="text-[var(--muted-foreground)]">/</span>
@@ -81,7 +79,7 @@ export function StudioTitleBar() {
       <div className="flex-1" />
 
       {/* Right: window controls (no-drag region) */}
-      <div className="flex items-center gap-0.5 [-webkit-app-region:no-drag]">
+      <div className="flex items-center gap-0 [-webkit-app-region:no-drag]">
         <button
           type="button"
           title={t.titlebarMinimize}
@@ -98,7 +96,7 @@ export function StudioTitleBar() {
           onClick={() => void api.windowToggleMaximize()}
           className={studioBtn}
         >
-          <Maximize2 className="size-3" />
+          {maximized ? <Minimize2 className="size-3" /> : <Maximize className="size-3" />}
         </button>
         <button
           type="button"

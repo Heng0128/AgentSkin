@@ -5,7 +5,7 @@
  *
  * Right inspector "Fingerprint" tab — 8-dimension signature cards
  * derived from the snapshot: color, shape, type, motion, filter,
- * effects. Rendered as Swiss detail groups with tabular-nums values.
+ * effects. Rendered as detail groups with tabular-nums values.
  */
 
 import { computeSignature, fingerprintFromSnapshot } from '@/components/studio/Toolbox';
@@ -39,11 +39,11 @@ export function InspectorFingerprint({ t }: { t: UiMessages }) {
       >
         <div className="mb-1 flex items-center gap-[var(--space-1)]">
           <span className="size-[3px] rounded-full bg-[var(--accent)]" />
-          <span className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-[var(--fg-2)]">
+          <span className="font-mono text-[10px] font-semibold   text-[var(--fg-2)]">
             {t.studioDimensions}
           </span>
           <span
-            className="ml-auto rounded-[var(--r-micro)] px-1 py-0.5 font-mono text-[9px] font-bold"
+            className="ml-auto rounded-[var(--r-micro)] px-1 py-0 font-mono text-[10px] font-bold"
             style={{ background: modeBg, color: modeFg }}
           >
             {sig.color.mode.toUpperCase()}
@@ -61,7 +61,7 @@ export function InspectorFingerprint({ t }: { t: UiMessages }) {
         <DimRow k="fg" v={sig.color.rootColor ?? '—'} />
         <DimRow k="mode" v={sig.color.mode} />
         {sig.color.backgrounds.length > 0 && (
-          <div className="flex flex-wrap gap-[2px] mt-[var(--space-1)]">
+          <div className="flex flex-wrap gap-0 mt-[var(--space-1)]">
             {[...new Set(sig.color.backgrounds)].map((c) => (
               <span
                 key={c}

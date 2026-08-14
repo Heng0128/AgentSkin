@@ -125,8 +125,8 @@ export function AgentStatusBar({
 
   return (
     <div className="mt-4">
-      <div className="mb-2 flex items-center gap-1.5">
-        <h2 className="text-xs font-semibold tracking-tight text-muted-foreground uppercase">
+      <div className="mb-2 flex items-center gap-1">
+        <h2 className="text-xs font-semibold tracking-tight text-muted-foreground">
           {t.workspaceAgentStrip}
         </h2>
         <span className="inline-flex size-4 items-center justify-center rounded-md bg-secondary text-[11px] font-semibold text-muted-foreground">
@@ -151,7 +151,7 @@ export function AgentStatusBar({
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
         {environments.map((env) => {
           const agentProgress = progress?.get(env.agent.id) ?? null;
           const hasLivePhase = agentProgress && isPhaseActive(agentProgress.phase);
@@ -198,9 +198,9 @@ export function AgentStatusBar({
               type="button"
               onClick={() => onSelectAgent?.(env)}
               className={cn(
-                'group/pill relative flex items-center gap-2 overflow-hidden rounded-[2px] border bg-card p-2 text-left',
+                'group/pill relative flex items-center gap-2 overflow-hidden rounded-md border bg-card p-2 text-left',
                 'transition-[border-color] duration-base ease-out',
-                'hover:border-border/80',
+                '',
                 hasLivePhase && 'border-cr-warning/30',
                 isFailed && 'border-destructive/30',
                 isActive && !hasLivePhase && 'border-cr-success/30',

@@ -7,7 +7,7 @@
  * Subscribes to `analysisProgress` from studioStore (pushed by main process
  * via `visual-analysis:status` IPC) and renders a step timeline + progress bar.
  *
- * Empty state when no analysis is running. Swiss/International design:
+ * Empty state when no analysis is running. International design:
  * mono font, tabular-nums, 10px sizing, single accent color.
  */
 
@@ -57,10 +57,10 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
       >
         <div className="flex items-center gap-[var(--space-1)]">
           <AppMark appId={agent as never} size={10} />
-          <span className="font-mono text-[9.5px] font-semibold uppercase tracking-wider text-[var(--fg-2)]">
+          <span className="font-mono text-[10px] font-semibold   text-[var(--fg-2)]">
             {agentMeta?.displayName ?? agent}
           </span>
-          <span className="ml-auto rounded-[var(--r-micro)] bg-[var(--accent)] px-1 py-0.5 font-mono text-[9px] font-bold text-white">
+          <span className="ml-auto rounded-[var(--r-micro)] bg-[var(--accent)] px-1 py-0 font-mono text-[10px] font-bold text-white">
             {step}
           </span>
         </div>
@@ -69,9 +69,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
       {/* Progress bar */}
       <div>
         <div className="mb-1 flex items-baseline justify-between">
-          <span className="font-mono text-[9.5px] uppercase tracking-wider text-[var(--fg-2)]">
-            Progress
-          </span>
+          <span className="font-mono text-[10px]   text-[var(--fg-2)]">Progress</span>
           <span className="font-mono text-[10px] font-bold tabular-nums text-[var(--fg-1)]">
             {progress}%
           </span>
@@ -116,7 +114,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
                 {s.label}
               </span>
               {isCurrent && (
-                <span className="ml-auto font-mono text-[9px] tabular-nums text-[var(--fg-3)]">
+                <span className="ml-auto font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
                   active
                 </span>
               )}

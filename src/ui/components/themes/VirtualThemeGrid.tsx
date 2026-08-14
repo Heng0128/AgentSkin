@@ -37,8 +37,8 @@ import type { ThemeCenterCardModel } from '@/types/theme-center';
 import type { AgentId } from '@shared/types';
 import { ThemeCard } from './ThemeCard';
 
-const GAP = 10; // Swiss: tighter grid gap
-const INFO_BUDGET = 80; // px reserved for the card info section (fixed, tighter Swiss card)
+const GAP = 10; // tighter grid gap
+const INFO_BUDGET = 80; // px reserved for the card info section (fixed, tighter card)
 const OVERSCAN = 2; // extra rows rendered above/below the viewport
 
 export interface VirtualThemeGridProps {

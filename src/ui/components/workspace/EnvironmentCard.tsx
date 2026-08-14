@@ -31,7 +31,7 @@ import { AgentStatusDot, envToDotVariant } from './AgentStatusDot';
  *   - Dropdown menu (…) for rename/duplicate/delete
  */
 
-/** Status → accent ring mapping (Swiss: minimal ring, no colored glow) */
+/** Status → accent ring mapping (minimal ring, no colored glow) */
 const statusAccent: Record<EnvironmentModel['status'], { ring: string }> = {
   active: {
     ring: '',
@@ -116,19 +116,17 @@ export function EnvironmentCard({
   const statusLabel = (() => {
     switch (env.status) {
       case 'active':
-        return <b className="text-[10.5px] font-semibold text-cr-success">{t.envStatusActive}</b>;
+        return <b className="text-[10px] font-semibold text-cr-success">{t.envStatusActive}</b>;
       case 'available':
         return (
-          <b className="text-[10.5px] font-semibold text-muted-foreground">
-            {t.envStatusAvailable}
-          </b>
+          <b className="text-[10px] font-semibold text-muted-foreground">{t.envStatusAvailable}</b>
         );
       case 'offline':
         return (
-          <b className="text-[10.5px] font-semibold text-muted-foreground">{t.envStatusOffline}</b>
+          <b className="text-[10px] font-semibold text-muted-foreground">{t.envStatusOffline}</b>
         );
       case 'detecting':
-        return <b className="text-[10.5px] font-semibold text-cr-warning">{t.statusDetecting}</b>;
+        return <b className="text-[10px] font-semibold text-cr-warning">{t.statusDetecting}</b>;
     }
   })();
 
@@ -137,10 +135,10 @@ export function EnvironmentCard({
     // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-label is conditionally set only when role="button" is active (i.e., when onClick is present).
     <div
       className={cn(
-        'group/card relative flex flex-col overflow-hidden rounded-[2px] border border-border bg-card text-card-foreground',
+        'group/card relative flex flex-col overflow-hidden rounded-md  bg-card text-card-foreground',
         'transition-[background-color,border-color,box-shadow] duration-base ease-out',
-        'hover:border-border-strong',
-        isActive ? 'border-2 border-primary' : 'border border-border',
+        '',
+        isActive ? 'border-2 border-primary' : '',
         onClick && 'cursor-pointer',
       )}
       onClick={onClick}
@@ -158,7 +156,7 @@ export function EnvironmentCard({
       }
       aria-label={onClick ? env.name : undefined}
     >
-      {/* === Top accent edge line (Swiss) === */}
+      {/* === Top accent edge line  === */}
       <div
         className={cn(
           'absolute top-0 left-0 h-[2px] w-full transition-all duration-slow',
@@ -175,7 +173,7 @@ export function EnvironmentCard({
       {/* === Card content === */}
       <div className="relative z-10 flex flex-1 flex-col p-4">
         {/* Top row: icon + title + menu */}
-        <div className="flex items-start gap-2.5">
+        <div className="flex items-start gap-2">
           {/* Agent icon — shadcn Avatar (image + fallback) */}
           <Avatar
             size="default"
@@ -189,17 +187,17 @@ export function EnvironmentCard({
               alt={env.agent.displayName}
               className="object-contain"
             />
-            <AvatarFallback className="bg-card2 rounded-[2px] text-[13px] font-semibold text-muted-foreground">
+            <AvatarFallback className="bg-card2 rounded-md text-[13px] font-semibold text-muted-foreground">
               {(env.agent.displayName || env.agent.id).charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
 
           {/* Name + info */}
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               <p className="truncate font-display text-sm font-bold">{env.name}</p>
               {isActive && (
-                <span className="shrink-0 rounded-[2px] bg-cr-success/15 px-1.5 py-px text-[10px] font-semibold text-cr-success">
+                <span className="shrink-0 rounded-md bg-cr-success/15 px-1 py-0 text-[10px] font-semibold text-cr-success">
                   {t.activeBadge}
                 </span>
               )}
@@ -222,7 +220,7 @@ export function EnvironmentCard({
                     <Button variant="ghost" size="icon-sm" aria-label={t.environmentDelete} />
                   }
                 >
-                  <MoreVertical className="size-3.5 text-muted-foreground" />
+                  <MoreVertical className="size-4 text-muted-foreground" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-32">
                   {onRename && env.presetId && (
@@ -256,10 +254,10 @@ export function EnvironmentCard({
         </div>
 
         {/* Meta grid: version / status / theme */}
-        <div className="mt-2.5 font-mono">
-          <div className="grid grid-cols-3 gap-1.5 rounded-[2px] bg-secondary px-2.5 py-2">
+        <div className="mt-2 font-mono">
+          <div className="grid grid-cols-3 gap-1 rounded-md bg-secondary px-2 py-2">
             <div>
-              <i className="mb-0.5 block text-[10px] font-mono opacity-70 uppercase tracking-[0.1em] not-italic">
+              <i className="mb-0.5 block text-[10px] font-mono opacity-70 not-italic">
                 {t.detailVersion}
               </i>
               <b className="block text-[11.5px] font-semibold tabular-nums text-foreground/80">
@@ -267,13 +265,13 @@ export function EnvironmentCard({
               </b>
             </div>
             <div>
-              <i className="mb-0.5 block text-[10px] font-mono opacity-70 uppercase tracking-[0.1em] not-italic">
+              <i className="mb-0.5 block text-[10px] font-mono opacity-70 not-italic">
                 {t.agentDetailStatus}
               </i>
               {statusLabel}
             </div>
             <div>
-              <i className="mb-0.5 block text-[10px] font-mono opacity-70 uppercase tracking-[0.1em] not-italic">
+              <i className="mb-0.5 block text-[10px] font-mono opacity-70 not-italic">
                 {t.capTheme}
               </i>
               <b className="block truncate text-[11.5px] tabular-nums text-foreground/80">
@@ -291,8 +289,8 @@ export function EnvironmentCard({
           </div>
         )}
 
-        {/* Bottom: status row (Swiss label) */}
-        <div className="mt-2.5 flex items-center gap-2 border-t border-dashed border-border/60 pt-2">
+        {/* Bottom: status row (label) */}
+        <div className="mt-2 flex items-center gap-2  pt-2">
           <AgentStatusDot
             size="xs"
             variant={
@@ -309,7 +307,7 @@ export function EnvironmentCard({
                     : envToDotVariant(env)
             }
           />
-          <span className="font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <span className="text-[11px] font-medium   text-muted-foreground">
             {progress ? phaseLabel(progress.phase, t) : statusLabel}
           </span>
           {progress && isPhaseActive(progress.phase) ? (
@@ -333,9 +331,9 @@ export function EnvironmentCard({
         </div>
         {progress && isPhaseActive(progress.phase) && (
           <div className="px-3 pb-2">
-            <div className="h-0.5 w-full overflow-hidden rounded-[2px] bg-muted">
+            <div className="h-0.5 w-full overflow-hidden rounded-md bg-muted">
               <div
-                className="h-full rounded-[2px] bg-primary transition-all duration-slow"
+                className="h-full rounded-md bg-primary transition-all duration-slow"
                 style={{ width: `${progress.progress}%` }}
               />
             </div>

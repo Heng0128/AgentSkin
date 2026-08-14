@@ -209,7 +209,11 @@ function createPerformanceLogger(): PerformanceLoggerApi {
       timeouts = [];
       timeoutSeq = 0;
       memSamples = [];
-      stopMemorySampler(); // halt the interval timer to prevent post-clear leaks
+      // Halt the memory sampler timer to prevent post-clear interval leaks.
+      if (memoryTimer !== undefined) {
+        clearInterval(memoryTimer);
+        memoryTimer = undefined;
+      }
     },
     logTimeout(event: Omit<IpcTimeoutEvent, 'id'>): void {
       timeoutSeq += 1;

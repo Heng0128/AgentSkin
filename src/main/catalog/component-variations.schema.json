@@ -54,9 +54,9 @@
         "--transition-base": { "type": "string", "description": "基础过渡" },
         "--letter-spacing-display": {
           "type": "string",
-          "description": "标题字距（Swiss: -0.01em）"
+          "description": "标题字距（紧凑标题，如 -0.01em）"
         },
-        "--tracking-wide": { "type": "string", "description": "宽字距（Swiss uppercase 装饰用）" }
+        "--tracking-wide": { "type": "string", "description": "宽字距（装饰性标签用）" }
       },
       "additionalProperties": {
         "type": "string",

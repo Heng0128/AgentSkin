@@ -83,7 +83,6 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
   color: var(--fg-0);
 }
 
@@ -135,10 +134,8 @@
   cursor: pointer;
   user-select: none;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--fg-1);
   transition: background var(--dur-fast);
 }
@@ -316,7 +313,7 @@
 .pw[data-active="true"] {
   border-color: var(--accent);
   box-shadow:
-    0 0 0 1px rgba(255, 69, 58, 0.15),
+    0 0 0 1px color-mix(in srgb, var(--primary) 15%, transparent),
     0 4px 16px rgba(0, 0, 0, 0.25);
 }
 
@@ -361,7 +358,7 @@
   background: transparent;
   color: var(--fg-2);
   cursor: pointer;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .pw__icon-btn:hover {
@@ -392,7 +389,7 @@
   background: var(--bg-1);
   border-top: 1px solid var(--border-subtle);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   color: var(--fg-2);
   flex-shrink: 0;
 }
@@ -414,7 +411,7 @@
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-2);
-  background: rgba(24, 24, 28, 0.85);
+  background: color-mix(in srgb, var(--bg-2) 85%, transparent);
   backdrop-filter: blur(8px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-lg);
@@ -458,7 +455,6 @@
   font-size: 10px;
   font-weight: 600;
   color: var(--accent);
-  letter-spacing: 0.04em;
 }
 
 .ws-inspector__tabs {
@@ -474,10 +470,8 @@
   border: none;
   background: transparent;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--fg-2);
   cursor: pointer;
   position: relative;
@@ -524,14 +518,14 @@
 .ws-landmark-chip .lm-dot {
   width: 7px;
   height: 7px;
-  border-radius: 1px;
+  border-radius: var(--radius-sm);
   flex-shrink: 0;
 }
 
 .ws-landmark-chip .lm-sel {
   flex: 1;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -540,7 +534,7 @@
 
 .ws-landmark-chip .lm-dim {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   color: var(--fg-3);
 }
 
@@ -552,7 +546,7 @@
   gap: var(--space-1);
   padding: 2px var(--space-1);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .ws-style-row .prop {
@@ -584,10 +578,8 @@
 
 .ws-dim-card__title {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
   color: var(--fg-2);
   opacity: 0.7;
   margin-bottom: var(--space-1);
@@ -597,7 +589,7 @@
   display: flex;
   justify-content: space-between;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   padding: 1px 0;
 }
 
@@ -667,7 +659,7 @@
   width: 32px;
   height: 3px;
   background: var(--border-strong);
-  border-radius: 2px;
+  border-radius: var(--radius-base);
 }
 
 .ws-dock__drag-handle:hover::after {
@@ -690,10 +682,8 @@
   border: none;
   background: transparent;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--fg-2);
   cursor: pointer;
   position: relative;
@@ -743,10 +733,8 @@
   justify-content: space-between;
   align-items: center;
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .ws-dock-card__label .name {
@@ -769,7 +757,7 @@
   right: 0;
   height: 3px;
   background: var(--border-default);
-  border-radius: 2px;
+  border-radius: var(--radius-base);
 }
 
 .ws-dock-card__slider-fill {
@@ -777,14 +765,14 @@
   left: 0;
   height: 3px;
   background: var(--accent);
-  border-radius: 1px;
+  border-radius: var(--radius-sm);
 }
 
 .ws-dock-card__slider-thumb {
   position: absolute;
   width: 11px;
   height: 11px;
-  border-radius: 2px;
+  border-radius: var(--radius-base);
   border: 2px solid var(--accent);
   background: var(--bg-2);
   transform: translateX(-50%);
@@ -798,7 +786,7 @@
 
 .ws-dock-card__reset {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   color: var(--fg-2);
   background: none;
   border: none;
@@ -872,10 +860,8 @@
 
 .ws-dock-card__toggle-row .lbl-name {
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--fg-1);
 }
 
@@ -883,7 +869,7 @@
   position: relative;
   width: 28px;
   height: 16px;
-  border-radius: 2px;
+  border-radius: var(--radius-base);
   background: var(--border-default);
   border: none;
   cursor: pointer;
@@ -901,7 +887,7 @@
   top: 2px;
   width: 12px;
   height: 12px;
-  border-radius: 1px;
+  border-radius: var(--radius-sm);
   background: var(--bg-2);
   transition: left var(--dur-fast);
 }
@@ -930,7 +916,6 @@
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--fg-2);
-  letter-spacing: 0.06em;
   z-index: var(--z-status);
 }
 
@@ -956,10 +941,8 @@
   align-items: center;
   gap: var(--space-1);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   color: var(--fg-1);
   opacity: 0.7;
 }
@@ -987,7 +970,6 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.04em;
   color: var(--fg-0);
   cursor: pointer;
   transition:
@@ -1017,7 +999,6 @@
   color: #fff;
   border-color: var(--accent);
   font-weight: 600;
-  letter-spacing: 0.06em;
 }
 
 .ws-btn--primary:hover {
@@ -1030,7 +1011,7 @@
 
 .ws-btn--sm {
   height: 24px;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 
 .ws-btn--ghost {
@@ -1080,14 +1061,13 @@
   padding: 0 4px;
   border-radius: var(--r-micro);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.05em;
 }
 
 .ws-badge--success {
   color: var(--cr-ok);
-  border: 1px solid rgba(46, 213, 115, 0.4);
+  border: 1px solid color-mix(in srgb, var(--cr-ok) 40%, transparent);
 }
 
 .ws-badge--idle {
@@ -1097,13 +1077,13 @@
 
 .ws-badge--warning {
   color: var(--cr-warn);
-  border: 1px solid rgba(255, 210, 64, 0.4);
+  border: 1px solid color-mix(in srgb, var(--cr-warn) 40%, transparent);
 }
 
 .ws-badge--red {
   color: var(--accent);
-  border: 1px solid rgba(255, 69, 58, 0.3);
-  background: rgba(255, 69, 58, 0.08);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
 }
 
 /* App mark */
@@ -1118,7 +1098,6 @@
   font-size: 7px;
   font-weight: 700;
   line-height: 1;
-  text-transform: uppercase;
 }
 
 /* Scrollbar */
@@ -1134,7 +1113,7 @@
 
 .ws-root ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
+  border-radius: var(--radius-base);
 }
 
 .ws-root ::-webkit-scrollbar-thumb:hover {
@@ -1181,7 +1160,6 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.04em;
   color: var(--fg-0);
 }
 
@@ -1241,8 +1219,6 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--fg-1);
 }
 
@@ -1321,7 +1297,6 @@
   background: var(--bg-3);
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.05em;
   cursor: pointer;
   transition: all var(--dur-fast);
 }
@@ -1370,8 +1345,6 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--fg-0);
 }
 
@@ -1412,8 +1385,8 @@
 }
 
 .ws-proposal-card[data-recommended="true"] {
-  border-color: rgba(255, 210, 64, 0.3);
-  background: rgba(255, 210, 64, 0.03);
+  border-color: color-mix(in srgb, var(--cr-warn) 30%, transparent);
+  background: color-mix(in srgb, var(--cr-warn) 3%, transparent);
 }
 
 .ws-proposal-card__top {
@@ -1455,7 +1428,7 @@
 .ws-proposal-card__strip > div {
   flex: 1;
   height: 28px;
-  border-radius: 1px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
   transition: flex var(--dur-mid);
 }
@@ -1532,7 +1505,7 @@
 
 .ws-swatch-item .si-label {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 10px;
   color: var(--fg-2);
   opacity: 0.6;
 }
@@ -1541,9 +1514,8 @@
   padding: 1px 4px;
   border-radius: var(--r-micro);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.05em;
   color: #000;
 }
 
@@ -1565,8 +1537,6 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
   color: var(--fg-2);
   cursor: pointer;
   position: relative;
@@ -1595,7 +1565,7 @@
 }
 
 /* -------------------------------------------------------------------
- * Live Tweak slider (native range input, SwissInternational styling)
+ * Live Tweak slider (native range input, native styling)
  * ------------------------------------------------------------------- */
 
 .ws-range {
@@ -1603,7 +1573,7 @@
   appearance: none;
   width: 100%;
   height: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-base);
   background: var(--border-default);
   outline: none;
   cursor: pointer;
@@ -1612,13 +1582,13 @@
 
 .ws-range::-webkit-slider-runnable-track {
   height: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-base);
   background: var(--border-default);
 }
 
 .ws-range::-moz-range-track {
   height: 3px;
-  border-radius: 2px;
+  border-radius: var(--radius-base);
   background: var(--border-default);
 }
 
@@ -1627,7 +1597,7 @@
   appearance: none;
   width: 11px;
   height: 11px;
-  border-radius: 2px;
+  border-radius: var(--radius-base);
   border: 2px solid var(--accent);
   background: var(--bg-2);
   margin-top: -4px;
@@ -1637,7 +1607,7 @@
 .ws-range::-moz-range-thumb {
   width: 11px;
   height: 11px;
-  border-radius: 2px;
+  border-radius: var(--radius-base);
   border: 2px solid var(--accent);
   background: var(--bg-2);
 }
@@ -1651,5 +1621,5 @@
 }
 
 .ws-range:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px rgba(255, 69, 58, 0.25);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
 }

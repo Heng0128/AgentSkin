@@ -67,17 +67,17 @@ export function StudioStatusBar() {
       {/* Fingerprint: bg / fg / accent color dots */}
       <span className="inline-flex items-center gap-[4px]">
         <span
-          className="inline-block size-[7px] rounded-[1px] border border-[var(--border-subtle)]"
+          className="inline-block size-[7px] rounded-[var(--radius-sm)] border border-[var(--border-subtle)]"
           style={{ background: colors.bg || 'transparent' }}
           title={colors.bg ? `bg: ${colors.bg}` : 'bg: n/a'}
         />
         <span
-          className="inline-block size-[7px] rounded-[1px] border border-[var(--border-subtle)]"
+          className="inline-block size-[7px] rounded-[var(--radius-sm)] border border-[var(--border-subtle)]"
           style={{ background: colors.fg || 'transparent' }}
           title={colors.fg ? `fg: ${colors.fg}` : 'fg: n/a'}
         />
         <span
-          className="inline-block size-[7px] rounded-[1px] border border-[var(--border-subtle)]"
+          className="inline-block size-[7px] rounded-[var(--radius-sm)] border border-[var(--border-subtle)]"
           style={{ background: colors.accent || 'transparent' }}
           title={colors.accent ? `accent: ${colors.accent}` : 'accent: n/a'}
         />

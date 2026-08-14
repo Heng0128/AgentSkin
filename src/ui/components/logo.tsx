@@ -5,12 +5,11 @@ import { cn } from '@/lib/utils';
 /**
  * # Logo
  *
- * AgentSkin brand mark — a white rounded square with a red "A" monogram
- * constructed from geometric shapes (triangle + serif + baseline bar).
- * Matches the reference design in A.html.
+ * AgentSkin brand mark — a rounded square with a monogram "A" constructed
+ * from geometric shapes (triangle + serif + baseline bar).
  *
  * Variants:
- *   - `color`: full brand mark — white bg, red "A", warm serif accent.
+ *   - `color`: full brand mark — theme background, theme primary "A".
  *   - `mono`: single color (currentColor) with layered opacity — the sidebar
  *     brand chip and other compact UI where the mark inherits text color.
  *
@@ -55,14 +54,24 @@ export function Logo({
 
   return (
     <svg viewBox="0 0 48 48" className={svgClass} role="img" aria-label={title} fill="none">
-      {/* White rounded-square background */}
-      <rect x="1" y="1" width="46" height="46" rx="2" fill="#FFFFFF" />
+      {/* Theme background */}
+      <rect x="1" y="1" width="46" height="46" rx="2" fill="var(--card)" />
+      <rect
+        x="1.3"
+        y="1.3"
+        width="45.4"
+        height="45.4"
+        rx="2"
+        stroke="var(--border-strong)"
+        strokeOpacity="0.5"
+        strokeWidth="0.6"
+      />
       {/* "A" triangle — the main body of the letter */}
-      <path d="M24 8.5L39.5 39.5h-7.6L24 22.4l-7.9 17.1H8.5Z" fill="#E30613" />
+      <path d="M24 8.5L39.5 39.5h-7.6L24 22.4l-7.9 17.1H8.5Z" fill="var(--primary)" />
       {/* Baseline bar — sits under the "A" crossbar area */}
-      <path d="M20 30.1h8l1.5 3.5H18.5Z" fill="#E30613" />
-      {/* Top serif accent — lighter warm red */}
-      <path d="M24 8.5L27 14.6 24 13.2 21 14.6Z" fill="#FF6B61" />
+      <path d="M20 30.1h8l1.5 3.5H18.5Z" fill="var(--primary)" />
+      {/* Top serif accent — lighter primary */}
+      <path d="M24 8.5L27 14.6 24 13.2 21 14.6Z" fill="var(--primary)" fillOpacity="0.6" />
     </svg>
   );
 }

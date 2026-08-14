@@ -25,6 +25,7 @@
  */
 
 import { api } from '@/api/agentSkinClient';
+import { dedupeByProductName } from '@/lib/app-dedupe';
 import { sha256Hex16 } from '@/lib/hash';
 
 import type { ElectronScanResult, LaunchResult, ScannedApp } from '@shared/types';
@@ -32,7 +33,7 @@ import { create } from 'zustand';
 
 /** Shape of the launcher-specific API surface (extends AgentSkinApi). */
 interface AppsApiExtension {
-  scanElectronApps(): Promise<ElectronScanResult>;
+  scanElectronApps(force?: boolean): Promise<ElectronScanResult>;
   launchElectronApp(request: {
     appId: string;
     exePath: string;
@@ -44,6 +45,7 @@ interface AppsApiExtension {
   onElectronStatus(
     listener: (status: Map<string, { pid: number; port: number | null }>) => void,
   ): () => void;
+  onElectronScanProgress(listener: (app: ScannedApp) => void): () => void;
 }
 
 /** Cast the shared `api` singleton to include the launcher-specific methods. */
@@ -66,6 +68,8 @@ interface AppsState {
   scanResult: ElectronScanResult | null;
   /** True while a scan IPC is in flight. */
   scanning: boolean;
+  /** Non-null when the last scan failed (drives the error banner + retry). */
+  scanError: string | null;
   /** AppIds currently being launched (IPC in flight). */
   launchingApps: Set<string>;
   /** Running apps: appId → { pid, port }. */
@@ -74,8 +78,9 @@ interface AppsState {
   hiddenApps: Set<string>;
 
   // --- Actions ---
-  /** Scan locally installed Electron applications. */
-  scan: () => Promise<void>;
+  /** Scan locally installed Electron applications. `force=true` bypasses the
+   *  main-process cache (used by the manual "scan" button). */
+  scan: (force?: boolean) => Promise<void>;
   /** Launch a scanned application. */
   launch: (app: ScannedApp) => Promise<void>;
   /** Toggle an app's hidden state. */
@@ -100,18 +105,55 @@ export const useAppsStore = create<AppsState>((set, get) => {
   return {
     scanResult: null,
     scanning: false,
+    scanError: null,
     launchingApps: new Set(),
     runningApps: new Map(),
     hiddenApps: new Set(),
 
-    scan: async () => {
-      set({ scanning: true });
+    scan: async (force = false) => {
+      // Guard against concurrent scans: the button is disabled while scanning,
+      // but a fast double-click or an auto-scan racing a manual click can still
+      // fire twice before React re-renders the disabled state.
+      if (get().scanning) return;
+      // Do NOT clear the existing list here — wiping it causes a visible flicker
+      // (empty state flash) between the click and the first streamed app.
+      set({ scanning: true, scanError: null });
+
+      // Stream each discovered app into the list as the main process scans, so
+      // tiles appear one-by-one instead of a single pop at the end. The final
+      // response (with icons + de-dupe) replaces this once it settles.
+      const unsubscribe = appsApi.onElectronScanProgress((app) => {
+        set((s) => {
+          const prev = s.scanResult ?? { adapted: [], other: [] };
+          const bucket = app.adapterMatch ? 'adapted' : 'other';
+          if (prev[bucket].some((a) => a.id === app.id)) return {};
+          return {
+            scanResult: {
+              ...prev,
+              [bucket]: [...prev[bucket], app],
+            },
+          };
+        });
+      });
+
       try {
-        const result = await appsApi.scanElectronApps();
-        set({ scanResult: result, scanning: false });
+        const result = await appsApi.scanElectronApps(force);
+        // Collapse multi-version installs (Quark 7.0.5.931 / 7.0.7.940 …) into
+        // one tile per product, keeping the highest version.
+        set({
+          scanResult: {
+            adapted: dedupeByProductName(result.adapted),
+            other: dedupeByProductName(result.other),
+          },
+          scanning: false,
+        });
       } catch (error) {
-        set({ scanning: false });
-        console.error('[appsStore] scan failed —', error);
+        set({
+          scanning: false,
+          scanError: error instanceof Error ? error.message : String(error),
+        });
+      } finally {
+        unsubscribe();
       }
     },
 

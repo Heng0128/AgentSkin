@@ -144,8 +144,16 @@ export interface ScannedApp {
   iconPath?: string;
   /** 匹配到的 AgentId (null = 未适配) */
   adapterMatch: AgentId | null;
+  /** Electron 判定置信度 (0-100)，仅 filesystem 来源填充 */
+  confidence?: number;
   /** 安装版本 */
   version?: string;
+  /**
+   * 发现来源，用于多版本去重时决定「用户实际在用的入口」。
+   * `agent`（适配器检测）> `registry`（注册表，指向 launcher）>
+   * `filesystem`（版本目录里的引擎 exe）。
+   */
+  source?: 'agent' | 'registry' | 'filesystem';
 }
 
 export interface ElectronScanResult {

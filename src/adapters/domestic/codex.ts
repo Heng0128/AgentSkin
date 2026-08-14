@@ -29,5 +29,6 @@ export class CodexAdapter extends BaseApplicationAdapter {
     dirNames: ['ChatGPT'],
     exeNames: ['ChatGPT.exe'],
     registryNames: ['ChatGPT', 'OpenAI Codex'],
+    msixPackageNames: ['OpenAI.Codex'],
   };
 }

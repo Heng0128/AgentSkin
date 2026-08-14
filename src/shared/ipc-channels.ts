@@ -209,6 +209,8 @@ export const IpcChannel = {
   ELECTRON_LAUNCH: 'electron:launch',
   /** Main→renderer: running status of scanned apps changed (launched / exited). */
   ELECTRON_STATUS: 'electron:status',
+  /** Main→renderer: a single app was discovered mid-scan (streaming progress). */
+  ELECTRON_SCAN_PROGRESS: 'electron:scan-progress',
 
   // --- Workspace live tweak (core-ipc.ts) ---
   /** Renderer→main: push override CSS to a running agent in real-time. */

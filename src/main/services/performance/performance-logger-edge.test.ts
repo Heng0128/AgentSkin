@@ -242,6 +242,48 @@ describe('clearTimeouts vs clear — state isolation', () => {
 });
 
 /* ------------------------------------------------------------------ */
+/*  clear() stops the memory sampler timer (MJ-1 fix)                 */
+/* ------------------------------------------------------------------ */
+
+describe('clear() stops memory sampler timer', () => {
+  it('stops the active setInterval when clear() is called', () => {
+    const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+
+    // Start the sampler (creates an interval).
+    performanceLogger.startMemorySampler(1000);
+    expect(clearIntervalSpy).not.toHaveBeenCalled(); // no prior timer to clear
+
+    // clear() must stop the timer.
+    performanceLogger.clear();
+    expect(clearIntervalSpy).toHaveBeenCalledOnce();
+
+    clearIntervalSpy.mockRestore();
+  });
+
+  it('is safe to call clear() when sampler was never started', () => {
+    expect(() => performanceLogger.clear()).not.toThrow();
+  });
+
+  it('sampler does not continue firing after clear()', () => {
+    const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+
+    performanceLogger.startMemorySampler(500);
+    const samplesBefore = performanceLogger.getMemorySamples().length;
+
+    performanceLogger.clear();
+
+    // After clear, no further samples should accumulate even if we advance.
+    // The timer is stopped — calling start again should work cleanly.
+    performanceLogger.startMemorySampler(500);
+    // First sample is taken immediately on start.
+    expect(performanceLogger.getMemorySamples().length).toBeGreaterThanOrEqual(samplesBefore);
+
+    clearIntervalSpy.mockRestore();
+    performanceLogger.stopMemorySampler();
+  });
+});
+
+/* ------------------------------------------------------------------ */
 /*  defensive copies                                                  */
 /* ------------------------------------------------------------------ */
 

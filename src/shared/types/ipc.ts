@@ -10,6 +10,7 @@ import type {
   InstallState,
   LaunchResult,
   Platform,
+  ScannedApp,
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
 import type { EnvironmentPreset } from './environment';
@@ -582,7 +583,7 @@ export interface AgentSkinApi {
     themeData: Record<string, unknown>,
   ): Promise<{ ok: boolean; path?: string }>;
   // --- Electron app discovery & launch ---
-  scanElectronApps(): Promise<ElectronScanResult>;
+  scanElectronApps(force?: boolean): Promise<ElectronScanResult>;
   launchElectronApp(request: LaunchRequest): Promise<LaunchResult>;
   /** Subscribe to running-status changes for scanned Electron apps (launch /
    *  exit). The main process pushes the full `getRunningApps()` snapshot via
@@ -591,4 +592,8 @@ export interface AgentSkinApi {
   onElectronStatus(
     cb: (status: Map<string, { pid: number; port: number | null }>) => void,
   ): () => void;
+  /** Subscribe to per-app discovery during a scan (streaming). Each newly
+   *  found app is pushed via `ELECTRON_SCAN_PROGRESS` as the scan walks the
+   *  filesystem. Returns an unsubscribe function. */
+  onElectronScanProgress(cb: (app: ScannedApp) => void): () => void;
 }

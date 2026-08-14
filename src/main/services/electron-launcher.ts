@@ -230,6 +230,23 @@ function spawnApp(exePath: string, args: string[]): ReturnType<typeof spawn> {
   return child;
 }
 
+/**
+ * Register an exit handler that clears the app from `runningApps` once the
+ * spawned process terminates. Without this, `runningApps` only ever grows and
+ * the renderer keeps showing a "running" dot for apps that already quit.
+ *
+ * The pid guard prevents a stale exit event (from a force-restarted process)
+ * from deleting a newer entry.
+ */
+function trackExit(child: ReturnType<typeof spawn>, appId: string, pid: number): void {
+  child.on('exit', () => {
+    if (runningApps.get(appId)?.pid === pid) {
+      runningApps.delete(appId);
+      pushElectronStatus();
+    }
+  });
+}
+
 /** Kill a list of PIDs via `taskkill /F /T`. Best-effort — swallows errors. */
 function killPids(pids: number[]): Promise<void> {
   return Promise.all(
@@ -410,6 +427,7 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
     }
 
     runningApps.set(appId, { pid, port: actualPort });
+    trackExit(child, appId, pid);
     pushElectronStatus();
     return {
       ok: true,
@@ -464,6 +482,7 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
   const pid = child.pid ?? -1;
   _log(`[launcher] ${appId}: spawned PID ${pid} (non-adapted, no CDP)`);
   runningApps.set(appId, { pid, port: null });
+  trackExit(child, appId, pid);
   pushElectronStatus();
 
   return {

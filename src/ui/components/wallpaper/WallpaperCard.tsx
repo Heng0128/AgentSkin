@@ -129,7 +129,7 @@ export function WallpaperCard({
       ref={cardRef}
       style={{ animationDelay: `${Math.min(index * 40, 320)}ms` }}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-[2px] border border-border bg-card text-left transition-colors duration-fast animate-card-enter',
+        'group relative flex flex-col overflow-hidden rounded-md  bg-card text-left transition-colors duration-fast animate-card-enter',
         'hover:border-primary/40 hover:bg-card2',
         selected && 'border-primary/60',
       )}
@@ -165,7 +165,7 @@ export function WallpaperCard({
             aria-hidden
           >
             <div className="absolute inset-0 bg-black/60" />
-            <span className="relative flex w-full items-center justify-between px-2.5 pb-2 font-mono text-[10px] tracking-wider text-popover-foreground/90">
+            <span className="relative flex w-full items-center justify-between px-2 pb-2 font-mono text-[10px]  text-popover-foreground/90">
               {wallpaper.type === 'video'
                 ? t.weTypeVideo
                 : wallpaper.type === 'image'
@@ -176,10 +176,10 @@ export function WallpaperCard({
               <span className="tabular-nums">{formatSize(wallpaper.sizeBytes)}</span>
             </span>
           </div>
-          {/* Type badge (Swiss mono) */}
+          {/* Type badge (mono) */}
           <span
             className={cn(
-              'absolute bottom-1 right-1 flex items-center gap-0.5 rounded-[2px] px-1 py-0.5 font-mono text-[10px] tracking-wider',
+              'absolute bottom-1 right-1 flex items-center gap-0 rounded-md px-1 py-0 font-mono text-[10px] ',
               wallpaper.type === 'video'
                 ? 'bg-primary/85 text-primary-foreground'
                 : wallpaper.type === 'image'
@@ -202,40 +202,40 @@ export function WallpaperCard({
                   ? 'WEB'
                   : 'SCN'}
           </span>
-          {/* UI background indicator (Swiss) */}
+          {/* UI background indicator  */}
           {isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-[2px] bg-primary px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-primary-foreground">
+            <span className="absolute left-1 top-1 rounded-md bg-primary px-1 py-0 font-mono text-[10px]  text-primary-foreground">
               UI
             </span>
           )}
-          {/* Preview-only badge (Swiss warning) */}
+          {/* Preview-only badge (warning) */}
           {previewOnly && !isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-[2px] bg-cr-warning px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-yellow-950">
+            <span className="absolute left-1 top-1 rounded-md bg-cr-warning px-1 py-0 font-mono text-[10px]  text-yellow-950">
               PREVIEW
             </span>
           )}
-          {/* Source badge for local imports (Swiss) */}
+          {/* Source badge for local imports  */}
           {wallpaper.source === 'local' && (
-            <span className="absolute right-1 top-1 rounded-[2px] bg-muted px-1 py-0.5 font-mono text-[9.5px] tracking-wider text-muted-foreground">
+            <span className="absolute right-1 top-1 rounded-md bg-muted px-1 py-0 font-mono text-[10px]  text-muted-foreground">
               LOCAL
             </span>
           )}
         </div>
 
-        {/* Title (Swiss mono info) */}
-        <div className="px-2 py-1.5">
+        {/* Title (mono info) */}
+        <div className="px-2 py-1">
           <p className="truncate font-display text-[11px] font-bold">{wallpaper.title}</p>
-          <p className="mt-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+          <p className="mt-0.5 font-mono text-[10px]  text-muted-foreground">
             {formatSize(wallpaper.sizeBytes)}
           </p>
         </div>
       </button>
 
-      {/* Delete button for local wallpapers (Swiss) */}
+      {/* Delete button for local wallpapers  */}
       {deletable && (
         <div className="absolute left-1 bottom-1 opacity-0 transition-opacity duration-fast group-hover:opacity-100">
           {confirming ? (
-            <div className="flex items-center gap-0.5 rounded-[2px] bg-card px-1 py-0.5">
+            <div className="flex items-center gap-0 rounded-md bg-card px-1 py-0">
               <button
                 type="button"
                 onClick={(e) => {
@@ -244,7 +244,7 @@ export function WallpaperCard({
                   setConfirming(false);
                 }}
                 disabled={isDeleting}
-                className="rounded-[2px] px-1 py-0.5 font-mono text-[10px] font-semibold tracking-wider text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                className="rounded-md px-1 py-0 font-mono text-[10px] font-semibold  text-destructive hover:bg-destructive/10 disabled:opacity-50"
               >
                 {isDeleting ? '…' : confirmLabel}
               </button>
@@ -254,7 +254,7 @@ export function WallpaperCard({
                   e.stopPropagation();
                   setConfirming(false);
                 }}
-                className="rounded-[2px] px-1 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground hover:bg-muted"
+                className="rounded-md px-1 py-0 font-mono text-[10px]  text-muted-foreground hover:bg-muted"
               >
                 ✕
               </button>
@@ -266,7 +266,7 @@ export function WallpaperCard({
                 e.stopPropagation();
                 setConfirming(true);
               }}
-              className="rounded-[2px] bg-card px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-md bg-card px-1 py-0 font-mono text-[10px]  text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
               {deleteLabel}
             </button>

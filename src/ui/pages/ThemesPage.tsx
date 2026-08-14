@@ -6,6 +6,7 @@ import { VirtualThemeGrid } from '@/components/themes/VirtualThemeGrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import {
   Select,
   SelectContent,
@@ -84,29 +85,29 @@ export function ThemesPage({ controller }: { controller: AppController }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {/* Swiss header — consistent with the other pages: display title +
+      {/* Page header — consistent with the other pages: display title +
           mono counter + hairline separator */}
       <div className="mb-3 flex items-center gap-3">
         <h2 className="font-display text-sm font-bold tracking-tight">{t.navThemes}</h2>
-        <span className="rounded-[2px] bg-muted px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-muted-foreground">
+        <span className="rounded-md bg-muted px-1 py-0 text-[11px] text-muted-foreground">
           {tc.allCount}
         </span>
         <span className="h-3 w-px bg-border" aria-hidden />
-        <span className="font-mono text-[10px] tracking-wider text-muted-foreground/60">
+        <span className="text-[11px] text-muted-foreground/60">
           {tc.categories.length > 0 ? t.categoryLabel(tc.selectedCategory ?? 'all') : ''}
         </span>
       </div>
 
-      {/* Swiss Toolbar */}
-      <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
+      {/* Toolbar */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="mono text-xs text-muted-foreground" style={{ fontSize: '11px' }}>
           {tc.themes.length === tc.allCount
             ? t.themeCount(tc.allCount)
             : `${tc.themes.length} / ${tc.allCount}`}
         </span>
 
-        {/* Search box — Swiss: rounded-[2px] h-[30px] */}
-        <InputGroup className="ml-auto h-[30px] rounded-[2px]" style={{ width: '200px' }}>
+        {/* Search box — rounded-md h-7 */}
+        <InputGroup className="ml-auto h-7 rounded-md" style={{ width: '200px' }}>
           <InputGroupInput
             value={tc.query}
             onChange={(e) => tc.setQuery(e.target.value)}
@@ -118,24 +119,24 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           </InputGroupAddon>
         </InputGroup>
 
-        {/* Sort select — Swiss: rounded-[2px] shadcn Select */}
+        {/* Sort select — rounded-md shadcn Select */}
         <Select value={tc.sortBy} onValueChange={(v) => tc.setSortBy(v as ThemeSortKey)}>
           <TooltipProvider delayDuration={200}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <SelectTrigger
-                  className="h-[30px] w-[130px] rounded-[2px] border-border bg-muted text-[11px] focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.13)]"
+                  className="h-7 w-[130px] rounded-md border-input bg-muted text-[11px] focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.13)]"
                   aria-label={t.sortName}
                 >
                   <SelectValue />
                 </SelectTrigger>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="text-[10.5px]">
+              <TooltipContent side="bottom" className="text-[10px]">
                 {t.studioSortHint}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <SelectContent className="rounded-[2px] border-border bg-card">
+          <SelectContent className="rounded-md border-border bg-card">
             <SelectItem value="name" className="text-[11px]">
               {t.sortName}
             </SelectItem>
@@ -151,15 +152,15 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           </SelectContent>
         </Select>
 
-        {/* View toggle — Swiss segmented */}
-        <div className="inline-flex items-center gap-0.5 rounded-[2px] bg-muted p-0.5">
+        {/* View toggle — sort direction */}
+        <div className="inline-flex items-center gap-0 rounded-md bg-muted p-0.5">
           <button
             type="button"
             onClick={() => tc.setSortOrder(tc.sortOrder === 'asc' ? 'desc' : 'asc')}
             aria-label={tc.sortOrder === 'asc' ? t.sortDesc : t.sortAsc}
             aria-pressed={tc.sortOrder === 'asc'}
             className={cn(
-              'h-[26px] rounded-[2px] px-2.5 text-xs font-medium transition-all duration-150',
+              'h-6 rounded-md px-2 text-xs font-medium transition-all duration-150',
               'bg-card text-foreground',
             )}
           >
@@ -171,7 +172,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         <Button
           size="sm"
           variant="ghost"
-          className="h-[30px] rounded-[2px] border border-border2 bg-card2 text-foreground transition-[border-color,color] duration-150 hover:border-primary hover:text-primary"
+          className="h-7 rounded-md  bg-card2 text-foreground transition-[border-color,color] duration-150 hover:border-primary hover:text-primary"
           disabled={controller.isInstalling}
           onClick={() => void controller.importTheme()}
         >
@@ -186,7 +187,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         {/* Studio — btn-red */}
         <Button
           size="sm"
-          className="h-[30px] rounded-[2px] bg-primary text-primary-foreground border border-primary transition-[background-color,transform] duration-150 hover:bg-primary/90 active:translate-y-px active:scale-[.99]"
+          className="h-7 rounded-md bg-primary text-primary-foreground border border-primary transition-[background-color,transform] duration-150 hover:bg-primary/90 active:translate-y-px active:scale-[.99]"
           onClick={() => {
             void api.openStudioWindow();
           }}
@@ -195,59 +196,33 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         </Button>
       </div>
 
-      {/* Filter row — Swiss segmented controls */}
+      {/* Filter row — segmented controls */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Category filter — segmented */}
+        {/* Category filter */}
         {tc.categories.length > 0 && (
-          <div className="inline-flex items-center gap-0.5 rounded-[2px] bg-muted border border-border p-0.5">
-            <button
-              type="button"
-              onClick={() => tc.setSelectedCategory(null)}
-              className={cn(
-                'h-[26px] rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
-                tc.selectedCategory === null
-                  ? 'bg-card text-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {t.themeFilterAll}
-            </button>
-            {tc.categories.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => tc.setSelectedCategory(cat)}
-                className={cn(
-                  'h-[26px] rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
-                  tc.selectedCategory === cat
-                    ? 'bg-card text-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {t.categoryLabel(cat)}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            size="sm"
+            bordered
+            value={tc.selectedCategory ?? 'all'}
+            onChange={(v) => tc.setSelectedCategory(v === 'all' ? null : v)}
+            options={[
+              { value: 'all', label: t.themeFilterAll },
+              ...tc.categories.map((cat) => ({ value: cat, label: t.categoryLabel(cat) })),
+            ]}
+          />
         )}
 
-        {/* Mode filter — segmented */}
-        <div className="inline-flex items-center gap-0.5 rounded-[2px] bg-muted border border-border p-0.5">
-          {(['all', 'dark', 'light'] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => tc.setModeFilter(m)}
-              className={cn(
-                'h-[26px] rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
-                tc.modeFilter === m
-                  ? 'bg-card text-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {m === 'all' ? t.themeModeAll : m === 'dark' ? t.themeModeDark : t.themeModeLight}
-            </button>
-          ))}
-        </div>
+        {/* Mode filter */}
+        <SegmentedControl
+          size="sm"
+          bordered
+          value={tc.modeFilter}
+          onChange={(v) => tc.setModeFilter(v)}
+          options={(['all', 'dark', 'light'] as const).map((m) => ({
+            value: m,
+            label: m === 'all' ? t.themeModeAll : m === 'dark' ? t.themeModeDark : t.themeModeLight,
+          }))}
+        />
 
         {/* Dynamic filter — toggle */}
         {tc.hasDynamic && (
@@ -256,10 +231,10 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             onClick={() => tc.setDynamicFilter(tc.dynamicFilter === 'dynamic' ? 'all' : 'dynamic')}
             title={t.themeDynamicHint}
             className={cn(
-              'inline-flex h-[26px] items-center gap-1 rounded-[2px] px-2.5 text-[11.5px] font-medium transition-all duration-150',
+              'inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11.5px] font-medium transition-all duration-150',
               tc.dynamicFilter === 'dynamic'
-                ? 'bg-card text-foreground border border-border'
-                : 'bg-muted text-muted-foreground hover:text-foreground border border-border',
+                ? 'bg-card text-foreground '
+                : 'bg-muted text-muted-foreground hover:text-foreground ',
             )}
           >
             <span className="relative flex size-1.5">
@@ -282,7 +257,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           </button>
         )}
 
-        {/* Stats badges — right side — Swiss Badge */}
+        {/* Stats badges — right side — Badge */}
         <div className="ml-auto flex items-center gap-2">
           {dynamicCount > 0 && (
             <Badge variant="red" data-icon="inline-start" className="gap-1">
@@ -297,11 +272,9 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         </div>
       </div>
 
-      {/* Swiss metadata row — theme count + active palette info */}
+      {/* Metadata row — theme count + active palette info */}
       <div className="flex items-center gap-3 py-2">
-        <span className="font-mono text-[10px] uppercase tracking-[.18em] text-muted-foreground">
-          {t.themeLibrary}
-        </span>
+        <span className="text-[11px] text-muted-foreground">{t.themeLibrary}</span>
         <span className="font-mono text-xs tabular-nums text-foreground">
           {tc.themes.length === tc.allCount
             ? t.themeCount(tc.allCount)
@@ -346,10 +319,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           >
             ◉
           </i>
-          <p
-            className="text-xs font-medium text-muted-foreground"
-            style={{ letterSpacing: '0.1em', fontFamily: 'var(--f-mono, monospace)' }}
-          >
+          <p className="text-xs font-medium text-muted-foreground">
             {tc.query ? t.themeNoResults : t.themeLibraryEmpty}
           </p>
           <p className="mt-2 max-w-52 text-xs leading-relaxed text-muted-foreground/70">
@@ -373,19 +343,16 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         <div
           className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
           style={{
-            background: 'var(--glass, rgba(14,14,17,0.62))',
+            background: 'color-mix(in srgb, var(--background) 72%, transparent)',
             backdropFilter: 'blur(20px) saturate(1.5)',
           }}
         >
           <div
-            className="flex flex-col items-center gap-3 rounded-[2px] border-2 border-dashed border-border bg-card px-12 py-9 text-center"
+            className="flex flex-col items-center gap-3 rounded-md border-2 border-dashed border-border bg-card px-12 py-9 text-center"
             style={{ boxShadow: 'var(--shadow, 0 10px 28px rgba(0,0,0,0.4))' }}
           >
-            <div
-              className="flex size-14 items-center justify-center rounded-[2px]"
-              style={{ background: 'var(--redbg, rgba(255,69,58,0.13))' }}
-            >
-              <UploadCloud className="size-7" style={{ color: 'var(--red, #FF453A)' }} />
+            <div className="flex size-14 items-center justify-center rounded-md bg-accent">
+              <UploadCloud className="size-7 text-primary" />
             </div>
             <p className="text-sm font-semibold text-foreground">{t.dropThemeHere}</p>
             <p className="max-w-60 text-xs leading-relaxed text-muted-foreground">

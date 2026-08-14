@@ -140,16 +140,16 @@ function AppActionList({
             <div
               key={appId}
               className={cn(
-                'flex items-center gap-2.5 rounded-[2px] border bg-background/50 px-3 py-2 transition-colors',
+                'flex items-center gap-2 rounded-md border bg-background/50 px-3 py-2 transition-colors',
                 !supported && 'opacity-50',
                 supported && detected && 'hover:bg-background/80',
               )}
             >
               <AppMark appId={appId} size={22} />
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1.5 text-xs font-medium">
+                <p className="flex items-center gap-1 text-xs font-medium">
                   {displayName}
-                  {isActive && <Badge className="px-1.5 py-0 text-[10px]">{t.activeBadge}</Badge>}
+                  {isActive && <Badge className="px-1 py-0 text-[10px]">{t.activeBadge}</Badge>}
                 </p>
                 <p className="truncate text-[11px] text-muted-foreground">{stateText}</p>
               </div>
@@ -192,8 +192,8 @@ function AppActionList({
 /** Metadata row: label + value pair for theme info. */
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70">{label}</span>
+    <div className="flex flex-col gap-0">
+      <span className="text-xs text-muted-foreground/70">{label}</span>
       <span className="text-xs font-medium">{value}</span>
     </div>
   );
@@ -214,10 +214,8 @@ function ColorSchemePicker({
 }) {
   return (
     <div className="mb-3">
-      <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted-foreground/70">
-        {t.colorSchemesLabel}
-      </p>
-      <div className="flex flex-wrap gap-1.5">
+      <p className="mb-1 text-xs text-muted-foreground/70">{t.colorSchemesLabel}</p>
+      <div className="flex flex-wrap gap-1">
         {schemes.map((scheme) => {
           const selected = (activeSchemeId ?? 'default') === scheme.id;
           const bg = scheme.colors.background ?? scheme.colors.bg;
@@ -232,17 +230,13 @@ function ColorSchemePicker({
               aria-pressed={selected}
               onClick={() => onChange(scheme.id === 'default' ? undefined : scheme.id)}
               className={cn(
-                'flex items-center gap-1.5 rounded-[2px] border px-2 py-1 text-[11px] transition-colors',
+                'flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] transition-colors',
                 selected
                   ? 'border-primary bg-card text-foreground'
-                  : 'border-border bg-background/50 text-muted-foreground hover:bg-background/80',
+                  : 'bg-background/50 text-muted-foreground hover:bg-background/80',
               )}
             >
-              <span
-                className="size-3 shrink-0 rounded-[2px]"
-                style={swatchStyle}
-                aria-hidden="true"
-              />
+              <span className="size-3 shrink-0 rounded-md" style={swatchStyle} aria-hidden="true" />
               {scheme.id === 'default' ? t.colorSchemeDefault : scheme.name}
             </button>
           );
@@ -337,7 +331,7 @@ export function DetailPanel({
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold tracking-[-0.015em]">{theme.name}</h2>
             {isDynamic && (
-              <Badge className="bg-muted text-muted-foreground px-1.5 py-0 text-[10px]">
+              <Badge className="bg-muted text-muted-foreground px-1 py-0 text-[10px]">
                 {t.themeDynamicBadge}
               </Badge>
             )}
@@ -354,7 +348,7 @@ export function DetailPanel({
 
         {/* Metadata grid */}
         {(theme.author || theme.category || theme.license) && (
-          <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-2 rounded-[2px] bg-muted/40 px-3 py-2.5">
+          <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-2 rounded-md bg-muted/40 px-3 py-2">
             {theme.author && <MetaRow label={t.themeAuthor} value={theme.author} />}
             {theme.category && (
               <MetaRow label={t.themeCategory} value={t.categoryLabel(theme.category)} />
@@ -372,11 +366,7 @@ export function DetailPanel({
         {theme.tags.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-1">
             {theme.tags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="rounded-[2px] text-[10px] font-normal"
-              >
+              <Badge key={tag} variant="secondary" className="rounded-md text-[10px] font-normal">
                 {tag}
               </Badge>
             ))}

@@ -200,11 +200,11 @@ export function StudioDrawer() {
                     No themes installed
                   </p>
                 ) : (
-                  <div className="flex flex-col gap-[2px]">
+                  <div className="flex flex-col gap-0">
                     {installedThemes.map((theme) => (
                       <div
                         key={theme.id}
-                        className="flex items-center gap-[var(--space-1)] p-[2px] rounded-[var(--r-micro)] hover:bg-[var(--bg-3)]"
+                        className="flex items-center gap-[var(--space-1)] p-0 rounded-[var(--r-micro)] hover:bg-[var(--bg-3)]"
                       >
                         <span
                           className="size-[10px] rounded-[var(--r-micro)] border border-[var(--border-subtle)]"
@@ -232,11 +232,11 @@ export function StudioDrawer() {
                     No wallpapers
                   </p>
                 ) : (
-                  <div className="flex flex-col gap-[2px]">
+                  <div className="flex flex-col gap-0">
                     {wallpapers.map((wp) => (
                       <div
                         key={wp.id}
-                        className="flex items-center gap-[var(--space-1)] p-[2px] rounded-[var(--r-micro)] hover:bg-[var(--bg-3)]"
+                        className="flex items-center gap-[var(--space-1)] p-0 rounded-[var(--r-micro)] hover:bg-[var(--bg-3)]"
                       >
                         <Image className="size-2.5" style={{ color: 'var(--fg-3)' }} />
                         <span className="font-mono text-[length:10px] text-[var(--fg-0)] truncate flex-1">

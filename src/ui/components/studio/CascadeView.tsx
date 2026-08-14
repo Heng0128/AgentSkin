@@ -31,12 +31,9 @@ export function CascadeView({
     <div className="space-y-2">
       {/* Render fonts */}
       {cascade.platformFonts.length > 0 && (
-        <div
-          className="border border-border bg-card p-1.5"
-          style={{ borderRadius: 'var(--radius)' }}
-        >
+        <div className=" bg-card p-1.5" style={{ borderRadius: 'var(--radius)' }}>
           <div
-            className="mb-1 font-mono text-[10px] uppercase"
+            className="mb-1 font-mono text-[10px] "
             style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)', opacity: 0.7 }}
           >
             RENDER FONTS
@@ -45,7 +42,7 @@ export function CascadeView({
             {cascade.platformFonts.map((f) => (
               <span
                 key={f}
-                className="bg-muted px-1 py-0.5 font-mono text-[9.5px]"
+                className="bg-muted px-1 py-0 font-mono text-[10px]"
                 style={{ color: 'var(--foreground)', borderRadius: 'var(--radius)' }}
               >
                 {f}
@@ -59,14 +56,14 @@ export function CascadeView({
       {boxModel && (boxModel.width !== undefined || boxModel.height !== undefined) && (
         <div className="flex items-center gap-1">
           <span
-            className="bg-muted px-1 py-0.5 font-mono text-[9.5px]"
+            className="bg-muted px-1 py-0 font-mono text-[10px]"
             style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
           >
             {boxModel.width ?? '?'} × {boxModel.height ?? '?'}
           </span>
           {boxModel.left !== undefined && boxModel.top !== undefined && (
             <span
-              className="bg-muted px-1 py-0.5 font-mono text-[9.5px]"
+              className="bg-muted px-1 py-0 font-mono text-[10px]"
               style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
             >
               @ {boxModel.left}, {boxModel.top}
@@ -76,9 +73,9 @@ export function CascadeView({
       )}
 
       {/* Matched CSS rules */}
-      <div className="border border-border bg-card p-1.5" style={{ borderRadius: 'var(--radius)' }}>
+      <div className=" bg-card p-1.5" style={{ borderRadius: 'var(--radius)' }}>
         <div
-          className="mb-1 font-mono text-[10px] uppercase"
+          className="mb-1 font-mono text-[10px] "
           style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)', opacity: 0.7 }}
         >
           CASCADE
@@ -105,10 +102,10 @@ export function CascadeView({
 
 function CssRuleRow({ rule }: { rule: CssMatchedRule }) {
   return (
-    <div className="border border-border bg-muted p-1" style={{ borderRadius: 'var(--radius)' }}>
+    <div className=" bg-muted p-1" style={{ borderRadius: 'var(--radius)' }}>
       <div className="flex items-center gap-1">
         <span
-          className="px-1 py-0.5 font-mono text-[9.5px]"
+          className="px-1 py-0 font-mono text-[10px]"
           style={{
             borderRadius: 'var(--radius)',
             color: 'var(--primary)',
@@ -130,7 +127,7 @@ function CssRuleRow({ rule }: { rule: CssMatchedRule }) {
           {rule.declarations.slice(0, MAX_DECLARATIONS).map((d) => (
             <div
               key={`${d.name}:${d.value}${d.important ? '!important' : ''}`}
-              className="flex items-baseline gap-1 px-0.5 font-mono text-[10px]"
+              className="flex items-baseline gap-1 px-0 font-mono text-[10px]"
             >
               <span
                 className="w-[100px] shrink-0 truncate"

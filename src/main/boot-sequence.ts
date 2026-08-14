@@ -83,7 +83,14 @@ let baselineCache: BootBaseline | null = null;
 // and the step degrades gracefully. Without this, a step whose `fn()` never
 // settles (e.g. a CDP call that hangs) would keep its setInterval alive
 // forever, leaking a timer handle and stalling the entire boot sequence.
-const STEP_TIMEOUT_MS = 15_000;
+//
+// 60s (was 15s): the "open main window" step loadURL()s the renderer. In dev
+// mode the first load can exceed 15s while Vite pre-bundles dependencies and
+// the renderer compiles ~190 modules. The persisted baseline showed 11.6s for
+// this step on a warm cache, so a cold Vite start blows past 15s and the boot
+// timed out + failed. 60s still catches a genuinely hung step, just with more
+// grace for slow cold starts.
+const STEP_TIMEOUT_MS = 60_000;
 
 /** Test hook: reset the cached baseline between boot simulations. */
 export function __resetBootBaselineCache(): void {

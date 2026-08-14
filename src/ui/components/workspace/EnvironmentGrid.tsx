@@ -84,7 +84,7 @@ function StatusRefreshLabel({
  *
  *  - Only mounts when `error` is a non-empty string.
  *  - Disables the retry button while `isRefreshing` to prevent duplicate calls.
- *  - Swiss style: rounded-[2px], mono label, destructive left border accent.
+ *  - style: rounded-md, mono label, destructive left border accent.
  */
 function StatusErrorBanner({
   error,
@@ -102,10 +102,10 @@ function StatusErrorBanner({
   return (
     <div
       role="alert"
-      className="mb-3 flex items-center gap-3 rounded-[2px] border border-destructive/25 bg-destructive/5 px-3 py-2"
+      className="mb-3 flex items-center gap-3 rounded-md border border-destructive/25 bg-destructive/5 px-3 py-2"
     >
       {/* Left accent bar */}
-      <span className="h-5 w-[3px] shrink-0 rounded-[1px] bg-destructive" aria-hidden />
+      <span className="h-5 w-[3px] shrink-0 rounded-sm bg-destructive" aria-hidden />
       <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-muted-foreground">
         {error}
       </span>
@@ -113,7 +113,7 @@ function StatusErrorBanner({
         type="button"
         onClick={onRetry}
         disabled={isRefreshing}
-        className="inline-flex shrink-0 items-center gap-1 rounded-[2px] border border-destructive/30 bg-card2 px-2 py-1 font-mono text-[10px] text-destructive transition-colors duration-fast hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-45"
+        className="inline-flex shrink-0 items-center gap-1 rounded-md border border-destructive/30 bg-card2 px-2 py-1 font-mono text-[10px] text-destructive transition-colors duration-fast hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-45"
       >
         {isRefreshing ? <Spinner className="size-3" /> : <RefreshCw className="size-3" />}
         {t.statusRetry}
@@ -175,11 +175,9 @@ export function EnvironmentGrid({
   if (environments.length === 0) {
     return (
       <div className="mt-6">
-        {/* Swiss section header */}
+        {/* section header */}
         <div className="mb-3 flex items-center gap-2">
-          <span className="font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
-            {title}
-          </span>
+          <span className="text-[11px] font-medium text-muted-foreground">{title}</span>
         </div>
         <StatusErrorBanner
           error={error ?? null}
@@ -187,8 +185,8 @@ export function EnvironmentGrid({
           onRetry={onRetry ?? (() => {})}
           t={t}
         />
-        <div className="rounded-[2px] border-2 border-dashed border-border/40 py-10 text-center dark:border-border/30">
-          <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-[2px] bg-card2">
+        <div className="rounded-md border-2 border-dashed border-border/40 py-10 text-center dark:border-border/30">
+          <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-md bg-card2">
             <Bot className="size-5 text-muted-foreground/50" />
           </div>
           <p className="font-mono text-[11px] text-muted-foreground">{t.emptyEnvironmentsHint}</p>
@@ -196,7 +194,7 @@ export function EnvironmentGrid({
             <Button
               size="sm"
               variant="outline"
-              className="mt-3 gap-1.5 text-xs"
+              className="mt-3 gap-1 text-xs"
               onClick={onBrowseThemes}
             >
               {t.browseThemes}
@@ -209,12 +207,10 @@ export function EnvironmentGrid({
 
   return (
     <div className="mt-5">
-      {/* Swiss section header with mono label */}
+      {/* section header with mono label */}
       <div className="mb-3 flex items-center gap-2 px-1">
-        <span className="font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
-          {title}
-        </span>
-        <span className="inline-flex size-[18px] items-center justify-center rounded-[2px] bg-card2 font-mono text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
+        <span className="text-[11px] font-medium text-muted-foreground">{title}</span>
+        <span className="inline-flex size-[18px] items-center justify-center rounded-md bg-card2 font-mono text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
           {environments.length}
         </span>
         {/* Live refresh indicator — isolated ticker so the grid doesn't re-render every second. */}
@@ -226,7 +222,7 @@ export function EnvironmentGrid({
         onRetry={onRetry ?? (() => {})}
         t={t}
       />
-      <div className={`grid gap-2.5 ${gridColsClass(environments.length)}`}>
+      <div className={`grid gap-2 ${gridColsClass(environments.length)}`}>
         {environments.map((env) => (
           <EnvironmentCard
             key={env.id}

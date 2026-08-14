@@ -46,7 +46,7 @@ export function StudioInspector({ t }: { t: UiMessages }) {
       >
         <span className="flex flex-col items-center justify-center h-full" style={{ width: 4 }}>
           <span
-            className="font-mono text-[9px] uppercase tracking-widest text-[var(--fg-3)]"
+            className="font-mono text-[10px]   text-[var(--fg-3)]"
             style={{ writingMode: 'vertical-rl' }}
           >
             Ins

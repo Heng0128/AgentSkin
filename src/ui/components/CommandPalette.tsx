@@ -3,8 +3,8 @@
 /**
  * # CommandPalette
  *
- * Global Cmd+K / Ctrl+K command palette. Swiss/International style:
- * bg-popover surface, border-border, rounded-[2px], hover uses bg-accent.
+ * Global Cmd+K / Ctrl+K command palette. International style:
+ * bg-popover surface, border-border, rounded-md, hover uses bg-accent.
  *
  * Three command groups:
  *   导航 (Navigation)  → route switches

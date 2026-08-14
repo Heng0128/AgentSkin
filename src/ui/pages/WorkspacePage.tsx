@@ -37,8 +37,6 @@ import { type UiMessages, uiMessages } from '@shared/i18n';
 import type { AppStatus } from '@shared/types';
 import { RefreshCw } from 'lucide-react';
 
-import '@/styles/workspace.css';
-
 /** Read current i18n message table (project-standard pattern). */
 function currentT(): UiMessages {
   return uiMessages[useShellStore.getState().locale];
@@ -70,17 +68,15 @@ export function WorkspacePage() {
       {/* ---------------------------------------------------------------- */}
       {/* Top bar — title + refresh                                         */}
       {/* ---------------------------------------------------------------- */}
-      <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-        <h1 className="font-mono text-[12px] font-semibold tracking-tight uppercase">
-          {t.navWorkspace}
-        </h1>
+      <header className="flex shrink-0 items-center justify-between  px-4 py-3">
+        <h1 className="font-display text-sm font-bold tracking-tight">{t.navWorkspace}</h1>
         <Button
           type="button"
           variant="ghost"
           size="xs"
           onClick={() => void refreshStatus()}
           disabled={isRefreshing}
-          className="gap-1.5"
+          className="gap-1"
         >
           {isRefreshing ? <Spinner className="size-3" /> : <RefreshCw className="size-3" />}
           <span className="text-[11px]">{t.workspaceRefreshStatus}</span>
@@ -92,8 +88,8 @@ export function WorkspacePage() {
       {/* ---------------------------------------------------------------- */}
       <div className="grid min-h-0 flex-1 grid-cols-[200px_1fr]">
         {/* Agent rail */}
-        <aside className="flex flex-col gap-2 overflow-y-auto border-r border-border px-3 py-3">
-          <span className="px-1 font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
+        <aside className="flex flex-col gap-2 overflow-y-auto  px-3 py-3">
+          <span className="px-1 text-[11px] tracking-tight text-muted-foreground ">
             {t.workspaceRunningApps}
           </span>
           {runningAgents.length === 0 ? (
@@ -108,13 +104,11 @@ export function WorkspacePage() {
                   key={app.appId}
                   type="button"
                   onClick={() => selectAgent(app.appId, app.port ?? 0)}
-                  className={`flex w-full items-center gap-2 rounded-[2px] border px-2 py-2 text-left transition-colors ${
-                    active
-                      ? 'border-primary/40 bg-primary/5'
-                      : 'border-transparent hover:border-border hover:bg-card'
+                  className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left transition-colors ${
+                    active ? 'border-primary/40 bg-primary/5' : 'border-transparent hover:bg-card'
                   }`}
                 >
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-[2px] bg-accent">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-accent">
                     <AppMark appId={app.appId} size={16} />
                   </span>
                   <span className="min-w-0 flex-1">
@@ -139,23 +133,21 @@ export function WorkspacePage() {
         <main className="flex min-w-0 flex-col gap-4 overflow-y-auto px-4 py-3">
           {currentAgentId === null ? (
             <div className="flex flex-1 items-center justify-center">
-              <p className="font-mono text-[11px] text-muted-foreground uppercase tracking-tight">
-                {t.workspaceSelectAgentHint}
-              </p>
+              <p className="text-[11px] text-muted-foreground">{t.workspaceSelectAgentHint}</p>
             </div>
           ) : (
             <>
               {/* Preview pane */}
               <section className="flex min-h-0 flex-col">
-                <span className="mb-2 font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
+                <span className="mb-2 text-[11px] tracking-tight text-muted-foreground ">
                   {t.workspacePreview}
                 </span>
                 <AgentLivePreview agentId={currentAgentId} overrides={currentOverrides} t={t} />
               </section>
 
               {/* Tweak controls */}
-              <section className="flex flex-col gap-3 border-t border-border pt-3">
-                <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
+              <section className="flex flex-col gap-3  pt-3">
+                <span className="text-[11px] tracking-tight text-muted-foreground ">
                   {t.workspaceTweakControls}
                 </span>
                 <TweakPanel

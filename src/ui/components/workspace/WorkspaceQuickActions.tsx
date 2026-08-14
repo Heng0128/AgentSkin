@@ -23,7 +23,7 @@ export interface WorkspaceQuickActionItem {
 export function WorkspaceQuickActions({ items }: { items: WorkspaceQuickActionItem[] }) {
   return (
     <div className="mt-5">
-      <div className="grid gap-2.5 sm:grid-cols-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         {items.map((item) => (
           <button
             key={item.id}
@@ -31,9 +31,9 @@ export function WorkspaceQuickActions({ items }: { items: WorkspaceQuickActionIt
             onClick={item.onClick}
             disabled={item.disabled}
             className={cn(
-              'group/action flex items-center gap-3 rounded-[2px] border border-border bg-card p-3 text-left',
+              'group/action flex items-center gap-3 rounded-md  bg-card p-3 text-left',
               'transition-[border-color] duration-base ease-out',
-              !item.disabled && 'hover:border-border-strong',
+              !item.disabled && '',
               item.disabled && 'cursor-not-allowed opacity-50',
               item.primary && !item.disabled && 'border-primary/25 hover:border-primary/40',
             )}

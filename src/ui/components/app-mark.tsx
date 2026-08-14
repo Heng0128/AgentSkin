@@ -43,7 +43,7 @@ export function AppMark({
         role="img"
         aria-label={label}
         className={cn(
-          'flex shrink-0 items-center justify-center rounded-[2px] bg-muted font-semibold text-muted-foreground',
+          'flex shrink-0 items-center justify-center rounded-md bg-muted font-semibold text-muted-foreground',
           className,
         )}
         style={{ width: size, height: size, fontSize: Math.max(8, Math.round(size * 0.55)) }}
@@ -61,7 +61,7 @@ export function AppMark({
       title={label}
       draggable={false}
       onError={() => setFailed(true)}
-      className={cn('shrink-0 rounded-[2px] object-contain', className)}
+      className={cn('shrink-0 rounded-md object-contain', className)}
       style={{ width: size, height: size }}
     />
   );

@@ -26,7 +26,7 @@ export interface InstallDetection {
   /** Detected product version (typically from the exe or registry). */
   version: string | null;
   /** Which signal confirmed the install. */
-  source: 'path' | 'registry' | 'core' | null;
+  source: 'path' | 'registry' | 'msix' | 'core' | null;
 }
 
 export interface DetectInstallationOptions {
@@ -56,6 +56,9 @@ async function readExeInfo(
   const literal = exePath.replace(/'/g, "''");
   // NOTE: single-quoted JS strings — `$` is literal, no template interpolation.
   const script = [
+    // Force UTF-8 stdout: PowerShell 5.1 emits the OEM code page (GBK on
+    // zh-CN) while Node decodes the pipe as UTF-8, garbling Chinese PE names.
+    '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
     `$v = (Get-Item -LiteralPath '${literal}').VersionInfo`,
     '"$($v.FileVersion)|$($v.ProductVersion)|$($v.ProductName)|$($v.FileDescription)"',
   ].join('\n');
@@ -242,9 +245,38 @@ function candidateRoots(): string[] {
 function buildRegistryScript(names: string[]): string {
   const nameArray = names.map((n) => `'${n.replace(/'/g, "''")}'`).join(',');
   const lines = [
+    '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
     `$names = @(${nameArray})`,
     "$keys = @('HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*','HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*')",
     'Get-ItemProperty $keys -ErrorAction SilentlyContinue | Where-Object { $e=$_; ($e.DisplayName -and ($names | Where-Object { $e.DisplayName -like "*$_*" })) -or ($names | Where-Object { $e.PSChildName -like "*$_*" }) } | ForEach-Object { "$($_.DisplayName)|$($_.DisplayVersion)|$($_.InstallLocation)|$($_.DisplayIcon)|$($_.UninstallString)" }',
+  ];
+  return lines.join('\n');
+}
+
+/**
+ * Build a PowerShell script that finds MSIX (Appx) packages whose name matches
+ * one of `packageNames`, then locates the first matching executable under the
+ * package's InstallLocation (recursively — the exe often lives in an `app\`
+ * subfolder, e.g. ChatGPT's `app\ChatGPT.exe`).
+ *
+ * Emits one line per package: `exeDir|version|packageName`.
+ */
+function buildMsixScript(packageNames: string[], exeNames: string[]): string {
+  const pkgs = packageNames.map((n) => `'${n.replace(/'/g, "''")}'`).join(',');
+  const exes = exeNames.map((n) => `'${n.replace(/'/g, "''")}'`).join(',');
+  const lines = [
+    '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
+    `$pkgs = @(${pkgs})`,
+    `$exes = @(${exes})`,
+    'Get-AppxPackage | Where-Object { $p = $_; $pkgs | Where-Object { $p.Name -like "*$_*" -or $p.PackageFullName -like "*$_*" } } | ForEach-Object {',
+    '  $root = $_.InstallLocation',
+    '  $hit = $null',
+    '  foreach ($e in $exes) {',
+    '    $hit = Get-ChildItem -Path $root -Recurse -Filter $e -File -ErrorAction SilentlyContinue | Select-Object -First 1',
+    '    if ($hit) { break }',
+    '  }',
+    '  if ($hit) { "$($hit.DirectoryName)|$($_.Version)|$($_.Name)" }',
+    '}',
   ];
   return lines.join('\n');
 }
@@ -397,6 +429,43 @@ export async function detectInstallation(
     }
   }
 
+  // 2.5) MSIX (Appx) package detection — MSIX apps do NOT write to the
+  // traditional Uninstall registry, so the adapter must opt in via
+  // `msixPackageNames`. Resolves the package's InstallLocation and locates the
+  // first matching exe underneath it (usually an `app\` subfolder).
+  let msixResult: { path: string; version: string | null } | null = null;
+  if (hints.msixPackageNames?.length) {
+    try {
+      const out = await execFileAsync(
+        'powershell',
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          buildMsixScript(hints.msixPackageNames, hints.exeNames),
+        ],
+        15000,
+      );
+      for (const raw of out.split('\n')) {
+        const line = raw.trim();
+        if (!line) continue;
+        // Format: exeDir|version|packageName
+        const [exeDir, version] = line.split('|');
+        if (exeDir?.trim()) {
+          msixResult = { path: exeDir.trim(), version: version?.trim() || null };
+          break; // first matching package wins
+        }
+      }
+    } catch (error) {
+      if (logFile) {
+        await appendLogLine(
+          logFile,
+          `[${stamp}] [${displayName}] msix scan failed: ${toMessage(error)}`,
+        );
+      }
+    }
+  }
+
   // 3) Filesystem path scan — fixed roots PLUS every registry-derived root.
   const registryRoots = registryEntries
     .map((e) => e.location)
@@ -436,6 +505,13 @@ export async function detectInstallation(
       path: pathResult.path,
       version: pathResult.version,
       source: 'path',
+    };
+  } else if (msixResult) {
+    result = {
+      installed: true,
+      path: msixResult.path,
+      version: msixResult.version,
+      source: 'msix',
     };
   } else if (registryResult) {
     result = {

@@ -24,6 +24,10 @@ vi.mock('../services/electron-scanner', () => ({
   invalidateScanCache: vi.fn(),
 }));
 
+vi.mock('../services/app-icon', () => ({
+  extractAppIcon: vi.fn(),
+}));
+
 vi.mock('../services/electron-launcher', () => ({
   launchApp: vi.fn(),
   getRunningApps: vi.fn(),
@@ -38,6 +42,7 @@ vi.mock('../services/performance', () => ({
 
 const { registerElectronIpc } = await import('./electron-ipc');
 const { scanElectronApps } = await import('../services/electron-scanner');
+const { extractAppIcon } = await import('../services/app-icon');
 const { launchApp } = await import('../services/electron-launcher');
 
 // ---------------------------------------------------------------------------
@@ -93,7 +98,10 @@ describe('electron-ipc', () => {
       const result = await handler({});
 
       expect(scanElectronApps).toHaveBeenCalledOnce();
-      expect(scanElectronApps).toHaveBeenCalledWith({ useCache: true });
+      expect(scanElectronApps).toHaveBeenCalledWith({
+        useCache: true,
+        onApp: expect.any(Function),
+      });
       expect(result).toEqual(sampleScanResult);
     });
 
@@ -104,8 +112,43 @@ describe('electron-ipc', () => {
       await expect(handler({})).rejects.toThrow('registry access denied');
     });
 
+    it('attaches real icons to unadapted apps', async () => {
+      const scanWithOther: ElectronScanResult = {
+        adapted: [],
+        other: [
+          {
+            id: 'xyz789',
+            exePath: 'C:\\App\\foo.exe',
+            productName: 'Foo',
+            companyName: '',
+            adapterMatch: null,
+          },
+        ],
+      };
+      vi.mocked(scanElectronApps).mockResolvedValue(scanWithOther);
+      vi.mocked(extractAppIcon).mockResolvedValue('data:image/png;base64,abc');
+
+      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
+      const result = (await handler({})) as ElectronScanResult;
+
+      expect(extractAppIcon).toHaveBeenCalledOnce();
+      expect(extractAppIcon).toHaveBeenCalledWith('C:\\App\\foo.exe');
+      expect(result.other[0].iconPath).toBe('data:image/png;base64,abc');
+    });
+
+    it('skips icon extraction for adapted apps (bundled brand logo)', async () => {
+      vi.mocked(scanElectronApps).mockResolvedValue(sampleScanResult);
+      vi.mocked(extractAppIcon).mockResolvedValue('data:image/png;base64,abc');
+
+      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
+      const result = await handler({});
+
+      expect(extractAppIcon).not.toHaveBeenCalled();
+      expect(result).toEqual(sampleScanResult);
+    });
+
     it('rejects with IpcTimeoutError when the scan hangs', async () => {
-      // Never-settling promise triggers the withMonitoredTimeout 15s ceiling.
+      // Never-settling promise triggers the withMonitoredTimeout 30s ceiling.
       vi.mocked(scanElectronApps).mockReturnValue(new Promise(() => {}));
 
       const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
@@ -113,8 +156,8 @@ describe('electron-ipc', () => {
 
       expect(caught).toHaveProperty('name', 'IpcTimeoutError');
       expect(caught).toHaveProperty('channel', IpcChannel.ELECTRON_SCAN);
-      expect(caught).toHaveProperty('ms', 15000);
-    }, 25_000); // scan timeout is 15s; 25s lets it fire before vitest kills
+      expect(caught).toHaveProperty('ms', 30000);
+    }, 40_000); // scan timeout is 30s; 40s lets it fire before vitest kills
   });
 
   describe('ELECTRON_LAUNCH', () => {

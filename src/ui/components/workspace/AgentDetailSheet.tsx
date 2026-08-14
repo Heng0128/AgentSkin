@@ -54,9 +54,9 @@ export function AgentDetailSheet({
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
         {env && (
           <>
-            <SheetHeader className="border-b border-border/60">
+            <SheetHeader className="">
               <div className="flex items-center gap-3">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-[2px] bg-card2 ring-1 ring-border-strong/50">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-md bg-card2 ring-1 ring-border-strong/50">
                   <AppMark appId={env.agent.id} size={36} />
                 </div>
                 <div className="min-w-0">
@@ -82,7 +82,7 @@ export function AgentDetailSheet({
 
               {/* 主题预览 — 视觉锚点 */}
               {env.theme?.preview && (
-                <div className="overflow-hidden rounded-[2px] border border-border/60 bg-muted">
+                <div className="overflow-hidden rounded-md  bg-muted">
                   <img
                     src={env.theme.preview}
                     alt=""
@@ -102,10 +102,10 @@ export function AgentDetailSheet({
               </div>
             </div>
 
-            <SheetFooter className="border-t border-border/60">
+            <SheetFooter className="">
               <Button
                 className={cn(
-                  'w-full gap-1.5 rounded-[2px] bg-primary text-primary-foreground',
+                  'w-full gap-1 rounded-md bg-primary text-primary-foreground',
                   'hover:bg-primary/90',
                 )}
                 disabled={isApplying}

@@ -95,12 +95,12 @@ export default function App() {
                   resolves against it. With min-height the resolved height stays
                   auto, so every page's h-full container collapsed to content
                   height and the inner scroll regions never engaged.
-                  Padding kept minimal (12 top / 20 sides / 16 bottom) so pages
+                  Padding kept minimal (8 top / 16 sides / 16 bottom) so pages
                   use nearly the full viewport — the sidebar/title/status bars
                   already frame the edges, and the inject dock floats above. */}
               <div
                 className={cn(
-                  'mx-auto h-full w-full p-[12px_20px_16px]',
+                  'mx-auto h-full w-full p-[8px_16px_16px]',
                   controller.route !== 'settings' && 'max-w-[1240px]',
                 )}
               >
@@ -174,7 +174,7 @@ export default function App() {
           <div
             key={toast.id}
             className={cn(
-              'fixed bottom-4 left-1/2 z-[100] -translate-x-1/2 rounded-[2px] border px-4 py-2 text-sm shadow-float',
+              'fixed bottom-4 left-1/2 z-[100] -translate-x-1/2 rounded-md border px-4 py-2 text-sm shadow-float',
               toast.tone === 'destructive'
                 ? 'border-destructive/30 bg-destructive/10 text-destructive'
                 : 'border-border bg-popover text-popover-foreground',

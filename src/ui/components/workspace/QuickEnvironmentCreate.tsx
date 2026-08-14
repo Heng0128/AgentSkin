@@ -78,14 +78,11 @@ export function QuickEnvironmentCreate({
   }
 
   return (
-    <div
-      className="mt-1 space-y-1.5 border border-border bg-card p-2"
-      style={{ borderRadius: 'var(--radius)' }}
-    >
+    <div className="mt-1 space-y-1  bg-card p-2" style={{ borderRadius: 'var(--radius)' }}>
       {/* 工程名 */}
       <input
         placeholder="工程名"
-        className="h-6 w-full border border-border bg-muted px-2 font-mono text-[10px] outline-none focus:border-primary/60"
+        className="h-6 w-full border border-input bg-muted px-2 text-[11px] outline-none focus:border-primary/60"
         style={{ borderRadius: 'var(--radius)' }}
         value={projectName}
         onChange={(e) => setProjectName(e.target.value)}
@@ -97,7 +94,7 @@ export function QuickEnvironmentCreate({
       {/* 作者 */}
       <input
         placeholder="作者（可选）"
-        className="h-6 w-full border border-border bg-muted px-2 font-mono text-[10px] outline-none focus:border-primary/60"
+        className="h-6 w-full border border-input bg-muted px-2 text-[11px] outline-none focus:border-primary/60"
         style={{ borderRadius: 'var(--radius)' }}
         value={author}
         onChange={(e) => setAuthor(e.target.value)}
@@ -105,7 +102,7 @@ export function QuickEnvironmentCreate({
 
       {/* 壁纸绑定（可选） */}
       <select
-        className="h-6 w-full border border-border bg-muted px-1 font-mono text-[10px] outline-none focus:border-primary/60"
+        className="h-6 w-full border border-input bg-muted px-1 text-[11px] outline-none focus:border-primary/60"
         style={{ borderRadius: 'var(--radius)' }}
         value={wallpaperId ?? ''}
         onChange={(e) => setWallpaperId(e.target.value || null)}
@@ -129,33 +126,33 @@ export function QuickEnvironmentCreate({
               key={id}
               type="button"
               className={cn(
-                'flex items-center gap-1 px-2 py-0.5 font-mono text-[10px]',
+                'flex items-center gap-1 px-2 py-0 text-[11px]',
                 isSelected
                   ? 'border border-primary bg-primary/10 text-primary'
-                  : 'border border-border bg-muted text-muted-foreground',
+                  : ' bg-muted text-muted-foreground',
               )}
-              style={{ borderRadius: 'var(--radius)', letterSpacing: '0.05em' }}
+              style={{ borderRadius: 'var(--radius)' }}
               onClick={() => setSelectedAgent(id)}
               title={meta.displayName}
             >
               <AppMark appId={id} size={10} />
-              {meta.displayName.toUpperCase()}
+              {meta.displayName}
             </button>
           );
         })}
       </div>
 
       {/* 操作按钮 */}
-      <div className="flex gap-1.5 pt-1">
+      <div className="flex gap-1 pt-1">
         <button
           type="button"
           className={cn(
-            'h-6 flex-1 border border-border px-2 font-mono text-[9.5px] font-bold uppercase',
+            'h-6 flex-1  px-2 text-[11px] font-medium',
             canSubmit
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-muted-foreground/50 cursor-not-allowed',
           )}
-          style={{ letterSpacing: '0.08em', borderRadius: 'var(--radius)' }}
+          style={{ borderRadius: 'var(--radius)' }}
           disabled={!canSubmit}
           onClick={() => void handleCreate()}
         >
@@ -163,8 +160,8 @@ export function QuickEnvironmentCreate({
         </button>
         <button
           type="button"
-          className="h-6 border border-border bg-muted px-2 font-mono text-[9.5px] uppercase text-muted-foreground"
-          style={{ letterSpacing: '0.06em', borderRadius: 'var(--radius)' }}
+          className="h-6  bg-muted px-2 text-[11px] text-muted-foreground"
+          style={{ borderRadius: 'var(--radius)' }}
           onClick={onCancel}
         >
           取消

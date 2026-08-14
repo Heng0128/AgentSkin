@@ -28,15 +28,15 @@ function StepRow({ step }: { step: InstallStep }) {
   const statusIcon = (() => {
     switch (step.status) {
       case 'done':
-        return <Check className="size-3.5 text-cr-success" />;
+        return <Check className="size-4 text-cr-success" />;
       case 'active':
-        return <Loader2 className="size-3.5 animate-spin text-primary" />;
+        return <Loader2 className="size-4 animate-spin text-primary" />;
       case 'error':
-        return <AlertCircle className="size-3.5 text-destructive" />;
+        return <AlertCircle className="size-4 text-destructive" />;
       case 'cancelled':
-        return <X className="size-3.5 text-muted-foreground" />;
+        return <X className="size-4 text-muted-foreground" />;
       default:
-        return <span className="size-3.5 rounded-full border border-muted-foreground/30" />;
+        return <span className="size-4 rounded-full border border-muted-foreground/30" />;
     }
   })();
 
@@ -178,7 +178,7 @@ export function InstallWizard({
     .slice(-50); // last 50 entries
 
   return (
-    <div className="animate-page-enter fixed bottom-4 left-1/2 z-[110] w-[480px] -translate-x-1/2 rounded-[2px] border bg-popover shadow-float">
+    <div className="animate-page-enter fixed bottom-4 left-1/2 z-[110] w-[480px] -translate-x-1/2 rounded-md border bg-popover shadow-float">
       {/* Header */}
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <img src={appIcon} alt="" className="size-6 rounded" draggable={false} />
@@ -190,7 +190,7 @@ export function InstallWizard({
         </div>
         {(isComplete || isFailed || isCancelled) && (
           <Button size="sm" variant="ghost" className="size-6 p-0" onClick={onClose}>
-            <X className="size-3.5" />
+            <X className="size-4" />
           </Button>
         )}
       </div>
@@ -209,7 +209,7 @@ export function InstallWizard({
       </div>
 
       {/* Steps list */}
-      <div className="mx-4 mt-3 max-h-32 overflow-y-auto rounded-[2px] bg-muted/30 p-2">
+      <div className="mx-4 mt-3 max-h-32 overflow-y-auto rounded-md bg-muted/30 p-2">
         <ul className="flex flex-col gap-1">
           {steps.map((step) => (
             <StepRow key={step.id} step={step} />
@@ -221,7 +221,7 @@ export function InstallWizard({
       {logEntries.length > 0 && (
         <div
           ref={logRef}
-          className="mx-4 mt-2 max-h-24 overflow-y-auto rounded-[2px] border bg-muted/20 p-2"
+          className="mx-4 mt-2 max-h-24 overflow-y-auto rounded-md border bg-muted/20 p-2"
         >
           {logEntries.map((entry, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: log entries are append-only display items — no reorder, insert, or delete, so index keys are safe.
@@ -234,13 +234,13 @@ export function InstallWizard({
       <div className="flex items-center gap-2 border-t px-4 py-3">
         {isFailed && onRetry && (
           <Button size="sm" variant="outline" onClick={onRetry}>
-            <RotateCw className="size-3.5" />
+            <RotateCw className="size-4" />
             {t?.restartAndApply ?? '重试'}
           </Button>
         )}
         {isInstalling && onCancel && (
           <Button size="sm" variant="outline" onClick={onCancel}>
-            <X className="size-3.5" />
+            <X className="size-4" />
             {t?.cancel ?? '取消'}
           </Button>
         )}

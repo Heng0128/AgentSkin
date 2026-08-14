@@ -556,5 +556,220 @@ describe('electron-scanner', () => {
     // Version falls back to registry entry when PE read fails.
     expect(result.other[0].version).toBe('3.0.0');
     expect(result.other[0].adapterMatch).toBeNull();
+    // Name falls back to the registry DisplayName when PE product name is empty.
+    expect(result.other[0].productName).toBe('MysteryApp');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 12 — findAnyExe prefers the directory-name match over aux exes
+  // -----------------------------------------------------------------------
+  it('picks the directory-name exe over an uninstaller listed first', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+
+    configureExecMocks(
+      '1.0.0|1.0.0|Discord|Discord App|Discord Inc',
+      'Discord|1.0.0|D:\\Apps\\Discord',
+    );
+
+    // `uninstall.exe` sorts first — the scanner must still pick Discord.exe.
+    statMap.set('D:\\Apps\\Discord\\uninstall.exe', 'file');
+    statMap.set('D:\\Apps\\Discord\\Discord.exe', 'file');
+    readdirMap.set('D:\\Apps\\Discord', ['uninstall.exe', 'Discord.exe']);
+
+    const result = await scanElectronApps({ useCache: false });
+
+    expect(result.other).toHaveLength(1);
+    expect(result.other[0].exePath).toBe('D:\\Apps\\Discord\\Discord.exe');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 13 — findAnyExe skips auxiliary exes when dir name doesn't match
+  // -----------------------------------------------------------------------
+  it('skips auxiliary exes when the directory name does not match', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+
+    configureExecMocks('2.0.0|2.0.0|MyTool Launcher|MyTool|Acme', 'MyTool|2.0.0|D:\\Apps\\MyTool');
+
+    // No `MyTool.exe` — the launcher lives under a different name, and the
+    // uninstaller sorts first. The scanner must skip it.
+    statMap.set('D:\\Apps\\MyTool\\uninstall.exe', 'file');
+    statMap.set('D:\\Apps\\MyTool\\mytool-launcher.exe', 'file');
+    readdirMap.set('D:\\Apps\\MyTool', ['uninstall.exe', 'mytool-launcher.exe']);
+
+    const result = await scanElectronApps({ useCache: false });
+
+    expect(result.other).toHaveLength(1);
+    expect(result.other[0].exePath).toBe('D:\\Apps\\MyTool\\mytool-launcher.exe');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 14 — L3 recurses into vendor folders (two-level AppData layout)
+  // -----------------------------------------------------------------------
+  it('discovers Electron apps nested under a vendor folder in AppData', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+
+    // Registry sweep empty; PE read empty → name falls back to the exe name.
+    configureExecMocks('', '');
+
+    const local = 'C:\\Users\\me\\AppData\\Local';
+    process.env.LOCALAPPDATA = local;
+
+    const vendor = `${local}\\slack`;
+    const appDir = `${vendor}\\app-4.0.0`;
+
+    // LOCALAPPDATA → slack (vendor) → app-4.0.0 (app, two levels deep).
+    readdirMap.set(local, ['slack']);
+    statMap.set(vendor, 'dir');
+    readdirMap.set(vendor, ['app-4.0.0']);
+    statMap.set(appDir, 'dir');
+    statMap.set(`${appDir}\\resources\\app.asar`, 'asar');
+    readdirMap.set(appDir, ['slack.exe', 'resources']);
+    statMap.set(`${appDir}\\slack.exe`, 'file');
+
+    const result = await scanElectronApps({ useCache: false });
+
+    expect(result.other).toHaveLength(1);
+    expect(result.other[0].exePath).toBe(`${appDir}\\slack.exe`);
+    // PE name empty → fallback to the exe filename ("slack").
+    expect(result.other[0].productName).toBe('slack');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 15 — L1 name falls back to the adapter display name
+  // -----------------------------------------------------------------------
+  it('falls back to the adapter name when PE product name is empty', async () => {
+    mockDetectInstallation.mockImplementation(async (opts: { displayName: string }) => {
+      if (opts.displayName === 'TRAE Work CN') {
+        return {
+          installed: true,
+          path: 'C:\\Program Files\\TRAE SOLO CN',
+          version: '1.2.3',
+          source: 'path',
+        };
+      }
+      return { installed: false, path: null, version: null, source: null };
+    });
+
+    // PE info has an empty product-name column (third field blank).
+    configureExecMocks('1.2.3|1.2.3||TRAE|ByteDance', '');
+
+    statMap.set('C:\\Program Files\\TRAE SOLO CN\\TRAE SOLO CN.exe', 'file');
+
+    const result = await scanElectronApps({ useCache: false });
+
+    expect(result.adapted).toHaveLength(1);
+    expect(result.adapted[0].adapterMatch).toBe('traework');
+    expect(result.adapted[0].productName).toBe('TRAE Work CN');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 16 — L3 descends three levels under Program Files
+  // -----------------------------------------------------------------------
+  it('discovers Electron apps nested three levels deep under Program Files', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+
+    configureExecMocks('', '');
+
+    const pf = 'C:\\Program Files';
+    process.env.ProgramFiles = pf;
+
+    // Docker Desktop: Program Files\Docker\Docker\frontend (3 levels).
+    const docker = `${pf}\\Docker`;
+    const dockerInner = `${docker}\\Docker`;
+    const frontend = `${dockerInner}\\frontend`;
+    readdirMap.set(pf, ['Docker']);
+    statMap.set(docker, 'dir');
+    readdirMap.set(docker, ['Docker']);
+    statMap.set(dockerInner, 'dir');
+    readdirMap.set(dockerInner, ['frontend']);
+    statMap.set(frontend, 'dir');
+    statMap.set(`${frontend}\\resources\\app.asar`, 'asar');
+    readdirMap.set(frontend, ['Docker Desktop.exe', 'resources']);
+    statMap.set(`${frontend}\\Docker Desktop.exe`, 'file');
+
+    const result = await scanElectronApps({ useCache: false });
+
+    expect(result.other).toHaveLength(1);
+    expect(result.other[0].exePath).toBe(`${frontend}\\Docker Desktop.exe`);
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 17 — launcher in a grandparent dir (QQ NT under C:\yyb)
+  // -----------------------------------------------------------------------
+  it('finds the launcher exe two ancestors up (QQ NT in the yyb dir)', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+    configureExecMocks('', '');
+
+    // C:\yyb\QQ.exe (launcher) → versions\9.9.31-49738\resources\app (no exe).
+    const yyb = 'C:\\yyb';
+    const versions = `${yyb}\\versions`;
+    const ver = `${versions}\\9.9.31-49738`;
+    readdirMap.set(yyb, ['QQ.exe', 'versions']);
+    statMap.set(`${yyb}\\QQ.exe`, 'file');
+    statMap.set(versions, 'dir');
+    readdirMap.set(versions, ['9.9.31-49738']);
+    statMap.set(ver, 'dir');
+    statMap.set(`${ver}\\resources\\app`, 'dir');
+    readdirMap.set(ver, ['resources']);
+
+    const result = await scanElectronApps({ useCache: false });
+
+    expect(result.other).toHaveLength(1);
+    expect(result.other[0].exePath).toBe(`${yyb}\\QQ.exe`);
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 18 — version dir full of auxiliary exes → launcher in parent
+  // -----------------------------------------------------------------------
+  it('skips an auxiliary-only version dir and picks the parent launcher', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+    configureExecMocks('', '');
+
+    const douyin = 'C:\\Apps\\douyin';
+    const ver = `${douyin}\\8.2.303`;
+    readdirMap.set(douyin, ['douyin.exe', '8.2.303']);
+    statMap.set(`${douyin}\\douyin.exe`, 'file');
+    statMap.set(ver, 'dir');
+    statMap.set(`${ver}\\resources\\app.asar`, 'asar');
+    // Version dir holds only auxiliary exes (updater, doctor, uninstaller…).
+    readdirMap.set(ver, ['app_shell_updater.exe', 'douyin_doctor.exe', 'uninst.exe', 'resources']);
+    statMap.set(`${ver}\\app_shell_updater.exe`, 'file');
+    statMap.set(`${ver}\\douyin_doctor.exe`, 'file');
+    statMap.set(`${ver}\\uninst.exe`, 'file');
+
+    const result = await scanElectronApps({ useCache: false, extraDirs: [douyin] });
+
+    expect(result.other).toHaveLength(1);
+    expect(result.other[0].exePath).toBe(`${douyin}\\douyin.exe`);
   });
 });

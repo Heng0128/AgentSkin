@@ -16,10 +16,4 @@
  * The old 'dashboard' / 'agents' / 'workspace' views are merged into Workspace + Apps.
  */
 
-export type Route =
-  | 'workspace'
-  | 'apps'
-  | 'themes'
-  | 'wallpaper'
-  | 'studio'
-  | 'settings';
+export type Route = 'workspace' | 'apps' | 'themes' | 'wallpaper' | 'studio' | 'settings';

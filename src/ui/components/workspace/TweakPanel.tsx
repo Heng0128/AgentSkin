@@ -18,9 +18,9 @@
  * override set to the running agent in real time. The component is fully
  * controlled — it reflects `overrides`, never owns the source of truth.
  *
- * Swiss / International design system:
+ * design system:
  *   - spacing values are drawn from 4/8/16/24/32 only
- *   - corners rounded-[2px]
+ *   - corners rounded-md
  *   - numeric readouts use tabular-nums
  *   - no 10/12/14px type — labels stay at 11px (the mono minimum)
  */
@@ -84,7 +84,7 @@ export function TweakPanel({
       <div className="grid grid-cols-3 gap-4">
         {/* Radius */}
         <label className="flex flex-col gap-2">
-          <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
+          <span className="text-[11px] tracking-tight text-muted-foreground ">
             {str(t, 'workspaceTweakRadius')}
           </span>
           <input
@@ -94,7 +94,6 @@ export function TweakPanel({
             step={1}
             value={pxToInt(overrides.radius, 0)}
             onChange={(e) => set('radius', `${e.target.value}px`)}
-            className="ws-range"
             aria-label={str(t, 'workspaceTweakRadius')}
           />
           <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
@@ -104,7 +103,7 @@ export function TweakPanel({
 
         {/* Spacing */}
         <label className="flex flex-col gap-2">
-          <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
+          <span className="text-[11px] tracking-tight text-muted-foreground ">
             {str(t, 'workspaceTweakSpacing')}
           </span>
           <input
@@ -114,7 +113,6 @@ export function TweakPanel({
             step={4}
             value={overrides.spacing ?? 8}
             onChange={(e) => set('spacing', Number(e.target.value))}
-            className="ws-range"
             aria-label={str(t, 'workspaceTweakSpacing')}
           />
           <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
@@ -124,7 +122,7 @@ export function TweakPanel({
 
         {/* Font size */}
         <label className="flex flex-col gap-2">
-          <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
+          <span className="text-[11px] tracking-tight text-muted-foreground ">
             {str(t, 'workspaceTweakFontSize')}
           </span>
           <input
@@ -134,7 +132,6 @@ export function TweakPanel({
             step={1}
             value={overrides.fontSize ?? 13}
             onChange={(e) => set('fontSize', Number(e.target.value))}
-            className="ws-range"
             aria-label={str(t, 'workspaceTweakFontSize')}
           />
           <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
@@ -145,19 +142,19 @@ export function TweakPanel({
 
       {/* Row 2: shadow select */}
       <div className="flex flex-col gap-2">
-        <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
+        <span className="text-[11px] tracking-tight text-muted-foreground ">
           {str(t, 'workspaceTweakShadow')}
         </span>
         <Select
           value={overrides.shadowLevel ?? 'none'}
           onValueChange={(v) => set('shadowLevel', v as ToolOverride['shadowLevel'])}
         >
-          <SelectTrigger className="h-8 w-32 rounded-[2px] text-[12px]">
+          <SelectTrigger className="h-8 w-32 rounded-md text-[13px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {SHADOW_LEVELS.map((level) => (
-              <SelectItem key={level} value={level} className="text-[12px]">
+              <SelectItem key={level} value={level} className="text-[13px]">
                 {str(t, SHADOW_LABEL_KEY[level])}
               </SelectItem>
             ))}
@@ -207,21 +204,19 @@ function ColorField({
   const hex = value ?? '#888888';
   return (
     <label className="flex flex-col gap-2">
-      <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
-        {label}
-      </span>
+      <span className="text-[11px] tracking-tight text-muted-foreground ">{label}</span>
       <div className="flex items-center gap-2">
         <input
           type="color"
           value={toColorInput(hex)}
           onChange={(e) => onChange(e.target.value)}
-          className="size-7 cursor-pointer rounded-[2px] border border-border bg-transparent p-0"
+          className="size-7 cursor-pointer rounded-md  bg-transparent p-0"
           aria-label={label}
         />
         <Input
           value={hex}
           onChange={(e) => onChange(e.target.value)}
-          className="h-7 flex-1 rounded-[2px] px-2 font-mono text-[11px] tabular-nums"
+          className="h-7 flex-1 rounded-md px-2 font-mono text-[11px] tabular-nums"
         />
       </div>
     </label>

@@ -65,6 +65,12 @@ export interface InstallHints {
   exeNames: string[];
   /** Substrings matched against Uninstall DisplayName (registry). */
   registryNames: string[];
+  /**
+   * MSIX (Appx) package name prefixes to match via `Get-AppxPackage`. MSIX
+   * apps do NOT write to the traditional Uninstall registry, so they need a
+   * dedicated probe (e.g. ChatGPT's Windows build ships as `OpenAI.Codex`).
+   */
+  msixPackageNames?: string[];
 }
 
 export interface ApplyThemeOptions {

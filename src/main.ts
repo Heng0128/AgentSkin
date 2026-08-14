@@ -237,6 +237,11 @@ app
     } catch (error) {
       clearTimeout(splashTimeout);
 
+      // Print the real cause to the terminal — boot failures previously only
+      // surfaced in a dialog (sendLog is a no-op before the window exists, and
+      // the dialog text is not echoed to stdout), leaving the console with only
+      // the unhelpful "[boot] releasing resources after failure" line.
+      console.error('[boot] startup failed:', error);
       console.warn('[boot] releasing resources after failure...');
       try {
         if (ctx.core && typeof (ctx.core as { dispose?: () => void }).dispose === 'function') {

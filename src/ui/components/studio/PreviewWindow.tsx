@@ -120,7 +120,7 @@ export function PreviewWindow({
 
   return (
     <div className="pw" data-active={active}>
-      {/* Header — 28px Swiss mono */}
+      {/* Header — 28px mono */}
       <div className="pw__header">
         <button type="button" className="pw__title-btn" onClick={handleHeaderClick}>
           <span className="pw__app-mark">
@@ -157,12 +157,12 @@ export function PreviewWindow({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[var(--bg-0)]">
-            <span className="font-mono text-[length:10px] text-fg-3">No snapshot</span>
+            <span className="font-mono text-[length:10px] text-[var(--fg-3)]">No snapshot</span>
           </div>
         )}
       </div>
 
-      {/* Footer — 22px Swiss mono */}
+      {/* Footer — 22px mono */}
       <div className="pw__footer">
         <span className="font-mono">800×600</span>
         <span className="pw__footer-sep">·</span>
@@ -171,13 +171,13 @@ export function PreviewWindow({
         <div className="relative">
           <button
             type="button"
-            className="font-mono text-[length:9.5px] text-[var(--fg-2)] hover:text-[var(--fg-0)]"
+            className="font-mono text-[length:10px] text-[var(--fg-2)] hover:text-[var(--fg-0)]"
             onClick={() => setZoomOpen((v) => !v)}
           >
             zoom ▾
           </button>
           {zoomOpen && (
-            <div className="absolute bottom-full right-0 z-10 mb-[2px] flex flex-col gap-[2px] rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-[2px] shadow-[var(--shadow-float)]">
+            <div className="absolute bottom-full right-0 z-10 mb-[2px] flex flex-col gap-0 rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">
               {SCALE_PRESETS.map((s) => (
                 <button
                   key={s}
@@ -186,7 +186,7 @@ export function PreviewWindow({
                     onScaleChange(s);
                     setZoomOpen(false);
                   }}
-                  className="whitespace-nowrap rounded-[var(--r-micro)] px-[var(--space-2)] py-[2px] text-left font-mono text-[length:10px] hover:bg-[var(--bg-3)]"
+                  className="whitespace-nowrap rounded-[var(--r-micro)] px-[var(--space-2)] py-0 text-left font-mono text-[length:10px] hover:bg-[var(--bg-3)]"
                   style={{
                     background: win.scale === s ? 'var(--accent-ghost)' : 'transparent',
                     color: win.scale === s ? 'var(--accent)' : 'var(--fg-0)',

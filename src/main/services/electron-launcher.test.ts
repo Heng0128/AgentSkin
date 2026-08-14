@@ -111,7 +111,7 @@ describe('electron-launcher', () => {
   // ── Helper: mock spawn to return a fake child with a pid ────────────────
   function mockSpawnSuccess(pid: number) {
     mockSpawn.mockImplementationOnce(
-      () => ({ pid, unref: vi.fn() }) as unknown as ReturnType<typeof spawn>,
+      () => ({ pid, unref: vi.fn(), on: vi.fn() }) as unknown as ReturnType<typeof spawn>,
     );
   }
 
@@ -470,6 +470,34 @@ describe('electron-launcher', () => {
       // Verify it's a copy — mutating the returned map must not affect state.
       running.delete('app-tracked');
       expect(getRunningApps().has('app-tracked')).toBe(true);
+    });
+
+    it('clears a running app when its spawned process exits', async () => {
+      mockExecFileSuccess(''); // not running → spawn
+      // Capture the exit handler so we can simulate process termination.
+      const captured = { handler: null as (() => void) | null };
+      mockSpawn.mockImplementationOnce(
+        () =>
+          ({
+            pid: 2222,
+            unref: vi.fn(),
+            on: vi.fn((event: string, cb: () => void) => {
+              if (event === 'exit') captured.handler = cb;
+            }),
+          }) as unknown as ReturnType<typeof spawn>,
+      );
+
+      await launchApp({
+        appId: 'app-exit-cleanup',
+        exePath: 'C:\\tools\\tool.exe',
+        adapted: false,
+      });
+
+      expect(getRunningApps().has('app-exit-cleanup')).toBe(true);
+
+      // Simulate the spawned process terminating.
+      captured.handler?.();
+      expect(getRunningApps().has('app-exit-cleanup')).toBe(false);
     });
   });
 
