@@ -19,10 +19,11 @@
  * 不依赖真实 CDP / adapter / 文件系统。
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import type { ApplicationAdapter } from '../adapters/base';
 import type { AgentId, SystemStatus } from '../shared/types';
 import type { SchemeSnapshot } from './agent-scheme';
-import type { LogCallback, StructuredLogEvent } from './services/contracts';
+import type { LogCallback, StructuredLogEvent, WallpaperAgentSetting } from './services/contracts';
 import { type RestoreFlowDeps, restoreThemeFlow } from './theme-restore-flow';
 
 // ---------------------------------------------------------------------------
@@ -48,7 +49,12 @@ function makeDeps(overrides: {
   hardeningRemoveImpl?: () => Promise<void>;
   removeSecondaryImpl?: () => Promise<void>;
   removeWallpaperImpl?: () => Promise<void>;
-  restoreSchemeImpl?: () => Promise<void>;
+  restoreSchemeImpl?: (
+    appId: AgentId,
+    port: number,
+    snapshot: SchemeSnapshot,
+    epoch: number,
+  ) => Promise<void>;
   persistImpl?: () => Promise<void>;
 }): RestoreFlowDeps {
   const {
@@ -72,7 +78,7 @@ function makeDeps(overrides: {
   let wallpaperSet: { appId: AgentId; enabled: boolean; id: string | null } | null = null;
 
   return {
-    adapter: () => ({ restoreTheme: restoreThemeImpl }) as ReturnType<RestoreFlowDeps['adapter']>,
+    adapter: () => ({ restoreTheme: restoreThemeImpl }) as unknown as ApplicationAdapter,
     isApplyingTheme: () => isApplyingTheme,
     lockAgent: () => {
       locked = true;
