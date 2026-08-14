@@ -90,7 +90,7 @@ export function ExportDialog({
       description="Package the current snapshot as a distributable theme."
       width={480}
     >
-      <div className="space-y-[10px]">
+      <div className="flex flex-col gap-[var(--space-2)]">
         {/* Name */}
         <div className="ws-field">
           <label className="ws-field__label" htmlFor="export-name">
@@ -231,7 +231,7 @@ function ToggleCheck({
           <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden="true">
             <path
               d="M1 4.5L3.5 7L8 2"
-              stroke="#fff"
+              stroke="var(--primary-foreground)"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"

@@ -73,25 +73,48 @@ export async function scanCustomDir(customDir: string): Promise<Map<string, Disc
   return items;
 }
 
+/** Error thrown when wallpaper import fails for a user-recoverable reason. */
+export class WallpaperImportError extends Error {
+  constructor(
+    readonly reason: 'UNSUPPORTED_FORMAT' | 'FILE_NOT_FOUND' | 'FILE_TOO_LARGE',
+    readonly details: string,
+  ) {
+    const messages: Record<typeof reason, string> = {
+      UNSUPPORTED_FORMAT: `不支持的壁纸格式 (${details})。支持: MP4, WebM, MKV, MOV, AVI, JPG, PNG, BMP, WebP, GIF`,
+      FILE_NOT_FOUND: `文件不存在或无法访问: ${details}`,
+      FILE_TOO_LARGE: `文件过大 (${details})。视频上限 500MB, 图片上限 50MB`,
+    };
+    super(messages[reason]);
+    this.name = 'WallpaperImportError';
+  }
+}
+
 /**
  * Import a media file (video or image) into the custom wallpapers directory.
  * Copies the file (does not move) so the original stays intact.
- * Returns the new {@link DiscoveredItem}, or null if the extension is
- * unsupported or the file exceeds the per-type size cap.
+ * Returns the new {@link DiscoveredItem}.
+ * @throws {WallpaperImportError} when the extension is unsupported, the file
+ *         does not exist, or the file exceeds the per-type size cap.
  */
-export async function importMedia(
-  sourcePath: string,
-  customDir: string,
-): Promise<DiscoveredItem | null> {
+export async function importMedia(sourcePath: string, customDir: string): Promise<DiscoveredItem> {
   const ext = path.extname(sourcePath).toLowerCase();
   const isVideo = IMPORTABLE_EXTENSIONS.has(ext);
   const isImage = IMAGE_EXTENSIONS.has(ext);
-  if (!isVideo && !isImage) return null;
+  if (!isVideo && !isImage) {
+    throw new WallpaperImportError('UNSUPPORTED_FORMAT', ext || '(no extension)');
+  }
 
   const sourceStat = await fs.stat(sourcePath).catch(() => null);
-  if (!sourceStat?.isFile()) return null;
+  if (!sourceStat?.isFile()) {
+    throw new WallpaperImportError('FILE_NOT_FOUND', sourcePath);
+  }
   const maxBytes = isVideo ? MAX_IMPORT_VIDEO_BYTES : MAX_IMPORT_IMAGE_BYTES;
-  if (sourceStat.size > maxBytes) return null;
+  if (sourceStat.size > maxBytes) {
+    throw new WallpaperImportError(
+      'FILE_TOO_LARGE',
+      `${(sourceStat.size / 1024 / 1024).toFixed(1)}MB`,
+    );
+  }
 
   await fs.mkdir(customDir, { recursive: true });
 

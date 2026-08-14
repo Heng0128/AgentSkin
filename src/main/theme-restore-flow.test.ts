@@ -9,8 +9,8 @@
  *   B3: port 有效 + snapshot=null → 完整 restore + 合成 fallback snapshot
  *   B4: port 有效 + snapshot 存在 → 完整 restore + 使用真实 snapshot
  *   B5: adapter.restoreTheme 抛错 → 捕获异常 + 继续所有 best-effort teardown
- *   B6: persist 失败不中断主流程
- *   B7: hardeningRemove/secondary/wallpaper 抛错被吞掉（best-effort）
+ *   B6: persist 抛错被吞掉（best-effort，内存状态已清理）
+ *   B7: hardeningRemove/secondary/wallpaper/restoreScheme 抛错被吞掉（best-effort）
  *   B8: epoch 递增 + lock/unlock 对称
  *   B9: cleanupModuleStateForAgent 在两条路径都被调用
  *   B10: 结构化日志 theme_restore / restore_failed 事件发射
@@ -337,11 +337,11 @@ describe('theme-restore-flow', () => {
   });
 
   // =========================================================================
-  // B6: Persist failure propagates (production code does NOT swallow it)
+  // B6: Persist failure is swallowed (best-effort — in-memory state already cleared)
   // =========================================================================
 
   describe('persist failure (B6)', () => {
-    it('rejects when persist throws (error propagates to caller)', async () => {
+    it('survives persist rejection without crashing the restore', async () => {
       const deps = makeDeps({
         port: VALID_PORT,
         persistImpl: async () => {
@@ -353,13 +353,40 @@ describe('theme-restore-flow', () => {
         _structuredEvents: StructuredLogEvent[];
       };
 
-      // Production code does NOT catch persist errors — they propagate
-      await expect(restoreThemeFlow(TEST_APP, deps)).rejects.toThrow('disk full');
+      // Production code catches persist errors — restore succeeds
+      const result = await restoreThemeFlow(TEST_APP, deps);
+      expect(result.platform).toBe('win32');
 
       // State was cleared BEFORE persist (clearActiveTheme precedes persist)
       expect(extra._getCleared()).toEqual({ appId: TEST_APP, port: VALID_PORT });
-      // Structured log NOT emitted (logStructured runs AFTER persist in the code)
-      expect(extra._structuredEvents).toHaveLength(0);
+      // Structured log still emitted (persist failure is best-effort, flow continues)
+      expect(extra._structuredEvents).toContainEqual(
+        expect.objectContaining({ type: 'theme_restore', agentId: TEST_APP }),
+      );
+      // Cleanup still performed
+      expect(deps.cleanupModuleStateForAgent).toHaveBeenCalledWith(TEST_APP);
+    });
+
+    it('survives persist rejection on no-port path', async () => {
+      const deps = makeDeps({
+        port: null,
+        persistImpl: async () => {
+          throw new Error('disk full');
+        },
+      });
+      const extra = deps as unknown as {
+        _getCleared: () => { appId: AgentId; port: number | null } | null;
+        _structuredEvents: StructuredLogEvent[];
+      };
+
+      // Same best-effort behaviour on the no-port path
+      const result = await restoreThemeFlow(TEST_APP, deps);
+      expect(result.platform).toBe('win32');
+
+      expect(extra._getCleared()).toEqual({ appId: TEST_APP, port: null });
+      expect(extra._structuredEvents).toContainEqual(
+        expect.objectContaining({ type: 'theme_restore', agentId: TEST_APP }),
+      );
     });
   });
 
@@ -413,7 +440,7 @@ describe('theme-restore-flow', () => {
       expect(extra._getCleared()).toEqual({ appId: TEST_APP, port: VALID_PORT });
     });
 
-    it('restoreOriginalScheme failure propagates (not caught by production code)', async () => {
+    it('continues when restoreOriginalScheme fails', async () => {
       const deps = makeDeps({
         port: VALID_PORT,
         restoreSchemeImpl: async () => {
@@ -421,8 +448,9 @@ describe('theme-restore-flow', () => {
         },
       });
 
-      // Production code does NOT wrap restoreOriginalScheme in .catch()
-      await expect(restoreThemeFlow(TEST_APP, deps)).rejects.toThrow('CDP timeout');
+      // Production code wraps restoreOriginalScheme in .catch() — best-effort
+      const result = await restoreThemeFlow(TEST_APP, deps);
+      expect(result.platform).toBe('win32');
     });
   });
 

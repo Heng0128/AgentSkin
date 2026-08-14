@@ -25,6 +25,7 @@
  */
 
 import { api } from '@/api/agentSkinClient';
+import { sha256Hex16 } from '@/lib/hash';
 
 import type { ElectronScanResult, LaunchResult, ScannedApp } from '@shared/types';
 import { create } from 'zustand';
@@ -57,6 +58,9 @@ export interface RunningAppInfo {
 /** Concurrency guard — prevents double-launching the same app. */
 const launchingGuard = new Set<string>();
 
+/** Module-level Set tracking custom exe paths added via manual-add. */
+const customExePaths = new Set<string>();
+
 interface AppsState {
   /** Last scan result (null = never scanned). */
   scanResult: ElectronScanResult | null;
@@ -78,6 +82,11 @@ interface AppsState {
   toggleHidden: (appId: string) => void;
   /** Manually refresh running-status from the main process. */
   refreshStatus: () => void;
+  /**
+   * Add a user-specified exe to the launch list. Marks it as un-adapted
+   * (`adapterMatch: null`) and appends it to `scanResult.other`.
+   */
+  addCustomApp: (exePath: string, preferredPort?: number | null) => Promise<ScannedApp | null>;
 }
 
 export const useAppsStore = create<AppsState>((set, get) => {
@@ -155,6 +164,38 @@ export const useAppsStore = create<AppsState>((set, get) => {
       // Trigger a re-scan which also refreshes running state via the
       // ELECTRON_STATUS subscription when the main process detects changes.
       void get().scan();
+    },
+
+    addCustomApp: async (exePath: string, preferredPort?: number | null) => {
+      // Dedupe: skip if already added by path.
+      if (customExePaths.has(exePath)) {
+        const existing = get().scanResult?.other.find((a) => a.exePath === exePath);
+        return existing ?? null;
+      }
+      customExePaths.add(exePath);
+
+      const id = await sha256Hex16(exePath);
+      const basename = exePath.split(/[\\/]/).pop() ?? exePath;
+      const productName = basename.replace(/\.exe$/i, '');
+      const customApp: ScannedApp = {
+        id,
+        exePath,
+        productName,
+        companyName: '',
+        adapterMatch: null,
+      };
+
+      // Merge into scanResult.other — preserve existing entries.
+      set((s) => {
+        const prev = s.scanResult ?? { adapted: [], other: [] };
+        const next: ElectronScanResult = {
+          adapted: prev.adapted,
+          other: [...prev.other, customApp],
+        };
+        return { scanResult: next };
+      });
+
+      return customApp;
     },
   };
 });

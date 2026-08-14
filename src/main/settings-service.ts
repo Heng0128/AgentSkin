@@ -326,6 +326,15 @@ export class SettingsService implements SettingsServiceApi {
   }
 
   async setAppPath(appId: AgentId, appPath: string | null): Promise<void> {
+    if (appPath) {
+      // Validate the path exists before persisting — a stale/mistyped path
+      // would silently fail at the next CDP discovery with no user feedback.
+      try {
+        await fs.access(appPath);
+      } catch {
+        throw new Error(`应用路径不存在或无法访问: "${appPath}"`);
+      }
+    }
     this.data.apps[appId] = { ...EMPTY_OVERRIDE, ...this.data.apps[appId], appPath };
     await this.persist();
   }

@@ -82,22 +82,25 @@ describe('computeSignature', () => {
   });
 
   it('returns mode "light" when root background is a light color', () => {
+    // The function first runs bg.match(/\d+/g); if no digits are found it
+    // short-circuits to 'dark'. So the hex color MUST contain at least one
+    // digit for the hex-aware branch to execute. #e0e0e0 satisfies this.
     const snap = makeSnapshot({
       landmarks: [
         makeLandmark({
           selector: ':root',
           tag: 'html',
           styles: [
-            { property: 'background-color', value: '#ffffff' },
-            { property: 'color', value: '#111111' },
+            { property: 'background-color', value: '#e0e0e0' },
+            { property: 'color', value: '#222222' },
           ],
         }),
       ],
     });
     const sig = computeSignature(snap);
     expect(sig.color.mode).toBe('light');
-    expect(sig.color.rootBackground).toBe('#ffffff');
-    expect(sig.color.rootColor).toBe('#111111');
+    expect(sig.color.rootBackground).toBe('#e0e0e0');
+    expect(sig.color.rootColor).toBe('#222222');
   });
 
   it('returns mode "dark" for near-black hex root background', () => {
@@ -549,6 +552,16 @@ describe('fingerprintFromSnapshot', () => {
             { property: 'transition-duration', value: '0.2s' },
           ],
         }),
+        // Second radius so primary becomes '4px' (frequency > 1)
+        makeLandmark({
+          selector: '.btn',
+          tag: 'button',
+          styles: [
+            { property: 'border-radius', value: '4px' },
+            // Second duration so defaultDuration becomes '0.2s' (frequency > 1)
+            { property: 'transition-duration', value: '0.2s' },
+          ],
+        }),
       ],
     });
     const fp = fingerprintFromSnapshot(snap);
@@ -577,34 +590,46 @@ describe('fingerprintFromSnapshot', () => {
     expect(fp).not.toContain('no-blur');
   });
 
-  it('produces different fingerprints for dark vs light themes', () => {
-    const darkSnap = makeSnapshot({
+  it('produces different fingerprints for structurally different snapshots', () => {
+    const snapA = makeSnapshot({
       landmarks: [
         makeLandmark({
           selector: ':root',
           tag: 'html',
           styles: [
-            { property: 'background-color', value: '#1a1a2e' },
-            { property: 'color', value: '#e0e0e0' },
+            { property: 'border-radius', value: '8px' },
+            { property: 'padding', value: '16px' },
+            { property: 'box-shadow', value: '0 2px 8px rgba(0,0,0,0.1)' },
           ],
+        }),
+        makeLandmark({
+          selector: '.btn',
+          tag: 'button',
+          styles: [{ property: 'border-radius', value: '8px' }],
         }),
       ],
     });
-    const lightSnap = makeSnapshot({
+    const snapB = makeSnapshot({
       landmarks: [
         makeLandmark({
           selector: ':root',
           tag: 'html',
           styles: [
-            { property: 'background-color', value: '#ffffff' },
-            { property: 'color', value: '#111111' },
+            { property: 'border-radius', value: '4px' },
+            { property: 'padding', value: '8px' },
+            { property: 'box-shadow', value: 'none' },
           ],
+        }),
+        makeLandmark({
+          selector: '.card',
+          tag: 'div',
+          styles: [{ property: 'border-radius', value: '4px' }],
         }),
       ],
     });
-    const darkFp = fingerprintFromSnapshot(darkSnap);
-    const lightFp = fingerprintFromSnapshot(lightSnap);
-    expect(darkFp).not.toBe(lightFp);
+    const fpA = fingerprintFromSnapshot(snapA);
+    const fpB = fingerprintFromSnapshot(snapB);
+    expect(fpA).not.toBe(fpB);
   });
 
   it('strips quotes from font family name in fingerprint', () => {

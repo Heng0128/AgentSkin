@@ -174,7 +174,8 @@ export async function restoreThemeFlow(
     const _epoch = deps.bumpEpoch(appId);
     deps.clearActiveTheme(appId, null);
     await deps.setAgentWallpaper(appId, { enabled: false, id: null });
-    await deps.persist();
+    // Best-effort persist — same rationale as the full-restore path below.
+    await deps.persist().catch(() => undefined);
     deps.cleanupModuleStateForAgent(appId);
     deps.logStructured({
       type: 'theme_restore',
@@ -248,10 +249,17 @@ export async function restoreThemeFlow(
     dataTheme: null,
     storage: {},
   };
-  await deps.restoreOriginalScheme(appId, port, snapshotOrFallback, epoch);
+  // Best-effort scheme restore (cdp-fanout may already have torn down the
+  // target, leaving the CDP call unable to reach the renderer).
+  await deps.restoreOriginalScheme(appId, port, snapshotOrFallback, epoch).catch(() => undefined);
 
   deps.clearActiveTheme(appId, port);
-  await deps.persist();
+  // Best-effort persist — a disk error shouldn't abort the entire restore.
+  // The state has already been cleared in memory above; persist is the
+  // durable mirror, so a failure here means the next startup may re-discover
+  // an activeThemeId that no longer has live CSS (session-scoped, dies with
+  // the renderer) — a cosmetic inconsistency the boot reconciler handles.
+  await deps.persist().catch(() => undefined);
   deps.cleanupModuleStateForAgent(appId);
 
   // Structured log for reliable parsing (locale-independent).

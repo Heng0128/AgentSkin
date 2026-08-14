@@ -52,6 +52,7 @@ import { extractThemeFilesFromArgv } from './file-open';
 import { registerIpc } from './ipc';
 import { loadLocalePreference } from './locale-preferences';
 import { brandingRoot, ctx, registerDisposable, sendLog } from './main-context';
+import { configureLauncherWindow } from './services/electron-launcher';
 import { performanceLogger } from './services/performance';
 import { SettingsService } from './settings-service';
 import { ThemeLibrary } from './theme-library';
@@ -334,6 +335,7 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
         onApplyRequest: deps.onApplyRequest,
       });
       registerIpc(ctx, mgr.updateTrayMenu);
+      configureLauncherWindow(() => ctx.mainWindow ?? null);
       const cleanupWallpaperLifecycle = registerWallpaperLifecycle();
       registerDisposable(cleanupWallpaperLifecycle);
       registerDisposable(() => {

@@ -37,7 +37,7 @@
  * from the store and delegates user actions back to store actions.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppCard } from '@/components/apps/AppCard';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -52,6 +52,10 @@ export default function AppsPage() {
   const runningApps = useAppsStore((s) => s.runningApps);
   const scan = useAppsStore((s) => s.scan);
   const launch = useAppsStore((s) => s.launch);
+  const addCustomApp = useAppsStore((s) => s.addCustomApp);
+
+  /** Hidden file input triggerable from the manual-add button. */
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scan on mount if we have no data yet.
   useEffect(() => {
@@ -62,6 +66,26 @@ export default function AppsPage() {
 
   const adapted = scanResult?.adapted ?? [];
   const other = scanResult?.other ?? [];
+
+  /** Open the native-style file picker via a hidden input[type=file]. */
+  const handleManualAdd = () => {
+    fileInputRef.current?.click();
+  };
+
+  /** When the user picks an exe, resolve its real path and add to the list. */
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Electron injects `path` onto File objects; fallback to name for safety.
+    const exePath = (file as File & { path?: string }).path ?? file.name;
+    if (exePath) {
+      await addCustomApp(exePath);
+    }
+
+    // Reset input so selecting the same file twice re-fires onChange.
+    e.target.value = '';
+  };
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
@@ -163,10 +187,17 @@ export default function AppsPage() {
 
           {/* Manual add button */}
           <div className="mt-4">
-            <Button variant="ghost" size="sm" disabled>
+            <Button variant="ghost" size="sm" onClick={handleManualAdd}>
               <Plus size={14} className="text-muted-foreground/50" />
               手动添加
             </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".exe"
+              className="hidden"
+              onChange={handleFileSelected}
+            />
           </div>
         </div>
       </div>

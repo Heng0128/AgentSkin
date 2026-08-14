@@ -25,7 +25,7 @@ import type {
 } from '../../shared/types';
 import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
-import { type MainContext, notifyStatusChanged, settingsDto } from '../main-context';
+import { type MainContext, notifyStatusChanged, sendLog, settingsDto } from '../main-context';
 import { buildWallpaperTheme, removeWallpaperTheme } from '../theme/wallpaper-theme';
 import { registerThemeWallpaperForInstalled } from '../wallpaper/theme-wallpaper';
 import { assertAgentId, assertNonEmptyString } from './ipc-validators';
@@ -54,7 +54,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
   });
 
   ipcMain.handle(IpcChannel.WALLPAPER_IMPORT, async (_event) => {
-    return withMonitoredTimeout(
+    const work = withMonitoredTimeout(
       IpcChannel.WALLPAPER_IMPORT,
       60000,
       (async () => {
@@ -93,9 +93,14 @@ export function registerWallpaperIpc(deps: MainContext): void {
         if (result.canceled || result.filePaths.length === 0) return deps.wallpapers.list();
         await deps.wallpapers.importMedia(result.filePaths[0]);
         notifyStatusChanged();
-        return deps.wallpapers.list();
+        return { ok: true as const, items: await deps.wallpapers.list() };
       })(),
     );
+    return work.catch((error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      sendLog(`[wallpaper] import failed: ${message}`);
+      return { ok: false as const, error: message };
+    });
   });
 
   ipcMain.handle(

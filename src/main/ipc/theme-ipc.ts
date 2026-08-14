@@ -21,7 +21,7 @@ import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { type ApplyRequest, isAgentId } from '../../shared/types';
 import { isThemePackagePath } from '../file-open';
-import { type MainContext, notifyStatusChanged, wrapCatalog } from '../main-context';
+import { type MainContext, notifyStatusChanged, sendLog, wrapCatalog } from '../main-context';
 import { assertAgentId, assertNonEmptyString, assertSafeThemeId } from './ipc-validators';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
@@ -184,13 +184,33 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
       (async () => {
         assertSafeThemeId(themeId);
         const status = await deps.core.status();
+        const restoreFailures: string[] = [];
         for (const appStatus of status.apps) {
-          if (appStatus.activeThemeId === themeId) await deps.core.restore(appStatus.appId);
+          if (appStatus.activeThemeId === themeId) {
+            try {
+              await deps.core.restore(appStatus.appId);
+            } catch (error) {
+              // A single restore failure must not abort the entire delete
+              // operation. Log and continue so the remaining agents still get
+              // restored and the theme is removed from the library.
+              const reason = (error as Error)?.message ?? String(error);
+              restoreFailures.push(`${appStatus.appId}: ${reason}`);
+            }
+          }
+        }
+        if (restoreFailures.length > 0) {
+          sendLog(
+            `[theme] delete ${themeId}: ${restoreFailures.length} restore(s) failed: ${restoreFailures.join('; ')}`,
+          );
         }
         await deps.library.delete(themeId);
         void updateTrayMenu();
         notifyStatusChanged();
-        return { themes: await deps.library.summaries(), status: await deps.core.status() };
+        return {
+          themes: await deps.library.summaries(),
+          status: await deps.core.status(),
+          ...(restoreFailures.length > 0 ? { restoreFailures } : {}),
+        };
       })(),
     );
   });

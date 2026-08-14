@@ -24,6 +24,21 @@ import path from 'node:path';
  * file fully written. The temp filename embeds PID + random suffix to avoid
  * collisions across concurrent writers.
  */
+/**
+ * Error thrown when a write operation fails due to insufficient disk space.
+ * Carries the original NodeJS error plus a user-facing hint.
+ */
+export class DiskFullError extends Error {
+  readonly code = 'ENOSPC';
+  constructor(
+    readonly originalError: NodeJS.ErrnoException,
+    readonly filePath: string,
+  ) {
+    super(`磁盘空间不足，无法写入文件 "${path.basename(filePath)}"。请清理磁盘空间后重试。`);
+    this.name = 'DiskFullError';
+  }
+}
+
 export async function writeJsonAtomic(file: string, data: unknown): Promise<void> {
   const dir = path.dirname(file);
   await fs.mkdir(dir, { recursive: true });
@@ -31,10 +46,25 @@ export async function writeJsonAtomic(file: string, data: unknown): Promise<void
   // 原实现 Math.random() 在极小规模并发下有碰撞风险，crypto.randomUUID() 生成
   // 122 位随机数，碰撞概率可忽略不计。
   const tmp = path.join(dir, `.${path.basename(file)}.${process.pid}.${randomUUID()}.tmp`);
-  await fs.writeFile(tmp, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+  try {
+    await fs.writeFile(tmp, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException)?.code;
+    if (code === 'ENOSPC') {
+      throw new DiskFullError(error as NodeJS.ErrnoException, file);
+    }
+    // Best-effort cleanup of the temp file if rename failed (e.g. target
+    // locked by another process). The original file is still intact.
+    await fs.unlink(tmp).catch(() => {});
+    throw error;
+  }
   try {
     await fs.rename(tmp, file);
   } catch (error) {
+    const code = (error as NodeJS.ErrnoException)?.code;
+    if (code === 'ENOSPC') {
+      throw new DiskFullError(error as NodeJS.ErrnoException, file);
+    }
     // Best-effort cleanup of the temp file if rename failed (e.g. target
     // locked by another process). The original file is still intact.
     await fs.unlink(tmp).catch(() => {});

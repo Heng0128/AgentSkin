@@ -155,12 +155,13 @@ export class WallpaperService implements WallpaperServiceApi {
 
   /**
    * Import a media file (video or image) into the custom wallpapers directory.
-   * Returns the new wallpaper id, or null if the extension is unsupported.
+   * Returns the new wallpaper id.
+   * @throws {WallpaperImportError} when the extension is unsupported, the file
+   *         does not exist, or the file exceeds the per-type size cap.
    */
-  async importMedia(sourcePath: string): Promise<string | null> {
-    if (!this.customDir) return null;
+  async importMedia(sourcePath: string): Promise<string> {
+    if (!this.customDir) throw new Error('Wallpaper service not initialized');
     const item = await importMedia(sourcePath, this.customDir);
-    if (!item) return null;
     this.items.set(item.id, item);
     return item.id;
   }

@@ -78,14 +78,22 @@ Electron 渲染进程的 React 应用层，包含全部 12 个 Zustand Store、7
 
 | 文件 | 路径 | 用途 |
 |------|------|------|
-| `AgentsPage.tsx` | /agents | Agent 列表与管理页 |
-| `AgentDashboardPage.tsx` | /agents/:id | 单个 Agent 详情仪表盘 |
-| `UnifiedWorkspacePage.tsx` | /workspace | 统一工作区页 |
-| `WorkspacePage.tsx` | /workspace（旧版） | 工作区页（兼容保留） |
+| `WorkspacePage.tsx` | /workspace | 工作区页 |
 | `ThemesPage.tsx` | /themes | 主题浏览与应用页 |
 | `WallpaperEnginePage.tsx` | /wallpaper | 壁纸引擎页 |
 | `SettingsPage.tsx` | /settings | 设置页 |
+| `AppsPage.tsx` | /apps | 应用管理页 |
 | `wallpaper/describeWallpaperFailure.ts` | — | 壁纸失败描述辅助 |
+
+### 已归档页面（pages/archive/）
+
+以下文件已从路由中移除，仅保留供实现参考：
+
+| 文件 | 原路径 | 归档原因 |
+|------|--------|----------|
+| `AgentsPage.tsx` | /agents | 已合并至 WorkspacePage |
+| `AgentDashboardPage.tsx` | /agents/:id | 已合并至 WorkspacePage |
+| `UnifiedWorkspacePage.tsx` | /workspace | 已被新版 WorkspacePage 取代 |
 
 ## 约定
 
