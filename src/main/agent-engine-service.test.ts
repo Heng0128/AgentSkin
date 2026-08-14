@@ -49,7 +49,10 @@ vi.mock('./app-discovery', () => ({
 }));
 vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
 vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));
-vi.mock('./fs-utils', () => ({ writeJsonAtomic: vi.fn(async () => {}), appendLogLine: vi.fn() }));
+vi.mock('./fs-utils', () => ({
+  writeJsonAtomic: vi.fn(async () => {}),
+  appendLogLine: vi.fn(async () => {}),
+}));
 vi.mock('./wallpaper-injector', () => ({
   applyAgentWallpaperNow: vi.fn(async () => ({ ok: true })),
   applyWallpaperToAgent: vi.fn(async () => ({ ok: true })),

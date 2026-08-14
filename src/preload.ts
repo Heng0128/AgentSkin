@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
+import type { LaunchRequest } from './main/services/electron-launcher';
+import type { TweakSession } from './main/services/tweak-injector';
 import type { AppLocale } from './shared/i18n';
 import { IpcChannel } from './shared/ipc-channels';
 import type {
@@ -21,6 +23,7 @@ import type {
   WallpaperSettings,
 } from './shared/types';
 import type { EnvironmentPreset } from './shared/types/environment';
+import type { ToolOverride } from './ui/types/override';
 
 function subscribe<T>(channel: string, listener: (payload: T) => void): () => void {
   const handler = (_event: Electron.IpcRendererEvent, payload: T) => listener(payload);
@@ -283,6 +286,18 @@ const api: AgentSkinApi = {
       companionBusy,
       switchEpoch,
     }),
+  // --- Electron app discovery & launch ---
+  scanElectronApps: () => ipcRenderer.invoke(IpcChannel.ELECTRON_SCAN),
+  launchElectronApp: (request: LaunchRequest) =>
+    ipcRenderer.invoke(IpcChannel.ELECTRON_LAUNCH, request),
+
+  // --- Workspace live tweak ---
+  pushTweak: (session: TweakSession, overrides: ToolOverride) =>
+    ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_PUSH, session, overrides),
+  saveTweakAsCustomCss: (session: TweakSession, overrides: ToolOverride) =>
+    ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_SAVE, session, overrides),
+  resetTweak: (session: TweakSession) =>
+    ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_RESET, session),
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);

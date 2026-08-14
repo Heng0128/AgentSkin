@@ -8,11 +8,11 @@ import type { ElectronScanResult, LaunchResult } from '../../shared/types/agent'
 // Mocks — must precede the dynamic import that pulls in the module under test
 // ---------------------------------------------------------------------------
 
-const handlers = new Map<string, (...args: unknown[]) => unknown>();
+const handlers = new Map<string, (...args: unknown[]) => Promise<unknown>>();
 
 vi.mock('electron', () => ({
   ipcMain: {
-    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
+    handle: vi.fn((channel: string, handler: (...args: unknown[]) => Promise<unknown>) => {
       handlers.set(channel, handler);
     }),
   },

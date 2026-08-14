@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { LaunchRequest } from '../../main/services/electron-launcher';
+import type { TweakSession } from '../../main/services/tweak-injector';
+import type { ToolOverride } from '../../ui/types/override';
 import type { AppLocale } from '../i18n';
-import type { AgentCatalogItem, AgentId, InstallState, Platform } from './agent';
+import type {
+  AgentCatalogItem,
+  AgentId,
+  ElectronScanResult,
+  InstallState,
+  LaunchResult,
+  Platform,
+  ScannedApp,
+} from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
 import type { EnvironmentPreset } from './environment';
 import type {
@@ -563,4 +574,12 @@ export interface AgentSkinApi {
     agentName: string,
     themeData: Record<string, unknown>,
   ): Promise<{ ok: boolean; path?: string }>;
+  // --- Electron app discovery & launch ---
+  scanElectronApps(): Promise<ElectronScanResult>;
+  launchElectronApp(request: LaunchRequest): Promise<LaunchResult>;
+
+  // --- Workspace live tweak ---
+  pushTweak(session: TweakSession, overrides: ToolOverride): Promise<boolean>;
+  saveTweakAsCustomCss(session: TweakSession, overrides: ToolOverride): Promise<boolean>;
+  resetTweak(session: TweakSession): Promise<boolean>;
 }

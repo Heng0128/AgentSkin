@@ -63,7 +63,7 @@ describe('AgentEngineRegistry — loadFrom / snapshot', () => {
       detectedPath: null,
     });
     const snap = reg.snapshot();
-    expect(snap.apps['traework']?.activeThemeId).toBe('test-theme');
+    expect(snap.apps.traework?.activeThemeId).toBe('test-theme');
   });
 });
 

@@ -390,11 +390,14 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
      */
     it('persistFailures increments on writeState failure', async () => {
       vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
+      // appendLogLine must resolve — otherwise the internal log() call from
+      // writeState's catch handler would double-increment the counter.
+      vi.mocked(appendLogLine).mockResolvedValue(undefined);
       const svc = makeService(stateFile);
 
       // Trigger writeState via persist.safe — same path the apply/restore flows use.
       // The persist chain serialises calls, so we await the safe() promise.
-      await svc['persist']['safe'](() => svc['writeState']());
+      await svc.persist.safe(() => svc.writeState());
 
       const m = svc.collectConcurrencyMetrics();
       expect(m.persistFailures).toBe(1);
@@ -434,12 +437,15 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
      */
     it('persistFailures accumulates across multiple failures', async () => {
       vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
+      // appendLogLine must resolve — otherwise the internal log() call from
+      // writeState's catch handler would double-increment the counter.
+      vi.mocked(appendLogLine).mockResolvedValue(undefined);
       const svc = makeService(stateFile);
 
       // Trigger three consecutive writeState failures.
-      await svc['persist']['safe'](() => svc['writeState']());
-      await svc['persist']['safe'](() => svc['writeState']());
-      await svc['persist']['safe'](() => svc['writeState']());
+      await svc.persist.safe(() => svc.writeState());
+      await svc.persist.safe(() => svc.writeState());
+      await svc.persist.safe(() => svc.writeState());
 
       const m = svc.collectConcurrencyMetrics();
       expect(m.persistFailures).toBe(3);
@@ -454,14 +460,17 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
       vi.mocked(writeJsonAtomic)
         .mockRejectedValueOnce(new Error('disk full'))
         .mockResolvedValueOnce(undefined);
+      // appendLogLine must resolve — otherwise the internal log() call from
+      // writeState's catch handler would double-increment the counter.
+      vi.mocked(appendLogLine).mockResolvedValue(undefined);
 
       const svc = makeService(stateFile);
 
-      await svc['persist']['safe'](() => svc['writeState']());
+      await svc.persist.safe(() => svc.writeState());
       // Counter should be 1 after first failure.
       expect(svc.collectConcurrencyMetrics().persistFailures).toBe(1);
 
-      await svc['persist']['safe'](() => svc['writeState']());
+      await svc.persist.safe(() => svc.writeState());
       // Counter stays at 1 after a successful write (no increment).
       expect(svc.collectConcurrencyMetrics().persistFailures).toBe(1);
     });

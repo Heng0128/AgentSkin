@@ -90,8 +90,10 @@ describe('PersistChain', () => {
     const chain = new PersistChain();
     expect(chain.depth).toBe(0);
 
-    // Start a pending write that we control resolution of
-    let resolveWrite: () => void;
+    // Start a pending write that we control resolution of.
+    // The callback runs in a microtask (when the chain reaches it), so
+    // resolveWrite is not assigned until we yield once.
+    let resolveWrite: (() => void) | undefined;
     const writePromise = chain.safe(
       () =>
         new Promise<void>((resolve) => {
@@ -99,59 +101,57 @@ describe('PersistChain', () => {
         }),
     );
 
-    // While the write is in-flight, depth should be 1
+    // safe() incremented pending synchronously: depth is already 1
     expect(chain.depth).toBe(1);
+
+    // Let the write callback execute so resolveWrite is assigned
+    await Promise.resolve();
 
     // Complete the write
     resolveWrite!();
     await writePromise;
-    await Promise.resolve(); // drain the chain's .finally microtask
 
-    // After settle, depth returns to 0
-    expect(chain.depth).toBe(0);
+    // The decrement happens in .finally on this.chain (a separate branch
+    // from the returned result), so we poll until it settles.
+    await vi.waitFor(() => expect(chain.depth).toBe(0));
   });
 
   it('depth tracks multiple queued writes', async () => {
     const chain = new PersistChain();
     expect(chain.depth).toBe(0);
 
+    // Pre-create promises so all resolvers are available synchronously.
+    // (If resolvers were captured inside the write callback, they would
+    // only be populated as each write reaches the front of the chain.)
     const resolvers: (() => void)[] = [];
-
-    // Queue 3 writes; each waits on an external resolver so they don't
-    // auto-settle before we can observe intermediate depth values.
-    const promises = [1, 2, 3].map(() =>
-      chain.safe(
-        () =>
-          new Promise<void>((resolve) => {
-            resolvers.push(resolve);
-          }),
-      ),
+    const innerPromises = [1, 2, 3].map(
+      () =>
+        new Promise<void>((resolve) => {
+          resolvers.push(resolve);
+        }),
     );
+
+    // Queue the writes using the pre-created promises
+    const promises = innerPromises.map((p) => chain.safe(() => p));
 
     // All 3 writes are queued synchronously: depth = 3
     expect(chain.depth).toBe(3);
 
-    // Resolve first write — after it settles, .finally decrements and the
-    // second write starts executing.
+    // Resolve first write — after it settles, .finally decrements and
+    // the second write starts executing.
     resolvers[0]();
     await promises[0];
-    await Promise.resolve(); // drain chain .finally
-    await Promise.resolve(); // drain next .then on chain
-    expect(chain.depth).toBe(2);
+    await vi.waitFor(() => expect(chain.depth).toBe(2));
 
     // Resolve second write
     resolvers[1]();
     await promises[1];
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(chain.depth).toBe(1);
+    await vi.waitFor(() => expect(chain.depth).toBe(1));
 
     // Resolve third write
     resolvers[2]();
     await promises[2];
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(chain.depth).toBe(0);
+    await vi.waitFor(() => expect(chain.depth).toBe(0));
   });
 
   it('depth decrements on write failure and continues chain', async () => {
@@ -162,11 +162,9 @@ describe('PersistChain', () => {
     // chain itself swallows the error and decrements depth.
     const failingPromise = chain.safe(() => Promise.reject(new Error('boom')));
     await failingPromise.catch(() => {});
-    await Promise.resolve(); // drain chain .finally
-    await Promise.resolve(); // drain next microtask
 
-    // depth should be back to 0 (failure handled, counter decremented)
-    expect(chain.depth).toBe(0);
+    // Poll until the chain's .finally has decremented depth
+    await vi.waitFor(() => expect(chain.depth).toBe(0));
 
     // Subsequent writes still execute normally
     let successRan = false;
@@ -174,6 +172,8 @@ describe('PersistChain', () => {
       successRan = true;
     });
     expect(successRan).toBe(true);
-    expect(chain.depth).toBe(0);
+
+    // Poll until the success write's .finally has decremented depth
+    await vi.waitFor(() => expect(chain.depth).toBe(0));
   });
 });
