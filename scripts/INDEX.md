@@ -16,6 +16,7 @@
 | 脚本 | 用途 |
 |------|------|
 | `check-architecture-boundaries.mjs` | 验证分层依赖方向（C4）：UI → preload → IPC → 主进程 → 适配器 |
+| `check-design-tokens.mjs` | 验证设计 token 合规（C6）：间距、字号、圆角、阴影、硬编码颜色、内联 box-shadow |
 | `check-injection-contract.mjs` | 验证 AgentId 四源一致（C1）：主进程、渲染进程、引擎、Store 中的 AgentId 一致 |
 | `check-themes.mjs` | 验证 14-token 主题契约（C2）：每个主题包必须包含完整的 14 个设计 token |
 

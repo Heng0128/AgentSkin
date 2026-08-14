@@ -27,6 +27,15 @@
  * 4. Box-shadow — only `shadow-none` and `shadow-float` are allowed.
  *    `shadow-sm`, `shadow`, `shadow-md`, `shadow-lg`, `shadow-xl` are flagged.
  *
+ * 9. Hardcoded colors — `rgba()`/`hsla()` with raw numeric channels (not CSS
+ *    var() references) are flagged. Whitelisted: `rgba(var(--x), alpha)`,
+ *    `var(--token, rgba(...))` fallbacks, `engines/` directory, and
+ *    RealDomPreview shadow levels.
+ *
+ * 10. Inline box-shadow — `box-shadow` or `boxShadow` inline declarations
+ *     with multi-level or non-token values. Only `none` and `var(--shadow-float)`
+ *     (or any `var(--shadow…)`) are allowed.
+ *
  * Scope: `src/ui/` — all `.ts` and `.tsx` files (recursive).
  *
  * Known false-positives:
@@ -81,6 +90,38 @@ const ALLOWED_ROUNDED = new Set(['rounded-none', 'rounded-[2px]']);
 
 /** Allowed shadow class names. */
 const ALLOWED_SHADOW = new Set(['shadow-none', 'shadow-float']);
+
+// ---------------------------------------------------------------------------
+// Rule 9: rgba/hsla hardcoded color detection
+// ---------------------------------------------------------------------------
+
+const HARD_COLOR_RE = /(rgba?|hsla?)\((\d+(\.\d+)?\s*,\s*){2,3}(\d+(\.\d+)?)\)/g;
+
+function isWhitelistedHardColor(line, match, matchIndex, relPath) {
+  // Whitelist 1: rgba(var(--x), alpha) — uses CSS variables
+  if (/rgba?\(\s*var\(--/.test(match)) return true;
+  // Whitelist 2: var(--token, rgba(...)) fallback declaration
+  const before = line.substring(0, matchIndex);
+  if (/\bvar\([^)]*,\s*$/.test(before)) return true;
+  // Whitelist 3: engines/ 目录 — CDP 注入输出
+  if (relPath.startsWith('engines/')) return true;
+  // Whitelist 4: RealDomPreview shadow levels — 预览引擎
+  if (relPath.includes('RealDomPreview') && /shadow|case/.test(line)) return true;
+  return false;
+}
+
+// ---------------------------------------------------------------------------
+// Rule 10: inline box-shadow multi-level detection
+// ---------------------------------------------------------------------------
+
+const INLINE_SHADOW_RE = /(?:box-shadow|boxShadow):\s*([^;}\n]+)/g;
+
+function isWhitelistedShadow(value) {
+  if (value === 'none') return true;
+  if (/var\(--shadow-float/.test(value)) return true;
+  if (/var\(--shadow/.test(value)) return true;
+  return false;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -368,6 +409,44 @@ function checkLine(line, _fileName, lineNum, relPath) {
       '改为 shadow-float 或 shadow-none',
     );
     m = shadowRe.exec(line);
+  }
+
+  // --- 9. Hardcoded rgba/hsla colors ---
+  {
+    let hcMatch = HARD_COLOR_RE.exec(line);
+    while (hcMatch !== null) {
+      const matchText = hcMatch[0];
+      const matchIndex = hcMatch.index;
+      if (!isWhitelistedHardColor(line, matchText, matchIndex, relPath)) {
+        addViolation(
+          relPath,
+          lineNum,
+          `硬编码颜色 ${matchText} — 应使用 CSS 变量或 design token`,
+          '改为 rgba(var(--token), alpha) 或 var(--token, fallback)',
+        );
+      }
+      hcMatch = HARD_COLOR_RE.exec(line);
+    }
+    // Reset lastIndex for next line (regex is global)
+    HARD_COLOR_RE.lastIndex = 0;
+  }
+
+  // --- 10. Inline box-shadow ---
+  {
+    let shMatch = INLINE_SHADOW_RE.exec(line);
+    while (shMatch !== null) {
+      const value = shMatch[1].trim();
+      if (!isWhitelistedShadow(value)) {
+        addViolation(
+          relPath,
+          lineNum,
+          `内联 box-shadow 使用了非 Swiss shadow token: ${value}`,
+          '改为 var(--shadow-float) 或 shadow-none',
+        );
+      }
+      shMatch = INLINE_SHADOW_RE.exec(line);
+    }
+    INLINE_SHADOW_RE.lastIndex = 0;
   }
 
   // --- 8. Inline style spacing (React camelCase + CSS kebab-case) ---

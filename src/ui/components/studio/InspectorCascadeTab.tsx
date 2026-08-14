@@ -17,6 +17,9 @@ import type { UiMessages } from '@shared/i18n';
 export function InspectorCascadeTab({ t }: { t: UiMessages }) {
   const snapshot = useStudioStore((s) => s.snapshot);
 
+  const MAX_VISIBLE_RULES = 12;
+  const MAX_VISIBLE_FONTS = 8;
+
   if (!snapshot) {
     return (
       <p className="font-mono text-[10px] text-[var(--fg-2)] px-1">{t.studioInspectorEmpty}</p>
@@ -32,14 +35,14 @@ export function InspectorCascadeTab({ t }: { t: UiMessages }) {
       const key = `${r.origin}:${r.selector}`;
       return arr.findIndex((x) => `${x.origin}:${x.selector}` === key) === i;
     })
-    .slice(0, 12);
+    .slice(0, MAX_VISIBLE_RULES);
 
   // Collect platform fonts from all visible landmarks
   const allFonts = [
     ...new Set(
       snapshot.landmarks.filter((lm) => lm.visible).flatMap((lm) => lm.platformFonts ?? []),
     ),
-  ].slice(0, 8);
+  ].slice(0, MAX_VISIBLE_FONTS);
 
   // Use root landmark box model
   const rootLandmark = snapshot.landmarks.find(

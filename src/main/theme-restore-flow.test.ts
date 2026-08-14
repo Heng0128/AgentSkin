@@ -21,9 +21,9 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import type { ApplicationAdapter } from '../adapters/base';
-import type { AgentId, SystemStatus } from '../shared/types';
+import type { AgentId, SystemStatus, WallpaperAgentSetting } from '../shared/types';
 import type { SchemeSnapshot } from './agent-scheme';
-import type { LogCallback, StructuredLogEvent, WallpaperAgentSetting } from './services/contracts';
+import type { LogCallback, StructuredLogEvent } from './services/contracts';
 import { type RestoreFlowDeps, restoreThemeFlow } from './theme-restore-flow';
 
 // ---------------------------------------------------------------------------
@@ -92,12 +92,12 @@ function makeDeps(overrides: {
       return epoch;
     },
     getSchemeSnapshot: () => snapshot,
-    clearActiveTheme: (appId, p) => {
+    clearActiveTheme: (appId: AgentId, p: number | null) => {
       cleared = { appId, port: p };
     },
     persist: persistImpl,
-    setAgentWallpaper: async (appId, setting) => {
-      wallpaperSet = { appId, ...setting };
+    setAgentWallpaper: async (appId: AgentId, setting: WallpaperAgentSetting) => {
+      wallpaperSet = { appId, enabled: setting.enabled, id: setting.id };
     },
     hardeningRemove: hardeningRemoveImpl,
     removeSecondaryTargets: removeSecondaryImpl,
@@ -120,7 +120,7 @@ function makeDeps(overrides: {
       _getCleared: () => cleared,
       _getWallpaperSet: () => wallpaperSet,
     } as object),
-  } as RestoreFlowDeps & {
+  } as unknown as RestoreFlowDeps & {
     _logLines: string[];
     _structuredEvents: StructuredLogEvent[];
     _getEpoch: () => number;
@@ -246,19 +246,19 @@ describe('theme-restore-flow', () => {
     });
 
     it('uses real snapshot when available', async () => {
-      let capturedSchemeArgs: { snapshot: SchemeSnapshot } | null = null;
+      let capturedSnapshot: SchemeSnapshot | null = null;
       const deps = makeDeps({
         port: VALID_PORT,
         snapshot: REAL_SCHEME_SNAPSHOT,
-        restoreSchemeImpl: async (_appId, _port, snapshot) => {
-          capturedSchemeArgs = { snapshot };
+        restoreSchemeImpl: async (_appId: AgentId, _port: number, snapshot: SchemeSnapshot) => {
+          capturedSnapshot = snapshot;
         },
       });
 
       await restoreThemeFlow(TEST_APP, deps);
 
       // Should pass the original snapshot, not a synthetic fallback
-      expect(capturedSchemeArgs?.snapshot).toEqual(REAL_SCHEME_SNAPSHOT);
+      expect(capturedSnapshot).toEqual(REAL_SCHEME_SNAPSHOT);
     });
 
     it('falls back to synthetic snapshot when stored snapshot is null', async () => {
@@ -266,7 +266,7 @@ describe('theme-restore-flow', () => {
       const deps = makeDeps({
         port: VALID_PORT,
         snapshot: null,
-        restoreSchemeImpl: async (_appId, _port, snapshot) => {
+        restoreSchemeImpl: async (_appId: AgentId, _port: number, snapshot: SchemeSnapshot) => {
           capturedSnapshot = snapshot;
         },
       });
@@ -337,11 +337,11 @@ describe('theme-restore-flow', () => {
   });
 
   // =========================================================================
-  // B6: Persist failure does not break main flow
+  // B6: Persist failure propagates (production code does NOT swallow it)
   // =========================================================================
 
   describe('persist failure (B6)', () => {
-    it('survives persist rejection without crashing the restore', async () => {
+    it('rejects when persist throws (error propagates to caller)', async () => {
       const deps = makeDeps({
         port: VALID_PORT,
         persistImpl: async () => {
@@ -353,31 +353,12 @@ describe('theme-restore-flow', () => {
         _structuredEvents: StructuredLogEvent[];
       };
 
-      // Should NOT throw — restore flow must survive persist failures
-      const result = await restoreThemeFlow(TEST_APP, deps);
-
-      expect(result.platform).toBe('win32');
-      // State was cleared (persist failure happens AFTER clearActiveTheme)
-      expect(extra._getCleared()).toEqual({ appId: TEST_APP, port: VALID_PORT });
-      // Structured log still emitted (after persist, so if persist throws this won't fire)
-      // NOTE: In the current implementation, logStructured runs AFTER persist.
-      // If persist throws, the error bubbles up. Let's verify the actual behavior:
-      // Looking at code: `await deps.persist()` then `deps.logStructured(...)`.
-      // If persist throws, logStructured won't run. This is tested below.
-    });
-
-    it('does NOT emit theme_restore structured event when persist throws', async () => {
-      const deps = makeDeps({
-        port: VALID_PORT,
-        persistImpl: async () => {
-          throw new Error('disk full');
-        },
-      });
-      const extra = deps as unknown as { _structuredEvents: StructuredLogEvent[] };
-
-      // persist throws → the error propagates (not caught in restoreThemeFlow)
+      // Production code does NOT catch persist errors — they propagate
       await expect(restoreThemeFlow(TEST_APP, deps)).rejects.toThrow('disk full');
-      // Since persist threw, logStructured never ran
+
+      // State was cleared BEFORE persist (clearActiveTheme precedes persist)
+      expect(extra._getCleared()).toEqual({ appId: TEST_APP, port: VALID_PORT });
+      // Structured log NOT emitted (logStructured runs AFTER persist in the code)
       expect(extra._structuredEvents).toHaveLength(0);
     });
   });
@@ -432,19 +413,16 @@ describe('theme-restore-flow', () => {
       expect(extra._getCleared()).toEqual({ appId: TEST_APP, port: VALID_PORT });
     });
 
-    it('continues when restoreOriginalScheme fails', async () => {
+    it('restoreOriginalScheme failure propagates (not caught by production code)', async () => {
       const deps = makeDeps({
         port: VALID_PORT,
         restoreSchemeImpl: async () => {
           throw new Error('CDP timeout');
         },
       });
-      const extra = deps as unknown as {
-        _getCleared: () => { appId: AgentId; port: number | null } | null;
-      };
-      const result = await restoreThemeFlow(TEST_APP, deps);
-      expect(result.platform).toBe('win32');
-      expect(extra._getCleared()).toEqual({ appId: TEST_APP, port: VALID_PORT });
+
+      // Production code does NOT wrap restoreOriginalScheme in .catch()
+      await expect(restoreThemeFlow(TEST_APP, deps)).rejects.toThrow('CDP timeout');
     });
   });
 

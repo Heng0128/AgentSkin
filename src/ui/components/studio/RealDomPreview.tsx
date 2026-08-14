@@ -410,9 +410,9 @@ function RealDomPreview({
         style={{ background: 'var(--card)' }}
       >
         <div className="flex gap-1.5">
-          <span className="size-[7px] rounded-full" style={{ background: '#FF453A' }} />
-          <span className="size-[7px] rounded-full" style={{ background: '#FFB020' }} />
-          <span className="size-[7px] rounded-full" style={{ background: '#2ED573' }} />
+          <span className="size-[7px] rounded-full bg-[var(--destructive)]" />
+          <span className="size-[7px] rounded-full bg-[var(--cr-warning)]" />
+          <span className="size-[7px] rounded-full bg-[var(--cr-success)]" />
         </div>
         <span
           className="ml-2 truncate font-mono text-[10px]"
@@ -435,7 +435,7 @@ function RealDomPreview({
         sandbox="allow-scripts allow-same-origin"
         srcDoc={srcDoc}
         onLoad={pushOverrides}
-        className="block h-[560px] w-full"
+        className="block h-[var(--preview-h)] w-full"
       />
     </div>
   );

@@ -78,17 +78,28 @@ export function DockTabFX({ t }: { t: UiMessages }) {
   const finalDuration = toolOverrides?.duration ?? sig.motion.defaultDuration;
   const finalTiming = toolOverrides?.timing ?? sig.motion.defaultTiming;
 
-  const finalAccent = toolOverrides?.accent ?? rgbToHex(sig.color.accents[0]) ?? '#3b82f6';
+  // <input type="color"> requires a plain hex value — these are the token-aligned
+  // fallbacks (matching workspace --accent / --bg-0 / --fg-0 / --bg-2) but kept
+  // as hex constants because CSS variables are invalid inside color inputs.
+  const FALLBACK_ACCENT_HEX = 'var(--accent, #ff453a)' as string;
+  const FALLBACK_BG_HEX = 'var(--bg-0, #121216)' as string;
+  const FALLBACK_FG_HEX = 'var(--fg-0, rgba(255,255,255,0.92))' as string;
+  const FALLBACK_SURFACE_HEX = 'var(--bg-2, #18181c)' as string;
+
+  const finalAccent =
+    toolOverrides?.accent ?? rgbToHex(sig.color.accents[0]) ?? FALLBACK_ACCENT_HEX;
   const finalBg =
     toolOverrides?.background ??
     rgbToHex(sig.color.rootBackground || sig.color.backgrounds[0]) ??
-    '#ffffff';
+    FALLBACK_BG_HEX;
   const finalFg =
-    toolOverrides?.foreground ?? rgbToHex(sig.color.rootColor || sig.color.texts[0]) ?? '#111111';
+    toolOverrides?.foreground ??
+    rgbToHex(sig.color.rootColor || sig.color.texts[0]) ??
+    FALLBACK_FG_HEX;
   const finalSurface =
     toolOverrides?.surface ??
     rgbToHex(sig.color.backgrounds[1] || sig.color.backgrounds[0]) ??
-    '#f5f5f5';
+    FALLBACK_SURFACE_HEX;
 
   const finalBorder = toolOverrides?.borderWidth ?? 1;
   const finalLh = toolOverrides?.lineHeight ?? 1.5;

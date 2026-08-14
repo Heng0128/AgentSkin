@@ -113,7 +113,7 @@ export function InspectorDetails({ t }: { t: UiMessages }) {
                 className="h-5 px-1.5 font-mono text-[10px]"
                 style={{
                   background: pseudoView === p ? 'var(--accent)' : 'var(--bg-4)',
-                  color: pseudoView === p ? '#fff' : 'var(--fg-2)',
+                  color: pseudoView === p ? 'var(--primary-foreground)' : 'var(--fg-2)',
                   borderRadius: 'var(--r-micro)',
                   letterSpacing: '0.04em',
                 }}
@@ -149,7 +149,7 @@ export function InspectorDetails({ t }: { t: UiMessages }) {
                 className="h-5 px-1.5 font-mono text-[10px]"
                 style={{
                   background: schemeView === sc ? 'var(--accent)' : 'var(--bg-4)',
-                  color: schemeView === sc ? '#fff' : 'var(--fg-2)',
+                  color: schemeView === sc ? 'var(--primary-foreground)' : 'var(--fg-2)',
                   borderRadius: 'var(--r-micro)',
                 }}
               >

@@ -65,17 +65,22 @@ function makeDeps(
   const logLines: string[] = [];
   const structuredEvents: { type: string; agentId: AgentId; phase: string; timestamp: string }[] =
     [];
-  const capturedSnapshots: SchemeSnapshot[] = [];
+  const capturedSnapshots: (SchemeSnapshot | null)[] = [];
   let storedSnapshot: SchemeSnapshot | null = null;
 
   return {
-    withPageSession: async (appId, port, fn, _retries) => {
+    withPageSession: async (
+      appId: AgentId,
+      port: number,
+      fn: (session: CdpSession) => Promise<void>,
+      _retries?: number,
+    ) => {
       if (throwOnSession) throw new Error('CDP unreachable');
       const session = { appId, port } as unknown as CdpSession;
       await fn(session);
     },
     getSchemeSnapshot: () => storedSnapshot,
-    setSchemeSnapshot: (snapshot) => {
+    setSchemeSnapshot: (snapshot: SchemeSnapshot | null) => {
       storedSnapshot = snapshot;
       capturedSnapshots.push(snapshot);
     },
@@ -83,7 +88,8 @@ function makeDeps(
     isEpochCurrent: () => isEpochCurrent,
     resolveLivePort: async () => resolvePortResult,
     log: (line: string) => logLines.push(line),
-    logStructured: (event) => structuredEvents.push(event as (typeof structuredEvents)[0]),
+    logStructured: (event: { type: string; agentId: AgentId; phase: string; timestamp: string }) =>
+      structuredEvents.push(event),
     // Test-only accessors
     _logLines: logLines,
     _structuredEvents: structuredEvents,

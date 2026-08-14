@@ -27,8 +27,8 @@ export function InspectorFingerprint({ t }: { t: UiMessages }) {
   const fingerprint = fingerprintFromSnapshot(snapshot);
 
   // Color mode badge
-  const modeBg = sig.color.mode === 'dark' ? '#201a40' : '#f0f0f0';
-  const modeFg = sig.color.mode === 'dark' ? '#ffffff' : '#111111';
+  const modeBg = sig.color.mode === 'dark' ? 'var(--bg-4)' : 'var(--accent-subtle)';
+  const modeFg = sig.color.mode === 'dark' ? 'var(--primary-foreground)' : 'var(--fg-0)';
 
   return (
     <div className="space-y-[var(--space-2)]">
