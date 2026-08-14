@@ -45,8 +45,10 @@
 import { execFile, spawn } from 'node:child_process';
 import net from 'node:net';
 import path from 'node:path';
+import type { BrowserWindow } from 'electron';
 import { requireAdapter } from '../../adapters/registry';
 import { toMessage } from '../../shared/errors';
+import { IpcChannel } from '../../shared/ipc-channels';
 import type { LaunchResult } from '../../shared/types';
 
 // ---------------------------------------------------------------------------
@@ -75,7 +77,7 @@ export interface LaunchRequest {
   readonly adapterId?: string;
 }
 
-/** Injectable dependencies — only the log sink today. */
+/** Injectable dependencies — log sink + main-window accessor for status push. */
 export interface LauncherDeps {
   /** Log line sink (defaults to no-op). */
   readonly log: (line: string) => void;
@@ -93,6 +95,9 @@ const runningApps = new Map<string, { pid: number; port: number | null }>();
 
 /** Active dependency wiring (log sink). */
 let moduleDeps: LauncherDeps = { log: () => {} };
+
+/** Main window accessor — used to push ELECTRON_STATUS to the renderer. */
+let getMainWindow: () => BrowserWindow | null = () => null;
 
 /** Max number of port-increment retries before giving up. */
 const MAX_PORT_RETRIES = 10;
@@ -120,6 +125,26 @@ const RESTART_SETTLE_DELAY = 500;
  */
 export function configureLauncher(deps: LauncherDeps): void {
   moduleDeps = deps;
+}
+
+/**
+ * Wire the main-window accessor for status push. Called once during startup
+ * (e.g. from `main.ts`) after the main window is created. Without this, the
+ * launcher silently skips status pushes (the renderer just doesn't receive
+ * `ELECTRON_STATUS` events).
+ */
+export function configureLauncherWindow(getter: () => BrowserWindow | null): void {
+  getMainWindow = getter;
+}
+
+/** Push the current running-apps snapshot to the renderer via
+ *  `ELECTRON_STATUS`. Best-effort — no-op when the main window is unavailable
+ *  (e.g. during tests or early startup). */
+function pushElectronStatus(): void {
+  const win = getMainWindow();
+  if (win && !win.isDestroyed()) {
+    win.webContents.send(IpcChannel.ELECTRON_STATUS, getRunningApps());
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -385,6 +410,7 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
     }
 
     runningApps.set(appId, { pid, port: actualPort });
+    pushElectronStatus();
     return {
       ok: true,
       pid,
@@ -438,6 +464,7 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
   const pid = child.pid ?? -1;
   _log(`[launcher] ${appId}: spawned PID ${pid} (non-adapted, no CDP)`);
   runningApps.set(appId, { pid, port: null });
+  pushElectronStatus();
 
   return {
     ok: true,

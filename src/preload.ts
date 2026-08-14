@@ -296,6 +296,14 @@ const api: AgentSkinApi = {
   scanElectronApps: () => ipcRenderer.invoke(IpcChannel.ELECTRON_SCAN),
   launchElectronApp: (request: LaunchRequest) =>
     ipcRenderer.invoke(IpcChannel.ELECTRON_LAUNCH, request),
+  onElectronStatus: (cb) => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      status: Map<string, { pid: number; port: number | null }>,
+    ) => cb(status);
+    ipcRenderer.on(IpcChannel.ELECTRON_STATUS, handler);
+    return () => ipcRenderer.off(IpcChannel.ELECTRON_STATUS, handler);
+  },
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);

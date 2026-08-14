@@ -584,4 +584,11 @@ export interface AgentSkinApi {
   // --- Electron app discovery & launch ---
   scanElectronApps(): Promise<ElectronScanResult>;
   launchElectronApp(request: LaunchRequest): Promise<LaunchResult>;
+  /** Subscribe to running-status changes for scanned Electron apps (launch /
+   *  exit). The main process pushes the full `getRunningApps()` snapshot via
+   *  `ELECTRON_STATUS` whenever a launch succeeds or an app exits. Returns an
+   *  unsubscribe function. */
+  onElectronStatus(
+    cb: (status: Map<string, { pid: number; port: number | null }>) => void,
+  ): () => void;
 }

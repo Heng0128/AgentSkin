@@ -63,6 +63,47 @@ describe('isPersistedState', () => {
       false,
     );
   });
+
+  // P3 follow-up: document current schemeSnapshot field validation.
+  // The structural guard currently validates only `mode` — agentId, dataTheme,
+  // and storage are trusted. These tests pin that behavior so future
+  // strengthening can detect regressions.
+  it('schemeSnapshot: accepts any agentId/dataTheme/storage (not validated)', () => {
+    // agentId as number — passes (field not checked)
+    expect(
+      isPersistedState({
+        version: 2,
+        apps: { traework: { schemeSnapshot: { agentId: 123, mode: 'dark', storage: {} } } },
+      }),
+    ).toBe(true);
+    // dataTheme as object — passes (field not checked)
+    expect(
+      isPersistedState({
+        version: 2,
+        apps: { traework: { schemeSnapshot: { mode: 'dark', dataTheme: {} } } },
+      }),
+    ).toBe(true);
+    // storage as string — passes (field not checked)
+    expect(
+      isPersistedState({
+        version: 2,
+        apps: { traework: { schemeSnapshot: { mode: 'dark', storage: 'invalid' } } },
+      }),
+    ).toBe(true);
+  });
+
+  it('schemeSnapshot: still accepts well-formed snapshot', () => {
+    expect(
+      isPersistedState({
+        version: 2,
+        apps: {
+          traework: {
+            schemeSnapshot: { agentId: 'traework', dataTheme: 'dark', mode: 'dark', storage: {} },
+          },
+        },
+      }),
+    ).toBe(true);
+  });
 });
 
 describe('PersistChain', () => {
