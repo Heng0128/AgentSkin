@@ -4,7 +4,11 @@ import { describe, expect, it } from 'vitest';
 import type { SchemeSnapshot } from '../agent-scheme';
 import { AgentEngineRegistry } from './agent-engine-registry';
 
-const SCHEMES: SchemeSnapshot[] = [{ mode: 'auto' }, { mode: 'light' }, { mode: 'dark' }];
+const SCHEMES: SchemeSnapshot[] = [
+  { agentId: 'traework', dataTheme: null, storage: {} },
+  { agentId: 'traework', dataTheme: 'light', storage: { theme: 'light' } },
+  { agentId: 'traework', dataTheme: 'dark', storage: { theme: 'dark' } },
+];
 
 function makeRegistry(): AgentEngineRegistry {
   return new AgentEngineRegistry();
@@ -78,7 +82,7 @@ describe('AgentEngineRegistry — setApp', () => {
     expect(app?.activeThemeId).toBe('theme-a');
     expect(app?.activeSchemeId).toBe('dark');
     expect(app?.port).toBe(9222);
-    expect(app?.schemeSnapshot).toEqual({ mode: 'dark' });
+    expect(app?.schemeSnapshot).toEqual(SCHEMES[2]);
     expect(app?.detectedPath).toBe('/path/to/app');
   });
 
@@ -173,7 +177,7 @@ describe('AgentEngineRegistry — setSchemeSnapshot silent no-op on missing entr
     const reg = makeRegistry();
     reg.patchApp('traework', {});
     reg.setSchemeSnapshot('traework', SCHEMES[2]);
-    expect(reg.getSchemeSnapshot('traework')).toEqual({ mode: 'dark' });
+    expect(reg.getSchemeSnapshot('traework')).toEqual(SCHEMES[2]);
   });
 });
 

@@ -3,11 +3,12 @@
 /**
  * AgentEngineService — resolveAgentWallpaperId + wallpaper facade 专项测试
  *
- * 覆盖核心链路的测试盲区（R1: resolveAgentWallpaperId 零覆盖 +
- * R2 部分: wallpaper facade 错误透传未验证）。
+ * 覆盖核心链路的测试盲区：
+ *   - R1: resolveAgentWallpaperId 所有分支零覆盖
+ *   - 补充测试: wallpaper facade 错误透传未验证
  *
  * resolveAgentWallpaperId 是私有方法，通过 (svc as any) 直接调用，
- * 无需 mock wallpaper-injector — 纯粹测试 wallpaper-id 解析分支。
+ * 无需 mock wallpaper-injector — 纯粹测试 wallpaper-id 解析分支逻辑。
  */
 
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -18,19 +19,17 @@ import type {
   AgentId,
   ThemeBundle,
   WallpaperAgentSetting,
+  WallpaperRenderOptions,
   WallpaperSettings,
 } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
 import type {
-  LoggerApi,
   SettingsServiceApi,
-  StructuredLogEvent,
   ThemeLibraryApi,
-  WallpaperResolver,
 } from './services/contracts';
 
 // ---------------------------------------------------------------------------
-// Mocks (minimal — only external IOPS / flows we don't want to exercise)
+// Mocks (与 reliability test 保持一致)
 // ---------------------------------------------------------------------------
 
 vi.mock('./app-discovery', () => ({
@@ -69,15 +68,21 @@ vi.mock('./wallpaper-self-heal', () => ({
 vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
 
 // ---------------------------------------------------------------------------
-// Fixtures
+// Constants & Helpers
 // ---------------------------------------------------------------------------
 
 const TEST_APP: AgentId = 'traework';
 
-function makeWallpaperSettings(opts: {
+const DEFAULT_RENDER: WallpaperRenderOptions = {
+  alignment: 'fill',
+  speed: 1,
+  loop: true,
+  brightness: 100,
+};
+
+function wallpaperSettings(opts: {
   perAgent?: boolean;
   perAgentId?: string | null;
-  perAgentRender?: WallpaperSettings['render'];
   enabled?: boolean;
   globalId?: string | null;
 }): {
@@ -90,65 +95,56 @@ function makeWallpaperSettings(opts: {
     wallpaper: () => ({
       enabled,
       id: opts.globalId ?? null,
-      render: { alignment: 'fill', speed: 1, loop: true, brightness: 100 },
+      render: DEFAULT_RENDER,
       agents: {} as Record<AgentId, WallpaperAgentSetting>,
     }),
-    agentWallpaper: (id: AgentId) => ({
+    agentWallpaper: () => ({
       enabled: perAgent,
       id: perAgent ? (opts.perAgentId ?? null) : null,
-      render: opts.perAgentRender,
+      render: undefined,
     }),
   };
 }
 
-function makeSettings(
-  opts: {
-    port?: number | number | null;
-    wallpaper?: ReturnType<typeof makeWallpaperSettings>;
-  } = {},
-): SettingsServiceApi {
-  const wp = opts.wallpaper ?? makeWallpaperSettings({});
+function makeSettings(wp?: ReturnType<typeof wallpaperSettings>): SettingsServiceApi {
+  const wpApi = wp ?? wallpaperSettings({});
   return {
     initialize: vi.fn(async () => {}),
-    overridesFor: vi.fn(() => ({ appPath: null, port: opts.port ?? null })),
-    wallpaper: wp.wallpaper,
-    agentWallpaper: wp.agentWallpaper,
-    toDto: vi.fn(() => ({})),
+    overridesFor: vi.fn(() => ({ appPath: null, port: null })),
+    wallpaper: wpApi.wallpaper,
+    agentWallpaper: wpApi.agentWallpaper,
+    toDto: vi.fn(() => ({}) as ReturnType<SettingsServiceApi['toDto']>),
     setAppPath: vi.fn(async () => {}),
     setAppPort: vi.fn(async () => {}),
     setWallpaper: vi.fn(async () => {}),
     setAgentWallpaper: vi.fn(async () => {}),
     customThemeCss: vi.fn(() => ''),
     setCustomThemeCss: vi.fn(async () => {}),
-    logger: vi.fn(() => ({ log: vi.fn(), logStructured: vi.fn() }) as LoggerApi),
-  } as unknown as SettingsServiceApi;
+  } as SettingsServiceApi;
 }
 
-function makeThemeEntry(themeId: string, bundle: Partial<ThemeBundle> = {}) {
+function themeEntry(themeId: string, bundle: Partial<ThemeBundle> = {}) {
   return {
-    bundle: {
-      id: themeId,
-      name: { en: 'Test', zh: '测试' },
-      ...bundle,
-    } as ThemeBundle,
+    bundle: { id: themeId, name: { en: 'Test', zh: '测试' }, ...bundle } as ThemeBundle,
     filePath: `/tmp/${themeId}`,
   };
 }
 
-function makeLibrary(findImpl: (id: string) => Promise<unknown>): ThemeLibraryApi {
+function makeThemeLibrary(impl: (id: string) => Promise<unknown>): ThemeLibraryApi {
   return {
-    find: vi.fn(findImpl),
+    initialize: vi.fn(async () => {}),
+    entries: vi.fn(async () => []),
     summaries: vi.fn(async () => []),
-    get: vi.fn(async () => null),
-    install: vi.fn(
-      async () =>
-        ({}) as ThemeLibraryApi extends { install: (...args: any[]) => infer R } ? R : never,
-    ),
-    uninstall: vi.fn(async () => {}),
-    uninstallPermanent: vi.fn(async () => {}),
+    coverPathFor: vi.fn(() => null),
+    iconPathFor: vi.fn(() => null),
+    find: vi.fn(impl),
+    installFile: vi.fn(async () => ({}) as never),
+    installBytes: vi.fn(async () => ({}) as never),
+    importPackage: vi.fn(async () => ({}) as never),
     inspectPackage: vi.fn(async () => ({ incoming: null, existing: null })),
-    import: vi.fn(async () => ({})),
-  } as unknown as ThemeLibraryApi;
+    exportPackage: vi.fn(async () => {}),
+    delete: vi.fn(async () => {}),
+  } as ThemeLibraryApi;
 }
 
 // ---------------------------------------------------------------------------
@@ -171,184 +167,138 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  function makeService(library?: ThemeLibraryApi, settings?: SettingsServiceApi) {
+  function makeSvc(library?: ThemeLibraryApi, settings?: SettingsServiceApi) {
     return new AgentEngineService(
-      library ?? makeLibrary(async () => null),
+      library ?? makeThemeLibrary(async () => null),
       stateFile,
       settings ?? makeSettings(),
     );
   }
 
-  /** Access the private method under test via type-safe cast. */
-  function resolveAgentWallpaperId(svc: AgentEngineService, appId: AgentId, entry?: unknown) {
+  function callResolve(svc: AgentEngineService, appId: AgentId, entry?: unknown) {
     return (
       svc as unknown as {
-        resolveAgentWallpaperId(
-          appId: AgentId,
-          entry?: unknown,
-        ): Promise<{ id: string | null; render?: unknown }>;
+        resolveAgentWallpaperId(appId: AgentId, entry?: unknown): Promise<{
+          id: string | null;
+          render?: WallpaperRenderOptions;
+        }>;
       }
     ).resolveAgentWallpaperId(appId, entry);
   }
 
-  // ── Branch group A: entry provided (applying a theme → theme is SOLE authority) ──
+  // ── A: entry provided (theme is SOLE authority) ────────────────────────
 
-  describe('when entry is provided (theme is authority)', () => {
-    it('returns workshopId when entry.wallpaper has workshopId', async () => {
-      const svc = makeService();
-      const entry = makeThemeEntry('sakura-pastel', {
-        wallpaper: { workshopId: 'wp-12345' },
-      });
+  describe('when entry provided (applying theme)', () => {
+    it('returns workshopId when theme.wallpaper has workshopId', async () => {
+      const svc = makeSvc();
+      const entry = themeEntry('sakura-pastel', { wallpaper: { workshopId: 'wp-12345' } });
 
-      const result = await resolveAgentWallpaperId(svc, TEST_APP, entry);
+      const result = await callResolve(svc, TEST_APP, entry);
 
       expect(result.id).toBe('wp-12345');
       expect(result.render).toBeDefined();
     });
 
-    it('returns theme: prefix + themeId when entry.wallpaper has video but no workshopId', async () => {
-      const svc = makeService();
-      const entry = makeThemeEntry('ocean-blue', {
-        wallpaper: { video: 'ocean.mp4' },
-      });
+    it('returns theme: prefixed id when theme.wallpaper has video only', async () => {
+      const svc = makeSvc();
+      const entry = themeEntry('ocean-blue', { wallpaper: { video: 'ocean.mp4' } });
 
-      const result = await resolveAgentWallpaperId(svc, TEST_APP, entry);
+      const result = await callResolve(svc, TEST_APP, entry);
 
       expect(result.id).toBe('theme:ocean-blue');
       expect(result.render).toBeDefined();
     });
 
-    it('returns null when entry has no wallpaper', async () => {
-      const svc = makeService();
-      const entry = makeThemeEntry('minimal-no-wp', {});
+    it('returns null when theme has no wallpaper', async () => {
+      const svc = makeSvc();
+      const entry = themeEntry('minimal-no-wp');
 
-      const result = await resolveAgentWallpaperId(svc, TEST_APP, entry);
+      const result = await callResolve(svc, TEST_APP, entry);
 
       expect(result.id).toBeNull();
     });
   });
 
-  // ── Branch group B: no entry (restart / reconnect → per-agent hierarchy) ──
+  // ── B: no entry (restart/reconnect — per-agent → global → persisted) ────
 
-  describe('when no entry is provided (per-agent → global → theme hierarchy)', () => {
-    it('returns per-agent wallpaper when agentWallpaper is enabled with id', async () => {
-      const settings = makeSettings({
-        wallpaper: makeWallpaperSettings({
-          perAgent: true,
-          perAgentId: 'wp-agent-specific',
-        }),
-      });
-      const svc = makeService(undefined, settings);
+  describe('when no entry provided (per-agent → global hierarchy)', () => {
+    it('returns per-agent wallpaper id when agentWallpaper.enabled', async () => {
+      const settings = makeSettings(
+        wallpaperSettings({ perAgent: true, perAgentId: 'wp-agent-x' }),
+      );
+      const svc = makeSvc(undefined, settings);
 
-      const result = await resolveAgentWallpaperId(svc, TEST_APP);
+      const result = await callResolve(svc, TEST_APP);
 
-      expect(result.id).toBe('wp-agent-specific');
+      expect(result.id).toBe('wp-agent-x');
     });
 
-    it('falls back to global wallpaper when no per-agent wallpaper', async () => {
-      const settings = makeSettings({
-        wallpaper: makeWallpaperSettings({
-          perAgent: false,
-          enabled: true,
-          globalId: 'wp-global-default',
-        }),
-      });
-      const svc = makeService(undefined, settings);
+    it('falls back to global wallpaper when no per-agent setting', async () => {
+      const settings = makeSettings(
+        wallpaperSettings({ enabled: true, globalId: 'wp-global-default' }),
+      );
+      const svc = makeSvc(undefined, settings);
 
-      const result = await resolveAgentWallpaperId(svc, TEST_APP);
+      const result = await callResolve(svc, TEST_APP);
 
       expect(result.id).toBe('wp-global-default');
     });
 
-    it('falls back to persisted active theme wallpaper when no settings wallpaper', async () => {
-      // agentWp.enabled = false, globalWp.enabled = false → look up theme
-      const settings = makeSettings({
-        wallpaper: makeWallpaperSettings({ enabled: false, perAgent: false }),
-      });
-      const library = makeLibrary(async (id: string) => {
-        if (id === 'persisted-theme') {
-          return makeThemeEntry('persisted-theme', {
-            wallpaper: { workshopId: 'wp-from-theme' },
-          });
-        }
-        return null;
-      });
-      const svc = makeService(library, settings);
+    it('falls back to persisted active theme wallpaper', async () => {
+      const settings = makeSettings(wallpaperSettings({}));
+      const library = makeThemeLibrary(async () => themeEntry('persisted-t', { wallpaper: { workshopId: 'wp-from-theme' } }));
+      const svc = makeSvc(library, settings);
 
-      // Patch the registry to return 'persisted-theme' for getActiveThemeId
-      (
-        svc as unknown as { registry: { getActiveThemeId: (id: AgentId) => string | null } }
-      ).registry.getActiveThemeId = () => 'persisted-theme';
+      // Inject registry hook for getActiveThemeId
+      (svc as unknown as { registry: { getActiveThemeId: () => string } }).registry.getActiveThemeId =
+        () => 'persisted-t';
 
-      const result = await resolveAgentWallpaperId(svc, TEST_APP);
+      const result = await callResolve(svc, TEST_APP);
 
       expect(result.id).toBe('wp-from-theme');
     });
 
-    it('returns null when no wallpaper configured anywhere', async () => {
-      const settings = makeSettings({
-        wallpaper: makeWallpaperSettings({ enabled: false, perAgent: false }),
-      });
-      const library = makeLibrary(async () => null);
-      const svc = makeService(library, settings);
+    it('returns null when no wallpaper configured anywhere (no active theme)', async () => {
+      const settings = makeSettings(wallpaperSettings({}));
+      const library = makeThemeLibrary(async () => null);
+      const svc = makeSvc(library, settings);
 
-      // getActiveThemeId returns null → short-circuit to { id: null }
-      (
-        svc as unknown as { registry: { getActiveThemeId: (id: AgentId) => string | null } }
-      ).registry.getActiveThemeId = () => null;
+      (svc as unknown as { registry: { getActiveThemeId: () => null } }).registry.getActiveThemeId =
+        () => null;
 
-      const result = await resolveAgentWallpaperId(svc, TEST_APP);
+      const result = await callResolve(svc, TEST_APP);
 
       expect(result.id).toBeNull();
     });
 
-    it('returns null when library.find throws', async () => {
-      const settings = makeSettings({
-        wallpaper: makeWallpaperSettings({ enabled: false, perAgent: false }),
+    it('returns null when library.find throws (disk/parse error)', async () => {
+      const settings = makeSettings(wallpaperSettings({}));
+      const library = makeThemeLibrary(async () => {
+        throw new Error('EACCES: disk broken');
       });
-      const library = makeLibrary(async () => {
-        throw new Error('disk broken');
-      });
-      const svc = makeService(library, settings);
+      const svc = makeSvc(library, settings);
 
-      (
-        svc as unknown as { registry: { getActiveThemeId: (id: AgentId) => string | null } }
-      ).registry.getActiveThemeId = () => 'some-theme';
+      (svc as unknown as { registry: { getActiveThemeId: () => string } }).registry.getActiveThemeId =
+        () => 'some-theme';
 
-      const result = await resolveAgentWallpaperId(svc, TEST_APP);
+      const result = await callResolve(svc, TEST_APP);
 
       expect(result.id).toBeNull();
     });
 
-    it('returns null video path when persisted theme has only video wallpaper', async () => {
-      const settings = makeSettings({
-        wallpaper: makeWallpaperSettings({ enabled: false, perAgent: false }),
-      });
-      const globalWp = makeWallpaperSettings({ enabled: false, globalId: null });
-
-      const settingsWithGlobal: SettingsServiceApi = {
-        ...settings,
-        wallpaper: () => ({
-          ...globalWp.wallpaper(),
-          agents: {} as Record<AgentId, WallpaperAgentSetting>,
-        }),
-        agentWallpaper: globalWp.agentWallpaper,
-      } as SettingsServiceApi;
-
-      const library = makeLibrary(async () =>
-        makeThemeEntry('video-theme', {
-          wallpaper: { video: 'sunset.mp4' },
-        }),
+    it('returns theme: prefix when persisted theme has video-only wallpaper', async () => {
+      const settings = makeSettings(wallpaperSettings({}));
+      const library = makeThemeLibrary(async () =>
+        themeEntry('video-t', { wallpaper: { video: 'sunset.mp4' } }),
       );
-      const svc = makeService(library, settingsWithGlobal);
+      const svc = makeSvc(library, settings);
 
-      (
-        svc as unknown as { registry: { getActiveThemeId: (id: AgentId) => string | null } }
-      ).registry.getActiveThemeId = () => 'video-theme';
+      (svc as unknown as { registry: { getActiveThemeId: () => string } }).registry.getActiveThemeId =
+        () => 'video-t';
 
-      const result = await resolveAgentWallpaperId(svc, TEST_APP);
+      const result = await callResolve(svc, TEST_APP);
 
-      expect(result.id).toBe('theme:video-theme');
+      expect(result.id).toBe('theme:video-t');
     });
   });
 });

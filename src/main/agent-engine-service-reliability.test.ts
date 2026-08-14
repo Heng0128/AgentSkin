@@ -570,6 +570,46 @@ describe('AgentEngineService Reliability Verification', () => {
 
       expect(result.ok).toBe(true);
     });
+
+    it('propagates applyAgentWallpaperNow failure from injector', async () => {
+      const { applyAgentWallpaperNow: impl } = await import('./wallpaper-injector');
+      vi.mocked(impl).mockResolvedValueOnce({
+        ok: false,
+        reason: 'disposed',
+        detail: 'Service already disposed',
+      });
+
+      const svc = makeService();
+      const result = await svc.applyAgentWallpaperNow(TEST_APP);
+
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe('disposed');
+    });
+
+    it('propagates applyWallpaperToAgent failure from injector', async () => {
+      const { applyWallpaperToAgent: impl } = await import('./wallpaper-injector');
+      vi.mocked(impl).mockResolvedValueOnce({
+        ok: false,
+        reason: 'not-found',
+        detail: 'Wallpaper id not found',
+      });
+
+      const svc = makeService();
+      const result = await svc.applyWallpaperToAgent('wp-missing', TEST_APP);
+
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe('not-found');
+    });
+
+    it('propagates removeWallpaperFromAgent failure from injector', async () => {
+      const { removeWallpaperFromAgent: impl } = await import('./wallpaper-injector');
+      vi.mocked(impl).mockResolvedValueOnce({ ok: false });
+
+      const svc = makeService();
+      const result = await svc.removeWallpaperFromAgent(TEST_APP);
+
+      expect(result.ok).toBe(false);
+    });
   });
 
   // =========================================================================
@@ -757,27 +797,20 @@ describe('AgentEngineService Reliability Verification', () => {
       expect(restoreResult.platform).toBe('win32');
     });
 
-    it('writeState swallows persist failures without throwing', async () => {
+    it('writeState swallows persist failures and logs "persist failed"', async () => {
       const { writeJsonAtomic } = await import('./fs-utils');
-      vi.mocked(writeJsonAtomic).mockRejectedValueOnce(new Error('EACCES: permission denied'));
+      vi.mocked(writeJsonAtomic).mockReset();
+      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('EACCES: permission denied'));
 
       const svc = makeService();
       const logSpy = vi.spyOn(svc as unknown as { log: (line: string) => void }, 'log');
 
-      // Trigger a persist via the registry path that calls writeState
-      await (
-        svc as unknown as {
-          persist: { safe: (fn: () => Promise<void>) => void };
-        }
-      ).persist.safe(async () => {
-        await (svc as unknown as { writeState: () => Promise<void> }).writeState();
-      });
+      // writeState catches writeJsonAtomic rejection and logs instead of throwing
+      await (svc as unknown as { writeState: () => Promise<void> }).writeState();
 
-      await flushMicrotasks();
-
-      // Should have logged the failure, not crashed
+      // Should have logged the failure, NOT thrown
       const logCalls = logSpy.mock.calls.flat();
-      expect(logCalls.some((line) => line.includes('persist failed'))).toBe(true);
+      expect(logCalls.some((line: string) => line.includes('persist failed'))).toBe(true);
     });
 
     it('does not crash when dispose interrupts in-flight background cleanup', async () => {

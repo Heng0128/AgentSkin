@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 
 import type { WallpaperInfo } from '@shared/types';
 import { Download, Image, Search, Video } from 'lucide-react';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 /** 页面 wrapper — 持有 AppController (由上层注入)。 */
 export function WallpaperEnginePage({ controller }: { controller: AppController }) {
@@ -157,7 +158,7 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
         onImport={() => void importWallpaper()}
       />
 
-      {/* Grid + detail sidebar */}
+      {/* Grid + detail sidebar (desktop) / Sheet (mobile) */}
       <div className="flex min-h-0 flex-1">
         <div className="we-grid min-h-0 flex-1 overflow-y-auto p-2">
           <WallpaperGrid
@@ -172,33 +173,69 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
           />
         </div>
 
-        {/* Right detail panel */}
+        {/* Desktop: right detail panel (visible md+) */}
         {selected && (
-          <InjectResultsPanel
-            selected={selected}
-            renderDraft={renderDraft}
-            isUiBackground={enabled && selectedId === selected.id}
-            enabled={enabled}
-            onSetUiBackground={handleSetUiBackground}
-            onRenderDraftChange={setRenderDraft}
-            applyingTo={applyingTo}
-            batchProgress={batchProgress}
-            injectResults={injectResults}
-            runningAgentCount={runningAgentCount}
-            readyAgentCount={readyAgentCount}
-            appStatusFor={appStatusFor}
-            agentWallpapers={agentWallpapers}
-            isRefreshing={isRefreshing}
-            relativeTime={relativeTime}
-            selectedVideo={selectedVideo}
-            onClose={() => page.setSelected(null)}
-            onApply={handleApplyAgent}
-            onRemove={page.handleRemove}
-            onApplyAll={handleApplyAllAgents}
-            t={t}
-          />
+          <div className="hidden md:block">
+            <InjectResultsPanel
+              selected={selected}
+              renderDraft={renderDraft}
+              isUiBackground={enabled && selectedId === selected.id}
+              enabled={enabled}
+              onSetUiBackground={handleSetUiBackground}
+              onRenderDraftChange={setRenderDraft}
+              applyingTo={applyingTo}
+              batchProgress={batchProgress}
+              injectResults={injectResults}
+              runningAgentCount={runningAgentCount}
+              readyAgentCount={readyAgentCount}
+              appStatusFor={appStatusFor}
+              agentWallpapers={agentWallpapers}
+              isRefreshing={isRefreshing}
+              relativeTime={relativeTime}
+              selectedVideo={selectedVideo}
+              onClose={() => page.setSelected(null)}
+              onApply={handleApplyAgent}
+              onRemove={page.handleRemove}
+              onApplyAll={handleApplyAllAgents}
+              t={t}
+            />
+          </div>
         )}
       </div>
+
+      {/* Mobile: bottom sheet for selected wallpaper (<md) */}
+      <Sheet open={selected !== null} onOpenChange={(open) => !open && page.setSelected(null)}>
+        <SheetContent
+          side="bottom"
+          className="h-[80svh] overflow-y-auto rounded-t-[2px] p-0 md:hidden"
+        >
+          {selected && (
+            <InjectResultsPanel
+              selected={selected}
+              renderDraft={renderDraft}
+              isUiBackground={enabled && selectedId === selected.id}
+              enabled={enabled}
+              onSetUiBackground={handleSetUiBackground}
+              onRenderDraftChange={setRenderDraft}
+              applyingTo={applyingTo}
+              batchProgress={batchProgress}
+              injectResults={injectResults}
+              runningAgentCount={runningAgentCount}
+              readyAgentCount={readyAgentCount}
+              appStatusFor={appStatusFor}
+              agentWallpapers={agentWallpapers}
+              isRefreshing={isRefreshing}
+              relativeTime={relativeTime}
+              selectedVideo={selectedVideo}
+              onClose={() => page.setSelected(null)}
+              onApply={handleApplyAgent}
+              onRemove={page.handleRemove}
+              onApplyAll={handleApplyAllAgents}
+              t={t}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

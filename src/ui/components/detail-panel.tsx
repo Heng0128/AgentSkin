@@ -300,9 +300,9 @@ export function DetailPanel({
   const isDynamic = Boolean(theme.wallpaper?.video || theme.wallpaper?.workshopId);
 
   return (
-    <div className="flex h-[min(80svh,38rem)] overflow-hidden">
-      {/* Left: preview image / video */}
-      <div className="relative flex w-[58%] shrink-0 items-center justify-center overflow-hidden bg-muted/60">
+    <div className="flex h-[min(80svh,38rem)] flex-col overflow-hidden md:flex-row">
+      {/* Left (desktop) / Top (mobile): preview image / video */}
+      <div className="relative flex h-[40svh] w-full shrink-0 items-center justify-center overflow-hidden bg-muted/60 md:h-auto md:w-[58%]">
         {isDynamic && videoUrl ? (
           <video
             key={theme.id}
