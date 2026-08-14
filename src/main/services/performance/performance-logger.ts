@@ -208,7 +208,8 @@ function createPerformanceLogger(): PerformanceLoggerApi {
       overflowWarned = false;
       timeouts = [];
       timeoutSeq = 0;
-      memSamples = []; // keep clear() symmetric with clearTimeouts/clearMemorySamples
+      memSamples = [];
+      stopMemorySampler(); // halt the interval timer to prevent post-clear leaks
     },
     logTimeout(event: Omit<IpcTimeoutEvent, 'id'>): void {
       timeoutSeq += 1;
@@ -221,7 +222,8 @@ function createPerformanceLogger(): PerformanceLoggerApi {
       }
     },
     getRecentTimeouts(count = 10): IpcTimeoutEvent[] {
-      return timeouts.slice(-count);
+      const n = Math.max(0, Math.min(count, timeouts.length));
+      return timeouts.slice(-n);
     },
     getAllTimeouts(): IpcTimeoutEvent[] {
       return [...timeouts];

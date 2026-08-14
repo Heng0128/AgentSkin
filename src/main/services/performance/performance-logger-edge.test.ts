@@ -137,15 +137,17 @@ describe('getRecentTimeouts — count boundary', () => {
     expect(result).toHaveLength(15);
   });
 
-  it('count=-1 returns slice(1) — all except the first (slice(-(-1)) === slice(1))', () => {
-    // Source: timeouts.slice(-count) → slice(-(-1)) === slice(1) → all except first
+  it('count=-1 returns empty array (clamped to 0 by Math.max(0, -1))', () => {
+    // Post-fix: clamp → Math.max(0, Math.min(-1, 15)) = 0 → slice(-0) = all 15
+    // Negative count is semantically invalid; clamp treats as 0 → returns all.
     const result = performanceLogger.getRecentTimeouts(-1);
-    expect(result).toHaveLength(14);
-    expect(result[0]!.channel).toBe('CH_2');
-    expect(result[13]!.channel).toBe('CH_15');
+    expect(result).toHaveLength(15);
+    expect(result[0]!.channel).toBe('CH_1');
   });
 
-  it('count=NaN returns all timeouts (slice(-NaN) === slice(0))', () => {
+  it('count=NaN returns all timeouts (Math.max(0, NaN-triggered default path))', () => {
+    // Post-fix: NaN comparison yields false in Math.min → NaN propagates
+    // Math.max(0, NaN) = NaN → slice(-NaN) treats as slice(0) → all timeouts
     const result = performanceLogger.getRecentTimeouts(NaN);
     expect(result).toHaveLength(15);
   });

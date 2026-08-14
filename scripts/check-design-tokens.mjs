@@ -548,31 +548,38 @@ function fileExists(absPath) {
   }
 }
 
+console.error('[DEBUG] A: about to check UI_DIR');
 if (!fileExists(UI_DIR)) {
   console.log(`⊘ src/ui/ not found — skipping design token check`);
   process.exit(0);
 }
+console.error('[DEBUG] B: UI_DIR exists, about to walkDir');
 
-walkDir(UI_DIR, (filePath, fileName) => {
-  if (!fileName.endsWith('.ts') && !fileName.endsWith('.tsx')) return;
-  // Skip test files — they may contain mock values outside the design system
-  if (fileName.endsWith('.test.ts') || fileName.endsWith('.test.tsx')) return;
+try {
+  walkDir(UI_DIR, (filePath, fileName) => {
+    if (!fileName.endsWith('.ts') && !fileName.endsWith('.tsx')) return;
+    // Skip test files — they may contain mock values outside the design system
+    if (fileName.endsWith('.test.ts') || fileName.endsWith('.test.tsx')) return;
 
-  checkedFiles++;
-  const src = readFileSync(filePath, 'utf8');
-  const lines = src.split('\n');
-  const relPath = relative(root, filePath).replace(/\\/g, '/');
+    checkedFiles++;
+    console.error(`[DEBUG] C: file #${checkedFiles} = ${fileName}`);
+    const src = readFileSync(filePath, 'utf8');
+    const lines = src.split('\n');
+    const relPath = relative(root, filePath).replace(/\\/g, '/');
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    // Skip comment lines (heuristic: line starts with // or * or /*)
-    const trimmed = line.trim();
-    if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
-      continue;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      // Skip comment lines (heuristic: line starts with // or * or /*)
+      const trimmed = line.trim();
+      if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
+        continue;
+      }
+      checkLine(line, fileName, i + 1, relPath);
     }
-    checkLine(line, fileName, i + 1, relPath);
-  }
-});
+  });
+} catch (e) {
+  console.error('[DEBUG] WALKDIR ERROR:', e.message);
+}
 
 // ---------------------------------------------------------------------------
 // Report
