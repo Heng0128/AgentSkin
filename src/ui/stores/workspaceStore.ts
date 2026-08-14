@@ -161,6 +161,10 @@ const initialState: Omit<
   | 'setDrawerWidth'
   | 'setDrawerCollapsed'
   | 'applyPreset'
+  | 'selectAgent'
+  | 'updateOverride'
+  | 'saveChanges'
+  | 'discardChanges'
 > = {
   viewMode: 'single',
   windows: initialWindows,
@@ -335,5 +339,57 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         width: preset.drawer?.width ?? currentDrawer.width,
       },
     });
+  },
+
+  // --- live tweak actions ---
+
+  selectAgent: (agentId, port) =>
+    set({
+      currentAgentId: agentId,
+      currentPort: port,
+      currentOverrides: {},
+      dirty: false,
+    }),
+
+  updateOverride: (key, value) =>
+    set((s) => {
+      const next: ToolOverride = { ...s.currentOverrides, [key]: value };
+      // Fire-and-forget the real-time push. The main process caches the CSS
+      // layer independently, so a failed push (agent restarting, port flap)
+      // does not block the UI from reflecting the intended state.
+      const session: TweakSession = {
+        agentId: s.currentAgentId ?? ('codex' as AgentId),
+        port: s.currentPort ?? 0,
+        overrides: next,
+        dirty: true,
+      };
+      void api.pushTweak(session, next);
+      return { currentOverrides: next, dirty: true };
+    }),
+
+  saveChanges: async () => {
+    const { currentAgentId, currentPort, currentOverrides } = get();
+    const session: TweakSession = {
+      agentId: currentAgentId ?? ('codex' as AgentId),
+      port: currentPort ?? 0,
+      overrides: currentOverrides,
+      dirty: true,
+    };
+    const ok = await api.saveTweakAsCustomCss(session, currentOverrides);
+    if (ok) set({ dirty: false });
+    return ok;
+  },
+
+  discardChanges: async () => {
+    const { currentAgentId, currentPort } = get();
+    const session: TweakSession = {
+      agentId: currentAgentId ?? ('codex' as AgentId),
+      port: currentPort ?? 0,
+      overrides: {},
+      dirty: false,
+    };
+    const ok = await api.resetTweak(session);
+    if (ok) set({ currentOverrides: {}, dirty: false });
+    return ok;
   },
 }));
