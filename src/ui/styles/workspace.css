@@ -1593,3 +1593,63 @@
   border-top: 1px solid var(--border-subtle);
   margin: var(--space-2) 0;
 }
+
+/* -------------------------------------------------------------------
+ * Live Tweak slider (native range input, SwissInternational styling)
+ * ------------------------------------------------------------------- */
+
+.ws-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border-default);
+  outline: none;
+  cursor: pointer;
+  transition: background var(--dur-fast);
+}
+
+.ws-range::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border-default);
+}
+
+.ws-range::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border-default);
+}
+
+.ws-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  border: 2px solid var(--accent);
+  background: var(--bg-2);
+  margin-top: -4px;
+  transition: border-color var(--dur-fast);
+}
+
+.ws-range::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  border: 2px solid var(--accent);
+  background: var(--bg-2);
+}
+
+.ws-range:hover::-webkit-slider-thumb {
+  border-color: var(--accent-hover);
+}
+
+.ws-range:hover::-moz-range-thumb {
+  border-color: var(--accent-hover);
+}
+
+.ws-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(255, 69, 58, 0.25);
+}

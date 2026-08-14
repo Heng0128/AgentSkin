@@ -71,14 +71,12 @@ export function ExportDialog({
       return;
     }
     if (license.trim()) {
-      // License is stored as part of meta in export payload — pass through
-      // setExportAuthor is already used; license would need a store field.
-      // For now it silently accompanies the export (future: add to store).
+      // TODO: License support — requires store field + payload update.
+      // For now the input collects the value but it is not written to the export payload.
     }
     if (targetDir) {
-      // Store the selected directory for the export to pick up.
-      // Currently exportTheme() runs the full pipeline internally;
-      // this dialog pre-validates that the user has picked a target.
+      // TODO: Target directory support — exportTheme() currently manages output path internally.
+      // This field pre-validates user intent but is not yet passed to the export pipeline.
     }
     void exportTheme();
     onClose();

@@ -37,6 +37,8 @@ import { uiMessages } from '@shared/i18n';
 import type { AppStatus } from '@shared/types';
 import { RefreshCw } from 'lucide-react';
 
+import '@/styles/workspace.css';
+
 /** Read current i18n message table (project-standard pattern). */
 function currentT(): UiMessages {
   return uiMessages[useShellStore.getState().locale];
