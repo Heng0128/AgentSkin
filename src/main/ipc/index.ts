@@ -57,7 +57,7 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
     },
   });
   registerEnvironmentIpc(ctx);
-  registerElectronIpc();
+  registerElectronIpc(ctx);
 
   // Open (or focus) the dedicated Theme Studio window on demand. The renderer
   // env exposes ELECTRON_RENDERER_URL in dev so we can point the studio window

@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { ElectronScanResult, LaunchResult } from '../../shared/types/agent';
+import type { MainContext } from '../main-context';
 
 // ---------------------------------------------------------------------------
 // Mocks — must precede the dynamic import that pulls in the module under test
@@ -80,6 +81,18 @@ const sampleLaunchRequest = {
 };
 
 // ---------------------------------------------------------------------------
+// Test doubles
+// ---------------------------------------------------------------------------
+
+const overridesFor = vi.fn<() => { appPath: string | null; port: number | null }>(() => ({
+  appPath: null,
+  port: null,
+}));
+// The handler only reads `settings.overridesFor`; the full `SettingsServiceApi`
+// surface is irrelevant to this test, so the mock narrows the context shape.
+const deps = { settings: { overridesFor } } as unknown as Pick<MainContext, 'settings'>;
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -87,7 +100,7 @@ describe('electron-ipc', () => {
   beforeEach(() => {
     handlers.clear();
     vi.clearAllMocks();
-    registerElectronIpc();
+    registerElectronIpc(deps);
   });
 
   describe('ELECTRON_SCAN', () => {
@@ -100,9 +113,25 @@ describe('electron-ipc', () => {
       expect(scanElectronApps).toHaveBeenCalledOnce();
       expect(scanElectronApps).toHaveBeenCalledWith({
         useCache: true,
+        extraDirs: [],
         onApp: expect.any(Function),
       });
       expect(result).toEqual(sampleScanResult);
+    });
+
+    it('forwards per-agent appPath overrides into extraDirs', async () => {
+      vi.mocked(scanElectronApps).mockResolvedValue(sampleScanResult);
+      vi.mocked(overridesFor).mockReturnValueOnce({ appPath: 'C:\\Custom\\App', port: null });
+
+      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
+      await handler({});
+
+      expect(scanElectronApps).toHaveBeenCalledOnce();
+      expect(scanElectronApps).toHaveBeenCalledWith({
+        useCache: true,
+        extraDirs: ['C:\\Custom\\App'],
+        onApp: expect.any(Function),
+      });
     });
 
     it('propagates scanner errors to the renderer', async () => {

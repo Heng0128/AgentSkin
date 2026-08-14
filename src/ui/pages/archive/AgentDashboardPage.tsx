@@ -132,7 +132,7 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
             <StatTile
               label={t.dashboardAgents}
               value={`${runningCount}/${supportedCount}`}
-              onClick={() => setRoute('agents')}
+              onClick={() => setRoute('apps')}
             />
             <StatTile label={t.yourEnvironments} value="—" onClick={() => setRoute('workspace')} />
           </div>

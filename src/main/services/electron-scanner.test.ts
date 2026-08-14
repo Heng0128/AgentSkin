@@ -154,7 +154,9 @@ vi.mock('node:fs/promises', () => ({
 // mocked adapters.
 // ---------------------------------------------------------------------------
 
-const { scanElectronApps, getCachedScan, invalidateScanCache } = await import('./electron-scanner');
+const { scanElectronApps, getCachedScan, invalidateScanCache, matchAgainstHints } = await import(
+  './electron-scanner'
+);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -468,6 +470,37 @@ describe('electron-scanner', () => {
     expect(cached).not.toBeNull();
     expect(cached).toHaveProperty('adapted');
     expect(cached).toHaveProperty('other');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 8b — cache expires after the 5-minute TTL
+  // -----------------------------------------------------------------------
+  it('does not return a stale cache once the TTL expires', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+    configureExecMocks('', '');
+    readdirMap.set('C:\\Empty', []);
+
+    await scanElectronApps({ useCache: true });
+    expect(getCachedScan()).not.toBeNull();
+
+    // Advance time past the 5-minute TTL; the cached result is now stale.
+    const realNow = Date.now.bind(Date);
+    vi.spyOn(Date, 'now').mockImplementation(() => realNow() + 5 * 60 * 1000 + 1);
+
+    expect(getCachedScan()).toBeNull();
+
+    // A subsequent useCache call must re-run the scan rather than hit stale cache.
+    const detectMock = vi
+      .fn()
+      .mockResolvedValue({ installed: false, path: null, version: null, source: null });
+    mockDetectInstallation.mockImplementation(detectMock);
+    await scanElectronApps({ useCache: true });
+    expect(detectMock).toHaveBeenCalled();
   });
 
   // -----------------------------------------------------------------------
@@ -855,5 +888,33 @@ describe('electron-scanner', () => {
     expect(result.other).toHaveLength(1);
     expect(result.other[0].exePath).toBe(`${appDir}\\electron.exe`);
     expect(result.other[0].confidence).toBe(65);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// matchAgainstHints — whole-word / whole-phrase matching
+// ---------------------------------------------------------------------------
+
+describe('matchAgainstHints', () => {
+  it('matches a short single-word token as a whole word', () => {
+    // 'ChatGPT' (7 chars, < 8) is a single-word hint for the codex adapter.
+    expect(matchAgainstHints({ productName: 'ChatGPT Desktop', fileDescription: '' })).toBe(
+      'codex',
+    );
+  });
+
+  it('does not match a long single-word token that only appears as a substring', () => {
+    // 'WorkBuddy' (9 chars) must not match inside the longer word 'WorkBuddyPro'.
+    expect(matchAgainstHints({ productName: 'WorkBuddyPro', fileDescription: '' })).toBeNull();
+  });
+
+  it('requires every word of a phrase token to be present', () => {
+    // Phrase 'OpenAI Codex' needs both 'openai' and 'codex'; 'Codex CLI' has only 'codex'.
+    expect(matchAgainstHints({ productName: 'Codex CLI', fileDescription: '' })).toBeNull();
+  });
+
+  it('matches a phrase token when all words are present in any order', () => {
+    // 'OpenAI Codex' words appear in reverse order across productName/fileDescription.
+    expect(matchAgainstHints({ productName: 'Codex', fileDescription: 'OpenAI' })).toBe('codex');
   });
 });

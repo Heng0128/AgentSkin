@@ -19,7 +19,9 @@
 
 import { ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
+import { AGENT_IDS } from '../../shared/types';
 import type { ElectronScanResult } from '../../shared/types/agent';
+import type { MainContext } from '../main-context';
 import { extractAppIcon } from '../services/app-icon';
 import { type LaunchRequest, launchApp } from '../services/electron-launcher';
 import { scanElectronApps } from '../services/electron-scanner';
@@ -50,7 +52,27 @@ async function attachIcons(result: ElectronScanResult): Promise<ElectronScanResu
   return { adapted, other: otherWithIcons };
 }
 
-export function registerElectronIpc(): void {
+/**
+ * Collect the user-configured manual install paths from per-agent `appPath`
+ * overrides. These feed the scanner's L3 filesystem sweep so a user can point the
+ * launcher at a non-standard install location that L1/L2 would otherwise miss.
+ * Paths are deduped case-insensitively on Windows (the only supported platform).
+ */
+function collectExtraDirs(settings: Pick<MainContext, 'settings'>['settings']): string[] {
+  const seen = new Set<string>();
+  const extraDirs: string[] = [];
+  for (const id of AGENT_IDS) {
+    const appPath = settings.overridesFor(id).appPath;
+    if (!appPath) continue;
+    const key = process.platform === 'win32' ? appPath.toLowerCase() : appPath;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    extraDirs.push(appPath);
+  }
+  return extraDirs;
+}
+
+export function registerElectronIpc(deps: Pick<MainContext, 'settings'>): void {
   ipcMain.handle(IpcChannel.ELECTRON_SCAN, async (event, force?: boolean) => {
     const sender = event.sender;
     const result = await withMonitoredTimeout(
@@ -60,6 +82,9 @@ export function registerElectronIpc(): void {
         // `force` bypasses the in-process cache so a manual "rescan" actually
         // re-walks the filesystem instead of replaying the last result.
         useCache: !force,
+        // Fold in user-set manual install paths so they participate in the L3
+        // filesystem sweep (per-agent `appPath` overrides from settings).
+        extraDirs: collectExtraDirs(deps.settings),
         // Stream each newly-discovered app to the renderer so the launcher can
         // show tiles appearing in real time instead of one final pop.
         onApp: (app) => {

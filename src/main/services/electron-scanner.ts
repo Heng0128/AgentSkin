@@ -20,8 +20,8 @@
  *     + hint matching as L2.
  *
  * Deduplication uses SHA-256 (first 16 hex chars) of the exe path as the
- * stable `id`. An in-memory cache (one-shot per process) avoids repeated full
- * scans when the renderer polles the launcher repeatedly; callers can bypass
+ * stable `id`. An in-memory cache with a 5-minute TTL avoids repeated full
+ * scans when the renderer polls the launcher repeatedly; callers can bypass
  * it with `useCache: false`.
  *
  * Timing: the whole operation is bounded by `SCAN_TIMEOUT_MS` (20s). On
@@ -53,6 +53,9 @@ import { mainWarn, mainWarnFromCatch } from '../logger';
 
 /** Hard ceiling on how long a full scan may take before we return partial results. */
 const SCAN_TIMEOUT_MS = 20_000;
+
+/** How long a completed scan result stays fresh in the in-memory cache. */
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 /**
  * Global concurrency cap for PowerShell subprocess spawns. L1/L2 can fan out
@@ -91,6 +94,11 @@ interface ScanCache {
 }
 
 let cache: ScanCache | null = null;
+
+/** Return the cached entry when it is still within the TTL window, else null. */
+function freshCache(): ScanCache | null {
+  return cache !== null && Date.now() - cache.timestamp < CACHE_TTL_MS ? cache : null;
+}
 
 /**
  * In-flight scan promise (single-flight guard). `useCache` callers that race
@@ -200,12 +208,16 @@ function nameFromExe(exePath: string): string {
 
 /**
  * Score a discovered exe against every known adapter's installHints.
- * Replicates the `matchesIdentity` semantics from install-detection.ts
- * (short tokens = whole-word match, long tokens / phrases = substring match).
+ * Matching is whole-word / whole-phrase: a single-word token must appear as a
+ * whole word in the haystack, and a phrase token must have every one of its
+ * words present (regardless of order or adjacency).
  *
  * Returns the winning AgentId or null.
  */
-function matchAgainstHints(info: { productName: string; fileDescription: string }): AgentId | null {
+export function matchAgainstHints(info: {
+  productName: string;
+  fileDescription: string;
+}): AgentId | null {
   for (const probe of AGENT_PROBES) {
     const haystack = `${info.productName} ${info.fileDescription}`.toLowerCase();
     const tokens = [...probe.hints.registryNames, ...probe.hints.dirNames].map((s) =>
@@ -214,8 +226,10 @@ function matchAgainstHints(info: { productName: string; fileDescription: string 
     const wordSet = new Set(haystack.split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 0));
     const matched = tokens.some((token) => {
       if (!token) return false;
-      const isPhrase = /\s|[^a-z0-9]/.test(token);
-      if (isPhrase || token.length >= 8) return haystack.includes(token);
+      if (/\s|[^a-z0-9]/.test(token)) {
+        const words = token.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+        return words.every((w) => wordSet.has(w));
+      }
       return wordSet.has(token);
     });
     if (matched) return probe.id;
@@ -833,9 +847,9 @@ export interface ScanOptions {
   onApp?: (app: ScannedApp) => void;
 }
 
-/** Return the cached scan result, or null if no cached result exists. */
+/** Return the cached scan result, or null if no fresh cached result exists. */
 export function getCachedScan(): ElectronScanResult | null {
-  return cache?.result ?? null;
+  return freshCache()?.result ?? null;
 }
 
 /** Discard any cached scan result. The next `scanElectronApps` call re-runs the full scan. */
@@ -852,8 +866,9 @@ export function invalidateScanCache(): void {
 export async function scanElectronApps(options?: ScanOptions): Promise<ElectronScanResult> {
   const { useCache = true, extraDirs = [], onApp } = options ?? {};
 
-  if (useCache && cache) {
-    return cache.result;
+  if (useCache) {
+    const cached = freshCache();
+    if (cached) return cached.result;
   }
 
   // Single-flight: a concurrent `useCache` call reuses the in-progress scan
