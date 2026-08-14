@@ -154,6 +154,10 @@ export interface ScannedApp {
    * `filesystem`（版本目录里的引擎 exe）。
    */
   source?: 'agent' | 'registry' | 'filesystem';
+  /** 多版本目录中收集到的所有版本（按版本号降序、去重），仅 v2 merge 后填充 */
+  versions?: string[];
+  /** 该入口是否为该产品的默认（用户实际在用）入口，仅 v2 merge 后填充 */
+  isDefaultEntry?: boolean;
 }
 
 /** 扫描过程的观测元数据（时长、降级来源、超时状态等）。 */

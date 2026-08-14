@@ -44,6 +44,7 @@ import { scanKnownAgents } from './collectors/knownAgent';
 import { scanRegistry } from './collectors/registry';
 import { scannerPipeline } from './flags';
 import { freshCache, getInflight, setCachedScan, setInflight } from './infra/cache';
+import { mergeByIdentity } from './pipeline/merge';
 import type { ScanOptions } from './types';
 
 export { resolveScanRoots } from './collectors/filesystem';
@@ -146,12 +147,10 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
       }
     }
 
-    const adapted: ScannedApp[] = [];
-    const other: ScannedApp[] = [];
-    for (const app of seen.values()) {
-      if (app.adapterMatch) adapted.push(app);
-      else other.push(app);
-    }
+    const all = [...seen.values()];
+    const merged = pipeline === 'v2' ? mergeByIdentity(all) : all;
+    const adapted = merged.filter((a) => a.adapterMatch);
+    const other = merged.filter((a) => !a.adapterMatch);
 
     const meta: ScanMeta = {
       timedOut,

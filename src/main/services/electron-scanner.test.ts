@@ -966,6 +966,73 @@ describe('electron-scanner', () => {
   });
 
   // -----------------------------------------------------------------------
+  // Scenario 23b — v2 merges multi-version installs by identity
+  // -----------------------------------------------------------------------
+  it('merges multi-version installs by identity under the v2 pipeline', async () => {
+    process.env.AGENTSKIN_SCANNER = 'v2';
+    try {
+      mockDetectInstallation.mockResolvedValue({
+        installed: false,
+        path: null,
+        version: null,
+        source: null,
+      });
+
+      // Registry sweep finds two side-by-side Quark versions; PE read fails so
+      // each entry falls back to its registry DisplayName + DisplayVersion.
+      configureExecMocks(
+        '',
+        'Quark|7.0.5.931|D:\\Quark\\7.0.5.931\nQuark|7.0.7.940|D:\\Quark\\7.0.7.940',
+      );
+      readdirMap.set('D:\\Quark\\7.0.5.931', ['Quark.exe']);
+      readdirMap.set('D:\\Quark\\7.0.7.940', ['Quark.exe']);
+      statMap.set('D:\\Quark\\7.0.5.931\\Quark.exe', 'file');
+      statMap.set('D:\\Quark\\7.0.7.940\\Quark.exe', 'file');
+
+      const result = await scanElectronApps({ useCache: false });
+
+      expect(result.meta?.pipeline).toBe('v2');
+      expect(result.adapted).toHaveLength(0);
+      expect(result.other).toHaveLength(1);
+      expect(result.other[0].isDefaultEntry).toBe(true);
+      expect(result.other[0].versions).toEqual(['7.0.7.940', '7.0.5.931']);
+    } finally {
+      delete process.env.AGENTSKIN_SCANNER;
+    }
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 23c — default v1 leaves multi-version installs unmerged
+  // -----------------------------------------------------------------------
+  it('does not merge multi-version installs under the default v1 pipeline', async () => {
+    delete process.env.AGENTSKIN_SCANNER;
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+
+    configureExecMocks(
+      '',
+      'Quark|7.0.5.931|D:\\Quark\\7.0.5.931\nQuark|7.0.7.940|D:\\Quark\\7.0.7.940',
+    );
+    readdirMap.set('D:\\Quark\\7.0.5.931', ['Quark.exe']);
+    readdirMap.set('D:\\Quark\\7.0.7.940', ['Quark.exe']);
+    statMap.set('D:\\Quark\\7.0.5.931\\Quark.exe', 'file');
+    statMap.set('D:\\Quark\\7.0.7.940\\Quark.exe', 'file');
+
+    const result = await scanElectronApps({ useCache: false });
+
+    expect(result.meta?.pipeline).toBe('v1');
+    expect(result.other).toHaveLength(2);
+    for (const app of result.other) {
+      expect(app.versions).toBeUndefined();
+      expect(app.isDefaultEntry).toBeUndefined();
+    }
+  });
+
+  // -----------------------------------------------------------------------
   // Scenario 24 — resolveScanRoots includes extraDirs
   // -----------------------------------------------------------------------
   it('resolveScanRoots includes extraDirs with depth 2', () => {
