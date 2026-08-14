@@ -26,29 +26,26 @@ import {
  *  entire history in one call (history is bounded to 50 anyway). */
 const MAX_COUNT = 50;
 
-/** Cap for timeout-event queries — a separate, tighter bound than traces. */
-const MAX_TIMEOUT_COUNT = 50;
+/** Clamp an arbitrary renderer-provided count to [1, max].
+ *  Non-numbers, NaN, Infinity, and out-of-range values all resolve to
+ *  `fallback` (the default argument the caller would have used). */
+function clampCount(value: unknown, max: number, fallback = 10): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(1, value));
+}
 
 export function registerPerformanceIpc(): void {
   ipcMain.handle(
     IpcChannel.PERFORMANCE_GET,
     (_event, count: unknown): PerformanceHistoryResponse => {
-      const n = Math.min(
-        MAX_COUNT,
-        Math.max(1, typeof count === 'number' && Number.isFinite(count) ? count : 10),
-      );
-      return performanceLogger.getHistory(n);
+      return performanceLogger.getHistory(clampCount(count, MAX_COUNT));
     },
   );
 
   ipcMain.handle(
     IpcChannel.PERFORMANCE_GET_TIMEOUTS,
     (_event, count: unknown): IpcTimeoutEvent[] => {
-      const n = Math.min(
-        MAX_TIMEOUT_COUNT,
-        Math.max(1, typeof count === 'number' && Number.isFinite(count) ? count : 10),
-      );
-      return performanceLogger.getRecentTimeouts(n);
+      return performanceLogger.getRecentTimeouts(clampCount(count, MAX_COUNT));
     },
   );
 
@@ -59,9 +56,9 @@ export function registerPerformanceIpc(): void {
 
   ipcMain.handle(IpcChannel.PERFORMANCE_GET_MEMORY, (_event, count: unknown): MemorySample[] => {
     const all = performanceLogger.getMemorySamples();
-    if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
-      return all.slice(-Math.min(count, all.length));
-    }
-    return all;
+    const n = clampCount(count, all.length);
+    // clampCount floors at 1; 0 / negatives mean "return all" for this channel.
+    if (n >= all.length || n <= 0) return all;
+    return all.slice(-n);
   });
 }

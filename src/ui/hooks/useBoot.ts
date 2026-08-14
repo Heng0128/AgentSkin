@@ -42,6 +42,10 @@ export function useBoot(deps: UseBootDeps): void {
   useEffect(() => {
     let disposed = false;
     let bootTimeout: ReturnType<typeof setTimeout> | undefined;
+    // P1 perf: hoist the "boot done" timer into effect scope so cleanup can
+    // cancel it. Without this, a component unmount within one macrotask would
+    // fire setBooting(false) on an unmounted component (React warning + leak).
+    let doneTimer: ReturnType<typeof setTimeout> | undefined;
     const bootTimeoutPromise = new Promise<never>((_, reject) => {
       bootTimeout = setTimeout(() => reject(new Error('Bootstrap timeout after 15s')), 15000);
     });
@@ -69,7 +73,7 @@ export function useBoot(deps: UseBootDeps): void {
         }
       } finally {
         if (bootTimeout !== undefined) clearTimeout(bootTimeout);
-        setTimeout(() => {
+        doneTimer = setTimeout(() => {
           if (!disposed) setBooting(false);
         }, 0);
       }
@@ -134,6 +138,7 @@ export function useBoot(deps: UseBootDeps): void {
       disposed = true;
       cancelAnimationFrame(initRafId);
       if (bootTimeout !== undefined) clearTimeout(bootTimeout);
+      if (doneTimer !== undefined) clearTimeout(doneTimer);
       offLog();
       offStatusChanged();
       window.clearInterval(poll);

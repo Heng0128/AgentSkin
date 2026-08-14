@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+
+// P1 perf: rAF batching flag for mousemove-driven parallax. Shared across
+// mounts so concurrent effects don't each schedule a separate frame. The
+// actual rAF schedule lives inline in the effect (see flushFrame closure).
+let _dbRafPending = false;
+
 import {
   buildFilter,
   buildFlipTransform,
@@ -116,20 +122,6 @@ export function DynamicBackground({
     wallpaper.type !== 'web' &&
     wallpaper.type !== 'scene' &&
     (render?.parallax ?? 0) > 0;
-  useEffect(() => {
-    const el = parallaxRef.current;
-    if (!el || !layerParallax) return;
-    const strength = Math.min(1, Math.max(0, (render?.parallax ?? 0) / 100));
-    const MAX_OFFSET = 40;
-    const onMove = (e: MouseEvent) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      el.style.transform = `scale(1.1) translate(${(-x * strength * MAX_OFFSET).toFixed(2)}px, ${(-y * strength * MAX_OFFSET).toFixed(2)}px)`;
-    };
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
-  }, [layerParallax, render?.parallax]);
-
   // Mouse parallax — scene/web: the iframe is pointer-events:none (it sits
   // behind the app UI), so it never receives mousemove itself. Forward
   // normalized pointer coords via postMessage — the scene renderer's message
@@ -139,43 +131,70 @@ export function DynamicBackground({
     (wallpaper.type === 'web' || wallpaper.type === 'scene') &&
     web.url != null &&
     (render?.parallax ?? 0) > 0;
+  const needsParallax = layerParallax || iframeParallax;
   useEffect(() => {
-    if (!iframeParallax) return;
-    // The loopback renderer serves from http://127.0.0.1:{port} — pin the
-    // targetOrigin to that exact origin instead of '*' so the pointer data
-    // can't be intercepted by unrelated windows. The loopback server is a
-    // process-lifetime singleton bound to 127.0.0.1, so the port is stable.
+    if (!needsParallax) return;
+    const el = parallaxRef.current;
+    const strength = Math.min(1, Math.max(0, (render?.parallax ?? 0) / 100));
+    const MAX_OFFSET = 40;
+    // P1 perf: single mousemove listener with rAF batching replaces two
+    // separate listeners that both wrote styles on every frame. The latest
+    // pointer snapshot is read once per frame, eliminating redundant writes.
+    let latestX = 0;
+    let latestY = 0;
+    let hasLatest = false;
     let targetOrigin = window.location.origin;
     try {
       targetOrigin = web.url ? new URL(web.url).origin : window.location.origin;
     } catch {
-      // Malformed URL — fall back to this window's origin; the iframe's origin
-      // check then drops the message and parallax silently degrades.
+      // Malformed URL — fall back to this window's origin.
     }
+    const flushFrame = () => {
+      if (!hasLatest) return;
+      // Layer parallax: translate the wallpaper layer opposite the cursor
+      if (layerParallax && el) {
+        el.style.transform = `scale(1.1) translate(${(-latestX * strength * MAX_OFFSET).toFixed(2)}px, ${(-latestY * strength * MAX_OFFSET).toFixed(2)}px)`;
+      }
+      // Iframe parallax: forward normalized pointer via postMessage
+      if (iframeParallax) {
+        const frame = webFrameRef.current;
+        if (frame?.contentWindow) {
+          try {
+            frame.contentWindow.postMessage(
+              {
+                __agentskin: true,
+                type: 'pointer',
+                data: { x: latestX, y: latestY },
+              },
+              targetOrigin,
+            );
+          } catch {
+            // Cross-origin posting blocked — parallax silently degrades.
+          }
+        }
+      }
+    };
     const onMove = (e: MouseEvent) => {
-      // Read the frame at event time: switching wallpapers remounts the iframe
-      // (key = wallpaper.id), so a captured reference would go stale.
-      const frame = webFrameRef.current;
-      if (!frame?.contentWindow) return;
-      try {
-        frame.contentWindow.postMessage(
-          {
-            __agentskin: true,
-            type: 'pointer',
-            data: {
-              x: e.clientX / (window.innerWidth || 1),
-              y: e.clientY / (window.innerHeight || 1),
-            },
-          },
-          targetOrigin,
-        );
-      } catch {
-        // Cross-origin posting is blocked — parallax silently degrades.
+      // Normalize to [-1, 1] range (centered)
+      latestX = (e.clientX / (window.innerWidth || 1) - 0.5) * 2;
+      latestY = (e.clientY / (window.innerHeight || 1) - 0.5) * 2;
+      hasLatest = true;
+      // Coalesce into a single rAF callback per frame
+      if (!_dbRafPending) {
+        _dbRafPending = true;
+        requestAnimationFrame(() => {
+          _dbRafPending = false;
+          flushFrame();
+        });
       }
     };
     window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
-  }, [iframeParallax, web.url]);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      // Reset rAF state for the next mount
+      _dbRafPending = false;
+    };
+  }, [needsParallax, layerParallax, iframeParallax, render?.parallax, web.url]);
 
   if (!wallpaper) return null;
 

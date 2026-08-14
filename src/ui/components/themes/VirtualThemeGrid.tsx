@@ -15,6 +15,23 @@
  */
 
 import { useLayoutEffect, useRef, useState } from 'react';
+
+// rAF batching for scroll events: coalesces multiple scroll events in the
+// same frame into a single setState call, avoiding redundant re-renders.
+let _rafPending = false;
+const _rafCallbacks = new Set<() => void>();
+function rAFThrottle(fn: () => void): void {
+  _rafCallbacks.add(fn);
+  if (!_rafPending) {
+    _rafPending = true;
+    requestAnimationFrame(() => {
+      _rafPending = false;
+      const cbs = new Set(_rafCallbacks);
+      _rafCallbacks.clear();
+      cbs.forEach((cb) => cb());
+    });
+  }
+}
 import type { UiMessages } from '@shared/i18n';
 import type { ThemeCenterCardModel } from '@/types/theme-center';
 import type { AgentId } from '@shared/types';
@@ -74,7 +91,12 @@ export function VirtualThemeGrid({
   const rowCount = Math.ceil(themes.length / cols);
 
   const handleScroll = () => {
-    if (scrollRef.current) setScrollTop(scrollRef.current.scrollTop);
+    if (!scrollRef.current) return;
+    // Read once per frame via rAF — scroll events can fire at 60-120Hz but
+    // React only needs the latest value once per frame.
+    rAFThrottle(() => {
+      if (scrollRef.current) setScrollTop(scrollRef.current.scrollTop);
+    });
   };
 
   const startRow = Math.max(0, Math.floor(scrollTop / rowH) - OVERSCAN);

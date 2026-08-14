@@ -45,7 +45,7 @@ import { useAppsStore } from '@/stores/appsStore';
 
 import { Plus, RefreshCw } from 'lucide-react';
 
-export default function AppsPage() {
+export function AppsPage() {
   const scanResult = useAppsStore((s) => s.scanResult);
   const scanning = useAppsStore((s) => s.scanning);
   const launchingApps = useAppsStore((s) => s.launchingApps);

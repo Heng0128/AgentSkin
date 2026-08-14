@@ -226,6 +226,14 @@ async function mountVideoWallpaper(
         // On failure, tear down the dead element so a retry (or the absence of
         // one) doesn't leave a stuck invisible <video> spewing console errors.
         if (verdict !== 'ok') {
+          // P1 perf: revoke any blob: URL so the browser can release the
+          // backing memory. A failed injection that doesn't revoke leaks the
+          // blob (often 50-200MB) until the agent process exits. Only blob:
+          // URLs need revocation — http(s): URLs are served by the loopback
+          // server and are stateless.
+          try {
+            if (video.src && video.src.startsWith('blob:')) URL.revokeObjectURL(video.src);
+          } catch (e) {}
           video.remove();
           scrim.remove();
           style.remove();

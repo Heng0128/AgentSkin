@@ -195,6 +195,11 @@ export function stopAudioLevelPolling(): void {
   }
   if (proc) {
     try {
+      // Remove the stdout data listener to avoid leaking the closure (which
+      // captures `buf`, `listeners`, `currentLevel`) after stop. Without
+      // this, a restarted poller would inherit stale state from the orphaned
+      // listener's captured scope.
+      proc.stdout?.removeAllListeners('data');
       proc.kill();
     } catch {
       // already gone
