@@ -29,11 +29,12 @@
 
 import { toMessage } from '../../shared/errors';
 import type { AgentId } from '../../shared/types';
-import { connectCdp, type CdpSession } from '../cdp/cdp-client';
+import type { ToolOverride } from '../../ui/types/override';
+import { type CdpSession, connectCdp } from '../cdp/cdp-client';
 import { injectCssLayer } from '../cdp/injection/shared';
 import { mainWarn } from '../logger';
+import { sanitizeCSS } from '../profile/safe-css';
 import type { SettingsService } from '../settings-service';
-import type { ToolOverride } from '../../ui/types/override';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -138,7 +139,15 @@ function overridesToCssSimple(overrides: ToolOverride): string {
   if (overrides.separators === false) root.push(`--as-sep:transparent`);
 
   if (!root.length) return '';
-  return `:root{${root.join(';')}}`;
+
+  // Sanitize before injection — user-controlled values (fontFam, accent, background…)
+  // flow into CSS custom properties and must be checked for breakout payloads
+  // ("</style><script>", expression(), external url() exfil, etc). The renderer-side
+  // equivalent in RealDomPreview.tsx already sanitizes via sanitizeCSS; the main-process
+  // injector must apply the same guard because it reaches a live CDP target directly.
+  const rawCss = `:root{${root.join(';')}}`;
+  const sanitized = sanitizeCSS(rawCss);
+  return sanitized.clean;
 }
 
 function shadowFromLevel(level: string): string {
@@ -174,6 +183,10 @@ export async function pushTweak(session: TweakSession, overrides: ToolOverride):
   const css = overridesToCssSimple(overrides);
   if (!css) return false;
 
+  // Mirror pushed overrides onto the session so any subsequent reader of
+  // session.overrides (logging, future save calls, etc.) sees the same snapshot.
+  session.overrides = overrides;
+
   const cdpSession = await resolveSessionForPort(session.port);
   if (!cdpSession) {
     mainWarn('Tweak.Inject', `no CDP session on port ${session.port} for ${session.agentId}`);
@@ -184,10 +197,7 @@ export async function pushTweak(session: TweakSession, overrides: ToolOverride):
     const ok = await injectCssLayer(cdpSession, TWEAK_LAYER_NAME, css);
     return ok;
   } catch (error) {
-    mainWarn(
-      'Tweak.Inject',
-      `push failed for ${session.agentId}: ${toMessage(error)}`,
-    );
+    mainWarn('Tweak.Inject', `push failed for ${session.agentId}: ${toMessage(error)}`);
     return false;
   } finally {
     cdpSession.close();
@@ -210,18 +220,28 @@ export async function pushTweak(session: TweakSession, overrides: ToolOverride):
 export async function saveTweakAsCustomCss(
   session: TweakSession,
   settings: SettingsService,
+  overrides: ToolOverride,
 ): Promise<boolean> {
-  const css = overridesToCssSimple(session.overrides);
+  // Accepts `overrides` explicitly (instead of always reading session.overrides)
+  // so the caller controls which snapshot is persisted. This matches pushTweak's
+  // signature and prevents accidental mismatch when the renderer pushes one set
+  // of overrides but saves another.
+  const css = overridesToCssSimple(overrides);
   if (!css) return false;
 
   const block = `${TWEAK_CSS_HEADER}\n${css}`;
   const existing = settings.customThemeCss();
   const combined = existing ? `${existing}\n${block}` : block;
 
-  await settings.setCustomThemeCss(combined);
-  session.dirty = false;
-  mainWarn('Tweak.Save', `saved tweak CSS for ${session.agentId} (${block.length}B)`);
-  return true;
+  try {
+    await settings.setCustomThemeCss(combined);
+    session.dirty = false;
+    mainWarn('Tweak.Save', `saved tweak CSS for ${session.agentId} (${block.length}B)`);
+    return true;
+  } catch (error) {
+    mainWarn('Tweak.Save', `save failed for ${session.agentId}: ${toMessage(error)}`);
+    return false;
+  }
 }
 
 /**
@@ -246,10 +266,7 @@ export async function resetTweak(agentId: AgentId, port: number): Promise<boolea
     const ok = await injectCssLayer(cdpSession, TWEAK_LAYER_NAME, '');
     return ok;
   } catch (error) {
-    mainWarn(
-      'Tweak.Reset',
-      `reset failed for ${agentId}: ${toMessage(error)}`,
-    );
+    mainWarn('Tweak.Reset', `reset failed for ${agentId}: ${toMessage(error)}`);
     return false;
   } finally {
     cdpSession.close();

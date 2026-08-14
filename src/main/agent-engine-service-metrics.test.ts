@@ -18,6 +18,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AgentEngineService } from './agent-engine-service';
+import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import type { SettingsServiceApi, StructuredLogEvent } from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
@@ -38,7 +39,7 @@ vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
 vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));
 vi.mock('./fs-utils', () => ({
   writeJsonAtomic: vi.fn(async () => {}),
-  appendLogLine: vi.fn(),
+  appendLogLine: vi.fn(async () => {}),
 }));
 vi.mock('./wallpaper-injector', () => ({
   applyAgentWallpaperNow: vi.fn(async () => ({ ok: true })),
@@ -366,6 +367,131 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
       const countAfterDispose = sent.length;
       await vi.advanceTimersByTimeAsync(10_000);
       expect(sent.length).toBe(countAfterDispose);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // persistFailures counter
+  // -------------------------------------------------------------------------
+
+  describe('persistFailures counter', () => {
+    /**
+     * Verifies the persistFailures counter starts at 0 on a fresh service.
+     */
+    it('persistFailures starts at 0', () => {
+      const svc = makeService(stateFile);
+      const m = svc.collectConcurrencyMetrics();
+      expect(m.persistFailures).toBe(0);
+    });
+
+    /**
+     * Verifies that when writeJsonAtomic rejects (e.g. disk full),
+     * writeState catches the error and increments persistFailures.
+     */
+    it('persistFailures increments on writeState failure', async () => {
+      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
+      const svc = makeService(stateFile);
+
+      // Trigger writeState via persist.safe — same path the apply/restore flows use.
+      // The persist chain serialises calls, so we await the safe() promise.
+      await svc['persist']['safe'](() => svc['writeState']());
+
+      const m = svc.collectConcurrencyMetrics();
+      expect(m.persistFailures).toBe(1);
+    });
+
+    /**
+     * Verifies that when appendLogLine rejects (e.g. disk full),
+     * the log() method's catch handler increments persistFailures.
+     */
+    it('persistFailures increments on appendLogLine failure', async () => {
+      vi.mocked(appendLogLine).mockRejectedValue(new Error('disk full'));
+      const svc = makeService(stateFile);
+
+      // log() is private; trigger it via asLogger() which exposes log().
+      const logger = svc.asLogger();
+      logger.log('test log line');
+
+      // The catch handler runs asynchronously — flush microtasks.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const m = svc.collectConcurrencyMetrics();
+      expect(m.persistFailures).toBe(1);
+    });
+
+    /**
+     * Verifies that collectConcurrencyMetrics() includes the persistFailures field.
+     */
+    it('collectConcurrencyMetrics includes persistFailures', () => {
+      const svc = makeService(stateFile);
+      const m = svc.collectConcurrencyMetrics();
+      expect(m).toHaveProperty('persistFailures');
+      expect(typeof m.persistFailures).toBe('number');
+    });
+
+    /**
+     * Verifies that persistFailures accumulates across multiple failures.
+     */
+    it('persistFailures accumulates across multiple failures', async () => {
+      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
+      const svc = makeService(stateFile);
+
+      // Trigger three consecutive writeState failures.
+      await svc['persist']['safe'](() => svc['writeState']());
+      await svc['persist']['safe'](() => svc['writeState']());
+      await svc['persist']['safe'](() => svc['writeState']());
+
+      const m = svc.collectConcurrencyMetrics();
+      expect(m.persistFailures).toBe(3);
+    });
+
+    /**
+     * Verifies that a writeState failure does not break subsequent writes.
+     * After a rejection, the next writeState call should still execute.
+     */
+    it('writeState failure does not break subsequent writes', async () => {
+      // First call rejects, second call succeeds.
+      vi.mocked(writeJsonAtomic)
+        .mockRejectedValueOnce(new Error('disk full'))
+        .mockResolvedValueOnce(undefined);
+
+      const svc = makeService(stateFile);
+
+      await svc['persist']['safe'](() => svc['writeState']());
+      // Counter should be 1 after first failure.
+      expect(svc.collectConcurrencyMetrics().persistFailures).toBe(1);
+
+      await svc['persist']['safe'](() => svc['writeState']());
+      // Counter stays at 1 after a successful write (no increment).
+      expect(svc.collectConcurrencyMetrics().persistFailures).toBe(1);
+    });
+
+    /**
+     * Verifies that appendLogLine failure does not break subsequent logging.
+     * After a rejection, the next log() call should still fire logListener.
+     */
+    it('log appendLogLine failure does not break logging', async () => {
+      // First call rejects, second call succeeds.
+      vi.mocked(appendLogLine)
+        .mockRejectedValueOnce(new Error('disk full'))
+        .mockResolvedValueOnce(undefined);
+
+      const receivedLines: string[] = [];
+      const svc = makeService(stateFile);
+      svc.setLogListener((line) => receivedLines.push(line));
+
+      const logger = svc.asLogger();
+      logger.log('first line');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      logger.log('second line');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Both lines should reach the listener regardless of appendLogLine failure.
+      expect(receivedLines).toContain('first line');
+      expect(receivedLines).toContain('second line');
+      // Counter incremented only once (for the first failure).
+      expect(svc.collectConcurrencyMetrics().persistFailures).toBe(1);
     });
   });
 });

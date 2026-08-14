@@ -16,32 +16,7 @@
 import { api } from '@/api/agentSkinClient';
 
 import { create } from 'zustand';
-
-/**
- * Concurrency-subsystem runtime metrics. Each field is a snapshot of the
- * underlying Map/Set size at the moment the main process collected them.
- * Zero for every field indicates a quiescent system.
- *
- * These are pushed from the main process (AgentEngineService) every 5s via
- * `diagnostics:concurrency-metrics` and merged into the store with
- * `updateConcurrencyMetrics`.
- */
-export interface ConcurrencyMetrics {
-  /** Number of agents currently in the companion-busy guard set (wallpaperStore). */
-  companionBusyByAgent: number;
-  /** Number of agents with an in-flight apply or restore operation. */
-  inflightOperations: number;
-  /** Number of agents actively running a self-heal cycle. */
-  selfHealingAgents: number;
-  /** Number of agents with captured media tokens awaiting epoch-restore. */
-  capturedTokens: number;
-  /** Current depth of the persistence-write serialisation chain. */
-  persistChainDepth: number;
-  /** Number of agents with a deferred self-heal thunk awaiting lock release. */
-  deferredSelfHeals: number;
-  /** Number of agents with an active (un-superseded) environment switch. */
-  switchEpochByAgent: number;
-}
+import type { ConcurrencyMetrics } from '../../shared/types/concurrency';
 
 interface DiagnosticsState {
   timeoutEvents: Array<{ id: string; channel: string; ms: number; timestamp: number }>;
@@ -62,6 +37,7 @@ const initialConcurrencyMetrics: ConcurrencyMetrics = {
   persistChainDepth: 0,
   deferredSelfHeals: 0,
   switchEpochByAgent: 0,
+  persistFailures: 0,
 };
 
 export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({

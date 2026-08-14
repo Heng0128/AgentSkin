@@ -52,7 +52,7 @@ vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
 vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));
 vi.mock('./fs-utils', () => ({
   writeJsonAtomic: vi.fn(async () => {}),
-  appendLogLine: vi.fn(),
+  appendLogLine: vi.fn(async () => {}),
 }));
 vi.mock('./wallpaper-injector', () => ({
   applyAgentWallpaperNow: vi.fn(async () => ({ ok: true })),
@@ -851,6 +851,213 @@ describe('AgentEngineService Reliability Verification', () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+  });
+
+  // =========================================================================
+  // Section 9: Cross-Agent Concurrency
+  // =========================================================================
+
+  describe('Cross-agent concurrency', () => {
+    /**
+     * Verifies that the inflightOperations map is keyed per-agent, so
+     * concurrent apply operations on two different agents execute in parallel
+     * rather than being serialized through a single global lock.
+     */
+    it('concurrent apply to different agents runs in parallel', async () => {
+      type ApplyFlowArg = { appId: AgentId; themeId?: string };
+      const gated = {
+        traework: deferred<{ response: ApplyResponse; background: Promise<void> }>(),
+        workbuddy: deferred<{ response: ApplyResponse; background: Promise<void> }>(),
+      };
+      vi.mocked(applyThemeFlow).mockImplementation((req: ApplyFlowArg) => {
+        const appId = req.appId;
+        if (appId === 'traework') return gated.traework.promise;
+        if (appId === 'workbuddy') return gated.workbuddy.promise;
+        throw new Error(`unexpected appId: ${appId as string}`);
+      });
+
+      const svc = makeService();
+
+      // Fire both applies concurrently — each targets a different agent
+      const p1 = svc.apply({ appId: 'traework', themeId: 't1' });
+      const p2 = svc.apply({ appId: 'workbuddy', themeId: 't2' });
+
+      // Both operations should be tracked independently in the inflight map
+      const inflight = (
+        svc as unknown as {
+          inflightOperations: Map<AgentId, { kind: string; promise: unknown; cleanup: unknown }>;
+        }
+      ).inflightOperations;
+      expect(inflight.size).toBe(2);
+      expect(inflight.has('traework')).toBe(true);
+      expect(inflight.has('workbuddy')).toBe(true);
+
+      // Resolve both
+      gated.traework.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      gated.workbuddy.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+
+      const [r1, r2] = await Promise.all([p1, p2]);
+      expect(r1.status).toBe('applied');
+      expect(r2.status).toBe('applied');
+
+      // Both applyThemeFlow calls were issued — confirming parallel execution
+      expect(applyThemeFlow).toHaveBeenCalledTimes(2);
+
+      // Wait for cleanup chain to drain
+      await flushMicrotasks();
+
+      // Both entries should be cleaned up
+      expect(inflight.size).toBe(0);
+    });
+
+    /**
+     * Verifies that inflight dedup is per-agent — the same agent's concurrent
+     * applies are deduplicated, but different agents are completely independent.
+     */
+    it('inflight dedup is per-agent not global', async () => {
+      type ApplyFlowArg = { appId: AgentId; themeId?: string };
+      // Gate only traework so we can observe that workbuddy proceeds independently
+      const traeworkGate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
+      vi.mocked(applyThemeFlow).mockImplementation((req: ApplyFlowArg) => {
+        if (req.appId === 'traework') return traeworkGate.promise;
+        // workbuddy resolves immediately
+        return Promise.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      });
+
+      const svc = makeService();
+
+      const p1 = svc.apply({ appId: 'traework', themeId: 't1' });
+      // Second apply to the SAME agent — should be deduplicated (same promise returned)
+      const p1dup = svc.apply({ appId: 'traework', themeId: 't1' });
+      // Apply to a DIFFERENT agent — should execute independently
+      const p2 = svc.apply({ appId: 'workbuddy', themeId: 't2' });
+
+      // The duplicate traework apply must resolve to the same result (dedup)
+      // Note: apply() is async so each call wraps internally; identity differs
+      // but the resolved value must be identical.
+      expect(await p1dup).toEqual(await p1);
+
+      // workbuddy should have already executed (its mock resolves immediately)
+      const r2 = await p2;
+      expect(r2.status).toBe('applied');
+
+      // applyThemeFlow called twice: once for traework (gated), once for workbuddy (immediate)
+      expect(applyThemeFlow).toHaveBeenCalledTimes(2);
+
+      // Release traework
+      traeworkGate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      const r1 = await p1;
+      expect(r1.status).toBe('applied');
+
+      await flushMicrotasks();
+
+      const inflight = (
+        svc as unknown as {
+          inflightOperations: Map<AgentId, { kind: string; promise: unknown; cleanup: unknown }>;
+        }
+      ).inflightOperations;
+      expect(inflight.size).toBe(0);
+    });
+
+    /**
+     * Verifies that collectConcurrencyMetrics() correctly reflects the
+     * per-agent inflight count, and that cross-agent operations are tracked
+     * independently.
+     */
+    it('metrics reflect per-agent concurrency', async () => {
+      type ApplyFlowArg = { appId: AgentId; themeId?: string };
+      const traeworkGate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
+      const workbuddyGate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
+
+      // Gate both agents so we can inspect mid-flight metrics
+      vi.mocked(applyThemeFlow).mockImplementation((req: ApplyFlowArg) => {
+        if (req.appId === 'traework') return traeworkGate.promise;
+        if (req.appId === 'workbuddy') return workbuddyGate.promise;
+        throw new Error(`unexpected appId: ${req.appId as string}`);
+      });
+
+      const svc = makeService();
+
+      // Initially no inflight operations
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+
+      // Start apply on traework
+      const p1 = svc.apply({ appId: 'traework', themeId: 't1' });
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(1);
+
+      // Start apply on workbuddy — now two independent inflight operations
+      const p2 = svc.apply({ appId: 'workbuddy', themeId: 't2' });
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(2);
+
+      // Complete traework first
+      traeworkGate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      await p1;
+      await flushMicrotasks();
+
+      // Only workbuddy should remain in-flight now
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(1);
+
+      // Complete workbuddy
+      workbuddyGate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      await p2;
+      await flushMicrotasks();
+
+      // All cleaned up
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+    });
+
+    /**
+     * Verifies that a restore on agent A does not block an apply on agent B.
+     * Cross-kind operations (restore vs apply) on different agents must run
+     * concurrently since the inflight dedup is keyed by agent.
+     */
+    it('restore and apply can run concurrently on different agents', async () => {
+      type ApplyFlowArg = { appId: AgentId; themeId?: string };
+      const restoreGate = deferred<SystemStatus>();
+
+      // Gate traework's restore so we can observe concurrent execution
+      vi.mocked(restoreThemeFlow).mockImplementation((appId: AgentId) => {
+        if (appId === 'traework') return restoreGate.promise;
+        throw new Error(`unexpected restore appId: ${appId as string}`);
+      });
+      // workbuddy's apply resolves immediately
+      vi.mocked(applyThemeFlow).mockResolvedValue({
+        response: APPLY_RESPONSE,
+        background: Promise.resolve(),
+      });
+
+      const svc = makeService();
+
+      // Restore traework (gated) and apply workbuddy concurrently
+      const restorePromise = svc.restore('traework');
+      const applyPromise = svc.apply({ appId: 'workbuddy', themeId: 't1' });
+
+      // Both should be tracked in the inflight map
+      const inflight = (
+        svc as unknown as {
+          inflightOperations: Map<AgentId, { kind: string; promise: unknown; cleanup: unknown }>;
+        }
+      ).inflightOperations;
+      expect(inflight.size).toBe(2);
+      expect(inflight.get('traework')?.kind).toBe('restore');
+      expect(inflight.get('workbuddy')?.kind).toBe('apply');
+
+      // workbuddy apply should complete without waiting for traework restore
+      const applyResult = await applyPromise;
+      expect(applyResult.status).toBe('applied');
+      expect(applyThemeFlow).toHaveBeenCalledTimes(1);
+      // restoreThemeFlow should still be pending for traework
+      expect(restoreThemeFlow).toHaveBeenCalledTimes(1);
+
+      // Release traework restore
+      restoreGate.resolve(STATUS);
+      const restoreResult = await restorePromise;
+      expect(restoreResult.platform).toBe('win32');
+
+      await flushMicrotasks();
+
+      expect(inflight.size).toBe(0);
     });
   });
 });

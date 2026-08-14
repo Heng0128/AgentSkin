@@ -46,9 +46,8 @@ import { execFile, spawn } from 'node:child_process';
 import net from 'node:net';
 import path from 'node:path';
 import { requireAdapter } from '../../adapters/registry';
-import type { Platform } from '../../shared/types/agent';
-import type { LaunchResult } from '../../shared/types';
 import { toMessage } from '../../shared/errors';
+import type { LaunchResult } from '../../shared/types';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -212,8 +211,11 @@ function killPids(pids: number[]): Promise<void> {
     pids.map(
       (pid) =>
         new Promise<void>((resolve) => {
-          execFile('taskkill', ['/F', '/T', '/PID', String(pid)], { windowsHide: true, timeout: 5000 }, () =>
-            resolve(),
+          execFile(
+            'taskkill',
+            ['/F', '/T', '/PID', String(pid)],
+            { windowsHide: true, timeout: 5000 },
+            () => resolve(),
           );
         }),
     ),
@@ -257,8 +259,13 @@ async function resolvePort(preferredPort: number | null | undefined): Promise<nu
   // No preference → let Chromium pick (spawn with 0).
   if (preferredPort == null || preferredPort === 0) return 0;
 
+  // Reject out-of-range ports before probing to avoid passing invalid values
+  // to Chromium (--remote-debugging-port > 65535 silently fails at the OS level).
+  if (preferredPort < 1 || preferredPort > 65535) return null;
+
   for (let i = 0; i <= MAX_PORT_RETRIES; i++) {
     const candidate = preferredPort + i;
+    if (candidate > 65535) break; // no further valid candidates
     if (!(await isPortOccupied(candidate))) return candidate;
   }
   return null; // all candidates occupied
@@ -304,7 +311,7 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
       };
     }
 
-    const adapter = requireAdapter(adapterId as Parameters<typeof requireAdapter>[0]);
+    const adapter = requireAdapter(adapterId);
 
     // 1. Check if already running.
     let runningPids: number[] = [];
@@ -392,7 +399,13 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
   let isRunning = false;
   try {
     const exeName = path.basename(exePath);
-    const output = await execFileAsync('tasklist', ['/FI', `IMAGENAME eq ${exeName}`, '/FO', 'CSV', '/NH']);
+    const output = await execFileAsync('tasklist', [
+      '/FI',
+      `IMAGENAME eq ${exeName}`,
+      '/FO',
+      'CSV',
+      '/NH',
+    ]);
     const nameWithoutExt = exeName.replace(/\.exe$/i, '');
     isRunning = output
       .toLowerCase()

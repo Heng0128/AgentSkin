@@ -2,6 +2,7 @@
 
 import type { AppLocale } from '../i18n';
 import type { AgentCatalogItem, AgentId, InstallState, Platform } from './agent';
+import type { ConcurrencyMetrics } from './concurrency';
 import type { EnvironmentPreset } from './environment';
 import type {
   CatalogResult,
@@ -485,21 +486,11 @@ export interface AgentSkinApi {
     Array<{ ts: number; heapUsed: number; rss: number; external: number }>
   >;
   /** Subscribe to live concurrency metrics pushed from the main process
-   *  every 5 seconds. The payload covers all 7 concurrency-subsystem maps/sets
-   *  (see ConcurrencyMetrics in diagnosticsStore / agent-engine-service).
+   *  every 5 seconds. The payload covers all concurrency-subsystem maps/sets
+   *  (see ConcurrencyMetrics in shared/types/concurrency).
    *  Returns an unsubscribe function. No ipcMain.handle is registered —
    *  this is a main->renderer push event sent via webContents.send. */
-  onDiagnosticsConcurrencyMetrics(
-    listener: (metrics: {
-      companionBusyByAgent: number;
-      inflightOperations: number;
-      selfHealingAgents: number;
-      capturedTokens: number;
-      persistChainDepth: number;
-      deferredSelfHeals: number;
-      switchEpochByAgent: number;
-    }) => void,
-  ): () => void;
+  onDiagnosticsConcurrencyMetrics(listener: (metrics: ConcurrencyMetrics) => void): () => void;
   /** Push renderer-side concurrency primitive sizes to the main process so
    * it can include them in the unified metrics broadcast. Fire-and-forget
    * (no ack). Called by the renderer's periodic self-report timer. */

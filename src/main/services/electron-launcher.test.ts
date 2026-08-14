@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { execFile, spawn } from 'node:child_process';
+import net from 'node:net';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as registry from '../../adapters/registry';
 import { configureLauncher, getRunningApps, launchApp } from './electron-launcher';
@@ -14,6 +15,22 @@ vi.mock('node:child_process', () => ({
   execFile: vi.fn(),
 }));
 
+vi.mock('node:net', () => {
+  // Default: simulate connection refused (no listener yet) — fires 'error'
+  // on the next microtask. Tests needing success call mockNetConnectSuccess().
+  const defaultSocket = {
+    once(event: string, cb: () => void) {
+      if (event === 'error') queueMicrotask(cb);
+    },
+    destroy() {},
+  };
+  return {
+    default: {
+      connect: vi.fn(() => defaultSocket),
+    },
+  };
+});
+
 vi.mock('../../adapters/registry', () => ({
   requireAdapter: vi.fn(),
 }));
@@ -21,26 +38,58 @@ vi.mock('../../adapters/registry', () => ({
 const mockSpawn = vi.mocked(spawn);
 const mockExecFile = vi.mocked(execFile);
 const mockRequireAdapter = vi.mocked(registry.requireAdapter);
+const mockNetConnect = vi.mocked(net.connect);
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 /** Create a mock adapter with configurable behavior. */
-function createMockAdapter(overrides: {
-  /** PIDs returned by findRunningPids. Default []. */
-  runningPids?: number[];
-  /** Ports returned by resolveDebugPorts. Default []. */
-  debugPorts?: number[];
-} = {}) {
+function createMockAdapter(
+  overrides: {
+    /** PIDs returned by findRunningPids. Default []. */
+    runningPids?: number[];
+    /** Ports returned by resolveDebugPorts. Default []. */
+    debugPorts?: number[];
+  } = {},
+) {
   return {
     findRunningPids: vi.fn().mockResolvedValue(overrides.runningPids ?? []),
-    resolveDebugPorts: vi.fn().mockResolvedValue(overridePorts ?? []),
+    resolveDebugPorts: vi.fn().mockResolvedValue(overrides.debugPorts ?? []),
   };
 }
 
-// Keep a mutable reference so createMockAdapter's default re-reads it.
-let overridePorts: number[] = [];
+/**
+ * Mock net.connect to simulate a successful TCP connection,
+ * making `probeTcpPort` return true ('connect' fires on next microtask).
+ */
+function mockNetConnectSuccess() {
+  mockNetConnect.mockImplementation(
+    () =>
+      ({
+        once(event: string, cb: () => void) {
+          if (event === 'connect') queueMicrotask(cb);
+        },
+        destroy() {},
+      }) as unknown as ReturnType<typeof net.connect>,
+  );
+}
+
+/**
+ * Mock net.connect to simulate a refused connection,
+ * making `probeTcpPort` return false ('error' fires on next microtask).
+ */
+function mockNetConnectRefused() {
+  mockNetConnect.mockImplementation(
+    () =>
+      ({
+        once(event: string, cb: () => void) {
+          if (event === 'error') queueMicrotask(cb);
+        },
+        destroy() {},
+      }) as unknown as ReturnType<typeof net.connect>,
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -50,11 +99,9 @@ describe('electron-launcher', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     configureLauncher({ log: vi.fn() });
-    // Clear running-apps state by relaunching nothing — the module-level Map
-    // persists across tests, so we reset it via a fresh spy on getRunningApps.
-    // Simpler: directly clear the map through repeated failed launches is
-    // impractical; instead we rely on unique appId per test.
-    overridePorts = [];
+    // Note: module-level runningApps Map persists across tests by design
+    // (it tracks real spawned PIDs). Tests use unique appId per case to
+    // avoid cross-test contamination.
   });
 
   afterEach(() => {
@@ -64,8 +111,7 @@ describe('electron-launcher', () => {
   // ── Helper: mock spawn to return a fake child with a pid ────────────────
   function mockSpawnSuccess(pid: number) {
     mockSpawn.mockImplementationOnce(
-      () =>
-        ({ pid, unref: vi.fn() }) as unknown as ReturnType<typeof spawn>,
+      () => ({ pid, unref: vi.fn() }) as unknown as ReturnType<typeof spawn>,
     );
   }
 
@@ -213,15 +259,8 @@ describe('electron-launcher', () => {
     it('does not restart — returns state=running with the live port', async () => {
       const adapter = createMockAdapter({ runningPids: [4242], debugPorts: [9222] });
       mockRequireAdapter.mockReturnValue(adapter as any);
-      // probeTcpPort: real net.connect — but we avoid the network by mocking
-      // execFile to help discovery. For this test we rely on the fact that
-      // probeTcpPort will try to connect to 9222; in a test environment
-      // there's no listener, so we instead mock the adapter to return a port
-      // that we know probeTcpPort handles. Simpler: we override probeTcpPort
-      // by mocking net — but net is imported directly.
-      //
-      // Strategy: use vi.mock on 'node:net' for this describe block.
-      // (Implemented below in a dedicated sub-describe.)
+      // Simulate that port 9222 has an active listener so probeTcpPort succeeds.
+      mockNetConnectSuccess();
 
       const result = await launchApp({
         appId: 'app-running-with-cdp',
@@ -230,18 +269,19 @@ describe('electron-launcher', () => {
         adapterId: 'traework',
       });
 
-      // Without mocking net.connect, probeTcpPort returns false → falls
-      // through to needs-restart. See the next sub-describe for the
-      // state=running path with mocked net.
-      // Here we at least verify findRunningPids was called and no spawn.
-      expect(adapter.findRunningPids).toHaveBeenCalledOnce();
+      expect(result.state).toBe('running');
+      expect(result.ok).toBe(true);
+      expect(result.pid).toBe(4242);
+      expect(result.port).toBe(9222);
       expect(mockSpawn).not.toHaveBeenCalled();
+      // The running entry must be tracked.
+      expect(getRunningApps().get('app-running-with-cdp')?.port).toBe(9222);
     });
   });
 
   // ── 4. Adapted app running but no CDP port ─────────────────────────────
   describe('adapted app running without CDP port', () => {
-    it('returns state=needs-restart when running but no port is reachable', async () => {
+    it('returns state=needs-restart when no CDP ports are discovered', async () => {
       const adapter = createMockAdapter({
         runningPids: [7777],
         debugPorts: [], // no CDP ports discovered
@@ -258,6 +298,29 @@ describe('electron-launcher', () => {
       expect(result.state).toBe('needs-restart');
       expect(result.ok).toBe(false);
       expect(result.pid).toBe(7777);
+      expect(result.port).toBeNull();
+      expect(mockSpawn).not.toHaveBeenCalled();
+    });
+
+    it('returns state=needs-restart when CDP ports exist but all probes fail', async () => {
+      const adapter = createMockAdapter({
+        runningPids: [8888],
+        debugPorts: [9222, 9223], // ports discovered but none reachable
+      });
+      mockRequireAdapter.mockReturnValue(adapter as any);
+      // Simulate that both ports refuse connection.
+      mockNetConnectRefused();
+
+      const result = await launchApp({
+        appId: 'app-running-dead-cdp',
+        exePath: 'C:\\trae\\trae.exe',
+        adapted: true,
+        adapterId: 'traework',
+      });
+
+      expect(result.state).toBe('needs-restart');
+      expect(result.ok).toBe(false);
+      expect(result.pid).toBe(8888);
       expect(result.port).toBeNull();
       expect(mockSpawn).not.toHaveBeenCalled();
     });
@@ -331,6 +394,57 @@ describe('electron-launcher', () => {
       expect(mockSpawn).toHaveBeenCalledOnce();
       const spawnArgs = mockSpawn.mock.calls[0][1] as string[];
       expect(spawnArgs[0]).toBe('--remote-debugging-port=9337');
+    });
+
+    it('returns state=failed when preferredPort exceeds 65535', async () => {
+      const adapter = createMockAdapter({ runningPids: [] });
+      mockRequireAdapter.mockReturnValue(adapter as any);
+      // No execFile calls should happen — the invalid port is rejected upfront.
+      const result = await launchApp({
+        appId: 'app-port-overflow',
+        exePath: 'C:\\trae\\trae.exe',
+        adapted: true,
+        preferredPort: 70000,
+        adapterId: 'traework',
+      });
+
+      expect(result.state).toBe('failed');
+      expect(result.ok).toBe(false);
+      expect(mockSpawn).not.toHaveBeenCalled();
+    });
+
+    it('stops incrementing when candidate exceeds 65535 (preferredPort near ceiling)', async () => {
+      const adapter = createMockAdapter({ runningPids: [] });
+      mockRequireAdapter.mockReturnValue(adapter as any);
+      // preferredPort=65533, retries would yield 65533, 65534, 65535, 65536...
+      // The loop must break at 65536 and never pass it to spawn.
+      mockExecFile.mockImplementation((_cmd, _args, _opts, cb) => {
+        (cb as (err: Error | null, stdout: string) => void)(null, 'occupied');
+        return {} as ReturnType<typeof execFile>;
+      });
+
+      const result = await launchApp({
+        appId: 'app-port-ceiling',
+        exePath: 'C:\\trae\\trae.exe',
+        adapted: true,
+        preferredPort: 65533,
+        adapterId: 'traework',
+      });
+
+      expect(result.state).toBe('failed');
+      expect(mockSpawn).not.toHaveBeenCalled();
+      // Verify no execFile call probed a port > 65535.
+      for (const call of mockExecFile.mock.calls) {
+        const cmd = call[0] as string;
+        if (cmd.includes('powershell') || cmd === 'powershell') {
+          const argStr = JSON.stringify(call[1]);
+          // Extract the port number from the PowerShell command.
+          const portMatch = argStr.match(/-LocalPort (\d+)/);
+          if (portMatch) {
+            expect(Number(portMatch[1])).toBeLessThanOrEqual(65535);
+          }
+        }
+      }
     });
   });
 

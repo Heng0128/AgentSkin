@@ -15,10 +15,20 @@
  */
 
 import { app, ipcMain, shell } from 'electron';
+import { toMessage } from '../../shared/errors';
 import { getMainMessages, isAppLocale, setMainLocale } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
+import type { ToolOverride } from '../../ui/types/override';
 import { saveLocalePreference } from '../locale-preferences';
+import { mainWarn } from '../logger';
 import { handleThemeFileOpen, type MainContext, wrapCatalog } from '../main-context';
+import {
+  pushTweak,
+  resetTweak,
+  saveTweakAsCustomCss,
+  type TweakSession,
+} from '../services/tweak-injector';
+import type { SettingsService } from '../settings-service';
 import { assertNonEmptyString } from './ipc-validators';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
@@ -82,5 +92,39 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
   ipcMain.handle(IpcChannel.SHELL_SHOW_ITEM, (_event, itemPath: unknown) => {
     assertNonEmptyString(itemPath, getMainMessages().invalidPath);
     return shell.showItemInFolder(itemPath);
+  });
+
+  // --- Workspace live tweak (delegates to tweak-injector.ts) ---
+  ipcMain.handle(
+    IpcChannel.WORKSPACE_TWEAK_PUSH,
+    async (_event, session: TweakSession, overrides: ToolOverride) => {
+      try {
+        return await pushTweak(session, overrides);
+      } catch (error) {
+        mainWarn('Tweak.Push', toMessage(error));
+        return false;
+      }
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.WORKSPACE_TWEAK_SAVE,
+    async (_event, session: TweakSession, settings: SettingsService, overrides: ToolOverride) => {
+      try {
+        return await saveTweakAsCustomCss(session, settings, overrides);
+      } catch (error) {
+        mainWarn('Tweak.Save', toMessage(error));
+        return false;
+      }
+    },
+  );
+
+  ipcMain.handle(IpcChannel.WORKSPACE_TWEAK_RESET, async (_event, session: TweakSession) => {
+    try {
+      return await resetTweak(session.agentId, session.port);
+    } catch (error) {
+      mainWarn('Tweak.Reset', toMessage(error));
+      return false;
+    }
   });
 }

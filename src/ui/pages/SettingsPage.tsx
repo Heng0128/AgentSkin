@@ -203,12 +203,25 @@ export function SettingsPage({ controller }: { controller: AppController }) {
     { value: 'system', label: t.themeSystem },
   ];
 
+  // Mobile section selector options for the <Select> replacement of the rail.
+  const sectionOptions = sections.map((s) => ({ value: s.id, label: s.label }));
+
   return (
     <div className="setp flex h-full min-h-0 flex-col min-w-0">
-      <div className="grid min-h-0 flex-1 grid-cols-[180px_minmax(0,1fr)]">
-        {/* Section rail (Swiss) */}
-        <aside className="set-rail flex min-h-0 flex-col gap-[3px] overflow-y-auto border-r border-border bg-card2 p-2">
-          <p className="px-3 pb-1 font-mono text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground/60">
+      <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[180px_minmax(0,1fr)]">
+        {/* Section rail (Swiss) — desktop only (md+) */}
+        <aside className="set-rail hidden min-h-0 flex-col gap-[3px] overflow-y-auto border-r border-border bg-card2 p-2 md:flex">
+          {/* Swiss-style back control — integrated into the rail header */}
+          <button
+            type="button"
+            onClick={() => controller.setRoute('workspace')}
+            className="flex items-center gap-1.5 rounded-[2px] px-3 py-1.5 text-[11px] text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+          >
+            <ArrowLeft className="size-3" />
+            {t.settingsBack}
+          </button>
+          <div className="mt-1 h-px bg-border" aria-hidden />
+          <p className="px-3 pt-2 pb-1 font-mono text-[10px] font-semibold uppercase tracking-[.18em] text-muted-foreground/60">
             {t.settingsTitle.toUpperCase()}
           </p>
           {sections.map((item) => (
@@ -231,21 +244,35 @@ export function SettingsPage({ controller }: { controller: AppController }) {
 
         {/* Content */}
         <div className="flex min-h-0 flex-col">
-          <div className="flex items-center justify-between border-b border-border px-4 py-2">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => controller.setRoute('workspace')}
-                className="h-7 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="size-3.5" />
-                {t.settingsBack}
-              </Button>
-              <h2 className="font-display text-[13px] font-bold tracking-tight">
-                {activeSection.label}
-              </h2>
-            </div>
+          {/* Mobile header: breadcrumb + section selector */}
+          <div className="flex items-center justify-between border-b border-border px-4 py-2 md:hidden">
+            <button
+              type="button"
+              onClick={() => controller.setRoute('workspace')}
+              className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="size-3" />
+              {t.settingsBack}
+            </button>
+            <Select value={section} onValueChange={(v) => setSection(v as SettingsSection)}>
+              <SelectTrigger className="h-7 w-auto min-w-[120px] rounded-[2px] border-border bg-muted text-[11px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="rounded-[2px] border-border bg-card">
+                {sectionOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Desktop header: breadcrumb + copy logs */}
+          <div className="hidden items-center justify-between border-b border-border px-4 py-2 md:flex">
+            <h2 className="font-display text-[13px] font-bold tracking-tight">
+              {activeSection.label}
+            </h2>
             {section === 'system' && logs.length > 0 && (
               <Button
                 variant="ghost"

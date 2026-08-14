@@ -16,18 +16,11 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type {
-  AgentId,
-  ThemeBundle,
-  WallpaperRenderOptions,
-  WallpaperSettings,
-} from '../shared/types';
+import type { AgentId, WallpaperRenderOptions, WallpaperSettings } from '../shared/types';
+import type { WallpaperAgentSetting } from '../shared/types/wallpaper';
 // Real toInstalledTheme requires deep ThemeBundle; we mock it below.
 import { AgentEngineService } from './agent-engine-service';
-import type {
-  SettingsServiceApi,
-  ThemeLibraryApi,
-} from './services/contracts';
+import type { PackageInspection, SettingsServiceApi, ThemeLibraryApi } from './services/contracts';
 
 // ---------------------------------------------------------------------------
 // Mocks (与 reliability test 保持一致)
@@ -75,7 +68,12 @@ vi.mock('./theme/utils', () => ({
   })),
 }));
 vi.mock('./services/agent-engine-options', () => ({
-  themeRenderOptions: vi.fn(() => ({ alignment: 'fill' as const, speed: 1, loop: true, brightness: 100 })),
+  themeRenderOptions: vi.fn(() => ({
+    alignment: 'fill' as const,
+    speed: 1,
+    loop: true,
+    brightness: 100,
+  })),
   mergeRenderOptions: vi.fn((_a: unknown, b: unknown) => b),
 }));
 
@@ -135,9 +133,20 @@ function makeSettings(wp?: ReturnType<typeof wallpaperSettings>): SettingsServic
   } as SettingsServiceApi;
 }
 
-function themeEntry(themeId: string, bundle: Partial<ThemeBundle> = {}) {
+interface TestThemeBundle {
+  id: string;
+  name: { en: string; zh: string };
+  wallpaper?: unknown;
+}
+
+interface TestThemeEntry {
+  bundle: TestThemeBundle;
+  filePath: string;
+}
+
+function themeEntry(themeId: string, bundle: Partial<TestThemeBundle> = {}): TestThemeEntry {
   return {
-    bundle: { id: themeId, name: { en: 'Test', zh: '测试' }, ...bundle } as ThemeBundle,
+    bundle: { id: themeId, name: { en: 'Test', zh: '测试' }, ...bundle },
     filePath: `/tmp/${themeId}`,
   };
 }
@@ -153,7 +162,9 @@ function makeThemeLibrary(impl: (id: string) => Promise<unknown>): ThemeLibraryA
     installFile: vi.fn(async () => ({}) as never),
     installBytes: vi.fn(async () => ({}) as never),
     importPackage: vi.fn(async () => ({}) as never),
-    inspectPackage: vi.fn(async () => ({ incoming: null, existing: null })),
+    inspectPackage: vi.fn(
+      async () => ({ incoming: null, existing: null }) as unknown as PackageInspection,
+    ),
     exportPackage: vi.fn(async () => {}),
     delete: vi.fn(async () => {}),
   } as ThemeLibraryApi;
@@ -190,7 +201,10 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
   function callResolve(svc: AgentEngineService, appId: AgentId, entry?: unknown) {
     return (
       svc as unknown as {
-        resolveAgentWallpaperId(appId: AgentId, entry?: unknown): Promise<{
+        resolveAgentWallpaperId(
+          appId: AgentId,
+          entry?: unknown,
+        ): Promise<{
           id: string | null;
           render?: WallpaperRenderOptions;
         }>;
@@ -265,13 +279,23 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
         stateFile,
         JSON.stringify({
           version: 2,
-          apps: { [TEST_APP]: { activeThemeId: 'persisted-t', activeSchemeId: null, port: null, schemeSnapshot: null, detectedPath: null } },
+          apps: {
+            [TEST_APP]: {
+              activeThemeId: 'persisted-t',
+              activeSchemeId: null,
+              port: null,
+              schemeSnapshot: null,
+              detectedPath: null,
+            },
+          },
         }),
         'utf8',
       );
 
       const settings = makeSettings(wallpaperSettings({}));
-      const library = makeThemeLibrary(async () => themeEntry('persisted-t', { wallpaper: { workshopId: 'wp-from-theme' } }));
+      const library = makeThemeLibrary(async () =>
+        themeEntry('persisted-t', { wallpaper: { workshopId: 'wp-from-theme' } }),
+      );
       const svc = makeSvc(library, settings);
       await svc.initialize();
 
@@ -300,8 +324,9 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
       });
       const svc = makeSvc(library, settings);
 
-      (svc as unknown as { registry: { getActiveThemeId: () => string } }).registry.getActiveThemeId =
-        () => 'some-theme';
+      (
+        svc as unknown as { registry: { getActiveThemeId: () => string } }
+      ).registry.getActiveThemeId = () => 'some-theme';
 
       const result = await callResolve(svc, TEST_APP);
 
@@ -313,7 +338,15 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
         stateFile,
         JSON.stringify({
           version: 2,
-          apps: { [TEST_APP]: { activeThemeId: 'video-t', activeSchemeId: null, port: null, schemeSnapshot: null, detectedPath: null } },
+          apps: {
+            [TEST_APP]: {
+              activeThemeId: 'video-t',
+              activeSchemeId: null,
+              port: null,
+              schemeSnapshot: null,
+              detectedPath: null,
+            },
+          },
         }),
         'utf8',
       );

@@ -86,27 +86,94 @@ describe('PersistChain', () => {
     expect(order).toEqual([1, 2, 3]);
   });
 
-  it('reports a non-negative depth and isolates a rejected write', async () => {
+  it('depth increments during pending write', async () => {
     const chain = new PersistChain();
-    const spy = vi.fn();
-    // A rejected write must not poison the chain for subsequent writes.
-    // Attach a catch to the returned promise so the rejection is observed
-    // (PersistChain swallows it internally, but `safe()` still returns the
-    // rejected promise for callers that want to know).
-    const rejected = chain
-      .safe(() => Promise.reject(new Error('boom')))
-      .catch((err) => {
-        spy(err);
-      });
-    // Ensure the rejected promise is fully settled before asserting, so no
-    // unhandled-rejection is reported outside this test.
-    await rejected;
-    expect(spy).toHaveBeenCalledOnce();
-    let ran = false;
+    expect(chain.depth).toBe(0);
+
+    // Start a pending write that we control resolution of
+    let resolveWrite: () => void;
+    const writePromise = chain.safe(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveWrite = resolve;
+        }),
+    );
+
+    // While the write is in-flight, depth should be 1
+    expect(chain.depth).toBe(1);
+
+    // Complete the write
+    resolveWrite!();
+    await writePromise;
+    await Promise.resolve(); // drain the chain's .finally microtask
+
+    // After settle, depth returns to 0
+    expect(chain.depth).toBe(0);
+  });
+
+  it('depth tracks multiple queued writes', async () => {
+    const chain = new PersistChain();
+    expect(chain.depth).toBe(0);
+
+    const resolvers: (() => void)[] = [];
+
+    // Queue 3 writes; each waits on an external resolver so they don't
+    // auto-settle before we can observe intermediate depth values.
+    const promises = [1, 2, 3].map(() =>
+      chain.safe(
+        () =>
+          new Promise<void>((resolve) => {
+            resolvers.push(resolve);
+          }),
+      ),
+    );
+
+    // All 3 writes are queued synchronously: depth = 3
+    expect(chain.depth).toBe(3);
+
+    // Resolve first write — after it settles, .finally decrements and the
+    // second write starts executing.
+    resolvers[0]();
+    await promises[0];
+    await Promise.resolve(); // drain chain .finally
+    await Promise.resolve(); // drain next .then on chain
+    expect(chain.depth).toBe(2);
+
+    // Resolve second write
+    resolvers[1]();
+    await promises[1];
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(chain.depth).toBe(1);
+
+    // Resolve third write
+    resolvers[2]();
+    await promises[2];
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(chain.depth).toBe(0);
+  });
+
+  it('depth decrements on write failure and continues chain', async () => {
+    const chain = new PersistChain();
+    expect(chain.depth).toBe(0);
+
+    // First write rejects — safe() returns the rejected promise, but the
+    // chain itself swallows the error and decrements depth.
+    const failingPromise = chain.safe(() => Promise.reject(new Error('boom')));
+    await failingPromise.catch(() => {});
+    await Promise.resolve(); // drain chain .finally
+    await Promise.resolve(); // drain next microtask
+
+    // depth should be back to 0 (failure handled, counter decremented)
+    expect(chain.depth).toBe(0);
+
+    // Subsequent writes still execute normally
+    let successRan = false;
     await chain.safe(() => {
-      ran = true;
+      successRan = true;
     });
-    expect(ran).toBe(true);
-    expect(chain.depth).toBeGreaterThanOrEqual(0);
+    expect(successRan).toBe(true);
+    expect(chain.depth).toBe(0);
   });
 });

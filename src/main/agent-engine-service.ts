@@ -35,6 +35,7 @@ import {
   type AgentId,
   type ApplyRequest,
   type ApplyResponse,
+  type ConcurrencyMetrics,
   type Platform,
   type SystemStatus,
   type WallpaperRenderOptions,
@@ -128,24 +129,6 @@ function platform(): Platform {
     : 'unsupported';
 }
 
-/**
- * Concurrency-subsystem runtime metrics. Each field is a snapshot of the
- * underlying Map/Set size (or derived depth) at collection time.
- * Pushed to the renderer every 5s via the
- * `diagnostics:concurrency-metrics` IPC channel so the Diagnostics tab can
- * visualise apply/restore pressure, self-heal activity, and persist-queue
- * health in real time.
- */
-export interface ConcurrencyMetrics {
-  companionBusyByAgent: number;
-  inflightOperations: number;
-  selfHealingAgents: number;
-  capturedTokens: number;
-  persistChainDepth: number;
-  deferredSelfHeals: number;
-  switchEpochByAgent: number;
-}
-
 // ---------------------------------------------------------------------------
 // Facade class
 // ---------------------------------------------------------------------------
@@ -206,6 +189,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
   private cachedCompanionBusySize = 0;
   /** Cached size of environmentStore's `switchEpochByAgent` Map (renderer-side). */
   private cachedSwitchEpochSize = 0;
+  /** Count of persistence failures since last reset — surfaced via ConcurrencyMetrics. */
+  private persistFailures = 0;
   /** Handle for the 5-second metrics broadcast interval (null when stopped). */
   private concurrencyMetricsTimer: ReturnType<typeof setInterval> | null = null;
   /**
@@ -252,7 +237,9 @@ export class AgentEngineService implements AgentEngineServiceApi {
     // Also append to the engine log file so failures are diagnosable even
     // when the UI is not open or the user closed the log panel.
     const ts = new Date().toISOString();
-    void appendLogLine(this.engineLogFile, `[${ts}] ${line}\n`);
+    void appendLogLine(this.engineLogFile, `[${ts}] ${line}\n`).catch(() => {
+      this.persistFailures++;
+    });
   }
 
   /**
@@ -574,6 +561,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
     try {
       await writeJsonAtomic(this.stateFile, this.registry.snapshot() as PersistedState);
     } catch (error) {
+      this.persistFailures++;
       this.log(`[state] persist failed: ${toMessage(error)}`);
     }
   }
@@ -821,6 +809,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
       persistChainDepth: this.persist.depth,
       deferredSelfHeals: getDeferredSelfHealsSize(),
       switchEpochByAgent: this.cachedSwitchEpochSize,
+      persistFailures: this.persistFailures,
     };
   }
 

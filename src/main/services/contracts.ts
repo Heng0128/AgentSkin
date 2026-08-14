@@ -40,7 +40,7 @@ import type {
   WallpaperAgentSetting,
   WallpaperSettings,
 } from '../../shared/types';
-import type { ConcurrencyMetrics } from '../agent-engine-service';
+import type { ConcurrencyMetrics } from '../../shared/types/concurrency';
 import type { ThemeBundle } from './theme-bundle';
 
 // ---------------------------------------------------------------------------

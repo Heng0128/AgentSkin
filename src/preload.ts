@@ -7,6 +7,7 @@ import type {
   AgentId,
   AgentSkinApi,
   ApplyRequest,
+  ConcurrencyMetrics,
   FileImportConfirmRequest,
   FileImportResult,
   InspectedNode,
@@ -253,15 +254,7 @@ const api: AgentSkinApi = {
       Array<{ ts: number; heapUsed: number; rss: number; external: number }>
     >,
   onDiagnosticsConcurrencyMetrics: (listener) =>
-    subscribe<{
-      companionBusyByAgent: number;
-      inflightOperations: number;
-      selfHealingAgents: number;
-      capturedTokens: number;
-      persistChainDepth: number;
-      deferredSelfHeals: number;
-      switchEpochByAgent: number;
-    }>(IpcChannel.DIAGNOSTICS_CONCURRENCY_METRICS, listener),
+    subscribe<ConcurrencyMetrics>(IpcChannel.DIAGNOSTICS_CONCURRENCY_METRICS, listener),
   // --- Secondary target injection trace ---
   // Per-target progress: { agent, targetId, targetType, title, success, error, elapsed }.
   onSecondaryInjectProgress: (listener) =>

@@ -45,6 +45,7 @@ describe('diagnosticsStore — timeout events', () => {
         persistChainDepth: 0,
         deferredSelfHeals: 0,
         switchEpochByAgent: 0,
+        persistFailures: 0,
       },
     });
     mockGetTimeouts.mockReset();

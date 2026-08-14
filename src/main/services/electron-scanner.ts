@@ -42,8 +42,8 @@ import { QoderAdapter } from '../../adapters/domestic/qoder';
 import { TraeAdapter } from '../../adapters/domestic/trae';
 import { WorkbuddyAdapter } from '../../adapters/domestic/workbuddy';
 import { ZcodeAdapter } from '../../adapters/domestic/zcode';
-import type { AgentId, ElectronScanResult, ScannedApp } from '../../shared/types/agent';
 import { execFileAsync } from '../../shared/exec-async';
+import type { AgentId, ElectronScanResult, ScannedApp } from '../../shared/types/agent';
 import { detectInstallation } from '../install-detection';
 import { mainWarn, mainWarnFromCatch } from '../logger';
 
@@ -89,11 +89,19 @@ function buildAgentProbes(): AgentProbe[] {
     new CodexAdapter(),
     new ZcodeAdapter(),
   ];
-  return adapters.map((a) => ({
-    id: a.id as AgentId,
-    displayName: a.name,
-    hints: a.installHints!,
-  }));
+  const probes: AgentProbe[] = [];
+  for (const a of adapters) {
+    if (!a.installHints) {
+      mainWarn('ElectronScanner', `adapter "${a.id}" has no installHints — skipping in L1 scan`);
+      continue;
+    }
+    probes.push({
+      id: a.id as AgentId,
+      displayName: a.name,
+      hints: a.installHints,
+    });
+  }
+  return probes;
 }
 
 const AGENT_PROBES: AgentProbe[] = buildAgentProbes();
@@ -114,9 +122,12 @@ function hashPath(p: string): string {
  *
  * Returns `null` on any failure (missing exe, blocked PowerShell, etc.).
  */
-async function readExeInfo(
-  exePath: string,
-): Promise<{ version: string | null; productName: string; fileDescription: string; companyName: string } | null> {
+async function readExeInfo(exePath: string): Promise<{
+  version: string | null;
+  productName: string;
+  fileDescription: string;
+  companyName: string;
+} | null> {
   const literal = exePath.replace(/'/g, "''");
   const script = [
     `$v = (Get-Item -LiteralPath '${literal}').VersionInfo`,
@@ -147,14 +158,12 @@ async function readExeInfo(
  *
  * Returns the winning AgentId or null.
  */
-function matchAgainstHints(
-  info: { productName: string; fileDescription: string },
-  excludeId?: AgentId,
-): AgentId | null {
+function matchAgainstHints(info: { productName: string; fileDescription: string }): AgentId | null {
   for (const probe of AGENT_PROBES) {
-    if (probe.id === excludeId) continue;
     const haystack = `${info.productName} ${info.fileDescription}`.toLowerCase();
-    const tokens = [...probe.hints.registryNames, ...probe.hints.dirNames].map((s) => s.toLowerCase());
+    const tokens = [...probe.hints.registryNames, ...probe.hints.dirNames].map((s) =>
+      s.toLowerCase(),
+    );
     const wordSet = new Set(haystack.split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 0));
     const matched = tokens.some((token) => {
       if (!token) return false;
@@ -215,10 +224,7 @@ async function scanKnownAgents(
  * its parent (Electron apps typically ship `ProductName.exe` alongside
  * `resources/app.asar`). Identity is confirmed via PE version info match.
  */
-async function findExeForAgent(
-  installDir: string,
-  hints: InstallHints,
-): Promise<string | null> {
+async function findExeForAgent(installDir: string, hints: InstallHints): Promise<string | null> {
   const searchDirs = [installDir, path.dirname(installDir)];
   for (const dir of searchDirs) {
     for (const exeName of hints.exeNames) {
@@ -285,9 +291,7 @@ async function findAnyExe(installDir: string): Promise<string | null> {
           found++;
           return candidate;
         }
-      } catch {
-        continue;
-      }
+      } catch {}
     }
   }
   return null;

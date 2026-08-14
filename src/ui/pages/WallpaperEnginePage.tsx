@@ -7,6 +7,7 @@
  * 状态/副作用/handler 全部委托给 useWallpaperPageController hook。
  */
 
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
 import { InjectResultsPanel } from '@/components/wallpaper/InjectResultsPanel';
 import { WallpaperGrid } from '@/components/wallpaper/WallpaperGrid';
@@ -16,7 +17,6 @@ import { cn } from '@/lib/utils';
 
 import type { WallpaperInfo } from '@shared/types';
 import { Download, Image, Search, Video } from 'lucide-react';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 /** 页面 wrapper — 持有 AppController (由上层注入)。 */
 export function WallpaperEnginePage({ controller }: { controller: AppController }) {
@@ -268,8 +268,8 @@ function Toolbar({
   onImport,
 }: ToolbarProps) {
   return (
-    <div className="we-sub flex items-center gap-[8px] border-b border-border px-4 py-2">
-      <div className="relative max-w-[240px] flex-1">
+    <div className="we-sub flex flex-wrap items-center gap-[8px] border-b border-border px-4 py-2">
+      <div className="relative min-w-[180px] max-w-[240px] flex-1">
         <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
         <input
           value={search}
@@ -287,7 +287,7 @@ function Toolbar({
         <option value="title">{t.weSortTitle}</option>
         <option value="size">{t.weSortSize}</option>
       </select>
-      <div className="we-tabs flex items-center gap-[2px] rounded-[2px] bg-[var(--bg2)] p-[2px]">
+      <div className="we-tabs flex flex-wrap items-center gap-[2px] rounded-[2px] bg-[var(--bg2)] p-[2px]">
         {(['all', 'video', 'image', 'web', 'scene'] as const).map((f) => (
           <button
             type="button"
