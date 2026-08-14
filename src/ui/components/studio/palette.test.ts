@@ -17,11 +17,18 @@ import {
 
 function makeSnapshot(over: Partial<ThemeVisualSnapshot> = {}): ThemeVisualSnapshot {
   return {
-    landmarks: [],
-    domTree: null,
-    screenshot: null,
-    timestamp: 0,
+    themeId: 'test',
+    themeName: 'Test Theme',
     agentId: 'traework',
+    timestamp: '2026-01-01T00:00:00Z',
+    landmarks: [],
+    summary: {
+      totalLandmarks: 0,
+      visibleLandmarks: 0,
+      selectorsTried: 0,
+      boxModelAvailable: false,
+      cascadeAvailable: false,
+    },
     ...over,
   };
 }
@@ -34,7 +41,9 @@ function snapshotWithRoot(styles: Array<{ property: string; value: string }>): T
         tag: 'html',
         visible: true,
         styles,
-        rect: { x: 0, y: 0, w: 100, h: 100 },
+        matchedRules: [],
+        platformFonts: [],
+        boxModel: null,
       },
     ],
   });

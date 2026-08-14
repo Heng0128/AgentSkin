@@ -190,6 +190,11 @@ export const IpcChannel = {
   // so the main process can include them in the unified metrics payload.
   DIAGNOSTICS_UPDATE_RENDERER_CONCURRENCY: 'diagnostics:update-renderer-concurrency',
 
+  // --- Persist failure notification ---
+  // SEND_ONLY — main → renderer. Fired when persistFailures reaches threshold (3).
+  // Renderer subscribes via preload and shows a destructive toast.
+  PERSIST_FAILURE_WARNING: 'persist:failure-warning',
+
   // --- Visual Analysis ---
   VISUAL_ANALYSIS_LIST: 'visual-analysis:list',
   VISUAL_ANALYSIS_GET: 'visual-analysis:get',

@@ -1063,4 +1063,354 @@ describe('AgentEngineService Reliability Verification', () => {
       expect(inflight.size).toBe(0);
     });
   });
+
+  // =========================================================================
+  // Section 10: 6-Adapter Concurrent Stress Test
+  // =========================================================================
+
+  describe('6-adapter concurrent stress test', () => {
+    /** All 6 supported adapter IDs — single source of truth for stress tests. */
+    const ALL_ADAPTERS: readonly AgentId[] = [
+      'workbuddy',
+      'qoderwork',
+      'traework',
+      'doubao',
+      'codex',
+      'zcode',
+    ];
+
+    /**
+     * Verifies that all 6 adapters can execute apply concurrently.
+     *
+     * Strategy: gate every agent's applyThemeFlow so all 6 operations stay
+     * in-flight simultaneously. Then verify that the inflightOperations map
+     * peaks at exactly 6 (one per adapter), and drops back to 0 after all
+     * operations settle and the cleanup chain drains.
+     */
+    it('all 6 adapters can apply concurrently', async () => {
+      const gates = Object.fromEntries(
+        ALL_ADAPTERS.map((id) => [
+          id,
+          deferred<{ response: ApplyResponse; background: Promise<void> }>(),
+        ]),
+      ) as Record<
+        AgentId,
+        ReturnType<typeof deferred<{ response: ApplyResponse; background: Promise<void> }>>
+      >;
+
+      vi.mocked(applyThemeFlow).mockImplementation((req: { appId: AgentId }) => {
+        const gate = gates[req.appId];
+        if (!gate) throw new Error(`unexpected appId: ${req.appId}`);
+        return gate.promise;
+      });
+
+      const svc = makeService();
+
+      // Fire all 6 applies concurrently
+      const promises = ALL_ADAPTERS.map((id) => svc.apply({ appId: id, themeId: `theme-${id}` }));
+
+      // Peak concurrency: all 6 should be tracked simultaneously
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(6);
+
+      const inflight = (
+        svc as unknown as {
+          inflightOperations: Map<AgentId, { kind: string; promise: unknown; cleanup: unknown }>;
+        }
+      ).inflightOperations;
+      expect(inflight.size).toBe(6);
+      for (const id of ALL_ADAPTERS) {
+        expect(inflight.has(id)).toBe(true);
+        expect(inflight.get(id)?.kind).toBe('apply');
+      }
+
+      // Resolve all gates
+      for (const id of ALL_ADAPTERS) {
+        gates[id].resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      }
+      await Promise.all(promises);
+
+      // Drain cleanup chain
+      await flushMicrotasks();
+
+      // All entries should be cleaned up
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+      expect(inflight.size).toBe(0);
+    });
+
+    /**
+     * Verifies that per-agent dedup holds across all 6 adapters.
+     *
+     * Strategy: gate traework's applyThemeFlow, then fire a duplicate apply
+     * on traework AND an independent apply on workbuddy. The duplicate must
+     * be absorbed by dedup (applyThemeFlow called only once for traework),
+     * and workbuddy's apply must execute independently.
+     */
+    it('per-agent dedup holds across all adapters', async () => {
+      const traeworkGate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
+
+      vi.mocked(applyThemeFlow).mockImplementation((req: { appId: AgentId }) => {
+        if (req.appId === 'traework') return traeworkGate.promise;
+        // All other agents resolve immediately
+        return Promise.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      });
+
+      const svc = makeService();
+
+      // First apply on traework (will be gated)
+      const p1 = svc.apply({ appId: 'traework', themeId: 't1' });
+      // Duplicate apply on traework — must be deduplicated
+      svc.apply({ appId: 'traework', themeId: 't1' }).catch(() => {});
+      // Independent apply on workbuddy — must execute without waiting
+      const p2 = svc.apply({ appId: 'workbuddy', themeId: 't2' });
+
+      // applyThemeFlow should have been called exactly twice: once for traework
+      // (dedup absorbed the duplicate), once for workbuddy
+      expect(applyThemeFlow).toHaveBeenCalledTimes(2);
+
+      // workbuddy completes immediately — does not wait for traework's gate
+      const r2 = await p2;
+      expect(r2.status).toBe('applied');
+
+      // Release traework
+      traeworkGate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      const r1 = await p1;
+      expect(r1.status).toBe('applied');
+
+      await flushMicrotasks();
+
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+    });
+
+    /**
+     * Verifies that mixed apply/restore operations across all 6 adapters
+     * complete without blocking each other.
+     *
+     * Strategy: 3 adapters execute apply, 3 execute restore. All operations
+     * are independent per-agent, so none should serialize behind another.
+     * Metrics must correctly reflect the inflight count throughout.
+     */
+    it('mixed apply/restore across all adapters', async () => {
+      const applyIds: AgentId[] = ['workbuddy', 'qoderwork', 'traework'];
+      const restoreIds: AgentId[] = ['doubao', 'codex', 'zcode'];
+
+      const applyGates = Object.fromEntries(
+        applyIds.map((id) => [
+          id,
+          deferred<{ response: ApplyResponse; background: Promise<void> }>(),
+        ]),
+      ) as Record<
+        AgentId,
+        ReturnType<typeof deferred<{ response: ApplyResponse; background: Promise<void> }>>
+      >;
+
+      const restoreGates = Object.fromEntries(
+        restoreIds.map((id) => [id, deferred<SystemStatus>()]),
+      ) as Record<AgentId, ReturnType<typeof deferred<SystemStatus>>>;
+
+      vi.mocked(applyThemeFlow).mockImplementation((req: { appId: AgentId }) => {
+        const gate = applyGates[req.appId];
+        if (!gate) throw new Error(`unexpected apply appId: ${req.appId}`);
+        return gate.promise;
+      });
+
+      vi.mocked(restoreThemeFlow).mockImplementation((appId: AgentId) => {
+        const gate = restoreGates[appId];
+        if (!gate) throw new Error(`unexpected restore appId: ${appId}`);
+        return gate.promise;
+      });
+
+      const svc = makeService();
+
+      // Fire 3 applies and 3 restores concurrently — all 6 operations in-flight
+      const applyPromises = applyIds.map((id) => svc.apply({ appId: id, themeId: `theme-${id}` }));
+      const restorePromises = restoreIds.map((id) => svc.restore(id));
+
+      // Peak concurrency: 6 total inflight operations
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(6);
+
+      // Resolve 2 applies and 1 restore
+      applyGates.workbuddy.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      applyGates.qoderwork.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      restoreGates.doubao.resolve(STATUS);
+
+      await Promise.all([applyPromises[0], applyPromises[1], restorePromises[0]]);
+      await flushMicrotasks();
+
+      // 3 should remain in-flight: traework apply + codex restore + zcode restore
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(3);
+
+      // Resolve the remaining 3
+      applyGates.traework.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      restoreGates.codex.resolve(STATUS);
+      restoreGates.zcode.resolve(STATUS);
+
+      await Promise.all([applyPromises[2], restorePromises[1], restorePromises[2]]);
+      await flushMicrotasks();
+
+      // All cleaned up
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+    });
+
+    /**
+     * Verifies that rapid sequential applies on the same adapter are
+     * correctly deduplicated — only the first executes, subsequent ones
+     * are absorbed until the first completes.
+     *
+     * Strategy: fire 5 rapid applies on traework. Due to same-kind dedup,
+     * applyThemeFlow is called exactly once. Then flush the cleanup chain
+     * and fire a 6th apply — it should execute as a fresh operation.
+     */
+    it('rapid sequential applies on same adapter', async () => {
+      let callCount = 0;
+      vi.mocked(applyThemeFlow).mockImplementation(() => {
+        callCount++;
+        return Promise.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      });
+
+      const svc = makeService();
+
+      // Fire 5 rapid applies on the same adapter
+      const promises: Promise<ApplyResponse>[] = [];
+      for (let i = 0; i < 5; i++) {
+        promises.push(svc.apply({ appId: 'traework', themeId: `t${i}` }));
+      }
+
+      // Only the first should have executed — rest deduplicated
+      expect(callCount).toBe(1);
+
+      // All 5 promises resolve successfully (dedup shares the same result)
+      const results = await Promise.all(promises);
+      for (const r of results) {
+        expect(r.status).toBe('applied');
+      }
+
+      // Flush cleanup chain so the inflight entry is removed
+      await flushMicrotasks();
+
+      // A 6th apply after cleanup should execute as a fresh operation
+      const p6 = svc.apply({ appId: 'traework', themeId: 't5' });
+      expect(callCount).toBe(2);
+      const r6 = await p6;
+      expect(r6.status).toBe('applied');
+
+      await flushMicrotasks();
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+    });
+
+    /**
+     * Verifies that concurrency metrics remain consistent during
+     * multi-adapter concurrent operations.
+     *
+     * Strategy: gate all 6 applies, sample metrics at multiple points
+     * during execution, and verify that inflightOperations always matches
+     * the actual number of unresolved operations. Also confirm that
+     * persistFailures does not increase spuriously under concurrency.
+     */
+    it('metrics consistency during concurrent operations', async () => {
+      const gates = Object.fromEntries(
+        ALL_ADAPTERS.map((id) => [
+          id,
+          deferred<{ response: ApplyResponse; background: Promise<void> }>(),
+        ]),
+      ) as Record<
+        AgentId,
+        ReturnType<typeof deferred<{ response: ApplyResponse; background: Promise<void> }>>
+      >;
+
+      vi.mocked(applyThemeFlow).mockImplementation((req: { appId: AgentId }) => {
+        const gate = gates[req.appId];
+        if (!gate) throw new Error(`unexpected appId: ${req.appId}`);
+        return gate.promise;
+      });
+
+      const svc = makeService();
+
+      // Initially clean
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+      expect(svc.collectConcurrencyMetrics().persistFailures).toBe(0);
+
+      // Start all 6 applies
+      const promises = ALL_ADAPTERS.map((id) => svc.apply({ appId: id, themeId: `theme-${id}` }));
+
+      // All 6 inflight
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(6);
+
+      // Resolve 2 at a time, sample metrics after each batch
+      gates.workbuddy.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      gates.qoderwork.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      await Promise.all([promises[0], promises[1]]);
+      await flushMicrotasks();
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(4);
+
+      gates.traework.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      gates.doubao.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      await Promise.all([promises[2], promises[3]]);
+      await flushMicrotasks();
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(2);
+
+      gates.codex.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      gates.zcode.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      await Promise.all([promises[4], promises[5]]);
+      await flushMicrotasks();
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+
+      // persistFailures should remain 0 — concurrency must not cause spurious failures
+      expect(svc.collectConcurrencyMetrics().persistFailures).toBe(0);
+    });
+
+    /**
+     * Verifies that cross-agent interference does not occur: an apply on
+     * agent A does not affect a restore on agent B, and vice versa.
+     *
+     * Strategy: perform apply on one adapter and restore on another,
+     * confirm both complete independently, and verify the registry state
+     * is correct after all operations settle.
+     */
+    it('no cross-agent interference', async () => {
+      const applyGate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
+      const restoreGate = deferred<SystemStatus>();
+
+      vi.mocked(applyThemeFlow).mockImplementation((req: { appId: AgentId }) => {
+        if (req.appId === 'traework') return applyGate.promise;
+        throw new Error(`unexpected apply appId: ${req.appId}`);
+      });
+
+      vi.mocked(restoreThemeFlow).mockImplementation((appId: AgentId) => {
+        if (appId === 'workbuddy') return restoreGate.promise;
+        throw new Error(`unexpected restore appId: ${appId}`);
+      });
+
+      const svc = makeService();
+
+      // Apply to traework, restore workbuddy — concurrently
+      const applyPromise = svc.apply({ appId: 'traework', themeId: 'new-theme' });
+      const restorePromise = svc.restore('workbuddy');
+
+      // Both tracked independently
+      const inflight = (
+        svc as unknown as {
+          inflightOperations: Map<AgentId, { kind: string; promise: unknown; cleanup: unknown }>;
+        }
+      ).inflightOperations;
+      expect(inflight.size).toBe(2);
+      expect(inflight.get('traework')?.kind).toBe('apply');
+      expect(inflight.get('workbuddy')?.kind).toBe('restore');
+
+      // Resolve apply first
+      applyGate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
+      const applyResult = await applyPromise;
+      expect(applyResult.status).toBe('applied');
+
+      // Restore workbuddy
+      restoreGate.resolve(STATUS);
+      const restoreResult = await restorePromise;
+      expect(restoreResult.platform).toBe('win32');
+
+      await flushMicrotasks();
+
+      // Both cleaned up
+      expect(inflight.size).toBe(0);
+      expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+    });
+  });
 });

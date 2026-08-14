@@ -33,7 +33,7 @@ import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
-import { uiMessages } from '@shared/i18n';
+import { type UiMessages, uiMessages } from '@shared/i18n';
 import type { AppStatus } from '@shared/types';
 import { RefreshCw } from 'lucide-react';
 
@@ -64,11 +64,6 @@ export function WorkspacePage() {
     () => (status?.apps ?? []).filter((a) => a.running && a.port !== null) as AppStatus[],
     [status],
   );
-
-  const currentPort =
-    currentAgentId === null
-      ? null
-      : (runningAgents.find((a) => a.appId === currentAgentId)?.port ?? null);
 
   return (
     <div className="flex h-full flex-col overflow-hidden">

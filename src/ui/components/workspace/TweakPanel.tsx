@@ -41,7 +41,26 @@ import type { UiMessages } from '@shared/i18n';
 // Shadow levels — shared with tweak-injector.ts shadowFromLevel()
 // ---------------------------------------------------------------------------
 
-const SHADOW_LEVELS: ToolOverride['shadowLevel'][] = ['none', 'sm', 'md', 'lg'];
+const SHADOW_LEVELS = ['none', 'sm', 'md', 'lg'] as const;
+
+/** Map a shadow level to its i18n key — keeps the lookup statically typed. */
+const SHADOW_LABEL_KEY: Record<string, keyof UiMessages> = {
+  none: 'workspaceTweakShadowNone',
+  sm: 'workspaceTweakShadowSm',
+  md: 'workspaceTweakShadowMd',
+  lg: 'workspaceTweakShadowLg',
+};
+
+/**
+ * Read a string-valued i18n key. `UiMessages` mixes string and function
+ * values (e.g. `themeStatsActive`), so a bare index access widens to a
+ * union that is not assignable to `string` / `ReactNode`. This helper
+ * narrows to the string case — callers only use it on known-string keys.
+ */
+function str(t: UiMessages, key: keyof UiMessages): string {
+  const v = t[key] as unknown;
+  return typeof v === 'string' ? v : '';
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -66,7 +85,7 @@ export function TweakPanel({
         {/* Radius */}
         <label className="flex flex-col gap-2">
           <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
-            {t.workspaceTweakRadius}
+            {str(t, 'workspaceTweakRadius')}
           </span>
           <input
             type="range"
@@ -76,7 +95,7 @@ export function TweakPanel({
             value={pxToInt(overrides.radius, 0)}
             onChange={(e) => set('radius', `${e.target.value}px`)}
             className="ws-range"
-            aria-label={t.workspaceTweakRadius}
+            aria-label={str(t, 'workspaceTweakRadius')}
           />
           <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
             {overrides.radius ?? '0px'}
@@ -86,7 +105,7 @@ export function TweakPanel({
         {/* Spacing */}
         <label className="flex flex-col gap-2">
           <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
-            {t.workspaceTweakSpacing}
+            {str(t, 'workspaceTweakSpacing')}
           </span>
           <input
             type="range"
@@ -96,7 +115,7 @@ export function TweakPanel({
             value={overrides.spacing ?? 8}
             onChange={(e) => set('spacing', Number(e.target.value))}
             className="ws-range"
-            aria-label={t.workspaceTweakSpacing}
+            aria-label={str(t, 'workspaceTweakSpacing')}
           />
           <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
             {overrides.spacing ?? 8}px
@@ -106,7 +125,7 @@ export function TweakPanel({
         {/* Font size */}
         <label className="flex flex-col gap-2">
           <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
-            {t.workspaceTweakFontSize}
+            {str(t, 'workspaceTweakFontSize')}
           </span>
           <input
             type="range"
@@ -116,7 +135,7 @@ export function TweakPanel({
             value={overrides.fontSize ?? 13}
             onChange={(e) => set('fontSize', Number(e.target.value))}
             className="ws-range"
-            aria-label={t.workspaceTweakFontSize}
+            aria-label={str(t, 'workspaceTweakFontSize')}
           />
           <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
             {overrides.fontSize ?? 13}px
@@ -127,7 +146,7 @@ export function TweakPanel({
       {/* Row 2: shadow select */}
       <div className="flex flex-col gap-2">
         <span className="font-mono text-[10px] tracking-tight text-muted-foreground uppercase">
-          {t.workspaceTweakShadow}
+          {str(t, 'workspaceTweakShadow')}
         </span>
         <Select
           value={overrides.shadowLevel ?? 'none'}
@@ -139,7 +158,7 @@ export function TweakPanel({
           <SelectContent>
             {SHADOW_LEVELS.map((level) => (
               <SelectItem key={level} value={level} className="text-[12px]">
-                {t[`workspaceTweakShadow${capitalize(level)}` as keyof UiMessages] ?? level}
+                {str(t, SHADOW_LABEL_KEY[level])}
               </SelectItem>
             ))}
           </SelectContent>
@@ -149,19 +168,19 @@ export function TweakPanel({
       {/* Row 3: color pickers — accent / background / foreground */}
       <div className="grid grid-cols-3 gap-4">
         <ColorField
-          label={t.workspaceTweakAccent}
+          label={str(t, 'workspaceTweakAccent')}
           value={overrides.accent}
           onChange={(v) => set('accent', v)}
           t={t}
         />
         <ColorField
-          label={t.workspaceTweakBackground}
+          label={str(t, 'workspaceTweakBackground')}
           value={overrides.background}
           onChange={(v) => set('background', v)}
           t={t}
         />
         <ColorField
-          label={t.workspaceTweakForeground}
+          label={str(t, 'workspaceTweakForeground')}
           value={overrides.foreground}
           onChange={(v) => set('foreground', v)}
           t={t}
@@ -217,10 +236,6 @@ function pxToInt(px: string | undefined, fallback: number): number {
   if (!px) return fallback;
   const n = Number.parseInt(px, 10);
   return Number.isNaN(n) ? fallback : n;
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /**

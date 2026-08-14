@@ -66,7 +66,7 @@ import {
 } from './cdp/injection/engine-strategy';
 import { EpochManager } from './epoch-manager';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
-import { ctx } from './main-context';
+import { ctx, notifyPersistFailure } from './main-context';
 import { resolveEngineDirDefault } from './palette-builder';
 import type { SchemeSyncDeps } from './scheme-sync';
 import { mergeRenderOptions, themeRenderOptions } from './services/agent-engine-options';
@@ -563,6 +563,10 @@ export class AgentEngineService implements AgentEngineServiceApi {
     } catch (error) {
       this.persistFailures++;
       this.log(`[state] persist failed: ${toMessage(error)}`);
+      // Threshold-based notification: alert user after 3 consecutive failures
+      if (this.persistFailures >= 3) {
+        notifyPersistFailure(this.persistFailures);
+      }
     }
   }
 

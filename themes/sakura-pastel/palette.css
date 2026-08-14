@@ -5,22 +5,22 @@
   --agentskin-surface: #ffffff;
   --agentskin-surface-elevated: #fffdfb;
   --agentskin-text: #4a3f45;
-  --agentskin-muted: #9a8b92;
-  --agentskin-accent: #e08aa8;
+  --agentskin-muted: #7a6b72;
+  --agentskin-accent: #9a2d56;
   --agentskin-secondary: #d9b8c8;
-  --agentskin-border: rgba(224, 138, 168, 0.25);
+  --agentskin-border: rgba(154, 45, 86, 0.25);
   --agentskin-code-bg: #f3e9e5;
   --agentskin-code-fg: #6b5a63;
-  --agentskin-focus-ring: #e08aa866;
-  --agentskin-selection: color-mix(in srgb, #e08aa8 32%, transparent);
+  --agentskin-focus-ring: #9a2d5666;
+  --agentskin-selection: color-mix(in srgb, #9a2d56 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
-  --agentskin-accent-raw: 224, 138, 168;
+  --agentskin-accent-raw: 154, 45, 86;
   --agentskin-secondary-raw: 217, 184, 200;
   --agentskin-text-raw: 74, 63, 69;
-  --agentskin-muted-raw: 154, 139, 146;
+  --agentskin-muted-raw: 122, 107, 114;
   --agentskin-surface-raw: 255, 255, 255;
   --agentskin-surface-elevated-raw: 255, 253, 251;
   --agentskin-bg-raw: 250, 244, 240;
-  --agentskin-border-raw: 224, 138, 168;
+  --agentskin-border-raw: 154, 45, 86;
 }

@@ -45,9 +45,14 @@ import type { MainContext } from '../main-context';
  */
 export function registerConcurrencyMetricsIpc(ctx: MainContext): void {
   // Start periodic broadcast (every 5s + immediate first shot).
+  // Fan-out to mainWindow + studioWindow so the Studio diagnostics panel
+  // sees the same live metrics without waiting for its own poll tick.
   ctx.core.startConcurrencyMetricsTimer((metrics) => {
     if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
       ctx.mainWindow.webContents.send(IpcChannel.DIAGNOSTICS_CONCURRENCY_METRICS, metrics);
+    }
+    if (ctx.studioWindow && !ctx.studioWindow.isDestroyed()) {
+      ctx.studioWindow.webContents.send(IpcChannel.DIAGNOSTICS_CONCURRENCY_METRICS, metrics);
     }
   });
 

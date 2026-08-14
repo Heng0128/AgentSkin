@@ -375,7 +375,6 @@ export interface AgentSkinApi {
   saveEnvironmentPresets(presets: EnvironmentPreset[]): Promise<{ ok: boolean }>;
   /** Detect whether Wallpaper Engine is installed on this machine. */
   weDetect(): Promise<{ installed: boolean; wallpaperCount: number }>;
-  // --- Workspace live tweak (tweak-injector.ts) ---
   /** Push current override set to a running agent in real time — no full
    *  theme re-apply. Returns true if the CDP layer was injected. */
   pushTweak(session: TweakSession, overrides: ToolOverride): Promise<boolean>;
@@ -585,9 +584,4 @@ export interface AgentSkinApi {
   // --- Electron app discovery & launch ---
   scanElectronApps(): Promise<ElectronScanResult>;
   launchElectronApp(request: LaunchRequest): Promise<LaunchResult>;
-
-  // --- Workspace live tweak ---
-  pushTweak(session: TweakSession, overrides: ToolOverride): Promise<boolean>;
-  saveTweakAsCustomCss(session: TweakSession, overrides: ToolOverride): Promise<boolean>;
-  resetTweak(session: TweakSession): Promise<boolean>;
 }

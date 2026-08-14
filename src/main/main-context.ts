@@ -160,6 +160,20 @@ export function notifyStatusChanged(): void {
 }
 
 /**
+ * Fan-out PERSIST_FAILURE_WARNING to mainWindow + studioWindow when
+ * persistFailures reaches threshold. Keeps the user informed about
+ * disk-persistence issues without waiting for the next poll tick.
+ */
+export function notifyPersistFailure(failureCount: number): void {
+  if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+    ctx.mainWindow.webContents.send(IpcChannel.PERSIST_FAILURE_WARNING, { failureCount });
+  }
+  if (ctx.studioWindow && !ctx.studioWindow.isDestroyed()) {
+    ctx.studioWindow.webContents.send(IpcChannel.PERSIST_FAILURE_WARNING, { failureCount });
+  }
+}
+
+/**
  * Wrap catalog items with a version + timestamp envelope. The renderer uses
  * `updatedAt` to bust its in-memory cache when the catalog changes.
  */

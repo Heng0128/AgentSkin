@@ -19,6 +19,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AgentEngineService } from './agent-engine-service';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
+import { notifyPersistFailure } from './main-context';
 import type { SettingsServiceApi, StructuredLogEvent } from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
@@ -77,6 +78,13 @@ vi.mock('./wallpaper-self-heal', async (importOriginal) => {
   };
 });
 vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
+vi.mock('./main-context', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./main-context')>();
+  return {
+    ...actual,
+    notifyPersistFailure: vi.fn(),
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -520,5 +528,298 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
       // Counter incremented only once (for the first failure).
       expect(svc.collectConcurrencyMetrics().persistFailures).toBe(1);
     });
+  });
+
+  // -------------------------------------------------------------------------
+  // persistFailures threshold notification
+  // -------------------------------------------------------------------------
+
+  describe('persistFailures threshold notification', () => {
+    /**
+     * Verifies that notifyPersistFailure is called when persistFailures
+     * reaches the threshold (3) after consecutive writeState failures.
+     */
+    it('notifyPersistFailure called when threshold reached', async () => {
+      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
+      vi.mocked(appendLogLine).mockResolvedValue(undefined);
+      const svc = makeService(stateFile);
+
+      // Trigger three consecutive writeState failures.
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+
+      expect(notifyPersistFailure).toHaveBeenCalledTimes(1);
+      expect(notifyPersistFailure).toHaveBeenCalledWith(3);
+    });
+
+    /**
+     * Verifies that notifyPersistFailure is NOT called when persistFailures
+     * is below the threshold (1 or 2 consecutive failures).
+     */
+    it('notifyPersistFailure not called below threshold', async () => {
+      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
+      vi.mocked(appendLogLine).mockResolvedValue(undefined);
+      const svc = makeService(stateFile);
+
+      // Only 2 failures — below threshold of 3.
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+
+      expect(notifyPersistFailure).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Verifies that notifyPersistFailure sends the correct failureCount
+     * in its payload argument.
+     */
+    it('notifyPersistFailure sends correct failureCount', async () => {
+      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
+      vi.mocked(appendLogLine).mockResolvedValue(undefined);
+      const svc = makeService(stateFile);
+
+      // Trigger 4 failures — threshold crossed at 3, fires once with count=3,
+      // then fires again at count=4 (>= 3 still holds).
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+
+      // Called at count=3 and count=4.
+      expect(notifyPersistFailure).toHaveBeenCalledTimes(2);
+      expect(notifyPersistFailure).toHaveBeenNthCalledWith(1, 3);
+      expect(notifyPersistFailure).toHaveBeenNthCalledWith(2, 4);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// IPC fan-out verification
+// ---------------------------------------------------------------------------
+
+/**
+ * These tests verify that registerConcurrencyMetricsIpc fans out metrics
+ * to BOTH mainWindow and studioWindow (mirroring notifyStatusChanged).
+ *
+ * Strategy: mock electron's ipcMain and the concurrency-metrics-ipc module's
+ * dependencies, capture the timer callback, and invoke it with controlled
+ * window mocks.
+ */
+describe('IPC fan-out verification', () => {
+  // Captured callback from startConcurrencyMetricsTimer
+  let capturedCallback: ((metrics: unknown) => void) | null = null;
+
+  // Mock window state
+  let mainWindowDestroyed = false;
+  let studioWindowDestroyed = false;
+  const mainWindowSendArgs: unknown[][] = [];
+  const studioWindowSendArgs: unknown[][] = [];
+
+  // Import the function under test via dynamic import after mocks are set up
+  // We use vi.hoisted to ensure mocks are available at import time.
+  const mockStartConcurrencyMetricsTimer = vi.fn((callback: (metrics: unknown) => void) => {
+    capturedCallback = callback;
+  });
+  const mockStopConcurrencyMetricsTimer = vi.fn();
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    capturedCallback = null;
+    mainWindowDestroyed = false;
+    studioWindowDestroyed = false;
+    mainWindowSendArgs.length = 0;
+    studioWindowSendArgs.length = 0;
+
+    // Dynamically import fresh module instance each test
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /**
+   * Creates a minimal MainContext-shaped object with mock windows.
+   */
+  function makeCtx(
+    studioWindow: {
+      webContents: { send: (...args: unknown[]) => void };
+      isDestroyed: () => boolean;
+    } | null,
+  ) {
+    return {
+      core: {
+        startConcurrencyMetricsTimer: mockStartConcurrencyMetricsTimer,
+        stopConcurrencyMetricsTimer: mockStopConcurrencyMetricsTimer,
+      },
+      mainWindow: {
+        webContents: {
+          send: (...args: unknown[]) => mainWindowSendArgs.push(args),
+        },
+        isDestroyed: () => mainWindowDestroyed,
+      },
+      studioWindow,
+    };
+  }
+
+  it('sends metrics to mainWindow', async () => {
+    // Mock ipcMain from electron before importing the IPC module
+    vi.doMock('electron', () => ({
+      ipcMain: { on: vi.fn() },
+    }));
+    vi.doMock('../shared/ipc-channels', () => ({
+      IpcChannel: {
+        DIAGNOSTICS_CONCURRENCY_METRICS: 'diagnostics:concurrency-metrics',
+        DIAGNOSTICS_UPDATE_RENDERER_CONCURRENCY: 'diagnostics:update-renderer-concurrency',
+      },
+    }));
+
+    const { registerConcurrencyMetricsIpc } = await import('./ipc/concurrency-metrics-ipc');
+
+    const studioWindow = {
+      webContents: { send: (...args: unknown[]) => studioWindowSendArgs.push(args) },
+      isDestroyed: () => studioWindowDestroyed,
+    };
+    const ctx = makeCtx(studioWindow);
+
+    registerConcurrencyMetricsIpc(
+      ctx as unknown as Parameters<typeof registerConcurrencyMetricsIpc>[0],
+    );
+
+    // The timer should have been started with a callback
+    expect(capturedCallback).not.toBeNull();
+
+    // Invoke the callback with a sample metrics payload
+    const sampleMetrics = { inflightOperations: 3, persistFailures: 0 };
+    capturedCallback!(sampleMetrics);
+
+    // mainWindow should have received the metrics
+    expect(mainWindowSendArgs).toHaveLength(1);
+    expect(mainWindowSendArgs[0][0]).toBe('diagnostics:concurrency-metrics');
+    expect(mainWindowSendArgs[0][1]).toEqual(sampleMetrics);
+  });
+
+  it('sends metrics to studioWindow (fan-out)', async () => {
+    vi.doMock('electron', () => ({
+      ipcMain: { on: vi.fn() },
+    }));
+    vi.doMock('../shared/ipc-channels', () => ({
+      IpcChannel: {
+        DIAGNOSTICS_CONCURRENCY_METRICS: 'diagnostics:concurrency-metrics',
+        DIAGNOSTICS_UPDATE_RENDERER_CONCURRENCY: 'diagnostics:update-renderer-concurrency',
+      },
+    }));
+
+    const { registerConcurrencyMetricsIpc } = await import('./ipc/concurrency-metrics-ipc');
+
+    const studioWindow = {
+      webContents: { send: (...args: unknown[]) => studioWindowSendArgs.push(args) },
+      isDestroyed: () => studioWindowDestroyed,
+    };
+    const ctx = makeCtx(studioWindow);
+
+    registerConcurrencyMetricsIpc(
+      ctx as unknown as Parameters<typeof registerConcurrencyMetricsIpc>[0],
+    );
+
+    expect(capturedCallback).not.toBeNull();
+
+    const sampleMetrics = { inflightOperations: 2, persistFailures: 1 };
+    capturedCallback!(sampleMetrics);
+
+    // studioWindow should ALSO receive the metrics (fan-out)
+    expect(studioWindowSendArgs).toHaveLength(1);
+    expect(studioWindowSendArgs[0][0]).toBe('diagnostics:concurrency-metrics');
+    expect(studioWindowSendArgs[0][1]).toEqual(sampleMetrics);
+
+    // Both windows received the same payload
+    expect(mainWindowSendArgs).toHaveLength(1);
+    expect(mainWindowSendArgs[0][1]).toEqual(studioWindowSendArgs[0][1]);
+  });
+
+  it('skips studioWindow when null', async () => {
+    vi.doMock('electron', () => ({
+      ipcMain: { on: vi.fn() },
+    }));
+    vi.doMock('../shared/ipc-channels', () => ({
+      IpcChannel: {
+        DIAGNOSTICS_CONCURRENCY_METRICS: 'diagnostics:concurrency-metrics',
+        DIAGNOSTICS_UPDATE_RENDERER_CONCURRENCY: 'diagnostics:update-renderer-concurrency',
+      },
+    }));
+
+    const { registerConcurrencyMetricsIpc } = await import('./ipc/concurrency-metrics-ipc');
+
+    // studioWindow is null — simulates Studio window not yet created
+    const ctx = makeCtx(null);
+
+    registerConcurrencyMetricsIpc(
+      ctx as unknown as Parameters<typeof registerConcurrencyMetricsIpc>[0],
+    );
+
+    expect(capturedCallback).not.toBeNull();
+
+    const sampleMetrics = { inflightOperations: 0, persistFailures: 0 };
+    capturedCallback!(sampleMetrics);
+
+    // mainWindow still receives
+    expect(mainWindowSendArgs).toHaveLength(1);
+    // studioWindow gets nothing (null guard)
+    expect(studioWindowSendArgs).toHaveLength(0);
+  });
+
+  it('skips destroyed windows', async () => {
+    vi.doMock('electron', () => ({
+      ipcMain: { on: vi.fn() },
+    }));
+    vi.doMock('../shared/ipc-channels', () => ({
+      IpcChannel: {
+        DIAGNOSTICS_CONCURRENCY_METRICS: 'diagnostics:concurrency-metrics',
+        DIAGNOSTICS_UPDATE_RENDERER_CONCURRENCY: 'diagnostics:update-renderer-concurrency',
+      },
+    }));
+
+    const { registerConcurrencyMetricsIpc } = await import('./ipc/concurrency-metrics-ipc');
+
+    const studioWindow = {
+      webContents: { send: (...args: unknown[]) => studioWindowSendArgs.push(args) },
+      isDestroyed: () => studioWindowDestroyed,
+    };
+    const ctx = makeCtx(studioWindow);
+
+    registerConcurrencyMetricsIpc(
+      ctx as unknown as Parameters<typeof registerConcurrencyMetricsIpc>[0],
+    );
+
+    expect(capturedCallback).not.toBeNull();
+
+    // Simulate mainWindow being destroyed (e.g. user closed the main window)
+    mainWindowDestroyed = true;
+
+    const sampleMetrics = { inflightOperations: 0, persistFailures: 0 };
+    capturedCallback!(sampleMetrics);
+
+    // mainWindow should NOT receive (destroyed guard)
+    expect(mainWindowSendArgs).toHaveLength(0);
+    // studioWindow still receives (independent guard)
+    expect(studioWindowSendArgs).toHaveLength(1);
   });
 });
