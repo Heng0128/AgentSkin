@@ -86,8 +86,8 @@ vi.mock('../../adapters/domestic/zcode', () => ({
   ZcodeAdapter: makeAdapter('zcode', 'ZCode', ZCODE_HINTS),
 }));
 
-// Reference to the mocked logger so we can assert on warnings.
-const { mainWarn } = await import('../logger');
+// Logger mock reference — used for silencing warn output during tests.
+await import('../logger');
 
 // ---------------------------------------------------------------------------
 // Mock install-detection — control what detectInstallation returns per agent.

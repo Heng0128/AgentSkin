@@ -23,6 +23,12 @@ import type { SettingsServiceApi, StructuredLogEvent } from './services/contract
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
 
+/** Type helper for accessing private members in tests (TS private is not runtime-enforced). */
+type AgentEngineServicePrivate = {
+  persist: { safe: (fn: () => unknown) => Promise<void> };
+  writeState: () => Promise<void>;
+};
+
 // ---------------------------------------------------------------------------
 // Minimal mocks (consistent with reliability test suite)
 // ---------------------------------------------------------------------------
@@ -397,7 +403,9 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
 
       // Trigger writeState via persist.safe — same path the apply/restore flows use.
       // The persist chain serialises calls, so we await the safe() promise.
-      await svc.persist.safe(() => svc.writeState());
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
 
       const m = svc.collectConcurrencyMetrics();
       expect(m.persistFailures).toBe(1);
@@ -443,9 +451,15 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
       const svc = makeService(stateFile);
 
       // Trigger three consecutive writeState failures.
-      await svc.persist.safe(() => svc.writeState());
-      await svc.persist.safe(() => svc.writeState());
-      await svc.persist.safe(() => svc.writeState());
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
 
       const m = svc.collectConcurrencyMetrics();
       expect(m.persistFailures).toBe(3);
@@ -466,11 +480,15 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
 
       const svc = makeService(stateFile);
 
-      await svc.persist.safe(() => svc.writeState());
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
       // Counter should be 1 after first failure.
       expect(svc.collectConcurrencyMetrics().persistFailures).toBe(1);
 
-      await svc.persist.safe(() => svc.writeState());
+      await (svc as unknown as AgentEngineServicePrivate).persist.safe(() =>
+        (svc as unknown as AgentEngineServicePrivate).writeState(),
+      );
       // Counter stays at 1 after a successful write (no increment).
       expect(svc.collectConcurrencyMetrics().persistFailures).toBe(1);
     });

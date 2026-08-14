@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { LaunchRequest } from '../../main/services/electron-launcher';
-import type { TweakSession } from '../../main/services/tweak-injector';
-import type { ToolOverride } from '../../ui/types/override';
+import type { ToolOverride, TweakSession } from '../../ui/types/override';
 import type { AppLocale } from '../i18n';
 import type {
   AgentCatalogItem,

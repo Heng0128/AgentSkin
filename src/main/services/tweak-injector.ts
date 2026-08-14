@@ -29,7 +29,7 @@
 
 import { toMessage } from '../../shared/errors';
 import type { AgentId } from '../../shared/types';
-import type { ToolOverride } from '../../ui/types/override';
+import type { ToolOverride, TweakSession } from '../../ui/types/override';
 import { type CdpSession, connectCdp } from '../cdp/cdp-client';
 import { injectCssLayer } from '../cdp/injection/shared';
 import { mainWarn } from '../logger';
@@ -45,22 +45,6 @@ const TWEAK_LAYER_NAME = 'workspace-tweak';
 
 /** Comment header prepended to tweak CSS chunks saved into customThemeCss. */
 const TWEAK_CSS_HEADER = '/* AgentSkin: workspace tweak */';
-
-// ---------------------------------------------------------------------------
-// TweakSession
-// ---------------------------------------------------------------------------
-
-/**
- * Active tweak session bound to a single agent. The renderer holds one
- * instance per connected agent and mutates `overrides` in real time as
- * the user adjusts sliders / color pickers.
- */
-export interface TweakSession {
-  agentId: AgentId;
-  port: number;
-  overrides: ToolOverride;
-  dirty: boolean;
-}
 
 // ---------------------------------------------------------------------------
 // CDP target discovery + session resolution
