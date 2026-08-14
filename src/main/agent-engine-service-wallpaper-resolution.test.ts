@@ -11,6 +11,7 @@
  * 无需 mock wallpaper-injector — 纯粹测试 wallpaper-id 解析分支逻辑。
  */
 
+import { writeFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -18,10 +19,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   AgentId,
   ThemeBundle,
-  WallpaperAgentSetting,
   WallpaperRenderOptions,
   WallpaperSettings,
 } from '../shared/types';
+// Real toInstalledTheme requires deep ThemeBundle; we mock it below.
 import { AgentEngineService } from './agent-engine-service';
 import type {
   SettingsServiceApi,
@@ -65,7 +66,18 @@ vi.mock('./wallpaper-self-heal', () => ({
   cleanupSelfHealForAgent: vi.fn(),
   disposeSelfHealState: vi.fn(),
 }));
-vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
+vi.mock('./theme/utils', () => ({
+  disposeThemeAssetCache: vi.fn(),
+  inferModeFromColors: vi.fn(() => 'dark'),
+  toInstalledTheme: vi.fn((entry: { bundle: { id: string; wallpaper?: unknown } }) => ({
+    id: entry.bundle.id,
+    wallpaper: entry.bundle.wallpaper ?? null,
+  })),
+}));
+vi.mock('./services/agent-engine-options', () => ({
+  themeRenderOptions: vi.fn(() => ({ alignment: 'fill' as const, speed: 1, loop: true, brightness: 100 })),
+  mergeRenderOptions: vi.fn((_a: unknown, b: unknown) => b),
+}));
 
 // ---------------------------------------------------------------------------
 // Constants & Helpers
@@ -233,25 +245,35 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
       expect(result.id).toBe('wp-agent-x');
     });
 
-    it('falls back to global wallpaper when no per-agent setting', async () => {
+    it('returns null when agentWallpaper disabled and no active theme (no global fallback for id)', async () => {
+      // Production code reads globalWp only for render mergeOptions;
+      // globalWp.id is NOT used as a fallback wallpaper id.
       const settings = makeSettings(
         wallpaperSettings({ enabled: true, globalId: 'wp-global-default' }),
       );
       const svc = makeSvc(undefined, settings);
 
+      // getActiveThemeId returns null → returns { id: null }
       const result = await callResolve(svc, TEST_APP);
 
-      expect(result.id).toBe('wp-global-default');
+      expect(result.id).toBeNull();
     });
 
-    it('falls back to persisted active theme wallpaper', async () => {
+    it('falls back to persisted active theme wallpaper workshopId', async () => {
+      // Write a valid persisted state so initialize() loads the active theme
+      writeFileSync(
+        stateFile,
+        JSON.stringify({
+          version: 2,
+          apps: { [TEST_APP]: { activeThemeId: 'persisted-t', activeSchemeId: null, port: null, schemeSnapshot: null, detectedPath: null } },
+        }),
+        'utf8',
+      );
+
       const settings = makeSettings(wallpaperSettings({}));
       const library = makeThemeLibrary(async () => themeEntry('persisted-t', { wallpaper: { workshopId: 'wp-from-theme' } }));
       const svc = makeSvc(library, settings);
-
-      // Inject registry hook for getActiveThemeId
-      (svc as unknown as { registry: { getActiveThemeId: () => string } }).registry.getActiveThemeId =
-        () => 'persisted-t';
+      await svc.initialize();
 
       const result = await callResolve(svc, TEST_APP);
 
@@ -287,14 +309,21 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
     });
 
     it('returns theme: prefix when persisted theme has video-only wallpaper', async () => {
+      writeFileSync(
+        stateFile,
+        JSON.stringify({
+          version: 2,
+          apps: { [TEST_APP]: { activeThemeId: 'video-t', activeSchemeId: null, port: null, schemeSnapshot: null, detectedPath: null } },
+        }),
+        'utf8',
+      );
+
       const settings = makeSettings(wallpaperSettings({}));
       const library = makeThemeLibrary(async () =>
         themeEntry('video-t', { wallpaper: { video: 'sunset.mp4' } }),
       );
       const svc = makeSvc(library, settings);
-
-      (svc as unknown as { registry: { getActiveThemeId: () => string } }).registry.getActiveThemeId =
-        () => 'video-t';
+      await svc.initialize();
 
       const result = await callResolve(svc, TEST_APP);
 
