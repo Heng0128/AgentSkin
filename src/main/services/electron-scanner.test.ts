@@ -419,9 +419,9 @@ describe('electron-scanner', () => {
     vi.spyOn(Date, 'now').mockImplementation(() => {
       callCount++;
       // After 5 calls (during first detectInstallation), jump time forward
-      // past the 10s deadline.
+      // past the 20s deadline (SCAN_TIMEOUT_MS = 20_000).
       if (callCount > 5) {
-        return realNow() + 11_000;
+        return realNow() + 21_000;
       }
       return realNow();
     });
@@ -436,6 +436,10 @@ describe('electron-scanner', () => {
     expect(result).toHaveProperty('other');
     expect(Array.isArray(result.adapted)).toBe(true);
     expect(Array.isArray(result.other)).toBe(true);
+
+    // Timed-out (partial) results must NOT be cached — a stale incomplete
+    // snapshot would be replayed to every subsequent useCache caller.
+    expect(getCachedScan()).toBeNull();
   });
 
   // -----------------------------------------------------------------------
@@ -498,6 +502,10 @@ describe('electron-scanner', () => {
     expect(result.other).toHaveLength(1);
     expect(result.other[0].exePath).toBe(`${appDir}\\CoolApp.exe`);
     expect(result.other[0].productName).toBe('CoolApp');
+    // L3 now reads PE info: CoolApp matches no adapter hints → adapterMatch
+    // stays null; the app.asar marker alone yields confidence 60.
+    expect(result.other[0].adapterMatch).toBeNull();
+    expect(result.other[0].confidence).toBe(60);
   });
 
   // -----------------------------------------------------------------------
@@ -771,5 +779,81 @@ describe('electron-scanner', () => {
 
     expect(result.other).toHaveLength(1);
     expect(result.other[0].exePath).toBe(`${douyin}\\douyin.exe`);
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 19 — registry sweep enumerates the WOW6432Node hive
+  // -----------------------------------------------------------------------
+  it('enumerates the WOW6432Node registry hive in the L2 sweep', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+
+    // Capture the PowerShell args passed to execFileAsync for the registry
+    // sweep (the only non-includeStderr call — L1 is mocked to not install).
+    let capturedArgs: string[] = [];
+    mockExecFileAsync.mockImplementation(
+      (
+        _cmd: string,
+        args: string[],
+        _timeout?: number,
+        options?: { includeStderr?: true },
+      ): Promise<string | ExecFileResult> => {
+        if (options?.includeStderr) {
+          return Promise.resolve({ stdout: '', stderr: '', errorMessage: null, errorCode: null });
+        }
+        capturedArgs = args;
+        return Promise.resolve('');
+      },
+    );
+
+    await scanElectronApps({ useCache: false });
+
+    const script = capturedArgs.join(' ');
+    expect(script).toContain('WOW6432Node');
+    expect(script).toContain(
+      'HKLM:\\Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*',
+    );
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 20 — multi-signal Electron detection without app.asar
+  // -----------------------------------------------------------------------
+  it('detects Electron via multi-signal confidence (unpacked + runtime files)', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+
+    // No app.asar / app dir — only app.asar.unpacked + runtime binaries.
+    // Confidence: unpacked(20) + electron.exe(15) + chrome_100_percent.pak(15)
+    // + v8_context_snapshot.bin(15) = 65 >= 50 → isElectron.
+    configureExecMocks('', '');
+
+    const customRoot = 'D:\\MultiSignal';
+    const appDir = `${customRoot}\\MultiSignalApp`;
+    readdirMap.set(customRoot, ['MultiSignalApp']);
+    statMap.set(appDir, 'dir');
+    statMap.set(`${appDir}\\resources\\app.asar.unpacked`, 'dir');
+    statMap.set(`${appDir}\\electron.exe`, 'file');
+    statMap.set(`${appDir}\\chrome_100_percent.pak`, 'file');
+    statMap.set(`${appDir}\\v8_context_snapshot.bin`, 'file');
+    readdirMap.set(appDir, [
+      'electron.exe',
+      'chrome_100_percent.pak',
+      'v8_context_snapshot.bin',
+      'resources',
+    ]);
+
+    const result = await scanElectronApps({ useCache: false, extraDirs: [customRoot] });
+
+    expect(result.other).toHaveLength(1);
+    expect(result.other[0].exePath).toBe(`${appDir}\\electron.exe`);
+    expect(result.other[0].confidence).toBe(65);
   });
 });

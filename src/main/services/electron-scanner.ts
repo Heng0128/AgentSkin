@@ -503,10 +503,12 @@ async function scanRegistry(
 ): Promise<void> {
   let raw: string;
   try {
-    raw = await execFileAsync(
-      'powershell',
-      ['-NoProfile', '-NonInteractive', '-Command', buildElectronRegistryScript()],
-      10000,
+    raw = await withPsConcurrency(() =>
+      execFileAsync(
+        'powershell',
+        ['-NoProfile', '-NonInteractive', '-Command', buildElectronRegistryScript()],
+        10000,
+      ),
     );
   } catch (error) {
     mainWarnFromCatch('ElectronScanner', error, 'L2 registry sweep');
