@@ -8,7 +8,9 @@
  * booleans previously scattered across studioStore.
  */
 
+import { api } from '@/api/agentSkinClient';
 import { WORKSPACE_PRESETS } from '@/stores/workspace-presets';
+import type { ToolOverride, TweakSession } from '@/types/override';
 import type {
   DockState,
   DrawerState,
@@ -47,6 +49,16 @@ interface WorkspaceState {
   // Active workspace preset (null = user-customized)
   activePresetId: string;
 
+  // --- Live tweak state ---
+  /** Currently selected agent for live tweaking. null = nothing selected. */
+  currentAgentId: AgentId | null;
+  /** CDP port of the currently selected agent (null when no live connection). */
+  currentPort: number | null;
+  /** Live overrides being edited. These are pushed to the agent in real time. */
+  currentOverrides: ToolOverride;
+  /** True once the user has changed overrides but not yet saved / discarded. */
+  dirty: boolean;
+
   // ---- actions ----
 
   setViewMode: (mode: ViewMode) => void;
@@ -77,6 +89,19 @@ interface WorkspaceState {
 
   // workspace preset
   applyPreset: (presetId: string) => void;
+
+  // --- live tweak actions ---
+  /** Select an agent for live tweaking (must be running with a CDP port). */
+  selectAgent: (agentId: AgentId, port: number) => void;
+  /**
+   * Update a single override dimension. Pushes the full set to the running
+   * agent in real time via the `workspace-tweak` CDP layer. Marks `dirty`.
+   */
+  updateOverride: (key: keyof ToolOverride, value: ToolOverride[keyof ToolOverride]) => void;
+  /** Persist current overrides into customThemeCss. Returns true on success. */
+  saveChanges: () => Promise<boolean>;
+  /** Discard overrides and clear the tweak layer. Returns true on success. */
+  discardChanges: () => Promise<boolean>;
 }
 
 // ---------------------------------------------------------------------------
@@ -162,6 +187,12 @@ const initialState: Omit<
   },
 
   activePresetId: 'default',
+
+  // --- live tweak defaults ---
+  currentAgentId: null,
+  currentPort: null,
+  currentOverrides: {},
+  dirty: false,
 };
 
 // ---------------------------------------------------------------------------

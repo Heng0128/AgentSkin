@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { EASING_OPTIONS, rgbToHex } from '@/components/studio/color-utils';
 import { ColorCard, SelectCard, SliderCard, ToggleCard } from '@/components/studio/dock-internals';
 import { Kicker } from '@/components/studio/kicker';
 import { computeSignature } from '@/components/studio/Toolbox';
@@ -34,35 +35,6 @@ function shadowLevels(
     { label: t.studioToolboxShadowLg, value: 'lg' },
     { label: t.studioToolboxShadowXl, value: 'xl' },
   ];
-}
-
-const easingOptions = [
-  'ease',
-  'linear',
-  'ease-in',
-  'ease-out',
-  'ease-in-out',
-  'cubic-bezier(.68,-.55,.27,1.55)',
-];
-
-/** Convert an rgb()/rgba() computed value to #rrggbb. Returns null on parse failure. */
-function rgbToHex(v: string | null | undefined): string | null {
-  if (!v) return null;
-  const trimmed = v.trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) return trimmed;
-  if (/^#[0-9a-fA-F]{3}$/.test(trimmed)) {
-    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
-  }
-  if (/^#[0-9a-fA-F]{8}$/.test(trimmed)) return trimmed.slice(0, 7);
-  const m = trimmed.match(/rgba?\(([^)]+)\)/);
-  if (!m) return null;
-  const parts = m[1].split(',').map((s) => s.trim());
-  const r = Number.parseInt(parts[0], 10);
-  const g = Number.parseInt(parts[1], 10);
-  const b = Number.parseInt(parts[2], 10);
-  if ([r, g, b].some((n) => Number.isNaN(n))) return null;
-  const h = (n: number) => n.toString(16).padStart(2, '0');
-  return `#${h(r)}${h(g)}${h(b)}`;
 }
 
 export function DockTabFX({ t }: { t: UiMessages }) {
@@ -360,7 +332,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
           <SelectCard
             label="easing"
             value={finalTiming}
-            options={easingOptions.map((e) => ({ label: e, value: e }))}
+            options={EASING_OPTIONS.map((e) => ({ label: e, value: e }))}
             overridden={overrides?.timing !== undefined}
             onReset={handleReset('timing')}
             onChange={(v) => setOverride('timing', v)}

@@ -2,7 +2,6 @@
 
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import type { LaunchRequest } from './main/services/electron-launcher';
-import type { TweakSession } from './main/services/tweak-injector';
 import type { AppLocale } from './shared/i18n';
 import { IpcChannel } from './shared/ipc-channels';
 import type {
@@ -23,7 +22,7 @@ import type {
   WallpaperSettings,
 } from './shared/types';
 import type { EnvironmentPreset } from './shared/types/environment';
-import type { ToolOverride } from './ui/types/override';
+import type { ToolOverride, TweakSession } from './ui/types/override';
 
 function subscribe<T>(channel: string, listener: (payload: T) => void): () => void {
   const handler = (_event: Electron.IpcRendererEvent, payload: T) => listener(payload);
@@ -89,6 +88,13 @@ const api: AgentSkinApi = {
   saveEnvironmentPresets: (presets: EnvironmentPreset[]) =>
     ipcRenderer.invoke(IpcChannel.ENV_PRESET_SET, presets),
   weDetect: () => ipcRenderer.invoke(IpcChannel.WE_DETECT),
+  // --- Workspace live tweak (tweak-injector.ts) ---
+  pushTweak: (session: TweakSession, overrides: ToolOverride) =>
+    ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_PUSH, session, overrides) as Promise<boolean>,
+  saveTweakAsCustomCss: (session: TweakSession, overrides: ToolOverride) =>
+    ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_SAVE, session, overrides) as Promise<boolean>,
+  resetTweak: (session: TweakSession) =>
+    ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_RESET, session) as Promise<boolean>,
   wallpaperVideoUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_VIDEO_URL, id),
   wallpaperWebUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_WEB_URL, id),
   showInFolder: (itemPath: string) => ipcRenderer.invoke(IpcChannel.SHELL_SHOW_ITEM, itemPath),
@@ -290,14 +296,6 @@ const api: AgentSkinApi = {
   scanElectronApps: () => ipcRenderer.invoke(IpcChannel.ELECTRON_SCAN),
   launchElectronApp: (request: LaunchRequest) =>
     ipcRenderer.invoke(IpcChannel.ELECTRON_LAUNCH, request),
-
-  // --- Workspace live tweak ---
-  pushTweak: (session: TweakSession, overrides: ToolOverride) =>
-    ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_PUSH, session, overrides),
-  saveTweakAsCustomCss: (session: TweakSession, overrides: ToolOverride) =>
-    ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_SAVE, session, overrides),
-  resetTweak: (session: TweakSession) =>
-    ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_RESET, session),
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);

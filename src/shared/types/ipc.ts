@@ -10,7 +10,6 @@ import type {
   InstallState,
   LaunchResult,
   Platform,
-  ScannedApp,
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
 import type { EnvironmentPreset } from './environment';
@@ -376,6 +375,16 @@ export interface AgentSkinApi {
   saveEnvironmentPresets(presets: EnvironmentPreset[]): Promise<{ ok: boolean }>;
   /** Detect whether Wallpaper Engine is installed on this machine. */
   weDetect(): Promise<{ installed: boolean; wallpaperCount: number }>;
+  // --- Workspace live tweak (tweak-injector.ts) ---
+  /** Push current override set to a running agent in real time — no full
+   *  theme re-apply. Returns true if the CDP layer was injected. */
+  pushTweak(session: TweakSession, overrides: ToolOverride): Promise<boolean>;
+  /** Persist the current tweak overrides into customThemeCss so they survive
+   *  restart without consuming a theme-library slot. Returns true on save. */
+  saveTweakAsCustomCss(session: TweakSession, overrides: ToolOverride): Promise<boolean>;
+  /** Discard live overrides for an agent — clears the temporary tweak layer
+   *  without disturbing the applied theme. Returns true on reset. */
+  resetTweak(session: TweakSession): Promise<boolean>;
   /** Resolve a wallpaper's media as a streamable loopback HTTP URL (served by
    *  the wallpaper media server) so video wallpapers can play without buffering
    *  the whole file. Returns null when the id is unknown. */

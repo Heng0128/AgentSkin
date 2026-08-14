@@ -30,11 +30,14 @@
 import { toMessage } from '../../shared/errors';
 import type { AgentId } from '../../shared/types';
 import type { ToolOverride, TweakSession } from '../../ui/types/override';
+
+export type { TweakSession } from '../../ui/types/override';
+
 import { type CdpSession, connectCdp } from '../cdp/cdp-client';
 import { injectCssLayer } from '../cdp/injection/shared';
 import { mainWarn } from '../logger';
 import { sanitizeCSS } from '../profile/safe-css';
-import type { SettingsService } from '../settings-service';
+import type { SettingsServiceApi } from './contracts';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -203,7 +206,7 @@ export async function pushTweak(session: TweakSession, overrides: ToolOverride):
  */
 export async function saveTweakAsCustomCss(
   session: TweakSession,
-  settings: SettingsService,
+  settings: SettingsServiceApi,
   overrides: ToolOverride,
 ): Promise<boolean> {
   // Accepts `overrides` explicitly (instead of always reading session.overrides)

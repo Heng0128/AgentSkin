@@ -28,7 +28,6 @@ import {
   saveTweakAsCustomCss,
   type TweakSession,
 } from '../services/tweak-injector';
-import type { SettingsService } from '../settings-service';
 import { assertNonEmptyString } from './ipc-validators';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
@@ -109,9 +108,12 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
 
   ipcMain.handle(
     IpcChannel.WORKSPACE_TWEAK_SAVE,
-    async (_event, session: TweakSession, settings: SettingsService, overrides: ToolOverride) => {
+    async (_event, session: TweakSession, overrides: ToolOverride) => {
       try {
-        return await saveTweakAsCustomCss(session, settings, overrides);
+        // `settings` is resolved from MainContext (deps) — never passed across
+        // IPC, because SettingsService is a class that cannot be serialized
+        // through the contextBridge. The renderer only sends (session, overrides).
+        return await saveTweakAsCustomCss(session, deps.settings, overrides);
       } catch (error) {
         mainWarn('Tweak.Save', toMessage(error));
         return false;
