@@ -32,14 +32,22 @@
  * returns plain data and stays testable.
  */
 
-import type { ElectronScanResult, ScannedApp } from '../../../shared/types/agent';
+import type { ElectronScanResult, ScanMeta, ScannedApp } from '../../../shared/types/agent';
 import { mainWarn } from '../../logger';
-import { isSkippableApp, scanFilesystem } from './collectors/filesystem';
+import {
+  isSkippableApp,
+  resolveScanRoots,
+  scanFilesystem,
+  scanFilesystemParallel,
+} from './collectors/filesystem';
 import { scanKnownAgents } from './collectors/knownAgent';
 import { scanRegistry } from './collectors/registry';
+import { scannerPipeline } from './flags';
 import { freshCache, getInflight, setCachedScan, setInflight } from './infra/cache';
 import type { ScanOptions } from './types';
 
+export { resolveScanRoots } from './collectors/filesystem';
+export { scannerPipeline } from './flags';
 export { getCachedScan, invalidateScanCache } from './infra/cache';
 export { matchAgainstHints } from './pipeline/match';
 export type { ScanOptions };
@@ -70,8 +78,10 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
   }
 
   const run = (async (): Promise<ElectronScanResult> => {
-    const deadline = Date.now() + SCAN_TIMEOUT_MS;
+    const startedAt = Date.now();
+    const deadline = startedAt + SCAN_TIMEOUT_MS;
     const isTimedOut = () => Date.now() > deadline;
+    const pipeline = scannerPipeline();
 
     const seen = new Map<string, ScannedApp>();
 
@@ -87,6 +97,11 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
     // must NOT be cached — a stale incomplete snapshot would be replayed to
     // every subsequent `useCache` caller until a manual force rescan.
     let timedOut = false;
+    const degradedSources: string[] = [];
+
+    // Resolve the L3 roots once up front so `meta.scannedRoots` reports the
+    // exact set the sweep was (or would have been) given.
+    const resolvedRoots = resolveScanRoots(extraDirs);
 
     // L1 — known agents.
     const t1 = Date.now();
@@ -97,6 +112,7 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
     );
     if (isTimedOut()) {
       timedOut = true;
+      degradedSources.push('L2', 'L3');
       mainWarn('ElectronScanner', 'scan timed out after L1 — returning partial result');
     } else {
       // L2 — registry sweep.
@@ -108,17 +124,23 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
       );
       if (isTimedOut()) {
         timedOut = true;
+        degradedSources.push('L3');
         mainWarn('ElectronScanner', 'scan timed out after L2 — returning partial result');
       } else {
         // L3 — filesystem sweep.
         const t3 = Date.now();
-        await scanFilesystem(collect, isTimedOut, extraDirs);
+        if (pipeline === 'v2') {
+          await scanFilesystemParallel(collect, isTimedOut, extraDirs);
+        } else {
+          await scanFilesystem(collect, isTimedOut, extraDirs);
+        }
         mainWarn(
           'ElectronScanner',
           `L3 done ${Date.now() - t3}ms seen=${seen.size} timedOut=${isTimedOut()}`,
         );
         if (isTimedOut()) {
           timedOut = true;
+          degradedSources.push('L3');
           mainWarn('ElectronScanner', 'scan timed out during L3 — returning partial result');
         }
       }
@@ -131,12 +153,25 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
       else other.push(app);
     }
 
-    const result: ElectronScanResult = { adapted, other };
+    const meta: ScanMeta = {
+      timedOut,
+      degradedSources,
+      scannedRoots: resolvedRoots.map((root) => root.dir),
+      durationMs: Date.now() - startedAt,
+      collectedAt: Date.now(),
+      pipeline,
+    };
+
+    const result: ElectronScanResult = { adapted, other, meta };
     // Only complete (non-timed-out) results are cached; partial results are
     // returned to the caller but never persisted.
     if (!timedOut) {
       setCachedScan(result);
     }
+    mainWarn(
+      'ElectronScanner',
+      `scan complete pipeline=${pipeline} adapted=${adapted.length} other=${other.length} degraded=${degradedSources.join(',') || 'none'} ${meta.durationMs}ms`,
+    );
     return result;
   })();
 

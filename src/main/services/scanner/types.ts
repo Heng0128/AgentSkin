@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { InstallHints } from '../../../adapters/base';
-import type { AgentId, ElectronScanResult, ScannedApp } from '../../../shared/types/agent';
+import type {
+  AgentId,
+  ElectronScanResult,
+  ScanMeta,
+  ScannedApp,
+} from '../../../shared/types/agent';
 
-export type { AgentId, ElectronScanResult, InstallHints, ScannedApp };
+export type { AgentId, ElectronScanResult, InstallHints, ScanMeta, ScannedApp };
 
 /** Snapshot of a single scan result plus the timestamp it was stored. */
 export interface ScanCache {

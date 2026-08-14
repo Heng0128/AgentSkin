@@ -3,6 +3,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { ScannedApp } from '../../../../shared/types/agent';
+import { DIR_CONCURRENCY_LIMIT, mapConcurrent } from '../infra/concurrency';
 import { readExeInfo } from '../infra/ps';
 import { matchAgainstHints } from '../pipeline/match';
 import type { ElectronMarker, ScanRoot } from '../types';
@@ -232,20 +233,47 @@ async function walkDir(
 }
 
 /**
+ * Resolve the full L3 scan-root list: the common install roots (Program Files,
+ * AppData, per-drive `yyb`, …) plus any user-supplied extra directories. Each
+ * extra directory descends two levels, matching the vendor/app nesting of
+ * LocalAppData-style layouts.
+ */
+export function resolveScanRoots(extraDirs: string[]): ScanRoot[] {
+  return [...commonInstallRoots(), ...extraDirs.map((dir) => ({ dir, depth: 2 }))];
+}
+
+/**
  * Walk each install root (recursing into vendor folders where applicable) and
  * collect every directory carrying an Electron `resources/app(.asar)` payload.
+ *
+ * Serial (v1) path: roots are visited one at a time.
  */
 export async function scanFilesystem(
   collect: (app: ScannedApp) => void,
   isTimedOut: () => boolean,
   extraDirs: string[],
 ): Promise<void> {
-  const roots: ScanRoot[] = [
-    ...commonInstallRoots(),
-    ...extraDirs.map((dir) => ({ dir, depth: 2 })),
-  ];
+  const roots = resolveScanRoots(extraDirs);
   for (const root of roots) {
     if (isTimedOut()) return;
     await walkDir(root.dir, root.depth, collect, isTimedOut);
   }
+}
+
+/**
+ * Parallel (v2) path: walk the same roots concurrently with a bounded pool.
+ * Roots assigned after the deadline short-circuit inside `walkDir` (which
+ * checks `isTimedOut` before doing any I/O), so timed-out walks are skipped
+ * rather than throwing. Behavior is otherwise identical to {@link scanFilesystem}.
+ */
+export async function scanFilesystemParallel(
+  collect: (app: ScannedApp) => void,
+  isTimedOut: () => boolean,
+  extraDirs: string[],
+): Promise<void> {
+  const roots = resolveScanRoots(extraDirs);
+  await mapConcurrent(roots, DIR_CONCURRENCY_LIMIT, async (root) => {
+    if (isTimedOut()) return;
+    await walkDir(root.dir, root.depth, collect, isTimedOut);
+  });
 }

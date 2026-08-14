@@ -156,11 +156,23 @@ export interface ScannedApp {
   source?: 'agent' | 'registry' | 'filesystem';
 }
 
+/** 扫描过程的观测元数据（时长、降级来源、超时状态等）。 */
+export interface ScanMeta {
+  timedOut: boolean;
+  degradedSources: string[];
+  scannedRoots: string[];
+  durationMs: number;
+  collectedAt: number;
+  pipeline: 'v1' | 'v2';
+}
+
 export interface ElectronScanResult {
   /** 已适配应用 = installHints 匹配到的 */
   adapted: ScannedApp[];
   /** 未适配的 Electron 应用 */
   other: ScannedApp[];
+  /** 扫描观测元数据（可选，旧缓存结果可能缺失）。 */
+  meta?: ScanMeta;
 }
 
 /** 启动结果 */

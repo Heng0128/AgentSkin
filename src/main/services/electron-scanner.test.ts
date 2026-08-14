@@ -154,9 +154,14 @@ vi.mock('node:fs/promises', () => ({
 // mocked adapters.
 // ---------------------------------------------------------------------------
 
-const { scanElectronApps, getCachedScan, invalidateScanCache, matchAgainstHints } = await import(
-  './electron-scanner'
-);
+const {
+  scanElectronApps,
+  getCachedScan,
+  invalidateScanCache,
+  matchAgainstHints,
+  scannerPipeline,
+  resolveScanRoots,
+} = await import('./electron-scanner');
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -223,6 +228,7 @@ describe('electron-scanner', () => {
   });
 
   afterEach(() => {
+    delete process.env.AGENTSKIN_SCANNER;
     vi.restoreAllMocks();
   });
 
@@ -888,6 +894,88 @@ describe('electron-scanner', () => {
     expect(result.other).toHaveLength(1);
     expect(result.other[0].exePath).toBe(`${appDir}\\electron.exe`);
     expect(result.other[0].confidence).toBe(65);
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 21 — scan meta observability (default v1)
+  // -----------------------------------------------------------------------
+  it('attaches ScanMeta with the default v1 pipeline and scan observability', async () => {
+    mockDetectInstallation.mockResolvedValue({
+      installed: false,
+      path: null,
+      version: null,
+      source: null,
+    });
+    configureExecMocks('', '');
+
+    const result = await scanElectronApps({ useCache: false });
+
+    expect(result.meta).toBeDefined();
+    expect(result.meta?.pipeline).toBe('v1');
+    expect(result.meta?.timedOut).toBe(false);
+    expect(result.meta?.degradedSources).toEqual([]);
+    expect(result.meta?.scannedRoots.length).toBeGreaterThan(0);
+    expect(typeof result.meta?.durationMs).toBe('number');
+    expect(typeof result.meta?.collectedAt).toBe('number');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 22 — feature flag selects v2
+  // -----------------------------------------------------------------------
+  it('scannerPipeline returns v1 by default and v2 when the env flag is set', () => {
+    delete process.env.AGENTSKIN_SCANNER;
+    expect(scannerPipeline()).toBe('v1');
+    process.env.AGENTSKIN_SCANNER = 'v2';
+    expect(scannerPipeline()).toBe('v2');
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 23 — v2 scan returns the same app set as v1
+  // -----------------------------------------------------------------------
+  it('returns the same app set under the v2 pipeline flag', async () => {
+    process.env.AGENTSKIN_SCANNER = 'v2';
+    try {
+      mockDetectInstallation.mockResolvedValue({
+        installed: false,
+        path: null,
+        version: null,
+        source: null,
+      });
+      configureExecMocks('2.0.0|2.0.0|CoolApp|Cool description|CoolCorp', '');
+
+      const customRoot = 'D:\\CustomAppsV2';
+      const appDir = `${customRoot}\\CoolApp`;
+      const asarPath = `${appDir}\\resources\\app.asar`;
+
+      readdirMap.set(customRoot, ['CoolApp']);
+      statMap.set(appDir, 'dir');
+      statMap.set(asarPath, 'asar');
+      readdirMap.set(appDir, ['CoolApp.exe', 'resources']);
+      statMap.set(`${appDir}\\CoolApp.exe`, 'file');
+
+      const result = await scanElectronApps({ useCache: false, extraDirs: [customRoot] });
+
+      expect(result.meta?.pipeline).toBe('v2');
+      expect(result.other).toHaveLength(1);
+      expect(result.other[0].exePath).toBe(`${appDir}\\CoolApp.exe`);
+      expect(result.other[0].adapterMatch).toBeNull();
+      expect(result.other[0].confidence).toBe(60);
+    } finally {
+      delete process.env.AGENTSKIN_SCANNER;
+    }
+  });
+
+  // -----------------------------------------------------------------------
+  // Scenario 24 — resolveScanRoots includes extraDirs
+  // -----------------------------------------------------------------------
+  it('resolveScanRoots includes extraDirs with depth 2', () => {
+    const roots = resolveScanRoots(['D:\\CustomA', 'D:\\CustomB']);
+    const dirs = roots.map((root) => root.dir);
+    expect(dirs).toContain('D:\\CustomA');
+    expect(dirs).toContain('D:\\CustomB');
+
+    const customA = roots.find((root) => root.dir === 'D:\\CustomA');
+    expect(customA?.depth).toBe(2);
   });
 });
 

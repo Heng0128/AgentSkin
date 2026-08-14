@@ -42,14 +42,13 @@ const LAUNCH_TIMEOUT_MS = 30_000;
  * degrades to the renderer's letter placeholder.
  */
 async function attachIcons(result: ElectronScanResult): Promise<ElectronScanResult> {
-  const adapted = result.adapted;
   const otherWithIcons = await Promise.all(
     result.other.map(async (app) => {
       const iconPath = await extractAppIcon(app.exePath);
       return iconPath ? { ...app, iconPath } : app;
     }),
   );
-  return { adapted, other: otherWithIcons };
+  return { ...result, other: otherWithIcons };
 }
 
 /**
