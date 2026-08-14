@@ -82,3 +82,16 @@ test-output/
 
 # Blueprint — static HTML/CSS/JS visual reference (outside build/test scope)
 blueprint/
+
+# Phase5 hygiene: debug/temp artifacts (2026-08-15)
+test-*.mjs
+run-*.mjs
+_verify_*.mjs
+check-*.txt
+child-*.txt
+direct-output.txt
+script-output.txt
+violations-report.txt
+test-quality-scan-report.md
+studio-layout-prototype.html
+dev-fresh.err
