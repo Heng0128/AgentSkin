@@ -18,7 +18,7 @@ import { app, ipcMain, shell } from 'electron';
 import { toMessage } from '../../shared/errors';
 import { getMainMessages, isAppLocale, setMainLocale } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
-import type { ToolOverride } from '../../ui/types/override';
+import type { ToolOverride } from '../../shared/types/override';
 import { saveLocalePreference } from '../locale-preferences';
 import { mainWarn } from '../logger';
 import { handleThemeFileOpen, type MainContext, wrapCatalog } from '../main-context';

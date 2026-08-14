@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
-import type { LaunchRequest } from './main/services/electron-launcher';
 import type { AppLocale } from './shared/i18n';
 import { IpcChannel } from './shared/ipc-channels';
 import type {
@@ -23,7 +22,8 @@ import type {
   WallpaperSettings,
 } from './shared/types';
 import type { EnvironmentPreset } from './shared/types/environment';
-import type { ToolOverride, TweakSession } from './ui/types/override';
+import type { LaunchRequest } from './shared/types/launch';
+import type { ToolOverride, TweakSession } from './shared/types/override';
 
 function subscribe<T>(channel: string, listener: (payload: T) => void): () => void {
   const handler = (_event: Electron.IpcRendererEvent, payload: T) => listener(payload);

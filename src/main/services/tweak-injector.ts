@@ -20,23 +20,24 @@
  *
  * ## Dependency direction
  *
- * This module imports `ToolOverride` from `src/ui/types/override.ts` — a
- * pure type with no React/DOM dependencies, safe for the main process.
- * The `overridesToCss` function could NOT be imported because it lives
- * inside a React component file (`RealDomPreview.tsx`); a local simplified
- * implementation lives here instead.
+ * This module imports `ToolOverride` and `TweakSession` from
+ * `src/shared/types/override.ts` — pure types with no React/DOM
+ * dependencies, safe for the main process. The `overridesToCss` function
+ * could NOT be imported because it lives inside a React component file
+ * (`RealDomPreview.tsx`); a local simplified implementation lives here
+ * instead.
  */
 
 import { toMessage } from '../../shared/errors';
+import { sanitizeCSS } from '../../shared/safe-css';
 import type { AgentId } from '../../shared/types';
-import type { ToolOverride, TweakSession } from '../../ui/types/override';
+import type { ToolOverride, TweakSession } from '../../shared/types/override';
 
-export type { TweakSession } from '../../ui/types/override';
+export type { TweakSession } from '../../shared/types/override';
 
 import { type CdpSession, connectCdp } from '../cdp/cdp-client';
 import { injectCssLayer } from '../cdp/injection/shared';
 import { mainWarn } from '../logger';
-import { sanitizeCSS } from '../profile/safe-css';
 import type { SettingsServiceApi } from './contracts';
 
 // ---------------------------------------------------------------------------

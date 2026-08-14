@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { LaunchRequest } from '../../main/services/electron-launcher';
-import type { ToolOverride, TweakSession } from '../../ui/types/override';
 import type { AppLocale } from '../i18n';
 import type {
   AgentCatalogItem,
@@ -14,6 +12,8 @@ import type {
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
 import type { EnvironmentPreset } from './environment';
+import type { LaunchRequest } from './launch';
+import type { ToolOverride, TweakSession } from './override';
 import type {
   CatalogResult,
   InstalledTheme,

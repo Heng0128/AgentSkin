@@ -218,8 +218,7 @@ for (const scanDir of SCAN_DIRS) {
     // Reset regex state
     IMPORT_RE.lastIndex = 0;
 
-    let match = IMPORT_RE.exec(src);
-    while (match !== null) {
+    for (let match = IMPORT_RE.exec(src); match !== null; match = IMPORT_RE.exec(src)) {
       const isTypeOnly = !!match[2];
       const importSource = match[3];
 
@@ -237,7 +236,6 @@ for (const scanDir of SCAN_DIRS) {
 
       const relPath = relative(root, filePath).replace(/\\/g, '/');
       const typeNote = isTypeOnly ? ' (type-only)' : '';
-      match = IMPORT_RE.exec(src);
       const fix = buildFix(fromLayer, toLayer, importSource);
 
       fail(relPath, lineNum, `'${importSource}' → layer '${toLayer}'${typeNote}`, violation, fix);
@@ -269,8 +267,7 @@ function scanForEngineImportViolations() {
     const src = readFileSync(filePath, 'utf8');
 
     IMPORT_RE.lastIndex = 0;
-    let match = IMPORT_RE.exec(src);
-    while (match !== null) {
+    for (let match = IMPORT_RE.exec(src); match !== null; match = IMPORT_RE.exec(src)) {
       const importSource = match[3];
       // Only care about @agentskin/engine imports
       if (importSource !== ENGINE_ALIAS && !importSource.startsWith(`${ENGINE_ALIAS}/`)) continue;
@@ -292,7 +289,6 @@ function scanForEngineImportViolations() {
         `Move the engine interaction into src/legacy/agentskin-core-runtime.ts ` +
           `and expose a typed wrapper that '${fromLayerName}' can call instead.`,
       );
-      match = IMPORT_RE.exec(src);
     }
   });
 }

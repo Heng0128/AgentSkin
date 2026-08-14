@@ -4,8 +4,8 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { StudioColorSets, ToolOverride } from '@/types/override';
 
 import type { UiMessages } from '@shared/i18n';
+import { sanitizeCSS } from '@shared/safe-css';
 import type { DomTreeNode } from '@shared/types';
-import { sanitizeCSS } from '../../../main/profile/safe-css';
 
 const VOID_TAGS = new Set([
   'img',

@@ -50,32 +50,15 @@ import { requireAdapter } from '../../adapters/registry';
 import { toMessage } from '../../shared/errors';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { LaunchResult } from '../../shared/types';
+import type { LaunchRequest } from '../../shared/types/launch';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-/** Parameters for launching a single application. */
-export interface LaunchRequest {
-  /** Unique app identifier (from `ScannedApp.id`). */
-  readonly appId: string;
-  /** Absolute path to the executable. */
-  readonly exePath: string;
-  /** Whether the app has an adapter (controls CDP flag injection). */
-  readonly adapted: boolean;
-  /**
-   * Preferred CDP port. `null`/`undefined` = random port (0). Ignored when
-   * `adapted === false`.
-   */
-  readonly preferredPort?: number | null;
-  /** Kill any running instances before spawning a new one. */
-  readonly forceRestart?: boolean;
-  /**
-   * AgentId of the backing adapter (required when `adapted === true`). Used
-   * to resolve the adapter for `findRunningPids` / `resolveDebugPorts`.
-   */
-  readonly adapterId?: string;
-}
+/** Re-exported so `src/main/ipc/electron-ipc.ts` can import the launch
+ *  request type without depending on the shared types file directly. */
+export type { LaunchRequest };
 
 /** Injectable dependencies — log sink + main-window accessor for status push. */
 export interface LauncherDeps {

@@ -24,7 +24,7 @@ import {
   buildObjectPosition as uiBuildObjectPosition,
   buildTintFilter as uiBuildTintFilter,
   hexHue as uiHexHue,
-} from '../../../ui/lib/wallpaperRender';
+} from '../../../shared/wallpaper-render';
 import {
   alignmentObjectFit as cdpAlignmentObjectFit,
   buildFilter as cdpBuildFilter,

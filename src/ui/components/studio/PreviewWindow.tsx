@@ -25,10 +25,10 @@ import { buildSrcDoc, overridesToCss } from '@/components/studio/RealDomPreview'
 import { useStudioStore } from '@/stores/studioStore';
 import type { PreviewWindowState } from '@/types/workspace';
 
+import { sanitizeCSS } from '@shared/safe-css';
 import type { DomTreeNode } from '@shared/types';
 import { AGENT_META } from '@shared/types';
 import { Copy, Maximize, X } from 'lucide-react';
-import { sanitizeCSS } from '../../../main/profile/safe-css';
 
 interface PreviewWindowProps {
   win: PreviewWindowState;
