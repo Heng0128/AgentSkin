@@ -4,8 +4,9 @@ import { execFileAsync } from '../../../../shared/exec-async';
 import type { ScannedApp } from '../../../../shared/types/agent';
 import { mainWarnFromCatch } from '../../../logger';
 import { withPsConcurrency } from '../infra/concurrency';
-import { readExeInfo } from '../infra/ps';
+import { readExeInfo, readExeInfosBatch } from '../infra/ps';
 import { matchAgainstHints } from '../pipeline/match';
+import { normalizeProductName } from '../pipeline/merge';
 import { hashPath, nameFromExe } from '../util';
 import { findAnyExe } from './shared';
 
@@ -129,6 +130,87 @@ export async function scanRegistry(
       id: hashPath(exePath),
       exePath,
       productName: info?.productName || entry.displayName || nameFromExe(exePath),
+      companyName: info?.companyName ?? '',
+      version: info?.version ?? entry.version ?? undefined,
+      adapterMatch: adapterInfo,
+      source: 'registry',
+    });
+  }
+}
+
+/**
+ * Whether a registry entry's DisplayName corresponds to a product already
+ * discovered by L1. The v2 sweep skips re-reading PE info for these because the
+ * known-agent probe already carries authoritative identity + version.
+ */
+export function shouldSkipRegistryEntry(
+  displayName: string,
+  knownProducts: ReadonlySet<string>,
+): boolean {
+  return knownProducts.has(normalizeProductName(displayName));
+}
+
+/**
+ * v2 registry sweep — identical discovery to {@link scanRegistry}, but:
+ *   - filters out entries already found by L1 (via {@link shouldSkipRegistryEntry});
+ *   - reads PE version info in batches (`readExeInfosBatch`) instead of one
+ *     PowerShell process per exe.
+ *
+ * The collect semantics (adapter match fallback, name/version fallbacks,
+ * `source: 'registry'`) match v1 verbatim.
+ */
+export async function scanRegistryV2(
+  collect: (app: ScannedApp) => void,
+  isTimedOut: () => boolean,
+  knownProducts?: ReadonlySet<string>,
+): Promise<void> {
+  let raw: string;
+  try {
+    raw = await withPsConcurrency(() =>
+      execFileAsync(
+        'powershell',
+        ['-NoProfile', '-NonInteractive', '-Command', buildElectronRegistryScript()],
+        10000,
+      ),
+    );
+  } catch (error) {
+    mainWarnFromCatch('ElectronScanner', error, 'L2 registry sweep');
+    return;
+  }
+
+  const skip = knownProducts ?? new Set<string>();
+  const entries = raw
+    .split('\n')
+    .map((l) => parseRegistryLine(l.trim()))
+    .filter(
+      (e): e is { displayName: string; version: string | null; location: string } => e !== null,
+    )
+    .filter((entry) => !shouldSkipRegistryEntry(entry.displayName, skip));
+
+  const located = await Promise.all(
+    entries.map(async (entry) => {
+      const exePath = await findAnyExe(entry.location);
+      return { entry, exePath };
+    }),
+  );
+
+  const withExe = located.filter((x) => x.exePath !== null);
+  const infoMap = await readExeInfosBatch(withExe.map((x) => x.exePath as string));
+
+  for (const { entry, exePath } of withExe) {
+    if (isTimedOut()) return;
+    const info = infoMap.get(exePath as string) ?? null;
+    // When the PE read fails, fall back to the registry DisplayName for hint
+    // matching instead of dropping the adapter match entirely — the registry
+    // name is often the only reliable identity signal (localized names,
+    // blocked PowerShell, etc.).
+    const adapterInfo = info
+      ? matchAgainstHints(info)
+      : matchAgainstHints({ productName: entry.displayName, fileDescription: '' });
+    collect({
+      id: hashPath(exePath as string),
+      exePath: exePath as string,
+      productName: info?.productName || entry.displayName || nameFromExe(exePath as string),
       companyName: info?.companyName ?? '',
       version: info?.version ?? entry.version ?? undefined,
       adapterMatch: adapterInfo,

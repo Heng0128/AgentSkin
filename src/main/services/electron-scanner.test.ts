@@ -163,6 +163,8 @@ const {
   resolveScanRoots,
 } = await import('./electron-scanner');
 
+const { shouldSkipRegistryEntry } = await import('./scanner/collectors/registry');
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -205,6 +207,37 @@ function configureExecMocks(peStdout: string, registryStdout: string): void {
         });
       }
       return Promise.resolve(registryStdout);
+    },
+  );
+}
+
+/**
+ * Configure mockExecFileAsync for the v2 registry batch path:
+ *   - non-includeStderr call → registry sweep → plain string
+ *   - includeStderr batch script (`readExeInfosBatch`) → path-prefixed lines
+ *   - any other includeStderr call (single `readExeInfo`) → empty stdout
+ */
+function configureExecMocksBatch(registryStdout: string, batchStdout: string): void {
+  mockExecFileAsync.mockImplementation(
+    (
+      _cmd: string,
+      args: string[],
+      _timeout?: number,
+      options?: { includeStderr?: true },
+    ): Promise<string | ExecFileResult> => {
+      if (!options?.includeStderr) {
+        return Promise.resolve(registryStdout);
+      }
+      const script = (args ?? []).join(' ');
+      if (script.includes('foreach ($p in $paths)')) {
+        return Promise.resolve({
+          stdout: batchStdout,
+          stderr: '',
+          errorMessage: null,
+          errorCode: null,
+        });
+      }
+      return Promise.resolve({ stdout: '', stderr: '', errorMessage: null, errorCode: null });
     },
   );
 }
@@ -1033,6 +1066,46 @@ describe('electron-scanner', () => {
   });
 
   // -----------------------------------------------------------------------
+  // Scenario 23d — v2 registry sweep uses the batch PE reader
+  // -----------------------------------------------------------------------
+  it('v2 registry sweep reads PE info in a batch and returns the same app', async () => {
+    process.env.AGENTSKIN_SCANNER = 'v2';
+    try {
+      mockDetectInstallation.mockResolvedValue({
+        installed: false,
+        path: null,
+        version: null,
+        source: null,
+      });
+
+      // Registry fixture returns one app; the batch PE read returns the same
+      // metadata the single-exe v1 path would produce (path-prefixed line).
+      configureExecMocksBatch(
+        'MyApp|0.9.0|D:\\Apps\\MyApp',
+        'D:\\Apps\\MyApp\\MyApp.exe|0.9.0|0.9.0|SomeApp|Generic Electron App|Unknown Inc',
+      );
+
+      statMap.set('D:\\Apps\\MyApp\\MyApp.exe', 'file');
+      readdirMap.set('D:\\Apps\\MyApp', ['MyApp.exe']);
+
+      const result = await scanElectronApps({ useCache: false });
+
+      expect(result.meta?.pipeline).toBe('v2');
+      expect(result.adapted).toHaveLength(0);
+      expect(result.other).toHaveLength(1);
+      expect(result.other[0]).toMatchObject({
+        exePath: 'D:\\Apps\\MyApp\\MyApp.exe',
+        productName: 'SomeApp',
+        companyName: 'Unknown Inc',
+        version: '0.9.0',
+        adapterMatch: null,
+      });
+    } finally {
+      delete process.env.AGENTSKIN_SCANNER;
+    }
+  });
+
+  // -----------------------------------------------------------------------
   // Scenario 24 — resolveScanRoots includes extraDirs
   // -----------------------------------------------------------------------
   it('resolveScanRoots includes extraDirs with depth 2', () => {
@@ -1071,5 +1144,27 @@ describe('matchAgainstHints', () => {
   it('matches a phrase token when all words are present in any order', () => {
     // 'OpenAI Codex' words appear in reverse order across productName/fileDescription.
     expect(matchAgainstHints({ productName: 'Codex', fileDescription: 'OpenAI' })).toBe('codex');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// shouldSkipRegistryEntry — L1/L2 reuse in the v2 registry sweep
+// ---------------------------------------------------------------------------
+
+describe('shouldSkipRegistryEntry', () => {
+  it('returns true when the display name normalizes to a known product', () => {
+    const known = new Set(['traesolocn', 'qoderworkcn']);
+    expect(shouldSkipRegistryEntry('TRAE SOLO CN', known)).toBe(true);
+    expect(shouldSkipRegistryEntry('QoderWork CN', known)).toBe(true);
+  });
+
+  it('returns false for an unknown product', () => {
+    const known = new Set(['traesolocn']);
+    expect(shouldSkipRegistryEntry('MyApp', known)).toBe(false);
+  });
+
+  it('normalizes a trailing version segment away', () => {
+    const known = new Set(['quark']);
+    expect(shouldSkipRegistryEntry('Quark 7.0.5.931', known)).toBe(true);
   });
 });

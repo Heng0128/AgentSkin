@@ -41,10 +41,10 @@ import {
   scanFilesystemParallel,
 } from './collectors/filesystem';
 import { scanKnownAgents } from './collectors/knownAgent';
-import { scanRegistry } from './collectors/registry';
+import { scanRegistry, scanRegistryV2 } from './collectors/registry';
 import { scannerPipeline } from './flags';
 import { freshCache, getInflight, setCachedScan, setInflight } from './infra/cache';
-import { mergeByIdentity } from './pipeline/merge';
+import { mergeByIdentity, normalizeProductName } from './pipeline/merge';
 import type { ScanOptions } from './types';
 
 export { resolveScanRoots } from './collectors/filesystem';
@@ -118,7 +118,17 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
     } else {
       // L2 — registry sweep.
       const t2 = Date.now();
-      await scanRegistry(collect, isTimedOut);
+      // Products already discovered by L1 — the v2 sweep skips re-reading PE
+      // info for these (the known-agent probe already has authoritative
+      // identity + version).
+      const knownProducts = new Set(
+        [...seen.values()].map((a) => normalizeProductName(a.productName || a.exePath)),
+      );
+      if (pipeline === 'v2') {
+        await scanRegistryV2(collect, isTimedOut, knownProducts);
+      } else {
+        await scanRegistry(collect, isTimedOut);
+      }
       mainWarn(
         'ElectronScanner',
         `L2 done ${Date.now() - t2}ms seen=${seen.size} timedOut=${isTimedOut()}`,
