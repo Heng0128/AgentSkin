@@ -9,7 +9,7 @@ import type { Route } from '@/types/navigation';
 
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
-import { Home, Image, PaintBucket, Settings } from 'lucide-react';
+import { Home, Image, LayoutGrid, PaintBucket, Settings } from 'lucide-react';
 
 interface NavEntry {
   route: Route;
@@ -74,6 +74,7 @@ export function Sidebar() {
       label: t.navGroupCore,
       items: [
         { route: 'workspace', icon: Home, label: t.navWorkspace },
+        { route: 'apps', icon: LayoutGrid, label: t.navApps },
         { route: 'themes', icon: PaintBucket, label: t.navThemes },
         { route: 'wallpaper', icon: Image, label: t.navWallpaperEngine },
       ],

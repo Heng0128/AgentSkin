@@ -15,7 +15,7 @@ import { AppMark } from '@/components/app-mark';
 import { useStudioStore } from '@/stores/studioStore';
 
 import type { UiMessages } from '@shared/i18n';
-import { AGENT_META } from '@shared/types';
+import { AGENT_META, isAnyAgentId } from '@shared/types';
 
 /** Ordered analysis steps for the timeline display. */
 const ANALYSIS_STEPS = [
@@ -45,7 +45,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
   }
 
   const { agent, step, progress } = analysisProgress;
-  const agentMeta = AGENT_META[agent as keyof typeof AGENT_META];
+  const agentMeta = isAnyAgentId(agent) ? AGENT_META[agent] : undefined;
   const currentStepIndex = ANALYSIS_STEPS.findIndex((s) => s.id === step);
 
   return (

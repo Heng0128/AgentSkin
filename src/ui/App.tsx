@@ -31,9 +31,10 @@ const ThemesPage = lazy(() =>
 const WallpaperEnginePage = lazy(() =>
   import('@/pages/WallpaperEnginePage').then((m) => ({ default: m.WallpaperEnginePage })),
 );
-const UnifiedWorkspacePage = lazy(() =>
-  import('@/pages/UnifiedWorkspacePage').then((m) => ({ default: m.UnifiedWorkspacePage })),
+const WorkspacePage = lazy(() =>
+  import('@/pages/WorkspacePage').then((m) => ({ default: m.WorkspacePage })),
 );
+const AppsPage = lazy(() => import('@/pages/AppsPage').then((m) => ({ default: m.AppsPage })));
 
 export default function App() {
   const controller = useAppController();
@@ -112,11 +113,10 @@ export default function App() {
                     }
                   >
                     <ErrorBoundary inline>
-                      {(controller.route === 'dashboard' ||
-                        controller.route === 'workspace' ||
-                        controller.route === 'agents') && (
-                        <UnifiedWorkspacePage controller={controller} />
+                      {controller.route === 'workspace' && (
+                        <WorkspacePage controller={controller} />
                       )}
+                      {controller.route === 'apps' && <AppsPage controller={controller} />}
                       {controller.route === 'themes' && <ThemesPage controller={controller} />}
                       {controller.route === 'wallpaper' && (
                         <WallpaperEnginePage controller={controller} />
