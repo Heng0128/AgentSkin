@@ -36,6 +36,18 @@ function currentT(): UiMessages {
   return uiMessages[useShellStore.getState().locale];
 }
 
+/** Serialize ToolOverride to a plain record for export payload. */
+function serializeToolOverride(
+  overrides: ToolOverride | null,
+): Record<string, unknown> | undefined {
+  if (!overrides) return undefined;
+  const out: Record<string, unknown> = {};
+  for (const k of Object.keys(overrides) as (keyof ToolOverride)[]) {
+    if (overrides[k] !== undefined) out[k] = overrides[k];
+  }
+  return out;
+}
+
 export type ExportState = {
   loading: boolean;
   dir: string | null;
@@ -744,12 +756,10 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     const project = get().getActiveProject();
     if (!project) return;
     const { snapshot, toolOverrides, exportName, exportAuthor } = get();
+    if (!snapshot) return;
     set({ exportState: { loading: true, dir: null, error: null } });
     try {
-      const merged =
-        snapshot != null
-          ? mergeOverridesToSkinTokens(buildStudioPalette(snapshot), toolOverrides)
-          : undefined;
+      const merged = mergeOverridesToSkinTokens(buildStudioPalette(snapshot), toolOverrides);
       const payload = {
         meta: {
           name: exportName.trim() || project.name,
@@ -757,7 +767,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
         },
         agentId: project.agentId,
         root: merged as Record<string, string> | undefined,
-        signature: (toolOverrides ?? undefined) as unknown as Record<string, unknown> | undefined,
+        signature: serializeToolOverride(toolOverrides),
       };
       const res = await api.exportStudioTheme(payload);
       set({ exportState: { loading: false, dir: res.packageDir, error: null } });
@@ -766,7 +776,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
         exportedDir: res.packageDir,
         palette: merged,
         signature: payload.signature,
-        overrides: (toolOverrides ?? undefined) as Record<string, unknown> | undefined,
+        overrides: serializeToolOverride(toolOverrides),
       });
       showToast(currentT().studioExportDone);
     } catch (err) {

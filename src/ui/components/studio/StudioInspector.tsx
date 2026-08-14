@@ -4,16 +4,19 @@
  * # StudioInspector
  *
  * Right sidebar inspector — collapsible 240px panel with tab bar
- * (Landmarks · Computed · Cascade · Fingerprint), window indicator
+ * (Landmarks · Computed · Cascade · Fingerprint · Profile), window indicator
  * chip for cross-window linkage, and content routing per tab.
  *
  * State:
  *   · workspaceStore: open / width / activeTab / collapsed
  *   · studioStore: activeProject (for window indicator chip)
+ *
+ * Note: InspectorCascadeTab is a standalone component (InspectorCascadeTab.tsx)
+ * that self-subscribes to the snapshot — no snapshot prop passed from here.
  */
 
 import { AppMark } from '@/components/app-mark';
-import { CascadeView } from '@/components/studio/CascadeView';
+import { InspectorCascadeTab } from '@/components/studio/InspectorCascadeTab';
 import { InspectorDetails } from '@/components/studio/InspectorDetails';
 import { InspectorFingerprint } from '@/components/studio/InspectorFingerprint';
 import { InspectorLandmarks } from '@/components/studio/InspectorLandmarks';
@@ -28,7 +31,6 @@ import { AGENT_META } from '@shared/types';
 export function StudioInspector({ t }: { t: UiMessages }) {
   const { inspector, setInspectorTab, setInspectorOpen } = useWorkspaceStore();
   const activeProject = useStudioStore((s) => s.getActiveProject());
-  const snapshot = useStudioStore((s) => s.snapshot);
 
   const activeAgentMeta = activeProject ? AGENT_META[activeProject.agentId] : null;
 
@@ -84,60 +86,10 @@ export function StudioInspector({ t }: { t: UiMessages }) {
       <div className="ws-inspector__scroll">
         {inspector.activeTab === 'landmarks' && <InspectorLandmarks t={t} />}
         {inspector.activeTab === 'computed' && <InspectorDetails t={t} />}
-        {inspector.activeTab === 'cascade' && <InspectorCascadeTab t={t} snapshot={snapshot} />}
+        {inspector.activeTab === 'cascade' && <InspectorCascadeTab t={t} />}
         {inspector.activeTab === 'fingerprint' && <InspectorFingerprint t={t} />}
         {inspector.activeTab === 'profile' && <InspectorProfile t={t} />}
       </div>
     </aside>
-  );
-}
-
-/** Cascade tab — renders a full cascade snapshot. */
-function InspectorCascadeTab({
-  t,
-  snapshot,
-}: {
-  t: UiMessages;
-  snapshot: ReturnType<typeof useStudioStore.getState>['snapshot'];
-}) {
-  if (!snapshot) {
-    return (
-      <p className="font-mono text-[10px] text-[var(--fg-2)] px-1">{t.studioInspectorEmpty}</p>
-    );
-  }
-
-  // Aggregate matched rules from all visible landmarks
-  const allMatchedRules = snapshot.landmarks
-    .filter((lm) => lm.visible)
-    .flatMap((lm) => lm.matchedRules ?? [])
-    .filter((r, i, arr) => {
-      // Deduplicate by selector origin
-      const key = `${r.origin}:${r.selector}`;
-      return arr.findIndex((x) => `${x.origin}:${x.selector}` === key) === i;
-    })
-    .slice(0, 12);
-
-  // Collect platform fonts from all visible landmarks
-  const allFonts = [
-    ...new Set(
-      snapshot.landmarks.filter((lm) => lm.visible).flatMap((lm) => lm.platformFonts ?? []),
-    ),
-  ].slice(0, 8);
-
-  // Use root landmark box model
-  const rootLandmark = snapshot.landmarks.find(
-    (lm) => lm.selector === ':root' || lm.tag === 'html',
-  );
-  const boxModel = rootLandmark?.boxModel ?? null;
-
-  return (
-    <CascadeView
-      cascade={{
-        matchedRules: allMatchedRules,
-        platformFonts: allFonts,
-        boxModel,
-      }}
-      t={t}
-    />
   );
 }

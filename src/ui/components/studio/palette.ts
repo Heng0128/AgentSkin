@@ -66,7 +66,7 @@ export function buildSkinTokens(input: {
 }
 
 /** Pull bg / fg / accent out of a snapshot's computed styles. */
-function paletteFromSnapshot(snapshot: ThemeVisualSnapshot): {
+export function paletteFromSnapshot(snapshot: ThemeVisualSnapshot): {
   bg: string;
   fg: string;
   accent: string;
