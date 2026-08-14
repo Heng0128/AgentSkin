@@ -609,6 +609,9 @@ export class AgentEngineService implements AgentEngineServiceApi {
   private statusCacheAt = 0;
   private static readonly STATUS_CACHE_TTL = 2000;
 
+  /** Interval (ms) for pushing concurrency metrics to the renderer. */
+  private static readonly METRICS_BROADCAST_INTERVAL_MS = 5000;
+
   async status(): Promise<SystemStatus> {
     const now = Date.now();
     if (this.statusCache && now - this.statusCacheAt < AgentEngineService.STATUS_CACHE_TTL) {
@@ -840,7 +843,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
     this.sendMetricsToRenderer = sender;
     this.concurrencyMetricsTimer = setInterval(() => {
       this.broadcastConcurrencyMetrics();
-    }, 5000);
+    }, AgentEngineService.METRICS_BROADCAST_INTERVAL_MS);
     this.broadcastConcurrencyMetrics();
   }
 
