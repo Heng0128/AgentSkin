@@ -35,17 +35,45 @@ export function AgentLivePreview({
   overrides: ToolOverride;
   t: UiMessages;
 }) {
-  const [domTree, setDomTree] = useState<DomTreeNode | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+  const [snapshots, setSnapshots] = useState<Record<string, DomTreeNode | undefined>>({});
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshFailed, setRefreshFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    const cached = snapshots[agentId];
+
+    if (cached) {
+      // Cache hit: display immediately, refresh in background
+      setRefreshing(true);
+      setRefreshFailed(false);
+      api
+        .snapshotBaseline(agentId as never)
+        .then((snap: ThemeVisualSnapshot) => {
+          if (cancelled) return;
+          setSnapshots((prev) => ({ ...prev, [agentId]: snap.domTree }));
+          setRefreshFailed(false);
+        })
+        .catch(() => {
+          // Refresh failed: keep cache, mark failure (bar turns red)
+          if (!cancelled) setRefreshFailed(true);
+        })
+        .finally(() => {
+          if (!cancelled) setRefreshing(false);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    // Cache miss: show loading
     setLoading(true);
     api
       .snapshotBaseline(agentId as never)
       .then((snap: ThemeVisualSnapshot) => {
         if (cancelled) return;
-        setDomTree(snap.domTree);
+        setSnapshots((prev) => ({ ...prev, [agentId]: snap.domTree }));
       })
       .catch(() => {
         /* leave domTree undefined → RealDomPreview shows fallback */
@@ -56,11 +84,13 @@ export function AgentLivePreview({
     return () => {
       cancelled = true;
     };
-  }, [agentId]);
+  }, [agentId, snapshots]);
 
-  if (loading) {
+  const domTree = snapshots[agentId];
+
+  if (loading && !domTree) {
     return (
-      <div className="flex h-[280px] items-center justify-center  rounded-md bg-card">
+      <div className="flex h-[280px] items-center justify-center rounded-md bg-card">
         <span className="font-mono text-[11px] text-muted-foreground">
           {t.workspacePreviewLoading}
         </span>
@@ -69,7 +99,17 @@ export function AgentLivePreview({
   }
 
   return (
-    <div className="overflow-hidden rounded-md ">
+    <div className="relative overflow-hidden rounded-md">
+      {refreshing && !refreshFailed && (
+        <div className="absolute inset-x-0 top-0 h-1 bg-primary/30 animate-pulse" />
+      )}
+      {refreshFailed && (
+        <div
+          className="absolute inset-x-0 top-0 h-1"
+          style={{ background: 'var(--destructive)' }}
+          title={t.workspacePreviewRefreshFailed ?? '刷新失败，显示缓存'}
+        />
+      )}
       <RealDomPreview domTree={domTree} overrides={overrides} t={t} />
     </div>
   );

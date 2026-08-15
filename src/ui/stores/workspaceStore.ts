@@ -58,6 +58,10 @@ interface WorkspaceState {
   currentOverrides: ToolOverride;
   /** True once the user has changed overrides but not yet saved / discarded. */
   dirty: boolean;
+  /** Per-agent overrides cache, persisted across sessions. agentId → overrides. */
+  overridesByAgent: Record<string, ToolOverride>;
+  /** Most recent push error message (null = no error). UI shows banner when set. */
+  pushError: string | null;
 
   // ---- actions ----
 
@@ -96,17 +100,47 @@ interface WorkspaceState {
   /**
    * Update a single override dimension. Pushes the full set to the running
    * agent in real time via the `workspace-tweak` CDP layer. Marks `dirty`.
+   * Returns a promise (fire-and-forget from callers is fine via `void`).
    */
-  updateOverride: (key: keyof ToolOverride, value: ToolOverride[keyof ToolOverride]) => void;
+  updateOverride: (
+    key: keyof ToolOverride,
+    value: ToolOverride[keyof ToolOverride],
+  ) => Promise<void>;
   /** Persist current overrides into customThemeCss. Returns true on success. */
   saveChanges: () => Promise<boolean>;
   /** Discard overrides and clear the tweak layer. Returns true on success. */
   discardChanges: () => Promise<boolean>;
+  /** Clear the push error banner. */
+  clearPushError: () => void;
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+const OVERRIDES_STORAGE_KEY = 'workspace.overridesByAgent';
+
+/** Load per-agent overrides from localStorage. Returns empty map on any error. */
+function loadOverridesByAgent(): Record<string, ToolOverride> {
+  try {
+    const raw = localStorage.getItem(OVERRIDES_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, ToolOverride>) : {};
+  } catch {
+    return {}; // quota / parse error — degrade to in-session only
+  }
+}
+
+/** Persist per-agent overrides to localStorage. Silently degrades on quota errors. */
+function persistOverridesByAgent(map: Record<string, ToolOverride>): void {
+  try {
+    localStorage.setItem(OVERRIDES_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    // quota exceeded etc. — degrade gracefully, UI still works
+  }
+}
+
+/** Monotonic token — incremented on each updateOverride call to discard stale push receipts. */
+let pushToken = 0;
 
 function makeWindow(id: string, agentId: AgentId): PreviewWindowState {
   return {
@@ -165,6 +199,7 @@ const initialState: Omit<
   | 'updateOverride'
   | 'saveChanges'
   | 'discardChanges'
+  | 'clearPushError'
 > = {
   viewMode: 'single',
   windows: initialWindows,
@@ -197,6 +232,8 @@ const initialState: Omit<
   currentPort: null,
   currentOverrides: {},
   dirty: false,
+  overridesByAgent: loadOverridesByAgent(),
+  pushError: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -344,28 +381,42 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   // --- live tweak actions ---
 
   selectAgent: (agentId, port) =>
-    set({
+    set((s) => ({
       currentAgentId: agentId,
       currentPort: port,
-      currentOverrides: {},
+      currentOverrides: s.overridesByAgent[agentId] ?? {},
       dirty: false,
-    }),
+      pushError: null,
+    })),
 
-  updateOverride: (key, value) =>
-    set((s) => {
-      const next: ToolOverride = { ...s.currentOverrides, [key]: value };
-      // Fire-and-forget the real-time push. The main process caches the CSS
-      // layer independently, so a failed push (agent restarting, port flap)
-      // does not block the UI from reflecting the intended state.
-      const session: TweakSession = {
-        agentId: s.currentAgentId ?? ('codex' as AgentId),
-        port: s.currentPort ?? 0,
-        overrides: next,
-        dirty: true,
-      };
-      void api.pushTweak(session, next);
-      return { currentOverrides: next, dirty: true };
-    }),
+  updateOverride: async (key, value) => {
+    const s = get();
+    const next: ToolOverride = { ...s.currentOverrides, [key]: value };
+    const session: TweakSession = {
+      agentId: s.currentAgentId ?? ('codex' as AgentId),
+      port: s.currentPort ?? 0,
+      overrides: next,
+      dirty: true,
+    };
+
+    // Optimistic update: UI reflects intent immediately.
+    const overridesByAgent = { ...s.overridesByAgent, [session.agentId]: next };
+    persistOverridesByAgent(overridesByAgent);
+    set({ currentOverrides: next, overridesByAgent, dirty: true, pushError: null });
+
+    // Capture current token; only the latest token's receipt is applied.
+    const token = ++pushToken;
+    try {
+      const ok = await api.pushTweak(session, next);
+      if (token !== pushToken) return; // stale receipt — discard
+      if (!ok) set({ pushError: 'push_failed' });
+    } catch (err) {
+      if (token !== pushToken) return; // stale receipt — discard
+      set({
+        pushError: err instanceof Error ? err.message : 'push_error',
+      });
+    }
+  },
 
   saveChanges: async () => {
     const { currentAgentId, currentPort, currentOverrides } = get();
@@ -376,7 +427,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       dirty: true,
     };
     const ok = await api.saveTweakAsCustomCss(session, currentOverrides);
-    if (ok) set({ dirty: false });
+    if (ok) {
+      // Sync persisted value so selectAgent restores the saved state.
+      const overridesByAgent = {
+        ...get().overridesByAgent,
+        [session.agentId]: currentOverrides,
+      };
+      persistOverridesByAgent(overridesByAgent);
+      set({ dirty: false, overridesByAgent, pushError: null });
+    }
     return ok;
   },
 
@@ -389,7 +448,16 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       dirty: false,
     };
     const ok = await api.resetTweak(session);
-    if (ok) set({ currentOverrides: {}, dirty: false });
+    if (ok) {
+      const { currentAgentId } = get();
+      const agentKey = currentAgentId ?? ('codex' as AgentId);
+      const overridesByAgent = { ...get().overridesByAgent };
+      delete overridesByAgent[agentKey];
+      persistOverridesByAgent(overridesByAgent);
+      set({ currentOverrides: {}, dirty: false, overridesByAgent });
+    }
     return ok;
   },
+
+  clearPushError: () => set({ pushError: null }),
 }));

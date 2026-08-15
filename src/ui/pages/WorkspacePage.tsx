@@ -32,6 +32,7 @@ import { TweakPanel } from '@/components/workspace/TweakPanel';
 import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import type { ToolOverride } from '@/types/override';
 
 import { type UiMessages, uiMessages } from '@shared/i18n';
 import type { AppStatus } from '@shared/types';
@@ -56,6 +57,8 @@ export function WorkspacePage() {
   const updateOverride = useWorkspaceStore((s) => s.updateOverride);
   const saveChanges = useWorkspaceStore((s) => s.saveChanges);
   const discardChanges = useWorkspaceStore((s) => s.discardChanges);
+  const pushError = useWorkspaceStore((s) => s.pushError);
+  const clearPushError = useWorkspaceStore((s) => s.clearPushError);
 
   /** Running agents that expose a CDP port — eligible for live tweaking. */
   const runningAgents = useMemo(
@@ -150,16 +153,33 @@ export function WorkspacePage() {
                 <span className="text-[11px] tracking-tight text-muted-foreground ">
                   {t.workspaceTweakControls}
                 </span>
+                {pushError && (
+                  <div
+                    className="mb-5 flex items-center justify-between gap-3 rounded-md px-4 py-3"
+                    style={{ background: 'var(--redbg)' }}
+                  >
+                    <p
+                      className="min-w-0 flex-1 truncate text-[12px]"
+                      style={{ color: 'var(--destructive)' }}
+                    >
+                      {t.workspacePushFailed ?? '实时推送失败：'}
+                      {pushError}
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={clearPushError}>
+                      {t.commonDismiss ?? '关闭'}
+                    </Button>
+                  </div>
+                )}
+
                 <TweakPanel
                   overrides={currentOverrides}
                   onChange={(next) => {
-                    // Push each changed dimension to the store, which forwards
-                    // the full override set to the live agent in real time.
-                    for (const kv of Object.entries(next)) {
-                      const k = kv[0] as keyof typeof currentOverrides;
-                      if (currentOverrides[k] !== next[k]) {
-                        updateOverride(k, kv[1]);
-                        break;
+                    // TweakPanel 每次只改一个 key，找到变化项直接透传。
+                    // break 改为 return 提升可读性。
+                    for (const [k, v] of Object.entries(next)) {
+                      if (currentOverrides[k as keyof ToolOverride] !== v) {
+                        void updateOverride(k as keyof ToolOverride, v);
+                        return;
                       }
                     }
                   }}
