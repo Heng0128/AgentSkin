@@ -28,7 +28,7 @@ import type { PreviewWindowState } from '@/types/workspace';
 import { sanitizeCSS } from '@shared/safe-css';
 import type { DomTreeNode } from '@shared/types';
 import { AGENT_META } from '@shared/types';
-import { Copy, Maximize, X } from 'lucide-react';
+import { Maximize, X } from 'lucide-react';
 
 interface PreviewWindowProps {
   win: PreviewWindowState;
@@ -129,9 +129,6 @@ export function PreviewWindow({
           <span className="pw__title">{meta.displayName}</span>
         </button>
         <span className="pw__spacer" />
-        <button type="button" className="pw__icon-btn" title="Duplicate window">
-          <Copy className="size-3" />
-        </button>
         <button type="button" className="pw__icon-btn" title="Fullscreen">
           <Maximize className="size-3" />
         </button>
