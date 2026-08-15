@@ -95,12 +95,14 @@ export function ColorCard({
   overridden,
   onReset,
   onChange,
+  placeholder = '#RRGGBB',
 }: {
   label: string;
   value: string;
   overridden: boolean;
   onReset: () => void;
   onChange: (v: string) => void;
+  placeholder?: string;
 }) {
   return (
     <div className="ws-dock-card" style={{ height: 72 }}>
@@ -118,7 +120,7 @@ export function ColorCard({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="#RRGGBB"
+          placeholder={placeholder}
           className="ws-dock-card__color-input"
           style={{ fontVariantNumeric: 'tabular-nums' }}
         />

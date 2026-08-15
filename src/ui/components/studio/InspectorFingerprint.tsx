@@ -57,9 +57,9 @@ export function InspectorFingerprint({ t }: { t: UiMessages }) {
       {/* Color card */}
       <div className="ws-dim-card">
         <div className="ws-dim-card__title">{t.studioDimColor}</div>
-        <DimRow k="bg" v={sig.color.rootBackground ?? '—'} />
-        <DimRow k="fg" v={sig.color.rootColor ?? '—'} />
-        <DimRow k="mode" v={sig.color.mode} />
+        <DimRow k={t.studioDimBgKey} v={sig.color.rootBackground ?? '—'} />
+        <DimRow k={t.studioDimFgKey} v={sig.color.rootColor ?? '—'} />
+        <DimRow k={t.studioDimModeKey} v={sig.color.mode} />
         {sig.color.backgrounds.length > 0 && (
           <div className="flex flex-wrap gap-0 mt-[var(--space-1)]">
             {[...new Set(sig.color.backgrounds)].map((c) => (
@@ -77,54 +77,54 @@ export function InspectorFingerprint({ t }: { t: UiMessages }) {
       {/* Shape card */}
       <div className="ws-dim-card">
         <div className="ws-dim-card__title">{t.studioDimRadius}</div>
-        <DimRow k="primary" v={sig.radius.primary} />
-        <DimRow k="unique" v={`${sig.radius.values.length} values`} />
+        <DimRow k={t.studioDimPrimary} v={sig.radius.primary} />
+        <DimRow k={t.studioDimUnique} v={`${sig.radius.values.length} values`} />
       </div>
 
       {/* Spacing card */}
       <div className="ws-dim-card">
         <div className="ws-dim-card__title">{t.studioDimSpacing}</div>
-        <DimRow k="avg padding" v={`${Math.round(sig.spacing.avgPadding)}px`} />
+        <DimRow k={t.studioDimAvgPadding} v={`${Math.round(sig.spacing.avgPadding)}px`} />
       </div>
 
       {/* Shadow card */}
       <div className="ws-dim-card">
         <div className="ws-dim-card__title">{t.studioDimShadow}</div>
-        <DimRow k="level" v={sig.shadow.level} />
+        <DimRow k={t.studioDimLevel} v={sig.shadow.level} />
       </div>
 
       {/* Blur card */}
       <div className="ws-dim-card">
         <div className="ws-dim-card__title">{t.studioDimBlur}</div>
-        <DimRow k="elements" v={`${sig.blur.countWithBlur}`} />
+        <DimRow k={t.studioDimElements} v={`${sig.blur.countWithBlur}`} />
       </div>
 
       {/* Typography card */}
       <div className="ws-dim-card">
         <div className="ws-dim-card__title">{t.studioDimFont}</div>
         <DimRow
-          k="family"
+          k={t.studioDimFamily}
           v={sig.font.family.split(',')[0]?.trim().replace(/'/g, '') ?? 'system-ui'}
         />
-        <DimRow k="sizes" v={`${[...new Set(sig.font.sizes)].length} unique`} />
+        <DimRow k={t.studioDimUniqueSizes} v={`${[...new Set(sig.font.sizes)].length} unique`} />
       </div>
 
       {/* Motion card */}
       <div className="ws-dim-card">
         <div className="ws-dim-card__title">{t.studioDimMotion}</div>
-        <DimRow k="duration" v={sig.motion.defaultDuration} />
-        <DimRow k="timing" v={sig.motion.defaultTiming} />
+        <DimRow k={t.studioDimDuration} v={sig.motion.defaultDuration} />
+        <DimRow k={t.studioDimTiming} v={sig.motion.defaultTiming} />
       </div>
 
       {/* Decoration card */}
       <div className="ws-dim-card">
         <div className="ws-dim-card__title">{t.studioDimDecoration}</div>
         <DimRow
-          k="gradients"
+          k={t.studioDimGradients}
           v={
             sig.decoration.gradients.length > 0
-              ? `${sig.decoration.gradients.length} found`
-              : 'none'
+              ? t.studioDimFound(sig.decoration.gradients.length)
+              : t.studioDimNone
           }
         />
       </div>

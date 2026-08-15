@@ -20,7 +20,6 @@
 
 import { useState } from 'react';
 import { useNotificationStore } from '@/stores/notificationStore';
-import { useShellStore } from '@/stores/shellStore';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 

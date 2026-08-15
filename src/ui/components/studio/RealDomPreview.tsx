@@ -415,20 +415,20 @@ function RealDomPreview({
           className="ml-2 truncate font-mono text-[10px]"
           style={{ letterSpacing: '0.08em', color: 'var(--muted-foreground)' }}
         >
-          PREVIEW · AGENT DOM REPLAY
+          {t.studioPreviewStatus}
         </span>
         {domTree && (
           <span
             className="ml-auto font-mono text-[10px]"
             style={{ color: 'var(--muted-foreground)' }}
           >
-            LIVE
+            {t.studioLiveIndicator}
           </span>
         )}
       </div>
       <iframe
         ref={iframeRef}
-        title="Agent real DOM preview"
+        title={t.studioRealDomPreviewTitle}
         sandbox="allow-scripts allow-same-origin"
         srcDoc={srcDoc}
         onLoad={pushOverrides}

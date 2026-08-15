@@ -88,7 +88,7 @@ export function InspectorDetails({ t }: { t: UiMessages }) {
         <div className="ws-detail-group__title">{t.studioInspector}</div>
         {inspectingLandmark.styles.length === 0 ? (
           <p className="font-mono text-[10px]" style={{ color: 'var(--fg-3)' }}>
-            No inline styles
+            {t.studioNoInlineStyles}
           </p>
         ) : (
           inspectingLandmark.styles.map((style) => (
@@ -173,7 +173,7 @@ export function InspectorDetails({ t }: { t: UiMessages }) {
       {/* Matched CSS rules cascade */}
       {inspectingLandmark.matchedRules && inspectingLandmark.matchedRules.length > 0 && (
         <div className="ws-detail-group">
-          <div className="ws-detail-group__title">CSS CASCADE</div>
+          <div className="ws-detail-group__title">{t.studioCascadeTitle}</div>
           <CascadeView
             cascade={{
               matchedRules: inspectingLandmark.matchedRules,
@@ -188,7 +188,7 @@ export function InspectorDetails({ t }: { t: UiMessages }) {
       {/* Live CDP data if no snapshot landmark */}
       {!inspectingLandmark.styles.length && !inspectingLandmark.matchedRules?.length && (
         <p className="font-mono text-[10px]" style={{ color: 'var(--fg-3)' }}>
-          No computed styles available (CDP inactive)
+          {t.studioNoComputedStyles}
         </p>
       )}
     </div>

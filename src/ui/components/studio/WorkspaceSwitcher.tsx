@@ -14,12 +14,15 @@ import type { WorkspacePresetId } from '@/stores/workspace-presets';
 import { WORKSPACE_PRESETS } from '@/stores/workspace-presets';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
+import type { UiMessages } from '@shared/i18n';
+
 interface WorkspaceSwitcherProps {
   open: boolean;
   onClose: () => void;
+  t: UiMessages;
 }
 
-export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
+export function WorkspaceSwitcher({ open, onClose, t }: WorkspaceSwitcherProps) {
   const { activePresetId, applyPreset } = useWorkspaceStore();
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -64,15 +67,17 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
         className="absolute right-[var(--space-4)] top-[var(--h-topbar)] w-[300px] rounded-[var(--r-md)] overflow-hidden border border-[var(--border-default)] bg-[var(--bg-2)] shadow-[var(--shadow-dialog)]"
         role="dialog"
         aria-modal="true"
-        aria-label="Workspace presets"
+        aria-label={t.studioWorkspacePresets}
       >
         <div className="px-[var(--space-4)] h-12 flex items-center justify-between border-b border-[var(--border-subtle)]">
-          <span className="font-mono text-[13px] font-semibold text-[var(--fg-0)]">Workspaces</span>
+          <span className="font-mono text-[13px] font-semibold text-[var(--fg-0)]">
+            {t.studioWorkspacesLabel}
+          </span>
           <button
             type="button"
             className="ws-dialog__close"
             onClick={handleClose}
-            aria-label="Close workspace switcher"
+            aria-label={t.studioCloseSwitcher}
           >
             ✕
           </button>
@@ -100,9 +105,9 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
                 </div>
                 <div className="font-mono text-[length:10px] text-[var(--fg-3)] mt-0">
                   {preset.viewMode}
-                  {preset.dock?.open && ' · dock'}
-                  {!preset.drawer?.collapsed && ' · drawer'}
-                  {!preset.inspector?.collapsed && ' · inspector'}
+                  {preset.dock?.open && ` · ${t.studioPresetDock}`}
+                  {!preset.drawer?.collapsed && ` · ${t.studioPresetDrawer}`}
+                  {!preset.inspector?.collapsed && ` · ${t.studioPresetInspector}`}
                 </div>
               </div>
             </button>

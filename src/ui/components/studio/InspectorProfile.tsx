@@ -18,13 +18,13 @@ import type { UiMessages } from '@shared/i18n';
 import { AGENT_META, isAnyAgentId } from '@shared/types';
 
 /** Ordered analysis steps for the timeline display. */
-const ANALYSIS_STEPS = [
-  { id: 'cdp-connect', label: 'CDP Connect' },
-  { id: 'dom-capture', label: 'DOM Capture' },
-  { id: 'color-quantize', label: 'Quantize' },
-  { id: 'color-extract', label: 'Extract' },
-  { id: 'profile-build', label: 'Build' },
-] as const;
+const ANALYSIS_STEPS: { id: string; labelKey: keyof UiMessages }[] = [
+  { id: 'cdp-connect', labelKey: 'studioAnalysisStepCdpConnect' },
+  { id: 'dom-capture', labelKey: 'studioAnalysisStepDomCapture' },
+  { id: 'color-quantize', labelKey: 'studioAnalysisStepQuantize' },
+  { id: 'color-extract', labelKey: 'studioAnalysisStepExtract' },
+  { id: 'profile-build', labelKey: 'studioAnalysisStepBuild' },
+];
 
 export function InspectorProfile({ t }: { t: UiMessages }) {
   const analysisProgress = useStudioStore((s) => s.analysisProgress);
@@ -36,9 +36,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
           className="border border-dashed border-[var(--border-subtle)] p-3"
           style={{ borderRadius: 'var(--r-xs)' }}
         >
-          <p className="font-mono text-[10px] text-[var(--fg-2)]">
-            {t.studioInspectorEmpty ?? 'No analysis running'}
-          </p>
+          <p className="font-mono text-[10px] text-[var(--fg-2)]">{t.studioNoAnalysisRunning}</p>
         </div>
       </div>
     );
@@ -69,7 +67,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
       {/* Progress bar */}
       <div>
         <div className="mb-1 flex items-baseline justify-between">
-          <span className="font-mono text-[10px]   text-[var(--fg-2)]">Progress</span>
+          <span className="font-mono text-[10px]   text-[var(--fg-2)]">{t.studioProgress}</span>
           <span className="font-mono text-[10px] font-bold tabular-nums text-[var(--fg-1)]">
             {progress}%
           </span>
@@ -111,11 +109,11 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
                   .filter(Boolean)
                   .join(' ')}
               >
-                {s.label}
+                {t[s.labelKey] as string}
               </span>
               {isCurrent && (
                 <span className="ml-auto font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
-                  active
+                  {t.studioActiveStatus}
                 </span>
               )}
             </div>

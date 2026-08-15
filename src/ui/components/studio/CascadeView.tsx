@@ -36,7 +36,7 @@ export function CascadeView({
             className="mb-1 font-mono text-[10px] "
             style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)', opacity: 0.7 }}
           >
-            RENDER FONTS
+            {t.studioRenderFonts}
           </div>
           <div className="flex flex-wrap gap-1">
             {cascade.platformFonts.map((f) => (
@@ -66,7 +66,7 @@ export function CascadeView({
               className="bg-muted px-1 py-0 font-mono text-[10px]"
               style={{ color: 'var(--muted-foreground)', borderRadius: 'var(--radius)' }}
             >
-              @ {boxModel.left}, {boxModel.top}
+              {t.studioBoxModelAt(boxModel.left, boxModel.top)}
             </span>
           )}
         </div>
@@ -78,7 +78,7 @@ export function CascadeView({
           className="mb-1 font-mono text-[10px] "
           style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)', opacity: 0.7 }}
         >
-          CASCADE
+          {t.studioCascadeSection}
         </div>
         {cascade.matchedRules.length === 0 ? (
           <p className="font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
@@ -91,7 +91,7 @@ export function CascadeView({
                 ? `${rule.declarations[0].name}:${rule.declarations[0].value}`
                 : 'empty';
               const stableKey = `${rule.origin}::${rule.selector ?? ''}::${declKey}::${idx}`;
-              return <CssRuleRow key={stableKey} rule={rule} />;
+              return <CssRuleRow key={stableKey} rule={rule} t={t} />;
             })}
           </div>
         )}
@@ -100,7 +100,7 @@ export function CascadeView({
   );
 }
 
-function CssRuleRow({ rule }: { rule: CssMatchedRule }) {
+function CssRuleRow({ rule, t }: { rule: CssMatchedRule; t: UiMessages }) {
   return (
     <div className=" bg-muted p-1" style={{ borderRadius: 'var(--radius)' }}>
       <div className="flex items-center gap-1">
@@ -119,7 +119,7 @@ function CssRuleRow({ rule }: { rule: CssMatchedRule }) {
           style={{ color: 'var(--foreground)' }}
           title={rule.selector ?? ''}
         >
-          {rule.selector ?? '(inline style)'}
+          {rule.selector ?? t.studioInlineStyle}
         </span>
       </div>
       {rule.declarations.length > 0 && (

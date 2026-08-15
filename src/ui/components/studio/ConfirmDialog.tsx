@@ -12,6 +12,7 @@
  * Built on WorkspaceDialog shell. Width clamped to 440px for readability.
  */
 
+import type { UiMessages } from '@shared/i18n';
 import { WorkspaceDialog } from './WorkspaceDialog';
 
 interface ConfirmDialogProps {
@@ -23,6 +24,7 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   loading?: boolean;
+  t: UiMessages;
 }
 
 export function ConfirmDialog({
@@ -34,6 +36,7 @@ export function ConfirmDialog({
   confirmLabel,
   cancelLabel,
   loading = false,
+  t,
 }: ConfirmDialogProps) {
   return (
     <WorkspaceDialog
@@ -50,7 +53,7 @@ export function ConfirmDialog({
 
       <WorkspaceDialog.Footer>
         <button type="button" className="ws-btn ws-btn--sm" onClick={onClose} disabled={loading}>
-          {cancelLabel ?? 'Cancel'}
+          {cancelLabel ?? t.cancel}
         </button>
         <button
           type="button"
@@ -65,7 +68,7 @@ export function ConfirmDialog({
             letterSpacing: '0.06em',
           }}
         >
-          {loading ? '···' : (confirmLabel ?? 'Delete')}
+          {loading ? t.studioLoadingDots : (confirmLabel ?? t.studioBundleActionDelete)}
         </button>
       </WorkspaceDialog.Footer>
     </WorkspaceDialog>

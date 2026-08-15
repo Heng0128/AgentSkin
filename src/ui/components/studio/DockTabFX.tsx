@@ -192,6 +192,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             overridden={overrides?.accent !== undefined}
             onReset={handleReset('accent')}
             onChange={(v) => setOverride('accent', v)}
+            placeholder={t.studioColorHexPlaceholder}
           />
           <ColorCard
             label={t.studioToolboxBgColor}
@@ -199,6 +200,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             overridden={overrides?.background !== undefined}
             onReset={handleReset('background')}
             onChange={(v) => setOverride('background', v)}
+            placeholder={t.studioColorHexPlaceholder}
           />
           <ColorCard
             label={t.studioToolboxFgColor}
@@ -206,6 +208,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             overridden={overrides?.foreground !== undefined}
             onReset={handleReset('foreground')}
             onChange={(v) => setOverride('foreground', v)}
+            placeholder={t.studioColorHexPlaceholder}
           />
           <ColorCard
             label={t.studioToolboxSurfaceColor}
@@ -213,6 +216,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             overridden={overrides?.surface !== undefined}
             onReset={handleReset('surface')}
             onChange={(v) => setOverride('surface', v)}
+            placeholder={t.studioColorHexPlaceholder}
           />
           <ToggleCard
             label={t.studioToolboxGradientBg}
@@ -273,7 +277,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             onChange={(v) => setOverride('blurPx', v)}
           />
           <SliderCard
-            label="border"
+            label={t.studioDimBorder}
             displayValue={String(finalBorder)}
             value={finalBorder}
             min={0}
@@ -311,7 +315,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             onChange={(v) => setOverride('fontSize', v)}
           />
           <SliderCard
-            label="line-height"
+            label={t.studioToolboxLineHeight}
             displayValue={String(finalLh)}
             value={finalLh}
             min={1}
@@ -341,7 +345,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             onChange={(v) => setOverride('duration', `${v}s`)}
           />
           <SelectCard
-            label="easing"
+            label={t.studioToolboxMotionEasing}
             value={finalTiming}
             options={EASING_OPTIONS.map((e) => ({ label: e, value: e }))}
             overridden={overrides?.timing !== undefined}
@@ -374,7 +378,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             onChange={(v) => setOverride('invert', v)}
           />
           <SliderCard
-            label="contrast"
+            label={t.studioToolboxContrast}
             displayValue={String(finalContrast)}
             value={finalContrast}
             min={0.5}
@@ -385,7 +389,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             onChange={(v) => setOverride('contrast', v)}
           />
           <SliderCard
-            label="saturate"
+            label={t.studioToolboxSaturate}
             displayValue={String(finalSaturate)}
             value={finalSaturate}
             min={0}
