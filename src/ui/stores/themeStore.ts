@@ -83,6 +83,10 @@ const MAX_CONCURRENCY = 6;
  *  a slot never frees (e.g. an apply that never settles). */
 const MAX_BUSY_WAIT_MS = 60_000;
 
+/** Debounce timer for refreshThemes — coalesces rapid successive calls
+ *  (e.g. IPC file-imported burst) into a single IPC round-trip. */
+let refreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 // ---------------------------------------------------------------------------
 // state shape
 // ---------------------------------------------------------------------------
@@ -169,13 +173,22 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     installedById: (id) => get().installed.find((theme) => theme.id === id),
     setSelection: (selection) => set({ selection }),
 
-    refreshThemes: async () => {
-      try {
-        set({ installed: (await api.catalog.themes.list()).items });
-      } catch (error) {
-        // Surface the failure instead of silently leaving a stale/empty list.
-        useNotificationStore.getState().fail(error);
-      }
+    refreshThemes: () => {
+      // Debounce: coalesce rapid successive calls (e.g. IPC file-imported
+      // burst) into a single IPC round-trip. 100ms is imperceptible to users.
+      return new Promise<void>((resolve) => {
+        if (refreshDebounceTimer !== null) clearTimeout(refreshDebounceTimer);
+        refreshDebounceTimer = setTimeout(async () => {
+          refreshDebounceTimer = null;
+          try {
+            set({ installed: (await api.catalog.themes.list()).items });
+          } catch (error) {
+            useNotificationStore.getState().fail(error);
+          } finally {
+            resolve();
+          }
+        }, 100);
+      });
     },
 
     unsubscribe,
@@ -250,6 +263,13 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       const appName =
         result.apps.find((a) => a.appId === appId)?.displayName ?? APP_META[appId]?.name ?? appId;
       useNotificationStore.getState().showToast(t.nativeRestored(appName));
+      // Symmetry with applyToApp: deactivate the per-agent wallpaper that
+      // was activated alongside the theme. Without this, restoring the
+      // theme leaves the wallpaper injected — a visual inconsistency.
+      void useWallpaperStore
+        .getState()
+        .setAgentWallpaper(appId, false, null)
+        .catch(() => undefined);
     },
 
     restoreAll: async () => {
@@ -292,7 +312,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       const didAcquire = await withImportLock(targetPath, async () => {
         const result = await withBusy('import', () => api.importThemeFromPath(targetPath));
         if (!result) return;
-        await get().refreshThemes();
+        get().refreshThemes();
         useNotificationStore.getState().showToast(t.importedTheme(result.theme.displayName));
       });
       if (!didAcquire) {
