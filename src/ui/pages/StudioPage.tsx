@@ -44,11 +44,11 @@ export function StudioPage() {
       <StudioTitleBar />
 
       <div className="ws-root min-h-0 flex-1" style={{ width: '100%', height: '100%' }}>
-        <StudioTopBar />
-        <StudioDrawer />
-        <StudioStage />
+        <StudioTopBar t={t} />
+        <StudioDrawer t={t} />
+        <StudioStage t={t} />
         <StudioInspector t={t} />
-        <StudioStatusBar />
+        <StudioStatusBar t={t} />
         <StudioDock t={t} />
       </div>
     </div>

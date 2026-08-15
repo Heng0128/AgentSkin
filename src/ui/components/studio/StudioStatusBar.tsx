@@ -14,6 +14,7 @@
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
+import type { UiMessages } from '@shared/i18n';
 import { paletteFromSnapshot } from './palette';
 
 /**
@@ -46,7 +47,7 @@ function extractFingerprintColors(
   return palette;
 }
 
-export function StudioStatusBar() {
+export function StudioStatusBar({ t }: { t: UiMessages }) {
   const snapshot = useStudioStore((s) => s.snapshot);
   const inspectMode = useStudioStore((s) => s.inspectMode);
   const activeWindowId = useWorkspaceStore((s) => s.activeWindowId);
@@ -64,17 +65,17 @@ export function StudioStatusBar() {
         <span
           className="inline-block size-[7px] rounded-[var(--radius-sm)] border border-[var(--border-subtle)]"
           style={{ background: colors.bg || 'transparent' }}
-          title={colors.bg ? `bg: ${colors.bg}` : 'bg: n/a'}
+          title={colors.bg ? t.studioStatusBg(colors.bg) : 'bg: n/a'}
         />
         <span
           className="inline-block size-[7px] rounded-[var(--radius-sm)] border border-[var(--border-subtle)]"
           style={{ background: colors.fg || 'transparent' }}
-          title={colors.fg ? `fg: ${colors.fg}` : 'fg: n/a'}
+          title={colors.fg ? t.studioStatusFg(colors.fg) : 'fg: n/a'}
         />
         <span
           className="inline-block size-[7px] rounded-[var(--radius-sm)] border border-[var(--border-subtle)]"
           style={{ background: colors.accent || 'transparent' }}
-          title={colors.accent ? `accent: ${colors.accent}` : 'accent: n/a'}
+          title={colors.accent ? t.studioStatusAccent(colors.accent) : 'accent: n/a'}
         />
         <span className="val ml-[2px]">
           {colors.bg || '—'} / {colors.fg || '—'} / {colors.accent || '—'}
@@ -82,12 +83,12 @@ export function StudioStatusBar() {
       </span>
 
       <span className="sep">·</span>
-      <span>zoom {zoomPct}%</span>
+      <span>{t.studioStatusZoom(zoomPct)}</span>
 
       {inspectMode && (
         <>
           <span className="sep">·</span>
-          <span style={{ color: 'var(--accent)' }}>● INSPECT</span>
+          <span style={{ color: 'var(--accent)' }}>● {t.studioStatusInspect}</span>
         </>
       )}
     </footer>

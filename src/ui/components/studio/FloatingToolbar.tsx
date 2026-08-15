@@ -15,12 +15,13 @@ import { captureAgentSnapshot } from '@/components/studio/actions/capturePipelin
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
+import type { UiMessages } from '@shared/i18n';
 import type { AgentId } from '@shared/types';
 import { Eye, RefreshCw, Search } from 'lucide-react';
 
 const ZOOM_PRESETS = [0.25, 0.38, 0.45, 0.55, 0.75, 1.0];
 
-export function FloatingToolbar() {
+export function FloatingToolbar({ t }: { t: UiMessages }) {
   const { windows, activeWindowId, updateWindow } = useWorkspaceStore();
 
   const { snapshotLoading, inspectMode, toggleInspect } = useStudioStore();
@@ -61,7 +62,7 @@ export function FloatingToolbar() {
         value={activeAgentId ?? ''}
         onChange={(e) => handleAgentChange(e.target.value as AgentId)}
         className="h-5 rounded-[var(--r-micro)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-1 font-mono text-[length:10px] text-[var(--fg-0)] outline-none"
-        title="Active window agent"
+        title={t.studioActiveWindowAgent}
       >
         {(['codex', 'traework', 'qoderwork', 'workbuddy', 'doubao', 'zcode'] as AgentId[]).map(
           (id) => (
@@ -82,13 +83,13 @@ export function FloatingToolbar() {
         className="ws-btn ws-btn--sm ws-btn--primary"
       >
         <Eye className="size-3" />
-        Snapshot
+        {t.studioSnapshotButton}
       </button>
       <button
         type="button"
         onClick={handleBaseline}
         className="ws-btn ws-btn--sm"
-        title="Capture baseline (restore agent to vanilla state)"
+        title={t.studioBaselineTooltip}
       >
         <RefreshCw className="size-3" />
       </button>
@@ -97,7 +98,7 @@ export function FloatingToolbar() {
         onClick={() => void toggleInspect()}
         data-active={inspectMode}
         className="ws-btn ws-btn--sm"
-        title={inspectMode ? 'Stop inspect' : 'Inspect pick mode'}
+        title={inspectMode ? t.studioInspectStop : t.studioInspectStart}
       >
         <Search className="size-3" />
       </button>
@@ -110,9 +111,9 @@ export function FloatingToolbar() {
           type="button"
           className="ws-btn ws-btn--sm"
           onClick={() => setZoomOpen((v) => !v)}
-          title="Zoom"
+          title={t.studioZoom}
         >
-          {activeWin ? `${activeWin.scale}×` : 'zoom'} ▾
+          {activeWin ? `${activeWin.scale}×` : t.studioZoomFallback} ▾
         </button>
         {zoomOpen && (
           <div className="absolute bottom-full right-0 z-10 mb-[2px] flex flex-col gap-0 rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">

@@ -25,6 +25,7 @@ import { buildSrcDoc, overridesToCss } from '@/components/studio/RealDomPreview'
 import { useStudioStore } from '@/stores/studioStore';
 import type { PreviewWindowState } from '@/types/workspace';
 
+import type { UiMessages } from '@shared/i18n';
 import { sanitizeCSS } from '@shared/safe-css';
 import type { DomTreeNode } from '@shared/types';
 import { AGENT_META } from '@shared/types';
@@ -40,6 +41,7 @@ interface PreviewWindowProps {
   domTree?: DomTreeNode;
   /** Native :root CSS custom properties captured at snapshot time (optional). */
   rootVars?: Record<string, string>;
+  t: UiMessages;
 }
 
 const SCALE_PRESETS = [0.25, 0.38, 0.45, 0.55, 0.75, 1.0];
@@ -52,6 +54,7 @@ export function PreviewWindow({
   onClose,
   domTree,
   rootVars,
+  t,
 }: PreviewWindowProps) {
   const toolOverrides = useStudioStore((s) => s.toolOverrides);
   const meta = AGENT_META[win.agentId];
@@ -129,11 +132,11 @@ export function PreviewWindow({
           <span className="pw__title">{meta.displayName}</span>
         </button>
         <span className="pw__spacer" />
-        <button type="button" className="pw__icon-btn" title="Fullscreen">
+        <button type="button" className="pw__icon-btn" title={t.studioFullscreen}>
           <Maximize className="size-3" />
         </button>
         {onClose && (
-          <button type="button" className="pw__icon-btn" onClick={onClose} title="Close">
+          <button type="button" className="pw__icon-btn" onClick={onClose} title={t.close}>
             <X className="size-3" />
           </button>
         )}
@@ -154,7 +157,9 @@ export function PreviewWindow({
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[var(--bg-0)]">
-            <span className="font-mono text-[length:10px] text-[var(--fg-3)]">No snapshot</span>
+            <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+              {t.studioNoSnapshot}
+            </span>
           </div>
         )}
       </div>
@@ -163,7 +168,7 @@ export function PreviewWindow({
       <div className="pw__footer">
         <span className="font-mono">800×600</span>
         <span className="pw__footer-sep">·</span>
-        <span className="font-mono">scale {win.scale}×</span>
+        <span className="font-mono">{t.studioPreviewScale(win.scale)}</span>
         <span className="pw__footer-sep">·</span>
         <div className="relative">
           <button
@@ -171,7 +176,7 @@ export function PreviewWindow({
             className="font-mono text-[length:10px] text-[var(--fg-2)] hover:text-[var(--fg-0)]"
             onClick={() => setZoomOpen((v) => !v)}
           >
-            zoom ▾
+            {t.studioZoomTrigger} ▾
           </button>
           {zoomOpen && (
             <div className="absolute bottom-full right-0 z-10 mb-[2px] flex flex-col gap-0 rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">

@@ -25,15 +25,10 @@ import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 import type { UiMessages } from '@shared/i18n';
-import { uiMessages } from '@shared/i18n';
 import { ChevronsLeft, ChevronsRight, Download, RefreshCw } from 'lucide-react';
 import { ExportDialog } from './ExportDialog';
 
-function currentT(): UiMessages {
-  return uiMessages[useShellStore.getState().locale];
-}
-
-export function StudioTopBar() {
+export function StudioTopBar({ t }: { t: UiMessages }) {
   const { dock, drawer, inspector, toggleDock, toggleDrawer, toggleInspector } =
     useWorkspaceStore();
 
@@ -81,13 +76,13 @@ export function StudioTopBar() {
             border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)',
           }}
         >
-          BETA
+          {t.studioHeaderBeta}
         </span>
         {activeProject && (
           <button
             type="button"
             className="ws-topbar__project-name hover:text-[var(--fg-0)] transition-colors"
-            title="Switch project"
+            title={t.studioSwitchProject}
             onClick={() => useWorkspaceStore.getState().toggleDrawer()}
           >
             / {activeProject.name}
@@ -107,7 +102,7 @@ export function StudioTopBar() {
             disabled={undoDisabled}
             onClick={handleUndo}
             className="ws-btn ws-btn--sm"
-            title="Undo"
+            title={t.studioUndo}
           >
             <ChevronsLeft className="size-3" />
           </button>
@@ -116,7 +111,7 @@ export function StudioTopBar() {
             disabled={redoDisabled}
             onClick={handleRedo}
             className="ws-btn ws-btn--sm"
-            title="Redo"
+            title={t.studioRedo}
           >
             <ChevronsRight className="size-3" />
           </button>
@@ -132,7 +127,7 @@ export function StudioTopBar() {
             data-active={dock.open}
             onClick={toggleDock}
             className="ws-btn ws-btn--sm"
-            title="Dock"
+            title={t.studioDockToggle}
           >
             FX
           </button>
@@ -141,7 +136,7 @@ export function StudioTopBar() {
             data-active={drawer.open}
             onClick={toggleDrawer}
             className="ws-btn ws-btn--sm"
-            title="Drawer"
+            title={t.studioDrawerToggle}
           >
             Lib
           </button>
@@ -150,7 +145,7 @@ export function StudioTopBar() {
             data-active={inspector.open}
             onClick={toggleInspector}
             className="ws-btn ws-btn--sm"
-            title="Inspector"
+            title={t.studioInspectorToggle}
           >
             Ins
           </button>
@@ -165,10 +160,10 @@ export function StudioTopBar() {
             type="button"
             className="ws-btn"
             onClick={handleRestore}
-            title="Restore agent to native baseline"
+            title={t.studioRestoreBaseline}
           >
             <RefreshCw className="size-3" />
-            Restore
+            {t.studioRestore}
           </button>
         )}
 
@@ -180,16 +175,12 @@ export function StudioTopBar() {
           onClick={handleExport}
         >
           <Download className="size-3" />
-          {exportState.loading ? 'Exporting…' : 'Export'}
+          {exportState.loading ? t.studioExporting : t.studioExportButton}
         </button>
       </div>
 
       {/* Export dialog */}
-      <ExportDialog
-        open={exportDialogOpen}
-        onClose={() => setExportDialogOpen(false)}
-        t={currentT()}
-      />
+      <ExportDialog open={exportDialogOpen} onClose={() => setExportDialogOpen(false)} t={t} />
     </header>
   );
 }

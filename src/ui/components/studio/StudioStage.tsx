@@ -14,10 +14,11 @@ import { PreviewWindow } from '@/components/studio/PreviewWindow';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
+import type { UiMessages } from '@shared/i18n';
 import type { DomTreeNode } from '@shared/types';
 import { FlaskConical } from 'lucide-react';
 
-export function StudioStage() {
+export function StudioStage({ t }: { t: UiMessages }) {
   const { windows, activeWindowId, setActiveWindow, updateWindow } = useWorkspaceStore();
 
   const snapshot = useStudioStore((s) => s.snapshot);
@@ -34,12 +35,8 @@ export function StudioStage() {
             <div className="ws-stage__placeholder-icon">
               <FlaskConical className="size-6 text-[var(--fg-3)]" />
             </div>
-            <p className="ws-stage__placeholder-title">No preview windows</p>
-            <p className="ws-stage__placeholder-hint">
-              Click the&nbsp;
-              <span className="font-mono text-[var(--accent)]">SNAPSHOT</span>
-              &nbsp;button below to capture the agent DOM and begin previewing.
-            </p>
+            <p className="ws-stage__placeholder-title">{t.studioEmptyNoWindows}</p>
+            <p className="ws-stage__placeholder-hint">{t.studioEmptySnapHintStage}</p>
           </div>
         </div>
       </main>
@@ -59,9 +56,10 @@ export function StudioStage() {
           onScaleChange={(s) => updateWindow(win.id, { scale: s })}
           domTree={domTree}
           rootVars={rootVars}
+          t={t}
         />
       </div>
-      <FloatingToolbar />
+      <FloatingToolbar t={t} />
     </main>
   );
 }

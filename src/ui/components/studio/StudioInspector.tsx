@@ -23,10 +23,19 @@ import { InspectorLandmarks } from '@/components/studio/InspectorLandmarks';
 import { InspectorProfile } from '@/components/studio/InspectorProfile';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { INSPECTOR_TABS, type InspectorTabId } from '@/types/workspace';
+import type { InspectorTabId } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 import { AGENT_META } from '@shared/types';
+
+/** Map inspector tab IDs to their i18n label keys. */
+const TAB_LABEL: Record<InspectorTabId, (t: UiMessages) => string> = {
+  landmarks: (t) => t.studioTabLandmarks,
+  computed: (t) => t.studioTabComputed,
+  cascade: (t) => t.studioTabCascade,
+  fingerprint: (t) => t.studioTabFingerprint,
+  profile: (t) => t.studioTabProfile,
+};
 
 export function StudioInspector({ t }: { t: UiMessages }) {
   const { inspector, setInspectorTab, setInspectorOpen } = useWorkspaceStore();
@@ -42,7 +51,7 @@ export function StudioInspector({ t }: { t: UiMessages }) {
         className="ws-inspector cursor-pointer"
         data-collapsed="true"
         onClick={() => setInspectorOpen(true)}
-        title="Click to expand inspector"
+        title={t.studioExpandInspector}
       >
         <span className="flex flex-col items-center justify-center h-full" style={{ width: 4 }}>
           <span
@@ -69,17 +78,19 @@ export function StudioInspector({ t }: { t: UiMessages }) {
 
       {/* Tab bar */}
       <div className="ws-inspector__tabs">
-        {INSPECTOR_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            className="ws-inspector__tab"
-            data-active={inspector.activeTab === tab.id ? 'true' : undefined}
-            onClick={() => setInspectorTab(tab.id as InspectorTabId)}
-          >
-            {tab.label}
-          </button>
-        ))}
+        {(['landmarks', 'computed', 'cascade', 'fingerprint', 'profile'] as InspectorTabId[]).map(
+          (id) => (
+            <button
+              key={id}
+              type="button"
+              className="ws-inspector__tab"
+              data-active={inspector.activeTab === id ? 'true' : undefined}
+              onClick={() => setInspectorTab(id)}
+            >
+              {TAB_LABEL[id](t)}
+            </button>
+          ),
+        )}
       </div>
 
       {/* Scrollable content */}

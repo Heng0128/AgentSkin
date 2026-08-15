@@ -26,9 +26,9 @@ import type { DockTabId } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 
-const DOCK_TABS: { id: DockTabId; label: string }[] = [
-  { id: 'fx', label: 'FX' },
-  { id: 'export', label: 'Export' },
+const DOCK_TABS: { id: DockTabId; labelKey: 'studioDockTabFx' | 'studioDockTabExport' }[] = [
+  { id: 'fx', labelKey: 'studioDockTabFx' },
+  { id: 'export', labelKey: 'studioDockTabExport' },
 ];
 
 export function StudioDock({ t }: { t: UiMessages }) {
@@ -96,9 +96,9 @@ export function StudioDock({ t }: { t: UiMessages }) {
         className="ws-dock__drag-handle"
         onMouseDown={handleDragStart}
         onDoubleClick={toggleDock}
-        title="Drag to resize · Double-click to toggle"
+        title={t.studioDockDragHint}
       >
-        <span className="sr-only">Drag to resize dock, double-click to toggle</span>
+        <span className="sr-only">{t.studioDockDragHintSr}</span>
       </button>
 
       {/* Tab bar */}
@@ -111,7 +111,7 @@ export function StudioDock({ t }: { t: UiMessages }) {
             data-active={dock.activeTab === tab.id ? 'true' : undefined}
             onClick={() => setDockTab(tab.id)}
           >
-            {tab.label}
+            {t[tab.labelKey]}
           </button>
         ))}
       </div>

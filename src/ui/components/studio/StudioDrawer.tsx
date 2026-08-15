@@ -21,10 +21,11 @@ import { useStudioStore } from '@/stores/studioStore';
 import { useWallpaperStore } from '@/stores/wallpaperStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
+import type { UiMessages } from '@shared/i18n';
 import { AGENT_IDS, AGENT_META, type AgentId } from '@shared/types';
 import { Image, Layers, LayoutGrid, Package } from 'lucide-react';
 
-export function StudioDrawer() {
+export function StudioDrawer({ t }: { t: UiMessages }) {
   const { drawer, setDrawerCollapsed } = useWorkspaceStore();
 
   const {
@@ -58,7 +59,7 @@ export function StudioDrawer() {
             type="button"
             className="ws-drawer-rail__btn"
             onClick={() => setDrawerCollapsed(false)}
-            title="Expand"
+            title={t.expandSidebar}
           >
             <LayoutGrid className="size-4" />
           </button>
@@ -79,7 +80,7 @@ export function StudioDrawer() {
           >
             <span className="flex items-center gap-[var(--space-1)]">
               <span className="dot" />
-              Projects
+              {t.studioProjectTitle}
             </span>
             <span>{projectsOpen ? '▾' : '▸'}</span>
           </button>
@@ -91,21 +92,21 @@ export function StudioDrawer() {
                 className="ws-btn ws-btn--sm w-full"
                 onClick={() => setCreatingProject(true)}
               >
-                <span className="text-[var(--fg-1)]">+</span> New
+                <span className="text-[var(--fg-1)]">+</span> {t.studioProjectNew}
               </button>
 
               {creatingProject && (
                 <div className="flex flex-col gap-[var(--space-1)] p-[var(--space-2)] rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-1)]">
                   <input
                     type="text"
-                    placeholder="Project name"
+                    placeholder={t.studioProjectPlaceholder}
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     className="ws-input h-[var(--h-btn-sm)] text-[length:11px]"
                   />
                   <input
                     type="text"
-                    placeholder="Author"
+                    placeholder={t.studioProjectAuthorPlaceholder}
                     value={newAuthor}
                     onChange={(e) => setNewAuthor(e.target.value)}
                     className="ws-input h-[var(--h-btn-sm)] text-[length:11px]"
@@ -135,14 +136,14 @@ export function StudioDrawer() {
                       className="ws-btn ws-btn--sm flex-1 ws-btn--primary"
                       onClick={() => void createProject()}
                     >
-                      Create
+                      {t.studioProjectCreate}
                     </button>
                     <button
                       type="button"
                       className="ws-btn ws-btn--sm flex-1"
                       onClick={() => setCreatingProject(false)}
                     >
-                      Cancel
+                      {t.cancel}
                     </button>
                   </div>
                 </div>
@@ -180,7 +181,7 @@ export function StudioDrawer() {
           >
             <span className="flex items-center gap-[var(--space-1)]">
               <span className="dot" />
-              Resources
+              {t.studioResourcesTitle}
             </span>
             <span>{resourcesOpen ? '▾' : '▸'}</span>
           </button>
@@ -192,12 +193,12 @@ export function StudioDrawer() {
                 <div className="flex items-center gap-[var(--space-1)] mb-[var(--space-1)]">
                   <Layers className="size-3" style={{ color: 'var(--fg-2)' }} />
                   <span className="font-mono text-[length:10px] text-[var(--fg-2)]">
-                    Theme Library
+                    {t.themeLibrary}
                   </span>
                 </div>
                 {installedThemes.length === 0 ? (
                   <p className="font-mono text-[length:10px] text-[var(--fg-3)] pl-[var(--space-4)]">
-                    No themes installed
+                    {t.studioLibraryEmpty}
                   </p>
                 ) : (
                   <div className="flex flex-col gap-0">
@@ -224,12 +225,12 @@ export function StudioDrawer() {
                 <div className="flex items-center gap-[var(--space-1)] mb-[var(--space-1)]">
                   <Image className="size-3" style={{ color: 'var(--fg-2)' }} />
                   <span className="font-mono text-[length:10px] text-[var(--fg-2)]">
-                    Wallpapers
+                    {t.studioWallpaperAllTitle}
                   </span>
                 </div>
                 {wallpapers.length === 0 ? (
                   <p className="font-mono text-[length:10px] text-[var(--fg-3)] pl-[var(--space-4)]">
-                    No wallpapers
+                    {t.studioWallpaperEmpty}
                   </p>
                 ) : (
                   <div className="flex flex-col gap-0">
@@ -252,14 +253,16 @@ export function StudioDrawer() {
               <div>
                 <div className="flex items-center gap-[var(--space-1)] mb-[var(--space-1)]">
                   <Package className="size-3" style={{ color: 'var(--fg-2)' }} />
-                  <span className="font-mono text-[length:10px] text-[var(--fg-2)]">Bundles</span>
+                  <span className="font-mono text-[length:10px] text-[var(--fg-2)]">
+                    {t.studioTabBundle}
+                  </span>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
                   className="w-full h-[var(--h-btn-sm)] text-[length:10px]"
                 >
-                  Import Bundle
+                  {t.studioBundleImport}
                 </Button>
               </div>
             </div>
@@ -275,7 +278,7 @@ export function StudioDrawer() {
           >
             <span className="flex items-center gap-[var(--space-1)]">
               <span className="dot" />
-              Agents
+              {t.agentsTitle}
             </span>
             <span>{agentsOpen ? '▾' : '▸'}</span>
           </button>
@@ -313,7 +316,7 @@ export function StudioDrawer() {
         type="button"
         className="flex items-center justify-center h-6 w-full border-t border-[var(--border-subtle)] cursor-pointer shrink-0 bg-transparent"
         onClick={() => setDrawerCollapsed(true)}
-        title="Collapse drawer"
+        title={t.collapseSidebar}
       >
         <span className="font-mono text-[length:10px] text-[var(--fg-2)]">◀</span>
       </button>

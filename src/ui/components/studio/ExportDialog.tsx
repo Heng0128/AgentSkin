@@ -86,57 +86,58 @@ export function ExportDialog({
     <WorkspaceDialog
       open={open}
       onClose={onClose}
-      title="Export Theme"
-      description="Package the current snapshot as a distributable theme."
+      title={t.studioExportDialogTitle}
+      description={t.studioExportDialogDesc}
       width={480}
     >
       <div className="flex flex-col gap-[var(--space-2)]">
         {/* Name */}
         <div className="ws-field">
           <label className="ws-field__label" htmlFor="export-name">
-            Theme Name
+            {t.studioExportNameLabel}
           </label>
           <input
             id="export-name"
             className="ws-input"
             value={exportName}
             onChange={(e) => setExportName(e.target.value)}
-            placeholder={activeProject?.name ?? 'My Theme'}
+            placeholder={activeProject?.name ?? t.studioExportNamePlaceholder}
           />
         </div>
 
         {/* Author */}
         <div className="ws-field">
           <label className="ws-field__label" htmlFor="export-author">
-            Author
+            {t.studioExportAuthorLabel}
           </label>
           <input
             id="export-author"
             className="ws-input"
             value={exportAuthor}
             onChange={(e) => setExportAuthor(e.target.value)}
-            placeholder="Anonymous"
+            placeholder={t.studioExportAuthorPlaceholder}
           />
         </div>
 
         {/* License (optional) */}
         <div className="ws-field">
           <label className="ws-field__label" htmlFor="export-license">
-            License <span style={{ color: 'var(--fg-3)' }}>(optional)</span>
+            {t.studioExportLicenseLabel}{' '}
+            <span style={{ color: 'var(--fg-3)' }}>{t.studioExportLicenseOptional}</span>
           </label>
           <input
             id="export-license"
             className="ws-input"
             value={license}
             onChange={(e) => setLicense(e.target.value)}
-            placeholder="MIT"
+            placeholder={t.studioExportLicensePlaceholder}
           />
         </div>
 
         {/* Target directory */}
         <div className="ws-field">
           <label className="ws-field__label" htmlFor="export-dir">
-            Target Directory
+            {t.studioExportDirLabel}
           </label>
           <div className="flex gap-[var(--space-2)]">
             <input
@@ -144,10 +145,10 @@ export function ExportDialog({
               className="ws-input flex-1"
               value={targetDir}
               onChange={(e) => setTargetDir(e.target.value)}
-              placeholder="C:\Users\...\exported-themes"
+              placeholder={t.studioExportDirPlaceholder}
             />
             <button type="button" className="ws-btn ws-btn--sm shrink-0" onClick={handlePickDir}>
-              Browse
+              {t.studioExportBrowse}
             </button>
           </div>
         </div>
@@ -155,12 +156,24 @@ export function ExportDialog({
         {/* Inclusion toggles */}
         <fieldset className="ws-field" style={{ marginBottom: 0, border: 'none', padding: 0 }}>
           <legend className="ws-field__label" style={{ float: 'left', marginBottom: '2px' }}>
-            Include in Package
+            {t.studioExportIncludeLabel}
           </legend>
           <div className="flex gap-[var(--space-3)]" style={{ paddingTop: '2px' }}>
-            <ToggleCheck label="Tokens" checked={includeTokens} onChange={setIncludeTokens} />
-            <ToggleCheck label="Assets" checked={includeAssets} onChange={setIncludeAssets} />
-            <ToggleCheck label="Meta" checked={includeMeta} onChange={setIncludeMeta} />
+            <ToggleCheck
+              label={t.studioExportIncludeTokens}
+              checked={includeTokens}
+              onChange={setIncludeTokens}
+            />
+            <ToggleCheck
+              label={t.studioExportIncludeAssets}
+              checked={includeAssets}
+              onChange={setIncludeAssets}
+            />
+            <ToggleCheck
+              label={t.studioExportIncludeMeta}
+              checked={includeMeta}
+              onChange={setIncludeMeta}
+            />
           </div>
         </fieldset>
 
@@ -185,7 +198,7 @@ export function ExportDialog({
 
       <WorkspaceDialog.Footer>
         <button type="button" className="ws-btn ws-btn--sm" onClick={onClose}>
-          Cancel
+          {t.cancel}
         </button>
         <button
           type="button"
@@ -193,7 +206,7 @@ export function ExportDialog({
           disabled={!snapshot || exportState.loading}
           onClick={handleConfirm}
         >
-          {exportState.loading ? (t.studioExporting ?? 'Exporting…') : 'Export'}
+          {exportState.loading ? t.studioExporting : t.studioExportButton}
         </button>
       </WorkspaceDialog.Footer>
     </WorkspaceDialog>
