@@ -91,16 +91,20 @@ vi.mock('@/stores/dialogStore', () => ({
 
 vi.mock('@/stores/shellStore', () => ({
   useShellStore: {
-    getState: vi.fn(() => ({ locale: 'zh-CN', route: null, booting: false })),
+    getState: vi.fn(() => ({ locale: 'en', route: null, booting: false })),
     setState: vi.fn(),
   },
 }));
 
 vi.mock('@shared/i18n', () => ({
   uiMessages: {
-    'zh-CN': {
-      themeApplied: (name: string) => `已应用主题: ${name}`,
-      actionFailed: '操作失败',
+    en: {
+      themeApplied: (name: string) => `Applied: ${name}`,
+      actionFailed: 'Action failed',
+      themeApplyUnexpectedStatus: (status: string) =>
+        `Theme apply returned unexpected status: ${status}`,
+      busyOperationInProgress: 'This operation is already running — please wait.',
+      busyTimeout: 'Timed out waiting for a free operation slot — try again.',
     },
   },
 }));
