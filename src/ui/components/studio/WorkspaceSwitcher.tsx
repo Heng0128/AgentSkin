@@ -6,13 +6,13 @@
  * Floating workspace preset switcher — anchored to Top Bar right side.
  * Click outside to dismiss; ESC to close.
  *
- * 5 presets: Default · Compare · Multi-Agent · Focus · Export
- * Each saves viewMode + dock/inspector/drawer state.
+ * Expected to be simplified to a single-button Default reset in M2.
  */
 
 import { useCallback, useEffect, useRef } from 'react';
+import type { WorkspacePresetId } from '@/stores/workspace-presets';
+import { WORKSPACE_PRESETS } from '@/stores/workspace-presets';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { WORKSPACE_PRESETS, type WorkspacePresetId } from '@/types/workspace';
 
 interface WorkspaceSwitcherProps {
   open: boolean;
@@ -81,33 +81,28 @@ export function WorkspaceSwitcher({ open, onClose }: WorkspaceSwitcherProps) {
         <div className="max-h-[360px] overflow-y-auto p-[var(--space-2)]">
           {WORKSPACE_PRESETS.map((preset) => (
             <button
-              key={preset.presetId}
+              key={preset.id}
               type="button"
-              onClick={() => handlePick(preset.presetId)}
+              onClick={() => handlePick(preset.id as WorkspacePresetId)}
               className="w-full flex items-center gap-[var(--space-2)] p-[var(--space-2)] rounded-[var(--r-xs)] text-left hover:bg-[var(--bg-3)] transition-colors"
               style={{
-                borderColor: activePresetId === preset.presetId ? 'var(--accent)' : 'transparent',
-                background:
-                  activePresetId === preset.presetId ? 'var(--accent-ghost)' : 'transparent',
+                borderColor: activePresetId === preset.id ? 'var(--accent)' : 'transparent',
+                background: activePresetId === preset.id ? 'var(--accent-ghost)' : 'transparent',
                 border: '1px solid',
               }}
             >
               <div className="size-8 rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-1)] flex items-center justify-center font-mono text-[10px] text-[var(--fg-2)]">
                 {preset.viewMode === 'single' && '×1'}
-                {preset.viewMode === 'dual' && '×2'}
-                {preset.viewMode === 'triple' && '×3'}
-                {preset.viewMode === 'quad' && '×4'}
-                {preset.viewMode === 'focus' && '⊞'}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-mono text-[length:11px] font-medium text-[var(--fg-0)]">
-                  {preset.name}
+                  {preset.label}
                 </div>
                 <div className="font-mono text-[length:10px] text-[var(--fg-3)] mt-0">
                   {preset.viewMode}
-                  {preset.dockOpen && ' · dock'}
-                  {!preset.drawerCollapsed && ' · drawer'}
-                  {!preset.inspectorCollapsed && ' · inspector'}
+                  {preset.dock?.open && ' · dock'}
+                  {!preset.drawer?.collapsed && ' · drawer'}
+                  {!preset.inspector?.collapsed && ' · inspector'}
                 </div>
               </div>
             </button>

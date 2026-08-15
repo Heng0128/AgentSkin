@@ -3,20 +3,22 @@
 /**
  * # StudioTopBar
  *
- * Workspace top bar — brand cluster, undo/redo, view-mode chips,
- * workspace switcher, restore, export. 52px fixed height.
+ * Workspace top bar — brand cluster, undo/redo, panel toggles,
+ * restore, export. 52px fixed height.
+ *
+ * Multi-mode view switcher and workspace preset dropdown are removed
+ * (single-window only).
  *
  * State wiring:
- *   · viewMode / setViewMode              workspaceStore
  *   · undo() / redo()                     studioStore (undoStack / redoStack)
  *   · exportTheme()                       studioStore
  *   · restoreAgent()                      studioStore
  *   · activeProject / getActiveProject()  studioStore
  *   · baselines                           studioStore (Restore visible when baseline exists)
+ *   · dock / drawer / inspector toggle    workspaceStore
  */
 
 import { useState } from 'react';
-import { WorkspaceSwitcher } from '@/components/studio/WorkspaceSwitcher';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';
 import { useStudioStore } from '@/stores/studioStore';
@@ -32,16 +34,8 @@ function currentT(): UiMessages {
 }
 
 export function StudioTopBar() {
-  const {
-    viewMode,
-    setViewMode,
-    dock,
-    drawer,
-    inspector,
-    toggleDock,
-    toggleDrawer,
-    toggleInspector,
-  } = useWorkspaceStore();
+  const { dock, drawer, inspector, toggleDock, toggleDrawer, toggleInspector } =
+    useWorkspaceStore();
 
   const activeProject = useStudioStore((s) => s.getActiveProject());
   const { snapshot, exportState, undoStack, redoStack, baselines } = useStudioStore();
@@ -50,7 +44,6 @@ export function StudioTopBar() {
   const redoDisabled = redoStack.length === 0;
 
   // Local UI state
-  const [switcherOpen, setSwitcherOpen] = useState(false);
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const showToast = useNotificationStore((s) => s.showToast);
 
@@ -102,29 +95,11 @@ export function StudioTopBar() {
         )}
       </div>
 
-      {/* Center: view-mode chips + undo/redo */}
+      {/* Center: undo/redo + panel toggles */}
       <div className="ws-topbar__center">
-        {/* View-mode chips */}
-        <div
-          className="flex items-center gap-[var(--space-1)] rounded-[var(--r-md)] p-0"
-          style={{ background: 'var(--bg-3)' }}
-        >
-          {(['single', 'dual', 'triple', 'quad', 'focus'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              onClick={() => setViewMode(mode)}
-              data-active={viewMode === mode}
-              className="ws-btn ws-btn--sm"
-            >
-              {mode}
-            </button>
-          ))}
-        </div>
-
         {/* Undo / Redo */}
         <div
-          className="flex items-center gap-[var(--space-1)] ml-[var(--space-2)] rounded-[var(--r-md)] p-0"
+          className="flex items-center gap-[var(--space-1)] rounded-[var(--r-md)] p-0"
           style={{ background: 'var(--bg-3)' }}
         >
           <button
@@ -182,18 +157,8 @@ export function StudioTopBar() {
         </div>
       </div>
 
-      {/* Right: Workspaces + Restore + Export */}
+      {/* Right: Restore + Export */}
       <div className="ws-topbar__right">
-        {/* Workspace preset switcher trigger */}
-        <button
-          type="button"
-          className="ws-btn ws-btn--sm"
-          onClick={() => setSwitcherOpen(true)}
-          title="Workspace presets"
-        >
-          ▢ Workspaces ▼
-        </button>
-
         {/* Restore: only when baseline exists for current agent */}
         {hasBaseline && (
           <button
@@ -218,9 +183,6 @@ export function StudioTopBar() {
           {exportState.loading ? 'Exporting…' : 'Export'}
         </button>
       </div>
-
-      {/* Workspace preset switcher overlay */}
-      <WorkspaceSwitcher open={switcherOpen} onClose={() => setSwitcherOpen(false)} />
 
       {/* Export dialog */}
       <ExportDialog
