@@ -1,4 +1,11 @@
 @import "tailwindcss";
+
+/* Limit Tailwind v4 auto-scan to source tree only — prevents HMR loop
+   caused by scanner picking up Vite's own cache/output directories. */
+@source "../../src/**/*.{ts,tsx}";
+@source "!../../node_modules";
+@source "!../../out";
+
 @import "@radix-ui/colors/slate.css";
 @import "@radix-ui/colors/slate-dark.css";
 @import "@radix-ui/colors/slate-alpha.css";

@@ -233,7 +233,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
           // Unknown status from main process — treat as transient failure.
           useNotificationStore
             .getState()
-            .showToast(`Theme apply returned unexpected status: ${outcome.status}`, 'destructive');
+            .showToast(t.themeApplyUnexpectedStatus(outcome.status), 'destructive');
           return false;
       }
       // Exhaustiveness fallback — handleApplyResult returns all kinds above,
@@ -347,10 +347,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
 async function withBusy<T>(key: BusyKey, fn: () => Promise<T>): Promise<T | undefined> {
   const t = currentT();
   if (busyKeys.has(key)) {
-    const msg = (t as Record<string, unknown>).busyOperationInProgress as string | undefined;
-    useNotificationStore
-      .getState()
-      .showToast(msg ?? 'This operation is already running — please wait.');
+    useNotificationStore.getState().showToast(t.busyOperationInProgress);
     return undefined;
   }
   // If the concurrency limit is reached, WAIT for a slot instead of silently
@@ -361,10 +358,7 @@ async function withBusy<T>(key: BusyKey, fn: () => Promise<T>): Promise<T | unde
   let elapsed = 0;
   while (busyKeys.size >= MAX_CONCURRENCY) {
     if (elapsed >= MAX_BUSY_WAIT_MS) {
-      const msg = (t as Record<string, unknown>).busyTimeout as string | undefined;
-      useNotificationStore
-        .getState()
-        .fail(msg ?? 'Timed out waiting for a free operation slot — try again.');
+      useNotificationStore.getState().fail(t.busyTimeout);
       return undefined;
     }
     await new Promise((resolve) => setTimeout(resolve, 50));

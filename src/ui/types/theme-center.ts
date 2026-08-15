@@ -1,30 +1,27 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
- * Theme Center card model — richer than ThemeCardModel.
+ * Theme Center card model — derive-only type.
+ *
+ * Built from a {@link ThemeCatalogItem} via `toCard()` in `useThemeCenter.ts`.
+ * Holds the same display fields as ThemeCatalogItem plus one computed field
+ * (`hasWallpaper`). Do NOT add independent data here — extend Omit<> and update
+ * the `toCard` mapping instead.
  *
  * ThemeCardModel is for simple contexts (dashboard recent themes).
  * ThemeCenterCardModel adds category, version, installed status, source, and
  * supported agent IDs for the full theme management grid.
  */
 
-import type { AgentId, ThemeSource } from '@shared/types';
+import type { AgentId, ThemeCatalogItem, ThemeSource } from '@shared/types';
 
-export interface ThemeCenterCardModel {
-  id: string;
-  name: string;
-  preview: string | null;
-  icon: string | null;
-  author: string;
-  version: string;
-  tags: string[];
-  category: string;
+export interface ThemeCenterCardModel
+  extends Omit<
+    ThemeCatalogItem,
+    'description' | 'legacyTargets' | 'schemes' | 'wallpaper' | 'mode'
+  > {
   /** Declared color mode from the theme manifest ('dark' | 'light' | 'auto'). */
   mode: 'dark' | 'light' | 'auto' | null;
-  /** Agent IDs this theme supports (e.g. ['traework', 'qoderwork']). */
-  supportedAgents: AgentId[];
-  installed: boolean;
-  source: ThemeSource;
   /** Whether this theme bundles a dynamic video wallpaper. */
   hasWallpaper: boolean;
 }

@@ -9,7 +9,7 @@ export interface ThemeManifest {
   version: string;
   author: string | null;
   description: string | null;
-  targets: AgentId[];
+  supportedAgents: AgentId[];
   preview: string | null;
   icon?: string | null;
 }
@@ -123,8 +123,7 @@ export type ThemeCategory =
   | 'professional'
   | 'creative'
   | 'dark'
-  | 'light'
-  | string;
+  | 'light';
 
 export interface ThemeCatalogItem {
   id: string;
@@ -135,6 +134,11 @@ export interface ThemeCatalogItem {
   preview: string | null;
   icon?: string | null;
   supportedAgents: AgentId[];
+  /**
+   * @deprecated Use `supportedAgents` instead. Kept for backward compatibility
+   *   with legacy catalog entries that predate the unified AgentId-based
+   *   naming. Will be removed in a future schema version.
+   */
   legacyTargets: string[];
   category: string;
   tags: string[];

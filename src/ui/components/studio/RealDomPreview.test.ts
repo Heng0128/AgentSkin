@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { nodeToHtml } from '@/lib/dom-export';
+
 import type { DomTreeNode } from '@shared/types';
 import { describe, expect, it } from 'vitest';
-import { nodeToHtml } from './RealDomPreview';
 
 function node(tag: string, over: Partial<DomTreeNode> = {}): DomTreeNode {
   return { tag, cls: '', style: {}, rect: { w: 0, h: 0, x: 0, y: 0 }, children: [], ...over };

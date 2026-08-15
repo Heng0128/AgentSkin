@@ -31,6 +31,11 @@ export const SEMANTIC_TO_AGENTSKIN: Record<string, string> = {
   focusRing: '--agentskin-focus-ring',
 };
 
+/** Inverse mapping: `--agentskin-*` token → manifest semantic color name. */
+const AGENTSKIN_TO_SEMANTIC: Record<string, string> = Object.fromEntries(
+  Object.entries(SEMANTIC_TO_AGENTSKIN).map(([semantic, token]) => [token, semantic]),
+);
+
 /**
  * Convert a manifest `colors` object (semantic names) into a
  * `--agentskin-*` palette dictionary (Studio palette format). Only keys with
@@ -41,7 +46,30 @@ export function semanticColorsToPalette(colors?: Record<string, unknown>): Recor
   if (!colors) return palette;
   for (const [semantic, value] of Object.entries(colors)) {
     const token = SEMANTIC_TO_AGENTSKIN[semantic];
-    if (token && typeof value === 'string') palette[token] = value;
+    if (token && typeof value === 'string') {
+      palette[token] = value;
+    } else if (process.env.NODE_ENV !== 'production') {
+      console.warn('[theme-mapping] unmapped semantic color:', semantic);
+    }
   }
   return palette;
+}
+
+/**
+ * Convert a `--agentskin-*` palette dictionary (Studio palette format) back
+ * into a manifest `colors` object (semantic names). Only tokens with a known
+ * reverse mapping and a string value are carried through.
+ */
+export function paletteToSemanticColors(palette?: Record<string, unknown>): Record<string, string> {
+  const colors: Record<string, string> = {};
+  if (!palette) return colors;
+  for (const [token, value] of Object.entries(palette)) {
+    const semantic = AGENTSKIN_TO_SEMANTIC[token];
+    if (semantic && typeof value === 'string') {
+      colors[semantic] = value;
+    } else if (process.env.NODE_ENV !== 'production') {
+      console.warn('[theme-mapping] unmapped palette token:', token);
+    }
+  }
+  return colors;
 }

@@ -21,7 +21,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppMark } from '@/components/app-mark';
-import { buildSrcDoc, overridesToCss } from '@/components/studio/RealDomPreview';
+import { buildSrcDoc, overridesToCss } from '@/lib/dom-export';
 import { useStudioStore } from '@/stores/studioStore';
 import type { PreviewWindowState } from '@/types/workspace';
 
