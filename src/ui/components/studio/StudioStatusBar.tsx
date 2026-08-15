@@ -4,11 +4,11 @@
  * # StudioStatusBar
  *
  * Workspace status bar — 24px fixed bottom, displays:
- *   · current viewMode
  *   · fingerprint (bg/fg/accent color swatches)
- *   · active window count
  *   · zoom percentage
  *   · inspect mode indicator
+ *
+ * Multi-window view mode display is removed.
  */
 
 import { useStudioStore } from '@/stores/studioStore';
@@ -51,9 +51,7 @@ export function StudioStatusBar() {
   const inspectMode = useStudioStore((s) => s.inspectMode);
   const activeWindowId = useWorkspaceStore((s) => s.activeWindowId);
   const windows = useWorkspaceStore((s) => s.windows);
-  const viewMode = useWorkspaceStore((s) => s.viewMode);
 
-  const winCount = windows.length;
   const scale = windows.find((w) => w.id === activeWindowId)?.scale ?? 1;
   const zoomPct = Math.round(scale * 100);
 
@@ -61,9 +59,6 @@ export function StudioStatusBar() {
 
   return (
     <footer className="ws-statusbar">
-      <span className="val">{viewMode}</span>
-      <span className="sep">·</span>
-
       {/* Fingerprint: bg / fg / accent color dots */}
       <span className="inline-flex items-center gap-[4px]">
         <span
@@ -86,8 +81,6 @@ export function StudioStatusBar() {
         </span>
       </span>
 
-      <span className="sep">·</span>
-      <span>{winCount} win</span>
       <span className="sep">·</span>
       <span>zoom {zoomPct}%</span>
 
