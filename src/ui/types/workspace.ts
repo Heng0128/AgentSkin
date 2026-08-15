@@ -1,35 +1,26 @@
 /**
  * Workspace types — preview window, dock, view mode, workspace layout state.
  *
- * These are consumed by workspaceStore.ts and the new Stage / Dock /
+ * These are consumed by workspaceStore.ts and the Stage / Dock /
  * Inspector / TopBar components.
+ *
+ * Note: Studio is now single-window only. ViewMode is retained as `'single'`
+ * for backward compatibility but other values are deprecated.
  */
 
 import type { AgentId } from '@shared/types';
 
 // ---------------------------------------------------------------------------
-// Viewport
+// Viewmode (single only)
 // ---------------------------------------------------------------------------
 
-export type ViewMode = 'single' | 'dual' | 'triple' | 'quad' | 'focus';
+export type ViewMode = 'single';
 
-export const VIEW_MODES: ViewMode[] = ['single', 'dual', 'triple', 'quad', 'focus'];
+export const VIEW_MODES: ViewMode[] = ['single'];
 
+/** Single-window label. Multi-window modes are deprecated. */
 export const VIEW_MODE_LABELS: Record<ViewMode, string> = {
   single: 'Single',
-  dual: 'Compare',
-  triple: 'Triple',
-  quad: 'Quad',
-  focus: 'Focus',
-};
-
-/** Number of preview windows required by each view mode. */
-export const VIEW_MODE_WINDOW_COUNT: Record<ViewMode, number> = {
-  single: 1,
-  dual: 2,
-  triple: 3,
-  quad: 4,
-  focus: 3,
 };
 
 // ---------------------------------------------------------------------------
@@ -123,70 +114,6 @@ export interface DrawerState {
 export const DRAWER_WIDTH_MIN = 48;
 export const DRAWER_WIDTH_MAX = 360;
 export const DRAWER_WIDTH_DEFAULT = 200;
-
-// ---------------------------------------------------------------------------
-// Workspace layout (preset)
-// ---------------------------------------------------------------------------
-
-export type WorkspacePresetId = 'default' | 'compare' | 'multi' | 'focus' | 'export';
-
-export interface WorkspaceLayout {
-  presetId: WorkspacePresetId;
-  name: string;
-  viewMode: ViewMode;
-  dockOpen: boolean;
-  dockTab: DockTabId;
-  drawerCollapsed: boolean;
-  inspectorCollapsed: boolean;
-}
-
-export const WORKSPACE_PRESETS: WorkspaceLayout[] = [
-  {
-    presetId: 'default',
-    name: 'Default',
-    viewMode: 'single',
-    dockOpen: true,
-    dockTab: 'fx',
-    drawerCollapsed: false,
-    inspectorCollapsed: false,
-  },
-  {
-    presetId: 'compare',
-    name: 'Compare',
-    viewMode: 'dual',
-    dockOpen: true,
-    dockTab: 'fx',
-    drawerCollapsed: false,
-    inspectorCollapsed: false,
-  },
-  {
-    presetId: 'multi',
-    name: 'Multi-Agent',
-    viewMode: 'triple',
-    dockOpen: true,
-    dockTab: 'fx',
-    drawerCollapsed: true,
-    inspectorCollapsed: false,
-  },
-  {
-    presetId: 'focus',
-    name: 'Focus',
-    viewMode: 'focus',
-    dockOpen: false,
-    dockTab: 'fx',
-    drawerCollapsed: true,
-    inspectorCollapsed: true,
-  },
-  {
-    presetId: 'export',
-    name: 'Export Ready',
-    viewMode: 'single',
-    dockOpen: true,
-    dockTab: 'export',
-    drawerCollapsed: false,
-    inspectorCollapsed: false,
-  },
-];
 
 // ---------------------------------------------------------------------------
 // messageBus: postMessage protocol between iframe windows
