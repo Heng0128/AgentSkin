@@ -3,9 +3,12 @@
 /**
  * # workspaceStore
  *
- * Workspace layout state — view mode, preview windows, dock, inspector,
- * drawer, and workspace presets. Replaces the ad-hoc collapsed/state
+ * Workspace layout state — single preview window, dock, inspector,
+ * drawer, and workspace preset. Replaces the ad-hoc collapsed/state
  * booleans previously scattered across studioStore.
+ *
+ * Note: Studio is now single-window only. `windows` always holds exactly
+ * one PreviewWindow. `addWindow` / `removeWindow` are removed.
  */
 
 import { api } from '@/api/agentSkinClient';
@@ -34,10 +37,10 @@ import { create } from 'zustand';
 // ---------------------------------------------------------------------------
 
 interface WorkspaceState {
-  // Current view mode (single / dual / triple / quad / focus)
+  // Always 'single' — Studio is single-window only
   viewMode: ViewMode;
 
-  // Preview windows (length depends on viewMode)
+  // Preview windows — always exactly [singleWindow]
   windows: PreviewWindowState[];
   activeWindowId: string | null;
 
@@ -67,9 +70,7 @@ interface WorkspaceState {
 
   setViewMode: (mode: ViewMode) => void;
 
-  // window management
-  addWindow: (win: PreviewWindowState) => void;
-  removeWindow: (id: string) => void;
+  // window management (single window — scale/inspect still mutable)
   setActiveWindow: (id: string) => void;
   updateWindow: (id: string, patch: Partial<PreviewWindowState>) => void;
 
@@ -152,34 +153,17 @@ function makeWindow(id: string, agentId: AgentId): PreviewWindowState {
   };
 }
 
-function windowsForMode(mode: ViewMode, agentId: AgentId): PreviewWindowState[] {
-  const count =
-    mode === 'single'
-      ? 1
-      : mode === 'dual'
-        ? 2
-        : mode === 'triple'
-          ? 3
-          : mode === 'quad'
-            ? 4
-            : /* focus */ 3;
-
-  return Array.from({ length: count }, (_, i) => makeWindow(`win-${Date.now()}-${i}`, agentId));
-}
-
 // ---------------------------------------------------------------------------
 // Initial state
 // ---------------------------------------------------------------------------
 
 const DEFAULT_AGENT: AgentId = 'codex';
 
-const initialWindows = windowsForMode('single', DEFAULT_AGENT);
+const initialWindow = makeWindow('w1', DEFAULT_AGENT);
 
 const initialState: Omit<
   WorkspaceState,
   | 'setViewMode'
-  | 'addWindow'
-  | 'removeWindow'
   | 'setActiveWindow'
   | 'updateWindow'
   | 'setDockOpen'
@@ -202,8 +186,8 @@ const initialState: Omit<
   | 'clearPushError'
 > = {
   viewMode: 'single',
-  windows: initialWindows,
-  activeWindowId: initialWindows[0]?.id ?? null,
+  windows: [initialWindow],
+  activeWindowId: initialWindow.id,
 
   dock: {
     open: true,
@@ -244,24 +228,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   ...initialState,
 
   setViewMode: (mode) => {
-    const { activeWindowId, windows } = get();
-    const agentId = windows.find((w) => w.id === activeWindowId)?.agentId ?? DEFAULT_AGENT;
-    const next = windowsForMode(mode, agentId);
-    set({
-      viewMode: mode,
-      windows: next,
-      activeWindowId: next[0]?.id ?? null,
-    });
+    // Single-window only — ignore any non-'single' value
+    if (mode !== 'single') return;
+    set({ viewMode: mode });
   },
-
-  addWindow: (win) => set((s) => ({ windows: [...s.windows, win] })),
-
-  removeWindow: (id) =>
-    set((s) => {
-      const next = s.windows.filter((w) => w.id !== id);
-      const nextActive = s.activeWindowId === id ? (next[0]?.id ?? null) : s.activeWindowId;
-      return { windows: next, activeWindowId: nextActive };
-    }),
 
   setActiveWindow: (id) => set({ activeWindowId: id }),
 
@@ -326,22 +296,16 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   setDrawerCollapsed: (collapsed) => set((s) => ({ drawer: { ...s.drawer, collapsed } })),
 
-  // workspace preset
+  // workspace preset — only applies dock/inspector/drawer config (no window count change)
   applyPreset: (presetId) => {
     const preset = WORKSPACE_PRESETS.find((p) => p.id === presetId);
     if (!preset) return;
 
-    const { windows } = get();
-    const agentId = windows[0]?.agentId ?? DEFAULT_AGENT;
-    const nextWindows = windowsForMode(preset.viewMode, agentId);
     const currentDock = get().dock;
     const currentInspector = get().inspector;
     const currentDrawer = get().drawer;
 
     set({
-      viewMode: preset.viewMode,
-      windows: nextWindows,
-      activeWindowId: nextWindows[0]?.id ?? null,
       activePresetId: presetId,
       dock: {
         ...currentDock,
