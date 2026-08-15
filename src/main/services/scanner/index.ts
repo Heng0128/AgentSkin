@@ -19,10 +19,13 @@
  *     look for subdirectories containing `resources/app(.asar)`. Same PE probe
  *     + hint matching as L2.
  *
- * Deduplication uses SHA-256 (first 16 hex chars) of the exe path as the
- * stable `id`. An in-memory cache with a 5-minute TTL avoids repeated full
- * scans when the renderer polls the launcher repeatedly; callers can bypass
- * it with `useCache: false`.
+ * Each `ScannedApp` gets a stable `id` (SHA-256 of the exe path) but the scan
+ * folds multi-version installs into ONE entry per product identity as they
+ * are discovered (`StreamMerge`) — the renderer receives a clean `add`/`update`
+ * event stream and the settled result is exactly what was streamed. An
+ * in-memory cache with a 5-minute TTL avoids repeated full scans when the
+ * renderer polls the launcher repeatedly; callers can bypass it with
+ * `useCache: false`.
  *
  * Timing: the whole operation is bounded by `SCAN_TIMEOUT_MS` (20s). On
  * timeout we return whatever partial results have been gathered so far.
@@ -32,6 +35,7 @@
  * returns plain data and stays testable.
  */
 
+import { normalizeProductName } from '../../../shared/app-identity';
 import type { ElectronScanResult, ScanMeta, ScannedApp } from '../../../shared/types/agent';
 import { mainWarn } from '../../logger';
 import {
@@ -44,12 +48,16 @@ import { scanKnownAgents } from './collectors/knownAgent';
 import { scanRegistry, scanRegistryV2 } from './collectors/registry';
 import { scannerPipeline } from './flags';
 import { freshCache, getInflight, setCachedScan, setInflight } from './infra/cache';
-import { mergeByIdentity, normalizeProductName } from './pipeline/merge';
+import { loadPersistedScan, savePersistedScan } from './infra/persist-cache';
+import { validateExistence } from './infra/validate';
+import { StreamMerge } from './pipeline/stream-merge';
 import type { ScanOptions } from './types';
 
 export { resolveScanRoots } from './collectors/filesystem';
 export { scannerPipeline } from './flags';
 export { getCachedScan, invalidateScanCache } from './infra/cache';
+export { loadPersistedScan, savePersistedScan } from './infra/persist-cache';
+export { validateExistence } from './infra/validate';
 export { matchAgainstHints } from './pipeline/match';
 export type { ScanOptions };
 
@@ -63,11 +71,40 @@ const SCAN_TIMEOUT_MS = 20_000;
  * collected so far is returned (best-effort).
  */
 export async function scanElectronApps(options?: ScanOptions): Promise<ElectronScanResult> {
-  const { useCache = true, extraDirs = [], onApp } = options ?? {};
+  const {
+    useCache = true,
+    extraDirs = [],
+    onApp,
+    userDataPath,
+    validateExistence: shouldValidate = true,
+  } = options ?? {};
 
   if (useCache) {
     const cached = freshCache();
     if (cached) return cached.result;
+  }
+
+  // Persisted cross-session cache: warm the launcher on a cold Electron start
+  // (process restart) by replaying yesterday's successful scan. Cheaper than a
+  // full sweep and covers the "re-open the launcher an hour later" flow.
+  // Stale entries (uninstalled software) are pruned by `validateExistence`.
+  //
+  // Skipped when:
+  //   - useCache=false (manual force-rescan) — caller wants a real re-sweep.
+  //   - userDataPath unset (unit tests, caller didn't wire the Electron
+  //     userData root) — persistence disabled.
+  if (useCache && userDataPath) {
+    const persisted = await loadPersistedScan(userDataPath);
+    if (persisted) {
+      // A persisted cache is stale-by-definition — prune ghosts the user
+      // has uninstalled since the last scan.
+      const validated = shouldValidate
+        ? await validateExistence(persisted.result)
+        : persisted.result;
+      // Seed the in-memory cache so the next 5-min poll avoids disk I/O.
+      setCachedScan(validated);
+      return validated;
+    }
   }
 
   // Single-flight: a concurrent `useCache` call reuses the in-progress scan
@@ -84,14 +121,21 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
     const isTimedOut = () => Date.now() > deadline;
     const pipeline = scannerPipeline();
 
-    const seen = new Map<string, ScannedApp>();
+    // Identity-merged collect: every discovered app folds into the stream
+    // merger (one entry per product), and the renderer gets a clean
+    // `add`/`update` event stream instead of the raw multi-version flood —
+    // so the streaming phase and the final result are the same data.
+    const merger = new StreamMerge();
 
     const collect = (app: ScannedApp) => {
-      if (seen.has(app.id)) return; // SHA-256 collision ≈ impossible; dedup by existing entry.
       if (isSkippableApp(app.exePath)) return;
-      seen.set(app.id, app);
-      mainWarn('ElectronScanner', `collect ${app.source}: ${app.productName} (${app.exePath})`);
-      onApp?.(app);
+      const op = merger.upsert(app);
+      if (op === 'discard') return;
+      mainWarn(
+        'ElectronScanner',
+        `collect ${op} ${app.source}: ${app.productName} (${app.exePath})`,
+      );
+      onApp?.({ op, app });
     };
 
     // Track whether the scan hit the deadline. Partial (timed-out) results
@@ -109,7 +153,7 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
     await scanKnownAgents(collect, isTimedOut);
     mainWarn(
       'ElectronScanner',
-      `L1 done ${Date.now() - t1}ms seen=${seen.size} timedOut=${isTimedOut()}`,
+      `L1 done ${Date.now() - t1}ms seen=${merger.size} timedOut=${isTimedOut()}`,
     );
     if (isTimedOut()) {
       timedOut = true;
@@ -122,7 +166,7 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
       // info for these (the known-agent probe already has authoritative
       // identity + version).
       const knownProducts = new Set(
-        [...seen.values()].map((a) => normalizeProductName(a.productName || a.exePath)),
+        merger.entries().map((a) => normalizeProductName(a.productName || a.exePath)),
       );
       if (pipeline === 'v2') {
         await scanRegistryV2(collect, isTimedOut, knownProducts);
@@ -131,7 +175,7 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
       }
       mainWarn(
         'ElectronScanner',
-        `L2 done ${Date.now() - t2}ms seen=${seen.size} timedOut=${isTimedOut()}`,
+        `L2 done ${Date.now() - t2}ms seen=${merger.size} timedOut=${isTimedOut()}`,
       );
       if (isTimedOut()) {
         timedOut = true;
@@ -147,7 +191,7 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
         }
         mainWarn(
           'ElectronScanner',
-          `L3 done ${Date.now() - t3}ms seen=${seen.size} timedOut=${isTimedOut()}`,
+          `L3 done ${Date.now() - t3}ms seen=${merger.size} timedOut=${isTimedOut()}`,
         );
         if (isTimedOut()) {
           timedOut = true;
@@ -157,8 +201,9 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
       }
     }
 
-    const all = [...seen.values()];
-    const merged = pipeline === 'v2' ? mergeByIdentity(all) : all;
+    // The final result is exactly what was streamed (identity-merged), so the
+    // renderer's incremental merges and the settled result can never diverge.
+    const merged = merger.finalize();
     const adapted = merged.filter((a) => a.adapterMatch);
     const other = merged.filter((a) => !a.adapterMatch);
 
@@ -176,6 +221,12 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
     // returned to the caller but never persisted.
     if (!timedOut) {
       setCachedScan(result);
+      // Persist the complete result to disk so a future cold Electron start
+      // can skip the full sweep. Failures are swallowed inside
+      // `savePersistedScan` — a cache write issue must not fail the scan.
+      if (userDataPath) {
+        void savePersistedScan(userDataPath, result);
+      }
     }
     mainWarn(
       'ElectronScanner',

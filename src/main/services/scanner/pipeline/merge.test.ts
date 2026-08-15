@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { describe, expect, it } from 'vitest';
-import type { ScannedApp } from '../../../../shared/types/agent';
 import {
   compareVersions,
   identityKey,
-  mergeByIdentity,
   normalizeProductName,
   parseVersion,
-} from './merge';
+} from '../../../../shared/app-identity';
+import type { ScannedApp } from '../../../../shared/types/agent';
+import { mergeByIdentity } from './merge';
 
 let seq = 0;
 

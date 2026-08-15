@@ -43,6 +43,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAppsStore } from '@/stores/appsStore';
 
+import { identityKey } from '@shared/app-identity';
 import { Plus, RefreshCw } from 'lucide-react';
 
 export function AppsPage() {
@@ -161,7 +162,9 @@ export function AppsPage() {
                   const isLaunching = launchingApps.has(app.id);
                   return (
                     <AppCard
-                      key={app.id}
+                      // Stable identity key — a streamed `update` (better entry
+                      // for the same product) must reuse the card, not remount it.
+                      key={identityKey(app)}
                       app={app}
                       isRunning={isRunning}
                       isLaunching={isLaunching}
@@ -187,7 +190,8 @@ export function AppsPage() {
                   const isLaunching = launchingApps.has(app.id);
                   return (
                     <AppCard
-                      key={app.id}
+                      // Stable identity key — see adapted section comment.
+                      key={identityKey(app)}
                       app={app}
                       isRunning={isRunning}
                       isLaunching={isLaunching}

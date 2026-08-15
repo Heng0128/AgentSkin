@@ -170,6 +170,23 @@ export interface ScanMeta {
   pipeline: 'v1' | 'v2';
 }
 
+/**
+ * Streaming scan-progress event pushed from main to renderer while a scan
+ * runs. The main process already collapses multi-version installs into one
+ * identity before emitting, so the renderer merges these incrementally and
+ * never sees the pre-merge flood:
+ *
+ *   - `add`    — a product identity seen for the first time → append a tile.
+ *   - `update` — a better entry (higher source rank, then higher version) for
+ *                an identity that is already on screen → replace that tile.
+ *   - `icon`   — async icon extraction finished for an unadapted app → patch
+ *                its tile in place (letter placeholder until then).
+ */
+export type ScanProgressEvent =
+  | { op: 'add'; app: ScannedApp }
+  | { op: 'update'; app: ScannedApp }
+  | { op: 'icon'; appId: string; iconPath: string };
+
 export interface ElectronScanResult {
   /** 已适配应用 = installHints 匹配到的 */
   adapted: ScannedApp[];

@@ -17,6 +17,9 @@ vi.mock('electron', () => ({
       handlers.set(channel, handler);
     }),
   },
+  app: {
+    getPath: vi.fn((name: string) => `\\mock\\userData\\${name}`),
+  },
 }));
 
 vi.mock('../services/electron-scanner', () => ({
@@ -115,6 +118,7 @@ describe('electron-ipc', () => {
         useCache: true,
         extraDirs: [],
         onApp: expect.any(Function),
+        userDataPath: expect.any(String),
       });
       expect(result).toEqual(sampleScanResult);
     });
@@ -131,6 +135,7 @@ describe('electron-ipc', () => {
         useCache: true,
         extraDirs: ['C:\\Custom\\App'],
         onApp: expect.any(Function),
+        userDataPath: expect.any(String),
       });
     });
 
@@ -174,6 +179,71 @@ describe('electron-ipc', () => {
 
       expect(extractAppIcon).not.toHaveBeenCalled();
       expect(result).toEqual(sampleScanResult);
+    });
+
+    it('streams identity-merged add/update events to the requesting renderer', async () => {
+      const other = {
+        id: 'q1',
+        exePath: 'C:\\App\\quark.exe',
+        productName: 'Quark',
+        companyName: '',
+        adapterMatch: null,
+        version: '7.0.5.931',
+      };
+      vi.mocked(scanElectronApps).mockImplementation((options) => {
+        options?.onApp?.({ op: 'add', app: other });
+        return Promise.resolve({ ...sampleScanResult, other: [other] });
+      });
+      const sender = { isDestroyed: () => false, send: vi.fn() };
+
+      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
+      await handler({ sender });
+
+      expect(sender.send).toHaveBeenCalledWith(IpcChannel.ELECTRON_SCAN_PROGRESS, {
+        op: 'add',
+        app: other,
+      });
+    });
+
+    it('streams an icon event per unadapted app as extraction finishes', async () => {
+      const other = {
+        id: 'xyz789',
+        exePath: 'C:\\App\\foo.exe',
+        productName: 'Foo',
+        companyName: '',
+        adapterMatch: null,
+      };
+      vi.mocked(scanElectronApps).mockResolvedValue({ adapted: [], other: [other] });
+      vi.mocked(extractAppIcon).mockResolvedValue('data:image/png;base64,abc');
+      const sender = { isDestroyed: () => false, send: vi.fn() };
+
+      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
+      const result = (await handler({ sender })) as ElectronScanResult;
+
+      expect(sender.send).toHaveBeenCalledWith(IpcChannel.ELECTRON_SCAN_PROGRESS, {
+        op: 'icon',
+        appId: 'xyz789',
+        iconPath: 'data:image/png;base64,abc',
+      });
+      expect(result.other[0].iconPath).toBe('data:image/png;base64,abc');
+    });
+
+    it('does not emit icon events to a destroyed renderer', async () => {
+      const other = {
+        id: 'xyz789',
+        exePath: 'C:\\App\\foo.exe',
+        productName: 'Foo',
+        companyName: '',
+        adapterMatch: null,
+      };
+      vi.mocked(scanElectronApps).mockResolvedValue({ adapted: [], other: [other] });
+      vi.mocked(extractAppIcon).mockResolvedValue('data:image/png;base64,abc');
+      const sender = { isDestroyed: () => true, send: vi.fn() };
+
+      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
+      await handler({ sender });
+
+      expect(sender.send).not.toHaveBeenCalled();
     });
 
     it('rejects with IpcTimeoutError when the scan hangs', async () => {

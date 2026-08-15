@@ -9,6 +9,7 @@ import type {
   LaunchResult,
   Platform,
   ScannedApp,
+  ScanProgressEvent,
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
 import type { EnvironmentPreset } from './environment';
@@ -592,8 +593,9 @@ export interface AgentSkinApi {
   onElectronStatus(
     cb: (status: Map<string, { pid: number; port: number | null }>) => void,
   ): () => void;
-  /** Subscribe to per-app discovery during a scan (streaming). Each newly
-   *  found app is pushed via `ELECTRON_SCAN_PROGRESS` as the scan walks the
-   *  filesystem. Returns an unsubscribe function. */
-  onElectronScanProgress(cb: (app: ScannedApp) => void): () => void;
+  /** Subscribe to streaming scan progress (identity-merged `add`/`update`
+   *  events plus async `icon` upgrades). Pushed via `ELECTRON_SCAN_PROGRESS`
+   *  while the scan walks the filesystem and icons extract. Returns an
+   *  unsubscribe function. */
+  onElectronScanProgress(cb: (event: ScanProgressEvent) => void): () => void;
 }

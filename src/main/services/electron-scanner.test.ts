@@ -1035,9 +1035,9 @@ describe('electron-scanner', () => {
   });
 
   // -----------------------------------------------------------------------
-  // Scenario 23c — default v1 leaves multi-version installs unmerged
+  // Scenario 23c — streaming identity merge is pipeline-independent
   // -----------------------------------------------------------------------
-  it('does not merge multi-version installs under the default v1 pipeline', async () => {
+  it('merges multi-version installs by identity under the default v1 pipeline too', async () => {
     delete process.env.AGENTSKIN_SCANNER;
     mockDetectInstallation.mockResolvedValue({
       installed: false,
@@ -1057,12 +1057,14 @@ describe('electron-scanner', () => {
 
     const result = await scanElectronApps({ useCache: false });
 
+    // The streaming identity merge (StreamMerge) applies to both pipelines so
+    // the renderer never sees a pre-merge multi-version flood, and the settled
+    // result is exactly what was streamed. v1 vs v2 only differ in collection
+    // strategy (registry batch / filesystem parallelism), not merge behavior.
     expect(result.meta?.pipeline).toBe('v1');
-    expect(result.other).toHaveLength(2);
-    for (const app of result.other) {
-      expect(app.versions).toBeUndefined();
-      expect(app.isDefaultEntry).toBeUndefined();
-    }
+    expect(result.other).toHaveLength(1);
+    expect(result.other[0].isDefaultEntry).toBe(true);
+    expect(result.other[0].versions).toEqual(['7.0.7.940', '7.0.5.931']);
   });
 
   // -----------------------------------------------------------------------

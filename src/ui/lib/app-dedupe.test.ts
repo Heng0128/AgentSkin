@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { ScannedApp } from '@shared/types';
+import type { ElectronScanResult, ScannedApp } from '@shared/types';
 import { describe, expect, it } from 'vitest';
-import { compareVersions, dedupeByProductName, parseVersion } from './app-dedupe';
+import { applyScanEvent, compareVersions, dedupeByProductName, parseVersion } from './app-dedupe';
 
 function app(overrides: Partial<ScannedApp>): ScannedApp {
   return {
@@ -136,5 +136,89 @@ describe('dedupeByProductName', () => {
     const result = dedupeByProductName(apps);
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('f2');
+  });
+});
+
+describe('applyScanEvent', () => {
+  const empty: ElectronScanResult = { adapted: [], other: [] };
+
+  it('add appends a new product to the right bucket', () => {
+    const other = app({ id: 'q1', productName: 'Quark', version: '7.0.5.931' });
+    const result = applyScanEvent(null, { op: 'add', app: other });
+    expect(result.other).toHaveLength(1);
+    expect(result.adapted).toHaveLength(0);
+  });
+
+  it('routes adapted apps into the adapted bucket', () => {
+    const adapted = app({ id: 'a1', productName: 'Trae', adapterMatch: 'traework' });
+    const result = applyScanEvent(empty, { op: 'add', app: adapted });
+    expect(result.adapted).toEqual([adapted]);
+  });
+
+  it('add is a no-op when the identity is already present (defensive)', () => {
+    const first = app({ id: 'q1', productName: 'Quark', version: '7.0.5.931' });
+    const dup = app({
+      id: 'q1b',
+      exePath: 'C:\\B\\q.exe',
+      productName: 'Quark',
+      version: '7.0.5.931',
+    });
+    const once = applyScanEvent(null, { op: 'add', app: first });
+    const twice = applyScanEvent(once, { op: 'add', app: dup });
+    expect(twice.other).toHaveLength(1);
+    expect(twice.other[0].id).toBe('q1');
+  });
+
+  it('update replaces the tile for the same identity', () => {
+    const older = app({
+      id: 'q1',
+      productName: 'Quark',
+      version: '7.0.5.931',
+      source: 'filesystem',
+    });
+    const newer = app({
+      id: 'q2',
+      exePath: 'C:\\B\\q.exe',
+      productName: 'Quark',
+      version: '7.0.7.940',
+      source: 'registry',
+    });
+    const withOld = applyScanEvent(null, { op: 'add', app: older });
+    const result = applyScanEvent(withOld, { op: 'update', app: newer });
+    expect(result.other).toHaveLength(1);
+    expect(result.other[0].id).toBe('q2');
+  });
+
+  it('update appends when the identity is absent (defensive)', () => {
+    const fresh = app({ id: 'q9', productName: 'Quark', version: '7.0.7.940' });
+    const result = applyScanEvent(empty, { op: 'update', app: fresh });
+    expect(result.other).toEqual([fresh]);
+  });
+
+  it('icon patches only the matching tile in other', () => {
+    const a = app({ id: 'q1', productName: 'Quark' });
+    const b = app({ id: 'c1', productName: 'Codex' });
+    const seeded = applyScanEvent(applyScanEvent(null, { op: 'add', app: a }), {
+      op: 'add',
+      app: b,
+    });
+    const result = applyScanEvent(seeded, {
+      op: 'icon',
+      appId: 'q1',
+      iconPath: 'data:image/png;base64,x',
+    });
+    expect(result.other.find((x) => x.id === 'q1')?.iconPath).toBe('data:image/png;base64,x');
+    expect(result.other.find((x) => x.id === 'c1')?.iconPath).toBeUndefined();
+  });
+
+  it('icon does not touch adapted apps', () => {
+    const adapted = app({ id: 'a1', productName: 'Trae', adapterMatch: 'traework' });
+    const seeded = applyScanEvent(empty, { op: 'add', app: adapted });
+    const result = applyScanEvent(seeded, {
+      op: 'icon',
+      appId: 'a1',
+      iconPath: 'data:image/png;base64,x',
+    });
+    expect(result.adapted[0].iconPath).toBeUndefined();
   });
 });

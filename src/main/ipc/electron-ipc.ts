@@ -17,10 +17,10 @@
  * pattern used by other standalone IPC modules (e.g. `bundle-ipc.ts`).
  */
 
-import { ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { AGENT_IDS } from '../../shared/types';
-import type { ElectronScanResult } from '../../shared/types/agent';
+import type { ElectronScanResult, ScanProgressEvent } from '../../shared/types/agent';
 import type { MainContext } from '../main-context';
 import { extractAppIcon } from '../services/app-icon';
 import { type LaunchRequest, launchApp } from '../services/electron-launcher';
@@ -36,16 +36,23 @@ const SCAN_TIMEOUT_MS = 30_000;
 const LAUNCH_TIMEOUT_MS = 30_000;
 
 /**
- * Attach real app icons (data URLs) to unadapted apps. Adapted apps already
- * render their bundled brand logo on the renderer side (`AppMark`), so we skip
- * the exe-icon extraction for them. Icons resolve in parallel and any failure
- * degrades to the renderer's letter placeholder.
+ * Attach real app icons (data URLs) to unadapted apps, streaming each one to
+ * the renderer as it resolves so tiles upgrade from a letter placeholder to a
+ * real icon without waiting for the whole batch. Adapted apps already render
+ * their bundled brand logo on the renderer side (`AppMark`), so we skip the
+ * exe-icon extraction for them. Any extraction failure degrades to the
+ * renderer's letter placeholder.
  */
-async function attachIcons(result: ElectronScanResult): Promise<ElectronScanResult> {
+async function attachIconsStreamed(
+  result: ElectronScanResult,
+  send: (event: ScanProgressEvent) => void,
+): Promise<ElectronScanResult> {
   const otherWithIcons = await Promise.all(
     result.other.map(async (app) => {
       const iconPath = await extractAppIcon(app.exePath);
-      return iconPath ? { ...app, iconPath } : app;
+      if (!iconPath) return app;
+      send({ op: 'icon', appId: app.id, iconPath });
+      return { ...app, iconPath };
     }),
   );
   return { ...result, other: otherWithIcons };
@@ -74,6 +81,13 @@ function collectExtraDirs(settings: Pick<MainContext, 'settings'>['settings']): 
 export function registerElectronIpc(deps: Pick<MainContext, 'settings'>): void {
   ipcMain.handle(IpcChannel.ELECTRON_SCAN, async (event, force?: boolean) => {
     const sender = event.sender;
+    // Route a scan progress event back to the requesting renderer, guarded
+    // against a window that died mid-scan (GPU crash / closed window).
+    const send = (scanEvent: ScanProgressEvent) => {
+      if (sender && !sender.isDestroyed()) {
+        sender.send(IpcChannel.ELECTRON_SCAN_PROGRESS, scanEvent);
+      }
+    };
     const result = await withMonitoredTimeout(
       IpcChannel.ELECTRON_SCAN,
       SCAN_TIMEOUT_MS,
@@ -84,18 +98,20 @@ export function registerElectronIpc(deps: Pick<MainContext, 'settings'>): void {
         // Fold in user-set manual install paths so they participate in the L3
         // filesystem sweep (per-agent `appPath` overrides from settings).
         extraDirs: collectExtraDirs(deps.settings),
-        // Stream each newly-discovered app to the renderer so the launcher can
-        // show tiles appearing in real time instead of one final pop.
-        onApp: (app) => {
-          if (sender && !sender.isDestroyed()) {
-            sender.send(IpcChannel.ELECTRON_SCAN_PROGRESS, app);
-          }
-        },
+        // Stream identity-merged progress (add/update) so the launcher shows
+        // tiles appearing one product at a time instead of a final pop.
+        onApp: send,
+        // Wire the Electron userData root so the scanner can read the
+        // persisted cross-session cache on a cold start and write a fresh one
+        // after each successful scan. Stale (uninstalled) apps are pruned by
+        // existence validation inside the scanner.
+        userDataPath: app.getPath('userData'),
       }),
     );
     // Icon extraction runs outside the scan timeout budget — it is a cosmetic
-    // enrichment and should never fail the whole scan.
-    return attachIcons(result);
+    // enrichment and should never fail the whole scan. Each finished icon is
+    // streamed immediately so tiles upgrade in place.
+    return attachIconsStreamed(result, send);
   });
 
   ipcMain.handle(IpcChannel.ELECTRON_LAUNCH, async (_event, request: LaunchRequest) => {

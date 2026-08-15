@@ -35,29 +35,35 @@
       .splash {
         display: flex; flex-direction: column; align-items: center;
         justify-content: center; width: 100%; height: 100%;
-        /* Match the main window's dark Swiss surface (#0a0a0c) with a soft
-           red-tinted glow so the splash no longer flashes bright-white before
-           the dark main UI appears. */
-        background: radial-gradient(ellipse at 50% 32%, #1b1b20 0%, #141418 48%, #0a0a0c 100%);
+        /* Warm cream radial — matches the light-theme `--background`
+           (hsl(40 12% 96%)) so the white-square brand mark sits naturally
+           instead of floating like a foreign tile on a black field.
+           A subtle red-tinted glow keeps the brand accent present without
+           making the splash feel saturated. The cross-fade into the dark
+           main window is handled in main.ts (150ms). */
+        background:
+          radial-gradient(ellipse at 50% 28%, rgba(227, 6, 19, 0.05) 0%, rgba(227, 6, 19, 0) 55%),
+          radial-gradient(ellipse at 50% 30%, #FCF9F4 0%, #F4EFE6 48%, #ECE5D9 100%);
       }
       .logo {
         width: 88px; height: 88px; margin-bottom: 28px;
-        filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+        filter: drop-shadow(0 8px 20px rgba(20, 16, 10, 0.10))
+                drop-shadow(0 2px 4px rgba(20, 16, 10, 0.08));
       }
       .title {
-        font-size: 20px; font-weight: 600; color: #f5f5f7;
+        font-size: 20px; font-weight: 600; color: #1f2024;
         letter-spacing: 2px; margin-bottom: 8px;
       }
       .status {
-        font-size: 12px; color: #9ba0a8; min-height: 18px;
+        font-size: 12px; color: #6b6e78; min-height: 18px;
       }
       .progress-bar {
         width: 200px; height: 3px; margin-top: 16px;
-        background: rgba(255, 255, 255, 0.09); border-radius: 2px; overflow: hidden;
+        background: rgba(31, 32, 36, 0.08); border-radius: 2px; overflow: hidden;
       }
       .progress-fill {
         height: 100%; width: 0%;
-        background: linear-gradient(90deg, #ff453a, #ff6b61);
+        background: linear-gradient(90deg, #e30613, #ff6b61);
         border-radius: 2px;
       }
     </style>

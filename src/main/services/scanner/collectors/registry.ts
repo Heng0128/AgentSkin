@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { normalizeProductName } from '../../../../shared/app-identity';
 import { execFileAsync } from '../../../../shared/exec-async';
 import type { ScannedApp } from '../../../../shared/types/agent';
 import { mainWarnFromCatch } from '../../../logger';
 import { withPsConcurrency } from '../infra/concurrency';
 import { readExeInfo, readExeInfosBatch } from '../infra/ps';
 import { matchAgainstHints } from '../pipeline/match';
-import { normalizeProductName } from '../pipeline/merge';
 import { hashPath, nameFromExe } from '../util';
 import { findAnyExe } from './shared';
 

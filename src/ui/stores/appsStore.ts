@@ -25,10 +25,15 @@
  */
 
 import { api } from '@/api/agentSkinClient';
-import { dedupeByProductName } from '@/lib/app-dedupe';
+import { applyScanEvent, dedupeByProductName } from '@/lib/app-dedupe';
 import { sha256Hex16 } from '@/lib/hash';
 
-import type { ElectronScanResult, LaunchResult, ScannedApp } from '@shared/types';
+import type {
+  ElectronScanResult,
+  LaunchResult,
+  ScannedApp,
+  ScanProgressEvent,
+} from '@shared/types';
 import { create } from 'zustand';
 
 /** Shape of the launcher-specific API surface (extends AgentSkinApi). */
@@ -45,7 +50,7 @@ interface AppsApiExtension {
   onElectronStatus(
     listener: (status: Map<string, { pid: number; port: number | null }>) => void,
   ): () => void;
-  onElectronScanProgress(listener: (app: ScannedApp) => void): () => void;
+  onElectronScanProgress(listener: (event: ScanProgressEvent) => void): () => void;
 }
 
 /** Cast the shared `api` singleton to include the launcher-specific methods. */
@@ -119,27 +124,21 @@ export const useAppsStore = create<AppsState>((set, get) => {
       // (empty state flash) between the click and the first streamed app.
       set({ scanning: true, scanError: null });
 
-      // Stream each discovered app into the list as the main process scans, so
-      // tiles appear one-by-one instead of a single pop at the end. The final
-      // response (with icons + de-dupe) replaces this once it settles.
-      const unsubscribe = appsApi.onElectronScanProgress((app) => {
-        set((s) => {
-          const prev = s.scanResult ?? { adapted: [], other: [] };
-          const bucket = app.adapterMatch ? 'adapted' : 'other';
-          if (prev[bucket].some((a) => a.id === app.id)) return {};
-          return {
-            scanResult: {
-              ...prev,
-              [bucket]: [...prev[bucket], app],
-            },
-          };
-        });
+      // Stream each identity-merged event into the list as the main process
+      // scans: `add` appends a new product, `update` replaces a tile when a
+      // better entry arrives, `icon` patches a tile in place once extraction
+      // finishes. Tiles appear one-by-one (no empty-state flash — the old
+      // list stays until the first event) and the final response only
+      // enriches the same data, never replacing it wholesale.
+      const unsubscribe = appsApi.onElectronScanProgress((event) => {
+        set((s) => ({ scanResult: applyScanEvent(s.scanResult, event) }));
       });
 
       try {
         const result = await appsApi.scanElectronApps(force);
-        // Collapse multi-version installs (Quark 7.0.5.931 / 7.0.7.940 …) into
-        // one tile per product, keeping the highest version.
+        // The main process already identity-merged the result (same data that
+        // was streamed), so this is a defensive idempotent pass — it collapses
+        // any duplicates if the stream and the final response ever disagree.
         set({
           scanResult: {
             adapted: dedupeByProductName(result.adapted),

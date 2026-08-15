@@ -12,6 +12,7 @@ import type {
   FileImportResult,
   InspectedNode,
   ScannedApp,
+  ScanProgressEvent,
   StudioProject,
   StudioSnapshotOptions,
   ThemeStudioExportRequest,
@@ -306,7 +307,8 @@ const api: AgentSkinApi = {
     return () => ipcRenderer.off(IpcChannel.ELECTRON_STATUS, handler);
   },
   onElectronScanProgress: (cb) => {
-    const handler = (_event: Electron.IpcRendererEvent, app: ScannedApp) => cb(app);
+    const handler = (_event: Electron.IpcRendererEvent, scanEvent: ScanProgressEvent) =>
+      cb(scanEvent);
     ipcRenderer.on(IpcChannel.ELECTRON_SCAN_PROGRESS, handler);
     return () => ipcRenderer.off(IpcChannel.ELECTRON_SCAN_PROGRESS, handler);
   },
