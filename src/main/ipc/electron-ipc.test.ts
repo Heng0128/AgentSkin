@@ -28,10 +28,6 @@ vi.mock('../services/electron-scanner', () => ({
   invalidateScanCache: vi.fn(),
 }));
 
-vi.mock('../services/app-icon', () => ({
-  extractAppIcon: vi.fn(),
-}));
-
 vi.mock('../services/electron-launcher', () => ({
   launchApp: vi.fn(),
   getRunningApps: vi.fn(),
@@ -46,7 +42,6 @@ vi.mock('../services/performance', () => ({
 
 const { registerElectronIpc } = await import('./electron-ipc');
 const { scanElectronApps } = await import('../services/electron-scanner');
-const { extractAppIcon } = await import('../services/app-icon');
 const { launchApp } = await import('../services/electron-launcher');
 
 // ---------------------------------------------------------------------------
@@ -146,41 +141,6 @@ describe('electron-ipc', () => {
       await expect(handler({})).rejects.toThrow('registry access denied');
     });
 
-    it('attaches real icons to unadapted apps', async () => {
-      const scanWithOther: ElectronScanResult = {
-        adapted: [],
-        other: [
-          {
-            id: 'xyz789',
-            exePath: 'C:\\App\\foo.exe',
-            productName: 'Foo',
-            companyName: '',
-            adapterMatch: null,
-          },
-        ],
-      };
-      vi.mocked(scanElectronApps).mockResolvedValue(scanWithOther);
-      vi.mocked(extractAppIcon).mockResolvedValue('data:image/png;base64,abc');
-
-      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
-      const result = (await handler({})) as ElectronScanResult;
-
-      expect(extractAppIcon).toHaveBeenCalledOnce();
-      expect(extractAppIcon).toHaveBeenCalledWith('C:\\App\\foo.exe');
-      expect(result.other[0].iconPath).toBe('data:image/png;base64,abc');
-    });
-
-    it('skips icon extraction for adapted apps (bundled brand logo)', async () => {
-      vi.mocked(scanElectronApps).mockResolvedValue(sampleScanResult);
-      vi.mocked(extractAppIcon).mockResolvedValue('data:image/png;base64,abc');
-
-      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
-      const result = await handler({});
-
-      expect(extractAppIcon).not.toHaveBeenCalled();
-      expect(result).toEqual(sampleScanResult);
-    });
-
     it('streams identity-merged add/update events to the requesting renderer', async () => {
       const other = {
         id: 'q1',
@@ -203,47 +163,6 @@ describe('electron-ipc', () => {
         op: 'add',
         app: other,
       });
-    });
-
-    it('streams an icon event per unadapted app as extraction finishes', async () => {
-      const other = {
-        id: 'xyz789',
-        exePath: 'C:\\App\\foo.exe',
-        productName: 'Foo',
-        companyName: '',
-        adapterMatch: null,
-      };
-      vi.mocked(scanElectronApps).mockResolvedValue({ adapted: [], other: [other] });
-      vi.mocked(extractAppIcon).mockResolvedValue('data:image/png;base64,abc');
-      const sender = { isDestroyed: () => false, send: vi.fn() };
-
-      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
-      const result = (await handler({ sender })) as ElectronScanResult;
-
-      expect(sender.send).toHaveBeenCalledWith(IpcChannel.ELECTRON_SCAN_PROGRESS, {
-        op: 'icon',
-        appId: 'xyz789',
-        iconPath: 'data:image/png;base64,abc',
-      });
-      expect(result.other[0].iconPath).toBe('data:image/png;base64,abc');
-    });
-
-    it('does not emit icon events to a destroyed renderer', async () => {
-      const other = {
-        id: 'xyz789',
-        exePath: 'C:\\App\\foo.exe',
-        productName: 'Foo',
-        companyName: '',
-        adapterMatch: null,
-      };
-      vi.mocked(scanElectronApps).mockResolvedValue({ adapted: [], other: [other] });
-      vi.mocked(extractAppIcon).mockResolvedValue('data:image/png;base64,abc');
-      const sender = { isDestroyed: () => true, send: vi.fn() };
-
-      const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
-      await handler({ sender });
-
-      expect(sender.send).not.toHaveBeenCalled();
     });
 
     it('rejects with IpcTimeoutError when the scan hangs', async () => {

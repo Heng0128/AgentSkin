@@ -22,7 +22,6 @@ import { IpcChannel } from '../../shared/ipc-channels';
 import { AGENT_IDS } from '../../shared/types';
 import type { ElectronScanResult, ScanProgressEvent } from '../../shared/types/agent';
 import type { MainContext } from '../main-context';
-import { extractAppIcon } from '../services/app-icon';
 import { type LaunchRequest, launchApp } from '../services/electron-launcher';
 import { scanElectronApps } from '../services/electron-scanner';
 import { withMonitoredTimeout } from './with-monitored-timeout';
@@ -34,29 +33,6 @@ const SCAN_TIMEOUT_MS = 30_000;
 /** Bounded timeout for the launch operation — longer than spawn because the
  *  handler may wait for CDP port discovery after spawning the child. */
 const LAUNCH_TIMEOUT_MS = 30_000;
-
-/**
- * Attach real app icons (data URLs) to unadapted apps, streaming each one to
- * the renderer as it resolves so tiles upgrade from a letter placeholder to a
- * real icon without waiting for the whole batch. Adapted apps already render
- * their bundled brand logo on the renderer side (`AppMark`), so we skip the
- * exe-icon extraction for them. Any extraction failure degrades to the
- * renderer's letter placeholder.
- */
-async function attachIconsStreamed(
-  result: ElectronScanResult,
-  send: (event: ScanProgressEvent) => void,
-): Promise<ElectronScanResult> {
-  const otherWithIcons = await Promise.all(
-    result.other.map(async (app) => {
-      const iconPath = await extractAppIcon(app.exePath);
-      if (!iconPath) return app;
-      send({ op: 'icon', appId: app.id, iconPath });
-      return { ...app, iconPath };
-    }),
-  );
-  return { ...result, other: otherWithIcons };
-}
 
 /**
  * Collect the user-configured manual install paths from per-agent `appPath`
@@ -108,10 +84,10 @@ export function registerElectronIpc(deps: Pick<MainContext, 'settings'>): void {
         userDataPath: app.getPath('userData'),
       }),
     );
-    // Icon extraction runs outside the scan timeout budget — it is a cosmetic
-    // enrichment and should never fail the whole scan. Each finished icon is
-    // streamed immediately so tiles upgrade in place.
-    return attachIconsStreamed(result, send);
+    // Icons are now enriched inside the scanner (`enrichIcons`) — the result
+    // arriving here already carries icons, and both the in-memory + persisted
+    // caches were written with the enriched result. No IPC-layer work needed.
+    return result;
   });
 
   ipcMain.handle(IpcChannel.ELECTRON_LAUNCH, async (_event, request: LaunchRequest) => {

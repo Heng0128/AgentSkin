@@ -36,8 +36,14 @@
  */
 
 import { normalizeProductName } from '../../../shared/app-identity';
-import type { ElectronScanResult, ScanMeta, ScannedApp } from '../../../shared/types/agent';
+import type {
+  ElectronScanResult,
+  ScanMeta,
+  ScannedApp,
+  ScanProgressEvent,
+} from '../../../shared/types/agent';
 import { mainWarn } from '../../logger';
+import { extractAppIcon } from '../app-icon';
 import {
   isSkippableApp,
   resolveScanRoots,
@@ -63,6 +69,44 @@ export type { ScanOptions };
 
 /** Hard ceiling on how long a full scan may take before we return partial results. */
 const SCAN_TIMEOUT_MS = 20_000;
+
+/** Interval (ms) between streaming individual cached apps to the renderer on a cache hit. */
+const SCAN_STREAM_INTERVAL_MS = 10;
+
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/** Guards against concurrent background re-scans after a cache hit. */
+let backgroundInflight: Promise<void> | null = null;
+
+/**
+ * Enrich unadapted apps with real icons (data URLs), streaming each one to the
+ * renderer as it resolves so tiles upgrade from a letter placeholder to a real
+ * icon without waiting for the whole batch. Adapted apps already render their
+ * bundled brand logo (`AppMark`), so only `other` is processed.
+ *
+ * Apps that already carry an `iconPath` (e.g. replayed from a persisted cache
+ * that previously enriched them) are skipped — no redundant extraction, no
+ * accidental overwrite.
+ *
+ * Icon extraction runs **outside** the `SCAN_TIMEOUT_MS` budget — it is a
+ * cosmetic enrichment and must never fail the scan. Extraction errors degrade
+ * to the renderer's letter placeholder.
+ */
+async function enrichIcons(
+  result: ElectronScanResult,
+  onApp?: (event: ScanProgressEvent) => void,
+): Promise<ElectronScanResult> {
+  const otherWithIcons = await Promise.all(
+    result.other.map(async (app) => {
+      if (app.iconPath) return app;
+      const iconPath = await extractAppIcon(app.exePath);
+      if (!iconPath) return app;
+      onApp?.({ op: 'icon', appId: app.id, iconPath });
+      return { ...app, iconPath };
+    }),
+  );
+  return { ...result, other: otherWithIcons };
+}
 
 /**
  * Run the three-layer Electron app scan and return the adapted/other split.
@@ -103,6 +147,42 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
         : persisted.result;
       // Seed the in-memory cache so the next 5-min poll avoids disk I/O.
       setCachedScan(validated);
+
+      // Stream the cached apps to the renderer so the list appears
+      // incrementally (same UX as a live scan) rather than all at once.
+      if (onApp) {
+        for (const app of [...validated.adapted, ...validated.other]) {
+          onApp({ op: 'add', app });
+          await delay(SCAN_STREAM_INTERVAL_MS);
+        }
+      }
+
+      // Fire-and-forget background re-scan: a persisted cache is stale-by-definition,
+      // so kick off a full sweep to pick up newly installed software. The in-memory
+      // cache is already seeded with the persisted result, so the renderer shows the
+      // old list instantly and new apps appear as they're found.
+      if (!backgroundInflight) {
+        backgroundInflight = (async () => {
+          try {
+            const fresh = await scanElectronApps({
+              useCache: false,
+              extraDirs,
+              onApp,
+              userDataPath,
+              validateExistence: shouldValidate,
+            });
+            setCachedScan(fresh);
+          } catch (error) {
+            mainWarn(
+              'ElectronScanner',
+              `background re-scan failed: ${error instanceof Error ? error.message : String(error)}`,
+            );
+          } finally {
+            backgroundInflight = null;
+          }
+        })();
+      }
+
       return validated;
     }
   }
@@ -217,22 +297,29 @@ export async function scanElectronApps(options?: ScanOptions): Promise<ElectronS
     };
 
     const result: ElectronScanResult = { adapted, other, meta };
+
+    // Icon enrichment runs outside the scan timeout budget — a cosmetic step
+    // that must never fail the scan. Done BEFORE caching so both the in-memory
+    // and persisted caches carry icons (avoids the "background re-scan clears
+    // icons" bug where a non-enriched result would overwrite the enriched one).
+    const enriched = await enrichIcons(result, onApp);
+
     // Only complete (non-timed-out) results are cached; partial results are
     // returned to the caller but never persisted.
     if (!timedOut) {
-      setCachedScan(result);
+      setCachedScan(enriched);
       // Persist the complete result to disk so a future cold Electron start
       // can skip the full sweep. Failures are swallowed inside
       // `savePersistedScan` — a cache write issue must not fail the scan.
       if (userDataPath) {
-        void savePersistedScan(userDataPath, result);
+        void savePersistedScan(userDataPath, enriched);
       }
     }
     mainWarn(
       'ElectronScanner',
       `scan complete pipeline=${pipeline} adapted=${adapted.length} other=${other.length} degraded=${degradedSources.join(',') || 'none'} ${meta.durationMs}ms`,
     );
-    return result;
+    return enriched;
   })();
 
   if (useCache) {

@@ -28,6 +28,7 @@ import { api } from '@/api/agentSkinClient';
 import { applyScanEvent, dedupeByProductName } from '@/lib/app-dedupe';
 import { sha256Hex16 } from '@/lib/hash';
 
+import { identityKey } from '@shared/app-identity';
 import type {
   ElectronScanResult,
   LaunchResult,
@@ -67,6 +68,55 @@ const launchingGuard = new Set<string>();
 
 /** Module-level Set tracking custom exe paths added via manual-add. */
 const customExePaths = new Set<string>();
+
+/** Shallow-compare the fields that affect tile rendering — used to skip
+ *  no-op updates when the final result replays what was already streamed. */
+function shallowEqualApp(a: ScannedApp, b: ScannedApp): boolean {
+  return (
+    a.id === b.id &&
+    a.productName === b.productName &&
+    a.companyName === b.companyName &&
+    a.exePath === b.exePath &&
+    a.iconPath === b.iconPath &&
+    a.adapterMatch === b.adapterMatch &&
+    a.source === b.source
+  );
+}
+
+/**
+ * Merge the final scan result into the existing list with minimal mutations:
+ *   - new identity → add
+ *   - changed identity → update
+ *   - missing identity → drop (uninstalled / deduped away)
+ * Reuses `applyScanEvent` for add/update so the renderer's tile transitions
+ * stay consistent with the streaming phase.
+ */
+function mergeFinalResult(
+  prev: ElectronScanResult | null,
+  result: ElectronScanResult,
+): ElectronScanResult {
+  let next = prev ?? { adapted: [], other: [] };
+  const seen = new Set<string>();
+
+  for (const app of [...result.adapted, ...result.other]) {
+    const key = identityKey(app);
+    seen.add(key);
+    const bucket: 'adapted' | 'other' = app.adapterMatch ? 'adapted' : 'other';
+    const existing = next[bucket].find((e) => identityKey(e) === key);
+    if (!existing) {
+      next = applyScanEvent(next, { op: 'add', app });
+    } else if (!shallowEqualApp(existing, app)) {
+      next = applyScanEvent(next, { op: 'update', app });
+    }
+  }
+
+  // Drop entries that no longer appear in the final result.
+  next = {
+    adapted: next.adapted.filter((a) => seen.has(identityKey(a))),
+    other: next.other.filter((a) => seen.has(identityKey(a))),
+  };
+  return next;
+}
 
 interface AppsState {
   /** Last scan result (null = never scanned). */
@@ -137,15 +187,18 @@ export const useAppsStore = create<AppsState>((set, get) => {
       try {
         const result = await appsApi.scanElectronApps(force);
         // The main process already identity-merged the result (same data that
-        // was streamed), so this is a defensive idempotent pass — it collapses
-        // any duplicates if the stream and the final response ever disagree.
-        set({
-          scanResult: {
+        // was streamed), so this is a defensive pass: diff against the current
+        // (streamed) list and only mutate tiles that actually changed. New
+        // identities are added, changed ones are updated via `applyScanEvent`
+        // (same path as the streaming phase), and identities that vanished
+        // (uninstalled or deduped away) are dropped — no wholesale replace.
+        set((s) => ({
+          scanResult: mergeFinalResult(s.scanResult, {
             adapted: dedupeByProductName(result.adapted),
             other: dedupeByProductName(result.other),
-          },
+          }),
           scanning: false,
-        });
+        }));
       } catch (error) {
         set({
           scanning: false,
