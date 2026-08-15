@@ -59,14 +59,14 @@ export function ExportDialog({
         setTargetDir(result.filePaths[0]);
       }
     } catch {
-      showToast('Directory picker unavailable — enter path manually', 'destructive');
+      showToast(t.studioToastDirPickerUnavailable, 'destructive');
     }
   };
 
   const handleConfirm = () => {
     if (!activeProject) return;
     if (!snapshot) {
-      showToast('Please capture a snapshot first', 'destructive');
+      showToast(t.studioToastCaptureSnapshotFirst, 'destructive');
       onClose();
       return;
     }

@@ -12,6 +12,8 @@
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useStudioStore } from '@/stores/studioStore';
 
+import type { UiMessages } from '@shared/i18n';
+
 export type CaptureTarget = 'current' | 'baseline';
 
 export interface CaptureOptions {
@@ -19,6 +21,8 @@ export interface CaptureOptions {
   switchToPreview?: boolean;
   /** Show a landmark count in the success toast (default: true). */
   showLandmarkCount?: boolean;
+  /** i18n messages for localized toasts (required). */
+  t: UiMessages;
 }
 
 /**
@@ -29,29 +33,30 @@ export interface CaptureOptions {
 export async function captureAgentSnapshot(
   _agentId: string,
   target: CaptureTarget,
-  opts: CaptureOptions = {},
+  opts: CaptureOptions,
 ): Promise<void> {
   const { showToast } = useNotificationStore.getState();
   const studio = useStudioStore.getState();
+  const { t } = opts;
 
   opts = { switchToPreview: true, showLandmarkCount: true, ...opts };
 
   try {
     if (target === 'baseline') {
-      showToast('Capturing baseline…');
+      showToast(t.studioToastCapturingBaseline);
       await studio.baselineSnapshot();
     } else {
-      showToast('Capturing…');
+      showToast(t.studioToastCapturing);
       await studio.captureSnapshot();
     }
 
     const snap = useStudioStore.getState().snapshot;
     if (opts.showLandmarkCount && snap?.landmarks?.length) {
-      showToast(`Captured · ${snap.landmarks.length} landmarks`);
+      showToast(t.studioToastCapturedCount(snap.landmarks.length));
     }
   } catch (err) {
     showToast(
-      `Capture failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      t.studioToastCaptureFailed(err instanceof Error ? err.message : 'Unknown error'),
       'destructive',
     );
     throw err;

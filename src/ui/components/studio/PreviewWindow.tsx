@@ -45,6 +45,7 @@ interface PreviewWindowProps {
 }
 
 const SCALE_PRESETS = [0.25, 0.38, 0.45, 0.55, 0.75, 1.0];
+const PREVIEW_DEFAULT_SIZE = '800×600';
 
 export function PreviewWindow({
   win,
@@ -166,7 +167,7 @@ export function PreviewWindow({
 
       {/* Footer — 22px mono */}
       <div className="pw__footer">
-        <span className="font-mono">800×600</span>
+        <span className="font-mono">{PREVIEW_DEFAULT_SIZE}</span>
         <span className="pw__footer-sep">·</span>
         <span className="font-mono">{t.studioPreviewScale(win.scale)}</span>
         <span className="pw__footer-sep">·</span>

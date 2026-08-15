@@ -36,12 +36,12 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
 
   const handleSnapshot = () => {
     if (!activeAgentId) return;
-    void captureAgentSnapshot(activeAgentId, 'current');
+    void captureAgentSnapshot(activeAgentId, 'current', { t });
   };
 
   const handleBaseline = () => {
     if (!activeAgentId) return;
-    void captureAgentSnapshot(activeAgentId, 'baseline');
+    void captureAgentSnapshot(activeAgentId, 'baseline', { t });
   };
 
   const handleAgentChange = (agentId: AgentId) => {

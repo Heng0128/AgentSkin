@@ -59,7 +59,7 @@ export function InspectorLandmarks({ t }: { t: UiMessages }) {
         type="text"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder={`Search (${allLandmarks.length})…`}
+        placeholder={t.studioSearchPlaceholder(allLandmarks.length)}
         className="h-7 w-full border border-[var(--border-subtle)] bg-[var(--bg-3)] px-2 font-mono text-[10px] text-[var(--fg-0)] outline-none"
         style={{ borderRadius: 'var(--r-xs)' }}
       />

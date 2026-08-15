@@ -52,7 +52,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
   const handleExport = () => {
     if (exportState.loading) return;
     if (!snapshot) {
-      showToast('Please capture a snapshot first', 'destructive');
+      showToast(t.studioToastCaptureSnapshotFirst, 'destructive');
       return;
     }
     setExportDialogOpen(true);
@@ -128,7 +128,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
             className="ws-btn ws-btn--sm"
             title={t.studioDockToggle}
           >
-            FX
+            {t.studioDockTabFx}
           </button>
           <button
             type="button"
@@ -137,7 +137,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
             className="ws-btn ws-btn--sm"
             title={t.studioDrawerToggle}
           >
-            Lib
+            {t.studioDrawerToggle}
           </button>
           <button
             type="button"
@@ -146,7 +146,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
             className="ws-btn ws-btn--sm"
             title={t.studioInspectorToggle}
           >
-            Ins
+            {t.studioInspectorToggle}
           </button>
         </div>
       </div>

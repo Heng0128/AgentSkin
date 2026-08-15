@@ -361,6 +361,10 @@ export const uiMessages = {
     themeDynamic: '动态',
     themeActive: '已启用',
     themeApplyUnexpectedStatus: (status: string) => `主题应用返回意外状态：${status}`,
+    themeBusyMultiple: (count: number) => `${count} 个任务进行中`,
+    themeDeleteWarning: (apps: string) => `此主题正应用于以下应用：${apps}。删除后将恢复原生主题。`,
+    themeDeletedWithApps: (name: string, count: number) =>
+      `已删除 ${name}，${count} 个应用恢复原生主题`,
     themeLibrary: '主题库',
     themeNoResults: '无匹配结果',
     themeLibraryEmpty: '主题库为空',
@@ -804,7 +808,7 @@ export const uiMessages = {
       '从 Agent 的 CDP 爬取数据中提取配色 hue，基于互补、分裂互补、三元、类似、单色等 HSL 配色理论生成协调主题',
     studioFitExportSuccess: (path: string) => `已导出主题包到 ${path}`,
     // --- StudioCenterPanel (tab labels + toolbar) ---
-    studioSearchPlaceholder: '筛选节点…',
+    studioSearchPlaceholder: (count?: number) => (count ? `搜索 (${count})…` : '搜索节点…'),
     studioInspectStart: '检查',
     studioInspectStop: '停止',
     studioBaselineTooltip: '还原 agent 到无主题原生态后抓取，抓完自动重上原主题',
@@ -983,7 +987,13 @@ export const uiMessages = {
     studioExportIncludeTokens: 'Tokens',
     studioExportIncludeAssets: '素材',
     studioExportIncludeMeta: '元数据',
-    // --- Floating Toolbar ---
+    // --- Studio toasts (capture pipeline + export dialog) ---
+    studioToastCapturingBaseline: '正在抓取基线…',
+    studioToastCapturing: '正在抓取快照…',
+    studioToastCapturedCount: (n: number) => `已抓取 · ${n} 个节点`,
+    studioToastCaptureFailed: (msg: string) => `抓取失败：${msg}`,
+    studioToastDirPickerUnavailable: '目录选择器不可用 — 请手动输入路径',
+    studioToastCaptureSnapshotFirst: '请先抓取快照',
     studioWindowTitle: (n: number) => `窗口 ${n}`,
     studioWindowChip: (n: number) => `W${n}`,
     studioActiveWindowAgent: '当前窗口 Agent',
@@ -1420,6 +1430,11 @@ export const uiMessages = {
     themeActive: 'Active',
     themeApplyUnexpectedStatus: (status: string) =>
       `Theme apply returned unexpected status: ${status}`,
+    themeBusyMultiple: (count: number) => `${count} task${count === 1 ? '' : 's'} in progress`,
+    themeDeleteWarning: (apps: string) =>
+      `This theme is used by: ${apps}. Deleting it will revert those apps to native.`,
+    themeDeletedWithApps: (name: string, count: number) =>
+      `Deleted ${name}, ${count} app${count === 1 ? '' : 's'} reverted to native`,
     themeLibrary: 'Library',
     themeNoResults: 'No results',
     themeLibraryEmpty: 'Library empty',
@@ -1851,7 +1866,7 @@ export const uiMessages = {
       'Extracts palette hues from agent CDP data, generating coordinated themes using complementary, split-complementary, triadic, analogous, and monochromatic HSL color theory.',
     studioFitExportSuccess: (path: string) => `Theme package exported to ${path}`,
     // --- StudioCenterPanel (tab labels + toolbar) ---
-    studioSearchPlaceholder: 'Filter nodes…',
+    studioSearchPlaceholder: (count?: number) => (count ? `Search (${count})…` : 'Filter nodes…'),
     studioInspectStart: 'Inspect',
     studioInspectStop: 'Stop',
     studioBaselineTooltip: 'Restore agent to vanilla state, capture, then re-apply original theme',
@@ -2032,7 +2047,13 @@ export const uiMessages = {
     studioExportIncludeTokens: 'Tokens',
     studioExportIncludeAssets: 'Assets',
     studioExportIncludeMeta: 'Meta',
-    // --- Floating Toolbar ---
+    // --- Studio toasts (capture pipeline + export dialog) ---
+    studioToastCapturingBaseline: 'Capturing baseline…',
+    studioToastCapturing: 'Capturing…',
+    studioToastCapturedCount: (n: number) => `Captured · ${n} landmarks`,
+    studioToastCaptureFailed: (msg: string) => `Capture failed: ${msg}`,
+    studioToastDirPickerUnavailable: 'Directory picker unavailable — enter path manually',
+    studioToastCaptureSnapshotFirst: 'Please capture a snapshot first',
     studioWindowTitle: (n: number) => `Window ${n}`,
     studioWindowChip: (n: number) => `W${n}`,
     studioActiveWindowAgent: 'Active window agent',

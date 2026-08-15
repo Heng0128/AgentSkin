@@ -365,11 +365,13 @@ function ColorRow({
   hint,
   value,
   onChange,
+  t,
 }: {
   label: string;
   hint?: string;
   value: string;
   onChange: (v: string) => void;
+  t: UiMessages;
 }) {
   return (
     <div className="space-y-1 py-1">
@@ -392,7 +394,7 @@ function ColorRow({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="#RRGGBB"
+          placeholder={t.studioColorHexPlaceholder}
           className="h-6 w-full border border-input bg-muted px-2 font-mono text-[10px] outline-none transition-colors focus:border-primary/60"
         />
       </div>
@@ -666,24 +668,28 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         hint={t.studioToolboxAccentColorHint}
         value={finalAccent}
         onChange={(v) => onOverride('accent', v)}
+        t={t}
       />
       <ColorRow
         label={t.studioToolboxBgColor}
         hint={t.studioToolboxBgColorHint}
         value={finalBg}
         onChange={(v) => onOverride('background', v)}
+        t={t}
       />
       <ColorRow
         label={t.studioToolboxFgColor}
         hint={t.studioToolboxFgColorHint}
         value={finalFg}
         onChange={(v) => onOverride('foreground', v)}
+        t={t}
       />
       <ColorRow
         label={t.studioToolboxSurfaceColor}
         hint={t.studioToolboxSurfaceColorHint}
         value={finalSurface}
         onChange={(v) => onOverride('surface', v)}
+        t={t}
       />
       <ToggleRow
         label={t.studioToolboxGradientBg}
