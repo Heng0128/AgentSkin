@@ -3,14 +3,10 @@
 /**
  * # StudioStage
  *
- * Workspace stage region — renders N preview windows based on the current
- * viewMode (single / dual / triple / focus / quad).
+ * Workspace stage region — renders a single preview window.
  *
- * Layout: the grid-template is driven by the `[data-view]` attribute on
- * .ws-stage__inner, implemented in workspace.css.
- *
- * When a snapshot exists, domTree + rootVars are passed to the first window
- * for real DOM rendering. Otherwise an empty-state placeholder is shown.
+ * Multi-window modes (dual / triple / focus / quad) are removed.
+ * Snapshot / Baseline / Inspect / Zoom functionality is preserved.
  */
 
 import { FloatingToolbar } from '@/components/studio/FloatingToolbar';
@@ -22,15 +18,14 @@ import type { DomTreeNode } from '@shared/types';
 import { FlaskConical } from 'lucide-react';
 
 export function StudioStage() {
-  const { viewMode, windows, activeWindowId, setActiveWindow, updateWindow, removeWindow } =
-    useWorkspaceStore();
+  const { windows, activeWindowId, setActiveWindow, updateWindow } = useWorkspaceStore();
 
   const snapshot = useStudioStore((s) => s.snapshot);
 
   const domTree: DomTreeNode | undefined = snapshot?.domTree;
   const rootVars = snapshot?.rootVars;
 
-  // Empty state: no snapshot yet captured for the active project.
+  // No windows — should not happen with single-window architecture.
   if (!windows.length) {
     return (
       <main className="ws-stage">
@@ -51,48 +46,20 @@ export function StudioStage() {
     );
   }
 
-  // Window props builder — first window receives the real DOM.
-  const firstWindow = windows[0];
-
-  const renderPreviewWindow = (
-    win: (typeof windows)[number],
-    idx: number,
-    opts?: { onClose?: () => void },
-  ) => (
-    <PreviewWindow
-      key={win.id}
-      win={win}
-      active={activeWindowId === win.id}
-      onSelect={() => setActiveWindow(win.id)}
-      onScaleChange={(s) => updateWindow(win.id, { scale: s })}
-      onClose={opts?.onClose}
-      domTree={idx === 0 ? domTree : undefined}
-      rootVars={idx === 0 ? rootVars : undefined}
-    />
-  );
-
-  if (viewMode === 'focus') {
-    return (
-      <main className="ws-stage">
-        <div className="ws-stage__inner" data-view="focus">
-          {renderPreviewWindow(firstWindow, 0)}
-          <div className="ws-focus-side">
-            {windows.slice(1).map((win, i) => renderPreviewWindow(win, i + 1))}
-          </div>
-        </div>
-        <FloatingToolbar />
-      </main>
-    );
-  }
+  const win = windows[0];
 
   return (
     <main className="ws-stage">
-      <div className="ws-stage__inner" data-view={viewMode}>
-        {windows.map((win, idx) =>
-          renderPreviewWindow(win, idx, {
-            onClose: windows.length > 1 ? () => removeWindow(win.id) : undefined,
-          }),
-        )}
+      <div className="ws-stage__inner" data-view="single">
+        <PreviewWindow
+          key={win.id}
+          win={win}
+          active={activeWindowId === win.id}
+          onSelect={() => setActiveWindow(win.id)}
+          onScaleChange={(s) => updateWindow(win.id, { scale: s })}
+          domTree={domTree}
+          rootVars={rootVars}
+        />
       </div>
       <FloatingToolbar />
     </main>
