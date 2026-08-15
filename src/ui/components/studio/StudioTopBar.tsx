@@ -66,7 +66,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
       {/* Left: brand + project name (clickable -> opens project switcher in drawer) */}
       <div className="ws-topbar__left">
         <span className="ws-topbar__brand-icon">✦</span>
-        <span className="ws-topbar__brand-name">Studio</span>
+        <span className="ws-topbar__brand-name">{t.studioBrand}</span>
         <span
           className="badge-beta inline-flex items-center h-4 px-1 rounded-[var(--r-micro)] font-mono text-[10px] font-bold"
           style={{

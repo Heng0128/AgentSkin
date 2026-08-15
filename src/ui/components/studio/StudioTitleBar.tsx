@@ -64,7 +64,9 @@ export function StudioTitleBar() {
       {/* Left: brand + active project */}
       <div className="pointer-events-none flex items-center gap-2">
         <span className="font-display text-sm font-bold text-[var(--primary)]">✦</span>
-        <span className="font-mono text-[11px] font-semibold   text-foreground">Studio</span>
+        <span className="font-mono text-[11px] font-semibold   text-foreground">
+          {t.studioBrand}
+        </span>
         {projectName && (
           <>
             <span className="text-[var(--muted-foreground)]">/</span>
