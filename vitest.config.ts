@@ -20,6 +20,16 @@ export default defineConfig({
     projects: [
       {
         test: {
+          name: 'engine',
+          environment: 'node',
+          include: ['src/engine/**/*.test.ts'],
+          testTimeout: 15000,
+          pool: 'forks',
+        },
+        /* engine runs pure .mjs runtime modules — no jest aliases needed */
+      },
+      {
+        test: {
           name: 'main',
           environment: 'node',
           include: ['src/main/**/*.test.ts', 'src/shared/**/*.test.ts'],
