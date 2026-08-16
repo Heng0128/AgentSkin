@@ -19,7 +19,7 @@
  * token management were mixed with scanning, importing, and the public API.
  */
 
-import { renderSceneToHtml } from '../scene-renderer-html';
+import { renderSceneToHtmlAsync } from '../scene-renderer-async';
 import { wallpaperMediaServer } from '../wallpaper-server';
 import type { DiscoveredItem } from './types';
 import { wallpaperMimeForPath } from './utils';
@@ -98,11 +98,12 @@ export class MediaRegistry {
       return url;
     }
 
-    // Scene wallpaper: parse scene.pkg → HTML canvas renderer.
+    // Scene wallpaper: parse scene.pkg → HTML canvas renderer (in a worker
+    // thread so large scenes don't block the main process event loop).
     if (item.type === 'scene' && item.pkgPath) {
       let html: string | null;
       try {
-        html = renderSceneToHtml(item.pkgPath);
+        html = await renderSceneToHtmlAsync(item.pkgPath);
       } catch (error) {
         console.error('[wallpaper-service] renderSceneToHtml threw:', error);
         return null;
