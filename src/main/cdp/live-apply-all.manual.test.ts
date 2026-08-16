@@ -46,6 +46,21 @@ interface AgentResult {
 async function verifyApplied(agentId: string, port: number): Promise<number> {
   const session = await openMainSession(agentId, port);
   try {
+    // Codex injects via <style id="agentskin-theme-style-codex">, not
+    // adoptedStyleSheets with __agentskin flag. Use a dedicated probe.
+    if (agentId === 'codex') {
+      const raw = await session.evaluate(`(() => {
+        const el = document.getElementById('agentskin-theme-style-codex');
+        return JSON.stringify({
+          stylePresent: !!el,
+          styleContent: (el?.textContent ?? '').length > 0,
+        });
+      })()`);
+      const v = JSON.parse(raw) as { stylePresent: boolean; styleContent: boolean };
+      // The codex target CSS is injected as a <style> element (design tokens),
+      // not adoptedStyleSheets. Presence of non-empty content = theme applied.
+      return v.stylePresent && v.styleContent ? 1 : 0;
+    }
     const v = await waitForTheme(session, { timeoutMs: 5000, intervalMs: 50 });
     return v?.adoptedSheetCount ?? 0;
   } finally {
@@ -63,7 +78,13 @@ describe('batch-6 real apply on all agents (manual)', () => {
     for (const agentId of AGENT_IDS) {
       const adapter = getAdapter(agentId);
       if (!adapter) {
-        results.push({ agentId, port: null, b1Adopted: 0, b2Adopted: 0, restored: 'adapter-missing' });
+        results.push({
+          agentId,
+          port: null,
+          b1Adopted: 0,
+          b2Adopted: 0,
+          restored: 'adapter-missing',
+        });
         continue;
       }
 
@@ -71,7 +92,14 @@ describe('batch-6 real apply on all agents (manual)', () => {
       try {
         port = await resolveLivePort(adapter, agentId, noop);
       } catch (error) {
-        results.push({ agentId, port: null, b1Adopted: 0, b2Adopted: 0, restored: 'port-error', error: String(error) });
+        results.push({
+          agentId,
+          port: null,
+          b1Adopted: 0,
+          b2Adopted: 0,
+          restored: 'port-error',
+          error: String(error),
+        });
         console.log(`[probe] ${agentId}: port discovery failed (${String(error)})`);
         continue;
       }
@@ -85,13 +113,27 @@ describe('batch-6 real apply on all agents (manual)', () => {
       let b2Adopted = 0;
       let restored = 'ok';
       try {
-        const resA = await adapter.applyTheme(themeA, { port, launch: false, appPath: null, restartExisting: false });
+        const resA = await adapter.applyTheme(themeA, {
+          port,
+          launch: false,
+          appPath: null,
+          restartExisting: false,
+        });
         b1Adopted = await verifyApplied(agentId, port);
-        console.log(`[B1] ${agentId}: applied sakura-noir adopted=${b1Adopted} res=${JSON.stringify(resA?.result ?? resA).slice(0, 120)}`);
+        console.log(
+          `[B1] ${agentId}: applied sakura-noir adopted=${b1Adopted} res=${JSON.stringify(resA).slice(0, 120)}`,
+        );
 
-        const resB = await adapter.applyTheme(themeB, { port, launch: false, appPath: null, restartExisting: false });
+        const resB = await adapter.applyTheme(themeB, {
+          port,
+          launch: false,
+          appPath: null,
+          restartExisting: false,
+        });
         b2Adopted = await verifyApplied(agentId, port);
-        console.log(`[B2] ${agentId}: hot-switched to ocean-tide adopted=${b2Adopted} res=${JSON.stringify(resB?.result ?? resB).slice(0, 120)}`);
+        console.log(
+          `[B2] ${agentId}: hot-switched to ocean-tide adopted=${b2Adopted} res=${JSON.stringify(resB).slice(0, 120)}`,
+        );
       } catch (error) {
         restored = `apply-error: ${String(error)}`;
         console.log(`[apply] ${agentId}: FAILED (${String(error)})`);
@@ -99,7 +141,7 @@ describe('batch-6 real apply on all agents (manual)', () => {
         try {
           const r = await adapter.restoreTheme(port);
           console.log(`[restore] ${agentId}: restored=${r?.renderer?.restored ?? false}`);
-          if (r && r.renderer && r.renderer.restored === false) restored = 'restore-false';
+          if (r?.renderer && r.renderer.restored === false) restored = 'restore-false';
         } catch (error) {
           restored = `restore-error: ${String(error)}`;
           console.log(`[restore] ${agentId}: FAILED (${String(error)})`);
@@ -110,7 +152,9 @@ describe('batch-6 real apply on all agents (manual)', () => {
 
     console.log(`\n[summary] ${results.length} agents probed`);
     for (const r of results) {
-      console.log(`        ${r.agentId}: port=${r.port ?? 'none'} B1=${r.b1Adopted} B2=${r.b2Adopted} restored=${r.restored}`);
+      console.log(
+        `        ${r.agentId}: port=${r.port ?? 'none'} B1=${r.b1Adopted} B2=${r.b2Adopted} restored=${r.restored}`,
+      );
     }
 
     const ran = results.filter((r) => r.port != null);

@@ -14,8 +14,6 @@
    ============================================================ */
 
 html.agentskin-host-doubao:root {
-  color-scheme: dark !important;
-
   /* --- Backgrounds --- */
   --dbx-bg-body-web: transparent !important;
   --dbx-bg-base-web: var(--agentskin-bg) !important;

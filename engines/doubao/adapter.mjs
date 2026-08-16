@@ -95,35 +95,32 @@ class AdaptiveMutationObserver {
   // STRUCTURAL CSS — uses only element selectors, pseudo-classes,
   // and minimal attribute patterns that are structurally stable.
   // ═══════════════════════════════════════════════════════════
+
+  // Semantic text domain — where near-black inline text is most likely to be
+  // chat/user content that must resolve to the theme foreground. Scoping the
+  // text contrast fallback here (CV-01) stops it from blanketing every
+  // component (links, badges, buttons, cards) with the theme value.
+  const SEMANTIC_TEXT_SCOPE = '[class*="message-list"], [class*="chat-content"], [role="log"], [class*="greeting"], [class*="welcome"]';
   const STRUCTURAL_CSS = `
-/* === Art layer: body::before fixed hero === */
+/* === Bulk theme foreground via natural inheritance ===
+   body carries the theme text color; descendants that do not set their
+   own color inherit it. We DO NOT blanket p/span/div/li/... with a
+   full-family color reset anymore (CV-01): that forced the theme value onto
+   every component and destroyed the app's own color layering. */
 html.${HOST_CLASS} body {
   color: var(--agentskin-text) !important;
   background: transparent !important;
 }
-/* === Forced text color: belt-and-suspenders for dark theme ===
-   Ensures text is NEVER black-on-dark even if token override misses. */
-html.${HOST_CLASS} p,
-html.${HOST_CLASS} span,
-html.${HOST_CLASS} div,
-html.${HOST_CLASS} li,
-html.${HOST_CLASS} td,
-html.${HOST_CLASS} th,
-html.${HOST_CLASS} label,
-html.${HOST_CLASS} h1,
-html.${HOST_CLASS} h2,
-html.${HOST_CLASS} h3,
-html.${HOST_CLASS} h4,
-html.${HOST_CLASS} h5,
-html.${HOST_CLASS} h6 {
-  color: inherit;
-}
-html.${HOST_CLASS} [style*="color: rgb(0"],
-html.${HOST_CLASS} [style*="color: #000"],
-html.${HOST_CLASS} [style*="color: black"],
-html.${HOST_CLASS} [style*="color:rgb(0"],
-html.${HOST_CLASS} [style*="color:#000"],
-html.${HOST_CLASS} [style*="color:black"] {
+/* === Forced text color: scoped to the semantic text domain only ===
+   Neutralizes near-black inline text (the dark-on-dark failure mode) but
+   ONLY inside chat/message content — interactive widgets and other regions
+   keep their own colors. */
+html.${HOST_CLASS} :is(${SEMANTIC_TEXT_SCOPE}) [style*="color: rgb(0"],
+html.${HOST_CLASS} :is(${SEMANTIC_TEXT_SCOPE}) [style*="color: #000"],
+html.${HOST_CLASS} :is(${SEMANTIC_TEXT_SCOPE}) [style*="color: black"],
+html.${HOST_CLASS} :is(${SEMANTIC_TEXT_SCOPE}) [style*="color:rgb(0"],
+html.${HOST_CLASS} :is(${SEMANTIC_TEXT_SCOPE}) [style*="color:#000"],
+html.${HOST_CLASS} :is(${SEMANTIC_TEXT_SCOPE}) [style*="color:black"] {
   color: var(--agentskin-text) !important;
 }
 html.${HOST_CLASS} body::before {

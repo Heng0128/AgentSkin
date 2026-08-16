@@ -20,8 +20,6 @@
    ============================================================ */
 
 html.agentskin-host-zcode:root {
-  color-scheme: dark !important;
-
   /* --- Backgrounds: transparent for art punch-through --- */
   --color-background: transparent !important;
   --color-surface: transparent !important;

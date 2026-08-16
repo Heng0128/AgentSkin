@@ -11,8 +11,6 @@
    ============================================================ */
 
 html.agentskin-host-codex:root {
-  color-scheme: dark !important;
-
   /* Text hierarchy — Codex uses --text-* tokens */
   --text-primary: var(--agentskin-text) !important;
   --text-secondary: var(--agentskin-muted) !important;

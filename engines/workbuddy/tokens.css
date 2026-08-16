@@ -10,7 +10,6 @@
    ============================================================ */
 
 html.agentskin-host-workbuddy body {
-  color-scheme: dark !important;
   --wb-accent: var(--agentskin-accent);
   --wb-secondary: var(--agentskin-secondary);
   --wb-surface: var(--agentskin-bg);

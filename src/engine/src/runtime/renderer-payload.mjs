@@ -1,4 +1,6 @@
-import { getSelectors } from "./selectivity-registry.mjs";
+import { getSelectors, isNativeThemeControlled, listSemanticNames } from "./selectivity-registry.mjs";
+import { NON_CONTROLLED_CLASS, collectNonControlledSelectors } from "./semantic-filter.mjs";
+import { STYLE_RUNTIME_SOURCE } from "./verify-style.mjs";
 
 function safeHostClass(appId) {
   return `agentskin-host-${String(appId).replace(/[^a-z0-9_-]/gi, "-")}`;
@@ -155,6 +157,9 @@ export function buildApplyExpression({ adapter, targetTheme }) {
   const host = JSON.stringify({ id: adapter.id, className: safeHostClass(adapter.id) });
   const theme = JSON.stringify(targetTheme.theme);
   const css = JSON.stringify(targetTheme.css);
+  const nonControlledSelectors = collectNonControlledSelectors(adapter.id);
+  const nonControlledJson = JSON.stringify(nonControlledSelectors);
+  const nonControlledClass = JSON.stringify(NON_CONTROLLED_CLASS);
   const images = JSON.stringify({
     ...(targetTheme.imageDataUrls ?? {}),
     ...(!targetTheme.imageDataUrls?.hero && targetTheme.artDataUrl ? { hero: targetTheme.artDataUrl } : {}),
@@ -206,7 +211,57 @@ export function buildApplyExpression({ adapter, targetTheme }) {
     }
     const styleId = 'agentskin-theme-style-' + host.id;
 
+    // sessionStorage disable flag (same key as engine-strategy's persistence
+    // script). Set by restore/teardown so a user-initiated undo is not fought
+    // by the self-heal loop: once disabled we tear the loop down for good.
+    const DISABLED_KEY = '__agentskin_disabled__';
+    const disabled = () => {
+      try { return sessionStorage.getItem(DISABLED_KEY) === '1'; } catch { return false; }
+    };
+
+    // Semantic filtering (§8 序 A / CV-04): nodes matching these selectors are
+    // non-theme-controlled (isNativeThemeControlled=false) and get marked so
+    // injected CSS can exclude them via :not(.agentskin-non-controlled).
+    const nonControlledSelectors = ${nonControlledJson};
+    const nonControlledClass = ${nonControlledClass};
+    const markNonControlled = () => {
+      let marked = 0;
+      if (!nonControlledSelectors.length) return 0;
+      for (const selector of nonControlledSelectors) {
+        let nodes;
+        try { nodes = document.querySelectorAll(selector); } catch { nodes = []; }
+        for (const node of nodes) {
+          const element = node;
+          if (!element?.classList || element.classList.contains(nonControlledClass)) continue;
+          element.classList.add(nonControlledClass);
+          marked += 1;
+        }
+      }
+      return marked;
+    };
+    // Self-heal loop ignores mutations whose target sits inside the injected
+    // chrome/layer, baseline-marked, non-controlled, punched-through, or
+    // hidden regions (aria-hidden) to avoid thrashing on our own DOM / the
+    // agent's decorative full-bleed layers and to cut unnecessary re-applies.
+    // (RFC §2.6 / CV-03 — observer exclusion set.)
+    const exclusionSelectors = [
+      '[data-agentskin-baseline]',
+      '#agentskin-' + host.id + '-skin-chrome',
+      '.' + nonControlledClass,
+      '[data-agentskin-punched]',
+      '[aria-hidden="true"]',
+    ];
+    const isExcludedNode = (node) => {
+      const element = typeof node?.closest === 'function' ? node : null;
+      if (!element) return false;
+      for (const selector of exclusionSelectors) {
+        try { if (element.closest(selector) != null) return true; } catch { /* 无效选择器 → 跳过 */ }
+      }
+      return false;
+    };
+
     const ensure = () => {
+      if (disabled()) return false;
       const root = document.documentElement;
       if (!root) return false;
       root.classList.add('agentskin-theme', host.className);
@@ -228,17 +283,27 @@ export function buildApplyExpression({ adapter, targetTheme }) {
         style.textContent = cssText;
         style.dataset.themeVersion = theme.id + '@' + theme.version;
       }
+      markNonControlled();
       profileRuntime?.ensure?.();
       return true;
     };
 
     let timer;
-    const observer = new AdaptiveMutationObserver(() => {
+    const observer = new AdaptiveMutationObserver((records) => {
+      if (disabled()) { cleanup(); return; }
+      // Skip self-triggered mutations (our chrome/layer/non-controlled nodes).
+      const relevant = records.filter((record) => !isExcludedNode(record.target));
+      if (relevant.length === 0) return;
       clearTimeout(timer);
       timer = setTimeout(ensure, 120);
     });
     observer.observe(document.documentElement, { childList: true, subtree: true });
-    const interval = setInterval(ensure, 5000);
+    const interval = setInterval(() => {
+      if (disabled()) { cleanup(); return; }
+      // Conditionally re-apply only when the theme <style> is missing; skip the
+      // unconditional re-apply when the skin is already mounted.
+      if (!document.getElementById(styleId)) ensure();
+    }, 5000);
     const cleanup = () => {
       observer.disconnect();
       clearTimeout(timer);
@@ -251,6 +316,12 @@ export function buildApplyExpression({ adapter, targetTheme }) {
       root?.classList.remove(host.className);
       root?.style.removeProperty('--agentskin-art');
       for (const name of Object.keys(imageUrls)) root?.style.removeProperty('--agentskin-image-' + name);
+      if (nonControlledSelectors.length) {
+        // 还原本次标记的非受控节点，避免清理后残留 agentskin-non-controlled。
+        document.querySelectorAll('.' + nonControlledClass).forEach((element) => {
+          element.classList.remove(nonControlledClass);
+        });
+      }
       if (root?.dataset.agentskinHost === host.id) {
         delete root.dataset.agentskinHost;
         delete root.dataset.agentskinTheme;
@@ -309,12 +380,71 @@ export function buildProbeExpression(adapter, themeVerification = null) {
   })()`;
 }
 
+/**
+ * 样式值对比采样片段（RFC §2.7 序5 / CV-05）。
+ *
+ * 收集注册表中 `isNativeThemeControlled=true` 的语义节点与根节点的计算样式，
+ * 与生效主题 token（--agentskin-text/surface/border）比对，输出 `styleSampling`
+ * 判定（`pass`）。内嵌片段只在主题 `<style>` 已挂载时取样，否则返回中性 pass。
+ */
+export function buildStyleSamplingSnippet(adapter) {
+  const probes = listSemanticNames(adapter.id)
+    .filter((name) => {
+      const selectors = getSelectors(adapter.id, name);
+      return selectors && isNativeThemeControlled(adapter.id, name);
+    })
+    .map((name) => ({ name, selectors: getSelectors(adapter.id, name) }));
+  const probesJson = JSON.stringify(probes);
+  const runtime = STYLE_RUNTIME_SOURCE;
+  return `
+    // Style sampling (RFC §2.7 序5 / CV-05) — detect "selector present but the
+    // theme is not actually taking effect" drift by comparing the computed
+    // styles of key controlled nodes against the resolved theme tokens.
+    const __styleRuntime = ${runtime};
+    const __styleProbes = ${probesJson};
+    const styleSampling = (() => {
+      if (!document.getElementById('agentskin-theme-style-' + appId)) {
+        return { pass: true, matchRatio: 1, judged: 0, misses: [], reason: 'style-not-present' };
+      }
+      const rootCs = getComputedStyle(document.documentElement);
+      const token = (name) => (rootCs.getPropertyValue(name) || '').trim() || null;
+      const tokens = {
+        text: token('--agentskin-text'),
+        surface: token('--agentskin-surface'),
+        border: token('--agentskin-border'),
+      };
+      const visibleSample = (selectors) => {
+        for (const sel of selectors) {
+          let node;
+          try { node = document.querySelector(sel); } catch { node = null; }
+          if (!node) continue;
+          const cs = getComputedStyle(node);
+          const rect = node.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0 && cs.display !== 'none' && cs.visibility !== 'hidden') {
+            return cs;
+          }
+        }
+        return null;
+      };
+      const samples = [{ key: 'root', color: rootCs.color, bg: rootCs.backgroundColor, border: rootCs.borderColor }];
+      for (const probe of __styleProbes) {
+        const cs = visibleSample(probe.selectors);
+        if (!cs) continue;
+        samples.push({ key: probe.name, color: cs.color, bg: cs.backgroundColor, border: cs.borderColor });
+      }
+      return __styleRuntime.assessStyleCompliance(samples, tokens, { tolerance: 0.08, minRatio: 1 });
+    })();
+  `;
+}
+
 export function buildVerifyExpression(adapter, expectedTheme = null, themeVerification = null, targetTheme = null) {
   const profile = resolveRendererProfile(adapter, targetTheme);
   const expected = JSON.stringify(expectedTheme);
   const expectedProfileId = JSON.stringify(profile?.id ?? null);
+  const styleSamplingSnippet = buildStyleSamplingSnippet(adapter);
   return `(() => {
     ${buildCompatibilityPrelude(adapter, themeVerification)}
+    ${styleSamplingSnippet}
     const expected = ${expected};
     const expectedProfileId = ${expectedProfileId};
     const state = window.__AGENTSKIN__?.hosts?.[appId];
@@ -332,6 +462,8 @@ export function buildVerifyExpression(adapter, expectedTheme = null, themeVerifi
       horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
       images: state?.imageNames ?? [],
       profile,
+      styleSampling,
+      styleDrift: !styleSampling.pass,
     };
     result.missing = [...result.missing, ...profileMissing];
     const themeMatches = !expected || (result.themeId === expected.id && result.version === expected.version);

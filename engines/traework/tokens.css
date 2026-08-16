@@ -6,8 +6,6 @@
    ============================================================ */
 
 html.agentskin-host-traework body {
-  color-scheme: dark !important;
-
   /* Ink / text */
   --vscode-foreground: var(--agentskin-text) !important;
   --vscode-icube-colorDefaultText: var(--agentskin-text) !important;

@@ -7,8 +7,6 @@
    ============================================================ */
 
 html.agentskin-host-qoderwork:root {
-  color-scheme: dark !important;
-
   /* Primary / brand */
   --color-primary: var(--agentskin-accent) !important;
   --color-primary-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;

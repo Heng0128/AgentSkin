@@ -19,10 +19,25 @@
  */
 
 /**
+ * @typedef {object} SemanticControlConfig
+ * @property {boolean} controlled - 该组件是否由主题控制（isNativeThemeControlled）。
+ *   true = 应用主题色值；false = 保留原生样式。缺省按 true 处理（维持现状），
+ *   避免因未配置而导致现有渲染失效。
+ * @property {string} [controllingSelector] - 真正承载主题样式的锚点选择器
+ *   （区别于 entry.selectors 的 fallback 链，选中实际视觉载体）。
+ * @property {string[]} [nonControlled] - 该组件内部**不应**被主题覆盖的子选择器
+ *   （如 inner input / inner button / divider / collapse-toggle），运行时会为
+ *   这些节点标记 `agentskin-non-controlled` 并从主题过滤中排除。
+ */
+
+/**
  * @typedef {object} SemanticSelectorEntry
  * @property {string[]} selectors - 按优先级排序的 CSS 选择器 fallback 数组
  * @property {boolean} required - true 表示该节点必须存在（阻塞预检）
  * @property {string} [description] - 人类可读的用途说明
+ * @property {SemanticControlConfig} [semantic] - 语义控制配置（对抗过度渲染，
+ *   驱动 `isNativeThemeControlled` 判定与 `agentskin-non-controlled` 标记）。
+ *   缺省即视为主题受控（controlled=true）。
  */
 
 /**
@@ -112,6 +127,15 @@ export const SELECTOR_REGISTRIES = {
 			],
 			required: false,
 			description: "底部输入区域",
+			semantic: {
+				controlled: true,
+				controllingSelector: ".composer-surface-chrome",
+				innerInputNonControlled: true,
+				innerInputSelector: "[contenteditable='true'], textarea",
+				innerButtonNonControlled: true,
+				innerButtonSelector: "button, [role='button']",
+				nonControlled: ["[contenteditable='true']", "textarea", "button", "[role='button']"],
+			},
 		},
 		workspace: {
 			selectors: [
@@ -226,6 +250,13 @@ export const SELECTOR_REGISTRIES = {
 			],
 			required: false,
 			description: "左侧任务/会话列表",
+			semantic: {
+				controlled: true,
+				controllingSelector: ".task-list-base",
+				innerHoverControlled: true,
+				innerHoverSelector: ".task-list-item:hover",
+				nonControlled: [".task-list-divider", ".collapse-toggle-icon"],
+			},
 		},
 		workspace: {
 			selectors: [
@@ -450,4 +481,65 @@ export function listSemanticNames(agentId) {
  */
 export function listRegisteredAgents() {
 	return Object.keys(SELECTOR_REGISTRIES);
+}
+
+/**
+ * 读取某语义条目的语义控制配置（`semantic`）。
+ *
+ * @param {string} agentId
+ * @param {string} semanticName
+ * @returns {import("./selectivity-registry.mjs").SemanticControlConfig | null}
+ *   未配置或条目不存在时返回 null（调用方应将其视作"受控"，见 isNativeThemeControlled）。
+ */
+export function getSemantic(agentId, semanticName) {
+	const registry = SELECTOR_REGISTRIES[agentId];
+	if (!registry) return null;
+	const entry = registry[semanticName];
+	if (!entry || !entry.semantic) return null;
+	return entry.semantic;
+}
+
+/**
+ * 判定某语义条目是否由主题控制（isNativeThemeControlled）。
+ *
+ * 判定规则（对齐审计 §2.3 优先级之一「显式标记」）：
+ *   - 显式配置 `semantic.controlled` → 按其值返回；
+ *   - 无 `semantic` 配置 → 按 true 处理（维持现状：现有引擎默认渲染全节点，
+ *     避免因未配置而退化）。
+ *
+ * @param {string} agentId
+ * @param {string} semanticName
+ * @returns {boolean}
+ */
+export function isNativeThemeControlled(agentId, semanticName) {
+	const semantic = getSemantic(agentId, semanticName);
+	if (!semantic) return true;
+	return semantic.controlled !== false;
+}
+
+/**
+ * 收集某平台所有「标注了 nonControlled 子节点」的语义条目拓扑，供语义过滤层
+ * 在运行时标记非受控节点并从主题过滤中排除。
+ *
+ * 返回结构：
+ *   [{ name, selectors, semantic: SemanticControlConfig }]
+ *
+ * 仅返回配置了 `semantic.nonControlled` 且 `controlled !== false` 的条目。
+ *
+ * @param {string} agentId
+ * @returns {Array<{ name: string; selectors: string[]; semantic: import("./selectivity-registry.mjs").SemanticControlConfig }>}
+ */
+export function collectNonControlledTopology(agentId) {
+	const registry = SELECTOR_REGISTRIES[agentId];
+	if (!registry) return [];
+	const result = [];
+	for (const [name, entry] of Object.entries(registry)) {
+		const semantic = entry.semantic;
+		if (!semantic || semantic.controlled === false) continue;
+		const nonControlled = semantic.nonControlled;
+		if (Array.isArray(nonControlled) && nonControlled.length) {
+			result.push({ name, selectors: entry.selectors, semantic });
+		}
+	}
+	return result;
 }
