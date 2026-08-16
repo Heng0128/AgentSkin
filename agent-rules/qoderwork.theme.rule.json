@@ -1,0 +1,81 @@
+{
+  "agentId": "qoderwork",
+  "displayName": "QoderWork CN",
+  "schemaVer": "1.3",
+  "_generated": {
+    "at": "2026-08-16T18:37:50.161Z",
+    "from": "C:\\Program Files\\QoderWork CN\\QoderWork CN\\resources\\app.asar",
+    "note": "asar 静态解包 + CDP 运行时探测自动生成的初始模板；globalApiCandidates/globalStorePathCandidates/canSilentSwitch/switchSideEffects 需人工补全后生效"
+  },
+  "themePersistCandidates": [
+    {
+      "type": "dataset",
+      "key": "theme",
+      "sampleValue": "classic-dark"
+    },
+    {
+      "type": "localStorage",
+      "key": "theme",
+      "sampleValue": "classic-dark"
+    },
+    {
+      "type": "localStorage",
+      "key": "preferences:theme-color",
+      "sampleValue": "\"classic\""
+    },
+    {
+      "type": "localStorage",
+      "key": "preferences:theme-brightness",
+      "sampleValue": "\"dark\""
+    }
+  ],
+  "globalApiCandidates": [],
+  "globalStorePathCandidates": [],
+  "lazyRiskComponents": [
+    "Modal",
+    "Dropdown",
+    "Popover",
+    "Select",
+    "Tooltip",
+    "Dialog"
+  ],
+  "shadowDomRiskSelectors": [],
+  "themeImplMode": "mixed",
+  "canSilentSwitch": false,
+  "switchSideEffects": [],
+  "lightFingerprint": {
+    "dataset": null,
+    "cssVars": {}
+  },
+  "darkFingerprint": {
+    "dataset": {
+      "theme": "classic-dark"
+    },
+    "cssVars": {
+      "--loading-bg": "#ffffff",
+      "--loading-text": "#09090b",
+      "--agents-content-area-bg": "var(--color-bg-container)",
+      "--agents-fade-bg": "var(--color-bg-base)",
+      "--color-primary": "#8ee5a1",
+      "--color-fill-secondary": "#ebebeb",
+      "--color-text-on-primary": "#fdfdfd",
+      "--color-muted-foreground": "#737373",
+      "--color-primary-bg": "#f1faf3",
+      "--color-primary-bg-hover": "#e6f7ec",
+      "--color-primary-border": "#cdefd9",
+      "--color-primary-border-hover": "#b3e6c7",
+      "--color-primary-hover": "#73cd94",
+      "--color-primary-active": "#73cd94",
+      "--color-primary-text-hover": "#73cd94",
+      "--color-primary-text": "#141414",
+      "--color-primary-text-active": "#73cd94",
+      "--color-text": "#141414",
+      "--color-text-secondary": "#636261",
+      "--color-text-tertiary": "#838280",
+      "--color-text-quaternary": "#8e8c8b",
+      "--color-border": "#bcbbba",
+      "--color-border-secondary": "#ddd",
+      "--color-border-tertiary": "#e6e6e6"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "agentId": "codex",
+  "displayName": "OpenAI Codex",
+  "schemaVer": "1.3",
+  "_generated": {
+    "at": "2026-08-16T18:29:54.952Z",
+    "from": "C:\\Program Files\\WindowsApps\\OpenAI.Codex_26.810.7004.0_x64__2p2nqsd0c76g0\\app\\resources\\app.asar",
+    "note": "asar 静态解包 + CDP 运行时探测自动生成的初始模板；globalApiCandidates/globalStorePathCandidates/canSilentSwitch/switchSideEffects 需人工补全后生效"
+  },
+  "themePersistCandidates": [],
+  "globalApiCandidates": [],
+  "globalStorePathCandidates": [],
+  "lazyRiskComponents": [
+    "Modal",
+    "Dropdown",
+    "Popover",
+    "Select",
+    "Tooltip",
+    "Dialog"
+  ],
+  "shadowDomRiskSelectors": [],
+  "themeImplMode": "adopted",
+  "canSilentSwitch": false,
+  "switchSideEffects": [],
+  "lightFingerprint": {
+    "dataset": null,
+    "cssVars": {}
+  },
+  "darkFingerprint": {
+    "dataset": null,
+    "cssVars": {
+      "--startup-background": "transparent",
+      "--wb-text-primary": "var(--color-text)",
+      "--wb-text-secondary": "var(--color-text-secondary)",
+      "--wb-text-tertiary": "var(--color-text-tertiary)",
+      "--wb-surface-primary": "var(--color-surface)",
+      "--wb-surface-secondary": "var(--color-surface-secondary)",
+      "--wb-border": "var(--color-border)",
+      "--wb-border-hover": "var(--color-border-strong)",
+      "--wb-divider": "var(--color-border-subtle)",
+      "--padding-panel": "var(--padding-panel-base)",
+      "--color-background-surface": "var(--color-surface-tertiary)",
+      "--color-background-surface-under": "var(--color-surface-secondary)"
+    }
+  }
+}
