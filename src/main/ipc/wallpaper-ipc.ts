@@ -26,7 +26,7 @@ import type {
 import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
 import { type MainContext, notifyStatusChanged, sendLog, settingsDto } from '../main-context';
-import { buildWallpaperTheme, removeWallpaperTheme } from '../theme/wallpaper-theme';
+import { buildWallpaperTheme } from '../theme/wallpaper-theme';
 import { registerThemeWallpaperForInstalled } from '../wallpaper/theme-wallpaper';
 import { assertAgentId, assertNonEmptyString } from './ipc-validators';
 import { withMonitoredTimeout } from './with-monitored-timeout';
@@ -240,7 +240,12 @@ export function registerWallpaperIpc(deps: MainContext): void {
             outRoot,
             videoPath,
           });
-          await removeWallpaperTheme(outRoot, built.themeId);
+          // F-16 fix: removed `removeWallpaperTheme(outRoot, built.themeId)`.
+          // The previous build → remove → load sequence deleted the directory
+          // that buildWallpaperTheme just created, then loader.load tried to
+          // read the deleted manifest — guaranteed failure. buildWallpaperTheme
+          // uses fs.mkdir(recursive) so it safely overwrites; no pre-cleanup
+          // needed.
           const loader = new ThemePackageLoader(outRoot);
           const pkg = await loader.load(built.themeId);
           const installer = new ThemeInstaller(deps.library);

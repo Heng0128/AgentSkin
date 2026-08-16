@@ -8,7 +8,6 @@ import type {
   InstallState,
   LaunchResult,
   Platform,
-  ScannedApp,
   ScanProgressEvent,
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';

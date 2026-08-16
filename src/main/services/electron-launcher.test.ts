@@ -3,6 +3,7 @@
 import { execFile, spawn } from 'node:child_process';
 import net from 'node:net';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ApplicationAdapter } from '../../adapters/base';
 import * as registry from '../../adapters/registry';
 import { configureLauncher, getRunningApps, launchApp } from './electron-launcher';
 
@@ -52,11 +53,16 @@ function createMockAdapter(
     /** Ports returned by resolveDebugPorts. Default []. */
     debugPorts?: number[];
   } = {},
-) {
+): Partial<ApplicationAdapter> {
   return {
     findRunningPids: vi.fn().mockResolvedValue(overrides.runningPids ?? []),
     resolveDebugPorts: vi.fn().mockResolvedValue(overrides.debugPorts ?? []),
   };
+}
+
+/** Cast a partial adapter mock to the full ApplicationAdapter the registry expects. */
+function asAdapter(partial: Partial<ApplicationAdapter>): ApplicationAdapter {
+  return partial as unknown as ApplicationAdapter;
 }
 
 /**
@@ -123,7 +129,7 @@ describe('electron-launcher', () => {
     });
   }
 
-  function mockExecFileError() {
+  function _mockExecFileError() {
     mockExecFile.mockImplementationOnce((_cmd, _args, _opts, cb) => {
       (cb as (err: Error | null, stdout: string) => void)(new Error('fail'), '');
       return {} as ReturnType<typeof execFile>;
@@ -134,7 +140,7 @@ describe('electron-launcher', () => {
   describe('adapted app launches with CDP port flag', () => {
     it('spawns with --remote-debugging-port=0 when no preferred port', async () => {
       const adapter = createMockAdapter({ runningPids: [], debugPorts: [9222] });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       mockSpawnSuccess(1234);
 
       const result = await launchApp({
@@ -163,7 +169,7 @@ describe('electron-launcher', () => {
 
     it('spawns with the preferred port when specified and available', async () => {
       const adapter = createMockAdapter({ runningPids: [] });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       // PowerShell says port 9336 is occupied.
       mockExecFile.mockImplementationOnce((_cmd, _args, _opts, cb) => {
         (cb as (err: Error | null, stdout: string) => void)(null, 'occupied');
@@ -192,7 +198,7 @@ describe('electron-launcher', () => {
 
     it('returns state=failed when all port candidates are occupied', async () => {
       const adapter = createMockAdapter({ runningPids: [] });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       // All 11 probes (preferredPort + 0..10) report occupied.
       mockExecFile.mockImplementation((_cmd, _args, _opts, cb) => {
         (cb as (err: Error | null, stdout: string) => void)(null, 'occupied');
@@ -258,7 +264,7 @@ describe('electron-launcher', () => {
   describe('adapted app already running with CDP port', () => {
     it('does not restart — returns state=running with the live port', async () => {
       const adapter = createMockAdapter({ runningPids: [4242], debugPorts: [9222] });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       // Simulate that port 9222 has an active listener so probeTcpPort succeeds.
       mockNetConnectSuccess();
 
@@ -286,7 +292,7 @@ describe('electron-launcher', () => {
         runningPids: [7777],
         debugPorts: [], // no CDP ports discovered
       });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
 
       const result = await launchApp({
         appId: 'app-running-no-cdp',
@@ -307,7 +313,7 @@ describe('electron-launcher', () => {
         runningPids: [8888],
         debugPorts: [9222, 9223], // ports discovered but none reachable
       });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       // Simulate that both ports refuse connection.
       mockNetConnectRefused();
 
@@ -330,7 +336,7 @@ describe('electron-launcher', () => {
   describe('launch failure', () => {
     it('returns state=failed when spawn throws synchronously', async () => {
       const adapter = createMockAdapter({ runningPids: [] });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       mockSpawn.mockImplementationOnce(() => {
         throw new Error('The system cannot find the file specified');
       });
@@ -369,7 +375,7 @@ describe('electron-launcher', () => {
   describe('port conflict resolution', () => {
     it('tries port+1 through port+10 on conflict', async () => {
       const adapter = createMockAdapter({ runningPids: [] });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       // First call: port 9336 occupied.
       mockExecFile.mockImplementationOnce((_cmd, _args, _opts, cb) => {
         (cb as (err: Error | null, stdout: string) => void)(null, 'occupied');
@@ -398,7 +404,7 @@ describe('electron-launcher', () => {
 
     it('returns state=failed when preferredPort exceeds 65535', async () => {
       const adapter = createMockAdapter({ runningPids: [] });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       // No execFile calls should happen — the invalid port is rejected upfront.
       const result = await launchApp({
         appId: 'app-port-overflow',
@@ -415,7 +421,7 @@ describe('electron-launcher', () => {
 
     it('stops incrementing when candidate exceeds 65535 (preferredPort near ceiling)', async () => {
       const adapter = createMockAdapter({ runningPids: [] });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       // preferredPort=65533, retries would yield 65533, 65534, 65535, 65536...
       // The loop must break at 65536 and never pass it to spawn.
       mockExecFile.mockImplementation((_cmd, _args, _opts, cb) => {
@@ -452,7 +458,7 @@ describe('electron-launcher', () => {
   describe('getRunningApps', () => {
     it('tracks launched apps and returns a snapshot', async () => {
       const adapter = createMockAdapter({ runningPids: [] });
-      mockRequireAdapter.mockReturnValue(adapter as any);
+      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       mockExecFileSuccess(''); // not running (adapted flow: findRunningPids already mocked)
       mockSpawnSuccess(1111);
 

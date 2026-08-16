@@ -195,7 +195,16 @@ async function collectElectronApp(
   });
 }
 
-/** Recursively descend `dir` up to `depth` levels looking for Electron apps. */
+/**
+ * Recursively descend `dir` up to `depth` levels looking for Electron apps.
+ *
+ * The walk is parallelised at each level with a bounded worker pool
+ * (`DIR_CONCURRENCY_LIMIT`): the per-entry `stat` plus the Electron-marker
+ * probe run concurrently instead of one-at-a-time. Recursion depth is ≤ 3 and
+ * each level's `mapConcurrent` awaits all its children before returning, so
+ * peak concurrency is bounded by `depth × DIR_CONCURRENCY_LIMIT` (≈24) — fast
+ * enough to sweep Program Files within the scan budget without unbounded I/O.
+ */
 async function walkDir(
   dir: string,
   depth: number,
@@ -210,26 +219,40 @@ async function walkDir(
     return;
   }
 
-  for (const entry of entries) {
-    if (isTimedOut()) return;
-    // Skip system/vendor dirs that never contain a user Electron app.
-    if (SKIP_DIRS.has(entry.toLowerCase())) continue;
-    const sub = path.join(dir, entry);
-    try {
-      if (!(await fs.stat(sub)).isDirectory()) continue;
-    } catch {
-      continue;
-    }
+  // Parallel stat pass: resolve which entries are directories (and skip system
+  // /vendor dirs) before probing markers, so the dominant serial `stat` cost
+  // is spread across the worker pool.
+  const subDirs = await mapConcurrent(
+    entries,
+    DIR_CONCURRENCY_LIMIT,
+    async (entry): Promise<string | null> => {
+      if (isTimedOut()) return null;
+      if (SKIP_DIRS.has(entry.toLowerCase())) return null;
+      const sub = path.join(dir, entry);
+      try {
+        return (await fs.stat(sub)).isDirectory() ? sub : null;
+      } catch {
+        return null;
+      }
+    },
+  );
 
-    const marker = await hasElectronMarker(sub);
-    if (marker.isElectron) {
-      await collectElectronApp(sub, collect, marker.confidence);
-      continue; // an app dir — don't descend into it
-    }
-    if (depth > 1) {
-      await walkDir(sub, depth - 1, collect, isTimedOut);
-    }
-  }
+  // Marker probe + optional recursion, also bounded by the same pool.
+  await mapConcurrent(
+    subDirs.filter((sub): sub is string => sub !== null),
+    DIR_CONCURRENCY_LIMIT,
+    async (sub) => {
+      if (isTimedOut()) return;
+      const marker = await hasElectronMarker(sub);
+      if (marker.isElectron) {
+        await collectElectronApp(sub, collect, marker.confidence);
+        return; // an app dir — don't descend into it
+      }
+      if (depth > 1) {
+        await walkDir(sub, depth - 1, collect, isTimedOut);
+      }
+    },
+  );
 }
 
 /**

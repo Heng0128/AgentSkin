@@ -411,6 +411,10 @@ export const uiMessages = {
     noWallpaper: '无壁纸',
     bindWallpaper: '绑定壁纸（可选）',
     wallpaperThemeAutoFailed: '按壁纸生成主题失败',
+    // Desktop dynamic background: video is always muted (Electron autoplay
+    // limit), so audioLevel reactivity has no effect on the desktop surface.
+    // Shown as a muted-speaker icon tooltip when the user has audioLevel > 0.
+    wallpaperAudioMuted: '桌面端视频静音，音频响应不可用',
     // --- Wallpaper Engine page ---
     wePageDesc: '浏览 Wallpaper Engine 壁纸库，选择壁纸应用到任意 Agent',
     weDetecting: '正在检测 Wallpaper Engine…',
@@ -528,6 +532,7 @@ export const uiMessages = {
     categoryArt: '艺术',
     categoryLabel: (slug: string) => {
       const labels: Record<string, string> = {
+        all: '全部',
         cyberpunk: '赛博朋克',
         minimal: '极简',
         anime: '动漫',
@@ -1483,6 +1488,10 @@ export const uiMessages = {
     noWallpaper: 'No wallpaper',
     bindWallpaper: 'Bind wallpaper (optional)',
     wallpaperThemeAutoFailed: 'Failed to generate a theme from the wallpaper',
+    // Desktop dynamic background: video is always muted (Electron autoplay
+    // limit), so audioLevel reactivity has no effect on the desktop surface.
+    // Shown as a muted-speaker icon tooltip when the user has audioLevel > 0.
+    wallpaperAudioMuted: 'Desktop video muted, audio reactivity unavailable',
     // --- Wallpaper Engine page ---
     wePageDesc: 'Browse Wallpaper Engine library and apply wallpapers to any Agent',
     weDetecting: 'Detecting Wallpaper Engine…',
@@ -1573,6 +1582,7 @@ export const uiMessages = {
     categoryArt: 'Art',
     categoryLabel: (slug: string) => {
       const labels: Record<string, string> = {
+        all: 'All',
         cyberpunk: 'Cyberpunk',
         minimal: 'Minimal',
         anime: 'Anime',

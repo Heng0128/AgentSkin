@@ -14,8 +14,11 @@ import {
   buildMediaElementStyle,
 } from '@/lib/wallpaperRender';
 import { useWallpaperVideoUrl, useWallpaperWebUrl } from '@/lib/wallpaperVideo';
+import { useShellStore } from '@/stores/shellStore';
 
+import { uiMessages } from '@shared/i18n';
 import type { WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
+import { VolumeX } from 'lucide-react';
 
 /**
  * # DynamicBackground
@@ -59,6 +62,11 @@ export function DynamicBackground({
   wallpaper: WallpaperInfo | null;
   render?: WallpaperRenderOptions;
 }) {
+  // i18n accessor — follows the project-standard `uiMessages[locale]` pattern
+  // derived from shellStore.locale (see WorkspacePage / settingsStore).
+  const locale = useShellStore((s) => s.locale);
+  const t = uiMessages[locale];
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
   const webFrameRef = useRef<HTMLIFrameElement>(null);
@@ -209,6 +217,25 @@ export function DynamicBackground({
   const tileImage = wallpaper.type === 'image' && alignment === 'tile';
   const loopVideo = render?.loop ?? true;
 
+  // I-12 / I-15: scrim + vignette opacities are no longer hardcoded. The scrim
+  // opacity is driven by `render.scrimOpacity` (theme-controllable, fallback
+  // 55 preserves the historical default). The vignette top/bottom stops are
+  // scaled proportionally from the same base so the depth effect tracks the
+  // thematic scrim instead of stacking an independent 40%/50% on top of tint.
+  const scrimOpacity = render?.scrimOpacity ?? 55;
+  const vignetteTop = Math.round((scrimOpacity / 55) * 40);
+  const vignetteBottom = Math.round((scrimOpacity / 55) * 50);
+
+  // I-14: desktop video is always muted (Electron autoplay policy), so the
+  // `audioLevel` reactivity requested in render has no audible effect here.
+  // Surface that to the user via a muted-speaker hint when they have enabled
+  // audio reactivity (audioLevel > 0) on a playing video wallpaper.
+  const showMutedHint =
+    wallpaper.playback === 'video' &&
+    video.url != null &&
+    !videoFailed &&
+    (render?.audioLevel ?? 0) > 0;
+
   return (
     <div
       aria-hidden
@@ -288,21 +315,35 @@ export function DynamicBackground({
         )}
       </div>
       {/* Readability scrim tinted with the app background color.
-          Opacity is centralized in a CSS variable so themes can tune how
-          much of the wallpaper motion punches through without editing this
-          component. */}
-      <div
-        className="absolute inset-0"
-        style={{ backgroundColor: 'color-mix(in srgb, var(--background) 55%, transparent)' }}
-      />
-      {/* Gentle top/bottom vignette for depth */}
+          Opacity is driven by `render.scrimOpacity` so themes can tune how
+          much of the wallpaper motion punches through (fallback 55 preserves
+          the historical default). */}
       <div
         className="absolute inset-0"
         style={{
-          background:
-            'linear-gradient(to bottom, color-mix(in srgb, var(--background) 40%, transparent) 0%, transparent 50%, color-mix(in srgb, var(--background) 50%, transparent) 100%)',
+          backgroundColor: `color-mix(in srgb, var(--background) ${scrimOpacity}%, transparent)`,
         }}
       />
+      {/* Gentle top/bottom vignette for depth. Stops scale proportionally
+          from the scrim base (40/55, 50/55) so the depth effect tracks the
+          thematic scrim instead of stacking a fixed 40%/50% on top of tint. */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(to bottom, color-mix(in srgb, var(--background) ${vignetteTop}%, transparent) 0%, transparent 50%, color-mix(in srgb, var(--background) ${vignetteBottom}%, transparent) 100%)`,
+        }}
+      />
+      {/* I-14: muted-audio hint. Desktop video is always muted (Electron
+          autoplay policy), so `audioLevel` reactivity requested in render has
+          no audible effect here. Surface that to the user via a tooltip. */}
+      {showMutedHint && (
+        <div
+          className="pointer-events-auto absolute bottom-3 right-3 z-10"
+          title={t.wallpaperAudioMuted}
+        >
+          <VolumeX className="size-4 text-foreground/60" />
+        </div>
+      )}
     </div>
   );
 }

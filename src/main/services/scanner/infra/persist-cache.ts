@@ -29,6 +29,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { ElectronScanResult } from '../../../../shared/types/agent';
+import { writeJsonAtomic } from '../../../fs-utils';
 import { mainWarn } from '../../../logger';
 
 /** On-disk cache schema version. Bumped when the format changes incompatibly. */
@@ -121,7 +122,6 @@ export async function savePersistedScan(
     result,
   };
   try {
-    const { writeJsonAtomic } = await import('../../../fs-utils');
     await writeJsonAtomic(file, payload);
   } catch (error) {
     // Disk-full or permission denied — log and move on. The in-memory cache

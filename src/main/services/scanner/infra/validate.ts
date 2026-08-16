@@ -20,6 +20,7 @@
 
 import fs from 'node:fs/promises';
 import type { ElectronScanResult, ScannedApp } from '../../../../shared/types/agent';
+import { mainWarn } from '../../../logger';
 
 /** Access-mode constant: test for file existence only (no r/w check). */
 const F_OK = 0;
@@ -35,7 +36,6 @@ export async function validateExistence(result: ElectronScanResult): Promise<Ele
   const [otherAlive, otherDead] = await partitionAlive(result.other);
 
   if (adaptedDead.length > 0 || otherDead.length > 0) {
-    const { mainWarn } = await import('../../../logger');
     mainWarn(
       'ScanValidator',
       `pruned ${adaptedDead.length + otherDead.length} ghost entries (adapted=${adaptedDead.length} other=${otherDead.length})`,

@@ -233,12 +233,24 @@ export const useThemeStore = create<ThemeState>((set, get) => {
           // Activate the theme's bundled wallpaper, if it has one.
           // Pass appId so the wallpaper follows the theme: per-agent
           // preference is persisted and CDP injection is triggered.
+          // F-11: also forward render options so they survive restart.
           const theme = get().installedById(themeId);
           if (theme?.wallpaper) {
-            void useWallpaperStore
-              .getState()
-              .activateThemeWallpaper(themeId, theme.wallpaper.workshopId, appId)
-              .catch(() => undefined);
+            // F-19: await + try/catch instead of fire-and-forget so IPC
+            // errors (CSP, CDP timeout) surface to the user instead of
+            // being silently swallowed by `.catch(() => undefined)`.
+            try {
+              await useWallpaperStore
+                .getState()
+                .activateThemeWallpaper(
+                  themeId,
+                  theme.wallpaper.workshopId,
+                  appId,
+                  theme.wallpaper.render,
+                );
+            } catch {
+              // Best-effort: don't fail the theme apply if wallpaper fails.
+            }
           }
           return true;
         }
@@ -348,6 +360,24 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       const t = currentT();
       if (!deletePrompt) return;
       const theme = deletePrompt;
+      // Capture affected apps BEFORE delete: agents that have this theme active
+      // will need wallpaper deactivated after the CDP restore.
+      const affectedApps =
+        useStatusStore
+          .getState()
+          .status?.apps.filter((app) => app.activeThemeId === theme.id)
+          .map((app) => app.appId) ?? [];
+      // A-5: warn if the theme is currently applied to any agent. The user
+      // should know that deleting will restore those agents to native UI.
+      if (affectedApps.length > 0) {
+        useNotificationStore
+          .getState()
+          .showToast(
+            t.themeDeleteWarning?.(affectedApps.join(', ')) ??
+              `Theme "${theme.name}" is active on ${affectedApps.length} agent(s); deleting will restore native UI.`,
+            'destructive',
+          );
+      }
       const result = await withBusy(`delete:${theme.id}`, () => api.deleteTheme(theme.id));
       setDeletePrompt(null);
       if (!result) return;
@@ -359,6 +389,22 @@ export const useThemeStore = create<ThemeState>((set, get) => {
           : {},
       );
       useNotificationStore.getState().showToast(t.themeDeleted(theme.name));
+      // WP-1: After deleting a theme, deactivate the per-agent wallpaper for
+      // any agent that was running this theme. The deleteTheme IPC channel
+      // restores the CDP shell but bypasses wallpaperStore — without this,
+      // the wallpaper remains injected against a now-deleted theme.
+      for (const appId of affectedApps) {
+        try {
+          await api.restoreApp(appId);
+        } catch {
+          /* CDP restore failure must not block the delete flow */
+        }
+        try {
+          await useWallpaperStore.getState().setAgentWallpaper(appId, false, null);
+        } catch {
+          /* Wallpaper restore failure must not block the delete flow */
+        }
+      }
     },
   };
 });

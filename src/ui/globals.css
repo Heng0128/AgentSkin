@@ -1,11 +1,4 @@
 @import "tailwindcss";
-
-/* Limit Tailwind v4 auto-scan to source tree only — prevents HMR loop
-   caused by scanner picking up Vite's own cache/output directories. */
-@source "../../src/**/*.{ts,tsx}";
-@source "!../../node_modules";
-@source "!../../out";
-
 @import "@radix-ui/colors/slate.css";
 @import "@radix-ui/colors/slate-dark.css";
 @import "@radix-ui/colors/slate-alpha.css";
@@ -25,6 +18,12 @@
 @import "tw-animate-css";
 @import "react-day-picker/style.css";
 @import "./shadcn-tailwind.css";
+
+/* Limit Tailwind v4 auto-scan to source tree only — prevents HMR loop
+   caused by scanner picking up Vite's own cache/output directories. */
+@source "../../src/**/*.{ts,tsx}";
+@source "!../../node_modules";
+@source "!../../out";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -409,15 +408,15 @@
     *,
     *::before,
     *::after {
-      transition-duration: 0.01ms !important;
-      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms;
+      animation-duration: 0.01ms;
     }
   }
   body.no-anim *,
   body.no-anim *::before,
   body.no-anim *::after {
-    transition: none !important;
-    animation: none !important;
+    transition: none;
+    animation: none;
   }
 
   html {

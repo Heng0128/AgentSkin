@@ -13,7 +13,7 @@
  * supported agent IDs for the full theme management grid.
  */
 
-import type { AgentId, ThemeCatalogItem, ThemeSource } from '@shared/types';
+import type { ThemeCatalogItem } from '@shared/types';
 
 export interface ThemeCenterCardModel
   extends Omit<

@@ -100,6 +100,7 @@ interface WallpaperState {
     themeId: string,
     workshopId?: string,
     appId?: AgentId,
+    render?: WallpaperRenderOptions,
   ) => Promise<ApplyAgentWallpaperResult | undefined>;
 }
 
@@ -261,22 +262,36 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
    * Failures are reported via notification but never throw — a wallpaper
    * activation failure must not roll back a successful theme apply.
    */
-  activateThemeWallpaper: async (themeId, workshopId, appId) => {
+  activateThemeWallpaper: async (themeId, workshopId, appId, render) => {
     try {
       const list = await api.listWallpapers();
       set({ wallpapers: list });
       const targetId = workshopId ?? `theme:${themeId}`;
       if (list.some((w) => w.id === targetId)) {
-        await get().setWallpaper(true, targetId);
+        // F-11: forward the theme's wallpaper render options so per-agent
+        // settings survive restart. Without this, themeRenderOptions(wp)
+        // fields (speed/loop/scrimOpacity) exist only in memory.
+        await get().setWallpaper(true, targetId, render);
         if (appId) {
-          // Theme-apply linkage: persist per-agent preference and inject.
-          // Failure to persist → don't inject (would succeed without setting).
-          const persisted = await get().setAgentWallpaper(appId, true, targetId);
+          const persisted = await get().setAgentWallpaper(appId, true, targetId, render);
           if (persisted) {
             const result = await get().applyAgentWallpaper(appId);
+            // A-27: CDP injection may fail (agent-not-running, CSP block).
+            // Make the failure visible instead of silently returning.
+            if (!result?.ok && result?.reason) {
+              useNotificationStore
+                .getState()
+                .fail(new Error(`Wallpaper injection failed: ${result.reason}`));
+            }
             return result;
           }
         }
+      } else {
+        // F-20: bundled wallpaper not in library (not subscribed / WE missing).
+        // Previously silent skip — now notify the user.
+        useNotificationStore
+          .getState()
+          .fail(new Error(`Theme wallpaper "${targetId}" not found in library`));
       }
     } catch (error) {
       // Best-effort: a theme apply shouldn't fail because the wallpaper

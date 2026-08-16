@@ -237,7 +237,7 @@ describe('workspaceStore — push token serialization', () => {
     firstResolve(true);
 
     expect(useWorkspaceStore.getState().pushError).toBe('push_failed'); // from second call
-    expect(useWorkspaceStore.getState().overridesByAgent['codex']).toEqual({ radius: '8px' });
+    expect(useWorkspaceStore.getState().overridesByAgent.codex).toEqual({ radius: '8px' });
   });
 
   it('过期回执不覆盖新值', async () => {
@@ -265,7 +265,7 @@ describe('workspaceStore — push token serialization', () => {
 
     // Final state reflects the latest token only.
     expect(useWorkspaceStore.getState().pushError).toBeNull(); // true from second call
-    expect(useWorkspaceStore.getState().overridesByAgent['codex']).toEqual({ radius: '8px' });
+    expect(useWorkspaceStore.getState().overridesByAgent.codex).toEqual({ radius: '8px' });
   });
 });
 
@@ -284,7 +284,7 @@ describe('workspaceStore — saveChanges persists to overridesByAgent', () => {
     const ok = await useWorkspaceStore.getState().saveChanges();
 
     expect(ok).toBe(true);
-    expect(useWorkspaceStore.getState().overridesByAgent['codex']).toEqual({ radius: '8px' });
+    expect(useWorkspaceStore.getState().overridesByAgent.codex).toEqual({ radius: '8px' });
     expect(useWorkspaceStore.getState().currentOverrides).toEqual({ radius: '8px' });
     expect(useWorkspaceStore.getState().dirty).toBe(false);
   });
@@ -298,7 +298,7 @@ describe('workspaceStore — saveChanges persists to overridesByAgent', () => {
 
     expect(ok).toBe(false);
     // Optimistic update already wrote to overridesByAgent — failure does not roll back.
-    expect(useWorkspaceStore.getState().overridesByAgent['codex']).toEqual({ radius: '8px' });
+    expect(useWorkspaceStore.getState().overridesByAgent.codex).toEqual({ radius: '8px' });
     expect(useWorkspaceStore.getState().dirty).toBe(true);
   });
 
@@ -324,13 +324,13 @@ describe('workspaceStore — discardChanges cleans up overridesByAgent', () => {
   it('discardChanges 成功后从 overridesByAgent 删除条目', async () => {
     useWorkspaceStore.getState().selectAgent('codex', 9222);
     await useWorkspaceStore.getState().updateOverride('radius', '8px');
-    expect(useWorkspaceStore.getState().overridesByAgent['codex']).toBeDefined();
+    expect(useWorkspaceStore.getState().overridesByAgent.codex).toBeDefined();
 
     mockResetTweak.mockResolvedValueOnce(true);
     const ok = await useWorkspaceStore.getState().discardChanges();
 
     expect(ok).toBe(true);
-    expect(useWorkspaceStore.getState().overridesByAgent['codex']).toBeUndefined();
+    expect(useWorkspaceStore.getState().overridesByAgent.codex).toBeUndefined();
     expect(useWorkspaceStore.getState().currentOverrides).toEqual({});
   });
 
@@ -342,7 +342,7 @@ describe('workspaceStore — discardChanges cleans up overridesByAgent', () => {
     const ok = await useWorkspaceStore.getState().discardChanges();
 
     expect(ok).toBe(false);
-    expect(useWorkspaceStore.getState().overridesByAgent['codex']).toEqual({ radius: '8px' });
+    expect(useWorkspaceStore.getState().overridesByAgent.codex).toEqual({ radius: '8px' });
     // currentOverrides is NOT rolled back on failure.
     expect(useWorkspaceStore.getState().currentOverrides).toEqual({ radius: '8px' });
   });

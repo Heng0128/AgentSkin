@@ -20,7 +20,7 @@
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { AGENT_IDS } from '../../shared/types';
-import type { ElectronScanResult, ScanProgressEvent } from '../../shared/types/agent';
+import type { ScanProgressEvent } from '../../shared/types/agent';
 import type { MainContext } from '../main-context';
 import { type LaunchRequest, launchApp } from '../services/electron-launcher';
 import { scanElectronApps } from '../services/electron-scanner';

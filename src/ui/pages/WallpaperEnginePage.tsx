@@ -207,6 +207,7 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
       <Sheet open={selected !== null} onOpenChange={(open) => !open && page.setSelected(null)}>
         <SheetContent
           side="bottom"
+          overlayClassName="md:hidden"
           className="h-[80svh] overflow-y-auto rounded-t-md p-0 md:hidden"
         >
           {selected && (

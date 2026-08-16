@@ -11,7 +11,6 @@ import type {
   FileImportConfirmRequest,
   FileImportResult,
   InspectedNode,
-  ScannedApp,
   ScanProgressEvent,
   StudioProject,
   StudioSnapshotOptions,

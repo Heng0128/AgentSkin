@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { InstallHints } from '../../../adapters/base';
 import type {
   AgentId,
   ElectronScanResult,

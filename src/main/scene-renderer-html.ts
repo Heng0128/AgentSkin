@@ -82,6 +82,13 @@ export {
  * @returns A complete HTML document string, or `null` if the pkg could not
  *          be parsed or contains no renderable content.
  */
+// A-25 TODO: renderSceneToHtml is fully synchronous — extractScene binary
+// parsing + buildRenderLayers texture reads + buildHtmlDocument all block the
+// main process event loop. Large workshop scenes (50MB+ textures, 100+ objects)
+// can stall IPC for seconds. Candidate migrations (ascending complexity):
+//   1. wrap call site in setImmediate (defers, doesn't free the loop)
+//   2. move extractScene into a worker_threads.Worker (true parallelism)
+//   3. cache SceneData by pkgPath + mtime (avoids repeat parsing)
 export function renderSceneToHtml(
   pkgPath: string,
   options?: { weInstallRoot?: string },
