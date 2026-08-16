@@ -88,6 +88,24 @@ const qoderwork = {
     if (title && !/^(DevTools|chrome|about:)/i.test(title) && url && !url.startsWith("about:")) return true;
     return false;
   },
+  // CSS variable bridge (S3): re-route the native --color-* family QoderWork
+  // reads onto AgentSkin semantic roles. Alphas mirror
+  // engines/qoderwork/tokens.css (art-transparent *-bg-container) vars are
+  // intentionally omitted.
+  bridge: [
+    { var: "--color-primary", role: "accent" },
+    { var: "--color-text", role: "text" },
+    { var: "--color-text-secondary", role: "muted" },
+    { var: "--color-text-tertiary", role: "text", alpha: 0.55 },
+    { var: "--color-muted", role: "muted" },
+    { var: "--color-text-on-primary", role: "bg" },
+    { var: "--color-bg-elevated", role: "surface-elevated", alpha: 0.85 },
+    { var: "--color-popover", role: "surface-elevated" },
+    { var: "--color-border", role: "border" },
+    { var: "--color-border-secondary", role: "border", alpha: 0.6 },
+    { var: "--color-fill", role: "text", alpha: 0.16 },
+    { var: "--color-link", role: "accent" },
+  ],
   verification: {
     // The root landmark is the only blocking check: it doubles as the
     // "app finished booting" signal and the minimal app fingerprint. Everything

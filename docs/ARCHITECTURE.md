@@ -69,6 +69,7 @@ mutation handler 成功后调用 `notifyStatusChanged()` → 推送 `STATUS_CHAN
 
 - `src/legacy/agentskin-core-runtime.ts`：**唯一**导入 `@agentskin/engine` 的桥接层（"legacy" 为历史命名，非废弃代码），承担 Windows 兼容与引擎适配。
 - `src/engine/`：vendored 引擎包 `@agentskin/engine`（CDP session、主题包读写、选择器解析等）。
+- `src/engine/src/semantic-quant/`：语义量化层（RFC 2026-08-17-semantic-quant-layer，Phase 1 薄切片）。标准枚举字典（uiArea/componentKind/componentLayer/riskLevel）+ `COMPONENT_INDEX`（componentId 稳定主键 + bindings N:M）+ 双版本字段快照（engineVersion 备注 / taxonomySchemaVersion 解析）。**`selectivity-registry.mjs` 不感知本层**；注入执行层禁止 import 本层（`scripts/check-semantic-contract.mjs` 强制），仅 `runtime/verify-style.mjs`（区域聚合双通道报告）与工具/未来 Studio 可消费。
 - `engines/<agent>/`：每目标应用三件套——`adapter.mjs`（L4 结构适配 + MutationObserver）、`tokens.css`（L1 原生 token 映射）、`cosmetic.css`（L2 打磨）。
 
 ## 注入分层（L0-L4）

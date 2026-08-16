@@ -74,15 +74,36 @@ const workbuddy = {
     if (type === "page" && title && !/^(DevTools|chrome)/i.test(title) && url && !url.startsWith("about:")) return true;
     return false;
   },
+  // CSS variable bridge (S3): re-route the native --cb-* (VS Code-arch) family
+  // WorkBuddy reads onto AgentSkin semantic roles. Art-transparent vars
+  // (--cb-chat-bg) omitted; surface/text/border/accent alphas mirror
+  // engines/workbuddy/tokens.css.
+  bridge: [
+    { var: "--cb-bg-primary", role: "surface" },
+    { var: "--cb-bg-secondary", role: "surface", alpha: 0.94 },
+    { var: "--cb-panel-bg-primary", role: "surface", alpha: 0.88 },
+    { var: "--cb-text-primary", role: "text" },
+    { var: "--cb-text-secondary", role: "text", alpha: 0.7 },
+    { var: "--cb-text-disabled", role: "text", alpha: 0.42 },
+    { var: "--cb-text-link", role: "accent" },
+    { var: "--cb-vscode-editor-background", role: "surface" },
+    { var: "--cb-vscode-foreground", role: "text" },
+    { var: "--cb-vscode-focusBorder", role: "accent", alpha: 0.4 },
+    { var: "--cb-vscode-button-background", role: "accent" },
+    { var: "--cb-vscode-button-foreground", role: "bg" },
+    { var: "--cb-vscode-panel-border", role: "accent", alpha: 0.3 },
+    { var: "--cb-input-placeholder", role: "text", alpha: 0.5 },
+    { var: "--cb-sidebar-bg", role: "surface", alpha: 0.12 },
+  ],
   verification: {
     // The root landmark is the only blocking check: it doubles as the
     // "app finished booting" signal and the minimal app fingerprint. Everything
     // else warns — panels hide per view/window, and CSS is inert on absent nodes.
-    rootAny: ["#root > .teams-container", ".teams-container", "#root", "#app", "body > div"],
+    rootAny: ["#root > .teams-container", ".teams-container", "#root", "body > div"],
     recommended: [
-      { name: "sidebar", any: [".conversation-sidebar", ".conversation-list", "[class*='sidebar']", "nav"] },
-      { name: "workspace", any: [".teams-main-content", ".main-content", ".chat-container", "[class*='chat']", "main"] },
-      { name: "composer", any: ["[role='textbox'][contenteditable='true']", ".wb-home-composer [contenteditable='true']", "[contenteditable='true']"] },
+      { name: "sidebar", any: [".conversation-sidebar", ".conversation-list", "[class*='sidebar']"] },
+      { name: "workspace", any: [".teams-main-content", ".main-content", ".chat-container", "[class*='chat']"] },
+      { name: "composer", any: ["[role='textbox'][contenteditable='true']", "[contenteditable='true']"] },
     ],
   },
 };

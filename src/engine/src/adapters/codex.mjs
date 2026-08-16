@@ -66,6 +66,18 @@ const codex = {
     if (title && !/^(DevTools|chrome|about:)/i.test(title) && url && !url.startsWith("about:")) return true;
     return false;
   },
+  // CSS variable bridge (S3): declaratively re-route the native Tailwind token
+  // family Codex reads onto AgentSkin semantic roles. Compiled by the engine
+  // at apply time (css-var-bridge.mjs) so both the app's own CSS rules and any
+  // JS getComputedStyle() reads resolve to the active theme. Alphas mirror
+  // engines/codex/tokens.css to preserve translucency/art punch-through.
+  bridge: [
+    { var: "--text-primary", role: "text" },
+    { var: "--text-secondary", role: "muted" },
+    { var: "--bg-tertiary", role: "surface-elevated", alpha: 0.85 },
+    { var: "--border-subtle", role: "border", alpha: 0.5 },
+    { var: "--border-medium", role: "border" },
+  ],
   verification: {
     // The root landmark is the only blocking check: it doubles as the
     // "app finished booting" signal and the minimal app fingerprint. Everything
@@ -73,10 +85,10 @@ const codex = {
     // Codex's main content surface uses a CSS-Modules hashed class
     // (`_MainContentSurface_xxx`) rather than the `main-surface` class, so
     // match the hashed prefix and fall back to a bare `<main>`.
-    rootAny: ["main.main-surface", "main[class*='MainContentSurface']", "main"],
+    rootAny: [ "main[class*='MainContentSurface']", "main"],
     recommended: [
       { name: "sidebar", any: ["aside.app-shell-left-panel"] },
-      { name: "composer", any: [".composer-surface-chrome"] },
+      { name: "composer", any: [] },
     ],
   },
 };

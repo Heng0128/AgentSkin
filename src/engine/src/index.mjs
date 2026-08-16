@@ -2,6 +2,20 @@ export { getAdapter, listAdapters, registerAdapter } from "./adapters/index.mjs"
 export { CdpSession, listCdpTargets } from "./cdp/session.mjs";
 export { discoverApp, findRunningPids, launchApp, resolveDebugPort, resolveDebugPorts } from "./runtime/launcher.mjs";
 export { DOM_SNAPSHOT_DEFAULT_MAX_NODES, DOM_SNAPSHOT_MAX_NODES } from "./runtime/dom-snapshot.mjs";
+export { SessionPool, targetKeyFor } from "./runtime/session-pool-runtime.mjs";
+export {
+  TOKEN_ROLES,
+  compileBridge,
+  compileVarDeclaration,
+  isTokenRole,
+  normalizeEntry,
+  parseColor,
+  resolveBridgeColor,
+  resolveBridgePalette,
+  resolveVariable,
+  tokenVar,
+  wrapBridgeRule,
+} from "./runtime/css-var-bridge.mjs";
 export { applyTheme, captureScreenshot, findTargets, probeApp, removeTheme, snapshotDom, verifyTheme, waitForTargets, watchTheme } from "./runtime/injector.mjs";
 export { applySkin, restoreSkin } from "./runtime/skin.mjs";
 export { prepareHostSettings, restoreHostSettings } from "./runtime/host-settings.mjs";

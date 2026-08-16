@@ -21,24 +21,29 @@
  *   node scripts/analyze-structure-compare.mjs --ci                  # CI 极简输出 + 语义化退出码
  *   node scripts/analyze-structure-compare.mjs --skip-cef-subapp     # CEF 布局跳过 local_webcontents/apps 子应用
  *   node scripts/analyze-structure-compare.mjs --ignore FILE.json     # 黑白名单：过滤固定噪声类名/变量（{classTokens:[],cssVars:[]}）
+ *   node scripts/analyze-structure-compare.mjs --suggest-ignore       # 自动提取跨 Agent 稳定的噪声候选，输出可喂给 --ignore 的 JSON
+ *   node scripts/analyze-structure-compare.mjs --baseline [FILE]      # 基线对拍：与历史报告对比，只把「新增漂移」当告警（默认对比上一次 _structure-compare.json）
  *   node scripts/analyze-structure-compare.mjs --rules               # 额外输出 agent-rules/*.theme.rule.json 规则库初始模板
  *   node scripts/analyze-structure-compare.mjs --meta                # 额外输出 meta/*.theme.meta.json + meta-validation.json（推理+自校验）
+ *   node scripts/analyze-structure-compare.mjs --write-patches       # 把「确定性删除」补丁自动写回适配器源码（死 landmark / 失效 bridge entry）
+ *   node scripts/analyze-structure-compare.mjs --write-patches --dry-run  # 仅预览待写回的补丁，不写文件
  *
  * 退出码（CI 模式对接流水线）：
  *   0  全部 Agent 探测正常，无结构漂移
- *   1  存在业务漂移（landmark 失效 / bridge 异常 / 疑似 @theme-inline），需人工修订适配器
+ *   1  存在业务漂移（landmark 失效 / bridge 异常 / 疑似 @theme-inline），需人工修订适配器；
+ *      --baseline 时仅由「新增漂移」触发（已恢复 / 持续漂移不阻断，避免告警疲劳）
  *   2  存在 Agent 探测失败（CDP 连接失败 / 静态解析异常 / 环境异常）
  */
 
+import { execFile } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import asar from '@electron/asar';
 import { listAdapters } from '../src/engine/src/adapters/index.mjs';
-import { discoverApp, resolveDebugPorts } from '../src/engine/src/runtime/launcher.mjs';
-import { findTargets } from '../src/engine/src/runtime/injector.mjs';
 import { listCdpTargets } from '../src/engine/src/cdp/session.mjs';
+import { findTargets } from '../src/engine/src/runtime/injector.mjs';
+import { discoverApp, resolveDebugPorts } from '../src/engine/src/runtime/launcher.mjs';
 import { inferCurrentMode, inferMeta } from '../src/engine/src/runtime/meta-inference.mjs';
 import { validateMeta } from '../src/engine/src/runtime/meta-validator.mjs';
 
@@ -61,7 +66,18 @@ const execFileSafe = async (cmd, args) => {
 };
 
 // ---- 全局运行选项（由 main 解析 CLI 参数写入）----
-const OPTIONS = { debug: false, markdown: false, ci: false, skipCefSubapp: false, ignorePath: null, baselinePath: null, suggestIgnore: false, rules: false, meta: false };
+const OPTIONS = {
+  debug: false,
+  markdown: false,
+  ci: false,
+  skipCefSubapp: false,
+  ignorePath: null,
+  suggestIgnore: false,
+  rules: false,
+  meta: false,
+  writePatches: false,
+  dryRun: false,
+};
 
 function debugLog(...parts) {
   if (OPTIONS.debug) console.log('[debug]', ...parts);
@@ -156,7 +172,9 @@ async function resolveLivePort(adapter) {
         debugLog(`${adapter.id}: 端口 ${port} 命中 ${targets.length} 个 renderer target`);
         return { port, targets };
       }
-    } catch { /* 文件可能残留，端口未活 */ }
+    } catch {
+      /* 文件可能残留，端口未活 */
+    }
   }
   // 2) netstat 回退：进程在跑但端口文件失效（新版改了 user-data 目录等）。
   //    逐个尝试全部候选端口，任一端口返回 CDP target 即采用（兼容多实例多端口）。
@@ -167,7 +185,9 @@ async function resolveLivePort(adapter) {
         debugLog(`${adapter.id}: netstat 端口 ${port} 命中 ${targets.length} 个 renderer target`);
         return { port, targets };
       }
-    } catch { /* 端口不是 CDP 端点 */ }
+    } catch {
+      /* 端口不是 CDP 端点 */
+    }
   }
   return null;
 }
@@ -186,7 +206,8 @@ async function enumerateTargets(port) {
       const brief = { id: t.id ?? null, url: t.url ?? null, title: t.title ?? null };
       if (type === 'page') pages.push(brief);
       else if (type === 'iframe') iframes.push(brief);
-      else if (type === 'worker' || type === 'service_worker' || type === 'shared_worker') workers.push({ ...brief, type });
+      else if (type === 'worker' || type === 'service_worker' || type === 'shared_worker')
+        workers.push({ ...brief, type });
     }
     return { total: list.length, byType, pages, iframes, workers };
   } catch (e) {
@@ -239,7 +260,9 @@ class CdpClient {
   close() {
     try {
       this.ws?.close();
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 }
 
@@ -485,7 +508,9 @@ async function probeRuntime(adapter, target) {
   await client.connect();
   try {
     await client.send('Runtime.enable').catch(() => {});
-    const classInventory = JSON.parse(await evaluateJson(client, buildClassInventoryExpression(RUNTIME_CLASS_CAP)));
+    const classInventory = JSON.parse(
+      await evaluateJson(client, buildClassInventoryExpression(RUNTIME_CLASS_CAP)),
+    );
     const rootVars = JSON.parse(await evaluateJson(client, buildVarsExpression(RUNTIME_VAR_CAP)));
 
     // 样式 AST（document.styleSheets + adoptedStyleSheets）与 Shadow DOM 遍历——只读、独立降级，
@@ -527,7 +552,19 @@ async function probeRuntime(adapter, target) {
       .catch(() => []);
     // target 全枚举（多 frame / iframe / worker），失败降级不阻断主链路
     const targetEnumeration = await enumerateTargets(target.port);
-    return { ok: true, port: target.port, title: target.title ?? null, classInventory, rootVars, styleAst, shadowDom, domContext, landmarkColors, targetEnumeration, landmarkChecks };
+    return {
+      ok: true,
+      port: target.port,
+      title: target.title ?? null,
+      classInventory,
+      rootVars,
+      styleAst,
+      shadowDom,
+      domContext,
+      landmarkColors,
+      targetEnumeration,
+      landmarkChecks,
+    };
   } finally {
     client.close();
   }
@@ -552,8 +589,7 @@ function locateAsar(appPath, executable) {
   return null;
 }
 
-const CLASS_LITERAL_RE =
-  /(?:className|class)\s*[:=]\s*(?:"([^"]*)"|'([^']*)'|`([^`]*)`)/g;
+const CLASS_LITERAL_RE = /(?:className|class)\s*[:=]\s*(?:"([^"]*)"|'([^']*)'|`([^`]*)`)/g;
 
 function extractClassTokens(source) {
   const tokens = new Set();
@@ -582,8 +618,8 @@ function extractCssVars(source) {
 
 // ---- 解包布局（traework 等 VS Code 系无 app.asar，app 直接解包在 resources\app）----
 
-import { readdir as fsReaddir } from 'node:fs/promises';
 import { statSync } from 'node:fs';
+import { readdir as fsReaddir } from 'node:fs/promises';
 
 async function collectFiles(root, extensions, byteCap, opts = {}) {
   const results = [];
@@ -613,7 +649,9 @@ async function collectFiles(root, extensions, byteCap, opts = {}) {
           const size = statSync(full).size;
           bytes += size;
           results.push({ path: full, size });
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
     }
   };
@@ -630,7 +668,12 @@ async function probeUnpacked(unpackedRoot, displayName, layout = 'unpacked', opt
     STATIC_BYTES_PER_FILE * STATIC_JS_FILE_CAP,
     collectOpts,
   );
-  const { files: cssFiles, bytes: cssBytes } = await collectFiles(unpackedRoot, /\.css$/i, STATIC_CSS_BYTES_TOTAL, collectOpts);
+  const { files: cssFiles, bytes: cssBytes } = await collectFiles(
+    unpackedRoot,
+    /\.css$/i,
+    STATIC_CSS_BYTES_TOTAL,
+    collectOpts,
+  );
 
   const jsPriority = (p) => {
     const n = p.replace(/\\/g, '/');
@@ -659,7 +702,9 @@ async function probeUnpacked(unpackedRoot, displayName, layout = 'unpacked', opt
       debugLog(`扫描 JS: ${file.path}`);
       const source = buffer.subarray(0, STATIC_BYTES_PER_FILE).toString('utf8');
       for (const token of extractClassTokens(source)) classTokens.add(token);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   const cssVars = new Set();
@@ -673,7 +718,9 @@ async function probeUnpacked(unpackedRoot, displayName, layout = 'unpacked', opt
       debugLog(`扫描 CSS: ${file.path}`);
       const source = buffer.subarray(0, STATIC_CSS_BYTES_TOTAL).toString('utf8');
       for (const name of extractCssVars(source)) cssVars.add(name);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   return {
@@ -741,14 +788,21 @@ async function discoverByProcess(adapter) {
     const psNames = names.map((n) => (n.toLowerCase().endsWith('.exe') ? n.slice(0, -4) : n));
     const { stdout } = await execFileAsync(
       'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-Command', `Get-Process -Name ${JSON.stringify(psNames.join(','))} -ErrorAction SilentlyContinue | Where-Object { $_.Path } | Select-Object -First 1 -ExpandProperty Path`],
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        `Get-Process -Name ${JSON.stringify(psNames.join(','))} -ErrorAction SilentlyContinue | Where-Object { $_.Path } | Select-Object -First 1 -ExpandProperty Path`,
+      ],
       { timeout: 8000 },
     );
     const executable = stdout.trim();
     if (executable && existsSync(executable)) {
       return { appId: adapter.id, appPath: dirname(executable), executable };
     }
-  } catch { /* fallthrough */ }
+  } catch {
+    /* fallthrough */
+  }
   return null;
 }
 
@@ -757,7 +811,12 @@ async function probeAsar(adapter, discovered, asarPath) {
   try {
     files = asar.listPackage(asarPath);
   } catch (e) {
-    return { ok: false, appPath: discovered.appPath, asarPath, error: `asar 读取失败: ${e.message}` };
+    return {
+      ok: false,
+      appPath: discovered.appPath,
+      asarPath,
+      error: `asar 读取失败: ${e.message}`,
+    };
   }
 
   // asar.listPackage 在 Windows 返回带前导反斜杠的路径；extractFile 需要去掉前导
@@ -804,7 +863,9 @@ async function probeAsar(adapter, discovered, asarPath) {
       debugLog(`扫描 JS: ${norm(file)}`);
       const source = buffer.subarray(0, STATIC_BYTES_PER_FILE).toString('utf8');
       for (const token of extractClassTokens(source)) classTokens.add(token);
-    } catch { /* 个别文件损坏跳过 */ }
+    } catch {
+      /* 个别文件损坏跳过 */
+    }
   }
 
   const cssVars = new Set();
@@ -822,7 +883,9 @@ async function probeAsar(adapter, discovered, asarPath) {
       const source = buffer.subarray(0, remaining).toString('utf8');
       cssBytes += Math.min(buffer.length, remaining);
       for (const name of extractCssVars(source)) cssVars.add(name);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   return {
@@ -858,7 +921,12 @@ function bridgeStatus(adapter, runtimeVarNames, staticVarNames) {
   }));
 }
 
-function buildCompare(adapter, runtime, statik, ignore = { classTokens: new Set(), cssVars: new Set() }) {
+function buildCompare(
+  adapter,
+  runtime,
+  statik,
+  ignore = { classTokens: new Set(), cssVars: new Set() },
+) {
   const runtimeFreq = new Map(runtime.classInventory?.top ?? []); // token -> DOM 出现频次
   const runtimeClassNames = new Set(runtimeFreq.keys());
   const runtimeVarNames = new Set(runtime.rootVars?.names ?? []);
@@ -894,7 +962,9 @@ function buildCompare(adapter, runtime, statik, ignore = { classTokens: new Set(
   const classCoverage = staticClassNames.size
     ? (classes.shared.length / staticClassNames.size).toFixed(3)
     : null;
-  const varCoverage = staticVarNames.size ? (vars.shared.length / staticVarNames.size).toFixed(3) : null;
+  const varCoverage = staticVarNames.size
+    ? (vars.shared.length / staticVarNames.size).toFixed(3)
+    : null;
 
   // 桥接变量可达性：区分「:root 不可达」与「静态 CSS 也未声明（疑似失效 entry）」
   const bridge = bridgeStatus(adapter, runtime.rootVars?.names ?? [], statik.cssVars?.names ?? []);
@@ -923,7 +993,9 @@ function buildCompare(adapter, runtime, statik, ignore = { classTokens: new Set(
     );
   }
   if (classes.onlyRuntime.length) {
-    verdicts.push(`运行时出现 ${classes.onlyRuntime.length} 个静态抓不到的类名（动态生成 / CSS Modules）`);
+    verdicts.push(
+      `运行时出现 ${classes.onlyRuntime.length} 个静态抓不到的类名（动态生成 / CSS Modules）`,
+    );
   }
   if (bridgeNeverDeclared.length) {
     verdicts.push(
@@ -938,7 +1010,9 @@ function buildCompare(adapter, runtime, statik, ignore = { classTokens: new Set(
   }
   const deadLandmarks = verificationDrift.filter((c) => c.visible === 0);
   if (deadLandmarks.length) {
-    verdicts.push(`适配器 verification 选择器失效 ${deadLandmarks.length} 个: ${deadLandmarks.map((c) => c.selector).join(', ')}`);
+    verdicts.push(
+      `适配器 verification 选择器失效 ${deadLandmarks.length} 个: ${deadLandmarks.map((c) => c.selector).join(', ')}`,
+    );
   }
   for (const hint of themeHint) verdicts.push(hint);
   if (!verdicts.length) verdicts.push('结构与 bridge entries 均与运行时一致');
@@ -990,14 +1064,25 @@ function adapterSourceFile(adapterId) {
  * 每条 action 附 sourceFile（适配器源文件）与 patch（{ location, current, change } 精确修订位点），
  * 使建议可直接落到 src/engine/src/adapters/<id>.mjs 的 verification / bridge 配置。
  */
-function buildPatchActions(adapter, compare) {
+function buildPatchActions(adapterId, compare) {
   const actions = [];
-  const sourceFile = adapterSourceFile(adapter.id);
-  const dead = (compare.verificationDrift ?? []).filter((c) => c.visible === 0);
+  const sourceFile = adapterSourceFile(adapterId);
+  // recommended 域 scope -> 数组下标 映射，让 location 精确到 verification.recommended[<idx>].any
+  // （同名 scope 在 recommended 中出现多次时取首个，location 仍可人工定位到数组）
+  const adapter = listAdapters().find((a) => a.id === adapterId);
+  const recommendedIndex = new Map(
+    (adapter?.verification?.recommended ?? []).map((s, i) => [s.name, i]),
+  );
+  const dead = (compare?.verificationDrift ?? []).filter((c) => c.visible === 0);
   for (const d of dead) {
     // scope 来自 landmarkChecks：'root' 对应 verification.rootAny，其余对应
     // verification.recommended.<scope>.any —— 可直接定位到具体数组。
-    const location = d.scope === 'root' ? 'verification.rootAny' : `verification.recommended[${d.scope}].any`;
+    const location =
+      d.scope === 'root'
+        ? 'verification.rootAny'
+        : recommendedIndex.has(d.scope)
+          ? `verification.recommended[${recommendedIndex.get(d.scope)}].any`
+          : `verification.recommended[${d.scope}].any`;
     actions.push({
       type: 'remove_verification_selector',
       target: d.selector,
@@ -1008,7 +1093,7 @@ function buildPatchActions(adapter, compare) {
       note: `选择器运行时已无可见命中（matches=${d.matches}），建议从 ${location} 中移除或替换`,
     });
   }
-  for (const b of compare.bridgeMissing ?? []) {
+  for (const b of compare?.bridgeMissing ?? []) {
     if (!b.declaredInStatic) {
       actions.push({
         type: 'remove_bridge_entry',
@@ -1025,14 +1110,24 @@ function buildPatchActions(adapter, compare) {
         var: b.var,
         role: b.role,
         sourceFile,
-        patch: { location: 'bridge', current: { var: b.var, role: b.role }, change: 'remove-or-component-inject' },
+        patch: {
+          location: 'bridge',
+          current: { var: b.var, role: b.role },
+          change: 'remove-or-component-inject',
+        },
         severity: 'medium',
         note: '变量仅存在于组件作用域（不在 :root），建议改为组件级注入而非 :root 桥接',
       });
     }
   }
-  for (const h of compare.themeHint ?? []) {
-    actions.push({ type: 'switch_to_component_injection', target: 'agent-wide', sourceFile, severity: 'medium', note: h });
+  for (const h of compare?.themeHint ?? []) {
+    actions.push({
+      type: 'switch_to_component_injection',
+      target: 'agent-wide',
+      sourceFile,
+      severity: 'medium',
+      note: h,
+    });
   }
   return actions;
 }
@@ -1043,15 +1138,254 @@ function agentStatus(r) {
   return 'OK';
 }
 
+// ---- 补丁自动写回：将「确定性删除」类建议直接落到适配器源码 ----
+// 通过括号平衡扫描 + 顶层逗号切分，把死 landmark 选择器 / 失效 bridge entry
+// 从 verification.rootAny / recommended.<scope>.any / bridge 数组中精确移除，
+// 保持源码结构合法（不破坏其它元素）。仅支持确定性删除；
+// switch_to_component_injection 需设计决策（组件级注入实现），保持人工落地。
+
+/** 括号平衡扫描：从 openIndex（指向 '[' 或 '{'）返回 {start,end}，找不到返回 null。 */
+function balancedSpan(src, openIndex, close) {
+  let depth = 0;
+  let inStr = false;
+  let quote = '';
+  let esc = false;
+  for (let i = openIndex; i < src.length; i++) {
+    const ch = src[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === '\\') esc = true;
+      else if (ch === quote) inStr = false;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inStr = true;
+      quote = ch;
+      continue;
+    }
+    if (ch === '[' || ch === '{') depth++;
+    else if (ch === ']' || ch === '}') {
+      depth--;
+      if (depth === 0 && ch === close) return { start: openIndex, end: i + 1 };
+    }
+  }
+  return null;
+}
+
+function arraySpan(src, openIndex) {
+  return balancedSpan(src, openIndex, ']');
+}
+
+function objectSpan(src, openIndex) {
+  return balancedSpan(src, openIndex, '}');
+}
+
+/** 返回 region（数组内层区间）中所有顶层逗号位置。 */
+function topLevelCommas(src, region) {
+  const out = [];
+  let depth = 0;
+  let inStr = false;
+  let quote = '';
+  let esc = false;
+  for (let i = region.start; i < region.end; i++) {
+    const ch = src[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === '\\') esc = true;
+      else if (ch === quote) inStr = false;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inStr = true;
+      quote = ch;
+      continue;
+    }
+    if (ch === '{' || ch === '[') depth++;
+    else if (ch === '}' || ch === ']') depth--;
+    else if (ch === ',' && depth === 0) out.push(i);
+  }
+  return out;
+}
+
+/** 顶层逗号切分：返回 region 内每个直接子元素（不含空元素）的 {start,end}。 */
+function splitTopLevelElements(src, region) {
+  const commas = topLevelCommas(src, region);
+  const els = [];
+  let start = region.start;
+  for (const c of commas) {
+    els.push({ start, end: c });
+    start = c + 1;
+  }
+  els.push({ start, end: region.end });
+  return els.filter((el) => src.slice(el.start, el.end).trim().length > 0);
+}
+
+/** 从 region 中删除元素 el（连同其尾随分隔逗号），返回新源码。 */
+function removeElementAt(src, region, el) {
+  const commas = topLevelCommas(src, region);
+  // el.end 落在逗号位置 => 元素自带尾随逗号（中段分隔逗号 / 末位 trailing comma 皆然），
+  // 连逗号一并删除，既保留与相邻元素的分隔，也不产生悬空逗号。
+  const trailing = commas.find((c) => c === el.end);
+  if (trailing !== undefined) return src.slice(0, el.start) + src.slice(trailing + 1);
+  // 无尾随逗号（源码未用 trailing comma 时的末位元素）：连同前导分隔逗号一并删除。
+  const before = [...commas].reverse().find((c) => c < el.start);
+  const start = before ?? el.start;
+  return src.slice(0, start) + src.slice(el.end);
+}
+
+/** 查找 src 的 [from,to) 内 `key:` 后的数组区间，返回绝对 {start,end}。 */
+function findKeyedArray(src, key, from = 0, to = src.length) {
+  const slice = src.slice(from, to);
+  const re = new RegExp(`\\b${key}\\s*:\\s*(\\[)`);
+  const m = re.exec(slice);
+  if (!m) return null;
+  const openRel = m.index + m[0].length - 1; // 指向 '['
+  const span = arraySpan(slice, openRel);
+  if (!span) return null;
+  return { start: from + span.start, end: from + span.end };
+}
+
+/** 在 recommended 数组内查找 `name` 等于 name 的直接子对象区间。 */
+function findNamedObject(src, rec, name) {
+  const inner = { start: rec.start + 1, end: rec.end - 1 };
+  for (const el of splitTopLevelElements(src, inner)) {
+    if (!src.slice(el.start, el.end).trim().startsWith('{')) continue;
+    const obj = objectSpan(src, el.start);
+    if (!obj) continue;
+    const m = /\bname\s*:\s*("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/.exec(
+      src.slice(obj.start, obj.end),
+    );
+    if (!m) continue;
+    const quote = m[1][0];
+    const val = m[1].slice(1, -1).replace(quote === '"' ? /\\"/g : /\\'/g, quote);
+    if (val === name) return obj;
+  }
+  return null;
+}
+
+/** 在数组 arr 内按 test(元素文本) 找到并删除元素；找不到返回 changed:false。 */
+function removeElementByTest(src, arr, test, desc) {
+  const inner = { start: arr.start + 1, end: arr.end - 1 };
+  const el = splitTopLevelElements(src, inner).find((e) => test(src.slice(e.start, e.end)));
+  if (!el) return { changed: false, reason: `未找到目标元素（${desc}）` };
+  const next = removeElementAt(src, inner, el);
+  if (next === src) return { changed: false, reason: `移除无变化（${desc}）` };
+  return { changed: true, src: next, element: src.slice(el.start, el.end).trim() };
+}
+
+/** 对单个 patch action 执行精确删除，返回 { changed, src?, element?, reason? }。 */
+function removePatch(src, action) {
+  if (action.type === 'remove_verification_selector') {
+    const target = action.patch?.current ?? action.target;
+    if (typeof target !== 'string') return { changed: false, reason: '选择器非字符串' };
+    const quoted = JSON.stringify(target);
+    if (action.scope === 'root') {
+      const arr = findKeyedArray(src, 'rootAny');
+      if (!arr) return { changed: false, reason: 'verification.rootAny 数组未找到' };
+      return removeElementByTest(src, arr, (t) => t.trim() === quoted, `rootAny 移除 ${target}`);
+    }
+    const rec = findKeyedArray(src, 'recommended');
+    if (!rec) return { changed: false, reason: 'verification.recommended 数组未找到' };
+    const obj = findNamedObject(src, rec, action.scope);
+    if (!obj) return { changed: false, reason: `recommended 内未找到 ${action.scope} 域` };
+    const any = findKeyedArray(src, 'any', obj.start, obj.end);
+    if (!any) return { changed: false, reason: `${action.scope}.any 数组未找到` };
+    return removeElementByTest(
+      src,
+      any,
+      (t) => t.trim() === quoted,
+      `${action.scope}.any 移除 ${target}`,
+    );
+  }
+  if (action.type === 'remove_bridge_entry') {
+    const arr = findKeyedArray(src, 'bridge');
+    if (!arr) return { changed: false, reason: 'bridge 数组未找到' };
+    const marker = `var: ${JSON.stringify(action.var)}`;
+    return removeElementByTest(src, arr, (t) => t.includes(marker), `bridge 移除 ${action.var}`);
+  }
+  return { changed: false, reason: '非自动落地类型（需人工决策）' };
+}
+
+/**
+ * 批量执行补丁写回。仅落地确定性删除类建议；
+ * 返回按文件汇总的结果（含未命中原因与 dry-run 标记），不抛出异常。
+ */
+function applyPatchActions(actions, { dryRun = false } = {}) {
+  const byFile = new Map();
+  for (const a of actions) {
+    if (a.type !== 'remove_verification_selector' && a.type !== 'remove_bridge_entry') continue;
+    if (!a.sourceFile) continue;
+    if (!byFile.has(a.sourceFile)) byFile.set(a.sourceFile, []);
+    byFile.get(a.sourceFile).push(a);
+  }
+  const results = [];
+  for (const [file, list] of byFile) {
+    let src;
+    try {
+      src = readFileSync(file, 'utf-8');
+    } catch (e) {
+      results.push({
+        file,
+        error: String(e.message ?? e),
+        applied: 0,
+        missed: list.length,
+        skipped: 0,
+      });
+      continue;
+    }
+    const applied = [];
+    const missed = [];
+    let modified = src;
+    for (const a of list) {
+      const res = removePatch(modified, a);
+      if (res.changed) {
+        modified = res.src;
+        applied.push({
+          type: a.type,
+          target: a.target ?? a.var,
+          scope: a.scope,
+          location: a.patch?.location,
+          element: res.element,
+        });
+      } else {
+        missed.push({
+          type: a.type,
+          target: a.target ?? a.var,
+          scope: a.scope,
+          location: a.patch?.location,
+          reason: res.reason,
+        });
+      }
+    }
+    const wrote = modified !== src && !dryRun;
+    if (wrote) writeFileSync(file, modified, 'utf-8');
+    results.push({
+      file,
+      dryRun,
+      wrote,
+      appliedCount: applied.length,
+      missedCount: missed.length,
+      applied,
+      missed,
+    });
+  }
+  return results;
+}
+
 function printAgentReport(adapter, report) {
   const name = report.displayName;
   console.log(`\n=== ${name} (${report.id}) ===`);
   if (report.runtime.ok) {
     console.log(`  CDP   : ok @:${report.runtime.port} title=${report.runtime.title ?? ''}`);
-    console.log(`          类名 ${report.runtime.classInventory.unique} | :root 变量 ${report.runtime.rootVars.unique}`);
+    console.log(
+      `          类名 ${report.runtime.classInventory.unique} | :root 变量 ${report.runtime.rootVars.unique}`,
+    );
     const sa = report.runtime.styleAst;
     if (sa && !sa.error) {
-      const adopted = sa.adoptedSheets > 0 ? ` | adopted构造样式表=${sa.adoptedSheets}(${sa.adoptedCssRules}条)` : '';
+      const adopted =
+        sa.adoptedSheets > 0
+          ? ` | adopted构造样式表=${sa.adoptedSheets}(${sa.adoptedCssRules}条)`
+          : '';
       console.log(
         `          样式AST: styleSheets=${sa.styleSheets}(${sa.cssRules}条)${adopted} | :root声明=${sa.rootVars.length} 主题选择器=${sa.themeSelectors.length}`,
       );
@@ -1060,9 +1394,13 @@ function printAgentReport(adapter, report) {
     }
     const sd = report.runtime.shadowDom;
     if (sd && !sd.error) {
-      const closed = sd.closedShadowRisk?.length ? ` | closed风险=${sd.closedShadowRisk.length}` : '';
+      const closed = sd.closedShadowRisk?.length
+        ? ` | closed风险=${sd.closedShadowRisk.length}`
+        : '';
       const adopted = sd.adoptedInShadow > 0 ? ` | shadow内构造样式表=${sd.adoptedInShadow}` : '';
-      console.log(`          ShadowDOM: openHost=${sd.openHostCount} 内部元素=${sd.totalShadowEls}${adopted}${closed}`);
+      console.log(
+        `          ShadowDOM: openHost=${sd.openHostCount} 内部元素=${sd.totalShadowEls}${adopted}${closed}`,
+      );
     } else {
       console.log(`          ShadowDOM: 不可用${sd?.error ? ` (${sd.error})` : ''}`);
     }
@@ -1071,7 +1409,9 @@ function printAgentReport(adapter, report) {
       const byType = Object.entries(te.byType)
         .map(([k, v]) => `${k}=${v}`)
         .join(' ');
-      console.log(`          Target: total=${te.total}（${byType}）| iframe=${te.iframes.length} worker=${te.workers.length}`);
+      console.log(
+        `          Target: total=${te.total}（${byType}）| iframe=${te.iframes.length} worker=${te.workers.length}`,
+      );
     }
     const drift = report.compare?.verificationDrift ?? [];
     const dead = drift.filter((c) => c.visible === 0);
@@ -1084,8 +1424,12 @@ function printAgentReport(adapter, report) {
   if (report.static.ok) {
     const s = report.static.scanned;
     console.log(`  静态  : ok asar=${report.static.asarPath}`);
-    console.log(`          扫描 JS ${s.jsFiles} 个(${(s.jsBytes / 1024 / 1024).toFixed(1)}MB) / CSS ${s.cssFiles} 个(${(s.cssBytes / 1024 / 1024).toFixed(1)}MB)`);
-    console.log(`          类名 ${report.static.classTokens.unique} | CSS 变量 ${report.static.cssVars.unique}`);
+    console.log(
+      `          扫描 JS ${s.jsFiles} 个(${(s.jsBytes / 1024 / 1024).toFixed(1)}MB) / CSS ${s.cssFiles} 个(${(s.cssBytes / 1024 / 1024).toFixed(1)}MB)`,
+    );
+    console.log(
+      `          类名 ${report.static.classTokens.unique} | CSS 变量 ${report.static.cssVars.unique}`,
+    );
   } else {
     console.log(`  静态  : 不可用 (${report.static.error})`);
   }
@@ -1099,21 +1443,47 @@ function printAgentReport(adapter, report) {
       `          变量 shared=${c.vars.sharedCount} onlyStatic=${c.vars.onlyStaticCount} onlyRuntime=${c.vars.onlyRuntimeCount} 覆盖率=${c.vars.coverage}`,
     );
     if (c.bridgeMissing.length) {
-      console.log(`          桥接缺失 ${c.bridgeMissing.map((b) => `${b.var}(${b.role})`).join(', ')}`);
+      console.log(
+        `          桥接缺失 ${c.bridgeMissing.map((b) => `${b.var}(${b.role})`).join(', ')}`,
+      );
     }
     if (c.themeHint?.length) {
       console.log(`          主题: ${c.themeHint.join('; ')}`);
     }
     for (const v of c.verdicts) console.log(`          - ${v}`);
+    const patches = buildPatchActions(adapter.id, report.compare);
+    if (patches.length) {
+      console.log(`  补丁建议 ${patches.length} 条（--markdown 输出完整修订清单）:`);
+      for (const p of patches) {
+        const at = p.patch?.location ? ` @${p.patch.location}` : '';
+        console.log(`          [${p.severity}] ${p.type}${at} — ${p.note}`);
+      }
+    }
   }
 }
 
-function printSummaryTable(reports) {
+function printSummaryTable(reports, baselineDiff) {
   console.log('\n\n=== 汇总 ===');
-  const header = ['agent', 'cdp', 'static', 'clsCov', 'varCov', 'bridge缺', '主题', '结论'];
+  // 基线对拍可用时才追加「基线」列（新增/恢复/持续/无基线/OK）
+  const bd = baselineDiff ? new Map(baselineDiff.agents.map((a) => [a.id, a])) : null;
+  const header = bd
+    ? ['agent', 'cdp', 'static', 'clsCov', 'varCov', 'bridge缺', '主题', '基线', '结论']
+    : ['agent', 'cdp', 'static', 'clsCov', 'varCov', 'bridge缺', '主题', '结论'];
   const rows = reports.map((r) => {
     const c = r.compare;
-    return [
+    const b = bd?.get(r.id);
+    const baselineMark = !b
+      ? '—'
+      : b.isNewDrift
+        ? '新增'
+        : b.isRecovered
+          ? '恢复'
+          : b.baselineStatus === 'DRIFT'
+            ? '持续'
+            : b.baselineStatus === 'absent'
+              ? '无基线'
+              : 'OK';
+    const row = [
       r.id,
       r.runtime.ok ? 'ok' : '—',
       r.static.ok ? 'ok' : '—',
@@ -1121,29 +1491,75 @@ function printSummaryTable(reports) {
       c ? c.vars.coverage : '—',
       c ? String(c.bridgeMissing.length) : '—',
       c?.themeHint?.length ? '!' : '—',
-      agentStatus(r),
     ];
+    if (bd) row.push(baselineMark);
+    row.push(agentStatus(r));
+    return row;
   });
-  const widths = header.map((h, i) => Math.max(h.length, ...rows.map((row) => String(row[i] ?? '').length)));
+  const widths = header.map((h, i) =>
+    Math.max(h.length, ...rows.map((row) => String(row[i] ?? '').length)),
+  );
   const fmt = (cells) => cells.map((cell, i) => String(cell).padEnd(widths[i])).join('  ');
   console.log(fmt(header));
   for (const row of rows) console.log(fmt(row));
 }
 
 /** Markdown 修订清单：直接面向适配器源码修订的可读报告。 */
-function renderMarkdown(reports) {
+function renderMarkdown(reports, baselineDiff) {
   const lines = [];
   lines.push('# AgentSkin 适配器结构漂移修订清单');
   lines.push('');
   lines.push(`> 生成时间：${new Date().toISOString()} ｜ 共 ${reports.length} 个 Agent`);
+  if (baselineDiff) {
+    lines.push('');
+    lines.push('## 基线对拍摘要');
+    lines.push('');
+    lines.push(`- 新增漂移：**${baselineDiff.newDriftCount}**（基线 OK → 当前出现，需修订）`);
+    lines.push(`- 已恢复：**${baselineDiff.recoveredCount}**（基线漂移 → 当前 OK）`);
+    lines.push(
+      `- 持续漂移：**${baselineDiff.persistentCount}**（基线、当前均有，已知问题不重复告警）`,
+    );
+  }
   lines.push('');
   for (const r of reports) {
     const status = agentStatus(r);
     lines.push(`## ${r.displayName}（${r.id}）`);
     lines.push('');
     lines.push(`- 运行状态：**${status}**`);
+    if (baselineDiff) {
+      const b = baselineDiff.agents.find((a) => a.id === r.id);
+      if (b) {
+        const marks = [];
+        if (b.isNewDrift) marks.push('**新增漂移**（基线 OK → 当前漂移）');
+        if (b.isRecovered) marks.push('**已恢复**（基线漂移 → 当前 OK）');
+        if (b.baselineStatus === 'DRIFT' && !b.isRecovered)
+          marks.push('持续漂移（已知问题，不重复告警）');
+        if (b.baselineStatus === 'absent') marks.push('基线中无记录（新增 Agent / 首次建基线）');
+        if (marks.length) lines.push(`- 基线对拍：${marks.join('；')}`);
+        const news = [
+          b.newDeadLandmarks?.length
+            ? `新增失效选择器 ${b.newDeadLandmarks.length} 个（${b.newDeadLandmarks.join(', ')}）`
+            : null,
+          b.newBridgeMissing?.length
+            ? `新增 bridge 缺失 ${b.newBridgeMissing.length} 个（${b.newBridgeMissing.join(', ')}）`
+            : null,
+        ].filter(Boolean);
+        if (news.length) lines.push(`  - ⚠️ ${news.join('；')}`);
+        const resolved = [
+          b.resolvedDeadLandmarks?.length
+            ? `恢复失效选择器 ${b.resolvedDeadLandmarks.length} 个（${b.resolvedDeadLandmarks.join(', ')}）`
+            : null,
+          b.resolvedBridgeMissing?.length
+            ? `恢复 bridge 缺失 ${b.resolvedBridgeMissing.length} 个（${b.resolvedBridgeMissing.join(', ')}）`
+            : null,
+        ].filter(Boolean);
+        if (resolved.length) lines.push(`  - ✅ ${resolved.join('；')}`);
+      }
+    }
     if (r.runtime.ok) {
-      lines.push(`- CDP：ok @:${r.runtime.port}（类名 ${r.runtime.classInventory.unique} / :root 变量 ${r.runtime.rootVars.unique}）`);
+      lines.push(
+        `- CDP：ok @:${r.runtime.port}（类名 ${r.runtime.classInventory.unique} / :root 变量 ${r.runtime.rootVars.unique}）`,
+      );
       const sa = r.runtime.styleAst;
       if (sa && !sa.error) {
         lines.push(
@@ -1152,16 +1568,23 @@ function renderMarkdown(reports) {
       }
       const sd = r.runtime.shadowDom;
       if (sd && !sd.error) {
-        lines.push(`- Shadow DOM：open host ${sd.openHostCount}｜内部元素 ${sd.totalShadowEls}｜shadow 内 adoptedStyleSheets ${sd.adoptedInShadow}`);
+        lines.push(
+          `- Shadow DOM：open host ${sd.openHostCount}｜内部元素 ${sd.totalShadowEls}｜shadow 内 adoptedStyleSheets ${sd.adoptedInShadow}`,
+        );
         if (sd.closedShadowRisk?.length) {
-          for (const c of sd.closedShadowRisk) lines.push(`  - ⚠️ closed shadow 风险：\`${c.selector}\`（host: ${c.host}，matches=${c.matches}）`);
+          for (const c of sd.closedShadowRisk)
+            lines.push(
+              `  - ⚠️ closed shadow 风险：\`${c.selector}\`（host: ${c.host}，matches=${c.matches}）`,
+            );
         }
       }
     } else {
       lines.push(`- CDP：不可用（${r.runtime.error}）`);
     }
     if (r.static.ok) {
-      lines.push(`- 静态解包：${r.static.layout ?? 'asar'}（类名 ${r.static.classTokens.unique} / CSS 变量 ${r.static.cssVars.unique}）`);
+      lines.push(
+        `- 静态解包：${r.static.layout ?? 'asar'}（类名 ${r.static.classTokens.unique} / CSS 变量 ${r.static.cssVars.unique}）`,
+      );
     } else {
       lines.push(`- 静态解包：不可用（${r.static.error}）`);
     }
@@ -1171,7 +1594,8 @@ function renderMarkdown(reports) {
       if (dead.length) {
         lines.push('');
         lines.push('### 失效 verification 选择器');
-        for (const d of dead) lines.push(`- \`${d.selector}\`（scope: ${d.scope}，matches=${d.matches}）`);
+        for (const d of dead)
+          lines.push(`- \`${d.selector}\`（scope: ${d.scope}，matches=${d.matches}）`);
       }
       const neverDeclared = c.bridgeMissing.filter((b) => !b.declaredInStatic);
       const componentScoped = c.bridgeMissing.filter((b) => b.declaredInStatic);
@@ -1179,10 +1603,14 @@ function renderMarkdown(reports) {
         lines.push('');
         lines.push('### bridge 变量问题');
         if (neverDeclared.length) {
-          lines.push(`- **疑似失效 entry（静态 CSS + 运行时 :root 均未声明）**：${neverDeclared.map((b) => `\`${b.var}\`(${b.role})`).join('、')}`);
+          lines.push(
+            `- **疑似失效 entry（静态 CSS + 运行时 :root 均未声明）**：${neverDeclared.map((b) => `\`${b.var}\`(${b.role})`).join('、')}`,
+          );
         }
         if (componentScoped.length) {
-          lines.push(`- 组件作用域不可达：${componentScoped.map((b) => `\`${b.var}\`(${b.role})`).join('、')}`);
+          lines.push(
+            `- 组件作用域不可达：${componentScoped.map((b) => `\`${b.var}\`(${b.role})`).join('、')}`,
+          );
         }
       }
       if (c.themeHint?.length) {
@@ -1190,18 +1618,24 @@ function renderMarkdown(reports) {
         lines.push('### 主题模式提示');
         for (const h of c.themeHint) lines.push(`- ${h}`);
       }
-      const patches = buildPatchActions(c);
+      const patches = buildPatchActions(r.id, c);
       if (patches.length) {
         lines.push('');
         lines.push('### 修订建议（自动生成）');
         for (const p of patches) {
-          lines.push(`- **[${p.severity}] ${p.type}**：${p.var || p.target || p.scope || 'agent-wide'} — ${p.note}`);
+          lines.push(
+            `- **[${p.severity}] ${p.type}**：${p.var || p.target || p.scope || 'agent-wide'} — ${p.note}`,
+          );
         }
       }
       lines.push('');
       lines.push('### diff 摘要');
-      lines.push(`- 类名：shared=${c.classes.sharedCount} onlyStatic=${c.classes.onlyStaticCount} onlyRuntime=${c.classes.onlyRuntimeCount}（覆盖率 ${c.classes.coverage}）`);
-      lines.push(`- 变量：shared=${c.vars.sharedCount} onlyStatic=${c.vars.onlyStaticCount} onlyRuntime=${c.vars.onlyRuntimeCount}（覆盖率 ${c.vars.coverage}）`);
+      lines.push(
+        `- 类名：shared=${c.classes.sharedCount} onlyStatic=${c.classes.onlyStaticCount} onlyRuntime=${c.classes.onlyRuntimeCount}（覆盖率 ${c.classes.coverage}）`,
+      );
+      lines.push(
+        `- 变量：shared=${c.vars.sharedCount} onlyStatic=${c.vars.onlyStaticCount} onlyRuntime=${c.vars.onlyRuntimeCount}（覆盖率 ${c.vars.coverage}）`,
+      );
       if (c.topRuntimeDiffs?.length) {
         lines.push('');
         lines.push('### 高频运行时独有类名（Top-N，静态抓不到）');
@@ -1214,10 +1648,30 @@ function renderMarkdown(reports) {
 }
 
 /** 轻量摘要：剔除冗余原始数据，仅保留对拍结论，供外部脚本 / CI 快速消费。 */
-function buildLightReport(reports) {
+function buildLightReport(reports, baselineDiff) {
   return {
     generatedAt: new Date().toISOString(),
     agents: reports.length,
+    baseline: baselineDiff
+      ? {
+          generatedAt: baselineDiff.generatedAt,
+          newDriftCount: baselineDiff.newDriftCount,
+          recoveredCount: baselineDiff.recoveredCount,
+          persistentCount: baselineDiff.persistentCount,
+          agents: baselineDiff.agents.map((a) => ({
+            id: a.id,
+            displayName: a.displayName,
+            baselineStatus: a.baselineStatus,
+            currentStatus: a.currentStatus,
+            isNewDrift: a.isNewDrift,
+            isRecovered: a.isRecovered,
+            newDeadLandmarks: a.newDeadLandmarks ?? [],
+            newBridgeMissing: a.newBridgeMissing ?? [],
+            resolvedDeadLandmarks: a.resolvedDeadLandmarks ?? [],
+            resolvedBridgeMissing: a.resolvedBridgeMissing ?? [],
+          })),
+        }
+      : null,
     summary: reports.map((r) => ({
       id: r.id,
       displayName: r.displayName,
@@ -1255,18 +1709,28 @@ function buildLightReport(reports) {
           }
         : { ok: false, error: r.runtime.error },
       static: r.static.ok
-        ? { layout: r.static.layout ?? 'asar', classes: r.static.classTokens.unique, vars: r.static.cssVars.unique }
+        ? {
+            layout: r.static.layout ?? 'asar',
+            classes: r.static.classTokens.unique,
+            vars: r.static.cssVars.unique,
+          }
         : { ok: false, error: r.static.error },
       compare: r.compare
         ? {
             drift: r.compare.drift,
             classCoverage: r.compare.classes.coverage,
             varCoverage: r.compare.vars.coverage,
-            bridgeMissing: r.compare.bridgeMissing.map((b) => ({ var: b.var, role: b.role, neverDeclared: !b.declaredInStatic })),
-            deadLandmarks: (r.compare.verificationDrift ?? []).filter((x) => x.visible === 0).map((x) => x.selector),
+            bridgeMissing: r.compare.bridgeMissing.map((b) => ({
+              var: b.var,
+              role: b.role,
+              neverDeclared: !b.declaredInStatic,
+            })),
+            deadLandmarks: (r.compare.verificationDrift ?? [])
+              .filter((x) => x.visible === 0)
+              .map((x) => x.selector),
             themeHint: r.compare.themeHint,
             topRuntimeDiffs: r.compare.topRuntimeDiffs,
-            patchActions: buildPatchActions(r.compare),
+            patchActions: buildPatchActions(r.id, r.compare),
             verdicts: r.compare.verdicts,
           }
         : null,
@@ -1299,7 +1763,8 @@ const FALLBACK_RULE = {
 };
 
 const RULE_THEME_KEY_RE = /theme|dark|light|scheme|appearance|color-mode/i;
-const RULE_FINGERPRINT_VAR_RE = /bg|background|surface|canvas|panel|card|text|foreground|primary|accent|brand|link|border|divider|fill/i;
+const RULE_FINGERPRINT_VAR_RE =
+  /bg|background|surface|canvas|panel|card|text|foreground|primary|accent|brand|link|border|divider|fill/i;
 // 指纹只收「颜色语义」变量；值里出现尺寸/间距单位或 --spacing 引用的视为布局变量，跳过
 const RULE_DIMENSION_VALUE_RE = /\d+(px|rem|em|vh|vw|%)|var\(--spac/i;
 
@@ -1308,7 +1773,8 @@ function deriveThemePersistCandidates(dom) {
   const candidates = [];
   if (!dom || dom.error) return candidates;
   for (const k of Object.keys(dom.dataset ?? {})) {
-    if (RULE_THEME_KEY_RE.test(k)) candidates.push({ type: 'dataset', key: k, sampleValue: dom.dataset[k] });
+    if (RULE_THEME_KEY_RE.test(k))
+      candidates.push({ type: 'dataset', key: k, sampleValue: dom.dataset[k] });
   }
   const seen = new Set();
   for (const item of dom.themeStorage ?? []) {
@@ -1329,7 +1795,9 @@ function deriveThemeImplMode(report) {
   const sa = report.runtime?.styleAst;
   const hints = report.compare?.themeHint ?? [];
   const adopted = sa && !sa.error && sa.adoptedSheets > 0;
-  const inline = hints.some((h) => typeof h === 'string' && (/@theme-inline/.test(h) || /组件作用域/.test(h)));
+  const inline = hints.some(
+    (h) => typeof h === 'string' && (/@theme-inline/.test(h) || /组件作用域/.test(h)),
+  );
   if (adopted && inline) return 'mixed';
   if (inline) return 'inline';
   if (adopted) return 'adopted';
@@ -1346,7 +1814,11 @@ function deriveFingerprint(dom, styleAst, mode) {
   if (current === mode || current === 'unknown') {
     const allVars = [...(styleAst?.rootVars ?? []), ...(styleAst?.adoptedRootVars ?? [])];
     for (const v of allVars) {
-      if (RULE_FINGERPRINT_VAR_RE.test(v.name) && !RULE_DIMENSION_VALUE_RE.test(v.value) && cssVars[v.name] === undefined) {
+      if (
+        RULE_FINGERPRINT_VAR_RE.test(v.name) &&
+        !RULE_DIMENSION_VALUE_RE.test(v.value) &&
+        cssVars[v.name] === undefined
+      ) {
         cssVars[v.name] = v.value;
         if (Object.keys(cssVars).length >= 24) break;
       }
@@ -1385,9 +1857,12 @@ function buildRuleTemplate(adapter, report) {
     globalApiCandidates: [],
     globalStorePathCandidates: [],
     lazyRiskComponents: ['Modal', 'Dropdown', 'Popover', 'Select', 'Tooltip', 'Dialog'],
-    shadowDomRiskSelectors: shadowDom && !shadowDom.error && shadowDom.openHosts?.length
-      ? shadowDom.openHosts.slice(0, 10).map((h) => `${h.tag}${h.cls?.length ? '.' + h.cls.join('.') : ''}`)
-      : [],
+    shadowDomRiskSelectors:
+      shadowDom && !shadowDom.error && shadowDom.openHosts?.length
+        ? shadowDom.openHosts
+            .slice(0, 10)
+            .map((h) => `${h.tag}${h.cls?.length ? '.' + h.cls.join('.') : ''}`)
+        : [],
     themeImplMode: deriveThemeImplMode(report),
     canSilentSwitch: false,
     switchSideEffects: [],
@@ -1405,7 +1880,11 @@ function loadBaseline(path) {
   if (!path || !existsSync(path)) return null;
   try {
     const raw = JSON.parse(readFileSync(path, 'utf-8'));
-    const list = Array.isArray(raw.summary) ? raw.summary : Array.isArray(raw.reports) ? raw.reports : null;
+    const list = Array.isArray(raw.summary)
+      ? raw.summary
+      : Array.isArray(raw.reports)
+        ? raw.reports
+        : null;
     if (!list) {
       debugLog(`baseline 文件缺少 reports/summary 数组，忽略: ${path}`);
       return null;
@@ -1417,7 +1896,9 @@ function loadBaseline(path) {
       const deadLandmarks = Array.isArray(cmp.deadLandmarks)
         ? cmp.deadLandmarks
         : (cmp.verificationDrift ?? []).filter((x) => x.visible === 0).map((x) => x.selector);
-      const bridgeMissing = (cmp.bridgeMissing ?? []).map((b) => (typeof b === 'string' ? b : b.var));
+      const bridgeMissing = (cmp.bridgeMissing ?? []).map((b) =>
+        typeof b === 'string' ? b : b.var,
+      );
       const drift = !!cmp.drift || deadLandmarks.length > 0 || (cmp.themeHint ?? []).length > 0;
       map.set(item.id, {
         status: item.status ?? (drift ? 'DRIFT' : 'OK'),
@@ -1436,7 +1917,7 @@ function loadBaseline(path) {
 
 /** 统一漂移信号：bridge 缺失 / verification 失效 / @theme-inline 提示任一存在即视为有漂移。 */
 function hasDriftSignal(cmp) {
-  return !!(cmp?.drift) || ((cmp?.themeHint ?? []).length > 0);
+  return !!cmp?.drift || (cmp?.themeHint ?? []).length > 0;
 }
 
 /**
@@ -1452,7 +1933,9 @@ function computeBaselineDiff(reports, baseline) {
   let persistentCount = 0;
   for (const r of reports) {
     const b = baseline.get(r.id);
-    const curDead = new Set((r.compare?.verificationDrift ?? []).filter((x) => x.visible === 0).map((x) => x.selector));
+    const curDead = new Set(
+      (r.compare?.verificationDrift ?? []).filter((x) => x.visible === 0).map((x) => x.selector),
+    );
     const curBridge = new Set((r.compare?.bridgeMissing ?? []).map((x) => x.var));
     const curHasDrift = hasDriftSignal(r.compare);
     const entry = {
@@ -1480,7 +1963,13 @@ function computeBaselineDiff(reports, baseline) {
     if (b.drift && curHasDrift) persistentCount++;
     agents.push(entry);
   }
-  return { generatedAt: new Date().toISOString(), agents, newDriftCount, recoveredCount, persistentCount };
+  return {
+    generatedAt: new Date().toISOString(),
+    agents,
+    newDriftCount,
+    recoveredCount,
+    persistentCount,
+  };
 }
 
 // 噪声启发式（仅用于「建议」，不自动生效；跨 Agent / 高频阈值兜底降低误报）
@@ -1523,7 +2012,8 @@ function buildIgnoreSuggestions(reports, ignore = { classTokens: new Set(), cssV
   const staticTokens = analyzed.map((r) => new Set(r.static?.classTokens?.tokens ?? []));
   const staticVars = analyzed.map((r) => new Set(r.static?.cssVars?.names ?? []));
 
-  const isNoiseClass = (t) => IGNORE_UTILITY_RE.test(t) || IGNORE_CLASS_RE.test(t) || IGNORE_HASH_RE.test(t);
+  const isNoiseClass = (t) =>
+    IGNORE_UTILITY_RE.test(t) || IGNORE_CLASS_RE.test(t) || IGNORE_HASH_RE.test(t);
   const isNoiseVar = (v) => IGNORE_VAR_RE.test(v) || IGNORE_HASH_RE.test(v);
 
   const classCandidates = new Map(); // token -> { agents:Set, totalFreq }
@@ -1560,7 +2050,8 @@ function buildIgnoreSuggestions(reports, ignore = { classTokens: new Set(), cssV
   for (const [token, rec] of classCandidates) {
     if (rec.agents.size < 2 && rec.totalFreq < 15) continue; // 不跨 Agent 且低频 → 不足以判定稳定噪声
     classTokens.push(token);
-    reasons[token] = `跨 Agent=${rec.agents.size} 累计频次=${rec.totalFreq}，疑似 Tailwind 工具类 / CSS Modules 噪声`;
+    reasons[token] =
+      `跨 Agent=${rec.agents.size} 累计频次=${rec.totalFreq}，疑似 Tailwind 工具类 / CSS Modules 噪声`;
   }
   for (const [v, rec] of varCandidates) {
     if (rec.agents.size < 2) continue; // 变量语义较强，仅跨 Agent 稳定才建议
@@ -1593,9 +2084,10 @@ async function main() {
   OPTIONS.skipCefSubapp = flag('--skip-cef-subapp');
   OPTIONS.ignorePath = value('--ignore');
   OPTIONS.suggestIgnore = flag('--suggest-ignore');
-  OPTIONS.baselinePath = value('--baseline');
   OPTIONS.rules = flag('--rules');
   OPTIONS.meta = flag('--meta');
+  OPTIONS.writePatches = flag('--write-patches');
+  OPTIONS.dryRun = flag('--dry-run');
 
   const requested = value('--agent');
   const outputDir = resolve(value('--out') ?? 'agents-raw-data');
@@ -1605,13 +2097,19 @@ async function main() {
 
   const adapters = listAdapters().filter((a) => (requested ? a.id === requested : true));
   if (!adapters.length) {
-    console.error(`未知 agent: ${requested}（可选: ${listAdapters().map((a) => a.id).join(', ')}）`);
+    console.error(
+      `未知 agent: ${requested}（可选: ${listAdapters()
+        .map((a) => a.id)
+        .join(', ')}）`,
+    );
     process.exit(2);
   }
 
   if (!OPTIONS.ci) {
     console.log(`=== 结构对拍（CDP × 静态解包）===`);
-    console.log(`目标: ${adapters.map((a) => a.id).join(', ')}${OPTIONS.skipCefSubapp ? ' [--skip-cef-subapp]' : ''}`);
+    console.log(
+      `目标: ${adapters.map((a) => a.id).join(', ')}${OPTIONS.skipCefSubapp ? ' [--skip-cef-subapp]' : ''}`,
+    );
   }
 
   const reports = [];
@@ -1650,13 +2148,65 @@ async function main() {
     if (!OPTIONS.ci) printAgentReport(adapter, report);
   }
 
+  // 补丁自动写回（--write-patches）：把「确定性删除」类建议直接落到适配器源码。
+  // 仅落地死 landmark 选择器移除 / 失效 bridge entry 移除；
+  // switch_to_component_injection 需设计决策，保持人工。--dry-run 只预览不写盘。
+  let patchResults = null;
+  if (OPTIONS.writePatches) {
+    const actions = [];
+    for (const r of reports) if (r.compare) actions.push(...buildPatchActions(r.id, r.compare));
+    patchResults = applyPatchActions(actions, { dryRun: OPTIONS.dryRun });
+    const appliedTotal = patchResults.reduce((n, p) => n + p.appliedCount, 0);
+    const missedTotal = patchResults.reduce((n, p) => n + p.missedCount, 0);
+    if (!OPTIONS.ci) {
+      console.log(
+        `\n补丁写回: ${OPTIONS.dryRun ? 'dry-run（仅预览，不写文件）' : '已写入适配器源码'} ｜ 确定删除 ${appliedTotal} 条 / 未命中 ${missedTotal} 条`,
+      );
+      for (const p of patchResults) {
+        const verb = p.error
+          ? `错误 ${p.error}`
+          : p.wrote
+            ? '已写入'
+            : p.dryRun
+              ? '将写入'
+              : '无改动';
+        console.log(
+          `          ${verb} ${p.file}（应用 ${p.appliedCount} / 未命中 ${p.missedCount}）`,
+        );
+        if (p.dryRun) {
+          for (const a of p.applied)
+            console.log(
+              `            - 将移除 ${a.type}「${a.target}」@${a.location} -> ${a.element}`,
+            );
+        }
+        for (const m of p.missed)
+          console.log(
+            `            ! 未命中 ${m.type}「${m.target ?? ''}」@${m.location ?? '?'}：${m.reason}`,
+          );
+      }
+    }
+    const pp = join(outputDir, '_structure-patches-applied.json');
+    writeFileSync(
+      pp,
+      JSON.stringify(
+        { generatedAt: new Date().toISOString(), dryRun: OPTIONS.dryRun, results: patchResults },
+        null,
+        2,
+      ),
+    );
+    if (!OPTIONS.ci) console.log(`补丁明细: ${pp}`);
+  }
+
   // 基线对比（--baseline）：以历史报告为基准，仅把「新增漂移」当作告警项（CI 增量语义）。
   // 必须在覆写 _structure-compare.json 之前读取默认基线，否则基线 == 本次结果，diff 恒为 0。
   let baselineDiff = null;
   // --baseline 为裸 flag 时 value() 会误取下一个以 -- 开头的参数，需显式判别；
   // 无值或值为 flag 时回退到默认基线（上一次 _structure-compare.json）。
   const rawBaseline = value('--baseline');
-  const baselinePath = rawBaseline && !rawBaseline.startsWith('--') ? rawBaseline : join(outputDir, '_structure-compare.json');
+  const baselinePath =
+    rawBaseline && !rawBaseline.startsWith('--')
+      ? rawBaseline
+      : join(outputDir, '_structure-compare.json');
   if (existsSync(baselinePath)) {
     const baseline = loadBaseline(baselinePath);
     if (baseline) {
@@ -1665,7 +2215,9 @@ async function main() {
       writeFileSync(bdPath, JSON.stringify(baselineDiff, null, 2));
       if (!OPTIONS.ci) {
         console.log(`\n基线对比: ${bdPath}`);
-        console.log(`          新增漂移 ${baselineDiff.newDriftCount} / 恢复 ${baselineDiff.recoveredCount} / 持续 ${baselineDiff.persistentCount}`);
+        console.log(
+          `          新增漂移 ${baselineDiff.newDriftCount} / 恢复 ${baselineDiff.recoveredCount} / 持续 ${baselineDiff.persistentCount}`,
+        );
         for (const a of baselineDiff.agents) {
           if (a.isNewDrift) {
             const extra = [
@@ -1674,7 +2226,9 @@ async function main() {
             ]
               .filter(Boolean)
               .join(' ');
-            console.log(`          [新增] ${a.displayName}（${a.id}）${a.note ?? ''}${extra ? ` ${extra}` : ''}`);
+            console.log(
+              `          [新增] ${a.displayName}（${a.id}）${a.note ?? ''}${extra ? ` ${extra}` : ''}`,
+            );
           }
           if (a.isRecovered) console.log(`          [恢复] ${a.displayName}（${a.id}）`);
         }
@@ -1684,15 +2238,18 @@ async function main() {
 
   // 产物 1：全量原始 JSON（保留，用于问题溯源）
   const fullPath = join(outputDir, '_structure-compare.json');
-  writeFileSync(fullPath, JSON.stringify({ generatedAt: new Date().toISOString(), reports }, null, 2));
+  writeFileSync(
+    fullPath,
+    JSON.stringify({ generatedAt: new Date().toISOString(), reports }, null, 2),
+  );
   // 产物 2：轻量结构化摘要（外部工具 / CI 消费）
   const lightPath = join(outputDir, '_structure-compare-light.json');
-  writeFileSync(lightPath, JSON.stringify(buildLightReport(reports), null, 2));
+  writeFileSync(lightPath, JSON.stringify(buildLightReport(reports, baselineDiff), null, 2));
   // 产物 3：Markdown 修订清单（人工可读，直接指导适配器源码修订）
   let mdPath = null;
   if (OPTIONS.markdown) {
     mdPath = join(outputDir, '_structure-compare-report.md');
-    writeFileSync(mdPath, renderMarkdown(reports), 'utf-8');
+    writeFileSync(mdPath, renderMarkdown(reports, baselineDiff), 'utf-8');
   }
 
   // 产物 4：ignore 噪声候选（--suggest-ignore）——人工复核后可直接作为 --ignore 输入
@@ -1701,7 +2258,10 @@ async function main() {
     if (suggest) {
       const sp = join(outputDir, '_ignore.suggest.json');
       writeFileSync(sp, JSON.stringify(suggest, null, 2));
-      if (!OPTIONS.ci) console.log(`\nignore 建议: ${sp}（类名 ${suggest.classTokens.length} / 变量 ${suggest.cssVars.length}）`);
+      if (!OPTIONS.ci)
+        console.log(
+          `\nignore 建议: ${sp}（类名 ${suggest.classTokens.length} / 变量 ${suggest.cssVars.length}）`,
+        );
     }
   }
 
@@ -1715,7 +2275,10 @@ async function main() {
       const rule = buildRuleTemplate(adapter, report);
       const rp = join(rulesDir, `${adapter.id}.theme.rule.json`);
       writeFileSync(rp, JSON.stringify(rule, null, 2));
-      if (!OPTIONS.ci) console.log(`\n规则模板: ${rp}（themeImplMode=${rule.themeImplMode}，persist候选 ${rule.themePersistCandidates.length}）`);
+      if (!OPTIONS.ci)
+        console.log(
+          `\n规则模板: ${rp}（themeImplMode=${rule.themeImplMode}，persist候选 ${rule.themePersistCandidates.length}）`,
+        );
     }
     const fp = join(rulesDir, 'fallback.generic.theme.rule.json');
     writeFileSync(fp, JSON.stringify(FALLBACK_RULE, null, 2));
@@ -1731,7 +2294,8 @@ async function main() {
       const report = reports.find((r) => r.id === adapter.id);
       if (!report) continue;
       if (!report.runtime.ok) {
-        if (!OPTIONS.ci) console.log(`\n元模型: ${adapter.id} 运行时探测失败，跳过（${report.runtime.error}）`);
+        if (!OPTIONS.ci)
+          console.log(`\n元模型: ${adapter.id} 运行时探测失败，跳过（${report.runtime.error}）`);
         continue;
       }
       // 规则不存在 → rule=null（无先验），inferMeta 自然落入 low + 运行时为准语义
@@ -1759,7 +2323,7 @@ async function main() {
     }
   }
 
-  printSummaryTable(reports);
+  printSummaryTable(reports, baselineDiff);
   if (!OPTIONS.ci) {
     console.log(`\n完整报告: ${fullPath}`);
     console.log(`轻量摘要: ${lightPath}`);

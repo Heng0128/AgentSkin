@@ -10,8 +10,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildApplyExpression,
+  buildPersistenceScript,
   buildVerifyExpression,
   buildStyleSamplingSnippet,
+  SESSION_DISABLED_KEY,
 } from './renderer-payload.mjs';
 
 const adapter = { id: 'traework' };
@@ -53,5 +55,79 @@ describe('buildStyleSamplingSnippet', () => {
     expect(snippet).toContain('getComputedStyle');
     expect(snippet).toContain("document.getElementById('agentskin-theme-style-' + appId)");
     expect(snippet).toContain('root');
+  });
+});
+
+describe('buildApplyExpression — bridge compilation (S3)', () => {
+  const bridgeAdapter = {
+    id: 'zcode',
+    bridge: [
+      { var: '--text-primary', role: 'text' },
+      { var: '--bg-surface', role: 'surface', alpha: 0.8 },
+      { var: '--accent', role: 'accent' },
+    ],
+  };
+
+  it('compiles bridge entries into the host `:root` rule of the theme <style>', () => {
+    const expression = buildApplyExpression({ adapter: bridgeAdapter, targetTheme: { theme: { id: 't' }, css: '/* theme */' } });
+    expect(expression).toContain('html.agentskin-host-zcode:root');
+    expect(expression).toContain('--text-primary: var(--agentskin-text) !important');
+    expect(expression).toContain('--accent: var(--agentskin-accent) !important');
+    // alpha < 1 wraps the token ref in color-mix, mirroring tokens.css translucency.
+    expect(expression).toContain('--bg-surface: color-mix(in srgb, var(--agentskin-surface) 80%, transparent) !important');
+  });
+
+  it('appends no bridge rule when the adapter declares empty entries', () => {
+    const expression = buildApplyExpression({
+      adapter: { id: 'traework', bridge: [] },
+      targetTheme: { theme: { id: 't' }, css: ':root{}' },
+    });
+    expect(expression).not.toContain('agentskin-host-traework:root');
+    expect(expression).toContain('":root{}"');
+  });
+
+  it('appends no bridge rule when the adapter omits a bridge', () => {
+    const expression = buildApplyExpression({
+      adapter: { id: 'workbuddy' },
+      targetTheme: { theme: { id: 't' }, css: ':root{}' },
+    });
+    expect(expression).not.toContain('agentskin-host-workbuddy:root');
+    expect(expression).toContain('":root{}"');
+  });
+});
+
+describe('buildPersistenceScript — new-document persistence (RFC P1)', () => {
+  const targetTheme = { theme: { id: 't', version: '1' }, css: ':root{}' };
+
+  it('reuses the exact same injection body as buildApplyExpression (no drift)', () => {
+    const persistence = buildPersistenceScript({ adapter, targetTheme });
+    const applyBody = buildApplyExpression({ adapter, targetTheme });
+    // The persistence script embeds the full apply expression verbatim.
+    expect(persistence).toContain(JSON.stringify(applyBody));
+    // …and therefore inherits every injection marker of the apply body
+    // (host class embedded in the apply body's JSON host literal).
+    expect(persistence).toContain('agentskin-theme-style-');
+    expect(persistence).toContain('agentskin-host-traework');
+  });
+
+  it('skips early when the sessionStorage disabled flag is set (removeTheme fallback)', () => {
+    const persistence = buildPersistenceScript({ adapter, targetTheme });
+    expect(persistence).toContain(`sessionStorage.getItem(${JSON.stringify(SESSION_DISABLED_KEY)}) === '1'`);
+    expect(persistence).toContain('return');
+  });
+
+  it('waits for document.documentElement on early new documents', () => {
+    const persistence = buildPersistenceScript({ adapter, targetTheme });
+    expect(persistence).toContain('document.documentElement');
+    expect(persistence).toContain('new MutationObserver');
+    expect(persistence).toContain('obs.observe(document, { childList: true, subtree: false })');
+  });
+
+  it('executes the injection body via (0, eval) — self-contained, no closure drift', () => {
+    const persistence = buildPersistenceScript({ adapter, targetTheme });
+    expect(persistence).toContain('(0, eval)(APPLY_BODY)');
+    // Idempotency is delegated to the shared apply body (ensure() skips when
+    // the style element already exists), so repeated executions do not pile up.
+    expect(persistence).toContain('const APPLY_BODY');
   });
 });

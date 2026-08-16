@@ -90,16 +90,36 @@ const traework = {
     // patchWindowsAdapters; now static so engine and runtime agree.)
     return /solo-lite|trae|traework/i.test(url) || /trae|traework/i.test(title);
   },
+  // CSS variable bridge (S3): re-route the native --vscode-* family TRAE SOLO
+  // reads onto AgentSkin semantic roles. --vscode-editor-background is kept
+  // out (art-transparent); surface/text/border/accent alphas mirror
+  // engines/traework/tokens.css.
+  bridge: [
+    { var: "--vscode-foreground", role: "text" },
+    { var: "--vscode-descriptionForeground", role: "muted" },
+    { var: "--vscode-editorWidget-background", role: "surface" },
+    { var: "--vscode-sideBar-background", role: "surface", alpha: 0.15 },
+    { var: "--vscode-icube-colorBg2", role: "surface" },
+    { var: "--vscode-icube-colorBg3", role: "surface-elevated" },
+    { var: "--vscode-textLink-foreground", role: "accent" },
+    { var: "--vscode-textLink-activeForeground", role: "secondary" },
+    { var: "--vscode-button-background", role: "accent" },
+    { var: "--vscode-button-foreground", role: "bg" },
+    { var: "--vscode-focusBorder", role: "accent", alpha: 0.6 },
+    { var: "--vscode-badge-background", role: "accent", alpha: 0.65 },
+    { var: "--vscode-scrollbarSlider-background", role: "accent", alpha: 0.22 },
+    { var: "--vscode-panel-border", role: "accent", alpha: 0.18 },
+  ],
   verification: {
     // The root landmark is the only blocking check: it doubles as the
     // "app finished booting" signal and the minimal app fingerprint. The home
     // routes render .panel-container while conversations render
     // .solo-lite-layout, so both satisfy the any-list. Everything else warns —
     // panels hide per view/window, and CSS is inert on absent nodes.
-    rootAny: ["#root .panel-container", "#root .solo-lite-layout", "#root"],
+    rootAny: [ "#root .solo-lite-layout", "#root"],
     recommended: [
       { name: "sidebar", any: [".task-list-base", ".task-list-panel"] },
-      { name: "workspace", any: [".panel-container", ".solo-lite-layout"] },
+      { name: "workspace", any: [ ".solo-lite-layout"] },
       { name: "composer", any: [".chat-input-v2-input-box-editable[contenteditable='true']"] },
     ],
   },

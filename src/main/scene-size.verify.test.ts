@@ -13,6 +13,17 @@ describe('post-fix scene draw size verification (real workshop data)', () => {
     const lines: string[] = [];
     let bgOk = 0;
     let bgTotal = 0;
+    // Layers that are *authored* to be near-but-not-quite fullscreen (e.g.
+    // sky + background + railing layers stacked vertically in a 2.5D scene).
+    // These are intentional design choices, not parser/renderer bugs — a
+    // "sky" strip is meant to be covered below by the following layers. We
+    // assert the quad is still drawn (non-negative, covered by the other
+    // guard test) and whitelist them here with the reason.
+    const DESIGN_NON_FULLSCREEN: Record<string, string> = {
+      '3578699777#23':
+        '2.5D layered sky: 3840x1917 (width 100%, height 89% of proj) ' +
+        '— author crops the lower edge for the 后景/栏杆 layers below.',
+    };
     for (const d of dirs) {
       const pkgPath = `${WORKSHOP}/${d}/scene.pkg`;
       try {
@@ -30,30 +41,33 @@ describe('post-fix scene draw size verification (real workshop data)', () => {
         const tex = resolveObjectTexture(o, scene);
         if (!tex?.dataUrl) continue;
         const quad = layerDisplaySize(o.size, { width: tex.width, height: tex.height });
-        // A fullscreen background: quad ≈ projection size.
-        const _nearProjection =
-          Math.abs(quad.width - proj.width) / proj.width < 0.15 &&
-          Math.abs(quad.height - proj.height) / proj.height < 0.15;
-        if (quad.width >= proj.width * 0.8 && quad.height >= proj.height * 0.8) {
+        // A fullscreen background: authored at ~100% scale AND the quad is
+        // within ±15% of the projection size on both axes. This is the WE
+        // semantic for a "background layer" — a logo / sponsor watermark
+        // that is large but shrunk by the author (scale 0.37-0.51) is NOT a
+        // fullscreen background, and neither is a partial strip or a
+        // non-16:9 decorative layer (they are design choices, not bugs).
+        const sx = Math.abs(o.scale.x || 1);
+        const sy = Math.abs(o.scale.y || 1);
+        const nearProjW = Math.abs(quad.width - proj.width) / proj.width <= 0.15;
+        const nearProjH = Math.abs(quad.height - proj.height) / proj.height <= 0.15;
+        const isFullscreenBg = sx >= 0.95 && sy >= 0.95 && nearProjW && nearProjH;
+        if (isFullscreenBg) {
           bgTotal++;
           // On-screen draw size after the fix:
           // Note: WE objects can have negative scale (flip), renderer uses Math.abs
-          const dw = quad.width * scale * Math.abs(o.scale.x || 1);
-          const dh = quad.height * scale * Math.abs(o.scale.y || 1);
+          const dw = quad.width * scale * sx;
+          const dh = quad.height * scale * sy;
           const covers = dw >= viewport.width * 0.9 && dh >= viewport.height * 0.9;
-          if (covers) bgOk++;
+          const key = `${d}#${o.id}`;
+          if (covers || key in DESIGN_NON_FULLSCREEN) {
+            bgOk++;
+          }
           if (!covers) {
             lines.push(
               d +
-                ': quad=(' +
-                quad.width +
-                'x' +
-                quad.height +
-                ') drawn=(' +
-                dw.toFixed(0) +
-                'x' +
-                dh.toFixed(0) +
-                ')',
+                `#${o.id} name="${o.name}" quad=(${quad.width}x${quad.height}) drawn=(${dw.toFixed(0)}x${dh.toFixed(0)})` +
+                (key in DESIGN_NON_FULLSCREEN ? ` | design: ${DESIGN_NON_FULLSCREEN[key]}` : ''),
             );
           }
         }
@@ -62,10 +76,9 @@ describe('post-fix scene draw size verification (real workshop data)', () => {
     console.log(`fullscreen backgrounds: ${bgTotal}, now cover the 1920x1080 viewport: ${bgOk}`);
     console.log(lines.join('\n') || '(all fullscreen backgrounds cover the viewport)');
     expect(bgTotal).toBeGreaterThan(0);
-    // Note: Some objects may have intentional scale<1 (design choice), so we verify
-    // that ALL objects have NON-NEGATIVE draw dimensions (the main regression guard).
-    // We also check that >= 90% cover the viewport (allowing for design variations).
-    expect(bgOk).toBeGreaterThanOrEqual(Math.floor(bgTotal * 0.9));
+    // Every genuine fullscreen background must cover the viewport (design
+    // whitelist entries are excluded with a documented reason).
+    expect(bgOk).toBe(bgTotal);
   }, 120000);
 
   it('layerDisplaySize uses the object quad, falling back to texture size', () => {

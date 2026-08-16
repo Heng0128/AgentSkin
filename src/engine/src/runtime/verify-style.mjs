@@ -17,6 +17,12 @@
  * `STYLE_RUNTIME_SOURCE` 通过 `FN.toString()` 序列化同名函数嵌入，注释声明一致。
  */
 
+import {
+  COMPONENT_INDEX,
+  RISK_LEVEL,
+  SEMANTIC_NAME_TO_COMPONENT_ID,
+} from "../semantic-quant/taxonomy.mjs";
+
 /**
  * 解析 CSS 颜色字符串为 { r, g, b }（0-255）。支持 `rgb(...)` / `rgba(...)` /
  * `#rgb` / `#rrggbb`。无法解析（transparent/currentcolor/var()/none/空串等）返回 null。
@@ -157,6 +163,66 @@ export function assessStyleCompliance(samples, tokens = {}, opts = {}) {
 
 	const matchRatio = judged > 0 ? passing / judged : 1;
 	return { pass: matchRatio >= minRatio, matchRatio, judged, misses };
+}
+
+/**
+ * 按区域（componentId）聚合样式采样结果，产出双通道报告（RFC §4.5）。
+ *
+ * 主进程侧纯函数——**不进入** `STYLE_RUNTIME_SOURCE`，页面内只执行
+ * `assessStyleCompliance`（其 toString 序列化不受本函数影响）。
+ *
+ * 分级原则：
+ *   - hardErrors：来自真实 DOM 采样（assessStyleCompliance）且组件 riskLevel=high
+ *     → 阻断 CI；
+ *   - semanticWarnings：riskLevel=medium/low，或 COMPONENT_INDEX 未登记组件
+ *     （索引人工 curate，落后于 DOM 是预期内状态）→ 仅提示，永不阻断 CI。
+ *
+ * sample 的 componentId 解析：优先 `sample.componentId`；缺省时经
+ * `SEMANTIC_NAME_TO_COMPONENT_ID` 由采样 key（语义名，如 "sidebar"）映射；
+ * 均无法映射时回退 key 本身。
+ *
+ * @param {Array<{
+ *   key?: string;
+ *   componentId?: string;
+ *   color?: string;
+ *   bg?: string;
+ *   border?: string;
+ * }>} samples 采样节点（含语义 key 或 componentId）
+ * @param {{ text?: string; surface?: string; border?: string }} tokens 期望 token
+ * @param {{ tolerance?: number; minRatio?: number }} [opts]
+ * @returns {{
+ *   hardErrors: Array<{ componentId: string; riskLevel: string; pass: boolean; matchRatio: number; judged: number; misses: object[] }>;
+ *   semanticWarnings: Array<{ componentId: string; riskLevel: string; pass: boolean; matchRatio: number; judged: number; misses: object[] }>;
+ * }}
+ */
+export function aggregateByRegion(samples, tokens = {}, opts = {}) {
+	const byComponent = new Map();
+
+	for (const sample of samples) {
+		const componentId = sample.componentId ?? SEMANTIC_NAME_TO_COMPONENT_ID[sample.key] ?? sample.key;
+		if (componentId === undefined || componentId === null) continue;
+		const list = byComponent.get(componentId) ?? [];
+		list.push(sample);
+		byComponent.set(componentId, list);
+	}
+
+	const hardErrors = [];
+	const semanticWarnings = [];
+
+	for (const [componentId, componentSamples] of byComponent) {
+		const result = assessStyleCompliance(componentSamples, tokens, opts);
+		if (result.pass) continue;
+		const meta = COMPONENT_INDEX[componentId];
+		const riskLevel = meta?.riskLevel ?? RISK_LEVEL.MEDIUM;
+		const entry = { componentId, riskLevel, ...result };
+		if (riskLevel === RISK_LEVEL.HIGH) {
+			hardErrors.push(entry);
+		} else {
+			semanticWarnings.push(entry);
+		}
+	}
+
+	return { hardErrors, semanticWarnings };
 }
 
 /**

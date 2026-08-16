@@ -49,13 +49,28 @@ const zcode = {
     if (/app\.asar/i.test(url)) return true;
     return false;
   },
+  // CSS variable bridge (S3): declaratively re-route the Tailwind v4 token
+  // family ZCode reads onto AgentSkin semantic roles. Compiled by the engine
+  // at apply time (css-var-bridge.mjs) so both the app's own CSS rules and any
+  // JS getComputedStyle() reads resolve to the active theme. Alphas mirror
+  // engines/zcode/tokens.css to preserve translucency/art punch-through.
+  // Art-transparent variables (--color-background, --color-surface, --bg-primary,
+  // --bg-base, --bg-canvas) are intentionally omitted so the hero/wallpaper
+  // stays visible.
+  bridge: [
+    { var: "--color-foreground", role: "text" },
+    { var: "--color-foreground-subtle", role: "muted" },
+    { var: "--color-accent", role: "accent" },
+    { var: "--color-primary", role: "accent" },
+    { var: "--color-border", role: "border" },
+  ],
   verification: {
     // The root landmark is the only blocking check: it doubles as the
     // "app finished booting" signal and the minimal app fingerprint.
     rootAny: ["#root", "body"],
     recommended: [
       { name: "sidebar", any: ["[class*='sidebar']", "aside"] },
-      { name: "composer", any: ["[contenteditable='true']", "textarea"] },
+      { name: "composer", any: ["[contenteditable='true']"] },
     ],
   },
 };

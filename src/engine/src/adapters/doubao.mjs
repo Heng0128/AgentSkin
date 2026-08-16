@@ -54,6 +54,30 @@ const doubao = {
     // patchWindowsAdapters; now static so engine and runtime agree.)
     return /豆包|doubao/i.test(title) || /doubao/i.test(url);
   },
+  // CSS variable bridge (S3): re-route the semi/dbx native token family Doubao
+  // reads onto AgentSkin semantic roles. Skips the art-transparent (*-body/web,
+  // --chat-bg-color) vars to preserve hero punch-through. Alphas mirror
+  // engines/doubao/tokens.css.
+  bridge: [
+    { var: "--semi-color-bg-0", role: "bg" },
+    { var: "--semi-color-bg-1", role: "surface" },
+    { var: "--semi-color-bg-2", role: "surface-elevated" },
+    { var: "--semi-color-text-0", role: "text" },
+    { var: "--semi-color-text-1", role: "muted" },
+    { var: "--semi-color-text-2", role: "muted", alpha: 0.75 },
+    { var: "--semi-color-primary", role: "accent" },
+    { var: "--semi-color-secondary", role: "secondary" },
+    { var: "--semi-color-border", role: "border" },
+    { var: "--semi-color-link", role: "accent" },
+    { var: "--semi-color-nav-bg", role: "surface" },
+    { var: "--dbx-bg-base-5", role: "surface" },
+    { var: "--dbx-bg-float", role: "surface-elevated" },
+    { var: "--dbx-text-primary", role: "text" },
+    { var: "--dbx-text-secondary", role: "muted" },
+    { var: "--dbx-text-tertiary", role: "muted", alpha: 0.7 },
+    { var: "--dbx-brand-default", role: "accent" },
+    { var: "--dbx-code-text", role: "code-fg" },
+  ],
   verification: {
     // The root landmark is the only blocking check: it doubles as the
     // "app finished booting" signal and the minimal app fingerprint.

@@ -8,7 +8,10 @@
  * switches to a second theme (B2), verifies via `waitForTheme`, then restores
  * the original theme per-agent in `finally`.
  *
- * Run explicitly: `npx vitest run src/main/cdp/live-apply-all.manual.test.ts`
+ * Run explicitly (manual gate): `AGENTSKIN_MANUAL=1 npx vitest run src/main/cdp/live-apply-all.manual.test.ts`
+ * Without `AGENTSKIN_MANUAL=1` the suite is skipped so `npm run check` never
+ * touches live agents (the vitest `main` project glob would otherwise collect
+ * `*.manual.test.ts` and run real apply/hot-switch/restore on every running app).
  */
 
 import { describe, expect, it } from 'vitest';
@@ -20,6 +23,9 @@ import { waitForTheme } from './injection/shared';
 
 const THEMES_ROOT = 'C:/Users/snowb/AppData/Roaming/AgentSkin/themes';
 const AGENT_IDS = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'] as const;
+// Manual gate: the suite only runs when explicitly requested via
+// `AGENTSKIN_MANUAL=1`, so `npm run check` skips it (see header note).
+const MANUAL = process.env.AGENTSKIN_MANUAL === '1';
 
 const noop = (): void => {};
 
@@ -68,7 +74,7 @@ async function verifyApplied(agentId: string, port: number): Promise<number> {
   }
 }
 
-describe('batch-6 real apply on all agents (manual)', () => {
+describe.skipIf(!MANUAL)('batch-6 real apply on all agents (manual)', () => {
   it('applies + hot-switches + restores a real theme on every live agent', async () => {
     const library = new ThemeLibrary(THEMES_ROOT);
     const themeA = (await library.find('sakura-noir')).bundle;

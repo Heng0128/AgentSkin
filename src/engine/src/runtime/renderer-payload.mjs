@@ -1,10 +1,21 @@
 import { getSelectors, isNativeThemeControlled, listSemanticNames } from "./selectivity-registry.mjs";
 import { NON_CONTROLLED_CLASS, collectNonControlledSelectors } from "./semantic-filter.mjs";
 import { STYLE_RUNTIME_SOURCE } from "./verify-style.mjs";
+import { compileBridge, wrapBridgeRule } from "./css-var-bridge.mjs";
 
 function safeHostClass(appId) {
   return `agentskin-host-${String(appId).replace(/[^a-z0-9_-]/gi, "-")}`;
 }
+
+/**
+ * sessionStorage 停用标记键（与主进程 `engine-strategy.ts` 的
+ * `SESSION_DISABLED_KEY` 语义一致）。
+ *
+ * - `applyTheme` / `watchTheme` 注册持久化脚本前会清除该标记，使脚本在下次导航生效；
+ * - `removeTheme` 设置该标记作为兜底：任何未能被显式移除的持久化脚本
+ *   （如来自旧进程、标识符未追踪）都会在新 document 直接跳过，保证「remove 后不重注入」。
+ */
+export const SESSION_DISABLED_KEY = "__agentskin_disabled__";
 
 function resolveRendererProfile(adapter, targetTheme) {
   const profileId = targetTheme?.options?.rendererProfile;
@@ -156,7 +167,14 @@ export function buildApplyExpression({ adapter, targetTheme }) {
   const profile = resolveRendererProfile(adapter, targetTheme);
   const host = JSON.stringify({ id: adapter.id, className: safeHostClass(adapter.id) });
   const theme = JSON.stringify(targetTheme.theme);
-  const css = JSON.stringify(targetTheme.css);
+  // Bridge (S3): compile the adapter's native-var → AgentSkin-role entries into
+  // CSS declarations on the same host + :root rule that carries the theme tokens.
+  // Appending to the theme <style> means cleanup() removes bridge + theme together.
+  const bridgeCss = wrapBridgeRule(
+    `html.${safeHostClass(adapter.id)}:root`,
+    compileBridge(adapter.bridge).css,
+  );
+  const css = JSON.stringify(targetTheme.css + (bridgeCss ? `\n${bridgeCss}` : ""));
   const nonControlledSelectors = collectNonControlledSelectors(adapter.id);
   const nonControlledJson = JSON.stringify(nonControlledSelectors);
   const nonControlledClass = JSON.stringify(NON_CONTROLLED_CLASS);
@@ -214,7 +232,7 @@ export function buildApplyExpression({ adapter, targetTheme }) {
     // sessionStorage disable flag (same key as engine-strategy's persistence
     // script). Set by restore/teardown so a user-initiated undo is not fought
     // by the self-heal loop: once disabled we tear the loop down for good.
-    const DISABLED_KEY = '__agentskin_disabled__';
+    const DISABLED_KEY = ${JSON.stringify(SESSION_DISABLED_KEY)};
     const disabled = () => {
       try { return sessionStorage.getItem(DISABLED_KEY) === '1'; } catch { return false; }
     };
@@ -339,6 +357,47 @@ export function buildApplyExpression({ adapter, targetTheme }) {
     };
     ensure();
     return { installed: true, appId: host.id, themeId: theme.id, version: theme.version };
+  })()`;
+}
+
+/**
+ * 持久化脚本（P1 —— `Page.addScriptToEvaluateOnNewDocument` 注入体）。
+ *
+ * 与 {@link buildApplyExpression} **共用同一注入体**：直接把其输出作为内嵌字符串，
+ * 当前 document 注入与 new-document 重注入只有一份逻辑，杜绝两份实现漂移。
+ *
+ * 脚本自包含、幂等：
+ *   1. sessionStorage 停用标记为 '1' → 直接跳过（`removeTheme` 兜底，跨导航存活）；
+ *   2. 等待 `document.documentElement` 出现（new document 早期可能尚无 `<html>`）；
+ *   3. `(0, eval)` 执行注入体 —— 注入体自身幂等（style 已存在时 `ensure()` 只更新不叠加，
+ *      并复用 `window.__AGENTSKIN__` 主机状态，重复执行不会堆积）。
+ *
+ * `(0, eval)` 与主进程 `engine-strategy.ts` 的持久化脚本一致：CDP new-document 注入
+ * 通道天然绕过页面 CSP，且注入体是编译期构建的受信字符串，不存在用户输入注入面。
+ */
+export function buildPersistenceScript({ adapter, targetTheme }) {
+  const applyBody = buildApplyExpression({ adapter, targetTheme });
+  const disabledKey = JSON.stringify(SESSION_DISABLED_KEY);
+  return `(() => {
+    'use strict';
+    try {
+      if (sessionStorage.getItem(${disabledKey}) === '1') return;
+    } catch (e) { /* sessionStorage 在部分上下文不可用 */ }
+    try { window.__AGENTSKIN_PERSIST_RAN__ = true; } catch (e) {}
+    const APPLY_BODY = ${JSON.stringify(applyBody)};
+    const applyAll = () => {
+      if (!document.documentElement) return;
+      try { (0, eval)(APPLY_BODY); }
+      catch (e) { try { window.__AGENTSKIN_PERSIST_ERR__ = (e && e.stack) || String(e); } catch (e2) {} }
+    };
+    if (document.documentElement) {
+      applyAll();
+    } else {
+      const obs = new MutationObserver(() => {
+        if (document.documentElement) { obs.disconnect(); applyAll(); }
+      });
+      obs.observe(document, { childList: true, subtree: false });
+    }
   })()`;
 }
 

@@ -8,7 +8,10 @@
  * verification selector fix (hashed MainContentSurface fallback) is picked up
  * by the live-apply integration test.
  *
- * Run explicitly: `npx vitest run src/main/cdp/reseed-themes.manual.test.ts`
+ * Run explicitly (manual gate): `AGENTSKIN_MANUAL=1 npx vitest run src/main/cdp/reseed-themes.manual.test.ts`
+ * Without `AGENTSKIN_MANUAL=1` the test is skipped so `npm run check` never
+ * rewrites the live userData theme library (the vitest `main` project glob
+ * would otherwise collect `*.manual.test.ts`).
  */
 
 import { it } from 'vitest';
@@ -18,24 +21,31 @@ import { ThemeLibrary } from '../theme/store';
 
 const THEMES_ROOT = 'C:/Users/snowb/AppData/Roaming/AgentSkin/themes';
 const REPO_THEMES = 'C:/Users/snowb/Desktop/work/desktop-main/themes';
+// Manual gate: only runs when explicitly requested via `AGENTSKIN_MANUAL=1`,
+// so `npm run check` skips it (see header note).
+const MANUAL = process.env.AGENTSKIN_MANUAL === '1';
 
-it('reseed built-in themes from repo themes/ into the live library', async () => {
-  const library = new ThemeLibrary(THEMES_ROOT);
-  await library.initialize();
-  const loader = new ThemePackageLoader(REPO_THEMES);
-  const packages = await loader.scan();
-  const installer = new ThemeInstaller(library);
-  const installed = await installer.installAll(packages);
-  console.log(`[reseed] installed ${installed.length} theme package(s)`);
+it.skipIf(!MANUAL)(
+  'reseed built-in themes from repo themes/ into the live library',
+  async () => {
+    const library = new ThemeLibrary(THEMES_ROOT);
+    await library.initialize();
+    const loader = new ThemePackageLoader(REPO_THEMES);
+    const packages = await loader.scan();
+    const installer = new ThemeInstaller(library);
+    const installed = await installer.installAll(packages);
+    console.log(`[reseed] installed ${installed.length} theme package(s)`);
 
-  // Verify the codex-root selector fix landed in the default bundle.
-  const bundle = (await library.find('sakura-noir')).bundle;
-  const codexVerif = bundle.targets?.codex?.verification as
-    | { required?: { name?: string; any?: string[] }[] }
-    | undefined;
-  console.log('[reseed] sakura-noir codex verification =', JSON.stringify(codexVerif));
-  const any = codexVerif?.required?.[0]?.any ?? [];
-  if (!any.some((s) => s.includes('MainContentSurface'))) {
-    throw new Error('codex-root selector fix not present in installed bundle');
-  }
-}, 120000);
+    // Verify the codex-root selector fix landed in the default bundle.
+    const bundle = (await library.find('sakura-noir')).bundle;
+    const codexVerif = bundle.targets?.codex?.verification as
+      | { required?: { name?: string; any?: string[] }[] }
+      | undefined;
+    console.log('[reseed] sakura-noir codex verification =', JSON.stringify(codexVerif));
+    const any = codexVerif?.required?.[0]?.any ?? [];
+    if (!any.some((s) => s.includes('MainContentSurface'))) {
+      throw new Error('codex-root selector fix not present in installed bundle');
+    }
+  },
+  120000,
+);

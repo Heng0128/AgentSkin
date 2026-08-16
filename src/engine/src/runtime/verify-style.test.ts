@@ -13,6 +13,7 @@ import {
   matchesToken,
   assessStyleCompliance,
   STYLE_RUNTIME_SOURCE,
+  aggregateByRegion,
 } from './verify-style.mjs';
 
 describe('normalizeColor', () => {
@@ -100,5 +101,72 @@ describe('STYLE_RUNTIME_SOURCE', () => {
     expect(trimmed.endsWith('})()')).toBe(true);
     expect(trimmed).toContain('assessStyleCompliance');
     expect(trimmed).toContain('normalizeColor');
+  });
+});
+
+describe('aggregateByRegion（双通道报告，RFC §4.5）', () => {
+  const tokens = { text: '#111111', surface: '#f0f0f0' };
+
+  it('全部通过 → 双通道均为空', () => {
+    const verdict = aggregateByRegion(
+      [
+        { key: 'root', color: '#111111', bg: 'transparent' },
+        { key: 'sidebar', color: '#111111', bg: '#f0f0f0' },
+      ],
+      tokens,
+    );
+    expect(verdict.hardErrors).toEqual([]);
+    expect(verdict.semanticWarnings).toEqual([]);
+  });
+
+  it('high 风险组件失败 → hardErrors（阻断 CI）', () => {
+    const verdict = aggregateByRegion(
+      [{ key: 'sidebar', color: '#ffffff', bg: '#000000' }],
+      tokens,
+    );
+    expect(verdict.hardErrors).toHaveLength(1);
+    expect(verdict.hardErrors[0].componentId).toBe('sidebar');
+    expect(verdict.hardErrors[0].riskLevel).toBe('high');
+    expect(verdict.semanticWarnings).toEqual([]);
+  });
+
+  it('medium 风险组件失败 → semanticWarnings（仅提示）', () => {
+    const verdict = aggregateByRegion(
+      [{ key: 'workspace', color: '#ffffff', bg: '#000000' }],
+      tokens,
+    );
+    expect(verdict.hardErrors).toEqual([]);
+    expect(verdict.semanticWarnings).toHaveLength(1);
+    expect(verdict.semanticWarnings[0].componentId).toBe('workspace');
+    expect(verdict.semanticWarnings[0].riskLevel).toBe('medium');
+  });
+
+  it('key→componentId 映射：messageList（registry 语义名）→ message-list（high）', () => {
+    const verdict = aggregateByRegion(
+      [{ key: 'messageList', color: '#ffffff', bg: '#000000' }],
+      tokens,
+    );
+    expect(verdict.hardErrors).toHaveLength(1);
+    expect(verdict.hardErrors[0].componentId).toBe('message-list');
+    expect(verdict.hardErrors[0].riskLevel).toBe('high');
+  });
+
+  it('显式 componentId 优先于 key 映射', () => {
+    const verdict = aggregateByRegion(
+      [{ key: 'sidebar', componentId: 'workspace', color: '#ffffff', bg: '#000000' }],
+      tokens,
+    );
+    expect(verdict.semanticWarnings).toHaveLength(1);
+    expect(verdict.semanticWarnings[0].componentId).toBe('workspace');
+  });
+
+  it('COMPONENT_INDEX 未登记组件（索引漏登记场景）→ 默认 medium → 仅提示，绝不阻断', () => {
+    const verdict = aggregateByRegion(
+      [{ key: 'future-tab-bar', color: '#ffffff', bg: '#000000' }],
+      tokens,
+    );
+    expect(verdict.hardErrors).toEqual([]);
+    expect(verdict.semanticWarnings).toHaveLength(1);
+    expect(verdict.semanticWarnings[0].riskLevel).toBe('medium');
   });
 });
