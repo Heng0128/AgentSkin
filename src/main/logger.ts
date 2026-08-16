@@ -102,6 +102,25 @@ export function mainInfo(scope: string, message: string): void {
 }
 
 /**
+ * Debug-level log, gated behind `DEBUG_CDP=1` (or any truthy value). This is
+ * intentionally NOT sent to the renderer log buffer — it's purely for terminal
+ * debugging via `console.debug`. The gate prevents chatty debug output from
+ * accidentally flooding production logs or the renderer's log buffer, while
+ * still being available on-demand via `DEBUG_CDP=1 npm start`.
+ *
+ * Usage:
+ * ```
+ * DEBUG_CDP=1 npm start
+ * ```
+ */
+export function mainDebug(scope: string, message: string): void {
+  if (process.env.DEBUG_CDP) {
+    const ts = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    console.debug(`[${ts}] [Main] [DEBUG] [${scope}] ${message}`);
+  }
+}
+
+/**
  * Log a caught error at WARN level, extracting its message safely via toMessage.
  * Replaces the `error instanceof Error ? error.message : String(error)`
  * pattern that would otherwise be inlined at every catch site.

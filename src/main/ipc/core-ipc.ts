@@ -14,6 +14,7 @@
  * are unit-testable — no implicit singleton import.
  */
 
+import fs from 'node:fs';
 import { app, ipcMain, shell } from 'electron';
 import { toMessage } from '../../shared/errors';
 import { getMainMessages, isAppLocale, setMainLocale } from '../../shared/i18n';
@@ -90,6 +91,12 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
 
   ipcMain.handle(IpcChannel.SHELL_SHOW_ITEM, (_event, itemPath: unknown) => {
     assertNonEmptyString(itemPath, getMainMessages().invalidPath);
+    // Reject paths that don't exist on disk — avoids popping Explorer errors
+    // for attacker-constructed paths and prevents revealing directories for
+    // fabricated paths (O2).
+    if (!fs.existsSync(itemPath)) {
+      throw new Error(getMainMessages().invalidPath);
+    }
     return shell.showItemInFolder(itemPath);
   });
 

@@ -43,6 +43,10 @@ export interface EngineInjectionDeps {
   /** Global user-authored custom CSS (custom.css), empty when unset. Injected
    *  as the final CSS layer so user overrides win over every theme layer. */
   customThemeCss?: () => string;
+  /** Per-agent min verify delay (default 500ms, RFC §4.8 fast-path tuning). */
+  verifyDelayMs?: number;
+  /** Per-agent verification poll interval (default 50ms, RFC §4.8). */
+  verifyIntervalMs?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,7 +147,8 @@ export async function tryEngineInjection(
       heroDataUrl,
       agent: appId,
       themeId,
-      verifyDelayMs: 500,
+      verifyDelayMs: deps.verifyDelayMs ?? 500,
+      verifyIntervalMs: deps.verifyIntervalMs ?? 50,
     });
   } catch (error) {
     deps.log(`[hardening] ${appId}: engine injection failed: ${toMessage(error)}`);

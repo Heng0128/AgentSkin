@@ -14,7 +14,6 @@
  * consumers subscribe to the minimal slice they need.
  */
 
-import type { Dispatch, SetStateAction } from 'react';
 import type { Route } from '@/types/navigation';
 
 import { type AppLocale, DEFAULT_LOCALE } from '@shared/i18n';
@@ -22,6 +21,14 @@ import { create } from 'zustand';
 
 /** localStorage key for the sidebar collapse preference. */
 const SIDEBAR_KEY = 'agentskin:sidebar-collapsed';
+
+/** A value, or an updater function producing a value from the previous one —
+ *  the React-free equivalent of `Dispatch<SetStateAction<T>>`. */
+type SetStateValue<T> = T | ((prev: T) => T);
+
+/** A setter function accepting a {@link SetStateValue} — the React-free
+ *  equivalent of `Dispatch<SetStateAction<T>>`. */
+type SetStateSetter<T> = (value: SetStateValue<T>) => void;
 
 interface ShellState {
   locale: AppLocale;
@@ -42,9 +49,9 @@ interface ShellState {
   setActiveAgentId: (id: string | null) => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
-  setInjectDockOpen: Dispatch<SetStateAction<boolean>>;
+  setInjectDockOpen: SetStateSetter<boolean>;
   toggleInjectDock: () => void;
-  setLogs: Dispatch<SetStateAction<string[]>>;
+  setLogs: SetStateSetter<string[]>;
   setLogsOpen: (open: boolean) => void;
 }
 

@@ -16,6 +16,7 @@ import { IpcChannel } from '../../shared/ipc-channels';
 import type { EnvironmentPreset } from '../../shared/types/environment';
 import { loadEnvPresets, saveEnvPresets } from '../env-preset-store';
 import type { MainContext } from '../main-context';
+import { assertTrustedSender } from './trusted-sender';
 
 export function registerEnvironmentIpc(ctx: MainContext): void {
   ipcMain.handle(IpcChannel.ENV_PRESET_GET, async () => {
@@ -29,7 +30,8 @@ export function registerEnvironmentIpc(ctx: MainContext): void {
     }
   });
 
-  ipcMain.handle(IpcChannel.ENV_PRESET_SET, async (_event, presets: EnvironmentPreset[]) => {
+  ipcMain.handle(IpcChannel.ENV_PRESET_SET, async (event, presets: EnvironmentPreset[]) => {
+    assertTrustedSender(event);
     try {
       const ok = await saveEnvPresets(ctx.userDataRoot, Array.isArray(presets) ? presets : []);
       return { ok };

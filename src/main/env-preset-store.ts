@@ -31,18 +31,25 @@ interface PresetEnvelope {
 }
 
 /** Field-level validation — every preset must carry these keys with correct types. */
-function isValidPreset(p: unknown): p is EnvironmentPreset {
+export function isValidPreset(p: unknown): p is EnvironmentPreset {
   if (!p || typeof p !== 'object') return false;
   const r = p as Record<string, unknown>;
   return (
     typeof r.id === 'string' &&
+    r.id.length <= 256 &&
     typeof r.name === 'string' &&
+    r.name.length <= 512 &&
     typeof r.agentId === 'string' &&
-    (typeof r.themeId === 'string' || r.themeId === null) &&
+    r.agentId.length <= 128 &&
+    (typeof r.themeId === 'string' && r.themeId.length <= 512 ? true : r.themeId === null) &&
     // wallpaperId may be absent (legacy v1 entries) — the loader back-fills null.
-    (r.wallpaperId === undefined || typeof r.wallpaperId === 'string' || r.wallpaperId === null) &&
+    (r.wallpaperId === undefined ||
+      (typeof r.wallpaperId === 'string' && r.wallpaperId.length <= 512) ||
+      r.wallpaperId === null) &&
     typeof r.createdAt === 'string' &&
-    typeof r.updatedAt === 'string'
+    r.createdAt.length <= 64 &&
+    typeof r.updatedAt === 'string' &&
+    r.updatedAt.length <= 64
   );
 }
 
@@ -73,7 +80,10 @@ export async function saveEnvPresets(
   presets: EnvironmentPreset[],
 ): Promise<boolean> {
   try {
-    const envelope: PresetEnvelope = { v: PRESET_SCHEMA_VERSION, presets };
+    // Drop any malformed / oversized entries before persisting so a hostile
+    // or buggy renderer cannot write junk or fill the disk (G2).
+    const clean = Array.isArray(presets) ? presets.filter(isValidPreset) : [];
+    const envelope: PresetEnvelope = { v: PRESET_SCHEMA_VERSION, presets: clean };
     await fs.writeFile(envPresetsPath(userDataRoot), JSON.stringify(envelope, null, 2), 'utf8');
     return true;
   } catch {

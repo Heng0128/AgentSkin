@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import fs from 'node:fs';
+import path from 'node:path';
 import {
   agentThemeExtension,
   legacyThemeExtension,
@@ -11,6 +12,9 @@ import {
 export const BUNDLE_EXTENSION = '.agentskin-bundle';
 
 export function isThemePackagePath(value: string): boolean {
+  // Only absolute paths are accepted — a bare relative name (or a path built
+  // from attacker-controlled separators) must not reach the file reader.
+  if (!path.isAbsolute(value)) return false;
   return (
     value.endsWith(agentThemeExtension) ||
     value.endsWith('.agentskin-theme') ||

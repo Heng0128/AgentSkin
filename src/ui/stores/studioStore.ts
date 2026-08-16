@@ -12,7 +12,7 @@
  */
 
 import { api } from '@/api/agentSkinClient';
-import { buildStudioPalette, mergeOverridesToSkinTokens } from '@/components/studio/palette';
+import { buildStudioPalette, mergeOverridesToSkinTokens } from '@/lib/palette';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';
 import type { ToolOverride } from '@/types/override';
@@ -48,11 +48,37 @@ function serializeToolOverride(
   return out;
 }
 
+/**
+ * Narrow a partial override record to {@link ToolOverride}.
+ *
+ * Replaces the scattered `as ToolOverride` casts (which silently bypassed type
+ * checking at several sites). ToolOverride is a fully-optional interface, so any
+ * plain string-keyed record is structurally valid; this helper makes the trust
+ * boundary explicit and drops a malformed `colors` entry (which would otherwise
+ * corrupt export token merging) instead of trusting it blindly.
+ */
+function asToolOverride(value: Record<string, unknown>): ToolOverride {
+  const v: Record<string, unknown> = { ...value };
+  if (v.colors !== undefined && (v.colors === null || typeof v.colors !== 'object')) {
+    delete v.colors;
+  }
+  return v as ToolOverride;
+}
+
 export type ExportState = {
   loading: boolean;
   dir: string | null;
   error: string | null;
 };
+
+/** A workspace-scoped installed bundle summary (theme + optional wallpaper). */
+export interface StudioBundle {
+  id: string;
+  name: string;
+  themeId?: string;
+  hasWallpaper: boolean;
+  createdAt: string;
+}
 
 interface StudioStoreState {
   // --- Projects ---
@@ -72,13 +98,7 @@ interface StudioStoreState {
   themeLibraryOpen: boolean;
 
   // --- Bundles (workspace-scoped) ---
-  bundles: Array<{
-    id: string;
-    name: string;
-    themeId?: string;
-    hasWallpaper: boolean;
-    createdAt: string;
-  }>;
+  bundles: StudioBundle[];
   bundlesLoading: boolean;
 
   // --- Snapshot / baseline ---
@@ -199,20 +219,6 @@ interface StudioStoreState {
 /** Async-lock guards: module-scoped (single studio window), not reactive state. */
 const busyLocks = new Set<string>();
 
-/**
- * Module-level cache for `getActiveProject` reference stability.
- *
- * `projects.find()` returns the same object reference when the projects array
- * and activeProjectId are unchanged, but every `set()` call forces zustand
- * to re-run subscribed selectors. By tracking the inputs and short-circuiting
- * when they match, we guarantee a stable return identity, eliminating
- * re-renders in downstream consumers that subscribe via
- * `useStudioStore((s) => s.getActiveProject())`.
- */
-let _projectsRef: StudioProject[] | undefined;
-let _lastActiveId: string | null | undefined;
-let _lastResult: StudioProject | null = null;
-
 function tryAcquireLock(key: string): boolean {
   if (busyLocks.has(key)) return false;
   busyLocks.add(key);
@@ -296,13 +302,12 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
 
   getActiveProject: () => {
     const { projects, activeProjectId } = get();
-    if (projects === _projectsRef && activeProjectId === _lastActiveId) {
-      return _lastResult;
-    }
-    _projectsRef = projects;
-    _lastActiveId = activeProjectId;
-    _lastResult = projects.find((p) => p.id === activeProjectId) ?? null;
-    return _lastResult;
+    // `projects.find` returns the same element reference while the array and
+    // activeProjectId are unchanged, so consumers subscribing via
+    // `useStudioStore((s) => s.getActiveProject())` still get a stable result
+    // identity without a manual module-level cache (which was prone to racing
+    // with direct setState in tests / HMR).
+    return projects.find((p) => p.id === activeProjectId) ?? null;
   },
 
   // ------------------------------------------------------------------
@@ -606,7 +611,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       set({ bundles: list, bundlesLoading: false });
     } catch (e) {
       set({ bundlesLoading: false });
-      showToast(`刷新 Bundles 失败：${toMessage(e)}`, 'destructive');
+      showToast(currentT().studioBundleRefreshFailed(toMessage(e)), 'destructive');
     }
   },
 
@@ -622,11 +627,11 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       // listBundles returns summaries; install wants id.
       await get().installBundle(result.id);
       await get().refreshBundles();
-      showToast(`已导入并安装Bundle：${result.name}`);
+      showToast(currentT().studioBundleImportedInstalled(result.name));
       return result.id;
     } catch (e) {
       set({ bundlesLoading: false });
-      showToast(`导入Bundle失败：${toMessage(e)}`, 'destructive');
+      showToast(currentT().studioBundleImportInstallFailed(toMessage(e)), 'destructive');
       return null;
     }
   },
@@ -636,12 +641,17 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     try {
       const res = await api.installBundleById(id);
       if (!res.ok) {
-        showToast(`安装Bundle失败：${res.error ?? 'unknown'}`, 'destructive');
+        showToast(
+          currentT().studioBundleInstallFailedDetail(
+            res.error ?? currentT().studioBundleUnknownError,
+          ),
+          'destructive',
+        );
       } else {
-        showToast('Bundle 已安装');
+        showToast(currentT().studioBundleInstalledDone);
       }
     } catch (e) {
-      showToast(`安装Bundle失败：${toMessage(e)}`, 'destructive');
+      showToast(currentT().studioBundleInstallFailedDetail(toMessage(e)), 'destructive');
     }
   },
 
@@ -650,13 +660,18 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     try {
       const res = await api.deleteBundle(id);
       if (!res.ok) {
-        showToast(`删除Bundle失败：${res.error ?? 'unknown'}`, 'destructive');
+        showToast(
+          currentT().studioBundleDeleteFailedDetail(
+            res.error ?? currentT().studioBundleUnknownError,
+          ),
+          'destructive',
+        );
         return;
       }
       set((s) => ({ bundles: s.bundles.filter((b) => b.id !== id) }));
-      showToast('Bundle 已删除');
+      showToast(currentT().studioBundleDeletedDone);
     } catch (e) {
-      showToast(`删除Bundle失败：${toMessage(e)}`, 'destructive');
+      showToast(currentT().studioBundleDeleteFailedDetail(toMessage(e)), 'destructive');
     }
   },
 
@@ -822,13 +837,13 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       const coalesce = undoCoalesce.key === key && now - undoCoalesce.at < UNDO_COALESCE_MS;
       undoCoalesce.key = key;
       undoCoalesce.at = now;
-      const next: Partial<ToolOverride> = { ...(prev ?? {}) };
+      const next: Record<string, unknown> = { ...(prev ?? {}) };
       if (value === undefined || value === '') {
         delete next[key];
       } else {
-        (next as Record<keyof ToolOverride, string | number | boolean | undefined>)[key] = value;
+        next[key] = value;
       }
-      const toolOverrides = Object.keys(next).length ? (next as ToolOverride) : null;
+      const toolOverrides = Object.keys(next).length ? asToolOverride(next) : null;
       return {
         toolOverrides,
         undoStack: coalesce ? s.undoStack : pushUndo(s.undoStack, prev),
@@ -904,7 +919,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     set((s) => ({
       undoStack: pushUndo(s.undoStack, s.toolOverrides),
       redoStack: [],
-      toolOverrides: { ...(s.toolOverrides ?? {}), ...palette } as ToolOverride,
+      toolOverrides: asToolOverride({ ...(s.toolOverrides ?? {}), ...palette }),
       previewView: action === 'apply' ? 'theme' : s.previewView,
     }));
   },
@@ -916,14 +931,14 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       // `colors` so export can bake the complete 14-token set.
       undoStack: pushUndo(s.undoStack, s.toolOverrides),
       redoStack: [],
-      toolOverrides: {
+      toolOverrides: asToolOverride({
         ...(s.toolOverrides ?? {}),
         accent: palette.accent,
         background: palette.background,
         foreground: palette.foreground,
         surface: palette.surface,
         colors: palette,
-      } as ToolOverride,
+      }),
       previewView: 'theme',
     })),
 
@@ -934,14 +949,14 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       // `colors` preserves the full palette for export.
       undoStack: pushUndo(s.undoStack, s.toolOverrides),
       redoStack: [],
-      toolOverrides: {
+      toolOverrides: asToolOverride({
         ...(s.toolOverrides ?? {}),
         accent: palette.accent,
         background: palette.background,
         foreground: palette.foreground,
         surface: palette.surface,
         colors: palette,
-      } as ToolOverride,
+      }),
       previewView: 'theme',
     }));
     const capturedActiveId = get().activeProjectId;

@@ -32,6 +32,8 @@ export type ShowToast = (message: string, tone?: ToastTone) => void;
 const TOAST_DURATION = 3600;
 /** Max toasts kept in the list. */
 const MAX_TOASTS = 5;
+/** Monotonic toast id counter — guarantees uniqueness across rapid toasts. */
+let toastId = 0;
 
 /**
  * Map raw IPC / core error messages to user-friendly text.
@@ -76,7 +78,7 @@ export const useNotificationStore = create<NotificationState>((set) => {
     toasts: [],
 
     showToast: (message, tone = 'default') => {
-      const id = Date.now() + Math.random();
+      const id = ++toastId;
       clearTimer(id);
       set((s) => ({ toasts: [...s.toasts.slice(-(MAX_TOASTS - 1)), { id, message, tone }] }));
       const timer = setTimeout(() => {

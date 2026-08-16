@@ -94,7 +94,11 @@ export type ResolveAgentWallpaperId = (
 ) => Promise<ResolvedWallpaper>;
 
 /** Ensure the agent has a live CDP endpoint (may restart). */
-export type EnsureCdpReady = (appId: AgentId, timeoutMs?: number) => Promise<CdpReadyResult>;
+export type EnsureCdpReady = (
+  appId: AgentId,
+  timeoutMs?: number,
+  forceRestart?: boolean,
+) => Promise<CdpReadyResult>;
 
 /** Re-resolve the live CDP port for an agent. */
 export type ResolveLivePort = (appId: AgentId) => Promise<number | null>;

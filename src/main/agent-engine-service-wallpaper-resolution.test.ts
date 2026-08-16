@@ -26,13 +26,34 @@ import type { PackageInspection, SettingsServiceApi, ThemeLibraryApi } from './s
 // Mocks (与 reliability test 保持一致)
 // ---------------------------------------------------------------------------
 
-vi.mock('./app-discovery', () => ({
-  reconcileZombiePorts: vi.fn(async () => {}),
-  probeAppStatus: vi.fn(),
-  resolveLivePort: vi.fn(async () => null),
-  ensureCdpReady: vi.fn(async () => ({ ok: true, port: 9222, reason: null })),
-  inferRestartReason: vi.fn(async () => ({ kind: 'not-installed' })),
-}));
+vi.mock('./app-discovery', () => {
+  class LivePortCache {
+    private m = new Map<string, number>();
+    get(a: string) {
+      return this.m.get(a) ?? null;
+    }
+    set(a: string, p: number) {
+      this.m.set(a, p);
+    }
+    clear(a: string) {
+      this.m.delete(a);
+    }
+    clearAll() {
+      this.m.clear();
+    }
+    size() {
+      return this.m.size;
+    }
+  }
+  return {
+    LivePortCache,
+    reconcileZombiePorts: vi.fn(async () => {}),
+    probeAppStatus: vi.fn(),
+    resolveLivePort: vi.fn(async () => null),
+    ensureCdpReady: vi.fn(async () => ({ ok: true, port: 9222, reason: null })),
+    inferRestartReason: vi.fn(async () => ({ kind: 'not-installed' })),
+  };
+});
 
 vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
 vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));

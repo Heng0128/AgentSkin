@@ -219,6 +219,15 @@ export function scheduleDeferredSelfHeal(
     const elapsed = Date.now() - startedAt;
     const d = deferredSelfHealDeps.get(appId);
 
+    // If the injector has been disposed (app quitting), drain the pending
+    // thunk without firing any CDP work — never keep polling after teardown.
+    if (d?.isDisposed?.()) {
+      deferredSelfHealTimers.delete(appId);
+      deferredSelfHeals.delete(appId);
+      deferredSelfHealDeps.delete(appId);
+      return;
+    }
+
     // Still under lock AND we haven't exceeded the safety bound → re-poll.
     if (d?.isApplyingTheme?.(appId) && elapsed < DEFERRED_MAX_WAIT_MS) {
       // Progressive backoff: 100ms for the first 5 attempts, then

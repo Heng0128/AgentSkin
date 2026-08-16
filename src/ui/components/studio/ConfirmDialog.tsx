@@ -62,7 +62,7 @@ export function ConfirmDialog({
           onClick={onConfirm}
           style={{
             background: 'var(--accent)',
-            color: '#fff',
+            color: 'var(--primary-foreground)',
             borderColor: 'var(--accent)',
             fontWeight: 600,
             letterSpacing: '0.06em',

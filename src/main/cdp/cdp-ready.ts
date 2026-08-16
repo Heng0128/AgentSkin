@@ -43,8 +43,15 @@ export interface CdpReadyDeps {
   /** Re-resolve the live CDP port for an agent (probe only, no side effects). */
   resolveLivePort: (appId: AgentId) => Promise<number | null>;
   /** Ensure the agent has a live CDP endpoint — may kill + relaunch (or
-   *  launch a not-running agent) with `--remote-debugging-port=0`. */
-  ensureCdpReady: (appId: AgentId, timeoutMs?: number) => Promise<CdpReadyResult>;
+   *  launch a not-running agent) with `--remote-debugging-port=0`. When
+   *  `forceRestart` is true, the user has confirmed a restart, so a running
+   *  app may be killed + relaunched; when false, only a not-running app is
+   *  launched (a running-but-CDP-less app returns `no-cdp`). */
+  ensureCdpReady: (
+    appId: AgentId,
+    timeoutMs?: number,
+    forceRestart?: boolean,
+  ) => Promise<CdpReadyResult>;
   /** Infer a structured {@link RestartReason} when no live port is found.
    *  `cdpFailureReason` is null when `ensureCdpReady` was not attempted (pure
    *  probe path). */
@@ -83,7 +90,7 @@ export async function ensureAgentCdpReady(
 
   if (restartExisting) {
     // User confirmed the restart — allowed to kill + relaunch with CDP enabled.
-    const cdpResult = await deps.ensureCdpReady(appId, timeoutMs);
+    const cdpResult = await deps.ensureCdpReady(appId, timeoutMs, true);
     if (cdpResult.port) return { port: cdpResult.port, status: 'ready' };
     deps.log(`[cdp-ready] ${appId}: restart failed (${cdpResult.reason})`);
     // Map the failure to a structured reason so the UI can guide the user.
@@ -101,7 +108,7 @@ export async function ensureAgentCdpReady(
   const reason = await deps.inferRestartReason(appId, null);
   if (reason === 'not-running') {
     deps.log(`[cdp-ready] ${appId}: installed but not running — auto-launching`);
-    const cdpResult = await deps.ensureCdpReady(appId, timeoutMs);
+    const cdpResult = await deps.ensureCdpReady(appId, timeoutMs, false);
     if (cdpResult.port) return { port: cdpResult.port, status: 'ready' };
     deps.log(`[cdp-ready] ${appId}: auto-launch failed (${cdpResult.reason})`);
     const mapped = await deps.inferRestartReason(appId, cdpResult.reason ?? null);

@@ -984,7 +984,7 @@
 
 .ws-btn[data-active="true"] {
   background: var(--accent);
-  color: #fff;
+  color: var(--primary-foreground);
   border-color: var(--accent);
   font-weight: 600;
 }
@@ -996,7 +996,7 @@
 
 .ws-btn--primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--primary-foreground);
   border-color: var(--accent);
   font-weight: 600;
 }
@@ -1047,7 +1047,7 @@
 
 .ws-chip[data-active="true"] {
   background: var(--accent);
-  color: #fff;
+  color: var(--primary-foreground);
   border-color: var(--accent);
 }
 
@@ -1516,7 +1516,7 @@
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
-  color: #000;
+  color: var(--foreground);
 }
 
 /* Export dialog subtabs (if needed) */

@@ -196,7 +196,7 @@ const VERIFICATION = {
   qoderwork: { name: 'agents-root', any: ['.agents-layout-root'] },
   workbuddy: { name: 'teams-root', any: ['.teams-container'] },
   doubao: { name: 'doubao-root', any: ['#root', 'body'] },
-  codex: { name: 'codex-root', any: ['main.main-surface'] },
+  codex: { name: 'codex-root', any: ['main.main-surface', "main[class*='MainContentSurface']"] },
 };
 
 const SHADOWS = {

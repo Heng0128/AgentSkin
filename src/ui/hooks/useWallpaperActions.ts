@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
+/**
+ * NOTE — 待合并：本文件当前没有任何调用方（dead code）。其 handler
+ * (handleApply / handleRemove / handleDelete / handleApplyAll) 与
+ * `useWallpaperPageController.ts` 中的同名 handler 几乎完全重复，后者才是
+ * WallpaperEnginePage 实际使用的入口。合并成单一 hook 需单独一轮执行
+ * （涉及 WallpaperEnginePage / InjectResultsPanel 等调用方核对），此处不做
+ * 破坏性改动，仅保留注释说明。
+ */
+
 import { useCallback } from 'react';
 import { api } from '@/api/agentSkinClient';
 import type { AppController } from '@/hooks/useAppController';

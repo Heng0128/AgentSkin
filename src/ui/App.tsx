@@ -184,7 +184,13 @@ export default function App() {
           </div>
         ))}
       </main>
-      {/* Sonner Toaster disabled — custom toast divs rendered above <Toaster position="top-right" richColors /> */}
+      {/* Sonner Toaster disabled — custom toast divs rendered above.
+          Deliberately kept: the hand-written <div> stack (fixed, bottom-center,
+          no max-count off-by-default) matches the historical UX and the
+          controller's toast tone model (destructive vs. default) without
+          bringing sonner's portal/stacking/animation into the app shell.
+          <Toaster position="top-right" richColors /> is available in
+          ui/components/ui/sonner.tsx if a future migration is warranted. */}
 
       <CommandPalette open={palette.open} onOpenChange={palette.setOpen} controller={controller} />
     </ErrorBoundary>

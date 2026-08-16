@@ -87,6 +87,16 @@ const MAX_BUSY_WAIT_MS = 60_000;
  *  (e.g. IPC file-imported burst) into a single IPC round-trip. */
 let refreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+// --- IPC event cancelers ---
+// Module-level so a re-run of create() (HMR) can detach the listeners that a
+// PREVIOUS create() round registered. A per-create() local would always be
+// null on re-run, leaking the old listeners (the prior `if (offFileImported)
+// unsubscribe()` guard was therefore dead code).
+let offFileImported: (() => void) | null = null;
+let offFileImportConfirm: (() => void) | null = null;
+let offFileImportFailed: (() => void) | null = null;
+let offTrayApply: (() => void) | null = null;
+
 // ---------------------------------------------------------------------------
 // state shape
 // ---------------------------------------------------------------------------
@@ -100,6 +110,9 @@ interface ThemeState {
   // --- queries ---
   installedById: (id: string) => ThemeCatalogItem | undefined;
   setSelection: (sel: Selection) => void;
+  /** Internal busy-state setter — used by withBusy so busy writes stay inside
+   *  the store action boundary instead of calling setState directly. */
+  _setBusy: (key: BusyKey | null) => void;
 
   // --- lifecycle ---
   /** Fetch themes from IPC; reports failures via notificationStore. */
@@ -128,15 +141,11 @@ interface ThemeState {
 // ---------------------------------------------------------------------------
 
 export const useThemeStore = create<ThemeState>((set, get) => {
-  // --- ipc cancelers (filled inside create, called by unsubscribe) ---
-  let offFileImported: (() => void) | null = null;
-  let offFileImportConfirm: (() => void) | null = null;
-  let offFileImportFailed: (() => void) | null = null;
-  let offTrayApply: (() => void) | null = null;
+  // --- ipc cancelers (module-level; filled inside create, called by unsubscribe) ---
 
   // Idempotent: HMR / repeated create() should not accumulate listeners.
-  // If a previous create() round registered cancelers, unsubscribe them first
-  // so the old closures are off'd before new ones are attached.
+  // Detach any listeners a previous create() round registered (module-level
+  // vars hold them) before new ones are attached below.
   function unsubscribe() {
     offFileImported?.();
     offFileImportConfirm?.();
@@ -148,6 +157,9 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     offTrayApply = null;
   }
 
+  // Clean up the previous create() round's listeners (no-op on first mount).
+  // Cancelers are module-level, so after the first create() round this guard
+  // is live (not dead code) and detaches the prior round's listeners.
   if (offFileImported) unsubscribe();
 
   // Wire IPC subscriptions at module load — mirrors useThemes' boot effect.
@@ -172,6 +184,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
 
     installedById: (id) => get().installed.find((theme) => theme.id === id),
     setSelection: (selection) => set({ selection }),
+    _setBusy: (key) => set({ busy: key }),
 
     refreshThemes: () => {
       // Debounce: coalesce rapid successive calls (e.g. IPC file-imported
@@ -260,10 +273,18 @@ export const useThemeStore = create<ThemeState>((set, get) => {
             .getState()
             .showToast(t.themeApplyUnexpectedStatus(outcome.status), 'destructive');
           return false;
+        case 'skipped-concurrent':
+          // RFC §4.10: a concurrent apply is already in-flight — benign no-op.
+          return true;
       }
       // Exhaustiveness fallback — handleApplyResult returns all kinds above,
-      // but TS control flow across await boundaries needs this.
-      return false as never;
+      // but TS control flow across await boundaries needs this. If a new
+      // outcome kind is added without a branch, this logs instead of silently
+      // returning a value that TS would have masked behind `as never`.
+      console.error(
+        `[themeStore] applyToApp: unhandled outcome kind: ${(outcome as { kind?: unknown }).kind}`,
+      );
+      return false;
     },
 
     restoreApp: async (appId) => {
@@ -431,7 +452,7 @@ async function withBusy<T>(key: BusyKey, fn: () => Promise<T>): Promise<T | unde
     elapsed += 50;
   }
   busyKeys.add(key);
-  useThemeStore.setState({ busy: key });
+  useThemeStore.getState()._setBusy(key);
   try {
     return await fn();
   } catch (error) {
@@ -440,8 +461,8 @@ async function withBusy<T>(key: BusyKey, fn: () => Promise<T>): Promise<T | unde
   } finally {
     busyKeys.delete(key);
     const remaining = Array.from(busyKeys);
-    useThemeStore.setState({
-      busy: remaining.length > 0 ? remaining[remaining.length - 1] : null,
-    });
+    useThemeStore
+      .getState()
+      ._setBusy(remaining.length > 0 ? remaining[remaining.length - 1] : null);
   }
 }

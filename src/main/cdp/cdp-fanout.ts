@@ -54,6 +54,12 @@ import { type CdpSession, connectCdp } from './cdp-client';
 import { type InjectEngineResult, injectThemeViaCdp, removeEngineInjection } from './cdp-inject';
 import { findDomTargets, findSecondaryTargets } from './cdp-targets';
 import { buildSecondaryInjectExpression, buildSecondaryRemoveExpression } from './secondary-inject';
+import {
+  acquireSession,
+  type CdpSessionPool,
+  type SessionHandle,
+  targetKeyFor,
+} from './session-pool';
 
 // ---------------------------------------------------------------------------
 // Deps slice
@@ -116,6 +122,14 @@ export interface CdpFanoutDeps {
    * When provided, the UI can render a real-time per-target injection timeline.
    */
   onSecondaryProgress?: (event: SecondaryInjectProgressEvent | SecondaryInjectSummaryEvent) => void;
+  /**
+   * Optional per-agent CDP session pool. When provided, target sessions are
+   * reused across the fan-out sub-tasks within a single epoch (secondary inject
+   * + hardening + remove) instead of being re-handshaked each time, and pooled
+   * sessions are owned by the pool (callers must NOT close them). When omitted,
+   * fan-out falls back to connect-then-close one-shot sessions.
+   */
+  sessions?: CdpSessionPool;
 }
 
 // ---------------------------------------------------------------------------
@@ -216,7 +230,13 @@ export async function injectSecondaryTargets(
     let targetSuccess = false;
     let targetError: string | undefined;
     try {
-      const session = await connectWithRetry(target.webSocketDebuggerUrl!, 3000);
+      const handle = await acquireSession(
+        deps.sessions,
+        appId,
+        targetKeyFor(target.id, target.webSocketDebuggerUrl),
+        () => connectWithRetry(target.webSocketDebuggerUrl!, 3000),
+      );
+      const session = handle.session;
       if (!session) {
         failed++;
         targetError = 'connect failed after retries';
@@ -238,7 +258,8 @@ export async function injectSecondaryTargets(
           );
         }
       } finally {
-        session.close();
+        // Pooled sessions are owned by the pool — only close one-shot ones.
+        if (!handle.pooled) session.close();
       }
     } catch (error) {
       failed++;
@@ -299,12 +320,19 @@ export async function removeSecondaryTargets(
       return;
     }
     try {
-      const session = await connectCdp(target.webSocketDebuggerUrl!, 3000);
+      const handle = await acquireSession(
+        deps.sessions,
+        appId,
+        targetKeyFor(target.id, target.webSocketDebuggerUrl),
+        () => connectCdp(target.webSocketDebuggerUrl!, 3000),
+      );
+      const session = handle.session;
+      if (!session) continue;
       try {
         await session.evaluate(expression);
         removed++;
       } finally {
-        session.close();
+        if (!handle.pooled) session.close();
       }
     } catch {
       // Best-effort — embedded content may have navigated away.
@@ -372,6 +400,7 @@ export async function hardeningPass(
   let legacyInjected = 0;
   let failed = 0;
   let firstSession: CdpSession | null = null;
+  let firstPooled = false;
 
   for (const target of domTargets) {
     // Abort if a newer apply/restore superseded this one mid-loop.
@@ -379,16 +408,23 @@ export async function hardeningPass(
       deps.log(
         `[hardening] ${appId}: epoch changed, aborting after ${engineInjected + legacyInjected}/${domTargets.length}`,
       );
-      if (firstSession) firstSession.close();
+      // Pooled sessions are closed by epoch invalidation; only close one-shot ones.
+      if (firstSession && !firstPooled) firstSession.close();
       return;
     }
 
-    let session: CdpSession | null = null;
+    let handle: SessionHandle = { session: null, pooled: false };
     try {
-      session = await connectWithRetry(target.webSocketDebuggerUrl!, 4000);
+      handle = await acquireSession(
+        deps.sessions,
+        appId,
+        targetKeyFor(target.id, target.webSocketDebuggerUrl),
+        () => connectWithRetry(target.webSocketDebuggerUrl!, 4000),
+      );
     } catch {
-      session = null;
+      handle = { session: null, pooled: false };
     }
+    const session = handle.session;
     if (!session) {
       failed++;
       deps.log(
@@ -444,13 +480,15 @@ export async function hardeningPass(
       // Keep the first successful page session for the health check below.
       if (!firstSession && target.type === 'page') {
         firstSession = session;
+        firstPooled = handle.pooled;
       }
     } catch (error) {
       failed++;
       deps.log(`[hardening] ${appId}: ${target.type} injection failed: ${toMessage(error)}`);
     } finally {
-      // Close unless we're keeping this session for the health check.
-      if (session !== firstSession) {
+      // Close one-shot sessions unless kept for the health check. Pooled
+      // sessions are owned by the pool and must never be closed here.
+      if (!handle.pooled && session !== firstSession) {
         session.close();
       }
     }
@@ -510,7 +548,8 @@ export async function hardeningPass(
         );
       }
     } finally {
-      firstSession.close();
+      // Pooled sessions are owned by the pool; only close one-shot ones.
+      if (!firstPooled) firstSession.close();
     }
   }
 }
@@ -548,14 +587,21 @@ export async function hardeningRemove(
       return;
     }
     try {
-      const session = await connectCdp(target.webSocketDebuggerUrl!, 3000);
+      const handle = await acquireSession(
+        deps.sessions,
+        appId,
+        targetKeyFor(target.id, target.webSocketDebuggerUrl),
+        () => connectCdp(target.webSocketDebuggerUrl!, 3000),
+      );
+      const session = handle.session;
+      if (!session) continue;
       try {
         // Pass appId so removeEngineInjection can also remove the tracked
         // Page.addScriptToEvaluateOnNewDocument identifiers (P1 audit #8).
         await removeEngineInjection(session, appId);
         removed++;
       } finally {
-        session.close();
+        if (!handle.pooled) session.close();
       }
     } catch {
       // Best-effort — target may have navigated away or closed.

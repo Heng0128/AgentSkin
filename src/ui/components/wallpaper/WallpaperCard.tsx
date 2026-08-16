@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { memo, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { formatSize } from '@/lib/wallpaperUtils';
@@ -18,8 +18,8 @@ export interface WallpaperCardProps {
   previewOnly: boolean;
   deletable: boolean;
   isDeleting: boolean;
-  onSelect: () => void;
-  onDelete: () => void;
+  onSelect: (wp: WallpaperInfo) => void;
+  onDelete: (id: string) => void;
   deleteLabel: string;
   confirmLabel: string;
   t: UiMessages;
@@ -46,6 +46,7 @@ export function WallpaperPreview({
   loading,
   loadingNode,
   emptyNode,
+  alt,
 }: {
   playback: 'video' | 'gif' | 'image' | 'web' | 'scene';
   mediaUrl: string | null;
@@ -54,6 +55,8 @@ export function WallpaperPreview({
   loading: boolean;
   loadingNode?: ReactNode;
   emptyNode?: ReactNode;
+  /** Descriptive alt for the preview image. Omit for a purely decorative preview. */
+  alt?: string;
 }) {
   const [failed, setFailed] = useState(false);
   const onError = () => setFailed(true);
@@ -72,17 +75,17 @@ export function WallpaperPreview({
     );
   }
   if (playback === 'gif' && mediaUrl && !failed) {
-    return <img src={mediaUrl} alt="" onError={onError} className={className} />;
+    return <img src={mediaUrl} alt={alt ?? ''} onError={onError} className={className} />;
   }
   // image / web / scene: show the still preview image.
   if (previewUrl) {
-    return <img src={previewUrl} alt="" loading="lazy" className={className} />;
+    return <img src={previewUrl} alt={alt ?? ''} loading="lazy" className={className} />;
   }
   if (loading) return <>{loadingNode}</>;
   return <>{emptyNode}</>;
 }
 
-export function WallpaperCard({
+export const WallpaperCard = memo(function WallpaperCard({
   wallpaper,
   index,
   selected,
@@ -134,7 +137,7 @@ export function WallpaperCard({
         selected && 'border-primary/60',
       )}
     >
-      <button type="button" onClick={onSelect} className="flex flex-1 flex-col">
+      <button type="button" onClick={() => onSelect(wallpaper)} className="flex flex-1 flex-col">
         {/* Preview — fixed 16:9 like Wallpaper Engine's thumbs (never stretched
             to square by row heights). */}
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
@@ -143,6 +146,7 @@ export function WallpaperCard({
             mediaUrl={mediaUrl}
             previewUrl={wallpaper.previewUrl}
             loading={mediaLoading}
+            alt={wallpaper.title}
             className="size-full object-cover"
             loadingNode={
               <div className="flex size-full items-center justify-center">
@@ -233,14 +237,14 @@ export function WallpaperCard({
 
       {/* Delete button for local wallpapers  */}
       {deletable && (
-        <div className="absolute left-1 bottom-1 opacity-0 transition-opacity duration-fast group-hover:opacity-100">
+        <div className="absolute left-1 bottom-1 opacity-0 transition-opacity duration-fast group-hover:opacity-100 group-focus-within:opacity-100">
           {confirming ? (
             <div className="flex items-center gap-0 rounded-md bg-card px-1 py-0">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete();
+                  onDelete(wallpaper.id);
                   setConfirming(false);
                 }}
                 disabled={isDeleting}
@@ -275,4 +279,4 @@ export function WallpaperCard({
       )}
     </div>
   );
-}
+});

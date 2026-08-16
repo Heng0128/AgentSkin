@@ -60,9 +60,17 @@ export function ThemeCard({
 
         {/* Active agent indicators — top-right, sharp pills */}
         {isActive && (
-          <div className="absolute right-1 top-1 flex items-center gap-0 rounded-md bg-cr-success/90 px-1 py-0">
+          <div
+            role="img"
+            aria-label={t.themeStatsActive(activeAgentIds.length)}
+            className="absolute right-1 top-1 flex items-center gap-0 rounded-md bg-cr-success/90 px-1 py-0"
+          >
             {activeAgentIds.map((agentId) => (
-              <span key={agentId} className="flex size-3 items-center justify-center rounded-sm bg-popover/90">
+              <span
+                key={agentId}
+                aria-hidden="true"
+                className="flex size-3 items-center justify-center rounded-sm bg-popover/90"
+              >
                 <AppMark appId={agentId} size={8} />
               </span>
             ))}
@@ -77,7 +85,7 @@ export function ThemeCard({
               isActive ? 'left-1' : 'right-1',
               theme.mode === 'dark'
                 ? 'bg-gray-900/80 text-gray-300'
-                : 'bg-muted text-muted-foreground',
+                : 'bg-muted text-foreground',
             )}
           >
             {theme.mode === 'dark' ? t.themeModeDark : t.themeModeLight}
@@ -133,7 +141,8 @@ export function ThemeCard({
 
         {/* Supported agents + tags — badges */}
         <div className="flex items-center gap-1 pt-0.5">
-          {theme.supportedAgents.map((agentId) => {
+          <span aria-hidden="true" className="flex items-center gap-1">
+            {theme.supportedAgents.map((agentId) => {
             const agentActive = activeAgentIds.includes(agentId);
             return (
               <span
@@ -149,6 +158,7 @@ export function ThemeCard({
               </span>
             );
           })}
+          </span>
           {theme.tags.length > 0 && (
             <div className="ml-auto flex gap-0">
               {theme.tags.slice(0, 2).map((tag) => (

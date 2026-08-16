@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CdpTarget } from '../../legacy/agentskin-core-runtime';
 
 // Mock listCdpTargets so listTargets/findPageTarget/findDomTargets/findSecondaryTargets
@@ -15,8 +15,21 @@ vi.mock('../../legacy/agentskin-core-runtime', async (importOriginal) => {
 
 // Import AFTER mock so the mocked module is in effect.
 const { listCdpTargets } = await import('../../legacy/agentskin-core-runtime');
-const { listTargets, findPageTarget, pickPageTarget, findDomTargets, findSecondaryTargets } =
-  await import('./cdp-targets');
+const {
+  listTargets,
+  findPageTarget,
+  pickPageTarget,
+  findDomTargets,
+  findSecondaryTargets,
+  clearTargetsCache,
+} = await import('./cdp-targets');
+
+// The per-port target-list cache is module-level — reset it between tests so
+// a cached result from one test never bleeds into the next.
+beforeEach(() => {
+  clearTargetsCache();
+  vi.clearAllMocks();
+});
 
 function makeTarget(overrides: Partial<CdpTarget> = {}): CdpTarget {
   return {
@@ -105,6 +118,30 @@ describe('listTargets', () => {
     vi.mocked(listCdpTargets).mockRejectedValue(new Error('ECONNREFUSED'));
     const result = await listTargets(9222);
     expect(result).toEqual([]);
+  });
+
+  it('reuses the cached target list within the TTL window (one fetch)', async () => {
+    vi.mocked(listCdpTargets).mockResolvedValue([makeTarget()]);
+    const first = await listTargets(9222);
+    const second = await listTargets(9222);
+    expect(first).toHaveLength(1);
+    expect(second).toBe(first); // same cached array
+    expect(listCdpTargets).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not cache an empty result (transient not-ready state is re-fetched)', async () => {
+    vi.mocked(listCdpTargets).mockResolvedValue([]);
+    await listTargets(9222);
+    await listTargets(9222);
+    expect(listCdpTargets).toHaveBeenCalledTimes(2);
+  });
+
+  it('clearTargetsCache invalidates the cached list', async () => {
+    vi.mocked(listCdpTargets).mockResolvedValue([makeTarget()]);
+    await listTargets(9222);
+    clearTargetsCache();
+    await listTargets(9222);
+    expect(listCdpTargets).toHaveBeenCalledTimes(2);
   });
 });
 

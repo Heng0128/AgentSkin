@@ -24,6 +24,7 @@ import { useStudioStore } from '@/stores/studioStore';
 import type { ToolOverride } from '@/types/override';
 
 import type { UiMessages } from '@shared/i18n';
+import { cssVarToHex } from './harmony';
 
 function shadowLevels(
   t: UiMessages,
@@ -79,12 +80,12 @@ export function DockTabFX({ t }: { t: UiMessages }) {
   const finalTiming = toolOverrides?.timing ?? sig.motion.defaultTiming;
 
   // <input type="color"> requires a valid hex string — CSS variables are
-  // invalid there.  These named constants are hex equivalents of the globals
-  // design tokens (see globals.css: --primary, --background, --foreground, --card).
-  const FALLBACK_ACCENT_HEX = '#F0574C'; // matches globals --primary
-  const FALLBACK_BG_HEX = '#0F1114'; // matches globals --background
-  const FALLBACK_FG_HEX = '#F0F2F4'; // matches globals --foreground
-  const FALLBACK_SURFACE_HEX = '#16181D'; // matches globals --card
+  // invalid there. Read the live theme vars at runtime (converted to hex),
+  // falling back to the named design token equivalents on failure.
+  const FALLBACK_ACCENT_HEX = cssVarToHex('--primary', '#F0574C'); // matches globals --primary
+  const FALLBACK_BG_HEX = cssVarToHex('--background', '#0F1114'); // matches globals --background
+  const FALLBACK_FG_HEX = cssVarToHex('--foreground', '#F0F2F4'); // matches globals --foreground
+  const FALLBACK_SURFACE_HEX = cssVarToHex('--card', '#16181D'); // matches globals --card
 
   const finalAccent =
     toolOverrides?.accent ?? rgbToHex(sig.color.accents[0]) ?? FALLBACK_ACCENT_HEX;

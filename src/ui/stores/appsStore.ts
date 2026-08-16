@@ -54,8 +54,12 @@ interface AppsApiExtension {
   onElectronScanProgress(listener: (event: ScanProgressEvent) => void): () => void;
 }
 
-/** Cast the shared `api` singleton to include the launcher-specific methods. */
-const appsApi = api as unknown as AppsApiExtension;
+/**
+ * The shared `api` singleton already exposes the launcher-specific methods
+ * (they are part of `AgentSkinApi`), so no cast is needed — this explicit
+ * type annotation lets the compiler verify the structural match.
+ */
+const appsApi: AppsApiExtension = api;
 
 /** Running-app record. */
 export interface RunningAppInfo {

@@ -73,4 +73,18 @@ describe('env-preset-store', () => {
     const loaded = await loadEnvPresets(dir);
     expect(loaded).toEqual([]);
   });
+
+  it('saveEnvPresets filters out malformed / oversized entries (G2)', async () => {
+    const good = makePreset({ id: 'good' });
+    const badType = { id: 'x', name: 42 };
+    const oversized = { ...makePreset({ id: 'big' }), name: 'x'.repeat(600) };
+    await saveEnvPresets(dir, [
+      good,
+      badType as unknown as EnvironmentPreset,
+      oversized as unknown as EnvironmentPreset,
+    ]);
+    const loaded = await loadEnvPresets(dir);
+    expect(loaded).toHaveLength(1);
+    expect(loaded[0]?.id).toBe('good');
+  });
 });

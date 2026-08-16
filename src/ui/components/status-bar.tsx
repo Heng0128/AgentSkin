@@ -45,6 +45,19 @@ function useTick(): string {
   return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
+/**
+ * Clock — isolated into its own component so the 1s ticker re-renders only
+ * this <span>, not the whole StatusBar (which holds store subscriptions that
+ * would otherwise re-read on every second).
+ */
+function Clock() {
+  return (
+    <span className="font-mono tabular-nums text-[11px] font-medium text-muted-foreground/70">
+      {useTick()}
+    </span>
+  );
+}
+
 const LED_STYLE: Record<LedState['variant'], { dot: string }> = {
   running: {
     dot: 'bg-cr-success',
@@ -76,7 +89,6 @@ export function StatusBar() {
         ? t.statusLedStandby
         : t.statusLedOffline;
 
-  const clock = useTick();
   const led = LED_STYLE[variant];
 
   // Aggregate counts from the live status snapshot.
@@ -142,9 +154,7 @@ export function StatusBar() {
         <span className="text-[11px] font-medium text-muted-foreground/60">
           {t.statusLocalOnly}
         </span>
-        <span className="font-mono tabular-nums text-[11px] font-medium text-muted-foreground/70">
-          {clock}
-        </span>
+        <Clock />
         <button
           type="button"
           title={t.statusVersionTip}

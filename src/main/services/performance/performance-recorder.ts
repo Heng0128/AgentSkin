@@ -200,6 +200,32 @@ export class ApplyTraceBuilder {
   }
 
   /**
+   * Append a standalone top-level step (not a child of another step) with a
+   * pre-measured duration. Used by deep CDP layers (`connectCdp`,
+   * `waitForTheme`, subprocess spawn) that record timing outside a `step()`
+   * callback but still want to land inside the active apply trace.
+   *
+   * Unlike sub-steps, this produces a first-class row in the trace's `steps`
+   * list (not a `children[]` on a parent). It is a no-op concern-wise so
+   * callers may invoke it unconditionally; it only throws if the trace is
+   * already finalized.
+   */
+  appendStep(name: string, duration: number, success = true, error?: string): void {
+    if (this.finalized) {
+      throw new Error(
+        `Trace "${this.traceId}" is already finalized; cannot append step "${name}".`,
+      );
+    }
+    this.steps.push({
+      name,
+      startedAt: nowMs() - duration,
+      duration,
+      success,
+      ...(error !== undefined ? { error } : {}),
+    });
+  }
+
+  /**
    * Finalize the trace, freezing all recorded steps and computing totals.
    *
    * Sub-steps registered via {@link addSubStep} are attached to their parent
@@ -304,6 +330,23 @@ export class PerformanceRecorder {
    */
   static getActive(): ApplyTraceBuilder | null {
     return PerformanceRecorder.active;
+  }
+
+  /**
+   * Record a standalone named step into the active trace (RFC §4.9). Intended
+   * for deep layers — `connectCdp`, `waitForTheme`, subprocess spawn — that
+   * measure their own duration and cannot be wrapped by a `step()` callback
+   * up in the apply orchestrator. No-op when no trace is in-flight.
+   *
+   * @param name     Step name (e.g. 'connectCdp', 'waitForTheme', 'spawnAgent').
+   * @param duration Measured elapsed time in milliseconds.
+   * @param success  Whether the operation completed successfully.
+   * @param error    Error message when `success` is false.
+   */
+  static recordNamedStep(name: string, duration: number, success = true, error?: string): void {
+    const builder = PerformanceRecorder.active;
+    if (!builder) return;
+    builder.appendStep(name, duration, success, error);
   }
 
   /** Reset sequence counter and clear active trace. Intended for test teardown. */

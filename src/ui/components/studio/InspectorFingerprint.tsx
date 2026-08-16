@@ -65,6 +65,8 @@ export function InspectorFingerprint({ t }: { t: UiMessages }) {
             {[...new Set(sig.color.backgrounds)].map((c) => (
               <span
                 key={c}
+                role="img"
+                aria-label={`${t.studioDimColor} ${c}`}
                 className="inline-block size-[10px] rounded-[var(--r-micro)] border border-[var(--border-subtle)]"
                 style={{ background: c }}
                 title={c}

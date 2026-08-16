@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // P1 perf: rAF batching flag for mousemove-driven parallax. Shared across
 // mounts so concurrent effects don't each schedule a separate frame. The
@@ -204,14 +204,17 @@ export function DynamicBackground({
     };
   }, [needsParallax, layerParallax, iframeParallax, render?.parallax, web.url]);
 
-  if (!wallpaper) return null;
-
   // Media-element style from global render options (object-fit/position,
   // flip/filter; defaults match history: cover + centered + no transforms).
-  const mediaStyle = buildMediaElementStyle(render);
+  // P2 perf: memoized so wallpapers don't rebuild these three style objects
+  // on every render — they only change when the render options do.
+  // (Hooks must run before the early return below to satisfy Rules of Hooks.)
+  const mediaStyle = useMemo(() => buildMediaElementStyle(render), [render]);
   const alignment = render?.alignment;
-  const flip = buildFlipTransform(render ?? {});
-  const filter = buildFilter(render ?? {});
+  const flip = useMemo(() => buildFlipTransform(render ?? {}), [render]);
+  const filter = useMemo(() => buildFilter(render ?? {}), [render]);
+
+  if (!wallpaper) return null;
 
   const isSceneOrWeb = wallpaper.type === 'web' || wallpaper.type === 'scene';
   const tileImage = wallpaper.type === 'image' && alignment === 'tile';

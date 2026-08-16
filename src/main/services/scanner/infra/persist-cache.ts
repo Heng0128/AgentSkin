@@ -26,11 +26,12 @@
  * rename).
  */
 
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { ElectronScanResult } from '../../../../shared/types/agent';
 import { writeJsonAtomic } from '../../../fs-utils';
-import { mainWarn } from '../../../logger';
+import { mainDebug, mainWarn } from '../../../logger';
 
 /** On-disk cache schema version. Bumped when the format changes incompatibly. */
 const CACHE_VERSION = 1;
@@ -39,10 +40,16 @@ const CACHE_VERSION = 1;
  *  stale and callers should trigger a full re-scan rather than replay it. */
 export const PERSIST_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+/** HMAC protects the cache from tampering (e.g. a poisoned scan-cache.json
+ *  seeding the launch whitelist with arbitrary exePaths). */
+const KEY_FILE_NAME = '.scan-cache.key';
+
 export interface ScanCacheFile {
   version: typeof CACHE_VERSION;
   savedAt: number;
   result: ElectronScanResult;
+  /** HMAC-SHA256 over `{version, savedAt, result}`; absent on legacy caches. */
+  sig?: string;
 }
 
 /**
@@ -52,6 +59,52 @@ export interface ScanCacheFile {
  */
 export function persistCachePath(userDataPath: string): string {
   return path.join(userDataPath, 'scan-cache.json');
+}
+
+/** Resolve the HMAC key file path within the same userData directory. */
+function cacheKeyPath(userDataPath: string): string {
+  return path.join(userDataPath, KEY_FILE_NAME);
+}
+
+/**
+ * Load the per-install HMAC key, creating it on first use. A random 32-byte
+ * key is generated once and persisted so signatures survive restarts. The key
+ * file sits alongside the cache in `userData` — a local attacker who can write
+ * the cache can also read the key, so this is integrity protection against
+ * accidental corruption / casual tampering, not a strong security boundary.
+ */
+async function loadOrCreateKey(userDataPath: string): Promise<Buffer> {
+  const keyPath = cacheKeyPath(userDataPath);
+  try {
+    const existing = await fs.readFile(keyPath);
+    if (existing.length > 0) return existing;
+  } catch {
+    // ENOENT → generate below.
+  }
+  const key = crypto.randomBytes(32);
+  await fs.writeFile(keyPath, key, { mode: 0o600 });
+  return key;
+}
+
+/** Compute the HMAC-SHA256 signature over the cache body (minus `sig`). */
+function signCache(
+  key: Buffer,
+  body: { version: number; savedAt: number; result: ElectronScanResult },
+): string {
+  return crypto.createHmac('sha256', key).update(JSON.stringify(body)).digest('hex');
+}
+
+/** Structural body of a cache file, used for both signing and verifying. */
+function cacheBody(v: Record<string, unknown>): {
+  version: number;
+  savedAt: number;
+  result: ElectronScanResult;
+} {
+  return {
+    version: v.version as number,
+    savedAt: v.savedAt as number,
+    result: v.result as ElectronScanResult,
+  };
 }
 
 /**
@@ -92,6 +145,30 @@ export async function loadPersistedScan(
     return null;
   }
 
+  // Integrity check: a signed cache must match its HMAC. A tampered cache
+  // (e.g. a poisoned scan-cache.json seeding the launch whitelist) is
+  // discarded. Legacy caches without a `sig` are accepted (written by an
+  // older version) but logged.
+  const v = parsed as unknown as Record<string, unknown>;
+  if (typeof v.sig === 'string') {
+    try {
+      const key = await loadOrCreateKey(userDataPath);
+      const expected = signCache(key, cacheBody(v));
+      if (expected !== v.sig) {
+        mainWarn('PersistScanCache', 'HMAC mismatch — cache tampered, discarding');
+        return null;
+      }
+    } catch (error) {
+      mainWarn(
+        'PersistScanCache',
+        `HMAC verification failed (${error instanceof Error ? error.message : String(error)}) — discarding`,
+      );
+      return null;
+    }
+  } else {
+    mainDebug('PersistScanCache', 'cache has no HMAC signature (legacy) — accepting');
+  }
+
   // TTL guard: a cache older than 24h is stale. Treat as missing.
   if (now - parsed.savedAt > PERSIST_CACHE_TTL_MS) {
     mainWarn(
@@ -122,6 +199,9 @@ export async function savePersistedScan(
     result,
   };
   try {
+    // Sign before writing so a tampered/poisoned cache is detected on load.
+    const key = await loadOrCreateKey(userDataPath);
+    payload.sig = signCache(key, cacheBody(payload as unknown as Record<string, unknown>));
     await writeJsonAtomic(file, payload);
   } catch (error) {
     // Disk-full or permission denied — log and move on. The in-memory cache

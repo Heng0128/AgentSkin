@@ -100,6 +100,42 @@ function useTick(): number {
   return 0;
 }
 
+/**
+ * Real-time "x s ago" / refresh indicator. Owns the 1s ticker so only this
+ * label re-renders on each tick — the agent pills (and the rest of the bar)
+ * stay idle until their actual data changes.
+ */
+function StatusRefreshLabel({
+  lastStatusAt,
+  isRefreshing,
+  t,
+}: {
+  lastStatusAt?: number | null;
+  isRefreshing?: boolean;
+  t: UiMessages;
+}) {
+  useTick();
+  const agoLabel = lastStatusAt ? relativeAgo(lastStatusAt, Date.now()) : null;
+  return (
+    <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/60">
+      {isRefreshing ? (
+        <>
+          <span className="relative flex size-1.5">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-muted-foreground/30 opacity-75" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-muted-foreground/50" />
+          </span>
+          <span className="text-muted-foreground">{t.statusDetecting}</span>
+        </>
+      ) : agoLabel ? (
+        <>
+          <span className="size-1.5 rounded-full bg-cr-success/60" />
+          <span>{agoLabel}</span>
+        </>
+      ) : null}
+    </span>
+  );
+}
+
 export function AgentStatusBar({
   environments,
   progress,
@@ -118,11 +154,6 @@ export function AgentStatusBar({
   t: UiMessages;
   onSelectAgent?: (env: EnvironmentModel) => void;
 }) {
-  // Re-render every second so the "x s ago" label stays live.
-  useTick();
-  // Relative "x s ago" label for the last successful status refresh.
-  const agoLabel = lastStatusAt ? relativeAgo(lastStatusAt, Date.now()) : null;
-
   return (
     <div className="mt-4">
       <div className="mb-2 flex items-center gap-1">
@@ -132,23 +163,9 @@ export function AgentStatusBar({
         <span className="inline-flex size-4 items-center justify-center rounded-md bg-secondary text-[11px] font-semibold text-muted-foreground">
           {environments.length}
         </span>
-        {/* Live refresh indicator — relative timestamp + pulsing dot */}
-        <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/60">
-          {isRefreshing ? (
-            <>
-              <span className="relative flex size-1.5">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-muted-foreground/30 opacity-75" />
-                <span className="relative inline-flex size-1.5 rounded-full bg-muted-foreground/50" />
-              </span>
-              <span className="text-muted-foreground">{t.statusDetecting}</span>
-            </>
-          ) : agoLabel ? (
-            <>
-              <span className="size-1.5 rounded-full bg-cr-success/60" />
-              <span>{agoLabel}</span>
-            </>
-          ) : null}
-        </span>
+        {/* Live refresh indicator — owned by StatusRefreshLabel so its 1s
+            ticker never re-renders the pill grid. */}
+        <StatusRefreshLabel lastStatusAt={lastStatusAt} isRefreshing={isRefreshing} t={t} />
       </div>
 
       <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">

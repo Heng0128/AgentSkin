@@ -110,6 +110,7 @@ export function InspectorDetails({ t }: { t: UiMessages }) {
                 key={p}
                 type="button"
                 onClick={() => setPseudoView(p === pseudoView ? null : p)}
+                aria-pressed={pseudoView === p}
                 className="h-5 px-1 font-mono text-[10px]"
                 style={{
                   background: pseudoView === p ? 'var(--accent)' : 'var(--bg-4)',

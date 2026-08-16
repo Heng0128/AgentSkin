@@ -15,6 +15,12 @@ describe('isThemePackagePath', () => {
     expect(isThemePackagePath('agentskin://themes/apply?theme=neon')).toBe(false);
     expect(isThemePackagePath('/tmp/neon.agentskin-theme.bak')).toBe(false);
   });
+
+  it('rejects relative paths even with a valid extension (G1)', () => {
+    expect(isThemePackagePath('neon.agentskin-theme')).toBe(false);
+    expect(isThemePackagePath('./themes/retro.codex-theme')).toBe(false);
+    expect(isThemePackagePath('../tmp/neon.agenttheme')).toBe(false);
+  });
 });
 
 describe('extractThemeFilesFromArgv', () => {

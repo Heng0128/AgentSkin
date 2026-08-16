@@ -167,16 +167,15 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
         set({ selectedId: null });
       }
       // Clear any per-agent selection that pointed at the deleted wallpaper.
+      // Spread the previous record and only override the keys that changed,
+      // rather than rebuilding the entire record.
       const prev = get().agentWallpapers;
-      const next = {} as Record<AgentId, WallpaperAgentSetting>;
+      const next = { ...prev };
       let changed = false;
       for (const key of Object.keys(prev) as AgentId[]) {
-        const entry = prev[key];
-        if (entry.id === id) {
+        if (prev[key].id === id) {
           next[key] = { enabled: false, id: null };
           changed = true;
-        } else {
-          next[key] = entry;
         }
       }
       if (changed) set({ agentWallpapers: next });
@@ -223,26 +222,10 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
     }
     const result = await get().applyAgentWallpaper(appId, options);
 
-    if (result?.ok && nextEnabled && nextId && !companionBusyByAgent.has(appId)) {
-      // pywal-style wallpaper→theme linkage: auto-extract a matching theme,
-      // apply it, then re-apply the wallpaper (theme apply clears per-agent
-      // wallpaper per "last applied wins"). Fire-and-forget: failures inside
-      // never roll back the wallpaper apply, only reported via notification.
-      try {
-        companionBusyByAgent.add(appId);
-        const theme = await api.extractThemeFromWallpaper(nextId);
-        const applied = await useThemeStore
-          .getState()
-          .applyToApp(theme.id, theme.displayName, appId);
-        if (applied) {
-          // Re-apply the wallpaper. companionBusyByAgent prevents re-entry.
-          await get().setAndApplyAgentWallpaper(appId, true, nextId, { render: options?.render });
-        }
-      } catch (error) {
-        useNotificationStore.getState().fail(error);
-      } finally {
-        companionBusyByAgent.delete(appId);
-      }
+    if (result?.ok && nextEnabled && nextId) {
+      // pywal-style wallpaper→theme linkage: extra-work is delegated to the
+      // standalone companion helper (extract theme, apply, re-apply wallpaper).
+      await runWallpaperCompanion(get, appId, nextId, options);
     }
 
     return result;
@@ -300,6 +283,44 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
     }
   },
 }));
+
+/**
+ * Pywal-style wallpaper → theme linkage: extract a matching theme, apply it,
+ * then re-apply the wallpaper (theme apply clears per-agent wallpaper per
+ * "last applied wins"). Extracted out of `setAndApplyAgentWallpaper` so the
+ * re-apply step drives the underlying `applyAgentWallpaper` directly instead
+ * of recursing into the full set-and-apply action. The module-level
+ * `companionBusyByAgent` guard is managed explicitly here (set on entry,
+ * cleared on exit) rather than relying on a re-entrancy check at a call
+ * boundary.
+ */
+async function runWallpaperCompanion(
+  get: () => WallpaperState,
+  appId: AgentId,
+  nextId: string,
+  options?: { restartExisting?: boolean; render?: WallpaperRenderOptions },
+): Promise<void> {
+  // Guarded per-agent so a re-apply (via applyAgentWallpaper) can't re-enter
+  // this companion path, and concurrent agents don't steal each other's guard.
+  if (companionBusyByAgent.has(appId)) return;
+  companionBusyByAgent.add(appId);
+  try {
+    const theme = await api.extractThemeFromWallpaper(nextId);
+    const applied = await useThemeStore.getState().applyToApp(theme.id, theme.displayName, appId);
+    if (applied) {
+      // Re-apply the wallpaper (the setting is already persisted). Fire the
+      // underlying apply directly — never the full setAndApply action, which
+      // would recurse back into this helper.
+      await get().applyAgentWallpaper(appId, options);
+    }
+  } catch (error) {
+    // Best-effort: failures inside never roll back the wallpaper apply, only
+    // reported via notification.
+    useNotificationStore.getState().fail(error);
+  } finally {
+    companionBusyByAgent.delete(appId);
+  }
+}
 
 /** Selector: the currently active wallpaper (resolved from the list), or null. */
 export const selectActiveWallpaper = (s: WallpaperState): WallpaperInfo | null =>

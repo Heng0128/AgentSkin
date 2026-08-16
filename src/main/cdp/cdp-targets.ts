@@ -25,13 +25,62 @@ import { listCdpTargets } from '../../legacy/agentskin-core-runtime';
 
 export type { CdpTarget };
 
+// ---------------------------------------------------------------------------
+// Per-port target list cache (RFC §4.3)
+// ---------------------------------------------------------------------------
+
+/**
+ * TTL cache for `listTargets` results, keyed by port (800ms).
+ *
+ * Why this cache: a single apply calls `findDomTargets` (hardening) and
+ * `findSecondaryTargets` (secondary inject), and `withPageSession` calls
+ * adapter.findTargets / listTargets again — each hitting the HTTP `/json/list`
+ * endpoint. Caching the list for 800ms collapses those repeated fetches within
+ * one apply window into a single request while still catching a freshly-
+ * registered target (WorkBuddy's targets appear over ~1s after launch).
+ *
+ * The cache is module-level (like the shared discovery snapshots) and
+ * invalidated on every epoch bump via {@link clearTargetsCache}. Only
+ * non-empty results are cached — an empty list may mean "endpoint not ready
+ * yet" and must always be re-fetched.
+ */
+interface TargetsSnapshot {
+  port: number;
+  targets: CdpTarget[];
+  capturedAt: number;
+}
+let cachedTargets: TargetsSnapshot | null = null;
+const TARGETS_TTL_MS = 800;
+
+/** Drop the cached target list for all ports (epoch bump / tests). */
+export function clearTargetsCache(port?: number): void {
+  if (port === undefined || cachedTargets?.port === port) {
+    cachedTargets = null;
+  }
+}
+
 /** Fetch all CDP targets on the given port. Returns [] on any fetch/parse error. */
 export async function listTargets(port: number): Promise<CdpTarget[]> {
-  try {
-    return await listCdpTargets(port);
-  } catch {
-    return [];
+  const now = Date.now();
+  if (
+    cachedTargets &&
+    cachedTargets.port === port &&
+    now - cachedTargets.capturedAt < TARGETS_TTL_MS
+  ) {
+    return cachedTargets.targets;
   }
+  let targets: CdpTarget[] = [];
+  try {
+    targets = await listCdpTargets(port);
+  } catch {
+    targets = [];
+  }
+  // Cache only non-empty results — an empty list may be a transient
+  // "endpoint not ready" state and must not linger for 800ms.
+  if (targets.length > 0) {
+    cachedTargets = { port, targets, capturedAt: now };
+  }
+  return targets;
 }
 
 /** Find the main page target (type === 'page'). Returns undefined if none. */

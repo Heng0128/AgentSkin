@@ -23,6 +23,14 @@ import { getActiveWallpaperAgents, openAgentWallpaperSession } from './wallpaper
 let registered = false;
 
 /**
+ * Set once the module is torn down (cleanup runs). Guards `broadcast` against
+ * opening fresh CDP sessions after teardown — the app is quitting, so any
+ * late power event must not spin up agent sessions that would only slow exit
+ * (G4).
+ */
+let disposed = false;
+
+/**
  * Production cleanup returned by {@link registerWallpaperLifecycle}.
  * Callers (e.g. boot-sequence disposable registry) store this and invoke
  * it on app teardown to remove all registered power-monitor / app listeners.
@@ -52,6 +60,8 @@ export function registerWallpaperLifecycle(): () => void {
   registered = true;
 
   const broadcast = async (paused: boolean): Promise<void> => {
+    // Early return after teardown: never open CDP sessions on a quitting app.
+    if (disposed) return;
     const agents = getActiveWallpaperAgents();
     await Promise.all(
       agents.map(async ({ appId, port }: { appId: AgentId; port: number }) => {
@@ -101,6 +111,9 @@ export function registerWallpaperLifecycle(): () => void {
   // keyed in installedListeners, then resets state so a later call to
   // registerWallpaperLifecycle() re-registers cleanly (hot-reload safe).
   registeredCleanup = () => {
+    // Mark disposed FIRST so any broadcast triggered concurrently (or by a
+    // late power event) short-circuits instead of opening new CDP sessions.
+    disposed = true;
     // Remove every listener keyed in installedListeners. PowerMonitor's .off()
     // has per-event overloads but the handlers stored here are contextually
     // typed by registration site; cast to the common handler signature.

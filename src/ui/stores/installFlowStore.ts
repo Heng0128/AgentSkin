@@ -57,6 +57,15 @@ function currentT(): UiMessages {
   return uiMessages[locale];
 }
 
+/**
+ * Retry-specific message keys not yet present in the shared `UiMessages`
+ * dict. Declared here so the fallback path in `retryInstall` is type-safe
+ * instead of reaching through `Record<string, unknown>`.
+ */
+interface InstallRetryMessages extends UiMessages {
+  importRetryNoPath?: string;
+}
+
 function makeSteps(t: UiMessages, activeId: StepId = 'read'): InstallStep[] {
   const map: Record<string, string> = {
     select: t.installAwaitingFile,
@@ -245,14 +254,13 @@ export const useInstallFlowStore = create<InstallFlowState_>((set, _get) => {
     },
 
     retryInstall: async (sourcePath) => {
-      const t = currentT();
+      const t = currentT() as InstallRetryMessages;
       const path = sourcePath ?? lastSourcePath;
       if (!path) {
         useNotificationStore
           .getState()
           .showToast(
-            ((t as Record<string, unknown>).importRetryNoPath as string | undefined) ??
-              '无法重试：原始文件路径未知，请重新选择文件导入。',
+            t.importRetryNoPath ?? '无法重试：原始文件路径未知，请重新选择文件导入。',
             'destructive',
           );
         return;

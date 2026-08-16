@@ -5,6 +5,7 @@
  * 不持有任何业务状态，不发起任何 IPC / store 操作。
  */
 
+import { useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { gridClass } from '@/lib/wallpaperUtils';
 
@@ -33,9 +34,17 @@ export function WallpaperGrid({
   onDelete,
   onEmptyNode,
 }: WallpaperGridProps) {
+  // Stable callbacks (memoized on their deps) so a `deletingId` change only
+  // re-renders the affected card — `WallpaperCard` is memoized with a shallow
+  // compare, and inline closures here would defeat that memo on every grid
+  // re-render. (Hooks must run before the early return below to satisfy Rules
+  // of Hooks.)
+  const handleSelect = useCallback((wp: WallpaperInfo) => onSelect(wp), [onSelect]);
+  const handleDelete = useCallback((id: string) => onDelete(id), [onDelete]);
+
   if (wallpapers.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center font-mono text-[11px]  text-muted-foreground/60">
+      <div className="flex h-40 items-center justify-center font-mono text-[11px] text-muted-foreground/60">
         {onEmptyNode}
       </div>
     );
@@ -51,10 +60,10 @@ export function WallpaperGrid({
           selected={selectedId === wp.id}
           isUiBackground={isUiBackground(wp)}
           previewOnly={wp.previewOnly}
-          onSelect={() => onSelect(wp)}
+          onSelect={handleSelect}
           deletable={wp.source === 'local' && wp.id.startsWith('local:')}
           isDeleting={deletingId === wp.id}
-          onDelete={() => onDelete(wp.id)}
+          onDelete={handleDelete}
           deleteLabel={t.wallpaperDelete}
           confirmLabel={t.wallpaperDeleteConfirm}
           t={t}

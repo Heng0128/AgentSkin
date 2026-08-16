@@ -137,6 +137,8 @@ export interface InjectEngineOptions {
   themeId?: string;
   /** Delay between injection and verification in ms (default DEFAULT_VERIFY_DELAY_MS). */
   verifyDelayMs?: number;
+  /** Poll interval for the verification loop (default 50ms, RFC §4.8). */
+  verifyIntervalMs?: number;
 }
 
 export interface InjectEngineResult {
@@ -186,6 +188,7 @@ export async function injectThemeViaEngine(
     agent,
     themeId,
     verifyDelayMs = DEFAULT_VERIFY_DELAY_MS,
+    verifyIntervalMs = 50,
   } = options;
 
   try {
@@ -290,7 +293,7 @@ export async function injectThemeViaEngine(
   // --- Step 6: Verify (polling with timeout) ---
   const verification = await waitForTheme(session, {
     timeoutMs: 3000,
-    intervalMs: 100,
+    intervalMs: verifyIntervalMs,
     minDelayMs: verifyDelayMs,
   });
 

@@ -58,12 +58,19 @@ import {
   type WithPageSessionDeps,
   withPageSession,
 } from './agent-engine/delegates';
-import type { DiscoveryDeps } from './app-discovery';
+import { type DiscoveryDeps, LivePortCache } from './app-discovery';
+import {
+  ApplyBaselineCache,
+  captureBaselineOnPort,
+  probeThemeLiveOnPort,
+} from './cdp/apply-baseline';
 import type { CdpFanoutDeps } from './cdp/cdp-fanout';
+import { clearTargetsCache } from './cdp/cdp-targets';
 import {
   cleanupEngineInjectionForAgent,
   disposeEngineInjectionState,
 } from './cdp/injection/engine-strategy';
+import { CdpSessionPool } from './cdp/session-pool';
 import { EpochManager } from './epoch-manager';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import { ctx, notifyPersistFailure } from './main-context';
@@ -129,6 +136,15 @@ function platform(): Platform {
     : 'unsupported';
 }
 
+/**
+ * RFC §4.8: per-agent min verify delay (ms) for the hardening/verify loop.
+ * Fast-applying agents can lower this from the 500ms default to shave latency
+ * off the apply hot path. The map is keyed by `AgentId`; agents absent from it
+ * keep the 500ms default. Populate entries only after confirming an agent's
+ * theme applies reliably within the reduced window.
+ */
+const APPLY_VERIFY_DELAY_OVERRIDES: Partial<Record<AgentId, number>> = Object.freeze({});
+
 // ---------------------------------------------------------------------------
 // Facade class
 // ---------------------------------------------------------------------------
@@ -180,6 +196,43 @@ export class AgentEngineService implements AgentEngineServiceApi {
    * early if it changes.
    */
   private readonly epochs = new EpochManager();
+
+  /**
+   * Per-agent CDP session pool. Reuses a target's WebSocket across the
+   * fan-out sub-tasks (secondary inject + hardening + remove) within a single
+   * epoch, and is invalidated on every epoch bump so sessions never leak
+   * across apply/restore operations (RFC §4.1).
+   */
+  private readonly cdpSessionPool = new CdpSessionPool();
+
+  /**
+   * Per-agent live CDP port cache (RFC §4.2) — 30s TTL, invalidated on every
+   * epoch bump so a freshly-restarted app's new port is never shadowed by a
+   * stale entry.
+   */
+  private readonly livePortCache = new LivePortCache();
+
+  /**
+   * Per-agent {@link BaselineSnapshot} cache (RFC §4.5) — LRU(3) + 60s TTL,
+   * keyed by `{appId, url, themeId}`. Seeds after a successful apply and is
+   * read on the theme-switch fast path; invalidated on probe failure and on
+   * every epoch bump so a stale baseline never crosses an apply boundary.
+   */
+  private readonly applyBaselineCache = new ApplyBaselineCache();
+
+  /**
+   * Bump the epoch for an agent AND invalidate its pooled CDP sessions. Every
+   * apply/restore bumps the epoch at its start, so pooled sessions are closed
+   * at each operation boundary and never reused across operations (RFC §4.1).
+   */
+  private bumpEpoch(appId: AgentId): number {
+    const epoch = this.epochs.bumpEpoch(appId);
+    this.cdpSessionPool.invalidateEpoch(appId);
+    this.livePortCache.clear(appId);
+    this.applyBaselineCache.clearAgent(appId);
+    clearTargetsCache();
+    return epoch;
+  }
 
   // -----------------------------------------------------------------------
   // Concurrency-metrics broadcast state
@@ -391,6 +444,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
       persist: () => this.persist.safe(() => this.writeState()),
       activeThemeId: (appId) => this.registry.getActiveThemeId(appId),
       activeSchemeId: (appId) => this.registry.getActiveSchemeId(appId),
+      livePortCache: this.livePortCache,
     };
   }
 
@@ -425,10 +479,10 @@ export class AgentEngineService implements AgentEngineServiceApi {
     return {
       wallpaperService: this.wallpaperService,
       isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
-      bumpEpoch: (appId) => this.epochs.bumpEpoch(appId),
+      bumpEpoch: (appId) => this.bumpEpoch(appId),
       resolveAgentWallpaperId: (appId, entry) => this.resolveAgentWallpaperId(appId, entry),
-      ensureCdpReady: (appId, timeoutMs) =>
-        ensureCdpReady(appId, this.discoveryDeps(), timeoutMs ?? 30000),
+      ensureCdpReady: (appId, timeoutMs, forceRestart) =>
+        ensureCdpReady(appId, this.discoveryDeps(), timeoutMs ?? 30000, forceRestart),
       resolveLivePort: (appId) => resolveLivePort(appId, this.discoveryDeps()),
       inferRestartReason: (appId, cdpFailureReason) =>
         inferRestartReason(appId, this.discoveryDeps(), cdpFailureReason ?? null),
@@ -453,8 +507,16 @@ export class AgentEngineService implements AgentEngineServiceApi {
           resolveEngineDir: resolveEngineDirDefault,
           log: (line) => this.log(line),
           customThemeCss: () => this.settings.customThemeCss(),
+          // RFC §4.8: per-agent verification tuning. Fast-applying agents can
+          // lower the min verify delay (200ms) and poll interval (50ms default)
+          // to shave latency off the hardening pass; the map is a no-op until
+          // an agent is added here.
+          verifyDelayMs: APPLY_VERIFY_DELAY_OVERRIDES[appId] ?? 500,
+          verifyIntervalMs: 50,
         }),
       log: (line) => this.log(line),
+      // Reuse target sessions across the fan-out sub-tasks within one epoch.
+      sessions: this.cdpSessionPool,
       // Forward secondary-injection progress/summary to the renderer so the UI
       // can render a per-target injection timeline. The discriminator ('targetId'
       // vs 'injected') distinguishes progress events from the summary event.
@@ -481,7 +543,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
       lockAgent: (appId) => this.applyingTheme.add(appId),
       unlockAgent: (appId) => this.applyingTheme.delete(appId),
       resolveLivePort: (appId) => resolveLivePort(appId, this.discoveryDeps()),
-      bumpEpoch: (appId) => this.epochs.bumpEpoch(appId),
+      bumpEpoch: (appId) => this.bumpEpoch(appId),
       getSchemeSnapshot: (appId) => this.registry.getSchemeSnapshot(appId),
       clearActiveTheme: (appId, port) => this.registry.clearActiveTheme(appId, port),
       persist: () => this.persist.safe(() => this.writeState()),
@@ -514,13 +576,19 @@ export class AgentEngineService implements AgentEngineServiceApi {
       isApplyingTheme: (appId) => this.applyingTheme.has(appId),
       lockAgent: (appId) => this.applyingTheme.add(appId),
       unlockAgent: (appId) => this.applyingTheme.delete(appId),
-      ensureCdpReady: (appId, timeoutMs) =>
-        ensureCdpReady(appId, this.discoveryDeps(), timeoutMs ?? 30000),
+      ensureCdpReady: (appId, timeoutMs, forceRestart) =>
+        ensureCdpReady(appId, this.discoveryDeps(), timeoutMs ?? 30000, forceRestart),
       resolveLivePort: (appId) => resolveLivePort(appId, this.discoveryDeps()),
       inferRestartReason: (appId, cdpFailureReason) =>
         inferRestartReason(appId, this.discoveryDeps(), cdpFailureReason ?? null),
+      cachedPort: (appId) => this.livePortCache.get(appId),
+      baselineGet: (appId, url, themeId) => this.applyBaselineCache.get(appId, url, themeId),
+      baselinePut: (snap) => this.applyBaselineCache.put(snap),
+      baselineInvalidate: (appId) => this.applyBaselineCache.invalidate(appId),
+      probeThemeLiveOnPort: (port) => probeThemeLiveOnPort(port),
+      captureBaselineOnPort: (port, appId, themeId) => captureBaselineOnPort(port, appId, themeId),
       findTheme: (themeId) => this.library.find(themeId),
-      bumpEpoch: (appId) => this.epochs.bumpEpoch(appId),
+      bumpEpoch: (appId) => this.bumpEpoch(appId),
       isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
       setActiveTheme: (appId, themeId, port, schemeId) => {
         this.registry.patchApp(appId, {
@@ -861,6 +929,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
     disposeThemeAssetCache();
     this.applyingTheme.clear();
     this.inflightOperations.clear();
+    this.cdpSessionPool.dispose();
+    this.livePortCache.clearAll();
     this.statusCache = null;
   }
 }

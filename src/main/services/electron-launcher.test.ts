@@ -5,7 +5,13 @@ import net from 'node:net';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApplicationAdapter } from '../../adapters/base';
 import * as registry from '../../adapters/registry';
-import { configureLauncher, getRunningApps, launchApp } from './electron-launcher';
+import {
+  configureLauncher,
+  getRunningApps,
+  launchApp,
+  registerAllowedExePaths,
+  resetLaunchRateLimit,
+} from './electron-launcher';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -104,7 +110,20 @@ function mockNetConnectRefused() {
 describe('electron-launcher', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetLaunchRateLimit();
     configureLauncher({ log: vi.fn() });
+    // Seed the launch whitelist with every exePath the success-path tests
+    // exercise, so the new C1 guard doesn't reject them. The rejection path
+    // is covered by the dedicated describe block below.
+    registerAllowedExePaths([
+      'C:\\trae\\trae.exe',
+      'C:\\qoder\\qoder.exe',
+      'C:\\doubao\\doubao.exe',
+      'C:\\tools\\myapp.exe',
+      'C:\\tools\\tool.exe',
+      'C:\\nonexistent\\app.exe',
+      'C:\\nonexistent\\tool.exe',
+    ]);
     // Note: module-level runningApps Map persists across tests by design
     // (it tracks real spawned PIDs). Tests use unique appId per case to
     // avoid cross-test contamination.
@@ -536,6 +555,99 @@ describe('electron-launcher', () => {
 
       expect(result.state).toBe('failed');
       expect(result.ok).toBe(false);
+    });
+  });
+
+  // ── C1: exePath whitelist guard ────────────────────────────────────────
+  describe('exePath whitelist guard', () => {
+    it('rejects an exePath that was never registered — does not spawn', async () => {
+      const result = await launchApp({
+        appId: 'app-malicious',
+        // Attacker-controlled path that is NOT in the whitelist.
+        exePath: 'C:\\Windows\\System32\\cmd.exe',
+        adapted: false,
+      });
+
+      expect(result.state).toBe('failed');
+      expect(result.ok).toBe(false);
+      // The guard must short-circuit before any spawn call.
+      expect(mockSpawn).not.toHaveBeenCalled();
+    });
+
+    it('rejects an exePath even when adapted=true with a valid adapterId', async () => {
+      const result = await launchApp({
+        appId: 'app-malicious-adapted',
+        exePath: 'C:\\Windows\\System32\\cmd.exe',
+        adapted: true,
+        adapterId: 'traework',
+      });
+
+      expect(result.state).toBe('failed');
+      expect(mockSpawn).not.toHaveBeenCalled();
+      // The requireAdapter must not even be reached on a rejected path.
+      expect(mockRequireAdapter).not.toHaveBeenCalled();
+    });
+
+    it('accepts a registered path with case-insensitive comparison on win32', async () => {
+      // registered as 'C:\\trae\\trae.exe' in beforeEach; launch with a
+      // different case — must still be allowed (and spawn).
+      mockExecFileSuccess('');
+      mockRequireAdapter.mockReturnValue(
+        asAdapter(createMockAdapter({ runningPids: [], debugPorts: [0] })),
+      );
+      mockSpawnSuccess(4242);
+
+      const result = await launchApp({
+        appId: 'app-case-insensitive',
+        exePath: 'c:\\TRAE\\TRAE.EXE',
+        adapted: true,
+        adapterId: 'traework',
+      });
+
+      expect(result.state).not.toBe('failed');
+      expect(mockSpawn).toHaveBeenCalled();
+    });
+  });
+
+  // ── O4: launch rate limiting ──────────────────────────────────────────
+  describe('launch rate limit', () => {
+    it('rejects the 6th launch within the 5s window', async () => {
+      resetLaunchRateLimit();
+      const base = Date.now();
+      vi.spyOn(Date, 'now').mockReturnValue(base);
+
+      // First 5 launches pass the rate-limit gate and consume a slot, then
+      // fail fast at the whitelist guard (non-whitelisted exePath → no spawn,
+      // no slow CDP probing).
+      for (let i = 0; i < 5; i += 1) {
+        const r = await launchApp({
+          appId: `app-rate-${i}`,
+          exePath: 'C:\\nonexistent\\x.exe',
+          adapted: false,
+        });
+        expect(r.state).toBe('failed');
+        expect(r.message).toContain('not an allowed'); // whitelist, not rate limit
+      }
+
+      // 6th launch within the same window → rejected by the rate limiter.
+      const sixth = await launchApp({
+        appId: 'app-rate-6',
+        exePath: 'C:\\nonexistent\\x.exe',
+        adapted: false,
+      });
+      expect(sixth.state).toBe('failed');
+      expect(sixth.message).toContain('rate limit');
+
+      // After the window elapses, launches are allowed again.
+      vi.spyOn(Date, 'now').mockReturnValue(base + 6_000);
+      resetLaunchRateLimit();
+      const later = await launchApp({
+        appId: 'app-rate-later',
+        exePath: 'C:\\nonexistent\\x.exe',
+        adapted: false,
+      });
+      expect(later.message).not.toContain('rate limit');
+      vi.restoreAllMocks();
     });
   });
 });

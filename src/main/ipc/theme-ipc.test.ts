@@ -49,6 +49,13 @@ vi.mock('../../legacy/agentskin-core-runtime', () => ({
 
 // Import after mocks are declared.
 const { registerThemeIpc } = await import('./theme-ipc');
+const { setTrustedSenderId } = await import('./trusted-sender');
+
+// Trusted-sender guard (G5): every high-sensitivity handler rejects calls
+// unless the event originates from the recorded main-window webContents id.
+beforeEach(() => {
+  setTrustedSenderId(1);
+});
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -232,35 +239,55 @@ describe('theme-ipc parameter validation', () => {
   });
 
   describe('THEME_IMPORT_PATH', () => {
+    const trustedEvent = { sender: { id: 1 }, senderFrame: { isMainFrame: () => true } };
+
     it('rejects non-string filePath', async () => {
       const handler = handlers.get(IpcChannel.THEME_IMPORT_PATH)!;
-      await expect(handler({}, 123)).rejects.toThrow(getMainMessages().invalidPackage);
-      await expect(handler({}, null)).rejects.toThrow(getMainMessages().invalidPackage);
+      await expect(handler(trustedEvent, 123)).rejects.toThrow(getMainMessages().invalidPackage);
+      await expect(handler(trustedEvent, null)).rejects.toThrow(getMainMessages().invalidPackage);
     });
 
     it('rejects filePath that is not a theme package', async () => {
       const handler = handlers.get(IpcChannel.THEME_IMPORT_PATH)!;
-      await expect(handler({}, '/tmp/not-a-theme.txt')).rejects.toThrow(
+      await expect(handler(trustedEvent, '/tmp/not-a-theme.txt')).rejects.toThrow(
         getMainMessages().invalidPackage,
       );
-      await expect(handler({}, '/tmp/random.zip')).rejects.toThrow(
+      await expect(handler(trustedEvent, '/tmp/random.zip')).rejects.toThrow(
         getMainMessages().invalidPackage,
+      );
+    });
+
+    it('rejects calls from an untrusted sender (G5)', async () => {
+      const handler = handlers.get(IpcChannel.THEME_IMPORT_PATH)!;
+      await expect(handler({ sender: { id: 999 } }, '/tmp/a.agenttheme')).rejects.toThrow(
+        'Untrusted IPC sender',
       );
     });
   });
 
   describe('THEME_OPEN_FILE', () => {
+    const trustedEvent = { sender: { id: 1 }, senderFrame: { isMainFrame: () => true } };
+
     // THEME_OPEN_FILE handler is synchronous, so validation throws
     // synchronously rather than as a rejected promise.
     it('rejects non-string filePath', () => {
       const handler = handlers.get(IpcChannel.THEME_OPEN_FILE)!;
-      expect(() => handler({}, 123)).toThrow(getMainMessages().invalidPackage);
-      expect(() => handler({}, null)).toThrow(getMainMessages().invalidPackage);
+      expect(() => handler(trustedEvent, 123)).toThrow(getMainMessages().invalidPackage);
+      expect(() => handler(trustedEvent, null)).toThrow(getMainMessages().invalidPackage);
     });
 
     it('rejects filePath that is not a theme package', () => {
       const handler = handlers.get(IpcChannel.THEME_OPEN_FILE)!;
-      expect(() => handler({}, '/tmp/not-a-theme.txt')).toThrow(getMainMessages().invalidPackage);
+      expect(() => handler(trustedEvent, '/tmp/not-a-theme.txt')).toThrow(
+        getMainMessages().invalidPackage,
+      );
+    });
+
+    it('rejects calls from an untrusted sender (G5)', () => {
+      const handler = handlers.get(IpcChannel.THEME_OPEN_FILE)!;
+      expect(() => handler({ sender: { id: 999 } }, '/tmp/a.agenttheme')).toThrow(
+        'Untrusted IPC sender',
+      );
     });
   });
 });

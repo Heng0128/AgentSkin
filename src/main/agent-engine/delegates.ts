@@ -174,8 +174,9 @@ export async function ensureCdpReady(
   appId: AgentId,
   deps: DiscoveryDeps,
   timeoutMs = 30000,
+  forceRestart = false,
 ): Promise<CdpReadyResult> {
-  return ensureCdpReadyImpl(appId, deps, timeoutMs);
+  return ensureCdpReadyImpl(appId, deps, timeoutMs, forceRestart);
 }
 
 /** Forward to {@link probeAppStatusImpl} — see app-discovery.ts. */

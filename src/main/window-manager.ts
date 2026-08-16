@@ -20,6 +20,7 @@
 import path from 'node:path';
 import { BrowserWindow } from 'electron';
 import { IpcChannel } from '../shared/ipc-channels';
+import { setTrustedSenderId } from './ipc/trusted-sender';
 import { brandingRoot, ctx } from './main-context';
 
 /**
@@ -136,6 +137,10 @@ export async function createMainWindow(options: WindowCreateOptions = {}): Promi
   });
 
   ctx.mainWindow.setMenuBarVisibility(false);
+
+  // Record the trusted main window's webContents id so high-sensitivity IPC
+  // handlers can reject calls from embedded webview/iframe content (G5).
+  setTrustedSenderId(ctx.mainWindow.webContents.id);
 
   // Close-to-tray: hide instead of close so background CDP injection keeps
   // running. The `isQuitting` flag is set by `before-quit` / tray "Quit".

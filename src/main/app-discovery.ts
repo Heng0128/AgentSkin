@@ -39,6 +39,7 @@ import { toMessage } from '../shared/errors';
 import type { AgentId, ApplyResponse, AppStatus } from '../shared/types';
 import { detectInstallation, verifyInstallPath } from './install-detection';
 import type { LogCallback } from './services/contracts';
+import { PerformanceRecorder } from './services/performance';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -53,7 +54,13 @@ export type CdpReadyResult =
   | { port: number; reason: null }
   | {
       port: null;
-      reason: 'not-installed' | 'spawn-error' | 'singleton-lock' | 'kill-denied' | 'timeout';
+      reason:
+        | 'not-installed'
+        | 'spawn-error'
+        | 'singleton-lock'
+        | 'kill-denied'
+        | 'timeout'
+        | 'no-cdp';
     };
 
 /**
@@ -222,6 +229,70 @@ export interface DiscoveryDeps {
   activeThemeId: ActiveThemeIdAccessor;
   /** Returns the persisted active color-scheme id (for status payload). */
   activeSchemeId: (appId: AgentId) => string | null;
+  /** Per-agent live-port cache (RFC §4.2) — 30s TTL, invalidated on epoch bump. */
+  livePortCache: LivePortCache;
+}
+
+// ---------------------------------------------------------------------------
+// LivePortCache (RFC §4.2)
+// ---------------------------------------------------------------------------
+
+/**
+ * Per-agent cache of the last-confirmed-live CDP port, TTL 30s.
+ *
+ * Why this cache: applying a theme re-runs `resolveLivePort` several times
+ * (cdp-ready probe, apply-time port re-resolve, withPageSession retries, and
+ * the 3s status() poll). Each miss re-runs the full discovery chain
+ * (DevToolsActivePort files + wmic process snapshot + netstat), which spawns
+ * child processes (0.5–2s each). A CDP port, once bound, rarely changes
+ * within seconds, so a 30s TTL collapses those repeated full discoveries
+ * into a single cheap TCP probe per poll.
+ *
+ * Placed in app-discovery.ts (main side) rather than shared/cdp-discovery.ts
+ * per RFC §4.2 — the shared module is imported by src/legacy/ and must not
+ * accumulate main-only state. The existing PID/netstat/process snapshots in
+ * shared keep their 1.5s TTL (port bindings change fast during startup); this
+ * layer caches the *resolved* port, which is stable.
+ *
+ * Invalidation (all handled by the orchestrator):
+ *   - {@link AgentEngineService.bumpEpoch} → `clear` (a new apply/restore).
+ *   - `resolveLivePort` probe failure → `clear` (stale entry).
+ *   - {@link reconcileZombiePorts} hit → `clear` (discovered dead port).
+ */
+export class LivePortCache {
+  private static readonly TTL_MS = 30_000;
+  private readonly entries = new Map<AgentId, { port: number; capturedAt: number }>();
+
+  /** Cached live port if present and not expired, else null. */
+  get(appId: AgentId): number | null {
+    const entry = this.entries.get(appId);
+    if (!entry) return null;
+    if (Date.now() - entry.capturedAt >= LivePortCache.TTL_MS) {
+      this.entries.delete(appId);
+      return null;
+    }
+    return entry.port;
+  }
+
+  /** Store a freshly-confirmed live port. */
+  set(appId: AgentId, port: number): void {
+    this.entries.set(appId, { port, capturedAt: Date.now() });
+  }
+
+  /** Drop the cached entry for an agent (epoch bump / zombie / probe fail). */
+  clear(appId: AgentId): void {
+    this.entries.delete(appId);
+  }
+
+  /** Drop every cached entry (service dispose). */
+  clearAll(): void {
+    this.entries.clear();
+  }
+
+  /** Number of live entries — surfaced for diagnostics/tests. */
+  size(): number {
+    return this.entries.size;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -265,6 +336,8 @@ export async function reconcileZombiePorts(
         `[state] ${appId}: port ${port} is dead — clearing stale port (activeThemeId preserved for re-injection)`,
       );
       deps.clearAppPort(appId);
+      // A probed-dead port must not hide behind the 30s live-port cache.
+      deps.livePortCache.clear(appId);
       dirty = true;
     }
   }
@@ -300,13 +373,37 @@ export async function resolveLivePort(
   knownDeadPort: number | null = null,
   options: { bypassCache?: boolean } = {},
 ): Promise<number | null> {
-  return resolveLivePortShared(
+  const { bypassCache = false } = options;
+
+  // Fast path: a recently-confirmed live port (30s TTL). A bound CDP port
+  // rarely changes within seconds, so reusing it avoids re-running the full
+  // discovery chain (DevToolsActivePort + wmic + netstat) on every apply
+  // sub-step and status() poll. The cached port is re-verified with a cheap
+  // TCP probe before returning — if it went dead, clear it and fall through
+  // to full discovery (RFC §4.2).
+  if (!bypassCache) {
+    const cached = deps.livePortCache.get(appId);
+    if (cached != null && cached !== knownDeadPort) {
+      if (await probePortLive(cached, 300)) {
+        deps.log(`[port] ${appId}: live-port cache hit — CDP on ${cached}`);
+        return cached;
+      }
+      deps.log(`[port] ${appId}: cached port ${cached} dead — clearing + full discovery`);
+      deps.livePortCache.clear(appId);
+    }
+  }
+
+  const port = await resolveLivePortShared(
     deps.adapter(appId),
     appId,
     deps.log.bind(null),
     knownDeadPort,
     options,
   );
+  // Cache a confirmed-live port so subsequent resolves within the TTL window
+  // skip the child-process discovery chain entirely.
+  if (port != null) deps.livePortCache.set(appId, port);
+  return port;
 }
 
 // ---------------------------------------------------------------------------
@@ -356,6 +453,16 @@ async function probeFreshlySpawnedPort(
  * discover it via {@link resolveLivePort} (netstat layer). Returns the live
  * port, or null if the app couldn't be (re)launched within the timeout.
  *
+ * `forceRestart` (RFC §4.9) replaces the implicit "always kill + relaunch"
+ * convention. Callers MUST NOT kill a running app without explicit user
+ * confirmation:
+ *   - `forceRestart=false` (default): only launch a NOT-running app. If the
+ *     app is running but without a debug port, return `{ port: null,
+ *     reason: 'no-cdp' }` WITHOUT killing it, so the caller can surface the
+ *     restart dialog.
+ *   - `forceRestart=true`: kill any running instances, then relaunch with CDP
+ *     (the previous behavior). Only set after the user confirms a restart.
+ *
  * This is invoked from `apply` (with the user's explicit restart
  * confirmation) so AgentSkin never restarts an app outside of an explicit
  * apply request.
@@ -364,6 +471,7 @@ export async function ensureCdpReady(
   appId: AgentId,
   deps: DiscoveryDeps,
   timeoutMs = 30000,
+  forceRestart = false,
 ): Promise<CdpReadyResult> {
   // Fast path: CDP already live.
   const live = await resolveLivePort(appId, deps);
@@ -406,6 +514,15 @@ export async function ensureCdpReady(
     deps.log(`[ensure-cdp] ${appId}: findRunningPids failed — ${toMessage(error)}`);
     killedPids = [];
   }
+
+  // RFC §4.9: without forceRestart we must NOT kill a running app — if it is
+  // alive but CDP-less, return 'no-cdp' so the caller can ask the user to
+  // confirm the restart. Only a genuinely idle (not-running) app is launched.
+  if (!forceRestart && killedPids.length > 0) {
+    deps.log(`[ensure-cdp] ${appId}: running without CDP — refusing to kill (forceRestart=false)`);
+    return { port: null, reason: 'no-cdp' };
+  }
+
   deps.log(
     `[ensure-cdp] ${appId}: CDP off -> restarting ${exePath} with random debug port (killing ${killedPids.length} PID(s))`,
   );
@@ -509,6 +626,7 @@ export async function ensureCdpReady(
   // can resolve their relative `resources/app` path the same way they do
   // when launched normally.
   let childPid = -1;
+  const spawnT0 = performance.now();
   try {
     const child = spawn(
       exePath,
@@ -527,7 +645,15 @@ export async function ensureCdpReady(
       timestamp: new Date().toISOString(),
       progress: 25,
     });
+    // RFC §4.9: standalone 'spawnAgent' timing step for the active apply trace.
+    PerformanceRecorder.recordNamedStep('spawnAgent', performance.now() - spawnT0);
   } catch (error) {
+    PerformanceRecorder.recordNamedStep(
+      'spawnAgent',
+      performance.now() - spawnT0,
+      false,
+      toMessage(error),
+    );
     deps.log(`[ensure-cdp] ${appId}: failed to launch: ${toMessage(error)}`);
     deps.logStructured({
       type: 'cdp_spawn_failed',
@@ -544,6 +670,10 @@ export async function ensureCdpReady(
   // resolveLivePort will miss (port=0 is filtered out), so discovery
   // relies on the netstat layer.
   const deadline = Date.now() + timeoutMs;
+  // Poll iteration counter: the first iteration bypasses the discovery TTL
+  // caches so a just-spawned process is picked up immediately; later
+  // iterations hit the TTL caches to avoid re-running wmic/netstat/tasklist.
+  let pollIteration = 0;
   while (Date.now() < deadline) {
     // Detect early exit: if the spawned child is gone, the launch *may* have
     // failed (singleton lock, missing dependency, sandbox rejection). However,
@@ -602,12 +732,12 @@ export async function ensureCdpReady(
         childPid = -1;
       }
     }
-    await new Promise((resolve) => setTimeout(resolve, 600));
     // Fast path: the freshly-spawned app's DevToolsActivePort file is written
-    // early in boot (before the renderer window is ready), so prefer reading
-    // it + a cheap live check over the full PID/wmic/netstat chain. This
-    // shaves the common case down to one file read + one TCP probe instead of
-    // re-running complete discovery every 600ms.
+    // early in boot (before the renderer window is ready), so probe it BEFORE
+    // sleeping — on the first iteration we don't want to burn the full 600ms
+    // if the port file is already written. This shaves the common case down to
+    // one file read + one TCP probe instead of a fixed wait + complete
+    // discovery every 600ms.
     const fastPort = await probeFreshlySpawnedPort(adapter, deps.log.bind(null));
     if (fastPort != null) {
       deps.log(`[ensure-cdp] ${appId}: CDP up on ${fastPort} (fresh spawn fast path)`);
@@ -619,9 +749,14 @@ export async function ensureCdpReady(
       });
       return { port: fastPort, reason: null };
     }
+    await new Promise((resolve) => setTimeout(resolve, 600));
     // Fall back to the full discovery chain (catches apps that don't write a
-    // port file, or where the file lags behind the actual bind).
-    const port = await resolveLivePort(appId, deps, null, { bypassCache: true });
+    // port file, or where the file lags behind the actual bind). Only the
+    // first poll bypasses the process/netstat TTL caches so the freshly
+    // spawned process is picked up promptly; subsequent polls hit the 1.5s TTL
+    // (which refreshes within ~2.5 polls anyway) instead of re-running
+    // wmic/netstat/tasklist every 600ms — a P0 perf win on cold starts.
+    const port = await resolveLivePort(appId, deps, null, { bypassCache: pollIteration === 0 });
     if (port != null) {
       deps.log(`[ensure-cdp] ${appId}: CDP up on random port ${port}`);
       deps.logStructured({
@@ -632,6 +767,7 @@ export async function ensureCdpReady(
       });
       return { port, reason: null };
     }
+    pollIteration += 1;
   }
   deps.log(`[ensure-cdp] ${appId}: timed out waiting for CDP after restart`);
   deps.logStructured({
@@ -811,6 +947,8 @@ export async function inferRestartReason(
         return 'spawn-failed';
       case 'timeout':
         return 'cdp-timeout';
+      case 'no-cdp':
+        return 'no-cdp';
     }
   }
   try {

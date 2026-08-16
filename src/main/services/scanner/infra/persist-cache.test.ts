@@ -23,6 +23,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Mock logger so persist-cache warnings don't pollute test output.
 vi.mock('../../../logger', () => ({
   mainWarn: vi.fn(),
+  mainDebug: vi.fn(),
 }));
 
 const { loadPersistedScan, persistCachePath, savePersistedScan } = await import('./persist-cache');
@@ -183,7 +184,40 @@ describe('persist-cache', () => {
     await savePersistedScan(tmpDir, VALID_RESULT);
 
     const entries = await (await import('node:fs/promises')).readdir(tmpDir);
-    // Only scan-cache.json should exist — no `.scan-cache.json.*.tmp` debris.
-    expect(entries).toEqual(['scan-cache.json']);
+    // scan-cache.json + the HMAC key; but no `.scan-cache.json.*.tmp` debris.
+    const noTemp = entries.filter((e) => !/\.tmp$/.test(e));
+    expect(noTemp).toContain('scan-cache.json');
+    expect(noTemp).toContain('.scan-cache.key');
+    expect(noTemp).toHaveLength(2);
+  });
+
+  // -----------------------------------------------------------------------
+  // HMAC — tamper detection
+  // -----------------------------------------------------------------------
+  it('loadPersistedScan discards a cache whose HMAC signature does not match', async () => {
+    await savePersistedScan(tmpDir, VALID_RESULT);
+
+    // Tamper with the persisted cache (e.g. poison the result).
+    const file = persistCachePath(tmpDir);
+    const { readFile, writeFile } = await import('node:fs/promises');
+    const raw = JSON.parse(await readFile(file, 'utf8'));
+    raw.result.adapted[0].exePath = 'C:\\Windows\\System32\\cmd.exe';
+    await writeFile(file, JSON.stringify(raw), 'utf8');
+
+    const result = await loadPersistedScan(tmpDir);
+    expect(result).toBeNull();
+  });
+
+  it('loadPersistedScan discards a cache signed with a different key', async () => {
+    await savePersistedScan(tmpDir, VALID_RESULT);
+
+    // Replace the key file → the existing signature no longer verifies.
+    const { writeFile } = await import('node:fs/promises');
+    const { randomBytes } = await import('node:crypto');
+    const keyPath = path.join(tmpDir, '.scan-cache.key');
+    await writeFile(keyPath, randomBytes(32));
+
+    const result = await loadPersistedScan(tmpDir);
+    expect(result).toBeNull();
   });
 });

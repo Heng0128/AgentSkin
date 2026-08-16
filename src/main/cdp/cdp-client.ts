@@ -38,6 +38,9 @@
  * Relies on the global WebSocket client shipped with Node 22+ / Electron 37+.
  */
 
+import { mainDebug } from '../logger';
+import { PerformanceRecorder } from '../services/performance';
+
 export interface CdpSession {
   /** Send a CDP command; rejects on timeout or socket error. */
   send<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T>;
@@ -138,15 +141,23 @@ function openCdpSocket(
 
   ws.onmessage = (event: MessageEvent) => {
     // Guard against non-string data in production
-    if (typeof event.data !== 'string') return;
+    if (typeof event.data !== 'string') {
+      mainDebug('CdpClient', `dropped non-string frame: ${typeof event.data}`);
+      return;
+    }
 
     let message: CdpResponse;
     try {
       const raw: unknown = JSON.parse(event.data);
-      if (!isCdpResponse(raw)) return; // Malformed — ignore, don't corrupt pending map
+      if (!isCdpResponse(raw)) {
+        // Malformed — ignore, don't corrupt pending map
+        mainDebug('CdpClient', `dropped malformed frame: ${event.data.slice(0, 200)}`);
+        return;
+      }
       message = raw;
     } catch {
       // Don't crash the session on malformed JSON from the target
+      mainDebug('CdpClient', `dropped unparseable frame: ${event.data.slice(0, 200)}`);
       return;
     }
     // Response (has an id) → resolve/reject a pending command.
@@ -318,11 +329,26 @@ export function connectCdp(
   openTimeoutMs = 5000,
   commandTimeoutMs = 8000,
 ): Promise<CdpSession> {
-  return openCdpSocket(webSocketDebuggerUrl, openTimeoutMs, commandTimeoutMs).then((core) => ({
-    send: core.send,
-    evaluate: makeEvaluate(core.send),
-    close: core.close,
-  }));
+  const t0 = performance.now();
+  return openCdpSocket(webSocketDebuggerUrl, openTimeoutMs, commandTimeoutMs)
+    .then((core) => {
+      // RFC §4.9: standalone 'connectCdp' timing step for the active apply trace.
+      PerformanceRecorder.recordNamedStep('connectCdp', performance.now() - t0);
+      return {
+        send: core.send,
+        evaluate: makeEvaluate(core.send),
+        close: core.close,
+      };
+    })
+    .catch((error) => {
+      PerformanceRecorder.recordNamedStep(
+        'connectCdp',
+        performance.now() - t0,
+        false,
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    });
 }
 
 /**
@@ -337,11 +363,26 @@ export function connectEventCdp(
   openTimeoutMs = 5000,
   commandTimeoutMs = 8000,
 ): Promise<EventCdpSession> {
-  return openCdpSocket(webSocketDebuggerUrl, openTimeoutMs, commandTimeoutMs).then((core) => ({
-    send: core.send,
-    evaluate: makeEvaluate(core.send),
-    close: core.close,
-    on: core.on,
-    off: core.off,
-  }));
+  const t0 = performance.now();
+  return openCdpSocket(webSocketDebuggerUrl, openTimeoutMs, commandTimeoutMs)
+    .then((core) => {
+      // RFC §4.9: standalone 'connectCdp' timing step for the active apply trace.
+      PerformanceRecorder.recordNamedStep('connectCdp', performance.now() - t0);
+      return {
+        send: core.send,
+        evaluate: makeEvaluate(core.send),
+        close: core.close,
+        on: core.on,
+        off: core.off,
+      };
+    })
+    .catch((error) => {
+      PerformanceRecorder.recordNamedStep(
+        'connectCdp',
+        performance.now() - t0,
+        false,
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    });
 }

@@ -72,7 +72,14 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
             {progress}%
           </span>
         </div>
-        <div className="h-[2px] w-full bg-[var(--bg-4)]">
+        <div
+          className="h-[2px] w-full bg-[var(--bg-4)]"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progress}
+          aria-label={t.studioProgress}
+        >
           <div
             className="h-full bg-[var(--accent)] transition-[width] duration-300"
             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
@@ -88,13 +95,13 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
           const isPending = i > currentStepIndex;
           return (
             <div key={s.id} className="flex items-center gap-[var(--space-1)] py-[3px]">
-              {/* Status dot */}
+              {/* Status dot — shape differs by state so it is not colour-only */}
               <span
                 className={[
-                  'size-[3px] rounded-full',
-                  isComplete && 'bg-[var(--accent)]',
-                  isCurrent && 'bg-[var(--accent)] animate-pulse',
-                  isPending && 'bg-[var(--bg-4)] border border-[var(--border-subtle)]',
+                  'size-[3px]',
+                  isComplete && 'rounded-[1px] bg-[var(--accent)]',
+                  isCurrent && 'rounded-full bg-[var(--accent)] animate-pulse',
+                  isPending && 'rounded-full bg-[var(--bg-4)] border border-[var(--border-subtle)]',
                 ]
                   .filter(Boolean)
                   .join(' ')}
@@ -111,6 +118,14 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
               >
                 {t[s.labelKey] as string}
               </span>
+              {isComplete && (
+                <span
+                  className="ml-auto font-mono text-[10px] text-[var(--accent)]"
+                  aria-hidden="true"
+                >
+                  ✓
+                </span>
+              )}
               {isCurrent && (
                 <span className="ml-auto font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
                   {t.studioActiveStatus}

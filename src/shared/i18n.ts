@@ -886,6 +886,14 @@ export const uiMessages = {
     studioBundleRevealFailed: (msg: string) => `无法在文件夹中显示：${msg}`,
     studioBundleDeleted: (id: string) => `已删除: ${id}`,
     studioBundleDeleteFailed: (msg: string) => `删除失败: ${msg}`,
+    // --- Bundle actions (studioStore) ---
+    studioBundleRefreshFailed: (msg: string) => `刷新 Bundles 失败：${msg}`,
+    studioBundleImportedInstalled: (name: string) => `已导入并安装Bundle：${name}`,
+    studioBundleImportInstallFailed: (msg: string) => `导入Bundle失败：${msg}`,
+    studioBundleInstallFailedDetail: (msg: string) => `安装Bundle失败：${msg}`,
+    studioBundleInstalledDone: 'Bundle 已安装',
+    studioBundleDeleteFailedDetail: (msg: string) => `删除Bundle失败：${msg}`,
+    studioBundleDeletedDone: 'Bundle 已删除',
     // --- StudioLeftRail (Project list / Library / Selectors) ---
     studioProjectTitle: '工程 · PROJECT',
     studioProjectNew: '新建',
@@ -1949,6 +1957,14 @@ export const uiMessages = {
     studioBundleRevealFailed: (msg: string) => `Cannot reveal in folder: ${msg}`,
     studioBundleDeleted: (id: string) => `Deleted: ${id}`,
     studioBundleDeleteFailed: (msg: string) => `Delete failed: ${msg}`,
+    // --- Bundle actions (studioStore) ---
+    studioBundleRefreshFailed: (msg: string) => `Failed to refresh bundles: ${msg}`,
+    studioBundleImportedInstalled: (name: string) => `Imported and installed bundle: ${name}`,
+    studioBundleImportInstallFailed: (msg: string) => `Failed to import bundle: ${msg}`,
+    studioBundleInstallFailedDetail: (msg: string) => `Failed to install bundle: ${msg}`,
+    studioBundleInstalledDone: 'Bundle installed',
+    studioBundleDeleteFailedDetail: (msg: string) => `Failed to delete bundle: ${msg}`,
+    studioBundleDeletedDone: 'Bundle deleted',
     // --- StudioLeftRail (Project list / Library / Selectors) ---
     studioProjectTitle: 'Project · PROJECT',
     studioProjectNew: 'New',

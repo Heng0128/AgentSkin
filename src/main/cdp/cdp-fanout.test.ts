@@ -11,6 +11,7 @@ import type { HealthCheckReport } from '../theme-health-check';
 import type { CdpSession } from './cdp-client';
 import type { CdpFanoutDeps } from './cdp-fanout';
 import type { InjectEngineResult, InjectThemeResult } from './cdp-inject';
+import { CdpSessionPool } from './session-pool';
 
 // ---------------------------------------------------------------------------
 // Mocks — must be set up before importing the module under test.
@@ -645,6 +646,58 @@ describe('hardeningPass', () => {
     // The last evaluate call should be the wallpaper re-append expression.
     const lastCall = vi.mocked(session.evaluate).mock.calls.at(-1);
     expect(lastCall?.[0]).toContain('__agentskinWpPunch');
+  });
+});
+
+// ===========================================================================
+// Pooled sessions (RFC §4.1) — reuse across sub-tasks, owned by the pool
+// ===========================================================================
+
+describe('pooled session reuse', () => {
+  it('reuses a target session across secondary + hardening without closing it', async () => {
+    const wvTarget = makeCdpTarget({ id: 'wv-1', type: 'webview' });
+    vi.mocked(findSecondaryTargets).mockResolvedValue([wvTarget]);
+    vi.mocked(findDomTargets).mockResolvedValue([wvTarget]);
+
+    const wvSession = makeMockSession();
+    let connectCount = 0;
+    vi.mocked(connectCdp).mockImplementation(() => {
+      connectCount++;
+      return Promise.resolve(wvSession);
+    });
+
+    const pool = new CdpSessionPool();
+    const deps = makeDeps({ sessions: pool });
+
+    // Secondary inject connects to the webview first.
+    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
+    // Hardening pass then reuses the SAME webview session (same target key).
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    // Only one underlying connect for the one target — pool collapsed the dupes.
+    expect(connectCount).toBe(1);
+    // The fan-out never closes a pooled session.
+    expect(wvSession.close).not.toHaveBeenCalled();
+    // The session lives in the pool until epoch invalidation.
+    expect(pool.poolSize('doubao')).toBe(1);
+  });
+
+  it('closes pooled sessions on epoch invalidation', async () => {
+    const target = makeCdpTarget({ id: 'wv-1', type: 'webview' });
+    vi.mocked(findSecondaryTargets).mockResolvedValue([target]);
+
+    const session = makeMockSession();
+    vi.mocked(connectCdp).mockResolvedValue(session);
+
+    const pool = new CdpSessionPool();
+    const deps = makeDeps({ sessions: pool });
+
+    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
+    expect(session.close).not.toHaveBeenCalled();
+
+    pool.invalidateEpoch('doubao');
+    expect(session.close).toHaveBeenCalledTimes(1);
+    expect(pool.poolSize('doubao')).toBe(0);
   });
 });
 

@@ -131,9 +131,7 @@ export function EnvironmentCard({
   })();
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: conditional interactive card — when onClick is present, role="button", tabIndex, and onKeyDown are all set for full keyboard accessibility.
-    // biome-ignore lint/a11y/useAriaPropsSupportedByRole: aria-label is conditionally set only when role="button" is active (i.e., when onClick is present).
-    <div
+    <article
       className={cn(
         'group/card relative flex flex-col overflow-hidden rounded-md  bg-card text-card-foreground',
         'transition-[background-color,border-color,box-shadow] duration-base ease-out',
@@ -142,7 +140,6 @@ export function EnvironmentCard({
         onClick && 'cursor-pointer',
       )}
       onClick={onClick}
-      role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={
         onClick
@@ -154,7 +151,6 @@ export function EnvironmentCard({
             }
           : undefined
       }
-      aria-label={onClick ? env.name : undefined}
     >
       {/* === Top accent edge line  === */}
       <div
@@ -340,6 +336,6 @@ export function EnvironmentCard({
           </div>
         )}
       </div>
-    </div>
+    </article>
   );
 }

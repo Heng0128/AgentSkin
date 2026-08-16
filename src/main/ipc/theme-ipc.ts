@@ -23,6 +23,7 @@ import { type ApplyRequest, isAgentId } from '../../shared/types';
 import { isThemePackagePath } from '../file-open';
 import { type MainContext, notifyStatusChanged, sendLog, wrapCatalog } from '../main-context';
 import { assertAgentId, assertNonEmptyString, assertSafeThemeId } from './ipc-validators';
+import { assertTrustedSender } from './trusted-sender';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
 // Single source of truth for max theme package size — shared with the engine layer.
@@ -131,7 +132,8 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
     },
   );
 
-  ipcMain.handle(IpcChannel.THEME_IMPORT_PATH, async (_event, filePath: unknown) => {
+  ipcMain.handle(IpcChannel.THEME_IMPORT_PATH, async (event, filePath: unknown) => {
+    assertTrustedSender(event);
     return withMonitoredTimeout(
       IpcChannel.THEME_IMPORT_PATH,
       30000,
@@ -147,7 +149,8 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
     );
   });
 
-  ipcMain.handle(IpcChannel.THEME_OPEN_FILE, (_event, filePath: unknown) => {
+  ipcMain.handle(IpcChannel.THEME_OPEN_FILE, (event, filePath: unknown) => {
+    assertTrustedSender(event);
     if (typeof filePath !== 'string' || !isThemePackagePath(filePath)) {
       throw new Error(getMainMessages().invalidPackage);
     }

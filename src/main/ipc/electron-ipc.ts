@@ -22,8 +22,13 @@ import { IpcChannel } from '../../shared/ipc-channels';
 import { AGENT_IDS } from '../../shared/types';
 import type { ScanProgressEvent } from '../../shared/types/agent';
 import type { MainContext } from '../main-context';
-import { type LaunchRequest, launchApp } from '../services/electron-launcher';
+import {
+  type LaunchRequest,
+  launchApp,
+  registerAllowedExePaths,
+} from '../services/electron-launcher';
 import { scanElectronApps } from '../services/electron-scanner';
+import { assertTrustedSender } from './trusted-sender';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
 /** Bounded timeout for the scan operation — prevents a slow registry sweep
@@ -55,6 +60,10 @@ function collectExtraDirs(settings: Pick<MainContext, 'settings'>['settings']): 
 }
 
 export function registerElectronIpc(deps: Pick<MainContext, 'settings'>): void {
+  // Seed the launch whitelist with user-configured manual install paths up
+  // front, so a launch request can be validated even before the first scan.
+  registerAllowedExePaths(collectExtraDirs(deps.settings));
+
   ipcMain.handle(IpcChannel.ELECTRON_SCAN, async (event, force?: boolean) => {
     const sender = event.sender;
     // Route a scan progress event back to the requesting renderer, guarded
@@ -87,10 +96,14 @@ export function registerElectronIpc(deps: Pick<MainContext, 'settings'>): void {
     // Icons are now enriched inside the scanner (`enrichIcons`) — the result
     // arriving here already carries icons, and both the in-memory + persisted
     // caches were written with the enriched result. No IPC-layer work needed.
+    // Seed the launch whitelist from every scanned app so `ELECTRON_LAUNCH`
+    // can validate the requested exePath against known-good targets.
+    registerAllowedExePaths([...result.adapted, ...result.other].map((a) => a.exePath));
     return result;
   });
 
-  ipcMain.handle(IpcChannel.ELECTRON_LAUNCH, async (_event, request: LaunchRequest) => {
+  ipcMain.handle(IpcChannel.ELECTRON_LAUNCH, async (event, request: LaunchRequest) => {
+    assertTrustedSender(event);
     return withMonitoredTimeout(IpcChannel.ELECTRON_LAUNCH, LAUNCH_TIMEOUT_MS, launchApp(request));
   });
 }

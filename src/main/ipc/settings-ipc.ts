@@ -17,9 +17,11 @@
 import { dialog, ipcMain } from 'electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
+import { sanitizeCSS } from '../../shared/safe-css';
 import type { SettingsUpdateResult } from '../../shared/types';
 import { type MainContext, notifyStatusChanged, settingsDto } from '../main-context';
 import { assertAgentId, assertPortOrNull } from './ipc-validators';
+import { assertTrustedSender } from './trusted-sender';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
 export function registerSettingsIpc(deps: MainContext): void {
@@ -98,7 +100,8 @@ export function registerSettingsIpc(deps: MainContext): void {
 
   ipcMain.handle(
     IpcChannel.SETTINGS_SET_CUSTOM_CSS,
-    async (_event, css: unknown): Promise<SettingsUpdateResult> => {
+    async (event, css: unknown): Promise<SettingsUpdateResult> => {
+      assertTrustedSender(event);
       return withMonitoredTimeout(
         IpcChannel.SETTINGS_SET_CUSTOM_CSS,
         15000,
@@ -106,7 +109,12 @@ export function registerSettingsIpc(deps: MainContext): void {
           if (typeof css !== 'string' || css.length > 256 * 1024) {
             throw new Error(getMainMessages().invalidCustomCss);
           }
-          await deps.settings.setCustomThemeCss(css);
+          // Sanitize before persisting so the stored value (and everything
+          // downstream in the CDP injection path) only ever holds clean CSS.
+          // Mirrors the sanitization already applied on the tweak + Studio
+          // RealDomPreview paths — this was the one integration gap.
+          const { clean } = sanitizeCSS(css);
+          await deps.settings.setCustomThemeCss(clean);
           notifyStatusChanged();
           return { settings: settingsDto(deps), status: await deps.core.status() };
         })(),

@@ -155,6 +155,7 @@ export function WorkspacePage() {
                 </span>
                 {pushError && (
                   <div
+                    role="alert"
                     className="mb-5 flex items-center justify-between gap-3 rounded-md px-4 py-3"
                     style={{ background: 'var(--redbg)' }}
                   >

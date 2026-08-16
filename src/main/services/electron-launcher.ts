@@ -76,6 +76,64 @@ export interface LauncherDeps {
  */
 const runningApps = new Map<string, { pid: number; port: number | null }>();
 
+/**
+ * Whitelist of executable paths the launcher is permitted to spawn. Populated
+ * **only** from scanner results and user-configured manual install paths (see
+ * `registerAllowedExePaths`). This closes the `ELECTRON_LAUNCH` hole: a
+ * compromised renderer can no longer pass an arbitrary `exePath` (e.g.
+ * `cmd.exe`) — the target must be an exact member of this set.
+ */
+const allowedExePaths = new Set<string>();
+
+/** Normalize a path for membership comparison (case-insensitive on Windows). */
+function normalizeExePath(p: string): string {
+  return process.platform === 'win32' ? p.toLowerCase() : p;
+}
+
+/**
+ * Register executable paths the launcher may spawn. Called by the IPC layer
+ * with every scan result and the user's manual install overrides. Accepts any
+ * iterable of strings; non-string / empty entries are ignored.
+ */
+export function registerAllowedExePaths(paths: Iterable<string>): void {
+  for (const p of paths) {
+    if (typeof p === 'string' && p.length > 0) {
+      allowedExePaths.add(normalizeExePath(p));
+    }
+  }
+}
+
+/** True when `exePath` is an exact member of the allowed launch whitelist. */
+export function isAllowedExePath(exePath: string): boolean {
+  return allowedExePaths.has(normalizeExePath(exePath));
+}
+
+// ── Launch rate limiting ────────────────────────────────────────────────
+// Prevents a compromised renderer from batch-spawning unbounded processes via
+// `ELECTRON_LAUNCH`. A rolling window of timestamps; a launch is rejected once
+// the window holds ≥ `LAUNCH_MAX_PER_WINDOW` entries.
+const LAUNCH_WINDOW_MS = 5_000;
+const LAUNCH_MAX_PER_WINDOW = 5;
+const launchTimes: number[] = [];
+
+/** Enforce ≤5 launches per rolling 5s window. Also records this launch. */
+function withinLaunchRateLimit(now: number = Date.now()): boolean {
+  // Prune entries older than the window.
+  while (launchTimes.length > 0 && now - launchTimes[0]! > LAUNCH_WINDOW_MS) {
+    launchTimes.shift();
+  }
+  if (launchTimes.length >= LAUNCH_MAX_PER_WINDOW) {
+    return false;
+  }
+  launchTimes.push(now);
+  return true;
+}
+
+/** Reset rate-limit state (test helper). */
+export function resetLaunchRateLimit(): void {
+  launchTimes.length = 0;
+}
+
 /** Active dependency wiring (log sink). */
 let moduleDeps: LauncherDeps = { log: () => {} };
 
@@ -324,6 +382,29 @@ export async function launchApp(request: LaunchRequest): Promise<LaunchResult> {
 async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
   const { appId, exePath, adapted, preferredPort, forceRestart, adapterId } = request;
   const _log = moduleDeps.log;
+
+  // Rate limit: a compromised renderer must not be able to batch-spawn
+  // unbounded processes. Enforce ≤5 launches per rolling 5s window.
+  if (!withinLaunchRateLimit()) {
+    return {
+      ok: false,
+      port: null,
+      state: 'failed',
+      message: 'launch rejected: rate limit exceeded (max 5 launches per 5s)',
+    };
+  }
+
+  // Whitelist guard: never spawn an exePath that wasn't produced by a scan or
+  // the user's manual install config. This is the security boundary for
+  // `ELECTRON_LAUNCH` — see `registerAllowedExePaths`.
+  if (!isAllowedExePath(exePath)) {
+    return {
+      ok: false,
+      port: null,
+      state: 'failed',
+      message: 'launch rejected: exePath is not an allowed launch target',
+    };
+  }
 
   // ── Adapted flow ──────────────────────────────────────────────────────
   if (adapted) {

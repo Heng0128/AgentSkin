@@ -188,7 +188,7 @@ export function ExportDialog({
         )}
         {exportState.dir && (
           <p
-            className="border border-green-700/30 bg-green-900/10 px-2 py-1 font-mono text-[10px] text-green-400 break-all"
+            className="border border-green-700/30 bg-green-900/10 px-2 py-1 font-mono text-[11px] text-[var(--cr-success)] break-all"
             style={{ borderRadius: 'var(--radius)' }}
           >
             {exportState.dir}

@@ -227,6 +227,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               key={item.id}
               variant="ghost"
               size="sm"
+              aria-current={section === item.id ? 'page' : undefined}
               className={cn(
                 'justify-start rounded-md h-8 px-3 text-muted-foreground',
                 section === item.id &&

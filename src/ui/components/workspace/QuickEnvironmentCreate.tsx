@@ -82,6 +82,7 @@ export function QuickEnvironmentCreate({
       {/* 工程名 */}
       <input
         placeholder="工程名"
+        aria-label="工程名"
         className="h-6 w-full border border-input bg-muted px-2 text-[11px] outline-none focus:border-primary/60"
         style={{ borderRadius: 'var(--radius)' }}
         value={projectName}
@@ -94,6 +95,7 @@ export function QuickEnvironmentCreate({
       {/* 作者 */}
       <input
         placeholder="作者（可选）"
+        aria-label="作者"
         className="h-6 w-full border border-input bg-muted px-2 text-[11px] outline-none focus:border-primary/60"
         style={{ borderRadius: 'var(--radius)' }}
         value={author}
@@ -106,6 +108,7 @@ export function QuickEnvironmentCreate({
         style={{ borderRadius: 'var(--radius)' }}
         value={wallpaperId ?? ''}
         onChange={(e) => setWallpaperId(e.target.value || null)}
+        aria-label={t.bindWallpaper}
         title={t.bindWallpaper}
       >
         <option value="">{t.noWallpaper}</option>

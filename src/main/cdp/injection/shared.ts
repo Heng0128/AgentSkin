@@ -15,6 +15,7 @@
 import { toMessage } from '../../../shared/errors';
 import { SHEET_OWNED_FLAG } from '../../../shared/injection-constants';
 import { mainWarn } from '../../logger';
+import { PerformanceRecorder } from '../../services/performance';
 import type { CdpSession } from '../cdp-client';
 
 // ===========================================================================
@@ -98,7 +99,8 @@ export async function waitForTheme(
   session: CdpSession,
   options: { timeoutMs?: number; intervalMs?: number; minDelayMs?: number } = {},
 ): Promise<ThemeVerification | null> {
-  const { timeoutMs = 3000, intervalMs = 100, minDelayMs = 0 } = options;
+  const { timeoutMs = 3000, intervalMs = 50, minDelayMs = 0 } = options;
+  const t0 = performance.now();
 
   if (minDelayMs > 0) {
     await delay(minDelayMs);
@@ -108,11 +110,19 @@ export async function waitForTheme(
   while (Date.now() - start < timeoutMs) {
     const verification = await verifyTheme(session);
     if (verification && verification.adoptedSheetCount > 0) {
+      PerformanceRecorder.recordNamedStep('waitForTheme', performance.now() - t0);
       return verification;
     }
     await delay(intervalMs);
   }
 
   // Final attempt after timeout
-  return verifyTheme(session);
+  const verification = await verifyTheme(session);
+  PerformanceRecorder.recordNamedStep(
+    'waitForTheme',
+    performance.now() - t0,
+    verification !== null,
+    verification === null ? 'theme not verified within timeout' : undefined,
+  );
+  return verification;
 }

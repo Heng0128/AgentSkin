@@ -58,7 +58,11 @@ function StatusRefreshLabel({
 
   if (isRefreshing) {
     return (
-      <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/60">
+      <span
+        aria-live="polite"
+        aria-atomic="true"
+        className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/80"
+      >
         <span className="relative flex size-1.5">
           <span className="absolute inline-flex size-full animate-ping rounded-full bg-muted-foreground/30 opacity-75" />
           <span className="relative inline-flex size-1.5 rounded-full bg-muted-foreground/50" />
@@ -69,7 +73,11 @@ function StatusRefreshLabel({
   }
   if (!agoLabel) return null;
   return (
-    <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/60">
+    <span
+      aria-live="polite"
+      aria-atomic="true"
+      className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/80"
+    >
       <span className="size-1.5 rounded-full bg-cr-success/60" />
       <span>{agoLabel}</span>
     </span>

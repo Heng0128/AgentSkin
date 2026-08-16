@@ -24,6 +24,9 @@ export type ApplyOutcome =
       restartReason?: ApplyResponse['restartReason'];
     }
   | { kind: 'port-occupied'; message: string }
+  /** RFC §4.10: a concurrent apply was deduplicated against an in-flight one —
+   *  benign, the in-flight apply is already running. */
+  | { kind: 'skipped-concurrent' }
   /**
    * Unknown/unexpected status from main process. Treated as a transient
    * failure — never silently classified as success to avoid misleading UI.
@@ -47,6 +50,8 @@ export function handleApplyResult(
       return { kind: 'port-occupied', message: result.message };
     case 'applied':
       return { kind: 'success' };
+    case 'skipped-concurrent':
+      return { kind: 'skipped-concurrent' };
     default:
       // Exhaustiveness guard: an unknown status from a future main process
       // must not crash the renderer with a TypeError on outcome.kind.

@@ -105,10 +105,13 @@ export function AgentLivePreview({
       )}
       {refreshFailed && (
         <div
+          role="alert"
           className="absolute inset-x-0 top-0 h-1"
           style={{ background: 'var(--destructive)' }}
           title={t.workspacePreviewRefreshFailed ?? '刷新失败，显示缓存'}
-        />
+        >
+          <span className="sr-only">{t.workspacePreviewRefreshFailed ?? '刷新失败，显示缓存'}</span>
+        </div>
       )}
       <RealDomPreview domTree={domTree} overrides={overrides} t={t} />
     </div>

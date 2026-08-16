@@ -135,6 +135,6 @@ describe('ensureAgentCdpReady — CDP readiness policy', () => {
     );
     const deps = createDeps({ ensureCdpReady: ensureCdpReady as CdpReadyDeps['ensureCdpReady'] });
     await ensureAgentCdpReady(TEST_AGENT, deps, { restartExisting: true, timeoutMs: 45_000 });
-    expect(ensureCdpReady).toHaveBeenCalledWith(TEST_AGENT, 45_000);
+    expect(ensureCdpReady).toHaveBeenCalledWith(TEST_AGENT, 45_000, true);
   });
 });

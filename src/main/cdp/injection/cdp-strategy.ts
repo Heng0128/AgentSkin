@@ -40,6 +40,8 @@ export interface InjectThemeOptions {
   retries?: number;
   /** Delay between injection and verification in ms (default DEFAULT_VERIFY_DELAY_MS). */
   verifyDelayMs?: number;
+  /** Poll interval for the verification loop (default 50ms, RFC §4.8). */
+  verifyIntervalMs?: number;
 }
 
 export interface InjectThemeResult {
@@ -73,6 +75,7 @@ export async function injectThemeViaCdp(
     hostClass,
     retries = 1,
     verifyDelayMs = DEFAULT_VERIFY_DELAY_MS,
+    verifyIntervalMs = 50,
   } = options;
   const hasHero = !!(heroPath || heroDataUrl);
 
@@ -105,7 +108,7 @@ export async function injectThemeViaCdp(
   // --- Step 4: Verify (+ retry with polling) ---
   let verification = await waitForTheme(session, {
     timeoutMs: 3000,
-    intervalMs: 100,
+    intervalMs: verifyIntervalMs,
     minDelayMs: verifyDelayMs,
   });
 

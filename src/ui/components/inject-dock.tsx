@@ -59,7 +59,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
     <div
       className={cn(
         'fixed bottom-11 left-1/2 z-[90] -translate-x-1/2',
-        'flex items-center gap-2 rounded-md  bg-[var(--pop)] px-4 py-2 shadow-float backdrop-blur-none',
+        'flex items-center gap-2 rounded-md  bg-popover px-4 py-2 shadow-float backdrop-blur-none',
         'transition-[opacity,filter] duration-300',
         dimmed && 'opacity-40 saturate-[0.6]',
       )}

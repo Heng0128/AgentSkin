@@ -89,7 +89,9 @@ export type RestartReason =
   | 'cdp-timeout';
 
 export interface ApplyResponse {
-  status: 'applied' | 'requires-restart' | 'port-occupied';
+  /** `skipped-concurrent` (RFC §4.10) distinguishes a real apply from a
+   *  concurrent call that was deduplicated against an in-flight one. */
+  status: 'applied' | 'requires-restart' | 'port-occupied' | 'skipped-concurrent';
   message: string;
   system: SystemStatus;
   /** Structured reason for `requires-restart` so the UI can show specific

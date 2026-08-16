@@ -31,6 +31,7 @@ vi.mock('../services/electron-scanner', () => ({
 vi.mock('../services/electron-launcher', () => ({
   launchApp: vi.fn(),
   getRunningApps: vi.fn(),
+  registerAllowedExePaths: vi.fn(),
 }));
 
 vi.mock('../services/performance', () => ({
@@ -43,6 +44,7 @@ vi.mock('../services/performance', () => ({
 const { registerElectronIpc } = await import('./electron-ipc');
 const { scanElectronApps } = await import('../services/electron-scanner');
 const { launchApp } = await import('../services/electron-launcher');
+const { setTrustedSenderId } = await import('./trusted-sender');
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -98,6 +100,7 @@ describe('electron-ipc', () => {
   beforeEach(() => {
     handlers.clear();
     vi.clearAllMocks();
+    setTrustedSenderId(1);
     registerElectronIpc(deps);
   });
 
@@ -179,11 +182,13 @@ describe('electron-ipc', () => {
   });
 
   describe('ELECTRON_LAUNCH', () => {
+    const trustedEvent = { sender: { id: 1 }, senderFrame: { isMainFrame: () => true } };
+
     it('forwards the LaunchRequest to launchApp and returns the result', async () => {
       vi.mocked(launchApp).mockResolvedValue(sampleLaunchResult);
 
       const handler = handlers.get(IpcChannel.ELECTRON_LAUNCH)!;
-      const result = await handler({}, sampleLaunchRequest);
+      const result = await handler(trustedEvent, sampleLaunchRequest);
 
       expect(launchApp).toHaveBeenCalledOnce();
       expect(launchApp).toHaveBeenCalledWith(sampleLaunchRequest);
@@ -194,7 +199,7 @@ describe('electron-ipc', () => {
       vi.mocked(launchApp).mockRejectedValue(new Error('spawn ENOENT'));
 
       const handler = handlers.get(IpcChannel.ELECTRON_LAUNCH)!;
-      await expect(handler({}, sampleLaunchRequest)).rejects.toThrow('spawn ENOENT');
+      await expect(handler(trustedEvent, sampleLaunchRequest)).rejects.toThrow('spawn ENOENT');
     });
 
     it('rejects with IpcTimeoutError when launch hangs', async () => {
@@ -202,11 +207,19 @@ describe('electron-ipc', () => {
       vi.mocked(launchApp).mockReturnValue(new Promise(() => {}));
 
       const handler = handlers.get(IpcChannel.ELECTRON_LAUNCH)!;
-      const caught = await handler({}, sampleLaunchRequest).catch((e: unknown) => e);
+      const caught = await handler(trustedEvent, sampleLaunchRequest).catch((e: unknown) => e);
 
       expect(caught).toHaveProperty('name', 'IpcTimeoutError');
       expect(caught).toHaveProperty('channel', IpcChannel.ELECTRON_LAUNCH);
       expect(caught).toHaveProperty('ms', 30000);
     }, 40_000); // launch timeout is 30s; 40s lets it fire before vitest kills
+
+    it('rejects calls from an untrusted sender (G5)', async () => {
+      const handler = handlers.get(IpcChannel.ELECTRON_LAUNCH)!;
+      await expect(handler({ sender: { id: 999 } }, sampleLaunchRequest)).rejects.toThrow(
+        'Untrusted IPC sender',
+      );
+      expect(launchApp).not.toHaveBeenCalled();
+    });
   });
 });

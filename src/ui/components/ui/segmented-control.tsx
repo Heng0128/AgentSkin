@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { ComponentType } from 'react';
+import type { ComponentType, KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -9,6 +9,9 @@ import { cn } from '@/lib/utils';
  * Unified segmented control — the single implementation replacing the five
  * previously hand-written inline variants (title-bar theme mode, ThemesPage
  * category/mode filters, WallpaperEngine type filter, SettingsPage select).
+ *
+ * ARIA: single-select, no associated tabpanels → uses the `radiogroup` /
+ * `radio` pattern (`aria-checked`), with ←/→ arrow-key navigation.
  *
  * Design tokens: `bg-muted` track + `bg-card` active segment, `rounded-md`
  * radius (now bound to `--radius-md` = 3px), 4px-grid spacing only.
@@ -37,9 +40,21 @@ export function SegmentedControl<T extends string>({
 }) {
   const iconOnly = options.every((opt) => !opt.label);
 
+  // radiogroup ←/→ arrow-key navigation: move selection to the neighbouring
+  // option, wrapping around at the ends.
+  const onKeyDown = (e: ReactKeyboardEvent) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const idx = options.findIndex((opt) => opt.value === value);
+    const delta = e.key === 'ArrowRight' ? 1 : -1;
+    const next = options[(idx + delta + options.length) % options.length];
+    if (next) onChange(next.value);
+  };
+
   return (
     <div
-      role="tablist"
+      role="radiogroup"
+      onKeyDown={onKeyDown}
       className={cn(
         'inline-flex items-center gap-1 rounded-md bg-muted p-1',
         bordered && 'border border-border',
@@ -50,11 +65,12 @@ export function SegmentedControl<T extends string>({
         const Icon = opt.icon;
         const active = opt.value === value;
         return (
+          // biome-ignore lint/a11y/useSemanticElements: button-based radiogroup is intentional — it preserves the segmented-control visual styling while still exposing the correct radiogroup/radio ARIA pattern with arrow-key navigation below.
           <button
             key={opt.value}
             type="button"
-            role="tab"
-            aria-selected={active}
+            role="radio"
+            aria-checked={active}
             title={opt.title}
             onClick={() => onChange(opt.value)}
             className={cn(

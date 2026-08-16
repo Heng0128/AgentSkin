@@ -87,6 +87,61 @@ function rotate(h: Hsl, deg: number): Hsl {
   return { ...h, h: (h.h + deg + 360) % 360 };
 }
 
+/** Convert an HSL triple (h 0-360, s/l 0-1) to an RGB triple 0-255. */
+function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+}
+
+/** Best-effort parse of a CSS color string (hex / rgb() / hsl()) to RGB. */
+function cssColorToRgb(raw: string): [number, number, number] | null {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.exec(raw.trim());
+  if (hex) {
+    let h = hex[1].slice(0, 6);
+    if (hex[1].length === 3)
+      h = h
+        .split('')
+        .map((c) => c + c)
+        .join('');
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+  const rgb = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i.exec(raw.trim());
+  if (rgb) return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+  const hsl = /^hsla?\(\s*([\d.]+)[,\s]+([\d.]+)%[,\s]+([\d.]+)%/i.exec(raw.trim());
+  if (hsl) return hslToRgb(Number(hsl[1]), Number(hsl[2]) / 100, Number(hsl[3]) / 100);
+  return null;
+}
+
+/**
+ * Read a CSS custom property from the document root at runtime and convert it
+ * to a 6-digit hex string. Falls back to `fallback` when the var is unset,
+ * not parseable, or there is no DOM (tests / SSR / Node scripts). This keeps
+ * the neutral scaffolding in sync with the live theme instead of hardcoding
+ * black/white values.
+ */
+export function cssVarToHex(name: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback;
+  try {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const rgb = value ? cssColorToRgb(value) : null;
+    if (!rgb) return fallback;
+    return `#${rgb.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+  } catch {
+    return fallback;
+  }
+}
+
 /** Is this hex "dark" (used to decide light vs dark neutral scaffolding)? */
 export function isDark(hex: string): boolean {
   const { h, s, l } = hexToHsl(hex);
@@ -111,18 +166,18 @@ function buildPalette(
       id,
       labelKey,
       accent,
-      background: '#0e0e13',
-      foreground: '#ededf2',
-      surface: '#1a1a22',
+      background: cssVarToHex('--background', '#0e0e13'),
+      foreground: cssVarToHex('--foreground', '#ededf2'),
+      surface: cssVarToHex('--card', '#1a1a22'),
     };
   }
   return {
     id,
     labelKey,
     accent,
-    background: '#f7f7fa',
-    foreground: '#16161c',
-    surface: '#ffffff',
+    background: cssVarToHex('--background', '#f7f7fa'),
+    foreground: cssVarToHex('--foreground', '#16161c'),
+    surface: cssVarToHex('--card', '#ffffff'),
   };
 }
 

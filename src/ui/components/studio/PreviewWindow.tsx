@@ -154,7 +154,8 @@ export function PreviewWindow({
             onLoad={pushOverrides}
             className="pw__iframe"
             style={{ transform: `scale(${win.scale})`, transformOrigin: 'top left' }}
-            title={meta.displayName}
+            title={`${meta.displayName} · ${t.studioPreviewStatus}`}
+            tabIndex={-1}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[var(--bg-0)]">

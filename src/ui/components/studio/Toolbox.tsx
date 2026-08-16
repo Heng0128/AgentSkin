@@ -426,6 +426,7 @@ function ToggleRow({
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={label}
         onClick={() => onChange(!checked)}
         className="relative h-4 w-7 shrink-0 transition-colors"
         style={{
@@ -852,7 +853,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       />
 
       {/* Summary of effective values */}
-      <div className="mt-2  p-2" style={{ background: 'var(--muted)' }}>
+      <div className="mt-2  p-2 bg-muted">
         <p
           className="mb-1 font-mono text-[10px] font-semibold "
           style={{ letterSpacing: '0.12em', color: 'var(--muted-foreground)' }}
