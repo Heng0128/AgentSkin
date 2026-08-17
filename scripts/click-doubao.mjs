@@ -52,6 +52,7 @@ async function run() {
   await c.send('Runtime.enable');
   await c.send('Page.enable');
   const res = await c.send('Runtime.evaluate', { expression: JS, returnByValue: true, awaitPromise: true });
+  if (res.exceptionDetails) console.log('EVAL ERR', JSON.stringify(res.exceptionDetails));
   const v = res.result?.value || {};
   if (!v.__coord) { console.log(JSON.stringify(v, null, 2)); c.close(); return; }
   const { x, y } = v.__coord;
