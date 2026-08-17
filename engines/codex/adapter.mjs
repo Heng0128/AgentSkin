@@ -141,14 +141,22 @@ html.${HOST_CLASS} [class*="sidebar"] {
 html.${HOST_CLASS} nav a:hover,
 html.${HOST_CLASS} [class*="sidebar"] a:hover,
 html.${HOST_CLASS} nav button:hover,
+html.${HOST_CLASS} aside button:hover,
 html.${HOST_CLASS} [class*="sidebar"] button:hover {
-  background: var(--bg-hover, color-mix(in srgb, var(--agentskin-accent) 10%, transparent)) !important;
+  background: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
 }
+/* Codex chat rows are <button class="sidebar-item">; the active thread is flagged
+   with the data-app-action-sidebar-thread-selected attribute, not [aria-current]. */
+html.${HOST_CLASS} button.sidebar-item[data-app-action-sidebar-thread-selected],
+html.${HOST_CLASS} [data-app-action-sidebar-thread-selected],
 html.${HOST_CLASS} nav a[aria-current="true"],
 html.${HOST_CLASS} nav a[aria-current="page"],
+html.${HOST_CLASS} nav button[data-state="active"],
 html.${HOST_CLASS} [class*="sidebar"] [aria-current="true"],
-html.${HOST_CLASS} [class*="sidebar"] [aria-current="page"] {
-  background: var(--bg-active, color-mix(in srgb, var(--agentskin-accent) 16%, transparent)) !important;
+html.${HOST_CLASS} [class*="sidebar"] [aria-current="page"],
+html.${HOST_CLASS} [class*="sidebar"] button[data-state="active"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
 }
 
 /* === Composer / input area: frosted glass ===

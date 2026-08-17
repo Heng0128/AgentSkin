@@ -846,6 +846,27 @@ html.agentskin-host-doubao [class*="outline-btn"]:hover {
   border-color: rgba(136, 192, 208, 0.6) !important;
 }
 
+/* Home / chat-mode toggle segments (对话 · 工作): these buttons sit inside a
+   rounded-full track (bg-dbx-fill-trans-10) and carry text-dbx-text-* colour
+   utilities. The generic "secondary" rule above throws a 1px square border on
+   them (class contains "text-dbx-text-secondary"), destroying the pill look.
+   Restore the native track behaviour and its colour hierarchy. */
+html.agentskin-host-doubao [class*="rounded-full"] button[class*="text-dbx-text-primary"],
+html.agentskin-host-doubao [class*="rounded-full"] button[class*="text-dbx-text-secondary"] {
+  background: transparent !important;
+  border: none !important;
+}
+html.agentskin-host-doubao [class*="rounded-full"] button[class*="text-dbx-text-primary"] {
+  color: var(--agentskin-text) !important;
+}
+html.agentskin-host-doubao [class*="rounded-full"] button[class*="text-dbx-text-secondary"] {
+  color: var(--agentskin-muted) !important;
+}
+html.agentskin-host-doubao [class*="rounded-full"] button[class*="text-dbx-text-primary"]:hover,
+html.agentskin-host-doubao [class*="rounded-full"] button[class*="text-dbx-text-secondary"]:hover {
+  color: var(--agentskin-text) !important;
+}
+
 /* Ghost / icon buttons: transparent + accent hover */
 html.agentskin-host-doubao button[class*="ghost"],
 html.agentskin-host-doubao button[class*="icon"]:not([class*="icon-bg"]),

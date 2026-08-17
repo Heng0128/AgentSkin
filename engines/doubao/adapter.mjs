@@ -148,7 +148,9 @@ html.${HOST_CLASS} [class*="input-container"][class*="flex"] {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-accent) 20%) 48%, transparent) !important;
   border: none !important;
   border-radius: var(--dbx-radius-4xl, 24px) !important;
-  overflow: hidden !important;
+  /* Do NOT use overflow:hidden here. This container hosts the composer's
+     inline popups (e.g. the "快速" skill menu). Clipping it hides all but the
+     last row of that menu. border-radius already rounds the frosted bg. */
   box-shadow: none !important;
 }
 html.${HOST_CLASS} [class*="input-guidance"]:focus-within,
@@ -348,7 +350,8 @@ html.${HOST_CLASS} [class*="suggest-message-list-wrapper"] {
       input.style.setProperty('border', 'none', 'important');
       input.style.setProperty('border-radius', 'var(--dbx-radius-4xl, 24px)', 'important');
       input.style.setProperty('backdrop-filter', 'blur(24px) saturate(1.25)', 'important');
-      input.style.setProperty('overflow', 'hidden', 'important');
+      // Do NOT set overflow:hidden on the composer container: it hosts inline
+      // popups (the "快速" skill menu). Clipping it hides all but the last item.
       input.setAttribute('data-agentskin-input', '1');
     }
 

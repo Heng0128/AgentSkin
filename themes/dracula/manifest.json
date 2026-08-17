@@ -20,6 +20,7 @@
   ],
   "icon": "icon.png",
   "preview": "preview.png",
+  "hero": "hero.webp",
   "targets": {
     "traework": {
       "css": "assets/css/traework.css",

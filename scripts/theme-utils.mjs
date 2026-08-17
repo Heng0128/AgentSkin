@@ -203,9 +203,9 @@ ${host} #root::before {
 // Shared token block (parsed by theme-library extractColors / detectMode)
 // ---------------------------------------------------------------------------
 
-export function tokenBlock(t) {
+export function tokenBlock(t, host = ':root') {
   const c = t.colors;
-  return `:root {
+  return `${host} {
   color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
   --agentskin-accent: ${c.accent};
   --agentskin-secondary: ${c.secondary};

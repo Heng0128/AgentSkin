@@ -1,5 +1,5 @@
 /* 深度专注 — OpenAI Codex (--text-*/--bg-* design tokens) */
-:root {
+html.agentskin-host-codex {
   color-scheme: dark !important;
   --agentskin-accent: #88c0d0;
   --agentskin-secondary: #81a1c1;
@@ -281,4 +281,38 @@ html.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* ===== Codex component-level interaction layering =====
+   Codex sidebar rows are <button class="sidebar-item">; the active thread is
+   flagged with the data-app-action-sidebar-thread-selected attribute (Tailwind
+   data-* variant), NOT [aria-current] / [class*=active]. Give hover + selected
+   an accent-tinted lift so the sidebar reads before/after instead of blending
+   into the frosted base — restores hover/selected interaction-state feedback.
+   Colors stay alpha-based so the frosted/backdrop-filter surfaces are preserved. */
+html.agentskin-host-codex button.sidebar-item,
+html.agentskin-host-codex [class*="sidebar"] button,
+html.agentskin-host-codex nav button,
+html.agentskin-host-codex aside button {
+  transition: background-color 120ms ease !important;
+}
+html.agentskin-host-codex button.sidebar-item:hover,
+html.agentskin-host-codex [class*="sidebar"] button:hover,
+html.agentskin-host-codex nav button:hover,
+html.agentskin-host-codex aside button:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+}
+html.agentskin-host-codex button.sidebar-item[data-app-action-sidebar-thread-selected],
+html.agentskin-host-codex [data-app-action-sidebar-thread-selected],
+html.agentskin-host-codex nav button[data-state="active"],
+html.agentskin-host-codex [class*="sidebar"] button[data-state="active"],
+html.agentskin-host-codex aside [class*="active"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
+}
+
+/* Composer focus: keep frosted but leaner so focus reads without a solid fill */
+html.agentskin-host-codex [contenteditable="true"]:focus,
+html.agentskin-host-codex [contenteditable="true"]:focus-within {
+  background: color-mix(in srgb, var(--agentskin-input-bg) 82%, var(--agentskin-accent) 18%) !important;
 }
