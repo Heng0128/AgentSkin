@@ -101,7 +101,20 @@ export async function seedBuiltInThemes(
   }
 
   // Install each package through the library
-  return installer.installAll(toInstall);
+  console.log(
+    '[DEBUG-seeder] toInstall count=',
+    toInstall.length,
+    'ids=',
+    toInstall.map((p) => p.manifest.id),
+  );
+  const result = await installer.installAll(toInstall);
+  console.log(
+    '[DEBUG-seeder] installed count=',
+    result.length,
+    'ids=',
+    result.map((t) => t.id),
+  );
+  return result;
 }
 
 /**
@@ -268,15 +281,21 @@ export async function pruneRemovedBuiltInThemes(
  *   - dev:        <projectRoot>/themes
  *   - packaged:   <resources>/app.asar/themes   (asar-readable via fs patch)
  *
- * We resolve from `app.getAppPath()`, which points at the project root in dev
- * and at `app.asar` when packaged, so the same path works in both modes. A few
- * fallback candidates keep the seed working if packaging ever relocates them.
+ * We resolve via candidate paths because `app.getAppPath()` semantics differ:
+ *   - electron-vite dev: points at out/main/ (main script dir), NOT project root
+ *   - packaged: points at app.asar
+ * The `process.cwd()` fallback covers dev mode (cwd = project root when launched
+ * via npm start / start.bat). Other candidates cover packaged/relocated layouts.
  */
 export function getThemesDir(): string {
   const candidates = [
     path.join(app.getAppPath(), 'themes'),
     path.join(process.resourcesPath, 'app.asar', 'themes'),
     path.join(process.resourcesPath, 'themes'),
+    // Dev mode fallback: when electron-vite runs main from out/main/,
+    // app.getAppPath() points at out/main/ instead of the project root.
+    // process.cwd() is the project root when launched via npm start / start.bat.
+    path.join(process.cwd(), 'themes'),
   ];
 
   for (const candidate of candidates) {

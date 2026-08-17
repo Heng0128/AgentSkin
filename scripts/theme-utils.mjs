@@ -504,6 +504,117 @@ ${host} [class*="modal"] {
 }
 
 // ---------------------------------------------------------------------------
+// Aurora Glass signature (manifest.signature = "aurora-glass")
+//
+// Opt-in crafted layer. Appended by generate-theme-css.mjs ONLY when a theme
+// declares `signature: "aurora-glass"` in its manifest, so existing themes are
+// untouched and `generate-theme-css --verify` stays deterministic. It layers a
+// slowly drifting aurora behind the frosted glass, adds a specular rim-light to
+// panels, an iridescent sheen sweep on primary buttons, and a breathing focus
+// glow on the composer — design craft beyond flat color/background swaps.
+// ---------------------------------------------------------------------------
+
+/** Per-agent host selector (mirrors the values hardcoded in ./generators/*). */
+export const HOSTS = Object.freeze({
+  traework: 'html.agentskin-host-traework',
+  qoderwork: 'html.agentskin-host-qoderwork',
+  workbuddy: 'body[data-application-name="workbuddy"]',
+  doubao: 'html.agentskin-host-doubao',
+  codex: 'html.agentskin-host-codex',
+  zcode: 'html.agentskin-host-zcode',
+});
+
+export function auroraGlassSignature(t, host) {
+  const c = t.colors;
+  // Doubao mounts on <body> (no #root); every other agent has #root.
+  const artTarget = host === HOSTS.doubao ? `${host} body::before` : `${host} #root::before`;
+
+  return `
+/* ===== Aurora Glass signature (manifest.signature = "aurora-glass") ===== */
+
+/* --- living aurora backdrop: replaces the static art wash with drifting bands --- */
+${artTarget} {
+  background:
+    radial-gradient(120% 80% at 82% 14%, ${alpha(c.secondary, 0.32)}, transparent 60%),
+    linear-gradient(118deg, ${alpha(c.accent, 0.18)} 0%, transparent 40%),
+    linear-gradient(242deg, ${alpha(c.secondary, 0.2)} 0%, transparent 44%),
+    linear-gradient(180deg, ${c.background} 0%, color-mix(in srgb, ${c.background} 72%, #060912) 100%) !important;
+  background-size: 200% 200%, 190% 190%, 190% 190%, 100% 100% !important;
+  background-repeat: no-repeat !important;
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes __aurora_glass_drift {
+    0%   { background-position: 0% 0%, 100% 18%, 50% 82%, 0 0; }
+    50%  { background-position: 22% 34%, 68% 58%, 28% 38%, 0 0; }
+    100% { background-position: 0% 0%, 100% 18%, 50% 82%, 0 0; }
+  }
+  @keyframes __aurora_glass_sheen {
+    0%   { transform: translateX(-130%) skewX(-18deg); }
+    55%  { transform: translateX(240%) skewX(-18deg); }
+    100% { transform: translateX(240%) skewX(-18deg); }
+  }
+  @keyframes __aurora_glass_breathe {
+    0%, 100% { box-shadow: 0 0 0 1px ${alpha(c.accent, 0.32)}, 0 0 16px ${alpha(c.secondary, 0.16)}; }
+    50%      { box-shadow: 0 0 0 1px ${alpha(c.accent, 0.58)}, 0 0 30px ${alpha(c.secondary, 0.3)}; }
+  }
+  ${artTarget} {
+    animation: __aurora_glass_drift 28s ease-in-out infinite !important;
+  }
+}
+
+/* --- glass specular rim-light: panels read as real glass, not flat fills --- */
+${host} aside,
+${host} nav,
+${host} [role="dialog"],
+${host} [role="menu"],
+${host} [role="tooltip"],
+${host} [class*="popover"],
+${host} [class*="modal"],
+${host} [class*="sidebar"] {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    inset 0 0 0 1px ${alpha(c.accent, 0.1)},
+    0 10px 34px rgba(4, 8, 16, 0.42) !important;
+}
+
+/* --- iridescent sheen sweep on primary / send buttons (liquid highlight) --- */
+${host} button[class*="primary"],
+${host} button[class*="send"],
+${host} button[class*="submit"] {
+  position: relative !important;
+  overflow: hidden !important;
+}
+${host} button[class*="primary"]::after,
+${host} button[class*="send"]::after,
+${host} button[class*="submit"]::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.30) 50%, transparent 100%) !important;
+  transform: translateX(-130%) skewX(-18deg) !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+@media (prefers-reduced-motion: no-preference) {
+  ${host} button[class*="primary"]:hover::after,
+  ${host} button[class*="send"]:hover::after,
+  ${host} button[class*="submit"]:hover::after {
+    opacity: 1 !important;
+    animation: __aurora_glass_sheen 1.05s ease-out !important;
+  }
+}
+
+/* --- breathing focus glow on the composer / inputs --- */
+${host} [contenteditable="true"]:focus,
+${host} [contenteditable="true"]:focus-within,
+${host} textarea:focus,
+${host} input:focus {
+  animation: __aurora_glass_breathe 3.6s ease-in-out infinite !important;
+}
+`;
+}
+
+// ---------------------------------------------------------------------------
 // Context builder
 // ---------------------------------------------------------------------------
 
@@ -534,6 +645,7 @@ export function buildContext(id, manifest, scheme = null) {
     name: manifest.displayName || manifest.name,
     mode,
     isLight: mode === 'light',
+    signature: manifest.signature ?? null,
     colors,
   };
 }

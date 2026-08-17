@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildContext, GENERATORS } from './theme-generators.mjs';
+import { auroraGlassSignature, HOSTS } from './theme-utils.mjs';
 
 const THEMES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'themes');
 
@@ -68,7 +69,12 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
     const cssDir = path.join(themeDir, 'assets', 'css', isDefault ? '' : scheme.id);
     if (!verifyMode) fs.mkdirSync(cssDir, { recursive: true });
     for (const [agent, generate] of Object.entries(GENERATORS)) {
-      const css = generate(ctx);
+      let css = generate(ctx);
+      // Opt-in crafted layer: only themes declaring `signature: "aurora-glass"`
+      // get the Aurora Glass signature appended. Deterministic → --verify stays green.
+      if (ctx.signature === 'aurora-glass' && HOSTS[agent]) {
+        css += auroraGlassSignature(ctx, HOSTS[agent]);
+      }
       const cssPath = path.join(cssDir, `${agent}.css`);
       if (verifyMode) {
         if (!fs.existsSync(cssPath)) {

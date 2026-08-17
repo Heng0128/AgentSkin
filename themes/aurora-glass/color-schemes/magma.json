@@ -1,0 +1,22 @@
+{
+  "id": "magma",
+  "name": "Magma Veil",
+  "mode": "dark",
+  "description": "熔岩面纱：极光落日，暖珊瑚与玫红接管夜空。同一套玻璃工艺，换一种温度。",
+  "colors": {
+    "accent": "#ffb38a",
+    "secondary": "#ff8fae",
+    "background": "#160e16",
+    "foreground": "#f3e6ee",
+    "muted": "#a98a9c",
+    "surface": "#221620",
+    "surfaceElevated": "#2e1f2c",
+    "border": "rgba(255, 179, 138, 0.18)",
+    "codeBackground": "#100810",
+    "codeForeground": "#e8d6e0",
+    "inputBackground": "#2a1c28",
+    "buttonBackground": "rgba(255, 179, 138, 0.14)",
+    "buttonForeground": "#ffb38a",
+    "focusRing": "#ffb38a60"
+  }
+}
