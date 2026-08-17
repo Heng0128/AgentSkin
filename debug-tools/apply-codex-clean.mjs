@@ -22,6 +22,10 @@ import { buildApplyExpression } from '../src/engine/src/runtime/renderer-payload
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 const PORT = process.argv[2] || '58554';
 const THEME_CSS_PATH = join(ROOT, 'themes', 'tokyo-night', 'assets', 'css', 'codex.css');
+const HERO_PATH = join(ROOT, 'themes', 'tokyo-night', 'hero.webp');
+const heroB64 = readFileSync(HERO_PATH).toString('base64');
+const heroDataUrl = 'data:image/webp;base64,' + heroB64;
+console.log('hero=webp bytes', Math.round(readFileSync(HERO_PATH).length / 1024), 'KB');
 
 class CDP {
   constructor(ws) {
@@ -99,6 +103,9 @@ const VERIFY = `(() => {
   const ro = sel ? getComputedStyle(sel) : null;
   const so = sidebar ? getComputedStyle(sidebar) : null;
   const mk = (cs) => cs ? { bg: cs.backgroundColor, boxS: cs.boxShadow.slice(0, 40) } : null;
+  const rootEl = document.querySelector('#root');
+  const artVar = getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').trim();
+  const before = getComputedStyle(rootEl || document.body, '::before');
   return {
     hostClass: document.documentElement.classList.contains('agentskin-host-codex'),
     themeId: document.documentElement.dataset.agentskinTheme ?? null,
@@ -109,6 +116,16 @@ const VERIFY = `(() => {
     sidebar: mk(so),
     selectedRow: sel ? { tag: sel.tagName, bg: ro?.backgroundColor, boxS: ro?.boxShadow.slice(0, 40) } : null,
     hasSelected: !!sel,
+    art: {
+      rootEl: !!rootEl,
+      artVar: artVar.replace(/url\\("[^"]*"\\)/, 'url(<blob>)').slice(0, 80),
+      bgImg: before.backgroundImage.replace(/url\\("[^"]*"\\)/, 'url(<blob>)').slice(0, 100),
+      content: before.content,
+      zIndex: before.zIndex,
+      position: before.position,
+      right: before.right,
+      top: before.top,
+    },
   };
 })()`;
 
@@ -150,7 +167,7 @@ async function run() {
       required: [],
       recommended: [],
     },
-    imageDataUrls: {},
+    imageDataUrls: { hero: heroDataUrl },
   };
   const expr = buildApplyExpression({ adapter: codex, targetTheme });
 
