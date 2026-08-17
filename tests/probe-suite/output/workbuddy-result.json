@@ -1,0 +1,47 @@
+{
+  "probe": {
+    "agentId": "workbuddy",
+    "timestamp": "2026-08-17T05:51:01.187Z",
+    "status": "CDP_TARGET_UNAVAILABLE",
+    "config": {
+      "port": 52743,
+      "hostSelector": "html.agentskin-host-workbuddy",
+      "tokenNamespaces": [
+        "--wb-",
+        "--color-"
+      ]
+    },
+    "probe": {
+      "variables": {
+        "light": null,
+        "dark": null,
+        "note": "Target application not running"
+      },
+      "dom": {
+        "light": null,
+        "dark": null,
+        "note": "Target application not running"
+      },
+      "styles": {
+        "light": null,
+        "dark": null,
+        "note": "Target application not running"
+      }
+    },
+    "summary": {
+      "totalVariables": 0,
+      "totalNodes": 0,
+      "truncated": false,
+      "themesAvailable": 0,
+      "errors": [
+        "Agent workbuddy (port 52743) is not running. Start the application with --remote-debugging-port=52743"
+      ]
+    }
+  },
+  "unpack": {
+    "agentId": "workbuddy",
+    "timestamp": "2026-08-17T05:51:01.194Z",
+    "themes": [],
+    "errors": []
+  }
+}

@@ -30,6 +30,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import { getAdapter } from '../src/engine/src/adapters/index.mjs';
 
 // ---------------------------------------------------------------------------
 // Default palette (used when the renderer sends nothing / partial)
@@ -415,6 +416,17 @@ function makePng(width, height, pixelFn) {
 // ---------------------------------------------------------------------------
 
 export function deriveTokens(root) {
+  // A-08 / Q18：拒绝"残缺提取"——调用方传入非空 root 却无任何 --agentskin-* token，
+  // 静默回退 DEFAULT_TOKENS 会让产物被默认紫色污染而不报错。此处直接拒绝并说明原因。
+  if (root && typeof root === 'object' && Object.keys(root).length > 0) {
+    const themed = Object.keys(root).filter((k) => k.startsWith('--agentskin-'));
+    if (themed.length === 0) {
+      throw new Error(
+        `[build-theme-package] deriveTokens: root 含 ${Object.keys(root).length} 个键但无任何 ` +
+          '`--agentskin-*` 主题 token —— 疑似残缺提取，拒绝回退到 DEFAULT_TOKENS 掩蔽。',
+      );
+    }
+  }
   const tokens = { ...DEFAULT_TOKENS };
   if (root && typeof root === 'object') {
     for (const [k, val] of Object.entries(root)) {
@@ -720,8 +732,16 @@ function buildIcon(palette) {
 // Public entry
 // ---------------------------------------------------------------------------
 
-export async function buildThemePackage(request, outDir) {
-  const agentId = String(request?.agentId || 'traework');
+export function buildThemePackage(request, outDir) {
+  // A-10 / Q13：非法或缺失 agentId 直接拒绝，避免静默生成"空白主题包"。
+  if (!request?.agentId || typeof request.agentId !== 'string') {
+    throw new Error(
+      '[build-theme-package] Missing request.agentId — must be one of: ' +
+        ['codex', 'doubao', 'workbuddy', 'qoderwork', 'traework', 'zcode'].join(', '),
+    );
+  }
+  getAdapter(request.agentId); // 抛错即拒绝非法 agentId
+  const agentId = request.agentId;
   const palette = deriveTokens(request?.root);
   const manifest = buildManifest(request, agentId, palette);
   const css = buildAgentCss(agentId, palette, request?.signature);

@@ -24,8 +24,47 @@ import {
 } from "../semantic-quant/taxonomy.mjs";
 
 /**
+ * 默认样式采样预算（A-02 / 审计校正：全局阈值 + 4-Agent 缺配置联合效应）。
+ *
+ * `assessStyleCompliance` 缺省把 `minRatio` 从 1 下调为 0.85：真实 DOM 中根背景归
+ * 艺术层、部分受控节点背景透明、border 天然继承，硬性 100% 命中会把合法值误判为
+ * 漂移（styleDrift 误报）。0.85 容忍少量不可比/透明节点，仍能拦截"主题完全未生效"
+ * 的真漂移。`STYLE_RUNTIME_SOURCE` 通过 `.toString()` 内嵌 `assessStyleCompliance`，
+ * 故该函数体内必须使用字面量（不可引用本模块级常量），下方内联值须与
+ * `DEFAULT_TOLERANCE` / `DEFAULT_MIN_RATIO` 保持一致。
+ */
+export const DEFAULT_TOLERANCE = 0.08;
+export const DEFAULT_MIN_RATIO = 0.85;
+
+/**
+ * per-Agent 样式采样策略（A-02）。缺省回退到 DEFAULT_*；
+ * 对语义拓扑完整、需更严格把关的 Agent 可在此收紧（如 `minRatio: 1`）。
+ * 键为 adapter.id；未登记键走默认。
+ *
+ * @type {Record<string, { tolerance?: number; minRatio?: number }>}
+ */
+export const STYLE_SAMPLING_POLICY = {
+  // 如需对某 Agent 收紧默认预算，例：
+  // codex: { minRatio: 0.9 },
+};
+
+/**
+ * 解析某 Agent 的样式采样预算：默认值 ⊳ 策略表 ⊳ 显式 override。
+ *
+ * @param {string} [agentId] adapter.id（可为空，回退默认）
+ * @param {{ tolerance?: number; minRatio?: number }} [override]
+ * @returns {{ tolerance: number; minRatio: number }}
+ */
+export function resolveStyleSamplingOpts(agentId = null, override = {}) {
+  const policy = (agentId && STYLE_SAMPLING_POLICY[agentId]) || {};
+  return {
+    tolerance: override.tolerance ?? policy.tolerance ?? DEFAULT_TOLERANCE,
+    minRatio: override.minRatio ?? policy.minRatio ?? DEFAULT_MIN_RATIO,
+  };
+}
+
+/**
  * 解析 CSS 颜色字符串为 { r, g, b }（0-255）。支持 `rgb(...)` / `rgba(...)` /
- * `#rgb` / `#rrggbb`。无法解析（transparent/currentcolor/var()/none/空串等）返回 null。
  *
  * @param {string} input
  * @returns {{ r: number; g: number; b: number } | null}
@@ -112,7 +151,8 @@ export function matchesToken(actual, expected, tolerance) {
  *   - 普通受控语义节点：以 color vs tokens.text、背景 vs tokens.surface、
  *     border vs tokens.border 分别判定；任一属性近似命中即视为该节点受控通过。
  *   - 期望 token 缺失/无法解析的属性跳过（无从判定，不计入分子分母）。
- *   - 命中率 = 判定通过节点数 / 参与判定节点数；无参与判定节点时取 1（中性）。
+ *   - 命中率 = 判定通过节点数 / 参与判定节点数；无参与判定节点时 status=unverifiable
+ *     （A-13：不再静默取 1 中性通过）。
  *
  * @param {{
  *   key: string;
@@ -123,6 +163,7 @@ export function matchesToken(actual, expected, tolerance) {
  * @param {{ text?: string; surface?: string; border?: string }} tokens 期望 token（需可解析）
  * @param {{ tolerance?: number; minRatio?: number }} [opts]
  * @returns {{
+ *   status: "pass" | "fail" | "unverifiable";
  *   pass: boolean;
  *   matchRatio: number;
  *   judged: number;
@@ -130,8 +171,10 @@ export function matchesToken(actual, expected, tolerance) {
  * }}
  */
 export function assessStyleCompliance(samples, tokens = {}, opts = {}) {
+	// 内联字面量：STYLE_RUNTIME_SOURCE 经 .toString() 序列化本函数为浏览器端自包含
+	// 片段，不能引用任何模块级绑定，否则浏览器端未定义。内联值须与导出默认常量同步。
 	const tolerance = opts.tolerance ?? 0.08;
-	const minRatio = opts.minRatio ?? 1;
+	const minRatio = opts.minRatio ?? 0.85;
 	const misses = [];
 	let judged = 0;
 	let passing = 0;
@@ -162,7 +205,11 @@ export function assessStyleCompliance(samples, tokens = {}, opts = {}) {
 	}
 
 	const matchRatio = judged > 0 ? passing / judged : 1;
-	return { pass: matchRatio >= minRatio, matchRatio, judged, misses };
+	// A-13 / Q9：三态判定，避免"无可判定样本 → judged=0 → 静默通过"。
+	let status;
+	if (judged === 0) status = "unverifiable";
+	else status = matchRatio >= minRatio ? "pass" : "fail";
+	return { status, pass: status === "pass", matchRatio, judged, misses };
 }
 
 /**
@@ -193,6 +240,7 @@ export function assessStyleCompliance(samples, tokens = {}, opts = {}) {
  * @returns {{
  *   hardErrors: Array<{ componentId: string; riskLevel: string; pass: boolean; matchRatio: number; judged: number; misses: object[] }>;
  *   semanticWarnings: Array<{ componentId: string; riskLevel: string; pass: boolean; matchRatio: number; judged: number; misses: object[] }>;
+ *   unverifiable: Array<{ componentId: string; pass: boolean; matchRatio: number; judged: number; status: string }>;
  * }}
  */
 export function aggregateByRegion(samples, tokens = {}, opts = {}) {
@@ -208,9 +256,16 @@ export function aggregateByRegion(samples, tokens = {}, opts = {}) {
 
 	const hardErrors = [];
 	const semanticWarnings = [];
+	const unverifiable = [];
 
 	for (const [componentId, componentSamples] of byComponent) {
 		const result = assessStyleCompliance(componentSamples, tokens, opts);
+		// A-13：UNVERIFIABLE 单独走 unverifiable 通道——"无法校验"≠"修改失败"，
+		// 既不被当作通过静默放行，也不误报为 hard error 阻断 CI。
+		if (result.status === "unverifiable") {
+			unverifiable.push({ componentId, ...result });
+			continue;
+		}
 		if (result.pass) continue;
 		const meta = COMPONENT_INDEX[componentId];
 		const riskLevel = meta?.riskLevel ?? RISK_LEVEL.MEDIUM;
@@ -222,7 +277,7 @@ export function aggregateByRegion(samples, tokens = {}, opts = {}) {
 		}
 	}
 
-	return { hardErrors, semanticWarnings };
+	return { hardErrors, semanticWarnings, unverifiable };
 }
 
 /**

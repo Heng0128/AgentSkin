@@ -24,7 +24,10 @@ export default defineConfig({
           environment: 'node',
           include: ['src/engine/**/*.test.ts'],
           testTimeout: 15000,
-          pool: 'forks',
+          // threads：forks 池在本机（Windows + Node 22）多 worker 并发时
+          // teardown 阶段进程不退出（测试跑完 summary 后挂起），threads 干净退出。
+          // 排查记录：2026-08-17（engine 15 文件 forks 必挂 / threads 干净）。
+          pool: 'threads',
         },
         /* engine runs pure .mjs runtime modules — no jest aliases needed */
       },
@@ -34,7 +37,7 @@ export default defineConfig({
           environment: 'node',
           include: ['src/main/**/*.test.ts', 'src/shared/**/*.test.ts'],
           testTimeout: 15000,
-          pool: 'forks',
+          pool: 'threads',
         },
         resolve: {
           alias: {
@@ -48,7 +51,7 @@ export default defineConfig({
           environment: 'node',
           include: ['src/ui/**/*.test.ts', 'src/ui/**/*.test.tsx'],
           testTimeout: 15000,
-          pool: 'forks',
+          pool: 'threads',
           setupFiles: ['vitest.setup.ui.ts'],
         },
         resolve: {
@@ -64,7 +67,7 @@ export default defineConfig({
           environment: 'node',
           include: ['tests/visual-regression/**/*.test.ts'],
           testTimeout: 30000,
-          pool: 'forks',
+          pool: 'threads',
         },
       },
     ],

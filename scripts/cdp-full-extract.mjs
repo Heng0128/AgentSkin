@@ -30,6 +30,31 @@ const AGENT_PORTS = {
 const DEFAULT_MAX_DOM_NODES = 2000;
 const DEFAULT_MAX_DEPTH = 12;
 const THEME_SWITCH_WAIT = 600; // ms to wait after theme switch
+
+// ============== per-Agent 时序配置表（审计 A-11 / R-21） ==============
+// 各 Agent 可独立配置主题切换等待、连接/命令超时与连接重试；
+// 缺省项回退到 DEFAULT_TIMING。resolveAgentTiming(agentId) 为默认 ⊳ 分表三级解析入口。
+const DEFAULT_TIMING = {
+  themeSwitchWait: 600, // 主题切换后等待重渲染
+  connectTimeout: 8000, // WS 连接超时
+  commandTimeout: 10000, // 单条 CDP 命令超时
+  evalTimeout: 15000, // Runtime.evaluate 超时
+  retry: 1, // 连接失败重试次数
+};
+
+const AGENT_TIMING = {
+  traework: { themeSwitchWait: 700, commandTimeout: 12000 },
+  doubao: { themeSwitchWait: 800, evalTimeout: 18000 },
+  codex: { retry: 2 },
+  qoderwork: {},
+  workbuddy: {},
+  zcode: {},
+};
+
+/** 解析某 Agent 的时序参数 = DEFAULT_TIMING ⊳ AGENT_TIMING[agentId]。 */
+export function resolveAgentTiming(agentId) {
+  return { ...DEFAULT_TIMING, ...(AGENT_TIMING[agentId] ?? {}) };
+}
 const ORDERED_STYLE_PROPS = [
   // 颜色类
   'color',
@@ -295,12 +320,16 @@ function extractAllColors(value) {
 // ============== CDP 客户端 ==============
 
 class CdpClient {
-  constructor(wsUrl) {
+  constructor(wsUrl, opts = {}) {
     this.wsUrl = wsUrl;
     this.ws = null;
     this.msgId = 0;
     this.pending = new Map();
     this.eventHandlers = new Map();
+    // per-Agent 时序（审计 A-11）：连接/命令超时可按 Agent 独立配置，缺省回退 DEFAULT_TIMING。
+    this.connectTimeout = opts.connectTimeout ?? DEFAULT_TIMING.connectTimeout;
+    this.commandTimeout = opts.commandTimeout ?? DEFAULT_TIMING.commandTimeout;
+    this.timing = opts.timing ?? null; // 供 themeSwitchWait 等非连接参数读取
   }
 
   async connect() {
@@ -309,7 +338,7 @@ class CdpClient {
       this.ws.onopen = () => resolve();
       this.ws.onerror = (e) => reject(new Error(`WS error: ${e.message || 'connection failed'}`));
       this.ws.onmessage = (msg) => this._handleMessage(msg.data);
-      setTimeout(() => reject(new Error('WS connect timeout')), 8000);
+      setTimeout(() => reject(new Error('WS connect timeout')), this.connectTimeout);
     });
   }
 
@@ -342,7 +371,7 @@ class CdpClient {
           this.pending.delete(id);
           reject(new Error(`CDP timeout: ${method}`));
         }
-      }, 10000);
+      }, this.commandTimeout);
     });
   }
 
@@ -449,7 +478,9 @@ async function captureDomTree(client, maxNodes = 2000, maxDepth = 12) {
       }
       
       const root = walk(document.documentElement, 0);
-      return JSON.stringify({ root, total: count });
+      // A-09/A-21：统一 truncated 语义 —— true 表示命中节点数上限、DOM 输出不完整
+      //（与 dom-snapshot.mjs 的 summary.truncated 含义一致，供下游基线比对避开伪漂移）。
+      return JSON.stringify({ root, total: count, truncated: count >= maxNodes });
     })()
   `;
 
@@ -463,20 +494,24 @@ async function captureDomTree(client, maxNodes = 2000, maxDepth = 12) {
     if (result.value) {
       const parsed = JSON.parse(result.value);
       // Normalize: ensure totalNodes property exists
-      return { root: parsed.root, totalNodes: parsed.total || 0 };
+      return {
+        root: parsed.root,
+        totalNodes: parsed.total || 0,
+        truncated: parsed.truncated === true,
+      };
     }
 
     // Fallback
-    return { root: { t: 'html', d: 0 }, totalNodes: 1 };
+    return { root: { t: 'html', d: 0 }, totalNodes: 1, truncated: false };
   } catch (e) {
     console.warn(`  ⚠ DOM 捕获失败: ${e.message}`);
-    return { root: { t: 'html', d: 0 }, totalNodes: 1 };
+    return { root: { t: 'html', d: 0 }, totalNodes: 1, truncated: false };
   }
 }
 
 // ============== 计算样式采样 ==============
 
-async function sampleComputedStyles(client, maxNodes = 200) {
+async function sampleComputedStyles(client, maxNodes = 200, contextId) {
   const expr = `
     (() => {
       const props = ${JSON.stringify(ORDERED_STYLE_PROPS)};
@@ -512,10 +547,11 @@ async function sampleComputedStyles(client, maxNodes = 200) {
     })()
   `;
 
-  const { result } = await client.send('Runtime.evaluate', {
-    expression: expr,
-    returnByValue: true,
-  });
+  const evaluateParams = { expression: expr, returnByValue: true };
+  // A-22：传入 contextId 时在指定 frame 的隔离 world 采样（多 iframe 场景独立采样不交叉）。
+  if (contextId != null) evaluateParams.contextId = contextId;
+
+  const { result } = await client.send('Runtime.evaluate', evaluateParams);
 
   try {
     return JSON.parse(result.value);
@@ -524,7 +560,90 @@ async function sampleComputedStyles(client, maxNodes = 200) {
   }
 }
 
-// ============== CSS 样式表捕获 ==============
+// ============== 帧树遍历 & 帧级隔离采样（A-22）==============
+
+/**
+ * 将 CDP Page.getFrameTree 的嵌套 tree 拍平为有序数组（DFS）。
+ * 纯函数，便于单测。
+ *
+ * @param {object|undefined} tree 形如 { frame, childFrames: [] }
+ * @returns {Array<{frameId: string, parentId: string|null, url: string, securityOrigin: string, unreachableUrl?: string}>}
+ */
+export function flattenFrameTree(tree) {
+  const out = [];
+  if (!tree?.frame) return out;
+  (function walk(node, parentId) {
+    const f = node.frame || {};
+    out.push({
+      frameId: f.id ?? f.frameId ?? '',
+      parentId: parentId ?? null,
+      url: f.url ?? '',
+      securityOrigin: f.securityOrigin ?? '',
+      unreachableUrl: f.unreachableUrl ?? undefined,
+    });
+    for (const child of node.childFrames || []) walk(child, f.id ?? f.frameId);
+  })(tree, null);
+  return out;
+}
+
+/**
+ * 枚举当前 target 的帧树（Page.enable + Page.getFrameTree）。仅主文档时返回 1 帧，
+ * 多 iframe（含同 URL 不同状态）时返回全部 child frame。
+ * @returns {Promise<Array>} 帧信息数组；失败时回退为单帧占位。
+ */
+async function enumerateFrames(client) {
+  try {
+    await client.send('Page.enable').catch(() => {});
+    const frameTree = await client.send('Page.getFrameTree');
+    return flattenFrameTree(frameTree?.frameTree);
+  } catch {
+    return []; // 无法枚举时按无帧处理（走主 frame 现有路径）
+  }
+}
+
+/**
+ * 对每个子 frame 创建隔离 world 并独立采样，产出 frameId 标签的样式样本。
+ * 仅适用于多帧场景（同窗口多 iframe 同 URL 不同状态 → 隔离不交叉）。
+ * 主 frame 不在此重复采样（已由 sampleComputedStyles 主流程覆盖）。
+ *
+ * @param {Object} client CDP 客户端
+ * @param {Array} frames enumerateFrames 的结果
+ * @returns {Promise<Array>} [{ frameId, url, securityOrigin, sampled, totalNodes, error? }]
+ */
+async function sampleChildFrames(client, frames) {
+  if (frames.length <= 1) return []; // 单帧：不重复、零行为变化
+  const results = [];
+  for (const fr of frames.slice(1)) {
+    let contextId = null;
+    try {
+      const world = await client.send('Page.createIsolatedWorld', {
+        frameId: fr.frameId,
+        worldName: 'agentskin-frame-sample',
+        grantUniversalAccess: true,
+      });
+      contextId = world?.executionContextId;
+    } catch {
+      contextId = null;
+    }
+    if (contextId == null) {
+      results.push({ ...fr, sampled: 0, totalNodes: 0, error: 'createIsolatedWorld failed' });
+      continue;
+    }
+    try {
+      const countExpr = await client.send('Runtime.evaluate', {
+        expression: 'document.querySelectorAll("*").length',
+        returnByValue: true,
+        contextId,
+      });
+      const totalNodes = Number(countExpr?.value ?? 0);
+      const samples = await sampleComputedStyles(client, 60, contextId);
+      results.push({ ...fr, sampled: samples.length, totalNodes, samples });
+    } catch (e) {
+      results.push({ ...fr, sampled: 0, totalNodes: 0, error: String(e?.message ?? e) });
+    }
+  }
+  return results;
+}
 
 async function captureAllStylesheets(client) {
   // 通过 Runtime.evaluate 从页面内获取所有样式表 + inline <style>
@@ -664,16 +783,77 @@ async function _getRootVariablesForTheme(client, scheme) {
 
 // ============== 主题切换 ==============
 
-async function setColorScheme(client, scheme) {
+// A-14：在 documentElement 上安装 MutationObserver，观测 style/class 变更以驱动主题重采。
+// 采用「先安装、后切换」两段式：切换引起的根样式变更一旦被观测到即视为重采信号，
+// 比固定 sleep 更准确；安装失败时回退到固定等待（零行为变化）。
+const INSTALL_ROOT_OBSERVER = `(() => {
+  try {
+    window.__agentskinRootDirty = false;
+    const root = document.documentElement;
+    if (window.__agentskinRootObserver) window.__agentskinRootObserver.disconnect();
+    window.__agentskinRootObserver = new MutationObserver(() => {
+      window.__agentskinRootDirty = true;
+    });
+    window.__agentskinRootObserver.observe(root, {
+      attributes: true,
+      attributeFilter: ['style', 'class', 'data-theme', 'data-mode'],
+      subtree: false,
+      childList: false,
+    });
+    return true;
+  } catch { return false; }
+})()`;
+
+async function installRootObserver(client) {
+  try {
+    const res = await client.send('Runtime.evaluate', {
+      expression: INSTALL_ROOT_OBSERVER,
+      returnByValue: true,
+    });
+    return res?.result?.value === true;
+  } catch {
+    return false;
+  }
+}
+
+async function waitRootMutation(client, waitMs) {
+  const expr = `(() => {
+    const deadline = Date.now() + ${waitMs};
+    return new Promise((resolve) => {
+      const tick = () => {
+        if (window.__agentskinRootDirty === true) return resolve(true);
+        if (Date.now() >= deadline) return resolve(false);
+        setTimeout(tick, 40);
+      };
+      tick();
+    });
+  })()`;
+  try {
+    const res = await client.send('Runtime.evaluate', {
+      expression: expr,
+      returnByValue: true,
+      awaitPromise: true,
+    });
+    return res?.result?.value === true;
+  } catch {
+    return null;
+  }
+}
+
+async function setColorScheme(client, scheme, waitMs = THEME_SWITCH_WAIT) {
   try {
     await client.send('Emulation.enable');
   } catch {}
 
   try {
+    // A-14：切换前先装观察器，切换后由根变更信号驱动重采等待。
+    await installRootObserver(client);
     await client.send('Emulation.setEmulatedMedia', {
       features: [{ name: 'prefers-color-scheme', value: scheme }],
     });
-    await sleep(THEME_SWITCH_WAIT);
+    const mutated = await waitRootMutation(client, waitMs);
+    // 观察器未生效（null）或未触发时回退到固定等待，确保不缩短既有时序。
+    if (mutated !== true) await sleep(waitMs);
     return true;
   } catch {
     return false;
@@ -703,7 +883,29 @@ function flattenVars(varGroups) {
   return flat;
 }
 
-function categorizeVars(flatVars) {
+// ============== per-Agent 变量命名空间白名单（审计 A-17） ==============
+// 各 Agent 的 CSS 变量归属其自有设计 token 命名空间（--vscode-* / --text-* / --wb-* /
+// --cb-* / --dbx-* …）。categorizeVars 仅对白名单前缀内的变量做角色归类，命名空间外的
+// 三方库 / UI 框架变量一律过滤，避免用无关变量污染主题分析（如同一页面里的第三方组件库主题）。
+// 前缀以 `--` 开头（不含结尾通配符）；缺省 Agent 未登记时回退到 AGENT_VAR_NAMESPACE_DEFAULT
+// （保留全部 --* 变量，等价于既有全量归类行为，零行为变化）。
+const AGENT_VAR_NAMESPACES = {
+  codex: ['--text-', '--bg-', '--border-'],
+  vscode: ['--vscode-'],
+  workbuddy: ['--wb-'],
+  zcode: ['--cv-', '--zcode-'],
+  qoderwork: ['--vs-', '--vscode-'],
+  doubao: ['--dbx-', '--db-'],
+  traework: ['--tw-'],
+};
+const AGENT_VAR_NAMESPACE_DEFAULT = ['--'];
+
+function isAgentVar(name, agentName) {
+  const prefixes = AGENT_VAR_NAMESPACES[agentName] ?? AGENT_VAR_NAMESPACE_DEFAULT;
+  return prefixes.some((p) => name.startsWith(p));
+}
+
+function categorizeVars(flatVars, agentName) {
   const categories = {
     color: [],
     bg: [],
@@ -719,6 +921,9 @@ function categorizeVars(flatVars) {
     input: [],
     other: [],
   };
+  const otherProps = {
+    ignored: [],
+  };
 
   const colorPattern =
     /color|bg|background|fill|stroke|surface|elevated|card|panel|modal|popover|tooltip|overlay|backdrop/i;
@@ -732,6 +937,12 @@ function categorizeVars(flatVars) {
   const inputPattern = /input|editor|field/i;
 
   for (const [name, data] of Object.entries(flatVars)) {
+    // A-17：命名空间过滤——非本 Agent 命名空间变量不参与归类。
+    if (!isAgentVar(name, agentName)) {
+      otherProps.ignored.push(name);
+      continue;
+    }
+
     const entry = { name, value: data.value, selectors: data.selectors };
 
     if (colorPattern.test(name)) {
@@ -760,6 +971,9 @@ function categorizeVars(flatVars) {
     }
   }
 
+  // 把被过滤变量数挂到 categories 上，供审计/调用方知晓过滤强度（不改变归类主结构）。
+  if (otherProps.ignored.length > 0) categories._ignoredNamespaceVars = otherProps.ignored;
+
   return categories;
 }
 
@@ -783,6 +997,43 @@ function analyzeColorPalette(flatVars) {
     .map(([color, data]) => ({ color, ...data }));
 
   return sorted;
+}
+
+// ============== 运行时 API 指纹（审计 A-16） ==============
+// 检测页面是否 monkey-patch 了影响采样的关键 API。被应用污染（非原生实现）意味着
+// CDP 采样读取到的可能是被篡改后的结果，需标记供下游与该 Agent 的 baseline 判定交叉印证。
+async function probeApiFingerprint(client) {
+  const expr = `(() => {
+    const describe = (name, fn) => {
+      const src = Function.prototype.toString.call(fn || (() => {}));
+      return { present: !!fn, native: /\\[native code\\]/.test(src) };
+    };
+    const probe = typeof document !== 'undefined' ? document.createElement('div') : null;
+    return {
+      querySelectorAll: describe('querySelectorAll', document && document.querySelectorAll),
+      getComputedStyle: describe('getComputedStyle', window && window.getComputedStyle),
+      matchMedia: describe('matchMedia', window && window.matchMedia),
+      getPropertyValue: describe('getPropertyValue', probe && probe.style && probe.style.getPropertyValue),
+    };
+  })()`;
+  try {
+    const res = await client.send('Runtime.evaluate', {
+      expression: expr,
+      returnByValue: true,
+      awaitPromise: true,
+    });
+    const value = res?.result?.value;
+    if (!value) return null;
+    const fingerprint = Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, { present: v.present, native: v.native }]),
+    );
+    return {
+      fingerprint,
+      polluted: Object.keys(fingerprint).filter((k) => !fingerprint[k].native),
+    };
+  } catch {
+    return null;
+  }
 }
 
 // ============== 主爬取流程 ==============
@@ -813,7 +1064,13 @@ async function extractAgent(port, agentName, outputDir) {
     return null;
   }
 
-  const client = new CdpClient(wsDebugUrl);
+  // per-Agent 时序（审计 A-11）：解析本 Agent 的连接/命令超时与主题切换等待。
+  const timing = resolveAgentTiming(agentName);
+  const client = new CdpClient(wsDebugUrl, {
+    connectTimeout: timing.connectTimeout,
+    commandTimeout: timing.commandTimeout,
+    timing,
+  });
 
   try {
     await client.connect();
@@ -821,6 +1078,12 @@ async function extractAgent(port, agentName, outputDir) {
 
     // 启用必要域
     await client.send('Runtime.enable').catch(() => {});
+
+    // A-16：运行时 API 指纹——检测采样关键 API 是否被页面 monkey-patch。
+    const apiFingerprint = await probeApiFingerprint(client);
+    if (apiFingerprint?.polluted?.length) {
+      console.warn(`  ⚠ API 被污染: ${apiFingerprint.polluted.join(', ')}`);
+    }
 
     // ====== 1. 捕获所有样式表 ======
     console.log(`  → 提取样式表...`);
@@ -860,7 +1123,7 @@ async function extractAgent(port, agentName, outputDir) {
 
     // ====== 4. 切换暗色主题 ======
     console.log(`  → 切换到暗色主题...`);
-    const darkOk = await setColorScheme(client, 'dark');
+    const darkOk = await setColorScheme(client, 'dark', timing.themeSwitchWait);
     let domDark = null,
       computedDark = null,
       rootVarsDark = {};
@@ -879,7 +1142,7 @@ async function extractAgent(port, agentName, outputDir) {
 
     // ====== 5. 切换亮色主题 ======
     console.log(`  → 切换到亮色主题...`);
-    const lightOk = await setColorScheme(client, 'light');
+    const lightOk = await setColorScheme(client, 'light', timing.themeSwitchWait);
     let domLight = null,
       computedLight = null,
       rootVarsLight = {};
@@ -925,12 +1188,61 @@ async function extractAgent(port, agentName, outputDir) {
       }));
     }
 
+    // ====== A-22：帧树遍历 & 帧级隔离采样 ======
+    let frameInfos = [];
+    let childFrameSamples = [];
+    try {
+      frameInfos = (await enumerateFrames(client)) || [];
+      // 多帧（同 URL 不同状态）才做帧级隔离采样；单帧跳过（零行为变化）。
+      if (frameInfos.length > 1) {
+        childFrameSamples = await sampleChildFrames(client, frameInfos);
+        console.log(
+          `  ✓ 帧树: ${frameInfos.length} 帧（${frameInfos.length - 1} 个 iframe），已隔离采样 ${childFrameSamples.length} 个子帧`,
+        );
+      }
+    } catch (e) {
+      console.warn(`  ⚠ 帧树采样失败: ${e.message}`);
+    }
+
     const result = {
       meta: {
         agent: agentName,
         port: port,
         extractedAt: new Date().toISOString(),
         wsDebugUrl,
+        // A-08 / Q18：残缺数据质量标记，供下游区分"无此变量"与"未拿到变量"。
+        dataQuality: {
+          totalNodes: {
+            default: domDefault.totalNodes,
+            dark: domDark?.totalNodes ?? null,
+            light: domLight?.totalNodes ?? null,
+          },
+          corsBlockedSheets: stylesheets.filter((s) => s.error).length,
+          failedSchemes: [...(darkOk ? [] : ['dark']), ...(lightOk ? [] : ['light'])],
+          domDegraded:
+            domDefault.totalNodes <= 1 ||
+            (domDark !== null && domDark.totalNodes <= 1) ||
+            (domLight !== null && domLight.totalNodes <= 1),
+          // A-09/A-21：DOM 是否因节点上限被截断（true=输出不完整，基线比对应避开伪漂移）。
+          truncated: {
+            default: domDefault.truncated === true,
+            dark: domDark?.truncated === true || null,
+            light: domLight?.truncated === true || null,
+          },
+          // A-22：同窗口多 iframe 各自独立采样（frameId 隔离，不同 URL 不同状态不交叉）。
+          // 仅多帧场景合成 frames；单帧时 frames=[]、multiFrame=false（零行为变化）。
+          multiFrame: frameInfos.length > 1,
+          iframeCount: frameInfos.length - 1,
+          frames: childFrameSamples,
+          // A-16：采样关键 API 是否被页面 monkey-patch（非原生实现 → 采样结果可信度降级）。
+          apiPolluted: apiFingerprint?.polluted ?? [],
+          apiFingerprint: apiFingerprint?.fingerprint ?? null,
+        },
+      },
+      frameSnapshot: {
+        // A-22：帧树全量信息（含主 frame），frameSnapshot.frames.length>1 即多帧。
+        frames: frameInfos,
+        sampledFrames: childFrameSamples,
       },
       rootVariables: {
         default: rootVarsDefault,
@@ -952,9 +1264,9 @@ async function extractAgent(port, agentName, outputDir) {
         },
       },
       categories: {
-        dark: categorizeVars(flattenVars(allVarsDark)),
-        light: categorizeVars(flattenVars(allVarsLight)),
-        neutral: categorizeVars(flattenVars(allVarsNeutral)),
+        dark: categorizeVars(flattenVars(allVarsDark), agentName),
+        light: categorizeVars(flattenVars(allVarsLight), agentName),
+        neutral: categorizeVars(flattenVars(allVarsNeutral), agentName),
       },
       colorPalette: {
         dark: analyzeColorPalette(flattenVars(allVarsDark)),
@@ -1023,6 +1335,14 @@ async function extractAgent(port, agentName, outputDir) {
       `  📊 统计: vars(dark=${result.stats.styleVars.dark}, light=${result.stats.styleVars.light}, neutral=${result.stats.styleVars.neutral}) | rootVars(default=${result.stats.rootVars.default}, dark=${result.stats.rootVars.dark}, light=${result.stats.rootVars.light})`,
     );
 
+    // A-12：语义基线持久化为独立 JSON（瘦身、可复用、供下游对比直接加载）。
+    // A-15：基线内同时保留亮/暗双方案（schemes.dark / schemes.light / schemes.neutral），
+    // 供亮-暗差异比对；单帧/单方案失败时对应方案置 null，不臆造。
+    const baseline = buildSemanticBaseline(agentName, result);
+    const baselinePath = join(outputDir, `${agentName}-baseline.json`);
+    writeFileSync(baselinePath, JSON.stringify(baseline, null, 2));
+    console.log(`  📎 语义基线已保存到 ${baselinePath}`);
+
     return result;
   } catch (e) {
     console.error(`  ✗ 提取失败: ${e.message}`);
@@ -1030,6 +1350,42 @@ async function extractAgent(port, agentName, outputDir) {
   } finally {
     client.close();
   }
+}
+
+// ============== 语义基线构建（审计 A-12 / A-15） ==============
+// 从 full-extract 结果中抽取「语义基线」：只保留主题语义所需的最小集合
+// （root 变量 / 分类变量 / 关键色板 / 数据质量），体积远小于 full-extract 的
+// DOM 全量快照，专供 analyze-structure-compare 等下游直接加载与跨版本比对。
+// 亮/暗/neutral 三方案各自独立成节（A-15 双基线缓存），任一方案缺失则置 null。
+function buildSemanticBaseline(agentName, result) {
+  const scheme = (name) => {
+    const cat = result.categories[name];
+    if (!result.rootVariables[name] && !cat) return null;
+    return {
+      rootVariables: result.rootVariables[name] ?? {},
+      categories: cat ?? {},
+      colorPalette: result.colorPalette[name] ?? [],
+    };
+  };
+  return {
+    meta: {
+      agent: agentName,
+      extractedAt: result.meta.extractedAt,
+      generatedBy: 'cdp-full-extract.mjs',
+      dataQuality: {
+        failedSchemes: result.meta.dataQuality.failedSchemes ?? [],
+        domDegraded: result.meta.dataQuality.domDegraded ?? false,
+        truncated: result.meta.dataQuality.truncated ?? null,
+        multiFrame: result.meta.dataQuality.multiFrame ?? false,
+        apiPolluted: result.meta.dataQuality.apiPolluted ?? [],
+      },
+    },
+    schemes: {
+      neutral: scheme('neutral'),
+      dark: scheme('dark'),
+      light: scheme('light'),
+    },
+  };
 }
 
 // ============== 入口 ==============
@@ -1100,7 +1456,10 @@ async function main() {
   console.log(`汇总: ${join(resolvedOut, '_extract-summary.json')}`);
 }
 
-main().catch((e) => {
-  console.error('Fatal:', e);
-  process.exit(1);
-});
+// 仅在作为 CLI 直接执行时运行（import 本模块用于单测/复用时不产生副作用）。
+if (import.meta.main) {
+  main().catch((e) => {
+    console.error('Fatal:', e);
+    process.exit(1);
+  });
+}

@@ -15,6 +15,7 @@ import {
   buildStyleSamplingSnippet,
   SESSION_DISABLED_KEY,
 } from './renderer-payload.mjs';
+import { DIAGNOSTICS_KILL_SWITCH } from './diagnostics-kill-switch.mjs';
 
 const adapter = { id: 'traework' };
 
@@ -55,6 +56,41 @@ describe('buildStyleSamplingSnippet', () => {
     expect(snippet).toContain('getComputedStyle');
     expect(snippet).toContain("document.getElementById('agentskin-theme-style-' + appId)");
     expect(snippet).toContain('root');
+  });
+
+  it('embeds per-Agent sampling opts with default minRatio 0.85 (A-02)', () => {
+    const snippet = buildStyleSamplingSnippet({ id: 'zcode' });
+    expect(snippet).toContain('"minRatio":0.85');
+    expect(snippet).toContain('"tolerance":0.08');
+  });
+
+  it('drops composer probe when the anchor is itself nonControlled and has no shell (A-03)', () => {
+    // zcode composer = 可编辑输入框（无 controllingSelector），锚点在 nonControlled 内 →
+    // 不再采样该非受控节点，避免漂移误报。
+    const snippet = buildStyleSamplingSnippet({ id: 'zcode' });
+    expect(snippet).not.toContain('"name":"composer"');
+  });
+
+  it('keeps and prefers the controlling shell for codex composer (A-03)', () => {
+    // codex composer 有独立受控壳体 .composer-surface-chrome → 保留采样并优先采样它。
+    const snippet = buildStyleSamplingSnippet({ id: 'codex' });
+    expect(snippet).toContain('"controllingSelector":".composer-surface-chrome"');
+    expect(snippet).toContain('"name":"composer"');
+  });
+
+  it('yields a neutral pass when the agent diagnostic is kill-switched (A-18)', () => {
+    // 临时写入门控，验证特异性关闭路径；测试末尾还原。
+    DIAGNOSTICS_KILL_SWITCH.zcode = { styleSampling: true };
+    try {
+      const snippet = buildStyleSamplingSnippet({ id: 'zcode' });
+      expect(snippet).toContain("reason: 'diagnostics-kill-switched'");
+      expect(snippet).toContain('pass: true');
+      // 不再触发真实采样/比对逻辑（不内嵌 assessStyleCompliance / 真实 probe）
+      expect(snippet).not.toContain('assessStyleCompliance');
+      expect(snippet).not.toContain('"name":"composer"');
+    } finally {
+      delete DIAGNOSTICS_KILL_SWITCH.zcode;
+    }
   });
 });
 

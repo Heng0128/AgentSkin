@@ -33,6 +33,7 @@
     "generate:theme-css": "node scripts/generate-theme-css.mjs",
     "generate:themes": "npm run generate:palette && npm run generate:theme-css",
     "analyze:structure": "node scripts/analyze-structure-compare.mjs",
+    "regression": "node scripts/regression-runner.mjs",
     "prepare": "husky"
   },
   "lint-staged": {

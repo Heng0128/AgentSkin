@@ -86,6 +86,15 @@ export const SELECTOR_REGISTRIES = {
 			],
 			required: false,
 			description: "用户消息输入区域",
+			semantic: {
+				controlled: true,
+				// 输入框/按钮等内层控件不随主题强制着色；容器外壳仍由主题控制。
+				innerInputNonControlled: true,
+				innerInputSelector: "[contenteditable='true'], textarea",
+				innerButtonNonControlled: true,
+				innerButtonSelector: "button, [role='button']",
+				nonControlled: ["[contenteditable='true']", "textarea", "button", "[role='button']"],
+			},
 		},
 		toolbar: {
 			selectors: [
@@ -185,6 +194,14 @@ export const SELECTOR_REGISTRIES = {
 			],
 			required: false,
 			description: "用户输入区域",
+			semantic: {
+				controlled: true,
+				innerInputNonControlled: true,
+				innerInputSelector: "[contenteditable='true'], textarea",
+				innerButtonNonControlled: true,
+				innerButtonSelector: "button, [role='button']",
+				nonControlled: ["[contenteditable='true']", "textarea", "button", "[role='button']"],
+			},
 		},
 	},
 	qoderwork: {
@@ -226,6 +243,14 @@ export const SELECTOR_REGISTRIES = {
 			],
 			required: false,
 			description: "可编辑输入区域",
+			semantic: {
+				controlled: true,
+				innerInputNonControlled: true,
+				innerInputSelector: "[contenteditable='true'], textarea",
+				innerButtonNonControlled: true,
+				innerButtonSelector: "button, [role='button']",
+				nonControlled: ["[contenteditable='true']", "textarea", "button", "[role='button']"],
+			},
 		},
 	},
 	traework: {
@@ -316,6 +341,14 @@ export const SELECTOR_REGISTRIES = {
 			],
 			required: false,
 			description: "用户输入区域",
+			semantic: {
+				controlled: true,
+				innerInputNonControlled: true,
+				innerInputSelector: "[contenteditable='true'], textarea",
+				innerButtonNonControlled: true,
+				innerButtonSelector: "button, [role='button']",
+				nonControlled: ["[contenteditable='true']", "textarea", "button", "[role='button']"],
+			},
 		},
 		workspace: {
 			selectors: [

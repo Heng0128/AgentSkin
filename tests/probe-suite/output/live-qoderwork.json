@@ -1,0 +1,2926 @@
+{
+  "agentId": "qoderwork",
+  "timestamp": "2026-08-17T06:10:11.108Z",
+  "status": "PROBE_COMPLETE",
+  "config": {
+    "port": 53137,
+    "hostSelector": "html.agentskin-host-qoderwork",
+    "tokenNamespaces": [
+      "--vscode-",
+      "--color-"
+    ],
+    "description": "Qoder IDE"
+  },
+  "cdp": {
+    "connected": true,
+    "browser": "Chrome/130.0.6723.191",
+    "protocolVersion": "1.3",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) QoderWorkCN/0.9.12 Chrome/130.0.6723.191 Electron/33.4.5 Safari/537.36",
+    "wsUrl": "ws://127.0.0.1:53137/devtools/browser/982bbfb8-6138-4487-85b5-b67613ff8de8",
+    "targetPage": {
+      "id": "B77FDF47C029F932F850E432976322FF",
+      "title": "QoderWork",
+      "url": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/index.html#windowId=main",
+      "type": "page"
+    },
+    "sessionEstablished": true
+  },
+  "runtime": {
+    "features": {
+      "hasMatchMedia": true,
+      "prefersDark": true,
+      "hasConstructor": true,
+      "adoptedSheetsAvailable": true,
+      "currentAdoptedSheets": 5,
+      "hasQuerySelector": true,
+      "hasGetComputedStyle": true,
+      "hasCustomElements": true,
+      "hasShadowRoot": true,
+      "mutationObserver": true,
+      "cssSupports": true,
+      "viewport": {
+        "w": 1440,
+        "h": 912
+      },
+      "devicePixelRatio": 1.5,
+      "colorScheme": "light"
+    },
+    "cssVariables": {
+      "variables": {
+        "--loading-bg": {
+          "source": "inline",
+          "value": "#ffffff",
+          "selector": ":root, :root[data-theme=\"light\"]",
+          "computed": "#09090b"
+        },
+        "--loading-text": {
+          "source": "inline",
+          "value": "#09090b",
+          "selector": ":root, :root[data-theme=\"light\"]",
+          "computed": "#fafafa"
+        },
+        "--loading-logo": {
+          "source": "inline",
+          "value": "#a1a1aa",
+          "selector": ":root, :root[data-theme=\"light\"]",
+          "computed": "#71717a"
+        },
+        "--tw-translate-x": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0"
+        },
+        "--tw-translate-y": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0"
+        },
+        "--tw-translate-z": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0"
+        },
+        "--tw-scale-x": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "1",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "1"
+        },
+        "--tw-scale-y": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "1",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "1"
+        },
+        "--tw-scale-z": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "1",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "1"
+        },
+        "--tw-rotate-x": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-rotate-y": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-rotate-z": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-skew-x": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-skew-y": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-scroll-snap-strictness": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "proximity",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "proximity"
+        },
+        "--tw-space-y-reverse": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0"
+        },
+        "--tw-space-x-reverse": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0"
+        },
+        "--tw-divide-x-reverse": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0"
+        },
+        "--tw-border-style": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "solid",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "solid"
+        },
+        "--tw-divide-y-reverse": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0"
+        },
+        "--tw-gradient-position": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-gradient-from": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "#0000",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "rgba(0, 0, 0, 0)"
+        },
+        "--tw-gradient-via": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "#0000",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "rgba(0, 0, 0, 0)"
+        },
+        "--tw-gradient-to": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "#0000",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "rgba(0, 0, 0, 0)"
+        },
+        "--tw-gradient-stops": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-gradient-via-stops": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-gradient-from-position": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0%",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0%"
+        },
+        "--tw-gradient-via-position": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "50%",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "50%"
+        },
+        "--tw-gradient-to-position": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "100%",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "100%"
+        },
+        "--tw-leading": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-font-weight": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-tracking": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-ordinal": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-slashed-zero": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-numeric-figure": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-numeric-spacing": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-numeric-fraction": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-shadow": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0 0 #0000",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0 0 #0000"
+        },
+        "--tw-shadow-color": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-shadow-alpha": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "100%",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "100%"
+        },
+        "--tw-inset-shadow": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0 0 #0000",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0 0 #0000"
+        },
+        "--tw-inset-shadow-color": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-inset-shadow-alpha": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "100%",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "100%"
+        },
+        "--tw-ring-color": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-ring-shadow": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0 0 #0000",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0 0 #0000"
+        },
+        "--tw-inset-ring-color": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-inset-ring-shadow": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0 0 #0000",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0 0 #0000"
+        },
+        "--tw-ring-inset": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-ring-offset-width": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0px",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0px"
+        },
+        "--tw-ring-offset-color": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "#fff",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "#fff"
+        },
+        "--tw-ring-offset-shadow": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "0 0 #0000",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "0 0 #0000"
+        },
+        "--tw-outline-style": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "solid",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "solid"
+        },
+        "--tw-blur": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-brightness": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-contrast": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-grayscale": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-hue-rotate": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-invert": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-opacity": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-saturate": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-sepia": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-drop-shadow": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-drop-shadow-color": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-drop-shadow-alpha": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "100%",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "100%"
+        },
+        "--tw-drop-shadow-size": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-backdrop-blur": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-backdrop-brightness": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-backdrop-contrast": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-backdrop-grayscale": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-backdrop-hue-rotate": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-backdrop-invert": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-backdrop-opacity": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-backdrop-saturate": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-backdrop-sepia": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-duration": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-ease": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "initial",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": ""
+        },
+        "--tw-content": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>>",
+          "value": "\"\"",
+          "selector": "*, ::before, ::after, ::backdrop",
+          "computed": "\"\""
+        },
+        "--font-sans": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "ui-sans-serif,system-ui,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\",\"Segoe UI Symbol\",\"Noto Color Emoji\"",
+          "selector": ":root, :host",
+          "computed": "ui-sans-serif,system-ui,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\",\"Segoe UI Symbol\",\"Noto Color Emoji\""
+        },
+        "--font-mono": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,\"Liberation Mono\",\"Courier New\",monospace",
+          "selector": ":root, :host",
+          "computed": "ui-monospace,\"Cascadia Code\",\"SF Mono\",Menlo,Consolas,\"Microsoft YaHei UI\",monospace"
+        },
+        "--color-red-50": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(97.1% .013 17.38)",
+          "selector": ":root, :host",
+          "computed": "oklch(97.1% .013 17.38)"
+        },
+        "--color-red-100": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(93.6% .032 17.717)",
+          "selector": ":root, :host",
+          "computed": "oklch(93.6% .032 17.717)"
+        },
+        "--color-red-200": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(88.5% .062 18.334)",
+          "selector": ":root, :host",
+          "computed": "oklch(88.5% .062 18.334)"
+        },
+        "--color-red-300": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(80.8% .114 19.571)",
+          "selector": ":root, :host",
+          "computed": "oklch(80.8% .114 19.571)"
+        },
+        "--color-red-400": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(70.4% .191 22.216)",
+          "selector": ":root, :host",
+          "computed": "oklch(70.4% .191 22.216)"
+        },
+        "--color-red-500": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(63.7% .237 25.331)",
+          "selector": ":root, :host",
+          "computed": "oklch(63.7% .237 25.331)"
+        },
+        "--color-red-600": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(57.7% .245 27.325)",
+          "selector": ":root, :host",
+          "computed": "oklch(57.7% .245 27.325)"
+        },
+        "--color-red-700": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(50.5% .213 27.518)",
+          "selector": ":root, :host",
+          "computed": "oklch(50.5% .213 27.518)"
+        },
+        "--color-red-800": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(44.4% .177 26.899)",
+          "selector": ":root, :host",
+          "computed": "oklch(44.4% .177 26.899)"
+        },
+        "--color-red-900": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(39.6% .141 25.723)",
+          "selector": ":root, :host",
+          "computed": "oklch(39.6% .141 25.723)"
+        },
+        "--color-red-950": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(25.8% .092 26.042)",
+          "selector": ":root, :host",
+          "computed": "oklch(25.8% .092 26.042)"
+        },
+        "--color-orange-500": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(70.5% .213 47.604)",
+          "selector": ":root, :host",
+          "computed": "oklch(70.5% .213 47.604)"
+        },
+        "--color-orange-600": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(64.6% .222 41.116)",
+          "selector": ":root, :host",
+          "computed": "oklch(64.6% .222 41.116)"
+        },
+        "--color-amber-50": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(98.7% .022 95.277)",
+          "selector": ":root, :host",
+          "computed": "oklch(98.7% .022 95.277)"
+        },
+        "--color-amber-300": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(87.9% .169 91.605)",
+          "selector": ":root, :host",
+          "computed": "oklch(87.9% .169 91.605)"
+        },
+        "--color-amber-500": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(76.9% .188 70.08)",
+          "selector": ":root, :host",
+          "computed": "oklch(76.9% .188 70.08)"
+        },
+        "--color-amber-600": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(66.6% .179 58.318)",
+          "selector": ":root, :host",
+          "computed": "oklch(66.6% .179 58.318)"
+        },
+        "--color-amber-700": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(55.5% .163 48.998)",
+          "selector": ":root, :host",
+          "computed": "oklch(55.5% .163 48.998)"
+        },
+        "--color-amber-950": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(27.9% .077 45.635)",
+          "selector": ":root, :host",
+          "computed": "oklch(27.9% .077 45.635)"
+        },
+        "--color-yellow-500": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(79.5% .184 86.047)",
+          "selector": ":root, :host",
+          "computed": "oklch(79.5% .184 86.047)"
+        },
+        "--color-yellow-600": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(68.1% .162 75.834)",
+          "selector": ":root, :host",
+          "computed": "oklch(68.1% .162 75.834)"
+        },
+        "--color-green-50": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(98.2% .018 155.826)",
+          "selector": ":root, :host",
+          "computed": "oklch(98.2% .018 155.826)"
+        },
+        "--color-green-100": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(96.2% .044 156.743)",
+          "selector": ":root, :host",
+          "computed": "oklch(96.2% .044 156.743)"
+        },
+        "--color-green-300": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(87.1% .15 154.449)",
+          "selector": ":root, :host",
+          "computed": "oklch(87.1% .15 154.449)"
+        },
+        "--color-green-400": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(79.2% .209 151.711)",
+          "selector": ":root, :host",
+          "computed": "oklch(79.2% .209 151.711)"
+        },
+        "--color-green-500": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(72.3% .219 149.579)",
+          "selector": ":root, :host",
+          "computed": "oklch(72.3% .219 149.579)"
+        },
+        "--color-green-600": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(62.7% .194 149.214)",
+          "selector": ":root, :host",
+          "computed": "oklch(62.7% .194 149.214)"
+        },
+        "--color-green-700": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(52.7% .154 150.069)",
+          "selector": ":root, :host",
+          "computed": "oklch(52.7% .154 150.069)"
+        },
+        "--color-green-900": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(39.3% .095 152.535)",
+          "selector": ":root, :host",
+          "computed": "oklch(39.3% .095 152.535)"
+        },
+        "--color-green-950": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(26.6% .065 152.934)",
+          "selector": ":root, :host",
+          "computed": "oklch(26.6% .065 152.934)"
+        },
+        "--color-blue-100": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(93.2% .032 255.585)",
+          "selector": ":root, :host",
+          "computed": "oklch(93.2% .032 255.585)"
+        },
+        "--color-blue-400": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(70.7% .165 254.624)",
+          "selector": ":root, :host",
+          "computed": "oklch(70.7% .165 254.624)"
+        },
+        "--color-blue-600": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(54.6% .245 262.881)",
+          "selector": ":root, :host",
+          "computed": "oklch(54.6% .245 262.881)"
+        },
+        "--color-blue-700": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(48.8% .243 264.376)",
+          "selector": ":root, :host",
+          "computed": "oklch(48.8% .243 264.376)"
+        },
+        "--color-blue-900": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(37.9% .146 265.522)",
+          "selector": ":root, :host",
+          "computed": "oklch(37.9% .146 265.522)"
+        },
+        "--color-gray-100": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(96.7% .003 264.542)",
+          "selector": ":root, :host",
+          "computed": "oklch(96.7% .003 264.542)"
+        },
+        "--color-gray-400": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(70.7% .022 261.325)",
+          "selector": ":root, :host",
+          "computed": "oklch(70.7% .022 261.325)"
+        },
+        "--color-gray-600": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(44.6% .03 256.802)",
+          "selector": ":root, :host",
+          "computed": "oklch(44.6% .03 256.802)"
+        },
+        "--color-gray-800": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(27.8% .033 256.848)",
+          "selector": ":root, :host",
+          "computed": "oklch(27.8% .033 256.848)"
+        },
+        "--color-neutral-100": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(97% 0 0)",
+          "selector": ":root, :host",
+          "computed": "oklch(97% 0 0)"
+        },
+        "--color-neutral-200": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(92.2% 0 0)",
+          "selector": ":root, :host",
+          "computed": "oklch(92.2% 0 0)"
+        },
+        "--color-neutral-300": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(87% 0 0)",
+          "selector": ":root, :host",
+          "computed": "oklch(87% 0 0)"
+        },
+        "--color-neutral-500": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(55.6% 0 0)",
+          "selector": ":root, :host",
+          "computed": "oklch(55.6% 0 0)"
+        },
+        "--color-neutral-600": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(43.9% 0 0)",
+          "selector": ":root, :host",
+          "computed": "oklch(43.9% 0 0)"
+        },
+        "--color-neutral-700": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(37.1% 0 0)",
+          "selector": ":root, :host",
+          "computed": "oklch(37.1% 0 0)"
+        },
+        "--color-neutral-800": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(26.9% 0 0)",
+          "selector": ":root, :host",
+          "computed": "oklch(26.9% 0 0)"
+        },
+        "--color-neutral-900": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "oklch(20.5% 0 0)",
+          "selector": ":root, :host",
+          "computed": "oklch(20.5% 0 0)"
+        },
+        "--color-black": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "#000",
+          "selector": ":root, :host",
+          "computed": "#000"
+        },
+        "--color-white": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "#fff",
+          "selector": ":root, :host",
+          "computed": "#fff"
+        },
+        "--spacing": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": ".25rem",
+          "selector": ":root, :host",
+          "computed": ".25rem"
+        },
+        "--container-xs": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "20rem",
+          "selector": ":root, :host",
+          "computed": "20rem"
+        },
+        "--container-sm": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "24rem",
+          "selector": ":root, :host",
+          "computed": "24rem"
+        },
+        "--container-md": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "28rem",
+          "selector": ":root, :host",
+          "computed": "28rem"
+        },
+        "--container-lg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "32rem",
+          "selector": ":root, :host",
+          "computed": "32rem"
+        },
+        "--container-xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "36rem",
+          "selector": ":root, :host",
+          "computed": "36rem"
+        },
+        "--container-2xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "42rem",
+          "selector": ":root, :host",
+          "computed": "42rem"
+        },
+        "--container-3xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "48rem",
+          "selector": ":root, :host",
+          "computed": "48rem"
+        },
+        "--container-4xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "56rem",
+          "selector": ":root, :host",
+          "computed": "56rem"
+        },
+        "--container-5xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "64rem",
+          "selector": ":root, :host",
+          "computed": "64rem"
+        },
+        "--text-xs": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": ".75rem",
+          "selector": ":root, :host",
+          "computed": ".75rem"
+        },
+        "--text-xs--line-height": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "calc(1/.75)",
+          "selector": ":root, :host",
+          "computed": "calc(1/.75)"
+        },
+        "--text-sm": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": ".875rem",
+          "selector": ":root, :host",
+          "computed": ".875rem"
+        },
+        "--text-sm--line-height": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "calc(1.25/.875)",
+          "selector": ":root, :host",
+          "computed": "calc(1.25/.875)"
+        },
+        "--text-base": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1rem",
+          "selector": ":root, :host",
+          "computed": "1rem"
+        },
+        "--text-base--line-height": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1.5",
+          "selector": ":root, :host",
+          "computed": "1.5"
+        },
+        "--text-lg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1.125rem",
+          "selector": ":root, :host",
+          "computed": "1.125rem"
+        },
+        "--text-lg--line-height": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "calc(1.75/1.125)",
+          "selector": ":root, :host",
+          "computed": "calc(1.75/1.125)"
+        },
+        "--text-xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1.25rem",
+          "selector": ":root, :host",
+          "computed": "1.25rem"
+        },
+        "--text-xl--line-height": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "calc(1.75/1.25)",
+          "selector": ":root, :host",
+          "computed": "calc(1.75/1.25)"
+        },
+        "--text-2xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1.5rem",
+          "selector": ":root, :host",
+          "computed": "1.5rem"
+        },
+        "--text-2xl--line-height": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "calc(2/1.5)",
+          "selector": ":root, :host",
+          "computed": "calc(2/1.5)"
+        },
+        "--text-3xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1.875rem",
+          "selector": ":root, :host",
+          "computed": "1.875rem"
+        },
+        "--text-3xl--line-height": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1.2",
+          "selector": ":root, :host",
+          "computed": "1.2"
+        },
+        "--font-weight-light": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "300",
+          "selector": ":root, :host",
+          "computed": "300"
+        },
+        "--font-weight-normal": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "400",
+          "selector": ":root, :host",
+          "computed": "400"
+        },
+        "--font-weight-medium": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "500",
+          "selector": ":root, :host",
+          "computed": "500"
+        },
+        "--font-weight-semibold": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "600",
+          "selector": ":root, :host",
+          "computed": "600"
+        },
+        "--font-weight-bold": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "700",
+          "selector": ":root, :host",
+          "computed": "700"
+        },
+        "--tracking-tight": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "-.025em",
+          "selector": ":root, :host",
+          "computed": "-.025em"
+        },
+        "--tracking-normal": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "0em",
+          "selector": ":root, :host",
+          "computed": "0em"
+        },
+        "--tracking-wide": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": ".025em",
+          "selector": ":root, :host",
+          "computed": ".025em"
+        },
+        "--tracking-wider": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": ".05em",
+          "selector": ":root, :host",
+          "computed": ".05em"
+        },
+        "--tracking-widest": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": ".1em",
+          "selector": ":root, :host",
+          "computed": ".1em"
+        },
+        "--leading-tight": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1.25",
+          "selector": ":root, :host",
+          "computed": "1.25"
+        },
+        "--leading-snug": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1.375",
+          "selector": ":root, :host",
+          "computed": "1.375"
+        },
+        "--leading-relaxed": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1.625",
+          "selector": ":root, :host",
+          "computed": "1.625"
+        },
+        "--radius-sm": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "calc(var(--radius) - 4px)",
+          "selector": ":root, :host",
+          "computed": "calc(.5rem - 4px)"
+        },
+        "--radius-md": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "calc(var(--radius) - 2px)",
+          "selector": ":root, :host",
+          "computed": "calc(.5rem - 2px)"
+        },
+        "--radius-lg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--radius)",
+          "selector": ":root, :host",
+          "computed": ".5rem"
+        },
+        "--radius-xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": ".75rem",
+          "selector": ":root, :host",
+          "computed": ".75rem"
+        },
+        "--radius-2xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "1rem",
+          "selector": ":root, :host",
+          "computed": "1rem"
+        },
+        "--drop-shadow-lg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "0 4px 4px #00000026",
+          "selector": ":root, :host",
+          "computed": "0 4px 4px #00000026"
+        },
+        "--ease-in": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "cubic-bezier(.4,0,1,1)",
+          "selector": ":root, :host",
+          "computed": "cubic-bezier(.4,0,1,1)"
+        },
+        "--ease-out": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "cubic-bezier(0,0,.2,1)",
+          "selector": ":root, :host",
+          "computed": "cubic-bezier(0,0,.2,1)"
+        },
+        "--ease-in-out": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "cubic-bezier(.4,0,.2,1)",
+          "selector": ":root, :host",
+          "computed": "cubic-bezier(.4,0,.2,1)"
+        },
+        "--animate-spin": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "spin 1s linear infinite",
+          "selector": ":root, :host",
+          "computed": "spin 1s linear infinite"
+        },
+        "--animate-pulse": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "pulse 2s cubic-bezier(.4,0,.6,1)infinite",
+          "selector": ":root, :host",
+          "computed": "pulse 2s cubic-bezier(.4,0,.6,1)infinite"
+        },
+        "--blur-sm": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "8px",
+          "selector": ":root, :host",
+          "computed": "8px"
+        },
+        "--blur-md": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "12px",
+          "selector": ":root, :host",
+          "computed": "12px"
+        },
+        "--blur-xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "24px",
+          "selector": ":root, :host",
+          "computed": "24px"
+        },
+        "--aspect-video": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "16/9",
+          "selector": ":root, :host",
+          "computed": "16/9"
+        },
+        "--default-transition-duration": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": ".15s",
+          "selector": ":root, :host",
+          "computed": ".15s"
+        },
+        "--default-transition-timing-function": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "cubic-bezier(.4,0,.2,1)",
+          "selector": ":root, :host",
+          "computed": "cubic-bezier(.4,0,.2,1)"
+        },
+        "--default-font-family": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--font-sans)",
+          "selector": ":root, :host",
+          "computed": "ui-sans-serif,system-ui,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\",\"Segoe UI Symbol\",\"Noto Color Emoji\""
+        },
+        "--default-mono-font-family": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--font-mono)",
+          "selector": ":root, :host",
+          "computed": "ui-monospace,\"Cascadia Code\",\"SF Mono\",Menlo,Consolas,\"Microsoft YaHei UI\",monospace"
+        },
+        "--color-primary-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-primary-bg-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-bg-hover)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-primary-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-border)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.35)"
+        },
+        "--color-primary-border-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-border-hover)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.55)"
+        },
+        "--color-primary-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-hover)",
+          "selector": ":root, :host",
+          "computed": "rgb(146, 181, 199)"
+        },
+        "--color-primary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary)",
+          "selector": ":root, :host",
+          "computed": "#7fa8bd"
+        },
+        "--color-primary-active": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-active)",
+          "selector": ":root, :host",
+          "computed": "rgb(159, 190, 206)"
+        },
+        "--color-primary-text-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-text-hover)",
+          "selector": ":root, :host",
+          "computed": "rgb(146, 181, 199)"
+        },
+        "--color-primary-text": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-text)",
+          "selector": ":root, :host",
+          "computed": "#d8dee9"
+        },
+        "--color-primary-text-active": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-text-active)",
+          "selector": ":root, :host",
+          "computed": "rgb(159, 190, 206)"
+        },
+        "--color-text": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text)",
+          "selector": ":root, :host",
+          "computed": "#d8dee9"
+        },
+        "--color-text-secondary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text-secondary)",
+          "selector": ":root, :host",
+          "computed": "#7a8a99"
+        },
+        "--color-text-tertiary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text-tertiary)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.55)"
+        },
+        "--color-text-quaternary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text-quaternary)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.4)"
+        },
+        "--color-text-on-primary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text-on-primary)",
+          "selector": ":root, :host",
+          "computed": "rgb(2, 3, 4)"
+        },
+        "--color-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-border)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.18)"
+        },
+        "--color-border-secondary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-border-secondary)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.108)"
+        },
+        "--color-border-tertiary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-border-tertiary)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.063)"
+        },
+        "--color-fill": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-fill)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.16)"
+        },
+        "--color-fill-secondary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-fill-secondary)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.1)"
+        },
+        "--color-fill-tertiary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-fill-tertiary)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.06)"
+        },
+        "--color-fill-quaternary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-fill-quaternary)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.03)"
+        },
+        "--color-fill-disable": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-fill-disable)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.08)"
+        },
+        "--color-bg-container": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-container)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-bg-elevated": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-elevated)",
+          "selector": ":root, :host",
+          "computed": "color-mix(in srgb, #1e2830 85%, #7fa8bd 15%)"
+        },
+        "--color-bg-layout": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-layout)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-bg-spotlight": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-spotlight)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-bg-mask": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-mask)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-bg-base": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-base)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-text-base": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text-base)",
+          "selector": ":root, :host",
+          "computed": "#d8dee9"
+        },
+        "--color-bg-highlight": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-highlight)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-bg-highlight-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-highlight-hover)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-white-opacity": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-white-opacity)",
+          "selector": ":root, :host",
+          "computed": "#fff"
+        },
+        "--color-black-opacity": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-black-opacity)",
+          "selector": ":root, :host",
+          "computed": "#000"
+        },
+        "--color-link": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-link)",
+          "selector": ":root, :host",
+          "computed": "#7fa8bd"
+        },
+        "--color-error": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-error)",
+          "selector": ":root, :host",
+          "computed": "#ff4d4f"
+        },
+        "--color-error-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-error-hover)",
+          "selector": ":root, :host",
+          "computed": "#ff7875"
+        },
+        "--color-error-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-error-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-error-bg-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-error-bg-hover)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-error-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-error-border)",
+          "selector": ":root, :host",
+          "computed": "rgba(255, 77, 79, 0.35)"
+        },
+        "--color-error-border-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-error-border-hover)",
+          "selector": ":root, :host",
+          "computed": "rgba(255, 77, 79, 0.55)"
+        },
+        "--color-info": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-info)",
+          "selector": ":root, :host",
+          "computed": "#0b83f1"
+        },
+        "--color-info-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-info-hover)",
+          "selector": ":root, :host",
+          "computed": "#5ebcff"
+        },
+        "--color-info-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-info-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-info-bg-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-info-bg-hover)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-info-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-info-border)",
+          "selector": ":root, :host",
+          "computed": "rgba(11, 131, 241, 0.35)"
+        },
+        "--color-info-border-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-info-border-hover)",
+          "selector": ":root, :host",
+          "computed": "rgba(11, 131, 241, 0.55)"
+        },
+        "--color-success": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-success)",
+          "selector": ":root, :host",
+          "computed": "#7fa8bd"
+        },
+        "--color-success-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-success-hover)",
+          "selector": ":root, :host",
+          "computed": "rgb(146, 181, 199)"
+        },
+        "--color-success-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-success-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-success-bg-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-success-bg-hover)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-success-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-success-border)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.35)"
+        },
+        "--color-success-border-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-success-border-hover)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.55)"
+        },
+        "--color-warning": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-warning)",
+          "selector": ":root, :host",
+          "computed": "#faad14"
+        },
+        "--color-warning-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-warning-hover)",
+          "selector": ":root, :host",
+          "computed": "#ffd666"
+        },
+        "--color-warning-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-warning-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-warning-bg-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-warning-bg-hover)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-warning-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-warning-border)",
+          "selector": ":root, :host",
+          "computed": "rgba(250, 173, 20, 0.35)"
+        },
+        "--color-warning-border-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-warning-border-hover)",
+          "selector": ":root, :host",
+          "computed": "rgba(250, 173, 20, 0.55)"
+        },
+        "--color-diff-insert": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-diff-insert)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.7)"
+        },
+        "--color-diff-insert-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-diff-insert-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-diff-remove": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-diff-remove)",
+          "selector": ":root, :host",
+          "computed": "#fc6b83"
+        },
+        "--color-diff-remove-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-diff-remove-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-pink": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-pink)",
+          "selector": ":root, :host",
+          "computed": "#9fb8c4"
+        },
+        "--color-pink-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-pink-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-pink-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-pink-hover)",
+          "selector": ":root, :host",
+          "computed": "rgb(178, 198, 208)"
+        },
+        "--color-purple": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-purple)",
+          "selector": ":root, :host",
+          "computed": "rgb(102, 134, 151)"
+        },
+        "--color-purple-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-purple-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-purple-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-purple-hover)",
+          "selector": ":root, :host",
+          "computed": "rgb(153, 185, 202)"
+        },
+        "--color-yellow": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-yellow)",
+          "selector": ":root, :host",
+          "computed": "#fac414"
+        },
+        "--color-yellow-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-yellow-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-yellow-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-yellow-hover)",
+          "selector": ":root, :host",
+          "computed": "#f1d372"
+        },
+        "--color-orange": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-orange)",
+          "selector": ":root, :host",
+          "computed": "#fa8125"
+        },
+        "--color-orange-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-orange-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-orange-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-orange-hover)",
+          "selector": ":root, :host",
+          "computed": "#e88c45"
+        },
+        "--color-teal": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-teal)",
+          "selector": ":root, :host",
+          "computed": "rgb(114, 151, 170)"
+        },
+        "--color-teal-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-teal-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-teal-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-teal-hover)",
+          "selector": ":root, :host",
+          "computed": "rgb(146, 181, 199)"
+        },
+        "--color-blue": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-blue)",
+          "selector": ":root, :host",
+          "computed": "#0090ff"
+        },
+        "--color-blue-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-blue-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-blue-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-blue-hover)",
+          "selector": ":root, :host",
+          "computed": "#72bcf5"
+        },
+        "--color-mauve": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-mauve)",
+          "selector": ":root, :host",
+          "computed": "rgba(122, 138, 153, 0.7)"
+        },
+        "--color-mauve-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-mauve-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-mauve-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-mauve-hover)",
+          "selector": ":root, :host",
+          "computed": "rgba(122, 138, 153, 0.4)"
+        },
+        "--color-slate": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-slate)",
+          "selector": ":root, :host",
+          "computed": "#94a3b8"
+        },
+        "--color-slate-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-slate-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-slate-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-slate-hover)",
+          "selector": ":root, :host",
+          "computed": "#cbd5e1"
+        },
+        "--color-lavender": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-lavender)",
+          "selector": ":root, :host",
+          "computed": "rgb(188, 205, 214)"
+        },
+        "--color-lavender-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-lavender-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-lavender-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-lavender-hover)",
+          "selector": ":root, :host",
+          "computed": "rgb(207, 220, 226)"
+        },
+        "--color-sage": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-sage)",
+          "selector": ":root, :host",
+          "computed": "rgb(108, 143, 161)"
+        },
+        "--color-sage-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-sage-bg)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-sage-hover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-sage-hover)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.12)"
+        },
+        "--color-shadow-2xs": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-shadow-2xs)",
+          "selector": ":root, :host",
+          "computed": "rgba(0, 0, 0, 0.03)"
+        },
+        "--color-shadow-xs": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-shadow-xs)",
+          "selector": ":root, :host",
+          "computed": "rgba(0, 0, 0, 0.04)"
+        },
+        "--color-shadow-sm": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-shadow-sm)",
+          "selector": ":root, :host",
+          "computed": "rgba(0, 0, 0, 0.06)"
+        },
+        "--color-shadow-md": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-shadow-md)",
+          "selector": ":root, :host",
+          "computed": "rgba(0, 0, 0, 0.08)"
+        },
+        "--color-shadow-lg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-shadow-lg)",
+          "selector": ":root, :host",
+          "computed": "rgba(0, 0, 0, 0.1)"
+        },
+        "--color-shadow-xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-shadow-xl)",
+          "selector": ":root, :host",
+          "computed": "rgba(0, 0, 0, 0.12)"
+        },
+        "--color-shadow-2xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-shadow-2xl)",
+          "selector": ":root, :host",
+          "computed": "rgba(0, 0, 0, 0.16)"
+        },
+        "--color-shadow-3xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-shadow-3xl)",
+          "selector": ":root, :host",
+          "computed": "rgba(0, 0, 0, 0.3)"
+        },
+        "--color-shadow-scrim": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-shadow-scrim)",
+          "selector": ":root, :host",
+          "computed": "rgba(0, 0, 0, 0.55)"
+        },
+        "--color-highlight-xs": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-highlight-xs)",
+          "selector": ":root, :host",
+          "computed": "rgba(255, 255, 255, 0.15)"
+        },
+        "--color-highlight-sm": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-highlight-sm)",
+          "selector": ":root, :host",
+          "computed": "rgba(255, 255, 255, 0.18)"
+        },
+        "--color-highlight-md": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-highlight-md)",
+          "selector": ":root, :host",
+          "computed": "rgba(255, 255, 255, 0.22)"
+        },
+        "--color-highlight-lg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-highlight-lg)",
+          "selector": ":root, :host",
+          "computed": "rgba(255, 255, 255, 0.35)"
+        },
+        "--color-highlight-xl": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-highlight-xl)",
+          "selector": ":root, :host",
+          "computed": "rgba(255, 255, 255, 0.4)"
+        },
+        "--color-background": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-container)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-foreground": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text)",
+          "selector": ":root, :host",
+          "computed": "#d8dee9"
+        },
+        "--color-input": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-border-tertiary)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.063)"
+        },
+        "--color-ring": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary-border)",
+          "selector": ":root, :host",
+          "computed": "rgba(127, 168, 189, 0.35)"
+        },
+        "--color-card": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-container)",
+          "selector": ":root, :host",
+          "computed": "transparent"
+        },
+        "--color-popover": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-bg-container)",
+          "selector": ":root, :host",
+          "computed": "#1e2830"
+        },
+        "--color-popover-foreground": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text)",
+          "selector": ":root, :host",
+          "computed": "#d8dee9"
+        },
+        "--color-primary-foreground": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text-on-primary)",
+          "selector": ":root, :host",
+          "computed": "rgb(2, 3, 4)"
+        },
+        "--color-secondary": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-fill-secondary)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.1)"
+        },
+        "--color-secondary-foreground": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text)",
+          "selector": ":root, :host",
+          "computed": "#d8dee9"
+        },
+        "--color-muted": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-fill-tertiary)",
+          "selector": ":root, :host",
+          "computed": "#7a8a99"
+        },
+        "--color-muted-foreground": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text-secondary)",
+          "selector": ":root, :host",
+          "computed": "rgba(122, 138, 153, 0.8)"
+        },
+        "--color-accent": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-fill-secondary)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.1)"
+        },
+        "--color-destructive": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-error)",
+          "selector": ":root, :host",
+          "computed": "#ff4d4f"
+        },
+        "--color-destructive-foreground": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-text-on-primary)",
+          "selector": ":root, :host",
+          "computed": "rgb(2, 3, 4)"
+        },
+        "--color-input-background": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-fill-tertiary)",
+          "selector": ":root, :host",
+          "computed": "rgba(216, 222, 233, 0.06)"
+        },
+        "--color-selection": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-primary)",
+          "selector": ":root, :host",
+          "computed": "color-mix(in srgb,#7fa8bd/**/25%,transparent)"
+        },
+        "--color-dock-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "var(--color-dock-bg)",
+          "selector": ":root, :host",
+          "computed": ""
+        },
+        "--base-color": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "#a1a1aa",
+          "selector": ".\\[--base-color\\:\\#a1a1aa\\]",
+          "computed": ""
+        },
+        "--base-gradient-color": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "#000",
+          "selector": ".\\[--base-gradient-color\\:\\#000\\]",
+          "computed": ""
+        },
+        "--bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "linear-gradient(90deg,#0000 calc(50% - var(--spread)),var(--base-gradient-color),#0000 calc(50% + var(--spread)))",
+          "selector": ".\\[--bg\\:linear-gradient\\(90deg\\,\\#0000_calc\\(50\\%-var\\(--spread\\)\\)\\,var\\(--bas",
+          "computed": ""
+        },
+        "--cell-size": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css>",
+          "value": "2rem",
+          "selector": ".\\[--cell-size\\:2rem\\]",
+          "computed": ""
+        },
+        "--sidebar-width": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "240px",
+          "selector": "[data-agents-page]",
+          "computed": ""
+        },
+        "--agents-layout-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "linear-gradient(172deg,var(--color-fill-tertiary)19.61%,var(--color-bg-container)81.35%)",
+          "selector": ":root:not([data-theme=\"light-glass\"]):not([data-theme=\"dark-glass\"]):not([data-t",
+          "computed": "transparent"
+        },
+        "--agents-content-area-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-bg-container)",
+          "selector": ":root:not([data-theme=\"light-glass\"]):not([data-theme=\"dark-glass\"]):not([data-t",
+          "computed": "transparent"
+        },
+        "--agents-fade-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-bg-base)",
+          "selector": ":root:not([data-theme=\"light-glass\"]):not([data-theme=\"dark-glass\"]):not([data-t",
+          "computed": "transparent"
+        },
+        "--agents-content-area-gap": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "4px",
+          "selector": ":root:not([data-theme=\"light-glass\"]):not([data-theme=\"dark-glass\"]):not([data-t",
+          "computed": "4px"
+        },
+        "--agents-content-area-radius": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "6px",
+          "selector": ":root:not([data-theme=\"light-glass\"]):not([data-theme=\"dark-glass\"]):not([data-t",
+          "computed": "6px"
+        },
+        "--settings-nav-row-selected-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-fill-secondary)",
+          "selector": "html",
+          "computed": "rgba(216, 222, 233, 0.1)"
+        },
+        "--tw-bg-opacity": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "0",
+          "selector": "[data-agents-page] .workbench-stack-view.workbench-right-dock-panel, [data-agent",
+          "computed": ""
+        },
+        "--mobile-app-star-size": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "1.5px",
+          "selector": "[data-agents-page] [data-mobile-app-star]:first-child",
+          "computed": ""
+        },
+        "--mobile-app-star-duration": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "7.2s",
+          "selector": "[data-agents-page] [data-mobile-app-star]:first-child",
+          "computed": ""
+        },
+        "--mobile-app-star-delay": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "0s",
+          "selector": "[data-agents-page] [data-mobile-app-star]:first-child",
+          "computed": ""
+        },
+        "--mobile-app-star-origin-right": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "61%",
+          "selector": "[data-agents-page] [data-mobile-app-star]:first-child",
+          "computed": ""
+        },
+        "--mobile-app-star-origin-bottom": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "15%",
+          "selector": "[data-agents-page] [data-mobile-app-star]:first-child",
+          "computed": ""
+        },
+        "--mobile-app-star-x": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "-76px",
+          "selector": "[data-agents-page] [data-mobile-app-star]:first-child",
+          "computed": ""
+        },
+        "--mobile-app-star-y": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "-112px",
+          "selector": "[data-agents-page] [data-mobile-app-star]:first-child",
+          "computed": ""
+        },
+        "--color-accent-foreground": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-text)",
+          "selector": "[data-modal=\"agents-settings\"]",
+          "computed": ""
+        },
+        "--color-card-foreground": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-text)",
+          "selector": "[data-modal=\"agents-settings\"]",
+          "computed": ""
+        },
+        "--tw-ring-opacity": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "1",
+          "selector": "body:has([data-agents-page]) [data-canvas-dialog], [data-agents-page] [data-canv",
+          "computed": ""
+        },
+        "--diff-font-size--": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "12px",
+          "selector": ".agent-diff-wrapper",
+          "computed": ""
+        },
+        "--diff-line-height--": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "1.5",
+          "selector": ".agent-diff-wrapper",
+          "computed": ""
+        },
+        "--font-ui": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,\"PingFang SC\",\"Microsoft YaHei\",\"Noto Sans CJK SC\",sans-serif",
+          "selector": ":root",
+          "computed": "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,\"PingFang SC\",\"Microsoft YaHei\",\"Noto Sans CJK SC\",sans-serif"
+        },
+        "--font-body": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--font-ui)",
+          "selector": ":root, :root[data-font-style=\"sans\"]",
+          "computed": "-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,\"Helvetica Neue\",Arial,\"PingFang SC\",\"Microsoft YaHei\",\"Noto Sans CJK SC\",sans-serif"
+        },
+        "--radius": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": ".5rem",
+          "selector": ":root",
+          "computed": ".5rem"
+        },
+        "--normal-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--normal-text": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover-foreground)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--normal-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-border)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--border-radius": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--radius)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--success-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--success-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-border)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--success-text": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover-foreground)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--info-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--info-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-border)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--info-text": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover-foreground)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--warning-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--warning-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-border)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--warning-text": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover-foreground)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--error-bg": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--error-border": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-border)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--error-text": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-popover-foreground)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--size": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "16px",
+          "selector": "[data-sonner-toast] .sonner-loading-wrapper",
+          "computed": ""
+        },
+        "--chat-input-parchment-glow": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-orange)",
+          "selector": ":root[data-theme=\"light-parchment\"] .chat-input-primary-glow, :root[data-theme=\"",
+          "computed": "rgba(159, 184, 196, 0.06)"
+        },
+        "--chat-input-parchment-halo": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-warning)",
+          "selector": ":root[data-theme=\"light-parchment\"] .chat-input-primary-glow, :root[data-theme=\"",
+          "computed": "transparent"
+        },
+        "--chat-input-parchment-edge": {
+          "source": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/assets/globals-V4ywVbHw.css",
+          "value": "var(--color-link)",
+          "selector": ":root[data-theme=\"light-parchment\"] .chat-input-primary-glow, :root[data-theme=\"",
+          "computed": "rgba(127, 168, 189, 0.12)"
+        },
+        "--toast-icon-margin-start": {
+          "source": "inline",
+          "value": "-3px",
+          "selector": "[data-sonner-toaster][dir=\"ltr\"], html[dir=\"ltr\"]",
+          "computed": ""
+        },
+        "--toast-icon-margin-end": {
+          "source": "inline",
+          "value": "4px",
+          "selector": "[data-sonner-toaster][dir=\"ltr\"], html[dir=\"ltr\"]",
+          "computed": ""
+        },
+        "--toast-svg-margin-start": {
+          "source": "inline",
+          "value": "-1px",
+          "selector": "[data-sonner-toaster][dir=\"ltr\"], html[dir=\"ltr\"]",
+          "computed": ""
+        },
+        "--toast-svg-margin-end": {
+          "source": "inline",
+          "value": "0px",
+          "selector": "[data-sonner-toaster][dir=\"ltr\"], html[dir=\"ltr\"]",
+          "computed": ""
+        },
+        "--toast-button-margin-start": {
+          "source": "inline",
+          "value": "auto",
+          "selector": "[data-sonner-toaster][dir=\"ltr\"], html[dir=\"ltr\"]",
+          "computed": ""
+        },
+        "--toast-button-margin-end": {
+          "source": "inline",
+          "value": "0",
+          "selector": "[data-sonner-toaster][dir=\"ltr\"], html[dir=\"ltr\"]",
+          "computed": ""
+        },
+        "--toast-close-button-start": {
+          "source": "inline",
+          "value": "0",
+          "selector": "[data-sonner-toaster][dir=\"ltr\"], html[dir=\"ltr\"]",
+          "computed": ""
+        },
+        "--toast-close-button-end": {
+          "source": "inline",
+          "value": "unset",
+          "selector": "[data-sonner-toaster][dir=\"ltr\"], html[dir=\"ltr\"]",
+          "computed": ""
+        },
+        "--toast-close-button-transform": {
+          "source": "inline",
+          "value": "translate(-35%, -35%)",
+          "selector": "[data-sonner-toaster][dir=\"ltr\"], html[dir=\"ltr\"]",
+          "computed": ""
+        },
+        "--gray1": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 99%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray2": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 97.3%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray3": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 95.1%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray4": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 93%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray5": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 90.9%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray6": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 88.7%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray7": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 85.8%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray8": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 78%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray9": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 56.1%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray10": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 52.3%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray11": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 43.5%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--gray12": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 9%)",
+          "selector": "[data-sonner-toaster]",
+          "computed": ""
+        },
+        "--y": {
+          "source": "inline",
+          "value": "translateY(100%)",
+          "selector": "[data-sonner-toast]",
+          "computed": ""
+        },
+        "--lift-amount": {
+          "source": "inline",
+          "value": "calc(var(--lift) * var(--gap))",
+          "selector": "[data-sonner-toast]",
+          "computed": ""
+        },
+        "--lift": {
+          "source": "inline",
+          "value": "1",
+          "selector": "[data-sonner-toast][data-y-position=\"top\"]",
+          "computed": ""
+        },
+        "--scale": {
+          "source": "inline",
+          "value": "var(--toasts-before) * 0.05 + 1",
+          "selector": "[data-sonner-toast][data-expanded=\"false\"][data-front=\"false\"]",
+          "computed": ""
+        },
+        "--normal-bg-hover": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 12%)",
+          "selector": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "computed": ""
+        },
+        "--normal-border-hover": {
+          "source": "inline",
+          "value": "hsl(0, 0%, 25%)",
+          "selector": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "computed": ""
+        },
+        "--agentskin-accent": {
+          "source": "inline",
+          "value": "#7fa8bd",
+          "selector": ":root",
+          "computed": "#7fa8bd"
+        },
+        "--agentskin-secondary": {
+          "source": "inline",
+          "value": "#9fb8c4",
+          "selector": ":root",
+          "computed": "#9fb8c4"
+        },
+        "--agentskin-bg": {
+          "source": "inline",
+          "value": "#0f1419",
+          "selector": ":root",
+          "computed": "#0f1419"
+        },
+        "--agentskin-surface": {
+          "source": "inline",
+          "value": "#171e26",
+          "selector": ":root",
+          "computed": "#171e26"
+        },
+        "--agentskin-surface-elevated": {
+          "source": "inline",
+          "value": "#1e2830",
+          "selector": ":root",
+          "computed": "#1e2830"
+        },
+        "--agentskin-text": {
+          "source": "inline",
+          "value": "#d8dee9",
+          "selector": ":root",
+          "computed": "#d8dee9"
+        },
+        "--agentskin-muted": {
+          "source": "inline",
+          "value": "#7a8a99",
+          "selector": ":root",
+          "computed": "#7a8a99"
+        },
+        "--agentskin-border": {
+          "source": "inline",
+          "value": "rgba(127, 168, 189, 0.18)",
+          "selector": ":root",
+          "computed": "rgba(127, 168, 189, 0.18)"
+        },
+        "--agentskin-code-bg": {
+          "source": "inline",
+          "value": "#0a0e12",
+          "selector": ":root",
+          "computed": "#0a0e12"
+        },
+        "--agentskin-code-fg": {
+          "source": "inline",
+          "value": "#c3ccd8",
+          "selector": ":root",
+          "computed": "#c3ccd8"
+        },
+        "--agentskin-input-bg": {
+          "source": "inline",
+          "value": "color-mix(in srgb, color-mix(in srgb, #171e26 82%, #7fa8bd 18%) 45%, transparent)",
+          "selector": ":root",
+          "computed": "color-mix(in srgb, color-mix(in srgb, #171e26 82%, #7fa8bd 18%) 45%, transparent)"
+        },
+        "--agentskin-button-bg": {
+          "source": "inline",
+          "value": "#7fa8bd",
+          "selector": ":root",
+          "computed": "#7fa8bd"
+        },
+        "--agentskin-focus-ring": {
+          "source": "inline",
+          "value": "#7fa8bd60",
+          "selector": ":root",
+          "computed": "#7fa8bd60"
+        },
+        "--agentskin-selection": {
+          "source": "inline",
+          "value": "rgba(127, 168, 189, 0.32)",
+          "selector": ":root",
+          "computed": "rgba(127, 168, 189, 0.32)"
+        },
+        "--agentskin-text-shadow": {
+          "source": "inline",
+          "value": "0 1px 3px rgba(0,0,0,0.5)",
+          "selector": ":root",
+          "computed": "0 1px 3px rgba(0,0,0,0.5)"
+        }
+      },
+      "sheets": {
+        "total": 8,
+        "corsBlocked": 0,
+        "adoptedSheets": 0
+      },
+      "errors": []
+    },
+    "domStructure": {
+      "summary": {
+        "totalElements": 253,
+        "recordedNodes": 200,
+        "truncated": false,
+        "openShadowRoots": 0,
+        "closedShadowRoots": 0,
+        "uniqueTags": 22,
+        "uniqueClasses": 211,
+        "uniqueIds": 26,
+        "depth": 15
+      },
+      "topTags": [
+        {
+          "tag": "div",
+          "count": 113
+        },
+        {
+          "tag": "span",
+          "count": 57
+        },
+        {
+          "tag": "svg",
+          "count": 16
+        },
+        {
+          "tag": "button",
+          "count": 15
+        },
+        {
+          "tag": "path",
+          "count": 15
+        },
+        {
+          "tag": "link",
+          "count": 12
+        },
+        {
+          "tag": "script",
+          "count": 4
+        },
+        {
+          "tag": "style",
+          "count": 4
+        },
+        {
+          "tag": "meta",
+          "count": 3
+        },
+        {
+          "tag": "img",
+          "count": 2
+        },
+        {
+          "tag": "html",
+          "count": 1
+        },
+        {
+          "tag": "head",
+          "count": 1
+        },
+        {
+          "tag": "title",
+          "count": 1
+        },
+        {
+          "tag": "body",
+          "count": 1
+        },
+        {
+          "tag": "g",
+          "count": 1
+        },
+        {
+          "tag": "defs",
+          "count": 1
+        },
+        {
+          "tag": "clippath",
+          "count": 1
+        },
+        {
+          "tag": "rect",
+          "count": 1
+        },
+        {
+          "tag": "h3",
+          "count": 1
+        },
+        {
+          "tag": "h1",
+          "count": 1
+        }
+      ],
+      "topClasses": [
+        {
+          "cls": "relative",
+          "count": 59
+        },
+        {
+          "cls": "flex",
+          "count": 55
+        },
+        {
+          "cls": "items-center",
+          "count": 50
+        },
+        {
+          "cls": "rounded-md",
+          "count": 46
+        },
+        {
+          "cls": "cursor-pointer",
+          "count": 39
+        },
+        {
+          "cls": "justify-center",
+          "count": 35
+        },
+        {
+          "cls": "inline-flex",
+          "count": 30
+        },
+        {
+          "cls": "w-full",
+          "count": 29
+        },
+        {
+          "cls": "absolute",
+          "count": 29
+        },
+        {
+          "cls": "pointer-events-none",
+          "count": 27
+        },
+        {
+          "cls": "text-left",
+          "count": 27
+        },
+        {
+          "cls": "pl-2",
+          "count": 25
+        },
+        {
+          "cls": "pr-2",
+          "count": 25
+        },
+        {
+          "cls": "hover:text-text",
+          "count": 24
+        },
+        {
+          "cls": "py-[5px]",
+          "count": 24
+        },
+        {
+          "cls": "group",
+          "count": 24
+        },
+        {
+          "cls": "outline-offset-2",
+          "count": 24
+        },
+        {
+          "cls": "focus-visible:outline",
+          "count": 24
+        },
+        {
+          "cls": "focus-visible:outline-2",
+          "count": 24
+        },
+        {
+          "cls": "focus-visible:outline-ring/70",
+          "count": 24
+        },
+        {
+          "cls": "inset-0",
+          "count": 24
+        },
+        {
+          "cls": "bg-fill-secondary",
+          "count": 23
+        },
+        {
+          "cls": "h-full",
+          "count": 21
+        },
+        {
+          "cls": "agentskin-non-controlled",
+          "count": 21
+        },
+        {
+          "cls": "gap-2.5",
+          "count": 21
+        },
+        {
+          "cls": "mb-1",
+          "count": 18
+        },
+        {
+          "cls": "text-text-secondary/80",
+          "count": 17
+        },
+        {
+          "cls": "items-start",
+          "count": 17
+        },
+        {
+          "cls": "flex-shrink-0",
+          "count": 14
+        },
+        {
+          "cls": "focus:outline-none",
+          "count": 14
+        }
+      ],
+      "sampleIds": [
+        "agentskin-theme-style-qoderwork",
+        "root",
+        "radix-_r_0_",
+        "radix-_r_5_",
+        "clip0_442_7544",
+        "DndDescribedBy-0",
+        "DndLiveRegion-0",
+        "radix-_r_i_",
+        "radix-_r_o_",
+        "radix-_r_u_",
+        "radix-_r_14_",
+        "radix-_r_1a_",
+        "radix-_r_1g_",
+        "radix-_r_1m_",
+        "radix-_r_1s_",
+        "radix-_r_22_",
+        "radix-_r_28_",
+        "radix-_r_2e_",
+        "radix-_r_2k_",
+        "radix-_r_2q_",
+        "radix-_r_30_",
+        "radix-_r_36_",
+        "radix-_r_3c_",
+        "radix-_r_3i_",
+        "radix-_r_3n_",
+        "radix-_r_3p_"
+      ],
+      "title": "QoderWork",
+      "url": "file:///C:/Program%20Files/QoderWork%20CN/QoderWork%20CN/resources/app.asar/out/renderer/index.html#windowId=main",
+      "documentElementTag": "HTML",
+      "documentElementClass": "agentskin-theme agentskin-host-qoderwork"
+    },
+    "styleSamples": {
+      "html": {
+        "found": true,
+        "props": {
+          "color": "rgb(255, 255, 255)",
+          "background-color": "rgba(0, 0, 0, 0)",
+          "border-color": "rgba(127, 168, 189, 0.18)",
+          "font-family": "ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"",
+          "font-size": "16px",
+          "font-weight": "400",
+          "line-height": "24px",
+          "display": "block",
+          "width": "1440px",
+          "height": "912px",
+          "opacity": "1"
+        },
+        "tag": "html"
+      },
+      "body": {
+        "found": true,
+        "props": {
+          "color": "rgb(250, 250, 250)",
+          "background-color": "rgb(9, 9, 11)",
+          "border-color": "rgba(127, 168, 189, 0.18)",
+          "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+          "font-size": "16px",
+          "font-weight": "400",
+          "line-height": "24px",
+          "display": "block",
+          "width": "1440px",
+          "height": "912px",
+          "opacity": "1"
+        },
+        "tag": "body"
+      },
+      "#app": {
+        "found": false
+      },
+      ".app": {
+        "found": false
+      },
+      "main": {
+        "found": false
+      },
+      "[role=\"main\"]": {
+        "found": false
+      },
+      "header": {
+        "found": false
+      },
+      "nav": {
+        "found": false
+      },
+      "aside": {
+        "found": false
+      },
+      "footer": {
+        "found": false
+      },
+      ".sidebar": {
+        "found": false
+      },
+      ".editor": {
+        "found": false
+      },
+      ".panel": {
+        "found": false
+      },
+      ".terminal": {
+        "found": false
+      },
+      "h1": {
+        "found": true,
+        "props": {
+          "color": "rgb(216, 222, 233)",
+          "background-color": "rgba(0, 0, 0, 0)",
+          "border-color": "rgba(127, 168, 189, 0.18)",
+          "font-family": "\"Instrument Sans\", ui-sans-serif, system-ui, sans-serif",
+          "font-size": "24px",
+          "font-weight": "500",
+          "line-height": "36px",
+          "display": "block",
+          "width": "768px",
+          "height": "36px",
+          "opacity": "1"
+        },
+        "tag": "h1"
+      },
+      "h2": {
+        "found": false
+      },
+      "h3": {
+        "found": true,
+        "props": {
+          "color": "color(srgb 0.847059 0.870588 0.913725 / 0.36)",
+          "background-color": "rgba(0, 0, 0, 0)",
+          "border-color": "rgba(127, 168, 189, 0.18)",
+          "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans CJK SC\", sans-serif",
+          "font-size": "12px",
+          "font-weight": "500",
+          "line-height": "16px",
+          "display": "block",
+          "width": "24px",
+          "height": "16px",
+          "opacity": "1"
+        },
+        "tag": "h3"
+      },
+      "code": {
+        "found": false
+      },
+      "pre": {
+        "found": false
+      },
+      ".monaco-editor": {
+        "found": false
+      },
+      ".tk-text-input": {
+        "found": false
+      },
+      "button": {
+        "found": true,
+        "props": {
+          "color": "rgb(238, 238, 235)",
+          "background-color": "rgba(0, 0, 0, 0)",
+          "border-color": "rgb(59, 58, 53)",
+          "font-family": "-apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"PingFang SC\", \"Microsoft YaHei\", \"Noto Sans CJK SC\", sans-serif",
+          "font-size": "16px",
+          "font-weight": "400",
+          "line-height": "24px",
+          "display": "flex",
+          "width": "36px",
+          "height": "35.3333px",
+          "opacity": "1"
+        },
+        "tag": "button",
+        "id": "radix-_r_5_"
+      },
+      "input": {
+        "found": false
+      },
+      "textarea": {
+        "found": false
+      },
+      "select": {
+        "found": false
+      }
+    }
+  },
+  "errors": [],
+  "summary": {
+    "totalCssVars": 398,
+    "agentskinVars": 15,
+    "nativeVars": 383,
+    "agentskinVarNames": [
+      "--agentskin-accent",
+      "--agentskin-secondary",
+      "--agentskin-bg",
+      "--agentskin-surface",
+      "--agentskin-surface-elevated",
+      "--agentskin-text",
+      "--agentskin-muted",
+      "--agentskin-border",
+      "--agentskin-code-bg",
+      "--agentskin-code-fg",
+      "--agentskin-input-bg",
+      "--agentskin-button-bg",
+      "--agentskin-focus-ring",
+      "--agentskin-selection",
+      "--agentskin-text-shadow"
+    ],
+    "nativeVarNames": [
+      "--loading-bg",
+      "--loading-text",
+      "--loading-logo",
+      "--tw-translate-x",
+      "--tw-translate-y",
+      "--tw-translate-z",
+      "--tw-scale-x",
+      "--tw-scale-y",
+      "--tw-scale-z",
+      "--tw-rotate-x",
+      "--tw-rotate-y",
+      "--tw-rotate-z",
+      "--tw-skew-x",
+      "--tw-skew-y",
+      "--tw-scroll-snap-strictness",
+      "--tw-space-y-reverse",
+      "--tw-space-x-reverse",
+      "--tw-divide-x-reverse",
+      "--tw-border-style",
+      "--tw-divide-y-reverse",
+      "--tw-gradient-position",
+      "--tw-gradient-from",
+      "--tw-gradient-via",
+      "--tw-gradient-to",
+      "--tw-gradient-stops",
+      "--tw-gradient-via-stops",
+      "--tw-gradient-from-position",
+      "--tw-gradient-via-position",
+      "--tw-gradient-to-position",
+      "--tw-leading",
+      "--tw-font-weight",
+      "--tw-tracking",
+      "--tw-ordinal",
+      "--tw-slashed-zero",
+      "--tw-numeric-figure",
+      "--tw-numeric-spacing",
+      "--tw-numeric-fraction",
+      "--tw-shadow",
+      "--tw-shadow-color",
+      "--tw-shadow-alpha",
+      "--tw-inset-shadow",
+      "--tw-inset-shadow-color",
+      "--tw-inset-shadow-alpha",
+      "--tw-ring-color",
+      "--tw-ring-shadow",
+      "--tw-inset-ring-color",
+      "--tw-inset-ring-shadow",
+      "--tw-ring-inset",
+      "--tw-ring-offset-width",
+      "--tw-ring-offset-color"
+    ],
+    "domElements": 253,
+    "domClasses": 211,
+    "domTags": 22,
+    "shadowRoots": 0,
+    "sheetsTotal": 8,
+    "sheetsCorsBlocked": 0,
+    "styleSampleCount": 5
+  }
+}

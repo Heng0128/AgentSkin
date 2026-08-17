@@ -496,11 +496,29 @@ verify-style 会将宿主切换后的计算样式与旧 token 比对，产生误
 
 ### P0-Block（立即修复）
 
-| 编号 | 行动 | 负责 | 预计工时 | 验收标准 |
-|------|------|------|---------|---------|
-| A-01 | 补全 workbuddy/doubao/qoderwork/zcode 的 semantic.nonControlled 配置 | 引擎团队 | 1 天 | 4 Agent 的 input/button/tooltip/divider 被正确排除 |
-| A-02 | verify-style 增加 per-Agent tolerance/minRatio 配置（默认 minRatio 从 1 降为 0.85） | 引擎团队 | 0.5 天 | 4 Agent CI 不再必然误报 |
-| A-03 | verify-style 导入 selectivity-registry 的 nonControlled 拓扑，采样时排除 | 引擎团队 | 1 天 | nonControlled 节点不参与 matchRatio 计算 |
+| 编号 | 行动 | 负责 | 预计工时 | 验收标准 | 状态 |
+|------|------|------|---------|---------|------|
+| A-01 | 补全 workbuddy/doubao/qoderwork/zcode 的 semantic.nonControlled 配置 | 引擎团队 | 1 天 | 4 Agent 的 input/button/tooltip/divider 被正确排除 | ✅ 已落地 |
+| A-02 | verify-style 增加 per-Agent tolerance/minRatio 配置（默认 minRatio 从 1 降为 0.85） | 引擎团队 | 0.5 天 | 4 Agent CI 不再必然误报 | ✅ 已落地 |
+| A-03 | verify-style 导入 selectivity-registry 的 nonControlled 拓扑，采样时排除 | 引擎团队 | 1 天 | nonControlled 节点不参与 matchRatio 计算 | ✅ 已落地 |
+
+> **⚠️ 级别校正（落地前裁定）**：原 P0-Block「CI 必然误报」基于 `minRatio=1` × 4-Agent 缺配置的 *联合效应* 推演。经代码核验，verify-style 尚未接入 CI 阻塞链路，故降级为 **P0-Quality/P1 严格性风险**，再行落地 A-01/A-02/A-03 以消除该隐患。
+
+**落地记录（2026-08-19）**：
+- **A-01**：`src/engine/src/runtime/selectivity-registry.mjs` — 为 workbuddy/doubao/qoderwork/zcode 的 composer 条目补齐 `semantic.nonControlled`（`[contenteditable='true']`/`textarea`/`button`/`[role='button']`），内层输入/按钮运行时标记 `agentskin-non-controlled` 并从主题过滤排除。
+- **A-02**：`src/engine/src/runtime/verify-style.mjs` — `assessStyleCompliance` 默认 `minRatio` 1→**0.85**（函数体内联字面量，保证 `STYLE_RUNTIME_SOURCE` `.toString()` 序列化自包含、不引用模块级常量）；新增导出 `DEFAULT_TOLERANCE`/`DEFAULT_MIN_RATIO`/`STYLE_SAMPLING_POLICY`/`resolveStyleSamplingOpts()`（默认 ⊳ 策略表 ⊳ override 三级解析）。
+- **A-03**：`src/engine/src/runtime/renderer-payload.mjs` — `buildStyleSamplingSnippet` 通过 `resolveStyleSamplingOpts(adapter.id)` 注入 per-Agent 预算（替换原硬编码 `{tolerance:0.08, minRatio:1}`）；采样优先 `controllingSelector` 受控壳体，并剔除「无受控壳体且锚点落在 nonControlled」的 probe（如 composer=输入框）。
+- **测试**：+9 项新增/更新（verify-style、semantic-filter、renderer-payload），覆盖默认 0.85、per-Agent override、序列化自包含守卫、4-Agent composer 排除、codex controllingSelector 保留。
+- **校验**：`npm run check` 全绿 —— 2820 通过 + 3 跳过，contract / themes / theme-staleness / architecture / semantic-contract 全部通过。
+
+**内层 P1 落地记录（cdp-full-extract.mjs 补全，2026-08-17）**：
+- **A-11**：`scripts/cdp-full-extract.mjs` — 新增 `DEFAULT_TIMING`/`AGENT_TIMING` 配置表 + `resolveAgentTiming()` 三级解析；`CdpClient` 连接/命令超时接入（`send` 超时由写死 10000ms 改为 `commandTimeout`）；`extractAgent` 按 Agent 解析时序并传给客户端，`setColorScheme` 使用 per-Agent `themeSwitchWait`。
+- **A-12**：新增 `buildSemanticBaseline()`，从 full-extract 抽取瘦身语义基线并落盘 `<agent>-baseline.json`（root 变量 / 分类 / 色板 / 数据质量），供下游对比直接加载。
+- **A-14**：`:root` MutationObserver 驱动重采——`installRootObserver()` + `waitRootMutation()`，切换由根 style/class 变更信号触发等待，观察器失效时回退到固定 `sleep`（零行为变化）。
+- **A-15**：语义基线内亮/暗双方案独立成节（`schemes.{neutral,dark,light}`），任一方案缺失置 `null`，供亮-暗差异比对。
+- **A-16**：新增 `probeApiFingerprint()`，检测 `querySelectorAll/getComputedStyle/matchMedia/getPropertyValue` 是否被 monkey-patch（`[native code]` 判定），结果写入 `meta.dataQuality.apiPolluted/apiFingerprint`，污染时控制台告警。
+- **A-17**：`categorizeVars` 新增 `agentName` 参数 + `AGENT_VAR_NAMESPACES` 白名单表，非本 Agent 命名空间变量过滤并记录于 `_ignoredNamespaceVars`，缺省回退全量（零行为变化）。
+- **校验**：`npm run check` 全绿 —— 2838 通过 + 3 跳过；Biome 对改动文件 0 告警；`cdp-full-extract-frame`（A-22）单测通过。
 
 ### P0-Quality（24h 内响应）
 
@@ -513,23 +531,23 @@ verify-style 会将宿主切换后的计算样式与旧 token 比对，产生误
 
 ### P1（版本周期内修复）
 
-| 编号 | 行动 | 负责 | 预计工时 | 验收标准 |
-|------|------|------|---------|---------|
-| A-08 | cdp-full-extract 输出增加 `meta.dataQuality` 元数据 | 引擎团队 | 0.5 天 | JSON 包含 totalNodes/corsBlockedSheets/failedSchemes |
-| A-09 | 统一 dom-snapshot 与 cdp-full-extract 的 truncated 语义 | 引擎团队 | 0.5 天 | 两模块 truncated 字段一致 |
-| A-10 | build-theme-package 入口增加 getAdapter(agentId) 合法性校验 | 引擎团队 | 0.5 天 | 非法 agentId 直接拒绝并报错 |
-| A-11 | 引入 AGENT_TIMING per-Agent 时序配置表 | 引擎团队 | 0.5 天 | 各 Agent 可独立配置超时/重试 |
-| A-12 | 语义基线持久化存储（独立 JSON 文件） | 引擎团队 | 1 天 | 基线可跨会话保留 |
-| A-13 | verify-style 三态判定 (PASS/FAIL/UNVERIFIABLE) | 引擎团队 | 1 天 | Shadow-Root 组件标记为 UNVERIFIABLE |
-| A-14 | :root style MutationObserver 驱动基线重采 | 引擎团队 | 2 天 | 宿主切换明暗模式后自动重采 |
-| A-15 | 双基线缓存（亮/暗） | 引擎团队 | 1 天 | 亮/暗模式各有独立基线 |
-| A-16 | 运行时 API 指纹（querySelectorAll/getComputedStyle 污染检测） | 引擎团队 | 1 天 | 污染时输出告警 |
-| A-17 | categorizeVars 增加 per-agent 命名空间白名单 | 引擎团队 | 0.5 天 | traework/codex 各有独立白名单 |
-| A-18 | 引入 DIAGNOSTICS_KILL_SWITCH per-Agent 开关 | 引擎团队 | 0.5 天 | 可动态关闭不稳定检测项 |
-| A-19 | 编写《渲染/注入行为规约》文档 | 文档 | 2 天 | 明确允许/跳过/透明规则 |
-| A-20 | 引入 regression-runner.mjs 统一回归编排 | 引擎团队 | 2 天 | 单命令完成 6 Agent 批量回归 |
-| A-21 | 大型 DOM 截断位置稳定化 | 引擎团队 | 1 天 | 同页面多次采样截断位置一致 |
-| A-22 | frameId 隔离采样（多 iframe 场景） | 引擎团队 | 1 天 | 各 iframe 独立采样不交叉 |
+| 编号 | 行动 | 负责 | 预计工时 | 验收标准 | 状态 |
+|------|------|------|---------|---------|------|
+| A-08 | cdp-full-extract 输出增加 `meta.dataQuality` 元数据 | 引擎团队 | 0.5 天 | JSON 包含 totalNodes/corsBlockedSheets/failedSchemes | ✅ 已落地 |
+| A-09 | 统一 dom-snapshot 与 cdp-full-extract 的 truncated 语义 | 引擎团队 | 0.5 天 | 两模块 truncated 字段一致 | ✅ 已落地 |
+| A-10 | build-theme-package 入口增加 getAdapter(agentId) 合法性校验 | 引擎团队 | 0.5 天 | 非法 agentId 直接拒绝并报错 | ✅ 已落地 |
+| A-11 | 引入 AGENT_TIMING per-Agent 时序配置表 | 引擎团队 | 0.5 天 | 各 Agent 可独立配置超时/重试 | ✅ 已落地 |
+| A-12 | 语义基线持久化存储（独立 JSON 文件） | 引擎团队 | 1 天 | 基线可跨会话保留 | ✅ 已落地 |
+| A-13 | verify-style 三态判定 (PASS/FAIL/UNVERIFIABLE) | 引擎团队 | 1 天 | Shadow-Root 组件标记为 UNVERIFIABLE | ✅ 已落地 |
+| A-14 | :root style MutationObserver 驱动基线重采 | 引擎团队 | 2 天 | 宿主切换明暗模式后自动重采 | ✅ 已落地 |
+| A-15 | 双基线缓存（亮/暗） | 引擎团队 | 1 天 | 亮/暗模式各有独立基线 | ✅ 已落地 |
+| A-16 | 运行时 API 指纹（querySelectorAll/getComputedStyle 污染检测） | 引擎团队 | 1 天 | 污染时输出告警 | ✅ 已落地 |
+| A-17 | categorizeVars 增加 per-agent 命名空间白名单 | 引擎团队 | 0.5 天 | traework/codex 各有独立白名单 | ✅ 已落地 |
+| A-18 | 引入 DIAGNOSTICS_KILL_SWITCH per-Agent 开关 | 引擎团队 | 0.5 天 | 可动态关闭不稳定检测项 | ✅ 已落地 |
+| A-19 | 编写《渲染/注入行为规约》文档 | 文档 | 2 天 | 明确允许/跳过/透明规则 | ✅ 已落地 |
+| A-20 | 引入 regression-runner.mjs 统一回归编排 | 引擎团队 | 2 天 | 单命令完成 6 Agent 批量回归 | ✅ 已落地 |
+| A-21 | 大型 DOM 截断位置稳定化 | 引擎团队 | 1 天 | 同页面多次采样截断位置一致 | ✅ 已落地 |
+| A-22 | frameId 隔离采样（多 iframe 场景） | 引擎团队 | 1 天 | 各 iframe 独立采样不交叉 | ✅ 已落地 |
 
 ### P2（排期优化）
 

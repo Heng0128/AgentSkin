@@ -100,10 +100,14 @@ export function buildDomSnapshotExpression(adapter, {
       const style = getComputedStyle(element);
       const visible = elementVisible(element, style, rect);
       if (!config.includeHidden && !visible) continue;
+      // A-21：先计满 eligibleNodes（完整分母），再判截断——记录 |= 稳定的文档序前缀，
+      // truncated |= "存在超出 maxNodes 但未记录的合格节点"。这样同页多次采样：
+      //   1) 保留集合是严格前缀，截断位置稳定（不随尾巴树形变化）；
+      //   2) eligibleNodes/recordedNodes 统计真实、不被 break 短暂截断而失真。
       eligibleNodes += 1;
       if (nodes.length >= config.maxNodes) {
         truncated = true;
-        break;
+        continue;
       }
       const tag = element.tagName.toLowerCase();
       const classes = [...element.classList].map((name) => limit(name, 120));

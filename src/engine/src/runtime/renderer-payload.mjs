@@ -1,7 +1,8 @@
-import { getSelectors, isNativeThemeControlled, listSemanticNames } from "./selectivity-registry.mjs";
+import { getSelectors, getSemantic, isNativeThemeControlled, listSemanticNames } from "./selectivity-registry.mjs";
 import { NON_CONTROLLED_CLASS, collectNonControlledSelectors } from "./semantic-filter.mjs";
-import { STYLE_RUNTIME_SOURCE } from "./verify-style.mjs";
+import { STYLE_RUNTIME_SOURCE, resolveStyleSamplingOpts } from "./verify-style.mjs";
 import { compileBridge, wrapBridgeRule } from "./css-var-bridge.mjs";
+import { isDiagnosticsEnabled } from "./diagnostics-kill-switch.mjs";
 
 function safeHostClass(appId) {
   return `agentskin-host-${String(appId).replace(/[^a-z0-9_-]/gi, "-")}`;
@@ -447,19 +448,47 @@ export function buildProbeExpression(adapter, themeVerification = null) {
  * 判定（`pass`）。内嵌片段只在主题 `<style>` 已挂载时取样，否则返回中性 pass。
  */
 export function buildStyleSamplingSnippet(adapter) {
+  // A-18 kill-switch：该 Agent 的样式漂移诊断被关闭时，产出中性 pass（不误报、
+  // 不拖拽回归）。注入主流程不受影响，仅在 build 阶段（Node 侧）分流。
+  if (!isDiagnosticsEnabled(adapter.id, 'styleSampling')) {
+    return `
+    // Diagnostics kill-switch (A-18): style drift sampling disabled for "${adapter.id}".
+    const styleSampling = { pass: true, matchRatio: 1, judged: 0, misses: [], reason: 'diagnostics-kill-switched' };
+  `;
+  }
+  // per-Agent 预算（A-02）：默认 minRatio=0.85，可从 STYLE_SAMPLING_POLICY 收紧。
+  const samplingOpts = resolveStyleSamplingOpts(adapter.id);
   const probes = listSemanticNames(adapter.id)
     .filter((name) => {
       const selectors = getSelectors(adapter.id, name);
       return selectors && isNativeThemeControlled(adapter.id, name);
     })
-    .map((name) => ({ name, selectors: getSelectors(adapter.id, name) }));
+    .map((name) => {
+      const selectors = getSelectors(adapter.id, name);
+      const semantic = getSemantic(adapter.id, name);
+      // 优先采样真正承载主题样式的受控壳体（区别于 fallback 链首项即输入框的情形）。
+      return { name, selectors, controllingSelector: semantic?.controllingSelector ?? null };
+    })
+    // A-03：当受控组件没有独立的「受控壳体」（controllingSelector，如 composer 的
+    // 可编辑输入框本身就是锚点）且其锚点选择器落在 nonControlled 中时，采样会把这些
+    // 非受控节点计入漂移判定、制造误报 —— 剔除此类 probe；有 controllingSelector 的
+    // 一律保留（始终采样真正承载主题的壳体）。
+    .filter((probe) => {
+      if (probe.controllingSelector) return true;
+      const semantic = getSemantic(adapter.id, probe.name);
+      const nonControlled = semantic?.nonControlled ?? [];
+      if (!Array.isArray(nonControlled) || nonControlled.length === 0) return true;
+      return !nonControlled.some((nc) => probe.selectors.includes(nc));
+    });
   const probesJson = JSON.stringify(probes);
+  const optsJson = JSON.stringify(samplingOpts);
   const runtime = STYLE_RUNTIME_SOURCE;
   return `
     // Style sampling (RFC §2.7 序5 / CV-05) — detect "selector present but the
     // theme is not actually taking effect" drift by comparing the computed
     // styles of key controlled nodes against the resolved theme tokens.
     const __styleRuntime = ${runtime};
+    const __styleOpts = ${optsJson};
     const __styleProbes = ${probesJson};
     const styleSampling = (() => {
       if (!document.getElementById('agentskin-theme-style-' + appId)) {
@@ -472,8 +501,12 @@ export function buildStyleSamplingSnippet(adapter) {
         surface: token('--agentskin-surface'),
         border: token('--agentskin-border'),
       };
-      const visibleSample = (selectors) => {
-        for (const sel of selectors) {
+      // 优先取受控壳体（controllingSelector），再按 fallback 链依次兜底。
+      const visibleSample = (probe) => {
+        const chain = probe.controllingSelector
+          ? [probe.controllingSelector, ...probe.selectors]
+          : probe.selectors;
+        for (const sel of chain) {
           let node;
           try { node = document.querySelector(sel); } catch { node = null; }
           if (!node) continue;
@@ -487,11 +520,11 @@ export function buildStyleSamplingSnippet(adapter) {
       };
       const samples = [{ key: 'root', color: rootCs.color, bg: rootCs.backgroundColor, border: rootCs.borderColor }];
       for (const probe of __styleProbes) {
-        const cs = visibleSample(probe.selectors);
+        const cs = visibleSample(probe);
         if (!cs) continue;
         samples.push({ key: probe.name, color: cs.color, bg: cs.backgroundColor, border: cs.borderColor });
       }
-      return __styleRuntime.assessStyleCompliance(samples, tokens, { tolerance: 0.08, minRatio: 1 });
+      return __styleRuntime.assessStyleCompliance(samples, tokens, __styleOpts);
     })();
   `;
 }

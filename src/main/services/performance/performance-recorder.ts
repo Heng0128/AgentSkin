@@ -15,9 +15,14 @@
  *
  * ## Single-trace model
  *
- * Only one trace is active at a time. Calling `start()` while a trace is
- * in-flight throws to prevent accidental interleaving. This mirrors the
- * constraint that theme-apply operations are serialized by the orchestrator.
+ * Only one REAL trace is active at a time (a telemetry simplification). The
+ * orchestrator deliberately supports per-agent CONCURRENT applies
+ * (MAX_CONCURRENCY=6, per-agent dedup — see agent-engine-service), so a second
+ * concurrent apply calling `start()` while one trace is in-flight must NOT
+ * throw (that would break core injection for the sake of observability).
+ * Instead `start()` returns a **shadow trace** (no-op): the apply proceeds
+ * untraced, and the singleton invariant is untouched. Deep-layer
+ * `recordNamedStep` calls keep landing in the real trace only.
  *
  * ## Error behavior
  *
@@ -278,6 +283,83 @@ export class ApplyTraceBuilder {
 }
 
 // ---------------------------------------------------------------------------
+// ShadowTrace (concurrent-apply fallback)
+// ---------------------------------------------------------------------------
+
+/**
+ * No-op trace returned by {@link PerformanceRecorder.start} when a real trace
+ * is already in-flight (concurrent apply to another agent).
+ *
+ * Structural subset of `ApplyTraceBuilder`'s public surface used by
+ * `theme-apply-flow`: `step` (both arities), `finish`, `traceId`.
+ * - Does NOT register itself as the singleton `active` trace;
+ * - Does NOT call `PerformanceRecorder.release()` (must not disturb the real trace);
+ * - `finish()` returns a minimal valid {@link ThemeApplyTrace} so
+ *   `performanceLogger.log(...)` keeps working unchanged.
+ */
+class ShadowTrace {
+  public readonly traceId: string;
+  private readonly agentId: string;
+  private readonly themeId?: string;
+  private readonly startedAt: number;
+  private finalized = false;
+
+  constructor(agentId: string, themeId?: string) {
+    this.traceId = `shadow-${agentId}`;
+    this.agentId = agentId;
+    this.themeId = themeId;
+    this.startedAt = nowMs();
+  }
+
+  async step<T>(
+    _name: string,
+    fn: ((addSubStep: AddSubStepFn) => Promise<T>) | (() => Promise<T>),
+  ): Promise<T> {
+    // Run the callback untouched (no timing, no recording) so apply behavior
+    // is bit-identical to the traced path.
+    if (fn.length > 0) {
+      return await (fn as (addSubStep: AddSubStepFn) => Promise<T>)(() => {});
+    }
+    return await (fn as () => Promise<T>)();
+  }
+
+  addSubStep(): void {
+    // no-op
+  }
+
+  appendStep(): void {
+    // no-op
+  }
+
+  finish(): ThemeApplyTrace {
+    if (this.finalized) {
+      throw new Error(`Shadow trace "${this.traceId}" has already been finalized.`);
+    }
+    this.finalized = true;
+    const trace: ThemeApplyTrace = {
+      id: this.traceId,
+      agentId: this.agentId,
+      startedAt: this.startedAt,
+      finishedAt: new Date().toISOString(),
+      duration: 0,
+      success: true,
+      steps: [
+        {
+          name: 'shadowed-concurrent-apply',
+          startedAt: this.startedAt,
+          duration: 0,
+          success: true,
+          // 并发 apply 时观测层让位：本 apply 未单独计时（见模块头注释）
+        },
+      ],
+      device: collectDeviceInfo(),
+    };
+    if (this.themeId !== undefined) trace.themeId = this.themeId;
+    return trace;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // PerformanceRecorder (static singleton)
 // ---------------------------------------------------------------------------
 
@@ -298,18 +380,18 @@ export class PerformanceRecorder {
   private static active: ApplyTraceBuilder | null = null;
 
   /**
-   * Begin a new theme-apply trace. Throws if a trace is already in-flight.
+   * Begin a new theme-apply trace.
+   *
+   * When a trace is already in-flight (concurrent apply to another agent),
+   * returns a **shadow no-op trace** instead of throwing — observability must
+   * never break the core injection path. See module docblock "Single-trace model".
    *
    * @param agentId  Target agent id.
    * @param themeId  Theme id (optional; omit for restore-to-default).
    */
-  static start(agentId: string, themeId?: string): ApplyTraceBuilder {
+  static start(agentId: string, themeId?: string): ApplyTraceBuilder | ShadowTrace {
     if (PerformanceRecorder.active) {
-      throw new Error(
-        'Cannot start a new performance trace: trace ' +
-          `"${PerformanceRecorder.active.traceId}" is already in-flight. ` +
-          'Call finish() on the current trace before starting another.',
-      );
+      return new ShadowTrace(agentId, themeId);
     }
     PerformanceRecorder.sequence += 1;
     const id = formatId(PerformanceRecorder.sequence);

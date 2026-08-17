@@ -27,6 +27,12 @@
  *   node scripts/analyze-structure-compare.mjs --meta                # 额外输出 meta/*.theme.meta.json + meta-validation.json（推理+自校验）
  *   node scripts/analyze-structure-compare.mjs --write-patches       # 把「确定性删除」补丁自动写回适配器源码（死 landmark / 失效 bridge entry）
  *   node scripts/analyze-structure-compare.mjs --write-patches --dry-run  # 仅预览待写回的补丁，不写文件
+ *   node scripts/analyze-structure-compare.mjs --shadow-seed FILE.json   # 注入 closed-shadow 种子增量（{common:[...], agentId:[...]}），并入规则库候选
+ *
+ * 说明：
+ *   - closed shadow root 无法被 JS 枚举，脚本内置 COMMON 原生宿主种子 + 各 Agent 分桶种子，
+ *     用 --shadow-seed 可追加已验证选择器；命中即写入运行时 closedShadowRisk，并回填 --rules 模板的 shadowDomRiskSelectors。
+ *   - Target 枚举含 OOPIF 跨 target 汇总：对全部 page/iframe target 拉取 Page.getFrameTree 合并，输出 frameCount / oopifCount（跨进程边界）。
  *
  * 退出码（CI 模式对接流水线）：
  *   0  全部 Agent 探测正常，无结构漂移
@@ -77,6 +83,7 @@ const OPTIONS = {
   meta: false,
   writePatches: false,
   dryRun: false,
+  shadowSeed: { common: [], byAgent: {} },
 };
 
 function debugLog(...parts) {
@@ -192,6 +199,96 @@ async function resolveLivePort(adapter) {
   return null;
 }
 
+/**
+ * 将 CDP Page.getFrameTree 的嵌套 tree 拍平为有序数组（DFS）。纯函数，便于单测。
+ * @param {object|undefined} tree 形如 { frame, childFrames: [] }
+ * @returns {Array<{frameId: string, parentId: string|null, url: string, securityOrigin: string}>}
+ */
+function flattenFrameTree(tree) {
+  const out = [];
+  if (!tree?.frame) return out;
+  (function walk(node, parentId) {
+    const f = node.frame || {};
+    out.push({
+      frameId: f.id ?? f.frameId ?? '',
+      parentId: parentId ?? null,
+      url: f.url ?? '',
+      securityOrigin: f.securityOrigin ?? '',
+    });
+    for (const child of node.childFrames || []) walk(child, f.id ?? f.frameId);
+  })(tree, null);
+  return out;
+}
+
+/**
+ * OOPIF 跨 target 汇总：对同一端口下全部 page/iframe target 逐个拉取 Page.getFrameTree，
+ * 拍平后按 frameId 合并成统一 frame 树；凡 child frame 的 parentId 指向**另一 target** 的 frame
+ * （或 parentId 存在但在合并集中找不到父 frame）即判定为 OOPIF / 跨进程边界。
+ * 逐 target 独立降级，任一 target 失败仅跳过，不阻断整体汇总。
+ */
+async function collectFrameAggregation(list) {
+  const frameTargets = list.filter(
+    (t) => (t.type === 'page' || t.type === 'iframe') && t.webSocketDebuggerUrl,
+  );
+  const framesById = new Map();
+  const perTarget = [];
+  for (const t of frameTargets) {
+    let tree = null;
+    let error = null;
+    const client = new CdpClient(t.webSocketDebuggerUrl);
+    try {
+      await client.connect();
+      await client.send('Page.enable').catch(() => {});
+      const res = await client.send('Page.getFrameTree');
+      tree = res.tree ?? res?.result?.tree ?? null;
+      const flat = flattenFrameTree(tree);
+      for (const f of flat)
+        framesById.set(f.frameId, {
+          ...f,
+          targetId: t.id ?? null,
+          targetType: t.type ?? null,
+          targetUrl: t.url ?? null,
+          targetTitle: t.title ?? null,
+        });
+    } catch (e) {
+      error = e.message;
+    } finally {
+      client.close();
+    }
+    perTarget.push({
+      targetId: t.id ?? null,
+      type: t.type ?? null,
+      url: t.url ?? null,
+      ok: !error,
+      error,
+      frames: tree && !error ? flattenFrameTree(tree).map((f) => f.frameId) : [],
+    });
+  }
+  // OOPIF 判定：子 frame 的 parentId 指向不同 target 的 frame，或 parentId 存在却找不到父 frame（孤立/跨 target）。
+  const oopifFrames = [];
+  for (const f of framesById.values()) {
+    if (!f.parentId) continue;
+    const parent = framesById.get(f.parentId);
+    const crossTarget = parent ? parent.targetId !== f.targetId : true;
+    if (crossTarget) {
+      oopifFrames.push({
+        frameId: f.frameId,
+        parentId: f.parentId,
+        url: f.url,
+        targetId: f.targetId,
+        targetType: f.targetType,
+      });
+    }
+  }
+  return {
+    targetCount: frameTargets.length,
+    frameCount: framesById.size,
+    oopifCount: oopifFrames.length,
+    oopifFrames,
+    perTarget,
+  };
+}
+
 /** 枚举全部 CDP target（主 frame + iframe + worker），不按 adapter 过滤——补 Layer2-1 Target 全发现。 */
 async function enumerateTargets(port) {
   try {
@@ -209,7 +306,15 @@ async function enumerateTargets(port) {
       else if (type === 'worker' || type === 'service_worker' || type === 'shared_worker')
         workers.push({ ...brief, type });
     }
-    return { total: list.length, byType, pages, iframes, workers };
+    // OOPIF 跨 target frame 汇总（含 iframe/跨进程），失败降级不影响 target 清单主链路。
+    const frames = await collectFrameAggregation(list).catch((e) => ({
+      error: e.message,
+      targetCount: 0,
+      frameCount: 0,
+      oopifCount: 0,
+      oopifFrames: [],
+    }));
+    return { total: list.length, byType, pages, iframes, workers, frames };
   } catch (e) {
     return { error: e.message };
   }
@@ -302,11 +407,79 @@ function buildVarsExpression(cap) {
 }
 
 /**
- * closed shadow root 无法被 JS 枚举（`el.shadowRoot` 恒为 `null`），只能靠 rule 库的
- * `shadowDomRiskSelectors` 已知风险选择器做启发式检测。当前 rule 库未建，默认空；
- * 后续接入 agent-rules 后由规则驱动（避免凭猜测误报）。
+ * closed shadow root 无法被 JS 枚举（`el.shadowRoot` 恒为 `null`），只能靠规则库的
+ * `shadowDomRiskSelectors` 已知风险选择器做启发式检测。这里的「种子」是规则库的初始候选：
+ *   - 命中元素且该元素无 open shadowRoot → 判定为 closed shadow 盲区（主题注入无法穿透）。
+ *   - 仅当对应组件在目标应用里**实际挂载**时才产生命中，不会凭空误报；种子本身不代表已确认。
+ *
+ * `COMMON` 为跨 Agent 固定种子：Chromium 原生 closed-shadow 宿主（UA shadow / 内置绘制控件），
+ * 主题 CSS 无法穿透其内部，是稳定的注入盲区提示。
+ * `BY_AGENT` 为各 Agent 的种子候选（待观测确认），与 COMMON 合并后作为该 Agent 的探测选择器；
+ * 结合 buildRuleTemplate 从 openShadow 观测回填的 `shadowDomRiskSelectors`，形成「种子→观测→回填」闭环。
  */
-const SHADOW_RISK_SELECTORS = [];
+const SHADOW_RISK_SELECTORS_COMMON = [
+  // Chromium 原生 closed shadow 宿主：UA shadow 内置绘制，注入无法穿透。
+  'input[type="range"]',
+  'input[type="color"]',
+  'input[type="file"]',
+  'input[type="date"]',
+  'input[type="time"]',
+  'input[type="datetime-local"]',
+  'input[type="month"]',
+  'input[type="week"]',
+  'video',
+  'audio',
+  'select',
+];
+
+/** 各 Agent closed shadow 规则库种子候选。无实据的异常分支留空，避免无依据的猜测误报。 */
+const SHADOW_RISK_SELECTORS_BY_AGENT = {
+  codex: [], // 渲染为 open DOM；已知编辑器/预览面并入 COMMON 原生宿主即可覆盖
+  doubao: [], // 文档/视频等复杂内容走 OOPIF iframe，由 frame 聚合（enumerateTargets）覆盖，不在主 frame 内探测
+  qoderwork: [],
+  traework: [],
+  workbuddy: [],
+  zcode: [],
+};
+
+/** 解析某 Agent 实际使用的 closed shadow 风险选择器 = COMMON ∪ 种子 ∪ --shadow-seed 增量（common + 分桶）。 */
+function resolveShadowRiskSelectors(adapterId) {
+  const seed = OPTIONS.shadowSeed ?? { common: [], byAgent: {} };
+  return [
+    ...SHADOW_RISK_SELECTORS_COMMON,
+    ...(seed.common ?? []),
+    ...(SHADOW_RISK_SELECTORS_BY_AGENT[adapterId] ?? []),
+    ...(seed.byAgent[adapterId] ?? []),
+  ];
+}
+
+/**
+ * 加载 --shadow-seed 指向的种子增量文件（{ "agentId": ["selector", ...], "common": [...] }），
+ * 用于注入已人工验证的 closed shadow 选择器。文件缺失/解析失败时静默降级为空。
+ */
+function loadShadowSeed(path) {
+  const empty = { common: [], byAgent: {} };
+  if (!path || !existsSync(path)) return empty;
+  try {
+    const raw = JSON.parse(readFileSync(path, 'utf-8'));
+    const byAgent = {};
+    for (const k of Object.keys(raw)) {
+      if (k === 'common') {
+        (Array.isArray(raw.common) ? raw.common : []).forEach((s) => {
+          if (typeof s === 'string' && !empty.common.includes(s)) empty.common.push(s);
+        });
+      } else if (typeof raw[k] === 'string') {
+        byAgent[k] = [raw[k]];
+      } else if (Array.isArray(raw[k])) {
+        byAgent[k] = raw[k].filter((s) => typeof s === 'string');
+      }
+    }
+    return { common: empty.common, byAgent };
+  } catch (e) {
+    debugLog(`shadow-seed 解析失败（已忽略）: ${e.message}`);
+    return empty;
+  }
+}
 
 /**
  * 采集样式表 AST：遍历 `document.styleSheets` + `document.adoptedStyleSheets` 的 cssRules，
@@ -518,7 +691,9 @@ async function probeRuntime(adapter, target) {
     const styleAst = await evaluateJson(client, buildStyleAstExpression())
       .then((v) => JSON.parse(v))
       .catch((e) => ({ error: e.message }));
-    const shadowDom = await evaluateJson(client, buildShadowDomExpression(SHADOW_RISK_SELECTORS))
+    // closed shadow 种子随 Agent 解析（COMMON ∪ 分桶 ∪ --shadow-seed），写入结果便于消费方回看探测依据
+    const shadowSeeds = resolveShadowRiskSelectors(adapter.id);
+    const shadowDom = await evaluateJson(client, buildShadowDomExpression(shadowSeeds))
       .then((v) => JSON.parse(v))
       .catch((e) => ({ error: e.message }));
     const domContext = await evaluateJson(client, buildDomContextExpression())
@@ -560,6 +735,7 @@ async function probeRuntime(adapter, target) {
       rootVars,
       styleAst,
       shadowDom,
+      shadowSeeds,
       domContext,
       landmarkColors,
       targetEnumeration,
@@ -1409,8 +1585,13 @@ function printAgentReport(adapter, report) {
       const byType = Object.entries(te.byType)
         .map(([k, v]) => `${k}=${v}`)
         .join(' ');
+      const fr = te.frames;
+      const frameInfo =
+        fr && !fr.error
+          ? ` | frame=${fr.frameCount} oopif=${fr.oopifCount}${fr.oopifCount ? ' (跨进程边界)' : ''}`
+          : '';
       console.log(
-        `          Target: total=${te.total}（${byType}）| iframe=${te.iframes.length} worker=${te.workers.length}`,
+        `          Target: total=${te.total}（${byType}）| iframe=${te.iframes.length} worker=${te.workers.length}${frameInfo}`,
       );
     }
     const drift = report.compare?.verificationDrift ?? [];
@@ -1697,6 +1878,7 @@ function buildLightReport(reports, baselineDiff) {
                   totalShadowEls: r.runtime.shadowDom?.totalShadowEls ?? null,
                   adoptedInShadow: r.runtime.shadowDom?.adoptedInShadow ?? null,
                   closedShadowRisk: r.runtime.shadowDom?.closedShadowRisk ?? [],
+                  seeds: r.runtime.shadowSeeds ?? [],
                 },
             targets: r.runtime.targetEnumeration?.error
               ? { error: r.runtime.targetEnumeration.error }
@@ -1705,6 +1887,13 @@ function buildLightReport(reports, baselineDiff) {
                   byType: r.runtime.targetEnumeration?.byType ?? {},
                   iframes: r.runtime.targetEnumeration?.iframes?.length ?? null,
                   workers: r.runtime.targetEnumeration?.workers?.length ?? null,
+                  frames: r.runtime.targetEnumeration?.frames?.error
+                    ? { error: r.runtime.targetEnumeration.frames.error }
+                    : {
+                        targetCount: r.runtime.targetEnumeration?.frames?.targetCount ?? null,
+                        frameCount: r.runtime.targetEnumeration?.frames?.frameCount ?? null,
+                        oopifCount: r.runtime.targetEnumeration?.frames?.oopifCount ?? null,
+                      },
                 },
           }
         : { ok: false, error: r.runtime.error },
@@ -1857,12 +2046,20 @@ function buildRuleTemplate(adapter, report) {
     globalApiCandidates: [],
     globalStorePathCandidates: [],
     lazyRiskComponents: ['Modal', 'Dropdown', 'Popover', 'Select', 'Tooltip', 'Dialog'],
-    shadowDomRiskSelectors:
-      shadowDom && !shadowDom.error && shadowDom.openHosts?.length
-        ? shadowDom.openHosts
-            .slice(0, 10)
-            .map((h) => `${h.tag}${h.cls?.length ? '.' + h.cls.join('.') : ''}`)
-        : [],
+    shadowDomRiskSelectors: (() => {
+      // 规则库种子（COMMON ∪ 各 Agent 分桶 ∪ --shadow-seed）作为固定候选，
+      // 与运行时观测到的 openShadow host 选择器合并去重，形成「种子→观测→回填」完整清单。
+      const observed =
+        shadowDom && !shadowDom.error && shadowDom.openHosts?.length
+          ? shadowDom.openHosts
+              .slice(0, 10)
+              .map((h) => `${h.tag}${h.cls?.length ? `.${h.cls.join('.')}` : ''}`)
+          : [];
+      const seeds = resolveShadowRiskSelectors(adapter.id);
+      const merged = [...observed];
+      for (const s of seeds) if (!merged.includes(s)) merged.push(s);
+      return merged;
+    })(),
     themeImplMode: deriveThemeImplMode(report),
     canSilentSwitch: false,
     switchSideEffects: [],
@@ -2088,6 +2285,7 @@ async function main() {
   OPTIONS.meta = flag('--meta');
   OPTIONS.writePatches = flag('--write-patches');
   OPTIONS.dryRun = flag('--dry-run');
+  OPTIONS.shadowSeed = loadShadowSeed(value('--shadow-seed'));
 
   const requested = value('--agent');
   const outputDir = resolve(value('--out') ?? 'agents-raw-data');

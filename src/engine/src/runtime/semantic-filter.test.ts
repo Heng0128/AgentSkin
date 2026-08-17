@@ -36,7 +36,7 @@ describe('semantic registry (CV-04 base)', () => {
   });
 
   it('entries without semantic config default to theme-controlled', () => {
-    // workbuddy.composer has no semantic config → isNativeThemeControlled 缺省 true
+    // workbuddy.composer now has a semantic config → isNativeThemeControlled true
     expect(isNativeThemeControlled('workbuddy', 'composer')).toBe(true);
     // 未知条目也按受控处理（避免未配置退化）
     expect(isNativeThemeControlled('traework', 'does-not-exist')).toBe(true);
@@ -46,6 +46,14 @@ describe('semantic registry (CV-04 base)', () => {
     // 预留：若未来某条目显式 controlled=false，应返回 false
     const fullTopology = collectNonControlledTopology('traework');
     expect(Array.isArray(fullTopology)).toBe(true);
+  });
+
+  it('4 agents gained composer nonControlled after audit A-01', () => {
+    for (const agent of ['workbuddy', 'doubao', 'qoderwork', 'zcode']) {
+      const semantic = getSemantic(agent, 'composer');
+      expect(semantic?.controlled).toBe(true);
+      expect(semantic?.nonControlled).toContain("[contenteditable='true']");
+    }
   });
 });
 
@@ -61,9 +69,13 @@ describe('collectNonControlledSelectors', () => {
     expect(collectNonControlledSelectors('nope')).toEqual([]);
   });
 
-  it('agents without semantic return empty', () => {
-    // qoderwork/other 无 semantic.nonControlled → 空
-    expect(collectNonControlledSelectors('qoderwork')).toEqual([]);
+  it('4 agents now contribute composer nonControlled selectors (A-01)', () => {
+    for (const agent of ['workbuddy', 'doubao', 'qoderwork', 'zcode']) {
+      const selectors = collectNonControlledSelectors(agent);
+      expect(selectors).toContain("[contenteditable='true']");
+      expect(selectors).toContain('textarea');
+      expect(selectors).toContain('button');
+    }
   });
 });
 
@@ -79,8 +91,15 @@ describe('buildExclusionSelectors', () => {
     expect(exclusions[0]).toContain(':not(.x-foo)');
   });
 
-  it('returns [] when nothing to exclude', () => {
-    expect(buildExclusionSelectors('qoderwork')).toEqual([]);
+  it('returns exclusions for the 4 A-01 agents composer inputs', () => {
+    for (const agent of ['workbuddy', 'doubao', 'qoderwork', 'zcode']) {
+      const exclusions = buildExclusionSelectors(agent);
+      expect(exclusions).toContain(`[contenteditable='true']:not(.${NON_CONTROLLED_CLASS})`);
+    }
+  });
+
+  it('returns [] for an unknown/empty agent', () => {
+    expect(buildExclusionSelectors('nope')).toEqual([]);
   });
 });
 
@@ -94,7 +113,7 @@ describe('buildSemanticMarkExpression', () => {
   });
 
   it('returns a trivial expression when no selectors exist', () => {
-    const expression = buildSemanticMarkExpression('qoderwork');
+    const expression = buildSemanticMarkExpression('nope');
     expect(expression).toBe('(() => { return 0; })()');
   });
 });
