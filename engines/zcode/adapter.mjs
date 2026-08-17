@@ -80,6 +80,11 @@ class AdaptiveMutationObserver {
   'use strict';
   const HOST_CLASS = 'agentskin-host-zcode';
   const MARKER = '__agentskin_zcode_adapter__';
+  // 运行时语义锚点（CV-06/CV-07 域限定）：把 frosted-glass 与输入框样式限定到
+  // 真正的侧边栏与 composer，而非 `aside, nav` / 全局输入框——避免误伤顶部导航栏、
+  // 代码编辑器与搜索框。由 findSidebar/findComposer 按几何/语义特征解析后打标。
+  const SIDEBAR_ATTR = 'data-agentskin-sidebar';
+  const COMPOSER_ATTR = 'data-agentskin-composer';
   if (window[MARKER]) return 'already-applied';
 
   const config = window.__AGENTSKIN_CONFIG__ || {};
@@ -124,39 +129,32 @@ html.${HOST_CLASS} [role="main"] {
   color: var(--agentskin-text) !important;
 }
 
-/* === Sidebar / nav containers: frosted glass ===
-   The tint (--sidebar-bg) is semi-transparent; backdrop-filter blurs what's
-   behind (hero art / injected wallpaper) for a true frosted-glass sidebar,
-   matching the composer + popover treatment. On flat (art:false) themes the
-   background is the palette's solid --agentskin-bg, so the blur is invisible
-   but harmless. A slightly softer blur than the input keeps the persistent
-   surface readable while still reading as glass. */
-html.${HOST_CLASS} aside,
-html.${HOST_CLASS} nav {
+/* === Sidebar containers: frosted glass (scoped to sidebar anchor, CV-06) ===
+   Prior version blended `aside, nav` indiscriminately, styling the top nav like
+   a sidebar and double-tinting layered `<aside>` wrappers. Now the frosted-glass
+   + hover/active tints attach to [data-agentskin-sidebar] (set at runtime by
+   findSidebar), so the persistent left pane reads as glass while the top nav
+   and any nested `<aside>`/`<nav>` outside the detected sidebar stay native. */
+html.${HOST_CLASS} [${SIDEBAR_ATTR}] {
   background: var(--sidebar-bg, color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 22%, transparent)) !important;
   backdrop-filter: blur(16px) saturate(1.15) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.15) !important;
 }
-html.${HOST_CLASS} aside a:hover,
-html.${HOST_CLASS} nav a:hover,
-html.${HOST_CLASS} aside button:hover,
-html.${HOST_CLASS} nav button:hover {
+html.${HOST_CLASS} [${SIDEBAR_ATTR}] a:hover,
+html.${HOST_CLASS} [${SIDEBAR_ATTR}] button:hover {
   background: var(--bg-hover, color-mix(in srgb, var(--agentskin-accent) 10%, transparent)) !important;
 }
-html.${HOST_CLASS} aside a[aria-current="true"],
-html.${HOST_CLASS} aside a[aria-current="page"],
-html.${HOST_CLASS} nav a[aria-current="true"],
-html.${HOST_CLASS} nav a[aria-current="page"] {
+html.${HOST_CLASS} [${SIDEBAR_ATTR}] a[aria-current="true"],
+html.${HOST_CLASS} [${SIDEBAR_ATTR}] a[aria-current="page"] {
   background: var(--bg-active, color-mix(in srgb, var(--agentskin-accent) 16%, transparent)) !important;
 }
 
-/* === Composer / input area: frosted glass ===
-   The tint (--input-bg) is semi-transparent so the hero wallpaper/art shows
-   through; backdrop-filter blurs what's behind for a true frosted-glass
-   effect. On flat (art:false) themes the background is the palette's solid
-   --agentskin-bg, so the blur is invisible but harmless. */
-html.${HOST_CLASS} [contenteditable="true"],
-html.${HOST_CLASS} textarea {
+/* === Composer / input area: frosted glass (scoped to composer anchor, CV-07) ===
+   Prior version hit every [contenteditable="true"]/textarea, so the code editor,
+   search box and other text surfaces were all over-rendered. Now the input glass
+   targets [data-agentskin-composer] ... editable surfaces only. */
+html.${HOST_CLASS} [${COMPOSER_ATTR}] [contenteditable="true"],
+html.${HOST_CLASS} [${COMPOSER_ATTR}] textarea {
   background: var(--input-bg, color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent)) !important;
   border: 1px solid color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
   border-radius: 14px !important;
@@ -166,9 +164,9 @@ html.${HOST_CLASS} textarea {
   color: var(--agentskin-text) !important;
   caret-color: var(--agentskin-accent) !important;
 }
-html.${HOST_CLASS} [contenteditable="true"]:focus,
-html.${HOST_CLASS} textarea:focus,
-html.${HOST_CLASS} input:focus {
+html.${HOST_CLASS} [${COMPOSER_ATTR}] [contenteditable="true"]:focus,
+html.${HOST_CLASS} [${COMPOSER_ATTR}] textarea:focus,
+html.${HOST_CLASS} [${COMPOSER_ATTR}] input:focus {
   outline: none !important;
   border-color: var(--agentskin-accent) !important;
   box-shadow: 0 0 0 2px var(--agentskin-focus-ring, color-mix(in srgb, var(--agentskin-accent) 38%, transparent)) !important;
@@ -257,6 +255,19 @@ html.${HOST_CLASS} [class*="tooltip"] {
       if (form) return form;
     }
     return null;
+  }
+
+  // 运行时语义锚点打标（CV-06/CV-07）：解析侧边栏与 composer 并附加属性，
+  // 使 STRUCTURAL_CSS 中的域限定选择器命中。幂等——重复调用不报错、不重复标记。
+  function applySemanticAnchors() {
+    const sidebar = findSidebar();
+    if (sidebar) {
+      try { sidebar.setAttribute(SIDEBAR_ATTR, ''); } catch {}
+    }
+    const composer = findComposer();
+    if (composer) {
+      try { composer.setAttribute(COMPOSER_ATTR, ''); } catch {}
+    }
   }
 
   // L4: Token auto-discovery — scans agent stylesheets for custom properties
