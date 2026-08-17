@@ -407,6 +407,31 @@ function buildVarsExpression(cap) {
 }
 
 /**
+ * bridge 可达性探测（修正诊断口径）：
+ * getComputedStyle 的对象索引枚举（cs[i]）不覆盖 adoptedStyleSheets / 动态注入的
+ * 自定义属性，导致 analyze 把「实际生效的 bridge 变量」误判为「组件作用域不可达」。
+ * 改为对每个 bridge 变量在 document.documentElement 和 document.body 上显式
+ * getPropertyValue(name) 寻址——实测对 adopted 注入仍能返回计算值（主题色）。
+ * 返回 { root: {var: value}, body: {var: value} }，空串值视为不可达（不入结果）。
+ */
+function buildBridgeReachExpression(vars) {
+  const arr = JSON.stringify(vars);
+  return `(() => {
+    const vars = ${arr};
+    const read = (el) => {
+      const s = getComputedStyle(el);
+      const o = {};
+      for (const v of vars) {
+        const val = s.getPropertyValue(v).trim();
+        if (val) o[v] = val;
+      }
+      return o;
+    };
+    return JSON.stringify({ root: read(document.documentElement), body: read(document.body) });
+  })()`;
+}
+
+/**
  * closed shadow root 无法被 JS 枚举（`el.shadowRoot` 恒为 `null`），只能靠规则库的
  * `shadowDomRiskSelectors` 已知风险选择器做启发式检测。这里的「种子」是规则库的初始候选：
  *   - 命中元素且该元素无 open shadowRoot → 判定为 closed shadow 盲区（主题注入无法穿透）。
@@ -685,6 +710,14 @@ async function probeRuntime(adapter, target) {
       await evaluateJson(client, buildClassInventoryExpression(RUNTIME_CLASS_CAP)),
     );
     const rootVars = JSON.parse(await evaluateJson(client, buildVarsExpression(RUNTIME_VAR_CAP)));
+    // bridge 可达性探测（修正口径）：对每个 bridge 变量在 root/body 显式 getPropertyValue 寻址，
+    // 规避 cs[] 枚举对 adopted 注入变量的漏采（该漏采曾误判 workbuddy/qoderwork 为「组件作用域不可达」）。
+    const bridgeReach = await evaluateJson(
+      client,
+      buildBridgeReachExpression((adapter.bridge ?? []).map((e) => e.var)),
+    )
+      .then((v) => JSON.parse(v))
+      .catch(() => ({ root: {}, body: {} }));
 
     // 样式 AST（document.styleSheets + adoptedStyleSheets）与 Shadow DOM 遍历——只读、独立降级，
     // 任一失败仅置 error 字段，不阻断 classInventory/rootVars 主链路。
@@ -733,6 +766,7 @@ async function probeRuntime(adapter, target) {
       title: target.title ?? null,
       classInventory,
       rootVars,
+      bridgeReach,
       styleAst,
       shadowDom,
       shadowSeeds,
@@ -1142,8 +1176,19 @@ function buildCompare(
     ? (vars.shared.length / staticVarNames.size).toFixed(3)
     : null;
 
-  // 桥接变量可达性：区分「:root 不可达」与「静态 CSS 也未声明（疑似失效 entry）」
-  const bridge = bridgeStatus(adapter, runtime.rootVars?.names ?? [], statik.cssVars?.names ?? []);
+  // 桥接变量可达性：区分「不可达」与「静态 CSS 也未声明（疑似失效 entry）」
+  // presentInRuntime 判定合并两来源：
+  //   - rootVars：:root 计算样式枚举，覆盖直接声明在 :root 的变量（codex/traework/zcode 等）
+  //   - bridgeReach：显式 getPropertyValue 寻址 root/body，覆盖 adopted 注入 / body 级声明
+  //     （cs[] 枚举对 adoptedStyleSheets 注入的变量漏采，曾误判 workbuddy/qoderwork 为不可达）
+  const brRootKeys = Object.keys(runtime.bridgeReach?.root ?? {});
+  const brBodyKeys = Object.keys(runtime.bridgeReach?.body ?? {});
+  const reachableVarNames = new Set([
+    ...(runtime.rootVars?.names ?? []),
+    ...brRootKeys,
+    ...brBodyKeys,
+  ]);
+  const bridge = bridgeStatus(adapter, reachableVarNames, statik.cssVars?.names ?? []);
   const bridgeMissing = bridge.filter((b) => !b.presentInRuntime);
   const bridgeNeverDeclared = bridgeMissing.filter((b) => !b.declaredInStatic);
 
@@ -1152,9 +1197,11 @@ function buildCompare(
     .filter((c) => c.error == null)
     .map((c) => ({ selector: c.selector, scope: c.scope, matches: c.matches, visible: c.visible }));
 
-  // Tailwind @theme-inline 组件级主题模式识别：静态有变量但 :root 全局读不到
+  // Tailwind @theme-inline 组件级主题模式识别：静态有变量，且 :root 枚举 + 显式寻址均读不到，
+  // 才判定为纯组件作用域（避免 adopted/body 注入被误判为不可达而误喊需改组件注入）。
   const themeHint = [];
-  if (statik.cssVars?.unique > 0 && (runtime.rootVars?.unique ?? 0) === 0) {
+  const bridgeReachEmpty = brRootKeys.length === 0 && brBodyKeys.length === 0;
+  if (statik.cssVars?.unique > 0 && (runtime.rootVars?.unique ?? 0) === 0 && bridgeReachEmpty) {
     themeHint.push(
       `检测疑似 Tailwind @theme-inline 模式：静态声明 ${statik.cssVars.unique} 个 CSS 变量，但运行时 :root 读取不到（变量仅组件作用域），当前 :root 桥接策略会失效，需改为组件级注入`,
     );

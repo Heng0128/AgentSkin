@@ -19,12 +19,12 @@ import { join, resolve } from 'node:path';
 
 // ============== 配置 ==============
 const AGENT_PORTS = {
-  codex: 58360,
-  doubao: 61607,
-  qoderwork: 61996,
-  traework: 54676,
-  workbuddy: 52743,
-  zcode: 65142,
+  codex: 58554,
+  doubao: 61055,
+  qoderwork: 53137,
+  traework: 56211,
+  workbuddy: 57440,
+  zcode: 55435,
 };
 
 const DEFAULT_MAX_DOM_NODES = 2000;

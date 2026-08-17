@@ -1,0 +1,109 @@
+{
+  "generatedAt": "2026-08-17T06:49:45.087Z",
+  "agents": [
+    {
+      "id": "codex",
+      "displayName": "OpenAI Codex",
+      "baselineStatus": "OK",
+      "currentStatus": "OK",
+      "newDeadLandmarks": [],
+      "resolvedDeadLandmarks": [],
+      "newBridgeMissing": [],
+      "resolvedBridgeMissing": [],
+      "isNewDrift": false,
+      "isRecovered": false
+    },
+    {
+      "id": "doubao",
+      "displayName": "豆包",
+      "baselineStatus": "OK",
+      "currentStatus": "OK",
+      "newDeadLandmarks": [],
+      "resolvedDeadLandmarks": [],
+      "newBridgeMissing": [],
+      "resolvedBridgeMissing": [],
+      "isNewDrift": false,
+      "isRecovered": false
+    },
+    {
+      "id": "workbuddy",
+      "displayName": "WorkBuddy",
+      "baselineStatus": "DRIFT",
+      "currentStatus": "OK",
+      "newDeadLandmarks": [],
+      "resolvedDeadLandmarks": [],
+      "newBridgeMissing": [],
+      "resolvedBridgeMissing": [
+        "--cb-bg-primary",
+        "--cb-bg-secondary",
+        "--cb-panel-bg-primary",
+        "--cb-text-primary",
+        "--cb-text-secondary",
+        "--cb-text-disabled",
+        "--cb-text-link",
+        "--cb-vscode-editor-background",
+        "--cb-vscode-foreground",
+        "--cb-vscode-focusBorder",
+        "--cb-vscode-button-background",
+        "--cb-vscode-button-foreground",
+        "--cb-vscode-panel-border",
+        "--cb-input-placeholder",
+        "--cb-sidebar-bg"
+      ],
+      "isNewDrift": false,
+      "isRecovered": true
+    },
+    {
+      "id": "qoderwork",
+      "displayName": "QoderWork CN",
+      "baselineStatus": "DRIFT",
+      "currentStatus": "OK",
+      "newDeadLandmarks": [],
+      "resolvedDeadLandmarks": [],
+      "newBridgeMissing": [],
+      "resolvedBridgeMissing": [
+        "--color-primary",
+        "--color-text",
+        "--color-text-secondary",
+        "--color-text-tertiary",
+        "--color-muted",
+        "--color-text-on-primary",
+        "--color-bg-elevated",
+        "--color-popover",
+        "--color-border",
+        "--color-border-secondary",
+        "--color-fill",
+        "--color-link"
+      ],
+      "isNewDrift": false,
+      "isRecovered": true
+    },
+    {
+      "id": "traework",
+      "displayName": "TRAE Work CN",
+      "baselineStatus": "OK",
+      "currentStatus": "OK",
+      "newDeadLandmarks": [],
+      "resolvedDeadLandmarks": [],
+      "newBridgeMissing": [],
+      "resolvedBridgeMissing": [],
+      "isNewDrift": false,
+      "isRecovered": false
+    },
+    {
+      "id": "zcode",
+      "displayName": "ZCode",
+      "baselineStatus": "OK",
+      "currentStatus": "OK",
+      "newDeadLandmarks": [],
+      "resolvedDeadLandmarks": [],
+      "newBridgeMissing": [],
+      "resolvedBridgeMissing": [],
+      "isNewDrift": false,
+      "isRecovered": false
+    }
+  ],
+  "newDriftCount": 0,
+  "recoveredCount": 2,
+  "persistentCount": 0
+}

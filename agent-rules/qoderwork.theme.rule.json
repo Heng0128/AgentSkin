@@ -3,7 +3,7 @@
   "displayName": "QoderWork CN",
   "schemaVer": "1.3",
   "_generated": {
-    "at": "2026-08-16T18:37:50.161Z",
+    "at": "2026-08-17T06:25:33.183Z",
     "from": "C:\\Program Files\\QoderWork CN\\QoderWork CN\\resources\\app.asar",
     "note": "asar 静态解包 + CDP 运行时探测自动生成的初始模板；globalApiCandidates/globalStorePathCandidates/canSilentSwitch/switchSideEffects 需人工补全后生效"
   },
@@ -12,6 +12,16 @@
       "type": "dataset",
       "key": "theme",
       "sampleValue": "classic-dark"
+    },
+    {
+      "type": "dataset",
+      "key": "agentskinTheme",
+      "sampleValue": "nordic-minimal"
+    },
+    {
+      "type": "dataset",
+      "key": "agentskinThemeVersion",
+      "sampleValue": "1.0.0"
     },
     {
       "type": "localStorage",
@@ -39,7 +49,19 @@
     "Tooltip",
     "Dialog"
   ],
-  "shadowDomRiskSelectors": [],
+  "shadowDomRiskSelectors": [
+    "input[type=\"range\"]",
+    "input[type=\"color\"]",
+    "input[type=\"file\"]",
+    "input[type=\"date\"]",
+    "input[type=\"time\"]",
+    "input[type=\"datetime-local\"]",
+    "input[type=\"month\"]",
+    "input[type=\"week\"]",
+    "video",
+    "audio",
+    "select"
+  ],
   "themeImplMode": "mixed",
   "canSilentSwitch": false,
   "switchSideEffects": [],
@@ -49,7 +71,9 @@
   },
   "darkFingerprint": {
     "dataset": {
-      "theme": "classic-dark"
+      "theme": "classic-dark",
+      "agentskinTheme": "nordic-minimal",
+      "agentskinThemeVersion": "1.0.0"
     },
     "cssVars": {
       "--loading-bg": "#ffffff",

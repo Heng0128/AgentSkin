@@ -1,0 +1,1163 @@
+{
+  "generatedAt": "2026-08-17T06:49:45.099Z",
+  "agents": 6,
+  "baseline": {
+    "generatedAt": "2026-08-17T06:49:45.087Z",
+    "newDriftCount": 0,
+    "recoveredCount": 2,
+    "persistentCount": 0,
+    "agents": [
+      {
+        "id": "codex",
+        "displayName": "OpenAI Codex",
+        "baselineStatus": "OK",
+        "currentStatus": "OK",
+        "isNewDrift": false,
+        "isRecovered": false,
+        "newDeadLandmarks": [],
+        "newBridgeMissing": [],
+        "resolvedDeadLandmarks": [],
+        "resolvedBridgeMissing": []
+      },
+      {
+        "id": "doubao",
+        "displayName": "豆包",
+        "baselineStatus": "OK",
+        "currentStatus": "OK",
+        "isNewDrift": false,
+        "isRecovered": false,
+        "newDeadLandmarks": [],
+        "newBridgeMissing": [],
+        "resolvedDeadLandmarks": [],
+        "resolvedBridgeMissing": []
+      },
+      {
+        "id": "workbuddy",
+        "displayName": "WorkBuddy",
+        "baselineStatus": "DRIFT",
+        "currentStatus": "OK",
+        "isNewDrift": false,
+        "isRecovered": true,
+        "newDeadLandmarks": [],
+        "newBridgeMissing": [],
+        "resolvedDeadLandmarks": [],
+        "resolvedBridgeMissing": [
+          "--cb-bg-primary",
+          "--cb-bg-secondary",
+          "--cb-panel-bg-primary",
+          "--cb-text-primary",
+          "--cb-text-secondary",
+          "--cb-text-disabled",
+          "--cb-text-link",
+          "--cb-vscode-editor-background",
+          "--cb-vscode-foreground",
+          "--cb-vscode-focusBorder",
+          "--cb-vscode-button-background",
+          "--cb-vscode-button-foreground",
+          "--cb-vscode-panel-border",
+          "--cb-input-placeholder",
+          "--cb-sidebar-bg"
+        ]
+      },
+      {
+        "id": "qoderwork",
+        "displayName": "QoderWork CN",
+        "baselineStatus": "DRIFT",
+        "currentStatus": "OK",
+        "isNewDrift": false,
+        "isRecovered": true,
+        "newDeadLandmarks": [],
+        "newBridgeMissing": [],
+        "resolvedDeadLandmarks": [],
+        "resolvedBridgeMissing": [
+          "--color-primary",
+          "--color-text",
+          "--color-text-secondary",
+          "--color-text-tertiary",
+          "--color-muted",
+          "--color-text-on-primary",
+          "--color-bg-elevated",
+          "--color-popover",
+          "--color-border",
+          "--color-border-secondary",
+          "--color-fill",
+          "--color-link"
+        ]
+      },
+      {
+        "id": "traework",
+        "displayName": "TRAE Work CN",
+        "baselineStatus": "OK",
+        "currentStatus": "OK",
+        "isNewDrift": false,
+        "isRecovered": false,
+        "newDeadLandmarks": [],
+        "newBridgeMissing": [],
+        "resolvedDeadLandmarks": [],
+        "resolvedBridgeMissing": []
+      },
+      {
+        "id": "zcode",
+        "displayName": "ZCode",
+        "baselineStatus": "OK",
+        "currentStatus": "OK",
+        "isNewDrift": false,
+        "isRecovered": false,
+        "newDeadLandmarks": [],
+        "newBridgeMissing": [],
+        "resolvedDeadLandmarks": [],
+        "resolvedBridgeMissing": []
+      }
+    ]
+  },
+  "summary": [
+    {
+      "id": "codex",
+      "displayName": "OpenAI Codex",
+      "status": "OK",
+      "runtime": {
+        "port": 58554,
+        "classes": 404,
+        "vars": 1290,
+        "styleAst": {
+          "styleSheets": 11,
+          "adoptedSheets": 5,
+          "adoptedCssRules": 52,
+          "rootVarDecls": 49,
+          "themeSelectors": 35
+        },
+        "shadowDom": {
+          "openHostCount": 0,
+          "totalShadowEls": 0,
+          "adoptedInShadow": 0,
+          "closedShadowRisk": [],
+          "seeds": [
+            "input[type=\"range\"]",
+            "input[type=\"color\"]",
+            "input[type=\"file\"]",
+            "input[type=\"date\"]",
+            "input[type=\"time\"]",
+            "input[type=\"datetime-local\"]",
+            "input[type=\"month\"]",
+            "input[type=\"week\"]",
+            "video",
+            "audio",
+            "select"
+          ]
+        },
+        "targets": {
+          "total": 2,
+          "byType": {
+            "page": 2
+          },
+          "iframes": 0,
+          "workers": 0,
+          "frames": {
+            "targetCount": 2,
+            "frameCount": 0,
+            "oopifCount": 0
+          }
+        }
+      },
+      "static": {
+        "layout": "asar",
+        "classes": 53,
+        "vars": 1463
+      },
+      "compare": {
+        "drift": false,
+        "classCoverage": "0.698",
+        "varCoverage": "0.824",
+        "bridgeMissing": [],
+        "deadLandmarks": [],
+        "themeHint": [],
+        "topRuntimeDiffs": [
+          {
+            "name": "no-drag",
+            "count": 33
+          },
+          {
+            "name": "border",
+            "count": 31
+          },
+          {
+            "name": "focus-visible:ring-2",
+            "count": 27
+          },
+          {
+            "name": "focus-visible:ring-ring",
+            "count": 27
+          },
+          {
+            "name": "disabled:cursor-not-allowed",
+            "count": 27
+          },
+          {
+            "name": "border-transparent",
+            "count": 27
+          },
+          {
+            "name": "whitespace-nowrap",
+            "count": 26
+          },
+          {
+            "name": "focus:outline-none",
+            "count": 24
+          },
+          {
+            "name": "focus-visible:ring-offset-0",
+            "count": 23
+          },
+          {
+            "name": "disabled:opacity-40",
+            "count": 23
+          },
+          {
+            "name": "px-2",
+            "count": 18
+          },
+          {
+            "name": "py-0",
+            "count": 18
+          },
+          {
+            "name": "aspect-square",
+            "count": 16
+          },
+          {
+            "name": "!px-0",
+            "count": 16
+          },
+          {
+            "name": "enabled:hover:bg-primary-ghost-hover",
+            "count": 15
+          },
+          {
+            "name": "data-[state=open]:bg-primary-ghost-hover",
+            "count": 15
+          },
+          {
+            "name": "overflow-hidden",
+            "count": 15
+          },
+          {
+            "name": "rounded-lg",
+            "count": 14
+          },
+          {
+            "name": "leading-[18px]",
+            "count": 12
+          },
+          {
+            "name": "hover:bg-primary-ghost-hover",
+            "count": 11
+          },
+          {
+            "name": "justify-end",
+            "count": 11
+          },
+          {
+            "name": "rounded-full",
+            "count": 10
+          },
+          {
+            "name": "focus-visible:outline-2",
+            "count": 10
+          },
+          {
+            "name": "h-token-button-composer",
+            "count": 9
+          },
+          {
+            "name": "outline-none",
+            "count": 9
+          }
+        ],
+        "patchActions": [],
+        "verdicts": [
+          "静态声明但运行时未出现 16 个类名",
+          "运行时出现 367 个静态抓不到的类名（动态生成 / CSS Modules）"
+        ]
+      }
+    },
+    {
+      "id": "doubao",
+      "displayName": "豆包",
+      "status": "OK",
+      "runtime": {
+        "port": 61055,
+        "classes": 484,
+        "vars": 1236,
+        "styleAst": {
+          "styleSheets": 73,
+          "adoptedSheets": 5,
+          "adoptedCssRules": 58,
+          "rootVarDecls": 753,
+          "themeSelectors": 200
+        },
+        "shadowDom": {
+          "openHostCount": 0,
+          "totalShadowEls": 0,
+          "adoptedInShadow": 0,
+          "closedShadowRisk": [
+            {
+              "selector": "input[type=\"file\"]",
+              "host": "input",
+              "matches": 1
+            }
+          ],
+          "seeds": [
+            "input[type=\"range\"]",
+            "input[type=\"color\"]",
+            "input[type=\"file\"]",
+            "input[type=\"date\"]",
+            "input[type=\"time\"]",
+            "input[type=\"datetime-local\"]",
+            "input[type=\"month\"]",
+            "input[type=\"week\"]",
+            "video",
+            "audio",
+            "select"
+          ]
+        },
+        "targets": {
+          "total": 5,
+          "byType": {
+            "webview": 1,
+            "page": 2,
+            "iframe": 1,
+            "other": 1
+          },
+          "iframes": 1,
+          "workers": 0,
+          "frames": {
+            "targetCount": 3,
+            "frameCount": 0,
+            "oopifCount": 0
+          }
+        }
+      },
+      "static": {
+        "layout": "cef",
+        "classes": 32,
+        "vars": 0
+      },
+      "compare": {
+        "drift": false,
+        "classCoverage": "0.000",
+        "varCoverage": null,
+        "bridgeMissing": [],
+        "deadLandmarks": [],
+        "themeHint": [],
+        "topRuntimeDiffs": [
+          {
+            "name": "flex",
+            "count": 232
+          },
+          {
+            "name": "items-center",
+            "count": 176
+          },
+          {
+            "name": "min-w-0",
+            "count": 175
+          },
+          {
+            "name": "relative",
+            "count": 158
+          },
+          {
+            "name": "shrink-0",
+            "count": 124
+          },
+          {
+            "name": "cursor-pointer",
+            "count": 95
+          },
+          {
+            "name": "justify-center",
+            "count": 93
+          },
+          {
+            "name": "truncate",
+            "count": 91
+          },
+          {
+            "name": "hover:bg-dbx-fill-trans-10-hover",
+            "count": 88
+          },
+          {
+            "name": "whitespace-nowrap",
+            "count": 84
+          },
+          {
+            "name": "block",
+            "count": 82
+          },
+          {
+            "name": "w-full",
+            "count": 79
+          },
+          {
+            "name": "absolute",
+            "count": 79
+          },
+          {
+            "name": "select-none",
+            "count": 71
+          },
+          {
+            "name": "bg-transparent",
+            "count": 64
+          },
+          {
+            "name": "overflow-hidden",
+            "count": 63
+          },
+          {
+            "name": "rounded-dbx-lg",
+            "count": 63
+          },
+          {
+            "name": "ease-out",
+            "count": 59
+          },
+          {
+            "name": "font-[400]",
+            "count": 58
+          },
+          {
+            "name": "[&_svg]:shrink-0",
+            "count": 58
+          },
+          {
+            "name": "transition-colors",
+            "count": 58
+          },
+          {
+            "name": "duration-150",
+            "count": 58
+          },
+          {
+            "name": "[&:is(:where(:is([aria-haspopup=\"dialog\"],[aria-haspopup=\"menu\"])[data-state=\"open\"]:not([data-slot=\"alert-dialog-trigger\"])),:where(:is([aria-haspopup=\"dialog\"],[aria-haspopup=\"menu\"])[data-state=\"open\"]:not([data-slot=\"alert-dialog-trigger\"])_*))]:bg-dbx-fill-trans-10-hover",
+            "count": 57
+          },
+          {
+            "name": "container-fBOrXO",
+            "count": 56
+          },
+          {
+            "name": "opacity-0",
+            "count": 54
+          }
+        ],
+        "patchActions": [],
+        "verdicts": [
+          "静态声明但运行时未出现 32 个类名（其中疑似 CSS Modules 哈希 1 个，属正常）",
+          "运行时出现 484 个静态抓不到的类名（动态生成 / CSS Modules）"
+        ]
+      }
+    },
+    {
+      "id": "workbuddy",
+      "displayName": "WorkBuddy",
+      "status": "OK",
+      "runtime": {
+        "port": 57440,
+        "classes": 267,
+        "vars": 0,
+        "styleAst": {
+          "styleSheets": 84,
+          "adoptedSheets": 5,
+          "adoptedCssRules": 81,
+          "rootVarDecls": 3847,
+          "themeSelectors": 200
+        },
+        "shadowDom": {
+          "openHostCount": 1,
+          "totalShadowEls": 11,
+          "adoptedInShadow": 0,
+          "closedShadowRisk": [
+            {
+              "selector": "video",
+              "host": "video",
+              "matches": 1
+            }
+          ],
+          "seeds": [
+            "input[type=\"range\"]",
+            "input[type=\"color\"]",
+            "input[type=\"file\"]",
+            "input[type=\"date\"]",
+            "input[type=\"time\"]",
+            "input[type=\"datetime-local\"]",
+            "input[type=\"month\"]",
+            "input[type=\"week\"]",
+            "video",
+            "audio",
+            "select"
+          ]
+        },
+        "targets": {
+          "total": 1,
+          "byType": {
+            "page": 1
+          },
+          "iframes": 0,
+          "workers": 0,
+          "frames": {
+            "targetCount": 1,
+            "frameCount": 0,
+            "oopifCount": 0
+          }
+        }
+      },
+      "static": {
+        "layout": "asar",
+        "classes": 91,
+        "vars": 5080
+      },
+      "compare": {
+        "drift": false,
+        "classCoverage": "0.044",
+        "varCoverage": "0.000",
+        "bridgeMissing": [],
+        "deadLandmarks": [],
+        "themeHint": [],
+        "topRuntimeDiffs": [
+          {
+            "name": "fixed-action-button",
+            "count": 16
+          },
+          {
+            "name": "_icon_981i8_1",
+            "count": 9
+          },
+          {
+            "name": "wb-button",
+            "count": 8
+          },
+          {
+            "name": "wb-button--ghost",
+            "count": 8
+          },
+          {
+            "name": "wb-button--icon-only",
+            "count": 8
+          },
+          {
+            "name": "wb-button__icon",
+            "count": 8
+          },
+          {
+            "name": "wb-button__icon--left",
+            "count": 8
+          },
+          {
+            "name": "conversation-item",
+            "count": 8
+          },
+          {
+            "name": "_card_11ei8_1",
+            "count": 8
+          },
+          {
+            "name": "conversation-agent-card",
+            "count": 8
+          },
+          {
+            "name": "_title_11ei8_23",
+            "count": 8
+          },
+          {
+            "name": "_time_11ei8_231",
+            "count": 8
+          },
+          {
+            "name": "agent-card-more-button",
+            "count": 8
+          },
+          {
+            "name": "_small_981i8_27",
+            "count": 8
+          },
+          {
+            "name": "quick-actions__item",
+            "count": 8
+          },
+          {
+            "name": "quick-actions__item-icon",
+            "count": 8
+          },
+          {
+            "name": "conversation-list-tab-button",
+            "count": 7
+          },
+          {
+            "name": "conversation-list-tab-button-box",
+            "count": 6
+          },
+          {
+            "name": "conversation-agent-card--standalone",
+            "count": 5
+          },
+          {
+            "name": "collapsible-section",
+            "count": 5
+          },
+          {
+            "name": "collapsible-section-header",
+            "count": 5
+          },
+          {
+            "name": "collapsible-section-title",
+            "count": 5
+          },
+          {
+            "name": "collapsible-section-icon",
+            "count": 5
+          },
+          {
+            "name": "_title_fpw7i_48",
+            "count": 5
+          },
+          {
+            "name": "collapsible-section-label",
+            "count": 5
+          }
+        ],
+        "patchActions": [],
+        "verdicts": [
+          "静态声明但运行时未出现 87 个类名（其中疑似 CSS Modules 哈希 31 个，属正常）",
+          "运行时出现 263 个静态抓不到的类名（动态生成 / CSS Modules）"
+        ]
+      }
+    },
+    {
+      "id": "qoderwork",
+      "displayName": "QoderWork CN",
+      "status": "OK",
+      "runtime": {
+        "port": 53137,
+        "classes": 271,
+        "vars": 0,
+        "styleAst": {
+          "styleSheets": 8,
+          "adoptedSheets": 5,
+          "adoptedCssRules": 47,
+          "rootVarDecls": 126,
+          "themeSelectors": 97
+        },
+        "shadowDom": {
+          "openHostCount": 0,
+          "totalShadowEls": 0,
+          "adoptedInShadow": 0,
+          "closedShadowRisk": [],
+          "seeds": [
+            "input[type=\"range\"]",
+            "input[type=\"color\"]",
+            "input[type=\"file\"]",
+            "input[type=\"date\"]",
+            "input[type=\"time\"]",
+            "input[type=\"datetime-local\"]",
+            "input[type=\"month\"]",
+            "input[type=\"week\"]",
+            "video",
+            "audio",
+            "select"
+          ]
+        },
+        "targets": {
+          "total": 2,
+          "byType": {
+            "page": 2
+          },
+          "iframes": 0,
+          "workers": 0,
+          "frames": {
+            "targetCount": 2,
+            "frameCount": 0,
+            "oopifCount": 0
+          }
+        }
+      },
+      "static": {
+        "layout": "asar",
+        "classes": 621,
+        "vars": 353
+      },
+      "compare": {
+        "drift": false,
+        "classCoverage": "0.251",
+        "varCoverage": "0.000",
+        "bridgeMissing": [],
+        "deadLandmarks": [],
+        "themeHint": [],
+        "topRuntimeDiffs": [
+          {
+            "name": "hover:text-text",
+            "count": 27
+          },
+          {
+            "name": "py-[5px]",
+            "count": 24
+          },
+          {
+            "name": "focus-visible:outline",
+            "count": 24
+          },
+          {
+            "name": "focus-visible:outline-2",
+            "count": 24
+          },
+          {
+            "name": "focus-visible:outline-ring/70",
+            "count": 24
+          },
+          {
+            "name": "text-[13px]",
+            "count": 24
+          },
+          {
+            "name": "leading-[22px]",
+            "count": 24
+          },
+          {
+            "name": "gap-2.5",
+            "count": 21
+          },
+          {
+            "name": "focus:outline-none",
+            "count": 19
+          },
+          {
+            "name": "active:scale-[0.97]",
+            "count": 19
+          },
+          {
+            "name": "gap-0.5",
+            "count": 19
+          },
+          {
+            "name": "size-3.5",
+            "count": 18
+          },
+          {
+            "name": "text-text-secondary/80",
+            "count": 17
+          },
+          {
+            "name": "hover:text-foreground",
+            "count": 17
+          },
+          {
+            "name": "active:text-foreground",
+            "count": 17
+          },
+          {
+            "name": "transition-[opacity,transform,color]",
+            "count": 17
+          },
+          {
+            "name": "group-hover:opacity-100",
+            "count": 17
+          },
+          {
+            "name": "group-hover:scale-100",
+            "count": 17
+          },
+          {
+            "name": "group-hover:pointer-events-auto",
+            "count": 17
+          },
+          {
+            "name": "focus-visible:ring-2",
+            "count": 14
+          },
+          {
+            "name": "p-1.5",
+            "count": 13
+          },
+          {
+            "name": "transition-[color,background-color,border-color,box-shadow,opacity]",
+            "count": 12
+          },
+          {
+            "name": "motion-reduce:transition-none",
+            "count": 12
+          },
+          {
+            "name": "focus-visible:outline-none",
+            "count": 12
+          },
+          {
+            "name": "focus-visible:ring-[var(--color-primary-border)]",
+            "count": 12
+          }
+        ],
+        "patchActions": [],
+        "verdicts": [
+          "静态声明但运行时未出现 465 个类名",
+          "运行时出现 115 个静态抓不到的类名（动态生成 / CSS Modules）"
+        ]
+      }
+    },
+    {
+      "id": "traework",
+      "displayName": "TRAE Work CN",
+      "status": "OK",
+      "runtime": {
+        "port": 56211,
+        "classes": 300,
+        "vars": 2000,
+        "styleAst": {
+          "styleSheets": 38,
+          "adoptedSheets": 5,
+          "adoptedCssRules": 66,
+          "rootVarDecls": 4003,
+          "themeSelectors": 200
+        },
+        "shadowDom": {
+          "openHostCount": 0,
+          "totalShadowEls": 0,
+          "adoptedInShadow": 0,
+          "closedShadowRisk": [
+            {
+              "selector": "input[type=\"file\"]",
+              "host": "input",
+              "matches": 1
+            }
+          ],
+          "seeds": [
+            "input[type=\"range\"]",
+            "input[type=\"color\"]",
+            "input[type=\"file\"]",
+            "input[type=\"date\"]",
+            "input[type=\"time\"]",
+            "input[type=\"datetime-local\"]",
+            "input[type=\"month\"]",
+            "input[type=\"week\"]",
+            "video",
+            "audio",
+            "select"
+          ]
+        },
+        "targets": {
+          "total": 2,
+          "byType": {
+            "page": 1,
+            "worker": 1
+          },
+          "iframes": 0,
+          "workers": 1,
+          "frames": {
+            "targetCount": 1,
+            "frameCount": 0,
+            "oopifCount": 0
+          }
+        }
+      },
+      "static": {
+        "layout": "unpacked",
+        "classes": 29,
+        "vars": 47
+      },
+      "compare": {
+        "drift": false,
+        "classCoverage": "0.000",
+        "varCoverage": "0.404",
+        "bridgeMissing": [],
+        "deadLandmarks": [],
+        "themeHint": [],
+        "topRuntimeDiffs": [
+          {
+            "name": "trigger-RljaZJ",
+            "count": 75
+          },
+          {
+            "name": "iconButton-Q3VY7z",
+            "count": 45
+          },
+          {
+            "name": "icon-_l_X9w",
+            "count": 45
+          },
+          {
+            "name": "tertiary-kDbrxb",
+            "count": 43
+          },
+          {
+            "name": "user-message-query-line",
+            "count": 35
+          },
+          {
+            "name": "default-FjFsr_",
+            "count": 29
+          },
+          {
+            "name": "taskIconBtn",
+            "count": 28
+          },
+          {
+            "name": "user-message-query-text",
+            "count": 23
+          },
+          {
+            "name": "wrapper-xSbnEu",
+            "count": 19
+          },
+          {
+            "name": "small-OBA1vF",
+            "count": 16
+          },
+          {
+            "name": "task-list-row-wrapper",
+            "count": 14
+          },
+          {
+            "name": "taskItemWrapper",
+            "count": 14
+          },
+          {
+            "name": "taskItem",
+            "count": 14
+          },
+          {
+            "name": "taskItemGrouped",
+            "count": 14
+          },
+          {
+            "name": "taskPinArea",
+            "count": 14
+          },
+          {
+            "name": "taskPinAreaGrouped",
+            "count": 14
+          },
+          {
+            "name": "pinIconDefault",
+            "count": 14
+          },
+          {
+            "name": "taskText",
+            "count": 14
+          },
+          {
+            "name": "taskRight",
+            "count": 14
+          },
+          {
+            "name": "taskActions",
+            "count": 14
+          },
+          {
+            "name": "taskMoreBtn",
+            "count": 14
+          },
+          {
+            "name": "taskTreeBtn",
+            "count": 14
+          },
+          {
+            "name": "taskTreeBtnCode",
+            "count": 14
+          },
+          {
+            "name": "core-expandable-section",
+            "count": 12
+          },
+          {
+            "name": "solo-common-button",
+            "count": 11
+          }
+        ],
+        "patchActions": [],
+        "verdicts": [
+          "静态声明但运行时未出现 29 个类名",
+          "运行时出现 300 个静态抓不到的类名（动态生成 / CSS Modules）"
+        ]
+      }
+    },
+    {
+      "id": "zcode",
+      "displayName": "ZCode",
+      "status": "OK",
+      "runtime": {
+        "port": 55435,
+        "classes": 402,
+        "vars": 432,
+        "styleAst": {
+          "styleSheets": 5,
+          "adoptedSheets": 5,
+          "adoptedCssRules": 40,
+          "rootVarDecls": 1,
+          "themeSelectors": 5
+        },
+        "shadowDom": {
+          "openHostCount": 0,
+          "totalShadowEls": 0,
+          "adoptedInShadow": 0,
+          "closedShadowRisk": [
+            {
+              "selector": "input[type=\"file\"]",
+              "host": "input",
+              "matches": 1
+            },
+            {
+              "selector": "select",
+              "host": "select",
+              "matches": 2
+            }
+          ],
+          "seeds": [
+            "input[type=\"range\"]",
+            "input[type=\"color\"]",
+            "input[type=\"file\"]",
+            "input[type=\"date\"]",
+            "input[type=\"time\"]",
+            "input[type=\"datetime-local\"]",
+            "input[type=\"month\"]",
+            "input[type=\"week\"]",
+            "video",
+            "audio",
+            "select"
+          ]
+        },
+        "targets": {
+          "total": 5,
+          "byType": {
+            "page": 1,
+            "worker": 4
+          },
+          "iframes": 0,
+          "workers": 4,
+          "frames": {
+            "targetCount": 1,
+            "frameCount": 0,
+            "oopifCount": 0
+          }
+        }
+      },
+      "static": {
+        "layout": "asar",
+        "classes": 58,
+        "vars": 465
+      },
+      "compare": {
+        "drift": false,
+        "classCoverage": "0.621",
+        "varCoverage": "0.809",
+        "bridgeMissing": [],
+        "deadLandmarks": [],
+        "themeHint": [],
+        "topRuntimeDiffs": [
+          {
+            "name": "whitespace-nowrap",
+            "count": 49
+          },
+          {
+            "name": "transition-colors",
+            "count": 45
+          },
+          {
+            "name": "inline-flex",
+            "count": 44
+          },
+          {
+            "name": "outline-none",
+            "count": 43
+          },
+          {
+            "name": "hover:text-foreground",
+            "count": 42
+          },
+          {
+            "name": "border",
+            "count": 42
+          },
+          {
+            "name": "border-transparent",
+            "count": 39
+          },
+          {
+            "name": "disabled:opacity-50",
+            "count": 39
+          },
+          {
+            "name": "[&_svg]:pointer-events-none",
+            "count": 39
+          },
+          {
+            "name": "[&_svg]:shrink-0",
+            "count": 39
+          },
+          {
+            "name": "select-none",
+            "count": 37
+          },
+          {
+            "name": "disabled:pointer-events-none",
+            "count": 37
+          },
+          {
+            "name": "aria-invalid:border-destructive",
+            "count": 37
+          },
+          {
+            "name": "aria-invalid:ring-2",
+            "count": 37
+          },
+          {
+            "name": "aria-invalid:ring-destructive/20",
+            "count": 37
+          },
+          {
+            "name": "dark:aria-invalid:border-destructive/50",
+            "count": 37
+          },
+          {
+            "name": "dark:aria-invalid:ring-destructive/40",
+            "count": 37
+          },
+          {
+            "name": "group/button",
+            "count": 35
+          },
+          {
+            "name": "bg-clip-padding",
+            "count": 35
+          },
+          {
+            "name": "aria-expanded:text-foreground",
+            "count": 35
+          },
+          {
+            "name": "aria-expanded:bg-hover",
+            "count": 34
+          },
+          {
+            "name": "overflow-hidden",
+            "count": 29
+          },
+          {
+            "name": "text-ui-base/relaxed",
+            "count": 27
+          },
+          {
+            "name": "hover:bg-hover",
+            "count": 26
+          },
+          {
+            "name": "hover:bg-surface-hover",
+            "count": 22
+          }
+        ],
+        "patchActions": [],
+        "verdicts": [
+          "静态声明但运行时未出现 22 个类名",
+          "运行时出现 366 个静态抓不到的类名（动态生成 / CSS Modules）"
+        ]
+      }
+    }
+  ]
+}

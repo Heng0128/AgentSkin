@@ -1,0 +1,95 @@
+{
+  "agentId": "doubao",
+  "displayName": "豆包",
+  "schemaVer": "1.3",
+  "_generated": {
+    "at": "2026-08-17T06:25:33.182Z",
+    "from": null,
+    "note": "asar 静态解包 + CDP 运行时探测自动生成的初始模板；globalApiCandidates/globalStorePathCandidates/canSilentSwitch/switchSideEffects 需人工补全后生效"
+  },
+  "themePersistCandidates": [
+    {
+      "type": "dataset",
+      "key": "theme",
+      "sampleValue": "dark"
+    },
+    {
+      "type": "dataset",
+      "key": "agentskinTheme",
+      "sampleValue": "nordic-minimal"
+    },
+    {
+      "type": "dataset",
+      "key": "agentskinThemeVersion",
+      "sampleValue": "1.0.0"
+    },
+    {
+      "type": "localStorage",
+      "key": "flow-web-code-block-theme-store",
+      "sampleValue": "{\"state\":{\"codeBlockMode\":\"dark\"},\"version\":0}"
+    }
+  ],
+  "globalApiCandidates": [],
+  "globalStorePathCandidates": [],
+  "lazyRiskComponents": [
+    "Modal",
+    "Dropdown",
+    "Popover",
+    "Select",
+    "Tooltip",
+    "Dialog"
+  ],
+  "shadowDomRiskSelectors": [
+    "input[type=\"range\"]",
+    "input[type=\"color\"]",
+    "input[type=\"file\"]",
+    "input[type=\"date\"]",
+    "input[type=\"time\"]",
+    "input[type=\"datetime-local\"]",
+    "input[type=\"month\"]",
+    "input[type=\"week\"]",
+    "video",
+    "audio",
+    "select"
+  ],
+  "themeImplMode": "adopted",
+  "canSilentSwitch": false,
+  "switchSideEffects": [],
+  "lightFingerprint": {
+    "dataset": null,
+    "cssVars": {}
+  },
+  "darkFingerprint": {
+    "dataset": {
+      "theme": "dark",
+      "agentskinTheme": "nordic-minimal",
+      "agentskinThemeVersion": "1.0.0"
+    },
+    "cssVars": {
+      "--dbx-bg-body-web": "rgba(33, 33, 33, 1)",
+      "--text-xs--line-height": "calc(1/.75)",
+      "--text-sm--line-height": "calc(1.25/.875)",
+      "--text-base--line-height": "calc(1.5/1)",
+      "--text-lg--line-height": "calc(1.75/1.125)",
+      "--text-xl--line-height": "calc(1.75/1.25)",
+      "--text-2xl--line-height": "calc(2/1.5)",
+      "--text-6xl--line-height": "1",
+      "--color-dbx-text-primary": "var(--dbx-text-primary)",
+      "--color-dbx-text-secondary": "var(--dbx-text-secondary)",
+      "--color-dbx-text-disable": "var(--dbx-text-disable)",
+      "--color-dbx-fill-primary-50": "var(--dbx-fill-primary-50)",
+      "--color-dbx-bg-base-5": "var(--dbx-bg-base-5)",
+      "--color-g-send-msg-bubble-text": "var(--g-send-msg-bubble-text,var(--g-msg-bubble-text,var(--s-color-text-secondar",
+      "--color-g-editing-msg-scrollbar-thumb-bg": "var(--g-editing-msg-scrollbar-thumb-bg,var(--dbx-neutral-1000-15))",
+      "--color-g-editing-msg-scrollbar-thumb-hover-bg": "var(--g-editing-msg-scrollbar-thumb-hover-bg,var(--dbx-neutral-1000-30))",
+      "--dbx-text-primary": "#000",
+      "--dbx-bg-base-web": "#f9f9f9",
+      "--dbx-text-secondary": "#00000080",
+      "--dbx-text-tertiary": "#00000059",
+      "--dbx-text-disable": "#0003",
+      "--dbx-text-markdown": "#000000f2",
+      "--dbx-text-n00-primary": "#fff",
+      "--dbx-text-n00-secondary": "#fffc"
+    }
+  }
+}

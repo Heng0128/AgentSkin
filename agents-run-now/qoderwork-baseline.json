@@ -1,0 +1,2053 @@
+{
+  "meta": {
+    "agent": "qoderwork",
+    "extractedAt": "2026-08-17T06:49:47.934Z",
+    "generatedBy": "cdp-full-extract.mjs",
+    "dataQuality": {
+      "failedSchemes": [],
+      "domDegraded": false,
+      "truncated": {
+        "default": false,
+        "dark": null,
+        "light": null
+      },
+      "multiFrame": false,
+      "apiPolluted": []
+    }
+  },
+  "schemes": {
+    "neutral": {
+      "rootVariables": {},
+      "categories": {
+        "color": [],
+        "bg": [],
+        "text": [],
+        "border": [],
+        "surface": [],
+        "accent": [],
+        "neutral": [],
+        "spacing": [],
+        "shadow": [],
+        "font": [],
+        "button": [],
+        "input": [],
+        "other": [],
+        "_ignoredNamespaceVars": [
+          "--loading-bg",
+          "--loading-text",
+          "--loading-logo",
+          "--color-fill-secondary",
+          "--color-primary-bg",
+          "--color-primary-bg-hover",
+          "--color-primary-border",
+          "--color-primary-border-hover",
+          "--color-primary-hover",
+          "--color-primary",
+          "--color-primary-active",
+          "--color-primary-text-hover",
+          "--color-primary-text",
+          "--color-primary-text-active",
+          "--color-text-on-primary",
+          "--color-text",
+          "--color-text-secondary",
+          "--color-text-tertiary",
+          "--color-text-quaternary",
+          "--color-text-base",
+          "--color-border",
+          "--color-border-secondary",
+          "--color-border-tertiary",
+          "--color-fill",
+          "--color-fill-tertiary",
+          "--color-fill-quaternary",
+          "--color-fill-disable",
+          "--color-bg-container",
+          "--color-bg-elevated",
+          "--color-bg-layout",
+          "--color-bg-spotlight",
+          "--color-bg-mask",
+          "--color-bg-base",
+          "--color-bg-highlight",
+          "--color-bg-highlight-hover",
+          "--color-white-opacity",
+          "--color-black-opacity",
+          "--color-link",
+          "--color-error",
+          "--color-error-hover",
+          "--color-error-bg",
+          "--color-error-bg-hover",
+          "--color-error-border",
+          "--color-error-border-hover",
+          "--color-info",
+          "--color-info-hover",
+          "--color-info-bg",
+          "--color-info-bg-hover",
+          "--color-info-border",
+          "--color-info-border-hover",
+          "--color-success",
+          "--color-success-hover",
+          "--color-success-bg",
+          "--color-success-bg-hover",
+          "--color-success-border",
+          "--color-success-border-hover",
+          "--color-warning",
+          "--color-warning-hover",
+          "--color-warning-bg",
+          "--color-warning-bg-hover",
+          "--color-warning-border",
+          "--color-warning-border-hover",
+          "--color-diff-insert",
+          "--color-diff-insert-bg",
+          "--color-diff-remove",
+          "--color-diff-remove-bg",
+          "--color-pink",
+          "--color-pink-bg",
+          "--color-pink-hover",
+          "--color-purple",
+          "--color-purple-bg",
+          "--color-purple-hover",
+          "--color-yellow",
+          "--color-yellow-bg",
+          "--color-yellow-hover",
+          "--color-orange",
+          "--color-orange-bg",
+          "--color-orange-hover",
+          "--color-teal",
+          "--color-teal-bg",
+          "--color-teal-hover",
+          "--color-blue",
+          "--color-blue-bg",
+          "--color-blue-hover",
+          "--color-mauve",
+          "--color-mauve-bg",
+          "--color-mauve-hover",
+          "--color-slate",
+          "--color-slate-bg",
+          "--color-slate-hover",
+          "--color-lavender",
+          "--color-lavender-bg",
+          "--color-lavender-hover",
+          "--color-sage",
+          "--color-sage-bg",
+          "--color-sage-hover",
+          "--color-shadow-2xs",
+          "--color-shadow-xs",
+          "--color-shadow-sm",
+          "--color-shadow-md",
+          "--color-shadow-lg",
+          "--color-shadow-xl",
+          "--color-shadow-2xl",
+          "--color-shadow-3xl",
+          "--color-shadow-scrim",
+          "--color-highlight-xs",
+          "--color-highlight-sm",
+          "--color-highlight-md",
+          "--color-highlight-lg",
+          "--color-highlight-xl",
+          "--tw-scale-x",
+          "--tw-scale-y",
+          "--tw-scale-z",
+          "--tw-leading",
+          "--tw-translate-x",
+          "--tw-translate-y",
+          "--tw-translate-z",
+          "--tw-rotate-x",
+          "--tw-rotate-y",
+          "--tw-rotate-z",
+          "--tw-skew-x",
+          "--tw-skew-y",
+          "--tw-scroll-snap-strictness",
+          "--tw-space-y-reverse",
+          "--tw-space-x-reverse",
+          "--tw-divide-x-reverse",
+          "--tw-border-style",
+          "--tw-divide-y-reverse",
+          "--tw-gradient-position",
+          "--tw-gradient-from",
+          "--tw-gradient-via",
+          "--tw-gradient-to",
+          "--tw-gradient-stops",
+          "--tw-gradient-via-stops",
+          "--tw-gradient-from-position",
+          "--tw-gradient-via-position",
+          "--tw-gradient-to-position",
+          "--tw-font-weight",
+          "--tw-tracking",
+          "--tw-ordinal",
+          "--tw-slashed-zero",
+          "--tw-numeric-figure",
+          "--tw-numeric-spacing",
+          "--tw-numeric-fraction",
+          "--tw-shadow",
+          "--tw-shadow-color",
+          "--tw-shadow-alpha",
+          "--tw-inset-shadow",
+          "--tw-inset-shadow-color",
+          "--tw-inset-shadow-alpha",
+          "--tw-ring-color",
+          "--tw-ring-shadow",
+          "--tw-inset-ring-color",
+          "--tw-inset-ring-shadow",
+          "--tw-ring-inset",
+          "--tw-ring-offset-width",
+          "--tw-ring-offset-color",
+          "--tw-ring-offset-shadow",
+          "--tw-outline-style",
+          "--tw-blur",
+          "--tw-brightness",
+          "--tw-contrast",
+          "--tw-grayscale",
+          "--tw-hue-rotate",
+          "--tw-invert",
+          "--tw-opacity",
+          "--tw-saturate",
+          "--tw-sepia",
+          "--tw-drop-shadow",
+          "--tw-drop-shadow-color",
+          "--tw-drop-shadow-alpha",
+          "--tw-drop-shadow-size",
+          "--tw-backdrop-blur",
+          "--tw-backdrop-brightness",
+          "--tw-backdrop-contrast",
+          "--tw-backdrop-grayscale",
+          "--tw-backdrop-hue-rotate",
+          "--tw-backdrop-invert",
+          "--tw-backdrop-opacity",
+          "--tw-backdrop-saturate",
+          "--tw-backdrop-sepia",
+          "--tw-duration",
+          "--tw-ease",
+          "--tw-content",
+          "--font-sans",
+          "--font-mono",
+          "--color-red-50",
+          "--color-red-100",
+          "--color-red-200",
+          "--color-red-300",
+          "--color-red-400",
+          "--color-red-500",
+          "--color-red-600",
+          "--color-red-700",
+          "--color-red-800",
+          "--color-red-900",
+          "--color-red-950",
+          "--color-orange-500",
+          "--color-orange-600",
+          "--color-amber-50",
+          "--color-amber-300",
+          "--color-amber-500",
+          "--color-amber-600",
+          "--color-amber-700",
+          "--color-amber-950",
+          "--color-yellow-500",
+          "--color-yellow-600",
+          "--color-green-50",
+          "--color-green-100",
+          "--color-green-300",
+          "--color-green-400",
+          "--color-green-500",
+          "--color-green-600",
+          "--color-green-700",
+          "--color-green-900",
+          "--color-green-950",
+          "--color-blue-100",
+          "--color-blue-400",
+          "--color-blue-600",
+          "--color-blue-700",
+          "--color-blue-900",
+          "--color-gray-100",
+          "--color-gray-400",
+          "--color-gray-600",
+          "--color-gray-800",
+          "--color-neutral-100",
+          "--color-neutral-200",
+          "--color-neutral-300",
+          "--color-neutral-500",
+          "--color-neutral-600",
+          "--color-neutral-700",
+          "--color-neutral-800",
+          "--color-neutral-900",
+          "--color-black",
+          "--color-white",
+          "--spacing",
+          "--container-xs",
+          "--container-sm",
+          "--container-md",
+          "--container-lg",
+          "--container-xl",
+          "--container-2xl",
+          "--container-3xl",
+          "--container-4xl",
+          "--container-5xl",
+          "--text-xs",
+          "--text-xs--line-height",
+          "--text-sm",
+          "--text-sm--line-height",
+          "--text-base",
+          "--text-base--line-height",
+          "--text-lg",
+          "--text-lg--line-height",
+          "--text-xl",
+          "--text-xl--line-height",
+          "--text-2xl",
+          "--text-2xl--line-height",
+          "--text-3xl",
+          "--text-3xl--line-height",
+          "--font-weight-light",
+          "--font-weight-normal",
+          "--font-weight-medium",
+          "--font-weight-semibold",
+          "--font-weight-bold",
+          "--tracking-tight",
+          "--tracking-normal",
+          "--tracking-wide",
+          "--tracking-wider",
+          "--tracking-widest",
+          "--leading-tight",
+          "--leading-snug",
+          "--leading-relaxed",
+          "--radius-sm",
+          "--radius-md",
+          "--radius-lg",
+          "--radius-xl",
+          "--radius-2xl",
+          "--drop-shadow-lg",
+          "--ease-in",
+          "--ease-out",
+          "--ease-in-out",
+          "--animate-spin",
+          "--animate-pulse",
+          "--blur-sm",
+          "--blur-md",
+          "--blur-xl",
+          "--aspect-video",
+          "--default-transition-duration",
+          "--default-transition-timing-function",
+          "--default-font-family",
+          "--default-mono-font-family",
+          "--color-background",
+          "--color-foreground",
+          "--color-input",
+          "--color-ring",
+          "--color-card",
+          "--color-popover",
+          "--color-popover-foreground",
+          "--color-primary-foreground",
+          "--color-secondary",
+          "--color-secondary-foreground",
+          "--color-muted",
+          "--color-muted-foreground",
+          "--color-accent",
+          "--color-destructive",
+          "--color-destructive-foreground",
+          "--color-input-background",
+          "--color-selection",
+          "--color-dock-bg",
+          "--base-color",
+          "--base-gradient-color",
+          "--bg",
+          "--cell-size",
+          "--sidebar-width",
+          "--agents-layout-bg",
+          "--agents-content-area-bg",
+          "--agents-fade-bg",
+          "--agents-content-area-gap",
+          "--agents-content-area-radius",
+          "--settings-nav-row-selected-bg",
+          "--tw-bg-opacity",
+          "--mobile-app-star-size",
+          "--mobile-app-star-duration",
+          "--mobile-app-star-delay",
+          "--mobile-app-star-origin-right",
+          "--mobile-app-star-origin-bottom",
+          "--mobile-app-star-x",
+          "--mobile-app-star-y",
+          "--color-accent-foreground",
+          "--color-card-foreground",
+          "--tw-ring-opacity",
+          "--diff-font-size--",
+          "--diff-line-height--",
+          "--font-ui",
+          "--radius",
+          "--agentskin-accent",
+          "--agentskin-secondary",
+          "--agentskin-bg",
+          "--agentskin-surface",
+          "--agentskin-surface-elevated",
+          "--agentskin-text",
+          "--agentskin-muted",
+          "--agentskin-border",
+          "--agentskin-code-bg",
+          "--agentskin-code-fg",
+          "--agentskin-input-bg",
+          "--agentskin-button-bg",
+          "--agentskin-focus-ring",
+          "--agentskin-selection",
+          "--agentskin-text-shadow",
+          "--font-body",
+          "--normal-bg",
+          "--normal-text",
+          "--normal-border",
+          "--border-radius",
+          "--success-bg",
+          "--success-border",
+          "--success-text",
+          "--info-bg",
+          "--info-border",
+          "--info-text",
+          "--warning-bg",
+          "--warning-border",
+          "--warning-text",
+          "--error-bg",
+          "--error-border",
+          "--error-text",
+          "--gray1",
+          "--gray2",
+          "--gray3",
+          "--gray4",
+          "--gray5",
+          "--gray6",
+          "--gray7",
+          "--gray8",
+          "--gray9",
+          "--gray10",
+          "--gray11",
+          "--gray12",
+          "--size",
+          "--chat-input-parchment-glow",
+          "--chat-input-parchment-halo",
+          "--chat-input-parchment-edge",
+          "--toast-icon-margin-start",
+          "--toast-icon-margin-end",
+          "--toast-svg-margin-start",
+          "--toast-svg-margin-end",
+          "--toast-button-margin-start",
+          "--toast-button-margin-end",
+          "--toast-close-button-start",
+          "--toast-close-button-end",
+          "--toast-close-button-transform",
+          "--y",
+          "--lift-amount",
+          "--lift",
+          "--scale",
+          "--normal-bg-hover",
+          "--normal-border-hover"
+        ]
+      },
+      "colorPalette": [
+        {
+          "color": "#0000",
+          "count": 10,
+          "vars": [
+            "--tw-gradient-from",
+            "--tw-gradient-via",
+            "--tw-gradient-to",
+            "--tw-shadow",
+            "--tw-inset-shadow",
+            "--tw-ring-shadow",
+            "--tw-inset-ring-shadow",
+            "--tw-ring-offset-shadow",
+            "--bg",
+            "--bg"
+          ]
+        },
+        {
+          "color": "#202116",
+          "count": 5,
+          "vars": [
+            "--color-primary",
+            "--color-primary-text",
+            "--color-text",
+            "--color-text-base",
+            "--color-bg-highlight"
+          ]
+        },
+        {
+          "color": "#3d3930",
+          "count": 4,
+          "vars": [
+            "--color-primary-hover",
+            "--color-primary-active",
+            "--color-primary-text-hover",
+            "--color-primary-text-active"
+          ]
+        },
+        {
+          "color": "#faf9f6",
+          "count": 4,
+          "vars": [
+            "--color-text-on-primary",
+            "--color-fill-quaternary",
+            "--color-bg-container",
+            "--color-bg-spotlight"
+          ]
+        },
+        {
+          "color": "#fff",
+          "count": 4,
+          "vars": [
+            "--color-bg-base",
+            "--color-black-opacity",
+            "--tw-ring-offset-color",
+            "--color-white"
+          ]
+        },
+        {
+          "color": "#000",
+          "count": 3,
+          "vars": [
+            "--color-white-opacity",
+            "--color-black",
+            "--base-gradient-color"
+          ]
+        },
+        {
+          "color": "#7fa8bd",
+          "count": 3,
+          "vars": [
+            "--agentskin-accent",
+            "--agentskin-input-bg",
+            "--agentskin-button-bg"
+          ]
+        },
+        {
+          "color": "#a1a1aa",
+          "count": 2,
+          "vars": [
+            "--loading-logo",
+            "--base-color"
+          ]
+        },
+        {
+          "color": "#0000000f",
+          "count": 2,
+          "vars": [
+            "--color-fill-secondary",
+            "--color-shadow-sm"
+          ]
+        },
+        {
+          "color": "#d4cfc6",
+          "count": 2,
+          "vars": [
+            "--color-primary-border",
+            "--color-border"
+          ]
+        },
+        {
+          "color": "#f7f4ef",
+          "count": 2,
+          "vars": [
+            "--color-fill-tertiary",
+            "--color-bg-elevated"
+          ]
+        },
+        {
+          "color": "#ffd666",
+          "count": 2,
+          "vars": [
+            "--color-warning-hover",
+            "--color-warning-border-hover"
+          ]
+        },
+        {
+          "color": "#fff3cf",
+          "count": 2,
+          "vars": [
+            "--color-warning-bg-hover",
+            "--color-yellow-bg"
+          ]
+        },
+        {
+          "color": "#171e26",
+          "count": 2,
+          "vars": [
+            "--agentskin-surface",
+            "--agentskin-input-bg"
+          ]
+        },
+        {
+          "color": "#09090b",
+          "count": 1,
+          "vars": [
+            "--loading-text"
+          ]
+        },
+        {
+          "color": "#f0ede7",
+          "count": 1,
+          "vars": [
+            "--color-primary-bg"
+          ]
+        },
+        {
+          "color": "#e8e4dc",
+          "count": 1,
+          "vars": [
+            "--color-primary-bg-hover"
+          ]
+        },
+        {
+          "color": "#c4beb4",
+          "count": 1,
+          "vars": [
+            "--color-primary-border-hover"
+          ]
+        },
+        {
+          "color": "#4a463c",
+          "count": 1,
+          "vars": [
+            "--color-text-secondary"
+          ]
+        },
+        {
+          "color": "#6b665c",
+          "count": 1,
+          "vars": [
+            "--color-text-tertiary"
+          ]
+        },
+        {
+          "color": "#a7a49b",
+          "count": 1,
+          "vars": [
+            "--color-text-quaternary"
+          ]
+        },
+        {
+          "color": "#e5e1d9",
+          "count": 1,
+          "vars": [
+            "--color-border-secondary"
+          ]
+        },
+        {
+          "color": "#ede9e2",
+          "count": 1,
+          "vars": [
+            "--color-border-tertiary"
+          ]
+        },
+        {
+          "color": "#f5f0e7",
+          "count": 1,
+          "vars": [
+            "--color-fill"
+          ]
+        },
+        {
+          "color": "#e0dcd4",
+          "count": 1,
+          "vars": [
+            "--color-fill-disable"
+          ]
+        },
+        {
+          "color": "#fdfcfa",
+          "count": 1,
+          "vars": [
+            "--color-bg-layout"
+          ]
+        },
+        {
+          "color": "#00000080",
+          "count": 1,
+          "vars": [
+            "--color-bg-mask"
+          ]
+        },
+        {
+          "color": "#2d2a22",
+          "count": 1,
+          "vars": [
+            "--color-bg-highlight-hover"
+          ]
+        },
+        {
+          "color": "#c4621a",
+          "count": 1,
+          "vars": [
+            "--color-link"
+          ]
+        },
+        {
+          "color": "#ff4d4f",
+          "count": 1,
+          "vars": [
+            "--color-error"
+          ]
+        },
+        {
+          "color": "#ff7875",
+          "count": 1,
+          "vars": [
+            "--color-error-hover"
+          ]
+        },
+        {
+          "color": "#fff2f0",
+          "count": 1,
+          "vars": [
+            "--color-error-bg"
+          ]
+        },
+        {
+          "color": "#fff1f0",
+          "count": 1,
+          "vars": [
+            "--color-error-bg-hover"
+          ]
+        },
+        {
+          "color": "#ffccc7",
+          "count": 1,
+          "vars": [
+            "--color-error-border"
+          ]
+        },
+        {
+          "color": "#ffa39e",
+          "count": 1,
+          "vars": [
+            "--color-error-border-hover"
+          ]
+        },
+        {
+          "color": "#0b83f1",
+          "count": 1,
+          "vars": [
+            "--color-info"
+          ]
+        },
+        {
+          "color": "#5ebcff",
+          "count": 1,
+          "vars": [
+            "--color-info-hover"
+          ]
+        },
+        {
+          "color": "#e6f7ff",
+          "count": 1,
+          "vars": [
+            "--color-info-bg"
+          ]
+        },
+        {
+          "color": "#d0efff",
+          "count": 1,
+          "vars": [
+            "--color-info-bg-hover"
+          ]
+        },
+        {
+          "color": "#b0e3ff",
+          "count": 1,
+          "vars": [
+            "--color-info-border"
+          ]
+        },
+        {
+          "color": "#87d1ff",
+          "count": 1,
+          "vars": [
+            "--color-info-border-hover"
+          ]
+        },
+        {
+          "color": "#5a7a5e",
+          "count": 1,
+          "vars": [
+            "--color-success"
+          ]
+        },
+        {
+          "color": "#6b8f71",
+          "count": 1,
+          "vars": [
+            "--color-success-hover"
+          ]
+        },
+        {
+          "color": "#eef2ed",
+          "count": 1,
+          "vars": [
+            "--color-success-bg"
+          ]
+        },
+        {
+          "color": "#e4ebe2",
+          "count": 1,
+          "vars": [
+            "--color-success-bg-hover"
+          ]
+        },
+        {
+          "color": "#c5d4c4",
+          "count": 1,
+          "vars": [
+            "--color-success-border"
+          ]
+        },
+        {
+          "color": "#b3e6c7",
+          "count": 1,
+          "vars": [
+            "--color-success-border-hover"
+          ]
+        },
+        {
+          "color": "#faad14",
+          "count": 1,
+          "vars": [
+            "--color-warning"
+          ]
+        },
+        {
+          "color": "#fffbe6",
+          "count": 1,
+          "vars": [
+            "--color-warning-bg"
+          ]
+        },
+        {
+          "color": "#ffe5bf",
+          "count": 1,
+          "vars": [
+            "--color-warning-border"
+          ]
+        },
+        {
+          "color": "#a6dcba",
+          "count": 1,
+          "vars": [
+            "--color-diff-insert"
+          ]
+        },
+        {
+          "color": "#d9ebe0",
+          "count": 1,
+          "vars": [
+            "--color-diff-insert-bg"
+          ]
+        },
+        {
+          "color": "#fc6b83",
+          "count": 1,
+          "vars": [
+            "--color-diff-remove"
+          ]
+        },
+        {
+          "color": "#e3d1d5",
+          "count": 1,
+          "vars": [
+            "--color-diff-remove-bg"
+          ]
+        },
+        {
+          "color": "#ec4899",
+          "count": 1,
+          "vars": [
+            "--color-pink"
+          ]
+        },
+        {
+          "color": "#f9e3f3",
+          "count": 1,
+          "vars": [
+            "--color-pink-bg"
+          ]
+        },
+        {
+          "color": "#f5d4eb",
+          "count": 1,
+          "vars": [
+            "--color-pink-hover"
+          ]
+        },
+        {
+          "color": "#615ced",
+          "count": 1,
+          "vars": [
+            "--color-purple"
+          ]
+        },
+        {
+          "color": "#ebe9ff",
+          "count": 1,
+          "vars": [
+            "--color-purple-bg"
+          ]
+        },
+        {
+          "color": "#dddaff",
+          "count": 1,
+          "vars": [
+            "--color-purple-hover"
+          ]
+        }
+      ]
+    },
+    "dark": {
+      "rootVariables": {},
+      "categories": {
+        "color": [],
+        "bg": [],
+        "text": [],
+        "border": [],
+        "surface": [],
+        "accent": [],
+        "neutral": [],
+        "spacing": [],
+        "shadow": [],
+        "font": [],
+        "button": [],
+        "input": [],
+        "other": [],
+        "_ignoredNamespaceVars": [
+          "--loading-bg",
+          "--loading-text",
+          "--loading-logo",
+          "--tw-gradient-from",
+          "--tw-gradient-stops",
+          "--tw-gradient-via",
+          "--tw-gradient-via-stops",
+          "--tw-gradient-to",
+          "--tw-shadow",
+          "--tw-ring-color",
+          "--base-color",
+          "--base-gradient-color",
+          "--bg",
+          "--color-primary",
+          "--color-fill-secondary",
+          "--color-text-on-primary",
+          "--color-popover",
+          "--color-muted",
+          "--color-muted-foreground",
+          "--color-primary-bg",
+          "--color-primary-bg-hover",
+          "--color-primary-border",
+          "--color-primary-border-hover",
+          "--color-primary-hover",
+          "--color-primary-active",
+          "--color-primary-text-hover",
+          "--color-primary-text",
+          "--color-primary-text-active",
+          "--color-text",
+          "--color-text-secondary",
+          "--color-text-tertiary",
+          "--color-text-quaternary",
+          "--color-border",
+          "--color-border-secondary",
+          "--color-border-tertiary",
+          "--color-fill",
+          "--color-fill-tertiary",
+          "--color-fill-quaternary",
+          "--color-fill-disable",
+          "--color-bg-container",
+          "--color-bg-elevated",
+          "--color-bg-layout",
+          "--color-bg-spotlight",
+          "--color-bg-mask",
+          "--color-bg-base",
+          "--color-text-base",
+          "--color-bg-highlight",
+          "--color-bg-highlight-hover",
+          "--color-white-opacity",
+          "--color-black-opacity",
+          "--color-link",
+          "--color-error",
+          "--color-error-hover",
+          "--color-error-bg",
+          "--color-error-bg-hover",
+          "--color-error-border",
+          "--color-error-border-hover",
+          "--color-info",
+          "--color-info-hover",
+          "--color-info-bg",
+          "--color-info-bg-hover",
+          "--color-info-border",
+          "--color-info-border-hover",
+          "--color-success",
+          "--color-success-hover",
+          "--color-success-bg",
+          "--color-success-bg-hover",
+          "--color-success-border",
+          "--color-success-border-hover",
+          "--color-warning",
+          "--color-warning-hover",
+          "--color-warning-bg",
+          "--color-warning-bg-hover",
+          "--color-warning-border",
+          "--color-warning-border-hover",
+          "--color-diff-insert",
+          "--color-diff-insert-bg",
+          "--color-diff-remove",
+          "--color-diff-remove-bg",
+          "--color-pink",
+          "--color-pink-bg",
+          "--color-pink-hover",
+          "--color-purple",
+          "--color-purple-bg",
+          "--color-purple-hover",
+          "--color-yellow",
+          "--color-yellow-bg",
+          "--color-yellow-hover",
+          "--color-orange",
+          "--color-orange-bg",
+          "--color-orange-hover",
+          "--color-teal",
+          "--color-teal-bg",
+          "--color-teal-hover",
+          "--color-blue",
+          "--color-blue-bg",
+          "--color-blue-hover",
+          "--color-mauve",
+          "--color-mauve-bg",
+          "--color-mauve-hover",
+          "--color-slate",
+          "--color-slate-bg",
+          "--color-slate-hover",
+          "--color-lavender",
+          "--color-lavender-bg",
+          "--color-lavender-hover",
+          "--color-sage",
+          "--color-sage-bg",
+          "--color-sage-hover",
+          "--color-shadow-2xs",
+          "--color-shadow-xs",
+          "--color-shadow-sm",
+          "--color-shadow-md",
+          "--color-shadow-lg",
+          "--color-shadow-xl",
+          "--color-shadow-2xl",
+          "--color-shadow-3xl",
+          "--color-shadow-scrim",
+          "--color-highlight-xs",
+          "--color-highlight-sm",
+          "--color-highlight-md",
+          "--color-highlight-lg",
+          "--color-highlight-xl"
+        ]
+      },
+      "colorPalette": [
+        {
+          "color": "#8ee5a1",
+          "count": 4,
+          "vars": [
+            "--color-primary",
+            "--color-primary-text",
+            "--color-link",
+            "--color-success-hover"
+          ]
+        },
+        {
+          "color": "#000",
+          "count": 3,
+          "vars": [
+            "--color-popover",
+            "--color-bg-base",
+            "--color-white-opacity"
+          ]
+        },
+        {
+          "color": "#14261c",
+          "count": 3,
+          "vars": [
+            "--color-primary-bg",
+            "--color-success-bg",
+            "--color-diff-insert-bg"
+          ]
+        },
+        {
+          "color": "#9be6b3",
+          "count": 3,
+          "vars": [
+            "--color-primary-hover",
+            "--color-primary-text-hover",
+            "--color-primary-text-active"
+          ]
+        },
+        {
+          "color": "#73cd94",
+          "count": 3,
+          "vars": [
+            "--color-primary-active",
+            "--color-success",
+            "--color-diff-insert"
+          ]
+        },
+        {
+          "color": "#71717a",
+          "count": 2,
+          "vars": [
+            "--loading-logo",
+            "--base-color"
+          ]
+        },
+        {
+          "color": "#0000004d",
+          "count": 2,
+          "vars": [
+            "--tw-shadow",
+            "--color-shadow-3xl"
+          ]
+        },
+        {
+          "color": "#ffffff1a",
+          "count": 2,
+          "vars": [
+            "--tw-shadow",
+            "--tw-ring-color"
+          ]
+        },
+        {
+          "color": "#fff",
+          "count": 2,
+          "vars": [
+            "--base-gradient-color",
+            "--color-black-opacity"
+          ]
+        },
+        {
+          "color": "#0000",
+          "count": 2,
+          "vars": [
+            "--bg",
+            "--bg"
+          ]
+        },
+        {
+          "color": "#0d0d0d",
+          "count": 2,
+          "vars": [
+            "--color-text-on-primary",
+            "--color-bg-container"
+          ]
+        },
+        {
+          "color": "#262626",
+          "count": 2,
+          "vars": [
+            "--color-muted",
+            "--color-border-tertiary"
+          ]
+        },
+        {
+          "color": "#1a2e21",
+          "count": 2,
+          "vars": [
+            "--color-primary-bg-hover",
+            "--color-success-bg-hover"
+          ]
+        },
+        {
+          "color": "#335942",
+          "count": 2,
+          "vars": [
+            "--color-primary-border",
+            "--color-success-border"
+          ]
+        },
+        {
+          "color": "#407354",
+          "count": 2,
+          "vars": [
+            "--color-primary-border-hover",
+            "--color-success-border-hover"
+          ]
+        },
+        {
+          "color": "#1a1a1a",
+          "count": 2,
+          "vars": [
+            "--color-fill-tertiary",
+            "--color-fill-quaternary"
+          ]
+        },
+        {
+          "color": "#080808",
+          "count": 2,
+          "vars": [
+            "--color-bg-elevated",
+            "--color-bg-spotlight"
+          ]
+        },
+        {
+          "color": "#5ebcff",
+          "count": 2,
+          "vars": [
+            "--color-info-hover",
+            "--color-info-bg-hover"
+          ]
+        },
+        {
+          "color": "#ffd666",
+          "count": 2,
+          "vars": [
+            "--color-warning-hover",
+            "--color-warning-border-hover"
+          ]
+        },
+        {
+          "color": "#09090b",
+          "count": 1,
+          "vars": [
+            "--loading-bg"
+          ]
+        },
+        {
+          "color": "#fafafa",
+          "count": 1,
+          "vars": [
+            "--loading-text"
+          ]
+        },
+        {
+          "color": "#fff3",
+          "count": 1,
+          "vars": [
+            "--tw-shadow"
+          ]
+        },
+        {
+          "color": "#363636",
+          "count": 1,
+          "vars": [
+            "--color-fill-secondary"
+          ]
+        },
+        {
+          "color": "#737373",
+          "count": 1,
+          "vars": [
+            "--color-muted-foreground"
+          ]
+        },
+        {
+          "color": "#faf9f5",
+          "count": 1,
+          "vars": [
+            "--color-text"
+          ]
+        },
+        {
+          "color": "#9c9d9e",
+          "count": 1,
+          "vars": [
+            "--color-text-secondary"
+          ]
+        },
+        {
+          "color": "#7c7d7f",
+          "count": 1,
+          "vars": [
+            "--color-text-tertiary"
+          ]
+        },
+        {
+          "color": "#717374",
+          "count": 1,
+          "vars": [
+            "--color-text-quaternary"
+          ]
+        },
+        {
+          "color": "#404040",
+          "count": 1,
+          "vars": [
+            "--color-border"
+          ]
+        },
+        {
+          "color": "#2a2a2a",
+          "count": 1,
+          "vars": [
+            "--color-border-secondary"
+          ]
+        },
+        {
+          "color": "#454545",
+          "count": 1,
+          "vars": [
+            "--color-fill"
+          ]
+        },
+        {
+          "color": "#525252",
+          "count": 1,
+          "vars": [
+            "--color-fill-disable"
+          ]
+        },
+        {
+          "color": "#050505",
+          "count": 1,
+          "vars": [
+            "--color-bg-layout"
+          ]
+        },
+        {
+          "color": "#4d4d4d",
+          "count": 1,
+          "vars": [
+            "--color-bg-mask"
+          ]
+        },
+        {
+          "color": "#f0f2f3",
+          "count": 1,
+          "vars": [
+            "--color-text-base"
+          ]
+        },
+        {
+          "color": "#d0d0d0",
+          "count": 1,
+          "vars": [
+            "--color-bg-highlight"
+          ]
+        },
+        {
+          "color": "#e0e0e0",
+          "count": 1,
+          "vars": [
+            "--color-bg-highlight-hover"
+          ]
+        },
+        {
+          "color": "#ff4d4f",
+          "count": 1,
+          "vars": [
+            "--color-error"
+          ]
+        },
+        {
+          "color": "#ff7875",
+          "count": 1,
+          "vars": [
+            "--color-error-hover"
+          ]
+        },
+        {
+          "color": "#4a1a1b",
+          "count": 1,
+          "vars": [
+            "--color-error-bg"
+          ]
+        },
+        {
+          "color": "#4a1c1b",
+          "count": 1,
+          "vars": [
+            "--color-error-bg-hover"
+          ]
+        },
+        {
+          "color": "#663338",
+          "count": 1,
+          "vars": [
+            "--color-error-border"
+          ]
+        },
+        {
+          "color": "#5c292e",
+          "count": 1,
+          "vars": [
+            "--color-error-border-hover"
+          ]
+        },
+        {
+          "color": "#0b83f1",
+          "count": 1,
+          "vars": [
+            "--color-info"
+          ]
+        },
+        {
+          "color": "#19080e",
+          "count": 1,
+          "vars": [
+            "--color-info-bg"
+          ]
+        },
+        {
+          "color": "#4f1c0e",
+          "count": 1,
+          "vars": [
+            "--color-info-border"
+          ]
+        },
+        {
+          "color": "#782e0e",
+          "count": 1,
+          "vars": [
+            "--color-info-border-hover"
+          ]
+        },
+        {
+          "color": "#faad14",
+          "count": 1,
+          "vars": [
+            "--color-warning"
+          ]
+        },
+        {
+          "color": "#4a4019",
+          "count": 1,
+          "vars": [
+            "--color-warning-bg"
+          ]
+        },
+        {
+          "color": "#4a401f",
+          "count": 1,
+          "vars": [
+            "--color-warning-bg-hover"
+          ]
+        },
+        {
+          "color": "#664d19",
+          "count": 1,
+          "vars": [
+            "--color-warning-border"
+          ]
+        },
+        {
+          "color": "#fc6b83",
+          "count": 1,
+          "vars": [
+            "--color-diff-remove"
+          ]
+        },
+        {
+          "color": "#1c2e2a",
+          "count": 1,
+          "vars": [
+            "--color-diff-remove-bg"
+          ]
+        },
+        {
+          "color": "#ec4899",
+          "count": 1,
+          "vars": [
+            "--color-pink"
+          ]
+        },
+        {
+          "color": "#4a1c31",
+          "count": 1,
+          "vars": [
+            "--color-pink-bg"
+          ]
+        },
+        {
+          "color": "#e593bc",
+          "count": 1,
+          "vars": [
+            "--color-pink-hover"
+          ]
+        },
+        {
+          "color": "#615ced",
+          "count": 1,
+          "vars": [
+            "--color-purple"
+          ]
+        },
+        {
+          "color": "#14160e",
+          "count": 1,
+          "vars": [
+            "--color-purple-bg"
+          ]
+        },
+        {
+          "color": "#8080ff",
+          "count": 1,
+          "vars": [
+            "--color-purple-hover"
+          ]
+        },
+        {
+          "color": "#fac414",
+          "count": 1,
+          "vars": [
+            "--color-yellow"
+          ]
+        }
+      ]
+    },
+    "light": {
+      "rootVariables": {},
+      "categories": {
+        "color": [],
+        "bg": [],
+        "text": [],
+        "border": [],
+        "surface": [],
+        "accent": [],
+        "neutral": [],
+        "spacing": [],
+        "shadow": [],
+        "font": [],
+        "button": [],
+        "input": [],
+        "other": [],
+        "_ignoredNamespaceVars": [
+          "--loading-bg",
+          "--loading-text",
+          "--loading-logo",
+          "--color-primary",
+          "--color-fill-secondary",
+          "--color-text-on-primary",
+          "--color-primary-bg",
+          "--color-primary-bg-hover",
+          "--color-primary-border",
+          "--color-primary-border-hover",
+          "--color-primary-hover",
+          "--color-primary-active",
+          "--color-primary-text-hover",
+          "--color-primary-text",
+          "--color-primary-text-active",
+          "--color-text",
+          "--color-text-secondary",
+          "--color-text-tertiary",
+          "--color-text-quaternary",
+          "--color-border",
+          "--color-border-secondary",
+          "--color-border-tertiary",
+          "--color-fill",
+          "--color-fill-tertiary",
+          "--color-fill-quaternary",
+          "--color-fill-disable",
+          "--color-bg-container",
+          "--color-bg-elevated",
+          "--color-bg-layout",
+          "--color-bg-spotlight",
+          "--color-bg-mask",
+          "--color-bg-base",
+          "--color-text-base",
+          "--color-bg-highlight",
+          "--color-bg-highlight-hover",
+          "--color-white-opacity",
+          "--color-black-opacity",
+          "--color-link",
+          "--color-error",
+          "--color-error-hover",
+          "--color-error-bg",
+          "--color-error-bg-hover",
+          "--color-error-border",
+          "--color-error-border-hover",
+          "--color-info",
+          "--color-info-hover",
+          "--color-info-bg",
+          "--color-info-bg-hover",
+          "--color-info-border",
+          "--color-info-border-hover",
+          "--color-success",
+          "--color-success-hover",
+          "--color-success-bg",
+          "--color-success-bg-hover",
+          "--color-success-border",
+          "--color-success-border-hover",
+          "--color-warning",
+          "--color-warning-hover",
+          "--color-warning-bg",
+          "--color-warning-bg-hover",
+          "--color-warning-border",
+          "--color-warning-border-hover",
+          "--color-diff-insert",
+          "--color-diff-insert-bg",
+          "--color-diff-remove",
+          "--color-diff-remove-bg",
+          "--color-pink",
+          "--color-pink-bg",
+          "--color-pink-hover",
+          "--color-purple",
+          "--color-purple-bg",
+          "--color-purple-hover",
+          "--color-yellow",
+          "--color-yellow-bg",
+          "--color-yellow-hover",
+          "--color-orange",
+          "--color-orange-bg",
+          "--color-orange-hover",
+          "--color-teal",
+          "--color-teal-bg",
+          "--color-teal-hover",
+          "--color-blue",
+          "--color-blue-bg",
+          "--color-blue-hover",
+          "--color-mauve",
+          "--color-mauve-bg",
+          "--color-mauve-hover",
+          "--color-slate",
+          "--color-slate-bg",
+          "--color-slate-hover",
+          "--color-lavender",
+          "--color-lavender-bg",
+          "--color-lavender-hover",
+          "--color-sage",
+          "--color-sage-bg",
+          "--color-sage-hover",
+          "--color-shadow-2xs",
+          "--color-shadow-xs",
+          "--color-shadow-sm",
+          "--color-shadow-md",
+          "--color-shadow-lg",
+          "--color-shadow-xl",
+          "--color-shadow-2xl",
+          "--color-shadow-3xl",
+          "--color-shadow-scrim",
+          "--color-highlight-xs",
+          "--color-highlight-sm",
+          "--color-highlight-md",
+          "--color-highlight-lg",
+          "--color-highlight-xl"
+        ]
+      },
+      "colorPalette": [
+        {
+          "color": "#73cd94",
+          "count": 5,
+          "vars": [
+            "--color-primary-hover",
+            "--color-primary-active",
+            "--color-primary-text-hover",
+            "--color-primary-text-active",
+            "--color-success"
+          ]
+        },
+        {
+          "color": "#8ee5a1",
+          "count": 3,
+          "vars": [
+            "--color-primary",
+            "--color-link",
+            "--color-success-hover"
+          ]
+        },
+        {
+          "color": "#fff",
+          "count": 3,
+          "vars": [
+            "--color-bg-container",
+            "--color-bg-base",
+            "--color-black-opacity"
+          ]
+        },
+        {
+          "color": "#fdfdfd",
+          "count": 2,
+          "vars": [
+            "--color-text-on-primary",
+            "--color-bg-layout"
+          ]
+        },
+        {
+          "color": "#f1faf3",
+          "count": 2,
+          "vars": [
+            "--color-primary-bg",
+            "--color-success-bg"
+          ]
+        },
+        {
+          "color": "#e6f7ec",
+          "count": 2,
+          "vars": [
+            "--color-primary-bg-hover",
+            "--color-success-bg-hover"
+          ]
+        },
+        {
+          "color": "#cdefd9",
+          "count": 2,
+          "vars": [
+            "--color-primary-border",
+            "--color-success-border"
+          ]
+        },
+        {
+          "color": "#b3e6c7",
+          "count": 2,
+          "vars": [
+            "--color-primary-border-hover",
+            "--color-success-border-hover"
+          ]
+        },
+        {
+          "color": "#141414",
+          "count": 2,
+          "vars": [
+            "--color-primary-text",
+            "--color-text"
+          ]
+        },
+        {
+          "color": "#f9f9f9",
+          "count": 2,
+          "vars": [
+            "--color-fill-tertiary",
+            "--color-bg-elevated"
+          ]
+        },
+        {
+          "color": "#080807",
+          "count": 2,
+          "vars": [
+            "--color-bg-highlight",
+            "--color-bg-highlight-hover"
+          ]
+        },
+        {
+          "color": "#5ebcff",
+          "count": 2,
+          "vars": [
+            "--color-info-hover",
+            "--color-info-bg-hover"
+          ]
+        },
+        {
+          "color": "#ffd666",
+          "count": 2,
+          "vars": [
+            "--color-warning-hover",
+            "--color-warning-border-hover"
+          ]
+        },
+        {
+          "color": "#ffffff",
+          "count": 1,
+          "vars": [
+            "--loading-bg"
+          ]
+        },
+        {
+          "color": "#09090b",
+          "count": 1,
+          "vars": [
+            "--loading-text"
+          ]
+        },
+        {
+          "color": "#a1a1aa",
+          "count": 1,
+          "vars": [
+            "--loading-logo"
+          ]
+        },
+        {
+          "color": "#ebebeb",
+          "count": 1,
+          "vars": [
+            "--color-fill-secondary"
+          ]
+        },
+        {
+          "color": "#636261",
+          "count": 1,
+          "vars": [
+            "--color-text-secondary"
+          ]
+        },
+        {
+          "color": "#838280",
+          "count": 1,
+          "vars": [
+            "--color-text-tertiary"
+          ]
+        },
+        {
+          "color": "#8e8c8b",
+          "count": 1,
+          "vars": [
+            "--color-text-quaternary"
+          ]
+        },
+        {
+          "color": "#bcbbba",
+          "count": 1,
+          "vars": [
+            "--color-border"
+          ]
+        },
+        {
+          "color": "#ddd",
+          "count": 1,
+          "vars": [
+            "--color-border-secondary"
+          ]
+        },
+        {
+          "color": "#e6e6e6",
+          "count": 1,
+          "vars": [
+            "--color-border-tertiary"
+          ]
+        },
+        {
+          "color": "#dfdfdf",
+          "count": 1,
+          "vars": [
+            "--color-fill"
+          ]
+        },
+        {
+          "color": "#fcfcfc",
+          "count": 1,
+          "vars": [
+            "--color-fill-quaternary"
+          ]
+        },
+        {
+          "color": "#dad9d8",
+          "count": 1,
+          "vars": [
+            "--color-fill-disable"
+          ]
+        },
+        {
+          "color": "#fafafa",
+          "count": 1,
+          "vars": [
+            "--color-bg-spotlight"
+          ]
+        },
+        {
+          "color": "#959594",
+          "count": 1,
+          "vars": [
+            "--color-bg-mask"
+          ]
+        },
+        {
+          "color": "#0f0d0c",
+          "count": 1,
+          "vars": [
+            "--color-text-base"
+          ]
+        },
+        {
+          "color": "#000",
+          "count": 1,
+          "vars": [
+            "--color-white-opacity"
+          ]
+        },
+        {
+          "color": "#ff4d4f",
+          "count": 1,
+          "vars": [
+            "--color-error"
+          ]
+        },
+        {
+          "color": "#ff7875",
+          "count": 1,
+          "vars": [
+            "--color-error-hover"
+          ]
+        },
+        {
+          "color": "#fff2f0",
+          "count": 1,
+          "vars": [
+            "--color-error-bg"
+          ]
+        },
+        {
+          "color": "#fff1f0",
+          "count": 1,
+          "vars": [
+            "--color-error-bg-hover"
+          ]
+        },
+        {
+          "color": "#ffccc7",
+          "count": 1,
+          "vars": [
+            "--color-error-border"
+          ]
+        },
+        {
+          "color": "#ffa39e",
+          "count": 1,
+          "vars": [
+            "--color-error-border-hover"
+          ]
+        },
+        {
+          "color": "#0b83f1",
+          "count": 1,
+          "vars": [
+            "--color-info"
+          ]
+        },
+        {
+          "color": "#e6f7ff",
+          "count": 1,
+          "vars": [
+            "--color-info-bg"
+          ]
+        },
+        {
+          "color": "#b0e3ff",
+          "count": 1,
+          "vars": [
+            "--color-info-border"
+          ]
+        },
+        {
+          "color": "#87d1ff",
+          "count": 1,
+          "vars": [
+            "--color-info-border-hover"
+          ]
+        },
+        {
+          "color": "#faad14",
+          "count": 1,
+          "vars": [
+            "--color-warning"
+          ]
+        },
+        {
+          "color": "#fffbe6",
+          "count": 1,
+          "vars": [
+            "--color-warning-bg"
+          ]
+        },
+        {
+          "color": "#fff1b8",
+          "count": 1,
+          "vars": [
+            "--color-warning-bg-hover"
+          ]
+        },
+        {
+          "color": "#ffe5bf",
+          "count": 1,
+          "vars": [
+            "--color-warning-border"
+          ]
+        },
+        {
+          "color": "#a6dcba",
+          "count": 1,
+          "vars": [
+            "--color-diff-insert"
+          ]
+        },
+        {
+          "color": "#d9ebe0",
+          "count": 1,
+          "vars": [
+            "--color-diff-insert-bg"
+          ]
+        },
+        {
+          "color": "#fc6b83",
+          "count": 1,
+          "vars": [
+            "--color-diff-remove"
+          ]
+        },
+        {
+          "color": "#e3d1d5",
+          "count": 1,
+          "vars": [
+            "--color-diff-remove-bg"
+          ]
+        },
+        {
+          "color": "#ec4899",
+          "count": 1,
+          "vars": [
+            "--color-pink"
+          ]
+        },
+        {
+          "color": "#f9e3f3",
+          "count": 1,
+          "vars": [
+            "--color-pink-bg"
+          ]
+        },
+        {
+          "color": "#e593bc",
+          "count": 1,
+          "vars": [
+            "--color-pink-hover"
+          ]
+        },
+        {
+          "color": "#615ced",
+          "count": 1,
+          "vars": [
+            "--color-purple"
+          ]
+        },
+        {
+          "color": "#ebe9ff",
+          "count": 1,
+          "vars": [
+            "--color-purple-bg"
+          ]
+        },
+        {
+          "color": "#8080ff",
+          "count": 1,
+          "vars": [
+            "--color-purple-hover"
+          ]
+        },
+        {
+          "color": "#fac414",
+          "count": 1,
+          "vars": [
+            "--color-yellow"
+          ]
+        },
+        {
+          "color": "#fff3cf",
+          "count": 1,
+          "vars": [
+            "--color-yellow-bg"
+          ]
+        },
+        {
+          "color": "#f1d372",
+          "count": 1,
+          "vars": [
+            "--color-yellow-hover"
+          ]
+        },
+        {
+          "color": "#fa8125",
+          "count": 1,
+          "vars": [
+            "--color-orange"
+          ]
+        },
+        {
+          "color": "#ffefde",
+          "count": 1,
+          "vars": [
+            "--color-orange-bg"
+          ]
+        },
+        {
+          "color": "#e88c45",
+          "count": 1,
+          "vars": [
+            "--color-orange-hover"
+          ]
+        }
+      ]
+    }
+  }
+}

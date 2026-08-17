@@ -1,0 +1,106 @@
+{
+  "agentId": "workbuddy",
+  "displayName": "WorkBuddy",
+  "schemaVer": "1.3",
+  "_generated": {
+    "at": "2026-08-17T06:25:33.182Z",
+    "from": "C:\\Program Files\\WorkBuddy\\resources\\app.asar",
+    "note": "asar 静态解包 + CDP 运行时探测自动生成的初始模板；globalApiCandidates/globalStorePathCandidates/canSilentSwitch/switchSideEffects 需人工补全后生效"
+  },
+  "themePersistCandidates": [
+    {
+      "type": "dataset",
+      "key": "theme",
+      "sampleValue": "dark"
+    },
+    {
+      "type": "dataset",
+      "key": "agentskinTheme",
+      "sampleValue": "nordic-minimal"
+    },
+    {
+      "type": "dataset",
+      "key": "agentskinThemeVersion",
+      "sampleValue": "1.0.0"
+    },
+    {
+      "type": "localStorage",
+      "key": "agent-ui-theme",
+      "sampleValue": "{\"theme\":\"dark\",\"followSystem\":false,\"vsCodeThemeName\":\"IDE Night\",\"vsCodeThemeKind\":\"vscode-dark\"}"
+    },
+    {
+      "type": "localStorage",
+      "key": "workbuddy.appearance.mode::personal::personal::c91626ec-83c6-4e9d-a81d-8346f2089024",
+      "sampleValue": "dark"
+    },
+    {
+      "type": "localStorage",
+      "key": "workbuddy.appearance.mode::legacy-snapshot",
+      "sampleValue": "dark"
+    }
+  ],
+  "globalApiCandidates": [],
+  "globalStorePathCandidates": [],
+  "lazyRiskComponents": [
+    "Modal",
+    "Dropdown",
+    "Popover",
+    "Select",
+    "Tooltip",
+    "Dialog"
+  ],
+  "shadowDomRiskSelectors": [
+    "div.wb-slot--closable-content",
+    "input[type=\"range\"]",
+    "input[type=\"color\"]",
+    "input[type=\"file\"]",
+    "input[type=\"date\"]",
+    "input[type=\"time\"]",
+    "input[type=\"datetime-local\"]",
+    "input[type=\"month\"]",
+    "input[type=\"week\"]",
+    "video",
+    "audio",
+    "select"
+  ],
+  "themeImplMode": "mixed",
+  "canSilentSwitch": false,
+  "switchSideEffects": [],
+  "lightFingerprint": {
+    "dataset": null,
+    "cssVars": {}
+  },
+  "darkFingerprint": {
+    "dataset": {
+      "theme": "dark",
+      "agentskinTheme": "nordic-minimal",
+      "agentskinThemeVersion": "1.0.0"
+    },
+    "cssVars": {
+      "--cb-vscode-editor-background": "var(--vscode-editor-background, #ffffff)",
+      "--cb-vscode-sideBar-background": "var(--vscode-sideBar-background, #f3f3f3)",
+      "--cb-vscode-input-background": "var(--vscode-input-background, #ffffff)",
+      "--cb-vscode-dropdown-background": "var(--vscode-dropdown-background, #ffffff)",
+      "--cb-vscode-foreground": "var(--vscode-foreground, #333333)",
+      "--cb-vscode-editor-foreground": "var(--vscode-editor-foreground, #4c4f69)",
+      "--cb-vscode-titleBar-activeBackground": "var(--vscode-titleBar-activeBackground, #dddddd)",
+      "--cb-vscode-titleBar-activeForeground": "var(--vscode-titleBar-activeForeground, #333333)",
+      "--cb-vscode-titleBar-inactiveBackground": "var(--vscode-titleBar-inactiveBackground, #dddddd)",
+      "--cb-vscode-titleBar-inactiveForeground": "var(--vscode-titleBar-inactiveForeground, #666666)",
+      "--cb-titlebar-control-hover-background": "rgba(0, 0, 0, 0.06)",
+      "--cb-vscode-descriptionForeground": "var(--vscode-descriptionForeground, #717171)",
+      "--cb-vscode-widget-border": "var(--vscode-widget-border, #e1e1e1)",
+      "--cb-vscode-panel-border": "var(--vscode-panel-border, #e1e1e1)",
+      "--cb-vscode-list-hoverBackground": "var(--vscode-list-hoverBackground, #f0f0f0)",
+      "--cb-vscode-toolbar-hoverBackground": "var(--vscode-toolbar-hoverBackground, #f0f0f0)",
+      "--cb-vscode-button-background": "var(--vscode-button-background, #007acc)",
+      "--cb-vscode-button-foreground": "var(--vscode-button-foreground, #ffffff)",
+      "--cb-vscode-button-hoverBackground": "var(--vscode-button-hoverBackground, #0062a3)",
+      "--cb-vscode-scrollbarSlider-background": "var(--vscode-scrollbarSlider-background, #c1c1c1)",
+      "--cb-vscode-scrollbarSlider-hoverBackground": "var(--vscode-scrollbarSlider-hoverBackground, #a8a8a8)",
+      "--cb-vscode-textLink-foreground": "var(--vscode-textLink-foreground, #006ab1)",
+      "--cb-panel-bg-primary": "var(--vscode-editor-background, #ffffff)",
+      "--cb-text-primary": "#333333"
+    }
+  }
+}
