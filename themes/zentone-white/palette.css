@@ -1,0 +1,26 @@
+/* palette.css — zentone-white (禅石白) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #f7f5f2;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #34322e;
+  --agentskin-muted: #8a857c;
+  --agentskin-accent: #5b7ea6;
+  --agentskin-secondary: #a6b7c8;
+  --agentskin-border: rgba(91, 126, 166, 0.18);
+  --agentskin-code-bg: #f2efe9;
+  --agentskin-code-fg: #4a4740;
+  --agentskin-focus-ring: #5b7ea666;
+  --agentskin-selection: color-mix(in srgb, #5b7ea6 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 91, 126, 166;
+  --agentskin-secondary-raw: 166, 183, 200;
+  --agentskin-text-raw: 52, 50, 46;
+  --agentskin-muted-raw: 138, 133, 124;
+  --agentskin-surface-raw: 255, 255, 255;
+  --agentskin-surface-elevated-raw: 255, 255, 255;
+  --agentskin-bg-raw: 247, 245, 242;
+  --agentskin-border-raw: 91, 126, 166;
+}

@@ -59,6 +59,38 @@ html.${HOST_CLASS} .task-list-panel [class*="active"] {
   background: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
 }
 
+/* === Sidebar separator shadow: themeable divider where the app shows a
+   native grey/solid border that follows its own light/dark theme === */
+html.${HOST_CLASS} .task-list-base,
+html.${HOST_CLASS} .task-list-panel {
+  box-shadow: 1px 0 0 color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
+}
+
+/* === Sidebar list bottom fade shadow: the app paints a sticky gradient
+   (.task-list-shadow-bottom) with a HARD-CODED color (rgb(38,38,38) in dark /
+   light-grey in light). In the host's own themes this fade blended with the
+   flat background and was invisible; our frosted/art surface makes it stand
+   out jarringly. Match the host "invisible" state by removing it entirely. === */
+html.${HOST_CLASS} .task-list-shadow-bottom,
+html.${HOST_CLASS} .task-list-shadow-top {
+  background-image: none !important;
+  background: transparent !important;
+}
+
+/* === Sidebar circular group/new buttons (conversation-list round thumbs
+   that otherwise use native grey rgba(212,212,212)/rgb(229,229,229)
+   following the host theme) === */
+html.${HOST_CLASS} .task-list-group-new-btn,
+html.${HOST_CLASS} .solo-mobile-compact-btn {
+  background: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  border-color: color-mix(in srgb, var(--agentskin-accent) 28%, transparent) !important;
+  color: var(--agentskin-text) !important;
+}
+html.${HOST_CLASS} .task-list-group-new-btn:hover,
+html.${HOST_CLASS} .solo-mobile-compact-btn:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 22%, transparent) !important;
+}
+
 /* === Composer === */
 html.${HOST_CLASS} .chat-input-v2-input-box-editable {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent) !important;
@@ -82,6 +114,36 @@ html.${HOST_CLASS} [class*="chat-input-primary-glow"] {
 }
 html.${HOST_CLASS} [class*="chat-input-primary-glow"]:focus-within {
   border-color: color-mix(in srgb, var(--agentskin-accent) 45%, transparent) !important;
+}
+
+/* === Composer outer editor part: neutralize the native opaque grey
+   (rgb(23,23,23) in dark / light equivalent in light) so the frosted inner
+   input stays the visual subject and the art punches through === */
+/* Specificity: the host wins with !!important on the (0,4,0) selector
+   `.solo-lite .messageInputContainer .messageInputChatInput .chat-input-v2-editor-part`,
+   which beats our plain (0,2,1). Replicate the ancestor chain + host class so
+   our transparent (0,5,1) outranks it. */
+html.${HOST_CLASS} .solo-lite .messageInputContainer .messageInputChatInput .chat-input-v2-editor-part,
+html.${HOST_CLASS} .solo-lite .messageInputChatInput .chat-input-v2-editor-part,
+html.${HOST_CLASS} .chat-input-v2-editor-part {
+  background: transparent !important;
+}
+
+/* === Composer plugin toolbar icons: repaint native grey pills
+   (host uses #292929 / var(--bg-bg-white) following its theme) with an
+   accent-tinted frosted pill so toolbar buttons keep our theme === */
+html.${HOST_CLASS} [class*="messageInputPluginToolbarIconWrapper"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--agentskin-accent) 22%, transparent) !important;
+  color: var(--agentskin-text) !important;
+}
+html.${HOST_CLASS} [class*="messageInputPluginToolbarIconWrapper"]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
+}
+html.${HOST_CLASS} [class*="messageInputPluginToolbar"] {
+  background: transparent !important;
+  border-color: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  color: var(--agentskin-text) !important;
 }
 
 /* === Message text === */

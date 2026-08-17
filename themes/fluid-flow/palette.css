@@ -1,0 +1,26 @@
+/* palette.css — fluid-flow (流体渐变) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0a0e1a;
+  --agentskin-surface: #121a2c;
+  --agentskin-surface-elevated: #182238;
+  --agentskin-text: #dbe6ff;
+  --agentskin-muted: #6b7a99;
+  --agentskin-accent: #4cc9f0;
+  --agentskin-secondary: #f06ad0;
+  --agentskin-border: rgba(76, 201, 240, 0.2);
+  --agentskin-code-bg: #080c16;
+  --agentskin-code-fg: #b9c8ea;
+  --agentskin-focus-ring: #4cc9f066;
+  --agentskin-selection: color-mix(in srgb, #4cc9f0 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 76, 201, 240;
+  --agentskin-secondary-raw: 240, 106, 208;
+  --agentskin-text-raw: 219, 230, 255;
+  --agentskin-muted-raw: 107, 122, 153;
+  --agentskin-surface-raw: 18, 26, 44;
+  --agentskin-surface-elevated-raw: 24, 34, 56;
+  --agentskin-bg-raw: 10, 14, 26;
+  --agentskin-border-raw: 76, 201, 240;
+}

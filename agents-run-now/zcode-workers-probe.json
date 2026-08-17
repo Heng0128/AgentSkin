@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-08-17T07:14:05.770Z",
+  "attached": [
+    {
+      "sessionId": "8B20A8DB50AFBB1865FD86F4C04F6389",
+      "targetInfo": {
+        "targetId": "BF7183AC14612B264E4F27C83518FB62",
+        "type": "worker",
+        "title": "zcode-diffs-worker",
+        "url": "file:///C:/Program%20Files/ZCode/resources/app.asar/out/renderer/assets/diffs.worker-CAavpt0L.js",
+        "attached": true,
+        "canAccessOpener": false,
+        "browserContextId": "9EF2DAA90A8786910E2FD5A01BA3005B"
+      }
+    },
+    {
+      "sessionId": "7BC74DA1D2E7F6E5A49F27E96E551901",
+      "targetInfo": {
+        "targetId": "FE6991DCA46CA85446D0C3A7940F23DE",
+        "type": "worker",
+        "title": "zcode-diffs-worker",
+        "url": "file:///C:/Program%20Files/ZCode/resources/app.asar/out/renderer/assets/diffs.worker-CAavpt0L.js",
+        "attached": true,
+        "canAccessOpener": false,
+        "browserContextId": "9EF2DAA90A8786910E2FD5A01BA3005B"
+      }
+    },
+    {
+      "sessionId": "6198E08D93BA136E651D5CE1A5D40B84",
+      "targetInfo": {
+        "targetId": "9442D98FB31BB45C6FC2A084DD658E10",
+        "type": "worker",
+        "title": "zcode-diffs-worker",
+        "url": "file:///C:/Program%20Files/ZCode/resources/app.asar/out/renderer/assets/diffs.worker-CAavpt0L.js",
+        "attached": true,
+        "canAccessOpener": false,
+        "browserContextId": "9EF2DAA90A8786910E2FD5A01BA3005B"
+      }
+    },
+    {
+      "sessionId": "D1B7B2E319CC00130A401EE713E7311A",
+      "targetInfo": {
+        "targetId": "A340EE6B7D2ED175514D8E10C978B810",
+        "type": "worker",
+        "title": "zcode-diffs-worker",
+        "url": "file:///C:/Program%20Files/ZCode/resources/app.asar/out/renderer/assets/diffs.worker-CAavpt0L.js",
+        "attached": true,
+        "canAccessOpener": false,
+        "browserContextId": "9EF2DAA90A8786910E2FD5A01BA3005B"
+      }
+    }
+  ]
+}

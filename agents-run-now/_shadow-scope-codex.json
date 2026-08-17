@@ -1,0 +1,516 @@
+{
+  "id": "codex",
+  "displayName": "OpenAI Codex",
+  "html": {
+    "className": "electron-dark agentskin-theme agentskin-host-codex",
+    "dataTheme": "",
+    "dataMode": "",
+    "colorScheme": ""
+  },
+  "sheets": {
+    "styleSheets": 11,
+    "adoptedSheets": 5,
+    "nestedRules": 565
+  },
+  "errors": [],
+  "families": [
+    {
+      "family": "--bg-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 23,
+          "sampleProps": [
+            "--learning-block-tooltip-text",
+            "--learning-block-visualization-surface",
+            "--icon-accent",
+            "--icon-tertiary",
+            "--icon-warning",
+            "--text-primary"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--text-primary",
+            "--text-secondary",
+            "--text-tertiary",
+            "--bg-primary",
+            "--bg-secondary",
+            "--bg-tertiary",
+            "--border-subtle"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--border-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 23,
+          "sampleProps": [
+            "--learning-block-tooltip-text",
+            "--learning-block-visualization-surface",
+            "--icon-accent",
+            "--icon-tertiary",
+            "--icon-warning",
+            "--text-primary"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--text-primary",
+            "--text-secondary",
+            "--text-tertiary",
+            "--bg-primary",
+            "--bg-secondary",
+            "--bg-tertiary",
+            "--border-subtle"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--constant-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 23,
+          "sampleProps": [
+            "--learning-block-tooltip-text",
+            "--learning-block-visualization-surface",
+            "--icon-accent",
+            "--icon-tertiary",
+            "--icon-warning",
+            "--text-primary"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--text-primary",
+            "--text-secondary",
+            "--text-tertiary",
+            "--bg-primary",
+            "--bg-secondary",
+            "--bg-tertiary",
+            "--border-subtle"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--icon-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 23,
+          "sampleProps": [
+            "--learning-block-tooltip-text",
+            "--learning-block-visualization-surface",
+            "--icon-accent",
+            "--icon-tertiary",
+            "--icon-warning",
+            "--text-primary"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--text-primary",
+            "--text-secondary",
+            "--text-tertiary",
+            "--bg-primary",
+            "--bg-secondary",
+            "--bg-tertiary",
+            "--border-subtle"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--learning-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 23,
+          "sampleProps": [
+            "--learning-block-tooltip-text",
+            "--learning-block-visualization-surface",
+            "--icon-accent",
+            "--icon-tertiary",
+            "--icon-warning",
+            "--text-primary"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--text-primary",
+            "--text-secondary",
+            "--text-tertiary",
+            "--bg-primary",
+            "--bg-secondary",
+            "--bg-tertiary",
+            "--border-subtle"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--main-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 23,
+          "sampleProps": [
+            "--learning-block-tooltip-text",
+            "--learning-block-visualization-surface",
+            "--icon-accent",
+            "--icon-tertiary",
+            "--icon-warning",
+            "--text-primary"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--text-primary",
+            "--text-secondary",
+            "--text-tertiary",
+            "--bg-primary",
+            "--bg-secondary",
+            "--bg-tertiary",
+            "--border-subtle"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--text-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 23,
+          "sampleProps": [
+            "--learning-block-tooltip-text",
+            "--learning-block-visualization-surface",
+            "--icon-accent",
+            "--icon-tertiary",
+            "--icon-warning",
+            "--text-primary"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--text-primary",
+            "--text-secondary",
+            "--text-tertiary",
+            "--bg-primary",
+            "--bg-secondary",
+            "--bg-tertiary",
+            "--border-subtle"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--theme-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 23,
+          "sampleProps": [
+            "--learning-block-tooltip-text",
+            "--learning-block-visualization-surface",
+            "--icon-accent",
+            "--icon-tertiary",
+            "--icon-warning",
+            "--text-primary"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".learning-block-color-scope",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--text-primary",
+            "--text-secondary",
+            "--text-tertiary",
+            "--bg-primary",
+            "--bg-secondary",
+            "--bg-tertiary",
+            "--border-subtle"
+          ]
+        }
+      ]
+    }
+  ],
+  "rootCoverage": [
+    {
+      "family": "--agentskin-",
+      "count": 22,
+      "covered": false
+    },
+    {
+      "family": "--codex-",
+      "count": 5,
+      "covered": false
+    },
+    {
+      "family": "--color-",
+      "count": 2,
+      "covered": true
+    },
+    {
+      "family": "--composer-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--conversation-",
+      "count": 2,
+      "covered": false
+    },
+    {
+      "family": "--corner-",
+      "count": 1,
+      "covered": false
+    },
+    {
+      "family": "--diffs-",
+      "count": 8,
+      "covered": false
+    },
+    {
+      "family": "--elevation-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--height-",
+      "count": 2,
+      "covered": false
+    },
+    {
+      "family": "--home-",
+      "count": 1,
+      "covered": false
+    },
+    {
+      "family": "--inset-",
+      "count": 1,
+      "covered": false
+    },
+    {
+      "family": "--max-",
+      "count": 1,
+      "covered": false
+    },
+    {
+      "family": "--padding-",
+      "count": 4,
+      "covered": false
+    },
+    {
+      "family": "--radius-",
+      "count": 7,
+      "covered": false
+    },
+    {
+      "family": "--safe-",
+      "count": 2,
+      "covered": false
+    },
+    {
+      "family": "--startup-",
+      "count": 8,
+      "covered": false
+    },
+    {
+      "family": "--text-",
+      "count": 1,
+      "covered": true
+    },
+    {
+      "family": "--wb-",
+      "count": 10,
+      "covered": false
+    }
+  ],
+  "overrides": [
+    {
+      "sel": "html.agentskin-host-codex:root",
+      "spec": [
+        0,
+        2,
+        1
+      ],
+      "important": true
+    }
+  ],
+  "ok": true,
+  "port": 58554,
+  "verify": []
+}

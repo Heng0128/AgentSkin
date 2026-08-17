@@ -1,0 +1,336 @@
+{
+  "id": "zcode",
+  "displayName": "ZCode",
+  "html": {
+    "className": "dark theme-zai-dark platform-windows-desktop agentskin-theme agentskin-host-zcode",
+    "dataTheme": "",
+    "dataMode": "",
+    "colorScheme": ""
+  },
+  "sheets": {
+    "styleSheets": 5,
+    "adoptedSheets": 5,
+    "nestedRules": 574
+  },
+  "errors": [],
+  "families": [
+    {
+      "family": "--animated-",
+      "ruleCount": 3,
+      "scopes": [
+        {
+          "sel": ".dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 94,
+          "sampleProps": [
+            "--animated-gradient-text-strong",
+            "--animated-gradient-text-soft",
+            "--color-background",
+            "--color-background-alt",
+            "--color-background-win-alt",
+            "--color-brand"
+          ]
+        },
+        {
+          "sel": ".theme-zai-light",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 127,
+          "sampleProps": [
+            "--animated-gradient-text-strong",
+            "--animated-gradient-text-soft",
+            "--color-background",
+            "--color-background-win-alt",
+            "--color-background-alt",
+            "--color-brand"
+          ]
+        },
+        {
+          "sel": ".theme-zai-dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 127,
+          "sampleProps": [
+            "--animated-gradient-text-strong",
+            "--animated-gradient-text-soft",
+            "--color-background",
+            "--color-background-win-alt",
+            "--color-background-alt",
+            "--color-brand"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".theme-zai-light",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--color-background",
+            "--color-background-win-alt",
+            "--color-background-alt",
+            "--color-brand",
+            "--color-accent",
+            "--color-find-highlight",
+            "--color-find-highlight-active",
+            "--color-border",
+            "--color-border-hover",
+            "--color-hover",
+            "--color-selected",
+            "--color-header",
+            "--color-panel",
+            "--color-sidebar",
+            "--color-surface",
+            "--color-surface-hover",
+            "--color-card",
+            "--color-card-border",
+            "--color-popover",
+            "--color-popover-border",
+            "--color-input",
+            "--color-input-focused",
+            "--color-input-border",
+            "--color-input-border-hover",
+            "--color-input-border-focused",
+            "--color-terminal-bg",
+            "--color-terminal-fg",
+            "--color-terminal-selection",
+            "--color-terminal-selection-inactive",
+            "--color-tab",
+            "--color-tab-active",
+            "--color-tab-border",
+            "--color-menu",
+            "--color-primary",
+            "--color-primary-foreground",
+            "--color-secondary",
+            "--color-interaction-ask-surface",
+            "--color-interaction-ask-foreground",
+            "--color-interaction-ask-fill",
+            "--color-interaction-confirmation-surface",
+            "--color-interaction-confirmation-foreground",
+            "--color-foreground",
+            "--color-foreground-subtle",
+            "--color-foreground-subtlest",
+            "--color-foreground-inverse",
+            "--color-success",
+            "--color-success-foreground",
+            "--color-destructive",
+            "--color-destructive-foreground",
+            "--color-warning",
+            "--color-warning-foreground",
+            "--color-diff-added",
+            "--color-diff-removed",
+            "--color-toast",
+            "--color-tooltip",
+            "--color-file-node",
+            "--color-file-node-hover",
+            "--color-file-node-foreground",
+            "--color-command-node",
+            "--color-command-node-hover",
+            "--color-command-node-foreground",
+            "--color-session-node",
+            "--color-session-node-hover",
+            "--color-session-node-foreground"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--color-",
+      "ruleCount": 3,
+      "scopes": [
+        {
+          "sel": ".dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 94,
+          "sampleProps": [
+            "--animated-gradient-text-strong",
+            "--animated-gradient-text-soft",
+            "--color-background",
+            "--color-background-alt",
+            "--color-background-win-alt",
+            "--color-brand"
+          ]
+        },
+        {
+          "sel": ".theme-zai-light",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 127,
+          "sampleProps": [
+            "--animated-gradient-text-strong",
+            "--animated-gradient-text-soft",
+            "--color-background",
+            "--color-background-win-alt",
+            "--color-background-alt",
+            "--color-brand"
+          ]
+        },
+        {
+          "sel": ".theme-zai-dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 127,
+          "sampleProps": [
+            "--animated-gradient-text-strong",
+            "--animated-gradient-text-soft",
+            "--color-background",
+            "--color-background-win-alt",
+            "--color-background-alt",
+            "--color-brand"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".theme-zai-light",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--color-background",
+            "--color-background-win-alt",
+            "--color-background-alt",
+            "--color-brand",
+            "--color-accent",
+            "--color-find-highlight",
+            "--color-find-highlight-active",
+            "--color-border",
+            "--color-border-hover",
+            "--color-hover",
+            "--color-selected",
+            "--color-header",
+            "--color-panel",
+            "--color-sidebar",
+            "--color-surface",
+            "--color-surface-hover",
+            "--color-card",
+            "--color-card-border",
+            "--color-popover",
+            "--color-popover-border",
+            "--color-input",
+            "--color-input-focused",
+            "--color-input-border",
+            "--color-input-border-hover",
+            "--color-input-border-focused",
+            "--color-terminal-bg",
+            "--color-terminal-fg",
+            "--color-terminal-selection",
+            "--color-terminal-selection-inactive",
+            "--color-tab",
+            "--color-tab-active",
+            "--color-tab-border",
+            "--color-menu",
+            "--color-primary",
+            "--color-primary-foreground",
+            "--color-secondary",
+            "--color-interaction-ask-surface",
+            "--color-interaction-ask-foreground",
+            "--color-interaction-ask-fill",
+            "--color-interaction-confirmation-surface",
+            "--color-interaction-confirmation-foreground",
+            "--color-foreground",
+            "--color-foreground-subtle",
+            "--color-foreground-subtlest",
+            "--color-foreground-inverse",
+            "--color-success",
+            "--color-success-foreground",
+            "--color-destructive",
+            "--color-destructive-foreground",
+            "--color-warning",
+            "--color-warning-foreground",
+            "--color-diff-added",
+            "--color-diff-removed",
+            "--color-toast",
+            "--color-tooltip",
+            "--color-file-node",
+            "--color-file-node-hover",
+            "--color-file-node-foreground",
+            "--color-command-node",
+            "--color-command-node-hover",
+            "--color-command-node-foreground",
+            "--color-session-node",
+            "--color-session-node-hover",
+            "--color-session-node-foreground"
+          ]
+        }
+      ]
+    }
+  ],
+  "rootCoverage": [
+    {
+      "family": "--agentskin-",
+      "count": 22,
+      "covered": false
+    },
+    {
+      "family": "--ui-",
+      "count": 1,
+      "covered": false
+    }
+  ],
+  "overrides": [
+    {
+      "sel": "html.agentskin-host-zcode:root",
+      "spec": [
+        0,
+        1,
+        1
+      ],
+      "important": true
+    }
+  ],
+  "ok": true,
+  "port": 55435,
+  "verify": []
+}

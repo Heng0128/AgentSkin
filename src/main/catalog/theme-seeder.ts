@@ -226,6 +226,24 @@ export const REMOVED_BUILTIN_THEME_IDS = [
   // by the v2.3 built-in set (nordic-minimal / deepspace-nebula /
   // sakura-pastel). Prune copies installed by older versions on upgrade.
   'naruto-tobi',
+  // v2.4 portfolio reset: the entire 15-theme built-in set was removed in
+  // favor of a re-planned promotion-style taxonomy (docs/theme-category-plan.md).
+  // Their theme packages are deleted from themes/; registering the ids here
+  // prunes any copies lingering in per-user ThemeLibrary on upgrade.
+  'amber-dusk',
+  'aurora-violet',
+  'bamboo-mist',
+  'cyber-rose',
+  'deepspace-nebula',
+  'forest-pine',
+  'glacier-white',
+  'graphite-code',
+  'midnight-jazz',
+  'nordic-minimal',
+  'ocean-tide',
+  'rose-quartz',
+  'sakura-noir',
+  'sakura-pastel',
 ];
 
 /**

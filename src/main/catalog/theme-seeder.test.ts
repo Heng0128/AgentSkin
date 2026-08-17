@@ -110,7 +110,9 @@ describe('seedBuiltInThemes — removed themes must never be reseeded', () => {
     // Pick two ids from the actual removed list so the test tracks the list.
     const removedA = REMOVED_BUILTIN_THEME_IDS[0];
     const removedB = REMOVED_BUILTIN_THEME_IDS[1];
-    const kept = 'nordic-minimal'; // a shipped theme id (not in the removed list)
+    // A shipped theme id that is NOT in the removed list (all legacy built-ins
+    // are now registered as removed, so use a hypothetical future bundle id).
+    const kept = 'future-bundled-theme';
     await writePackage(themesRoot, removedA);
     await writePackage(themesRoot, removedB);
     await writePackage(themesRoot, kept);
@@ -132,7 +134,7 @@ describe('seedBuiltInThemes — removed themes must never be reseeded', () => {
     // does not wipe it). Pruning must remove them.
     const removedA = REMOVED_BUILTIN_THEME_IDS[0];
     const library = createFakeLibrary();
-    await pruneRemovedBuiltInThemes(library, new Set([removedA, 'nordic-minimal']));
+    await pruneRemovedBuiltInThemes(library, new Set([removedA, 'future-bundled-theme']));
     expect(library.deletedIds).toEqual([removedA]);
   });
 });

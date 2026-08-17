@@ -1,0 +1,26 @@
+/* palette.css — catppuccin (马卡龙暗色) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #1e1e2e;
+  --agentskin-surface: #313244;
+  --agentskin-surface-elevated: #45475a;
+  --agentskin-text: #cdd6f4;
+  --agentskin-muted: #6c7086;
+  --agentskin-accent: #cba6f7;
+  --agentskin-secondary: #f5c2e7;
+  --agentskin-border: rgba(203, 166, 247, 0.18);
+  --agentskin-code-bg: #181825;
+  --agentskin-code-fg: #cdd6f4;
+  --agentskin-focus-ring: #cba6f760;
+  --agentskin-selection: color-mix(in srgb, #cba6f7 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 203, 166, 247;
+  --agentskin-secondary-raw: 245, 194, 231;
+  --agentskin-text-raw: 205, 214, 244;
+  --agentskin-muted-raw: 108, 112, 134;
+  --agentskin-surface-raw: 49, 50, 68;
+  --agentskin-surface-elevated-raw: 69, 71, 90;
+  --agentskin-bg-raw: 30, 30, 46;
+  --agentskin-border-raw: 203, 166, 247;
+}

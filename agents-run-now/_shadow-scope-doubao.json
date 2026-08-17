@@ -1,0 +1,7092 @@
+{
+  "id": "doubao",
+  "displayName": "豆包",
+  "html": {
+    "className": "agentskin-theme agentskin-host-doubao",
+    "dataTheme": "dark",
+    "dataMode": "",
+    "colorScheme": ""
+  },
+  "sheets": {
+    "styleSheets": 94,
+    "adoptedSheets": 5,
+    "nestedRules": 46094
+  },
+  "errors": [],
+  "families": [
+    {
+      "family": "--action-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--active-",
+      "ruleCount": 8,
+      "scopes": [
+        {
+          "sel": ".more-skills-content-container-utq532 .skill-item-Yt_Ld2:not(.skill-item-selected-VYAEyH):active",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 1,
+          "sampleProps": [
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item__primary-EQmcz2",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz.activable__primary-active-eCx6mf",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--static-bg-color",
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".chat-input-icon-zg1MF3 .chat-input-icon-area-a915k9",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".search-source-card-tRuH32",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".more-skills-content-container-utq532 .skill-item-Yt_Ld2:not(.skill-item-selected-VYAEyH):active",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item__primary-EQmcz2",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz.activable__primary-active-eCx6mf",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--static-bg-color",
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".chat-input-icon-zg1MF3 .chat-input-icon-area-a915k9",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".search-source-card-tRuH32",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--base-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--bg-",
+      "ruleCount": 3,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        },
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--border-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--btn-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--button-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--canvas-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".code-canvas-theme-CaNPp7[data-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 47,
+          "sampleProps": [
+            "--s-color-text-primary-raw",
+            "--s-color-text-primary",
+            "--s-color-text-secondary",
+            "--s-color-text-tertiary",
+            "--s-color-text-quaternary",
+            "--s-color-text-disable"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".code-canvas-theme-CaNPp7[data-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--s-color-text-primary-raw",
+            "--s-color-text-primary",
+            "--s-color-text-secondary",
+            "--s-color-text-tertiary",
+            "--s-color-text-quaternary",
+            "--s-color-text-disable",
+            "--s-color-bg-primary",
+            "--s-color-bg-secondary",
+            "--s-color-bg-tertiary",
+            "--s-color-bg-trans",
+            "--s-color-bg-trans-tertiary",
+            "--s-color-bg-dialogs",
+            "--s-color-bg-body",
+            "--s-color-bg-body-raw",
+            "--s-color-alert-raw",
+            "--s-color-system-alert-lighten",
+            "--s-color-border-tertiary",
+            "--s-color-bg-float"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--center-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 9,
+          "sampleProps": [
+            "--max-width-layout-container-width",
+            "--max-width-layout-large-padding",
+            "--max-width-layout-small-padding",
+            "--width",
+            "--center-content",
+            "--total-side"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--left-side"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--chat-",
+      "ruleCount": 6,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        },
+        {
+          "sel": ".code-block-element-R6c8c0",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 14,
+          "sampleProps": [
+            "--code-font-family-mono",
+            "--chat-md-codeblock-bg-color",
+            "--chat-md-codeblock-header-bg-color",
+            "--code-area-radius",
+            "--code-area-radius-inner",
+            "--code-area-bg-color"
+          ]
+        },
+        {
+          "sel": ".container-WHryEq.share-ec08QY .task-card-bg",
+          "scope": "component",
+          "spec": [
+            0,
+            3,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "propCount": 1,
+          "sampleProps": [
+            "--chat-task-card-container-bg-color"
+          ]
+        },
+        {
+          "sel": ".container-TRjNAx.share-ZuG85O .task-card-bg",
+          "scope": "component",
+          "spec": [
+            0,
+            3,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "propCount": 1,
+          "sampleProps": [
+            "--chat-task-card-container-bg-color"
+          ]
+        },
+        {
+          "sel": ".bg-Ebtrqc",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--task-card-border-color",
+            "--chat-task-card-container-bg-color"
+          ]
+        },
+        {
+          "sel": ".container-cI_cFr.share-O8hdRk .task-card-bg",
+          "scope": "component",
+          "spec": [
+            0,
+            3,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "propCount": 1,
+          "sampleProps": [
+            "--chat-task-card-container-bg-color"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".code-block-element-R6c8c0",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--chat-md-codeblock-bg-color",
+            "--chat-md-codeblock-header-bg-color"
+          ]
+        },
+        {
+          "sel": ".container-WHryEq.share-ec08QY .task-card-bg",
+          "scope": "component",
+          "spec": [
+            0,
+            3,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--chat-task-card-container-bg-color"
+          ]
+        },
+        {
+          "sel": ".container-TRjNAx.share-ZuG85O .task-card-bg",
+          "scope": "component",
+          "spec": [
+            0,
+            3,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--chat-task-card-container-bg-color"
+          ]
+        },
+        {
+          "sel": ".bg-Ebtrqc",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--chat-task-card-container-bg-color"
+          ]
+        },
+        {
+          "sel": ".container-cI_cFr.share-O8hdRk .task-card-bg",
+          "scope": "component",
+          "spec": [
+            0,
+            3,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--chat-task-card-container-bg-color"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--chatarea-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--click-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--code-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".code-block-element-R6c8c0",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 14,
+          "sampleProps": [
+            "--code-font-family-mono",
+            "--chat-md-codeblock-bg-color",
+            "--chat-md-codeblock-header-bg-color",
+            "--code-area-radius",
+            "--code-area-radius-inner",
+            "--code-area-bg-color"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".code-block-element-R6c8c0",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--chat-md-codeblock-bg-color",
+            "--chat-md-codeblock-header-bg-color"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--color-",
+      "ruleCount": 6,
+      "scopes": [
+        {
+          "sel": ".semi-popupview-light",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 510,
+          "sampleProps": [
+            "--s-color-brand-primary-default",
+            "--s-color-brand-primary-default-raw",
+            "--s-color-brand-primary-hover",
+            "--s-color-brand-primary-hover-raw",
+            "--s-color-brand-primary-pressed",
+            "--s-color-brand-primary-pressed-raw"
+          ]
+        },
+        {
+          "sel": ".semi-popupview-dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 510,
+          "sampleProps": [
+            "--s-color-brand-primary-disable",
+            "--s-color-text-secondary",
+            "--s-color-text-disable",
+            "--s-color-text-invert-secondary",
+            "--s-color-text-invert-disable",
+            "--s-color-text-intact-primary"
+          ]
+        },
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        },
+        {
+          "sel": ".code-canvas-theme-CaNPp7[data-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 47,
+          "sampleProps": [
+            "--s-color-text-primary-raw",
+            "--s-color-text-primary",
+            "--s-color-text-secondary",
+            "--s-color-text-tertiary",
+            "--s-color-text-quaternary",
+            "--s-color-text-disable"
+          ]
+        },
+        {
+          "sel": ".thinking-box-dVqaap .flow-markdown-body",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "propCount": 6,
+          "sampleProps": [
+            "--md-box-samantha-normal-text-font-size",
+            "--md-box-samantha-normal-text-line-height",
+            "--md-box-samantha-normal-text-color",
+            "--s-color-text-primary",
+            "--color-text-primary",
+            "--md-box-paragraph-spacing"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".code-canvas-theme-CaNPp7[data-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--s-color-text-primary-raw",
+            "--s-color-text-primary",
+            "--s-color-text-secondary",
+            "--s-color-text-tertiary",
+            "--s-color-text-quaternary",
+            "--s-color-text-disable",
+            "--s-color-bg-primary",
+            "--s-color-bg-secondary",
+            "--s-color-bg-tertiary",
+            "--s-color-bg-trans",
+            "--s-color-bg-trans-tertiary",
+            "--s-color-bg-dialogs",
+            "--s-color-bg-body",
+            "--s-color-bg-body-raw",
+            "--s-color-alert-raw",
+            "--s-color-system-alert-lighten",
+            "--s-color-border-tertiary",
+            "--s-color-bg-float"
+          ]
+        },
+        {
+          "sel": ".thinking-box-dVqaap .flow-markdown-body",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--s-color-text-primary"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--conditional-",
+      "ruleCount": 2,
+      "scopes": [
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--content-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 9,
+          "sampleProps": [
+            "--max-width-layout-container-width",
+            "--max-width-layout-large-padding",
+            "--max-width-layout-small-padding",
+            "--width",
+            "--center-content",
+            "--total-side"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--left-side"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--dbx-",
+      "ruleCount": 6,
+      "scopes": [
+        {
+          "sel": "body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            1
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 2,
+          "sampleProps": [
+            "--dbx-bg-body-web",
+            "--chat-bg-color"
+          ]
+        },
+        {
+          "sel": ":root[data-theme=\"dark\"] body",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            1
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 1,
+          "sampleProps": [
+            "--dbx-bg-body-web"
+          ]
+        },
+        {
+          "sel": ":root[data-theme=\"light\"] body",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            1
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 1,
+          "sampleProps": [
+            "--dbx-bg-body-web"
+          ]
+        },
+        {
+          "sel": ":root, :host([data-rendering-environment=\"external\"]), [theme=\"light\"], [data-theme=\"light\"], [theme-mode=\"light\"], [data-theme-mode=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            5,
+            1
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 234,
+          "sampleProps": [
+            "--dbx-text-primary",
+            "--dbx-bg-base-web",
+            "--dbx-text-secondary",
+            "--dbx-text-tertiary",
+            "--dbx-text-disable",
+            "--dbx-text-markdown"
+          ]
+        },
+        {
+          "sel": "[theme=\"dark\"], [data-theme=\"dark\"], [theme-mode=\"dark\"], [data-theme-mode=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            4,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 234,
+          "sampleProps": [
+            "--dbx-text-primary",
+            "--dbx-bg-base-web",
+            "--dbx-text-secondary",
+            "--dbx-text-tertiary",
+            "--dbx-text-disable",
+            "--dbx-text-markdown"
+          ]
+        },
+        {
+          "sel": ".mediaPopover-vIRVXm",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--dbx-text-primary",
+            "--dbx-fill-trans-10-hover"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".mediaPopover-vIRVXm",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--dbx-text-primary",
+            "--dbx-fill-trans-10-hover"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--dot-",
+      "ruleCount": 2,
+      "scopes": [
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--error-",
+      "ruleCount": 2,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 15,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 17,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-border-hover",
+            "--normal-text",
+            "--success-bg"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--fill-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--font-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--google-",
+      "ruleCount": 4,
+      "scopes": [
+        {
+          "sel": ".semi-popupview-light",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 510,
+          "sampleProps": [
+            "--s-color-brand-primary-default",
+            "--s-color-brand-primary-default-raw",
+            "--s-color-brand-primary-hover",
+            "--s-color-brand-primary-hover-raw",
+            "--s-color-brand-primary-pressed",
+            "--s-color-brand-primary-pressed-raw"
+          ]
+        },
+        {
+          "sel": ".semi-popupview-dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 510,
+          "sampleProps": [
+            "--s-color-brand-primary-disable",
+            "--s-color-text-secondary",
+            "--s-color-text-disable",
+            "--s-color-text-invert-secondary",
+            "--s-color-text-invert-disable",
+            "--s-color-text-intact-primary"
+          ]
+        },
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--gray1",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray10",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray11",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray12",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray2",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray3",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray4",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray5",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray6",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray7",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray8",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--gray9",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 13,
+          "sampleProps": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster]",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--gray1",
+            "--gray2",
+            "--gray3",
+            "--gray4",
+            "--gray5",
+            "--gray6",
+            "--gray7",
+            "--gray8",
+            "--gray9",
+            "--gray10",
+            "--gray11",
+            "--gray12"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--header-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--hover-",
+      "ruleCount": 9,
+      "scopes": [
+        {
+          "sel": ".more-skills-content-container-utq532 .skill-item-Yt_Ld2:not(.skill-item-selected-VYAEyH):hover",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 1,
+          "sampleProps": [
+            "--hover-bg-color"
+          ]
+        },
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item__primary-EQmcz2",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz.activable__primary-active-eCx6mf",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--static-bg-color",
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".chat-input-icon-zg1MF3 .chat-input-icon-area-a915k9",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".search-source-card-tRuH32",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".academic-source-card-footer-quote-hILIwh",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 1,
+          "sampleProps": [
+            "--hover-bg-color"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".more-skills-content-container-utq532 .skill-item-Yt_Ld2:not(.skill-item-selected-VYAEyH):hover",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item__primary-EQmcz2",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz.activable__primary-active-eCx6mf",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--static-bg-color",
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".chat-input-icon-zg1MF3 .chat-input-icon-area-a915k9",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".search-source-card-tRuH32",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        },
+        {
+          "sel": ".academic-source-card-footer-quote-hILIwh",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--hover-bg-color"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--icon-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--info-",
+      "ruleCount": 2,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 15,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 17,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-border-hover",
+            "--normal-text",
+            "--success-bg"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--input-",
+      "ruleCount": 3,
+      "scopes": [
+        {
+          "sel": ".input-content-container-bMefgL",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 12,
+          "sampleProps": [
+            "--input-guidance-input-container-max-height",
+            "--input-guidance-input-container-min-height",
+            "--input-guidance-input-container-padding",
+            "--input-guidance-input-container-radius",
+            "--input-guidance-input-container-border",
+            "--input-guidance-input-container-background"
+          ]
+        },
+        {
+          "sel": ".input-content-container-qGGCGi",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 12,
+          "sampleProps": [
+            "--input-guidance-input-container-max-height",
+            "--input-guidance-input-container-min-height",
+            "--input-guidance-input-container-padding",
+            "--input-guidance-input-container-radius",
+            "--input-guidance-input-container-border",
+            "--input-guidance-input-container-background"
+          ]
+        },
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".input-content-container-bMefgL",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "active": true,
+          "hits": [
+            "--input-guidance-input-container-border",
+            "--input-guidance-input-container-background",
+            "--input-guidance-input-editor-color",
+            "--input-guidance-input-editor-placeholder-color"
+          ]
+        },
+        {
+          "sel": ".input-content-container-qGGCGi",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--input-guidance-input-container-border",
+            "--input-guidance-input-container-background",
+            "--input-guidance-input-editor-color",
+            "--input-guidance-input-editor-placeholder-color"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--left-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 9,
+          "sampleProps": [
+            "--max-width-layout-container-width",
+            "--max-width-layout-large-padding",
+            "--max-width-layout-small-padding",
+            "--width",
+            "--center-content",
+            "--total-side"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--left-side"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--light-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--line-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--loading-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--max-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 9,
+          "sampleProps": [
+            "--max-width-layout-container-width",
+            "--max-width-layout-large-padding",
+            "--max-width-layout-small-padding",
+            "--width",
+            "--center-content",
+            "--total-side"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--left-side"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--md-",
+      "ruleCount": 4,
+      "scopes": [
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        },
+        {
+          "sel": ".code-canvas-theme-CaNPp7[data-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 47,
+          "sampleProps": [
+            "--s-color-text-primary-raw",
+            "--s-color-text-primary",
+            "--s-color-text-secondary",
+            "--s-color-text-tertiary",
+            "--s-color-text-quaternary",
+            "--s-color-text-disable"
+          ]
+        },
+        {
+          "sel": ".thinking-box-dVqaap .flow-markdown-body",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "propCount": 6,
+          "sampleProps": [
+            "--md-box-samantha-normal-text-font-size",
+            "--md-box-samantha-normal-text-line-height",
+            "--md-box-samantha-normal-text-color",
+            "--s-color-text-primary",
+            "--color-text-primary",
+            "--md-box-paragraph-spacing"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".code-canvas-theme-CaNPp7[data-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--s-color-text-primary-raw",
+            "--s-color-text-primary",
+            "--s-color-text-secondary",
+            "--s-color-text-tertiary",
+            "--s-color-text-quaternary",
+            "--s-color-text-disable",
+            "--s-color-bg-primary",
+            "--s-color-bg-secondary",
+            "--s-color-bg-tertiary",
+            "--s-color-bg-trans",
+            "--s-color-bg-trans-tertiary",
+            "--s-color-bg-dialogs",
+            "--s-color-bg-body",
+            "--s-color-bg-body-raw",
+            "--s-color-alert-raw",
+            "--s-color-system-alert-lighten",
+            "--s-color-border-tertiary",
+            "--s-color-bg-float"
+          ]
+        },
+        {
+          "sel": ".thinking-box-dVqaap .flow-markdown-body",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--s-color-text-primary"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--msg-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--neutral-",
+      "ruleCount": 3,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        },
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--normal-",
+      "ruleCount": 4,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 15,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"] [data-sonner-toast][data-invert=\"true\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            4,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"] [data-sonner-toast][data-invert=\"true\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            4,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 17,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-border-hover",
+            "--normal-text",
+            "--success-bg"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"] [data-sonner-toast][data-invert=\"true\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            4,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"] [data-sonner-toast][data-invert=\"true\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            4,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--padding",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 9,
+          "sampleProps": [
+            "--max-width-layout-container-width",
+            "--max-width-layout-large-padding",
+            "--max-width-layout-small-padding",
+            "--width",
+            "--center-content",
+            "--total-side"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--left-side"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--primary-",
+      "ruleCount": 2,
+      "scopes": [
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--radius-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--s-",
+      "ruleCount": 9,
+      "scopes": [
+        {
+          "sel": ":root",
+          "scope": "root",
+          "spec": [
+            0,
+            0,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 262,
+          "sampleProps": [
+            "--s-color-brand-primary-default",
+            "--s-color-brand-primary-default-raw",
+            "--s-color-brand-primary-hover",
+            "--s-color-brand-primary-hover-raw",
+            "--s-color-brand-primary-pressed",
+            "--s-color-brand-primary-pressed-raw"
+          ]
+        },
+        {
+          "sel": ":root[data-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 262,
+          "sampleProps": [
+            "--s-color-brand-primary-disable",
+            "--s-color-text-secondary",
+            "--s-color-text-disable",
+            "--s-color-text-invert-secondary",
+            "--s-color-text-invert-disable",
+            "--s-color-text-intact-primary"
+          ]
+        },
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        },
+        {
+          "sel": ".semi-popupview-light",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 510,
+          "sampleProps": [
+            "--s-color-brand-primary-default",
+            "--s-color-brand-primary-default-raw",
+            "--s-color-brand-primary-hover",
+            "--s-color-brand-primary-hover-raw",
+            "--s-color-brand-primary-pressed",
+            "--s-color-brand-primary-pressed-raw"
+          ]
+        },
+        {
+          "sel": ".semi-popupview-dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 510,
+          "sampleProps": [
+            "--s-color-brand-primary-disable",
+            "--s-color-text-secondary",
+            "--s-color-text-disable",
+            "--s-color-text-invert-secondary",
+            "--s-color-text-invert-disable",
+            "--s-color-text-intact-primary"
+          ]
+        },
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        },
+        {
+          "sel": ".code-canvas-theme-CaNPp7[data-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 47,
+          "sampleProps": [
+            "--s-color-text-primary-raw",
+            "--s-color-text-primary",
+            "--s-color-text-secondary",
+            "--s-color-text-tertiary",
+            "--s-color-text-quaternary",
+            "--s-color-text-disable"
+          ]
+        },
+        {
+          "sel": ".thinking-box-dVqaap .flow-markdown-body",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "propCount": 6,
+          "sampleProps": [
+            "--md-box-samantha-normal-text-font-size",
+            "--md-box-samantha-normal-text-line-height",
+            "--md-box-samantha-normal-text-color",
+            "--s-color-text-primary",
+            "--color-text-primary",
+            "--md-box-paragraph-spacing"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".code-canvas-theme-CaNPp7[data-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--s-color-text-primary-raw",
+            "--s-color-text-primary",
+            "--s-color-text-secondary",
+            "--s-color-text-tertiary",
+            "--s-color-text-quaternary",
+            "--s-color-text-disable",
+            "--s-color-bg-primary",
+            "--s-color-bg-secondary",
+            "--s-color-bg-tertiary",
+            "--s-color-bg-trans",
+            "--s-color-bg-trans-tertiary",
+            "--s-color-bg-dialogs",
+            "--s-color-bg-body",
+            "--s-color-bg-body-raw",
+            "--s-color-alert-raw",
+            "--s-color-system-alert-lighten",
+            "--s-color-border-tertiary",
+            "--s-color-bg-float"
+          ]
+        },
+        {
+          "sel": ".thinking-box-dVqaap .flow-markdown-body",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": true,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--s-color-text-primary"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--safe-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--scrollThumbColor",
+      "ruleCount": 9,
+      "scopes": [
+        {
+          "sel": ".custom-scrollbar-style:hover",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-style",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-Z56ba3",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-w0wFTR",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-noolpt",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-R1vwYP",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": "#deep-research-notification-popup-container .semi-notification-list",
+          "scope": "component",
+          "spec": [
+            1,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-WZVAgq",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".container-Y4wEXp",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".custom-scrollbar-style:hover",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": "#deep-research-notification-popup-container .semi-notification-list",
+          "scope": "component",
+          "spec": [
+            1,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".container-Y4wEXp",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--scrollbar-",
+      "ruleCount": 10,
+      "scopes": [
+        {
+          "sel": ".custom-scrollbar-style:hover",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-style",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-Z56ba3",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-w0wFTR",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-noolpt",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-R1vwYP",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": "#deep-research-notification-popup-container .semi-notification-list",
+          "scope": "component",
+          "spec": [
+            1,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".show-scrollbar-thumb-WZVAgq",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".container-Y4wEXp",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--scrollThumbColor",
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".custom-scrollbar-style:hover",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": "#deep-research-notification-popup-container .semi-notification-list",
+          "scope": "component",
+          "spec": [
+            1,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        },
+        {
+          "sel": ".container-Y4wEXp",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--scrollbar-color-hover",
+            "--scrollbar-color-active"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--select-",
+      "ruleCount": 2,
+      "scopes": [
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--selected-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--semi-",
+      "ruleCount": 10,
+      "scopes": [
+        {
+          "sel": ".samantha-popover-tTqfwm.samantha-popover-tTqfwm .semi-popover-icon-arrow",
+          "scope": "component",
+          "spec": [
+            0,
+            3,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--semi-color-border",
+            "--semi-color-bg-3"
+          ]
+        },
+        {
+          "sel": ".semiColorsLight",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 89,
+          "sampleProps": [
+            "--semi-color-bg-0",
+            "--semi-color-bg-1",
+            "--semi-color-bg-2",
+            "--semi-color-bg-3",
+            "--semi-color-bg-4",
+            "--semi-color-info"
+          ]
+        },
+        {
+          "sel": ".semiColorsDark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 89,
+          "sampleProps": [
+            "--semi-color-bg-0",
+            "--semi-color-bg-1",
+            "--semi-color-bg-2",
+            "--semi-color-bg-3",
+            "--semi-color-bg-4",
+            "--semi-color-info"
+          ]
+        },
+        {
+          "sel": ".semi-popupview-light",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 510,
+          "sampleProps": [
+            "--s-color-brand-primary-default",
+            "--s-color-brand-primary-default-raw",
+            "--s-color-brand-primary-hover",
+            "--s-color-brand-primary-hover-raw",
+            "--s-color-brand-primary-pressed",
+            "--s-color-brand-primary-pressed-raw"
+          ]
+        },
+        {
+          "sel": ".semi-popupview-dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 510,
+          "sampleProps": [
+            "--s-color-brand-primary-disable",
+            "--s-color-text-secondary",
+            "--s-color-text-disable",
+            "--s-color-text-invert-secondary",
+            "--s-color-text-invert-disable",
+            "--s-color-text-intact-primary"
+          ]
+        },
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        },
+        {
+          "sel": "body, body[theme-mode=\"dark\"] .semi-always-light",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 105,
+          "sampleProps": [
+            "--semi-color-white",
+            "--semi-color-black",
+            "--semi-color-primary",
+            "--semi-color-primary-hover",
+            "--semi-color-primary-active",
+            "--semi-color-primary-disabled"
+          ]
+        },
+        {
+          "sel": "body[theme-mode=\"dark\"], body .semi-always-dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            2
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 105,
+          "sampleProps": [
+            "--semi-color-white",
+            "--semi-color-black",
+            "--semi-color-primary",
+            "--semi-color-primary-hover",
+            "--semi-color-primary-active",
+            "--semi-color-primary-disabled"
+          ]
+        },
+        {
+          "sel": "body[theme-mode=\"dark\"], html[data-theme=\"dark\"] body, body .semi-always-dark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            3,
+            4
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 105,
+          "sampleProps": [
+            "--semi-color-white",
+            "--semi-color-black",
+            "--semi-color-primary",
+            "--semi-color-primary-hover",
+            "--semi-color-primary-active",
+            "--semi-color-primary-disabled"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".samantha-popover-tTqfwm.samantha-popover-tTqfwm .semi-popover-icon-arrow",
+          "scope": "component",
+          "spec": [
+            0,
+            3,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--semi-color-border",
+            "--semi-color-bg-3"
+          ]
+        },
+        {
+          "sel": ".semiColorsLight",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--semi-color-bg-0",
+            "--semi-color-bg-1",
+            "--semi-color-bg-2",
+            "--semi-color-bg-3",
+            "--semi-color-bg-4",
+            "--semi-color-link",
+            "--semi-color-nav-bg",
+            "--semi-color-fill-0",
+            "--semi-color-fill-1",
+            "--semi-color-fill-2",
+            "--semi-color-text-0",
+            "--semi-color-text-1",
+            "--semi-color-text-2",
+            "--semi-color-text-3",
+            "--semi-color-border",
+            "--semi-color-shadow",
+            "--semi-color-link-hover",
+            "--semi-color-primary",
+            "--semi-color-link-active",
+            "--semi-color-link-visited",
+            "--semi-color-tertiary",
+            "--semi-color-overlay-bg",
+            "--semi-color-highlight",
+            "--semi-color-secondary",
+            "--semi-color-disabled-bg",
+            "--semi-color-primary-hover",
+            "--semi-color-disabled-fill",
+            "--semi-color-disabled-text",
+            "--semi-color-highlight-bg",
+            "--semi-color-primary-active",
+            "--semi-color-tertiary-hover",
+            "--semi-color-disabled-border",
+            "--semi-color-primary-disabled",
+            "--semi-color-secondary-hover",
+            "--semi-color-secondary-active",
+            "--semi-color-primary-light-hover",
+            "--semi-color-primary-light-active",
+            "--semi-color-primary-light-default",
+            "--semi-color-secondary-light-hover",
+            "--semi-color-tertiary-light-default",
+            "--semi-color-secondary-light-default"
+          ]
+        },
+        {
+          "sel": ".semiColorsDark",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--semi-color-bg-0",
+            "--semi-color-bg-1",
+            "--semi-color-bg-2",
+            "--semi-color-bg-3",
+            "--semi-color-bg-4",
+            "--semi-color-link",
+            "--semi-color-nav-bg",
+            "--semi-color-fill-0",
+            "--semi-color-fill-1",
+            "--semi-color-fill-2",
+            "--semi-color-text-0",
+            "--semi-color-text-1",
+            "--semi-color-text-2",
+            "--semi-color-text-3",
+            "--semi-color-border",
+            "--semi-color-shadow",
+            "--semi-color-link-hover",
+            "--semi-color-primary",
+            "--semi-color-link-active",
+            "--semi-color-link-visited",
+            "--semi-color-tertiary",
+            "--semi-color-overlay-bg",
+            "--semi-color-highlight",
+            "--semi-color-secondary",
+            "--semi-color-disabled-bg",
+            "--semi-color-primary-hover",
+            "--semi-color-disabled-fill",
+            "--semi-color-disabled-text",
+            "--semi-color-highlight-bg",
+            "--semi-color-primary-active",
+            "--semi-color-tertiary-hover",
+            "--semi-color-disabled-border",
+            "--semi-color-primary-disabled",
+            "--semi-color-secondary-hover",
+            "--semi-color-secondary-active",
+            "--semi-color-primary-light-hover",
+            "--semi-color-primary-light-active",
+            "--semi-color-primary-light-default",
+            "--semi-color-secondary-light-hover",
+            "--semi-color-tertiary-light-default",
+            "--semi-color-secondary-light-default"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--send-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--settingarea-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--slide-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--static-",
+      "ruleCount": 4,
+      "scopes": [
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz.activable__primary-active-back-da7Tg8",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 1,
+          "sampleProps": [
+            "--static-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz.activable__primary-active-eCx6mf",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 3,
+          "sampleProps": [
+            "--static-bg-color",
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".skill-bar-item-raUMqz.activable__primary-active-back-da7Tg8",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--static-bg-color"
+          ]
+        },
+        {
+          "sel": ".skill-bar-item-raUMqz.activable__primary-active-eCx6mf",
+          "scope": "component",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--static-bg-color",
+            "--hover-bg-color",
+            "--active-bg-color"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--success-",
+      "ruleCount": 2,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 15,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 17,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-border-hover",
+            "--normal-text",
+            "--success-bg"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--table-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--task-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".bg-Ebtrqc",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 2,
+          "sampleProps": [
+            "--task-card-border-color",
+            "--chat-task-card-container-bg-color"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".bg-Ebtrqc",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--chat-task-card-container-bg-color"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--text-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".cici-ext-container, :root",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 368,
+          "sampleProps": [
+            "--neutral-30",
+            "--neutral-70",
+            "--icon-height",
+            "--icon-width",
+            "--header-height",
+            "--font-size"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--total-",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 9,
+          "sampleProps": [
+            "--max-width-layout-container-width",
+            "--max-width-layout-large-padding",
+            "--max-width-layout-small-padding",
+            "--width",
+            "--center-content",
+            "--total-side"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--left-side"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--video-",
+      "ruleCount": 2,
+      "scopes": [
+        {
+          "sel": "html, body",
+          "scope": "component",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 584,
+          "sampleProps": [
+            "--bg-base",
+            "--action-bg-transparent",
+            "--action-bg-hover",
+            "--action-icon",
+            "--bg-base-1",
+            "--bg-base-1-overlay"
+          ]
+        },
+        {
+          "sel": "html body",
+          "scope": "body",
+          "spec": [
+            0,
+            0,
+            2
+          ],
+          "important": false,
+          "inDom": true,
+          "propCount": 580,
+          "sampleProps": [
+            "--bg-base-1",
+            "--bg-base-1-overlay",
+            "--bg-base-2",
+            "--bg-base-2-overlay",
+            "--bg-base-3",
+            "--bg-base-3-overlay"
+          ]
+        }
+      ],
+      "shadowed": []
+    },
+    {
+      "family": "--warning-",
+      "ruleCount": 2,
+      "scopes": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 15,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 17,
+          "sampleProps": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-border-hover",
+            "--normal-text",
+            "--success-bg"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"light\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        },
+        {
+          "sel": "[data-sonner-toaster][data-sonner-theme=\"dark\"]",
+          "scope": "theme-class",
+          "spec": [
+            0,
+            2,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--normal-bg",
+            "--normal-bg-hover",
+            "--normal-border",
+            "--normal-text",
+            "--success-bg",
+            "--success-border",
+            "--success-text",
+            "--info-bg",
+            "--info-border",
+            "--info-text",
+            "--warning-bg",
+            "--warning-border",
+            "--warning-text",
+            "--error-bg",
+            "--error-border",
+            "--error-text"
+          ]
+        }
+      ]
+    },
+    {
+      "family": "--width",
+      "ruleCount": 1,
+      "scopes": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "propCount": 9,
+          "sampleProps": [
+            "--max-width-layout-container-width",
+            "--max-width-layout-large-padding",
+            "--max-width-layout-small-padding",
+            "--width",
+            "--center-content",
+            "--total-side"
+          ]
+        }
+      ],
+      "shadowed": [
+        {
+          "sel": ".container-SrVXPg",
+          "scope": "component",
+          "spec": [
+            0,
+            1,
+            0
+          ],
+          "important": false,
+          "inDom": false,
+          "active": false,
+          "hits": [
+            "--left-side"
+          ]
+        }
+      ]
+    }
+  ],
+  "rootCoverage": [
+    {
+      "family": "--AI-",
+      "count": 66,
+      "covered": false
+    },
+    {
+      "family": "--B100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--B900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--C900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--G900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--I900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--L900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N00",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N00-",
+      "count": 36,
+      "covered": false
+    },
+    {
+      "family": "--N100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N1000",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N1000-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N650",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N650-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N900-",
+      "count": 36,
+      "covered": false
+    },
+    {
+      "family": "--N950",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--N950-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--O900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--P900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--R900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--S900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--T900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--V900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Vnext-",
+      "count": 21,
+      "covered": false
+    },
+    {
+      "family": "--W100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--W900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y100",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y100-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y200",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y200-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y300",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y300-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y350",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y350-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y400",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y400-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y50",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y50-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y500",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y500-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y600",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y600-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y700",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y700-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y800",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y800-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y900",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--Y900-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--action-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--active-",
+      "count": 1,
+      "covered": false
+    },
+    {
+      "family": "--agentskin-",
+      "count": 52,
+      "covered": false
+    },
+    {
+      "family": "--animate-",
+      "count": 4,
+      "covered": false
+    },
+    {
+      "family": "--asr-",
+      "count": 7,
+      "covered": false
+    },
+    {
+      "family": "--bg-",
+      "count": 96,
+      "covered": false
+    },
+    {
+      "family": "--border-",
+      "count": 2,
+      "covered": false
+    },
+    {
+      "family": "--chat-",
+      "count": 3,
+      "covered": false
+    },
+    {
+      "family": "--color-",
+      "count": 173,
+      "covered": true
+    },
+    {
+      "family": "--colorful-",
+      "count": 84,
+      "covered": false
+    },
+    {
+      "family": "--conditional-",
+      "count": 6,
+      "covered": false
+    },
+    {
+      "family": "--container-",
+      "count": 4,
+      "covered": false
+    },
+    {
+      "family": "--ctx-",
+      "count": 10,
+      "covered": false
+    },
+    {
+      "family": "--dbx-",
+      "count": 506,
+      "covered": true
+    },
+    {
+      "family": "--default-",
+      "count": 8,
+      "covered": false
+    },
+    {
+      "family": "--dot-",
+      "count": 4,
+      "covered": false
+    },
+    {
+      "family": "--ease-",
+      "count": 4,
+      "covered": false
+    },
+    {
+      "family": "--fill-",
+      "count": 30,
+      "covered": false
+    },
+    {
+      "family": "--font-",
+      "count": 19,
+      "covered": false
+    },
+    {
+      "family": "--function-",
+      "count": 588,
+      "covered": false
+    },
+    {
+      "family": "--google-",
+      "count": 2,
+      "covered": false
+    },
+    {
+      "family": "--gradient-",
+      "count": 36,
+      "covered": false
+    },
+    {
+      "family": "--header-",
+      "count": 2,
+      "covered": false
+    },
+    {
+      "family": "--hover-",
+      "count": 1,
+      "covered": false
+    },
+    {
+      "family": "--icon-",
+      "count": 26,
+      "covered": false
+    },
+    {
+      "family": "--illustration-",
+      "count": 93,
+      "covered": false
+    },
+    {
+      "family": "--leading-",
+      "count": 6,
+      "covered": false
+    },
+    {
+      "family": "--line-",
+      "count": 19,
+      "covered": false
+    },
+    {
+      "family": "--md-",
+      "count": 67,
+      "covered": false
+    },
+    {
+      "family": "--neutral-",
+      "count": 6,
+      "covered": false
+    },
+    {
+      "family": "--primary-",
+      "count": 155,
+      "covered": false
+    },
+    {
+      "family": "--product-",
+      "count": 4,
+      "covered": false
+    },
+    {
+      "family": "--radius-",
+      "count": 24,
+      "covered": false
+    },
+    {
+      "family": "--s-",
+      "count": 1044,
+      "covered": true
+    },
+    {
+      "family": "--safe-",
+      "count": 4,
+      "covered": false
+    },
+    {
+      "family": "--select-",
+      "count": 12,
+      "covered": false
+    },
+    {
+      "family": "--semi-",
+      "count": 1679,
+      "covered": true
+    },
+    {
+      "family": "--send-",
+      "count": 1,
+      "covered": false
+    },
+    {
+      "family": "--shadow-",
+      "count": 145,
+      "covered": false
+    },
+    {
+      "family": "--spacing",
+      "count": 2,
+      "covered": false
+    },
+    {
+      "family": "--spacing-",
+      "count": 30,
+      "covered": false
+    },
+    {
+      "family": "--static-",
+      "count": 102,
+      "covered": false
+    },
+    {
+      "family": "--tab-",
+      "count": 2,
+      "covered": false
+    },
+    {
+      "family": "--table-",
+      "count": 1,
+      "covered": false
+    },
+    {
+      "family": "--text-",
+      "count": 106,
+      "covered": false
+    },
+    {
+      "family": "--tracking-",
+      "count": 4,
+      "covered": false
+    },
+    {
+      "family": "--tw-",
+      "count": 2,
+      "covered": false
+    },
+    {
+      "family": "--ud-",
+      "count": 12,
+      "covered": false
+    },
+    {
+      "family": "--udtoken-",
+      "count": 600,
+      "covered": false
+    },
+    {
+      "family": "--video-",
+      "count": 2,
+      "covered": false
+    }
+  ],
+  "overrides": [
+    {
+      "sel": "html.agentskin-host-doubao:root",
+      "spec": [
+        0,
+        2,
+        1
+      ],
+      "important": true
+    },
+    {
+      "sel": "html.agentskin-host-doubao:root body",
+      "spec": [
+        0,
+        2,
+        2
+      ],
+      "important": true
+    },
+    {
+      "sel": "html.agentskin-host-doubao:root .semi-popupview-dark",
+      "spec": [
+        0,
+        2,
+        2
+      ],
+      "important": true
+    },
+    {
+      "sel": "html.agentskin-host-doubao:root .semi-popupview-light",
+      "spec": [
+        0,
+        2,
+        2
+      ],
+      "important": true
+    },
+    {
+      "sel": "html.agentskin-host-doubao:root [class*=\"show-scrollbar-thumb\"]",
+      "spec": [
+        0,
+        2,
+        1
+      ],
+      "important": true
+    }
+  ],
+  "ok": true,
+  "port": 61055,
+  "verify": [
+    {
+      "sel": ".input-content-container-bMefgL",
+      "count": 1,
+      "tag": "DIV",
+      "cls": "relative z-0 rounded-dbx-4xl after:rounded-dbx-4xl input-con",
+      "diff": [
+        {
+          "t": "--input-guidance-input-container-border",
+          "v": "1px solid color-mix(in srgb, #7fa8bd 25%, transparent)",
+          "parent": "1px solid transparent",
+          "differs": true
+        },
+        {
+          "t": "--input-guidance-input-container-background",
+          "v": "#1e2830",
+          "parent": "#1e2830",
+          "differs": false
+        },
+        {
+          "t": "--input-guidance-input-editor-color",
+          "v": "#7a8a99",
+          "parent": "#7a8a99",
+          "differs": false
+        },
+        {
+          "t": "--input-guidance-input-editor-placeholder-color",
+          "v": "color-mix(in srgb, #7a8a99 50%, transparent)",
+          "parent": "color-mix(in srgb, #7a8a99 50%, transparent)",
+          "differs": false
+        }
+      ]
+    }
+  ]
+}

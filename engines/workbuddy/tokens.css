@@ -10,10 +10,10 @@
    ============================================================ */
 
 html.agentskin-host-workbuddy body {
-  --wb-accent: var(--agentskin-accent);
-  --wb-secondary: var(--agentskin-secondary);
-  --wb-surface: var(--agentskin-bg);
-  --wb-text: var(--agentskin-text);
+  --wb-accent: var(--agentskin-accent) !important;
+  --wb-secondary: var(--agentskin-secondary) !important;
+  --wb-surface: var(--agentskin-bg) !important;
+  --wb-text: var(--agentskin-text) !important;
 
   /* --- Backgrounds --- */
   --cb-bg-primary: var(--wb-surface) !important;
@@ -130,4 +130,30 @@ html.agentskin-host-workbuddy body {
   --cb-tab-active-border: var(--wb-accent) !important;
   --cb-tab-text: var(--wb-text) !important;
   --cb-tab-inactive-text: color-mix(in srgb, var(--wb-text) 60%, transparent) !important;
+}
+
+/* ===== sidebar-next / detail-panel shadowing patch =====
+   WorkBuddy's newer sidebar design re-declares --cb-* directly on
+   .sidebar-next / .sidebar-next-main-header / .detail-panel /
+   .detail-sidebar (0,1,0–0,2,0), which shadows the body-level
+   overrides above inside those components (direct declaration beats
+   inherited value regardless of the parent's !important). These
+   selectors (0,2,1) with !important beat the app's non-important
+   declarations, keeping our themed values applied. Mirrors the body
+   block's token definitions. */
+html.agentskin-host-workbuddy .sidebar-next,
+html.agentskin-host-workbuddy .sidebar-next-main-header,
+html.agentskin-host-workbuddy .sidebar-next-body > .detail-panel,
+html.agentskin-host-workbuddy .sidebar-next-body > .detail-panel .detail-sidebar {
+  /* List / selection */
+  --cb-vscode-list-hoverBackground: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --cb-vscode-list-inactiveSelectionBackground: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --cb-vscode-list-activeSelectionForeground: var(--wb-text) !important;
+
+  /* Surfaces */
+  --cb-bg-primary: var(--wb-surface) !important;
+  --cb-bg-secondary: color-mix(in srgb, var(--wb-surface) 94%, transparent) !important;
+  --cb-bg-tertiary: color-mix(in srgb, var(--wb-surface) 82%, var(--wb-accent) 6%) !important;
+  --cb-panel-bg-primary: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --cb-panel-bg-secondary: color-mix(in srgb, var(--wb-surface) 78%, var(--wb-accent) 10%) !important;
 }

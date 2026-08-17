@@ -1,0 +1,603 @@
+{
+  "generatedAt": "2026-08-17T07:23:41.964Z",
+  "sheetCount": 78,
+  "consumption": {
+    "sColor": {
+      "rules": 2647,
+      "samples": [
+        {
+          "sheet": "62482.2adbd1e9.css",
+          "selector": ".nav-link-IkIer0.drag-overlay-lqA0T3",
+          "usages": 1,
+          "tokens": [
+            "--s-color-bg-primary"
+          ]
+        },
+        {
+          "sheet": "62482.2adbd1e9.css",
+          "selector": ".nav-link-IkIer0.overflow-popover-LkFMRl.active-b4dTQX",
+          "usages": 1,
+          "tokens": [
+            "--s-color-brand-primary-default"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".voice-call-panel-OVz3Tq",
+          "usages": 2,
+          "tokens": [
+            "--s-color-border-tertiary",
+            "--s-color-text-invert-primary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".voice-call-panel-OVz3Tq .timeout-bPW3d5",
+          "usages": 1,
+          "tokens": [
+            "--s-color-text-tertiary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".voice-call-panel-OVz3Tq .hangup-p4u50U",
+          "usages": 1,
+          "tokens": [
+            "--s-color-accents-red"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".voice-call-panel-OVz3Tq .hangup-p4u50U:hover",
+          "usages": 1,
+          "tokens": [
+            "--s-color-bg-trans"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".button-name-CQA7Bp",
+          "usages": 1,
+          "tokens": [
+            "--s-color-text-invert-intact-primary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".select-all-oLJbIW .semi-checkbox-addon",
+          "usages": 1,
+          "tokens": [
+            "--s-color-text-tertiary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".overlimit-LkP5TY .semi-checkbox-addon",
+          "usages": 1,
+          "tokens": [
+            "--s-color-alert"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".header-container-miMQVk .title-rHLWOB",
+          "usages": 1,
+          "tokens": [
+            "--s-color-text-primary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".botButton-rXZUXF svg",
+          "usages": 1,
+          "tokens": [
+            "--s-color-text-secondary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".section-title-icon-btn--active-HxixHa,\n.section-title-icon-btn-WeTnoA:hover",
+          "usages": 1,
+          "tokens": [
+            "--s-color-bg-trans"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".samantha-dropdown-sBBDZ9 [role='menuitem']",
+          "usages": 1,
+          "tokens": [
+            "--s-color-text-secondary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".samantha-dropdown-sBBDZ9 [role='menuitem'] [aria-label='tick']",
+          "usages": 1,
+          "tokens": [
+            "--s-color-brand-primary-default"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".samantha-dropdown-sBBDZ9 [role='menuitem'].semi-dropdown-item:not(.semi-dropdown-item-active):hover",
+          "usages": 1,
+          "tokens": [
+            "--s-color-bg-trans"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".samantha-dropdown-sBBDZ9 [role='menuitem'] .icon-tick-k4ah2S.active-xe4Ufj",
+          "usages": 1,
+          "tokens": [
+            "--s-color-brand-primary-default"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".samantha-dropdown-sBBDZ9 [role='menuitem'].semi-dropdown-item-disabled",
+          "usages": 1,
+          "tokens": [
+            "--s-color-text-disable"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".samantha-dropdown-sBBDZ9.semi-dropdown-wrapper",
+          "usages": 2,
+          "tokens": [
+            "--s-color-bg-float",
+            "--s-color-border-tertiary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".samantha-dropdown-sBBDZ9 .semi-dropdown-divider",
+          "usages": 1,
+          "tokens": [
+            "--s-color-border-secondary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".samantha-dropdown-sBBDZ9 .semi-dropdown-title",
+          "usages": 1,
+          "tokens": [
+            "--s-color-text-quaternary"
+          ]
+        }
+      ],
+      "count": 6322
+    },
+    "dbx": {
+      "rules": 1474,
+      "samples": [
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".botButtonV2-wjbnbO svg",
+          "usages": 1,
+          "tokens": [
+            "--dbx-text-secondary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".botButtonV2-wjbnbO.disabled-e3s0YO",
+          "usages": 1,
+          "tokens": [
+            "--dbx-text-disable"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".top-divider-aJrvEi",
+          "usages": 1,
+          "tokens": [
+            "--dbx-line-10"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".container-MWoWM8.hovered-wpg2oH,\n.container-MWoWM8:hover",
+          "usages": 1,
+          "tokens": [
+            "--dbx-fill-trans-10-hover"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".title-HWT4Gz",
+          "usages": 1,
+          "tokens": [
+            "--dbx-text-primary"
+          ]
+        },
+        {
+          "sheet": "inline-style-sheet-22900-6",
+          "selector": "html.agentskin-host-doubao:root",
+          "usages": 71,
+          "tokens": [
+            "--dbx-bg-body-web",
+            "--dbx-text-primary",
+            "--dbx-bg-base-web",
+            "--dbx-text-secondary",
+            "--dbx-text-tertiary"
+          ]
+        },
+        {
+          "sheet": "inline-style-sheet-22900-6",
+          "selector": "html.agentskin-host-doubao:root, html.agentskin-host-doubao [class*=\"input-guidance\"], html.agentskin-host-doubao [class",
+          "usages": 2,
+          "tokens": [
+            "--dbx-line-10",
+            "--dbx-fill-highlight-disable"
+          ]
+        },
+        {
+          "sheet": "s1-desktop-header.4995bffd.css",
+          "selector": ".top-divider-aJrvEi",
+          "usages": 1,
+          "tokens": [
+            "--dbx-line-10"
+          ]
+        },
+        {
+          "sheet": "s1-desktop-header.4995bffd.css",
+          "selector": ".container-MWoWM8.hovered-wpg2oH,\n.container-MWoWM8:hover",
+          "usages": 1,
+          "tokens": [
+            "--dbx-fill-trans-10-hover"
+          ]
+        },
+        {
+          "sheet": "async-skill-share-receive-message-action.d6d5c679.css",
+          "selector": ".custom-scrollbar-style:hover",
+          "usages": 3,
+          "tokens": [
+            "--dbx-static-black-15",
+            "--dbx-static-black-30",
+            "--dbx-static-black-55"
+          ]
+        },
+        {
+          "sheet": "async-skill-share-receive-message-action.d6d5c679.css",
+          "selector": ".show-scrollbar-thumb-style",
+          "usages": 3,
+          "tokens": [
+            "--dbx-static-black-15",
+            "--dbx-static-black-30",
+            "--dbx-static-black-55"
+          ]
+        },
+        {
+          "sheet": "s2-active-switch-banner.d6d5c679.css",
+          "selector": ".custom-scrollbar-style:hover",
+          "usages": 3,
+          "tokens": [
+            "--dbx-static-black-15",
+            "--dbx-static-black-30",
+            "--dbx-static-black-55"
+          ]
+        },
+        {
+          "sheet": "s2-active-switch-banner.d6d5c679.css",
+          "selector": ".show-scrollbar-thumb-style",
+          "usages": 3,
+          "tokens": [
+            "--dbx-static-black-15",
+            "--dbx-static-black-30",
+            "--dbx-static-black-55"
+          ]
+        },
+        {
+          "sheet": "s2-security-audit.dad2c9fa.css",
+          "selector": ".container-zDJUmx",
+          "usages": 1,
+          "tokens": [
+            "--dbx-line-divider-10"
+          ]
+        },
+        {
+          "sheet": "s2-security-audit.dad2c9fa.css",
+          "selector": ".agreement-IUGQMB",
+          "usages": 1,
+          "tokens": [
+            "--dbx-text-secondary"
+          ]
+        },
+        {
+          "sheet": "s2-security-audit.dad2c9fa.css",
+          "selector": ".agreement-link-Z2s4g3",
+          "usages": 1,
+          "tokens": [
+            "--dbx-text-primary"
+          ]
+        },
+        {
+          "sheet": "s2-security-audit.dad2c9fa.css",
+          "selector": ".modal-text-mp24wE",
+          "usages": 1,
+          "tokens": [
+            "--dbx-text-secondary"
+          ]
+        },
+        {
+          "sheet": "s2-security-audit.dad2c9fa.css",
+          "selector": ".modal-text-link-phKhs7",
+          "usages": 1,
+          "tokens": [
+            "--dbx-neutral-1000"
+          ]
+        },
+        {
+          "sheet": "s2-security-audit.dad2c9fa.css",
+          "selector": ".agreement-modal-Kbs01i .ok-button-fsiEBp",
+          "usages": 2,
+          "tokens": [
+            "--dbx-neutral-1000-95",
+            "--dbx-neutral-00"
+          ]
+        },
+        {
+          "sheet": "s2-security-audit.dad2c9fa.css",
+          "selector": ".agreement-modal-Kbs01i .ok-button-fsiEBp:hover",
+          "usages": 1,
+          "tokens": [
+            "--dbx-neutral-800"
+          ]
+        }
+      ],
+      "count": 2950
+    },
+    "semi": {
+      "rules": 3353,
+      "samples": [
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-wrapper",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-bg-3"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-title",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-text-2"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-text-0"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item-hover",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-fill-0"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item:not(.semi-dropdown-item-active):hover",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-fill-0"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item:not(.semi-dropdown-item-active):active",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-fill-1"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item:focus-visible",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-fill-0"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item-danger",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-danger"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item-secondary",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-secondary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item-warning",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-warning"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item-tertiary",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-tertiary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item-primary",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-primary"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-item.semi-dropdown-item-disabled",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-disabled-text"
+          ]
+        },
+        {
+          "sheet": "async-business-layout.ec7acb58.css",
+          "selector": ".semi-dropdown-divider",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-border"
+          ]
+        },
+        {
+          "sheet": "85357.96f985b7.css",
+          "selector": "/* shadow */\n/* sizing */\n/* spacing */\n.semi-modal",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-text-0"
+          ]
+        },
+        {
+          "sheet": "85357.96f985b7.css",
+          "selector": ".semi-modal-mask",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-overlay-bg"
+          ]
+        },
+        {
+          "sheet": "85357.96f985b7.css",
+          "selector": ".semi-modal-content",
+          "usages": 2,
+          "tokens": [
+            "--semi-color-bg-2",
+            "--semi-color-border"
+          ]
+        },
+        {
+          "sheet": "85357.96f985b7.css",
+          "selector": ".semi-modal-header",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-text-0"
+          ]
+        },
+        {
+          "sheet": "85357.96f985b7.css",
+          "selector": ".semi-modal-confirm-icon",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-primary"
+          ]
+        },
+        {
+          "sheet": "85357.96f985b7.css",
+          "selector": ".semi-modal-info-icon",
+          "usages": 1,
+          "tokens": [
+            "--semi-color-info"
+          ]
+        }
+      ],
+      "count": 5190
+    },
+    "ffc": {
+      "rules": 4,
+      "samples": [
+        {
+          "sheet": "inline-style-sheet-22900-6",
+          "selector": "html.agentskin-host-doubao:root",
+          "usages": 29,
+          "tokens": [
+            "--ffc-text-primary",
+            "--ffc-text-secondary",
+            "--ffc-text-tertiary",
+            "--ffc-text-disabled",
+            "--ffc-text-highlight"
+          ]
+        },
+        {
+          "sheet": "inline-style-sheet-22900-44",
+          "selector": "/* ===== Body-level overrides =====\n   :root[data-theme=\"dark\"] body sets --dbx-bg-body-web at (0,2,1).\n   Our html.agen",
+          "usages": 42,
+          "tokens": [
+            "--ffc-text-primary",
+            "--ffc-text-secondary",
+            "--ffc-text-tertiary",
+            "--ffc-text-disabled",
+            "--ffc-text-highlight"
+          ]
+        },
+        {
+          "sheet": "inline-style-sheet-22900-60",
+          "selector": "html.agentskin-host-doubao:root body",
+          "usages": 42,
+          "tokens": [
+            "--ffc-text-primary",
+            "--ffc-text-secondary",
+            "--ffc-text-tertiary",
+            "--ffc-text-disabled",
+            "--ffc-text-highlight"
+          ]
+        },
+        {
+          "sheet": "inline-style-sheet-22900-63",
+          "selector": "html.agentskin-host-doubao:root body",
+          "usages": 42,
+          "tokens": [
+            "--ffc-text-primary",
+            "--ffc-text-secondary",
+            "--ffc-text-tertiary",
+            "--ffc-text-disabled",
+            "--ffc-text-highlight"
+          ]
+        }
+      ],
+      "count": 155
+    }
+  },
+  "computedRoot": {
+    "--s-color-bg-body": "color-mix(in srgb, #171e26 85%, transparent)",
+    "--s-color-bg-primary": "#7fa8bd",
+    "--s-color-text-primary": "#d8dee9",
+    "--s-color-brand-primary-default": "#7fa8bd",
+    "--dbx-bg-float": "color-mix(in srgb, #171e26 85%, transparent)",
+    "--dbx-text-primary": "#d8dee9",
+    "--semi-color-bg-0": "color-mix(in srgb, #171e26 85%, transparent)",
+    "--semi-color-text-0": "#d8dee9",
+    "--semi-color-primary": "#7fa8bd"
+  },
+  "domStats": {
+    "rootAttrs": {
+      "data-theme": "dark",
+      "data-chatapp-style": "header-left-padding",
+      "style": "--sidebar-width: 220px; --scrollbar-width: 9px; --g-header-wrapper-border-bottom-width: 1px; --g-sidebar-wrapper-padding-left: 8px; --g-sidebar-wrapper-padding-right: 8px; --g-sidebar-wrapper-padding-top: 10px; --header-height: 56px; --desktop-zoom-factor: 1; --desktop-zoom-inverse-factor: 1; --desktop-traffic-light-inset-65: 65px; --desktop-traffic-light-inset-70: 70px; --desktop-traffic-light-inset-80: 80px; --desktop-traffic-light-inset-88: 88px; --g-header-left-padding: 0px; --agentskin-image-hero: url(\"blob:chrome://doubao-chat/71c6fbe5-d813-408f-88f6-e73e33e01b99\"); --agentskin-image-icon: url(\"blob:chrome://doubao-chat/263ebadd-dd94-4020-9c3c-7971f11b640c\"); --agentskin-image-preview: url(\"blob:chrome://doubao-chat/b65855d3-7034-48f4-8149-7a677346c209\"); --agentskin-art: url(\"blob:chrome://doubao-chat/8f038041-4169-48fe-82fc-95d80c0ffae6\");",
+      "class": "agentskin-theme agentskin-host-doubao",
+      "data-agentskin-host": "doubao",
+      "data-agentskin-theme": "nordic-minimal",
+      "data-agentskin-theme-version": "1.0.0",
+      "data-agentskin-art-blob-url": "blob:chrome://doubao-chat/8f038041-4169-48fe-82fc-95d80c0ffae6"
+    },
+    "rootClass": "agentskin-theme agentskin-host-doubao",
+    "bodyClass": "",
+    "sColorClassElements": 23,
+    "dbxClassElements": 143,
+    "semiClassElements": 0
+  }
+}

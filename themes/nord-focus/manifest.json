@@ -1,0 +1,208 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "nord-focus",
+  "name": "Nord Focus",
+  "displayName": "深度专注",
+  "version": "1.0.0",
+  "description": "低饱和蓝灰配色，去除多余视觉干扰，面向长时间工作、阅读、写代码的生产力场景。关闭全部CSS动画，弱化边角装饰。",
+  "author": {
+    "name": "AgentSkin Team"
+  },
+  "mode": "dark",
+  "category": "minimal",
+  "tags": [
+    "dark",
+    "minimal",
+    "focus",
+    "productivity",
+    "nord"
+  ],
+  "icon": "icon.png",
+  "preview": "preview.png",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role='textbox'][contenteditable='true']",
+              ".wb-home-composer [contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css",
+      "verification": {
+        "required": [
+          {
+            "name": "doubao-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ]
+      }
+    },
+    "codex": {
+      "css": "assets/css/codex.css",
+      "verification": {
+        "required": [
+          {
+            "name": "codex-root",
+            "any": [
+              "main.main-surface",
+              "main[class*='MainContentSurface']"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              "aside.app-shell-left-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".composer-surface-chrome"
+            ]
+          }
+        ]
+      }
+    },
+    "zcode": {
+      "css": "assets/css/zcode.css",
+      "verification": {
+        "required": [
+          {
+            "name": "zcode-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "composer",
+            "any": [
+              "[contenteditable='true']",
+              "textarea"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#88c0d0",
+    "secondary": "#81a1c1",
+    "background": "#2e3440",
+    "foreground": "#eceff4",
+    "muted": "#7b88a1",
+    "surface": "#3b4252",
+    "surfaceElevated": "#434c5e",
+    "border": "rgba(136, 192, 208, 0.18)",
+    "codeBackground": "#2e3440",
+    "codeForeground": "#d8dee9",
+    "inputBackground": "#3b4252",
+    "buttonBackground": "rgba(136, 192, 208, 0.2)",
+    "buttonForeground": "#2e3440",
+    "focusRing": "#88c0d060"
+  },
+  "colorSchemes": []
+}

@@ -1,0 +1,208 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "tokyo-night",
+  "name": "Tokyo Night",
+  "displayName": "东京夜色",
+  "version": "1.0.0",
+  "description": "程序员圈超级流行暗色配色，聊天UI与代码块色调统一，大量编辑器、社区主题以此为基底。灵感来自 tokyo-night-vscode-theme。",
+  "author": {
+    "name": "AgentSkin Team",
+    "url": "https://github.com/Heng0128/AgentSkin"
+  },
+  "mode": "dark",
+  "category": "color-scheme",
+  "tags": [
+    "dark",
+    "popular",
+    "blue",
+    "purple"
+  ],
+  "icon": "icon.png",
+  "preview": "preview.png",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role='textbox'][contenteditable='true']",
+              ".wb-home-composer [contenteditable='true']"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css",
+      "verification": {
+        "required": [
+          {
+            "name": "doubao-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ]
+      }
+    },
+    "codex": {
+      "css": "assets/css/codex.css",
+      "verification": {
+        "required": [
+          {
+            "name": "codex-root",
+            "any": [
+              "main.main-surface",
+              "main[class*='MainContentSurface']"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              "aside.app-shell-left-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".composer-surface-chrome"
+            ]
+          }
+        ]
+      }
+    },
+    "zcode": {
+      "css": "assets/css/zcode.css",
+      "verification": {
+        "required": [
+          {
+            "name": "zcode-root",
+            "any": [
+              "#root",
+              "body"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "composer",
+            "any": [
+              "[contenteditable='true']",
+              "textarea"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#7aa2f7",
+    "secondary": "#bb9af7",
+    "background": "#1a1b26",
+    "foreground": "#c0caf5",
+    "muted": "#565f89",
+    "surface": "#24283b",
+    "surfaceElevated": "#2f344d",
+    "codeBackground": "#1a1b26",
+    "codeForeground": "#c0caf5",
+    "inputBackground": "#24283b",
+    "border": "rgba(122, 162, 247, 0.18)",
+    "buttonBackground": "rgba(122, 162, 247, 0.2)",
+    "buttonForeground": "#1a1b26",
+    "focusRing": "#7aa2f760"
+  },
+  "colorSchemes": []
+}

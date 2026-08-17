@@ -78,3 +78,46 @@ html.agentskin-host-traework .monaco-workbench {
   --vscode-titleBar-inactiveBackground: color-mix(in srgb, var(--agentskin-surface) 6%, transparent) !important;
   background: transparent !important;
 }
+
+/* ===== App-root token shadowing patch =====
+   TraeWork re-declares the --bg-bg-* design tokens directly on the app root
+   element (html[data-theme="dark"] → #1a1b1d / #262626 / #171717 / #ffffff ...;
+   [data-theme="light"] → white variants), which is the nearest scope for all
+   app content (root → body → #root → #solo-lite-root → chat panels).
+   A direct declaration there beats any body-level override, so we must
+   override the SAME element. Selector (0,1,1)+!important beats the app's
+   non-important [data-theme] declaration, keeping art punch-through
+   transparent and these host-grey surfaces on OUR theme instead of the host's
+   light/dark switch. (.solo-theme is NOT an ancestor of chat content, but we
+   mirror the overrides there for the studio surface.) */
+html.agentskin-host-traework,
+html.agentskin-host-traework .solo-theme {
+  --bg-bg-base-default: transparent !important;
+  /* Sidebar bottom fade shadow — host linear-gradient uses this token */
+  --bg-bg-base-secondary: color-mix(in srgb, var(--agentskin-surface) 45%, transparent) !important;
+  /* Composer outer editor "dialog" part — host .solo-lite ... .chat-input-v2-editor-part
+     forces background: var(--bg-bg-input,#fff) !important, so drive token -> frosted */
+  --bg-bg-input: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 55%, transparent) !important;
+  /* Generic translucent overlay fills (hover pills, subtle panels) */
+  --bg-bg-overlay-l1: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
+  --bg-bg-overlay-l2: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+  /* "White" surfaces (toolbar pill bases in light theme) -> accent-tinted frosted */
+  --bg-bg-white: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 55%, transparent) !important;
+  /* VS Code-namespace twin of overlay-l1 seen on the composer editor part */
+  --vscode-icube--bg-bg-overlay-l1: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
+}
+
+/* 容器级修正：宿主会在比 <html> 更靠近消费者的节点上重新声明以下 token
+   （--bg-bg-input 在编辑器外层、--bg-bg-base-secondary 在侧边栏），
+   直接覆盖 html 会被更近的非 important 声明遮蔽。
+   在这些具体容器上再以 !important 声明一次即可命中。 */
+html.agentskin-host-traework .messageInputChatInput,
+html.agentskin-host-traework .chat-input-v2-container,
+html.agentskin-host-traework .messageInputEditorWrapper {
+  --bg-bg-input: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 55%, transparent) !important;
+}
+html.agentskin-host-traework .task-list-base,
+html.agentskin-host-traework .task-list-panel,
+html.agentskin-host-traework .task-list-scroller {
+  --bg-bg-base-secondary: color-mix(in srgb, var(--agentskin-surface) 45%, transparent) !important;
+}
