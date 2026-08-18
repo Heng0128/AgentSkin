@@ -31,6 +31,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import { getAdapter } from '../src/engine/src/adapters/index.mjs';
+// 2a multi-asset: reuse the B-line engine gates (SAFE_IMAGE_TYPES /
+// MAX_THEME_IMAGES / MAX_THEME_IMAGE_BASE64) so the Studio-exported package
+// obeys the same quantity/volume contract as hand-authored bundles
+// (RFC themes-asset-injection-2a §2.3).
+import {
+  MAX_THEME_IMAGE_BASE64,
+  MAX_THEME_IMAGES,
+  SAFE_IMAGE_TYPES,
+} from '../src/engine/src/theme/package.mjs';
 
 // ---------------------------------------------------------------------------
 // Default palette (used when the renderer sends nothing / partial)
@@ -629,6 +638,85 @@ function buildCraft(agentId, signature) {
 }
 
 // ---------------------------------------------------------------------------
+// 2a multi-asset: image packaging
+// ---------------------------------------------------------------------------
+
+const IMAGE_ID = /^[a-z0-9][a-z0-9_-]*$/i;
+const DATA_URL = /^data:([^;,]+);base64,([A-Za-z0-9+/=\s]+)$/;
+const EXT_BY_MIME = {
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/webp': '.webp',
+  'image/gif': '.gif',
+};
+/** Installer reserves 3 bundle slots (hero/icon/preview); the creative image
+ *  set the Studio may declare is therefore 32 − 3 = 29, so the final bundle
+ *  never trips the engine's MAX_THEME_IMAGES gate at install time. */
+const MAX_THEME_CREATIVE_IMAGES = MAX_THEME_IMAGES - 3;
+const RESERVED_IMAGE_IDS = new Set(['icon', 'preview']);
+
+/**
+ * Normalize `request.images` (image id → base64 data URL) into embeddable
+ * image records `{ filename, mimeType, base64 }`, enforcing the SAME gates
+ * as the B-line engine validator (RFC themes-asset-injection-2a §2.3):
+ * SAFE_ID ids, SAFE_IMAGE_TYPES mime whitelist, ≤29 creative images and the
+ * 8MB cumulative base64 ceiling. `hero` is the backdrop special case.
+ * Returns null when no images are declared (backward compatible).
+ */
+function processThemeImages(request) {
+  const raw = request?.images;
+  if (!raw) return null;
+  if (typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error('[build-theme-package] images must be an object keyed by image id.');
+  }
+  const entries = Object.entries(raw);
+  if (!entries.length)
+    throw new Error('[build-theme-package] images must not be empty when provided.');
+  if (entries.length > MAX_THEME_CREATIVE_IMAGES) {
+    throw new Error(
+      `[build-theme-package] images exceeds ${MAX_THEME_CREATIVE_IMAGES} creative entries ` +
+        `(max ${MAX_THEME_IMAGES} minus ${3} reserved hero/icon/preview slots).`,
+    );
+  }
+  const images = {};
+  let totalBase64 = 0;
+  for (const [id, dataUrl] of entries) {
+    if (!IMAGE_ID.test(id)) throw new Error(`[build-theme-package] invalid image id '${id}'.`);
+    if (RESERVED_IMAGE_IDS.has(id)) {
+      throw new Error(
+        `[build-theme-package] '${id}' is a reserved image id (icon/preview are system-managed).`,
+      );
+    }
+    if (typeof dataUrl !== 'string') {
+      throw new Error(`[build-theme-package] images.${id} must be a base64 data URL string.`);
+    }
+    const match = DATA_URL.exec(dataUrl.trim());
+    if (!match) {
+      throw new Error(`[build-theme-package] images.${id} dataUrl is not a base64 data URL.`);
+    }
+    const mimeType = match[1].toLowerCase();
+    if (!SAFE_IMAGE_TYPES.has(mimeType)) {
+      throw new Error(
+        `[build-theme-package] images.${id} mimeType '${mimeType}' is not supported.`,
+      );
+    }
+    const base64 = match[2].replace(/\s+/g, '');
+    totalBase64 += base64.length;
+    images[id] = {
+      filename: `${id}${EXT_BY_MIME[mimeType]}`,
+      mimeType,
+      base64,
+    };
+  }
+  if (totalBase64 > MAX_THEME_IMAGE_BASE64) {
+    throw new Error(
+      `[build-theme-package] images cumulative base64 exceeds ${MAX_THEME_IMAGE_BASE64} bytes.`,
+    );
+  }
+  return images;
+}
+
+// ---------------------------------------------------------------------------
 // manifest
 // ---------------------------------------------------------------------------
 
@@ -641,7 +729,7 @@ function slugify(name) {
   );
 }
 
-function buildManifest(request, agentId, palette) {
+function buildManifest(request, agentId, palette, images) {
   const id =
     (request.meta?.id && slugify(request.meta.id)) ||
     slugify(request.meta?.name) ||
@@ -650,6 +738,18 @@ function buildManifest(request, agentId, palette) {
   const author = request.meta?.author || 'AgentSkin Studio';
   const mode = palette.mode;
   const verify = VERIFICATION[agentId];
+  // 2a multi-asset: `hero` (backdrop special case of `images.hero`) +
+  // `assets.images` (id → relative file path) mirror the B-line
+  // `bundle.assets.images` contract so the installer can embed them.
+  const imageEntries = images ? Object.entries(images) : [];
+  const heroFile = images?.hero ? `assets/images/${images.hero.filename}` : undefined;
+  const assets = imageEntries.length
+    ? {
+        images: Object.fromEntries(
+          imageEntries.map(([imgId, img]) => [imgId, `assets/images/${img.filename}`]),
+        ),
+      }
+    : undefined;
   return {
     $schema: 'https://agentskin.dev/schema/manifest-v2.json',
     schemaVersion: 2,
@@ -670,6 +770,8 @@ function buildManifest(request, agentId, palette) {
     colors: manifestColors(palette.tokens),
     preview: 'preview.png',
     icon: 'icon.png',
+    ...(heroFile ? { hero: heroFile } : {}),
+    ...(assets ? { assets } : {}),
     category: 'studio',
     tags: ['studio', 'custom', mode],
     unofficial: true,
@@ -743,11 +845,14 @@ export function buildThemePackage(request, outDir) {
   getAdapter(request.agentId); // 抛错即拒绝非法 agentId
   const agentId = request.agentId;
   const palette = deriveTokens(request?.root);
-  const manifest = buildManifest(request, agentId, palette);
+  // 2a multi-asset: normalize + gate the declared image set (null when absent).
+  const images = processThemeImages(request);
+  const manifest = buildManifest(request, agentId, palette, images);
   const css = buildAgentCss(agentId, palette, request?.signature);
 
   const pkgDir = path.join(outDir, `${manifest.id}.agentskin-theme`);
   fs.mkdirSync(path.join(pkgDir, 'assets', 'css'), { recursive: true });
+  if (images) fs.mkdirSync(path.join(pkgDir, 'assets', 'images'), { recursive: true });
 
   fs.writeFileSync(
     path.join(pkgDir, 'manifest.json'),
@@ -757,6 +862,17 @@ export function buildThemePackage(request, outDir) {
   fs.writeFileSync(path.join(pkgDir, 'assets', 'css', `${agentId}.css`), css, 'utf8');
   fs.writeFileSync(path.join(pkgDir, 'preview.png'), buildPreview(palette));
   fs.writeFileSync(path.join(pkgDir, 'icon.png'), buildIcon(palette));
+
+  // 2a multi-asset: write each image into assets/images/<id>.<ext> so the
+  // manifest's `hero` + `assets.images` references resolve at install time.
+  if (images) {
+    for (const img of Object.values(images)) {
+      fs.writeFileSync(
+        path.join(pkgDir, 'assets', 'images', img.filename),
+        Buffer.from(img.base64, 'base64'),
+      );
+    }
+  }
 
   return pkgDir;
 }

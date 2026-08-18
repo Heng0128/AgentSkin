@@ -445,8 +445,31 @@ export class ThemeInstaller {
 
     // Hero artwork: the applied desktop background (exposed to the injected
     // CSS as --agentskin-art) and the catalog cover. Packages that ship no
-    // dedicated artwork fall back to the preview screenshot.
-    const hero = manifest.hero ? await readImageAsset(packagePath, manifest.hero) : preview;
+    // dedicated artwork fall back to the preview screenshot. `manifest.hero`
+    // is the canonical backdrop; `assets.images.hero` is the 2a special-case
+    // alias (RFC themes-asset-injection-2a §2.1) when only the image set is
+    // declared.
+    let hero: EmbeddedImage;
+    if (manifest.hero) {
+      hero = await readImageAsset(packagePath, manifest.hero);
+    } else if (manifest.assets?.images?.hero) {
+      hero = await readImageAsset(packagePath, manifest.assets.images.hero);
+    } else {
+      hero = preview;
+    }
+
+    // 2a multi-asset (RFC themes-asset-injection-2a §2.1): additional
+    // coordinated images beyond the hero backdrop. Each `assets.images.<id>`
+    // (id → relative path) is embedded into the bundle and exposed to the
+    // injected CSS as `--agentskin-asset-<id>`. `hero`/`icon`/`preview` are
+    // system-managed (embedded below), so they are skipped here; the engine
+    // re-validates the assembled bundle (MAX_THEME_IMAGES=32, 8MB cumulative
+    // base64, SAFE_IMAGE_TYPES) at install time.
+    const creativeImages: Record<string, EmbeddedImage> = {};
+    for (const [imageId, rel] of Object.entries(manifest.assets?.images ?? {})) {
+      if (imageId === 'hero' || imageId === 'icon' || imageId === 'preview') continue;
+      creativeImages[imageId] = await readImageAsset(packagePath, rel);
+    }
 
     // Install one bundle per color scheme (default + each declared scheme).
     // Scheme variants are stored under `<themeId>--<schemeId>` ids; the
@@ -461,7 +484,7 @@ export class ThemeInstaller {
       for (const scheme of schemes) {
         const bundle = await this.buildBundle(
           manifest,
-          { icon, preview, hero },
+          { icon, preview, hero, creative: creativeImages },
           packagePath,
           scheme,
           packageRoot,
@@ -493,7 +516,13 @@ export class ThemeInstaller {
    */
   private async buildBundle(
     manifest: ThemeManifest,
-    images: { icon: EmbeddedImage; preview: EmbeddedImage; hero: EmbeddedImage },
+    images: {
+      icon: EmbeddedImage;
+      preview: EmbeddedImage;
+      hero: EmbeddedImage;
+      /** 2a multi-asset: additional coordinated images (id → embedded asset). */
+      creative: Record<string, EmbeddedImage>;
+    },
     packagePath: string,
     scheme: {
       id: string;
@@ -650,6 +679,11 @@ export class ThemeInstaller {
           hero: images.hero,
           icon: images.icon,
           preview: images.preview,
+          // 2a multi-asset: creative images ride the same `assets.images`
+          // contract so the engine exposes each as --agentskin-asset-<id>.
+          // Spread after hero/icon/preview — creative ids skip those reserved
+          // keys, so there is no collision.
+          ...images.creative,
         },
       },
     };

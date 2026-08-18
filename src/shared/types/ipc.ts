@@ -12,6 +12,7 @@ import type {
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
 import type { EnvironmentPreset } from './environment';
+import type { HealthCheckReport } from './health-check';
 import type { LaunchRequest } from './launch';
 import type { ToolOverride, TweakSession } from './override';
 import type {
@@ -545,6 +546,13 @@ export interface AgentSkinApi {
       duration: number;
     }) => void,
   ): () => void;
+  // --- Theme health check ---
+  /** Subscribe to theme health-check reports pushed from the main process after
+   *  each injection cycle. The report carries the health score, blocking layer
+   *  count, and art/sheet status for diagnostics display. Returns an unsubscribe
+   *  function. No ipcMain.handle is registered — this is a main→renderer push
+   *  event sent via webContents.send. */
+  onThemeHealthReport(listener: (report: HealthCheckReport) => void): () => void;
   // --- Theme Studio: Wallpaper picker (workspace-scoped) ---
   /** List wallpapers for the Studio WALLPAPER tab. */
   listWallpapersForStudio(): Promise<

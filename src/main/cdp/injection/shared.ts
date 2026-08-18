@@ -26,9 +26,11 @@ import type { ThemeVerification } from './types';
 
 export { injectCssAdopted, injectCssLayer } from './css-inject';
 export {
+  type ImageSetResult,
   injectHeroBlob,
   injectHeroFromDataUrl,
   transferHeroBase64,
+  transferImageSet,
 } from './hero-inject';
 export type { ThemeVerification } from './types';
 
@@ -44,11 +46,21 @@ export async function verifyTheme(session: CdpSession): Promise<ThemeVerificatio
       const rootBg = getComputedStyle(root).backgroundImage || '';
       const bodyBg = getComputedStyle(document.body).backgroundImage || '';
       const adopted = (document.adoptedStyleSheets || []).filter(s => s.${SHEET_OWNED_FLAG}).length;
+      // 2a multi-asset: collect every resolved --agentskin-asset-<id> value.
+      const assets = {};
+      for (const name of rootCs) {
+        if (name.startsWith('--agentskin-asset-')) {
+          const value = rootCs.getPropertyValue(name).trim();
+          if (value) assets[name] = value.slice(0, 60);
+        }
+      }
       return JSON.stringify({
         accent: rootCs.getPropertyValue('--agentskin-accent').trim(),
         agentskinArt: rootCs.getPropertyValue('--agentskin-art').trim().slice(0, 60),
         heroBlobActive: rootBg.includes('blob:') || bodyBg.includes('blob:'),
         adoptedSheetCount: adopted,
+        assets,
+        assetsActive: Object.keys(assets).length,
       });
     })()`);
 

@@ -100,14 +100,25 @@ export async function resolveSessionForPort(port: number): Promise<CdpSession | 
 // `RealDomPreview.tsx` (React component with DOM deps) and cannot be imported
 // into the main process without violating the L4 boundary.
 //
-// This simplified version covers the subset of ToolOverride fields that
-// map directly to CSS custom properties — enough for live-tweak preview.
-// The full version in RealDomPreview handles `colors` (semantic palette)
-// and `dim`/`opacity` overlays, which are out of scope for the live-tweak
-// injector.
+// Covers all ToolOverride fields that map to CSS custom properties or
+// short standalone rules — enough for live-tweak preview. Fields handled:
+//   shape:       radius, spacing, shadowLevel, blurPx, borderWidth
+//   typography:  fontSize, fontFam, lineHeight
+//   motion:      duration, timing
+//   color:       accent, background, foreground, surface, colors (semantic palette)
+//   structure:   separators
+//   layout:      scale
+//   filter:      invert, contrast, saturate
+//   effects:     dim, opacity
+//   gradient:    gradientAccent
+//
+// The full version in `dom-export.ts` additionally performs role-based color
+// rebinding inside DOM node replay — irrelevant here because the injector
+// targets raw CSS custom properties only.
 
 function overridesToCssSimple(overrides: ToolOverride): string {
   const root: string[] = [];
+  const extra: string[] = [];
   if (overrides.radius) root.push(`--as-radius:${overrides.radius}`);
   if (typeof overrides.spacing === 'number') root.push(`--as-spacing:${overrides.spacing}px`);
   if (overrides.shadowLevel && overrides.shadowLevel !== 'none')
@@ -126,14 +137,67 @@ function overridesToCssSimple(overrides: ToolOverride): string {
   if (typeof overrides.lineHeight === 'number') root.push(`--as-lh:${overrides.lineHeight}`);
   if (overrides.separators === false) root.push(`--as-sep:transparent`);
 
-  if (!root.length) return '';
+  // colors: semantic palette — merge known role keys into root variables.
+  // Only the four core roles are mapped; extra palette keys are ignored
+  // because they have no predefined --as-* custom property.
+  if (overrides.colors) {
+    if (overrides.colors.accent) root.push(`--as-accent:${overrides.colors.accent}`);
+    if (overrides.colors.background) root.push(`--as-bg:${overrides.colors.background}`);
+    if (overrides.colors.foreground) root.push(`--as-fg:${overrides.colors.foreground}`);
+    if (overrides.colors.surface) root.push(`--as-surface:${overrides.colors.surface}`);
+  }
 
-  // Sanitize before injection — user-controlled values (fontFam, accent, background…)
-  // flow into CSS custom properties and must be checked for breakout payloads
-  // ("</style><script>", expression(), external url() exfil, etc). The renderer-side
-  // equivalent in RealDomPreview.tsx already sanitizes via sanitizeCSS; the main-process
-  // injector must apply the same guard because it reaches a live CDP target directly.
-  const rawCss = `:root{${root.join(';')}}`;
+  // gradientAccent — bake a gradient var and apply it as background-image.
+  // Reference: dom-export.ts L312-317.
+  if (overrides.gradientAccent) {
+    root.push(
+      '--as-grad: linear-gradient(135deg, var(--as-accent, #3b82f6) 0%, var(--as-bg, #ffffff) 72%)',
+    );
+    extra.push('html,body{background-image:var(--as-grad,none)}');
+  }
+
+  // scale — body transform (preview-only).
+  // Reference: dom-export.ts L323-324.
+  if (typeof overrides.scale === 'number' && overrides.scale !== 1) {
+    extra.push(`body{transform:scale(${overrides.scale});transform-origin:top left}`);
+  }
+
+  // filter chain — invert + contrast + saturate (preview-only).
+  // Reference: dom-export.ts L325-329.
+  const filters: string[] = [];
+  if (overrides.invert) filters.push('invert(1) hue-rotate(180deg)');
+  if (typeof overrides.contrast === 'number' && overrides.contrast !== 1)
+    filters.push(`contrast(${overrides.contrast})`);
+  if (typeof overrides.saturate === 'number' && overrides.saturate !== 1)
+    filters.push(`saturate(${overrides.saturate})`);
+  if (filters.length) extra.push(`html{filter:${filters.join(' ')}}`);
+
+  // dim — fixed full-screen dark overlay via body::before (preview-only).
+  // Reference: dom-export.ts L330-335.
+  if (typeof overrides.dim === 'number' && overrides.dim > 0) {
+    extra.push(
+      `body::before{content:"";position:fixed;inset:0;background:rgba(0,0,0,${overrides.dim});pointer-events:none;z-index:99999}`,
+    );
+  }
+
+  // opacity — body-level transparency (preview-only).
+  // Reference: dom-export.ts L336-338.
+  if (typeof overrides.opacity === 'number' && overrides.opacity < 1) {
+    extra.push(`body{opacity:${overrides.opacity}}`);
+  }
+
+  if (!root.length && !extra.length) return '';
+
+  // Combine :root{} block (if any) with extra standalone rules, then sanitize.
+  // User-controlled values (fontFam, accent, colors…) flow into CSS and must be
+  // checked for breakout payloads ("</style><script>", expression(), external
+  // url() exfil, etc). The renderer-side equivalent in RealDomPreview.tsx already
+  // sanitizes via sanitizeCSS; the main-process injector must apply the same guard
+  // because it reaches a live CDP target directly.
+  const blocks: string[] = [];
+  if (root.length) blocks.push(`:root{${root.join(';')}}`);
+  blocks.push(...extra);
+  const rawCss = blocks.join('');
   const sanitized = sanitizeCSS(rawCss);
   return sanitized.clean;
 }

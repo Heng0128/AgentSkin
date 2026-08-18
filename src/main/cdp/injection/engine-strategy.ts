@@ -37,7 +37,7 @@ import {
 import { mainWarnFromCatch } from '../../logger';
 import type { CdpSession } from '../cdp-client';
 import { injectCssLayer } from './css-inject';
-import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
+import { injectHeroBlob, injectHeroFromDataUrl, transferImageSet } from './hero-inject';
 import { waitForTheme } from './shared';
 import type { ThemeVerification } from './types';
 
@@ -67,6 +67,12 @@ export interface InjectEngineOptions {
    * the "user override wins" guarantee. Optional — omitted when unset.
    */
   customCss?: string;
+  /**
+   * Full image set as data URLs (id → data URL). When provided, every entry is
+   * injected as `--agentskin-asset-<id>` and `hero` is also aliased to
+   * `--agentskin-art` (2a multi-asset). Takes precedence over heroDataUrl/heroPath.
+   */
+  imageDataUrls?: Record<string, string> | null;
   /** Hero image as data URL (data:image/webp;base64,...). */
   heroDataUrl?: string | null;
   /** Absolute path to hero.webp (alternative to heroDataUrl). */
@@ -88,6 +94,8 @@ export interface InjectEngineResult {
   adapterApplied: boolean;
   /** Whether the hero blob URL was set. */
   heroInjected: boolean;
+  /** 2a multi-asset: number of `--agentskin-asset-<id>` assets injected. */
+  imagesInjected: number;
   /** Verification read-back values. */
   verification: ThemeVerification | null;
   /** Whether all critical checks passed. */
@@ -123,6 +131,7 @@ export async function injectThemeViaEngine(
     themeCss,
     customCss,
     adapterJs,
+    imageDataUrls,
     heroDataUrl,
     heroPath,
     agent,
@@ -143,6 +152,7 @@ export async function injectThemeViaEngine(
       layersInjected: 0,
       adapterApplied: false,
       heroInjected: false,
+      imagesInjected: 0,
       verification: null,
       success: false,
     };
@@ -174,25 +184,27 @@ export async function injectThemeViaEngine(
     // Best-effort — target may not have sessionStorage yet.
   }
 
-  // --- Step 2: Hero blob URL ---
+  // --- Step 2: Image blob URLs (multi-asset, else single hero) ---
+  const imageSet = imageDataUrls && Object.keys(imageDataUrls).length > 0 ? imageDataUrls : null;
   let heroInjected = false;
+  let imagesInjected = 0;
   let heroBlobUrl = '';
-  if (heroDataUrl) {
+  if (imageSet) {
+    const result = await transferImageSet(session, imageSet);
+    imagesInjected = result.injectedIds.length;
+    heroInjected = result.heroInjected;
+  } else if (heroDataUrl) {
     heroInjected = await injectHeroFromDataUrl(session, heroDataUrl);
-    if (heroInjected) {
-      heroBlobUrl =
-        (await session.evaluate(
-          `getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '')`,
-        )) || '';
-    }
+    imagesInjected = heroInjected ? 1 : 0;
   } else if (heroPath) {
     heroInjected = await injectHeroBlob(session, heroPath);
-    if (heroInjected) {
-      heroBlobUrl =
-        (await session.evaluate(
-          `getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '')`,
-        )) || '';
-    }
+    imagesInjected = heroInjected ? 1 : 0;
+  }
+  if (heroInjected) {
+    heroBlobUrl =
+      (await session.evaluate(
+        `getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').trim().replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '')`,
+      )) || '';
   }
 
   // --- Step 3: Set config for adapter ---
@@ -256,7 +268,7 @@ export async function injectThemeViaEngine(
 
   const success = layersInjected >= 2 && adapterApplied && verification !== null;
 
-  return { layersInjected, adapterApplied, heroInjected, verification, success };
+  return { layersInjected, adapterApplied, heroInjected, imagesInjected, verification, success };
 }
 
 /**

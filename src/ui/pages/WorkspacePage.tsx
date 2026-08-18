@@ -23,12 +23,14 @@
  *   └─▶ api.pushTweak (real-time) + AgentDomPreview (local replay)
  */
 
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
+import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { AgentLivePreview } from '@/components/workspace/AgentLivePreview';
 import { TweakPanel } from '@/components/workspace/TweakPanel';
+import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
@@ -36,7 +38,7 @@ import type { ToolOverride } from '@/types/override';
 
 import { type UiMessages, uiMessages } from '@shared/i18n';
 import type { AppStatus } from '@shared/types';
-import { RefreshCw } from 'lucide-react';
+import { AlertTriangle, CheckCircle, RefreshCw, XCircle } from 'lucide-react';
 
 /** Read current i18n message table (project-standard pattern). */
 function currentT(): UiMessages {
@@ -59,6 +61,15 @@ export function WorkspacePage() {
   const discardChanges = useWorkspaceStore((s) => s.discardChanges);
   const pushError = useWorkspaceStore((s) => s.pushError);
   const clearPushError = useWorkspaceStore((s) => s.clearPushError);
+
+  const healthReport = useDiagnosticsStore((s) => s.healthReport);
+  const setHealthReport = useDiagnosticsStore((s) => s.setHealthReport);
+
+  /** Subscribe to theme health reports pushed from the main process. */
+  useEffect(() => {
+    const unsubscribe = api.onThemeHealthReport(setHealthReport);
+    return unsubscribe;
+  }, [setHealthReport]);
 
   /** Running agents that expose a CDP port — eligible for live tweaking. */
   const runningAgents = useMemo(
@@ -85,6 +96,70 @@ export function WorkspacePage() {
           <span className="text-[11px]">{t.workspaceRefreshStatus}</span>
         </Button>
       </header>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* Health status bar — theme injection diagnostics                  */}
+      {/* ---------------------------------------------------------------- */}
+      {healthReport ? (
+        <div className="flex items-center gap-4  px-4 py-2 bg-[var(--bg-2)] border border-[var(--border-subtle)] rounded-[2px] mx-4 mb-3">
+          {/* Score with color indicator */}
+          <span className="flex items-center gap-2">
+            {healthReport.score >= 80 ? (
+              <CheckCircle className="size-3.5 text-green-500" />
+            ) : healthReport.score >= 50 ? (
+              <AlertTriangle className="size-3.5 text-yellow-500" />
+            ) : (
+              <XCircle className="size-3.5 text-red-500" />
+            )}
+            <span className="font-mono text-[11px] tabular-nums">
+              {t.workspaceHealthScore}: {healthReport.score}
+            </span>
+          </span>
+
+          {/* Blocking count — red warning when > 0 */}
+          <span className="flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">{t.workspaceHealthBlocking}:</span>
+            <span
+              className={`font-mono text-[11px] tabular-nums ${
+                healthReport.blockingCount > 0
+                  ? 'text-red-500 font-medium'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {healthReport.blockingCount}
+            </span>
+          </span>
+
+          {/* Theme sheet indicator */}
+          <span className="flex items-center gap-2">
+            <span
+              className={`size-2 rounded-full ${healthReport.themeSheetPresent ? 'bg-green-500' : 'bg-muted-foreground/40'}`}
+              aria-hidden
+            />
+            <span className="text-[11px] text-muted-foreground">
+              {t.workspaceHealthSheetPresent}
+            </span>
+          </span>
+
+          {/* Hero art indicator */}
+          <span className="flex items-center gap-2">
+            <span
+              className={`size-2 rounded-full ${healthReport.heroArtActive ? 'bg-green-500' : 'bg-muted-foreground/40'}`}
+              aria-hidden
+            />
+            <span className="text-[11px] text-muted-foreground">{t.workspaceHealthArtActive}</span>
+          </span>
+
+          {/* Agent + timestamp */}
+          <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+            {healthReport.agentId} @ {new Date(healthReport.timestamp).toLocaleTimeString()}
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center  px-4 py-2 bg-[var(--bg-2)] border border-[var(--border-subtle)] rounded-[2px] mx-4 mb-3">
+          <span className="text-[11px] text-muted-foreground">{t.workspaceHealthSelectAgent}</span>
+        </div>
+      )}
 
       {/* ---------------------------------------------------------------- */}
       {/* Body — two-column grid: agent rail / preview+tweak               */}

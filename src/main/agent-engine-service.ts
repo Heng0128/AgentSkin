@@ -504,8 +504,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
     return {
       adapter: (appId) => this.adapter(appId),
       isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
-      tryEngineInjection: (session, appId, bundle, targetTheme, heroDataUrl) =>
-        tryEngineInjection(session, appId, bundle, targetTheme, heroDataUrl, {
+      tryEngineInjection: (session, appId, bundle, targetTheme, imageDataUrls) =>
+        tryEngineInjection(session, appId, bundle, targetTheme, imageDataUrls, {
           resolveEngineDir: resolveEngineDirDefault,
           log: (line) => this.log(line),
           customThemeCss: () => this.settings.customThemeCss(),

@@ -47,6 +47,7 @@ describe('diagnosticsStore — timeout events', () => {
         switchEpochByAgent: 0,
         persistFailures: 0,
       },
+      healthReport: null,
     });
     mockGetTimeouts.mockReset();
     mockClearTimeouts.mockReset();
@@ -195,5 +196,78 @@ describe('diagnosticsStore — timeout events', () => {
     expect(state.timeoutsLoading).toBe(false);
     // All 3 calls actually reached the mock api
     expect(mockGetTimeouts).toHaveBeenCalledTimes(3);
+  });
+
+  // -----------------------------------------------------------------------
+  // healthReport: initial value
+  // -----------------------------------------------------------------------
+
+  it('healthReport defaults to null', () => {
+    expect(useDiagnosticsStore.getState().healthReport).toBeNull();
+  });
+
+  // -----------------------------------------------------------------------
+  // healthReport: setHealthReport updates the state
+  // -----------------------------------------------------------------------
+
+  it('setHealthReport stores the full HealthCheckReport payload', () => {
+    const report = {
+      agentId: 'traework',
+      timestamp: 1_700_000_000_000,
+      heroArtActive: true,
+      themeSheetPresent: true,
+      accentToken: '#4a90d9',
+      hostClassPresent: true,
+      adapterPresent: true,
+      nativeTokens: { '--vscode-foreground': '#cccccc' },
+      opaqueLayers: [],
+      blockingCount: 0,
+      score: 100,
+    };
+
+    useDiagnosticsStore.getState().setHealthReport(report);
+
+    const stored = useDiagnosticsStore.getState().healthReport;
+    expect(stored).toEqual(report);
+    expect(stored?.agentId).toBe('traework');
+    expect(stored?.score).toBe(100);
+    expect(stored?.blockingCount).toBe(0);
+  });
+
+  it('setHealthReport replaces the previous report (last writer wins)', () => {
+    const reportA = {
+      agentId: 'traework',
+      timestamp: 1,
+      heroArtActive: true,
+      themeSheetPresent: true,
+      accentToken: '#4a90d9',
+      hostClassPresent: true,
+      adapterPresent: true,
+      nativeTokens: {},
+      opaqueLayers: [],
+      blockingCount: 0,
+      score: 100,
+    };
+    const reportB = {
+      agentId: 'doubao',
+      timestamp: 2,
+      heroArtActive: false,
+      themeSheetPresent: true,
+      accentToken: '#ff0000',
+      hostClassPresent: true,
+      adapterPresent: true,
+      nativeTokens: {},
+      opaqueLayers: [],
+      blockingCount: 3,
+      score: 40,
+    };
+
+    useDiagnosticsStore.getState().setHealthReport(reportA);
+    useDiagnosticsStore.getState().setHealthReport(reportB);
+
+    const stored = useDiagnosticsStore.getState().healthReport;
+    expect(stored).toEqual(reportB);
+    expect(stored?.agentId).toBe('doubao');
+    expect(stored?.score).toBe(40);
   });
 });

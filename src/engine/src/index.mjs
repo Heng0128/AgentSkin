@@ -22,6 +22,8 @@ export { prepareHostSettings, restoreHostSettings } from "./runtime/host-setting
 export {
   MAX_THEME_PACKAGE_BYTES,
   MAX_THEME_IMAGES,
+  MAX_THEME_IMAGE_BASE64,
+  SAFE_IMAGE_TYPES,
   THEME_EXTENSION,
   THEME_FORMAT,
   THEME_SCHEMA_VERSION,

@@ -30,6 +30,7 @@ import {
   type ThemeColorsFromImage,
   type ThemeVisualSnapshot,
 } from '@shared/types';
+import type { HealthCheckReport } from '@shared/types/health-check';
 import { create } from 'zustand';
 
 /** Read current i18n message table (project-standard pattern from installFlowStore / environmentStore). */
@@ -221,6 +222,14 @@ interface StudioStoreState {
   /** Subscribe to visual-analysis progress events from main process. Idempotent. */
   initAnalysisProgressSubscription(): void;
 
+  // --- Theme health check ---
+  /** Latest theme health-check report pushed from the main process. Null until first report. */
+  healthReport: HealthCheckReport | null;
+  /** Guard flag so initHealthReportSubscription is idempotent across HMR. */
+  _healthReportSubscribed: boolean;
+  /** Subscribe to theme health-check reports from main process. Idempotent. */
+  initHealthReportSubscription(): void;
+
   // --- Simple setters (form fields, UI flags) ---
   setCreatingProject(v: boolean): void;
   setNewName(v: string): void;
@@ -333,6 +342,10 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   analysisProgress: null,
   _analysisProgressSubscribed: false,
 
+  // --- Theme health check ---
+  healthReport: null,
+  _healthReportSubscribed: false,
+
   getActiveProject: () => {
     const { projects, activeProjectId } = get();
     // `projects.find` returns the same element reference while the array and
@@ -353,6 +366,19 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     set({ _analysisProgressSubscribed: true });
     api.onVisualAnalysisProgress((payload) => {
       set({ analysisProgress: payload });
+    });
+  },
+
+  // ------------------------------------------------------------------
+  // Theme health check subscription
+  // ------------------------------------------------------------------
+  // Idempotent: guarded by _healthReportSubscribed flag so HMR / repeated
+  // init calls don't accumulate listeners.
+  initHealthReportSubscription: () => {
+    if (get()._healthReportSubscribed) return;
+    set({ _healthReportSubscribed: true });
+    api.onThemeHealthReport((report) => {
+      set({ healthReport: report });
     });
   },
 

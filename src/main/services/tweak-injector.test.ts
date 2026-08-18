@@ -414,16 +414,138 @@ describe('tweak-injector', () => {
       expect(css).toContain('--as-sep:transparent');
     });
 
-    it('does not inject CSS for preview-only fields (scale, invert, contrast)', async () => {
+    it('generates CSS for previously-preview-only fields (scale, invert, contrast, saturate)', async () => {
+      // These fields were historically excluded from overridesToCssSimple but
+      // are now supported — they produce standalone rules appended after :root{}.
       const session = makeSession({
         overrides: { scale: 1.2, invert: true, contrast: 1.5, saturate: 0.8 },
       });
 
-      // These fields are intentionally not in the simplified overridesToCss
       const result = await pushTweak(session, session.overrides);
 
-      // All fields produce no CSS → pushTweak returns false early
-      expect(result).toBe(false);
+      expect(result).toBe(true);
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      expect(css).toContain('body{transform:scale(1.2);transform-origin:top left}');
+      expect(css).toContain(
+        'html{filter:invert(1) hue-rotate(180deg) contrast(1.5) saturate(0.8)}',
+      );
+    });
+
+    it('dim generates body::before overlay rule', async () => {
+      const session = makeSession({ overrides: { dim: 0.4 } });
+
+      const result = await pushTweak(session, session.overrides);
+
+      expect(result).toBe(true);
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      expect(css).toContain('body::before{');
+      expect(css).toContain('position:fixed');
+      expect(css).toContain('inset:0');
+      expect(css).toContain('background:rgba(0,0,0,0.4)');
+      expect(css).toContain('pointer-events:none');
+      expect(css).toContain('z-index:99999');
+    });
+
+    it('dim = 0 produces no overlay (guarded)', async () => {
+      const session = makeSession({ overrides: { dim: 0, radius: '2px' } });
+
+      await pushTweak(session, session.overrides);
+
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      expect(css).not.toContain('body::before');
+      expect(css).toContain('--as-radius:2px');
+    });
+
+    it('opacity generates body transparency rule', async () => {
+      const session = makeSession({ overrides: { opacity: 0.7 } });
+
+      const result = await pushTweak(session, session.overrides);
+
+      expect(result).toBe(true);
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      expect(css).toContain('body{opacity:0.7}');
+    });
+
+    it('opacity = 1 produces no rule (guarded)', async () => {
+      const session = makeSession({ overrides: { opacity: 1, radius: '2px' } });
+
+      await pushTweak(session, session.overrides);
+
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      expect(css).not.toContain('opacity');
+      expect(css).toContain('--as-radius:2px');
+    });
+
+    it('gradientAccent generates --as-grad var and body background rule', async () => {
+      const session = makeSession({ overrides: { gradientAccent: true } });
+
+      const result = await pushTweak(session, session.overrides);
+
+      expect(result).toBe(true);
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      expect(css).toContain(
+        '--as-grad: linear-gradient(135deg, var(--as-accent, #3b82f6) 0%, var(--as-bg, #ffffff) 72%)',
+      );
+      expect(css).toContain('html,body{background-image:var(--as-grad,none)}');
+    });
+
+    it('colors palette merges known role keys into root', async () => {
+      const session = makeSession({
+        overrides: {
+          colors: {
+            accent: '#ff5722',
+            background: '#1a1a1a',
+            foreground: '#eeeeee',
+            surface: '#2d2d2d',
+          },
+        },
+      });
+
+      const result = await pushTweak(session, session.overrides);
+
+      expect(result).toBe(true);
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      expect(css).toContain('--as-accent:#ff5722');
+      expect(css).toContain('--as-bg:#1a1a1a');
+      expect(css).toContain('--as-fg:#eeeeee');
+      expect(css).toContain('--as-surface:#2d2d2d');
+    });
+
+    it('colors palette ignores unknown keys (no --as-* mapping)', async () => {
+      const session = makeSession({
+        overrides: {
+          colors: {
+            accent: '#000',
+            background: '#fff',
+            unknownKey: 'should-be-ignored',
+          },
+        },
+      });
+
+      const result = await pushTweak(session, session.overrides);
+
+      expect(result).toBe(true);
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      expect(css).toContain('--as-accent:#000');
+      expect(css).toContain('--as-bg:#fff');
+      expect(css).not.toContain('unknownKey');
+      expect(css).not.toContain('should-be-ignored');
+    });
+
+    it('extra rules are appended after :root{} block', async () => {
+      const session = makeSession({
+        overrides: { radius: '4px', dim: 0.3, opacity: 0.9 },
+      });
+
+      await pushTweak(session, session.overrides);
+
+      const css = mockInjectCssLayer.mock.calls[0][2];
+      const rootIdx = css.indexOf(':root{');
+      const dimIdx = css.indexOf('body::before{');
+      const opacityIdx = css.indexOf('body{opacity:0.9}');
+      // :root{} block comes first, extra rules follow
+      expect(rootIdx).toBeLessThan(dimIdx);
+      expect(dimIdx).toBeLessThan(opacityIdx);
     });
   });
 

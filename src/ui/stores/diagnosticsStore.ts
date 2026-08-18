@@ -15,6 +15,7 @@
 
 import { api } from '@/api/agentSkinClient';
 
+import type { HealthCheckReport } from '@shared/types/health-check';
 import { create } from 'zustand';
 import type { ConcurrencyMetrics } from '../../shared/types/concurrency';
 
@@ -23,10 +24,14 @@ interface DiagnosticsState {
   timeoutsLoading: boolean;
   timeoutsError: string | null;
   concurrencyMetrics: ConcurrencyMetrics;
+  /** Latest theme health-check report pushed from the main process, or null
+   *  until the first report arrives. */
+  healthReport: HealthCheckReport | null;
 
   loadTimeouts: (count?: number) => Promise<void>;
   clearTimeouts: () => Promise<void>;
   updateConcurrencyMetrics: (metrics: Partial<ConcurrencyMetrics>) => void;
+  setHealthReport: (report: HealthCheckReport) => void;
 }
 
 const initialConcurrencyMetrics: ConcurrencyMetrics = {
@@ -45,6 +50,7 @@ export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({
   timeoutsLoading: false,
   timeoutsError: null,
   concurrencyMetrics: initialConcurrencyMetrics,
+  healthReport: null,
 
   loadTimeouts: async (count = 10) => {
     set({ timeoutsLoading: true, timeoutsError: null });
@@ -76,5 +82,9 @@ export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({
     set((state) => ({
       concurrencyMetrics: { ...state.concurrencyMetrics, ...metrics },
     }));
+  },
+
+  setHealthReport: (report) => {
+    set({ healthReport: report });
   },
 }));

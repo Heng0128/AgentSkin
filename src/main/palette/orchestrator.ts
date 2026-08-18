@@ -88,7 +88,7 @@ export async function tryEngineInjection(
   appId: string,
   bundle: ThemeBundle,
   targetTheme: ResolvedThemeTarget,
-  heroDataUrl: string | null,
+  imageDataUrls: Record<string, string> | null,
   deps: EngineInjectionDeps,
 ): Promise<InjectEngineResult | null> {
   try {
@@ -144,7 +144,7 @@ export async function tryEngineInjection(
       // 5th (final) layer: user-authored custom CSS, if any. Appended last so
       // it beats every theme layer at equal specificity.
       customCss: deps.customThemeCss?.() || undefined,
-      heroDataUrl,
+      imageDataUrls: imageDataUrls ?? undefined,
       agent: appId,
       themeId,
       verifyDelayMs: deps.verifyDelayMs ?? 500,

@@ -49,7 +49,7 @@ export interface ReloadWatchdogDeps {
     appId: AgentId,
     bundle: ThemeBundle,
     targetTheme: ResolvedThemeTarget,
-    heroDataUrl: string | null,
+    imageDataUrls: Record<string, string> | null,
   ) => Promise<InjectEngineResult | null>;
   log: (line: string) => void;
 }
@@ -60,7 +60,8 @@ export interface AttachReloadWatchdogOptions {
   pageTargetUrl?: string;
   bundle: ThemeBundle;
   targetTheme: ResolvedThemeTarget;
-  heroDataUrl: string | null;
+  /** 2a multi-asset: full image set to re-inject on reload (or null). */
+  imageDataUrls: Record<string, string> | null;
   epoch: number;
   deps: ReloadWatchdogDeps;
 }
@@ -159,12 +160,13 @@ async function reverifyAfterNavigation(state: ReloadWatchdogState): Promise<void
       appId,
       state.options.bundle,
       state.options.targetTheme,
-      state.options.heroDataUrl,
+      state.options.imageDataUrls,
     );
     if (result) {
       deps.log(
         `[reload-watchdog] ${appId}: re-injected layers=${result.layersInjected} ` +
-          `adapter=${result.adapterApplied} hero=${result.heroInjected}`,
+          `adapter=${result.adapterApplied} hero=${result.heroInjected} ` +
+          `images=${result.imagesInjected}`,
       );
     } else {
       deps.log(

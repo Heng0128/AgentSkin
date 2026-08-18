@@ -14,13 +14,14 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import type { AgentId } from '../../shared/types';
+import type { RendererHints } from '../cdp/renderer-rank';
 import type { WallpaperInjectorDeps } from './injector-types';
 import { resolvePageTarget, resolvePageTargets } from './target-discovery';
 
 const TEST_AGENT: AgentId = 'doubao' as AgentId;
 const PORT = 9222;
 
-function page(id: string, url: string): any {
+function page(id: string, url: string): Record<string, string> {
   return {
     id,
     type: 'page',
@@ -30,7 +31,7 @@ function page(id: string, url: string): any {
   };
 }
 
-function depsWithTargets(targets: unknown[], hints?: unknown): WallpaperInjectorDeps {
+function depsWithTargets(targets: unknown[], hints?: RendererHints): WallpaperInjectorDeps {
   return {
     wallpaperService: null,
     isEpochCurrent: () => true,
@@ -41,7 +42,7 @@ function depsWithTargets(targets: unknown[], hints?: unknown): WallpaperInjector
     inferRestartReason: async () => 'no-cdp' as const,
     findAgentTargets: vi.fn(async () => targets),
     setAgentWallpaper: async () => {},
-    rendererHints: hints === undefined ? undefined : ((() => hints) as any),
+    rendererHints: hints === undefined ? undefined : () => hints,
     log: () => undefined,
   } as unknown as WallpaperInjectorDeps;
 }

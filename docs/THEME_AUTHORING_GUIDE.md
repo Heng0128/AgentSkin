@@ -145,7 +145,8 @@ npm run check:themes
 
 ## 4. 路线 B：手写深度适配（做出"自己的"主题）
 
-从参考主题提炼的**通用四步技法**（以初音未来主题为范本，但去 IP 化）：
+> **权威版已并入 `themes/THEME_SPEC.md`「深度适配指南」章节**（四步技法 A / 作用域约定 B / 六端速查表 C），本节保留为快速参考，内容冲突时以 THEME_SPEC 为准。
+> 从参考主题提炼的**通用四步技法**（以初音未来主题为范本，但去 IP 化）：
 
 ### 4.1 步骤一：集中声明私有调色板
 
@@ -270,7 +271,7 @@ html.agentskin-host-workbuddy .conversation-sidebar {
 - 作用域：`html.agentskin-host-doubao:root`
 - 原生 token：`--dbx-bg-body-web` / `-bg-base-web` / `-bg-base-2/5` / `-bg-float` / `-bg-mask` / `-bg-blur-md` / `--dbx-text-primary/-secondary/-tertiary/-disable` / `--dbx-fill-*` / `--dbx-line-*`
 - 稳定表面：`.chat-container`、`.dbx-*` 语义容器（建议用 DevTools 实测当前版本类名）
-- ⚠️ **文档纠错**：`themes/THEME_SPEC.md` 第 170 行称豆包用 `--semi-color-*`、`--dbx-*` 是"历史死 token，勿依赖"——**与代码事实相反**。实际 aurora-glass `doubao.css` 大量使用 `--dbx-*`，应以本表为准，THEME_SPEC 待修正。
+- ✅ **THEME_SPEC 已修正**：原第 170 行称豆包用 `--semi-color-*`、`--dbx-*` 是"历史死 token"——已改为 `--dbx-*`（251-token 语义层，`--semi-color-*` 为遗留）。aurora-glass `doubao.css` 大量使用 `--dbx-*`，以本表 + THEME_SPEC 为准。
 
 ---
 
@@ -323,7 +324,7 @@ npm run check                  # 全量：typecheck+lint+test+contract+themes+st
 
 ### 🔴 已确认的事实缺口
 1. **手写深度适配路径几乎无文档**：THEME_SPEC 只讲"填 token 跑生成器"和一句"`art:false` 跳过生成器手动维护 CSS"，但**没教怎么手写**——覆写哪些 token、挂哪些选择器、怎么做纹理/主视觉，全是空白。本手册第 4、5 节补的就是这块。
-2. **THEME_SPEC 豆包 token 写错**：称豆包用 `--semi-color-*`、`--dbx-*` 是死 token。实际 aurora-glass `doubao.css` 用的是 `--dbx-*`（251-token 体系）。需修正 THEME_SPEC 第 170 行。
+2. **THEME_SPEC 豆包 token 写错（已修正）**：原称豆包用 `--semi-color-*`、`--dbx-*` 是死 token。实际 aurora-glass `doubao.css` 用的是 `--dbx-*`（251-token 体系）。**已修正 THEME_SPEC 第 170 行 + probe.tokenNamespaces 示例**。
 3. **单 hero 模型，无原生纹理变量**：运行时只注入 `--agentskin-art`（一张图）。参考主题的"纹理 + 主视觉 + 点缀层"三层叠加在 AgentSkin 落不了地（除非 bake 进 hero 或用内联 data-url 自造 `--my-texture`，后者不被 chunk、有体积风险）。要做 texture 主题，要么改注入层支持 `--agentskin-texture`，要么接受单图层。
 
 ### 🟠 待你确认的能力缺口

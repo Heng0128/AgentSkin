@@ -63,6 +63,12 @@ function resolveWithin(themeId: string, packagePath: string, rel: string, label:
 }
 
 /**
+ * Safe image asset id — mirrors the engine's `SAFE_ID` (package.mjs) so a
+ * manifest that validates here also passes the engine bundle gate at install.
+ */
+const SAFE_IMAGE_ID = /^[a-z0-9][a-z0-9_-]*$/i;
+
+/**
  * Validate that a target config references an existing CSS file.
  */
 async function validateTarget(
@@ -221,6 +227,44 @@ export class ThemePackageLoader {
         await fs.access(heroPath);
       } catch {
         throw new ThemePackageValidationError(themeId, `hero file not found: ${manifest.hero}`);
+      }
+    }
+
+    // 3c. 2a multi-asset: validate assets.images (id → relative path). Each id
+    // must be a safe slug (mirrors engine SAFE_ID), each path must stay inside
+    // the package root, and each file must exist — the installer embeds them
+    // into the bundle where the engine re-enforces quantity/volume gates
+    // (RFC themes-asset-injection-2a §2.1 / §2.3.1).
+    if (manifest.assets?.images !== undefined) {
+      const imageAssets = manifest.assets.images;
+      if (!imageAssets || typeof imageAssets !== 'object' || Array.isArray(imageAssets)) {
+        throw new ThemePackageValidationError(
+          themeId,
+          'assets.images must be an object keyed by image id',
+        );
+      }
+      for (const [imageId, rel] of Object.entries(imageAssets)) {
+        if (!SAFE_IMAGE_ID.test(imageId)) {
+          throw new ThemePackageValidationError(
+            themeId,
+            `assets.images contains invalid image id '${imageId}'`,
+          );
+        }
+        if (typeof rel !== 'string' || !rel.trim()) {
+          throw new ThemePackageValidationError(
+            themeId,
+            `assets.images.${imageId} must be a non-empty relative path`,
+          );
+        }
+        const imagePath = resolveWithin(themeId, packagePath, rel, `assets.images.${imageId}`);
+        try {
+          await fs.access(imagePath);
+        } catch {
+          throw new ThemePackageValidationError(
+            themeId,
+            `asset image file not found for ${imageId}: ${rel}`,
+          );
+        }
       }
     }
 

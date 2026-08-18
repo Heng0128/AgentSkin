@@ -256,10 +256,10 @@ export async function tryEngineInjection(
   appId: AgentId,
   bundle: ThemeBundle,
   targetTheme: ResolvedThemeTarget,
-  heroDataUrl: string | null,
+  imageDataUrls: Record<string, string> | null,
   deps: EngineInjectionDeps,
 ): Promise<InjectEngineResult | null> {
-  return tryEngineInjectionImpl(session, appId, bundle, targetTheme, heroDataUrl, deps);
+  return tryEngineInjectionImpl(session, appId, bundle, targetTheme, imageDataUrls, deps);
 }
 
 // ---------------------------------------------------------------------------

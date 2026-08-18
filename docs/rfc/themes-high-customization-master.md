@@ -150,4 +150,21 @@ manifest.decorations
 
 ---
 
+## 9. 外部参考实现索引（评审佐证，一手证据）
+
+> 以下参考均来自 CodeDrobe 开源仓库（core / skills）未合并 PR，**仅学结构、不抄本体**（其 CSS 依赖 `--codedrobe-*` 变量与 `html.codedrobe-host-*` 作用域，跨引擎不可复用）。索引指向各子文档的详细对照。
+
+| 参考 | 来源 | 对齐本方案的段/缺口 | 已落位置 |
+|------|------|--------------------|---------|
+| **caishen 主题源码**（私有调色板 → token 覆写 → 纹理+hero 双图 → `:has()` 路由上下文 → 每表面精修） | [CodeDrobe/skills PR#3](https://github.com/CodeDrobe/skills/pull/3)（ChannelerH，07-22，未合并） | 2a（`--codedrobe-image-texture` 证实纹理方向）+ 2b（锚点/上下文探测） | [2b §2.5](file:///c:/Users/snowb/Desktop/work/desktop-main/docs/rfc/themes-surface-layout-2b.md#L98-L118) |
+| **Codex root landmark 漂移修复**（`rootAny: [稳定首选, 严格兜底]` + 回归测试拒绝过宽裸选择器） | [CodeDrobe/core PR#7](https://github.com/CodeDrobe/core/pull/7)（gaopengbin，08-01，未合并） | 缺口1 决策层自动化（选择器首选+兜底模式） | [立项 §4.1](file:///c:/Users/snowb/Desktop/work/desktop-main/docs/rfc/deep-adaptation-initiative.md#L79-L103) |
+| **`lastVerified` 版本种子 + probe/verify/回滚**（版本漂移检测最小闭环） | CodeDrobe/core PR#7 + README verification 机制 | 缺口3 版本漂移检测 | [立项 §4.3](file:///c:/Users/snowb/Desktop/work/desktop-main/docs/rfc/deep-adaptation-initiative.md#L129-L143) |
+
+**评审用要点（一句话每条）**：
+- PR#3：CodeDrobe 已有一等纹理变量 `--codedrobe-image-texture` → 佐证 2a"纹理缺位"判断正确，2a 方向保留。
+- PR#7：应用改版选择器漂移是**真实高频事件**（Codex build 535 即发生）→ 缺口1 应照"首选+严格兜底+回归测试"模式实现，而非手写单选择器。
+- lastVerified：版本漂移检测的最小种子 = 记录"上次验证通过时的 appVersion/build" → 缺口3 的 `contexts.when` + `lastVerified` 配合成闭环。
+
+---
+
 > 总方案为评审稿。若批准，按 §5.1 顺位分阶段实现；每段拆分为独立 PR，逐段回归，避免一次性大变更。未批前不改代码。

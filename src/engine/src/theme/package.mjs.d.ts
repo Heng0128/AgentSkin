@@ -6,6 +6,8 @@ export const THEME_EXTENSION: string;
 export const THEME_SCHEMA_VERSION: number;
 export const MAX_THEME_PACKAGE_BYTES: number;
 export const MAX_THEME_IMAGES: number;
+export const MAX_THEME_IMAGE_BASE64: number;
+export const SAFE_IMAGE_TYPES: ReadonlySet<string>;
 export function assertString(value: unknown, label: string): void;
 export function mimeTypeFor(filename: string): string;
 export function validateId(id: string): void;

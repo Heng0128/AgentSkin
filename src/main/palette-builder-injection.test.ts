@@ -122,7 +122,7 @@ describe('tryEngineInjection', () => {
       'workbuddy',
       makeBundle(),
       makeTarget(),
-      'data:hero',
+      { hero: 'data:hero' },
       deps,
     );
 
@@ -132,7 +132,7 @@ describe('tryEngineInjection', () => {
     expect(session).toEqual({});
     expect(payload.agent).toBe('workbuddy');
     expect(payload.themeId).toBe('test-theme');
-    expect(payload.heroDataUrl).toBe('data:hero');
+    expect(payload.imageDataUrls).toEqual({ hero: 'data:hero' });
     expect(payload.paletteCss).toContain('--agentskin-accent-raw: 255, 0, 0;');
     expect(payload.tokensCss).toBe(':root{}');
     expect(payload.adapterJs).toBe('export{}');
@@ -154,7 +154,7 @@ describe('tryEngineInjection', () => {
     );
     const payload = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
     expect(payload.themeId).toBe('unknown');
-    expect(payload.heroDataUrl).toBeNull();
+    expect(payload.imageDataUrls).toBeUndefined();
   });
 
   it('returns null when any engine file is missing (legacy fallback)', async () => {

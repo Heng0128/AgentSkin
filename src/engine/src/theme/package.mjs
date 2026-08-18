@@ -6,10 +6,37 @@ export const THEME_EXTENSION = ".agentskin-theme";
 export const THEME_SCHEMA_VERSION = 1;
 export const MAX_THEME_PACKAGE_BYTES = 30 * 1024 * 1024;
 export const MAX_THEME_IMAGES = 32;
+/** 2a multi-asset: cumulative base64 ceiling across all image assets (RFC
+ *  themes-asset-injection-2a §2.3.1). 8MB base64 ≈ 6MB raw; the typical
+ *  250KB-per-image theme stays on the single-evaluate fast path. */
+export const MAX_THEME_IMAGE_BASE64 = 8 * 1024 * 1024;
 
 const SAFE_ID = /^[a-z0-9][a-z0-9_-]*$/i;
-const SAFE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
-const BASE64 = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+export const SAFE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+// 2a multi-asset: base64 shape is validated iteratively (not via regex) so an
+// asset near the 8MB ceiling cannot overflow the V8 regex stack on the `{4}`
+// quantifier — a clean gate error must always win over a stack overflow
+// (RFC themes-asset-injection-2a §2.3.1).
+const BASE64_CHARS = new Set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".split(""));
+// Legal padding → core-length remainder mapping, mirroring the legacy regex
+// /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/:
+//   no padding  → core % 4 === 0
+//   one "="     → core % 4 === 3   (3 alphabet chars + 1 pad)
+//   two "=="    → core % 4 === 2   (2 alphabet chars + 2 pad)
+const PADDING_REMAINDER = [0, 3, 2];
+function isValidBase64(value) {
+  if (value.length === 0) return false;
+  let end = value.length;
+  while (end > 0 && value[end - 1] === "=") end -= 1;
+  const padding = value.length - end;
+  if (padding > 2) return false;
+  if (end === 0) return false;
+  if (end % 4 !== PADDING_REMAINDER[padding]) return false;
+  for (let index = 0; index < end; index += 1) {
+    if (!BASE64_CHARS.has(value[index])) return false;
+  }
+  return true;
+}
 const REMOTE_CSS = /@import\s|url\(\s*["']?(?!data:)/i;
 const MAX_VERIFICATION_REQUIREMENTS = 32;
 const MAX_VERIFICATION_CONTEXTS = 16;
@@ -47,7 +74,7 @@ function validateImageAsset(image, label) {
   if (!SAFE_IMAGE_TYPES.has(image.mimeType)) {
     throw new Error(`${label}.mimeType '${image.mimeType}' is not supported.`);
   }
-  if (!BASE64.test(image.base64)) throw new Error(`${label}.base64 must contain valid Base64 data.`);
+  if (!isValidBase64(image.base64)) throw new Error(`${label}.base64 must contain valid Base64 data.`);
 }
 
 function resolvedImageAssets(bundle) {
@@ -329,15 +356,23 @@ export function validateThemePackage(bundle) {
     const images = Object.entries(bundle.assets.images);
     if (!images.length) throw new Error("assets.images must not be empty when provided.");
     if (images.length > MAX_THEME_IMAGES) throw new Error(`assets.images exceeds ${MAX_THEME_IMAGES} entries.`);
+    let imageTotalBase64 = 0;
     for (const [name, image] of images) {
       if (!SAFE_ID.test(name)) throw new Error(`assets.images contains invalid image id '${name}'.`);
       validateImageAsset(image, `assets.images.${name}`);
+      imageTotalBase64 += image.base64.length;
+    }
+    if (imageTotalBase64 > MAX_THEME_IMAGE_BASE64) {
+      throw new Error(`assets.images cumulative base64 exceeds ${MAX_THEME_IMAGE_BASE64} bytes.`);
     }
   }
   if (bundle.assets?.art) {
     validateImageAsset(bundle.assets.art, "assets.art");
     if (bundle.assets.images?.hero) {
       throw new Error("assets.art cannot be combined with assets.images.hero.");
+    }
+    if (bundle.assets.art.base64.length > MAX_THEME_IMAGE_BASE64) {
+      throw new Error(`assets.art base64 exceeds ${MAX_THEME_IMAGE_BASE64} bytes.`);
     }
   }
   return bundle;

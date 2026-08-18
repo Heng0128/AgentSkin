@@ -10,6 +10,7 @@ import type {
   ConcurrencyMetrics,
   FileImportConfirmRequest,
   FileImportResult,
+  HealthCheckReport,
   InspectedNode,
   ScanProgressEvent,
   StudioProject,
@@ -287,6 +288,9 @@ const api: AgentSkinApi = {
       total: number;
       duration: number;
     }>(IpcChannel.THEME_SECONDARY_INJECT_SUMMARY, listener),
+  // --- Theme health check ---
+  onThemeHealthReport: (listener) =>
+    subscribe<HealthCheckReport>(IpcChannel.THEME_HEALTH_REPORT, listener),
   /** Fire-and-forget push of renderer-side primitive sizes so the main
    *  process can include them in the unified metrics broadcast. */
   sendRendererConcurrencyMetrics: (companionBusy: number, switchEpoch: number) =>

@@ -306,6 +306,125 @@ describe('ThemePackageLoader', () => {
         'targets.traewrok: unknown agent id "traewrok"',
       );
     });
+
+    it('loads a theme with valid multi-image assets (2a)', async () => {
+      const themeId = 'multi-image';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+      await fs.mkdir(path.join(themeDir, 'assets', 'images'), { recursive: true });
+
+      const manifest = JSON.parse(createMinimalManifest(themeId)) as Record<string, unknown>;
+      manifest.assets = {
+        images: {
+          hero: 'assets/images/hero.png',
+          sidebar: 'assets/images/sidebar.png',
+          mascot: 'assets/images/mascot.gif',
+        },
+      };
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(manifest));
+      for (const f of [
+        'icon.png',
+        'preview.png',
+        'assets/images/hero.png',
+        'assets/images/sidebar.png',
+        'assets/images/mascot.gif',
+      ]) {
+        await fs.writeFile(path.join(themeDir, f), Buffer.from(createPlaceholderPng(), 'base64'));
+      }
+
+      const pkg = await loader.load(themeId);
+      expect(pkg.manifest.assets?.images).toEqual({
+        hero: 'assets/images/hero.png',
+        sidebar: 'assets/images/sidebar.png',
+        mascot: 'assets/images/mascot.gif',
+      });
+    });
+
+    it('rejects assets.images with a path escaping the package root', async () => {
+      const themeId = 'img-escape';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+
+      const manifest = JSON.parse(createMinimalManifest(themeId)) as Record<string, unknown>;
+      manifest.assets = { images: { sidebar: '../../etc/passwd' } };
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(manifest));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+
+      await expect(loader.load(themeId)).rejects.toThrow(
+        'assets.images.sidebar path escapes package root',
+      );
+    });
+
+    it('rejects assets.images referencing a missing file', async () => {
+      const themeId = 'img-missing';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+
+      const manifest = JSON.parse(createMinimalManifest(themeId)) as Record<string, unknown>;
+      manifest.assets = { images: { sidebar: 'assets/images/sidebar.png' } };
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(manifest));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+
+      await expect(loader.load(themeId)).rejects.toThrow('asset image file not found for sidebar');
+    });
+
+    it('rejects assets.images with an invalid image id', async () => {
+      const themeId = 'img-bad-id';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+
+      const manifest = JSON.parse(createMinimalManifest(themeId)) as Record<string, unknown>;
+      manifest.assets = { images: { '../escape': 'assets/images/x.png' } };
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(manifest));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+
+      await expect(loader.load(themeId)).rejects.toThrow(
+        "assets.images contains invalid image id '../escape'",
+      );
+    });
+
+    it('rejects assets.images with an invalid id value', async () => {
+      const themeId = 'img-bad-val';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+
+      const manifest = JSON.parse(createMinimalManifest(themeId)) as Record<string, unknown>;
+      manifest.assets = { images: { sidebar: '' } };
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(manifest));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+
+      await expect(loader.load(themeId)).rejects.toThrow(
+        'assets.images.sidebar must be a non-empty relative path',
+      );
+    });
   });
 
   describe('scan', () => {

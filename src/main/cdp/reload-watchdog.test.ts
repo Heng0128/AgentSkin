@@ -69,7 +69,7 @@ function makeOptions(overrides: Partial<Parameters<typeof attachReloadWatchdog>[
     pageTargetUrl: 'ws://127.0.0.1:9222/devtools/page/1',
     bundle: { format: 'agentskin-theme' } as never,
     targetTheme: { css: ':root{}' } as never,
-    heroDataUrl: null,
+    imageDataUrls: null,
     epoch: 1,
     deps,
     ...overrides,

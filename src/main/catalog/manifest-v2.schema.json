@@ -116,6 +116,12 @@
             }
           ],
           "description": "@deprecated Use manifest.hero instead"
+        },
+        "images": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "maxProperties": 32,
+          "description": "(2a multi-asset) Additional coordinated images: id → relative file path (png/jpeg/webp/gif). Each is embedded into the bundle's assets.images and exposed to the injected CSS as --agentskin-asset-<id>. The special id 'hero' is the backdrop (alias of manifest.hero); 'icon'/'preview' are reserved for the system-managed cover assets. The engine enforces the final quantity (MAX_THEME_IMAGES=32) and 8MB cumulative base64 budget at install time."
         }
       },
       "description": "Optional asset references relative to the package root"

@@ -19,7 +19,7 @@
 import { DEFAULT_VERIFY_DELAY_MS } from '../../../shared/injection-constants';
 import type { CdpSession } from '../cdp-client';
 import { injectCssAdopted } from './css-inject';
-import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
+import { injectHeroBlob, injectHeroFromDataUrl, transferImageSet } from './hero-inject';
 import { backoffDelay, verifyTheme, waitForTheme } from './shared';
 import type { ThemeVerification } from './types';
 
@@ -30,6 +30,12 @@ import type { ThemeVerification } from './types';
 export interface InjectThemeOptions {
   /** CSS text to inject (the agent-specific stylesheet). */
   css: string;
+  /**
+   * Full image set as data URLs (id → data URL). When provided, every entry is
+   * injected as `--agentskin-asset-<id>` and `hero` is also aliased to
+   * `--agentskin-art` (2a multi-asset). Takes precedence over heroDataUrl/heroPath.
+   */
+  imageDataUrls?: Record<string, string> | null;
   /** Absolute path to hero.webp (or null to skip file-based art injection). */
   heroPath?: string | null;
   /** Hero image as data URL (alternative to heroPath; used by engine). */
@@ -49,6 +55,8 @@ export interface InjectThemeResult {
   cssInjected: boolean;
   /** Whether the hero blob URL was set on <html> via --agentskin-art. */
   heroInjected: boolean;
+  /** 2a multi-asset: number of `--agentskin-asset-<id>` assets injected. */
+  imagesInjected: number;
   /** Verification read-back values. */
   verification: ThemeVerification | null;
   /** Whether all checks passed. */
@@ -60,7 +68,7 @@ export interface InjectThemeResult {
 // ---------------------------------------------------------------------------
 
 /**
- * Inject theme CSS + hero art into a live page via CDP, then verify.
+ * Inject theme CSS + art into a live page via CDP, then verify.
  * Best-effort: never throws — returns a result object with success=false
  * on failure so callers can decide whether to retry or report.
  */
@@ -70,6 +78,7 @@ export async function injectThemeViaCdp(
 ): Promise<InjectThemeResult> {
   const {
     css,
+    imageDataUrls,
     heroPath,
     heroDataUrl,
     hostClass,
@@ -77,12 +86,20 @@ export async function injectThemeViaCdp(
     verifyDelayMs = DEFAULT_VERIFY_DELAY_MS,
     verifyIntervalMs = 50,
   } = options;
-  const hasHero = !!(heroPath || heroDataUrl);
+  const imageSet = imageDataUrls && Object.keys(imageDataUrls).length > 0 ? imageDataUrls : null;
+  const hasImage = !!(imageSet || heroPath || heroDataUrl);
+  const hasHero = !!(heroPath || heroDataUrl || imageSet?.hero);
 
   try {
     await session.send('Runtime.enable');
   } catch {
-    return { cssInjected: false, heroInjected: false, verification: null, success: false };
+    return {
+      cssInjected: false,
+      heroInjected: false,
+      imagesInjected: 0,
+      verification: null,
+      success: false,
+    };
   }
 
   // --- Step 1: Host class ---
@@ -94,12 +111,19 @@ export async function injectThemeViaCdp(
     }
   }
 
-  // --- Step 2: Hero blob URL ---
+  // --- Step 2: Image blob URLs (multi-asset, else single hero) ---
   let heroInjected = false;
-  if (heroDataUrl) {
+  let imagesInjected = 0;
+  if (imageSet) {
+    const result = await transferImageSet(session, imageSet);
+    imagesInjected = result.injectedIds.length;
+    heroInjected = result.heroInjected;
+  } else if (heroDataUrl) {
     heroInjected = await injectHeroFromDataUrl(session, heroDataUrl);
+    imagesInjected = heroInjected ? 1 : 0;
   } else if (heroPath) {
     heroInjected = await injectHeroBlob(session, heroPath);
+    imagesInjected = heroInjected ? 1 : 0;
   }
 
   // --- Step 3: CSS via adoptedStyleSheets ---
@@ -115,10 +139,14 @@ export async function injectThemeViaCdp(
   if (!verification?.heroBlobActive && heroInjected) {
     // Hero might have been GC'd or page re-rendered; retry once.
     for (let i = 0; i < retries && !verification?.heroBlobActive; i++) {
-      if (heroDataUrl) {
-        await injectHeroFromDataUrl(session, heroDataUrl);
+      if (imageSet) {
+        const result = await transferImageSet(session, imageSet);
+        imagesInjected = result.injectedIds.length;
+        heroInjected = result.heroInjected;
+      } else if (heroDataUrl) {
+        heroInjected = await injectHeroFromDataUrl(session, heroDataUrl);
       } else if (heroPath) {
-        await injectHeroBlob(session, heroPath);
+        heroInjected = await injectHeroBlob(session, heroPath);
       }
       if (!cssInjected) {
         cssInjected = await injectCssAdopted(session, css);
@@ -129,7 +157,9 @@ export async function injectThemeViaCdp(
   }
 
   const success =
-    cssInjected && (!hasHero || heroInjected) && (verification?.heroBlobActive ?? !hasHero);
+    cssInjected &&
+    (!hasImage || (hasHero ? heroInjected : imagesInjected > 0)) &&
+    (verification?.heroBlobActive ?? !hasHero);
 
-  return { cssInjected, heroInjected, verification, success };
+  return { cssInjected, heroInjected, imagesInjected, verification, success };
 }

@@ -143,6 +143,7 @@ function makeMockEngineResult(overrides: Partial<InjectEngineResult> = {}): Inje
     layersInjected: 4,
     adapterApplied: true,
     heroInjected: true,
+    imagesInjected: 1,
     verification: {
       accent: '#0ff',
       agentskinArt: 'url(blob:abc)',
@@ -158,6 +159,7 @@ function makeMockLegacyResult(overrides: Partial<InjectThemeResult> = {}): Injec
   return {
     cssInjected: true,
     heroInjected: true,
+    imagesInjected: 1,
     verification: {
       accent: '#0ff',
       agentskinArt: 'url(blob:abc)',

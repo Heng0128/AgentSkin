@@ -124,7 +124,7 @@ assets/css/<agent>.css × 6（每个 agent 一份完整 CSS）
   "tags": ["dark", "minimal"],
   "license": "MPL-2.0",
   "probe": {
-    "tokenNamespaces": ["--agentskin-", "--vscode-", "--color-", "--cb-", "--semi-color-"],
+    "tokenNamespaces": ["--agentskin-", "--vscode-", "--color-", "--cb-", "--dbx-"],
     "styleContract": "THEME_SPEC.md#探针样式契约"
   }
 }
@@ -167,7 +167,7 @@ CDP 样式探针读取的样式集合，即主题**必须能被观测到**的样
 | TRAE Work | `--vscode-*` | VS Code fork |
 | QoderWork | `--color-*` (antd) | antd 体系 |
 | WorkBuddy | `--cb-*` | 腾讯体系 |
-| 豆包 | `--semi-color-*` | Semi Design（`--dbx-*` 为历史死 token，勿依赖） |
+| 豆包 | `--dbx-*` | 251-token 语义层（`--semi-color-*` 为遗留，勿用于新主题） |
 | Codex / ZCode | `--color-*` | 与 QoderWork 同族 |
 
 ### 2. Computed-style 字段全集（75 个）
@@ -184,3 +184,120 @@ CDP 样式探针读取的样式集合，即主题**必须能被观测到**的样
 ### 3. 主题包声明
 
 每个主题 `manifest.json` 应含 `probe` 块，声明本主题贡献的 token 命名空间并指向本契约（见上方示例 manifest）。
+
+---
+
+## 深度适配指南（手写 CSS，路线 B）
+
+> 生成器路线（A）只做"14 token 重映射 + 通用形态旋钮"，**无法**产出背景纹理、主视觉大图、品牌点缀、每应用差异化表面质感。要做"自己的" distinctive 主题，须走本节的**手写深度适配**——它本质是"基座生成 → 反复雕琢/多版本迭代 → 高精度、高适配、深度定制"的结果，而非逐字符手敲。
+> 本节合并自 `docs/THEME_AUTHORING_GUIDE.md` 第 4/5 节（消除文档源分裂）。技法示例以 WorkBuddy 端为范本，去 IP 化。
+
+### A. 四步技法
+
+1. **集中声明私有调色板**（每端 CSS 顶部 `:root`）：先声明你自己的语义色，后面全引用它，方便统一调：
+
+```css
+:root.agentskin-host-workbuddy {
+  --my-ink: #163f4b;
+  --my-teal: #16bfc4;
+  --my-pink: #ff8fc8;
+  --my-line: rgba(22,191,196,.24);
+  --my-shadow: rgba(12,105,119,.12);
+}
+```
+
+2. **覆写应用原生 token**（按端命名空间，见下方速查表）——"真正生效"的关键，目标应用自有一套设计 token，须在更高优先级作用域覆盖：
+
+```css
+html.agentskin-host-workbuddy body[data-application-name="workbuddy"] {
+  --cb-bg-primary: var(--my-surface) !important;
+  --cb-text-primary: var(--my-ink) !important;
+  --cb-vscode-button-background: var(--my-teal) !important;
+}
+```
+
+3. **铺背景**（hero + 纹理 + 点缀层）：
+
+```css
+/* hero：运行时注入的 --agentskin-art（单图，Blob URL） */
+html.agentskin-host-workbuddy body {
+  background:
+    linear-gradient(rgba(10,14,26,.86), rgba(10,14,26,.92)),
+    var(--agentskin-art) center / cover no-repeat !important;
+}
+
+/* 纹理：AgentSkin 无原生纹理变量；方案 a 把纹理 bake 进 hero，方案 b 自造 data-url 变量 */
+html.agentskin-host-workbuddy body {
+  --my-texture: url("data:image/png;base64,iVBOR..."); /* 小图平铺 */
+  background-image: var(--my-texture), var(--agentskin-art) !important;
+  background-size: 360px auto, cover !important;
+  background-repeat: repeat, no-repeat !important;
+}
+
+/* 点缀层：::before 光斑/网点（pointer-events:none，z-index 压低） */
+html.agentskin-host-workbuddy body::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(circle at 86% 8%, rgba(255,255,255,.5) 0 2px, transparent 3px);
+  background-size: 83px 83px; opacity: .35;
+}
+```
+
+4. **每表面精修**（对稳定表面单独调质感：毛玻璃、阴影、圆角、品牌描边）：
+
+```css
+html.agentskin-host-workbuddy .conversation-sidebar {
+  background: linear-gradient(180deg, rgba(...,.95), rgba(...,.92)),
+              var(--my-texture) center / 590px auto repeat !important;
+  border-right: 1px solid var(--my-line) !important;
+  box-shadow: 12px 0 32px var(--my-shadow) !important;
+  backdrop-filter: blur(18px) saturate(1.06) !important;
+}
+```
+
+### B. 作用域约定（避免"写了不生效"）
+
+优先级不够 = 主题不生效的头号原因。目标应用的 token 常写在 `:root` / `body` / `[data-theme=...]` 上，必须用**更高优先级且带 host 作用域**的选择器：
+
+| 端 | 推荐作用域选择器（实测） |
+|----|--------------------------|
+| workbuddy | `body[data-application-name="workbuddy"]` |
+| traework | `html.agentskin-host-traework body` / `html.agentskin-host-traework .类名` |
+| qoderwork | `html.agentskin-host-qoderwork:root` |
+| codex | `html.agentskin-host-codex` |
+| zcode | `html.agentskin-host-zcode` |
+| doubao | `html.agentskin-host-doubao:root` |
+
+> 规则：**不要裸 `:root{...}`**（会被应用自身 `:root[data-theme]` 反超）。一律加 `html.agentskin-host-<agent>` 或 `body[data-application-name=...]` 前缀，并对关键覆写加 `!important`。
+
+### C. 六端 token 命名空间 + 稳定表面速查表
+
+> "稳定表面"指 DOM 结构改动较少、可放心挂背景/阴影的容器。来源：参考主题 verification 选择器 + `themes/aurora-glass/assets/css/*.css` 实测。
+
+**WorkBuddy（`--cb-*` 体系，腾讯）**
+- 作用域：`body[data-application-name="workbuddy"]`
+- 原生 token：`--cb-bg-primary` / `--cb-text-primary` / `--cb-vscode-button-background` / `--cb-vscode-titleBar-*` / `--cb-vscode-scrollbarSlider-*` / `--cb-button-dark-*` / `--cb-markdown-hr-border-color` / `--cb-stroke-secondary`
+- 稳定表面：`.conversation-sidebar`、`.conversation-list`、`.chat-container`、`.wb-home-page`、`.wb-home-composer`、`.cb-markdown`、`.workbuddy-topbar`
+- 参考：aurora-glass `workbuddy.css` 顶部 90 行
+
+**TRAE Work（`--vscode-*` + `--vscode-icube-*` 体系，VS Code fork）**
+- 作用域：`html.agentskin-host-traework body`（壳层 token 写在 `body` 上）
+- 原生 token：`--vscode-foreground`、`--vscode-editor-background`、`--vscode-button-background`、`--vscode-focusBorder`、`--vscode-list-hoverBackground`、`--vscode-icube-colorBg1/2/3`、`--vscode-icube-colorLine1/2`、`--vscode-icube-colorBrand`、`--vscode-icube--bg-bg-overlay-l2/l3`
+- 稳定表面：`.task-list-base`（侧栏）、`.solo-lite-panel-border`、`.panel-content`、`.solo-lite-chat-panel-container`、`.solo-lite`（壳层 body class）
+
+**QoderWork（`--color-*` 体系，antd）**
+- 作用域：`html.agentskin-host-qoderwork:root`
+- 原生 token：`--color-primary`、`--color-primary-bg(-hover)`、`--color-text(-base/-secondary/-tertiary/-quaternary)`、`--color-border(-secondary/-tertiary)`、`--color-fill(-secondary/-tertiary/-quaternary)`、`--color-bg-container` / `--color-bg-elevated` / `--color-bg-layout` / `--color-bg-base`、`--color-link`
+- 稳定表面：`.agents-layout-root`、`.agents-sidebar`、`.agents-content-area`、`.agents-parchment-paper-surface`、`.sidebar-section-title`
+
+**Codex / ZCode（`--color-token-*` 体系，与 QoderWork 同族）**
+- 作用域：`html.agentskin-host-codex` / `html.agentskin-host-zcode`
+- 原生 token：`--color-token-bg-primary` / `-bg-secondary` / `-main-surface-primary` / `-side-bar-background` / `-foreground` / `-text-primary/-secondary/-tertiary` / `-input-background` / `-button-background` / `-border(-default/-heavy/-light)` / `-list-hover-background` / `-focus-border` / `-scrollbar-slider-background` / `-text-preformat-*`
+- 稳定表面：`aside.app-shell-left-panel`、`main.main-surface`、`header.app-header-tint`、`.composer-surface-chrome`
+- ZCode 是 Codex 派生壳，建议直接复用 codex.css 再核对差异（命名空间同族）。
+
+**豆包 Doubao（`--dbx-*` 体系，251-token，不是 `--semi-color-*`）**
+- 作用域：`html.agentskin-host-doubao:root`
+- 原生 token：`--dbx-bg-body-web` / `-bg-base-web` / `-bg-base-2/5` / `-bg-float` / `-bg-mask` / `-bg-blur-md` / `--dbx-text-primary/-secondary/-tertiary/-disable` / `--dbx-fill-*` / `--dbx-line-*`
+- 稳定表面：`.chat-container`、`.dbx-*` 语义容器（建议用 DevTools 实测当前版本类名）
+- 参考：aurora-glass `doubao.css`（`--dbx-` 为主，`--semi-color-` 为遗留）——本表与上文「探针样式契约」token 命名空间表一致。

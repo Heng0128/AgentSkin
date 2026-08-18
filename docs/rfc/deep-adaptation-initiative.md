@@ -76,6 +76,32 @@
 - 兼容性：保留现有手写静态选择器为 fallback，仅在锚点可用时升级。
 - **难点**：性能（不能每帧探测，需缓存 + 慢变化重试）、与 session pool 复用。
 
+#### 外部参考实现（CodeDrobe core PR#7 · Codex build 535 root landmark 漂移修复）
+
+> 一手证据来源：[CodeDrobe/core PR#7](https://github.com/CodeDrobe/core/pull/7)（`gaopengbin`，2026-08-01，**仍 Open**）。真实发生的选择器漂移案例，模式可直接抄进缺口1。
+
+**实证**（用 `codedrobe dom snapshot` 实测 Codex 新版 build 535）：
+- `main.main-surface` 不再匹配（root landmark 变了 → `#root main`）；
+- `aside.app-shell-left-panel`、`.composer-surface-chrome` 仍匹配（只有 root landmark 漂移）。
+
+**他们的解法（缺口1 的落地模板）：**
+```js
+// codex.mjs —— rootAny 从"单选择器" → "首选 + 兜底"
+rootAny: ["main.main-surface", "#root main"],
+```
+
+**配套回归测试（灵魂，防止退化回过度宽泛）：**
+```js
+assert.ok(!adapter.verification.rootAny.includes("main"));
+assert.ok(!adapter.verification.rootAny.some((s) => s.includes('[role="main"]')));
+```
+
+**对本缺口1 的增量（评审依据）：**
+1. **首选 landmark + 锚定 `#root` 的严格兜底 + 拒绝裸 `main`/`[role="main"]`**（会被 route 级 aux main 误命中）——正是我们手册 §5 的"稳定表面 + 不裸选"哲学，他们用**代码 + 回归测试**强制了。缺口1 应照此模式实现：`rootAny: [稳定首选, 严格兜底]` + 回归断言"不得出现过宽裸选择器"。
+2. **`lastVerified` 版本元数据**（`win32: { appVersion, build, verifiedAt }`）——每次验证记录应用版本，就是**缺口3 版本漂移检测的种子**，可直接对齐。
+
+> 社区通用兜底技巧（PR#7 评论区 `thc282`）：`main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"])` → fallback `main, [role="main"]`。
+
 ### 4.2 缺口 2 · 高定制多素材注入【需 RFC】
 > 升级自旧"纹理一等支持"。目标是把主题从"单背景 + 调色"提升为"多素材汇编 + 面级布局 + 透明可动"。
 
@@ -99,6 +125,22 @@
 - 扩展 `targets.<agent>.verification`：新增 `contexts.when`（命中条件）+ 复用 `required`/`recommended`。
 - 引擎侧：应用改版后，`required` 探测失败 → 记录"版本漂移"状态 → 通知/降级，而非沿用失效 CSS。
 - 兼容：旧包不填 `contexts` 时不触发，向后兼容。
+
+#### 外部参考实现（CodeDrobe core · `lastVerified` 版本种子 + verification 预检）
+
+> 一手证据来源：[CodeDrobe/core PR#7](https://github.com/CodeDrobe/core/pull/7) 的 `lastVerified` 元数据 + core README 的 verification 机制。这告诉我们缺口3 的**最小种子**和**运行时行为**该长什么样。
+
+**CodeDrobe 的做法（缺口3 落地参考）：**
+```js
+// 每次验证通过后记录应用版本（版本漂移检测的种子）
+lastVerified: {
+  win32: { appVersion: "26.727.6591", build: "535", verifiedAt: "<ISO>" }
+}
+```
+
+- **运行时验证而非仅声明**：inject 前 `probe`（预检 required/recommended）、inject 后 `verify`（复核注入），**失败即回滚**（可逆）。这与我们缺口3"告警/降级而非静默崩"目标一致，且更早：他们直接**失败回滚**。
+- **漂移闭环 = lastVerified 比对**：当 `probe` 的 required 选择器命中但与 `lastVerified` 记录的应用版本不符 → 判定版本漂移 → 触发重新适配（对齐他们"改版后重读 DOM 重新生成"的 Skill 工作流）或告警。
+- 对我们 schema 的含义：`contexts.when` 结构（命中条件）可与 `lastVerified.appVersion`/`build` 字段配合——前者做"当前版本是否适配"的结构化判断，后者记录"上次验证通过时的版本"，两者构成完整的漂移检测闭环。
 
 ### 4.4 缺口 4 · 文档收敛（零风险 P0）
 - 统一口径：豆包实际用 `--dbx-*`（251-token 生态主导），`--semi-color-*` 为遗留。

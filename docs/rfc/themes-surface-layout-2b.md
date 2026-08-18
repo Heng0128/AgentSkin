@@ -95,6 +95,28 @@
 - ❌ 本 RFC **不做**运行时"自由拖动/碰撞/宠物行为/复杂 CSS 动画引擎"——那是 2c 的透明可动 overlay 运行时。
 - ✅ 本 RFC 只做"静态定位 + 简单预置动效（fade/float/breath）"占位，`motion` 字段先留 `null`/已知枚举，复杂动效 2c 扩展。
 
+### 2.5 外部参考实现（CodeDrobe PR#3 · caishen）
+
+> 一手证据来源：[CodeDrobe/skills PR#3](https://github.com/CodeDrobe/skills/pull/3)（`ChannelerH`，2026-07-22，"Caishen Readable Codex theme example"，**未合并**）。公开源码，非 IP 素材，可作结构范本。这是"高定制主题怎么产"的**已开源可复制样例**，与 2a/2b 规划逐点对应。
+
+**已验证实现的技法（对照本 RFC）：**
+
+| caishen 写法 | 对应本 RFC / 2a | 可吸收点 |
+|---|---|---|
+| `:root.codedrobe-host-codex` 私有调色板 `--caishen-*` | 2b 锚点面 + 手册 §4.1 | 集中声明语义色，后文全引用 |
+| `--color-token-*` 原生 token 覆写（bg/text/border/input/hover/link/focus） | 手册 §5 Codex 命名空间 | 覆写层与布局层解耦 |
+| `body` `linear-gradient + var(--codedrobe-image-texture) repeat` 铺纹理 | **2b 纹理变量** | CodeDrobe **已有 `--codedrobe-image-texture` 一等纹理变量**，非仅 hero → 佐证 2a 立项"纹理缺位"判断正确 |
+| `aside.app-shell-left-panel` / `main.main-surface` / `.composer-surface-chrome` 每表面精修 | 2b 锚点面 = 稳定表面 | 与 §5 稳定表面速查表一致 |
+| `[role="main"]:has([data-testid="home-icon"])` 用 `--codedrobe-image-hero` 铺主视觉 | 2a hero 别名 + 2b 锚点 | **`:has()` 做"路由上下文"探测**——首页才铺主视觉，是缺口3 版本漂移的轻量替代 |
+| `@media (prefers-reduced-motion: reduce)` 降级动画 | 2c 低配降级 | 手册未写，**应补进 2c 边界** |
+| `@media (max-width: 820px)` 响应式折叠 | 2b 尺寸自适应 | 可吸收 |
+
+**对本 RFC 的直接增量（评审依据）：**
+1. **`--codedrobe-image-texture` 已存在** → 缺口2b 的"纹理+主视觉双图"在 CodeDrobe 已落地，AgentSkin 2a 应保留此方向（当前仅 `--agentskin-art` 单 hero，正是差距）。
+2. **`:has()` 上下文探测**可作 `anchor` 的增强选择器（如 `[role="main"]:has([data-testid="home-icon"])`），让"同一素材只在特定路由/上下文出现"，补强 §2.1 锚点分级。
+
+> ⚠️ 仅学结构，不复制其 CSS 本体（依赖 `--codedrobe-image-*` 变量与 `html.codedrobe-host-codex` 作用域，跨引擎不可复用）。
+
 ---
 
 ## 3. 边界（本 RFC 明确不做）

@@ -13,7 +13,7 @@
  * ignored so the validator stays forward-compatible):
  *   type, enum, const, required, properties, additionalProperties (bool),
  *   items (single schema), oneOf, minLength, maxLength, pattern,
- *   minimum, maximum, $ref / $defs, format (lenient URI/email check).
+ *   minimum, maximum, maxProperties, $ref / $defs, format (lenient URI/email check).
  *
  * Additionally performs the cross-field checks the JSON Schema cannot
  * express (SPEC-3):
@@ -65,6 +65,7 @@ interface JsonSchema {
   pattern?: string;
   minimum?: number;
   maximum?: number;
+  maxProperties?: number;
   $ref?: string;
   $defs?: Record<string, JsonSchema>;
   format?: string;
@@ -225,6 +226,12 @@ function validateNode(
           validateNode(record[key], schema.additionalProperties, `${path}.${key}`, errors, defs);
         }
       }
+    }
+    if (schema.maxProperties !== undefined && Object.keys(record).length > schema.maxProperties) {
+      errors.push({
+        path,
+        message: `must have at most ${schema.maxProperties} properties`,
+      });
     }
   }
 }

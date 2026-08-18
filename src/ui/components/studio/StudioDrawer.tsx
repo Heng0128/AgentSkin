@@ -22,8 +22,53 @@ import { useWallpaperStore } from '@/stores/wallpaperStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 import type { UiMessages } from '@shared/i18n';
-import { AGENT_IDS, AGENT_META, type AgentId } from '@shared/types';
-import { Image, Layers, LayoutGrid, Package } from 'lucide-react';
+import { AGENT_IDS, AGENT_META, AGENT_SECURITY_PROFILES, type AgentId } from '@shared/types';
+import { Image, Layers, LayoutGrid, Lock, Package, Shield, ShieldCheck } from 'lucide-react';
+
+// ---------------------------------------------------------------------------
+// Static agent profile data — avoids adding IPC channels. Token counts and
+// brand colors sourced from agents-profiles/_profiles-summary.json and
+// per-agent <id>-profile.json (tokens.core.dark.accent).
+// ---------------------------------------------------------------------------
+
+interface AgentProfileTokens {
+  light: number;
+  dark: number;
+  categories: number;
+}
+
+const AGENT_TOKEN_COUNTS: Record<string, AgentProfileTokens> = {
+  // Token counts sourced from agents-profiles/_profiles-summary.json (styleVars.dark).
+  // Categories count from the same file's categories array length.
+  codex: { light: 1246, dark: 1255, categories: 16 },
+  doubao: { light: 1199, dark: 2297, categories: 15 },
+  traework: { light: 4614, dark: 4613, categories: 16 },
+  workbuddy: { light: 3560, dark: 3617, categories: 16 },
+  qoderwork: { light: 132, dark: 141, categories: 15 },
+  zcode: { light: 390, dark: 410, categories: 15 },
+};
+
+// Brand colors sourced from per-agent <id>-profile.json (tokens.core.dark.accent).
+// workbuddy uses CSS variable var(--wb-palette-brand-8); fallback to Microsoft blue.
+const AGENT_BRAND_COLORS: Record<string, { dark: string; light: string }> = {
+  codex: { dark: '#40c977', light: '#40c977' },
+  doubao: { dark: '#35a04f', light: '#27ce6e' },
+  traework: { dark: '#0c0c0d', light: '#0c0c0d' },
+  workbuddy: { dark: '#0078d4', light: '#0078d4' },
+  qoderwork: { dark: '#8ee5a1', light: '#8ee5a1' },
+  zcode: { dark: '#001d3d', light: '#001d3d' },
+};
+
+type StrategyKey =
+  | 'studioProfileHighTokens'
+  | 'studioProfileMediumTokens'
+  | 'studioProfileLowTokens';
+
+function getStrategyKey(tokens: number): StrategyKey {
+  if (tokens >= 1000) return 'studioProfileHighTokens';
+  if (tokens >= 100) return 'studioProfileMediumTokens';
+  return 'studioProfileLowTokens';
+}
 
 export function StudioDrawer({ t }: { t: UiMessages }) {
   const { drawer, setDrawerCollapsed } = useWorkspaceStore();
@@ -130,6 +175,62 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                       );
                     })}
                   </div>
+
+                  {/* Agent profile summary — visible when an agent is selected */}
+                  {(() => {
+                    const tokens = AGENT_TOKEN_COUNTS[newAgent];
+                    const brand = AGENT_BRAND_COLORS[newAgent];
+                    if (!tokens || !brand) return null;
+                    const strategyKey = getStrategyKey(tokens.dark);
+                    return (
+                      <div className="flex flex-col gap-[var(--space-1)] p-[var(--space-2)] rounded-[2px] border border-[var(--bg-3)]">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono text-[length:10px] text-[var(--fg-2)] uppercase tracking-wider">
+                            {t.studioProfileSummary}
+                          </span>
+                          <span className="font-mono text-[length:10px] text-[var(--fg-3)] tabular-nums">
+                            {AGENT_META[newAgent]?.displayName ?? newAgent}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-[var(--space-2)]">
+                          {/* Brand color swatches */}
+                          <div className="flex items-center gap-[var(--space-1)]">
+                            <span
+                              className="size-4 rounded-[var(--r-micro)] border border-[var(--border-subtle)]"
+                              style={{ background: brand.dark }}
+                              title={`${t.studioProfileAccent} (dark)`}
+                            />
+                            <span
+                              className="size-4 rounded-[var(--r-micro)] border border-[var(--border-subtle)]"
+                              style={{ background: brand.light }}
+                              title={`${t.studioProfileAccent} (light)`}
+                            />
+                          </div>
+                          <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+                            {t.studioProfileTokens}:
+                          </span>
+                          <span className="font-mono text-[length:10px] text-[var(--fg-0)] tabular-nums">
+                            {tokens.dark}
+                          </span>
+                          <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+                            {t.studioProfileCategories}:
+                          </span>
+                          <span className="font-mono text-[length:10px] text-[var(--fg-0)] tabular-nums">
+                            {tokens.categories}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-[var(--space-1)]">
+                          <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+                            {t.studioProfileStrategy}:
+                          </span>
+                          <span className="font-mono text-[length:10px] text-[var(--fg-1)]">
+                            {t[strategyKey]}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className="flex gap-[var(--space-1)]">
                     <button
                       type="button"
@@ -285,9 +386,36 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
 
           {agentsOpen && (
             <div className="flex flex-col gap-[var(--space-1)] mt-[var(--space-1)]">
+              {/* Security posture sub-header */}
+              <span className="font-mono text-[length:10px] text-[var(--fg-3)] px-[var(--space-1)]">
+                {t.studioSecurityLabel}
+              </span>
+
               {AGENT_IDS.map((id) => {
                 const meta = AGENT_META[id as AgentId];
                 const status = appStatusFor(id);
+                const sec = AGENT_SECURITY_PROFILES[id as AgentId];
+
+                // Build tooltip: "Context Isolation: ON / Sandbox: ON / WebSecurity: strict"
+                const tooltipParts: string[] = [];
+                if (sec) {
+                  tooltipParts.push(
+                    `${t.studioSecurityContextIsolation}: ${sec.contextIsolation ? t.studioSecurityEnabled : t.studioSecurityDisabled}`,
+                  );
+                  tooltipParts.push(
+                    `${t.studioSecuritySandbox}: ${sec.sandbox ? t.studioSecurityEnabled : t.studioSecurityDisabled}`,
+                  );
+                  tooltipParts.push(
+                    `${t.studioSecurityWebSecurity}: ${
+                      sec.webSecurity === 'strict'
+                        ? t.studioSecurityStrict
+                        : sec.webSecurity === 'standard'
+                          ? t.studioSecurityStandard
+                          : t.studioSecurityDisabled
+                    }`,
+                  );
+                }
+
                 return (
                   <div
                     key={id}
@@ -297,6 +425,33 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                     <span className="font-mono text-[length:10px] text-[var(--fg-0)] truncate flex-1">
                       {meta.displayName}
                     </span>
+
+                    {/* Security posture icons */}
+                    {sec && (
+                      <span
+                        className="flex items-center gap-[2px]"
+                        title={tooltipParts.join(' / ')}
+                      >
+                        <Lock
+                          className="size-[10px]"
+                          style={{
+                            color: sec.contextIsolation ? 'var(--cr-ok)' : 'var(--fg-3)',
+                          }}
+                        />
+                        <Shield
+                          className="size-[10px]"
+                          style={{
+                            color: sec.sandbox ? 'var(--cr-ok)' : 'var(--fg-3)',
+                          }}
+                        />
+                        {sec.webSecurity === 'strict' ? (
+                          <ShieldCheck className="size-[10px]" style={{ color: 'var(--cr-ok)' }} />
+                        ) : (
+                          <ShieldCheck className="size-[10px]" style={{ color: 'var(--fg-3)' }} />
+                        )}
+                      </span>
+                    )}
+
                     <span
                       className="size-[5px] rounded-[2px]"
                       style={{

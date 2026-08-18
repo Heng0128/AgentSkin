@@ -124,7 +124,7 @@ export interface CdpFanoutDeps {
     appId: AgentId,
     bundle: ThemeBundle,
     targetTheme: ResolvedThemeTarget,
-    heroDataUrl: string | null,
+    imageDataUrls: Record<string, string> | null,
   ) => Promise<InjectEngineResult | null>;
   /** Logger sink (usually `AgentEngineService.log`). */
   log: (line: string) => void;
@@ -272,7 +272,16 @@ export async function hardeningPass(
     }
   }
 
-  const heroDataUrl = targetTheme.imageDataUrls?.hero ?? targetTheme.artDataUrl ?? null;
+  // 2a multi-asset: resolve the FULL image set (not just hero) the same way
+  // the secondary-inject and renderer-payload paths do — imageDataUrls wins,
+  // artDataUrl backfills hero when imageDataUrls lacks it.
+  const imageDataUrls = {
+    ...(targetTheme.imageDataUrls ?? {}),
+    ...(!targetTheme.imageDataUrls?.hero && targetTheme.artDataUrl
+      ? { hero: targetTheme.artDataUrl }
+      : {}),
+  };
+  const resolvedImages = Object.keys(imageDataUrls).length > 0 ? imageDataUrls : null;
   let engineInjected = 0;
   let legacyInjected = 0;
   let watchdogSkipped = 0;
@@ -343,7 +352,7 @@ export async function hardeningPass(
             appId,
             bundle,
             targetTheme,
-            heroDataUrl,
+            resolvedImages,
           );
 
           if (engineResult) {
@@ -352,6 +361,7 @@ export async function hardeningPass(
               deps.log(
                 `[hardening] ${appId}: ENGINE [${target.type}] layers=${engineResult.layersInjected} ` +
                   `adapter=${engineResult.adapterApplied} hero=${engineResult.heroInjected} ` +
+                  `images=${engineResult.imagesInjected} ` +
                   `accent=${engineResult.verification?.accent || '?'}`,
               );
             }
@@ -360,7 +370,7 @@ export async function hardeningPass(
             // Page targets can still fall back to the core's CSS.
             const result = await injectThemeViaCdp(session, {
               css: targetTheme.css,
-              heroDataUrl,
+              imageDataUrls: resolvedImages,
               hostClass: hostClassFor(appId),
               retries: 1,
               verifyDelayMs: DEFAULT_VERIFY_DELAY_MS,
@@ -369,7 +379,7 @@ export async function hardeningPass(
             if (!firstSession) {
               deps.log(
                 `[hardening] ${appId}: LEGACY [page] css=${result.cssInjected} ` +
-                  `hero=${result.heroInjected} ` +
+                  `hero=${result.heroInjected} images=${result.imagesInjected} ` +
                   `verified=${result.verification?.heroBlobActive ?? 'n/a'} ` +
                   `accent=${result.verification?.accent || '?'}`,
               );
@@ -471,7 +481,7 @@ export async function hardeningPass(
         pageTargetUrl: primaryPage.webSocketDebuggerUrl,
         bundle,
         targetTheme,
-        heroDataUrl,
+        imageDataUrls: resolvedImages,
         epoch,
         deps: watchdogDeps,
       });

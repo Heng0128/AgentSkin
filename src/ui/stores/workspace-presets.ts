@@ -26,15 +26,50 @@ export interface WorkspacePreset {
 }
 
 /**
- * Preset identifier. Currently only 'default' exists as Studio is
- * single-window only. Retained for backward compatibility.
+ * Preset identifier. The five built-in presets cover the canonical
+ * workspace layouts — each seeds dock / inspector / drawer differently.
  */
-export type WorkspacePresetId = 'default';
+export type WorkspacePresetId = 'default' | 'compare' | 'multi-agent' | 'generator' | 'focus';
 
 export const WORKSPACE_PRESETS: WorkspacePreset[] = [
-  { id: 'default', label: 'Default', viewMode: 'single' },
-  { id: 'compare', label: 'Compare', viewMode: 'single' },
-  { id: 'multi-agent', label: 'Multi-Agent', viewMode: 'single' },
-  { id: 'generator', label: 'Generator', viewMode: 'single' },
-  { id: 'focus', label: 'Focus (PR)', viewMode: 'single' },
+  {
+    id: 'default',
+    label: 'Default',
+    viewMode: 'single',
+    dock: { open: true, height: 320 },
+    inspector: { collapsed: true, width: 260 },
+    drawer: { collapsed: false, width: 280 },
+  },
+  {
+    id: 'compare',
+    label: 'Compare',
+    viewMode: 'single',
+    dock: { open: true, height: 320 },
+    inspector: { collapsed: false, width: 300 },
+    drawer: { collapsed: false, width: 300 },
+  },
+  {
+    id: 'multi-agent',
+    label: 'Multi-Agent',
+    viewMode: 'single',
+    dock: { open: true, height: 280 },
+    inspector: { collapsed: false, width: 240 },
+    drawer: { collapsed: true, width: 240 },
+  },
+  {
+    id: 'generator',
+    label: 'Generator',
+    viewMode: 'single',
+    dock: { open: false, height: 0 },
+    inspector: { collapsed: false, width: 320 },
+    drawer: { collapsed: false, width: 340 },
+  },
+  {
+    id: 'focus',
+    label: 'Focus',
+    viewMode: 'single',
+    dock: { open: false, height: 0 },
+    inspector: { collapsed: true, width: 0 },
+    drawer: { collapsed: true, width: 0 },
+  },
 ];

@@ -58,6 +58,16 @@ export interface ThemeBackgroundAssets {
 export interface ThemeAssets {
   /** @deprecated Use `manifest.hero` instead — see ThemeBackgroundAssets. */
   background?: ThemeBackgroundAssets;
+  /**
+   * (2a multi-asset) Additional coordinated images beyond the hero backdrop.
+   * id → relative file path (png/jpeg/webp/gif). Each is embedded into the
+   * bundle's `assets.images` and exposed to the injected CSS as
+   * `--agentskin-asset-<id>`. The special id `hero` is the backdrop (alias of
+   * `manifest.hero`, resolved by the installer); `icon`/`preview` are
+   * reserved for the system-managed cover assets.
+   * RFC themes-asset-injection-2a §2.1.
+   */
+  images?: Record<string, string>;
 }
 
 /**
