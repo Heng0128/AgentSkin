@@ -458,7 +458,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
       className="flex items-center gap-2  pb-1 pt-2 font-mono text-[10px] font-semibold "
       style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)' }}
     >
-      <span className="size-[3px] rounded-full" style={{ background: 'var(--primary)' }} />
+      <span className="size-[3px] rounded-[2px]" style={{ background: 'var(--primary)' }} />
       <span>{children}</span>
     </div>
   );

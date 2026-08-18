@@ -38,12 +38,12 @@ export function InspectorFingerprint({ t }: { t: UiMessages }) {
         style={{ borderRadius: 'var(--r-xs)' }}
       >
         <div className="mb-1 flex items-center gap-[var(--space-1)]">
-          <span className="size-[3px] rounded-full bg-[var(--accent)]" />
+          <span className="size-[3px] rounded-[2px] bg-[var(--accent)]" />
           <span className="font-mono text-[10px] font-semibold   text-[var(--fg-2)]">
             {t.studioDimensions}
           </span>
           <span
-            className="ml-auto rounded-[var(--r-micro)] px-1 py-0 font-mono text-[10px] font-bold"
+            className="ml-auto rounded-[2px] px-1 py-0 font-mono text-[10px] font-bold"
             style={{ background: modeBg, color: modeFg }}
           >
             {sig.color.mode.toUpperCase()}
@@ -67,7 +67,7 @@ export function InspectorFingerprint({ t }: { t: UiMessages }) {
                 key={c}
                 role="img"
                 aria-label={`${t.studioDimColor} ${c}`}
-                className="inline-block size-[10px] rounded-[var(--r-micro)] border border-[var(--border-subtle)]"
+                className="inline-block size-[10px] rounded-[2px] border border-[var(--border-subtle)]"
                 style={{ background: c }}
                 title={c}
               />

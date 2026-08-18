@@ -1061,7 +1061,10 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     const finalPalette = imageToThemeAccent
       ? { ...imageToThemePalette, accent: imageToThemeAccent }
       : imageToThemePalette;
-    get().setPaletteLoaded(finalPalette);
+    // ThemeColorsFromImage is structurally Record<string, string> (mode is a
+    // string subtype); cast at the boundary since setPaletteLoaded's param is
+    // intentionally wide to also accept semanticColorsToPalette() output.
+    get().setPaletteLoaded(finalPalette as unknown as Record<string, string>);
     set({
       imageToThemeStatus: 'idle',
       imageToThemePalette: null,

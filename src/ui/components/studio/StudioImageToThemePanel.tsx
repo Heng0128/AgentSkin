@@ -303,7 +303,9 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
             <span className="font-mono text-[10px] text-[var(--fg-3)]">{t[group.labelKey]}</span>
             <div className="flex flex-wrap gap-1">
               {group.tokens.map((token) => {
-                const value = imageToThemePalette[token];
+                // ThemeColorsFromImage has no index signature; tokens are a
+                // known-valid subset of keys, so a cast here is safe.
+                const value = (imageToThemePalette as unknown as Record<string, string>)[token];
                 if (!value) return null;
                 const isExpanded = expandedToken === token;
                 return (

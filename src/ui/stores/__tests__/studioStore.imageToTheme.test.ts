@@ -12,6 +12,7 @@
  * without Electron IPC.
  */
 
+import type { ThemeColorsFromImage } from '@shared/types/theme';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
@@ -237,7 +238,7 @@ describe('studioStore — image→theme', () => {
     // Full palette is also preserved in colors.
     expect(state.toolOverrides?.colors).toMatchObject({
       accent: '#override',
-      background: '#fff',
+      background: mockPalette.background,
     });
   });
 

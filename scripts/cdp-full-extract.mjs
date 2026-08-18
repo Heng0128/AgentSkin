@@ -14,21 +14,27 @@
  *   node scripts/cdp-full-extract.mjs --all  --out agents-raw-data
  */
 
+import { execFile } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { promisify } from 'node:util';
+import {
+  findRunningPids,
+  findTargets,
+  getAdapter,
+  listAdapters,
+  resolveDebugPorts,
+} from '../src/engine/src/index.mjs';
+
+const execFileAsync = promisify(execFile);
 
 // ============== 配置 ==============
-const AGENT_PORTS = {
-  codex: 58554,
-  doubao: 61055,
-  qoderwork: 53137,
-  traework: 56211,
-  workbuddy: 57440,
-  zcode: 55435,
-};
+// 端口不再硬编码——复用项目的三层发现策略（DevToolsActivePort 文件 → PID argv → netstat
+// → /json/list + matchTarget），与 src/shared/cdp-discovery.ts 的 resolveLivePort
+// 同源，避免维护过期端口表。
 
 const DEFAULT_MAX_DOM_NODES = 2000;
-const DEFAULT_MAX_DEPTH = 12;
+const DEFAULT_MAX_DEPTH = 24;
 const THEME_SWITCH_WAIT = 600; // ms to wait after theme switch
 
 // ============== per-Agent 时序配置表（审计 A-11 / R-21） ==============
@@ -395,7 +401,7 @@ class CdpClient {
 async function captureDomTree(client, maxNodes = 2000, maxDepth = 12) {
   const extractExpr = `
     (() => {
-      const SKIP = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'LINK', 'HEAD', 'TITLE', 'SVG', 'PATH', 'DEFS', 'CLIPPATH', 'USE', 'SYMBOL', 'G']);
+      const SKIP = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'LINK', 'BASE', 'HEAD', 'TITLE', 'SVG', 'PATH', 'DEFS', 'CLIPPATH', 'USE', 'SYMBOL', 'G']);
       const maxNodes = ${maxNodes};
       const maxDepth = ${maxDepth};
       let count = 0;
@@ -694,24 +700,63 @@ async function captureAllStylesheets(client) {
 }
 
 /**
- * 获取 :root 元素上所有 CSS 自定义属性的计算值
+ * 获取根主题变量。策略为「聚合」而非单一宿主：
+ *
+ * 1. `documentElement` 的计算变量（覆盖 `:root` 规则 / html inline / 继承）。非空即返回 —— 这是
+ *    绝大多数 agent（codex/doubao/traework/zcode）的形态。
+ * 2. 若为 0（或 `!fallback` 被关闭），聚合三路来源，解决 VS Code 家族（WorkBuddy/QoderWork）
+ *    变量按组件分散内联在多个 slot 元素 + stylesheet 规则里的问题：
+ *    - 全 DOM（含 open shadowRoot）元素的 inline `style` 里的 `--var`
+ *    - `document.styleSheets` 中 `:root` / `body` 选择器下声明的 `--var`
+ *    聚合按「首次出现即保留」合并，附 `__host` 元信息标识来源形态，供上层区分
+ *    「:root 原生」/「VS Code 聚合」/「真无变量」。
  */
-async function getRootComputedVariables(client) {
+export async function getRootComputedVariables(client, fallback = true) {
   const expr = `
     (() => {
-      const cs = getComputedStyle(document.documentElement);
+      const cap = (s) => (s && s.trim()) ? s.trim().slice(0, 200) : null;
       const vars = {};
-      // 遍历所有属性找到 CSS 变量
-      for (let i = 0; i < cs.length; i++) {
-        const prop = cs[i];
-        if (prop.startsWith('--')) {
-          const val = cs.getPropertyValue(prop);
-          if (val && val.trim()) {
-            vars[prop.trim()] = val.trim().slice(0, 200);
+      const put = (k, v) => { if (v != null && vars[k] == null) vars[k] = v; };
+      const collectComputed = (el) => { const cs = getComputedStyle(el); for (let i = 0; i < cs.length; i++) { const p = cs[i]; if (p.startsWith('--')) put(p.trim(), cap(cs.getPropertyValue(p))); } };
+      // 1) documentElement 计算变量：覆盖 :root 规则 / html inline / var() 继承值。
+      //    对 codex/doubao/traework/zcode 等即完整主题变量集，走原生快路径返回。
+      collectComputed(document.documentElement);
+      const rootCount = Object.keys(vars).length;
+      if (rootCount && ${String(fallback)}) return JSON.stringify(vars);
+      // 2) documentElement 为空 或 fallback=false → 聚合三路来源。VS Code 家族
+      //    （WorkBuddy/QoderWork）的变量按组件分散在 slot 的 inline style 与样式表
+      //    规则里，不集中在 :root；仅靠 documentElement 会误判为「无变量」。
+      const inlineRe = /(--[a-zA-Z0-9_-]+)\\s*:\\s*([^;]*)/g;
+      for (const el of document.querySelectorAll('*')) {
+        const st = (el.getAttribute && el.getAttribute('style')) || '';
+        if (!st.includes('--')) continue;
+        let m; inlineRe.lastIndex = 0;
+        while ((m = inlineRe.exec(st)) !== null) { put(m[1].trim(), cap(m[2])); }
+      }
+      // 3) stylesheet :root/body 规则里的变量声明
+      const tryRules = (sheets) => {
+        for (const sheet of sheets) {
+          let rules; try { rules = sheet.cssRules || sheet.rules; } catch { continue; }
+          if (!rules) continue;
+          for (const r of rules) {
+            if (r.type) { try { const er = r.cssRules || r.rules; if (er) tryRules([{ cssRules: er }]); } catch {} }
+            try {
+              if (!r.selectorText) continue;
+              if (!/:root|^body|^html/i.test(r.selectorText)) continue;
+              const hr = /(--[a-zA-Z0-9_-]+)\\s*:\\s*([^;{}]*)/g;
+              let m; while ((m = hr.exec(r.style.cssText)) !== null) put(m[1].trim(), cap(m[2]));
+            } catch {}
           }
         }
-      }
-      return JSON.stringify(vars);
+      };
+      tryRules(document.styleSheets);
+      const totalCount = Object.keys(vars).length;
+      const hostKind = totalCount === 0
+        ? 'none'
+        : (rootCount === 0 ? 'aggregated-inline-or-rules' : 'merged-root-plus-distributed');
+      const out = { ...vars };
+      out['__host'] = JSON.stringify({ kind: hostKind, n: Object.keys(vars).length });
+      return JSON.stringify(out);
     })()
   `;
 
@@ -727,9 +772,19 @@ async function getRootComputedVariables(client) {
   }
 }
 
-/**
- * 获取指定主题下 :root 的 CSS 变量值（先切换，再读，再恢复）
- */
+/** 排除诊断键 `__host` 后的 CSS 变量条目数。 */
+function rootVarsCount(vars) {
+  let n = 0;
+  for (const k of Object.keys(vars)) {
+    if (k !== '__host') n++;
+  }
+  return n;
+}
+
+/** 排除诊断键 `__host` 后的 entries（供 allVars 归一化）。 */
+function rootVarsEntries(vars) {
+  return Object.entries(vars).filter(([k]) => k !== '__host');
+}
 async function _getRootVariablesForTheme(client, scheme) {
   // 先记录当前 prefers-color-scheme
   const resetExpr = `
@@ -1036,33 +1091,167 @@ async function probeApiFingerprint(client) {
   }
 }
 
+// ============== 端口发现（复用项目策略，见 src/shared/cdp-discovery.ts） ==============
+// 三层链路：DevToolsActivePort 文件（resolveDebugPorts）→ PID argv（wmic）→ netstat 回环。
+// 每层都以 findTargets（/json/list + adapter.matchTarget）确认为准。
+
+async function probeTargetsOnPort(adapter, port) {
+  try {
+    const targets = await findTargets(adapter, port, 1200);
+    return targets.length ? targets : null;
+  } catch {
+    return null;
+  }
+}
+
+async function explicitPortsFromPids(pids) {
+  if (process.platform !== 'win32' || !pids.length) return [];
+  let out = '';
+  try {
+    out = String(
+      (await execFileAsync('wmic', ['process', 'get', 'processid,commandline', '/format:list']))
+        .stdout ?? '',
+    );
+  } catch {
+    return [];
+  }
+  const wanted = new Set(pids);
+  const ports = [];
+  for (const block of out.split(/\r?\n\s*\r?\n/)) {
+    const pidMatch = /ProcessId=(\d+)/.exec(block);
+    if (!pidMatch || !wanted.has(Number(pidMatch[1]))) continue;
+    const cli = /CommandLine=(.*)/s.exec(block)?.[1];
+    if (!cli) continue;
+    const port = /--remote-debugging-port=(\d+)/.exec(cli)?.[1];
+    if (port && Number(port) >= 1024 && Number(port) <= 65535) ports.push(Number(port));
+  }
+  return [...new Set(ports)].sort((a, b) => a - b);
+}
+
+async function listeningPortsForPids(pids) {
+  if (process.platform !== 'win32' || !pids.length) return [];
+  let out = '';
+  try {
+    out = String((await execFileAsync('netstat', ['-ano'])).stdout ?? '');
+  } catch {
+    return [];
+  }
+  const wanted = new Set(pids.map(String));
+  const ports = new Set();
+  for (const raw of out.split('\n')) {
+    const line = raw.trim();
+    if (!line.includes('LISTENING')) continue;
+    const parts = line.split(/\s+/);
+    if (parts.length < 5) continue;
+    if (!wanted.has(parts[parts.length - 1])) continue;
+    const local = parts[1];
+    if (!local.startsWith('127.0.0.1:') && !local.startsWith('[::1]:')) continue;
+    const colon = local.lastIndexOf(':');
+    if (colon < 0) continue;
+    const port = Number(local.slice(colon + 1));
+    if (port >= 1024 && port <= 65535) ports.add(port);
+  }
+  return [...ports];
+}
+
+/**
+ * 复用项目 CDP 端口发现策略，返回 { port, adapter, targets }。
+ * 显式 --port 时仅验证并返回；否则走三层自动发现。
+ */
+async function discoverLivePort(agentName, explicitPort = null) {
+  const adapter = getAdapter(agentName);
+  if (explicitPort) {
+    const tagets = await probeTargetsOnPort(adapter, explicitPort);
+    if (tagets) return { port: explicitPort, adapter, targets: tagets };
+    throw new Error(`[${agentName}] 显式端口 ${explicitPort} 无匹配 CDP target`);
+  }
+
+  // Layer 1: DevToolsActivePort 文件
+  const filePorts = await resolveDebugPorts(adapter, process.platform);
+  for (const port of filePorts) {
+    const targets = await probeTargetsOnPort(adapter, port);
+    if (targets) {
+      console.log(`  ${agentName}: layer 1 (DevToolsActivePort 文件) — CDP on ${port}`);
+      return { port, adapter, targets };
+    }
+  }
+
+  // Layer 2: PID argv + netstat
+  try {
+    const pids = await findRunningPids(adapter, process.platform, null);
+    const explicitPorts = await explicitPortsFromPids(pids);
+    for (const port of explicitPorts) {
+      const targets = await probeTargetsOnPort(adapter, port);
+      if (targets) {
+        console.log(`  ${agentName}: layer 2 (argv) — CDP on ${port}`);
+        return { port, adapter, targets };
+      }
+    }
+    const netstatPorts = await listeningPortsForPids(pids);
+    for (const port of netstatPorts) {
+      if (explicitPorts.includes(port)) continue;
+      const targets = await probeTargetsOnPort(adapter, port);
+      if (targets) {
+        console.log(`  ${agentName}: layer 2 (netstat) — CDP on ${port}`);
+        return { port, adapter, targets };
+      }
+    }
+  } catch {
+    // 进程探测尽力而为
+  }
+
+  throw new Error(
+    `[${agentName}] 未发现存活 CDP 端口。请确认应用已以 --remote-debugging-port 启动，或用 --port 显式指定。`,
+  );
+}
+
+/**
+ * 从引擎适配器 rendererHints 中取主渲染器。判定优先级：
+ *   1. preferredUrlPatterns 命中的 target（如 doubao 的 `doubao-chat/chat`）
+ *   2. 排除 secondaryPatterns（如 codex 的 avatar-overlay）后的第一个
+ *   3. 兜底 targets[0]
+ * 此前遗漏 preferredUrlPatterns，导致 doubao 退化成 targets[0]（选中被注入的
+ * 第三方页面「GitHub高星主题注入工具」）。
+ */
+function pickPrimaryTarget(adapter, targets) {
+  const hints = adapter?.rendererHints;
+  const secondary = hints?.secondaryPatterns ?? [];
+  const preferred = hints?.preferredUrlPatterns ?? [];
+  const primaryPool = targets.filter((t) => !secondary.some((p) => String(t.url).includes(p)));
+  // 1) 优先 preferredUrlPatterns（从全量 targets 中找，不受 secondary 排除影响）
+  const preferredHit = preferred.length
+    ? targets.find((t) => preferred.some((p) => String(t.url).includes(p)))
+    : null;
+  const chosen = preferredHit ?? primaryPool[0] ?? targets[0];
+  const skipped = targets.length - primaryPool.length;
+  if (skipped) console.log(`  ✓ 跳过 ${skipped} 个次渲染器（rendererHints）`);
+  if (preferredHit) console.log(`  ✓ 命中 preferredUrlPatterns 主渲染器（rendererHints）`);
+  return chosen;
+}
+
 // ============== 主爬取流程 ==============
 
-async function extractAgent(port, agentName, outputDir) {
-  const _wsUrl = `ws://127.0.0.1:${port}/json`;
-  let wsDebugUrl = null;
-
-  console.log(`\n--- 提取 ${agentName} (port: ${port}) ---`);
-
-  // 先获取 websocket URL
-  try {
-    const http = await fetch(`http://127.0.0.1:${port}/json`);
-    const targets = await http.json();
-    // 找 page 类型 target
-    const pageTarget = targets.find((t) => t.type === 'page');
-    if (pageTarget?.webSocketDebuggerUrl) {
-      wsDebugUrl = pageTarget.webSocketDebuggerUrl;
-      console.log(`  找到 target: ${pageTarget.title || 'untitled'}`);
+async function extractAgent(port, agentName, outputDir, adapter = null, discoveredTargets = null) {
+  let resolved;
+  if (adapter && discoveredTargets) {
+    resolved = { port, adapter, targets: discoveredTargets };
+  } else {
+    try {
+      resolved = await discoverLivePort(agentName, port);
+    } catch (e) {
+      console.error(`  ✗ 端口发现失败: ${e.message}`);
+      return null;
     }
-  } catch (e) {
-    console.error(`  ✗ 无法获取 target 列表: ${e.message}`);
+  }
+  const { adapter: activeAdapter, targets } = resolved;
+  const primaryTarget = pickPrimaryTarget(activeAdapter, targets);
+  if (!primaryTarget?.webSocketDebuggerUrl) {
+    console.error(`  ✗ 没有可用的主渲染器 target`);
     return null;
   }
-
-  if (!wsDebugUrl) {
-    console.error(`  ✗ 没有可用的 page target`);
-    return null;
-  }
+  const wsDebugUrl = primaryTarget.webSocketDebuggerUrl;
+  console.log(`\n--- 提取 ${agentName} (port: ${resolved.port}) ---`);
+  console.log(`  主渲染器: ${primaryTarget.title || primaryTarget.url || 'untitled'}`);
 
   // per-Agent 时序（审计 A-11）：解析本 Agent 的连接/命令超时与主题切换等待。
   const timing = resolveAgentTiming(agentName);
@@ -1110,7 +1299,9 @@ async function extractAgent(port, agentName, outputDir) {
     // ====== 2. 根元素变量提取（当前主题） ======
     console.log(`  → 提取根元素 CSS 变量（当前主题）...`);
     const rootVarsDefault = await getRootComputedVariables(client);
-    console.log(`  ✓ 当前主题根变量: ${Object.keys(rootVarsDefault).length} 个`);
+    console.log(
+      `  ✓ 当前主题根变量: ${rootVarsCount(rootVarsDefault)} 个${rootVarsDefault.__host ? `（回退宿主 ${rootVarsDefault.__host}）` : ''}`,
+    );
 
     // ====== 3. 当前主题（默认态）的 DOM 和计算样式 ======
     console.log(`  → 捕获 DOM 树（默认态）...`);
@@ -1131,7 +1322,9 @@ async function extractAgent(port, agentName, outputDir) {
     if (darkOk) {
       console.log(`  ✓ 切换到暗色成功`);
       rootVarsDark = await getRootComputedVariables(client);
-      console.log(`  ✓ 暗色根变量: ${Object.keys(rootVarsDark).length} 个`);
+      console.log(
+        `  ✓ 暗色根变量: ${rootVarsCount(rootVarsDark)} 个${rootVarsDark.__host ? `（回退宿主 ${rootVarsDark.__host}）` : ''}`,
+      );
       domDark = await captureDomTree(client, DEFAULT_MAX_DOM_NODES, DEFAULT_MAX_DEPTH);
       console.log(`  ✓ 暗色 DOM: ${domDark.totalNodes} 节点`);
       computedDark = await sampleComputedStyles(client, 300);
@@ -1150,7 +1343,9 @@ async function extractAgent(port, agentName, outputDir) {
     if (lightOk) {
       console.log(`  ✓ 切换到亮色成功`);
       rootVarsLight = await getRootComputedVariables(client);
-      console.log(`  ✓ 亮色根变量: ${Object.keys(rootVarsLight).length} 个`);
+      console.log(
+        `  ✓ 亮色根变量: ${rootVarsCount(rootVarsLight)} 个${rootVarsLight.__host ? `（回退宿主 ${rootVarsLight.__host}）` : ''}`,
+      );
       domLight = await captureDomTree(client, DEFAULT_MAX_DOM_NODES, DEFAULT_MAX_DEPTH);
       console.log(`  ✓ 亮色 DOM: ${domLight.totalNodes} 节点`);
       computedLight = await sampleComputedStyles(client, 300);
@@ -1169,20 +1364,29 @@ async function extractAgent(port, agentName, outputDir) {
     const allVarsNeutral = { ...allVarsByScheme.neutral };
 
     // 根变量用 ":root@runtime" 作为选择器
+    // 缓存回退宿主诊断信息，随后从 rootVariables 移除（不污染变量落盘）。
+    const rootVarsDetection = {
+      default: rootVarsDefault.__host ? JSON.parse(rootVarsDefault.__host) : null,
+      dark: rootVarsDark.__host ? JSON.parse(rootVarsDark.__host) : null,
+      light: rootVarsLight.__host ? JSON.parse(rootVarsLight.__host) : null,
+    };
+    delete rootVarsDefault.__host;
+    delete rootVarsDark.__host;
+    delete rootVarsLight.__host;
     if (Object.keys(rootVarsDefault).length > 0) {
-      allVarsNeutral[':root@runtime'] = Object.entries(rootVarsDefault).map(([name, value]) => ({
+      allVarsNeutral[':root@runtime'] = rootVarsEntries(rootVarsDefault).map(([name, value]) => ({
         name,
         value,
       }));
     }
     if (Object.keys(rootVarsDark).length > 0) {
-      allVarsDark[':root@runtime:dark'] = Object.entries(rootVarsDark).map(([name, value]) => ({
+      allVarsDark[':root@runtime:dark'] = rootVarsEntries(rootVarsDark).map(([name, value]) => ({
         name,
         value,
       }));
     }
     if (Object.keys(rootVarsLight).length > 0) {
-      allVarsLight[':root@runtime:light'] = Object.entries(rootVarsLight).map(([name, value]) => ({
+      allVarsLight[':root@runtime:light'] = rootVarsEntries(rootVarsLight).map(([name, value]) => ({
         name,
         value,
       }));
@@ -1249,6 +1453,7 @@ async function extractAgent(port, agentName, outputDir) {
         dark: rootVarsDark,
         light: rootVarsLight,
       },
+      rootVarsDetection,
       variables: {
         dark: {
           grouped: allVarsDark,
@@ -1305,9 +1510,9 @@ async function extractAgent(port, agentName, outputDir) {
       },
       stats: {
         rootVars: {
-          default: Object.keys(rootVarsDefault).length,
-          dark: Object.keys(rootVarsDark).length,
-          light: Object.keys(rootVarsLight).length,
+          default: rootVarsCount(rootVarsDefault),
+          dark: rootVarsCount(rootVarsDark),
+          light: rootVarsCount(rootVarsLight),
         },
         domNodes: {
           default: domDefault.totalNodes,
@@ -1401,20 +1606,26 @@ async function main() {
     mkdirSync(resolvedOut, { recursive: true });
   }
 
-  let agentsToExtract = {};
+  const agentsToExtract = {};
 
   if (useAll) {
-    agentsToExtract = AGENT_PORTS;
+    // 复用引擎注册的全部适配器 id，端口由 discoverLivePort 动态发现。
+    for (const adapter of listAdapters()) agentsToExtract[adapter.id] = null;
   } else {
     const portArg = args.indexOf('--port');
     const nameArg = args.indexOf('--name');
-    if (portArg >= 0 && nameArg >= 0) {
-      agentsToExtract[args[nameArg + 1]] = parseInt(args[portArg + 1], 10);
+    const portIdx = portArg >= 0 ? args[portArg + 1] : undefined;
+    const nameIdx = nameArg >= 0 ? args[nameArg + 1] : undefined;
+    if (nameIdx) {
+      agentsToExtract[nameIdx] = portIdx ? parseInt(portIdx, 10) : null;
     } else {
       console.log('用法:');
       console.log('  node scripts/cdp-full-extract.mjs --all --out agents-raw-data');
       console.log(
         '  node scripts/cdp-full-extract.mjs --port 58360 --name codex --out agents-raw-data',
+      );
+      console.log(
+        '  node scripts/cdp-full-extract.mjs --name codex --out agents-raw-data   // 自动发现端口',
       );
       process.exit(1);
     }
@@ -1423,11 +1634,19 @@ async function main() {
   console.log('=== CDP Full Extract ===');
   console.log(`目标: ${Object.keys(agentsToExtract).join(', ')}`);
   console.log(`输出: ${resolvedOut}`);
+  console.log(
+    '提示: 端口经项目三层发现策略（DevToolsActivePort→argv→netstat）自动定位，无需手写端口表',
+  );
   console.log('');
 
   const results = {};
   for (const [name, port] of Object.entries(agentsToExtract)) {
-    results[name] = await extractAgent(port, name, resolvedOut);
+    try {
+      results[name] = await extractAgent(port, name, resolvedOut);
+    } catch (e) {
+      console.error(`  ✗ ${name}: ${e.message}`);
+      results[name] = null;
+    }
   }
 
   // 生成汇总

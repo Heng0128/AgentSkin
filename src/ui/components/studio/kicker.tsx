@@ -14,7 +14,7 @@ export function Kicker({
 }) {
   return (
     <div className="flex items-center gap-1 font-mono text-[10px] font-semibold ">
-      <span className="size-[3px] rounded-full" style={{ background: dotColor }} />
+      <span className="size-[3px] rounded-[2px]" style={{ background: dotColor }} />
       <span style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)', opacity: 0.75 }}>
         {children}
       </span>

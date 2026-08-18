@@ -16,7 +16,6 @@ import type { LaunchRequest } from './launch';
 import type { ToolOverride, TweakSession } from './override';
 import type {
   CatalogResult,
-  ImagePixelSample,
   InstalledTheme,
   StudioProject,
   StudioSnapshotOptions,

@@ -298,7 +298,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                       {meta.displayName}
                     </span>
                     <span
-                      className="size-[5px] rounded-full"
+                      className="size-[5px] rounded-[2px]"
                       style={{
                         background: status?.installed ? 'var(--cr-ok)' : 'var(--fg-3)',
                       }}

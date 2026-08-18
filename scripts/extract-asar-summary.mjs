@@ -318,7 +318,7 @@ function collectSurfaces(extractDir) {
     if (text === null) continue;
     countMatches(
       preloadExposed,
-      [...text.matchAll(/exposeInMainWorld\s*\(\s*["']([^"']+)/g)].map((m) => m[1]),
+      [...text.matchAll(/exposeInMainWorld\s*\(\s*["'`]([^"'`]+)/g)].map((m) => m[1]),
     );
     countMatches(
       ipc.handle,
@@ -386,7 +386,10 @@ function collectSecurity(extractDir) {
         text,
       );
     if (m) {
-      security.csp = { from: `meta:${rel}`, directives: parseCspDirectives(m[2]) };
+      security.csp = {
+        from: `meta:${rel}`,
+        directives: parseCspDirectives(decodeHtmlEntities(m[2])),
+      };
       break;
     }
   }
@@ -402,6 +405,26 @@ function parseCspDirectives(content) {
     if (srcName) directives[srcName] = rest;
   }
   return directives;
+}
+
+// HTML 属性值里单/双引号常被编码为实体（&#39; &quot; &amp;），解码后才能还原真实的
+// CSP 指令值（如 &#39;none&#39; → 'none'）。真实 Codex 的 meta CSP 即用 &#39; 转义。
+function decodeHtmlEntities(text) {
+  return text.replace(/&(#x?[0-9a-f]+|amp|lt|gt|quot|apos);/gi, (match, entity) => {
+    const named = {
+      amp: '&',
+      lt: '<',
+      gt: '>',
+      quot: '"',
+      apos: "'",
+    };
+    if (entity[0] === '#') {
+      const hex = entity[1] === 'x' || entity[1] === 'X';
+      const code = parseInt(entity.slice(hex ? 2 : 1), hex ? 16 : 10);
+      return Number.isNaN(code) ? match : String.fromCodePoint(code);
+    }
+    return named[entity.toLowerCase()] ?? match;
+  });
 }
 
 function collectTokens(extractDir, _family) {

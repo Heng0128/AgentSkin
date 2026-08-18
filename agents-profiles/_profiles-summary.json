@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-06T13:12:16.010Z",
+  "generatedAt": "2026-08-18T14:45:24.134Z",
   "profiles": {
     "codex": {
       "tokensLight": 10,
@@ -7,40 +7,41 @@
       "categories": [
         "backgrounds",
         "other",
-        "borders",
-        "text",
         "spacing",
-        "accent",
         "typography",
+        "text",
+        "borders",
+        "accent",
+        "radius",
+        "semantic",
         "gradient",
         "shadows",
         "scrollbar",
-        "radius",
         "code",
-        "semantic",
         "icon",
-        "inputs"
+        "inputs",
+        "buttons"
       ],
       "stats": {
         "rootVars": {
-          "default": 1282,
-          "dark": 1282,
-          "light": 1282
+          "default": 1246,
+          "dark": 1246,
+          "light": 1246
         },
         "domNodes": {
-          "default": 98,
-          "dark": 98,
-          "light": 98
+          "default": 295,
+          "dark": 295,
+          "light": 295
         },
         "styleVars": {
-          "dark": 1291,
-          "light": 1282,
-          "neutral": 1461
+          "dark": 1255,
+          "light": 1246,
+          "neutral": 1538
         },
         "computedSamples": {
-          "default": 247,
-          "dark": 247,
-          "light": 247
+          "default": 300,
+          "dark": 300,
+          "light": 300
         }
       }
     },
@@ -66,30 +67,30 @@
       ],
       "stats": {
         "rootVars": {
-          "default": 1242,
-          "dark": 1242,
-          "light": 1242
+          "default": 1199,
+          "dark": 1199,
+          "light": 1199
         },
         "domNodes": {
-          "default": 244,
-          "dark": 244,
-          "light": 244
+          "default": 956,
+          "dark": 956,
+          "light": 956
         },
         "styleVars": {
-          "dark": 2337,
-          "light": 1242,
-          "neutral": 2754
+          "dark": 2297,
+          "light": 1199,
+          "neutral": 2767
         },
         "computedSamples": {
-          "default": 223,
-          "dark": 223,
-          "light": 225
+          "default": 283,
+          "dark": 283,
+          "light": 283
         }
       }
     },
     "qoderwork": {
-      "tokensLight": 0,
-      "tokensDark": 0,
+      "tokensLight": 10,
+      "tokensDark": 10,
       "categories": [
         "other",
         "text",
@@ -109,19 +110,19 @@
       ],
       "stats": {
         "rootVars": {
-          "default": 0,
-          "dark": 0,
-          "light": 0
+          "default": 132,
+          "dark": 132,
+          "light": 132
         },
         "domNodes": {
-          "default": 134,
-          "dark": 134,
-          "light": 134
+          "default": 474,
+          "dark": 474,
+          "light": 474
         },
         "styleVars": {
-          "dark": 123,
-          "light": 110,
-          "neutral": 383
+          "dark": 141,
+          "light": 132,
+          "neutral": 384
         },
         "computedSamples": {
           "default": 300,
@@ -135,16 +136,16 @@
       "tokensDark": 10,
       "categories": [
         "spacing",
-        "backgrounds",
-        "radius",
-        "other",
-        "typography",
-        "text",
-        "borders",
         "accent",
+        "borders",
+        "other",
+        "radius",
+        "backgrounds",
+        "text",
         "scrollbar",
         "inputs",
         "buttons",
+        "typography",
         "shadows",
         "code",
         "semantic",
@@ -153,30 +154,30 @@
       ],
       "stats": {
         "rootVars": {
-          "default": 4294,
-          "dark": 4294,
-          "light": 4294
+          "default": 4315,
+          "dark": 4315,
+          "light": 4315
         },
         "domNodes": {
-          "default": 136,
-          "dark": 136,
-          "light": 136
+          "default": 576,
+          "dark": 576,
+          "light": 576
         },
         "styleVars": {
-          "dark": 4432,
-          "light": 4417,
-          "neutral": 5104
+          "dark": 4613,
+          "light": 4614,
+          "neutral": 5381
         },
         "computedSamples": {
-          "default": 279,
-          "dark": 279,
-          "light": 279
+          "default": 300,
+          "dark": 300,
+          "light": 300
         }
       }
     },
     "workbuddy": {
-      "tokensLight": 0,
-      "tokensDark": 0,
+      "tokensLight": 10,
+      "tokensDark": 10,
       "categories": [
         "other",
         "backgrounds",
@@ -191,30 +192,30 @@
         "scrollbar",
         "spacing",
         "radius",
-        "gradient",
         "buttons",
+        "gradient",
         "icon"
       ],
       "stats": {
         "rootVars": {
-          "default": 0,
-          "dark": 0,
-          "light": 0
+          "default": 3560,
+          "dark": 3560,
+          "light": 3560
         },
         "domNodes": {
-          "default": 205,
-          "dark": 205,
-          "light": 205
+          "default": 668,
+          "dark": 668,
+          "light": 668
         },
         "styleVars": {
-          "dark": 1987,
-          "light": 1289,
-          "neutral": 4072
+          "dark": 3617,
+          "light": 3560,
+          "neutral": 4234
         },
         "computedSamples": {
-          "default": 205,
-          "dark": 205,
-          "light": 205
+          "default": 210,
+          "dark": 210,
+          "light": 210
         }
       }
     },
@@ -240,19 +241,19 @@
       ],
       "stats": {
         "rootVars": {
-          "default": 388,
-          "dark": 388,
-          "light": 388
+          "default": 390,
+          "dark": 390,
+          "light": 390
         },
         "domNodes": {
-          "default": 52,
-          "dark": 52,
-          "light": 52
+          "default": 227,
+          "dark": 227,
+          "light": 227
         },
         "styleVars": {
-          "dark": 408,
-          "light": 388,
-          "neutral": 474
+          "dark": 410,
+          "light": 390,
+          "neutral": 476
         },
         "computedSamples": {
           "default": 300,

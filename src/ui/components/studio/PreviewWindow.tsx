@@ -181,7 +181,7 @@ export function PreviewWindow({
             {t.studioZoomTrigger} ▾
           </button>
           {zoomOpen && (
-            <div className="absolute bottom-full right-0 z-10 mb-[2px] flex flex-col gap-0 rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">
+            <div className="absolute bottom-full right-0 z-10 mb-1 flex flex-col gap-0 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">
               {SCALE_PRESETS.map((s) => (
                 <button
                   key={s}

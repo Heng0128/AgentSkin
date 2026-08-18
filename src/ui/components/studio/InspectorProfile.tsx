@@ -100,8 +100,9 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
                 className={[
                   'size-[3px]',
                   isComplete && 'rounded-[1px] bg-[var(--accent)]',
-                  isCurrent && 'rounded-full bg-[var(--accent)] animate-pulse',
-                  isPending && 'rounded-full bg-[var(--bg-4)] border border-[var(--border-subtle)]',
+                  isCurrent && 'rounded-[2px] bg-[var(--accent)] animate-pulse',
+                  isPending &&
+                    'rounded-[2px] bg-[var(--bg-4)] border border-[var(--border-subtle)]',
                 ]
                   .filter(Boolean)
                   .join(' ')}

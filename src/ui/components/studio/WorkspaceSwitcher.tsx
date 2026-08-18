@@ -64,7 +64,7 @@ export function WorkspaceSwitcher({ open, onClose, t }: WorkspaceSwitcherProps) 
     <div className="ws-dialog-overlay" aria-hidden="true">
       <div
         ref={dialogRef}
-        className="absolute right-[var(--space-4)] top-[var(--h-topbar)] w-[300px] rounded-[var(--r-md)] overflow-hidden border border-[var(--border-default)] bg-[var(--bg-2)] shadow-[var(--shadow-dialog)]"
+        className="absolute right-[var(--space-4)] top-[var(--h-topbar)] w-[300px] rounded-[2px] overflow-hidden border border-[var(--border-default)] bg-[var(--bg-2)] shadow-float"
         role="dialog"
         aria-modal="true"
         aria-label={t.studioWorkspacePresets}

@@ -1,0 +1,13 @@
+import { readFileSync } from "node:fs";
+const cur = JSON.parse(readFileSync("./agents-raw-data/workbuddy-full-extract.json", "utf8"));
+console.log("variables.dark.flat 变量数:", Object.keys(cur.variables?.dark?.flat ?? {}).length);
+console.log("variables.light.flat:", Object.keys(cur.variables?.light?.flat ?? {}).length);
+console.log("variables.neutral.flat:", Object.keys(cur.variables?.neutral?.flat ?? {}).length);
+const flat = cur.variables?.dark?.flat ?? {};
+const withCb = Object.keys(flat).filter((k) => k.includes("--cb-"));
+const wscode = Object.keys(flat).filter((k) => k.includes("--vscode-"));
+console.log("dark flat 中 --cb-* 数:", withCb.length, "样例:", withCb.slice(0, 8));
+console.log("dark flat 中 --vscode-* 数:", wscode.length, "样例:", wscode.slice(0, 8));
+console.log("categories.dark:", JSON.stringify(Object.keys(cur.categories?.dark ?? {})));
+const color = cur.colorPalette?.dark;
+console.log("colorPalette.dark keys:", color ? Object.keys(color).length : "none");
