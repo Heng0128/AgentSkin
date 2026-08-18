@@ -155,14 +155,20 @@ export interface ApplyFlowDeps {
 
   // -- CDP fan-out (non-blocking follow-ups) -----------------------------
 
-  /** Inject theme CSS into secondary CDP targets (webviews/iframes). */
+  /**
+   * Secondary-target injection (webview/iframe CSS-only). Backward-compatible
+   * alias for {@link hardeningPass} — kept in the deps interface so existing
+   * test mocks continue to work. New code should use `hardeningPass` directly.
+   */
   injectSecondaryTargets: (
     appId: AgentId,
     port: number,
     bundle: ThemeBundle,
     epoch: number,
   ) => Promise<void>;
-  /** Hardening pass: re-inject via adoptedStyleSheets + verify. */
+
+  /** Hardening pass: re-inject page targets via engine layers + inject
+   *  webview/iframe targets with lightweight CSS, then verify. */
   hardeningPass: (
     appId: AgentId,
     port: number,
@@ -488,11 +494,10 @@ async function applyOnResolvedPort(
   deps.setActiveTheme(appId, request.themeId, port, request.schemeId);
   await trace.step('persist', () => deps.persist());
 
-  // Inject the theme CSS into secondary targets (MCP webviews, ardot
-  // iframes) that the core's matchTarget/preflight filter out. Non-blocking
-  // and best-effort — the main page is already themed, the response can
-  // return immediately while embedded content is themed a moment later.
-  backgroundTasks.push(deps.injectSecondaryTargets(appId, port, entry.bundle, epoch));
+  // Inject the theme into webview/iframe targets inside hardeningPass (below)
+  // — its loop applies the engine layers to page targets and lightweight CSS
+  // to webview/iframe targets in a single pass, so there is no separate
+  // secondary-target step.
 
   // Wallpaper: "last applied wins". Sync per-agent setting to match the
   // theme's wallpaper state so restarts restore the correct wallpaper.

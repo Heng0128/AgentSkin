@@ -48,8 +48,6 @@ import {
   type CdpFanoutDeps,
   hardeningPass as hardeningPassImpl,
   hardeningRemove as hardeningRemoveImpl,
-  injectSecondaryTargets as injectSecondaryTargetsImpl,
-  removeSecondaryTargets as removeSecondaryTargetsImpl,
 } from '../cdp/cdp-fanout';
 import type { InjectEngineResult } from '../cdp/cdp-inject';
 import { pickPageTarget } from '../cdp/cdp-targets';
@@ -227,17 +225,6 @@ export async function restoreOriginalScheme(
 // CDP fan-out operations
 // ---------------------------------------------------------------------------
 
-/** Forward to {@link injectSecondaryTargetsImpl} — see cdp-fanout.ts. */
-export async function injectSecondaryTargets(
-  appId: AgentId,
-  port: number,
-  bundle: ThemeBundle,
-  epoch: number,
-  deps: CdpFanoutDeps,
-): Promise<void> {
-  return injectSecondaryTargetsImpl(appId, port, bundle, epoch, deps);
-}
-
 /** Forward to {@link hardeningPassImpl} — see cdp-fanout.ts. */
 export async function hardeningPass(
   appId: AgentId,
@@ -257,16 +244,6 @@ export async function hardeningRemove(
   deps: CdpFanoutDeps,
 ): Promise<void> {
   return hardeningRemoveImpl(appId, port, epoch, deps);
-}
-
-/** Forward to {@link removeSecondaryTargetsImpl} — see cdp-fanout.ts. */
-export async function removeSecondaryTargets(
-  appId: AgentId,
-  port: number,
-  epoch: number,
-  deps: CdpFanoutDeps,
-): Promise<void> {
-  return removeSecondaryTargetsImpl(appId, port, epoch, deps);
 }
 
 // ---------------------------------------------------------------------------

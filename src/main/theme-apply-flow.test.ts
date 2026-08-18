@@ -201,8 +201,8 @@ describe('applyThemeFlow — fast path (RFC §4.4)', () => {
       expect.objectContaining({ format: 'agentskin-theme' }),
       expect.objectContaining({ port: FAST_PORT, launch: false }),
     );
-    // Background follow-ups (secondary / hardening / scheme) still run.
-    expect(deps.injectSecondaryTargets).toHaveBeenCalledWith(
+    // Background follow-ups (hardening / scheme) still run.
+    expect(deps.hardeningPass).toHaveBeenCalledWith(
       FAST_AGENT,
       FAST_PORT,
       expect.anything(),
@@ -255,7 +255,6 @@ describe('fastApplyThemeFlow (RFC §4.4)', () => {
     expect(result).toBeNull();
     // The fast path must NOT touch the adapter or run any follow-ups.
     expect(adapter.applyTheme).not.toHaveBeenCalled();
-    expect(deps.injectSecondaryTargets).not.toHaveBeenCalled();
     expect(deps.hardeningPass).not.toHaveBeenCalled();
   });
 
@@ -274,13 +273,7 @@ describe('fastApplyThemeFlow (RFC §4.4)', () => {
       expect.objectContaining({ format: 'agentskin-theme' }),
       expect.objectContaining({ port: FAST_PORT, launch: false }),
     );
-    // Non-blocking follow-ups still run so the applied theme is fully wired.
-    expect(deps.injectSecondaryTargets).toHaveBeenCalledWith(
-      FAST_AGENT,
-      FAST_PORT,
-      expect.anything(),
-      expect.any(Number),
-    );
+    // Non-blocking hardening follow-up still runs so the applied theme is fully wired.
     expect(deps.hardeningPass).toHaveBeenCalled();
   });
 

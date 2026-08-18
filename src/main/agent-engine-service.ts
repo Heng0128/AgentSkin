@@ -46,11 +46,9 @@ import {
   hardeningRemove,
   inferRestartReason,
   injectAgentWallpaperFromApply,
-  injectSecondaryTargets,
   probeAppStatus,
   reconcileZombiePorts,
   removeAgentVideoWallpaper,
-  removeSecondaryTargets,
   resolveLivePort,
   restoreOriginalScheme,
   syncSchemeWithStability,
@@ -64,7 +62,7 @@ import {
   captureBaselineOnPort,
   probeThemeLiveOnPort,
 } from './cdp/apply-baseline';
-import type { CdpFanoutDeps } from './cdp/cdp-fanout';
+import { type CdpFanoutDeps, injectSecondaryTargets } from './cdp/cdp-fanout';
 import { clearTargetsCache } from './cdp/cdp-targets';
 import {
   cleanupEngineInjectionForAgent,
@@ -551,8 +549,6 @@ export class AgentEngineService implements AgentEngineServiceApi {
       setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
       hardeningRemove: (appId, port, epoch) =>
         hardeningRemove(appId, port, epoch, this.fanoutDeps()),
-      removeSecondaryTargets: (appId, port, epoch) =>
-        removeSecondaryTargets(appId, port, epoch, this.fanoutDeps()),
       removeAgentVideoWallpaper: (appId, port, epoch) =>
         removeAgentVideoWallpaper(appId, port, epoch, this.wallpaperDeps()),
       restoreOriginalScheme: (appId, port, snapshot, epoch) =>

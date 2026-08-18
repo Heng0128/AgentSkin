@@ -47,7 +47,6 @@ function makeDeps(overrides: {
   snapshot?: SchemeSnapshot | null;
   restoreThemeImpl?: () => Promise<void>;
   hardeningRemoveImpl?: () => Promise<void>;
-  removeSecondaryImpl?: () => Promise<void>;
   removeWallpaperImpl?: () => Promise<void>;
   restoreSchemeImpl?: (
     appId: AgentId,
@@ -63,7 +62,6 @@ function makeDeps(overrides: {
     snapshot = null,
     restoreThemeImpl = async () => {},
     hardeningRemoveImpl = async () => {},
-    removeSecondaryImpl = async () => {},
     removeWallpaperImpl = async () => {},
     restoreSchemeImpl = async () => {},
     persistImpl = async () => {},
@@ -100,7 +98,6 @@ function makeDeps(overrides: {
       wallpaperSet = { appId, enabled: setting.enabled, id: setting.id };
     },
     hardeningRemove: hardeningRemoveImpl,
-    removeSecondaryTargets: removeSecondaryImpl,
     removeAgentVideoWallpaper: removeWallpaperImpl,
     restoreOriginalScheme: restoreSchemeImpl,
     cleanupModuleStateForAgent: vi.fn(),
@@ -211,9 +208,6 @@ describe('theme-restore-flow', () => {
         hardeningRemoveImpl: async () => {
           callOrder.push('hardeningRemove');
         },
-        removeSecondaryImpl: async () => {
-          callOrder.push('removeSecondary');
-        },
         removeWallpaperImpl: async () => {
           callOrder.push('removeWallpaper');
         },
@@ -236,7 +230,6 @@ describe('theme-restore-flow', () => {
       // All cleanup steps executed
       expect(callOrder).toContain('hardeningRemove');
       expect(callOrder).toContain('adapter.restoreTheme');
-      expect(callOrder).toContain('removeSecondary');
       expect(callOrder).toContain('removeWallpaper');
       expect(callOrder).toContain('restoreScheme');
       // Structured log
@@ -295,9 +288,6 @@ describe('theme-restore-flow', () => {
           callOrder.push('adapter-throws');
           throw new Error('CDP session disconnected');
         },
-        removeSecondaryImpl: async () => {
-          callOrder.push('removeSecondary');
-        },
         removeWallpaperImpl: async () => {
           callOrder.push('removeWallpaper');
         },
@@ -318,7 +308,6 @@ describe('theme-restore-flow', () => {
       // Adapter failure was caught
       expect(callOrder).toContain('adapter-throws');
       // All subsequent cleanup steps still execute
-      expect(callOrder).toContain('removeSecondary');
       expect(callOrder).toContain('removeWallpaper');
       expect(callOrder).toContain('restoreScheme');
       // Lock released even on failure
@@ -400,21 +389,6 @@ describe('theme-restore-flow', () => {
         port: VALID_PORT,
         hardeningRemoveImpl: async () => {
           throw new Error('target not found');
-        },
-      });
-      const extra = deps as unknown as {
-        _getCleared: () => { appId: AgentId; port: number | null } | null;
-      };
-      const result = await restoreThemeFlow(TEST_APP, deps);
-      expect(result.platform).toBe('win32');
-      expect(extra._getCleared()).toEqual({ appId: TEST_APP, port: VALID_PORT });
-    });
-
-    it('continues when removeSecondaryTargets fails', async () => {
-      const deps = makeDeps({
-        port: VALID_PORT,
-        removeSecondaryImpl: async () => {
-          throw new Error('secondary gone');
         },
       });
       const extra = deps as unknown as {

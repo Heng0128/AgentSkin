@@ -180,183 +180,6 @@ export async function connectWithRetry(
 }
 
 // ---------------------------------------------------------------------------
-// Secondary targets (webviews / iframes) — CSS-only
-// ---------------------------------------------------------------------------
-
-/**
- * Inject the theme CSS into ALL secondary CDP targets (webviews, iframes)
- * that the core's matchTarget/preflight filter out.
- *
- * WorkBuddy embeds MCP apps in <webview> tags and ardot.tencent.com content
- * in <iframe>s — these are visible UI surfaces that would otherwise show
- * unthemed content, breaking visual consistency with the main window which
- * core's applyTheme already themed.
- *
- * This is CSS-only: the core's renderer profile (chrome-layer overlay) is
- * deliberately skipped because it targets the main page's DOM structure
- * (.teams-main-content, .wb-home-page) which doesn't exist in embedded
- * content. The CSS variables + stylesheet alone are enough for the embedded
- * React apps to inherit the theme's colors.
- *
- * Best-effort: failures on individual secondary targets are logged but
- * never fail the overall apply. Aborts mid-loop if the epoch flips.
- */
-export async function injectSecondaryTargets(
-  appId: AgentId,
-  port: number,
-  bundle: ThemeBundle,
-  epoch: number,
-  deps: CdpFanoutDeps,
-): Promise<void> {
-  if (!deps.isEpochCurrent(appId, epoch)) return;
-  const adapter = deps.adapter(appId);
-  let targetTheme: ResolvedThemeTarget;
-  try {
-    targetTheme = resolveThemeTargetFor(bundle, adapter.coreId);
-  } catch (error) {
-    deps.log(`[secondary] ${appId}: resolveThemeTarget failed: ${toMessage(error)}`);
-    return;
-  }
-
-  // Secondary targets = DOM-bearing types other than the main page.
-  // The main page (type: "page") is already handled by adapter.applyTheme.
-  // Workers have no DOM and are correctly excluded.
-  const secondary = await findSecondaryTargets(port);
-  if (!secondary.length) {
-    deps.log(`[secondary] ${appId}: no secondary targets (webview/iframe) on port ${port}`);
-    return;
-  }
-
-  const expression = buildSecondaryInjectExpression(appId, targetTheme);
-  let injected = 0;
-  let failed = 0;
-  const loopStart = Date.now();
-  for (const target of secondary) {
-    // Abort if a newer apply/restore superseded this one mid-loop.
-    if (!deps.isEpochCurrent(appId, epoch)) {
-      deps.log(
-        `[secondary] ${appId}: epoch changed, aborting after ${injected}/${secondary.length}`,
-      );
-      return;
-    }
-    const targetStart = Date.now();
-    let targetSuccess = false;
-    let targetError: string | undefined;
-    try {
-      const handle = await acquireSession(
-        deps.sessions,
-        appId,
-        targetKeyFor(target.id, target.webSocketDebuggerUrl),
-        () => connectWithRetry(target.webSocketDebuggerUrl!, 3000),
-      );
-      const session = handle.session;
-      if (!session) {
-        failed++;
-        targetError = 'connect failed after retries';
-        deps.log(
-          `[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" connect failed after retries`,
-        );
-        continue;
-      }
-      try {
-        const result = await session.evaluate(expression);
-        if (result.includes('"installed":true')) {
-          injected++;
-          targetSuccess = true;
-        } else {
-          failed++;
-          targetError = `unexpected result: ${result}`;
-          deps.log(
-            `[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" returned: ${result}`,
-          );
-        }
-      } finally {
-        // Pooled sessions are owned by the pool — only close one-shot ones.
-        if (!handle.pooled) session.close();
-      }
-    } catch (error) {
-      failed++;
-      targetError = toMessage(error);
-      deps.log(
-        `[secondary] ${appId}: target ${target.type} "${target.title?.slice(0, 40)}" evaluate failed: ${targetError}`,
-      );
-    }
-    // Emit per-target progress event for the renderer UI.
-    deps.onSecondaryProgress?.({
-      agent: appId,
-      targetId: target.id ?? `${target.type}-${injected + failed}`,
-      targetType: target.type ?? 'unknown',
-      title: target.title,
-      success: targetSuccess,
-      error: targetError,
-      elapsed: Date.now() - targetStart,
-    });
-  }
-  deps.log(
-    `[secondary] ${appId}: injected CSS into ${injected}/${secondary.length} secondary target(s)` +
-      (failed ? ` (${failed} failed)` : '') +
-      ` — webviews/iframes on port ${port}`,
-  );
-  // Emit summary event for the renderer UI.
-  deps.onSecondaryProgress?.({
-    agent: appId,
-    injected,
-    failed,
-    total: secondary.length,
-    duration: Date.now() - loopStart,
-  });
-}
-
-/**
- * Remove the theme CSS from all secondary CDP targets (webviews, iframes).
- * Called during restore so embedded content doesn't keep showing a stale
- * theme after the main window is restored. Best-effort. Aborts mid-loop
- * if the epoch flips.
- */
-export async function removeSecondaryTargets(
-  appId: AgentId,
-  port: number,
-  epoch: number,
-  deps: CdpFanoutDeps,
-): Promise<void> {
-  if (!deps.isEpochCurrent(appId, epoch)) return;
-  const secondary = await findSecondaryTargets(port);
-  if (!secondary.length) return;
-
-  const expression = buildSecondaryRemoveExpression(appId);
-  let removed = 0;
-  for (const target of secondary) {
-    if (!deps.isEpochCurrent(appId, epoch)) {
-      deps.log(
-        `[secondary] ${appId}: epoch changed, aborting remove after ${removed}/${secondary.length}`,
-      );
-      return;
-    }
-    try {
-      const handle = await acquireSession(
-        deps.sessions,
-        appId,
-        targetKeyFor(target.id, target.webSocketDebuggerUrl),
-        () => connectCdp(target.webSocketDebuggerUrl!, 3000),
-      );
-      const session = handle.session;
-      if (!session) continue;
-      try {
-        await session.evaluate(expression);
-        removed++;
-      } finally {
-        if (!handle.pooled) session.close();
-      }
-    } catch {
-      // Best-effort — embedded content may have navigated away.
-    }
-  }
-  deps.log(
-    `[secondary] ${appId}: removed CSS from ${removed}/${secondary.length} secondary target(s)`,
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Hardening pass — engine multi-layer injection into ALL DOM targets
 // ---------------------------------------------------------------------------
 
@@ -422,12 +245,12 @@ export async function hardeningPass(
   let engineInjected = 0;
   let legacyInjected = 0;
   let watchdogSkipped = 0;
-  const secondaryInjected = 0;
-  const secondaryFailed = 0;
+  let secondaryInjected = 0;
+  let secondaryFailed = 0;
   let failed = 0;
   let firstSession: CdpSession | null = null;
   let firstPooled = false;
-  const secondaryLoopStart = 0;
+  let secondaryLoopStart = 0;
 
   for (const target of domTargets) {
     // Abort if a newer apply/restore superseded this one mid-loop.
@@ -461,50 +284,49 @@ export async function hardeningPass(
     }
 
     try {
-      // --- RFC 2026-08-18 P3: watchdog gate (page targets only) ---
-      // Verify the engine's owned adoptedStyleSheets are already present. If
-      // they are, a previous pass already applied them — inject nothing (skip
-      // the duplicate write and the flicker it causes). `verifyTheme` is
-      // error-tolerant (returns null on evaluate failure) → treat as "absent"
-      // and re-inject. Non-page targets always proceed to injection since they
-      // have no other writer.
-      const watchdogVerification = target.type === 'page' ? await verifyTheme(session) : null;
-      if (watchdogVerification && watchdogVerification.adoptedSheetCount > 0) {
-        watchdogSkipped++;
-        if (!firstSession) {
-          firstSession = session;
-          firstPooled = handle.pooled;
-        }
-        deps.log(
-          `[hardening] ${appId}: WATCHDOG skip ${target.type} "${target.title?.slice(0, 40)}" ` +
-            `(engine sheets already applied: ${watchdogVerification.adoptedSheetCount})`,
-        );
-      } else {
-        // Inject the engine architecture (palette + tokens + cosmetic + theme +
-        // adapter.mjs). `injectThemeViaEngine` internally verifies adoption and
-        // returns the per-layer outcome.
-        const engineResult = await deps.tryEngineInjection(
-          session,
-          appId,
-          bundle,
-          targetTheme,
-          heroDataUrl,
-        );
-
-        if (engineResult) {
-          engineInjected++;
+      if (target.type === 'page') {
+        // --- RFC 2026-08-18 P3: watchdog gate (page targets only) ---
+        // Verify the engine's owned adoptedStyleSheets are already present. If
+        // they are, a previous pass already applied them — inject nothing (skip
+        // the duplicate write and the flicker it causes). `verifyTheme` is
+        // error-tolerant (returns null on evaluate failure) → treat as "absent"
+        // and re-inject. Page targets are covered by core applyTheme + this
+        // engine layer, so the watchdog only skips when those are verified.
+        const watchdogVerification = await verifyTheme(session);
+        if (watchdogVerification && watchdogVerification.adoptedSheetCount > 0) {
+          watchdogSkipped++;
           if (!firstSession) {
-            deps.log(
-              `[hardening] ${appId}: ENGINE [${target.type}] layers=${engineResult.layersInjected} ` +
-                `adapter=${engineResult.adapterApplied} hero=${engineResult.heroInjected} ` +
-                `accent=${engineResult.verification?.accent || '?'}`,
-            );
+            firstSession = session;
+            firstPooled = handle.pooled;
           }
+          deps.log(
+            `[hardening] ${appId}: WATCHDOG skip ${target.type} "${target.title?.slice(0, 40)}" ` +
+              `(engine sheets already applied: ${watchdogVerification.adoptedSheetCount})`,
+          );
         } else {
-          // Fallback: legacy single-CSS injection (when engine files missing).
-          // Only apply to page targets — webviews/iframes get basic CSS via
-          // injectSecondaryTargets which runs separately.
-          if (target.type === 'page') {
+          // Inject the engine architecture (palette + tokens + cosmetic + theme +
+          // adapter.mjs). `injectThemeViaEngine` internally verifies adoption and
+          // returns the per-layer outcome.
+          const engineResult = await deps.tryEngineInjection(
+            session,
+            appId,
+            bundle,
+            targetTheme,
+            heroDataUrl,
+          );
+
+          if (engineResult) {
+            engineInjected++;
+            if (!firstSession) {
+              deps.log(
+                `[hardening] ${appId}: ENGINE [${target.type}] layers=${engineResult.layersInjected} ` +
+                  `adapter=${engineResult.adapterApplied} hero=${engineResult.heroInjected} ` +
+                  `accent=${engineResult.verification?.accent || '?'}`,
+              );
+            }
+          } else {
+            // Fallback: legacy single-CSS injection (when engine files missing).
+            // Page targets can still fall back to the core's CSS.
             const result = await injectThemeViaCdp(session, {
               css: targetTheme.css,
               heroDataUrl,
@@ -523,12 +345,48 @@ export async function hardeningPass(
             }
           }
         }
-      }
 
-      // Keep the first successful page session for the health check below.
-      if (!firstSession && target.type === 'page') {
-        firstSession = session;
-        firstPooled = handle.pooled;
+        // Keep the first successful page session for the health check below.
+        if (!firstSession && target.type === 'page') {
+          firstSession = session;
+          firstPooled = handle.pooled;
+        }
+      } else {
+        // --- Non-page targets (webview / iframe): lightweight CSS-only ---
+        // These (MCP webviews, ardot iframes) are filtered out of the core's
+        // matchTarget/preflight, so they have no other writer. Inject the CSS
+        // variables + stylesheet + host class via buildSecondaryInjectExpression
+        // exactly once here — the previous architecture ALSO injected these
+        // targets with the full engine layer via a separate injectSecondaryTargets
+        // pass, double-writing them. This loop is now their single channel.
+        if (secondaryLoopStart === 0) secondaryLoopStart = Date.now();
+        const targetStart = Date.now();
+        let targetSuccess = false;
+        let targetError: string | undefined;
+        let targetResult = '';
+        try {
+          targetResult = await session.evaluate(buildSecondaryInjectExpression(appId, targetTheme));
+          if (targetResult.includes('"installed":true')) {
+            targetSuccess = true;
+            secondaryInjected++;
+          } else {
+            targetError = `unexpected result: ${targetResult}`;
+            secondaryFailed++;
+          }
+        } catch (error) {
+          targetError = toMessage(error);
+          secondaryFailed++;
+        }
+        // Emit per-target progress event for the renderer timeline.
+        deps.onSecondaryProgress?.({
+          agent: appId,
+          targetId: target.id ?? `secondary-${secondaryInjected + secondaryFailed}`,
+          targetType: target.type ?? 'unknown',
+          title: target.title,
+          success: targetSuccess,
+          error: targetError,
+          elapsed: Date.now() - targetStart,
+        });
       }
     } catch (error) {
       failed++;
@@ -542,9 +400,23 @@ export async function hardeningPass(
     }
   }
 
+  // Emit the non-page summary event (mirrors the former injectSecondaryTargets
+  // summary) once all secondary targets have been attempted — only when there
+  // were any to report.
+  if (secondaryLoopStart > 0) {
+    deps.onSecondaryProgress?.({
+      agent: appId,
+      injected: secondaryInjected,
+      failed: secondaryFailed,
+      total: secondaryInjected + secondaryFailed,
+      duration: Date.now() - secondaryLoopStart,
+    });
+  }
+
   deps.log(
     `[hardening] ${appId}: applied to ${engineInjected + legacyInjected}/${domTargets.length} targets ` +
       `(engine=${engineInjected} legacy=${legacyInjected}` +
+      `${secondaryInjected ? ` secondary=${secondaryInjected}` : ''}` +
       `${watchdogSkipped ? ` watchdog-skip=${watchdogSkipped}` : ''}` +
       `${failed ? ` failed=${failed}` : ''})`,
   );
@@ -677,10 +549,17 @@ export async function hardeningRemove(
       const session = handle.session;
       if (!session) continue;
       try {
-        // RFC 2026-08-18 P2: removeEngineInjection no longer removes any
-        // tracked new-document script (that persistence is core-owned); it
-        // only sets the shared disable flag + clears engine layers/sheets.
-        await removeEngineInjection(session);
+        if (target.type === 'page') {
+          // RFC 2026-08-18 P2: removeEngineInjection no longer removes any
+          // tracked new-document script (that persistence is core-owned); it
+          // only sets the shared disable flag + clears engine layers/sheets.
+          await removeEngineInjection(session);
+        } else {
+          // Non-page targets were lightweight-CSS-injected by hardeningPass —
+          // strip that single <style> + host class + CSS variables here (the
+          // CSS-only clean counterpart, mirroring the injection split).
+          await session.evaluate(buildSecondaryRemoveExpression(appId));
+        }
         removed++;
       } finally {
         if (!handle.pooled) session.close();
@@ -693,3 +572,21 @@ export async function hardeningRemove(
     `[hardening-remove] ${appId}: removed engine from ${removed}/${domTargets.length} target(s)`,
   );
 }
+
+// ---------------------------------------------------------------------------
+// Backward-compatible aliases
+// ---------------------------------------------------------------------------
+
+/**
+ * @deprecated Use {@link hardeningPass} instead. Kept for backward compatibility
+ * with delegates.ts and test mocks. `hardeningPass` now handles both page
+ * engine injection AND secondary (webview/iframe) CSS injection in a unified loop.
+ */
+export const injectSecondaryTargets = hardeningPass;
+
+/**
+ * @deprecated Use {@link hardeningRemove} instead. Kept for backward compatibility
+ * with delegates.ts and test mocks. `hardeningRemove` now strips engine layers
+ * from all DOM-bearing targets (page + webview + iframe).
+ */
+export const removeSecondaryTargets = hardeningRemove;

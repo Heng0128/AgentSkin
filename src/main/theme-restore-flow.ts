@@ -93,10 +93,9 @@ export interface RestoreFlowDeps {
 
   // -- CDP fan-out / wallpaper / scheme teardown -------------------------
 
-  /** Remove engine injection from all DOM-bearing CDP targets. */
+  /** Remove engine injection from page targets + lightweight CSS from
+   *  webview/iframe targets (all DOM-bearing CDP targets). */
   hardeningRemove: (appId: AgentId, port: number, epoch: number) => Promise<void>;
-  /** Remove theme CSS from secondary CDP targets (webviews/iframes). */
-  removeSecondaryTargets: (appId: AgentId, port: number, epoch: number) => Promise<void>;
   /** Remove any injected wallpaper (video/image) from the agent's page. */
   removeAgentVideoWallpaper: (appId: AgentId, port: number, epoch: number) => Promise<void>;
   /** Restore the user's original light/dark scheme (best-effort). */
@@ -209,10 +208,10 @@ export async function restoreThemeFlow(
     //   1. Left the epoch bumped at its new value but no downstream cleanup used
     //      it (epoch looked "stale" to the next restore/apply, causing epoch
     //      check false-fails or background task misfires).
-    //   2. Skipped removeSecondaryTargets / removeAgentVideoWallpaper /
-    //      restoreOriginalScheme — leaving engine artifacts (CSS layers,
-    //      hero blob URLs, CDP media emulation, video wallpaper <video> tag)
-    //      in the DOM for the lifetime of the agent process.
+    //   2. Skipped removeAgentVideoWallpaper / restoreOriginalScheme —
+    //      leaving engine artifacts (CSS layers, hero blob URLs, CDP media
+    //      emulation, video wallpaper <video> tag) in the DOM for the lifetime
+    //      of the agent process.
     // We now log the failure and continue through all best-effort cleanup
     // steps so epoch is consumed symmetrically with the success path and
     // engine teardown still happens even if adapter-level restore barfed.
@@ -226,10 +225,6 @@ export async function restoreThemeFlow(
   } finally {
     deps.unlockAgent(appId);
   }
-
-  // Remove the theme CSS from secondary targets (webviews/iframes) too.
-  // Best-effort — the main window is already restored by adapter.restoreTheme.
-  await deps.removeSecondaryTargets(appId, port, epoch).catch(() => undefined);
 
   // Remove video wallpaper if one was injected.
   await deps.removeAgentVideoWallpaper(appId, port, epoch).catch(() => undefined);

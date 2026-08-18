@@ -24,7 +24,6 @@ vi.mock('./cdp-client', () => ({
 
 vi.mock('./cdp-targets', () => ({
   findDomTargets: vi.fn(),
-  findSecondaryTargets: vi.fn(),
 }));
 
 vi.mock('./cdp-inject', () => ({
@@ -51,20 +50,14 @@ vi.mock('../../legacy/agentskin-core-runtime', async (importOriginal) => {
 
 // Import mocked modules AFTER mock declarations.
 const { connectCdp, connectEventCdp } = await import('./cdp-client');
-const { findDomTargets, findSecondaryTargets } = await import('./cdp-targets');
+const { findDomTargets } = await import('./cdp-targets');
 const { injectThemeViaCdp, removeEngineInjection } = await import('./cdp-inject');
 const { checkThemeHealth } = await import('../theme-health-check');
 const { buildSecondaryInjectExpression, buildSecondaryRemoveExpression } = await import(
   './secondary-inject'
 );
 const { resolveThemeTargetFor } = await import('../../legacy/agentskin-core-runtime');
-const {
-  injectSecondaryTargets,
-  removeSecondaryTargets,
-  hardeningPass,
-  hardeningRemove,
-  connectWithRetry,
-} = await import('./cdp-fanout');
+const { hardeningPass, hardeningRemove, connectWithRetry } = await import('./cdp-fanout');
 const { disposeReloadWatchdogs, getReloadWatchdogKeys } = await import('./reload-watchdog');
 
 // ---------------------------------------------------------------------------
@@ -211,7 +204,6 @@ beforeEach(() => {
   // cleanly instead of surfacing an unhandled rejection.
   vi.mocked(connectEventCdp).mockResolvedValue(makeMockEventSession());
   vi.mocked(findDomTargets).mockResolvedValue([]);
-  vi.mocked(findSecondaryTargets).mockResolvedValue([]);
   vi.mocked(injectThemeViaCdp).mockResolvedValue(makeMockLegacyResult());
   vi.mocked(removeEngineInjection).mockResolvedValue(undefined);
   vi.mocked(checkThemeHealth).mockResolvedValue(makeMockHealthReport());
@@ -224,202 +216,6 @@ beforeEach(() => {
 // module-level state across tests.
 afterEach(() => {
   disposeReloadWatchdogs();
-});
-
-// ===========================================================================
-// injectSecondaryTargets
-// ===========================================================================
-
-describe('injectSecondaryTargets', () => {
-  it('returns early when epoch is not current', async () => {
-    const deps = makeDeps({
-      isEpochCurrent: vi.fn().mockReturnValue(false),
-    });
-    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
-    expect(findSecondaryTargets).not.toHaveBeenCalled();
-    expect(deps.log).not.toHaveBeenCalled();
-  });
-
-  it('logs and returns when resolveThemeTargetFor throws', async () => {
-    vi.mocked(resolveThemeTargetFor).mockImplementation(() => {
-      throw new Error('no target for coreId');
-    });
-    const deps = makeDeps();
-    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
-    expect(findSecondaryTargets).not.toHaveBeenCalled();
-    expect(deps.log).toHaveBeenCalledWith(
-      expect.stringContaining('[secondary] doubao: resolveThemeTarget failed'),
-    );
-  });
-
-  it('logs and returns when no secondary targets are found', async () => {
-    vi.mocked(findSecondaryTargets).mockResolvedValue([]);
-    const deps = makeDeps();
-    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
-    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('no secondary targets'));
-    expect(connectCdp).not.toHaveBeenCalled();
-  });
-
-  it('injects CSS into all secondary targets successfully', async () => {
-    const targets = [
-      makeCdpTarget({ id: 'wv-1', type: 'webview' }),
-      makeCdpTarget({ id: 'if-1', type: 'iframe' }),
-    ];
-    vi.mocked(findSecondaryTargets).mockResolvedValue(targets);
-    const session = makeMockSession({
-      evaluate: vi.fn().mockResolvedValue('{"installed":true}'),
-    });
-    vi.mocked(connectCdp).mockResolvedValue(session);
-
-    const deps = makeDeps();
-    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
-
-    expect(connectCdp).toHaveBeenCalledTimes(2);
-    expect(session.evaluate).toHaveBeenCalledTimes(2);
-    expect(session.close).toHaveBeenCalledTimes(2);
-    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('injected CSS into 2/2'));
-  });
-
-  it('counts failures when evaluate returns non-installed result', async () => {
-    const targets = [makeCdpTarget({ id: 'wv-1', type: 'webview', title: 'Bad WebView' })];
-    vi.mocked(findSecondaryTargets).mockResolvedValue(targets);
-    const session = makeMockSession({
-      evaluate: vi.fn().mockResolvedValue('{"installed":false,"reason":"no-root"}'),
-    });
-    vi.mocked(connectCdp).mockResolvedValue(session);
-
-    const deps = makeDeps();
-    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
-
-    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('injected CSS into 0/1'));
-    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('1 failed'));
-  });
-
-  it('counts failures when connectCdp throws', async () => {
-    const targets = [makeCdpTarget({ id: 'wv-1', type: 'webview' })];
-    vi.mocked(findSecondaryTargets).mockResolvedValue(targets);
-    vi.mocked(connectCdp).mockRejectedValue(new Error('CDP connect timeout'));
-
-    const deps = makeDeps();
-    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
-
-    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('connect failed'));
-    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('0/1'));
-  });
-
-  it('aborts mid-loop when epoch changes between targets', async () => {
-    const targets = [
-      makeCdpTarget({ id: 'wv-1', type: 'webview' }),
-      makeCdpTarget({ id: 'wv-2', type: 'webview' }),
-      makeCdpTarget({ id: 'wv-3', type: 'webview' }),
-    ];
-    vi.mocked(findSecondaryTargets).mockResolvedValue(targets);
-
-    // Epoch is current on first check (before loop), flips to false on second
-    // check (inside loop, before processing wv-2).
-    let callCount = 0;
-    const deps = makeDeps({
-      isEpochCurrent: vi.fn(() => {
-        callCount++;
-        // Call 1 = pre-loop guard (true), call 2 = first iteration guard (true),
-        // call 3 = second iteration guard (false) → abort.
-        return callCount <= 2;
-      }),
-    });
-
-    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
-
-    expect(deps.log).toHaveBeenCalledWith(
-      expect.stringContaining('epoch changed, aborting after 1/3'),
-    );
-    // Only one target processed before abort.
-    expect(connectCdp).toHaveBeenCalledTimes(1);
-  });
-});
-
-// ===========================================================================
-// removeSecondaryTargets
-// ===========================================================================
-
-describe('removeSecondaryTargets', () => {
-  it('returns early when epoch is not current', async () => {
-    const deps = makeDeps({
-      isEpochCurrent: vi.fn().mockReturnValue(false),
-    });
-    await removeSecondaryTargets('doubao', 9222, 1, deps);
-    expect(findSecondaryTargets).not.toHaveBeenCalled();
-  });
-
-  it('returns early when no secondary targets are found', async () => {
-    vi.mocked(findSecondaryTargets).mockResolvedValue([]);
-    const deps = makeDeps();
-    await removeSecondaryTargets('doubao', 9222, 1, deps);
-    expect(connectCdp).not.toHaveBeenCalled();
-    expect(deps.log).not.toHaveBeenCalled();
-  });
-
-  it('removes CSS from all secondary targets successfully', async () => {
-    const targets = [
-      makeCdpTarget({ id: 'wv-1', type: 'webview' }),
-      makeCdpTarget({ id: 'if-1', type: 'iframe' }),
-    ];
-    vi.mocked(findSecondaryTargets).mockResolvedValue(targets);
-    const session = makeMockSession();
-    vi.mocked(connectCdp).mockResolvedValue(session);
-
-    const deps = makeDeps();
-    await removeSecondaryTargets('doubao', 9222, 1, deps);
-
-    expect(connectCdp).toHaveBeenCalledTimes(2);
-    expect(session.evaluate).toHaveBeenCalledTimes(2);
-    expect(session.close).toHaveBeenCalledTimes(2);
-    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('removed CSS from 2/2'));
-  });
-
-  it('aborts mid-loop when epoch changes between targets', async () => {
-    const targets = [
-      makeCdpTarget({ id: 'wv-1', type: 'webview' }),
-      makeCdpTarget({ id: 'wv-2', type: 'webview' }),
-    ];
-    vi.mocked(findSecondaryTargets).mockResolvedValue(targets);
-
-    let callCount = 0;
-    const deps = makeDeps({
-      isEpochCurrent: vi.fn(() => {
-        callCount++;
-        return callCount <= 2;
-      }),
-    });
-
-    await removeSecondaryTargets('doubao', 9222, 1, deps);
-
-    expect(deps.log).toHaveBeenCalledWith(
-      expect.stringContaining('epoch changed, aborting remove after 1/2'),
-    );
-    expect(connectCdp).toHaveBeenCalledTimes(1);
-  });
-
-  it('continues on individual target failures (best-effort)', async () => {
-    const targets = [
-      makeCdpTarget({ id: 'wv-1', type: 'webview' }),
-      makeCdpTarget({ id: 'wv-2', type: 'webview' }),
-    ];
-    vi.mocked(findSecondaryTargets).mockResolvedValue(targets);
-
-    let callCount = 0;
-    vi.mocked(connectCdp).mockImplementation(() => {
-      callCount++;
-      if (callCount === 1) return Promise.reject(new Error('connect failed'));
-      return Promise.resolve(makeMockSession());
-    });
-
-    const deps = makeDeps();
-    await removeSecondaryTargets('doubao', 9222, 1, deps);
-
-    // Second target still processed despite first failure.
-    expect(connectCdp).toHaveBeenCalledTimes(2);
-    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('removed CSS from 1/2'));
-  });
 });
 
 // ===========================================================================
@@ -469,11 +265,13 @@ describe('hardeningPass', () => {
 
     await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
 
-    expect(deps.tryEngineInjection).toHaveBeenCalledTimes(2);
+    // Engine layers target only `page` targets; the webview is handled by the
+    // lightweight secondary CSS injection in the same loop (RFC 2026-08-18).
+    expect(deps.tryEngineInjection).toHaveBeenCalledTimes(1);
     expect(injectThemeViaCdp).not.toHaveBeenCalled();
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('ENGINE [page]'));
     expect(deps.log).toHaveBeenCalledWith(
-      expect.stringContaining('applied to 2/2 targets (engine=2 legacy=0)'),
+      expect.stringContaining('applied to 1/2 targets (engine=1 legacy=0 secondary=1)'),
     );
   });
 
@@ -496,7 +294,7 @@ describe('hardeningPass', () => {
     expect(injectThemeViaCdp).toHaveBeenCalledTimes(1);
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('LEGACY [page]'));
     expect(deps.log).toHaveBeenCalledWith(
-      expect.stringContaining('applied to 1/2 targets (engine=0 legacy=1)'),
+      expect.stringContaining('applied to 1/2 targets (engine=0 legacy=1 secondary=1)'),
     );
   });
 
@@ -515,6 +313,101 @@ describe('hardeningPass', () => {
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('applied to 0/1 targets'));
   });
 
+  it('injects lightweight CSS into non-page targets via the unified loop', async () => {
+    const targets = [
+      makeCdpTarget({ id: 'wv-1', type: 'webview', title: 'McpView' }),
+      makeCdpTarget({ id: 'if-1', type: 'iframe', title: 'ArdoFrame' }),
+    ];
+    vi.mocked(findDomTargets).mockResolvedValue(targets);
+    const session = makeMockSession({
+      evaluate: vi.fn().mockResolvedValue('{"installed":true}'),
+    });
+    vi.mocked(connectCdp).mockResolvedValue(session);
+
+    const deps = makeDeps();
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    // Each non-page target gets exactly one lightweight CSS write.
+    expect(session.evaluate).toHaveBeenCalledTimes(2);
+    expect(buildSecondaryInjectExpression).toHaveBeenCalledTimes(2);
+    expect(injectThemeViaCdp).not.toHaveBeenCalled();
+    expect(deps.log).toHaveBeenCalledWith(
+      expect.stringContaining('applied to 0/2 targets (engine=0 legacy=0 secondary=2)'),
+    );
+  });
+
+  it('reports per-target progress and a summary for non-page targets', async () => {
+    const targets = [
+      makeCdpTarget({ id: 'wv-1', type: 'webview', title: 'McpView' }),
+      makeCdpTarget({ id: 'wv-2', type: 'webview', title: 'OtherView' }),
+    ];
+    vi.mocked(findDomTargets).mockResolvedValue(targets);
+    vi.mocked(connectCdp).mockResolvedValue(makeMockSession());
+
+    const events: unknown[] = [];
+    const deps = makeDeps({
+      onSecondaryProgress: vi.fn((event) => {
+        events.push(event);
+      }),
+    });
+
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    // one progress event per target + one summary event.
+    const progressEvents = events.filter((e) => (e as { targetId?: string }).targetId);
+    expect(progressEvents).toHaveLength(2);
+    expect((progressEvents[0] as { targetId: string }).targetId).toBe('wv-1');
+    expect((progressEvents[1] as { targetId: string }).targetId).toBe('wv-2');
+    const summary = events.at(-1) as { injected: number; failed: number; total: number };
+    expect(summary.injected).toBe(2);
+    expect(summary.failed).toBe(0);
+    expect(summary.total).toBe(2);
+  });
+
+  it('counts non-page failures and marks the failing progress event', async () => {
+    const targets = [makeCdpTarget({ id: 'wv-1', type: 'webview', title: 'Bad WebView' })];
+    vi.mocked(findDomTargets).mockResolvedValue(targets);
+    const session = makeMockSession({
+      evaluate: vi.fn().mockResolvedValue('{"installed":false,"reason":"no-root"}'),
+    });
+    vi.mocked(connectCdp).mockResolvedValue(session);
+
+    const events: unknown[] = [];
+    const deps = makeDeps({
+      onSecondaryProgress: vi.fn((event) => {
+        events.push(event);
+      }),
+    });
+
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    expect(events).toHaveLength(2);
+    expect((events[0] as { success: boolean }).success).toBe(false);
+    expect((events[0] as { error?: string }).error).toContain('unexpected result');
+    const summary = events.at(-1) as { injected: number; failed: number };
+    expect(summary.injected).toBe(0);
+    expect(summary.failed).toBe(1);
+    // Non-page evaluate failures bump the summary failed count but not the
+    // top-level `failed` counter, so the log line shows engine=0 legacy=0.
+    expect(deps.log).toHaveBeenCalledWith(
+      expect.stringContaining('applied to 0/1 targets (engine=0 legacy=0)'),
+    );
+  });
+
+  it('does not emit secondary progress when there are only page targets', async () => {
+    const targets = [makeCdpTarget({ id: 'page-1', type: 'page' })];
+    vi.mocked(findDomTargets).mockResolvedValue(targets);
+    vi.mocked(connectCdp).mockResolvedValue(makeMockSession());
+
+    const deps = makeDeps({
+      onSecondaryProgress: vi.fn(),
+    });
+
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    expect(deps.onSecondaryProgress).not.toHaveBeenCalled();
+  });
+
   it('watchdog skips a page target when engine sheets are already present (P3)', async () => {
     // The page session's evaluate answers a verification that reports the
     // engine's owned adoptedStyleSheets as present → watchdog skips injection.
@@ -526,10 +419,7 @@ describe('hardeningPass', () => {
         adoptedSheetCount: 3,
       }),
     );
-    const targets = [
-      makeCdpTarget({ id: 'page-1', type: 'page' }),
-      makeCdpTarget({ id: 'wv-1', type: 'webview' }),
-    ];
+    const targets = [makeCdpTarget({ id: 'page-1', type: 'page' })];
     vi.mocked(findDomTargets).mockResolvedValue(targets);
     vi.mocked(connectCdp).mockResolvedValue(makeMockSession({ evaluate: presentEval }));
 
@@ -539,8 +429,8 @@ describe('hardeningPass', () => {
 
     await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
 
-    // page-1 skipped (sheets already applied), only wv-1 is injected.
-    expect(deps.tryEngineInjection).toHaveBeenCalledTimes(1);
+    // page-1 skipped (sheets already applied) → no engine write.
+    expect(deps.tryEngineInjection).not.toHaveBeenCalled();
     expect(injectThemeViaCdp).not.toHaveBeenCalled();
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('WATCHDOG skip page'));
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('watchdog-skip=1'));
@@ -739,9 +629,8 @@ describe('hardeningPass', () => {
 // ===========================================================================
 
 describe('pooled session reuse', () => {
-  it('reuses a target session across secondary + hardening without closing it', async () => {
+  it('reuses a webview session across repeat hardening passes without closing it', async () => {
     const wvTarget = makeCdpTarget({ id: 'wv-1', type: 'webview' });
-    vi.mocked(findSecondaryTargets).mockResolvedValue([wvTarget]);
     vi.mocked(findDomTargets).mockResolvedValue([wvTarget]);
 
     const wvSession = makeMockSession();
@@ -754,9 +643,9 @@ describe('pooled session reuse', () => {
     const pool = new CdpSessionPool();
     const deps = makeDeps({ sessions: pool });
 
-    // Secondary inject connects to the webview first.
-    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
-    // Hardening pass then reuses the SAME webview session (same target key).
+    // Both passes touch the SAME webview (same target key) — the pool collapses
+    // the two connects into one underlying session, which the loop reuses.
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
     await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
 
     // Only one underlying connect for the one target — pool collapsed the dupes.
@@ -768,8 +657,8 @@ describe('pooled session reuse', () => {
   });
 
   it('closes pooled sessions on epoch invalidation', async () => {
-    const target = makeCdpTarget({ id: 'wv-1', type: 'webview' });
-    vi.mocked(findSecondaryTargets).mockResolvedValue([target]);
+    const wvTarget = makeCdpTarget({ id: 'wv-1', type: 'webview' });
+    vi.mocked(findDomTargets).mockResolvedValue([wvTarget]);
 
     const session = makeMockSession();
     vi.mocked(connectCdp).mockResolvedValue(session);
@@ -777,7 +666,7 @@ describe('pooled session reuse', () => {
     const pool = new CdpSessionPool();
     const deps = makeDeps({ sessions: pool });
 
-    await injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
     expect(session.close).not.toHaveBeenCalled();
 
     pool.invalidateEpoch('doubao');
@@ -820,8 +709,11 @@ describe('hardeningRemove', () => {
     const deps = makeDeps();
     await hardeningRemove('doubao', 9222, 1, deps);
 
-    expect(connectCdp).toHaveBeenCalledTimes(3);
-    expect(removeEngineInjection).toHaveBeenCalledTimes(3);
+    // Page target → removeEngineInjection; non-page targets → lightweight
+    // CSS strip (their single-channel counterpart to hardeningPass).
+    expect(removeEngineInjection).toHaveBeenCalledTimes(1);
+    expect(buildSecondaryRemoveExpression).toHaveBeenCalledTimes(2);
+    expect(session.evaluate).toHaveBeenCalledTimes(2);
     // RFC 2026-08-18 P2: removeEngineInjection no longer takes an appId.
     // Sanity-check each call targets exactly one session argument.
     for (const call of vi.mocked(removeEngineInjection).mock.calls) {
@@ -871,9 +763,11 @@ describe('hardeningRemove', () => {
     const deps = makeDeps();
     await hardeningRemove('doubao', 9222, 1, deps);
 
-    // Second target still processed.
+    // page-1 connect fails (never reaches engine removal); wv-1 is still
+    // stripped via the lightweight CSS channel.
     expect(connectCdp).toHaveBeenCalledTimes(2);
-    expect(removeEngineInjection).toHaveBeenCalledTimes(1);
+    expect(removeEngineInjection).not.toHaveBeenCalled();
+    expect(buildSecondaryRemoveExpression).toHaveBeenCalledTimes(1);
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('removed engine from 1/2'));
   });
 
@@ -884,15 +778,13 @@ describe('hardeningRemove', () => {
     ];
     vi.mocked(findDomTargets).mockResolvedValue(targets);
     vi.mocked(connectCdp).mockResolvedValue(makeMockSession());
-    vi.mocked(removeEngineInjection)
-      .mockRejectedValueOnce(new Error('remove failed'))
-      .mockResolvedValueOnce(undefined);
+    vi.mocked(removeEngineInjection).mockRejectedValueOnce(new Error('remove failed'));
 
     const deps = makeDeps();
     await hardeningRemove('doubao', 9222, 1, deps);
 
-    expect(removeEngineInjection).toHaveBeenCalledTimes(2);
-    // First target failed (not counted in removed), second succeeded.
+    expect(removeEngineInjection).toHaveBeenCalledTimes(1);
+    // page-1 failed (not counted in removed), wv-1 succeeded via CSS strip.
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('removed engine from 1/2'));
   });
 });
@@ -941,16 +833,16 @@ describe('connectWithRetry', () => {
     }
   });
 
-  it('injectSecondaryTargets retries a connect that fails once (CDP-2)', async () => {
+  it('hardeningPass retries a connect that fails once (CDP-2)', async () => {
     vi.useFakeTimers();
     try {
       const session = makeMockSession();
-      vi.mocked(findSecondaryTargets).mockResolvedValue([makeCdpTarget({ type: 'webview' })]);
+      vi.mocked(findDomTargets).mockResolvedValue([makeCdpTarget({ type: 'webview' })]);
       vi.mocked(connectCdp)
         .mockRejectedValueOnce(new Error('CDP connection failed'))
         .mockResolvedValueOnce(session);
       const deps = makeDeps();
-      const promise = injectSecondaryTargets('doubao', 9222, makeBundle(), 1, deps);
+      const promise = hardeningPass('doubao', 9222, makeBundle(), 1, deps);
       await vi.advanceTimersByTimeAsync(500); // first backoff
       await promise;
       // 1 initial + 1 retry — the connect failure is absorbed by the retry.

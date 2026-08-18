@@ -32,11 +32,7 @@ import { getAdapter, registerBuiltinAdapters } from '../../adapters/registry';
 import { resolveThemeTargetFor } from '../../legacy/agentskin-core-runtime';
 import { resolveLivePort } from '../../shared/cdp-discovery';
 import { SESSION_DISABLED_KEY } from '../../shared/injection-constants';
-import {
-  type EngineInjectionDeps,
-  resolveEngineDirDefault,
-  tryEngineInjection,
-} from '../palette/orchestrator';
+import { type EngineInjectionDeps, tryEngineInjection } from '../palette/orchestrator';
 import { ThemeLibrary } from '../theme-library';
 import { connectCdp } from './cdp-client';
 import { waitForTheme } from './injection/shared';
