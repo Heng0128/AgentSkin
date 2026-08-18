@@ -130,11 +130,11 @@ html.${HOST_CLASS} [role="main"] {
 }
 
 /* === Sidebar containers: frosted glass (scoped to sidebar anchor, CV-06) ===
-   Prior version blended `aside, nav` indiscriminately, styling the top nav like
-   a sidebar and double-tinting layered `<aside>` wrappers. Now the frosted-glass
+   Prior version blended 'aside, nav' indiscriminately, styling the top nav like
+   a sidebar and double-tinting layered <aside> wrappers. Now the frosted-glass
    + hover/active tints attach to [data-agentskin-sidebar] (set at runtime by
    findSidebar), so the persistent left pane reads as glass while the top nav
-   and any nested `<aside>`/`<nav>` outside the detected sidebar stay native. */
+   and any nested <aside>/<nav> outside the detected sidebar stay native. */
 html.${HOST_CLASS} [${SIDEBAR_ATTR}] {
   background: var(--sidebar-bg, color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 22%, transparent)) !important;
   backdrop-filter: blur(16px) saturate(1.15) !important;
@@ -306,6 +306,11 @@ html.${HOST_CLASS} [class*="tooltip"] {
     document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
   }
 
+  // CV-06/CV-07 语义锚点打标：先于 CSS 生成执行，确保 `[data-agentskin-sidebar]` /
+  // `[data-agentskin-composer]` 域限定选择器在样式表注入前就已命中目标 DOM。
+  // （此前 applySemanticAnchors 只定义不调用，导致毛玻璃侧边栏/输入框从未生效。）
+  applySemanticAnchors();
+
   const fullCss = [STRUCTURAL_CSS, discoverAndOverrideTokens()].filter(Boolean).join('\n');
   const sheet = new CSSStyleSheet();
   sheet.replaceSync(fullCss);
@@ -323,6 +328,8 @@ html.${HOST_CLASS} [class*="tooltip"] {
     if (!structural) return;
     if (healTimer) clearTimeout(healTimer);
     healTimer = setTimeout(() => {
+      // 重新打标（导航/重渲染可能替换侧边栏/composer 节点）后重建样式表
+      applySemanticAnchors();
       try { sheet.replaceSync([STRUCTURAL_CSS, discoverAndOverrideTokens()].filter(Boolean).join('\n')); } catch {}
     }, 300);
   });
@@ -330,6 +337,7 @@ html.${HOST_CLASS} [class*="tooltip"] {
 
   const interval = setInterval(() => {
     if (!document.documentElement.classList.contains(HOST_CLASS)) document.documentElement.classList.add(HOST_CLASS);
+    applySemanticAnchors(); // 兜底重打标（应用可能无 DOM 变更但需补标）
     if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
       document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
     }

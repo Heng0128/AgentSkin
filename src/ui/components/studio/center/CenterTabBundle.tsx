@@ -3,24 +3,146 @@
 /**
  * # CenterTabBundle
  *
- * Placeholder panel for the "Bundle" center tab.
- * Full implementation will manage installed bundle packages.
+ * Bundle management panel — lists installed bundle packages and provides
+ * import / install / delete operations.
+ *
+ * Data source: studioStore (bundles, bundlesLoading, refreshBundles,
+ * importAndInstallBundle, deleteBundle).
+ *
+ * Visual style follows Swiss/International design tokens:
+ *   · rounded-[2px] corners
+ *   · spacing from the 4/8/16/24/32/48 Tailwind scale only
+ *   · typography: text-[10px] mono for body, text-xs for headings
+ *   · all colors via CSS custom properties (no bare hex/rgba)
  */
 
+import { useEffect } from 'react';
+import { useStudioStore } from '@/stores/studioStore';
+
 import type { UiMessages } from '@shared/i18n';
+import { Package, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 
 export function CenterTabBundle({ t }: { t: UiMessages }) {
-  const desc =
-    'studioTabBundleDesc' in t
-      ? (t as unknown as Record<string, string>).studioTabBundleDesc
-      : '管理已安装的 bundle 包（主题 + 壁纸组合）。';
+  const { bundles, bundlesLoading, refreshBundles, importAndInstallBundle, deleteBundle } =
+    useStudioStore(
+      useShallow((s) => ({
+        bundles: s.bundles,
+        bundlesLoading: s.bundlesLoading,
+        refreshBundles: s.refreshBundles,
+        importAndInstallBundle: s.importAndInstallBundle,
+        deleteBundle: s.deleteBundle,
+      })),
+    );
+
+  useEffect(() => {
+    void refreshBundles();
+  }, [refreshBundles]);
+
+  const handleImport = () => {
+    void importAndInstallBundle();
+  };
+
+  const handleRefresh = () => {
+    void refreshBundles();
+  };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm(t.studioBundleDeleteConfirm)) {
+      void deleteBundle(id);
+    }
+  };
 
   return (
-    <div className="rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
-      <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">{t.studioTabBundle}</h3>
-      <p className="mt-2 font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">{desc}</p>
-      <div className="mt-4 rounded-[2px] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-2)] p-8 text-center">
-        <p className="font-mono text-[10px] text-[var(--fg-3)]">Bundle 管理（即将推出）</p>
+    <div className="flex h-full flex-col rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Package className="h-3.5 w-3.5 text-[var(--fg-2)]" />
+          <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">
+            {t.studioBundleListTitle.toUpperCase()}
+          </h3>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={bundlesLoading}
+            className="flex items-center gap-1 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] px-2 py-1 font-mono text-[10px] text-[var(--fg-1)] transition-colors hover:bg-[var(--bg-3)] disabled:opacity-50"
+          >
+            <RefreshCw className={`h-3 w-3 ${bundlesLoading ? 'animate-spin' : ''}`} />
+            {t.studioBundleRefresh}
+          </button>
+          <button
+            type="button"
+            onClick={handleImport}
+            disabled={bundlesLoading}
+            className="flex items-center gap-1 rounded-[2px] border border-[var(--primary)] bg-[var(--primary)] px-2 py-1 font-mono text-[10px] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            <Plus className="h-3 w-3" />
+            {t.studioBundleImportBtn}
+          </button>
+        </div>
+      </div>
+
+      {/* Description */}
+      <p className="mt-2 font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">
+        {t.studioBundlePanelDesc}
+      </p>
+
+      {/* Content area */}
+      <div className="mt-4 flex-1 overflow-auto">
+        {bundlesLoading && bundles.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="font-mono text-[10px] text-[var(--fg-3)]">{t.studioBundleLoading}</p>
+          </div>
+        ) : bundles.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-[2px] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-2)] py-12">
+            <Package className="h-6 w-6 text-[var(--fg-3)]" />
+            <p className="mt-2 font-mono text-[10px] text-[var(--fg-3)]">{t.studioBundleEmpty}</p>
+            <p className="mt-1 font-mono text-[10px] text-[var(--fg-3)]">
+              {t.studioBundleImportBtn}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {bundles.map((bundle) => (
+              <div
+                key={bundle.id}
+                className="flex items-center justify-between rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-3"
+              >
+                <div className="flex flex-col gap-1">
+                  <span className="font-mono text-xs font-bold text-[var(--fg-0)]">
+                    {bundle.name}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] text-[var(--fg-2)]">
+                      {t.studioBundleTagTheme}: {bundle.themeId ?? '—'}
+                    </span>
+                    {bundle.hasWallpaper && (
+                      <span className="rounded-[2px] bg-[var(--bg-3)] px-1 py-0.5 font-mono text-[10px] text-[var(--fg-1)]">
+                        {t.studioBundleHasWallpaper}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+                    {bundle.createdAt !== undefined && bundle.createdAt !== ''
+                      ? bundle.createdAt
+                      : '—'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(bundle.id)}
+                  className="flex items-center gap-1 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] px-2 py-1 font-mono text-[10px] text-[var(--fg-2)] transition-colors hover:border-red-500 hover:text-red-500"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  {t.studioBundleDeleteBtn}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

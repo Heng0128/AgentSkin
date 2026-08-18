@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 const PORT = process.argv[2] || '58554';
 const ADAPTER_PATH = join(ROOT, 'engines', 'codex', 'adapter.mjs');
-const THEME_CSS_PATH = join(ROOT, 'themes', 'tokyo-night', 'assets', 'css', 'codex.css');
+const THEME_CSS_PATH = join(ROOT, 'themes', 'aurora-glass', 'assets', 'css', 'codex.css');
 class CDP {
   constructor(ws) {
     this.ws = ws;

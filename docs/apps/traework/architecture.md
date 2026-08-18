@@ -1,8 +1,8 @@
 # traework 架构文档 (AgentSkin)
 
-> 逆向理解产物。基于 CDP 全量快照（`cdp-full-extract`）动态提取，未写回任何原应用文件。
+> 逆向理解产物 = **静态 asar 解包层**（`extract-asar-summary.mjs`）+ **动态 CDP 层**（`cdp-full-extract`），未写回任何原应用文件。
 > 动态布局来源：`agents-raw-data/traework-full-extract.json`；
-> 静态 asar 层：_暂无解包汇总_（可跑 `extract-asar-summary.mjs` 后合并）。
+> 静态 asar 来源：`docs/apps/traework/raw/extract-summary.{json,md}`（Trae CN 为已解包目录 + 超小 asar stub，直接扫描 `resources/app`）。
 > 目标：支撑深度主题注入 / 脆弱性分级 / 语义锚点维护。
 
 ## 1. 包身份（CDP 运行时侧）
@@ -92,6 +92,21 @@
 
 > 锚点采集规则：过滤 css-module hash（`_pk7td_1`）、噪声类（`__as_*`）、单/双字符工具类。
 > 升级后使用 `scripts/snapshot-compare.mjs` diff 语义锚点新增/消失。
+
+### 4.1 锚点/变量前缀实测核验
+
+> 以 `agents-raw-data/traework-full-extract.json` 对照 §4 声称的锚点与变量前缀，裁决是否失准。
+
+| 声称 | 本地实测 | 裁决 |
+|------|---------|------|
+| 变量前缀 `--vscode-*` | ✅ 66862 命中 | ✅ 属实（VS Code 内核变量主桶） |
+| `--brand-*`（traework 品牌 token） | ✅ 2604 命中 | ✅ 属实 |
+| `--solo-*`（solo-lite 层 token） | ✅ 270 命中 | ✅ 属实 |
+| 锚点 `.chat-input-v2-container` | ✅ 57 命中 | ✅ 属实（核心输入区） |
+| 锚点 `.app-region-drag` | ✅ 6 命中 | ✅ 属实（自定义标题栏拖拽区） |
+
+**结论**：traework（`vscode-extension solo-lite` 形态）的变量前缀与核心锚点均与本地实测吻合，无失真锚点。
+注意其变量以 VS Code 内核 `--vscode-*` 为主（量级远大于自研 `--brand-*`/`--solo-*`），注入主体应覆盖 `--vscode-*` 立柱 + 自研层面桶。
 
 ## 5. 注入面与脆弱性提示
 

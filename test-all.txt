@@ -1,0 +1,695 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90mC:/Users/snowb/Desktop/work/desktop-main[39m
+
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/diagnostics-kill-switch.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/baseline-snapshot.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/semantic-quant/semantic-resolve.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/meta-inference.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/test/selector-resolver.test.ts [2m([22m[2m36 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/preflight.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/semantic-filter.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/css-var-bridge.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/meta-validator.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/renderer-payload.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/semantic-quant/semantic-snapshot.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/verify-style.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/adaptive-observer.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/session-pool-runtime.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/persistence.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m [30m[46m engine [49m[39m src/engine/src/runtime/css-variable-detection.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+stderr | src/main/wallpaper-server.test.ts > WallpaperMediaServer.register > returns null for non-existent file
+[wallpaper-server] file not found: C:\Users\snowb\AppData\Local\Temp\wallpaper-server-test-yVmmh8\does-not-exist.mp4
+
+stderr | src/main/settings-service.test.ts > SettingsService.initialize > resets to defaults when file is corrupt JSON
+[settings] C:\Users\snowb\AppData\Local\Temp\settings-test-hsGHmV\settings.json exists but could not be parsed — resetting to defaults: SyntaxError: Expected property name or '}' in JSON at position 2 (line 1 column 3)
+    at JSON.parse (<anonymous>)
+    at SettingsService.initialize (C:/Users/snowb/Desktop/work/desktop-main/src/main/settings-service.ts:209:27)
+    at makeService (C:/Users/snowb/Desktop/work/desktop-main/src/main/settings-service.test.ts:25:3)
+    at C:/Users/snowb/Desktop/work/desktop-main/src/main/settings-service.test.ts:94:17
+    at file:///C:/Users/snowb/Desktop/work/desktop-main/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > skips hero from path when file does not exist
+[01:13:40] [Main] [WARN] [Inject.Hero] read local hero failed (/nonexistent/hero.webp): ENOENT
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns cssInjected=false when CSS injection returns error
+[01:13:40] [Main] [WARN] [Inject.CSS] adopt-owned returned non-ok: err:replaceSync failed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns cssInjected=false when CSS evaluate throws
+[01:13:40] [Main] [WARN] [Inject.CSS] adopt-owned CDP evaluate failed (26B CSS): Renderer evaluation failed: evaluate crashed
+
+stderr | src/main/settings-service.test.ts > SettingsService.overridesFor > filters out invalid ports from persisted state
+[settings] C:\Users\snowb\AppData\Local\Temp\settings-test-Kzenqh\settings.json version=2 but apps structure invalid — resetting apps
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > does not retry when hero was not injected
+[01:13:40] [Main] [WARN] [Inject.Hero] small-hero renderer evaluate failed: err:injection failed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns success=false when CSS fails even if hero succeeds
+[01:13:40] [Main] [WARN] [Inject.CSS] adopt-owned returned non-ok: err:failed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper-server.test.ts [2m([22m[2m36 tests[22m[2m)[22m[33m 499[2mms[22m[39m
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/settings-service.test.ts [2m([22m[2m43 tests[22m[2m)[22m[33m 328[2mms[22m[39m
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+[90mstdout[2m | src/main/wallpaper-injector.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:40] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene-extractor.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 891[2mms[22m[39m
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:41] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/snapshot-theme.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 2808[2mms[22m[39m
+     [33m[2m✓[22m[39m throws when no DOM-bearing CDP target is available [33m 333[2mms[22m[39m
+     [33m[2m✓[22m[39m captures the live interface when no theme is applied (protocol path) [33m 336[2mms[22m[39m
+     [33m[2m✓[22m[39m degrades to the Runtime.evaluate fallback when DOM/CSS domains are blocked [33m 322[2mms[22m[39m
+     [33m[2m✓[22m[39m skips landmarks that do not exist in the DOM [33m 334[2mms[22m[39m
+     [33m[2m✓[22m[39m captures light/dark scheme variants when requested [33m 1136[2mms[22m[39m
+     [33m[2m✓[22m[39m does not crash when the DOM tree capture fails [33m 328[2mms[22m[39m
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+[90mstdout[2m | src/main/cdp/cdp-fanout.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:42] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:43] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:43] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+stderr | src/main/cdp/cdp-inject.test.ts > injectThemeViaCdp > returns verification=null when verify evaluate throws
+[01:13:43] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Renderer evaluation failed: verify crashed
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/cdp-inject.test.ts [2m([22m[2m24 tests[22m[2m)[22m[33m 3158[2mms[22m[39m
+     [33m[2m✓[22m[39m returns verification=null when verify evaluate throws [33m 3040[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/reload-watchdog.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 2950[2mms[22m[39m
+     [33m[2m✓[22m[39m does NOT re-inject when the engine sheets are already present [33m 716[2mms[22m[39m
+     [33m[2m✓[22m[39m re-injects exactly once when the engine sheets are missing [33m 724[2mms[22m[39m
+     [33m[2m✓[22m[39m disarms and does NOT re-inject when the epoch is no longer current [33m 712[2mms[22m[39m
+     [33m[2m✓[22m[39m re-injects via a fresh verify after debounce and tolerates verify failures [33m 713[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/palette-builder-injection.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 549[2mms[22m[39m
+[90mstdout[2m | src/main/wallpaper-primary-wins.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+stderr | src/main/config/settings.test.ts > wallpaper settings (config/settings.ts) > loadSettings falls back to defaults when the config file is invalid JSON
+[WallpaperSettings] Failed to load settings, using defaults: SyntaxError: Expected property name or '}' in JSON at position 2 (line 1 column 3)
+    at JSON.parse (<anonymous>)
+    at loadSettings (C:/Users/snowb/Desktop/work/desktop-main/src/main/config/settings.ts:40:39)
+    at getImageBlobThresholdBytes (C:/Users/snowb/Desktop/work/desktop-main/src/main/config/settings.ts:92:14)
+    at C:/Users/snowb/Desktop/work/desktop-main/src/main/config/settings.test.ts:76:12
+    at file:///C:/Users/snowb/Desktop/work/desktop-main/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+stderr | src/main/cdp/cdp-fanout.test.ts > hardeningPass > re-appends wallpaper punch-through sheet after health check
+[01:13:44] [Main] [WARN] [Inject.Verify] theme-verify CDP evaluate failed: Unexpected token 'w', "wp-reappended" is not valid JSON
+
+stderr | src/main/config/settings.test.ts > wallpaper settings (config/settings.ts) > loadSettings drops a type-mismatched field instead of using the bad value
+[WallpaperSettings]: Type mismatch for imageBlobThresholdMB, using default
+
+stderr | src/main/config/settings.test.ts > wallpaper settings (config/settings.ts) > loadSettings clamps out-of-range threshold back to default
+[WallpaperSettings]: imageBlobThresholdMB=-5 out of range (1..1000), using default
+
+stderr | src/main/config/settings.test.ts > wallpaper settings (config/settings.ts) > loadSettings clamps out-of-range threshold back to default
+[WallpaperSettings]: imageBlobThresholdMB=0 out of range (1..1000), using default
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/cdp-fanout.test.ts [2m([22m[2m36 tests[22m[2m)[22m[33m 2268[2mms[22m[39m
+     [33m[2m✓[22m[39m counts failures when connectCdp throws [33m 2040[2mms[22m[39m
+stderr | src/main/config/settings.test.ts > wallpaper settings (config/settings.ts) > loadSettings clamps out-of-range threshold back to default
+[WallpaperSettings]: imageBlobThresholdMB=10000000000 out of range (1..1000), using default
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/config/settings.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 633[2mms[22m[39m
+stderr | src/main/catalog/theme-package-loader.test.ts > ThemePackageLoader > load > loads a valid theme package
+[01:13:45] [Main] [WARN] [ThemePackageLoader] theme "cyber-neon" declares deprecated assets.background; use manifest.hero instead (embedded and exposed as --agentskin-art)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/injection/shared.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 5540[2mms[22m[39m
+     [33m[2m✓[22m[39m delay grows with attempt (exponential) [33m 516[2mms[22m[39m
+     [33m[2m✓[22m[39m caps at max [33m 5006[2mms[22m[39m
+stderr | src/main/catalog/theme-package-loader.test.ts > ThemePackageLoader > load > tolerates missing optional asset background
+[01:13:46] [Main] [WARN] [ThemePackageLoader] theme "no-bg-asset" declares deprecated assets.background; use manifest.hero instead (embedded and exposed as --agentskin-art)
+
+stderr | src/main/catalog/theme-package-loader.test.ts > ThemePackageLoader > load > rejects asset path escaping package root
+[01:13:46] [Main] [WARN] [ThemePackageLoader] theme "escape" declares deprecated assets.background; use manifest.hero instead (embedded and exposed as --agentskin-art)
+
+stderr | src/main/cdp/cdp-wallpaper-inject.test.ts > bypassPageCsp > returns true when Layer 1 fails but Layer 2 (evaluate) succeeds
+[cdp-wallpaper] bypassPageCsp Layer 1 (Page.setBypassCSP) failed: Not supported on this target
+
+stderr | src/main/cdp/cdp-wallpaper-inject.test.ts > bypassPageCsp > returns false when ALL layers fail (send + evaluate both throw)
+[cdp-wallpaper] bypassPageCsp Layer 1 (Page.setBypassCSP) failed: Not supported on this target
+
+stderr | src/main/cdp/cdp-wallpaper-inject.test.ts > bypassPageCsp > returns false when ALL layers fail (send + evaluate both throw)
+[cdp-wallpaper] bypassPageCsp Layer 2 (CSP meta removal) failed: evaluate failed
+
+stderr | src/main/cdp/cdp-wallpaper-inject.test.ts > bypassPageCsp > returns false when ALL layers fail (send + evaluate both throw)
+[cdp-wallpaper] bypassPageCsp Layer 3 (CSP probe) failed: evaluate failed
+
+stderr | src/main/cdp/cdp-wallpaper-inject.test.ts > bypassPageCsp > does NOT set anySucceeded from Layer 3 diagnostic probe
+[cdp-wallpaper] bypassPageCsp Layer 1 (Page.setBypassCSP) failed: Not supported
+
+stderr | src/main/cdp/cdp-wallpaper-inject.test.ts > bypassPageCsp > does NOT set anySucceeded from Layer 3 diagnostic probe
+[cdp-wallpaper] bypassPageCsp Layer 2 (CSP meta removal) failed: Layer 2 failed
+
+stderr | src/main/cdp/cdp-wallpaper-inject.test.ts > bypassPageCsp > does NOT set anySucceeded from Layer 3 diagnostic probe
+[cdp-wallpaper] bypassPageCsp: all bypass layers failed — CSP is header-based on a webview target. Blob/data: URL fallback is the only path that can load media.
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/cdp-wallpaper-inject.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 6134[2mms[22m[39m
+     [33m[2m✓[22m[39m retries on timeout error and succeeds [33m 1005[2mms[22m[39m
+     [33m[2m✓[22m[39m retries on WebSocket closed error and succeeds [33m 1004[2mms[22m[39m
+     [33m[2m✓[22m[39m throws after exhausting all retries on persistent timeout [33m 2006[2mms[22m[39m
+     [33m[2m✓[22m[39m respects CHUNK_EVAL_MAX_RETRIES (3 total attempts for 2 retries) [33m 2030[2mms[22m[39m
+stderr | src/main/catalog/theme-package-loader.test.ts > ThemePackageLoader > scan > discovers all valid packages in the themes directory
+[01:13:46] [Main] [WARN] [ThemePackageLoader] skipped invalid theme "broken-theme": Theme package "broken-theme" validation failed: manifest.json not found
+
+stderr | src/main/catalog/theme-package-loader.test.ts > ThemePackageLoader > scan > discovers all valid packages in the themes directory
+[01:13:46] [Main] [WARN] [ThemePackageLoader] theme "theme-a" declares deprecated assets.background; use manifest.hero instead (embedded and exposed as --agentskin-art)
+
+stderr | src/main/catalog/theme-package-loader.test.ts > ThemePackageLoader > scan > discovers all valid packages in the themes directory
+[01:13:46] [Main] [WARN] [ThemePackageLoader] theme "theme-b" declares deprecated assets.background; use manifest.hero instead (embedded and exposed as --agentskin-art)
+
+stderr | src/main/catalog/theme-package-loader.test.ts > ThemePackageLoader > scan > sorts packages by name
+[01:13:46] [Main] [WARN] [ThemePackageLoader] theme "alpha-theme" declares deprecated assets.background; use manifest.hero instead (embedded and exposed as --agentskin-art)
+
+stderr | src/main/catalog/theme-package-loader.test.ts > ThemePackageLoader > scan > sorts packages by name
+[01:13:46] [Main] [WARN] [ThemePackageLoader] theme "beta-theme" declares deprecated assets.background; use manifest.hero instead (embedded and exposed as --agentskin-art)
+
+stderr | src/main/catalog/theme-package-loader.test.ts > ThemePackageLoader > scan > sorts packages by name
+[01:13:46] [Main] [WARN] [ThemePackageLoader] theme "zebra-theme" declares deprecated assets.background; use manifest.hero instead (embedded and exposed as --agentskin-art)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/catalog/theme-package-loader.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 1268[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper-primary-wins.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 2042[2mms[22m[39m
+     [33m[2m✓[22m[39m reports FAILURE when the primary target fails even if secondary succeeds [33m 2033[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/scanner/infra/persist-cache.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 801[2mms[22m[39m
+[90mstdout[2m | src/main/agent-engine-service-reliability.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper/we/parser.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 955[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/agent-scheme.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 1261[2mms[22m[39m
+     [33m[2m✓[22m[39m reports failure when the injected write throws [33m 1213[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper/local/importer.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 754[2mms[22m[39m
+     [33m[2m✓[22m[39m throws WallpaperImportError (FILE_TOO_LARGE) when image exceeds cap [33m 317[2mms[22m[39m
+stderr | src/main/wallpaper/media-registry.test.ts > MediaRegistry release > keeps unregistering remaining tokens when one unregister throws
+[wallpaper] failed to unregister media token: Error: server hiccup
+
+stderr | src/main/wallpaper/media-registry.test.ts > MediaRegistry release > releaseForId unregisters only the given id and survives throws
+[wallpaper] failed to unregister media token: Error: boom
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper/media-registry.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 768[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/electron-scanner.test.ts [2m([22m[2m35 tests[22m[2m)[22m[33m 533[2mms[22m[39m
+[90mstdout[2m | src/main/agent-engine-service-reliability.test.ts[2m > [22m[2mAgentEngineService Reliability Verification[2m > [22m[2mError handling and recovery paths[2m > [22m[2mgracefully handles service disposal during in-flight operation
+[22m[39m[agentskin:cdp-patch] fetch interceptor uninstalled
+
+[90mstdout[2m | src/main/wallpaper-injector.test.ts[2m > [22m[2minjectWithFallback[2m > [22m[2mfalls back to last successful wallpaper on failure
+[22m[39m[agentskin:cdp-patch] win32: 3 live DevToolsActivePort file(s) found, distributed per-app by dir name: QoderWork CN:C:\Users\snowb\AppData\Roaming\QoderWork CN\DevToolsActivePort, TRAE SOLO CN:C:\Users\snowb\AppData\Roaming\TRAE SOLO CN\DevToolsActivePort, session:C:\Users\snowb\.workbuddy\app\session\DevToolsActivePort
+
+[90mstdout[2m | src/main/boot-sequence.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+stderr | src/main/agent-engine-service-reliability.test.ts > AgentEngineService Reliability Verification > Disposed three-layer guard (Batch B) > injectWithFallback skips self-heal trigger when disposed even after 3 consecutive failures
+[wallpaper-self-heal] traework: 3 consecutive failures — invoking self-heal callback
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/fs-utils.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 731[2mms[22m[39m
+[90mstdout[2m | src/main/catalog/theme-seeder.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/agent-engine-service-reliability.test.ts [2m([22m[2m47 tests[22m[2m)[22m[33m 1705[2mms[22m[39m
+[90mstdout[2m | src/main/catalog/theme-seeder.test.ts[2m > [22m[2mseedBuiltInThemes — removed themes must never be reseeded[2m > [22m[2monly installs shipped themes, skipping every REMOVED_BUILTIN_THEME_IDS package
+[22m[39m[DEBUG-seeder] toInstall count= [33m1[39m ids= [ [32m'future-bundled-theme'[39m ]
+
+[90mstdout[2m | src/main/catalog/theme-seeder.test.ts[2m > [22m[2mseedBuiltInThemes — removed themes must never be reseeded[2m > [22m[2monly installs shipped themes, skipping every REMOVED_BUILTIN_THEME_IDS package
+[22m[39m[DEBUG-seeder] installed count= [33m1[39m ids= [ [32m'future-bundled-theme'[39m ]
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/catalog/theme-seeder.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 308[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/fs/tar-pack.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 762[2mms[22m[39m
+     [33m[2m✓[22m[39m packs and extracts a directory tree byte-for-byte [33m 386[2mms[22m[39m
+     [33m[2m✓[22m[39m extracts a bundle whose files live at the archive root [33m 323[2mms[22m[39m
+[90mstdout[2m | src/main/agent-engine-service.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/studio-project-ipc.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 248[2mms[22m[39m
+[90mstdout[2m | src/main/theme-apply-flow.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/agent-engine-service.test.ts [2m([22m[2m25 tests[22m[2m)[22m[33m 487[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/theme-apply-flow.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 370[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/shared/withTimeout.test.ts [2m([22m[2m19 tests[22m[2m)[22m[33m 672[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/boot-sequence.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 133[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene-renderer-worker.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1171[2mms[22m[39m
+     [33m[2m✓[22m[39m echoes the requestId and returns a rendered HTML document on success [33m 1054[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/locale-preferences.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 163[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper/mutex.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 642[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/performance-ipc.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 93[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/logger.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 491[2mms[22m[39m
+       [33m[2m✓[22m[39m caps the buffer at 1000 entries to avoid unbounded memory growth (P3-11 raised ceiling) and prefers keeping WARN/ERROR over INFO when overflowing [33m 416[2mms[22m[39m
+[90mstdout[2m | src/main/agent-engine-service-metrics.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/visual-analyzer-ipc.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 15043[2mms[22m[39m
+       [33m[2m✓[22m[39m returns not-running placeholder when getStatus times out (degrades via catch) [33m 15014[2mms[22m[39m
+stderr | src/main/services/performance/performance-logger-edge.test.ts > clearTimeouts vs clear — state isolation > clearTimeouts resets only timeouts/timeoutSeq, leaves buffer/overflow intact
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+stderr | src/main/services/performance/performance-logger-edge.test.ts > clearTimeouts vs clear — state isolation > clear() resets all 5 state variables (buffer, traceOverflowCount, overflowWarned, timeouts, timeoutSeq)
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+stderr | src/main/services/performance/performance-logger-edge.test.ts > clearTimeouts vs clear — state isolation > after clear(), traceOverflowCount is zero so overflow re-triggers console.warn
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+stderr | src/main/services/performance/performance-logger-edge.test.ts > FIFO order after overflow > after inserting 51 traces, buffer[0] is trace_002 (first was shifted out)
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+stderr | src/main/services/performance/performance-logger-edge.test.ts > FIFO order after overflow > after inserting 52 traces, buffer[0] is trace_003
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+stderr | src/main/services/performance/performance-logger-edge.test.ts > FIFO order after overflow > FIFO order is preserved across the overflow boundary
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/performance/performance-logger-edge.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 142[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/shared/cdp-discovery-resolve.test.ts [2m([22m[2m19 tests[22m[2m)[22m[33m 335[2mms[22m[39m
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > pushTweak > returns false when CDP target discovery fails (fetch rejects)
+[01:13:55] [Main] [WARN] [Tweak.Inject] no CDP session on port 9336 for traework
+
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > pushTweak > returns false when port has no page target
+[01:13:55] [Main] [WARN] [Tweak.Inject] no CDP session on port 9336 for traework
+
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > pushTweak > returns false when connectCdp throws
+[01:13:55] [Main] [WARN] [Tweak.Inject] no CDP session on port 9336 for traework
+
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > pushTweak > returns false and still closes session when injectCssLayer throws
+[01:13:55] [Main] [WARN] [Tweak.Inject] push failed for traework: CDP timeout
+
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > saveTweakAsCustomCss > persists overrides as CSS and marks dirty = false
+[01:13:56] [Main] [WARN] [Tweak.Save] saved tweak CSS for traework (87B)
+
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > saveTweakAsCustomCss > appends to existing customThemeCss (preserving prior content)
+[01:13:56] [Main] [WARN] [Tweak.Save] saved tweak CSS for traework (59B)
+
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > resetTweak > returns false when CDP session cannot be resolved
+[01:13:56] [Main] [WARN] [Tweak.Reset] no CDP session on port 9336 for traework
+
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > resetTweak > returns false and still closes session when injectCssLayer throws
+[01:13:56] [Main] [WARN] [Tweak.Reset] reset failed for traework: socket closed
+
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > saveTweakAsCustomCss error handling > returns false when setCustomThemeCss throws
+[01:13:56] [Main] [WARN] [Tweak.Save] save failed for traework: IPC timeout
+
+stderr | src/main/services/tweak-injector.test.ts > tweak-injector > saveTweakAsCustomCss error handling > preserves explicit overrides parameter (not session.overrides)
+[01:13:56] [Main] [WARN] [Tweak.Save] saved tweak CSS for traework (58B)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/tweak-injector.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 283[2mms[22m[39m
+[90mstdout[2m | src/main/agent-engine-service-metrics.test.ts[2m > [22m[2mAgentEngineService — Concurrency Metrics Subsystem[2m > [22m[2mdispose — interval cleanup[2m > [22m[2mstops the metrics timer on dispose
+[22m[39m[agentskin:cdp-patch] fetch interceptor uninstalled
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/session-pool.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 76[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/theme-restore-flow.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 129[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/agent-engine-service-metrics.test.ts [2m([22m[2m29 tests[22m[2m)[22m[33m 672[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/env-preset-store.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 234[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/performance/performance-recorder.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 157[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper/we/scanner.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 256[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/catalog/manifest-validator.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/agent-engine-persist.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 342[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper/theme-wallpaper.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 364[2mms[22m[39m
+[90mstdout[2m | src/main/agent-engine-service-wallpaper-resolution.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/studio-ipc.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 168[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/studio-workspace-ipc.test.ts [2m([22m[2m24 tests[22m[2m)[22m[33m 398[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper-lifecycle.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 127[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/agent-engine-service-wallpaper-resolution.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 205[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/theme-ipc.test.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 161[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 94[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/cdp-client.test.ts [2m([22m[2m44 tests[22m[2m)[22m[32m 152[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/pkg-parser.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+stderr | src/main/services/performance/performance-logger.test.ts > PerformanceLogger — log() & ring buffer > 51st log() triggers overflow: traceOverflowCount === 1, buffer stays at MAX_HISTORY
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+stderr | src/main/services/performance/performance-logger.test.ts > PerformanceLogger — log() & ring buffer > accumulates traceOverflowCount across multiple overflows
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+stderr | src/main/services/performance/performance-logger.test.ts > PerformanceLogger — log() & ring buffer > after overflow, buffer retains the most recent MAX_HISTORY entries (FIFO eviction)
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+stderr | src/main/services/performance/performance-logger.test.ts > PerformanceLogger — getStats() > reflects accumulated overflowCount in stats after buffer wraps
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+stderr | src/main/services/performance/performance-logger.test.ts > PerformanceLogger — clear() > resets traceOverflowCount to zero
+[PerformanceLogger] ring buffer overflow: MAX_HISTORY=50 exceeded, oldest trace discarded. Increase MAX_HISTORY or persist traces to disk if historical data retention is required.
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/performance/performance-logger.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 120[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/shared/cdp-discovery.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 129[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/catalog/manifest-schema.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper-service.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/profile/native-profile.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/palette-builder.test.ts [2m([22m[2m61 tests[22m[2m)[22m[32m 89[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/lz4-decoder.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+[90mstdout[2m | src/main/ipc/wallpaper-ipc.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/shared/tonal-palette.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/settings-ipc.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 78[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/wallpaper-ipc.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/catalog/theme-catalog.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/agent-engine-registry.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/performance/performance-logger-timeout.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 68[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/with-monitored-timeout.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 68[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/profile/color-quantize.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene-pkg-parser.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/profile/studio-theme-templates.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+stderr | src/shared/theme-mapping.test.ts > semanticColorsToPalette > ignores non-string values
+[theme-mapping] unmapped semantic color: background
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/inspect-session.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+stderr | src/shared/theme-mapping.test.ts > paletteToSemanticColors > ignores unknown palette tokens
+[theme-mapping] unmapped palette token: --unknown-token
+
+ [32m✓[39m [30m[45m main [49m[39m src/shared/theme-mapping.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+[90mstdout[2m | src/main/wallpaper/target-discovery.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper/target-discovery.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/electron-launcher.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 24671[2mms[22m[39m
+       [33m[2m✓[22m[39m spawns with --remote-debugging-port=0 when no preferred port [33m 8193[2mms[22m[39m
+       [33m[2m✓[22m[39m tracks launched apps and returns a snapshot [33m 8196[2mms[22m[39m
+       [33m[2m✓[22m[39m accepts a registered path with case-insensitive comparison on win32 [33m 8207[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/wallpaper/render-css.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+[90mstdout[2m | src/main/cdp/baseline-css-capture.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+stderr | src/main/cdp/baseline-css-capture.test.ts > captureBaselineCss (mock CDP) > marks jsFrozen=false and degrades gracefully when Debugger freeze throws
+[01:14:04] [Main] [WARN] [BaselineCss.Freeze] Debugger freeze failed (degraded capture): freeze fail
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/baseline-css-capture.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+[90mstdout[2m | src/main/catalog/theme-installer.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/shared/safe-css.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 92[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/boot-progress.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/ipc-validators.test.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/catalog/theme-installer.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/cdp-ready.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/steam-path-resolver.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/config/studio-window-state.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/profile/overrides-store.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/scanner/infra/validate.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/scanner/infra/ps.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/scanner/pipeline/merge.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scheme-sync.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/shared/errors.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/profile/transform-ledger.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/particle-parser.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/agent-engine-options.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/profile/treatment-classifier.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+[90mstdout[2m | src/main/cdp/baseline-validator.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+stderr | src/main/cdp/baseline-validator.test.ts > validateBaselineCss (mock CDP) > degrades when probe throws
+[01:14:08] [Main] [WARN] [BaselineCss.Validate] baseline probe failed, degrading: probe boom
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/baseline-validator.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+[90mstdout[2m | src/main/wallpaper/injection-state.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+[90mstdout[2m | src/main/cdp/baseline-gate.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+stderr | src/main/cdp/baseline-gate.test.ts > evaluateReplicationGate > forbids conservatively when the replication probe throws
+[01:14:08] [Main] [WARN] [BaselineCss.Validate] baseline probe failed, degrading: cdp down
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/baseline-gate.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 85[2mms[22m[39m
+stderr | src/main/wallpaper/injection-state.test.ts > setActiveMediaToken (atomic replace) > keeps the new token tracked even when unregister throws
+[wallpaper] failed to unregister stale media token: Error: server hiccup
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper/injection-state.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+[90mstdout[2m | src/main/wallpaper-deferred-heal.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/renderer-rank.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+[90mstdout[2m | src/main/app-discovery-cache.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper-deferred-heal.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/app-discovery-cache.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/catalog/agent-catalog.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/boot-profiler.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+[90mstdout[2m | src/main/file-open.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/file-open.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/profile/studio-history.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/core-ipc.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 30058[2mms[22m[39m
+       [33m[2m✓[22m[39m rejects with IpcTimeoutError when core.status() hangs [33m 15012[2mms[22m[39m
+       [33m[2m✓[22m[39m rejects with IpcTimeoutError when core.status() hangs [33m 15015[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/shared/timeout-renderer.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/theme/theme-from-image.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+[90mstdout[2m | src/main/cdp/baseline-css-replay.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+[90mstdout[2m | src/main/main-context-disposables.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+stderr | src/main/cdp/baseline-css-replay.test.ts > replayBaseline / stopReplay (mock CDP) > returns false and does NOT adopt when replay css is empty
+[01:14:10] [Main] [WARN] [BaselineCss.Replay] replay aborted: empty replay CSS (no captured stylesheets)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/baseline-css-replay.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/trusted-sender.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/secondary-inject.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/main-context-disposables.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/binary-reader.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/boot-reporter.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/theme/wallpaper-sample.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/epoch-manager.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper/unified-background.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/services/scanner/pipeline/stream-merge.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/audio-level.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/shared/i18n.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+[90mstdout[2m | src/main/cdp/apply-baseline.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+[90mstdout[2m | src/main/cdp/cdp-targets.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/apply-baseline.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/cdp/cdp-targets.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+[90mstdout[2m | src/main/cdp/live-doubao-engine.manual.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+[90mstdout[2m | src/main/cdp/live-apply-all.manual.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+[90mstdout[2m | src/main/cdp/live-reload-persistence.manual.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+ [2m[90m↓[39m[22m [30m[45m main [49m[39m src/main/cdp/live-apply-all.manual.test.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m [30m[45m main [49m[39m src/main/cdp/live-doubao-engine.manual.test.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [2m[90m↓[39m[22m [30m[45m main [49m[39m src/main/cdp/live-reload-persistence.manual.test.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/import-guard.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 459[2mms[22m[39m
+[90mstdout[2m | src/main/cdp/reseed-themes.manual.test.ts
+[22m[39m[agentskin:cdp-patch] fetch interceptor installed (WebSocket /json/list fallback)
+
+stderr | src/ui/stores/themeStore.test.ts > themeStore — applyToApp unknown-status branch > shows a destructive toast and returns false when applyTheme returns an unknown status
+[apply-result] unknown status from main process: future-unknown-status
+
+ [2m[90m↓[39m[22m [30m[45m main [49m[39m src/main/cdp/reseed-themes.manual.test.ts [2m([22m[2m1 test[22m[2m | [22m[33m1 skipped[39m[2m)[22m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/themeStore.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 284[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/components/studio/__tests__/StudioImageToThemePanel.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/components/dynamic-background.test.tsx [2m([22m[2m11 tests[22m[2m)[22m[32m 82[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/lib/app-dedupe.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/wallpaperStore.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 166[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/hooks/useAppController.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 230[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/components/studio/Toolbox.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 98[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/statusStore.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/components/studio/palette.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 92[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/bootProgressStore.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/workspaceStore.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/__tests__/studioStore.imageToTheme.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/studioStore.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/environmentStore.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/pages/wallpaper/describeWallpaperFailure.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/shellStore.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/pages/ThemesPage.test.tsx [2m([22m[2m8 tests[22m[2m)[22m[33m 328[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/lib/wallpaperVideo.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/components/studio/RealDomPreview.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/hooks/useConcurrencyReporter.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+stderr | src/ui/hooks/apply-result.test.ts > handleApplyResult > returns "unknown-status" (not success) for unrecognized status
+[apply-result] unknown status from main process: new-unrecognized-status
+
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/hooks/apply-result.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/stores/diagnosticsStore.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/hooks/useRelativeTime.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/lib/status-utils.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/components/diagnostics/PerformancePanel-polling.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+ [32m✓[39m [30m[45m ui [49m[39m src/ui/components/diagnostics/PerformancePanel-timeout.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 113[2mms[22m[39m
+ [32m✓[39m [30m[42m visual-regression [49m[39m tests/visual-regression/theme-token-consistency.test.ts [2m([22m[2m89 tests[22m[2m)[22m[32m 236[2mms[22m[39m
+ [32m✓[39m [30m[42m visual-regression [49m[39m tests/visual-regression/deriveTokens-consistency.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m [30m[42m visual-regression [49m[39m tests/visual-regression/regression-runner.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m [30m[42m visual-regression [49m[39m tests/visual-regression/cdp-full-extract-frame.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+[90mstdout[2m | src/main/scene-size.verify.test.ts[2m > [22m[2mpost-fix scene draw size verification (real workshop data)[2m > [22m[2mdraws every fullscreen background at the projection size on a 1920x1080 viewport
+[22m[39mfullscreen backgrounds: 62, now cover the 1920x1080 viewport: 62
+3578699777#23 name="25天空" quad=(3840x1917) drawn=(1920x959) | design: 2.5D layered sky: 3840x1917 (width 100%, height 89% of proj) — author crops the lower edge for the 后景/栏杆 layers below.
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/ipc/electron-ipc.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 60049[2mms[22m[39m
+       [33m[2m✓[22m[39m rejects with IpcTimeoutError when the scan hangs [33m 30009[2mms[22m[39m
+       [33m[2m✓[22m[39m rejects with IpcTimeoutError when launch hangs [33m 30016[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/wallpaper-injector.test.ts [2m([22m[2m19 tests[22m[2m)[22m[33m 60582[2mms[22m[39m
+     [33m[2m✓[22m[39m falls back to last successful wallpaper on failure [33m 15121[2mms[22m[39m
+     [33m[2m✓[22m[39m logs fallback attempt and failure when fallback also fails [33m 30292[2mms[22m[39m
+     [33m[2m✓[22m[39m cleans up previous token on no-page-target exit [33m 15130[2mms[22m[39m
+[90mstdout[2m | src/main/scene-html-size.test.ts[2m > [22m[2mscene HTML size after texture cap (real workshop data)[2m > [22m[2mrenders every scene and reports HTML + estimated decode memory
+[22m[39mscenes rendered: 35, total HTML: 422MB
+largest: 3299228616: 36.9MB | 3347416586: 35.3MB | 3233141951: 33.0MB | 3028090166: 24.0MB | 3436945972: 23.4MB | 3211109911: 23.2MB | 3354495107: 21.7MB | 3375885250: 20.8MB
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene-html-size.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 88911[2mms[22m[39m
+     [33m[2m✓[22m[39m renders every scene and reports HTML + estimated decode memory [33m 88908[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene-renderer-html.test.ts [2m([22m[2m23 tests[22m[2m)[22m[33m 89656[2mms[22m[39m
+     [33m[2m✓[22m[39m every scene.pkg embeds the postMessage bridge and a working mousemove fallback [33m 89429[2mms[22m[39m
+[90mstdout[2m | src/main/scene-particle-smoke.test.ts[2m > [22m[2mscene HTML — real workshop particle scenes (smoke)[2m > [22m[2mrenders every scene.pkg and embeds particle simulation for resolvable presets
+[22m[39mscenes rendered: 35, with particle layers: 26
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene-size.verify.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 90576[2mms[22m[39m
+     [33m[2m✓[22m[39m draws every fullscreen background at the projection size on a 1920x1080 viewport [33m 57852[2mms[22m[39m
+     [33m[2m✓[22m[39m all fullscreen backgrounds have non-negative draw dimensions after the scale fix [33m 32715[2mms[22m[39m
+[90mstdout[2m | src/main/scene-particle-smoke.test.ts[2m > [22m[2mworkshop pkg-embedded particle resolution[2m > [22m[2mresolves every particle ref from the pkg (custom + presets), not just install presets
+[22m[39mdistinct particle refs: [33m66[39m | resolvable from pkg alone: [33m66[39m
+custom refs: [33m46[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene-particle-smoke.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 126370[2mms[22m[39m
+     [33m[2m✓[22m[39m renders every scene.pkg and embeds particle simulation for resolvable presets [33m 89801[2mms[22m[39m
+     [33m[2m✓[22m[39m resolves every particle ref from the pkg (custom + presets), not just install presets [33m 36564[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m174 passed[39m[22m[2m | [22m[33m4 skipped[39m[90m (178)[39m
+[2m      Tests [22m [1m[32m2377 passed[39m[22m[2m | [22m[33m4 skipped[39m[90m (2381)[39m
+[2m   Start at [22m 01:13:38
+[2m   Duration [22m 127.89s[2m (transform 26.17s, setup 996ms, import 92.61s, tests 639.08s, environment 98ms)[22m
+

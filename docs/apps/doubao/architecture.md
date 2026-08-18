@@ -93,6 +93,21 @@
 > 锚点采集规则：过滤 css-module hash（`_pk7td_1`）、噪声类（`__as_*`）、单/双字符工具类。
 > 升级后使用 `scripts/snapshot-compare.mjs` diff 语义锚点新增/消失。
 
+### 4.1 锚点/变量前缀实测核验
+
+> 以 `agents-raw-data/doubao-full-extract.json` 对照 §4 声称的锚点与变量前缀，裁决是否失准。
+
+| 声称 | 本地实测 | 裁决 |
+|------|---------|------|
+| 变量前缀 `--s-*` | ✅ 11622 命中 | ✅ 属实（semi 设计系统主桶） |
+| `--semi-*` | ✅ 14989 命中 | ✅ 属实（Semi Design 库 token） |
+| `--dbx-*`（豆包业务 token） | ✅ 7412 命中 | ✅ 属实 |
+| 锚点 `.bg-dbx-bg-base-web` | ✅ 9 命中 | ✅ 属实（dbx 层语义工具类） |
+| 锚点 `.ProseMirror` | ✅ 存在 | ✅ 属实（富文本/编辑器库稳定 class） |
+
+**结论**：doubao（`chromium-webview chrome://doubao-chat` 形态）的变量前缀与锚点均与本地实测吻合，无失真锚点。
+注意 doubao 为 Semi Design（`--s-*`/`--semi-*`）+ 自研 `--dbx-*` 双体系，覆盖面较大；`ProseMirror` 为第三方编辑器库稳定 class，属可靠锚点。
+
 ## 5. 注入面与脆弱性提示
 
 - **安全上下文**：`chrome://doubao-chat`。

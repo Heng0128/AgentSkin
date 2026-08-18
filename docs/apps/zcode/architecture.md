@@ -1,8 +1,8 @@
 # zcode 架构文档 (AgentSkin)
 
-> 逆向理解产物。基于 CDP 全量快照（`cdp-full-extract`）动态提取，未写回任何原应用文件。
+> 逆向理解产物 = **静态 asar 解包层**（`extract-asar-summary.mjs`）+ **动态 CDP 层**（`cdp-full-extract`），未写回任何原应用文件。
 > 动态布局来源：`agents-raw-data/zcode-full-extract.json`；
-> 静态 asar 层：_暂无解包汇总_（可跑 `extract-asar-summary.mjs` 后合并）。
+> 静态 asar 来源：`docs/apps/zcode/raw/extract-summary.{json,md}`（app.asar 解包汇总）。
 > 目标：支撑深度主题注入 / 脆弱性分级 / 语义锚点维护。
 
 ## 1. 包身份（CDP 运行时侧）
@@ -92,6 +92,20 @@
 
 > 锚点采集规则：过滤 css-module hash（`_pk7td_1`）、噪声类（`__as_*`）、单/双字符工具类。
 > 升级后使用 `scripts/snapshot-compare.mjs` diff 语义锚点新增/消失。
+
+### 4.1 锚点/变量前缀实测核验
+
+> 以 `agents-raw-data/zcode-full-extract.json` 对照 §4 声称的锚点与变量前缀，裁决是否失准。
+
+| 声称 | 本地实测 | 裁决 |
+|------|---------|------|
+| 变量前缀 `--color-*` | ✅ 6322 命中 | ✅ 属实（zcode 最大设计 token 桶） |
+| `--beam-*`（zcode 特色光效 token） | ✅ 942 命中 | ✅ 属实 |
+| `--ui-*`（功能面 token） | ✅ 32 命中 | ✅ 属实 |
+| 锚点 `@container/conversation` | ✅ 6 命中 | ✅ 属实（容器查询定位） |
+| AgentSkin 语义标记 `data-agentskin-*` | ABSENT | ⚠️ zcode 尚未注入 `data-agentskin-*` 标记（非失真，是标记应用缺口，待补） |
+
+**结论**：zcode 核心变量前缀与锚点均与本地实测吻合。唯一注意项是 `data-agentskin-*` 语义标记尚未附着到 zcode 的 DOM（参考其余适配器的 `rendererHints` 语义锚点注入），若需跨 Agent 统一语义锚点可补。
 
 ## 5. 注入面与脆弱性提示
 

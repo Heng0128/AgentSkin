@@ -1,0 +1,158 @@
+{
+  "agent": "zcode",
+  "cdpVersion": "file:///C:/Program%20Files/ZCode/resources/app.asar/out/renderer/index.html?restoreSession=true&supportsSettings=true&zcodeLaunchMarks=%7B%22createdAt%22%3A1787041642532.9%2C%22mainStart%22%3A1787041644219%2C%22appReady%22%3A1787041645039%2C%22loadUrl%22%3A1787041647384%7D",
+  "staticVersion": "3.7.7",
+  "rootVarSource": "root",
+  "stats": {
+    "staticNamespaces": 22,
+    "runtimeNamespaces": 17,
+    "staticOnlyNamespaces": 7,
+    "sharedNamespaces": 15,
+    "staticTestIds": 363,
+    "verifiedTestIds": 0,
+    "unverifiedTestIds": 3
+  },
+  "staticOnlyNamespaces": [
+    {
+      "ns": "highlight",
+      "varCount": 2,
+      "sampleVars": [
+        "highlight-bg-color",
+        "highlight-selected-bg-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "markdown",
+      "varCount": 2,
+      "sampleVars": [
+        "markdown-table-layout-left-inset",
+        "markdown-table-layout-right-inset"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "react",
+      "varCount": 1,
+      "sampleVars": [
+        "react-pdf-text-layer"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "spacing",
+      "varCount": 1,
+      "sampleVars": [
+        "spacing"
+      ],
+      "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
+    },
+    {
+      "ns": "attachment",
+      "varCount": 1,
+      "sampleVars": [
+        "attachment-bg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "bg",
+      "varCount": 1,
+      "sampleVars": [
+        "bg"
+      ],
+      "hint": "design-token 可能走 distributed/component-inline，非 :root 暴露——需核是否在核心渲染面"
+    },
+    {
+      "ns": "side",
+      "varCount": 1,
+      "sampleVars": [
+        "side-pane-tab-bg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    }
+  ],
+  "sharedNamespaces": [
+    {
+      "ns": "color",
+      "staticVars": 256,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "tw",
+      "staticVars": 127,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "text",
+      "staticVars": 23,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "container",
+      "staticVars": 10,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "radius",
+      "staticVars": 7,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "font",
+      "staticVars": 6,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "blur",
+      "staticVars": 6,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "tracking",
+      "staticVars": 4,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "leading",
+      "staticVars": 4,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "default",
+      "staticVars": 4,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "animate",
+      "staticVars": 3,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "ease",
+      "staticVars": 2,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "animated",
+      "staticVars": 2,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "aspect",
+      "staticVars": 1,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "ui",
+      "staticVars": 1,
+      "runtimeCount": 3
+    }
+  ],
+  "unverifiedTestIds": [
+    "chat-input",
+    "docx-editor-viewer",
+    "chat-view"
+  ],
+  "verifiedTestIds": []
+}

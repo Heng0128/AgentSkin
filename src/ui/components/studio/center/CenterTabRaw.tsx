@@ -10,10 +10,7 @@
 import type { UiMessages } from '@shared/i18n';
 
 export function CenterTabRaw({ t }: { t: UiMessages }) {
-  const desc =
-    'studioTabRawDesc' in t
-      ? (t as unknown as Record<string, string>).studioTabRawDesc
-      : '原生 CSS 源码编辑：直接修改注入样式表。';
+  const desc = t.studioTabRawDesc;
 
   return (
     <div className="rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">

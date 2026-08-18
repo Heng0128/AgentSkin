@@ -228,48 +228,6 @@ html.${HOST_CLASS} [class*="tooltip"] {
 }
 `;
 
-  // ═══════════════════════════════════════════════════════════
-  // L5: HEURISTIC DOM POSITIONING
-  // Finds elements by semantic features when class names drift.
-  // ═══════════════════════════════════════════════════════════
-
-  function findSidebar() {
-    // Strategy 1: <nav> on the left
-    const nav = document.querySelector('nav');
-    if (nav) {
-      const rect = nav.getBoundingClientRect();
-      if (rect.left < 60 && rect.width < 350 && rect.height > 400) return nav;
-    }
-    // Strategy 2: <aside> with nav-like role
-    const aside = document.querySelector('aside[role="navigation"], aside[class*="nav"]');
-    if (aside) {
-      const rect = aside.getBoundingClientRect();
-      if (rect.left < 60 && rect.width < 350 && rect.height > 400) return aside;
-    }
-    return null;
-  }
-
-  function findComposer() {
-    // Strategy 1: contenteditable or textarea → walk up to container
-    const editable = document.querySelector('[contenteditable="true"]')
-      || document.querySelector('textarea');
-    if (editable) {
-      let el = editable.parentElement;
-      for (let i = 0; i < 6 && el; i++) {
-        const rect = el.getBoundingClientRect();
-        if (rect.width > 300 && rect.height > 60 && rect.height < 300) return el;
-        el = el.parentElement;
-      }
-    }
-    // Strategy 2: form containing a textarea
-    const textarea = document.querySelector('textarea');
-    if (textarea) {
-      const form = textarea.closest('form');
-      if (form) return form;
-    }
-    return null;
-  }
-
   // L4: Token auto-discovery — scans agent stylesheets for custom properties
   function discoverAndOverrideTokens() {
     const discovered = new Set();

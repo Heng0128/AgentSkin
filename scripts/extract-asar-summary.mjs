@@ -214,7 +214,10 @@ function extractAsar(asarPath, destDir, dryRun) {
 }
 
 // ============== 文本扫描工具 ==============
-function readableFiles(dir) {
+// skipDirNames 可被调用方注入：VS Code 架构的标准布局把前端运行时代码放在 out/ 下，
+// 对 vscode 族需移除 'out' 跳过，否则根 asar 扫描全空（workbuddy 代码在顶层目录，
+// 而 zcode/qoderwork/traework 的标准布局在 out/）。
+function readableFiles(dir, skipDirNames = SKIP_DIR_NAMES) {
   const files = [];
   const stack = [dir];
   while (stack.length > 0) {
@@ -229,7 +232,7 @@ function readableFiles(dir) {
       const full = join(d, entry.name);
       const ext = entry.name.slice(entry.name.lastIndexOf('.')).toLowerCase();
       if (entry.isDirectory()) {
-        if (!SKIP_DIR_NAMES.has(entry.name)) stack.push(full);
+        if (!skipDirNames.has(entry.name)) stack.push(full);
       } else if (entry.isFile() && ['.js', '.cjs', '.mjs', '.html', '.css'].includes(ext)) {
         files.push(full);
       }
@@ -256,9 +259,9 @@ function countMatches(accum, matches) {
 }
 
 // ============== 扫描模块 ==============
-function collectTopology(extractDir) {
+function collectTopology(extractDir, skipDirNames) {
   const topology = { entries: [], chunks: [], preloadScripts: [], processArches: [] };
-  const files = readableFiles(extractDir);
+  const files = readableFiles(extractDir, skipDirNames);
   for (const file of files) {
     const text = readTextSafe(file);
     if (text === null) continue;
@@ -280,13 +283,13 @@ function collectTopology(extractDir) {
   return topology;
 }
 
-function collectStrings(extractDir) {
+function collectStrings(extractDir, skipDirNames) {
   const dataAttrs = new Map();
   const dataTestids = new Map();
   const ipcTypes = new Map();
   const i18nKeys = new Map();
   const ids = new Map();
-  const files = readableFiles(extractDir);
+  const files = readableFiles(extractDir, skipDirNames);
   for (const file of files) {
     const text = readTextSafe(file);
     if (text === null) continue;
@@ -331,10 +334,10 @@ function collectStrings(extractDir) {
   };
 }
 
-function collectSurfaces(extractDir) {
+function collectSurfaces(extractDir, skipDirNames) {
   const preloadExposed = new Map();
   const ipc = { handle: new Map(), invoke: new Map(), send: new Map(), on: new Map() };
-  const files = readableFiles(extractDir);
+  const files = readableFiles(extractDir, skipDirNames);
   for (const file of files) {
     if (!/\.(js|cjs|mjs)$/.test(file)) continue;
     const text = readTextSafe(file);
@@ -371,7 +374,7 @@ function collectSurfaces(extractDir) {
   };
 }
 
-function collectSecurity(extractDir) {
+function collectSecurity(extractDir, skipDirNames) {
   const security = {
     contextIsolation: null,
     webSecurity: null,
@@ -379,7 +382,7 @@ function collectSecurity(extractDir) {
     csp: { from: 'none', directives: {} },
   };
   const htmlFiles = [];
-  const files = readableFiles(extractDir);
+  const files = readableFiles(extractDir, skipDirNames);
   for (const file of files) {
     const text = readTextSafe(file);
     if (text === null) continue;
@@ -450,11 +453,11 @@ function decodeHtmlEntities(text) {
   });
 }
 
-function collectTokens(extractDir, _family) {
+function collectTokens(extractDir, _family, skipDirNames) {
   const buckets = new Map();
   let cssBytes = 0;
   let sheets = 0;
-  const files = readableFiles(extractDir);
+  const files = readableFiles(extractDir, skipDirNames);
   for (const file of files) {
     if (!/\.css$/.test(file)) continue;
     const text = readTextSafe(file);
@@ -492,9 +495,9 @@ function namespaceOf(varName) {
   return m ? m[1] : varName;
 }
 
-function collectSourcemaps(extractDir) {
+function collectSourcemaps(extractDir, skipDirNames) {
   const seen = new Map();
-  const files = readableFiles(extractDir);
+  const files = readableFiles(extractDir, skipDirNames);
   for (const file of files) {
     if (!/\.(js|cjs|mjs)$/.test(file)) continue;
     const text = readTextSafe(file);
@@ -543,6 +546,18 @@ function runPipeline(args) {
   if (isExtractedDir(appPath)) {
     quality.extractDepth = 'none';
     quality.extractedDirs = [{ from: appPath, to: appPath }];
+    // 已解包目录同样需要全量扫描（此前直接 return 导致产出为空，如 traework）。
+    const skipDirs =
+      args.family === 'vscode'
+        ? new Set([...SKIP_DIR_NAMES].filter((n) => n !== 'out'))
+        : SKIP_DIR_NAMES;
+    const topology = collectTopology(appPath, skipDirs);
+    const strings = collectStrings(appPath, skipDirs);
+    const surfaces = collectSurfaces(appPath, skipDirs);
+    const security = collectSecurity(appPath, skipDirs);
+    const tokens = collectTokens(appPath, args.family, skipDirs);
+    const sourcemaps = collectSourcemaps(appPath, skipDirs);
+    const fragilitySeeds = buildFragilitySeeds(strings);
     return finalize({
       appPath,
       appId,
@@ -552,6 +567,14 @@ function runPipeline(args) {
       workDir,
       outDir,
       quality,
+      rootDir: appPath,
+      topology,
+      strings,
+      surfaces,
+      security,
+      tokens,
+      sourcemaps,
+      fragilitySeeds,
     });
   }
 
@@ -605,13 +628,19 @@ function runPipeline(args) {
   }
 
   // 5. 全量扫描（合并所有已解包目录）。
+  // VS Code 架构的标准布局把前端运行时代码放在 out/ 下（区别于构建产物语义），
+  // 因此对该族保留 out/ 扫描，否则根 asar 扫不到任何 token/锚点。
+  const skipDirs =
+    args.family === 'vscode'
+      ? new Set([...SKIP_DIR_NAMES].filter((n) => n !== 'out'))
+      : SKIP_DIR_NAMES;
   const rootDir = scanResults.find((s) => s.role === 'root')?.dir ?? scanResults[0].dir;
-  const topology = collectTopology(rootDir);
-  const strings = collectStrings(rootDir);
-  const surfaces = collectSurfaces(rootDir);
-  const security = collectSecurity(rootDir);
-  const tokens = collectTokens(rootDir, args.family);
-  const sourcemaps = collectSourcemaps(rootDir);
+  const topology = collectTopology(rootDir, skipDirs);
+  const strings = collectStrings(rootDir, skipDirs);
+  const surfaces = collectSurfaces(rootDir, skipDirs);
+  const security = collectSecurity(rootDir, skipDirs);
+  const tokens = collectTokens(rootDir, args.family, skipDirs);
+  const sourcemaps = collectSourcemaps(rootDir, skipDirs);
   const fragilitySeeds = buildFragilitySeeds(strings);
 
   const report = finalize({
@@ -637,7 +666,11 @@ function runPipeline(args) {
 }
 
 function isExtractedDir(dir) {
-  return existsSync(join(dir, 'package.json')) && walkAsars(dir).length === 0;
+  if (!existsSync(join(dir, 'package.json'))) return false;
+  // 忽略超小的 asar stub：VS Code 新版 linear 布局在已解包目录中仍留一个 ~28B 的
+  // node_modules.asar 占位（traework），它并非可解包的有效 asar。
+  const asars = walkAsars(dir);
+  return asars.every((p) => statSync(p).size < 1 * 1024 * 1024);
 }
 
 function finalize(ctx) {

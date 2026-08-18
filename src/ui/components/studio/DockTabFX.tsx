@@ -20,7 +20,9 @@ import { Kicker } from '@/components/studio/kicker';
 import { computeSignature } from '@/components/studio/Toolbox';
 import type { PalettePreset } from '@/lib/palettePresets';
 import { loadPalettePresets, savePalettePreset } from '@/lib/palettePresets';
+import { useStatusStore } from '@/stores/statusStore';
 import { useStudioStore } from '@/stores/studioStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { ToolOverride } from '@/types/override';
 
 import type { UiMessages } from '@shared/i18n';
@@ -44,6 +46,26 @@ export function DockTabFX({ t }: { t: UiMessages }) {
   const setOverride = useStudioStore((s) => s.setOverride);
   const resetOverrides = useStudioStore((s) => s.resetOverrides);
   const setPaletteLoaded = useStudioStore((s) => s.setPaletteLoaded);
+  const wsUpdateOverride = useWorkspaceStore((s) => s.updateOverride);
+  const wsAgentId = useWorkspaceStore((s) => s.currentAgentId);
+  const statusApps = useStatusStore((s) => s.status?.apps);
+
+  // Bridge studio workspace agent to workspaceStore live-tweak target.
+  // Only act when no explicit selection exists in workspaceStore — preserves
+  // user's deliberate agent choice from the Workspace page.
+  // Requires a valid CDP port — read real port from statusStore; port=0 is
+  // unreachable and would cause silent push failures in tweak-injector.
+  useEffect(() => {
+    const ws = useWorkspaceStore.getState();
+    const agentId = ws.windows[0]?.agentId;
+    if (agentId && !ws.currentAgentId) {
+      const runningApp = statusApps?.find((a) => a.appId === agentId);
+      const realPort = runningApp?.port ?? 0;
+      if (realPort > 0) {
+        ws.selectAgent(agentId, realPort);
+      }
+    }
+  }, [statusApps]);
 
   const [presets, setPresets] = useState<PalettePreset[]>([]);
   const [presetName, setPresetName] = useState('');
@@ -115,8 +137,17 @@ export function DockTabFX({ t }: { t: UiMessages }) {
 
   const overrides = toolOverrides as ToolOverride | null;
 
+  const pushOverride = (key: keyof ToolOverride, value: string | number | boolean | undefined) => {
+    setOverride(key, value); // iframe mock preview
+    // Push to real agent only when a valid agent session exists.
+    // CDP injection requires a real port; port=0 is unreachable and would silently fail.
+    if (wsAgentId) {
+      void wsUpdateOverride(key, value);
+    }
+  };
+
   const handleReset = (key: keyof ToolOverride) => () => {
-    setOverride(key, undefined);
+    pushOverride(key, undefined);
   };
 
   const handleSavePreset = () => {
@@ -192,7 +223,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             value={finalAccent}
             overridden={overrides?.accent !== undefined}
             onReset={handleReset('accent')}
-            onChange={(v) => setOverride('accent', v)}
+            onChange={(v) => pushOverride('accent', v)}
             placeholder={t.studioColorHexPlaceholder}
           />
           <ColorCard
@@ -200,7 +231,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             value={finalBg}
             overridden={overrides?.background !== undefined}
             onReset={handleReset('background')}
-            onChange={(v) => setOverride('background', v)}
+            onChange={(v) => pushOverride('background', v)}
             placeholder={t.studioColorHexPlaceholder}
           />
           <ColorCard
@@ -208,7 +239,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             value={finalFg}
             overridden={overrides?.foreground !== undefined}
             onReset={handleReset('foreground')}
-            onChange={(v) => setOverride('foreground', v)}
+            onChange={(v) => pushOverride('foreground', v)}
             placeholder={t.studioColorHexPlaceholder}
           />
           <ColorCard
@@ -216,7 +247,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             value={finalSurface}
             overridden={overrides?.surface !== undefined}
             onReset={handleReset('surface')}
-            onChange={(v) => setOverride('surface', v)}
+            onChange={(v) => pushOverride('surface', v)}
             placeholder={t.studioColorHexPlaceholder}
           />
           <ToggleCard
@@ -224,7 +255,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             checked={finalGrad}
             overridden={overrides?.gradientAccent !== undefined}
             onReset={handleReset('gradientAccent')}
-            onChange={(v) => setOverride('gradientAccent', v)}
+            onChange={(v) => pushOverride('gradientAccent', v)}
           />
         </div>
       </div>
@@ -243,7 +274,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             unit="px"
             overridden={overrides?.radius !== undefined}
             onReset={handleReset('radius')}
-            onChange={(v) => setOverride('radius', `${v}px`)}
+            onChange={(v) => pushOverride('radius', `${v}px`)}
           />
           <SliderCard
             label={t.studioDimSpacing}
@@ -255,7 +286,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             unit="px"
             overridden={overrides?.spacing !== undefined}
             onReset={handleReset('spacing')}
-            onChange={(v) => setOverride('spacing', v)}
+            onChange={(v) => pushOverride('spacing', v)}
           />
           <SelectCard
             label={t.studioDimShadow}
@@ -263,7 +294,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             options={shadowLevels(t).map((s) => ({ label: s.label, value: s.value }))}
             overridden={overrides?.shadowLevel !== undefined}
             onReset={handleReset('shadowLevel')}
-            onChange={(v) => setOverride('shadowLevel', v as ToolOverride['shadowLevel'])}
+            onChange={(v) => pushOverride('shadowLevel', v as ToolOverride['shadowLevel'])}
           />
           <SliderCard
             label={t.studioDimBlur}
@@ -275,7 +306,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             unit="px"
             overridden={overrides?.blurPx !== undefined}
             onReset={handleReset('blurPx')}
-            onChange={(v) => setOverride('blurPx', v)}
+            onChange={(v) => pushOverride('blurPx', v)}
           />
           <SliderCard
             label={t.studioDimBorder}
@@ -287,14 +318,14 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             unit="px"
             overridden={overrides?.borderWidth !== undefined}
             onReset={handleReset('borderWidth')}
-            onChange={(v) => setOverride('borderWidth', v)}
+            onChange={(v) => pushOverride('borderWidth', v)}
           />
           <ToggleCard
             label={t.studioToolboxSeparator}
             checked={finalSep}
             overridden={overrides?.separators !== undefined}
             onReset={handleReset('separators')}
-            onChange={(v) => setOverride('separators', v)}
+            onChange={(v) => pushOverride('separators', v)}
           />
         </div>
       </div>
@@ -313,7 +344,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             unit="px"
             overridden={overrides?.fontSize !== undefined}
             onReset={handleReset('fontSize')}
-            onChange={(v) => setOverride('fontSize', v)}
+            onChange={(v) => pushOverride('fontSize', v)}
           />
           <SliderCard
             label={t.studioToolboxLineHeight}
@@ -324,7 +355,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             step={0.05}
             overridden={overrides?.lineHeight !== undefined}
             onReset={handleReset('lineHeight')}
-            onChange={(v) => setOverride('lineHeight', v)}
+            onChange={(v) => pushOverride('lineHeight', v)}
           />
         </div>
       </div>
@@ -343,7 +374,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             unit="s"
             overridden={overrides?.duration !== undefined}
             onReset={handleReset('duration')}
-            onChange={(v) => setOverride('duration', `${v}s`)}
+            onChange={(v) => pushOverride('duration', `${v}s`)}
           />
           <SelectCard
             label={t.studioToolboxMotionEasing}
@@ -351,7 +382,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             options={EASING_OPTIONS.map((e) => ({ label: e, value: e }))}
             overridden={overrides?.timing !== undefined}
             onReset={handleReset('timing')}
-            onChange={(v) => setOverride('timing', v)}
+            onChange={(v) => pushOverride('timing', v)}
           />
         </div>
       </div>
@@ -369,14 +400,14 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             step={0.05}
             overridden={overrides?.scale !== undefined}
             onReset={handleReset('scale')}
-            onChange={(v) => setOverride('scale', v)}
+            onChange={(v) => pushOverride('scale', v)}
           />
           <ToggleCard
             label={t.studioToolboxInvert}
             checked={finalInvert}
             overridden={overrides?.invert !== undefined}
             onReset={handleReset('invert')}
-            onChange={(v) => setOverride('invert', v)}
+            onChange={(v) => pushOverride('invert', v)}
           />
           <SliderCard
             label={t.studioToolboxContrast}
@@ -387,7 +418,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             step={0.05}
             overridden={overrides?.contrast !== undefined}
             onReset={handleReset('contrast')}
-            onChange={(v) => setOverride('contrast', v)}
+            onChange={(v) => pushOverride('contrast', v)}
           />
           <SliderCard
             label={t.studioToolboxSaturate}
@@ -398,7 +429,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             step={0.05}
             overridden={overrides?.saturate !== undefined}
             onReset={handleReset('saturate')}
-            onChange={(v) => setOverride('saturate', v)}
+            onChange={(v) => pushOverride('saturate', v)}
           />
         </div>
       </div>
@@ -416,7 +447,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             step={0.05}
             overridden={overrides?.dim !== undefined}
             onReset={handleReset('dim')}
-            onChange={(v) => setOverride('dim', v)}
+            onChange={(v) => pushOverride('dim', v)}
           />
           <SliderCard
             label={t.studioToolboxContentOpacity}
@@ -427,7 +458,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
             step={0.05}
             overridden={overrides?.opacity !== undefined}
             onReset={handleReset('opacity')}
-            onChange={(v) => setOverride('opacity', v)}
+            onChange={(v) => pushOverride('opacity', v)}
           />
           <button
             type="button"
