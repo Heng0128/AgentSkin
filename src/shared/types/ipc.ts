@@ -16,10 +16,12 @@ import type { LaunchRequest } from './launch';
 import type { ToolOverride, TweakSession } from './override';
 import type {
   CatalogResult,
+  ImagePixelSample,
   InstalledTheme,
   StudioProject,
   StudioSnapshotOptions,
   ThemeCatalogItem,
+  ThemeColorsFromImage,
   ThemeStudioExportRequest,
 } from './theme';
 import type { VisualAnalysisSummary } from './visual-analysis';
@@ -458,7 +460,7 @@ export interface AgentSkinApi {
   /** Extract a color palette from an uploaded image → theme (pywal-style).
    *  Returns a normalized 14-key `--agentskin-*` palette + recommended mode. */
   extractThemeFromImage(base64Data: string): Promise<{
-    palette: Record<string, string>;
+    palette: ThemeColorsFromImage;
     mode: 'light' | 'dark';
   }>;
   // --- Theme Studio: Bundles (workspace-scoped, no dialog passthrough) ---

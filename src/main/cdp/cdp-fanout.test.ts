@@ -11,6 +11,7 @@ import type { HealthCheckReport } from '../theme-health-check';
 import type { CdpSession, EventCdpSession } from './cdp-client';
 import type { CdpFanoutDeps } from './cdp-fanout';
 import type { InjectEngineResult, InjectThemeResult } from './cdp-inject';
+import type { RendererHints } from './renderer-rank';
 import { CdpSessionPool } from './session-pool';
 
 // ---------------------------------------------------------------------------
@@ -621,6 +622,130 @@ describe('hardeningPass', () => {
     // The last evaluate call should be the wallpaper re-append expression.
     const lastCall = vi.mocked(session.evaluate).mock.calls.at(-1);
     expect(lastCall?.[0]).toContain('__agentskinWpPunch');
+  });
+
+  // ---------------------------------------------------------------------------
+  // RFC A2 P2 — primary renderer unification on rendererHints
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Helper: build a mock adapter that declares `rendererHints`. Without this
+   * the factory's `as unknown as ApplicationAdapter` leaves the accessor
+   * undefined → hardeningPass falls back to list order.
+   */
+  function makeHintedAdapter(hints: RendererHints): ApplicationAdapter {
+    const adapter = makeMockAdapter();
+    (adapter as unknown as { rendererHints: () => RendererHints }).rendererHints = () => hints;
+    return adapter;
+  }
+
+  it('hoists the rendererHints-preferred page to the front and runs health on it (P2)', async () => {
+    // List order is adversarial: the NON-preferred page comes first, so historic
+    // first-page logic would pick the wrong window. rendererHints must override.
+    const mainWs = 'ws://127.0.0.1:9222/devtools/page/main';
+    const secWs = 'ws://127.0.0.1:9222/devtools/page/secondary';
+    const targets = [
+      makeCdpTarget({
+        id: 'page-secondary',
+        type: 'page',
+        url: 'http://localhost/side.html',
+        webSocketDebuggerUrl: secWs,
+      }),
+      makeCdpTarget({
+        id: 'page-main',
+        type: 'page',
+        url: 'http://localhost/app/index.html',
+        webSocketDebuggerUrl: mainWs,
+      }),
+    ];
+    vi.mocked(findDomTargets).mockResolvedValue(targets);
+
+    const mainSession = makeMockSession();
+    const secSession = makeMockSession();
+    vi.mocked(connectCdp).mockImplementation((url) =>
+      Promise.resolve(url === mainWs ? mainSession : secSession),
+    );
+
+    const deps = makeDeps({
+      adapter: vi
+        .fn()
+        .mockReturnValue(makeHintedAdapter({ preferredUrlPatterns: ['app/index\\.html$'] })),
+    });
+
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    // The preferred page is hoisted → it becomes `firstSession` → health runs
+    // on the semantic-anchor window, not whatever /json/list returned first.
+    expect(checkThemeHealth).toHaveBeenCalledWith(mainSession, 'doubao');
+    // The reload watchdog arms on the primary (preferred) page's ws url.
+    expect(connectEventCdp).toHaveBeenCalledWith(mainWs);
+  });
+
+  it('falls back to the first page target when no rendererHints are declared (P2)', async () => {
+    const mainWs = 'ws://127.0.0.1:9222/devtools/page/main';
+    const secWs = 'ws://127.0.0.1:9222/devtools/page/secondary';
+    const targets = [
+      makeCdpTarget({
+        id: 'page-first',
+        type: 'page',
+        url: 'http://localhost/a.html',
+        webSocketDebuggerUrl: mainWs,
+      }),
+      makeCdpTarget({
+        id: 'page-second',
+        type: 'page',
+        url: 'http://localhost/b.html',
+        webSocketDebuggerUrl: secWs,
+      }),
+    ];
+    vi.mocked(findDomTargets).mockResolvedValue(targets);
+    const firstSession = makeMockSession();
+    const secondSession = makeMockSession();
+    vi.mocked(connectCdp).mockImplementation((url) =>
+      Promise.resolve(url === mainWs ? firstSession : secondSession),
+    );
+    // makeMockAdapter has no rendererHints → accessor is undefined.
+    const deps = makeDeps();
+
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    expect(checkThemeHealth).toHaveBeenCalledWith(firstSession, 'doubao');
+    expect(connectEventCdp).toHaveBeenCalledWith(mainWs);
+  });
+
+  it('does not choose a secondaryPatterns page as primary even when listed first (P2)', async () => {
+    const bootWs = 'ws://127.0.0.1:9222/devtools/page/boot';
+    const mainWs = 'ws://127.0.0.1:9222/devtools/page/main';
+    const targets = [
+      makeCdpTarget({
+        id: 'page-boot',
+        type: 'page',
+        url: 'http://localhost/boot.html',
+        webSocketDebuggerUrl: bootWs,
+      }),
+      makeCdpTarget({
+        id: 'page-main',
+        type: 'page',
+        url: 'http://localhost/app/index.html',
+        webSocketDebuggerUrl: mainWs,
+      }),
+    ];
+    vi.mocked(findDomTargets).mockResolvedValue(targets);
+    const bootSession = makeMockSession();
+    const mainSession = makeMockSession();
+    vi.mocked(connectCdp).mockImplementation((url) =>
+      Promise.resolve(url === bootWs ? bootSession : mainSession),
+    );
+
+    const deps = makeDeps({
+      adapter: vi.fn().mockReturnValue(makeHintedAdapter({ secondaryPatterns: ['boot\\.html$'] })),
+    });
+
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    // boot page excluded from the primary decision → main becomes primary.
+    expect(checkThemeHealth).toHaveBeenCalledWith(mainSession, 'doubao');
+    expect(connectEventCdp).toHaveBeenCalledWith(mainWs);
   });
 });
 

@@ -38,7 +38,7 @@ function clamp(n: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, n));
 }
 
-function hexToHsl(hex: string): Hsl {
+export function hexToHsl(hex: string): Hsl {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
   if (!m) return { h: 222, s: 80, l: 55 }; // sensible default (blue)
   const int = Number.parseInt(m[1], 16);
@@ -61,7 +61,7 @@ function hexToHsl(hex: string): Hsl {
   return { h, s: s * 100, l: l * 100 };
 }
 
-function hslToHex({ h, s, l }: Hsl): string {
+export function hslToHex({ h, s, l }: Hsl): string {
   const sn = s / 100;
   const ln = l / 100;
   const c = (1 - Math.abs(2 * ln - 1)) * sn;

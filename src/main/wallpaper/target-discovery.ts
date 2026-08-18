@@ -26,6 +26,7 @@ import { toMessage } from '../../shared/errors';
 import type { AgentId } from '../../shared/types';
 import type { CdpSession } from '../cdp/cdp-client';
 import { type CdpTarget, filterForCdpConnectivity } from '../cdp/cdp-targets';
+import { partitionRenderers } from '../cdp/renderer-rank';
 import type { WallpaperInjectorDeps } from './injector-types';
 
 // ---------------------------------------------------------------------------
@@ -77,6 +78,17 @@ export async function resolvePageTarget(
 ): Promise<CdpTarget | undefined> {
   try {
     const targets = filterForCdpConnectivity(await deps.findAgentTargets(appId, port));
+    if (targets.length === 0) return undefined;
+
+    // RFC A2 P1：适配器声明了 rendererHints 时，用语义锚点选主 renderer
+    // （排除 secondary、按 preferredUrlPatterns/score 判定）。否则退化到历史
+    // 行为——优先 'page'（主窗口也常是 page），其次任意已批准 target。
+    const hints = deps.rendererHints?.(appId);
+    if (hints) {
+      const ranked = partitionRenderers(hints, targets);
+      if (ranked.primary) return ranked.primary;
+      // 全部被 secondaryPatterns 排除时不该发生（至少应有主候选）；兜底同下。
+    }
     // Prefer 'page' type, but accept any target the adapter's matchTarget
     // approved (including 'webview' for WorkBuddy). filterForCdpConnectivity
     // already ensured all targets have a usable webSocketDebuggerUrl.
@@ -115,7 +127,21 @@ export async function resolvePageTargets(
     // fail with "CDP connection failed" errors, wasting time and producing
     // confusing log noise. The filter is a superset of the previous
     // `Boolean(t.webSocketDebuggerUrl)` check.
-    return filterForCdpConnectivity(targets);
+    const connectable = filterForCdpConnectivity(targets);
+    if (connectable.length === 0) return [];
+
+    // RFC A2 P1：适配器声明了 rendererHints 时，保持全量返回（壁纸仍铺所有
+    // 表面——CDP-5 由主窗口决定整体成败），但把主 renderer 排到首位，供调用方
+    // 优先迭代/判定。无 hints 时不做任何重排，行为与现状完全一致。
+    const hints = deps.rendererHints?.(appId);
+    if (hints) {
+      const ranked = partitionRenderers(hints, connectable);
+      const ordered: CdpTarget[] = [];
+      if (ranked.primary) ordered.push(ranked.primary);
+      ordered.push(...ranked.candidates, ...ranked.secondaries);
+      return ordered;
+    }
+    return connectable;
   } catch (error) {
     deps.log(
       `[wallpaper] ${appId}: resolvePageTargets findAgentTargets failed — ${toMessage(error)}`,

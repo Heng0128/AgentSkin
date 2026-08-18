@@ -68,7 +68,11 @@ import {
   setWallpaperDeps,
 } from './wallpaper/injection-state';
 // Sub-module imports (types, target discovery, state management)
-import type { WallpaperApplyOptions, WallpaperInjectorDeps } from './wallpaper/injector-types';
+import type {
+  SurfaceRect,
+  WallpaperApplyOptions,
+  WallpaperInjectorDeps,
+} from './wallpaper/injector-types';
 import { withExclusive } from './wallpaper/mutex';
 import {
   IMAGE_BLOB_FALLBACK_CAP,
@@ -79,6 +83,7 @@ import {
   waitForPageReady,
   waitForTargets,
 } from './wallpaper/target-discovery';
+import { buildContinuationMountJs, computeUnifiedPlan } from './wallpaper/unified-background';
 import { recordInjectionFailure, recordInjectionSuccess } from './wallpaper-self-heal';
 import { wallpaperMediaServer } from './wallpaper-server';
 
@@ -526,6 +531,44 @@ export async function injectAgentWallpaper(
     });
   }
 
+  // -----------------------------------------------------------------------
+  // P3: unified background plan (RFC 2026-08-18 §4.3)
+  //
+  // For an image wallpaper served from a SHARED loopback URL across ≥2
+  // connectable surfaces, the primary target hosts the real full-bleed
+  // background and each secondary target gets a light continuation layer
+  // positioned at the primary's host-window rect (offset computed from
+  // resolveSurfaceRects). The shared image is thus continuous across the
+  // split instead of each surface painting its own full-viewport background
+  // (which misaligns at the seam).
+  //
+  // Guards:
+  //   - Only image + shared-URL enters this path. Video/web secondary
+  //     surfaces keep the existing independent full-bleed injection.
+  //   - deps.resolveSurfaceRects missing, or incomplete rects for any
+  //     surface → fall back to the current independent path (RFC R3), never
+  //     worse than today.
+  // -----------------------------------------------------------------------
+  let continuation: { src: string; rects: ReadonlyMap<string, SurfaceRect> } | undefined;
+  if (isImage && useHttpImage && httpUrl) {
+    const plan = computeUnifiedPlan(pageTargets);
+    if (plan.enabled && deps.resolveSurfaceRects) {
+      const rectsList = await deps.resolveSurfaceRects(appId, pageTargets);
+      if (rectsList && rectsList.length === pageTargets.length) {
+        const rects = new Map(rectsList.map((e) => [e.target.webSocketDebuggerUrl, e.rect]));
+        const primaryWs = pageTargets[0].webSocketDebuggerUrl;
+        // Require a rect for the primary AND every secondary before enabling
+        // — a missing rect means we cannot compute the offset, so fall back.
+        if (
+          rects.has(primaryWs) &&
+          plan.secondaries.every((s) => rects.has(s.webSocketDebuggerUrl))
+        ) {
+          continuation = { src: httpUrl, rects };
+        }
+      }
+    }
+  }
+
   // Inject into a single target's session. Returns { ok, verdict }.
   // All playback settings come from `options.render` (single source of
   // truth). Passing `undefined` fields lets each injector apply its built-in
@@ -669,6 +712,30 @@ export async function injectAgentWallpaper(
           restoreCapturedToken(appId); // token may have been cleared/set during injection setup
         });
         return { ok: false, verdict: 'epoch-cancelled' };
+      }
+      // P3: secondary surface under a unified background → mount the light
+      // continuation layer positioned at the primary's host-window rect
+      // instead of painting an independent full-viewport background. The
+      // primary (index 0) still mounts the real full-bleed wallpaper via
+      // injectOne below.
+      if (continuation && !isPrimary) {
+        const primaryRect = continuation.rects.get(pageTargets[0].webSocketDebuggerUrl);
+        const secondaryRect = continuation.rects.get(pageWsUrl);
+        if (primaryRect && secondaryRect) {
+          const js = buildContinuationMountJs({
+            src: continuation.src,
+            primaryRect,
+            secondaryRect,
+            render: options.render,
+          });
+          const raw = await session.evaluate(js);
+          return {
+            ok: raw === 'ok',
+            verdict: raw === 'ok' ? 'continuation' : `continuation:${raw}`,
+          };
+        }
+        // Fall through: missing rect for this surface (shouldn't happen given
+        // the plan guard) → independently inject so it's not left bare.
       }
       let { ok, verdict } = await injectOne(session);
       if (!ok) {

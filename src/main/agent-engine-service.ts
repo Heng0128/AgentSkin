@@ -69,6 +69,7 @@ import {
   disposeEngineInjectionState,
 } from './cdp/injection/engine-strategy';
 import { disposeReloadWatchdogs } from './cdp/reload-watchdog';
+import type { RendererHints } from './cdp/renderer-rank';
 import { CdpSessionPool } from './cdp/session-pool';
 import { EpochManager } from './epoch-manager';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
@@ -487,6 +488,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
         inferRestartReason(appId, this.discoveryDeps(), cdpFailureReason ?? null),
       findAgentTargets: (appId, port) => this.adapter(appId).findTargets(port, 1200),
       setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
+      rendererHints: (appId): RendererHints | undefined =>
+        this.adapter(appId).rendererHints() as RendererHints | undefined,
       isApplyingTheme: (appId) => this.applyingTheme.has(appId),
       isDisposed: () => this.disposed,
       log: (line) => this.log(line),

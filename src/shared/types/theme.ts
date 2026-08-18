@@ -218,3 +218,35 @@ export interface StudioSnapshotOptions {
   /** Also capture light/dark scheme variants via emulated media. */
   captureSchemes?: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Image → Theme extraction (pywal-style)
+// ---------------------------------------------------------------------------
+
+/** Pixel sampler output for image-to-theme extraction (renderer→main IPC). */
+export interface ImagePixelSample {
+  /** De-duplicated colors + occurrence count (avoids same-color sample bloat). */
+  colors: Array<{ r: number; g: number; b: number; weight: number }>;
+  /** Resolution (used to decide cluster bucket count, optional). */
+  width?: number;
+  height?: number;
+}
+
+/** 14-token palette derived from an image (aligns with ThemeManifest.colors). */
+export interface ThemeColorsFromImage {
+  mode: 'light' | 'dark';
+  accent: string;
+  secondary: string;
+  background: string;
+  foreground: string;
+  muted: string;
+  surface: string;
+  surfaceElevated: string;
+  border: string;
+  codeBackground: string;
+  codeForeground: string;
+  inputBackground: string;
+  buttonBackground: string;
+  buttonForeground: string;
+  focusRing: string;
+}

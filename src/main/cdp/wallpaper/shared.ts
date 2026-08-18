@@ -25,6 +25,7 @@ import {
   VIDEO_SCRIM_ID,
   VIDEO_WALLPAPER_ID,
   WALLPAPER_CONTAINER_ID,
+  WALLPAPER_CONTINUATION_ID,
   WALLPAPER_GUARD_ID,
   WALLPAPER_HEAL_GLOBAL,
   WALLPAPER_OBSERVER_GLOBAL,
@@ -318,6 +319,9 @@ export async function removeAllWallpapers(session: CdpSession): Promise<void> {
       // Clean up shared elements
       document.querySelectorAll('[id="${WALLPAPER_STYLE_ID}"]').forEach(function(el){ el.remove(); });
       document.querySelectorAll('[id="${WALLPAPER_GUARD_ID}"]').forEach(function(el){ el.remove(); });
+      // Clean up unified-background continuation layers (secondary surfaces in
+      // a multi-surface shared wallpaper — separate ID from the primary container)
+      document.querySelectorAll('[id="${WALLPAPER_CONTINUATION_ID}"]').forEach(function(el){ el.remove(); });
       if (window.${WALLPAPER_OBSERVER_GLOBAL}) { window.${WALLPAPER_OBSERVER_GLOBAL}.disconnect(); delete window.${WALLPAPER_OBSERVER_GLOBAL}; }
       if (window.${WALLPAPER_HEAL_GLOBAL}) { clearInterval(window.${WALLPAPER_HEAL_GLOBAL}); delete window.${WALLPAPER_HEAL_GLOBAL}; }
       if (window.${WALLPAPER_RESIZE_GLOBAL}) { window.removeEventListener('resize', window.${WALLPAPER_RESIZE_GLOBAL}); delete window.${WALLPAPER_RESIZE_GLOBAL}; }

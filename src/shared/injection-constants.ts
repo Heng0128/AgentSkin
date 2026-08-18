@@ -100,6 +100,14 @@ export const WEB_SCRIM_ID = '__agentskin_web_scrim__';
  *  of containing-block quirks in different agent shells. */
 export const WALLPAPER_CONTAINER_ID = '__agentskin_wallpaper_container__';
 
+/** Continuation layer div injected on SECONDARY surfaces in a multi-surface
+ *  unified background (RFC 2026-08-18 §4.3). Where the primary surface hosts
+ *  the real full-bleed wallpaper, each secondary surface gets a lightweight
+ *  copy positioned at the PRIMARY's host-window rect (via a computed offset)
+ *  so the shared image continues seamlessly across the split. Never carries
+ *  its own scrim/guard — those live only on the primary. */
+export const WALLPAPER_CONTINUATION_ID = '__agentskin_wallpaper_continuation__';
+
 /** <style> element ID for wallpaper CSS rules. */
 export const WALLPAPER_STYLE_ID = '__agentskin_wallpaper_style__';
 /** Guard <style> element ID for wallpaper base rules. */

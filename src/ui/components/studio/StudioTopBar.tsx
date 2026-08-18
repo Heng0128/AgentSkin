@@ -22,17 +22,37 @@ import { useState } from 'react';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import type { PreviewView } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 import { ChevronsLeft, ChevronsRight, Download, RefreshCw } from 'lucide-react';
 import { ExportDialog } from './ExportDialog';
+
+/** Ordered list of center tabs for the TopBar view switcher. */
+const TOPBAR_TABS: {
+  view: PreviewView;
+  labelKey:
+    | 'studioTabTheme'
+    | 'studioTabWallpaper'
+    | 'studioTabBundle'
+    | 'studioTabInspect'
+    | 'studioTabGenerator'
+    | 'studioTabRaw';
+}[] = [
+  { view: 'theme', labelKey: 'studioTabTheme' },
+  { view: 'wallpaper', labelKey: 'studioTabWallpaper' },
+  { view: 'bundle', labelKey: 'studioTabBundle' },
+  { view: 'inspect', labelKey: 'studioTabInspect' },
+  { view: 'generator', labelKey: 'studioTabGenerator' },
+  { view: 'raw', labelKey: 'studioTabRaw' },
+];
 
 export function StudioTopBar({ t }: { t: UiMessages }) {
   const { dock, drawer, inspector, toggleDock, toggleDrawer, toggleInspector } =
     useWorkspaceStore();
 
   const activeProject = useStudioStore((s) => s.getActiveProject());
-  const { snapshot, exportState, undoStack, redoStack, baselines } = useStudioStore();
+  const { snapshot, exportState, undoStack, redoStack, baselines, previewView } = useStudioStore();
 
   const undoDisabled = undoStack.length === 0;
   const redoDisabled = redoStack.length === 0;
@@ -114,6 +134,25 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
           >
             <ChevronsRight className="size-3" />
           </button>
+        </div>
+
+        {/* Center view switcher: 6 tabs (theme / wallpaper / bundle / inspect / generator / raw) */}
+        <div
+          className="flex items-center gap-0 ml-[var(--space-2)] rounded-[var(--r-md)] p-0"
+          style={{ background: 'var(--bg-3)' }}
+        >
+          {TOPBAR_TABS.map((tab) => (
+            <button
+              key={tab.view}
+              type="button"
+              data-active={previewView === tab.view}
+              onClick={() => useStudioStore.getState().setPreviewView(tab.view)}
+              className="ws-btn ws-btn--sm"
+              title={t[tab.labelKey]}
+            >
+              {t[tab.labelKey]}
+            </button>
+          ))}
         </div>
 
         {/* Panel toggles */}

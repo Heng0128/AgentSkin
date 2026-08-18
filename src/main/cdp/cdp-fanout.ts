@@ -59,13 +59,14 @@ import type { AgentId } from '../../shared/types';
 import { checkThemeHealth } from '../theme-health-check';
 import { type CdpSession, connectCdp } from './cdp-client';
 import { type InjectEngineResult, injectThemeViaCdp, removeEngineInjection } from './cdp-inject';
-import { findDomTargets } from './cdp-targets';
+import { type CdpTarget, findDomTargets } from './cdp-targets';
 import { verifyTheme } from './injection/shared';
 import {
   attachReloadWatchdog,
   detachReloadWatchdog,
   type ReloadWatchdogDeps,
 } from './reload-watchdog';
+import { pickPrimaryRenderer, type RendererHints } from './renderer-rank';
 import { buildSecondaryInjectExpression, buildSecondaryRemoveExpression } from './secondary-inject';
 import {
   acquireSession,
@@ -235,10 +236,40 @@ export async function hardeningPass(
   // iframes, and additional page targets (e.g. WorkBuddy's 13 targets)
   // without engine theming. DOM-bearing = page, webview, iframe (workers
   // have no DOM and are correctly excluded).
-  const domTargets = await findDomTargets(port);
+  //
+  // RFC A2 P2: we keep iterating ALL DOM targets (webview/iframe are filtered
+  // out of matchTarget and MUST still receive the lightweight CSS-only
+  // injection below — narrowing to the matchTarget-compatible set would regress
+  // WorkBuddy's multi-surface theming). Instead we unify the PRIMARY renderer
+  // decision on `rendererHints`: the semantic-anchor page (when declared) is
+  // hoisted to the front of the loop and becomes the `firstSession`/health
+  // target, so "which page is the main window" no longer depends on list order.
+  let domTargets = await findDomTargets(port);
   if (!domTargets.length) {
     deps.log(`[hardening] ${appId}: no DOM-bearing targets on port ${port}`);
     return;
+  }
+
+  // Resolve the primary page target via the adapter's rendererHints (RFC A2 P2).
+  // Only page-type targets are candidates; hints are optional — when absent,
+  // fall back to the first page target (historic behavior). We read the raw
+  // unknown-typed accessor and normalize to RendererHints.
+  let primaryPage: CdpTarget | undefined = domTargets.find(
+    (t) => t.type === 'page' && t.webSocketDebuggerUrl,
+  );
+  const rawHints = adapter.rendererHints?.() as RendererHints | undefined;
+  if (rawHints) {
+    const ranked = pickPrimaryRenderer(
+      rawHints,
+      domTargets.filter((t) => t.type === 'page' && t.webSocketDebuggerUrl),
+    );
+    if (ranked) primaryPage = ranked;
+    // Hoist the primary page to the front so the engine layer + health check
+    // run on the main window first (not whatever /json/list returns first).
+    const withoutPrimary = domTargets.filter((t) => !(t.id === primaryPage?.id));
+    if (withoutPrimary.length < domTargets.length) {
+      domTargets = primaryPage ? [primaryPage, ...withoutPrimary] : domTargets;
+    }
   }
 
   const heroDataUrl = targetTheme.imageDataUrls?.hero ?? targetTheme.artDataUrl ?? null;
@@ -429,7 +460,6 @@ export async function hardeningPass(
   // once if missing. Only armed while this epoch is still current (a newer
   // apply/restore would supersede it and manage its own watchdog).
   if (deps.isEpochCurrent(appId, epoch)) {
-    const primaryPage = domTargets.find((t) => t.type === 'page' && t.webSocketDebuggerUrl);
     if (primaryPage?.webSocketDebuggerUrl) {
       const watchdogDeps: ReloadWatchdogDeps = {
         isEpochCurrent: deps.isEpochCurrent,

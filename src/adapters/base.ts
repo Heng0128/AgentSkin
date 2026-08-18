@@ -124,6 +124,13 @@ export interface ApplicationAdapter {
   resolveDebugPorts(platform: string): Promise<number[]>;
   defaultPort(): number;
   displayName(): string;
+
+  /**
+   * 主 renderer 语义锚点（可选，RFC A2 P1）。透传 @agentskin/engine 适配器
+   * 的 `rendererHints`，用于在多兼容 page target 间稳定判定主 renderer。
+   * 缺省返回 undefined（无适配级声明，调用方退化为现状）。
+   */
+  rendererHints(): unknown;
 }
 
 /**
@@ -220,5 +227,14 @@ export abstract class BaseApplicationAdapter implements ApplicationAdapter {
 
   displayName(): string {
     return getCoreAdapter(this.requireCore()).displayName;
+  }
+
+  /** 透传 core 适配器的 rendererHints（RFC A2 P1）。无 core 支持时返回 undefined。 */
+  rendererHints(): unknown {
+    try {
+      return getCoreAdapter(this.requireCore()).rendererHints;
+    } catch {
+      return undefined;
+    }
   }
 }

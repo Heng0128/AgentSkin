@@ -21,6 +21,7 @@ import type {
 } from '../../shared/types';
 import type { CdpReadyResult } from '../app-discovery';
 import type { CdpTarget } from '../cdp/cdp-targets';
+import type { RendererHints } from '../cdp/renderer-rank';
 import type { LogCallback } from '../services/contracts';
 import type { ThemeEntry } from '../theme-library';
 
@@ -110,13 +111,23 @@ export type InferRestartReason = (
   cdpFailureReason?: CdpReadyResult['reason'],
 ) => Promise<RestartReason>;
 
-/**
- * Discover CDP targets for an agent, filtered by its adapter's `matchTarget`
- * (the same policy theme injection uses) so wallpaper lands on the correct
- * page even when an agent exposes multiple targets. Backed by
- * `adapter.findTargets` in the orchestrator.
- */
-export type FindAgentTargets = (appId: AgentId, port: number) => Promise<CdpTarget[]>;
+/** Discover CDP targets for an agent, filtered by its adapter's `matchTarget`
+ *  (the same policy theme injection uses) so wallpaper lands on the correct
+ *  page even when an agent exposes multiple targets. Backed by
+ *  `adapter.findTargets` in the orchestrator. */
+export type FindAgentTargets = (appId: AgentId, port: number) => Promise<CdpTarget[]>; /** */
+/** 宿主窗口坐标系下的表面矩形（统一背景偏移来源，RFC 2026-08-18 §4.3）。 */
+export interface SurfaceRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+/** 每个 CDP target → 宿主窗口矩形。用于计算多表面统一背景的 continuation 偏移。 */
+export type ResolveSurfaceRects = (
+  appId: AgentId,
+  targets: CdpTarget[],
+) => Promise<Array<{ target: CdpTarget; rect: SurfaceRect }> | undefined>;
 
 /** Persist a per-agent wallpaper preference. */
 export type SetAgentWallpaper = (appId: AgentId, setting: WallpaperAgentSetting) => Promise<void>;
@@ -153,6 +164,19 @@ export interface WallpaperInjectorDeps {
   inferRestartReason: InferRestartReason;
   findAgentTargets: FindAgentTargets;
   setAgentWallpaper: SetAgentWallpaper;
+  /**
+   * 读取每个 CDP 表面的宿主窗口矩形（RFC 2026-08-18 §4.3）。可选 — 无适配级
+   * 实现或实现返回 undefined 时，统一背景退化为各自独立铺满（现状），符合
+   * RFC R3 兜底。提供该能力时，多 renderer 图片壁纸进入「主全铺 + secondary
+   * continuation」共享路径。
+   */
+  resolveSurfaceRects?: ResolveSurfaceRects;
+  /**
+   * 读取指定应用的主 renderer 语义锚点（RFC A2 P1）。可选 — 无适配级声明时
+   * 返回 undefined，`resolvePageTarget`/`resolvePageTargets` 退化为现状断言
+   * （第一个 page target）。
+   */
+  rendererHints?: (appId: AgentId) => RendererHints | undefined;
   log: LogCallback;
   /**
    * True when an apply/restore operation is currently in-flight for an agent.

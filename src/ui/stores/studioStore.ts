@@ -27,6 +27,7 @@ import {
   type InspectedNode,
   type StudioProject,
   type ThemeCatalogItem,
+  type ThemeColorsFromImage,
   type ThemeVisualSnapshot,
 } from '@shared/types';
 import { create } from 'zustand';
@@ -130,6 +131,17 @@ interface StudioStoreState {
   pseudoView: string | null;
   schemeView: 'light' | 'dark' | null;
 
+  // --- Image → Theme (pywal-style extraction) ---
+  /** Lifecycle: idle → extracting → ready | error. */
+  imageToThemeStatus: 'idle' | 'extracting' | 'ready' | 'error';
+  imageToThemeError: string | null;
+  /** Recommended mode from the extraction engine. */
+  imageToThemeMode: 'light' | 'dark' | null;
+  /** Raw 14-token palette (engine output). Null until extraction succeeds. */
+  imageToThemePalette: ThemeColorsFromImage | null;
+  /** User-tweaked accent (hex). Falls back to palette.accent when null. */
+  imageToThemeAccent: string | null;
+
   // --- Export ---
   exportName: string;
   exportAuthor: string;
@@ -185,6 +197,21 @@ interface StudioStoreState {
   setPaletteLoaded(palette: Record<string, string>): void;
   /** Add a fully-qualified selector (e.g. from live inspect) to pinned selectors. */
   pinSelector(sel: string): void;
+  /** Decode + extract a 14-token palette from an uploaded image (IPC). */
+  extractImageFromImage(base64Data: string): Promise<void>;
+  /**
+   * Bridge wallpaper → Studio: extract a palette from a wallpaper via the
+   * public WALLPAPER_EXTRACT_THEME channel and fold it into the active
+   * project's `toolOverrides` (live theme preview). Resilient: surfaces a
+   * toast on failure rather than throwing.
+   */
+  applyWallpaperExtractedPalette(wallpaperId: string): Promise<void>;
+  /** Commit the (possibly accent-tweaked) palette into toolOverrides + persist + switch to 'theme'. */
+  applyImageToTheme(): void;
+  /** Reset all image→theme state to idle. */
+  clearImageToTheme(): void;
+  /** Override the accent within the extracted palette (live preview only). */
+  setImageAccent(hex: string): void;
 
   // --- Visual analysis progress ---
   /** Current visual-analysis progress (from main process via IPC). Null when idle. */
@@ -291,6 +318,12 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   customSelectorInput: '',
   pseudoView: null,
   schemeView: null,
+
+  imageToThemeStatus: 'idle',
+  imageToThemeError: null,
+  imageToThemeMode: null,
+  imageToThemePalette: null,
+  imageToThemeAccent: null,
 
   exportName: '',
   exportAuthor: '',
@@ -972,6 +1005,82 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       }
     })();
   },
+
+  // ------------------------------------------------------------------
+  // Image → Theme actions
+  // ------------------------------------------------------------------
+
+  extractImageFromImage: async (base64Data) => {
+    if (!tryAcquireLock('image-extract')) return;
+    set({ imageToThemeStatus: 'extracting', imageToThemeError: null });
+    try {
+      const { palette, mode } = await api.extractThemeFromImage(base64Data);
+      set({
+        imageToThemeStatus: 'ready',
+        imageToThemePalette: palette,
+        imageToThemeMode: mode,
+        imageToThemeAccent: null,
+      });
+    } catch (_e) {
+      set({
+        imageToThemeStatus: 'error',
+        imageToThemeError: currentT().studioImageToThemeErrorExtractFailed,
+      });
+    } finally {
+      releaseLock('image-extract');
+    }
+  },
+
+  applyWallpaperExtractedPalette: async (wallpaperId) => {
+    const showToast = useNotificationStore.getState().showToast;
+    if (!tryAcquireLock('wallpaper-extract')) return;
+    try {
+      // Returns the freshly-installed theme (pywal-style). Its `colors` is the
+      // semantic palette we can fold into the active project's toolOverrides.
+      const installed = await api.extractThemeFromWallpaper(wallpaperId);
+      const palette = installed?.colors;
+      if (!palette || Object.keys(palette).length === 0) {
+        showToast(currentT().studioNoPalette, 'destructive');
+        return;
+      }
+      get().setPaletteLoaded(palette);
+      set({ previewView: 'theme' });
+    } catch (e) {
+      showToast(
+        `${currentT().studioImageToThemeErrorExtractFailed}：${toMessage(e)}`,
+        'destructive',
+      );
+    } finally {
+      releaseLock('wallpaper-extract');
+    }
+  },
+
+  applyImageToTheme: () => {
+    const { imageToThemePalette, imageToThemeAccent } = get();
+    if (!imageToThemePalette) return;
+    const finalPalette = imageToThemeAccent
+      ? { ...imageToThemePalette, accent: imageToThemeAccent }
+      : imageToThemePalette;
+    get().setPaletteLoaded(finalPalette);
+    set({
+      imageToThemeStatus: 'idle',
+      imageToThemePalette: null,
+      imageToThemeAccent: null,
+      imageToThemeMode: null,
+      imageToThemeError: null,
+    });
+  },
+
+  clearImageToTheme: () =>
+    set({
+      imageToThemeStatus: 'idle',
+      imageToThemeError: null,
+      imageToThemePalette: null,
+      imageToThemeAccent: null,
+      imageToThemeMode: null,
+    }),
+
+  setImageAccent: (hex) => set({ imageToThemeAccent: hex }),
 
   // ------------------------------------------------------------------
   // Simple setters

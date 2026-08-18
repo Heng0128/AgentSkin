@@ -117,6 +117,21 @@ export interface AppAdapter {
   rendererProfiles?: Record<string, RendererProfile>;
   hostSettings?: HostSettingsAdapter;
   matchTarget(target: CdpTarget): boolean;
+  /**
+   * 主 renderer 语义锚点（可选）。当应用暴露多个兼容的 page target 时，用于稳定
+   * 判定"哪个是可见主窗口"（而非依赖 /json/list 的返回顺序）。缺省时保持现状
+   * （第一个 page target 即主 renderer）。
+   *
+   * 仅基于 CDP target 元数据（url/title/type）判定，不依赖运行时 DOM，避免脏读。
+   */
+  rendererHints?: {
+    /** 按序尝试的 URL 形态匹配（含 URL 片段、query 标记）。首个命中的 target 即为主 renderer。 */
+    preferredUrlPatterns?: string[];
+    /** 主 renderer 判定回调：返回的数值越大表示该 target 作为主 renderer 的优先级越高。 */
+    score?: (target: CdpTarget) => number;
+    /** 明确判为"次 renderer"（后台页/boot/浮层）的 URL 形态，不参与主窗口注入。 */
+    secondaryPatterns?: string[];
+  };
 }
 
 export interface ThemeIdentity {

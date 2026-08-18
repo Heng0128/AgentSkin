@@ -20,39 +20,13 @@
  * 输出是"草稿"：C3 的 Studio 人工微调兜底（方案 §8 风险缓解）。
  */
 
+import type { ImagePixelSample, ThemeColorsFromImage } from '../../shared/types/theme';
 import { luminanceOf, medianCut, parseColor, toHex } from '../profile/color-quantize';
 
-// ---------------------------------------------------------------------------
-// 类型
-// ---------------------------------------------------------------------------
-
-/** 图片量化的输入：降采样像素样本（调用方提供）。 */
-export interface ImagePixelSample {
-  /** 去重的颜色 + 出现频次（避免同色重复占样本）。 */
-  colors: Array<{ r: number; g: number; b: number; weight: number }>;
-  /** 分辨率（用于决定聚类桶数，可选）。 */
-  width?: number;
-  height?: number;
-}
-
-/** 与 ThemeManifest.colors 对齐的 14 token 输出。 */
-export interface ThemeColorsFromImage {
-  mode: 'dark' | 'light';
-  accent: string;
-  secondary: string;
-  background: string;
-  foreground: string;
-  muted: string;
-  surface: string;
-  surfaceElevated: string;
-  border: string;
-  codeBackground: string;
-  codeForeground: string;
-  inputBackground: string;
-  buttonBackground: string;
-  buttonForeground: string;
-  focusRing: string;
-}
+// Re-export the shared types so existing importers (`wallpaper-theme.ts`, the
+// vitest suite) keep working without a churn of import paths. The single source
+// of truth is `src/shared/types/theme.ts`.
+export type { ImagePixelSample, ThemeColorsFromImage };
 
 // ---------------------------------------------------------------------------
 // 工具

@@ -14,6 +14,7 @@ import type {
   ScanProgressEvent,
   StudioProject,
   StudioSnapshotOptions,
+  ThemeColorsFromImage,
   ThemeStudioExportRequest,
   ThemeVisualSnapshot,
   TrayApplyRequest,
@@ -193,7 +194,7 @@ const api: AgentSkinApi = {
   // --- Theme Studio: image → palette extraction ---
   extractThemeFromImage: (base64Data: string) =>
     ipcRenderer.invoke(IpcChannel.STUDIO_IMAGE_EXTRACT_THEME, base64Data) as Promise<{
-      palette: Record<string, string>;
+      palette: ThemeColorsFromImage;
       mode: 'light' | 'dark';
     }>,
   // --- Theme Studio: Bundles (workspace-scoped) ---

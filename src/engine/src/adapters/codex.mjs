@@ -66,6 +66,13 @@ const codex = {
     if (title && !/^(DevTools|chrome|about:)/i.test(title) && url && !url.startsWith("about:")) return true;
     return false;
   },
+  // RFC A2 — rendererHints: 主 renderer 语义锚点。Codex 暴露多个兼容 page target，
+  // 其中 `?initialRoute=avatar-overlay`（头像浮层页）显式为**次** renderer——绝不应
+  // 被当作主窗口注入。其余（主 index.html / 设置 / 其他窗口）未命中 secondaryPatterns，
+  // 由 partitionRenderers 退化为第一个 page 即主 renderer（现状），零行为回归。
+  rendererHints: {
+    secondaryPatterns: ["initialRoute=avatar-overlay", "avatar-overlay"],
+  },
   // CSS variable bridge (S3): declaratively re-route the native Tailwind token
   // family Codex reads onto AgentSkin semantic roles. Compiled by the engine
   // at apply time (css-var-bridge.mjs) so both the app's own CSS rules and any

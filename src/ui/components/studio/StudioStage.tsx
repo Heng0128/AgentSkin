@@ -9,8 +9,10 @@
  * Snapshot / Baseline / Inspect / Zoom functionality is preserved.
  */
 
+import { CenterStageTab } from '@/components/studio/CenterStageTab';
 import { FloatingToolbar } from '@/components/studio/FloatingToolbar';
 import { PreviewWindow } from '@/components/studio/PreviewWindow';
+import { StudioImageToThemePanel } from '@/components/studio/StudioImageToThemePanel';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
@@ -22,9 +24,32 @@ export function StudioStage({ t }: { t: UiMessages }) {
   const { windows, activeWindowId, setActiveWindow, updateWindow } = useWorkspaceStore();
 
   const snapshot = useStudioStore((s) => s.snapshot);
+  const previewView = useStudioStore((s) => s.previewView);
 
   const domTree: DomTreeNode | undefined = snapshot?.domTree;
   const rootVars = snapshot?.rootVars;
+
+  // Generator (image → theme) panel replaces the preview stage.
+  if (previewView === 'generator') {
+    return (
+      <main className="ws-stage">
+        <div className="ws-stage__inner" data-view="generator">
+          <StudioImageToThemePanel t={t} />
+        </div>
+      </main>
+    );
+  }
+
+  // Non-theme center tabs (wallpaper / bundle / inspect / raw).
+  if (previewView !== 'theme') {
+    return (
+      <main className="ws-stage">
+        <div className="ws-stage__inner" data-view={previewView}>
+          <CenterStageTab view={previewView} t={t} />
+        </div>
+      </main>
+    );
+  }
 
   // No windows — should not happen with single-window architecture.
   if (!windows.length) {

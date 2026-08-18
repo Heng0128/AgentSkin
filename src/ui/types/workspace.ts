@@ -27,8 +27,8 @@ export const VIEW_MODE_LABELS: Record<ViewMode, string> = {
 // Preview view (theme vs generator)
 // ---------------------------------------------------------------------------
 
-/** What the center stage is currently displaying — snapshot replica or palette generator. */
-export type PreviewView = 'theme' | 'generator';
+/** What the center stage is currently displaying — theme / wallpaper / bundle / inspect / generator / raw. */
+export type PreviewView = 'theme' | 'wallpaper' | 'bundle' | 'inspect' | 'generator' | 'raw';
 
 // ---------------------------------------------------------------------------
 // Preview Window

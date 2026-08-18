@@ -54,6 +54,15 @@ const doubao = {
     // patchWindowsAdapters; now static so engine and runtime agree.)
     return /豆包|doubao/i.test(title) || /doubao/i.test(url);
   },
+  // RFC A2 — rendererHints: 主 renderer 语义锚点。Doubao 暴露「boot/启动页 + 主聊天
+  // 窗口」等多个兼容 page target。主窗口为已文档化的 `chrome://doubao-chat/chat`，
+  // 用 preferredUrlPatterns 把它稳定判为主 renderer，避免 /json/list 顺序把启动页
+  // 推到首位。未命中该 pattern 时不改变任何排序（partitionRenderers 退化为第一个
+  // page 即主 renderer，现状）。启动页的具体 URL 形态尚未实机观察，故不加
+  // secondaryPatterns，避免误伤。
+  rendererHints: {
+    preferredUrlPatterns: ["doubao-chat/chat"],
+  },
   // CSS variable bridge (S3): re-route the semi/dbx native token family Doubao
   // reads onto AgentSkin semantic roles. Skips the art-transparent (*-body/web,
   // --chat-bg-color) vars to preserve hero punch-through. Alphas mirror

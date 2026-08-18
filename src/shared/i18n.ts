@@ -856,6 +856,9 @@ export const uiMessages = {
     studioTabInspect: '检查',
     studioTabGenerator: '搭配',
     studioTabRaw: '原貌',
+    // --- StudioTopBar view toggle ---
+    studioViewTheme: '主题',
+    studioViewImage: '图片',
     studioFilterNodes: '筛选节点…',
     studioStop: '停止',
     studioCheck: '检查',
@@ -1935,6 +1938,9 @@ export const uiMessages = {
     studioTabBundle: 'Bundle',
     studioTabInspect: 'Inspect',
     studioTabGenerator: 'Generator',
+    // --- StudioTopBar view toggle ---
+    studioViewTheme: 'Theme',
+    studioViewImage: 'Image',
     studioTabRaw: 'Raw',
     studioFilterNodes: 'Filter nodes…',
     studioStop: 'Stop',
