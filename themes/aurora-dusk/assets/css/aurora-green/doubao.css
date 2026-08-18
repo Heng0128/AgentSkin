@@ -625,7 +625,8 @@ html.agentskin-host-doubao [class*="topic"]:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
 }
 
-/* Suggestion cards: kill ALL border-like effects + stacked backdrop-filter */
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
+/* ---- kill native shadow/border effects on suggestion & topic cards ---- */
 html.agentskin-host-doubao [class*="suggest"],
 html.agentskin-host-doubao [class*="recommend"],
 html.agentskin-host-doubao [class*="topic"] {
@@ -633,6 +634,8 @@ html.agentskin-host-doubao [class*="topic"] {
   box-shadow: none !important;
   border-image: none !important;
 }
+
+/* ---- kill stacked shadow/blur/border on suggested-card children ---- */
 html.agentskin-host-doubao [class*="suggest"] *,
 html.agentskin-host-doubao [class*="recommend"] *,
 html.agentskin-host-doubao [class*="topic"] * {

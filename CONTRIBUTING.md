@@ -106,6 +106,22 @@ chore: 杂项
 
 详细 manifest 字段、配色方案、分发格式规范见 [docs/THEME_SPEC.md](docs/THEME_SPEC.md)。
 
+### 关于「原生硬编码视觉缺陷」修正规则
+
+目标应用会自带一些**无法通过主题变量修改**的硬编码视觉缺陷（气泡方角阴影、硬编码的渐变遮罩带、灰/实底色等），它们会破坏主题的艺术背景。项目已把这些修正规则收敛为**单一来源**：
+
+- 规则唯一存放于 `scripts/native-defect-fixes.mjs`（`NATIVE_DEFECT_FIXES` 注册表 + `nativeDefectFixCss()` 生成函数）。
+- 各 `scripts/generators/<agent>Css.mjs` 在生成时**自动拼接**这些规则。
+
+因此：**新增或重建主题时，这些缺陷修正会自动带上，无需你手写、也无需记住任何选择器**。你只管在 `manifest.json` 里定义 14 个语义色即可。
+
+注意两点：
+
+1. **遇到新的硬编码缺陷**，请往 `scripts/native-defect-fixes.mjs` 的注册表加规则（`selectors` + `props`），**不要**直接在生成器里手写一段——否则又与 adapter 内嵌副本漂移。`props` 只允许「清除类」值（`none`/`transparent`），不得注入主题颜色。
+2. **adapter 内嵌副本靠校验守护**：`engines/<agent>/adapter.mjs` 因浏览器自包含约束也内嵌一份同一规则，由一致性校验脚本保证它与注册表同步，漂移会 fail 门禁。
+
+设计文档见 `docs/rfc/2026-08-18-native-defect-fixes-consolidation.md`。
+
 ## 行为准则
 
 - 保持最小改动；每次提交只解决一个问题。

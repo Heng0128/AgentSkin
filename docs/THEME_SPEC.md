@@ -242,6 +242,13 @@ ThemePackageLoader 在加载时执行以下验证：
 3. **永远不要手动编辑生成的 CSS 文件**，修改应在 manifest colors 或生成脚本中进行
 4. 结构性选择器由 `generate-theme-css.mjs` 内联产出（无 `_shared/` 共享层、无 `@import` 机制）——详见 `themes/THEME_SPEC.md`
 
+### 原生硬编码缺陷修正（自动带上）
+
+目标应用的硬编码视觉缺陷（方角阴影、渐变遮罩带、灰/实底色等）由共享注册表
+`scripts/native-defect-fixes.mjs` 中和，各 Agent 的 CSS 由生成器**自动拼接**这些规则，
+创建/重建主题时**无需手写**。规则清单、探针发现新缺陷并回填注册表的工作流见：
+[docs/native-defect-fixes.md](native-defect-fixes.md)（自动生成，`npm run gen:defect-doc` 刷新）。
+
 ### 豆包适配说明
 
 豆包（Doubao）使用 `--dbx-*` 前缀的 251 个设计 token，通过 `:root[data-theme="dark"|"light"]` 切换主题。AgentSkin 的覆盖策略：

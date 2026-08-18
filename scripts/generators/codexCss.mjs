@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
+
+import { nativeDefectFixCss } from '../native-defect-fixes.mjs';
 import {
   sharedChromeRules,
   shellStructureCss,
@@ -52,7 +54,13 @@ ${host} aside [class*="active"] {
 ${host} [contenteditable="true"]:focus,
 ${host} [contenteditable="true"]:focus-within {
   background: ${focusInputBg} !important;
-}`;
+}
+
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ----
+   Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
+   注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
+${nativeDefectFixCss('codex', host)}
+`;
 }
 
 export default codexCss;

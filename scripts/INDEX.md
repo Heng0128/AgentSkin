@@ -19,6 +19,7 @@
 | `check-architecture-boundaries.mjs` | 验证分层依赖方向（C4）：UI → preload → IPC → 主进程 → 适配器 |
 | `check-design-tokens.mjs` | 验证设计 token 合规（C6）：间距、字号、圆角、阴影、硬编码颜色、内联 box-shadow |
 | `check-injection-contract.mjs` | 验证 AgentId 四源一致（C1）：主进程、渲染进程、引擎、Store 中的 AgentId 一致 |
+| `check-native-defect-consistency.mjs` | 验证原生硬编码视觉缺陷修正规则一致性（C8）：adapter 内嵌副本必须覆盖共享注册表 `native-defect-fixes.mjs` |
 | `check-themes.mjs` | 验证 14-token 主题契约（C2）：每个主题包必须包含完整的 14 个设计 token |
 
 ### 构建脚本（build-*）
@@ -34,6 +35,7 @@
 | 脚本 | 用途 |
 |------|------|
 | `generate-desktop-icons.mjs` | 生成桌面图标资源 |
+| `generate-defect-fixes-doc.mjs` | 从共享注册表自动渲染 `docs/native-defect-fixes.md`（`--verify` 校验新鲜度，供 `check:defect-doc`） |
 | `generate-nsis-assets.mjs` | 生成 NSIS 安装包资源 |
 | `generate-theme-assets.mjs` | 生成主题静态资源（缩略图、预览图等） |
 | `generate-theme-css.mjs` | 生成主题 CSS 文件，从 token 映射到 CSS 变量 |
@@ -90,6 +92,7 @@
 | `regen-studio-packages.mjs` | 重新生成 Studio 主题包 |
 | `run-step.ps1` | 分步运行脚本的 PowerShell 封装 |
 | `theme-generators.mjs` | 主题生成器入口，编排多个生成步骤 |
+| `native-defect-fixes.mjs` | 原生硬编码视觉缺陷修正规则的**单一来源**注册表 + `nativeDefectFixCss()` 生成函数（C8/C9） |
 | `theme-utils.mjs` | 主题工具函数，被多个生成/校验脚本复用 |
 | `update-theme-manifests.mjs` | 更新主题 manifest 文件 |
 | `validate-themes.ts` | 主题验证器（TypeScript 实现） |
@@ -100,5 +103,5 @@
 1. **命名规范**：校验脚本 `check-*`、构建脚本 `build-*`、生成脚本 `generate-*`、审计脚本 `audit-*`、分析脚本 `analyze-*`。
 2. **前缀约定**：下划线前缀（`_audit-*`、`_debug-*`）表示内部辅助脚本，不直接对外暴露。
 3. **语言选择**：校验与构建工具优先使用 `.mjs`（ESM），TypeScript 仅用于需要类型检查的场景（如 `validate-themes.ts`）。
-4. **`npm run check` 守卫**：所有 `check-*` 脚本必须在 `npm run check` 时全绿，否则禁止 push（不变量 C1-C7）。
+4. **`npm run check` 守卫**：所有 `check-*` 脚本必须在 `npm run check` 时全绿，否则禁止 push（不变量 C1-C9）。
 5. **生成器就近**：各适配器 CSS 生成器集中在 `generators/` 目录，与 `engines/` 下对应适配器一一对应。

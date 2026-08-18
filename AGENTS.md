@@ -32,6 +32,8 @@ AI Agent 视觉定制引擎。通过 CDP 注入为 traework、qoderwork、workbu
 | C5 | Store 契约一致性 | check-store-contracts | src/ui/stores/ |
 | C6 | 设计 token 合规 | check-design-tokens | docs/design-tokens.md |
 | C7 | SPDX 头部 | check-license-header | CONTRIBUTING.md |
+| C8 | 原生缺陷修正一致性 | check-native-defect-consistency | native-defect-fixes.mjs + engines/ |
+| C9 | 缺陷规范文档新鲜度 | check:defect-doc | docs/native-defect-fixes.md |
 
 ## 5. 黄金规则
 

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
+
+import { nativeDefectFixCss } from '../native-defect-fixes.mjs';
 import { alpha, artLayerCss, tokenBlock } from '../theme-utils.mjs';
 
 function workbuddyCss(t) {
@@ -322,19 +324,8 @@ a:hover {
   color: var(--cb-text-primary) !important;
 }
 
-/* Quick actions container: kill side shadow rendering (the jarring squared
-   shadow on both sides of the recommendation area above the input). */
-.quick-actions,
-.quick-actions__list,
-[class*="quick-action"]:not(.quick-actions__item) {
-  box-shadow: none !important;
-  outline: none !important;
-}
-.quick-actions *,
-.quick-actions__list * {
-  box-shadow: none !important;
-  outline: none !important;
-}
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
+${nativeDefectFixCss('workbuddy', '')}
 
 /* Message bubbles: subtle frosted surfaces */
 [class*="message-bubble"],

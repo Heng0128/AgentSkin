@@ -215,7 +215,8 @@ html.agentskin-host-traework article {
   color: var(--agentskin-text);
 }
 
-/* ---- message bubbles: kill native squared box-shadow on side bubbles ---- */
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
+/* ---- kill native squared box-shadow on chat bubbles ---- */
 html.agentskin-host-traework [class*="message-bubble"],
 html.agentskin-host-traework [class*="messageBubble"],
 html.agentskin-host-traework [class*="msg-bubble"],
@@ -225,6 +226,21 @@ html.agentskin-host-traework [class*="message-content"],
 html.agentskin-host-traework [class*="msg-content"] {
   box-shadow: none !important;
   outline: none !important;
+}
+
+/* ---- clear native grey rounded surface on the user-message text box ---- */
+html.agentskin-host-traework .user-message__text-box,
+html.agentskin-host-traework [class*="user-message__text-box"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+
+/* ---- remove native hardcoded fade-gradient mask over the message list ---- */
+html.agentskin-host-traework [class*="user-message-navigator__mask"] {
+  background-image: none !important;
+  background: transparent !important;
 }
 
 /* ---- contrast fix: avatar badges with hardcoded light bg ---- */

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
+
+import { nativeDefectFixCss } from '../native-defect-fixes.mjs';
 import { alpha, artLayerCss, shade, tokenBlock } from '../theme-utils.mjs';
 
 function qoderworkCss(t) {
@@ -313,6 +315,11 @@ ${host} ::-webkit-scrollbar-thumb:hover {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ----
+   QoderWork 目前没有独立的清除类缺陷规则（原生缺陷已被 token 覆盖 + 表面透明化消解）；
+   注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
+${nativeDefectFixCss('qoderwork', host)}
 `;
 }
 

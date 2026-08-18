@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
+
+import { nativeDefectFixCss } from '../native-defect-fixes.mjs';
 import { alpha, artLayerCss, shade, sharedChromeRules, tokenBlock } from '../theme-utils.mjs';
 
 function traeworkCss(t) {
@@ -190,17 +192,8 @@ ${host} article {
   color: var(--agentskin-text);
 }
 
-/* ---- message bubbles: kill native squared box-shadow on side bubbles ---- */
-${host} [class*="message-bubble"],
-${host} [class*="messageBubble"],
-${host} [class*="msg-bubble"],
-${host} [class*="chat-bubble"],
-${host} [class*="bubble"],
-${host} [class*="message-content"],
-${host} [class*="msg-content"] {
-  box-shadow: none !important;
-  outline: none !important;
-}
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
+${nativeDefectFixCss('traework', host)}
 
 /* ---- contrast fix: avatar badges with hardcoded light bg ---- */
 ${host} [class*="agent-avatar"],

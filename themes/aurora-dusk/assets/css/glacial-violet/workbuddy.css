@@ -352,14 +352,16 @@ a:hover {
   color: var(--cb-text-primary) !important;
 }
 
-/* Quick actions container: kill side shadow rendering (the jarring squared
-   shadow on both sides of the recommendation area above the input). */
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
+/* ---- kill native side shadows on the recommendation chips above the input ---- */
 .quick-actions,
 .quick-actions__list,
 [class*="quick-action"]:not(.quick-actions__item) {
   box-shadow: none !important;
   outline: none !important;
 }
+
+/* ---- kill stacked side shadows on descendants of the quick-action chips ---- */
 .quick-actions *,
 .quick-actions__list * {
   box-shadow: none !important;

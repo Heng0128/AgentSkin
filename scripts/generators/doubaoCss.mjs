@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
+
+import { nativeDefectFixCss } from '../native-defect-fixes.mjs';
 import { alpha, computeArtParams, rawRgb, shade, tokenBlock } from '../theme-utils.mjs';
 
 function doubaoCss(t) {
@@ -615,22 +617,8 @@ ${host} [class*="topic"]:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
 }
 
-/* Suggestion cards: kill ALL border-like effects + stacked backdrop-filter */
-${host} [class*="suggest"],
-${host} [class*="recommend"],
-${host} [class*="topic"] {
-  outline: none !important;
-  box-shadow: none !important;
-  border-image: none !important;
-}
-${host} [class*="suggest"] *,
-${host} [class*="recommend"] *,
-${host} [class*="topic"] * {
-  border-color: transparent !important;
-  outline: none !important;
-  box-shadow: none !important;
-  backdrop-filter: none !important;
-}
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
+${nativeDefectFixCss('doubao', host)}
 
 /* Hide Doubao's own welcome illustration / decorative images (pink character etc.)
    so our hero.webp on body::before shows through cleanly */

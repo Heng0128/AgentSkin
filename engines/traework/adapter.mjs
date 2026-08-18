@@ -120,7 +120,7 @@ html.${HOST_CLASS} [class*="chat-input-primary-glow"]:focus-within {
    (rgb(23,23,23) in dark / light equivalent in light) so the frosted inner
    input stays the visual subject and the art punches through === */
 /* Specificity: the host wins with !!important on the (0,4,0) selector
-   `.solo-lite .messageInputContainer .messageInputChatInput .chat-input-v2-editor-part`,
+   .solo-lite .messageInputContainer .messageInputChatInput .chat-input-v2-editor-part,
    which beats our plain (0,2,1). Replicate the ancestor chain + host class so
    our transparent (0,5,1) outranks it. */
 html.${HOST_CLASS} .solo-lite .messageInputContainer .messageInputChatInput .chat-input-v2-editor-part,
@@ -164,6 +164,29 @@ html.${HOST_CLASS} [class*="message-content"],
 html.${HOST_CLASS} [class*="msg-content"] {
   box-shadow: none !important;
   outline: none !important;
+}
+
+/* === User-message bubble surface: the native grey rounded box
+   (.user-message__text-box paints rgba(212,212,212,0.06) + 16px radius in
+   the host's default theme) reads as a leftover "<bubble ring>" against our
+   art surface once the box-shadow is gone. Match the host "flat" state by
+   clearing its surface and letting the art / text-only bubble take over. === */
+html.${HOST_CLASS} .user-message__text-box,
+html.${HOST_CLASS} [class*="user-message__text-box"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+
+/* === Message-navigator fade mask: the app overlays a sticky HARD-CODED dark
+   gradient (.user-message-navigator__mask--top/bottom paints rgb(23,23,23)
+   to transparent) at the top/bottom of the message list. Same class of issue
+   as .task-list-shadow-bottom — on our art surface it reads as a shadow band
+   behind the bubbles. Match the host "invisible" state by removing it. === */
+html.${HOST_CLASS} [class*="user-message-navigator__mask"] {
+  background-image: none !important;
+  background: transparent !important;
 }
 
 /* === Avatar badges === */

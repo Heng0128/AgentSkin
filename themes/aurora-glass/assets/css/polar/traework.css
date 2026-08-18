@@ -215,7 +215,8 @@ html.agentskin-host-traework article {
   color: var(--agentskin-text);
 }
 
-/* ---- message bubbles: kill native squared box-shadow on side bubbles ---- */
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
+/* ---- kill native squared box-shadow on chat bubbles ---- */
 html.agentskin-host-traework [class*="message-bubble"],
 html.agentskin-host-traework [class*="messageBubble"],
 html.agentskin-host-traework [class*="msg-bubble"],
@@ -225,6 +226,21 @@ html.agentskin-host-traework [class*="message-content"],
 html.agentskin-host-traework [class*="msg-content"] {
   box-shadow: none !important;
   outline: none !important;
+}
+
+/* ---- clear native grey rounded surface on the user-message text box ---- */
+html.agentskin-host-traework .user-message__text-box,
+html.agentskin-host-traework [class*="user-message__text-box"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+
+/* ---- remove native hardcoded fade-gradient mask over the message list ---- */
+html.agentskin-host-traework [class*="user-message-navigator__mask"] {
+  background-image: none !important;
+  background: transparent !important;
 }
 
 /* ---- contrast fix: avatar badges with hardcoded light bg ---- */
@@ -409,86 +425,4 @@ html.agentskin-host-traework ::-webkit-scrollbar-thumb:hover {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
-}
-
-/* ===== Aurora Glass signature (manifest.signature = "aurora-glass") ===== */
-
-/* --- living aurora backdrop: replaces the static art wash with drifting bands --- */
-html.agentskin-host-traework #root::before {
-  background:
-    radial-gradient(120% 80% at 82% 14%, rgba(143, 168, 217, 0.32), transparent 60%),
-    linear-gradient(118deg, rgba(127, 212, 232, 0.18) 0%, transparent 40%),
-    linear-gradient(242deg, rgba(143, 168, 217, 0.2) 0%, transparent 44%),
-    linear-gradient(180deg, #080d16 0%, color-mix(in srgb, #080d16 72%, #060912) 100%) !important;
-  background-size: 200% 200%, 190% 190%, 190% 190%, 100% 100% !important;
-  background-repeat: no-repeat !important;
-}
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes __aurora_glass_drift {
-    0%   { background-position: 0% 0%, 100% 18%, 50% 82%, 0 0; }
-    50%  { background-position: 22% 34%, 68% 58%, 28% 38%, 0 0; }
-    100% { background-position: 0% 0%, 100% 18%, 50% 82%, 0 0; }
-  }
-  @keyframes __aurora_glass_sheen {
-    0%   { transform: translateX(-130%) skewX(-18deg); }
-    55%  { transform: translateX(240%) skewX(-18deg); }
-    100% { transform: translateX(240%) skewX(-18deg); }
-  }
-  @keyframes __aurora_glass_breathe {
-    0%, 100% { box-shadow: 0 0 0 1px rgba(127, 212, 232, 0.32), 0 0 16px rgba(143, 168, 217, 0.16); }
-    50%      { box-shadow: 0 0 0 1px rgba(127, 212, 232, 0.58), 0 0 30px rgba(143, 168, 217, 0.3); }
-  }
-  html.agentskin-host-traework #root::before {
-    animation: __aurora_glass_drift 28s ease-in-out infinite !important;
-  }
-}
-
-/* --- glass specular rim-light: panels read as real glass, not flat fills --- */
-html.agentskin-host-traework aside,
-html.agentskin-host-traework nav,
-html.agentskin-host-traework [role="dialog"],
-html.agentskin-host-traework [role="menu"],
-html.agentskin-host-traework [role="tooltip"],
-html.agentskin-host-traework [class*="popover"],
-html.agentskin-host-traework [class*="modal"],
-html.agentskin-host-traework [class*="sidebar"] {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    inset 0 0 0 1px rgba(127, 212, 232, 0.1),
-    0 10px 34px rgba(4, 8, 16, 0.42) !important;
-}
-
-/* --- iridescent sheen sweep on primary / send buttons (liquid highlight) --- */
-html.agentskin-host-traework button[class*="primary"],
-html.agentskin-host-traework button[class*="send"],
-html.agentskin-host-traework button[class*="submit"] {
-  position: relative !important;
-  overflow: hidden !important;
-}
-html.agentskin-host-traework button[class*="primary"]::after,
-html.agentskin-host-traework button[class*="send"]::after,
-html.agentskin-host-traework button[class*="submit"]::after {
-  content: '' !important;
-  position: absolute !important;
-  inset: 0 !important;
-  background: linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.30) 50%, transparent 100%) !important;
-  transform: translateX(-130%) skewX(-18deg) !important;
-  pointer-events: none !important;
-  opacity: 0 !important;
-}
-@media (prefers-reduced-motion: no-preference) {
-  html.agentskin-host-traework button[class*="primary"]:hover::after,
-  html.agentskin-host-traework button[class*="send"]:hover::after,
-  html.agentskin-host-traework button[class*="submit"]:hover::after {
-    opacity: 1 !important;
-    animation: __aurora_glass_sheen 1.05s ease-out !important;
-  }
-}
-
-/* --- breathing focus glow on the composer / inputs --- */
-html.agentskin-host-traework [contenteditable="true"]:focus,
-html.agentskin-host-traework [contenteditable="true"]:focus-within,
-html.agentskin-host-traework textarea:focus,
-html.agentskin-host-traework input:focus {
-  animation: __aurora_glass_breathe 3.6s ease-in-out infinite !important;
 }
