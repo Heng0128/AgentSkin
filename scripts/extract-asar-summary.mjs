@@ -29,7 +29,7 @@
 
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, join, relative, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import asar from '@electron/asar';
 
@@ -181,13 +181,36 @@ function lookUpAppPath(app) {
 
 // ============== 解包 ==============
 function extractAsar(asarPath, destDir, dryRun) {
-  if (dryRun) return;
+  if (dryRun) return [];
   if (existsSync(destDir)) {
     // 已存在则认为可复用；调用侧会校验产物存在性。
-    return;
+    return [];
   }
   mkdirSync(destDir, { recursive: true });
-  asar.extractAll(asarPath, destDir);
+  try {
+    asar.extractAll(asarPath, destDir);
+  } catch (_err) {
+    // 跨平台 Electron 打包会把与当前 OS 无关的二进制（如 arm64-linux / arm64-darwin 的
+    // ripgrep）登记为 unpacked，但 Windows 安装包只带 win32/x64 的物理文件。
+    // extractAll 走到这些缺失项即抛 ENOENT 中断。回退为逐文件容错解包，
+    // 缺失的 unpacked 项跳过并返回，由调用侧记入 quality.missing。
+    const skipped = [];
+    for (const entry of asar.listPackage(asarPath)) {
+      const target = join(destDir, entry);
+      if (existsSync(target)) continue;
+      let buf;
+      try {
+        buf = asar.extractFile(asarPath, entry);
+      } catch {
+        skipped.push(entry);
+        continue;
+      }
+      mkdirSync(dirname(target), { recursive: true });
+      writeFileSync(target, buf);
+    }
+    return skipped;
+  }
+  return [];
 }
 
 // ============== 文本扫描工具 ==============
@@ -570,7 +593,9 @@ function runPipeline(args) {
       quality.missing.push({ path: a.path, reason: `exceeds --max-asar-bytes (${a.size}B)` });
       continue;
     } else {
-      extractAsar(a.path, dest, args.dryRun);
+      const skipped = extractAsar(a.path, dest, args.dryRun);
+      for (const f of skipped)
+        quality.missing.push({ path: f, reason: 'unpacked-binary-missing (non-host OS)' });
       extractedDirs.push({ from: a.path, to: dest });
     }
     scanResults.push({ role: a.role, dir: dest });
