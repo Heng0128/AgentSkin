@@ -70,6 +70,7 @@ import {
   cleanupEngineInjectionForAgent,
   disposeEngineInjectionState,
 } from './cdp/injection/engine-strategy';
+import { disposeReloadWatchdogs } from './cdp/reload-watchdog';
 import { CdpSessionPool } from './cdp/session-pool';
 import { EpochManager } from './epoch-manager';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
@@ -926,6 +927,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
     disposeWallpaperInjectionState();
     disposeEngineInjectionState();
     disposeSelfHealState();
+    disposeReloadWatchdogs();
     disposeThemeAssetCache();
     this.applyingTheme.clear();
     this.inflightOperations.clear();

@@ -1,116 +1,81 @@
-// Probe running Codex (58554): screenshot + token/computed diagnostics.
+// SPDX-License-Identifier: MPL-2.0
+// Manual probe: dump codex injection state on every page target for the given port.
+// Usage: node debug-tools/probe-codex.mjs <port>
+const port = Number(process.argv[2] ?? 56005);
 
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+async function listTargets() {
+  const http = await import('node:http');
+  return new Promise((resolve, reject) => {
+    http.get(`http://127.0.0.1:${port}/json/list`, (r) => {
+      let d = '';
+      r.on('data', (c) => (d += c));
+      r.on('end', () => resolve(JSON.parse(d)));
+    }).on('error', reject);
+  });
+}
 
-const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..');
-const PORT = process.argv[2] || '58554';
-class CDP {
-  constructor(ws) {
-    this.ws = ws;
-    this.id = 0;
-    this.pending = new Map();
-  }
-  static async connect(url) {
-    const c = new CDP(new WebSocket(url));
-    await new Promise((res, rej) => {
-      c.ws.addEventListener('open', res, { once: true });
-      c.ws.addEventListener('error', () => rej(new Error('ws')), { once: true });
-    });
-    c.ws.addEventListener('message', (e) => c.#msg(e.data));
-    return c;
-  }
-  #msg(raw) {
-    const m = JSON.parse(raw);
-    if (m.id != null && this.pending.has(m.id)) {
-      const { r } = this.pending.get(m.id);
-      this.pending.delete(m.id);
-      m.error ? r(new Error(m.error.message)) : r(m.result);
+async function evalIn(wsUrl, expr) {
+  const ws = new WebSocket(wsUrl);
+  let id = 0;
+  const pend = new Map();
+  ws.onmessage = (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (msg.id && pend.has(msg.id)) {
+      const { resolve, reject } = pend.get(msg.id);
+      pend.delete(msg.id);
+      if (msg.error) reject(new Error(msg.error.message));
+      else resolve(msg.result);
     }
-  }
-  send(method, params = {}) {
-    const id = ++this.id;
-    return new Promise((res, rej) => {
-      this.pending.set(id, { r: res });
-      this.ws.send(JSON.stringify({ id, method, params }));
-      setTimeout(() => {
-        if (this.pending.has(id)) {
-          this.pending.delete(id);
-          rej(new Error('timeout ' + method));
-        }
-      }, 20000);
+  };
+  await new Promise((resolve, reject) => {
+    ws.onopen = resolve;
+    ws.onerror = reject;
+  });
+  const send = (method, params = {}) =>
+    new Promise((resolve, reject) => {
+      const mid = ++id;
+      pend.set(mid, { resolve, reject });
+      ws.send(JSON.stringify({ id: mid, method, params }));
     });
-  }
-  close() {
-    try {
-      this.ws.close();
-    } catch {}
+  const exprId = ++id;
+  const ret = await new Promise((resolve, reject) => {
+    pend.set(exprId, { resolve, reject });
+    ws.send(
+      JSON.stringify({
+        id: exprId,
+        method: 'Runtime.evaluate',
+        params: { expression: expr, returnByValue: true },
+      }),
+    );
+  });
+  ws.close();
+  return ret?.result?.value ?? ret;
+}
+
+const targets = await listTargets();
+console.log(
+  'targets:',
+  targets
+    .map((t) => `${t.type} "${t.title}" ${t.url} ${t.webSocketDebuggerUrl ? 'ws' : 'no-ws'}`)
+    .join('\n  '),
+);
+for (const t of targets) {
+  if (!t.webSocketDebuggerUrl) continue;
+  try {
+    const expr = `(() => {
+      const el = document.getElementById('agentskin-theme-style-codex');
+      const state = window.__AGENTSKIN__?.hosts?.codex;
+      return JSON.stringify({
+        url: location.href,
+        stylePresent: !!el,
+        styleLen: (el?.textContent ?? '').length,
+        statePresent: !!state,
+        adopted: (document.adoptedStyleSheets||[]).filter(s=>!!s.__agentskin).length,
+      });
+    })()`;
+    const raw = await evalIn(t.webSocketDebuggerUrl, expr);
+    console.log(`  "${t.title}": ${raw}`);
+  } catch (e) {
+    console.log(`  "${t.title}": EVAL ERR ${e.message}`);
   }
 }
-const JS = `(() => {
-  const root = getComputedStyle(document.documentElement);
-  const axes = ['--text-primary','--text-secondary','--text-tertiary','--bg-primary','--bg-secondary','--bg-tertiary','--bg-quaternary','--border-subtle','--border-medium','--brand-gradient','--brand-text'];
-  const vars = {};
-  for (const v of axes) vars[v] = root.getPropertyValue(v).trim();
-  const capture = (el, label) => {
-    if (!el) return null;
-    const cs = getComputedStyle(el);
-    const r = el.getBoundingClientRect();
-    return { label, tag: el.tagName, cls: (typeof el.className==='string'?el.className:(el.getAttribute&&el.getAttribute('class'))||'').slice(0,120), bg: cs.backgroundColor, color: cs.color, radius: cs.borderRadius, w: Math.round(r.width), h: Math.round(r.height) };
-  };
-  const out = {
-    agentHosted: document.documentElement.classList.contains('agentskin-host-codex'),
-    bodyBg: getComputedStyle(document.body).backgroundColor,
-    vars,
-    nodes: [
-      capture(document.querySelector('aside.app-shell-left-panel'), 'sidebar'),
-      capture(document.querySelector('main[class*="MainContentSurface"]') || document.querySelector('main'), 'main-surface'),
-    ]
-  };
-  // count agentskin injected styles
-  out.agentskinStyles = Array.from(document.querySelectorAll('style')).filter(s=>/agentskin/i.test(s.textContent||'')).length;
-  return out;
-})()`;
-const JS2 = `(() => {
-  // detect host marker + constructable stylesheets in addition to <style> tags
-  const hits = (text) => /agentskin/i.test(text || '');
-  const styleTags = Array.from(document.querySelectorAll('style')).filter(s => hits(s.textContent)).map(s => s.id || '(no-id)');
-  let adopted = 0;
-  try { if (document.adoptedStyleSheets) adopted = document.adoptedStyleSheets.filter(s => { try { return hits(s.cssRules[0]?.cssText); } catch { return false; } }).length; } catch {}
-  const html = document.documentElement;
-  return {
-    url: location.href,
-    hostOnHtml: html.classList.contains('agentskin-host-codex'),
-    hostOnBody: document.body && document.body.classList.contains('agentskin-host-codex'),
-    anyHostClass: Array.from(html.classList).filter(c=>/agentskin/i.test(c)),
-    styleTags, adopted, totalHtmlClassLen: html.className.length
-  };
-})()`;
-async function run() {
-  const list = (await (await fetch(`http://127.0.0.1:${PORT}/json`)).json()).filter(
-    (x) =>
-      x.type === 'page' && x.webSocketDebuggerUrl && !/devtools|chrome|about:/.test(x.url || ''),
-  );
-  for (let i = 0; i < list.length; i++) {
-    const t = list[i];
-    const c = await CDP.connect(t.webSocketDebuggerUrl);
-    await c.send('Runtime.enable');
-    const r = await c.send('Runtime.evaluate', { expression: JS, returnByValue: true });
-    const r2 = await c.send('Runtime.evaluate', { expression: JS2, returnByValue: true });
-    console.log('\n===== TARGET', i, 'URL=', t.url, 'TITLE=', t.title);
-    console.log('DIAG=', JSON.stringify(r2.result?.value));
-    if (t === list[0]) console.log('MAIN=', JSON.stringify(r.result?.value));
-    if (t === list[0] && process.argv[3] === 'shot') {
-      const shot = await c.send('Page.captureScreenshot', { format: 'png' });
-      const p = join(ROOT, 'codex-probe.png');
-      writeFileSync(p, Buffer.from(shot.data, 'base64'));
-      console.log('screenshot=', p);
-    }
-    c.close();
-  }
-}
-run().catch((e) => {
-  console.error('FAIL', e.message);
-  process.exit(1);
-});

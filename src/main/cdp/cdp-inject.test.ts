@@ -392,19 +392,20 @@ describe('injectThemeViaCdp', () => {
 // ===========================================================================
 
 describe('removeEngineInjection', () => {
-  it('calls Page.removeScriptToEvaluateOnNewDocument when agent is provided', async () => {
+  it('sets sessionStorage disable flag (RFC P2: no tracked script removal)', async () => {
     const send = vi.fn().mockResolvedValue({});
     const session = makeMockSession(undefined, { send });
-    await removeEngineInjection(session, 'doubao');
-    // Should call Page.removeScriptToEvaluateOnNewDocument (best-effort).
-    // Also calls Runtime.enable and Page.* — at minimum send was called.
+    await removeEngineInjection(session);
+    // RFC 2026-08-18 P2: removeEngineInjection no longer removes any tracked
+    // new-document script (core owns persistence). send is still touched via
+    // Runtime.enable (best-effort).
     expect(send).toHaveBeenCalled();
   });
 
   it('sets sessionStorage disable flag', async () => {
     const evaluate = vi.fn(smartEvaluate());
     const session = makeMockSession(evaluate);
-    await removeEngineInjection(session, 'doubao');
+    await removeEngineInjection(session);
     const sessionStorageCall = evaluate.mock.calls.find(
       ([expr]) => expr.includes('sessionStorage') && expr.includes('__agentskin_disabled__'),
     );
@@ -414,7 +415,7 @@ describe('removeEngineInjection', () => {
   it('clears engine injection from the document', async () => {
     const evaluate = vi.fn(smartEvaluate());
     const session = makeMockSession(evaluate);
-    await removeEngineInjection(session, 'doubao');
+    await removeEngineInjection(session);
     // The clear expression removes adoptedStyleSheets with __agentskin flag
     // and clears adapter markers.
     const clearCall = evaluate.mock.calls.find(
@@ -423,7 +424,7 @@ describe('removeEngineInjection', () => {
     expect(clearCall).toBeDefined();
   });
 
-  it('works without agent parameter (no persistence script removal)', async () => {
+  it('works without agent parameter', async () => {
     const send = vi.fn().mockResolvedValue({});
     const evaluate = vi.fn(smartEvaluate());
     const session = makeMockSession(evaluate, { send });
@@ -440,7 +441,7 @@ describe('removeEngineInjection', () => {
     const evaluate = vi.fn(smartEvaluate());
     const session = makeMockSession(evaluate, { send });
     // Should not throw.
-    await expect(removeEngineInjection(session, 'doubao')).resolves.toBeUndefined();
+    await expect(removeEngineInjection(session)).resolves.toBeUndefined();
   });
 
   it('handles evaluate failure gracefully (best-effort)', async () => {
@@ -449,14 +450,14 @@ describe('removeEngineInjection', () => {
     });
     const session = makeMockSession(evaluate);
     // Should not throw.
-    await expect(removeEngineInjection(session, 'doubao')).resolves.toBeUndefined();
+    await expect(removeEngineInjection(session)).resolves.toBeUndefined();
   });
 
-  it('handles send failure for persistence script removal gracefully', async () => {
-    const send = vi.fn().mockRejectedValue(new Error('Page.remove failed'));
+  it('handles send failure gracefully (best-effort)', async () => {
+    const send = vi.fn().mockRejectedValue(new Error('Runtime.enable failed'));
     const evaluate = vi.fn(smartEvaluate());
     const session = makeMockSession(evaluate, { send });
-    // Should not throw — persistence script removal is best-effort.
-    await expect(removeEngineInjection(session, 'doubao')).resolves.toBeUndefined();
+    // Should not throw — the sessionStorage flag set is best-effort.
+    await expect(removeEngineInjection(session)).resolves.toBeUndefined();
   });
 });

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApplicationAdapter } from '../../adapters/base';
 import type {
   CdpTarget,
@@ -8,7 +8,7 @@ import type {
   ThemeBundle,
 } from '../../legacy/agentskin-core-runtime';
 import type { HealthCheckReport } from '../theme-health-check';
-import type { CdpSession } from './cdp-client';
+import type { CdpSession, EventCdpSession } from './cdp-client';
 import type { CdpFanoutDeps } from './cdp-fanout';
 import type { InjectEngineResult, InjectThemeResult } from './cdp-inject';
 import { CdpSessionPool } from './session-pool';
@@ -19,6 +19,7 @@ import { CdpSessionPool } from './session-pool';
 
 vi.mock('./cdp-client', () => ({
   connectCdp: vi.fn(),
+  connectEventCdp: vi.fn(),
 }));
 
 vi.mock('./cdp-targets', () => ({
@@ -49,7 +50,7 @@ vi.mock('../../legacy/agentskin-core-runtime', async (importOriginal) => {
 });
 
 // Import mocked modules AFTER mock declarations.
-const { connectCdp } = await import('./cdp-client');
+const { connectCdp, connectEventCdp } = await import('./cdp-client');
 const { findDomTargets, findSecondaryTargets } = await import('./cdp-targets');
 const { injectThemeViaCdp, removeEngineInjection } = await import('./cdp-inject');
 const { checkThemeHealth } = await import('../theme-health-check');
@@ -64,6 +65,7 @@ const {
   hardeningRemove,
   connectWithRetry,
 } = await import('./cdp-fanout');
+const { disposeReloadWatchdogs, getReloadWatchdogKeys } = await import('./reload-watchdog');
 
 // ---------------------------------------------------------------------------
 // Factories
@@ -86,6 +88,17 @@ function makeMockSession(overrides: Partial<CdpSession> = {}): CdpSession {
     evaluate: vi.fn().mockResolvedValue('{"installed":true}'),
     close: vi.fn(),
     ...overrides,
+  };
+}
+
+/** Event-aware session used by the reload watchdog (has on/off). */
+function makeMockEventSession(): EventCdpSession {
+  return {
+    send: vi.fn().mockResolvedValue({}),
+    evaluate: vi.fn().mockResolvedValue('{}'),
+    close: vi.fn(),
+    on: vi.fn(),
+    off: vi.fn(),
   };
 }
 
@@ -193,6 +206,10 @@ function makeDeps(overrides: Partial<CdpFanoutDeps> = {}): CdpFanoutDeps {
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(connectCdp).mockResolvedValue(makeMockSession());
+  // Reload watchdog (hardeningPass arms it on every page target): give it a
+  // benign event session so the async `void openWatchdogSession` settles
+  // cleanly instead of surfacing an unhandled rejection.
+  vi.mocked(connectEventCdp).mockResolvedValue(makeMockEventSession());
   vi.mocked(findDomTargets).mockResolvedValue([]);
   vi.mocked(findSecondaryTargets).mockResolvedValue([]);
   vi.mocked(injectThemeViaCdp).mockResolvedValue(makeMockLegacyResult());
@@ -201,6 +218,12 @@ beforeEach(() => {
   vi.mocked(buildSecondaryInjectExpression).mockReturnValue('(() => "inject")()');
   vi.mocked(buildSecondaryRemoveExpression).mockReturnValue('(() => "remove")()');
   vi.mocked(resolveThemeTargetFor).mockReturnValue(makeResolvedTarget());
+});
+
+// hardeningPass arms a reload watchdog on page targets; ensure it never leaks
+// module-level state across tests.
+afterEach(() => {
+  disposeReloadWatchdogs();
 });
 
 // ===========================================================================
@@ -492,6 +515,68 @@ describe('hardeningPass', () => {
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('applied to 0/1 targets'));
   });
 
+  it('watchdog skips a page target when engine sheets are already present (P3)', async () => {
+    // The page session's evaluate answers a verification that reports the
+    // engine's owned adoptedStyleSheets as present → watchdog skips injection.
+    const presentEval = vi.fn().mockResolvedValue(
+      JSON.stringify({
+        accent: '#f00',
+        agentskinArt: '',
+        heroBlobActive: false,
+        adoptedSheetCount: 3,
+      }),
+    );
+    const targets = [
+      makeCdpTarget({ id: 'page-1', type: 'page' }),
+      makeCdpTarget({ id: 'wv-1', type: 'webview' }),
+    ];
+    vi.mocked(findDomTargets).mockResolvedValue(targets);
+    vi.mocked(connectCdp).mockResolvedValue(makeMockSession({ evaluate: presentEval }));
+
+    const deps = makeDeps({
+      tryEngineInjection: vi.fn().mockResolvedValue(makeMockEngineResult()),
+    });
+
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    // page-1 skipped (sheets already applied), only wv-1 is injected.
+    expect(deps.tryEngineInjection).toHaveBeenCalledTimes(1);
+    expect(injectThemeViaCdp).not.toHaveBeenCalled();
+    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('WATCHDOG skip page'));
+    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('watchdog-skip=1'));
+
+    // RFC 2026-08-18 P3: hardeningPass must also arm the cross-navigation reload
+    // watchdog on the primary page target (regardless of skip/inject).
+    expect(connectEventCdp).toHaveBeenCalledWith('ws://127.0.0.1:9222/devtools/page/1');
+    expect(getReloadWatchdogKeys()).toContain('doubao');
+  });
+
+  it('watchdog injects a page target when engine sheets are absent (P3)', async () => {
+    // A verification that reports adoptedSheetCount === 0 (or missing) means
+    // the engine sheets were not applied → the watchdog must re-inject.
+    const absentEval = vi.fn().mockResolvedValue(
+      JSON.stringify({
+        accent: '',
+        agentskinArt: '',
+        heroBlobActive: false,
+        adoptedSheetCount: 0,
+      }),
+    );
+    const targets = [makeCdpTarget({ id: 'page-1', type: 'page' })];
+    vi.mocked(findDomTargets).mockResolvedValue(targets);
+    vi.mocked(connectCdp).mockResolvedValue(makeMockSession({ evaluate: absentEval }));
+
+    const deps = makeDeps({
+      tryEngineInjection: vi.fn().mockResolvedValue(makeMockEngineResult()),
+    });
+
+    await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
+
+    expect(deps.tryEngineInjection).toHaveBeenCalledTimes(1);
+    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('ENGINE [page]'));
+    expect(deps.log).not.toHaveBeenCalledWith(expect.stringContaining('WATCHDOG skip'));
+  });
+
   it('counts failures when connectCdp throws', async () => {
     const targets = [makeCdpTarget({ id: 'page-1', type: 'page' })];
     vi.mocked(findDomTargets).mockResolvedValue(targets);
@@ -737,9 +822,10 @@ describe('hardeningRemove', () => {
 
     expect(connectCdp).toHaveBeenCalledTimes(3);
     expect(removeEngineInjection).toHaveBeenCalledTimes(3);
-    // Each call should pass the appId.
+    // RFC 2026-08-18 P2: removeEngineInjection no longer takes an appId.
+    // Sanity-check each call targets exactly one session argument.
     for (const call of vi.mocked(removeEngineInjection).mock.calls) {
-      expect(call[1]).toBe('doubao');
+      expect(call.length).toBe(1);
     }
     expect(session.close).toHaveBeenCalledTimes(3);
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('removed engine from 3/3'));

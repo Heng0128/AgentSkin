@@ -30,8 +30,8 @@ describe('buildApplyExpression — observer exclusion set (CV-03)', () => {
     expect(expression).toContain('[aria-hidden="true"]');
   });
 
-  it('gates conditional re-apply on missing <style> (no unconditional ensure)', () => {
-    expect(expression).toContain("if (!document.getElementById(styleId)) ensure();");
+  it('gates conditional re-apply on a missing adopted theme sheet (no unconditional ensure)', () => {
+    expect(expression).toContain("(document.adoptedStyleSheets || []).some((s) => s.__agentskin_theme === true)");
   });
 });
 
@@ -54,7 +54,7 @@ describe('buildStyleSamplingSnippet', () => {
     const snippet = buildStyleSamplingSnippet(adapter);
     expect(snippet).toContain('styleSampling');
     expect(snippet).toContain('getComputedStyle');
-    expect(snippet).toContain("document.getElementById('agentskin-theme-style-' + appId)");
+    expect(snippet).toContain("__agentskin_theme === true)");
     expect(snippet).toContain('root');
   });
 
@@ -142,7 +142,7 @@ describe('buildPersistenceScript — new-document persistence (RFC P1)', () => {
     expect(persistence).toContain(JSON.stringify(applyBody));
     // …and therefore inherits every injection marker of the apply body
     // (host class embedded in the apply body's JSON host literal).
-    expect(persistence).toContain('agentskin-theme-style-');
+    expect(persistence).toContain('__agentskin_theme');
     expect(persistence).toContain('agentskin-host-traework');
   });
 

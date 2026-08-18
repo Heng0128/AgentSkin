@@ -18,6 +18,17 @@ function safeHostClass(appId) {
  */
 export const SESSION_DISABLED_KEY = "__agentskin_disabled__";
 
+// Engine-local reflections of the shared injection constants. The engine
+// runtime is self-contained ESM (cannot `import` the TS shared kernel), so it
+// mirrors `SHEET_OWNED_FLAG` and adds a core-specific theme-sheet marker.
+// The themed CSS is now adopted as a single owned sheet instead of a `<style>`
+// element. A distinct `__agentskin_theme` flag (rather than a named layer)
+// ensures it never collides with the hardening engine's
+// palette/tokens/cosmetic/theme/custom layers during the transition window.
+export const SHEET_OWNED_FLAG = "__agentskin";
+export const THEME_SHEET_FLAG = "__agentskin_theme";
+export const THEME_SHEET_VERSION_FLAG = "__agentskin_theme_version";
+
 function resolveRendererProfile(adapter, targetTheme) {
   const profileId = targetTheme?.options?.rendererProfile;
   if (profileId === undefined) return null;
@@ -228,8 +239,6 @@ export function buildApplyExpression({ adapter, targetTheme }) {
       for (const objectUrl of ownedImageUrls) globalThis.URL?.revokeObjectURL?.(objectUrl);
       throw error;
     }
-    const styleId = 'agentskin-theme-style-' + host.id;
-
     // sessionStorage disable flag (same key as engine-strategy's persistence
     // script). Set by restore/teardown so a user-initiated undo is not fought
     // by the self-heal loop: once disabled we tear the loop down for good.
@@ -292,16 +301,19 @@ export function buildApplyExpression({ adapter, targetTheme }) {
       }
       if (artUrl) root.style.setProperty('--agentskin-art', 'url("' + artUrl + '")');
       else root.style.removeProperty('--agentskin-art');
-      let style = document.getElementById(styleId);
-      if (!style) {
-        style = document.createElement('style');
-        style.id = styleId;
-        (document.head || root).appendChild(style);
-      }
-      if (style.dataset.themeVersion !== theme.id + '@' + theme.version) {
-        style.textContent = cssText;
-        style.dataset.themeVersion = theme.id + '@' + theme.version;
-      }
+      const adoptThemeSheet = () => {
+        const existing = (document.adoptedStyleSheets || []).find((s) => s.${THEME_SHEET_FLAG} === true);
+        const stale = existing && existing.${THEME_SHEET_VERSION_FLAG} !== theme.id + '@' + theme.version;
+        if (existing && !stale) return;
+        document.adoptedStyleSheets = (document.adoptedStyleSheets || []).filter((s) => s.${THEME_SHEET_FLAG} !== true);
+        const themeSheet = new CSSStyleSheet();
+        themeSheet.replaceSync(cssText);
+        themeSheet.${SHEET_OWNED_FLAG} = true;
+        themeSheet.${THEME_SHEET_FLAG} = true;
+        themeSheet.${THEME_SHEET_VERSION_FLAG} = theme.id + '@' + theme.version;
+        document.adoptedStyleSheets = [...(document.adoptedStyleSheets || []), themeSheet];
+      };
+      adoptThemeSheet();
       markNonControlled();
       profileRuntime?.ensure?.();
       return true;
@@ -321,7 +333,7 @@ export function buildApplyExpression({ adapter, targetTheme }) {
       if (disabled()) { cleanup(); return; }
       // Conditionally re-apply only when the theme <style> is missing; skip the
       // unconditional re-apply when the skin is already mounted.
-      if (!document.getElementById(styleId)) ensure();
+      if (!(document.adoptedStyleSheets || []).some((s) => s.${THEME_SHEET_FLAG} === true)) ensure();
     }, 5000);
     const cleanup = () => {
       observer.disconnect();
@@ -330,7 +342,9 @@ export function buildApplyExpression({ adapter, targetTheme }) {
       profileRuntime?.cleanup?.();
       for (const objectUrl of ownedImageUrls) globalThis.URL?.revokeObjectURL?.(objectUrl);
       ownedImageUrls.clear();
-      document.getElementById(styleId)?.remove();
+      if (document.adoptedStyleSheets) {
+        document.adoptedStyleSheets = document.adoptedStyleSheets.filter((s) => s.${THEME_SHEET_FLAG} !== true);
+      }
       const root = document.documentElement;
       root?.classList.remove(host.className);
       root?.style.removeProperty('--agentskin-art');
@@ -411,7 +425,9 @@ export function buildRemoveExpression(adapter) {
     const state = window.__AGENTSKIN__?.hosts?.[appId];
     if (state?.cleanup) return state.cleanup();
     ${fallbackCleanup}
-    document.getElementById('agentskin-theme-style-' + appId)?.remove();
+    if (document.adoptedStyleSheets) {
+      document.adoptedStyleSheets = document.adoptedStyleSheets.filter((s) => s.${THEME_SHEET_FLAG} !== true);
+    }
     const root = document.documentElement;
     root?.classList.remove(${hostClass});
     root?.style.removeProperty('--agentskin-art');
@@ -491,7 +507,7 @@ export function buildStyleSamplingSnippet(adapter) {
     const __styleOpts = ${optsJson};
     const __styleProbes = ${probesJson};
     const styleSampling = (() => {
-      if (!document.getElementById('agentskin-theme-style-' + appId)) {
+      if (!(document.adoptedStyleSheets || []).some((s) => s.${THEME_SHEET_FLAG} === true)) {
         return { pass: true, matchRatio: 1, judged: 0, misses: [], reason: 'style-not-present' };
       }
       const rootCs = getComputedStyle(document.documentElement);
@@ -550,7 +566,7 @@ export function buildVerifyExpression(adapter, expectedTheme = null, themeVerifi
       installed: Boolean(state),
       themeId: state?.themeId ?? null,
       version: state?.version ?? null,
-      stylePresent: Boolean(document.getElementById('agentskin-theme-style-' + appId)),
+      stylePresent: (document.adoptedStyleSheets || []).some((s) => s.${THEME_SHEET_FLAG} === true),
       horizontalOverflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
       images: state?.imageNames ?? [],
       profile,

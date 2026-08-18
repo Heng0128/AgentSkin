@@ -1,196 +1,152 @@
-# 原生基准真值 Baseline Truth（P0 · 阶段一）
+# Baseline Truth — 主题注入现状固化（收敛前基线）
 
-> 关联：`docs/rfc/2026-08-16-cdp-injection-performance.md` 批 6 模板引擎审计改造
-> 日期：2026-08-16
-> 状态：`待人工核对`（本文档为静态源码分析输出，逐项需人工打开各 Agent 复核，见 §7）
-> 依据：`src/engine/src/adapters/*.mjs`、`engines/*/tokens.css`、`src/engine/src/runtime/profiles/*.mjs`
-
----
-
-## 1. 目的与验收锚点
-
-本表是模板引擎"基准真值层"的输入。目标：**自定义主题加载前，引擎必须能完整复刻每个 Agent 的原生亮主题与原生暗主题**，复刻还原度即主题包还原度的上限。
-
-**高还原度达成线**（据此验收 P0）：
-
-1. 载体定位正确：每个核心组件明确"外层 as 载体 / 内层 as 非受控"，0 颠倒。
-2. 主要色对齐：背景/文字/边框三色组与原生快照色差 ΔE ≤ 3（非透明场景）。
-3. 嵌套组件零误染：内部子控件 computedStyle 与未注入时一致。
-4. 亮→暗切换：两套基准复刻后可动态切换，组件表现逻辑对齐原生。
-
-**极限还原方向**：放弃 computedStyle 近似，改走 **CSS 规则级捕获 + 精确回注**（见 §6），ΔE 理论逼近 0。
+> 这不是设计文档，是**现状的唯一参照物**。作用：把收敛前“主题注入到底怎么跑、谁在写页面、谁在持久化、靠什么探测/清理”全部固定下来，作为 [RFC: 双引擎收敛](./2026-08-18-engine-injection-convergence.md) P1-P3 迁移的对照基准与回滚锚点。
+>
+> **变更法则**：凡改动注入通道 / 持久化承担者 / 注入标识 / 清理逻辑 / 探测锚点者，必须先更新本文件，再改代码，再跑 `npm run check`。
+> 状态：`已确认`（2026-08-18 逐文件核对）
 
 ---
 
-## 2. 原生亮/暗主题载体真值（静态锚点）
+## 1. 链路全景
 
-> 载体 = 原生主题生效的 DOM 节点组。以下来自 adapter 元数据与 tokens.css 静态提炼，`可信度` 标注是否已由真实应用核对。
+```
+UI → preload → IPC → 主进程(theme-apply-flow) → 适配器 applyTheme / hardeningPass → CDP → 目标应用渲染进程
+                                                      ↓
+                                       src/engine/src/runtime/  (core 运行时)
+                                       src/main/cdp/injection/  (hardening 引擎)
+```
 
-| Agent | 原生亮主题载体 | 原生暗主题载体 | 嵌套组件样式载体 | 主题注入宿主 | 可信度 |
-|-------|---------------|---------------|-----------------|-------------|--------|
-| traework  | `html[data-theme="light"]`、`:root` 原生 `--vscode-*` token | `html[data-theme="dark"]`、`:root` 原生 `--vscode-*` token | 输入框外层容器、侧边栏外层 div | `html.agentskin-host-traework body` + `.monaco-workbench` | 静态 |
-| qoderwork | `[data-color-scheme="light"]`、根节点 | `[data-color-scheme="dark"]`、根节点 | 输入框外层、侧边栏外层 div | `html.agentskin-host-qoderwork` | 静态 |
-| workbuddy | `--wb-theme: light`、根 CSS 变量 | `--wb-theme: dark`、根 CSS 变量 | 输入框外层、侧边栏外层 div | `html.agentskin-host-workbuddy` | 静态 |
-| doubao    | `--dbx-theme: light`、根 CSS 变量（Semi：`--semi-color-*`） | `--dbx-theme: dark`、根 CSS 变量（Semi：`--semi-color-*`） | 输入框外层、侧边栏外层 div，4 处后代通配符 `*` | `html.agentskin-host-doubao:root` | 静态 |
-| codex     | `:root[data-appearance="light"]` | `:root[data-appearance="dark"]` | 输入框外层、侧边栏外层 div | `<style id="agentskin-theme-style-codex">`（非 adoptedStyleSheets） | 静态 |
-| zcode     | `body.theme-light` | `body.theme-dark` | 输入框外层、侧边栏外层 div | `html.agentskin-host-zcode` | 静态 |
+## 2. 适用边界与本文件覆盖范围
 
-### 2.1 关键载体验证选择器（adapter `verification.*`）
+- 覆盖：**主题（theme）** 注入。壁纸(wallpaper)、副目标(secondary targets)、light/dark 模式同步不在本基线展开（它们在流程上附属于 apply，见 §4 时序）。
+- Agent：6 个（`traework` `qoderwork` `workbuddy` `doubao` `codex` `zcode`），共享同一套双轨机制，仅 adapter.mjs/生成器差异。
+- 关键结论（本文件核心）：**主题注入由两套独立机制并存承担，都写主页面，构成结构性双写。** 这是收敛 RFC 要消除的对象。
 
-| Agent | 根 landmark（阻塞校验） | 侧边栏 | 工作区 | 输入框 |
-|-------|------------------------|--------|--------|--------|
-| traework  | `#root .panel-container` / `.solo-lite-layout` / `#root` | `.task-list-base` / `.task-list-panel` | `.panel-container` / `.solo-lite-layout` | `.chat-input-v2-input-box-editable[contenteditable='true']` |
-| qoderwork | `#root .agents-layout-root` / `.agents-layout-root` / `#root` | `.agents-sidebar` / `[data-resizable-sidebar]` | `.agents-content-area` / `.agents-layout-body` | `.chat-input-editor-text[contenteditable='true']` |
-| workbuddy | `#root > .teams-container` / `.teams-container` / `#root` | `.conversation-sidebar` / `.conversation-list` | `.teams-main-content` / `.main-content` | `[role='textbox'][contenteditable='true']` / `.wb-home-composer [contenteditable='true']` |
-| doubao    | `#root` / `body` | （暂无推荐 landmark） | （暂无推荐 landmark） | （暂无推荐 landmark） |
-| codex     | `main.main-surface` / `main[class*='MainContentSurface']` / `main` | `aside.app-shell-left-panel` | `main`（见根 landmark） | `.composer-surface-chrome` |
-| zcode     | `#root` / `body` | `[class*='sidebar']` / `aside` | `[class*='chat']` | `[contenteditable='true']` / `textarea` |
+## 3. 两套注入机制现状
 
-> 注：doubao 目前 adapter 仅声明 `rootAny`，无组件级 landmark，需在 P0 阶段人工补齐（§7）。
+### 3.1 通道对比
 
----
+| 维度 | 机制 A — core 运行时 | 机制 B — hardening 引擎 |
+|------|----------------------|--------------------------|
+| 代码位置 | `src/engine/src/runtime/{injector.mjs,renderer-payload.mjs}` | `src/main/cdp/injection/{engine-strategy.ts,css-inject.ts}` |
+| 入口 | `adapter.applyTheme`（[theme-apply-flow.ts](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/theme-apply-flow.ts#L431-L443)） | `hardeningPass`（[cdp-fanout.ts](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/cdp/cdp-fanout.ts#L370-L495)） |
+| 触发 | 每次 apply，同步等待 | 每次 apply，后台 fire-and-forget |
+| 目标 | 主 `page` 目标 | **全部** DOM target（page/webview/iframe，`findDomTargets`） |
+| 写入通道 | `document.adoptedStyleSheets`，单张 owned sheet（标记 `__agentskin_theme`）承载整包 `cssText`（[renderer-payload.mjs](file:///c:/Users/snowb/Desktop/work/desktop-main/src/engine/src/runtime/renderer-payload.mjs#L304-L316)） | `document.adoptedStyleSheets`，逐层 adopt palette/tokens/cosmetic/theme/custom（[engine-strategy.ts](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/cdp/injection/engine-strategy.ts#L253-L268)） |
+| CSS 承担 | 单 owned sheet 承载整包 cssText | 每层一个 `CSSStyleSheet`（`injectCssLayer`） |
+| 自愈 | MutationObserver + `setInterval` 5s 按需重挂（[renderer-payload.mjs](file:///c:/Users/snowb/Desktop/work/desktop-main/src/engine/src/runtime/renderer-payload.mjs#L311-L325)） | 持久化脚本`applyLayers()`幂等重跑 |
 
-## 3. 三色组（背景 / 文字 / 边框）→ 原生 token 映射
+### 3.2 共享注入原子（两套共用，勿重复定义）
 
-以下为各 Agent 原生 token 体系中"背景 / 文字 / 边框"三色组的**典型受控 token**，供基准复刻与自定义主题映射共用。`agentskin-*` 为引擎侧注入 token。
+定义于 [injection-runtime.ts](file:///c:/Users/snowb/Desktop/work/desktop-main/src/shared/injection-runtime.ts)：
 
-### 3.1 traework（VS Code token 体系）
+| 原子 | 说明 | 使用方 |
+|------|------|--------|
+| `ADOPT_LAYER_BODY` | adopt 单个具名 layer，幂等 | A 持久化脚本 `applyLayers` |
+| `buildAdoptLayerExpression` | 完整 IIFE adopt 具名 layer | B `injectCssLayer`（境换） |
+| `buildAdoptOwnedSheetExpression` | 无名 owned sheet（wallpaper 等） | B 相关 |
+| `CLEAR_ADAPTERS_BODY` | 断连所有 adapter 标记(observer+interval) | B `injectThemeViaEngine` 清理 + `buildClearEngineInjectionExpression` |
+| `buildClearEngineInjectionExpression` | 全清（owned sheets + adapters + host class + config global） | B `removeEngineInjection` |
 
-| 语义 | 原生 token（受控） | 引擎映射 |
-|------|-------------------|----------|
-| 背景 | `--vscode-editor-background`、`--vscode-icube-colorBg1/2/3`、`--vscode-sideBar-background` | `--agentskin-bg` / `--agentskin-surface` / `--agentskin-surface-elevated` |
-| 文字 | `--vscode-foreground`、`--vscode-icube-colorDefaultText` | `--agentskin-text` / `--agentskin-muted` |
-| 边框 | `--vscode-icube-colorLine1/2`、`--vscode-icube--border-border-neutral-l1` | `--agentskin-border` / `--agentskin-accent` 混合 |
-| 强调 | `--vscode-textLink-foreground`、`--vscode-button-background` | `--agentskin-accent` / `--agentskin-secondary` |
+> 共享内核已归一化“adoptedStyleSheets 操作”。**core 的 `<style>` 通道是唯一未收敛进共享内核的特殊路径**——收敛 P1 的核心动作就是把 core 切到 `adoptedStyleSheets` 复用上述原子。
 
-**宿主**：`html.agentskin-host-traework body`（主 token）+ `.monaco-workbench`（侧栏/面板/活动栏 re-declare）。
+## 4. Apply 固定编排时序（[theme-apply-flow.ts](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/theme-apply-flow.ts#L425-L554)）
 
-### 3.2 qoderwork
+```
+1. adapter.applyTheme(bundle, {launch:false})  ← 机制 A，同步
+2. setActiveTheme + persist
+3. injectSecondaryTargets(后台)                 ← 副目标 webview/iframe
+4. hardeningPass(后台) → 对主页面再次写 adoptedStyleSheets ← 机制 B，构成双写
+5. [hardening 完成] .then → injectAgentWallpaperFromApply
+6. syncSchemeWithStability(后台)               ← light/dark 匹配
+```
 
-| 语义 | 原生 token（受控） | 引擎映射 |
-|------|-------------------|----------|
-| 背景 | 根 `--bg-*` / `--surface-*` | `--agentskin-bg` / `--agentskin-surface` |
-| 文字 | 根 `--text-*` / `--fg-*` | `--agentskin-text` / `--agentskin-muted` |
-| 边框 | 根 `--border-*` / `--line-*` | `--agentskin-border` |
-| 强调 | 根 `--accent-*` / `--brand-*` | `--agentskin-accent` |
+> 双写成立点：主 `page` 目标在步骤 1 被 core 的 owned sheet 写入，步骤 4 又被 hardening 五层 adoptedStyleSheets 写入（[cdp-fanout.ts](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/cdp/cdp-fanout.ts#L440-L446)）。P1 起两者都走 `adoptedStyleSheets`，仅标记维度不同（core：单一 `__agentskin_theme`owned sheet；hardening：命名 layer）。
 
-> 具体 token 名需在 P0 人工核对（见 §7）。
+### 并发护栏（保留，收敛时勿破坏）
 
-### 3.3 workbuddy
+- `applyEpoch`（`isEpochCurrent` + `bumpEpoch`）：新 apply/restore 使旧后台任务失效（[cdp-fanout.ts](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/cdp/cdp-fanout.ts#L407-L414)）。
+- `deps.unlockAgent`（`applyingTheme` 锁）：防并发 apply 互相覆盖。
+- hardening→wallpaper 链式 `.then`：确保硬化把 punch-through sheet 重排到最后后再建 wallpaper，避免顺序竞态。
 
-| 语义 | 原生 token（受控） | 引擎映射 |
-|------|-------------------|----------|
-| 背景 | 根 `--wb-bg-*` / `--surface-*` | `--agentskin-bg` / `--agentskin-surface` |
-| 文字 | 根 `--wb-text-*` / `--fg-*` | `--agentskin-text` / `--agentskin-muted` |
-| 边框 | 根 `--wb-border-*` / `--line-*` | `--agentskin-border` |
-| 强调 | 根 `--wb-accent-*` / `--brand-*` | `--agentskin-accent` |
+## 5. 持久化双轨（核心双写之二）
 
-### 3.4 doubao（Semi Design token 体系，实际驱动 UI）
+两套各自注册一个 `Page.addScriptToEvaluateOnNewDocument`，**导航后都会执行**：
 
-| 语义 | 原生 token（受控） | 引擎映射 |
-|------|-------------------|----------|
-| 背景 | `--semi-color-bg-0/1/2/3/4`、`--s-color-bg-*` | `--agentskin-bg` / `--agentskin-surface` / `--agentskin-surface-elevated` |
-| 文字 | `--semi-color-text-0/1/2/3`、`--s-color-text-*` | `--agentskin-text` / `--agentskin-muted` |
-| 边框 | `--semi-color-border`、`--s-color-border-*` | `--agentskin-border` |
-| 强调 | `--semi-color-primary`、`--s-color-brand-primary-*` | `--agentskin-accent` / `--agentskin-secondary` |
+| 机制 | 注册函数 | 持久化脚本内容 | 跟踪 key |
+|------|----------|----------------|----------|
+| A | `injector.mjs` `registerPersistenceScript`（[L92-107](file:///c:/Users/snowb/Desktop/work/desktop-main/src/engine/src/runtime/injector.mjs#L92-L107)） | `buildPersistenceScript` → `(0,eval)(APPLY_BODY)` 重放 adopted-themed-sheet 注入体（[renderer-payload.mjs](file:///c:/Users/snowb/Desktop/work/desktop-main/src/engine/src/runtime/renderer-payload.mjs#L379-L403)） | `port:targetId` |
+| B | `engine-strategy.ts` `registerEnginePersistence`（[L323-522](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/cdp/injection/engine-strategy.ts#L323-L522)） | 内联脚本 `applyLayers()+applyHero()+applyAdapter()` 重放五层 adoptedStyleSheets | `agentId` |
 
-> 依据 tokens.css 注释：Doubao 实际驱动 UI 的是 268 个 `--semi-*` token + 64 语义变量，`--dbx-*/--s-color-*/--ffc-*` 多为 legacy 但保留兜底。
+- **共享禁用标记**：`sessionStorage['__agentskin_disabled__']='1'`（`SESSION_DISABLED_KEY`），restore 时置位，令两套持久化脚本在下次导航都跳过。收敛 P2 需保留此单一语义。
+- **双脚本事实**：机制 A 与机制 B 各注册一个 new-document 脚本；即使各自幂等，也存在重复执行开销与双清理路径（见 §6）。这是收敛 P2 要合并的对象。
 
-### 3.5 codex
+## 6. 清理双轨
 
-| 语义 | 原生 token（受控） | 引擎映射 |
-|------|-------------------|----------|
-| 背景 | `--app-surface-*` / `--fill-*` | `--agentskin-bg` / `--agentskin-surface` |
-| 文字 | `--text-*` / `--fg-*` | `--agentskin-text` / `--agentskin-muted` |
-| 边框 | `--border-*` / `--line-*` | `--agentskin-border` |
-| 强调 | `--accent-*` / `--brand-*` | `--agentskin-accent` |
+| 机制 | 清理函数 | 作用 |
+|------|----------|------|
+| A | `renderer-payload.mjs` `buildRemoveExpression`（[L405-434](file:///c:/Users/snowb/Desktop/work/desktop-main/src/engine/src/runtime/renderer-payload.mjs#L405-L434)） | 调 `state.cleanup()` / fallback：移除 `__agentskin_theme` owned sheet、host class、art、image vars、dataset |
+| B | `engine-strategy.ts` `removeEngineInjection`（[L541-574](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/cdp/injection/engine-strategy.ts#L541-L574)） | 移除脚本 id + 置禁用标志 + `buildClearEngineInjectionExpression`（owned sheets/adapters/host/config） |
 
-> codex 通过 `<style id="agentskin-theme-style-codex">` 注入，不走 adoptedStyleSheets；验证需专用探针（已实现于批 6）。
+> 收敛后应统一到单一清理内核（`buildClearEngineInjectionExpression`），core 的 `__agentskin_theme` filter 由此接管（其 sheet 也带 `__agentskin` owned 标记，故 hardening 清理同样能移除）。
 
-### 3.6 zcode
+## 7. 注入标识 / 常量（唯一来源 [injection-constants.ts](file:///c:/Users/snowb/Desktop/work/desktop-main/src/shared/injection-constants.ts)）
 
-| 语义 | 原生 token（受控） | 引擎映射 |
-|------|-------------------|----------|
-| 背景 | 根 `--bg-*` / `--surface-*` | `--agentskin-bg` / `--agentskin-surface` |
-| 文字 | 根 `--text-*` / `--fg-*` | `--agentskin-text` / `--agentskin-muted` |
-| 边框 | 根 `--border-*` / `--line-*` | `--agentskin-border` |
-| 强调 | 根 `--accent-*` / `--brand-*` | `--agentskin-accent` |
+| 常量 | 值 | 用途 |
+|------|-----|------|
+| `HOST_CLASS_PREFIX` | `agentskin-host-` | `<html>` host class |
+| `RENDERER_CONFIG_GLOBAL` | `__AGENTSKIN_CONFIG__` | adapter config global |
+| `SESSION_DISABLED_KEY` | `__agentskin_disabled__` | 持久化禁用标记 |
+| `SHEET_OWNED_FLAG` | `__agentskin` | adoptedSheet owned 标记 |
+| `SHEET_LAYER_FLAG` | `__agentskin_layer` | adoptedSheet 层名标记 |
+| `ADAPTER_MARKERS` | `__agentskin_<id>_adapter__` ×6 | adapter 标记 |
+| `RENDERER_SELF_HEAL_INTERVAL_MS` | 5000 | core 自愈轮询间隔 |
+| `THEME_SHEET_FLAG`（engine-local） | `__agentskin_theme` | core 单张主题 owned-sheet 标记（P1 起；P1 前为 `<style>` id `agentskin-theme-style-<agentId>`，已退役） |
 
----
+## 8. 探测锚点清单（P1 后状态）
 
-## 4. 组件语义（受控 vs 非受控）—— 嵌套组件内外层
+P1 已把 core 从 `<style>` 迁移到 adoptedSheet：全部探测由 `getElementById('agentskin-theme-style-<id>')` 迁移为**探测 `__agentskin_theme` owned sheet 是否存在**：
 
-> 目标：解决"本该渲染外层却渲染内层 / 反之亦然"的双层 div 模式冲突。**只渲染标记为 `isNativeThemeControlled=true` 的载体节点**，内部子控件一律跳过。
+| 位置 | 探测内容 |
+|------|----------|
+| [renderer-payload.mjs#L428-430](file:///c:/Users/snowb/Desktop/work/desktop-main/src/engine/src/runtime/renderer-payload.mjs#L428-L430) | remove fallback：filter 移除 `__agentskin_theme` sheet |
+| [renderer-payload.mjs#L510](file:///c:/Users/snowb/Desktop/work/desktop-main/src/engine/src/runtime/renderer-payload.mjs#L510) | styleSampling：无 `__agentskin_theme` sheet → 中性 pass |
+| [renderer-payload.mjs#L569](file:///c:/Users/snowb/Desktop/work/desktop-main/src/engine/src/runtime/renderer-payload.mjs#L569) | `buildVerifyExpression.stylePresent` |
+| `checkThemeHealth.themeSheetPresent`（[theme-health-check.ts#L97-118](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/theme-health-check.ts#L97-L118)） | **无需改动**：按 `s[__agentskin]` owned sheet 计数，core 新 sheet 天然计入 |
+| core 自愈 interval（[renderer-payload.mjs#L336](file:///c:/Users/snowb/Desktop/work/desktop-main/src/engine/src/runtime/renderer-payload.mjs#L336)） | 无 `__agentskin_theme` sheet → ensure() 重挂 |
 
-| 组件 | 原生主题载体（受控） | 内部子控件（非受控，禁止额外渲染） |
-|------|---------------------|----------------------------------|
-| 输入框 | 外层容器（承载背景/边框/圆角） | 文本子节点、按钮、光标、占位符、`[contenteditable]` 内层 |
-| 侧边栏（双层 div） | 原生亮/暗下背景、圆角实际挂载的**那一层**（需 baselineSnapshot 判定） | 另一层 div、列表项、图标 |
-| 聊天区 | 外层容器（承载背景） | 消息气泡、代码块、markdown 子节点 |
+> 未迁移（保持 `<style>`，独立于本收敛范围）：副目标注入 `secondary-inject.ts`（webview/iframe），其测试相应断言不变。手动测试 `live-reload-persistence` / `live-apply-all` 仍引用旧 id，但 `AGENTSKIN_MANUAL=1` 跳过，不跑在 `npm run check`；后续使用需同步更新断代。
 
-> ⚠️ 双层侧边栏"外层 or 内层"必须在 baselineSnapshot 采集后由 `computedStyle` 判定（原生亮/暗下背景/圆角挂在哪层就渲染哪层），静态无法定论——见 §7 人工复核。
+## 9. 双写 / 闪烁风险定位（收敛动机复刻）
 
-### 4.1 doubao 特化风险
+- **双 CSS**：主页面同时持有 core 的 owned sheet（`__agentskin_theme`，P1 起）与 hardening 的 5 层 adoptedStyleSheets → 同 selector 双规则、重复解析。
+- **双持久化**：两个 new-document 脚本 → 重复执行开销、双清理路径。
+- **闪烁**：apply 存在 原生首帧 → core owned sheet 换上 → hardening adoptedStyleSheets 再盖 的时间窗，无防闪隔离（两段过渡）。收敛到单引擎后此时间窗自然消除。
+- **验证兜底**：hardening 里引擎缺失时走 `injectThemeViaCdp` 单 CSS legacy 回退（[cdp-fanout.ts#L461-L477](file:///c:/Users/snowb/Desktop/work/desktop-main/src/main/cdp/cdp-fanout.ts#L461-L477)）——长期作为脆弱路径最终 fallback 保留（RFC §7 项 2）。
 
-`doubao` 被指存在 4 处后代通配符 `*` 强制渲染子节点，导致内部子控件被误清样式。落地时：
-- 语义过滤层必须将输入框/侧边栏内部子节点标记为非受控并跳过；
-- 通配符 `*` 命中范围收敛为"受控载体的直接子代"或全部移除。
+## 10. 6 Agent 通道矩阵
 
----
+6 个 agent 全部共享本节双轨机制，差异仅在 adapter.mjs 结构 CSS 与生成器（`scripts/generators/<agent>Css.mjs`），与“注入通道双轨”无关。缺陷修正规则见 `scripts/native-defect-fixes.mjs`（C8/C9 单一来源）。
 
-## 5. 现存渲染故障锚点（对照审计报告）
+| Agent | core owned sheet（`__agentskin_theme`） | hardening adoptedStyleSheets | legacy 回退可用 |
+|-------|:---:|:---:|:---:|
+| traework | ✓ | ✓ | ✓ |
+| qoderwork | ✓ | ✓ | ✓ |
+| workbuddy | ✓ | ✓ | ✓ |
+| doubao | ✓ | ✓ | ✓ |
+| codex | ✓ | ✓ | ✓ |
+| zcode | ✓ | ✓ | ✓ |
 
-| 故障 | 涉及 Agent | 代码锚点 | 处理归属 |
-|------|-----------|----------|----------|
-| 过度渲染 | 全部 | `adapters.mjs` 无差别遍历 DOM | P2 语义过滤层 |
-| 嵌套组件错染 | doubao/workbuddy/codex/zcode | 输入框/侧边栏内外层颠倒 | P0 本表 §4 + P2 |
-| 配色冲突 | 全部 | 自定义主题直接叠加原生样式无基准对照 | P0 基准真值 + P3 映射 |
-| `color-scheme: dark !important` | 全部 6 个 tokens.css | `engines/*/tokens.css` 首行 | P0 修复（动态切换） |
-| 自愈循环对抗用户撤销 | doubao 等 | renderer-payload / doubao adapter | P0 加 sessionStorage 禁用检查 |
+## 11. 收敛对照（本文件的“应然”）
 
----
+**P1 已完成**：core 注入通道已由 `<style>` 迁移到 adopted owned sheet（`__agentskin_theme`），主页面不再注入 `<style>` 标签；探测锚点已迁移到 sheet 探测。剩余双轨：双持久化脚本（P2）、hardening 无条件二次写（P3）。
 
-## 6. 极限还原策略：CSS 规则级捕获 + 精确回注
+收敛全部完成后（RFC P1-P3 全落地），本文件 §3-§8 最终应态：
 
-**原则**：不复刻 computedStyle（丢失 var()/calc()/渐变/媒体查询上下文），改为通过 CDP 捕获定义原生主题的**原始 CSS 规则文本**，复刻时精确回注。
+- 主页面仅**一套** adoptedStyleSheets 五层（palette/tokens/cosmetic/theme/custom），无 core 独立 sheet 与 `<style>` 标签。
+- 持久化**一套** new-document 脚本 + `__agentskin_disabled__` 禁用标记。
+- 清理**一套** `buildClearEngineInjectionExpression` 内核。
+- 探测锚点全部基于 adoptedStyleSheets 层标记，无 `agentskin-theme-style-*` 依赖。
+- hardening 降级 watchdog：校验通过则跳过，失败才重注入。
 
-采集：
-1. `CSS.getStyleSheetText(styleSheetId)` 获取样式表原文；
-2. `CSS.getMatchedStylesForNode(nodeId)` 定位核心组件受控节点的匹配规则；
-3. 递归解析 var() 引用链，捕获变量定义；
-4. 按 `origin==='regular'` 过滤第三方库，仅留存 Agent 自带样式；
-5. 采集前 `Debugger.setJavaScriptEnabled(false)` 暂停 JS，防动态篡改。
-
-复刻：
-1. 构造 `CSSStyleSheet`，`replaceSync(capturedText)`；
-2. `document.adoptedStyleSheets` 注入；
-3. 亮/暗切换 = 替换 styleSheet 内容。
-
-**还原度预期**：核心规则 ΔE≈0；唯一不可还原项为系统字体渲染差异与 Houdini paint worklet（极少）。
-
-**回滚语义**：复刻基准失败 → 禁止加载自定义主题，触发降级（回退 landmark 级快照或直接禁用）。
-
----
-
-## 7. 人工复核项（P0 后续必做）
-
-下列项静态代码无法判定，需打开各 Agent DevTools Elements / Computed 面板逐项核对，核对后回填本表：
-
-1. **每个 Agent 原生亮/暗主题实际视觉效果** 是否与 §2 表一致（尤其 doubao、zcode 的组件 landmark 需补齐）。
-2. **双层侧边栏背景/圆角实际挂载层**（外层 or 内层）——用 `computedStyle` 在原生亮/暗两态下实测。
-3. **输入框内部控件**清单（按钮/光标/占位/`contenteditable` 内层）逐项确认非受控。
-4. **三色组 token 名**（qoderwork/workbuddy/codex/zcode 的 `--bg-*`/`--text-*`/`--border-*` 具体名）需在真实 computedStyle 中反查确认。
-5. **基准快照采集性能开销**：在低配设备实测超时（现设 5s 降级阈值）。
-6. **版本更新后 DOM 变化范围**：跟踪各 Agent 更新日志，评估旧基准失效节奏。
-
----
-
-## 8. 落地次序（P0 阶段）
-
-| 序 | 事项 | 产出 |
-|----|------|------|
-| 1 | 本表人工核对（§7） | `baseline-truth.md` 回填为已验证 |
-| 2 | 修复 `color-scheme` 强制暗问题 | 6 个 `tokens.css` 支持动态切换 |
-| 3 | 自愈循环加 sessionStorage 禁用检查 | renderer-payload / doubao adapter |
-| 4 | 新增 `baseline-css-capture.ts`（规则级采集） | CDP 采集 demo，验证 6 Agent 可行性 |
-| 5 | 新增 `baseline-css-replay.ts`（精确回注） | 回注后截图与原生对比验收 |
+> 每阶段落地时更新本文件以反映最新基线，并跑 `npm run check` 全绿。

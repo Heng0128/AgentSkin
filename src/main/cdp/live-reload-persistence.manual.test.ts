@@ -30,6 +30,9 @@ import { ThemeLibrary } from '../theme-library';
 import { type CdpSession, connectCdp } from './cdp-client';
 
 const THEMES_ROOT = 'C:/Users/snowb/AppData/Roaming/AgentSkin/themes';
+// Theme to apply during the live smoke. Override via `THEME_ID=<id>`; defaults
+// to an installed theme so the smoke doesn't fail on a missing bundle.
+const THEME_ID = process.env.THEME_ID ?? 'aurora-dusk';
 const ALL_AGENT_IDS = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'] as const;
 // Optional env override: `AGENTS=qoderwork,workbuddy npx vitest ...` to probe a
 // subset without touching agents that are busy (e.g. traework mid-session).
@@ -175,7 +178,7 @@ async function dumpPersistDiag(agentId: string, port: number): Promise<void> {
 describe.skipIf(!MANUAL)('batch-7 real reload-persistence on all agents (manual)', () => {
   it('applies, auto-restores across reload, and stops restoring after remove', async () => {
     const library = new ThemeLibrary(THEMES_ROOT);
-    const themeA = (await library.find('sakura-noir')).bundle;
+    const themeA = (await library.find(THEME_ID)).bundle;
 
     const results: AgentResult[] = [];
     for (const agentId of AGENT_IDS) {

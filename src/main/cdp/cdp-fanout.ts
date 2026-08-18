@@ -13,25 +13,32 @@
  * like WorkBuddy that have 13+ CDP targets where previously only the
  * first page was themed.
  *
- * Four functions, two pairs:
- *   - {@link injectSecondaryTargets} / {@link removeSecondaryTargets} —
- *     CSS-only injection into webviews/iframes that the core's
- *     matchTarget/preflight filter out.
- *   - {@link hardeningPass} / {@link hardeningRemove} — engine
- *     multi-layer injection (palette + tokens + cosmetic + theme +
- *     adapter.mjs) into ALL DOM-bearing targets, plus a DOM health
- *     check on the first page session.
+ * Two functions, one pair:
+ *   - {@link hardeningPass} / {@link hardeningRemove} — iterate ALL
+ *     DOM-bearing targets (page, webview, iframe). `page` targets get the
+ *     engine multi-layer injection (palette + tokens + cosmetic + theme +
+ *     adapter.mjs) plus a DOM health check; non-page targets (webviews/
+ *     iframes) that the core's matchTarget/preflight filter out get a
+ *     lightweight CSS-only injection inline — they share the loop and the
+ *     resolved target theme so no surface is written twice.
  *
- * Why these go together: all four share the same target-discovery
- * pattern (`findDomTargets` / `findSecondaryTargets`), the same
- * per-target CDP session lifecycle, and the same epoch-cancellation
- * guard (they abort mid-loop if a newer apply/restore supersedes the
- * in-flight one). None of them own state — they're pure orchestration
- * over a deps slice injected by the facade.
+ * The two target classes were previously handled by separate functions
+ * (`injectSecondaryTargets` CSS-only + `hardeningPass` engine), which
+ * double-wrote webviews/iframes when engine files existed. They're now
+ * unified here: a webview/iframe is either engine-injected (nothing, it's
+ * non-page) or lightweight-injected exactly once by this loop, and the
+ * per-target progress events (formerly `injectSecondaryTargets`) are emitted
+ * from the same pass for the renderer timeline.
+ *
+ * Why these go together: all of them share the same target-discovery
+ * pattern (`findDomTargets`), the same per-target CDP session lifecycle,
+ * and the same epoch-cancellation guard (they abort mid-loop if a newer
+ * apply/restore supersedes the in-flight one). They own no state — pure
+ * orchestration over a deps slice injected by the facade.
  *
  * Call chain:
- *   AgentEngineService.apply   → injectSecondaryTargets + hardeningPass
- *   AgentEngineService.restore → hardeningRemove + removeSecondaryTargets
+ *   AgentEngineService.apply   → hardeningPass (page engine + non-page CSS)
+ *   AgentEngineService.restore → hardeningRemove (page engine + non-page CSS)
  */
 
 import type { BrowserWindow } from 'electron';
@@ -52,7 +59,13 @@ import type { AgentId } from '../../shared/types';
 import { checkThemeHealth } from '../theme-health-check';
 import { type CdpSession, connectCdp } from './cdp-client';
 import { type InjectEngineResult, injectThemeViaCdp, removeEngineInjection } from './cdp-inject';
-import { findDomTargets, findSecondaryTargets } from './cdp-targets';
+import { findDomTargets } from './cdp-targets';
+import { verifyTheme } from './injection/shared';
+import {
+  attachReloadWatchdog,
+  detachReloadWatchdog,
+  type ReloadWatchdogDeps,
+} from './reload-watchdog';
 import { buildSecondaryInjectExpression, buildSecondaryRemoveExpression } from './secondary-inject';
 import {
   acquireSession,
@@ -354,13 +367,23 @@ export async function removeSecondaryTargets(
  * a safety net — particularly important for Doubao which strips <style>
  * elements within ~50ms of insertion.
  *
- * Iterates ALL DOM-bearing CDP targets (page, webview, iframe) so the
- * engine layers (palette/tokens/cosmetic/theme CSS + adapter.mjs) are
- * applied to every user-visible surface. This is critical for apps like
- * WorkBuddy that have 13+ CDP targets — previously only the first page
- * was themed, leaving webviews and iframes unstyled. The adapter.mjs
- * and CSS layers are also registered via Page.addScriptToEvaluateOnNewDocument
- * inside `injectThemeViaEngine` so they survive navigation/reload.
+ * RFC 2026-08-18 P3: hardening is degraded to a **WATCHDOG**. It no longer
+ * blindly writes into every target. Before injecting into a `page` target it
+ * verifies the engine's owned adoptedStyleSheets (`SHEET_OWNED_FLAG`) are
+ * already present:
+ *
+ *   - present → skip (no second write, no flicker),
+ *   - absent  → re-inject once, then return to watchdog state.
+ *
+ * Non-page targets (webview/iframe) still receive injection on every pass — the
+ * core covers only the main page, so these have no other writer and must be
+ * (re)applied here.
+ *
+ * Iterates ALL DOM-bearing CDP targets (page, webview, iframe) so the engine
+ * layers (palette/tokens/cosmetic/theme CSS + adapter.mjs) are applied to every
+ * user-visible surface. This is critical for apps like WorkBuddy that have 13+
+ * CDP targets — previously only the first page was themed, leaving webviews and
+ * iframes unstyled.
  *
  * Also runs a DOM health check on the main page to detect opaque layers
  * that block the hero art, logging a score for diagnostics.
@@ -398,9 +421,13 @@ export async function hardeningPass(
   const heroDataUrl = targetTheme.imageDataUrls?.hero ?? targetTheme.artDataUrl ?? null;
   let engineInjected = 0;
   let legacyInjected = 0;
+  let watchdogSkipped = 0;
+  const secondaryInjected = 0;
+  const secondaryFailed = 0;
   let failed = 0;
   let firstSession: CdpSession | null = null;
   let firstPooled = false;
+  const secondaryLoopStart = 0;
 
   for (const target of domTargets) {
     // Abort if a newer apply/restore superseded this one mid-loop.
@@ -434,45 +461,66 @@ export async function hardeningPass(
     }
 
     try {
-      // Try engine architecture first (palette + tokens + cosmetic + theme + adapter.mjs).
-      // This also registers persistence via Page.addScriptToEvaluateOnNewDocument
-      // so the engine re-applies itself on every navigation/reload.
-      const engineResult = await deps.tryEngineInjection(
-        session,
-        appId,
-        bundle,
-        targetTheme,
-        heroDataUrl,
-      );
-
-      if (engineResult) {
-        engineInjected++;
+      // --- RFC 2026-08-18 P3: watchdog gate (page targets only) ---
+      // Verify the engine's owned adoptedStyleSheets are already present. If
+      // they are, a previous pass already applied them — inject nothing (skip
+      // the duplicate write and the flicker it causes). `verifyTheme` is
+      // error-tolerant (returns null on evaluate failure) → treat as "absent"
+      // and re-inject. Non-page targets always proceed to injection since they
+      // have no other writer.
+      const watchdogVerification = target.type === 'page' ? await verifyTheme(session) : null;
+      if (watchdogVerification && watchdogVerification.adoptedSheetCount > 0) {
+        watchdogSkipped++;
         if (!firstSession) {
-          deps.log(
-            `[hardening] ${appId}: ENGINE [page] layers=${engineResult.layersInjected} ` +
-              `adapter=${engineResult.adapterApplied} hero=${engineResult.heroInjected} ` +
-              `accent=${engineResult.verification?.accent || '?'}`,
-          );
+          firstSession = session;
+          firstPooled = handle.pooled;
         }
+        deps.log(
+          `[hardening] ${appId}: WATCHDOG skip ${target.type} "${target.title?.slice(0, 40)}" ` +
+            `(engine sheets already applied: ${watchdogVerification.adoptedSheetCount})`,
+        );
       } else {
-        // Fallback: legacy single-CSS injection (when engine files missing).
-        // Only apply to page targets — webviews/iframes get basic CSS via
-        // injectSecondaryTargets which runs separately.
-        if (target.type === 'page') {
-          const result = await injectThemeViaCdp(session, {
-            css: targetTheme.css,
-            heroDataUrl,
-            hostClass: hostClassFor(appId),
-            retries: 1,
-            verifyDelayMs: DEFAULT_VERIFY_DELAY_MS,
-          });
-          legacyInjected++;
+        // Inject the engine architecture (palette + tokens + cosmetic + theme +
+        // adapter.mjs). `injectThemeViaEngine` internally verifies adoption and
+        // returns the per-layer outcome.
+        const engineResult = await deps.tryEngineInjection(
+          session,
+          appId,
+          bundle,
+          targetTheme,
+          heroDataUrl,
+        );
+
+        if (engineResult) {
+          engineInjected++;
           if (!firstSession) {
             deps.log(
-              `[hardening] ${appId}: LEGACY [page] css=${result.cssInjected} hero=${result.heroInjected} ` +
-                `verified=${result.verification?.heroBlobActive ?? 'n/a'} ` +
-                `accent=${result.verification?.accent || '?'}`,
+              `[hardening] ${appId}: ENGINE [${target.type}] layers=${engineResult.layersInjected} ` +
+                `adapter=${engineResult.adapterApplied} hero=${engineResult.heroInjected} ` +
+                `accent=${engineResult.verification?.accent || '?'}`,
             );
+          }
+        } else {
+          // Fallback: legacy single-CSS injection (when engine files missing).
+          // Only apply to page targets — webviews/iframes get basic CSS via
+          // injectSecondaryTargets which runs separately.
+          if (target.type === 'page') {
+            const result = await injectThemeViaCdp(session, {
+              css: targetTheme.css,
+              heroDataUrl,
+              hostClass: hostClassFor(appId),
+              retries: 1,
+              verifyDelayMs: DEFAULT_VERIFY_DELAY_MS,
+            });
+            legacyInjected++;
+            if (!firstSession) {
+              deps.log(
+                `[hardening] ${appId}: LEGACY [page] css=${result.cssInjected} ` +
+                  `hero=${result.heroInjected} ` +
+                  `verified=${result.verification?.heroBlobActive ?? 'n/a'} ` +
+                  `accent=${result.verification?.accent || '?'}`,
+              );
+            }
           }
         }
       }
@@ -496,8 +544,37 @@ export async function hardeningPass(
 
   deps.log(
     `[hardening] ${appId}: applied to ${engineInjected + legacyInjected}/${domTargets.length} targets ` +
-      `(engine=${engineInjected} legacy=${legacyInjected}${failed ? ` failed=${failed}` : ''})`,
+      `(engine=${engineInjected} legacy=${legacyInjected}` +
+      `${watchdogSkipped ? ` watchdog-skip=${watchdogSkipped}` : ''}` +
+      `${failed ? ` failed=${failed}` : ''})`,
   );
+
+  // RFC 2026-08-18 P3: arm the cross-navigation reload watchdog on the primary
+  // page target. After a reload/navigation the core's persistenceSessions
+  // restore the visible theme sheet (R2), but the engine's owned layers
+  // (palette/tokens/cosmetic/theme + adapter.mjs) are lost — this long-lived,
+  // event-aware session re-verifies them on each document load and re-injects
+  // once if missing. Only armed while this epoch is still current (a newer
+  // apply/restore would supersede it and manage its own watchdog).
+  if (deps.isEpochCurrent(appId, epoch)) {
+    const primaryPage = domTargets.find((t) => t.type === 'page' && t.webSocketDebuggerUrl);
+    if (primaryPage?.webSocketDebuggerUrl) {
+      const watchdogDeps: ReloadWatchdogDeps = {
+        isEpochCurrent: deps.isEpochCurrent,
+        tryEngineInjection: deps.tryEngineInjection,
+        log: deps.log,
+      };
+      attachReloadWatchdog({
+        appId,
+        pageTargetUrl: primaryPage.webSocketDebuggerUrl,
+        bundle,
+        targetTheme,
+        heroDataUrl,
+        epoch,
+        deps: watchdogDeps,
+      });
+    }
+  }
 
   // Health check: detect opaque layers blocking the hero art. Run on the
   // first page session only — it's diagnostics, not per-target.
@@ -575,6 +652,10 @@ export async function hardeningRemove(
 ): Promise<void> {
   if (!deps.isEpochCurrent(appId, epoch)) return;
 
+  // RFC 2026-08-18 P3: disarm the cross-navigation reload watchdog so a
+  // subsequent reload stays clean (remove→reload → no auto re-inject, R4).
+  detachReloadWatchdog(appId);
+
   const domTargets = await findDomTargets(port);
   if (!domTargets.length) return;
 
@@ -596,9 +677,10 @@ export async function hardeningRemove(
       const session = handle.session;
       if (!session) continue;
       try {
-        // Pass appId so removeEngineInjection can also remove the tracked
-        // Page.addScriptToEvaluateOnNewDocument identifiers (P1 audit #8).
-        await removeEngineInjection(session, appId);
+        // RFC 2026-08-18 P2: removeEngineInjection no longer removes any
+        // tracked new-document script (that persistence is core-owned); it
+        // only sets the shared disable flag + clears engine layers/sheets.
+        await removeEngineInjection(session);
         removed++;
       } finally {
         if (!handle.pooled) session.close();

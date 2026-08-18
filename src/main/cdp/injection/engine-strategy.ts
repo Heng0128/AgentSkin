@@ -25,14 +25,12 @@
  * {@link ./cdp-strategy}.
  */
 
-import { readFile } from 'node:fs/promises';
 import {
   DEFAULT_VERIFY_DELAY_MS,
   RENDERER_CONFIG_GLOBAL,
   SESSION_DISABLED_KEY,
 } from '../../../shared/injection-constants';
 import {
-  ADOPT_LAYER_BODY,
   buildClearEngineInjectionExpression,
   CLEAR_ADAPTERS_BODY,
 } from '../../../shared/injection-runtime';
@@ -42,64 +40,6 @@ import { injectCssLayer } from './css-inject';
 import { injectHeroBlob, injectHeroFromDataUrl } from './hero-inject';
 import { waitForTheme } from './shared';
 import type { ThemeVerification } from './types';
-
-// ---------------------------------------------------------------------------
-// Persistence-script identifier tracking (P1 audit #8)
-// ---------------------------------------------------------------------------
-
-/**
- * Tracks the `Page.addScriptToEvaluateOnNewDocument` identifier returned by
- * CDP for each agent's persistence script, keyed by agent id.
- *
- * Why this exists: every `apply` call previously registered a fresh
- * persistence script via `Page.addScriptToEvaluateOnNewDocument` without
- * ever calling `Page.removeScriptToEvaluateOnNewDocument`. After N theme
- * switches the target carried N scripts, all of which executed on every
- * navigation (only the last one's CSS won, but the first N-1 still wasted
- * execution time and memory — each can be 500KB+ with a base64 hero).
- *
- * Lifecycle:
- *   - {@link registerEnginePersistence} removes any previously-tracked
- *     identifiers for the agent (best-effort — the target may have changed
- *     since the last apply, in which case the old identifiers are already
- *     gone with the old target) before registering the new script.
- *   - The new identifier is recorded here so the next apply (or a restore
- *     via {@link removeEngineInjection}) can clean it up.
- *
- * Module-scoped because there is one CDP injection module per process and
- * the identifiers are per-target (not per-session), so any session on the
- * same target can remove a script registered by a previous session.
- */
-const persistenceScriptIds = new Map<string, Set<string>>();
-
-/**
- * Remove all previously-registered persistence scripts for an agent from the
- * given session's target. Best-effort: identifiers from a previous target
- * (e.g. after an app restart) are invalid and the CDP call silently fails,
- * which is fine — the old target is gone and took its scripts with it.
- */
-async function removeOldPersistenceScripts(session: CdpSession, agent: string): Promise<void> {
-  const ids = persistenceScriptIds.get(agent);
-  if (!ids?.size) return;
-  for (const identifier of ids) {
-    try {
-      await session.send('Page.removeScriptToEvaluateOnNewDocument', { identifier });
-    } catch {
-      // Identifier may be from a previous target — silently ignore.
-    }
-  }
-  ids.clear();
-}
-
-/** Record a freshly-registered persistence-script identifier for an agent. */
-function trackPersistenceScript(agent: string, identifier: string): void {
-  let set = persistenceScriptIds.get(agent);
-  if (!set) {
-    set = new Set();
-    persistenceScriptIds.set(agent, set);
-  }
-  set.add(identifier);
-}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -220,6 +160,20 @@ export async function injectThemeViaEngine(
     );
   }
 
+  // --- Step 1b: Clear the disabled flag ---
+  // A `removeTheme` sets `SESSION_DISABLED_KEY` so any unreachable persistence
+  // script skips on the next navigation. If it is still set when we apply, the
+  // adapter's `ensure()` short-circuits and the theme never takes effect (seen
+  // on Doubao after a restore left stale `__agentskin_disabled__`). Best-effort.
+  try {
+    await session.evaluate(`(() => {
+      try { sessionStorage.removeItem(${JSON.stringify(SESSION_DISABLED_KEY)}); } catch (e) {}
+      return 'ok';
+    })()`);
+  } catch {
+    // Best-effort — target may not have sessionStorage yet.
+  }
+
   // --- Step 2: Hero blob URL ---
   let heroInjected = false;
   let heroBlobUrl = '';
@@ -281,14 +235,17 @@ export async function injectThemeViaEngine(
     );
   }
 
-  // --- Step 5b: Register persistence via Page.addScriptToEvaluateOnNewDocument ---
-  // The Runtime.evaluate injection above is ephemeral — it lives only in the
-  // current document. When the agent navigates, reloads, or React remounts the
-  // root, the adoptedStyleSheets and adapter marker are gone and the theme
-  // disappears. Registering a script on new documents makes the engine
-  // re-apply itself automatically on every navigation/reload, so the mjs
-  // files stay "applied" for the lifetime of the CDP target.
-  await registerEnginePersistence(session, options);
+  // --- Step 5b (removed, RFC 2026-08-18 P2) ---
+  // This engine used to register its own new-document persistence via
+  // `registerEnginePersistence` (a `Page.addScriptToEvaluateOnNewDocument`).
+  // P2 retired it: the registration ran on the operation-scoped pooled session,
+  // and since `Page.addScriptToEvaluateOnNewDocument` registrations are
+  // **session-bound** (verified 2026-08-17), closing that session at the epoch
+  // boundary dropped the script before the next navigation — it never survived
+  // reload. The core runtime (@agentskin/engine `injector.mjs`) owns the single
+  // authoritative persistence on a dedicated long-lived `persistenceSessions`;
+  // this engine only injects the current document. `removeEngineInjection`
+  // below still sets the shared `SESSION_DISABLED_KEY` as belt-and-suspenders.
 
   // --- Step 6: Verify (polling with timeout) ---
   const verification = await waitForTheme(session, {
@@ -303,227 +260,7 @@ export async function injectThemeViaEngine(
 }
 
 /**
- * Register a self-contained re-application script via
- * `Page.addScriptToEvaluateOnNewDocument` so the engine layers (palette,
- * tokens, cosmetic, theme CSS) and adapter.mjs are re-applied automatically
- * whenever the target navigates or reloads. Without this, the injection
- * performed by `injectThemeViaEngine` is lost on every navigation.
- *
- * The registered script:
- *   1. Waits for `document.documentElement` (new documents may not have it yet)
- *   2. Re-injects each CSS layer as an adoptedStyleSheet (idempotent — the
- *      adapter.mjs already removes same-named layers before re-adding)
- *   3. Re-runs the adapter.mjs (idempotent — the adapter checks its marker
- *      and returns 'already-applied' if already running)
- *
- * Best-effort: failures here do NOT fail the overall injection because the
- * synchronous Runtime.evaluate pass has already applied the theme to the
- * current document. Persistence only matters for future navigations.
- */
-async function registerEnginePersistence(
-  session: CdpSession,
-  options: InjectEngineOptions,
-): Promise<void> {
-  const {
-    paletteCss,
-    tokensCss,
-    cosmeticCss,
-    themeCss,
-    customCss,
-    adapterJs,
-    heroDataUrl,
-    heroPath,
-    agent,
-    themeId,
-  } = options;
-
-  // Resolve the hero data URL up front so the persisted script can set
-  // --agentskin-art without re-reading the file (which it can't do from a
-  // page context). If a heroPath was given instead, read it now.
-  let resolvedHeroDataUrl = heroDataUrl ?? null;
-  if (!resolvedHeroDataUrl && heroPath) {
-    try {
-      const data = await readFile(heroPath);
-      const mime = heroPath.endsWith('.png')
-        ? 'image/png'
-        : heroPath.endsWith('.jpg') || heroPath.endsWith('.jpeg')
-          ? 'image/jpeg'
-          : 'image/webp';
-      resolvedHeroDataUrl = `data:${mime};base64,${data.toString('base64')}`;
-    } catch (err) {
-      resolvedHeroDataUrl = null;
-      mainWarnFromCatch('cdp/engine', err, `read hero file failed for agent=${agent ?? 'unknown'}`);
-    }
-  }
-
-  // Build the persistence script. Each layer is embedded as a JSON string
-  // literal so the script is fully self-contained — no external lookups,
-  // no closure variables, works in a fresh document context.
-  const layersJson = JSON.stringify([
-    ['palette', paletteCss],
-    ['tokens', tokensCss],
-    ['cosmetic', cosmeticCss],
-    ...(themeCss ? [['theme', themeCss] as [string, string]] : []),
-    ...(customCss ? [['custom', customCss] as [string, string]] : []),
-  ]);
-  const configJson = JSON.stringify({
-    heroBlobUrl: '',
-    agent: agent || '',
-    themeId: themeId || '',
-  });
-  const heroDataUrlJson = JSON.stringify(resolvedHeroDataUrl);
-  // The adapter.mjs is an IIFE that returns 'applied' / 'already-applied'.
-  // Wrap it so we can invoke it from the persistence script.
-  const adapterWrapper = `(function(){ ${adapterJs} })()`;
-
-  // The persistence script. Runs in the page's main world on every new
-  // document. Must be self-contained and idempotent.
-  // Checks sessionStorage for a disable flag so {@link removeEngineInjection}
-  // can stop re-application without tracking CDP script identifiers (which are
-  // per-session and not easily reusable across connect/disconnect cycles).
-  const persistenceScript = `(function() {
-  'use strict';
-  // Restore tears down the theme by setting this flag. The flag persists
-  // across navigations within the same tab/session (sessionStorage scope),
-  // so the persistence script will skip re-application on future navigations
-  // until a new apply clears the flag.
-  try {
-    if (sessionStorage.getItem('${SESSION_DISABLED_KEY}') === '1') return;
-  } catch (e) { /* sessionStorage may not be available in some contexts */ }
-  var LAYERS = ${layersJson};
-  var CONFIG = ${configJson};
-  var HERO_DATA_URL = ${heroDataUrlJson};
-  var ADAPTER = ${JSON.stringify(adapterWrapper)};
-
-  function applyLayers() {
-    if (!document || !document.adoptedStyleSheets) return 0;
-    var injected = 0;
-    for (var i = 0; i < LAYERS.length; i++) {
-      var layerName = LAYERS[i][0];
-      var layerCss = LAYERS[i][1];
-      try {
-        ${ADOPT_LAYER_BODY}
-        injected++;
-      } catch (e) { /* best-effort */ }
-    }
-    return injected;
-  }
-
-  function applyHero() {
-    if (!HERO_DATA_URL || !HERO_DATA_URL.startsWith('data:')) return;
-    try {
-      var comma = HERO_DATA_URL.indexOf(',');
-      var mime = (/^data:([^;,]+)/.exec(HERO_DATA_URL) || [])[1] || 'image/webp';
-      var b64 = HERO_DATA_URL.slice(comma + 1);
-      var binary = atob(b64);
-      var bytes = new Uint8Array(binary.length);
-      for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      var blob = new Blob([bytes], { type: mime });
-      var url = URL.createObjectURL(blob);
-      document.documentElement.style.setProperty('--agentskin-art', 'url(' + url + ')');
-    } catch (e) { /* best-effort */ }
-  }
-
-  function applyAdapter() {
-    try {
-      // Set config so the adapter can read heroBlobUrl/agent/themeId.
-      window.${RENDERER_CONFIG_GLOBAL} = CONFIG;
-      // Read back the hero blob URL we just set so the adapter picks it up.
-      var artUrl = getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').trim()
-        .replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '');
-      if (artUrl) {
-        window.${RENDERER_CONFIG_GLOBAL} = Object.assign({}, CONFIG, { heroBlobUrl: artUrl });
-      }
-      // Evaluate the adapter IIFE.
-      //
-      // Why eval and not import()/postMessage? (evaluated 2026-07-25)
-      //
-      //   import() — requires serving the adapter from a URL (file:// or a
-      //     custom agentskin:// scheme). Doubao/WorkBuddy ship strict CSP
-      //     that blocks dynamic import from non-https origins; per-app CSP
-      //     modification is fragile and defeats the stealth injection channel.
-      //     Also async, which breaks first-paint timing.
-      //
-      //   postMessage — the bridge script itself would still be a CDP-injected
-      //     string (same "code as string" problem, just moved). Async, so
-      //     can't guarantee timing. Adds complexity without solving type safety.
-      //
-      //   The real concern is type safety, not eval itself. The fix is to
-      //   compile engines/<agent>/adapter.mjs from TypeScript source so the
-      //   adapter is type-checked at build time, while keeping the CDP
-      //   evaluate as the runtime transport (it bypasses CSP by design).
-      (0, eval)(ADAPTER);
-    } catch (e) { /* best-effort */ }
-  }
-
-  function applyAll() {
-    if (!document.documentElement) return;
-    applyLayers();
-    applyHero();
-    applyAdapter();
-  }
-
-  // On new documents, document.documentElement may not exist yet. Wait for it.
-  if (document.documentElement) {
-    applyAll();
-  } else {
-    // Use a MutationObserver to apply as soon as <html> appears.
-    var obs = new MutationObserver(function() {
-      if (document.documentElement) {
-        obs.disconnect();
-        applyAll();
-      }
-    });
-    obs.observe(document, { childList: true, subtree: false });
-  }
-})();`;
-
-  try {
-    await session.send('Page.enable');
-    // Clear the disable flag so the persistence script will re-apply on
-    // future navigations. This must happen BEFORE registering the script
-    // so the script's first execution (on the next navigation) sees no flag.
-    try {
-      await session.evaluate(
-        `(() => { try { sessionStorage.removeItem('${SESSION_DISABLED_KEY}'); } catch (e) { console.warn('[engine-strategy] sessionStorage.removeItem failed:', e); } return 'ok'; })()`,
-      );
-    } catch {
-      // sessionStorage may not be available yet — non-fatal, the script
-      // itself has a try/catch around the flag check.
-    }
-    // P1 audit #8: remove any persistence scripts previously registered for
-    // this agent before adding the new one. Without this, every theme switch
-    // piled a new script onto the target and all old scripts kept executing
-    // on every navigation (wasting memory + execution time, only the last
-    // one's CSS won). The old identifiers may be from a previous target
-    // (after an app restart) — those are already gone, removal is a no-op.
-    const agentKey = agent || '__unknown__';
-    await removeOldPersistenceScripts(session, agentKey);
-    const result = await session.send<{ identifier?: string }>(
-      'Page.addScriptToEvaluateOnNewDocument',
-      {
-        source: persistenceScript,
-        runImmediately: false,
-      },
-    );
-    if (result?.identifier) {
-      trackPersistenceScript(agentKey, result.identifier);
-    }
-  } catch (err) {
-    // Best-effort — the current document is already themed by the
-    // synchronous Runtime.evaluate pass. Persistence only affects future
-    // navigations, so a failure here is non-fatal. Log for diagnostics.
-    mainWarnFromCatch(
-      'cdp/engine',
-      err,
-      `register persistence failed for agent=${agent ?? 'unknown'}`,
-    );
-  }
-}
-
-/**
- * Remove the persistence script registered by {@link registerEnginePersistence}
- * and tear down the engine layers + adapter from the current document.
+ * Tear down the engine layers + adapter from the current document.
  * Called during theme restore so the engine doesn't re-apply itself on the
  * next navigation.
  *
@@ -531,28 +268,21 @@ async function registerEnginePersistence(
  * that received engine injection must be cleaned up here, otherwise stale
  * adoptedStyleSheets and adapter markers survive restore.
  *
- * P1 audit #8: when `agent` is provided, also removes the tracked
- * `Page.addScriptToEvaluateOnNewDocument` identifiers for that agent so the
- * script is fully torn down (not just disabled via sessionStorage). This
- * closes the leak where N theme switches left N dead scripts on the target.
+ * RFC 2026-08-18 P2: this engine no longer registers its own new-document
+ * persistence (that is core-owned on dedicated long-lived sessions), so there
+ * are no tracked script identifiers to remove. It still sets the shared
+ * `SESSION_DISABLED_KEY` as belt-and-suspenders so any core persistence script
+ * that could not be explicitly removed skips on future navigations.
  *
  * Best-effort: never throws — callers use it in fire-and-forget restore paths.
  */
-export async function removeEngineInjection(session: CdpSession, agent?: string): Promise<void> {
-  // 1. Remove the tracked persistence-script identifiers from the target.
-  //    P1 audit #8: previously we only set a sessionStorage disable flag,
-  //    which left the script registered on the target forever. After N
-  //    theme switches the target carried N dead scripts. Now we remove them
-  //    explicitly so the target is clean.
-  if (agent) {
-    await removeOldPersistenceScripts(session, agent);
-  }
-
-  // 2. Set the disable flag in sessionStorage as a belt-and-suspenders
-  //    fallback. This persists across navigations within the same tab/session,
-  //    so any persistence script we couldn't remove (e.g. registered by a
-  //    previous process incarnation whose identifiers we never tracked) will
-  //    still skip re-application on future navigations.
+export async function removeEngineInjection(session: CdpSession): Promise<void> {
+  // 1. Set the disable flag in sessionStorage as a belt-and-suspenders
+  //    fallback, mirroring core's removeTheme. This persists across
+  //    navigations within the same tab/session, so any persistence script we
+  //    couldn't remove (e.g. registered by a previous process incarnation
+  //    whose identifiers were never tracked) still skips re-application on
+  //    future navigations.
   try {
     await session.send('Runtime.enable');
     await session.evaluate(`(() => {
@@ -563,7 +293,7 @@ export async function removeEngineInjection(session: CdpSession, agent?: string)
     // Best-effort — target may not have sessionStorage yet.
   }
 
-  // 3. Tear down the engine layers + adapter from the current document.
+  // 2. Tear down the engine layers + adapter from the current document.
   //    Delegates to the shared kernel so owned-sheet / adapter-marker /
   //    host-class cleanup is defined exactly once.
   try {
@@ -578,20 +308,20 @@ export async function removeEngineInjection(session: CdpSession, agent?: string)
 // ---------------------------------------------------------------------------
 
 /**
- * Drop module-scoped tracking state for a single agent. Called when a theme
- * is fully removed from an agent (restore + no future re-apply scheduled) so
- * stale script identifiers or cached values do not accumulate across the
- * uptime of a long-running tray app.
+ * RFC 2026-08-18 P2: this engine no longer owns module-scoped persistence
+ * state — new-document persistence is core-owned (dedicated long-lived
+ * sessions). These lifecycle hooks are retained because the service layer
+ * (agent-engine-service) calls them on theme removal / shutdown; they now
+ * have nothing to clear, so they are documented no-ops.
  */
-export function cleanupEngineInjectionForAgent(agent: string): void {
-  persistenceScriptIds.delete(agent);
+export function cleanupEngineInjectionForAgent(_agent: string): void {
+  // No-op since P2 — persistence state is core-owned.
 }
 
 /**
- * Drop ALL module-scoped tracking state. Called only on app shutdown to
- * release references before GC; without this, the maps retain identifiers
- * for every agent that was ever themed during the process lifetime.
+ * RFC 2026-08-18 P2: no-op counterpart of {@link cleanupEngineInjectionForAgent}
+ * for full-shutdown cleanup. Retained for service-layer lifecycle symmetry.
  */
 export function disposeEngineInjectionState(): void {
-  persistenceScriptIds.clear();
+  // No-op since P2 — persistence state is core-owned.
 }

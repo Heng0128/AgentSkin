@@ -22,12 +22,27 @@ import { connectCdp } from './cdp-client';
 import { waitForTheme } from './injection/shared';
 
 const THEMES_ROOT = 'C:/Users/snowb/AppData/Roaming/AgentSkin/themes';
-const AGENT_IDS = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'] as const;
+// Theme A/B to apply during the smoke. Override via THEME_A / THEME_B; defaults
+// to installed themes (aurora-dusk / aurora-glass) so real apply works without
+// forcing a reseed of test-only package names (sakura-noir / ocean-tide).
+const THEME_A = process.env.THEME_A ?? 'aurora-dusk';
+const THEME_B = process.env.THEME_B ?? 'aurora-glass';
+const ALL_AGENT_IDS = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'] as const;
+// Optional env override: `AGENTS=qoderwork,workbuddy npx vitest ...` to probe a
+// subset without touching agents that are busy (e.g. traework mid-session).
+const AGENT_IDS = (
+  process.env.AGENTS
+    ? process.env.AGENTS.split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : ALL_AGENT_IDS
+) as readonly string[];
 // Manual gate: the suite only runs when explicitly requested via
 // `AGENTSKIN_MANUAL=1`, so `npm run check` skips it (see header note).
 const MANUAL = process.env.AGENTSKIN_MANUAL === '1';
 
 const noop = (): void => {};
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 registerBuiltinAdapters();
 
@@ -50,23 +65,17 @@ interface AgentResult {
 }
 
 async function verifyApplied(agentId: string, port: number): Promise<number> {
+  if (agentId === 'codex') {
+    // Codex has multiple page targets (main app://-/index.html and the
+    // avatar-overlay). The engine injects into every compatible target, and
+    // the style element + __AGENTSKIN__ host state can appear on any of them.
+    // Scan ALL page targets (instead of only the first) so a strong-adversary
+    // target that delayed self-heal isn't mistaken for a failed injection.
+    return verifyCodexApplied(port);
+  }
+
   const session = await openMainSession(agentId, port);
   try {
-    // Codex injects via <style id="agentskin-theme-style-codex">, not
-    // adoptedStyleSheets with __agentskin flag. Use a dedicated probe.
-    if (agentId === 'codex') {
-      const raw = await session.evaluate(`(() => {
-        const el = document.getElementById('agentskin-theme-style-codex');
-        return JSON.stringify({
-          stylePresent: !!el,
-          styleContent: (el?.textContent ?? '').length > 0,
-        });
-      })()`);
-      const v = JSON.parse(raw) as { stylePresent: boolean; styleContent: boolean };
-      // The codex target CSS is injected as a <style> element (design tokens),
-      // not adoptedStyleSheets. Presence of non-empty content = theme applied.
-      return v.stylePresent && v.styleContent ? 1 : 0;
-    }
     const v = await waitForTheme(session, { timeoutMs: 5000, intervalMs: 50 });
     return v?.adoptedSheetCount ?? 0;
   } finally {
@@ -74,11 +83,47 @@ async function verifyApplied(agentId: string, port: number): Promise<number> {
   }
 }
 
+/** Probe every Codex page target; report 1 if any target shows the engine host
+ * state mounted. `applyTheme` (legacy core channel) mounts
+ * `window.__AGENTSKIN__.hosts.codex`; the engine's
+ * `<style id="agentskin-theme-style-codex">` belongs to the hardening channel
+ * (`tryEngineInjection`), which this test does NOT drive — so host-state
+ * presence is the correct positive signal for this test. */
+async function verifyCodexApplied(port: number): Promise<number> {
+  const adapter = getAdapter('codex')!;
+  const targets = (await adapter.findTargets(port, 1200)) as {
+    url?: string;
+    webSocketDebuggerUrl?: string;
+  }[];
+  const wsTargets = targets.filter((t) => t.webSocketDebuggerUrl);
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    for (const t of wsTargets) {
+      const session = await connectCdp(t.webSocketDebuggerUrl!, 5000, 8000);
+      try {
+        const raw = await session.evaluate(`(() => {
+          const state = window.__AGENTSKIN__?.hosts?.codex;
+          return JSON.stringify({ url: location.href, statePresent: !!state });
+        })()`);
+        const v = JSON.parse(raw) as { url: string; statePresent: boolean };
+        console.log(`[codex-probe] ${v.url} state=${v.statePresent}`);
+        if (v.statePresent) return 1;
+      } catch {
+        // Reconnect next poll — target may be mid-navigation.
+      } finally {
+        session.close();
+      }
+    }
+    await sleep(100);
+  }
+  return 0;
+}
+
 describe.skipIf(!MANUAL)('batch-6 real apply on all agents (manual)', () => {
   it('applies + hot-switches + restores a real theme on every live agent', async () => {
     const library = new ThemeLibrary(THEMES_ROOT);
-    const themeA = (await library.find('sakura-noir')).bundle;
-    const themeB = (await library.find('ocean-tide')).bundle;
+    const themeA = (await library.find(THEME_A)).bundle;
+    const themeB = (await library.find(THEME_B)).bundle;
 
     const results: AgentResult[] = [];
     for (const agentId of AGENT_IDS) {
