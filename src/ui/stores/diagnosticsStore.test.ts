@@ -47,7 +47,7 @@ describe('diagnosticsStore — timeout events', () => {
         switchEpochByAgent: 0,
         persistFailures: 0,
       },
-      healthReport: null,
+      healthReportByAgent: {},
     });
     mockGetTimeouts.mockReset();
     mockClearTimeouts.mockReset();
@@ -202,15 +202,15 @@ describe('diagnosticsStore — timeout events', () => {
   // healthReport: initial value
   // -----------------------------------------------------------------------
 
-  it('healthReport defaults to null', () => {
-    expect(useDiagnosticsStore.getState().healthReport).toBeNull();
+  it('healthReportByAgent defaults to empty object', () => {
+    expect(useDiagnosticsStore.getState().healthReportByAgent).toEqual({});
   });
 
   // -----------------------------------------------------------------------
   // healthReport: setHealthReport updates the state
   // -----------------------------------------------------------------------
 
-  it('setHealthReport stores the full HealthCheckReport payload', () => {
+  it('setHealthReport stores the full HealthCheckReport payload keyed by agentId', () => {
     const report = {
       agentId: 'traework',
       timestamp: 1_700_000_000_000,
@@ -227,14 +227,14 @@ describe('diagnosticsStore — timeout events', () => {
 
     useDiagnosticsStore.getState().setHealthReport(report);
 
-    const stored = useDiagnosticsStore.getState().healthReport;
+    const stored = useDiagnosticsStore.getState().healthReportByAgent.traework;
     expect(stored).toEqual(report);
     expect(stored?.agentId).toBe('traework');
     expect(stored?.score).toBe(100);
     expect(stored?.blockingCount).toBe(0);
   });
 
-  it('setHealthReport replaces the previous report (last writer wins)', () => {
+  it('setHealthReport keeps per-agent reports independent (agentId partitioning)', () => {
     const reportA = {
       agentId: 'traework',
       timestamp: 1,
@@ -265,9 +265,47 @@ describe('diagnosticsStore — timeout events', () => {
     useDiagnosticsStore.getState().setHealthReport(reportA);
     useDiagnosticsStore.getState().setHealthReport(reportB);
 
-    const stored = useDiagnosticsStore.getState().healthReport;
-    expect(stored).toEqual(reportB);
-    expect(stored?.agentId).toBe('doubao');
-    expect(stored?.score).toBe(40);
+    // Both reports are retained independently keyed by agentId
+    const state = useDiagnosticsStore.getState().healthReportByAgent;
+    expect(state.traework).toEqual(reportA);
+    expect(state.doubao).toEqual(reportB);
+    expect(state.traework?.score).toBe(100);
+    expect(state.doubao?.score).toBe(40);
+  });
+
+  it('setHealthReport overwrites same agentId (last writer wins per agent)', () => {
+    const reportV1 = {
+      agentId: 'traework',
+      timestamp: 1,
+      heroArtActive: true,
+      themeSheetPresent: true,
+      accentToken: '#4a90d9',
+      hostClassPresent: true,
+      adapterPresent: true,
+      nativeTokens: {},
+      opaqueLayers: [],
+      blockingCount: 0,
+      score: 80,
+    };
+    const reportV2 = {
+      agentId: 'traework',
+      timestamp: 2,
+      heroArtActive: true,
+      themeSheetPresent: true,
+      accentToken: '#4a90d9',
+      hostClassPresent: true,
+      adapterPresent: true,
+      nativeTokens: {},
+      opaqueLayers: [],
+      blockingCount: 0,
+      score: 95,
+    };
+
+    useDiagnosticsStore.getState().setHealthReport(reportV1);
+    useDiagnosticsStore.getState().setHealthReport(reportV2);
+
+    const stored = useDiagnosticsStore.getState().healthReportByAgent.traework;
+    expect(stored).toEqual(reportV2);
+    expect(stored?.score).toBe(95);
   });
 });

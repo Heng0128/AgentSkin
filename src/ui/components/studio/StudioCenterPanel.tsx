@@ -17,6 +17,7 @@ import type { PreviewView } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 import { CenterTabBundle } from './center/CenterTabBundle';
+import { CenterTabGenerator } from './center/CenterTabGenerator';
 import { CenterTabInspect } from './center/CenterTabInspect';
 import { CenterTabRaw } from './center/CenterTabRaw';
 import { CenterTabWallpaper } from './center/CenterTabWallpaper';
@@ -77,13 +78,7 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
         {previewView === 'wallpaper' && <CenterTabWallpaper t={t} />}
         {previewView === 'bundle' && <CenterTabBundle t={t} />}
         {previewView === 'inspect' && <CenterTabInspect t={t} />}
-        {previewView === 'generator' && (
-          <div className="rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
-            <p className="font-mono text-[10px] text-[var(--fg-2)]">
-              {t.studioTabGenerator} — Image → Theme generator
-            </p>
-          </div>
-        )}
+        {previewView === 'generator' && <CenterTabGenerator t={t} />}
         {previewView === 'raw' && <CenterTabRaw t={t} />}
       </div>
     </div>

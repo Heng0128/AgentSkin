@@ -163,6 +163,49 @@ export interface ThemeTarget {
   verification?: VerificationProfile;
 }
 
+/** 锚点面内的五宫格对齐（RFC themes-surface-layout-2b §2.2）。缺省 `bottomRight`。 */
+export type DecorationAnchorPosition =
+  | "topLeft" | "topCenter" | "topRight"
+  | "centerLeft" | "center" | "centerRight"
+  | "bottomLeft" | "bottomCenter" | "bottomRight";
+
+/**
+ * 2b P3 预置动效枚举（RFC 2b §2.4 评审待决策 #4）：仅静态定位 + 简单预置动画。
+ * 复杂/可动宠物留 2c。`prefers-reduced-motion` 时降级为静态。
+ */
+export type DecorationMotion = "idle-fade" | "float";
+
+/**
+ * 单个主题装饰布局声明（RFC 2b §2.2）：把 `assets.images.<id>.asset` 挂到
+ * 稳定锚点面上。运行时按锚点元素宿主坐标 + 对齐/偏移/尺寸换算成
+ * `position:fixed;pointer-events:none` 覆盖层。锚点失效时该 layout 静默跳过。
+ */
+export interface DecorationLayout {
+  /** 引用 `assets.images.<id>` 的素材 id。 */
+  asset: string;
+  /** 目标应用稳定语义选择器（锚点面）。 */
+  anchor: string;
+  /** 相对锚点面的五宫格对齐（缺省 `bottomRight`）。 */
+  anchorPosition?: DecorationAnchorPosition;
+  /** 相对锚点位置的像素偏移（`x` 右为正，`y` 下为正）。 */
+  offset?: { x?: number; y?: number };
+  /** 覆盖层宽度；`null` = auto。 */
+  width?: number | null;
+  /** 覆盖层高度；`null` = auto。 */
+  height?: number | null;
+  /** 覆盖层 z-index（缺省 0）。 */
+  zIndex?: number;
+  /** 可选预置动效 id（2b 只做静态定位 + idle-fade/float，复杂动效留 2c）。 */
+  motion?: DecorationMotion | null;
+  /** 挂载闪烁/动画开关（缺省 false）。 */
+  flash?: boolean;
+}
+
+/** 主题装饰声明（`bundle.decorations`）。缺省无装饰 → 行为与现状一致。 */
+export interface DecorationsConfig {
+  layouts: DecorationLayout[];
+}
+
 export interface ThemePackage {
   format: "agentskin-theme";
   schemaVersion: 1;
@@ -174,6 +217,8 @@ export interface ThemePackage {
     /** @deprecated Use images.hero for new theme packages. */
     art?: ThemeArt;
   };
+  /** (2b surface layouts) Declarative asset-on-surface layouts. RFC 2b §2.2. */
+  decorations?: DecorationsConfig;
 }
 
 export interface LegacyThemeManifest extends ThemeIdentity {
@@ -208,6 +253,8 @@ export interface ResolvedThemeTarget {
   imageDataUrls: Record<string, string>;
   /** Backward-compatible alias for imageDataUrls.hero. */
   artDataUrl: string | null;
+  /** (2b) Declarative asset-on-surface layouts. RFC 2b §2.2. */
+  decorations?: DecorationsConfig | null;
 }
 
 export interface SelectorParseError {

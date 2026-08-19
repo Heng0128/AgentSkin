@@ -24,9 +24,9 @@ interface DiagnosticsState {
   timeoutsLoading: boolean;
   timeoutsError: string | null;
   concurrencyMetrics: ConcurrencyMetrics;
-  /** Latest theme health-check report pushed from the main process, or null
-   *  until the first report arrives. */
-  healthReport: HealthCheckReport | null;
+  /** Per-agent latest theme health-check report pushed from the main process.
+   *  Keyed by agentId so switching agents preserves each report independently. */
+  healthReportByAgent: Record<string, HealthCheckReport>;
 
   loadTimeouts: (count?: number) => Promise<void>;
   clearTimeouts: () => Promise<void>;
@@ -50,7 +50,7 @@ export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({
   timeoutsLoading: false,
   timeoutsError: null,
   concurrencyMetrics: initialConcurrencyMetrics,
-  healthReport: null,
+  healthReportByAgent: {},
 
   loadTimeouts: async (count = 10) => {
     set({ timeoutsLoading: true, timeoutsError: null });
@@ -85,6 +85,11 @@ export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({
   },
 
   setHealthReport: (report) => {
-    set({ healthReport: report });
+    set((s) => ({
+      healthReportByAgent: {
+        ...s.healthReportByAgent,
+        [report.agentId]: report,
+      },
+    }));
   },
 }));

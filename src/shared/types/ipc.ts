@@ -389,6 +389,30 @@ export interface AgentSkinApi {
   /** Discard live overrides for an agent — clears the temporary tweak layer
    *  without disturbing the applied theme. Returns true on reset. */
   resetTweak(session: TweakSession): Promise<boolean>;
+  // --- CSS source editor ---
+  /** List stylesheets (metadata only) for a running agent by port. */
+  listStyleSheets(port: number): Promise<
+    Array<{
+      styleSheetId: string;
+      url: string;
+      disabled: boolean;
+      isInline: boolean;
+      sourceURL: string;
+      length: string;
+      label: string;
+    }>
+  >;
+  /** Read the CSS text of a specific stylesheet by its synthetic id. */
+  getStyleSheetText(port: number, styleSheetId: string): Promise<string>;
+  /**
+   * Inject edited raw CSS through the workspace-tweak layer. The CSS is
+   * sanitized before injection. Returns true on success.
+   */
+  applyRawCssEdit(
+    port: number,
+    agentId: AgentId,
+    css: string,
+  ): Promise<{ ok: boolean; error?: string }>;
   /** Resolve a wallpaper's media as a streamable loopback HTTP URL (served by
    *  the wallpaper media server) so video wallpapers can play without buffering
    *  the whole file. Returns null when the id is unknown. */

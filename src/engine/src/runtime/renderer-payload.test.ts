@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildApplyExpression,
   buildPersistenceScript,
+  buildRemoveExpression,
   buildVerifyExpression,
   buildStyleSamplingSnippet,
   SESSION_DISABLED_KEY,
@@ -129,6 +130,131 @@ describe('buildApplyExpression — bridge compilation (S3)', () => {
     });
     expect(expression).not.toContain('agentskin-host-workbuddy:root');
     expect(expression).toContain('":root{}"');
+  });
+});
+
+describe('buildApplyExpression — decorations.layouts (RFC 2b §2.3)', () => {
+  const decorations = {
+    layouts: [
+      {
+        asset: 'mascot',
+        anchor: '.conversation-sidebar',
+        anchorPosition: 'topRight',
+        offset: { x: 16, y: 16 },
+        height: 60,
+        zIndex: 10,
+        flash: true,
+      },
+    ],
+  };
+  const targetTheme = {
+    theme: { id: 't', version: '1' },
+    css: ':root{}',
+    imageDataUrls: { mascot: 'data:image/png;base64,YQ==' },
+    decorations,
+  };
+
+  it('emits empty/null decorations when the target declares none (backward compatible)', () => {
+    const expression = buildApplyExpression({ adapter, targetTheme: { theme: { id: 't' }, css: '' } });
+    expect(expression).toContain('const decorations = null;');
+    expect(expression).toContain('mountDecorations');
+  });
+
+  it('embeds the decorations manifest JSON into the self-contained IIFE', () => {
+    const expression = buildApplyExpression({ adapter, targetTheme });
+    expect(expression).toContain('"asset":"mascot"');
+    expect(expression).toContain('"anchor":".conversation-sidebar"');
+    expect(expression).toContain('"anchorPosition":"topRight"');
+    expect(expression).toContain('"zIndex":10');
+  });
+
+  it('mounts overlays with the anchor layout maths, pointer-events:none and a host-scoped id', () => {
+    const expression = buildApplyExpression({ adapter, targetTheme });
+    expect(expression).toContain('data-agentskin-decor');
+    expect(expression).toContain('position:fixed!important');
+    expect(expression).toContain('pointer-events:none!important');
+    expect(expression).toContain("id = 'agentskin-decor-' + host.id + '-' + index");
+    // anchorPosition topRight drives the left/top derivation.
+    expect(expression).toContain("pos.endsWith('Right')");
+    // flash triggers a requestAnimationFrame opacity fade-in.
+    expect(expression).toContain('requestAnimationFrame');
+  });
+
+  it('skips a layout whose anchor misses at runtime and records drift (RFC §2.1/§3)', () => {
+    const expression = buildApplyExpression({ adapter, targetTheme });
+    expect(expression).toContain('recordDrift');
+    expect(expression).toContain("driftKey = host.id + ':' + index");
+    expect(expression).toContain("recordDrift(driftKey, 'miss')");
+    expect(expression).toContain("recordDrift(driftKey, 'zero-rect')");
+  });
+
+  it('writes drift to the persistent window.__AGENTSKIN__.decorDrift ring (capped 32)', () => {
+    const expression = buildApplyExpression({ adapter, targetTheme });
+    expect(expression).toContain('rootState.decorDrift ||= []');
+    expect(expression).toContain('driftBus.length > 32');
+  });
+
+  it('applies idle-fade/float motion with injected keyframes and reduced-motion downgrade (RFC 2b §2.4)', () => {
+    const expression = buildApplyExpression({ adapter, targetTheme });
+    expect(expression).toContain('@keyframes agentskin-decor-idle-fade');
+    expect(expression).toContain('@keyframes agentskin-decor-float');
+    expect(expression).toContain("'(prefers-reduced-motion: reduce)'");
+    expect(expression).toContain('ensureMotionStyle()');
+    expect(expression).toContain('el.style.animation = MOTION_ANIMATIONS[motion]');
+    // flash is skipped when a motion preset is active (avoid opacity conflict).
+    expect(expression).toContain('if (layout.flash && !motion)');
+  });
+
+  it('cleans both overlay divs and the motion keyframes style idempotently', () => {
+    const expression = buildApplyExpression({ adapter, targetTheme });
+    expect(expression).toContain("[data-agentskin-decor-motion]");
+    expect(expression).toContain("document.getElementById('agentskin-decor-motion')");
+  });
+
+  it('persists through buildPersistenceScript (embedded apply body, no drift)', () => {
+    const persistence = buildPersistenceScript({ adapter, targetTheme });
+    expect(persistence).toContain('data-agentskin-decor');
+    expect(persistence).toContain('mountDecorations');
+  });
+});
+
+describe('buildRemoveExpression — decorations (RFC 2b §2.3)', () => {
+  it('removes surface decoration overlays idempotently in the fallback path', () => {
+    const expression = buildRemoveExpression(adapter);
+    expect(expression).toContain("[data-agentskin-decor]");
+    expect(expression).toContain('.forEach((el) => el.remove())');
+  });
+});
+
+describe('decorations — multi-surface regression (RFC 2b §4 #2)', () => {
+  const decorations = {
+    layouts: [
+      { asset: 'mascot', anchor: '.conversation-sidebar', anchorPosition: 'topRight', height: 60 },
+    ],
+  };
+  const targetTheme = {
+    theme: { id: 't', version: '1' },
+    css: ':root{}',
+    imageDataUrls: { mascot: 'data:image/png;base64,YQ==' },
+    decorations,
+  };
+
+  it('scopes overlay ids per host so multiple surfaces never collide across documents', () => {
+    const a = buildApplyExpression({ adapter: { id: 'workbuddy' }, targetTheme });
+    const b = buildApplyExpression({ adapter: { id: 'codex' }, targetTheme });
+    // Each target mounts its own decoration block with a host-scoped id, so two
+    // IIFEs in two documents cannot double-write the same element.
+    expect(a).toContain("id = 'agentskin-decor-' + host.id + '-' + index");
+    expect(b).toContain("id = 'agentskin-decor-' + host.id + '-' + index");
+    // The host class prefix differs per adapter → distinct document scoping.
+    expect(a).toContain('agentskin-host-workbuddy');
+    expect(b).toContain('agentskin-host-codex');
+  });
+
+  it('records drift per document: a target without a matching anchor logs a drift entry, not a crash', () => {
+    const expression = buildApplyExpression({ adapter: { id: 'qoderwork' }, targetTheme });
+    expect(expression).toContain("if (!anchorEl) { recordDrift(driftKey, 'miss'); continue; }");
+    expect(expression).toContain('return 0;');
   });
 });
 

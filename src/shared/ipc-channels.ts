@@ -220,6 +220,14 @@ export const IpcChannel = {
   /** Renderer→main: discard overrides and reset to the applied theme. */
   WORKSPACE_TWEAK_RESET: 'workspace:tweak:reset',
 
+  // --- CSS source editor (css-service.ts / core-ipc.ts) ---
+  /** Renderer→main: list stylesheets (metadata only) for a running agent. */
+  CSS_LIST: 'css:list',
+  /** Renderer→main: read the CSS text of a specific stylesheet by synthetic id. */
+  CSS_GET_TEXT: 'css:get-text',
+  /** Renderer→main: inject edited raw CSS through the workspace-tweak layer. */
+  CSS_APPLY_EDIT: 'css:apply-edit',
+
   // --- Theme health check ---
   /** Theme health check report — pushed from main to renderer on each probe cycle */
   THEME_HEALTH_REPORT: 'theme:health-report',

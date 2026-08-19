@@ -13,6 +13,7 @@
 
 import { api } from '@/api/agentSkinClient';
 import { buildStudioPalette, mergeOverridesToSkinTokens } from '@/lib/palette';
+import { extractOverrideFromSnapshot } from '@/lib/snapshot-to-override';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';
 import type { ToolOverride } from '@/types/override';
@@ -211,6 +212,8 @@ interface StudioStoreState {
   applyImageToTheme(): void;
   /** Reset all image→theme state to idle. */
   clearImageToTheme(): void;
+  /** Extract a ToolOverride baseline from the current snapshot and merge into toolOverrides. */
+  applyOverrideFromSnapshot: () => void;
   /** Override the accent within the extracted palette (live preview only). */
   setImageAccent(hex: string): void;
 
@@ -223,8 +226,9 @@ interface StudioStoreState {
   initAnalysisProgressSubscription(): void;
 
   // --- Theme health check ---
-  /** Latest theme health-check report pushed from the main process. Null until first report. */
-  healthReport: HealthCheckReport | null;
+  /** Per-agent latest theme health-check report pushed from the main process.
+   *  Keyed by agentId so switching agents preserves each report independently. */
+  healthReportByAgent: Record<string, HealthCheckReport>;
   /** Guard flag so initHealthReportSubscription is idempotent across HMR. */
   _healthReportSubscribed: boolean;
   /** Subscribe to theme health-check reports from main process. Idempotent. */
@@ -343,7 +347,7 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   _analysisProgressSubscribed: false,
 
   // --- Theme health check ---
-  healthReport: null,
+  healthReportByAgent: {},
   _healthReportSubscribed: false,
 
   getActiveProject: () => {
@@ -378,7 +382,12 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     if (get()._healthReportSubscribed) return;
     set({ _healthReportSubscribed: true });
     api.onThemeHealthReport((report) => {
-      set({ healthReport: report });
+      set((s) => ({
+        healthReportByAgent: {
+          ...s.healthReportByAgent,
+          [report.agentId]: report,
+        },
+      }));
     });
   },
 
@@ -1098,6 +1107,27 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       imageToThemeMode: null,
       imageToThemeError: null,
     });
+  },
+
+  applyOverrideFromSnapshot: () => {
+    const showToast = useNotificationStore.getState().showToast;
+    const snapshot = get().snapshot;
+    if (!snapshot) {
+      showToast(currentT().studioNoPalette, 'destructive');
+      return;
+    }
+    const extracted = extractOverrideFromSnapshot(snapshot);
+    if (Object.keys(extracted).length === 0) {
+      showToast(currentT().studioNoPalette, 'destructive');
+      return;
+    }
+    set((s) => ({
+      undoStack: pushUndo(s.undoStack, s.toolOverrides),
+      redoStack: [],
+      toolOverrides: asToolOverride({ ...(s.toolOverrides ?? {}), ...extracted }),
+      previewView: 'theme',
+    }));
+    showToast(currentT().studioGeneratorApplied);
   },
 
   clearImageToTheme: () =>

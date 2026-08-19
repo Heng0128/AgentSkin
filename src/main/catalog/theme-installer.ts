@@ -686,6 +686,9 @@ export class ThemeInstaller {
           ...images.creative,
         },
       },
+      // 2b surface layouts: pass the manifest's decorations through to the
+      // bundle so the engine applies them (RFC themes-surface-layout-2b §2.2).
+      ...(manifest.decorations ? { decorations: manifest.decorations } : {}),
     };
   }
 

@@ -98,6 +98,26 @@ const api: AgentSkinApi = {
     ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_SAVE, session, overrides) as Promise<boolean>,
   resetTweak: (session: TweakSession) =>
     ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_RESET, session) as Promise<boolean>,
+  // --- CSS source editor ---
+  listStyleSheets: (port: number) =>
+    ipcRenderer.invoke(IpcChannel.CSS_LIST, port) as Promise<
+      Array<{
+        styleSheetId: string;
+        url: string;
+        disabled: boolean;
+        isInline: boolean;
+        sourceURL: string;
+        length: string;
+        label: string;
+      }>
+    >,
+  getStyleSheetText: (port: number, styleSheetId: string) =>
+    ipcRenderer.invoke(IpcChannel.CSS_GET_TEXT, port, styleSheetId) as Promise<string>,
+  applyRawCssEdit: (port: number, agentId: AgentId, css: string) =>
+    ipcRenderer.invoke(IpcChannel.CSS_APPLY_EDIT, port, agentId, css) as Promise<{
+      ok: boolean;
+      error?: string;
+    }>,
   wallpaperVideoUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_VIDEO_URL, id),
   wallpaperWebUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_WEB_URL, id),
   showInFolder: (itemPath: string) => ipcRenderer.invoke(IpcChannel.SHELL_SHOW_ITEM, itemPath),

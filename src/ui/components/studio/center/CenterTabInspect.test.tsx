@@ -34,11 +34,20 @@ import { CenterTabInspect } from './CenterTabInspect';
 
 // --- Mutable store state (simulates useStudioStore.getState()) ----------
 let mockSnapshot: ThemeVisualSnapshot | null = null;
-let mockHealthReport: HealthCheckReport | null = null;
+let mockHealthReportByAgent: Record<string, HealthCheckReport> = {};
+const mockActiveProject = {
+  id: 'proj-001',
+  name: 'Test Project',
+  agentId: 'traework',
+};
 
 vi.mock('@/stores/studioStore', () => ({
   useStudioStore: (selector: (state: Record<string, unknown>) => unknown) =>
-    selector({ snapshot: mockSnapshot, healthReport: mockHealthReport }),
+    selector({
+      snapshot: mockSnapshot,
+      healthReportByAgent: mockHealthReportByAgent,
+      getActiveProject: () => mockActiveProject,
+    }),
 }));
 
 // --- Fixtures --------------------------------------------------------------
@@ -102,7 +111,7 @@ const mockHealthReportFixture: HealthCheckReport = {
 /** Reset store to a clean slate before each test. */
 beforeEach(() => {
   mockSnapshot = null;
-  mockHealthReport = null;
+  mockHealthReportByAgent = {};
 });
 
 afterEach(() => {
@@ -114,7 +123,7 @@ afterEach(() => {
 describe('CenterTabInspect — health check rendering', () => {
   it('renders the score value inside the health-score card', () => {
     mockSnapshot = mockSnapshotFixture;
-    mockHealthReport = mockHealthReportFixture;
+    mockHealthReportByAgent = { traework: mockHealthReportFixture };
 
     const html = renderToStaticMarkup(<CenterTabInspect t={uiMessages['zh-CN']} />);
 
@@ -126,7 +135,7 @@ describe('CenterTabInspect — health check rendering', () => {
 
   it('applies destructive border when blockingCount > 0', () => {
     mockSnapshot = mockSnapshotFixture;
-    mockHealthReport = { ...mockHealthReportFixture, blockingCount: 3 };
+    mockHealthReportByAgent = { traework: { ...mockHealthReportFixture, blockingCount: 3 } };
 
     const html = renderToStaticMarkup(<CenterTabInspect t={uiMessages['zh-CN']} />);
 
@@ -137,7 +146,9 @@ describe('CenterTabInspect — health check rendering', () => {
 
   it('uses neutral style when blockingCount === 0', () => {
     mockSnapshot = mockSnapshotFixture;
-    mockHealthReport = { ...mockHealthReportFixture, blockingCount: 0, score: 95 };
+    mockHealthReportByAgent = {
+      traework: { ...mockHealthReportFixture, blockingCount: 0, score: 95 },
+    };
 
     const html = renderToStaticMarkup(<CenterTabInspect t={uiMessages['zh-CN']} />);
 
@@ -149,7 +160,7 @@ describe('CenterTabInspect — health check rendering', () => {
 
   it('renders opaque layers section with count (collapsed in SSR)', () => {
     mockSnapshot = mockSnapshotFixture;
-    mockHealthReport = mockHealthReportFixture;
+    mockHealthReportByAgent = { traework: mockHealthReportFixture };
 
     const html = renderToStaticMarkup(<CenterTabInspect t={uiMessages['zh-CN']} />);
 
@@ -164,7 +175,7 @@ describe('CenterTabInspect — health check rendering', () => {
 
   it('renders native tokens table with name + value', () => {
     mockSnapshot = mockSnapshotFixture;
-    mockHealthReport = mockHealthReportFixture;
+    mockHealthReportByAgent = { traework: mockHealthReportFixture };
 
     const html = renderToStaticMarkup(<CenterTabInspect t={uiMessages['zh-CN']} />);
 
@@ -177,7 +188,7 @@ describe('CenterTabInspect — health check rendering', () => {
 
   it('does not render health section when healthReport is null', () => {
     mockSnapshot = mockSnapshotFixture;
-    mockHealthReport = null;
+    mockHealthReportByAgent = {};
 
     const html = renderToStaticMarkup(<CenterTabInspect t={uiMessages['zh-CN']} />);
 

@@ -66,6 +66,30 @@ interface WorkspaceState {
   /** Most recent push error message (null = no error). UI shows banner when set. */
   pushError: string | null;
 
+  // --- Raw CSS editing (CenterTabRaw) ---
+  /** Discovered stylesheets for the current agent. Empty when not loaded. */
+  rawSheets: Array<{
+    styleSheetId: string;
+    url: string;
+    disabled: boolean;
+    isInline: boolean;
+    sourceURL: string;
+    length: string;
+    label: string;
+  }>;
+  /** Currently selected sheet index (into rawSheets). null = none selected. */
+  rawSheetIndex: number | null;
+  /** Current textarea content (may differ from original = dirty). */
+  rawCss: string;
+  /** Original CSS text at load time — compared against rawCss for dirty check. */
+  rawCssOriginal: string;
+  /** True when rawCss !== rawCssOriginal. */
+  rawDirty: boolean;
+  /** Error message to display in the raw editor (load/apply failure). */
+  rawError: string | null;
+  /** True while a list/load/apply operation is in flight. */
+  rawLoading: boolean;
+
   // ---- actions ----
 
   setViewMode: (mode: ViewMode) => void;
@@ -113,6 +137,19 @@ interface WorkspaceState {
   discardChanges: () => Promise<boolean>;
   /** Clear the push error banner. */
   clearPushError: () => void;
+  // --- raw CSS editing actions ---
+  /** Load the stylesheet list for the current agent. Returns the list (may be empty). */
+  loadRawSheets: () => Promise<Array<{ styleSheetId: string; label: string }>>;
+  /** Select a sheet by index and load its CSS text into the textarea. */
+  selectRawSheet: (index: number) => Promise<void>;
+  /** Update textarea content (marks dirty when it differs from original). */
+  setRawCss: (css: string) => void;
+  /** Apply the current rawCss through the workspace-tweak layer. Returns ok. */
+  applyRawEdit: () => Promise<boolean>;
+  /** Reset textarea to the original CSS text and clear the tweak layer. */
+  resetRawEdit: () => Promise<boolean>;
+  /** Clear the raw editor error banner. */
+  clearRawError: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -184,6 +221,12 @@ const initialState: Omit<
   | 'saveChanges'
   | 'discardChanges'
   | 'clearPushError'
+  | 'loadRawSheets'
+  | 'selectRawSheet'
+  | 'setRawCss'
+  | 'applyRawEdit'
+  | 'resetRawEdit'
+  | 'clearRawError'
 > = {
   viewMode: 'single',
   windows: [initialWindow],
@@ -218,6 +261,15 @@ const initialState: Omit<
   dirty: false,
   overridesByAgent: loadOverridesByAgent(),
   pushError: null,
+
+  // --- raw CSS editing defaults ---
+  rawSheets: [],
+  rawSheetIndex: null,
+  rawCss: '',
+  rawCssOriginal: '',
+  rawDirty: false,
+  rawError: null,
+  rawLoading: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -424,4 +476,103 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   },
 
   clearPushError: () => set({ pushError: null }),
+
+  // --- raw CSS editing actions ---
+
+  loadRawSheets: async () => {
+    const { currentPort } = get();
+    if (!currentPort) {
+      set({ rawError: 'no_agent_selected', rawSheets: [], rawSheetIndex: null });
+      return [];
+    }
+    set({ rawLoading: true, rawError: null });
+    try {
+      const sheets = await api.listStyleSheets(currentPort);
+      set({ rawSheets: sheets, rawLoading: false });
+      return sheets.map((s) => ({ styleSheetId: s.styleSheetId, label: s.label }));
+    } catch (error) {
+      set({
+        rawLoading: false,
+        rawError: error instanceof Error ? error.message : 'load_failed',
+        rawSheets: [],
+        rawSheetIndex: null,
+      });
+      return [];
+    }
+  },
+
+  selectRawSheet: async (index: number) => {
+    const { rawSheets, currentPort } = get();
+    if (!currentPort) {
+      set({ rawError: 'no_agent_selected' });
+      return;
+    }
+    if (index < 0 || index >= rawSheets.length) {
+      set({ rawError: 'invalid_sheet_index' });
+      return;
+    }
+    const sheet = rawSheets[index];
+    set({
+      rawLoading: true,
+      rawError: null,
+      rawSheetIndex: index,
+      rawCss: '',
+      rawCssOriginal: '',
+      rawDirty: false,
+    });
+    try {
+      const text = await api.getStyleSheetText(currentPort, sheet.styleSheetId);
+      set({ rawCss: text, rawCssOriginal: text, rawLoading: false, rawDirty: false });
+    } catch (error) {
+      set({
+        rawLoading: false,
+        rawError: error instanceof Error ? error.message : 'load_text_failed',
+      });
+    }
+  },
+
+  setRawCss: (css: string) => {
+    const { rawCssOriginal } = get();
+    set({ rawCss: css, rawDirty: css !== rawCssOriginal });
+  },
+
+  applyRawEdit: async () => {
+    const { currentPort, currentAgentId, rawCss } = get();
+    if (!currentPort || !currentAgentId) {
+      set({ rawError: 'no_agent_selected' });
+      return false;
+    }
+    set({ rawLoading: true, rawError: null });
+    try {
+      const result = await api.applyRawCssEdit(currentPort, currentAgentId, rawCss);
+      if (result.ok) {
+        set({ rawLoading: false, rawCssOriginal: rawCss, rawDirty: false });
+        return true;
+      }
+      set({ rawLoading: false, rawError: result.error ?? 'apply_failed' });
+      return false;
+    } catch (error) {
+      set({
+        rawLoading: false,
+        rawError: error instanceof Error ? error.message : 'apply_failed',
+      });
+      return false;
+    }
+  },
+
+  resetRawEdit: async () => {
+    const { currentPort, currentAgentId, rawCssOriginal } = get();
+    set({ rawCss: rawCssOriginal, rawDirty: false });
+    // Clear the tweak layer if an agent is connected.
+    if (currentPort && currentAgentId) {
+      try {
+        await api.applyRawCssEdit(currentPort, currentAgentId, '');
+      } catch {
+        // best-effort clear
+      }
+    }
+    return true;
+  },
+
+  clearRawError: () => set({ rawError: null }),
 }));

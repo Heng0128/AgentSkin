@@ -215,6 +215,104 @@ describe('resolveThemeTarget exposes every image as a data URL', () => {
   });
 });
 
+describe('decorations.layouts validation (RFC 2b §2.2)', () => {
+  const layout = () => ({
+    asset: 'mascot',
+    anchor: '.conversation-sidebar',
+    anchorPosition: 'topRight',
+    offset: { x: 16, y: 16 },
+    height: 60,
+    zIndex: 10,
+  });
+  // `decorations` is a TOP-LEVEL bundle field (sibling of `assets`), mirroring
+  // the source manifest shape buildThemePackage emits.
+  const bundles = () => validateThemePackage({
+    ...minimalBundle(),
+    assets: { images: { hero: image('hero'), mascot: image('mascot') } },
+    decorations: { layouts: [layout()] },
+  });
+
+  it('accepts a valid decorations block referencing embedded image ids', () => {
+    expect(() => bundles()).not.toThrow();
+  });
+
+  it('rejects an asset that is not in assets.images (dangling overlay)', () => {
+    const bundle = bundles();
+    bundle.decorations.layouts[0].asset = 'ghost';
+    expect(() => validateThemePackage(bundle)).toThrow(
+      "decorations.layouts[0].asset 'ghost' does not match any assets.images id",
+    );
+  });
+
+  it('rejects an unknown anchorPosition five-grid enum', () => {
+    const bundle = bundles();
+    bundle.decorations.layouts[0].anchorPosition = 'rightTop';
+    expect(() => validateThemePackage(bundle)).toThrow(
+      'decorations.layouts[0].anchorPosition',
+    );
+  });
+
+  it('rejects a duplicate asset across layouts', () => {
+    const bundle = bundles();
+    bundle.decorations.layouts.push({ asset: 'mascot', anchor: '.other' });
+    expect(() => validateThemePackage(bundle)).toThrow(
+      "contains duplicate asset 'mascot'",
+    );
+  });
+
+  it('rejects more than 16 layouts', () => {
+    const bundle = bundles();
+    for (let i = 0; i < 16; i += 1) bundle.assets.images[`a${i}`] = image(`a${i}`);
+    bundle.decorations = {
+      layouts: Array.from({ length: 17 }, (_, i) => ({ asset: `a${i % 16}`, anchor: '.x' })),
+    };
+    expect(() => validateThemePackage(bundle)).toThrow(`decorations.layouts exceeds 16 entries`);
+  });
+
+  it('accepts null and the idle-fade/float motion presets (RFC 2b §2.4)', () => {
+    const frozen = bundles();
+    frozen.decorations.layouts[0].motion = 'idle-fade';
+    expect(() => validateThemePackage(frozen)).not.toThrow();
+    const float = bundles();
+    float.decorations.layouts[0].motion = 'float';
+    expect(() => validateThemePackage(float)).not.toThrow();
+    const none = bundles();
+    none.decorations.layouts[0].motion = null;
+    expect(() => validateThemePackage(none)).not.toThrow();
+  });
+
+  it('rejects an unknown motion preset (complex pets defer to 2c)', () => {
+    const bundle = bundles();
+    bundle.decorations.layouts[0].motion = 'drag';
+    expect(() => validateThemePackage(bundle)).toThrow(
+      "decorations.layouts[0].motion 'drag' is not a supported preset",
+    );
+  });
+});
+
+describe('resolveThemeTarget exposes decorations (RFC 2b §2.3)', () => {
+  it('passes the decorations config through to the injected target', () => {
+    const bundle = validateThemePackage({
+      ...minimalBundle(),
+      assets: { images: { hero: image('hero'), mascot: image('mascot') } },
+      decorations: {
+        layouts: [{ asset: 'mascot', anchor: '.conversation-sidebar', zIndex: 10 }],
+      },
+    });
+    const target = resolveThemeTarget(bundle, 'codex');
+    expect(target.decorations?.layouts[0]).toMatchObject({
+      asset: 'mascot',
+      anchor: '.conversation-sidebar',
+      zIndex: 10,
+    });
+  });
+
+  it('defaults decorations to null when a bundle declares none', () => {
+    const bundle = validateThemePackage(minimalBundle({ images: { hero: image('hero') } }));
+    expect(resolveThemeTarget(bundle, 'codex').decorations).toBeNull();
+  });
+});
+
 describe('buildThemePackage source-manifest gate', () => {
   it('merges art + images into hero + creative and enforces the quantity gate', async () => {
     const dir = path.join(process.cwd(), '.tmp-package-gate-test');

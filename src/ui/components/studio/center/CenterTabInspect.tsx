@@ -81,7 +81,9 @@ function ScoreRing({ score, label }: { score: number; label: string }) {
 
 export function CenterTabInspect({ t }: { t: UiMessages }) {
   const snapshot = useStudioStore((s) => s.snapshot);
-  const healthReport = useStudioStore((s) => s.healthReport);
+  const activeProject = useStudioStore((s) => s.getActiveProject());
+  const healthReportByAgent = useStudioStore((s) => s.healthReportByAgent);
+  const healthReport = activeProject ? (healthReportByAgent[activeProject.agentId] ?? null) : null;
   const [opaqueExpanded, setOpaqueExpanded] = useState(false);
   const domNodeCount = useMemo(() => countDomNodes(snapshot?.domTree), [snapshot]);
 

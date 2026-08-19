@@ -19,13 +19,17 @@ import { app, ipcMain, shell } from 'electron';
 import { toMessage } from '../../shared/errors';
 import { getMainMessages, isAppLocale, setMainLocale } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
+import { sanitizeCSS } from '../../shared/safe-css';
 import type { ToolOverride } from '../../shared/types/override';
+import { getStyleSheetText, listStyleSheets } from '../cdp/css-service';
+import { injectCssLayer } from '../cdp/injection/shared';
 import { saveLocalePreference } from '../locale-preferences';
 import { mainWarn } from '../logger';
 import { handleThemeFileOpen, type MainContext, wrapCatalog } from '../main-context';
 import {
   pushTweak,
   resetTweak,
+  resolveSessionForPort,
   saveTweakAsCustomCss,
   type TweakSession,
 } from '../services/tweak-injector';
@@ -136,4 +140,92 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
       return false;
     }
   });
+
+  // --- CSS source editor (delegates to css-service.ts) ---
+  ipcMain.handle(IpcChannel.CSS_LIST, async (_event, port: unknown) => {
+    return withMonitoredTimeout(
+      IpcChannel.CSS_LIST,
+      10000,
+      (async () => {
+        if (typeof port !== 'number' || port <= 0 || port > 65535) {
+          throw new Error(`invalid port: ${String(port)}`);
+        }
+        const session = await resolveSessionForPort(port);
+        if (!session) {
+          mainWarn('CssEditor.List', `no CDP session on port ${port}`);
+          return [];
+        }
+        try {
+          return await listStyleSheets(session);
+        } finally {
+          session.close();
+        }
+      })(),
+    );
+  });
+
+  ipcMain.handle(IpcChannel.CSS_GET_TEXT, async (_event, port: unknown, styleSheetId: unknown) => {
+    return withMonitoredTimeout(
+      IpcChannel.CSS_GET_TEXT,
+      10000,
+      (async () => {
+        if (typeof port !== 'number' || port <= 0 || port > 65535) {
+          throw new Error(`invalid port: ${String(port)}`);
+        }
+        if (typeof styleSheetId !== 'string' || !styleSheetId.startsWith('sheet-index-')) {
+          throw new Error(`invalid styleSheetId: ${String(styleSheetId)}`);
+        }
+        const session = await resolveSessionForPort(port);
+        if (!session) {
+          mainWarn('CssEditor.Text', `no CDP session on port ${port}`);
+          return '';
+        }
+        try {
+          return await getStyleSheetText(session, styleSheetId);
+        } finally {
+          session.close();
+        }
+      })(),
+    );
+  });
+
+  ipcMain.handle(
+    IpcChannel.CSS_APPLY_EDIT,
+    async (_event, port: unknown, agentId: unknown, css: unknown) => {
+      return withMonitoredTimeout(
+        IpcChannel.CSS_APPLY_EDIT,
+        10000,
+        (async () => {
+          if (typeof port !== 'number' || port <= 0 || port > 65535) {
+            throw new Error(`invalid port: ${String(port)}`);
+          }
+          if (typeof agentId !== 'string') {
+            throw new Error(`invalid agentId: ${String(agentId)}`);
+          }
+          if (typeof css !== 'string') {
+            throw new Error('css must be a string');
+          }
+          // Sanitize before injection — same guard as other tweak paths.
+          const sanitized = sanitizeCSS(css);
+          if (sanitized.blocked && !sanitized.clean.trim()) {
+            return { ok: false, error: `CSS blocked: ${sanitized.reasons.join(', ')}` };
+          }
+          const session = await resolveSessionForPort(port);
+          if (!session) {
+            mainWarn('CssEditor.Apply', `no CDP session on port ${port} for ${agentId}`);
+            return { ok: false, error: 'no_cdp_session' };
+          }
+          try {
+            const ok = await injectCssLayer(session, 'workspace-tweak', sanitized.clean);
+            return ok ? { ok: true } : { ok: false, error: 'inject_failed' };
+          } catch (error) {
+            mainWarn('CssEditor.Apply', `apply failed for ${agentId}: ${toMessage(error)}`);
+            return { ok: false, error: toMessage(error) };
+          } finally {
+            session.close();
+          }
+        })(),
+      );
+    },
+  );
 }

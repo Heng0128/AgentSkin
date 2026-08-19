@@ -62,7 +62,8 @@ export function WorkspacePage() {
   const pushError = useWorkspaceStore((s) => s.pushError);
   const clearPushError = useWorkspaceStore((s) => s.clearPushError);
 
-  const healthReport = useDiagnosticsStore((s) => s.healthReport);
+  const healthReportByAgent = useDiagnosticsStore((s) => s.healthReportByAgent);
+  const healthReport = currentAgentId ? (healthReportByAgent[currentAgentId] ?? null) : null;
   const setHealthReport = useDiagnosticsStore((s) => s.setHealthReport);
 
   /** Subscribe to theme health reports pushed from the main process. */

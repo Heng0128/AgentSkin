@@ -126,6 +126,87 @@
       },
       "description": "Optional asset references relative to the package root"
     },
+    "decorations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "layouts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "required": ["asset", "anchor"],
+            "additionalProperties": false,
+            "properties": {
+              "asset": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9_-]*$",
+                "description": "References an id in manifest.assets.images"
+              },
+              "anchor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "description": "Stable application semantic selector for the anchor surface"
+              },
+              "anchorPosition": {
+                "type": "string",
+                "enum": [
+                  "topLeft",
+                  "topCenter",
+                  "topRight",
+                  "centerLeft",
+                  "center",
+                  "centerRight",
+                  "bottomLeft",
+                  "bottomCenter",
+                  "bottomRight"
+                ],
+                "default": "bottomRight",
+                "description": "Five-grid alignment relative to the anchor surface"
+              },
+              "offset": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "x": { "type": "number", "description": "Pixel offset along +x (right)" },
+                  "y": { "type": "number", "description": "Pixel offset along +y (down)" }
+                },
+                "description": "Pixel offset relative to the anchor position"
+              },
+              "width": {
+                "oneOf": [{ "type": "number", "minimum": 1 }, { "type": "null" }],
+                "default": null,
+                "description": "Overlay width; null = auto (aspect-ratio keeps height when omitted)"
+              },
+              "height": {
+                "oneOf": [{ "type": "number", "minimum": 1 }, { "type": "null" }],
+                "default": null,
+                "description": "Overlay height; null = auto"
+              },
+              "zIndex": {
+                "type": "integer",
+                "default": 0,
+                "description": "Overlay z-index"
+              },
+              "motion": {
+                "oneOf": [{ "type": "string", "enum": ["idle-fade", "float"] }, { "type": "null" }],
+                "default": null,
+                "description": "Optional preset motion id (RFC 2b §2.4: idle-fade/float; reduced-motion downgrades to static; complex motion lands in 2c)"
+              },
+              "flash": {
+                "type": "boolean",
+                "default": false,
+                "description": "Mount flash/animation toggle"
+              }
+            }
+          },
+          "description": "Declarative surface layouts: each entry mounts an asset onto an anchor surface (RFC themes-surface-layout-2b §2.2)"
+        }
+      },
+      "description": "(2b surface layouts) Theme decoration declarations mapping assets onto stable anchor surfaces"
+    },
     "targets": {
       "type": "object",
       "additionalProperties": {

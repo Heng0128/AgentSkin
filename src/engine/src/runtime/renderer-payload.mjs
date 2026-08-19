@@ -194,6 +194,10 @@ export function buildApplyExpression({ adapter, targetTheme }) {
     ...(targetTheme.imageDataUrls ?? {}),
     ...(!targetTheme.imageDataUrls?.hero && targetTheme.artDataUrl ? { hero: targetTheme.artDataUrl } : {}),
   });
+  // (2b decorations.layouts) Declarative asset-on-surface layouts, embedded so
+  // the self-contained IIFE can query anchors and mount overlays in-page — the
+  // same expression survives persistence / navigation (RFC 2b §2.3).
+  const decorationsJson = JSON.stringify(targetTheme.decorations ?? null);
   const profileId = JSON.stringify(profile?.id ?? null);
   const profileFactory = profile ? `(${profile.runtime.toString()})` : "null";
   return `(() => {
@@ -201,6 +205,7 @@ export function buildApplyExpression({ adapter, targetTheme }) {
     const theme = ${theme};
     const cssText = ${css};
     const imageDataUrls = ${images};
+    const decorations = ${decorationsJson};
     const profileId = ${profileId};
     const profileFactory = ${profileFactory};
     const rootState = window.__AGENTSKIN__ ||= { hosts: {} };
@@ -230,6 +235,127 @@ export function buildApplyExpression({ adapter, targetTheme }) {
     }
     const artDataUrl = imageDataUrls.hero ?? null;
     const artUrl = imageUrls.hero ?? null;
+
+    // --- 2b decorations.layouts (static surface overlays, RFC 2b §2.3) ---
+    // Each layout mounts its asset onto the anchor element's bounding rect at a
+    // five-grid position + pixel offset, as a position:fixed;pointer-events:none
+    // overlay. Anchors that miss or assets not embedded are skipped (RFC §2.1).
+    // The maths is an in-page port of shared computeAnchorLayout (the engine is
+    // self-contained ESM and cannot import the TS shared kernel).
+    const decorOverlayAttr = 'data-agentskin-decor';
+    // --- 2b P3 drift hook (RFC 2b §2.1 filter / §3 boundary) ---
+    // "anchor miss → skip + record" contract: missing anchors are recorded on the
+    // persistent window.__AGENTSKIN__.decorDrift ring (deduped by host+index, capped
+    // at 32) so 缺口3 drift-warning can consume them without us doing full auto-select
+    // here. Asset-not-embedded is a config miss, NOT anchor drift — it does not record.
+    const driftBus = (rootState.decorDrift ||= []);
+    const driftHas = (key) => { for (let i = 0; i < driftBus.length; i += 1) if (driftBus[i].key === key) return true; return false; };
+    const recordDrift = (key, reason) => {
+      if (driftHas(key)) return;
+      driftBus.push({ key, reason, at: new Date().toISOString() });
+      if (driftBus.length > 32) driftBus.splice(0, driftBus.length - 32);
+      try { console.warn('[AgentSkin] decor anchor drift (' + reason + '): ' + key); } catch (e) {}
+    };
+    // --- 2b P3 motion presets (RFC 2b §2.4) ---
+    // Static placement only in 2b; idle-fade/float keyframes are injected on demand.
+    // prefers-reduced-motion downgrades to static (mirrors the caishen reference,
+    // RFC 2b §2.5). Complex / draggable pets stay in 2c.
+    const DECOR_MOTION_KEYFRAMES = {
+      'idle-fade': '@keyframes agentskin-decor-idle-fade{0%,100%{opacity:1}50%{opacity:.55}}',
+      float: '@keyframes agentskin-decor-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}',
+    };
+    const MOTION_ANIMATIONS = {
+      'idle-fade': 'agentskin-decor-idle-fade 3s ease-in-out infinite',
+      float: 'agentskin-decor-float 4s ease-in-out infinite',
+    };
+    const prefersReducedMotion = typeof window.matchMedia !== 'undefined' && !!window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let motionStyleInjected = false;
+    const ensureMotionStyle = () => {
+      if (motionStyleInjected) return;
+      motionStyleInjected = true;
+      try {
+        if (document.getElementById('agentskin-decor-motion')) return;
+        const style = document.createElement('style');
+        style.id = 'agentskin-decor-motion';
+        style.setAttribute('data-agentskin-decor-motion', '');
+        style.textContent = Object.values(DECOR_MOTION_KEYFRAMES).join('\\n');
+        document.documentElement.appendChild(style);
+      } catch (e) { /* non-fatal */ }
+    };
+    const mountDecorations = () => {
+      if (!decorations || !imageUrls) return 0;
+      let mounted = 0;
+      for (let index = 0; index < decorations.layouts.length; index += 1) {
+        const layout = decorations.layouts[index];
+        const src = imageUrls[layout.asset];
+        const driftKey = host.id + ':' + index + ':' + layout.asset + ':' + String(layout.anchor);
+        if (!src) continue; // config miss (asset not embedded) — not anchor drift
+        let anchorEl;
+        try { anchorEl = document.querySelector(layout.anchor); } catch { anchorEl = null; }
+        if (!anchorEl) { recordDrift(driftKey, 'miss'); continue; }
+        let rect;
+        try { rect = anchorEl.getBoundingClientRect(); } catch { rect = null; }
+        if (!rect || (rect.width <= 0 && rect.height <= 0)) { recordDrift(driftKey, 'zero-rect'); continue; }
+        const pos = layout.anchorPosition || 'bottomRight';
+        const offsetX = layout.offset?.x ?? 0;
+        const offsetY = layout.offset?.y ?? 0;
+        const width = layout.width ?? null;
+        const height = layout.height ?? null;
+        const top = pos.startsWith('top')
+          ? rect.top + offsetY
+          : pos.startsWith('bottom')
+            ? rect.bottom + offsetY
+            : rect.top + rect.height / 2 + offsetY;
+        const left = pos.endsWith('Right')
+          ? rect.right + offsetX - (width ?? 0)
+          : pos.endsWith('Left')
+            ? rect.left + offsetX
+            : rect.left + rect.width / 2 + offsetX - (width ?? 0) / 2;
+        const id = 'agentskin-decor-' + host.id + '-' + index;
+        const prev = document.getElementById(id);
+        if (prev) prev.remove();
+        const el = document.createElement('div');
+        el.id = id;
+        el.setAttribute(decorOverlayAttr, '');
+        el.setAttribute('aria-hidden', 'true');
+        el.style.cssText =
+          'position:fixed!important;' +
+          'left:' + left + 'px!important;' +
+          'top:' + top + 'px!important;' +
+          (width != null ? 'width:' + width + 'px!important;' : '') +
+          (height != null ? 'height:' + height + 'px!important;' : '') +
+          'z-index:' + (layout.zIndex ?? 0) + '!important;' +
+          'pointer-events:none!important;overflow:hidden!important;';
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = '';
+        img.style.width = width != null ? width + 'px' : '100%';
+        img.style.height = height != null ? height + 'px' : 'auto';
+        img.style.objectFit = 'contain';
+        img.style.display = 'block';
+        el.appendChild(img);
+        document.documentElement.appendChild(el);
+        const motion = layout.motion ?? null;
+        if (layout.flash && !motion) {
+          el.style.transition = 'opacity 0.4s ease';
+          el.style.opacity = '0';
+          requestAnimationFrame(() => { el.style.opacity = '1'; });
+        }
+        if (motion && MOTION_ANIMATIONS[motion] && !prefersReducedMotion) {
+          ensureMotionStyle();
+          el.style.animation = MOTION_ANIMATIONS[motion];
+        }
+        mounted += 1;
+      }
+      return mounted;
+    };
+    const removeDecorations = () => {
+      try {
+        document.querySelectorAll('[' + decorOverlayAttr + ']').forEach((el) => el.remove());
+        document.querySelectorAll('[data-agentskin-decor-motion]').forEach((el) => el.remove());
+      } catch { /* ignored */ }
+    };
+
     let profileRuntime;
     try {
       profileRuntime = profileFactory ? profileFactory({
@@ -315,6 +441,7 @@ export function buildApplyExpression({ adapter, targetTheme }) {
       };
       adoptThemeSheet();
       markNonControlled();
+      mountDecorations();
       profileRuntime?.ensure?.();
       return true;
     };
@@ -340,6 +467,7 @@ export function buildApplyExpression({ adapter, targetTheme }) {
       clearTimeout(timer);
       clearInterval(interval);
       profileRuntime?.cleanup?.();
+      removeDecorations();
       for (const objectUrl of ownedImageUrls) globalThis.URL?.revokeObjectURL?.(objectUrl);
       ownedImageUrls.clear();
       if (document.adoptedStyleSheets) {
@@ -425,6 +553,10 @@ export function buildRemoveExpression(adapter) {
     const state = window.__AGENTSKIN__?.hosts?.[appId];
     if (state?.cleanup) return state.cleanup();
     ${fallbackCleanup}
+    // (2b) Remove any surface decoration overlays + motion keyframes that survive
+    // without state.
+    try { document.querySelectorAll('[data-agentskin-decor]').forEach((el) => el.remove()); } catch {}
+    try { document.querySelectorAll('[data-agentskin-decor-motion]').forEach((el) => el.remove()); } catch {}
     if (document.adoptedStyleSheets) {
       document.adoptedStyleSheets = document.adoptedStyleSheets.filter((s) => s.${THEME_SHEET_FLAG} !== true);
     }

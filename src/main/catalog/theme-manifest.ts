@@ -166,6 +166,66 @@ export interface ThemeFontConfig {
   preload?: boolean;
 }
 
+/**
+ * 锚点面内的五宫格对齐（RFC themes-surface-layout-2b §2.2）。格式为
+ * `{top|center|bottom}{Left|Center|Right}`，缺省 `bottomRight`。
+ */
+export type DecorationAnchorPosition =
+  | 'topLeft'
+  | 'topCenter'
+  | 'topRight'
+  | 'centerLeft'
+  | 'center'
+  | 'centerRight'
+  | 'bottomLeft'
+  | 'bottomCenter'
+  | 'bottomRight';
+
+/**
+ * 2b P3 预置动效枚举（RFC 2b §2.4）：仅静态定位 + `idle-fade`/`float` 简单
+ * 预置动画。复杂/可动宠物留 2c。
+ */
+export type DecorationMotion = 'idle-fade' | 'float';
+
+/**
+ * 单个主题装饰布局声明：把 `assets.images.<id>` 的一张素材放到某个稳定
+ * 锚点面上。运行时按锚点元素宿主坐标 + 对齐/偏移/尺寸换算成 `position:fixed`
+ * 覆盖层（`pointer-events:none`，不挡点击）。锚点失效时该 layout 静默跳过，
+ * 不阻塞整主题（RFC 2b §2.1/§2.3）。
+ *
+ * RFC themes-surface-layout-2b §2.2。
+ */
+export interface DecorationLayout {
+  /** 引用 `assets.images.<id>` 的素材 id。 */
+  asset: string;
+  /** 目标应用稳定语义选择器（锚点面）。 */
+  anchor: string;
+  /** 相对锚点面的五宫格对齐（缺省 `bottomRight`）。 */
+  anchorPosition?: DecorationAnchorPosition;
+  /** 相对锚点位置的像素偏移（`x` 沿右为正，`y` 沿下为正）。 */
+  offset?: { x?: number; y?: number };
+  /** 覆盖层宽度；`null` = auto（与 height 可省略其一，等宽/等比自适应）。 */
+  width?: number | null;
+  /** 覆盖层高度；`null` = auto。 */
+  height?: number | null;
+  /** 覆盖层 z-index（缺省 0）。 */
+  zIndex?: number;
+  /** 可选预置动效 id（`idle-fade`/`float`，2b 只做静态定位 + 简单预置动画）。 */
+  motion?: DecorationMotion | null;
+  /** 挂载闪烁/动画开关（缺省 false）。 */
+  flash?: boolean;
+}
+
+/**
+ * 主题装饰声明（`manifest.decorations`）。`layouts` 内每个元素把一个素材
+ * 挂到指定锚点面上。声明为空/缺失时主题行为与现状完全一致（向后兼容）。
+ *
+ * RFC themes-surface-layout-2b §2.2。
+ */
+export interface DecorationsConfig {
+  layouts: DecorationLayout[];
+}
+
 export interface ThemeManifest {
   /** Stable theme identifier (lowercase alphanumeric + hyphens). */
   id: string;
@@ -214,6 +274,11 @@ export interface ThemeManifest {
   colors: ThemeColors;
   /** Optional asset references relative to the package root. */
   assets?: ThemeAssets;
+  /**
+   * 主题装饰声明（2b）：把 `assets.images.<id>` 的素材挂到稳定锚点面上。
+   * 缺省无装饰 → 行为与现状一致。RFC themes-surface-layout-2b §2.2。
+   */
+  decorations?: DecorationsConfig;
   /** Per-agent target configurations (v2). */
   targets?: Record<string, ThemeTargetConfig>;
   /** Explicit supported agent ids (v2). When present, overrides deriving from `targets`. */

@@ -41,7 +41,7 @@ export function WorkspaceQuickActions({ items }: { items: WorkspaceQuickActionIt
             {/* Icon container */}
             <div
               className={cn(
-                'flex size-9 shrink-0 items-center justify-center rounded-lg transition-transform duration-base group-hover/action:scale-105',
+                'flex size-9 shrink-0 items-center justify-center rounded-[2px] transition-transform duration-base group-hover/action:scale-105',
                 item.primary
                   ? 'bg-accent text-primary'
                   : 'bg-accent text-muted-foreground group-hover/action:text-foreground',

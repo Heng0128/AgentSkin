@@ -45,6 +45,16 @@ const MAX_SELECTOR_LENGTH = 1024;
 const SELECTOR_WARNING_LENGTH = 180;
 const MAX_LINT_WARNINGS = 100;
 const MAX_LINT_SELECTOR_DISPLAY_LENGTH = 240;
+// 2b decorations.layouts bounds (RFC themes-surface-layout-2b §2.2).
+const MAX_DECOR_LAYOUTS = 16;
+const DECOR_ANCHOR_POSITIONS = new Set([
+  "topLeft", "topCenter", "topRight",
+  "centerLeft", "center", "centerRight",
+  "bottomLeft", "bottomCenter", "bottomRight",
+]);
+// 2b P3: preset motion enumerable (RFC 2b §2.4 评审待决策 #4 — idle-fade/float only).
+// Unknown values are rejected at bundle gate; complex / draggable pets stay in 2c.
+const DECOR_MOTION_KINDS = new Set(["idle-fade", "float"]);
 
 function assertString(value, label) {
   if (typeof value !== "string" || !value.trim()) throw new Error(`${label} must be a non-empty string.`);
@@ -256,6 +266,80 @@ export function lintThemePackage(bundle) {
   return [...unique.values()].slice(0, MAX_LINT_WARNINGS);
 }
 
+function validateAssetImageNameSet(images) {
+  if (images === undefined) return;
+  const ids = new Set(Object.keys(images));
+  return ids;
+}
+
+/**
+ * 2b decorations validation. `images` (the resolved `assets.images` id set)
+ * is passed in so a layout's `asset` can be checked against actually-embedded
+ * image ids — a dangling reference would render a blank overlay and is a
+ * manifest authoring error (RFC 2b §2.2). Anchors are selector strings;
+ * they may drift at runtime but must be non-empty and bounded here.
+ */
+function validateDecorations(decorations, images, label = "decorations") {
+  if (decorations === undefined) return;
+  if (!decorations || typeof decorations !== "object" || Array.isArray(decorations)) {
+    throw new Error(`${label} must be an object.`);
+  }
+  if (!Array.isArray(decorations.layouts) || !decorations.layouts.length) {
+    throw new Error(`${label}.layouts must be a non-empty array of layouts.`);
+  }
+  if (decorations.layouts.length > MAX_DECOR_LAYOUTS) {
+    throw new Error(`${label}.layouts exceeds ${MAX_DECOR_LAYOUTS} entries.`);
+  }
+  const seenAssets = new Set();
+  for (const [index, layout] of decorations.layouts.entries()) {
+    const itemLabel = `${label}.layouts[${index}]`;
+    if (!layout || typeof layout !== "object" || Array.isArray(layout)) {
+      throw new Error(`${itemLabel} must be an object.`);
+    }
+    if (!SAFE_ID.test(layout.asset)) throw new Error(`${itemLabel}.asset must be a safe id.`);
+    if (images !== undefined && !images.has(layout.asset)) {
+      throw new Error(`${itemLabel}.asset '${layout.asset}' does not match any assets.images id.`);
+    }
+    if (seenAssets.has(layout.asset)) throw new Error(`${label} contains duplicate asset '${layout.asset}'.`);
+    seenAssets.add(layout.asset);
+    assertString(layout.anchor, `${itemLabel}.anchor`);
+    if (layout.anchor.length > MAX_SELECTOR_LENGTH || layout.anchor.includes("\0")) {
+      throw new Error(`${itemLabel}.anchor is not a safe selector.`);
+    }
+    if (layout.anchorPosition !== undefined && !DECOR_ANCHOR_POSITIONS.has(layout.anchorPosition)) {
+      throw new Error(`${itemLabel}.anchorPosition '${layout.anchorPosition}' is not a valid five-grid position.`);
+    }
+    if (layout.offset !== undefined) {
+      if (!layout.offset || typeof layout.offset !== "object" || Array.isArray(layout.offset)) {
+        throw new Error(`${itemLabel}.offset must be an object.`);
+      }
+      for (const axis of ["x", "y"]) {
+        const value = layout.offset[axis];
+        if (value !== undefined && (typeof value !== "number" || !Number.isFinite(value))) {
+          throw new Error(`${itemLabel}.offset.${axis} must be a finite number.`);
+        }
+      }
+    }
+    for (const dim of ["width", "height"]) {
+      const value = layout[dim];
+      if (value !== null && value !== undefined && (typeof value !== "number" || !Number.isFinite(value) || value < 1)) {
+        throw new Error(`${itemLabel}.${dim} must be null or a positive number.`);
+      }
+    }
+    if (layout.zIndex !== undefined && (!Number.isInteger(layout.zIndex))) {
+      throw new Error(`${itemLabel}.zIndex must be an integer.`);
+    }
+    if (layout.motion !== null && layout.motion !== undefined) {
+      if (typeof layout.motion !== "string" || !DECOR_MOTION_KINDS.has(layout.motion)) {
+        throw new Error(`${itemLabel}.motion '${layout.motion}' is not a supported preset (allowed: idle-fade, float).`);
+      }
+    }
+    if (layout.flash !== undefined && typeof layout.flash !== "boolean") {
+      throw new Error(`${itemLabel}.flash must be a boolean.`);
+    }
+  }
+}
+
 function validateTarget(target, appId) {
   if (!SAFE_ID.test(appId)) throw new Error(`Invalid target app id '${appId}'.`);
   assertString(target?.css, `targets.${appId}.css`);
@@ -375,6 +459,8 @@ export function validateThemePackage(bundle) {
       throw new Error(`assets.art base64 exceeds ${MAX_THEME_IMAGE_BASE64} bytes.`);
     }
   }
+  // 2b: decorations reference assets.images ids, so validate after assets.
+  validateDecorations(bundle.decorations, validateAssetImageNameSet(bundle.assets?.images), "decorations");
   return bundle;
 }
 
@@ -406,6 +492,7 @@ export function resolveThemeTarget(bundle, appId) {
     verification: target.verification ?? null,
     imageDataUrls,
     artDataUrl: imageDataUrls.hero ?? null,
+    decorations: bundle.decorations ?? null,
   };
 }
 
@@ -468,6 +555,7 @@ export async function buildThemePackage(manifestFilename) {
     },
     targets,
     ...(assets ? { assets } : {}),
+    ...(source.decorations ? { decorations: source.decorations } : {}),
   });
   const serialized = `${JSON.stringify(bundle, null, 2)}\n`;
   if (Buffer.byteLength(serialized) > MAX_THEME_PACKAGE_BYTES) {

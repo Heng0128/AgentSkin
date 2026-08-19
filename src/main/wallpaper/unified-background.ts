@@ -35,11 +35,10 @@
  */
 
 import { WALLPAPER_CONTINUATION_ID } from '../../shared/injection-constants';
+import { computeContinuationLayout, type SurfaceRect } from '../../shared/surface-rect';
 import type { WallpaperRenderOptions } from '../../shared/types';
-import type { CdpSession } from '../cdp/cdp-client';
 import type { CdpTarget } from '../cdp/cdp-targets';
 import { buildMediaElementCss } from '../cdp/wallpaper/css-render';
-import type { SurfaceRect } from './injector-types';
 
 // ---------------------------------------------------------------------------
 // Plan — multi-surface detection
@@ -67,27 +66,11 @@ export function computeUnifiedPlan<T>(targets: readonly T[]): UnifiedPlan<T> {
 
 // ---------------------------------------------------------------------------
 // Offset math — host-window coordinate deltas
+// (computeContinuationLayout 迁移至 src/shared/surface-rect，此处 re-export 保持
+//  既有调用方 `unified-background` 的 import 兼容)
 // ---------------------------------------------------------------------------
 
-/**
- * 纯函数：计算副表面上 continuation 图层的摆放矩形。
- *
- * 主表面的 full-bleed 容器占据宿主窗口的 `[primaryRect.x, primaryRect.y,
- * +width, +height]`。从副表面的坐标系看（其原点=宿主坐标 `secondaryRect.x/y`），
- * 主容器出现在 `(primaryRect.x - secondaryRect.x, primaryRect.y - secondaryRect.y)`。
- * 把尺寸按主容器等宽等高放置，两者同源、同 object-fit，即可让共享图在接缝处连续。
- */
-export function computeContinuationLayout(
-  primaryRect: SurfaceRect,
-  secondaryRect: SurfaceRect,
-): { left: number; top: number; width: number; height: number } {
-  return {
-    left: primaryRect.x - secondaryRect.x,
-    top: primaryRect.y - secondaryRect.y,
-    width: primaryRect.width,
-    height: primaryRect.height,
-  };
-}
+export { computeContinuationLayout };
 
 // ---------------------------------------------------------------------------
 // Mount / remove expressions (pure, unit-testable)
@@ -148,30 +131,9 @@ export function buildContinuationRemoveJs(): string {
 }
 
 // ---------------------------------------------------------------------------
-// CDP rect reader (fallback for primary; secondary host bounds come from deps)
+// CDP rect reader — 迁移至 src/main/cdp/surface-rect.ts
+// (readSurfaceRect 依赖 CdpSession，归属 cdp 层；此处 re-export 保持既有
+//  调用方经 `unified-background` import 的兼容)
 // ---------------------------------------------------------------------------
 
-/**
- * 经 CDP 读取某个页面内元素的 getBoundingClientRect。返回的是该页面文档内坐标
- * ——跨表面不可直接比较，仅作尺寸兜底/诊断。host 相对坐标务必用
- * {@link WallpaperInjectorDeps.resolveSurfaceRects}。
- */
-export async function readSurfaceRect(
-  session: CdpSession,
-  selector: string,
-): Promise<SurfaceRect | null> {
-  try {
-    const raw = await session.evaluate(`(() => {
-      var el = document.querySelector(${JSON.stringify(selector)});
-      if (!el) return null;
-      var r = el.getBoundingClientRect();
-      return JSON.stringify({ x: r.x, y: r.y, width: r.width, height: r.height });
-    })()`);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as SurfaceRect | null;
-    if (!parsed || !Number.isFinite(parsed.x) || !Number.isFinite(parsed.width)) return null;
-    return parsed;
-  } catch {
-    return null;
-  }
-}
+export { readSurfaceRect } from '../cdp/surface-rect';
