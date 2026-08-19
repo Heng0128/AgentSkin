@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { IpcChannel } from '../../shared/ipc-channels';
+import type { SelectorValidationReport } from '../../shared/types/selector-probe';
 import type { MainContext } from '../main-context';
 
 // ---------------------------------------------------------------------------
@@ -427,7 +428,7 @@ describe('css-ipc handlers', () => {
       vi.mocked(resolveSessionForPort).mockResolvedValue(null);
 
       const handler = handlers.get(IpcChannel.SELECTOR_VALIDATE)!;
-      const result = await handler({}, 9222, 'agent1', ['.a', '.b']);
+      const result = (await handler({}, 9222, 'agent1', ['.a', '.b'])) as SelectorValidationReport;
       expect(result.summary.total).toBe(2);
       expect(result.summary.timeout).toBe(2);
       expect(result.agentId).toBe('agent1');
@@ -450,7 +451,7 @@ describe('css-ipc handlers', () => {
       });
 
       const handler = handlers.get(IpcChannel.SELECTOR_VALIDATE)!;
-      const result = await handler({}, 9222, 'agent1', []);
+      const result = (await handler({}, 9222, 'agent1', [])) as SelectorValidationReport;
       expect(result.summary.total).toBe(0);
       expect(mockSession.close).toHaveBeenCalledOnce();
     });
