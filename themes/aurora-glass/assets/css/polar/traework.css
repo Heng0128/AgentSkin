@@ -243,6 +243,13 @@ html.agentskin-host-traework [class*="user-message-navigator__mask"] {
   background: transparent !important;
 }
 
+/* ---- remove native hardcoded sticky fade-gradient shadow band under the sidebar task list (verified live: .task-list-shadow-bottom paints rgb(38,38,38) in dark) ---- */
+html.agentskin-host-traework .task-list-shadow-bottom,
+html.agentskin-host-traework .task-list-shadow-top {
+  background-image: none !important;
+  background: transparent !important;
+}
+
 /* ---- contrast fix: avatar badges with hardcoded light bg ---- */
 html.agentskin-host-traework [class*="agent-avatar"],
 html.agentskin-host-traework [class*="avatar"] {

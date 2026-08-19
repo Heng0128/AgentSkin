@@ -6,15 +6,17 @@ import {
   shellStructureCss,
   shellTokenOverrides,
   tokenBlock,
+  zcodeColorTokenOverrides,
 } from '../theme-utils.mjs';
 
 function zcodeCss(t) {
   const host = 'html.agentskin-host-zcode';
-  return `/* ${t.name} — ZCode (generic --text-*/--bg-* design tokens) */
+  return `/* ${t.name} — ZCode (--color-* Tailwind v4 native tokens + engine flat semantic layer) */
 ${tokenBlock(t)}
 
 /* ===== Native token overrides (wins over :root[data-theme]) ===== */
 ${shellTokenOverrides(host, t)}
+${zcodeColorTokenOverrides(host, t)}
 ${shellStructureCss(host, t)}
 ${sharedChromeRules(host, t)}
 

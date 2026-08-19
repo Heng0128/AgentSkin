@@ -64,6 +64,12 @@ export const NATIVE_DEFECT_FIXES = {
       selectors: ['[class*="user-message-navigator__mask"]'],
       props: ['background-image: none !important', 'background: transparent !important'],
     },
+    {
+      label: 'task-list-shadow',
+      note: 'remove native hardcoded sticky fade-gradient shadow band under the sidebar task list (verified live: .task-list-shadow-bottom paints rgb(38,38,38) in dark)',
+      selectors: ['.task-list-shadow-bottom', '.task-list-shadow-top'],
+      props: ['background-image: none !important', 'background: transparent !important'],
+    },
   ],
   workbuddy: [
     {

@@ -1,4 +1,4 @@
-/* 极光黄昏 — ZCode (generic --text-*/--bg-* design tokens) */
+/* 极光黄昏 — ZCode (--color-* Tailwind v4 native tokens + engine flat semantic layer) */
 :root {
   color-scheme: dark !important;
   --agentskin-accent: #9b8ae8;
@@ -86,6 +86,95 @@ html.agentskin-host-zcode {
   /* Code blocks */
   --code-bg: #08081a !important;
   --code-fg: #cfcae0 !important;
+}
+html.agentskin-host-zcode {
+  color-scheme: dark !important;
+
+  /* --- Backgrounds: transparent for art punch-through --- */
+  --color-background: transparent !important;
+  --color-surface: transparent !important;
+
+  /* Surfaces — SEMI-TRANSPARENT (frosted glass): hero art shows through.
+     Opaque surfaces would hide the background, which is the point. */
+  --color-card: color-mix(in srgb, #14142a 55%, transparent) !important;
+  --color-panel: color-mix(in srgb, #14142a 45%, transparent) !important;
+  --color-sidebar: color-mix(in srgb, #14142a 40%, transparent) !important;
+  --color-header: color-mix(in srgb, #14142a 50%, transparent) !important;
+  --color-tab: color-mix(in srgb, #14142a 50%, transparent) !important;
+  --color-tab-active: color-mix(in srgb, #1c1c3a 65%, transparent) !important;
+  --color-popover: color-mix(in srgb, #1c1c3a 82%, transparent) !important;
+  --color-menu: color-mix(in srgb, #14142a 75%, transparent) !important;
+  --color-toast: color-mix(in srgb, #1c1c3a 85%, transparent) !important;
+  --color-tooltip: color-mix(in srgb, #1c1c3a 85%, transparent) !important;
+  --color-input: color-mix(in srgb, #14142a 72%, transparent) !important;
+  --color-input-focused: color-mix(in srgb, #1c1c3a 78%, transparent) !important;
+  --color-background-alt: color-mix(in srgb, #14142a 40%, transparent) !important;
+  --color-background-win-alt: color-mix(in srgb, #14142a 40%, transparent) !important;
+
+  /* Hover / selected tints (transparent-based so the background still shows) */
+  --color-surface-hover: color-mix(in srgb, #9b8ae8 10%, transparent) !important;
+  --color-selected: color-mix(in srgb, #9b8ae8 16%, transparent) !important;
+  --color-hover: color-mix(in srgb, #9b8ae8 10%, transparent) !important;
+
+  /* --- Foregrounds --- */
+  --color-foreground: #e0def0 !important;
+  --color-foreground-subtle: #7a7a96 !important;
+  --color-foreground-subtlest: color-mix(in srgb, #7a7a96 65%, transparent) !important;
+  --color-foreground-inverse: #0a0a18 !important;
+
+  /* --- Borders --- */
+  --color-border: rgba(155, 138, 232, 0.16) !important;
+  --color-border-hover: color-mix(in srgb, #9b8ae8 30%, transparent) !important;
+  --color-input-border: rgba(155, 138, 232, 0.16) !important;
+  --color-input-border-hover: color-mix(in srgb, #9b8ae8 35%, transparent) !important;
+  --color-input-border-focused: #9b8ae8 !important;
+  --color-card-border: rgba(155, 138, 232, 0.16) !important;
+  --color-tab-border: rgba(155, 138, 232, 0.16) !important;
+  --color-popover-border: rgba(155, 138, 232, 0.16) !important;
+
+  /* --- Accent / brand (primary actions, active states) --- */
+  --color-accent: #9b8ae8 !important;
+  --color-brand: #9b8ae8 !important;
+  --color-primary: #9b8ae8 !important;
+  --color-primary-foreground: #0a0a18 !important;
+  --color-secondary: color-mix(in srgb, #1c1c3a 60%, transparent) !important;
+  --color-destructive: #e5484d !important;
+  --color-destructive-foreground: #fff !important;
+  --color-success: #46a758 !important;
+  --color-success-foreground: #fff !important;
+  --color-warning: #f5a524 !important;
+  --color-warning-foreground: #1a1a1a !important;
+
+  /* --- Interaction ask (agent message surfaces) — frosted --- */
+  --color-interaction-ask-fill: color-mix(in srgb, #9b8ae8 12%, transparent) !important;
+  --color-interaction-ask-surface: color-mix(in srgb, #14142a 40%, transparent) !important;
+  --color-interaction-ask-foreground: #e0def0 !important;
+  --color-interaction-confirmation-surface: color-mix(in srgb, #14142a 40%, transparent) !important;
+  --color-interaction-confirmation-foreground: #e0def0 !important;
+
+  /* --- Node / command / file tree surfaces — frosted --- */
+  --color-command-node: color-mix(in srgb, #14142a 40%, transparent) !important;
+  --color-command-node-hover: color-mix(in srgb, #9b8ae8 10%, transparent) !important;
+  --color-command-node-foreground: #e0def0 !important;
+  --color-session-node: color-mix(in srgb, #14142a 40%, transparent) !important;
+  --color-session-node-hover: color-mix(in srgb, #9b8ae8 10%, transparent) !important;
+  --color-session-node-foreground: #e0def0 !important;
+  --color-file-node: color-mix(in srgb, #14142a 40%, transparent) !important;
+  --color-file-node-hover: color-mix(in srgb, #9b8ae8 10%, transparent) !important;
+  --color-file-node-foreground: #e0def0 !important;
+
+  /* --- Terminal --- */
+  --color-terminal-bg: #08081a !important;
+  --color-terminal-fg: #cfcae0 !important;
+  --color-terminal-selection: color-mix(in srgb, #9b8ae8 32%, transparent) !important;
+  --color-terminal-selection-inactive: color-mix(in srgb, #9b8ae8 20%, transparent) !important;
+
+  /* --- Code / diff / find --- */
+  --color-markdown-inline-code: #cfcae0 !important;
+  --color-diff-added: color-mix(in srgb, #46a758 40%, transparent) !important;
+  --color-diff-removed: color-mix(in srgb, #e5484d 40%, transparent) !important;
+  --color-find-highlight: color-mix(in srgb, #9b8ae8 30%, transparent) !important;
+  --color-find-highlight-active: color-mix(in srgb, #9b8ae8 45%, transparent) !important;
 }
 /* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
 html.agentskin-host-zcode #root {

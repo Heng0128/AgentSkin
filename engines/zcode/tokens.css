@@ -1,175 +1,37 @@
 /* ============================================================
-   ENGINE: zcode — Layer 0: Token Override
+   ENGINE: zcode — Layer 0: Token Override (PLACEHOLDER)
    ------------------------------------------------------------
-   Pure design-token overrides for the ZCode desktop app. The
-   renderer is a local Vite/React build served via file:// and
-   rooted at #root. ZCode is a Tailwind v4 UI: its theme tokens
-   are the --color-* family declared on :root / .dark /
-   .theme-zai-dark (verified against the live DOM — components
-   consume var(--color-background), var(--color-surface),
-   var(--color-foreground), var(--color-border), …).
+   ZCode is a Tailwind v4 UI whose native theme tokens are the
+   --color-* family declared on :root / .dark / .theme-zai-dark
+   (verified against the live DOM, 50894 probe: 257 tokens).
 
-   We override that family on the html host class so every
-   surface/text/border derives from --agentskin-*. The semantic
-   --bg-* / --sidebar-bg / --button-primary-bg / --input-bg
-   overrides are kept for the adapter.mjs structural layer, which
-   consumes them via var(--x, fallback).
+   As of commit dd4528e3 the codex engine L0 was emptied in favour
+   of theme-layer ownership; zcode follows the SAME architecture:
 
-   Selector: html.agentskin-host-zcode:root (0,1,1) + !important
-   beats .theme-zai-dark (0,1,0) and :root (0,0,1).
+   - The primary visual identity (--color-* backgrounds, surfaces,
+     foregrounds, borders, accents) is now owned by the THEME LAYER
+     via `zcodeColorTokenOverrides()` in scripts/theme-utils.mjs
+     (generated into each theme's zcode.css). Keeping a second copy
+     here would double-map the same tokens from two sources and
+     drift apart — this file is intentionally a no-op placeholder.
+   - The flat semantic layer (--text-* / --bg-* / --accent-* /
+     --button-* / --sidebar-bg / --input-bg …) is also emitted by
+     the theme layer (shellTokenOverrides) and consumed by the
+     adapter.mjs structural CSS via var(--x, fallback) — every
+     consumer has a fallback, so absence here never breaks the
+     adapter.
+
+   Selector specificity note: the theme layer uses the same
+   html.agentskin-host-zcode:root + !important and is injected at
+   Layer 3 (theme.css), after this Layer 1, so no conflict.
+
+   This file must remain present: palette/orchestrator.ts treats a
+   missing tokens.css as a missing engine layer (falls back to
+   legacy) and check-injection-contract.mjs lists it as required
+   per-agent. Empty placeholder satisfies both.
    ============================================================ */
 
 html.agentskin-host-zcode:root {
-  /* --- Backgrounds: transparent for art punch-through --- */
-  --color-background: transparent !important;
-  --color-surface: transparent !important;
-
-  /* Surfaces are SEMI-TRANSPARENT (frosted glass): the hero background image
-     (--agentskin-art) or an injected wallpaper shows through. Only flat/纯色
-     themes (art:false) render as solid — they rely on the palette's deep
-     --agentskin-bg behind the tint. Opaque surfaces here would hide the
-     background, which is the whole point of AgentSkin themes. */
-  --color-card: color-mix(in srgb, var(--agentskin-surface) 55%, transparent) !important;
-  --color-panel: color-mix(in srgb, var(--agentskin-surface) 45%, transparent) !important;
-  --color-sidebar: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
-  --color-header: color-mix(in srgb, var(--agentskin-surface) 50%, transparent) !important;
-  --color-tab: color-mix(in srgb, var(--agentskin-surface) 50%, transparent) !important;
-  --color-tab-active: color-mix(in srgb, var(--agentskin-surface-elevated) 65%, transparent) !important;
-  --color-popover: color-mix(in srgb, var(--agentskin-surface-elevated) 82%, transparent) !important;
-  --color-menu: color-mix(in srgb, var(--agentskin-surface) 75%, transparent) !important;
-  --color-toast: color-mix(in srgb, var(--agentskin-surface-elevated) 85%, transparent) !important;
-  --color-tooltip: color-mix(in srgb, var(--agentskin-surface-elevated) 85%, transparent) !important;
-  --color-input: color-mix(in srgb, var(--agentskin-surface) 72%, transparent) !important;
-  --color-input-focused: color-mix(in srgb, var(--agentskin-surface-elevated) 78%, transparent) !important;
-  --color-background-alt: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
-  --color-background-win-alt: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
-
-  /* Hover / selected tints (transparent-based so the background still shows) */
-  --color-surface-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
-  --color-selected: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
-  --color-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
-
-  /* --- Foregrounds --- */
-  --color-foreground: var(--agentskin-text) !important;
-  --color-foreground-subtle: var(--agentskin-muted) !important;
-  --color-foreground-subtlest: color-mix(in srgb, var(--agentskin-muted) 65%, transparent) !important;
-  --color-foreground-inverse: var(--agentskin-bg) !important;
-
-  /* --- Borders --- */
-  --color-border: var(--agentskin-border) !important;
-  --color-border-hover: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
-  --color-input-border: var(--agentskin-border) !important;
-  --color-input-border-hover: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
-  --color-input-border-focused: var(--agentskin-accent) !important;
-  --color-card-border: var(--agentskin-border) !important;
-  --color-tab-border: var(--agentskin-border) !important;
-  --color-popover-border: var(--agentskin-border) !important;
-
-  /* --- Accent / brand (primary actions, active states) --- */
-  --color-accent: var(--agentskin-accent) !important;
-  --color-brand: var(--agentskin-accent) !important;
-  --color-primary: var(--agentskin-accent) !important;
-  --color-primary-foreground: var(--agentskin-bg) !important;
-  --color-secondary: color-mix(in srgb, var(--agentskin-surface-elevated) 60%, transparent) !important;
-  --color-destructive: #e5484d !important;
-  --color-destructive-foreground: #fff !important;
-  --color-success: #46a758 !important;
-  --color-success-foreground: #fff !important;
-  --color-warning: #f5a524 !important;
-  --color-warning-foreground: #1a1a1a !important;
-
-  /* --- Interaction ask (agent message surfaces) — frosted --- */
-  --color-interaction-ask-fill: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
-  --color-interaction-ask-surface: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
-  --color-interaction-ask-foreground: var(--agentskin-text) !important;
-  --color-interaction-confirmation-surface: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
-  --color-interaction-confirmation-foreground: var(--agentskin-text) !important;
-
-  /* --- Node / command / file tree surfaces — frosted --- */
-  --color-command-node: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
-  --color-command-node-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
-  --color-command-node-foreground: var(--agentskin-text) !important;
-  --color-session-node: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
-  --color-session-node-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
-  --color-session-node-foreground: var(--agentskin-text) !important;
-  --color-file-node: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
-  --color-file-node-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
-  --color-file-node-foreground: var(--agentskin-text) !important;
-
-  /* --- Terminal --- */
-  --color-terminal-bg: var(--agentskin-code-bg) !important;
-  --color-terminal-fg: var(--agentskin-code-fg) !important;
-  --color-terminal-selection: color-mix(in srgb, var(--agentskin-accent) 32%, transparent) !important;
-  --color-terminal-selection-inactive: color-mix(in srgb, var(--agentskin-accent) 20%, transparent) !important;
-
-  /* --- Code / diff --- */
-  --color-markdown-inline-code: var(--agentskin-code-fg) !important;
-  --color-diff-added: color-mix(in srgb, #46a758 40%, transparent) !important;
-  --color-diff-removed: color-mix(in srgb, #e5484d 40%, transparent) !important;
-  --color-find-highlight: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
-  --color-find-highlight-active: color-mix(in srgb, var(--agentskin-accent) 45%, transparent) !important;
-
-  /* --- Text hierarchy (Tailwind theme-text tokens ZCode declares) --- */
-  --text-primary: var(--agentskin-text) !important;
-  --text-secondary: var(--agentskin-muted) !important;
-  --text-tertiary: color-mix(in srgb, var(--agentskin-text) 55%, transparent) !important;
-  --text-quaternary: color-mix(in srgb, var(--agentskin-text) 40%, transparent) !important;
-
-  /* --- Backgrounds (semantic family the adapter consumes) --- */
-  --bg-primary: transparent !important;
-  --bg-secondary: color-mix(in srgb, var(--agentskin-surface) 92%, black) !important;
-  --bg-tertiary: color-mix(in srgb, var(--agentskin-surface-elevated) 85%, var(--agentskin-accent) 15%) !important;
-  --bg-elevated: var(--agentskin-surface-elevated) !important;
-  --bg-base: transparent !important;
-  --bg-canvas: transparent !important;
-  --bg-surface: color-mix(in srgb, var(--agentskin-surface) 80%, transparent) !important;
-  --bg-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
-  --bg-active: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
-  --bg-selected: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
-
-  /* Borders */
-  --border-xsubtle: color-mix(in srgb, var(--agentskin-border) 25%, transparent) !important;
-  --border-subtle: color-mix(in srgb, var(--agentskin-border) 50%, transparent) !important;
-  --border-medium: var(--agentskin-border) !important;
-  --border-strong: color-mix(in srgb, var(--agentskin-border) 80%, transparent) !important;
-
-  /* Accent / brand */
-  --accent: var(--agentskin-accent) !important;
-  --accent-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
-  --accent-pressed: color-mix(in srgb, var(--agentskin-accent) 75%, white) !important;
-  --accent-soft: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
-  --accent-soft-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
-
-  /* Buttons */
-  --button-primary-bg: var(--agentskin-accent) !important;
-  --button-primary-fg: var(--agentskin-bg) !important;
-  --button-primary-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
-  --button-secondary-bg: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
-  --button-secondary-fg: var(--agentskin-text) !important;
-
-  /* Links */
-  --link: var(--agentskin-accent) !important;
-  --link-hover: color-mix(in srgb, var(--agentskin-accent) 80%, white) !important;
-
-  /* Input / composer */
-  --input-bg: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent) !important;
-  --input-border: var(--agentskin-border) !important;
-  --input-focus-ring: var(--agentskin-focus-ring) !important;
-
-  /* Sidebar / panels */
-  --sidebar-bg: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 22%, transparent) !important;
-  --panel-bg: color-mix(in srgb, var(--agentskin-surface) 14%, transparent) !important;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
-  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.24) !important;
-
-  /* Selection */
-  --selection-bg: color-mix(in srgb, var(--agentskin-accent) 28%, transparent) !important;
-
-  /* Code blocks */
-  --code-bg: var(--agentskin-code-bg) !important;
-  --code-fg: var(--agentskin-code-fg) !important;
+  /* No-op: all native token overrides are owned by the theme layer
+     (zcodeColorTokenOverrides) to keep a single source of truth. */
 }

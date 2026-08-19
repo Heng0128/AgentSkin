@@ -484,6 +484,123 @@ export function codexColorTokenOverrides(host, t) {
 }`;
 }
 
+// ---------------------------------------------------------------------------
+// ZCode native token overrides (--color-* Tailwind v4 system)
+// ---------------------------------------------------------------------------
+
+/**
+ * ZCode-native token overrides.
+ *
+ * Live ZCode (`file://` Vite/React build, Tailwind v4) drives its visual
+ * identity through the `--color-*` family declared on :root / .dark /
+ * .theme-zai-dark — 257 tokens as of the 50894 probe (background / surface /
+ * foreground / border / accent / card / panel / sidebar / input / popover /
+ * tooltip / menu / terminal / diff / interaction-* / *-node …). The shared
+ * `shellTokenOverrides` block maps the palette onto a flat `--text-*` /
+ * `--bg-*` / `--accent-*` system that ZCode does NOT consume natively — those
+ * flat tokens exist only as the engine's own semantic layer consumed by
+ * `engines/zcode/adapter.mjs` structural CSS (`var(--x, fallback)`).
+ *
+ * This function maps the 14-token palette onto the REAL `--color-*` system so
+ * the theme layer (author-controlled) takes over the primary visual identity,
+ * matching the codex `--color-token-*` approach. Coverage mirrors the 65
+ * tokens previously hardcoded in `engines/zcode/tokens.css` (now a no-op
+ * placeholder), with backgrounds kept semi-transparent for art punch-through
+ * and semantic states (destructive/success/warning) deliberately left native.
+ */
+export function zcodeColorTokenOverrides(host, t) {
+  const c = t.colors;
+  return `${host} {
+  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+
+  /* --- Backgrounds: transparent for art punch-through --- */
+  --color-background: transparent !important;
+  --color-surface: transparent !important;
+
+  /* Surfaces — SEMI-TRANSPARENT (frosted glass): hero art shows through.
+     Opaque surfaces would hide the background, which is the point. */
+  --color-card: color-mix(in srgb, ${c.surface} 55%, transparent) !important;
+  --color-panel: color-mix(in srgb, ${c.surface} 45%, transparent) !important;
+  --color-sidebar: color-mix(in srgb, ${c.surface} 40%, transparent) !important;
+  --color-header: color-mix(in srgb, ${c.surface} 50%, transparent) !important;
+  --color-tab: color-mix(in srgb, ${c.surface} 50%, transparent) !important;
+  --color-tab-active: color-mix(in srgb, ${c.surfaceElevated} 65%, transparent) !important;
+  --color-popover: color-mix(in srgb, ${c.surfaceElevated} 82%, transparent) !important;
+  --color-menu: color-mix(in srgb, ${c.surface} 75%, transparent) !important;
+  --color-toast: color-mix(in srgb, ${c.surfaceElevated} 85%, transparent) !important;
+  --color-tooltip: color-mix(in srgb, ${c.surfaceElevated} 85%, transparent) !important;
+  --color-input: color-mix(in srgb, ${c.surface} 72%, transparent) !important;
+  --color-input-focused: color-mix(in srgb, ${c.surfaceElevated} 78%, transparent) !important;
+  --color-background-alt: color-mix(in srgb, ${c.surface} 40%, transparent) !important;
+  --color-background-win-alt: color-mix(in srgb, ${c.surface} 40%, transparent) !important;
+
+  /* Hover / selected tints (transparent-based so the background still shows) */
+  --color-surface-hover: color-mix(in srgb, ${c.accent} 10%, transparent) !important;
+  --color-selected: color-mix(in srgb, ${c.accent} 16%, transparent) !important;
+  --color-hover: color-mix(in srgb, ${c.accent} 10%, transparent) !important;
+
+  /* --- Foregrounds --- */
+  --color-foreground: ${c.foreground} !important;
+  --color-foreground-subtle: ${c.muted} !important;
+  --color-foreground-subtlest: color-mix(in srgb, ${c.muted} 65%, transparent) !important;
+  --color-foreground-inverse: ${c.background} !important;
+
+  /* --- Borders --- */
+  --color-border: ${c.border} !important;
+  --color-border-hover: color-mix(in srgb, ${c.accent} 30%, transparent) !important;
+  --color-input-border: ${c.border} !important;
+  --color-input-border-hover: color-mix(in srgb, ${c.accent} 35%, transparent) !important;
+  --color-input-border-focused: ${c.accent} !important;
+  --color-card-border: ${c.border} !important;
+  --color-tab-border: ${c.border} !important;
+  --color-popover-border: ${c.border} !important;
+
+  /* --- Accent / brand (primary actions, active states) --- */
+  --color-accent: ${c.accent} !important;
+  --color-brand: ${c.accent} !important;
+  --color-primary: ${c.accent} !important;
+  --color-primary-foreground: ${c.background} !important;
+  --color-secondary: color-mix(in srgb, ${c.surfaceElevated} 60%, transparent) !important;
+  --color-destructive: #e5484d !important;
+  --color-destructive-foreground: #fff !important;
+  --color-success: #46a758 !important;
+  --color-success-foreground: #fff !important;
+  --color-warning: #f5a524 !important;
+  --color-warning-foreground: #1a1a1a !important;
+
+  /* --- Interaction ask (agent message surfaces) — frosted --- */
+  --color-interaction-ask-fill: color-mix(in srgb, ${c.accent} 12%, transparent) !important;
+  --color-interaction-ask-surface: color-mix(in srgb, ${c.surface} 40%, transparent) !important;
+  --color-interaction-ask-foreground: ${c.foreground} !important;
+  --color-interaction-confirmation-surface: color-mix(in srgb, ${c.surface} 40%, transparent) !important;
+  --color-interaction-confirmation-foreground: ${c.foreground} !important;
+
+  /* --- Node / command / file tree surfaces — frosted --- */
+  --color-command-node: color-mix(in srgb, ${c.surface} 40%, transparent) !important;
+  --color-command-node-hover: color-mix(in srgb, ${c.accent} 10%, transparent) !important;
+  --color-command-node-foreground: ${c.foreground} !important;
+  --color-session-node: color-mix(in srgb, ${c.surface} 40%, transparent) !important;
+  --color-session-node-hover: color-mix(in srgb, ${c.accent} 10%, transparent) !important;
+  --color-session-node-foreground: ${c.foreground} !important;
+  --color-file-node: color-mix(in srgb, ${c.surface} 40%, transparent) !important;
+  --color-file-node-hover: color-mix(in srgb, ${c.accent} 10%, transparent) !important;
+  --color-file-node-foreground: ${c.foreground} !important;
+
+  /* --- Terminal --- */
+  --color-terminal-bg: ${c.codeBackground} !important;
+  --color-terminal-fg: ${c.codeForeground} !important;
+  --color-terminal-selection: color-mix(in srgb, ${c.accent} 32%, transparent) !important;
+  --color-terminal-selection-inactive: color-mix(in srgb, ${c.accent} 20%, transparent) !important;
+
+  /* --- Code / diff / find --- */
+  --color-markdown-inline-code: ${c.codeForeground} !important;
+  --color-diff-added: color-mix(in srgb, #46a758 40%, transparent) !important;
+  --color-diff-removed: color-mix(in srgb, #e5484d 40%, transparent) !important;
+  --color-find-highlight: color-mix(in srgb, ${c.accent} 30%, transparent) !important;
+  --color-find-highlight-active: color-mix(in srgb, ${c.accent} 45%, transparent) !important;
+}`;
+}
+
 /** Structural chrome shared by the shell-style agents (art layer, frosted
  *  sidebar/composer, popovers). Selectors are the heuristic L5 landmarks the
  *  per-agent adapter additionally positions via JS. */
