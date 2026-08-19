@@ -194,6 +194,21 @@ describe('AgentEngineService Reliability Verification', () => {
     return new AgentEngineService({} as any, stateFile, makeSettings());
   }
 
+  /** Service initialized from an explicit per-agent persisted state. */
+  async function makeServiceWithApps(apps: Record<string, unknown>): Promise<AgentEngineService> {
+    writeFileSync(stateFile, JSON.stringify({ version: 2, apps }), 'utf8');
+    const svc = makeService();
+    await svc.initialize();
+    return svc;
+  }
+
+  /** Service whose registry already has an active theme for TEST_APP — the
+   *  precondition for a real restore (R4 idempotency short-circuits restores
+   *  with no active theme and no wallpaper preference). */
+  async function makeServiceWithTheme(): Promise<AgentEngineService> {
+    return makeServiceWithApps({ [TEST_APP]: { activeThemeId: 't1', port: 9222 } });
+  }
+
   // =========================================================================
   // Section 1: Epoch Manager Correctness
   // =========================================================================
@@ -283,7 +298,7 @@ describe('AgentEngineService Reliability Verification', () => {
     it('queues restore behind in-flight apply with deterministic ordering', async () => {
       const gate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
       vi.mocked(applyThemeFlow).mockImplementation(() => gate.promise);
-      const svc = makeService();
+      const svc = await makeServiceWithTheme();
 
       const applyPromise = svc.apply(APPLY_REQUEST);
       const restorePromise = svc.restore(TEST_APP);
@@ -304,7 +319,7 @@ describe('AgentEngineService Reliability Verification', () => {
     it('queues apply behind in-flight restore with deterministic ordering', async () => {
       const gate = deferred<SystemStatus>();
       vi.mocked(restoreThemeFlow).mockImplementation(() => gate.promise);
-      const svc = makeService();
+      const svc = await makeServiceWithTheme();
 
       const restorePromise = svc.restore(TEST_APP);
       const applyPromise = svc.apply(APPLY_REQUEST);
@@ -789,7 +804,7 @@ describe('AgentEngineService Reliability Verification', () => {
     it('cross-kind: restore queues behind in-flight apply and proceeds after cleanup', async () => {
       const applyGate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
       vi.mocked(applyThemeFlow).mockImplementation(() => applyGate.promise);
-      const svc = makeService();
+      const svc = await makeServiceWithTheme();
 
       // Start apply, then attempt restore while apply is in-flight
       const applyPromise = svc.apply(APPLY_REQUEST);
@@ -1051,7 +1066,7 @@ describe('AgentEngineService Reliability Verification', () => {
         background: Promise.resolve(),
       });
 
-      const svc = makeService();
+      const svc = await makeServiceWithTheme();
 
       // Restore traework (gated) and apply workbuddy concurrently
       const restorePromise = svc.restore('traework');
@@ -1240,7 +1255,11 @@ describe('AgentEngineService Reliability Verification', () => {
         return gate.promise;
       });
 
-      const svc = makeService();
+      // The 3 restore targets need an active-theme precondition (R4
+      // idempotency short-circuits restores with nothing to tear down).
+      const svc = await makeServiceWithApps(
+        Object.fromEntries(restoreIds.map((id) => [id, { activeThemeId: `theme-${id}`, port: 1 }])),
+      );
 
       // Fire 3 applies and 3 restores concurrently — all 6 operations in-flight
       const applyPromises = applyIds.map((id) => svc.apply({ appId: id, themeId: `theme-${id}` }));

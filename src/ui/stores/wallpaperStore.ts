@@ -62,6 +62,13 @@ export function getCompanionBusySize(): number {
   return companionBusyByAgent.size;
 }
 
+/** True while the wallpaper→theme→wallpaper companion is running for this
+ *  agent (RFC 2026-08-19 R4): remove flows must not race the companion's
+ *  apply chain, or the removal would be re-injected by the in-flight apply. */
+export function isCompanionBusy(appId: AgentId): boolean {
+  return companionBusyByAgent.has(appId);
+}
+
 interface WallpaperState {
   wallpapers: WallpaperInfo[];
   enabled: boolean;
@@ -224,23 +231,25 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
 
     if (result?.ok && nextEnabled && nextId) {
       // pywal-style wallpaper→theme linkage: extra-work is delegated to the
-      // standalone companion helper (extract theme, apply, re-apply wallpaper).
-      await runWallpaperCompanion(get, appId, nextId, options);
+      // standalone companion helper (extract theme, apply — the theme apply
+      // flow re-injects the wallpaper in the main process).
+      await runWallpaperCompanion(appId, nextId);
     }
 
     return result;
   },
 
   /**
-   * Activate a theme's bundled wallpaper.
+   * Activate a theme's bundled wallpaper — **preference-only** (RFC
+   * 2026-08-19 R1, Single Injector).
    *
-   * Two call modes:
-   *  - Standalone (no appId): writes global wallpaper preference via `setWallpaper`.
-   *    Used by settings UI manual trigger.
-   *  - Theme-apply linkage (with appId): after global preference, also persists
-   *    the per-agent wallpaper setting (`setAgentWallpaper`) and triggers CDP
-   *    injection (`applyAgentWallpaper`). Called by `themeStore.applyToApp`
-   *    success branch so the wallpaper follows the theme automatically.
+   * Writes the global wallpaper preference (`setWallpaper`) and, when an
+   * `appId` is given, the per-agent wallpaper setting (`setAgentWallpaper`)
+   * so the choice survives restart. It deliberately does NOT trigger CDP
+   * injection: the main-process apply flow already injects the theme's
+   * bundled wallpaper in its background chain
+   * (`theme-apply-flow.ts → injectAgentWallpaperFromApply`). A renderer-side
+   * `applyAgentWallpaper` here would be a second, racing injection (P0-1).
    *
    * Failures are reported via notification but never throw — a wallpaper
    * activation failure must not roll back a successful theme apply.
@@ -256,18 +265,9 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
         // fields (speed/loop/scrimOpacity) exist only in memory.
         await get().setWallpaper(true, targetId, render);
         if (appId) {
-          const persisted = await get().setAgentWallpaper(appId, true, targetId, render);
-          if (persisted) {
-            const result = await get().applyAgentWallpaper(appId);
-            // A-27: CDP injection may fail (agent-not-running, CSP block).
-            // Make the failure visible instead of silently returning.
-            if (!result?.ok && result?.reason) {
-              useNotificationStore
-                .getState()
-                .fail(new Error(`Wallpaper injection failed: ${result.reason}`));
-            }
-            return result;
-          }
+          // Preference-only: the main-process background chain performs the
+          // actual injection after the theme apply settles.
+          await get().setAgentWallpaper(appId, true, targetId, render);
         }
       } else {
         // F-20: bundled wallpaper not in library (not subscribed / WE missing).
@@ -294,25 +294,19 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
  * cleared on exit) rather than relying on a re-entrancy check at a call
  * boundary.
  */
-async function runWallpaperCompanion(
-  get: () => WallpaperState,
-  appId: AgentId,
-  nextId: string,
-  options?: { restartExisting?: boolean; render?: WallpaperRenderOptions },
-): Promise<void> {
+async function runWallpaperCompanion(appId: AgentId, nextId: string): Promise<void> {
   // Guarded per-agent so a re-apply (via applyAgentWallpaper) can't re-enter
   // this companion path, and concurrent agents don't steal each other's guard.
   if (companionBusyByAgent.has(appId)) return;
   companionBusyByAgent.add(appId);
   try {
     const theme = await api.extractThemeFromWallpaper(nextId);
-    const applied = await useThemeStore.getState().applyToApp(theme.id, theme.displayName, appId);
-    if (applied) {
-      // Re-apply the wallpaper (the setting is already persisted). Fire the
-      // underlying apply directly — never the full setAndApply action, which
-      // would recurse back into this helper.
-      await get().applyAgentWallpaper(appId, options);
-    }
+    // Single-Injector (RFC 2026-08-19 R1): applying the extracted theme now
+    // routes through the main-process apply flow, whose background chain
+    // re-injects the theme's bundled wallpaper (theme-apply-flow.ts →
+    // injectAgentWallpaperFromApply). The previous explicit re-apply here was
+    // a third, racing CDP injection (P0-1 triple injection).
+    await useThemeStore.getState().applyToApp(theme.id, theme.displayName, appId);
   } catch (error) {
     // Best-effort: failures inside never roll back the wallpaper apply, only
     // reported via notification.

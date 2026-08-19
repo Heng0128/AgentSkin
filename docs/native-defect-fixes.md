@@ -43,7 +43,7 @@
 
 | Agent | host 作用域 | 独立清除类规则数 |
 |-------|------------|------------------|
-| TRAE Work CN (`traework`) | `html.agentskin-host-traework` | 3 |
+| TRAE Work CN (`traework`) | `html.agentskin-host-traework` | 4 |
 | WorkBuddy (`workbuddy`) | `body[data-application-name="workbuddy"]` | 2 |
 | 豆包 (`doubao`) | `html.agentskin-host-doubao` | 2 |
 | QoderWork CN (`qoderwork`) | `html.agentskin-host-qoderwork` | 0 |
@@ -85,6 +85,16 @@
 
 **选择器**（host 作用域自动加前缀）：
 - `[class*="user-message-navigator__mask"]`
+
+#### `task-list-shadow`
+
+**修正**：remove native hardcoded sticky fade-gradient shadow band under the sidebar task list (verified live: .task-list-shadow-bottom paints rgb(38,38,38) in dark)
+
+**生效清除声明**：`background-image: none !important`，`background: transparent !important`
+
+**选择器**（host 作用域自动加前缀）：
+- `.task-list-shadow-bottom`
+- `.task-list-shadow-top`
 
 ### WorkBuddy — `scripts/generators/workbuddyCss.mjs`
 

@@ -29,6 +29,7 @@ import { useWallpaperStore } from '@/stores/wallpaperStore';
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
 import type { AgentId, ThemeCatalogItem } from '@shared/types';
+import { AGENT_IDS } from '@shared/types';
 import { create } from 'zustand';
 import { handleApplyResult } from '../hooks/apply-result';
 import type { RestartPrompt } from './dialogStore';
@@ -55,33 +56,125 @@ function currentT(): UiMessages {
 }
 
 /**
- * Run an async operation under a busy-state guard: set the busy key, run
- * `fn`, route any throw to `fail`, and always clear busy. Replaces the
- * try/catch/finally boilerplate that was duplicated across 5 actions.
+ * Run an async operation under a per-agent busy guard (RFC 2026-08-19 R2).
  *
- * A `busyKeys` Set provides synchronous mutual exclusion. React state
- * updates are async (batched into the next render tick), so reading `busy`
- * inside `withBusy` would always see the stale closure value — two rapid
- * calls in the same render cycle (tray burst, double-click) would both see
- * `busy === null` and both proceed, racing each other through IPC. The Set
- * is updated synchronously so a duplicate call bails out immediately. The
- * state `busy` is still set for UI feedback (spinner, disabled buttons).
+ * Concurrency model: **per-agent serial, cross-agent parallel**. Each agent
+ * owns a promise chain (`agentChains`); apply/restore for the same agent are
+ * queued onto that chain and run one at a time, while operations for
+ * different agents run concurrently. Non-agent operations (import/export/
+ * delete/bundle) share a single global chain (`globalChain`).
  *
- * Each key is a distinct operation (e.g. a per-agent apply), so up to
- * `MAX_CONCURRENCY` independent operations may run at once — applies to
- * different agents no longer block each other.
+ * The previous implementation used a global `busyKeys` Set with a
+ * `MAX_CONCURRENCY` spin-wait (50ms polling, 60s cap) — that model (a) made
+ * the busy key granularity `apply:${appId}:${themeId}`, so switching themes
+ * on the same agent bypassed the guard; (b) burned CPU polling for a slot;
+ * (c) let `restoreAll` (6 parallel restores) occupy every slot and starve
+ * applies; (d) tracked busy as one scalar value, so a wallpaper-page apply
+ * showed a spinner on the themes page. All four are eliminated by promise
+ * chaining: no polling, per-agent slots, scalar busy replaced by a per-agent
+ * map.
+ *
+ * The scalar `busy` state is retained for UI feedback but as a per-agent map
+ * (`busy[appId]`) plus a global slot (`globalBusy`); the controller exposes
+ * an aggregate "representative" key for the existing global-disable checks.
  */
-const busyKeys = new Set<BusyKey>();
-// The product supports 6 agents; raising the global concurrency cap to 6 lets
-// "apply to all agents" inject every agent in parallel instead of dropping
-// the surplus ones (withBusy now queues rather than rejects, but a cap of < 6
-// would still serialize the last couple of applies unnecessarily).
-const MAX_CONCURRENCY = 6;
+const agentChains = new Map<AgentId, Promise<void>>();
+let globalChain: Promise<void> = Promise.resolve();
 
-/** Maximum time (ms) to wait for a concurrency slot in withBusy before giving
- *  up and surfacing a notification. Prevents the queue from hanging forever if
- *  a slot never frees (e.g. an apply that never settles). */
-const MAX_BUSY_WAIT_MS = 60_000;
+function emptyAgentBusy(): Record<AgentId, BusyKey | null> {
+  return Object.fromEntries(AGENT_IDS.map((id) => [id, null])) as Record<AgentId, BusyKey | null>;
+}
+
+/** Resolve the agent id from a busy key like `apply:traework` / `restore:traework`. */
+function busyKeyAgent(key: BusyKey): AgentId | null {
+  const idx = key.indexOf(':');
+  if (idx === -1) return null;
+  const rest = key.slice(idx + 1);
+  return (AGENT_IDS as readonly string[]).includes(rest) ? (rest as AgentId) : null;
+}
+
+/**
+ * Queue `fn` onto the per-agent chain. Runs one at a time per agent, agents
+ * in parallel. Errors are routed to notification `fail` and returned as
+ * `undefined` (same contract as the legacy `withBusy`).
+ */
+async function withAgentBusy<T>(
+  appId: AgentId,
+  key: BusyKey,
+  fn: () => Promise<T>,
+): Promise<T | undefined> {
+  const prev = agentChains.get(appId) ?? Promise.resolve();
+  const result = prev.then(() => {
+    useThemeStore.getState()._setAgentBusy(appId, key);
+    return fn();
+  });
+  // Keep the chain alive regardless of success/failure; the task's own
+  // rejection is captured by the caller below.
+  agentChains.set(
+    appId,
+    result.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  try {
+    return await result;
+  } catch (error) {
+    useNotificationStore.getState().fail(error);
+    return undefined;
+  } finally {
+    useThemeStore.getState()._setAgentBusy(appId, null);
+  }
+}
+
+/**
+ * Queue `fn` onto the global chain (import/export/delete/bundle). Serializes
+ * against every other global operation; errors behave like `withAgentBusy`.
+ */
+async function withGlobalBusy<T>(key: BusyKey, fn: () => Promise<T>): Promise<T | undefined> {
+  const prev = globalChain;
+  const result = prev.then(() => {
+    useThemeStore.getState()._setGlobalBusy(key);
+    return fn();
+  });
+  globalChain = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  try {
+    return await result;
+  } catch (error) {
+    useNotificationStore.getState().fail(error);
+    return undefined;
+  } finally {
+    useThemeStore.getState()._setGlobalBusy(null);
+  }
+}
+
+/**
+ * Dispatch a busy-keyed operation: agent-scoped keys (apply/restore) run on
+ * the per-agent chain, everything else on the global chain. Backwards-compatible
+ * entry point so call sites only need to fix their key granularity.
+ */
+async function withBusy<T>(key: BusyKey, fn: () => Promise<T>): Promise<T | undefined> {
+  const appId = busyKeyAgent(key);
+  return appId !== null ? withAgentBusy(appId, key, fn) : withGlobalBusy(key, fn);
+}
+
+/** Aggregate representative busy key — drives the controller's global-disable
+ *  checks (`busy !== null`, `startsWith('apply:')`, etc.). Prefers the global
+ *  slot, then the first active per-agent slot. */
+export function aggregateBusyKey(
+  busy: Record<AgentId, BusyKey | null>,
+  globalBusy: BusyKey | null,
+): BusyKey | null {
+  if (globalBusy !== null) return globalBusy;
+  for (const appId of AGENT_IDS) {
+    const key = busy[appId];
+    if (key !== null) return key;
+  }
+  return null;
+}
 
 /** Debounce timer for refreshThemes — coalesces rapid successive calls
  *  (e.g. IPC file-imported burst) into a single IPC round-trip. */
@@ -105,14 +198,20 @@ interface ThemeState {
   installed: ThemeCatalogItem[];
   loading: boolean;
   selection: Selection;
-  busy: BusyKey | null;
+  /** Per-agent busy keys (spinner granularity). Non-null while an apply or
+   *  restore for that agent is queued or running. */
+  busy: Record<AgentId, BusyKey | null>;
+  /** Global busy key (import/export/delete/bundle — non-agent operations). */
+  globalBusy: BusyKey | null;
 
   // --- queries ---
   installedById: (id: string) => ThemeCatalogItem | undefined;
   setSelection: (sel: Selection) => void;
-  /** Internal busy-state setter — used by withBusy so busy writes stay inside
-   *  the store action boundary instead of calling setState directly. */
-  _setBusy: (key: BusyKey | null) => void;
+  /** Internal per-agent busy setter — used by withAgentBusy so busy writes
+   *  stay inside the store action boundary instead of calling setState directly. */
+  _setAgentBusy: (appId: AgentId, key: BusyKey | null) => void;
+  /** Internal global busy setter — used by withGlobalBusy. */
+  _setGlobalBusy: (key: BusyKey | null) => void;
 
   // --- lifecycle ---
   /** Fetch themes from IPC; reports failures via notificationStore. */
@@ -180,11 +279,13 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     installed: [],
     loading: true,
     selection: null,
-    busy: null,
+    busy: emptyAgentBusy(),
+    globalBusy: null,
 
     installedById: (id) => get().installed.find((theme) => theme.id === id),
     setSelection: (selection) => set({ selection }),
-    _setBusy: (key) => set({ busy: key }),
+    _setAgentBusy: (appId, key) => set((current) => ({ busy: { ...current.busy, [appId]: key } })),
+    _setGlobalBusy: (key) => set({ globalBusy: key }),
 
     refreshThemes: () => {
       // Debounce: coalesce rapid successive calls (e.g. IPC file-imported
@@ -210,7 +311,7 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       const { setRestartPrompt } = useDialogStore.getState();
       const t = currentT();
 
-      const result = await withBusy(`apply:${appId}:${themeId}`, async () => {
+      const result = await withBusy(`apply:${appId}`, async () => {
         // Two-phase CDP discovery: first attempt probes only (no restart).
         return api.applyTheme({
           themeId,
@@ -222,10 +323,13 @@ export const useThemeStore = create<ThemeState>((set, get) => {
 
       if (!result) return false;
 
-      // Don't overwrite shared status with this operation's snapshot: with
-      // MAX_CONCURRENCY operations in flight, an older completion can land
-      // last and regress the status UI. Refresh the authoritative state instead.
-      await useStatusStore.getState().refreshStatus();
+      // Response-as-Truth (RFC 2026-08-19 R3): the main process returns the
+      // authoritative post-operation snapshot in `result.system`, so we adopt
+      // it directly instead of issuing a second refreshStatus() round-trip.
+      // Per-agent serialization (withAgentBusy) guarantees a later snapshot
+      // includes earlier operations' effects; cross-agent staleness is bounded
+      // by each response being captured at its own completion time.
+      useStatusStore.getState().setStatus(result.system);
 
       const outcome = handleApplyResult(result, { themeId, themeName, appId });
       switch (outcome.kind) {
@@ -243,28 +347,12 @@ export const useThemeStore = create<ThemeState>((set, get) => {
           return false;
         case 'success': {
           useNotificationStore.getState().showToast(t.themeApplied(themeName));
-          // Activate the theme's bundled wallpaper, if it has one.
-          // Pass appId so the wallpaper follows the theme: per-agent
-          // preference is persisted and CDP injection is triggered.
-          // F-11: also forward render options so they survive restart.
-          const theme = get().installedById(themeId);
-          if (theme?.wallpaper) {
-            // F-19: await + try/catch instead of fire-and-forget so IPC
-            // errors (CSP, CDP timeout) surface to the user instead of
-            // being silently swallowed by `.catch(() => undefined)`.
-            try {
-              await useWallpaperStore
-                .getState()
-                .activateThemeWallpaper(
-                  themeId,
-                  theme.wallpaper.workshopId,
-                  appId,
-                  theme.wallpaper.render,
-                );
-            } catch {
-              // Best-effort: don't fail the theme apply if wallpaper fails.
-            }
-          }
+          // Single-Injector (RFC 2026-08-19 R1): the theme's bundled wallpaper
+          // is injected by the main-process apply flow's background chain
+          // (theme-apply-flow.ts → injectAgentWallpaperFromApply), which also
+          // persists the per-agent wallpaper setting. The renderer must NOT
+          // re-inject — a second CDP injection here caused a race with the
+          // background chain (P0-1 triple injection).
           return true;
         }
         case 'unknown-status':
@@ -291,8 +379,8 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       const t = currentT();
       const result = await withBusy(`restore:${appId}`, () => api.restoreApp(appId));
       if (!result) return;
-      // Same as applyToApp: refresh authoritative status.
-      await useStatusStore.getState().refreshStatus();
+      // Response-as-Truth (R3): restore returns the authoritative SystemStatus.
+      useStatusStore.getState().setStatus(result);
       const appName =
         result.apps.find((a) => a.appId === appId)?.displayName ?? APP_META[appId]?.name ?? appId;
       useNotificationStore.getState().showToast(t.nativeRestored(appName));
@@ -314,17 +402,22 @@ export const useThemeStore = create<ThemeState>((set, get) => {
         useNotificationStore.getState().showToast(t.restoreAllNothing);
         return;
       }
-      const results = await Promise.all(
+      const settled = await Promise.all(
         targets.map(async (app) => {
           const result = await withBusy(`restore:${app.appId}`, () => api.restoreApp(app.appId));
           // withBusy returns undefined on: thrown error (logged via fail),
           // same-key collision, or concurrency cap.
-          return result !== undefined;
+          return { ok: result !== undefined, status: result };
         }),
       );
-      const okCount = results.filter((r) => r).length;
-      const failCount = results.length - okCount;
-      await useStatusStore.getState().refreshStatus();
+      const okCount = settled.filter((r) => r.ok).length;
+      const failCount = settled.length - okCount;
+      // Response-as-Truth (R3): the last-settled restore's snapshot is the
+      // final system state — every restore has resolved by this point, so no
+      // extra refreshStatus() round-trip is needed.
+      for (const entry of settled) {
+        if (entry.status) useStatusStore.getState().setStatus(entry.status);
+      }
       if (failCount === 0) {
         useNotificationStore.getState().showToast(t.restoreAllDone(okCount));
       } else if (okCount === 0) {
@@ -410,16 +503,14 @@ export const useThemeStore = create<ThemeState>((set, get) => {
           : {},
       );
       useNotificationStore.getState().showToast(t.themeDeleted(theme.name));
-      // WP-1: After deleting a theme, deactivate the per-agent wallpaper for
-      // any agent that was running this theme. The deleteTheme IPC channel
-      // restores the CDP shell but bypasses wallpaperStore — without this,
-      // the wallpaper remains injected against a now-deleted theme.
+      // WP-1 + R4 (RFC 2026-08-19): the deleteTheme IPC channel already
+      // restores the CDP shell for every agent running this theme
+      // (theme-ipc.ts THEME_DELETE → core.restore per affected app). The
+      // renderer must NOT issue a second restoreApp here (P0-3 double
+      // restore). The per-agent wallpaper preference is NOT handled by the
+      // main-process delete, so we clear it explicitly — the wallpapers
+      // themselves are torn down by the delete's restore flow.
       for (const appId of affectedApps) {
-        try {
-          await api.restoreApp(appId);
-        } catch {
-          /* CDP restore failure must not block the delete flow */
-        }
         try {
           await useWallpaperStore.getState().setAgentWallpaper(appId, false, null);
         } catch {
@@ -429,40 +520,3 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     },
   };
 });
-
-/** Run `fn` under a busy-key guard (see module docblock). */
-async function withBusy<T>(key: BusyKey, fn: () => Promise<T>): Promise<T | undefined> {
-  const t = currentT();
-  if (busyKeys.has(key)) {
-    useNotificationStore.getState().showToast(t.busyOperationInProgress);
-    return undefined;
-  }
-  // If the concurrency limit is reached, WAIT for a slot instead of silently
-  // dropping the operation. Previously this returned `undefined` immediately,
-  // which made "apply to all agents" (6 applies) silently skip the 5th/6th
-  // agent whenever 4 were already in flight — the user saw no error and no
-  // injection. Waiting guarantees every queued operation eventually runs.
-  let elapsed = 0;
-  while (busyKeys.size >= MAX_CONCURRENCY) {
-    if (elapsed >= MAX_BUSY_WAIT_MS) {
-      useNotificationStore.getState().fail(t.busyTimeout);
-      return undefined;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    elapsed += 50;
-  }
-  busyKeys.add(key);
-  useThemeStore.getState()._setBusy(key);
-  try {
-    return await fn();
-  } catch (error) {
-    useNotificationStore.getState().fail(error);
-    return undefined;
-  } finally {
-    busyKeys.delete(key);
-    const remaining = Array.from(busyKeys);
-    useThemeStore
-      .getState()
-      ._setBusy(remaining.length > 0 ? remaining[remaining.length - 1] : null);
-  }
-}

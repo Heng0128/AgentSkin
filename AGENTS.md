@@ -42,7 +42,7 @@ AI Agent 视觉定制引擎。通过 CDP 注入为 traework、qoderwork、workbu
 3. 禁止自建内容 CDN、账号系统、服务端
 4. 注入架构重构需 RFC 评审——当前架构良好，非必要不重构。确需重构时提交 RFC 文档，经评审后方可执行。
 5. UI 页面新增需 RFC 评审——六页封顶为默认约束（dashboard/workspace/themes/wallpaper/settings/studio）。确需新增时提交 RFC 文档，经评审后可突破上限。
-6. 禁止 10/12/14px 间距，仅用 4/8/16/24/32/48
+6. 禁止间距使用任意散值（如 `gap-[9px]`、`px-[13px]`）；间距应使用 Tailwind 标准档（4px 网格，2–96px，含 12/14px 等实际档位）；`w-*`/`h-*` 布局尺寸不受限——由 `check-design-tokens.mjs`（C6）强制，允许集以脚本为准（2026-08-20 校准，对齐 design-tokens.md §3.3/§7.2 实际字阶与间距）
 7. 禁止未经 npm run check 全绿就 push
 
 ## 6. RFC 触发条件

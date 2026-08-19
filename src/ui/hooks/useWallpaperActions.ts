@@ -13,6 +13,7 @@ import { useCallback } from 'react';
 import { api } from '@/api/agentSkinClient';
 import type { AppController } from '@/hooks/useAppController';
 import { describeWallpaperFailure } from '@/pages/wallpaper/describeWallpaperFailure';
+import { isCompanionBusy } from '@/stores/wallpaperStore';
 
 import type { AgentId, WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
@@ -106,6 +107,13 @@ export function useWallpaperActions(params: WallpaperActionsParams): WallpaperAc
   const handleRemove = useCallback(
     async (agentId: AgentId) => {
       const name = AGENT_META[agentId].displayName;
+      // R4 arbitration (RFC 2026-08-19): refuse to remove while the
+      // wallpaper→theme companion is mid-apply for this agent — the in-flight
+      // apply would re-inject the wallpaper right after the removal.
+      if (isCompanionBusy(agentId)) {
+        showToast(t.weSyncInProgress, 'destructive');
+        return;
+      }
       setApplyingTo(agentId);
       setInjectResults((prev) => ({ ...prev, [agentId]: undefined }));
       try {

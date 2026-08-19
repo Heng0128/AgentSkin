@@ -57,7 +57,7 @@ function StatTile({
           {label}
         </span>
       </div>
-      <span className="font-display text-[28px] font-bold tracking-tight text-foreground">
+      <span className="font-display text-3xl font-bold tracking-tight text-foreground">
         {value}
       </span>
     </button>

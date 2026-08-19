@@ -36,15 +36,30 @@ export interface WallpaperRestartPrompt {
   restartReason?: RestartReason;
 }
 
+/** Launch-flow restart prompt (RFC 2026-08-19 R5): a scanned Electron app
+ *  needs a restart to enable its debug port. Unlike the theme/wallpaper
+ *  restart prompts, the action re-launches the app (forceRestart) rather
+ *  than re-applying a theme. */
+export interface LaunchRestartPrompt {
+  /** Scanned-app id (exePath hash — NOT an AgentId; may be un-adapted). */
+  appId: string;
+  /** User-facing product name. */
+  name: string;
+  /** Message from the launcher explaining why a restart is needed. */
+  message: string;
+}
+
 interface DialogState {
   restartPrompt: RestartPrompt | null;
   wallpaperRestartPrompt: WallpaperRestartPrompt | null;
+  launchRestartPrompt: LaunchRestartPrompt | null;
   deletePrompt: ThemeCatalogItem | null;
   fileImportPrompt: FileImportConfirmRequest | null;
 
   // --- setters ---
   setRestartPrompt: (prompt: RestartPrompt | null) => void;
   setWallpaperRestartPrompt: (prompt: WallpaperRestartPrompt | null) => void;
+  setLaunchRestartPrompt: (prompt: LaunchRestartPrompt | null) => void;
   setDeletePrompt: (prompt: ThemeCatalogItem | null) => void;
   setFileImportPrompt: (prompt: FileImportConfirmRequest | null) => void;
 }
@@ -52,11 +67,13 @@ interface DialogState {
 export const useDialogStore = create<DialogState>((set) => ({
   restartPrompt: null,
   wallpaperRestartPrompt: null,
+  launchRestartPrompt: null,
   deletePrompt: null,
   fileImportPrompt: null,
 
   setRestartPrompt: (restartPrompt) => set({ restartPrompt }),
   setWallpaperRestartPrompt: (wallpaperRestartPrompt) => set({ wallpaperRestartPrompt }),
+  setLaunchRestartPrompt: (launchRestartPrompt) => set({ launchRestartPrompt }),
   setDeletePrompt: (deletePrompt) => set({ deletePrompt }),
   setFileImportPrompt: (fileImportPrompt) => set({ fileImportPrompt }),
 }));

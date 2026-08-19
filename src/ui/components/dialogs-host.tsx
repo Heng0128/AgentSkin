@@ -36,7 +36,14 @@ export function shouldShowActionButton(reason: RestartReason | undefined): boole
 }
 
 export function DialogsHost({ controller }: { controller: AppController }) {
-  const { t, restartPrompt, wallpaperRestartPrompt, deletePrompt, fileImportPrompt } = controller;
+  const {
+    t,
+    restartPrompt,
+    wallpaperRestartPrompt,
+    launchRestartPrompt,
+    deletePrompt,
+    fileImportPrompt,
+  } = controller;
   const appName = (appId: string) =>
     AGENT_IDS.includes(appId as AgentId) ? APP_META[appId as AgentId].name : appId;
 
@@ -128,6 +135,45 @@ export function DialogsHost({ controller }: { controller: AppController }) {
                   : t.restartAndApply}
               </Button>
             ) : null}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Launch restart dialog — shown when launching a scanned Electron app
+          returns `needs-restart` (P0-5, RFC 2026-08-19 R5). The app needs a
+          restart to enable its debug port; the action re-launches it with
+          forceRestart. */}
+      <Dialog
+        open={launchRestartPrompt !== null}
+        onOpenChange={(open) => {
+          if (!open) controller.setLaunchRestartPrompt(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t.launchRestartTitle}</DialogTitle>
+            <DialogDescription>
+              {launchRestartPrompt
+                ? t.launchRestartDescription(launchRestartPrompt.name)
+                : t.restartDescription('')}
+            </DialogDescription>
+            {launchRestartPrompt?.message ? (
+              <p className="text-sm text-muted-foreground/80">{launchRestartPrompt.message}</p>
+            ) : null}
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => controller.setLaunchRestartPrompt(null)}>
+              {t.restartLater}
+            </Button>
+            <Button
+              disabled={controller.busy !== null}
+              onClick={() => {
+                const prompt = launchRestartPrompt;
+                if (prompt) void controller.forceRestartLaunch(prompt.appId);
+              }}
+            >
+              {t.forceRestart}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

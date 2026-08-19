@@ -284,7 +284,7 @@ describe('wallpaperStore — Toast notification behavior', () => {
   // 6b. activateThemeWallpaper — theme-apply linkage (appId)
   // -----------------------------------------------------------------------
 
-  it('activateThemeWallpaper persists per-agent preference and injects when appId is provided', async () => {
+  it('activateThemeWallpaper persists preferences WITHOUT injection (R1 Single Injector)', async () => {
     // listWallpapers returns the bundled wallpaper for this theme.
     mockListWallpapers.mockResolvedValueOnce([
       { id: 'theme:theme-amber', title: 'Amber', projectType: 'video' },
@@ -293,7 +293,6 @@ describe('wallpaperStore — Toast notification behavior', () => {
       mockSettings({ enabled: true, id: 'theme:theme-amber' }),
     );
     mockSetAgentWallpaper.mockResolvedValueOnce(mockSettings());
-    mockApplyAgentWallpaper.mockResolvedValueOnce({ ok: true });
 
     const result = await useWallpaperStore
       .getState()
@@ -308,10 +307,10 @@ describe('wallpaperStore — Toast notification behavior', () => {
       'traework',
       expect.objectContaining({ enabled: true, id: 'theme:theme-amber' }),
     );
-    // CDP injection triggered (api.applyAgentWallpaper(appId, options?)).
-    expect(mockApplyAgentWallpaper).toHaveBeenCalledWith('traework', undefined);
-    // Returns the apply result.
-    expect(result).toEqual({ ok: true });
+    // R1: NO renderer-side CDP injection — the main-process apply flow owns it.
+    expect(mockApplyAgentWallpaper).not.toHaveBeenCalled();
+    // Preference-only: no apply result to return.
+    expect(result).toBeUndefined();
     // No failure reported.
     expect(mockFail).not.toHaveBeenCalled();
   });

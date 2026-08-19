@@ -27,9 +27,13 @@
 import { api } from '@/api/agentSkinClient';
 import { applyScanEvent, dedupeByProductName } from '@/lib/app-dedupe';
 import { sha256Hex16 } from '@/lib/hash';
+import { useDialogStore } from '@/stores/dialogStore';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 import { identityKey } from '@shared/app-identity';
 import type {
+  AgentId,
   ElectronScanResult,
   LaunchResult,
   ScannedApp,
@@ -140,8 +144,13 @@ interface AppsState {
   /** Scan locally installed Electron applications. `force=true` bypasses the
    *  main-process cache (used by the manual "scan" button). */
   scan: (force?: boolean) => Promise<void>;
-  /** Launch a scanned application. */
-  launch: (app: ScannedApp) => Promise<void>;
+  /** Launch a scanned application. `forceRestart` re-launches a running app
+   *  with the debug port enabled (used by the needs-restart dialog action). */
+  launch: (app: ScannedApp, options?: { forceRestart?: boolean }) => Promise<void>;
+  /** Force-restart a scanned app from the needs-restart dialog (P0-5):
+   *  resolves the app by scanned id, closes the prompt, re-launches with
+   *  forceRestart. */
+  forceRestartLaunch: (appId: string) => Promise<void>;
   /** Toggle an app's hidden state. */
   toggleHidden: (appId: string) => void;
   /** Manually refresh running-status from the main process. */
@@ -213,7 +222,7 @@ export const useAppsStore = create<AppsState>((set, get) => {
       }
     },
 
-    launch: async (app: ScannedApp) => {
+    launch: async (app: ScannedApp, options?: { forceRestart?: boolean }) => {
       const { launchingApps, runningApps } = get();
 
       // Guard: don't double-launch.
@@ -224,17 +233,37 @@ export const useAppsStore = create<AppsState>((set, get) => {
       set({ launchingApps: new Set(launchingApps).add(app.id) });
 
       try {
+        // P0-6 (RFC 2026-08-19 R5): surface the user's per-agent debug-port
+        // override (settings → apps[appId].port) through the launch request.
+        // The main-process launcher probes it and walks upward when occupied.
+        const settings = useSettingsStore.getState().settings;
+        const preferredPort = settings?.apps?.[app.id as AgentId]?.port ?? null;
+
         const result = await appsApi.launchElectronApp({
           appId: app.id,
           exePath: app.exePath,
           adapted: app.adapterMatch !== null,
           adapterId: app.adapterMatch ?? undefined,
+          preferredPort,
+          forceRestart: options?.forceRestart === true,
         });
 
         // Update running apps from the launch result.
         const next = new Map(runningApps);
         if (result.ok && result.pid) {
           next.set(app.id, { pid: result.pid, port: result.port ?? null });
+        } else if (result.state === 'needs-restart') {
+          // P0-5 (RFC 2026-08-19 R5): surface the needs-restart state instead
+          // of silently swallowing it — the dialog offers a force restart.
+          const name = app.productName || app.id;
+          useDialogStore.getState().setLaunchRestartPrompt({
+            appId: app.id,
+            name,
+            message: result.message,
+          });
+        } else if (!result.ok) {
+          // Generic launch failure — surface it instead of failing silently.
+          useNotificationStore.getState().fail(new Error(result.message));
         }
         set({ runningApps: next });
       } catch (error) {
@@ -256,6 +285,14 @@ export const useAppsStore = create<AppsState>((set, get) => {
         next.add(appId);
       }
       set({ hiddenApps: next });
+    },
+
+    forceRestartLaunch: async (appId: string) => {
+      const scan = get().scanResult;
+      const app = [...(scan?.adapted ?? []), ...(scan?.other ?? [])].find((a) => a.id === appId);
+      useDialogStore.getState().setLaunchRestartPrompt(null);
+      if (!app) return;
+      await get().launch(app, { forceRestart: true });
     },
 
     refreshStatus: () => {

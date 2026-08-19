@@ -26,6 +26,7 @@
 import { useEffect, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { appStatusFor, useAgentStore } from '@/stores/agentStore';
+import { useAppsStore } from '@/stores/appsStore';
 import { useDialogStore } from '@/stores/dialogStore';
 import { useEnvironmentStore } from '@/stores/environmentStore';
 import { selectInstallFlags, useInstallFlowStore } from '@/stores/installFlowStore';
@@ -34,7 +35,7 @@ import { useSecondaryInjectStore } from '@/stores/secondaryInjectStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';
-import { useThemeStore } from '@/stores/themeStore';
+import { aggregateBusyKey, useThemeStore } from '@/stores/themeStore';
 import { selectActiveWallpaper, useWallpaperStore } from '@/stores/wallpaperStore';
 
 import type { UiMessages } from '@shared/i18n';
@@ -153,11 +154,13 @@ export function useAppController() {
   // -----------------------------------------------------------------------
   const restartPrompt = useDialogStore((s) => s.restartPrompt);
   const wallpaperRestartPrompt = useDialogStore((s) => s.wallpaperRestartPrompt);
+  const launchRestartPrompt = useDialogStore((s) => s.launchRestartPrompt);
   const deletePrompt = useDialogStore((s) => s.deletePrompt);
   const fileImportPrompt = useDialogStore((s) => s.fileImportPrompt);
   const setDeletePrompt = useDialogStore((s) => s.setDeletePrompt);
   const setFileImportPrompt = useDialogStore((s) => s.setFileImportPrompt);
   const setRestartPrompt = useDialogStore((s) => s.setRestartPrompt);
+  const setLaunchRestartPrompt = useDialogStore((s) => s.setLaunchRestartPrompt);
 
   // -----------------------------------------------------------------------
   // Agent slice
@@ -256,6 +259,7 @@ export function useAppController() {
   const themeLoading = useThemeStore((s) => s.loading);
   const selection = useThemeStore((s) => s.selection);
   const themeBusy = useThemeStore((s) => s.busy);
+  const themeGlobalBusy = useThemeStore((s) => s.globalBusy);
   const setSelection = useThemeStore((s) => s.setSelection);
   const applyToApp = useThemeStore((s) => s.applyToApp);
   const restoreApp = useThemeStore((s) => s.restoreApp);
@@ -340,7 +344,7 @@ export function useAppController() {
     statusStale: status === null,
     lastStatusAt,
     isRefreshing,
-    busy: themeBusy,
+    busy: aggregateBusyKey(themeBusy, themeGlobalBusy),
     toasts: controllerToasts,
     showToast,
     logs,
@@ -395,6 +399,9 @@ export function useAppController() {
     setRestartPrompt,
     wallpaperRestartPrompt,
     setWallpaperRestartPrompt,
+    launchRestartPrompt,
+    setLaunchRestartPrompt,
+    forceRestartLaunch: useAppsStore.getState().forceRestartLaunch,
     deletePrompt,
     setDeletePrompt,
     fileImportPrompt,

@@ -106,6 +106,7 @@ const {
     loading: false,
     selection: { busyId: null, kind: 'all' as const },
     busy: { all: false, current: false },
+    globalBusy: null,
     installedById: {},
     setSelection: noop,
     applyToApp: noop,
@@ -212,6 +213,7 @@ vi.mock('@/stores/agentStore', () => ({
 
 vi.mock('@/stores/themeStore', () => ({
   useThemeStore: (selector: (s: Record<string, unknown>) => unknown) => selector(themeMock),
+  aggregateBusyKey: () => null,
 }));
 
 vi.mock('@/stores/installFlowStore', () => ({
@@ -256,6 +258,27 @@ vi.mock('@/api/agentSkinClient', () => ({
     setLocale: vi.fn().mockResolvedValue(undefined),
     onBootWarnings: vi.fn().mockReturnValue(vi.fn()),
     onRuntimeLog: vi.fn().mockReturnValue(vi.fn()),
+    onStatusChanged: vi.fn().mockReturnValue(vi.fn()),
+    refreshStatus: vi.fn().mockResolvedValue({ platform: 'win32', apps: [] }),
+    onElectronStatus: vi.fn().mockReturnValue(vi.fn()),
+    onElectronScanProgress: vi.fn().mockReturnValue(vi.fn()),
+    scanElectronApps: vi.fn().mockResolvedValue({ adapted: [], other: [] }),
+    launchElectronApp: vi.fn().mockResolvedValue({
+      ok: true,
+      pid: 1,
+      port: null,
+      state: 'launched',
+      message: '',
+    }),
+    getSettings: vi
+      .fn()
+      .mockResolvedValue({ apps: {}, defaultPorts: {}, wallpaper: { agents: {} } }),
+    getBootstrap: vi.fn().mockResolvedValue({ locale: 'zh-CN', appVersion: 'test' }),
+    onFileImported: vi.fn().mockReturnValue(vi.fn()),
+    onFileImportConfirm: vi.fn().mockReturnValue(vi.fn()),
+    onFileImportFailed: vi.fn().mockReturnValue(vi.fn()),
+    onTrayApply: vi.fn().mockReturnValue(vi.fn()),
+    catalog: { themes: { list: vi.fn().mockResolvedValue({ items: [] }) } },
   },
 }));
 

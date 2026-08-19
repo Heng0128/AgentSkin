@@ -160,7 +160,7 @@ import { useDialogStore } from '@/stores/dialogStore';
 
 // Import AFTER all mocks are in place
 import type { AgentId } from '@shared/types';
-import { useThemeStore } from './themeStore';
+import { type BusyKey, useThemeStore } from './themeStore';
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -171,7 +171,11 @@ describe('themeStore — applyToApp unknown-status branch', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    useThemeStore.setState({ busy: null, installed: [], selection: null });
+    useThemeStore.setState({
+      busy: {} as Record<AgentId, BusyKey | null>,
+      installed: [],
+      selection: null,
+    });
     mockListThemes.mockResolvedValue({ items: [] });
     mockRefreshStatus.mockResolvedValue(undefined);
   });
@@ -191,7 +195,9 @@ describe('themeStore — applyToApp unknown-status branch', () => {
     );
     expect(mockShowToast).toHaveBeenCalledTimes(1);
     expect(result).toBe(false);
-    expect(mockRefreshStatus).toHaveBeenCalledTimes(1);
+    // Response-as-Truth (R3): status adopted from response.system, no refresh.
+    expect(mockSetStatus).toHaveBeenCalledWith({ platform: 'win32', apps: [] });
+    expect(mockRefreshStatus).not.toHaveBeenCalled();
   });
 });
 
@@ -202,7 +208,11 @@ describe('themeStore — applyToApp unknown-status branch', () => {
 describe('themeStore — withBusy busy array (F-6)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useThemeStore.setState({ busy: null, installed: [], selection: null });
+    useThemeStore.setState({
+      busy: {} as Record<AgentId, BusyKey | null>,
+      installed: [],
+      selection: null,
+    });
     mockListThemes.mockResolvedValue({ items: [] });
     mockRefreshStatus.mockResolvedValue(undefined);
     // 'applied' is the recognized success status per handleApplyResult.
@@ -213,7 +223,7 @@ describe('themeStore — withBusy busy array (F-6)', () => {
     });
   });
 
-  it('all 3 concurrent applies complete and refreshStatus is called 3 times', async () => {
+  it('all 3 concurrent applies complete and adopt response.system (R3)', async () => {
     // Fire 3 concurrent apply operations with different agent keys.
     const results = await Promise.all([
       useThemeStore.getState().applyToApp('theme-a', 'Theme A', 'traework'),
@@ -223,8 +233,9 @@ describe('themeStore — withBusy busy array (F-6)', () => {
 
     // All three should complete without error.
     expect(results.length).toBe(3);
-    // Verify that refreshStatus was called for each apply.
-    expect(mockRefreshStatus).toHaveBeenCalledTimes(3);
+    // Each apply adopts the authoritative response.system snapshot.
+    expect(mockSetStatus).toHaveBeenCalledTimes(3);
+    expect(mockRefreshStatus).not.toHaveBeenCalled();
   });
 });
 
@@ -235,7 +246,11 @@ describe('themeStore — withBusy busy array (F-6)', () => {
 describe('themeStore — restoreApp wallpaper deactivation (A-5)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useThemeStore.setState({ busy: null, installed: [], selection: null });
+    useThemeStore.setState({
+      busy: {} as Record<AgentId, BusyKey | null>,
+      installed: [],
+      selection: null,
+    });
     mockRestoreApp.mockResolvedValue({
       apps: [{ appId: 'traework', displayName: 'Trae' }],
       system: { platform: 'win32', apps: [] },
@@ -249,8 +264,9 @@ describe('themeStore — restoreApp wallpaper deactivation (A-5)', () => {
 
     // The wallpaper deactivation should be called with enabled=false and id=null.
     expect(mockSetAgentWallpaper).toHaveBeenCalledWith('traework', false, null);
-    // And status should be refreshed from the authoritative source.
-    expect(mockRefreshStatus).toHaveBeenCalledTimes(1);
+    // Response-as-Truth (R3): restore returns the authoritative SystemStatus.
+    expect(mockSetStatus).toHaveBeenCalledTimes(1);
+    expect(mockRefreshStatus).not.toHaveBeenCalled();
   });
 });
 
@@ -261,7 +277,11 @@ describe('themeStore — restoreApp wallpaper deactivation (A-5)', () => {
 describe('themeStore — confirmDelete affected-apps warning (A-6 + A-10)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useThemeStore.setState({ busy: null, installed: [], selection: null });
+    useThemeStore.setState({
+      busy: {} as Record<AgentId, BusyKey | null>,
+      installed: [],
+      selection: null,
+    });
     mockDeleteTheme.mockResolvedValue({
       status: {
         apps: [
@@ -314,7 +334,11 @@ describe('themeStore — confirmDelete affected-apps warning (A-6 + A-10)', () =
 describe('themeStore — refreshThemes debounce (A-7)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useThemeStore.setState({ busy: null, installed: [], selection: null });
+    useThemeStore.setState({
+      busy: {} as Record<AgentId, BusyKey | null>,
+      installed: [],
+      selection: null,
+    });
     vi.useFakeTimers();
     mockListThemes.mockResolvedValue({ items: [] });
   });

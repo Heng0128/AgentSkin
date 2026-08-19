@@ -102,5 +102,5 @@ Electron 渲染进程的 React 应用层，包含全部 12 个 Zustand Store、7
 3. **选择器稳定**：Zustand v5 + React 19 下，selector 必须返回稳定引用，避免 useSyncExternalStore tearing。
 4. **禁止被动挂载同步 set()**：不在 useEffect 中同步调用 setState 触发全量重渲染。
 5. **国际化**：翻译由 Store action 内部读取 locale 实现，不在组件层注入 t 函数。
-6. **设计 Token**：UI 组件尺寸仅使用 4/8/16/24/32/48 序列，禁止 10/12/14px。
+6. **设计 Token**：UI 间距禁止任意散值（如 `gap-[9px]`），使用 Tailwind 标准档（4px 网格 2–96px）；`w-*`/`h-*` 布局尺寸不受限——由 `check-design-tokens.mjs`（C6）强制，允许集以脚本为准。
 7. **组件就近测试**：领域组件的 `.test.tsx` 与组件同目录，UI 组件测试放在 `components/ui/` 同目录。

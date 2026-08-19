@@ -111,7 +111,7 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
         </select>
 
         {rawDirty && (
-          <span className="rounded-[2px] bg-[var(--cr-warn-subtle)] px-2 py-[1px] font-mono text-[10px] text-[var(--cr-warn-fg)]">
+          <span className="rounded-[2px] bg-[var(--cr-warn-subtle)] px-2 py-px font-mono text-[10px] text-[var(--cr-warn-fg)]">
             {t.studioRawDirty}
           </span>
         )}
@@ -168,7 +168,7 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
         </button>
 
         {rawError && (
-          <span className="ml-auto rounded-[2px] bg-[var(--destructive-subtle)] px-2 py-[1px] font-mono text-[10px] text-[var(--destructive-fg)]">
+          <span className="ml-auto rounded-[2px] bg-[var(--destructive-subtle)] px-2 py-px font-mono text-[10px] text-[var(--destructive-fg)]">
             {rawError}
           </span>
         )}

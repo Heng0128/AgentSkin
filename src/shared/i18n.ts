@@ -319,6 +319,10 @@ export const uiMessages = {
     restartLater: '暂不重启',
     restartAndApply: '重启并应用',
     launchAndApply: '启动并应用',
+    launchRestartTitle: '需要重启应用',
+    launchRestartDescription: (name: string) =>
+      `应用「${name}」需要重启才能启用调试端口（CDP）。点击"强制重启"将自动结束并重新启动它。`,
+    forceRestart: '强制重启',
     deleteTitle: '确定删除这个主题吗？',
     deleteDescription: (name: string) =>
       `「${name}」的本地主题包将被删除。如果正在使用，会先恢复应用原生界面。`,
@@ -462,6 +466,7 @@ export const uiMessages = {
     weInjecting: (name: string) => `正在注入到 ${name}…`,
     weInjected: (name: string) => `${name} 壁纸已应用`,
     weRemoved: (name: string) => `${name} 壁纸已移除`,
+    weSyncInProgress: '壁纸同步中，请稍后再试',
     weApplyAll: '应用到所有',
     weApplyingAll: (done: number, total: number) => `批量应用中 ${done}/${total}…`,
     weApplyAllDone: (ok: number, total: number) => `批量应用完成（${ok}/${total} 成功）`,
@@ -1460,6 +1465,10 @@ export const uiMessages = {
     restartLater: 'Not now',
     restartAndApply: 'Restart & apply',
     launchAndApply: 'Launch & apply',
+    launchRestartTitle: 'App restart needed',
+    launchRestartDescription: (name: string) =>
+      `"${name}" needs a restart to enable its debugging port (CDP). Click "Force restart" to end and relaunch it automatically.`,
+    forceRestart: 'Force restart',
     deleteTitle: 'Delete this theme?',
     deleteDescription: (name: string) =>
       `The local package for "${name}" will be removed. If it is active, the original interface is restored first.`,
@@ -1605,6 +1614,7 @@ export const uiMessages = {
     weInjecting: (name: string) => `Injecting into ${name}…`,
     weInjected: (name: string) => `${name} wallpaper applied`,
     weRemoved: (name: string) => `${name} wallpaper removed`,
+    weSyncInProgress: 'Wallpaper sync in progress, please retry later',
     weApplyAll: 'Apply to all',
     weApplyingAll: (done: number, total: number) => `Batch applying ${done}/${total}…`,
     weApplyAllDone: (ok: number, total: number) => `Batch apply done (${ok}/${total} succeeded)`,

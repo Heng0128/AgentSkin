@@ -812,6 +812,15 @@ export class AgentEngineService implements AgentEngineServiceApi {
 
   private async restoreInternal(appId: AgentId): Promise<SystemStatus> {
     this.statusCache = null;
+    // Idempotent restore (RFC 2026-08-19 R4): when the agent has no active
+    // theme AND no wallpaper preference, there is nothing to tear down —
+    // skip the CDP round-trip entirely and return the current snapshot.
+    // Repeated delete/restore calls (e.g. double-clicks, delete-then-restore
+    // flows) are therefore safe no-ops instead of error paths.
+    if (!this.registry.getActiveThemeId(appId) && !this.settings.agentWallpaper(appId)?.enabled) {
+      this.log(`[restore] ${appId}: nothing to restore — no-op (idempotent)`);
+      return this.status();
+    }
     return restoreThemeFlowImpl(appId, this.restoreFlowDeps());
   }
 

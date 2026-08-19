@@ -145,8 +145,17 @@ export function sendLog(line: string): void {
  * (apply/restore/delete, tray actions, boot-restore). Keeps Studio's 5s-poll
  * status snapshot in sync without waiting for its next tick. Renderer
  * subscribes via `onStatusChanged` → immediate `refreshStatus()`.
+ *
+ * Debounced (50ms): a single user action often fans out through several IPC
+ * handlers (e.g. theme apply + wallpaper apply + tray update), and each used
+ * to push one STATUS_CHANGED — a 4x redundant fan-out per action. The timer
+ * coalesces a burst into one push. Final-state pushes that must not be
+ * coalesced use {@link notifyStatusChangedNow}.
  */
-export function notifyStatusChanged(): void {
+const STATUS_NOTIFY_DEBOUNCE_MS = 50;
+let statusNotifyTimer: ReturnType<typeof setTimeout> | null = null;
+
+function sendStatusChanged(): void {
   // Fan-out STATUS_CHANGED to both windows so Studio's status snapshot
   // (activeThemeId, running, debugReady) stays in sync after apply/restore
   // without waiting for its 5s poll tick. Cross-module integration fix:
@@ -157,6 +166,24 @@ export function notifyStatusChanged(): void {
   if (ctx.studioWindow && !ctx.studioWindow.isDestroyed()) {
     ctx.studioWindow.webContents.send(IpcChannel.STATUS_CHANGED);
   }
+}
+
+/** Coalesced STATUS_CHANGED push (50ms debounce). Safe to call freely. */
+export function notifyStatusChanged(): void {
+  if (statusNotifyTimer !== null) return;
+  statusNotifyTimer = setTimeout(() => {
+    statusNotifyTimer = null;
+    sendStatusChanged();
+  }, STATUS_NOTIFY_DEBOUNCE_MS);
+}
+
+/** Immediate STATUS_CHANGED push, flushing any pending debounce. */
+export function notifyStatusChangedNow(): void {
+  if (statusNotifyTimer !== null) {
+    clearTimeout(statusNotifyTimer);
+    statusNotifyTimer = null;
+  }
+  sendStatusChanged();
 }
 
 /**

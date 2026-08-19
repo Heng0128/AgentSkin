@@ -53,7 +53,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
     step = 1,
     display?: string,
   ) => (
-    <div className="we-prow flex items-center gap-[9px]">
+    <div className="we-prow flex items-center gap-2">
       <span className="w-[76px] shrink-0 font-mono text-[10px]  text-muted-foreground">
         {label}
       </span>
@@ -87,7 +87,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       </div>
 
       {/* Theme tint */}
-      <div className="we-prow flex items-center gap-[9px]">
+      <div className="we-prow flex items-center gap-2">
         <span className="w-[76px] shrink-0 font-mono text-[10px]  text-muted-foreground">
           THEME_TINT
         </span>
@@ -103,7 +103,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       </div>
 
       {/* Alignment */}
-      <div className="we-prow flex items-center gap-[9px]">
+      <div className="we-prow flex items-center gap-2">
         <span className="w-[76px] shrink-0 font-mono text-[10px]  text-muted-foreground">
           ALIGNMENT
         </span>
@@ -127,7 +127,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
         slider('播放速度', 'speed', 25, 200, 5, r.speed !== undefined ? `${r.speed}x` : undefined)}
       {/* Loop (video only) */}
       {isVideo && (
-        <div className="we-prow flex items-center gap-[9px]">
+        <div className="we-prow flex items-center gap-2">
           <span className="w-[76px] shrink-0 font-mono text-[10px]  text-muted-foreground">
             LOOP
           </span>
@@ -169,7 +169,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       )}
 
       {/* Flip */}
-      <div className="we-prow flex items-center gap-[9px]">
+      <div className="we-prow flex items-center gap-2">
         <span className="w-[76px] shrink-0 font-mono text-[10px]  text-muted-foreground">FLIP</span>
         <span className="flex flex-1 items-center gap-[6px]">
           <button

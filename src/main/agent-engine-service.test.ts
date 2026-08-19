@@ -340,7 +340,11 @@ describe('AgentEngineService (orchestration)', () => {
     it('queues restore behind an in-flight apply and keeps ordering deterministic', async () => {
       const gate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
       vi.mocked(applyThemeFlow).mockReturnValue(gate.promise);
-      const svc = makeService();
+      // R4 idempotency: an initialized active theme is the precondition for a
+      // real restore — otherwise restore short-circuits to a no-op.
+      const svc = await makeInitializedService({
+        [TEST_APP]: { activeThemeId: 't1', port: 9222 },
+      });
       const lines: string[] = [];
       svc.setLogListener((line) => lines.push(line));
 
@@ -366,7 +370,9 @@ describe('AgentEngineService (orchestration)', () => {
     it('queues apply behind an in-flight restore', async () => {
       const gate = deferred<SystemStatus>();
       vi.mocked(restoreThemeFlow).mockReturnValue(gate.promise);
-      const svc = makeService();
+      const svc = await makeInitializedService({
+        [TEST_APP]: { activeThemeId: 't1', port: 9222 },
+      });
 
       const restorePromise = svc.restore(TEST_APP);
       const applyPromise = svc.apply(APPLY_REQUEST);
@@ -386,7 +392,9 @@ describe('AgentEngineService (orchestration)', () => {
     it('deduplicates same-kind restores', async () => {
       const gate = deferred<SystemStatus>();
       vi.mocked(restoreThemeFlow).mockReturnValue(gate.promise);
-      const svc = makeService();
+      const svc = await makeInitializedService({
+        [TEST_APP]: { activeThemeId: 't1', port: 9222 },
+      });
 
       const p1 = svc.restore(TEST_APP);
       const p2 = svc.restore(TEST_APP);
