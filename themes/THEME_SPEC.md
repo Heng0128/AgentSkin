@@ -167,7 +167,7 @@ CDP 样式探针读取的样式集合，即主题**必须能被观测到**的样
 | TRAE Work | `--vscode-*` | VS Code fork |
 | QoderWork | `--color-*` (antd) | antd 体系 |
 | WorkBuddy | `--cb-*` | 腾讯体系 |
-| 豆包 | `--dbx-*` | 251-token 语义层（`--semi-color-*` 为遗留，勿用于新主题） |
+| 豆包 | `--dbx-*` | 251-token 语义封装层；`--semi-color-*` 为 Semi Design 原生语义层，两者并存、均现行有效（参考 aurora-glass `doubao.css`） |
 | Codex / ZCode | `--color-*` | 与 QoderWork 同族 |
 
 ### 2. Computed-style 字段全集（75 个）
@@ -300,4 +300,4 @@ html.agentskin-host-workbuddy .conversation-sidebar {
 - 作用域：`html.agentskin-host-doubao:root`
 - 原生 token：`--dbx-bg-body-web` / `-bg-base-web` / `-bg-base-2/5` / `-bg-float` / `-bg-mask` / `-bg-blur-md` / `--dbx-text-primary/-secondary/-tertiary/-disable` / `--dbx-fill-*` / `--dbx-line-*`
 - 稳定表面：`.chat-container`、`.dbx-*` 语义容器（建议用 DevTools 实测当前版本类名）
-- 参考：aurora-glass `doubao.css`（`--dbx-` 为主，`--semi-color-` 为遗留）——本表与上文「探针样式契约」token 命名空间表一致。
+- 参考：aurora-glass `doubao.css`（`--dbx-` 语义封装层与 `--semi-color-` Semi 原生语义层并存，均现行有效，覆写时按需选用）——本表与上文「探针样式契约」token 命名空间表一致。

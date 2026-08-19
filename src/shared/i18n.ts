@@ -891,6 +891,8 @@ export const uiMessages = {
       '可抓取「CURRENT」（带主题）或「RAW」（无主题）两种状态，切换上方标签对照查看。',
     studioThemeEmpty: '点击「SNAP」抓取主题快照后在此编辑',
     studioGeneratorEmpty: '新建或导入工程后可使用生成器',
+    studioGeneratorEmptyTitle: '暂无快照数据',
+    studioGeneratorEmptyHint: '抓取快照后可使用生成器提取覆盖属性',
     // --- Bundle Studio (Theme Studio → Bundle tab) ---
     studioBundleKicker: '主题包 · BUNDLE WORKSPACE',
     studioBundleImport: '导入 .agentskin-bundle',
@@ -2021,6 +2023,9 @@ export const uiMessages = {
       'Capture either "CURRENT" (themed) or "RAW" (no theme) state — switch tabs above to compare.',
     studioThemeEmpty: 'Click "SNAP" to capture a theme snapshot and edit here',
     studioGeneratorEmpty: 'Create or import a project to use the generator',
+    studioGeneratorEmptyTitle: 'No Snapshot Data',
+    studioGeneratorEmptyHint:
+      'Capture a snapshot to extract override properties with the generator',
     // --- Bundle Studio (Theme Studio → Bundle tab) ---
     studioBundleKicker: 'Theme Package · BUNDLE WORKSPACE',
     studioBundleImport: 'Import .agentskin-bundle',

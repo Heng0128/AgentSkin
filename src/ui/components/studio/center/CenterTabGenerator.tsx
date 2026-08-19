@@ -54,10 +54,10 @@ export function CenterTabGenerator({ t }: { t: UiMessages }) {
         </p>
         <div className="mt-4 rounded-[2px] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-2)] p-8 text-center">
           <p className="font-mono text-xs font-bold text-[var(--fg-0)]">
-            {t.studioInspectEmptyTitle}
+            {t.studioGeneratorEmptyTitle}
           </p>
           <p className="mt-2 font-mono text-[10px] text-[var(--fg-3)]">
-            {t.studioInspectEmptyHint}
+            {t.studioGeneratorEmptyHint}
           </p>
         </div>
       </div>

@@ -227,6 +227,17 @@ export const IpcChannel = {
   CSS_GET_TEXT: 'css:get-text',
   /** Renderer→main: inject edited raw CSS through the workspace-tweak layer. */
   CSS_APPLY_EDIT: 'css:apply-edit',
+  // SEND_ONLY — main → renderer event. Pushed for each CDP CSS.domain event
+  // (styleSheetChanged / styleSheetAdded / styleSheetRemoved). Subscribed via
+  // ipcRenderer.on in preload. Registering ipcMain.handle here would cause
+  // invoke() to hang forever.
+  CSS_EVENTS: 'css:events',
+
+  // --- Selector probe (selector-validator.ts) ---
+  /** Renderer→main: probe a single CSS selector against a running agent. */
+  SELECTOR_PROBE: 'selector:probe',
+  /** Renderer→main: validate multiple selectors for an agent. */
+  SELECTOR_VALIDATE: 'selector:validate',
 
   // --- Theme health check ---
   /** Theme health check report — pushed from main to renderer on each probe cycle */

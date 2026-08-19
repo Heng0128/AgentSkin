@@ -11,10 +11,12 @@ import type {
   ScanProgressEvent,
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
+import type { CssStyleSheetEvent } from './css-event';
 import type { EnvironmentPreset } from './environment';
 import type { HealthCheckReport } from './health-check';
 import type { LaunchRequest } from './launch';
 import type { ToolOverride, TweakSession } from './override';
+import type { SelectorProbeResult, SelectorValidationReport } from './selector-probe';
 import type {
   CatalogResult,
   InstalledTheme,
@@ -413,6 +415,11 @@ export interface AgentSkinApi {
     agentId: AgentId,
     css: string,
   ): Promise<{ ok: boolean; error?: string }>;
+  /** Subscribe to CDP CSS domain events (styleSheetChanged / styleSheetAdded
+   *  / styleSheetRemoved) pushed from the main process for a running agent.
+   *  Returns an unsubscribe function. No ipcMain.handle is registered —
+   *  this is a main→renderer push event sent via webContents.send. */
+  onCssEvents(listener: (event: CssStyleSheetEvent) => void): () => void;
   /** Resolve a wallpaper's media as a streamable loopback HTTP URL (served by
    *  the wallpaper media server) so video wallpapers can play without buffering
    *  the whole file. Returns null when the id is unknown. */
@@ -632,4 +639,13 @@ export interface AgentSkinApi {
    *  while the scan walks the filesystem and icons extract. Returns an
    *  unsubscribe function. */
   onElectronScanProgress(cb: (event: ScanProgressEvent) => void): () => void;
+  // --- Selector probe (selector-validator.ts) ---
+  /** Probe a single CSS selector against a running agent by port. */
+  probeSelector(port: number, selector: string): Promise<SelectorProbeResult>;
+  /** Validate multiple selectors for an agent by port. */
+  validateSelectors(
+    port: number,
+    agentId: string,
+    selectors: string[],
+  ): Promise<SelectorValidationReport>;
 }

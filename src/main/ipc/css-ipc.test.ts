@@ -65,7 +65,16 @@ vi.mock('../cdp/injection/shared', () => ({
 }));
 
 vi.mock('../../shared/safe-css', () => ({
-  sanitizeCSS: vi.fn().mockReturnValue({ clean: '', blocked: false, reasons: [] }),
+  sanitizeCSS: vi.fn().mockReturnValue({
+    clean: '',
+    blocked: false,
+    reasons: [],
+  }),
+}));
+
+vi.mock('../cdp/selector-validator', () => ({
+  probeSelector: vi.fn(),
+  validateSelectors: vi.fn(),
 }));
 
 const { registerCoreIpc } = await import('./core-ipc');
@@ -293,6 +302,156 @@ describe('css-ipc handlers', () => {
       const handler = handlers.get(IpcChannel.CSS_APPLY_EDIT)!;
       const result = await handler({}, 9222, 'agent1', 'body{color:red}');
       expect(result).toEqual({ ok: false, error: 'CDP timeout' });
+      expect(mockSession.close).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('SELECTOR_PROBE', () => {
+    it('returns probeSelector result with valid port and selector', async () => {
+      const { resolveSessionForPort } = await import('../services/tweak-injector');
+      const { probeSelector } = await import('../cdp/selector-validator');
+      const mockSession = makeMockSession();
+      const probeResult = { selector: '.panel', kind: 'hit' as const, count: 3 };
+      vi.mocked(resolveSessionForPort).mockResolvedValue(
+        mockSession as unknown as ReturnType<typeof makeMockSession>,
+      );
+      vi.mocked(probeSelector).mockResolvedValue(probeResult);
+
+      const handler = handlers.get(IpcChannel.SELECTOR_PROBE)!;
+      const result = await handler({}, 9222, '.panel');
+      expect(result).toEqual(probeResult);
+      expect(mockSession.close).toHaveBeenCalledOnce();
+    });
+
+    it('rejects when port is not a valid number', async () => {
+      const handler = handlers.get(IpcChannel.SELECTOR_PROBE)!;
+      await expect(handler({}, 'abc')).rejects.toThrow('invalid port');
+      await expect(handler({}, -1)).rejects.toThrow('invalid port');
+      await expect(handler({}, 70000)).rejects.toThrow('invalid port');
+    });
+
+    it('rejects NaN / Infinity / float port', async () => {
+      const handler = handlers.get(IpcChannel.SELECTOR_PROBE)!;
+      await expect(handler({}, NaN)).rejects.toThrow('invalid port');
+      await expect(handler({}, Infinity)).rejects.toThrow('invalid port');
+      await expect(handler({}, -Infinity)).rejects.toThrow('invalid port');
+      await expect(handler({}, 8080.5)).rejects.toThrow('invalid port');
+    });
+
+    it('rejects when selector is empty or not a string', async () => {
+      const handler = handlers.get(IpcChannel.SELECTOR_PROBE)!;
+      await expect(handler({}, 9222, '')).rejects.toThrow('selector must be a non-empty string');
+      await expect(handler({}, 9222, 123)).rejects.toThrow('selector must be a non-empty string');
+    });
+
+    it('returns timeout result when no CDP session on port', async () => {
+      const { resolveSessionForPort } = await import('../services/tweak-injector');
+      vi.mocked(resolveSessionForPort).mockResolvedValue(null);
+
+      const handler = handlers.get(IpcChannel.SELECTOR_PROBE)!;
+      const result = await handler({}, 9222, '.panel');
+      expect(result).toEqual({ selector: '.panel', kind: 'timeout', count: 0 });
+    });
+
+    it('rejects and closes session when probeSelector throws', async () => {
+      const { resolveSessionForPort } = await import('../services/tweak-injector');
+      const { probeSelector } = await import('../cdp/selector-validator');
+      const mockSession = makeMockSession();
+      vi.mocked(resolveSessionForPort).mockResolvedValue(
+        mockSession as unknown as ReturnType<typeof makeMockSession>,
+      );
+      vi.mocked(probeSelector).mockRejectedValue(new Error('CDP evaluate failed'));
+
+      const handler = handlers.get(IpcChannel.SELECTOR_PROBE)!;
+      await expect(handler({}, 9222, '.panel')).rejects.toThrow('CDP evaluate failed');
+      expect(mockSession.close).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('SELECTOR_VALIDATE', () => {
+    it('returns full report when session and inputs are valid', async () => {
+      const { resolveSessionForPort } = await import('../services/tweak-injector');
+      const { validateSelectors } = await import('../cdp/selector-validator');
+      const mockSession = makeMockSession();
+      const report = {
+        agentId: 'traework',
+        results: [
+          { selector: '.a', kind: 'hit' as const, count: 1 },
+          { selector: '.b', kind: 'miss' as const, count: 0 },
+        ],
+        summary: { total: 2, hit: 1, miss: 1, invalid: 0, timeout: 0 },
+        timestamp: 1234567890,
+      };
+      vi.mocked(resolveSessionForPort).mockResolvedValue(
+        mockSession as unknown as ReturnType<typeof makeMockSession>,
+      );
+      vi.mocked(validateSelectors).mockResolvedValue(report);
+
+      const handler = handlers.get(IpcChannel.SELECTOR_VALIDATE)!;
+      const result = await handler({}, 9222, 'traework', ['.a', '.b']);
+      expect(result).toEqual(report);
+      expect(mockSession.close).toHaveBeenCalledOnce();
+    });
+
+    it('rejects when port is not a valid number', async () => {
+      const handler = handlers.get(IpcChannel.SELECTOR_VALIDATE)!;
+      await expect(handler({}, -1, 'agent1', ['.a'])).rejects.toThrow('invalid port');
+      await expect(handler({}, 70000, 'agent1', ['.a'])).rejects.toThrow('invalid port');
+    });
+
+    it('rejects NaN / Infinity / float port', async () => {
+      const handler = handlers.get(IpcChannel.SELECTOR_VALIDATE)!;
+      await expect(handler({}, NaN, 'agent1', ['.a'])).rejects.toThrow('invalid port');
+      await expect(handler({}, Infinity, 'agent1', ['.a'])).rejects.toThrow('invalid port');
+      await expect(handler({}, -Infinity, 'agent1', ['.a'])).rejects.toThrow('invalid port');
+      await expect(handler({}, 8080.5, 'agent1', ['.a'])).rejects.toThrow('invalid port');
+    });
+
+    it('rejects when agentId is not a string', async () => {
+      const handler = handlers.get(IpcChannel.SELECTOR_VALIDATE)!;
+      await expect(handler({}, 9222, 123, ['.a'])).rejects.toThrow('invalid agentId');
+    });
+
+    it('rejects when selectors is not an array of strings', async () => {
+      const handler = handlers.get(IpcChannel.SELECTOR_VALIDATE)!;
+      await expect(handler({}, 9222, 'agent1', 'not-array')).rejects.toThrow(
+        'selectors must be an array of strings',
+      );
+      await expect(handler({}, 9222, 'agent1', [123])).rejects.toThrow(
+        'selectors must be an array of strings',
+      );
+    });
+
+    it('returns all-timeout report when no CDP session', async () => {
+      const { resolveSessionForPort } = await import('../services/tweak-injector');
+      vi.mocked(resolveSessionForPort).mockResolvedValue(null);
+
+      const handler = handlers.get(IpcChannel.SELECTOR_VALIDATE)!;
+      const result = await handler({}, 9222, 'agent1', ['.a', '.b']);
+      expect(result.summary.total).toBe(2);
+      expect(result.summary.timeout).toBe(2);
+      expect(result.agentId).toBe('agent1');
+      expect(result.results).toHaveLength(2);
+      expect(result.results[0].kind).toBe('timeout');
+    });
+
+    it('returns empty report when selectors is empty array', async () => {
+      const { resolveSessionForPort } = await import('../services/tweak-injector');
+      const { validateSelectors } = await import('../cdp/selector-validator');
+      const mockSession = makeMockSession();
+      vi.mocked(resolveSessionForPort).mockResolvedValue(
+        mockSession as unknown as ReturnType<typeof makeMockSession>,
+      );
+      vi.mocked(validateSelectors).mockResolvedValue({
+        agentId: 'agent1',
+        results: [],
+        summary: { total: 0, hit: 0, miss: 0, invalid: 0, timeout: 0 },
+        timestamp: 1234567890,
+      });
+
+      const handler = handlers.get(IpcChannel.SELECTOR_VALIDATE)!;
+      const result = await handler({}, 9222, 'agent1', []);
+      expect(result.summary.total).toBe(0);
       expect(mockSession.close).toHaveBeenCalledOnce();
     });
   });

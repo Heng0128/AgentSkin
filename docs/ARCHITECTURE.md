@@ -99,11 +99,27 @@ themes/<id>/manifest.json（14 语义 token + 元数据 + targets 验证选择�
 
 ## UI（src/ui/）
 
-- 状态管理：UI 状态管理使用 17 个 Zustand stores（src/ui/stores/），useAppController 作为兼容聚合层为新旧组件提供统一接口；IPC 统一经 `api/agentSkinClient.ts`。
+- 状态管理：UI 状态管理使用 16 个 Zustand stores（src/ui/stores/），useAppController 作为兼容聚合层为新旧组件提供统一接口；IPC 统一经 `api/agentSkinClient.ts`。16 个 store 涵盖：agent、apps、bootProgress、diagnostics、dialog、environment、import-guard、installFlow、notification、secondaryInject、settings、shell、status、studio、theme、wallpaper、workspace、workspace-presets（含辅助模块）。
 - 页面：dashboard / workspace / themes / wallpaper / settings + 独立 Studio 窗口。
 - 组件：shadcn 风格（components.json），约 60 个组件。
 - i18n：自研双语（zh-CN 默认 / en），src/shared/i18n.ts。
 - 全局层：TitleBar / StatusBar / Sidebar / InjectDock / InstallWizard / CommandPalette / DynamicBackground。
+
+## Studio 子系统
+
+### Generator（快照→覆盖提取）
+
+`src/ui/lib/snapshot-to-override.ts` 提供纯函数 `extractOverrideFromSnapshot`，从 CDP 主题快照中提取 ToolOverride 基线（background / foreground / accent / radius / fontFam / fontSize）。提取策略：body/:root 取背景色和前景色，交互组件（.chat-input-box / .agent-card / button 等）取 border-color 或 box-shadow 中的颜色作为强调色，border-radius 取众数，font-family 取众数，font-size 取平均后 2px 取整。
+
+`studioStore.applyOverrideFromSnapshot` 调用纯函数提取后合并进 toolOverrides。UI 层 `CenterTabGenerator` 展示提取结果并提供「应用到 Tweak」按钮。
+
+### CSS 编辑器（原貌 / Raw）
+
+`CenterTabRaw`（src/ui/components/studio/center/CenterTabRaw.tsx）为 CSS 源码编辑器：通过 CDP 读取 Agent 的样式表列表和文本，支持直接编辑并通过 `workspace-tweak` 通道实时注入。复用现有注入路径，未引入新注入机制。IPC 经 `css-ipc.ts`（CSS_LIST / CSS_GET_TEXT / CSS_APPLY_EDIT）与主进程 `css-service.ts` 交互。
+
+### 分区健康报告
+
+`diagnosticsStore` 使用 `healthReportByAgent: Record<string, HealthCheckReport>` 按 agentId 分区缓存各 Agent 最新的主题健康报告。切换 Agent 时各分区独立保留，避免互相覆盖。报告由主进程推送，UI 经 `setHealthReport` 写入对应分区。
 
 ## 数据目录
 

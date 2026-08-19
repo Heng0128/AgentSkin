@@ -238,7 +238,7 @@ ThemePackageLoader 在加载时执行以下验证：
 每个 Agent 的 CSS 文件通过 `--agentskin-*` 统一令牌系统工作：
 
 1. 主题 CSS 只覆写 14 个 `--agentskin-*` 令牌
-2. 由 `generate-theme-css.mjs` 生成各 Agent 专用 CSS（traework → `--vscode-*`，qoderwork → `--color-*`，workbuddy → `--cb-*`，doubao → `--semi-color-*`）
+2. 由 `generate-theme-css.mjs` 生成各 Agent 专用 CSS（traework → `--vscode-*`，qoderwork → `--color-*`，workbuddy → `--cb-*`，doubao → `--dbx-*`）
 3. **永远不要手动编辑生成的 CSS 文件**，修改应在 manifest colors 或生成脚本中进行
 4. 结构性选择器由 `generate-theme-css.mjs` 内联产出（无 `_shared/` 共享层、无 `@import` 机制）——详见 `themes/THEME_SPEC.md`
 

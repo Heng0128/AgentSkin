@@ -63,6 +63,15 @@ export default defineConfig({
       },
       {
         test: {
+          name: 'scripts',
+          environment: 'node',
+          include: ['scripts/**/*.test.mjs'],
+          testTimeout: 15000,
+          pool: 'threads',
+        },
+      },
+      {
+        test: {
           name: 'visual-regression',
           environment: 'node',
           include: ['tests/visual-regression/**/*.test.ts'],

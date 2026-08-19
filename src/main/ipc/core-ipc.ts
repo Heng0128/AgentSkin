@@ -23,6 +23,7 @@ import { sanitizeCSS } from '../../shared/safe-css';
 import type { ToolOverride } from '../../shared/types/override';
 import { getStyleSheetText, listStyleSheets } from '../cdp/css-service';
 import { injectCssLayer } from '../cdp/injection/shared';
+import { probeSelector, validateSelectors } from '../cdp/selector-validator';
 import { saveLocalePreference } from '../locale-preferences';
 import { mainWarn } from '../logger';
 import { handleThemeFileOpen, type MainContext, wrapCatalog } from '../main-context';
@@ -147,7 +148,7 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
       IpcChannel.CSS_LIST,
       10000,
       (async () => {
-        if (typeof port !== 'number' || port <= 0 || port > 65535) {
+        if (typeof port !== 'number' || !Number.isInteger(port) || port <= 0 || port > 65535) {
           throw new Error(`invalid port: ${String(port)}`);
         }
         const session = await resolveSessionForPort(port);
@@ -169,7 +170,7 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
       IpcChannel.CSS_GET_TEXT,
       10000,
       (async () => {
-        if (typeof port !== 'number' || port <= 0 || port > 65535) {
+        if (typeof port !== 'number' || !Number.isInteger(port) || port <= 0 || port > 65535) {
           throw new Error(`invalid port: ${String(port)}`);
         }
         if (typeof styleSheetId !== 'string' || !styleSheetId.startsWith('sheet-index-')) {
@@ -196,7 +197,7 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
         IpcChannel.CSS_APPLY_EDIT,
         10000,
         (async () => {
-          if (typeof port !== 'number' || port <= 0 || port > 65535) {
+          if (typeof port !== 'number' || !Number.isInteger(port) || port <= 0 || port > 65535) {
             throw new Error(`invalid port: ${String(port)}`);
           }
           if (typeof agentId !== 'string') {
@@ -221,6 +222,78 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
           } catch (error) {
             mainWarn('CssEditor.Apply', `apply failed for ${agentId}: ${toMessage(error)}`);
             return { ok: false, error: toMessage(error) };
+          } finally {
+            session.close();
+          }
+        })(),
+      );
+    },
+  );
+
+  // --- Selector probe (delegates to selector-validator.ts) ---
+  ipcMain.handle(IpcChannel.SELECTOR_PROBE, async (_event, port: unknown, selector: unknown) => {
+    return withMonitoredTimeout(
+      IpcChannel.SELECTOR_PROBE,
+      10000,
+      (async () => {
+        if (typeof port !== 'number' || !Number.isInteger(port) || port <= 0 || port > 65535) {
+          throw new Error(`invalid port: ${String(port)}`);
+        }
+        if (typeof selector !== 'string' || selector.length === 0) {
+          throw new Error('selector must be a non-empty string');
+        }
+        const session = await resolveSessionForPort(port);
+        if (!session) {
+          mainWarn('Selector.Probe', `no CDP session on port ${port}`);
+          return { selector: String(selector), kind: 'timeout', count: 0 };
+        }
+        try {
+          return await probeSelector(session, selector);
+        } finally {
+          session.close();
+        }
+      })(),
+    );
+  });
+
+  ipcMain.handle(
+    IpcChannel.SELECTOR_VALIDATE,
+    async (_event, port: unknown, agentId: unknown, selectors: unknown) => {
+      return withMonitoredTimeout(
+        IpcChannel.SELECTOR_VALIDATE,
+        15000,
+        (async () => {
+          if (typeof port !== 'number' || !Number.isInteger(port) || port <= 0 || port > 65535) {
+            throw new Error(`invalid port: ${String(port)}`);
+          }
+          if (typeof agentId !== 'string') {
+            throw new Error(`invalid agentId: ${String(agentId)}`);
+          }
+          if (!Array.isArray(selectors) || !selectors.every((s) => typeof s === 'string')) {
+            throw new Error('selectors must be an array of strings');
+          }
+          const session = await resolveSessionForPort(port);
+          if (!session) {
+            mainWarn('Selector.Validate', `no CDP session on port ${port}`);
+            return {
+              agentId: String(agentId),
+              results: selectors.map((s: string) => ({
+                selector: s,
+                kind: 'timeout',
+                count: 0,
+              })),
+              summary: {
+                total: selectors.length,
+                hit: 0,
+                miss: 0,
+                invalid: 0,
+                timeout: selectors.length,
+              },
+              timestamp: Date.now(),
+            };
+          }
+          try {
+            return await validateSelectors(session, agentId, selectors);
           } finally {
             session.close();
           }

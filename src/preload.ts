@@ -23,9 +23,11 @@ import type {
   WallpaperAgentSetting,
   WallpaperSettings,
 } from './shared/types';
+import type { CssStyleSheetEvent } from './shared/types/css-event';
 import type { EnvironmentPreset } from './shared/types/environment';
 import type { LaunchRequest } from './shared/types/launch';
 import type { ToolOverride, TweakSession } from './shared/types/override';
+import type { SelectorProbeResult, SelectorValidationReport } from './shared/types/selector-probe';
 
 function subscribe<T>(channel: string, listener: (payload: T) => void): () => void {
   const handler = (_event: Electron.IpcRendererEvent, payload: T) => listener(payload);
@@ -118,6 +120,7 @@ const api: AgentSkinApi = {
       ok: boolean;
       error?: string;
     }>,
+  onCssEvents: (listener) => subscribe<CssStyleSheetEvent>(IpcChannel.CSS_EVENTS, listener),
   wallpaperVideoUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_VIDEO_URL, id),
   wallpaperWebUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_WEB_URL, id),
   showInFolder: (itemPath: string) => ipcRenderer.invoke(IpcChannel.SHELL_SHOW_ITEM, itemPath),
@@ -336,6 +339,16 @@ const api: AgentSkinApi = {
     ipcRenderer.on(IpcChannel.ELECTRON_SCAN_PROGRESS, handler);
     return () => ipcRenderer.off(IpcChannel.ELECTRON_SCAN_PROGRESS, handler);
   },
+  // --- Selector probe (selector-validator.ts) ---
+  probeSelector: (port: number, selector: string) =>
+    ipcRenderer.invoke(IpcChannel.SELECTOR_PROBE, port, selector) as Promise<SelectorProbeResult>,
+  validateSelectors: (port: number, agentId: string, selectors: string[]) =>
+    ipcRenderer.invoke(
+      IpcChannel.SELECTOR_VALIDATE,
+      port,
+      agentId,
+      selectors,
+    ) as Promise<SelectorValidationReport>,
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);
