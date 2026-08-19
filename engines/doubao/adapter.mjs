@@ -100,7 +100,7 @@ class AdaptiveMutationObserver {
   // chat/user content that must resolve to the theme foreground. Scoping the
   // text contrast fallback here (CV-01) stops it from blanketing every
   // component (links, badges, buttons, cards) with the theme value.
-  const SEMANTIC_TEXT_SCOPE = '[class*="message-list"], [class*="chat-content"], [role="log"], [class*="greeting"], [class*="welcome"]';
+  const SEMANTIC_TEXT_SCOPE = '[data-testid="chat_list_wrapper"], [data-testid="chat_route_layout_leftside_nav"], [class*="message-list"], [class*="chat-content"], [role="log"], [class*="greeting"], [class*="welcome"]';
   const STRUCTURAL_CSS = `
 /* === Bulk theme foreground via natural inheritance ===
    body carries the theme text color; descendants that do not set their
@@ -140,9 +140,9 @@ html.${HOST_CLASS} body::before {
    Applied via JS heuristic to the actual input container. */
 
 /* === Input area: frosted glass + radius (NO border line) ===
-   The outer input wrapper uses "input-guidance" in its class. We keep the
-   frosted translucent look but the visible border line is removed entirely
-   (see the variable override + ::after kill below). */
+   Anchor: [data-testid="chat_input"] (stable product semantic, verified live
+   63551: 1000x100 DIV). Falls back to the class patterns for older builds. */
+html.${HOST_CLASS} [data-testid="chat_input"],
 html.${HOST_CLASS} [class*="input-guidance"],
 html.${HOST_CLASS} [class*="input-container"][class*="flex"] {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-accent) 20%) 48%, transparent) !important;
@@ -153,6 +153,7 @@ html.${HOST_CLASS} [class*="input-container"][class*="flex"] {
      last row of that menu. border-radius already rounds the frosted bg. */
   box-shadow: none !important;
 }
+html.${HOST_CLASS} [data-testid="chat_input"]:focus-within,
 html.${HOST_CLASS} [class*="input-guidance"]:focus-within,
 html.${HOST_CLASS} [class*="input-container"][class*="flex"]:focus-within {
   border-color: transparent !important;
@@ -187,17 +188,25 @@ html.${HOST_CLASS} [class*="h-header-height"] button:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
 }
 
-/* === Sidebar: kill borders, shadows, opaque bg === */
+/* === Sidebar: kill borders, shadows, opaque bg ===
+   Anchor: [data-testid="chat_route_layout_leftside_nav"] (stable, verified
+   live 63551: 220x875 NAV) + [data-testid="flow_chat_sidebar"]; class
+   patterns kept as fallback for older builds. */
+html.${HOST_CLASS} [data-testid="chat_route_layout_leftside_nav"],
+html.${HOST_CLASS} [data-testid="flow_chat_sidebar"],
 html.${HOST_CLASS} [class*="left-side"] > div[class*="relative"][class*="fixed"] {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
 }
+html.${HOST_CLASS} [data-testid="chat_route_layout_leftside_nav"] [class*="rounded-full"][class*="size-20"],
+html.${HOST_CLASS} [data-testid="chat_route_layout_leftside_nav"] [class*="rounded-full"][class*="size-22"],
 html.${HOST_CLASS} [class*="left-side"] [class*="rounded-full"][class*="size-20"],
 html.${HOST_CLASS} [class*="left-side"] [class*="rounded-full"][class*="size-22"] {
   border: none !important;
   box-shadow: none !important;
 }
+html.${HOST_CLASS} [data-testid="chat_route_layout_leftside_nav"] [class*="rounded-dbx"][class*="border"],
 html.${HOST_CLASS} [class*="left-side"] [class*="rounded-dbx"][class*="border"] {
   border: none !important;
   box-shadow: none !important;
@@ -207,6 +216,7 @@ html.${HOST_CLASS} [class*="sidebar_nav_item"] * {
   box-shadow: none !important;
   border: none !important;
 }
+html.${HOST_CLASS} [data-testid="chat_route_layout_leftside_nav"] img[class*="border"],
 html.${HOST_CLASS} [class*="left-side"] img[class*="border"] {
   border: none !important;
 }
@@ -285,8 +295,9 @@ html.${HOST_CLASS} [class*="suggest-message-list-wrapper"] {
       let el = textbox.closest('form') || textbox.parentElement?.parentElement?.parentElement;
       if (el) return el;
     }
-    // Strategy 3: fallback to class pattern (least stable)
-    return document.querySelector('[class*="input-guidance"]')
+    // Strategy 3: stable data-testid (product semantic, survives refactors)
+    return document.querySelector('[data-testid="chat_input"]')
+      || document.querySelector('[class*="input-guidance"]')
       || document.querySelector('[class*="input-container"]')
       || document.querySelector('[class*="chat-input"]');
   }
@@ -575,6 +586,7 @@ html.${HOST_CLASS} [data-agentskin-punched]::after {
   // ═══════════════════════════════════════════════════════════
   const INPUT_LINE_FRAME_CSS = `
 html.${HOST_CLASS}:root,
+html.${HOST_CLASS} [data-testid="chat_input"],
 html.${HOST_CLASS} [class*="input-guidance"],
 html.${HOST_CLASS} [class*="input-container"],
 html.${HOST_CLASS} [class*="input-box"],
@@ -587,6 +599,7 @@ html.${HOST_CLASS} [class*="input-wrapper"] {
   --dbx-fill-highlight-disable: transparent !important;
   --active-shadow: none !important;
 }
+html.${HOST_CLASS} [data-testid="chat_input"],
 html.${HOST_CLASS} [class*="input-guidance"],
 html.${HOST_CLASS} [class*="input-container"],
 html.${HOST_CLASS} [class*="input-box"],
@@ -594,14 +607,17 @@ html.${HOST_CLASS} [class*="chat-input"],
 html.${HOST_CLASS} [class*="composer"],
 html.${HOST_CLASS} [class*="input-area"],
 html.${HOST_CLASS} [class*="input-wrapper"],
+html.${HOST_CLASS} [data-testid="chat_input"] *,
 html.${HOST_CLASS} [class*="input-guidance"] *,
 html.${HOST_CLASS} [class*="input-container"] *,
+html.${HOST_CLASS} [data-testid="chat_input"]:focus-within,
 html.${HOST_CLASS} [class*="input-guidance"]:focus-within,
 html.${HOST_CLASS} [class*="input-container"]:focus-within {
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
 }
+html.${HOST_CLASS} [data-testid="chat_input"]::after,
 html.${HOST_CLASS} [class*="input-guidance"]::after,
 html.${HOST_CLASS} [class*="input-container"]::after,
 html.${HOST_CLASS} [class*="input-box"]::after,

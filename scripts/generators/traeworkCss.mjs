@@ -77,9 +77,95 @@ ${host} body {
   /* App-level surface variables → transparent for art punch-through */
   --bg-bg-base-default: transparent !important;
 
-  /* Selection */
+  /* Selection (camelCase is the real token; kebab is dead — 0 refs in app source) */
   --vscode-editor-selectionBackground: ${alpha(c.accent, 0.18)} !important;
-  --vscode-selection-background: ${alpha(c.accent, 0.24)} !important;
+
+  /* ===== icube blind-spot completion (2026-08-19) =====
+     GitLab对标 l77948032-cyber/Trae-Skin: 41/50 blind-spot tokens verified live
+     on 58510 (icube text/bg/icon/invert + menu/dropdown/checkbox/input). */
+  /* Input */
+  --vscode-input-foreground: ${c.foreground} !important;
+  --vscode-input-placeholderForeground: ${alpha(c.foreground, 0.48)} !important;
+  --vscode-disabledForeground: ${alpha(c.foreground, 0.42)} !important;
+
+  /* icube text system */
+  --vscode-icube-colorTextDefault: ${c.foreground} !important;
+  --vscode-icube-colorTextGray: ${c.muted} !important;
+  --vscode-icube--text-text-secondary: ${c.muted} !important;
+  --vscode-icube--text-text-brand: ${c.accent} !important;
+  --vscode-icube--text-text-default-hover: ${c.foreground} !important;
+  --vscode-icube--text-text-default-active: ${c.foreground} !important;
+  --vscode-icube--text-text-tertiary: ${alpha(c.muted, 0.7)} !important;
+  --vscode-icube--text-text-disabled: ${alpha(c.foreground, 0.42)} !important;
+  --vscode-icube--text-text-onaccent: ${c.background} !important;
+
+  /* icube backgrounds */
+  --vscode-icube--bg-bg-base-default: transparent !important;
+  --vscode-icube--bg-bg-base-secondary: color-mix(in srgb, ${c.surface} 88%, transparent) !important;
+  --vscode-icube--bg-bg-base-tertiary: color-mix(in srgb, ${c.surfaceElevated} 85%, transparent) !important;
+  --vscode-icube--bg-bg-menu: color-mix(in srgb, ${c.surfaceElevated} 92%, transparent) !important;
+  --vscode-icube--bg-bg-tooltip: color-mix(in srgb, ${c.surfaceElevated} 94%, transparent) !important;
+  --vscode-icube--bg-bg-overlay-l4: color-mix(in srgb, ${c.surface} 78%, transparent) !important;
+  --vscode-icube--bg-bg-invert: ${c.surfaceElevated} !important;
+  --vscode-icube--bg-bg-invert-hover: ${alpha(c.accent, 0.12)} !important;
+  --vscode-icube--bg-bg-invert-active: ${alpha(c.accent, 0.18)} !important;
+  --vscode-icube--bg-bg-invert-disabled: ${alpha(c.foreground, 0.04)} !important;
+
+  /* icube icons */
+  --vscode-icube--icon-icon-default: ${c.foreground} !important;
+  --vscode-icube--icon-icon-default-hover: ${c.accent} !important;
+  --vscode-icube--icon-icon-secondary: ${c.muted} !important;
+  --vscode-icube--icon-icon-tertiary: ${alpha(c.muted, 0.7)} !important;
+  --vscode-icube--icon-icon-disabled: ${alpha(c.foreground, 0.42)} !important;
+  --vscode-icube--icon-icon-onaccent: ${c.background} !important;
+
+  /* icube borders */
+  --vscode-icube--border-border-neutral-l2: ${alpha(c.accent, 0.24)} !important;
+  --vscode-icube--border-border-neutral-l3: ${alpha(c.accent, 0.32)} !important;
+
+  /* Menu / dropdown / checkbox / list (VS Code workbench chrome) */
+  --vscode-menu-background: color-mix(in srgb, ${c.surfaceElevated} 92%, transparent) !important;
+  --vscode-menu-foreground: ${c.foreground} !important;
+  --vscode-menu-border: ${alpha(c.accent, 0.18)} !important;
+  --vscode-menu-separatorBackground: ${alpha(c.accent, 0.1)} !important;
+  --vscode-dropdown-background: color-mix(in srgb, ${c.surfaceElevated} 94%, transparent) !important;
+  --vscode-dropdown-foreground: ${c.foreground} !important;
+  --vscode-dropdown-border: ${alpha(c.accent, 0.18)} !important;
+  --vscode-checkbox-background: color-mix(in srgb, ${c.surfaceElevated} 90%, transparent) !important;
+  --vscode-checkbox-foreground: ${c.foreground} !important;
+  --vscode-checkbox-border: ${alpha(c.accent, 0.24)} !important;
+  --vscode-list-activeSelectionForeground: ${c.foreground} !important;
+
+  /* ===== Bare-prefix mirror (2026-08-19) =====
+     Same families exist bare (--bg-bg-*/--text-text-*/--icon-icon-*),
+     verified 25/25 native on 58510. Mirror icube mappings 1:1. */
+  --bg-bg-base-tertiary: color-mix(in srgb, ${c.surfaceElevated} 85%, transparent) !important;
+  --bg-bg-menu: color-mix(in srgb, ${c.surfaceElevated} 92%, transparent) !important;
+  --bg-bg-tooltip: color-mix(in srgb, ${c.surfaceElevated} 94%, transparent) !important;
+  --bg-bg-overlay-l3: color-mix(in srgb, ${c.surface} 78%, transparent) !important;
+  --bg-bg-overlay-l4: color-mix(in srgb, ${c.surface} 82%, transparent) !important;
+  --bg-bg-brand: ${c.accent} !important;
+  --bg-bg-brand-hover: color-mix(in srgb, ${c.accent} 88%, white) !important;
+  --bg-bg-brand-active: color-mix(in srgb, ${c.accent} 76%, black) !important;
+  --bg-bg-brand-disabled: ${alpha(c.accent, 0.35)} !important;
+  --bg-bg-invert: ${c.surfaceElevated} !important;
+  --bg-bg-invert-hover: ${alpha(c.accent, 0.12)} !important;
+  --bg-bg-invert-active: ${alpha(c.accent, 0.18)} !important;
+  --bg-bg-invert-disabled: ${alpha(c.foreground, 0.04)} !important;
+
+  --text-text-default: ${c.foreground} !important;
+  --text-text-secondary: ${c.muted} !important;
+  --text-text-tertiary: ${alpha(c.muted, 0.7)} !important;
+  --text-text-default-hover: ${c.foreground} !important;
+  --text-text-default-active: ${c.foreground} !important;
+  --text-text-brand: ${c.accent} !important;
+
+  --icon-icon-default: ${c.foreground} !important;
+  --icon-icon-secondary: ${c.muted} !important;
+  --icon-icon-tertiary: ${alpha(c.muted, 0.7)} !important;
+  --icon-icon-default-hover: ${c.accent} !important;
+  --icon-icon-onaccent: ${c.background} !important;
+  --icon-icon-disabled: ${alpha(c.foreground, 0.42)} !important;
 
   background: transparent !important;
   color: var(--agentskin-text) !important;

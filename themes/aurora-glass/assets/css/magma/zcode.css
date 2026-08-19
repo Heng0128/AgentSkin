@@ -175,6 +175,30 @@ html.agentskin-host-zcode {
   --color-diff-removed: color-mix(in srgb, #e5484d 40%, transparent) !important;
   --color-find-highlight: color-mix(in srgb, #ffb38a 30%, transparent) !important;
   --color-find-highlight-active: color-mix(in srgb, #ffb38a 45%, transparent) !important;
+
+  /* --- Secondary surfaces (2026-08-19, reverse blind-spot) ---
+     Live 50894: popover-foreground / menu-hover / tooltip-tag* /
+     card-selected / *-node (subagent/plugin/skill) / diff-*-foreground were
+     unthemed. Terminal 16-color ANSI palette is intentionally left native
+     (functional semantic colors, like codex charts-blue). */
+  --color-popover-foreground: #f3e6ee !important;
+  --color-popover-header: #2e1f2c !important;
+  --color-menu-hover: color-mix(in srgb, #ffb38a 12%, transparent) !important;
+  --color-tooltip-tag: color-mix(in srgb, #2e1f2c 92%, transparent) !important;
+  --color-tooltip-tag-foreground: #a98a9c !important;
+  --color-card-selected: color-mix(in srgb, #221620 72%, #ffb38a 28%) !important;
+  --color-diff-added-foreground: #f3e6ee !important;
+  --color-diff-removed-foreground: #f3e6ee !important;
+  --color-subagent-node: color-mix(in srgb, #221620 55%, transparent) !important;
+  --color-subagent-node-hover: color-mix(in srgb, #ffb38a 12%, transparent) !important;
+  --color-subagent-node-foreground: #f3e6ee !important;
+  --color-plugin-node: color-mix(in srgb, #221620 55%, transparent) !important;
+  --color-plugin-node-hover: color-mix(in srgb, #ffb38a 12%, transparent) !important;
+  --color-plugin-node-foreground: #f3e6ee !important;
+  --color-skill-node: color-mix(in srgb, #221620 55%, transparent) !important;
+  --color-skill-node-hover: color-mix(in srgb, #ffb38a 12%, transparent) !important;
+  --color-skill-node-foreground: #f3e6ee !important;
+  --color-icon-blue: #ffb38a !important;
 }
 /* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
 html.agentskin-host-zcode #root {

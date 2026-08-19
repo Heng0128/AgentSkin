@@ -140,6 +140,7 @@ html.agentskin-host-doubao:root {
   --semi-color-primary-light-hover: rgba(255, 179, 138, 0.18) !important;
   --semi-color-primary-light-active: rgba(255, 179, 138, 0.24) !important;
   --semi-color-primary-disabled: rgba(255, 179, 138, 0.35) !important;
+  --semi-color-focus-border: rgba(255, 179, 138, 0.85) !important;
 
   /* Secondary / tertiary */
   --semi-color-secondary: #ff8fae !important;
@@ -173,6 +174,40 @@ html.agentskin-host-doubao:root {
   --semi-color-shadow: rgba(255, 179, 138, 0.18) !important;
   --semi-color-nav-bg: #221620 !important;
   --semi-color-overlay-bg: rgba(22, 14, 22, 0.6) !important;
+
+  /* Semi semantic color family (2026-08-19, reverse blind-spot) */
+  --semi-color-info: color-mix(in srgb, #ffb38a 88%, black) !important;
+  --semi-color-info-hover: color-mix(in srgb, #ffb38a 82%, black) !important;
+  --semi-color-info-active: color-mix(in srgb, #ffb38a 74%, black) !important;
+  --semi-color-info-disabled: rgba(255, 179, 138, 0.3) !important;
+  --semi-color-success: #2ea043 !important;
+  --semi-color-success-hover: #3fb950 !important;
+  --semi-color-success-active: #2ea043 !important;
+  --semi-color-success-disabled: rgba(46, 160, 67, 0.3) !important;
+  --semi-color-warning: #f5a524 !important;
+  --semi-color-warning-hover: #f7b53d !important;
+  --semi-color-warning-active: #f5a524 !important;
+  --semi-color-warning-disabled: rgba(245, 165, 36, 0.3) !important;
+  --semi-color-danger: #e5484d !important;
+  --semi-color-danger-hover: #ed5f63 !important;
+  --semi-color-danger-active: #e5484d !important;
+  --semi-color-danger-disabled: rgba(229, 72, 77, 0.3) !important;
+  --semi-color-black: #160e16 !important;
+  --semi-color-white: #f3e6ee !important;
+  --semi-color-default: #221620 !important;
+  --semi-color-default-hover: color-mix(in srgb, #221620 90%, #ffb38a 10%) !important;
+  --semi-color-default-active: color-mix(in srgb, #221620 80%, #ffb38a 20%) !important;
+
+  /* Markdown kit */
+  --md-box-samantha-normal-text-color: #f3e6ee !important;
+  --md-box-samantha-deep-text-color: #f3e6ee !important;
+  --md-box-samantha-li-maker-color: #ffb38a !important;
+  --md-box-samantha-split-line-color: rgba(255, 179, 138, 0.18) !important;
+  --md-box-samantha-blockquote-left-border-color: rgba(255, 179, 138, 0.55) !important;
+
+  /* Links */
+  --color-link-text: #ffb38a !important;
+  --color-link-text-active: rgb(204, 143, 110) !important;
 
   /* Gray ramp (gray1 lightest -> gray12 darkest) */
   --gray1: #f3e6ee !important;
@@ -220,8 +255,105 @@ html.agentskin-host-doubao:root {
 
 /* ===== Body-level overrides =====
    :root[data-theme="dark"] body sets --dbx-bg-body-web at (0,2,1).
-   Our html.agentskin-host-doubao:root body = (0,2,2) beats it. */
+   Our html.agentskin-host-doubao:root body = (0,2,2) beats it.
+
+   Semi Design tokens MUST also be mirrored at body level: Doubao's own CSS
+   redeclares the entire --semi-color-* family directly on body via
+   'body, body[theme-mode="dark"] .semi-always-light { ... }' (0,0,1). A direct
+   body declaration beats the inherited :root override, so the :root-level
+   semi block above was silently falling back to Doubao's stock palette.
+   This body-level block (0,2,2) !important wins on the same element. */
 html.agentskin-host-doubao:root body {
+  /* --- Semi Design (real token system) body mirror --- */
+  --semi-color-bg-0: #160e16 !important;
+  --semi-color-bg-1: #221620 !important;
+  --semi-color-bg-2: #2e1f2c !important;
+  --semi-color-bg-3: #2e1f2c !important;
+  --semi-color-bg-4: color-mix(in srgb, #2e1f2c 92%, #fff) !important;
+  --semi-color-text-0: #f3e6ee !important;
+  --semi-color-text-1: #a98a9c !important;
+  --semi-color-text-2: rgba(169, 138, 156, 0.75) !important;
+  --semi-color-text-3: rgba(169, 138, 156, 0.45) !important;
+  --semi-color-primary: #ffb38a !important;
+  --semi-color-primary-hover: rgb(224, 158, 121) !important;
+  --semi-color-primary-active: rgb(194, 136, 105) !important;
+  --semi-color-primary-light-default: rgba(255, 179, 138, 0.12) !important;
+  --semi-color-primary-light-hover: rgba(255, 179, 138, 0.18) !important;
+  --semi-color-primary-light-active: rgba(255, 179, 138, 0.24) !important;
+  --semi-color-primary-disabled: rgba(255, 179, 138, 0.35) !important;
+  --semi-color-focus-border: rgba(255, 179, 138, 0.85) !important;
+  --semi-color-secondary: #ff8fae !important;
+  --semi-color-secondary-hover: rgb(224, 126, 153) !important;
+  --semi-color-secondary-active: rgb(194, 109, 132) !important;
+  --semi-color-secondary-light-default: rgba(255, 143, 174, 0.12) !important;
+  --semi-color-secondary-light-hover: rgba(255, 143, 174, 0.18) !important;
+  --semi-color-tertiary: rgba(243, 230, 238, 0.06) !important;
+  --semi-color-tertiary-hover: rgba(243, 230, 238, 0.1) !important;
+  --semi-color-tertiary-light-default: rgba(243, 230, 238, 0.06) !important;
+  --semi-color-fill-0: rgba(243, 230, 238, 0.04) !important;
+  --semi-color-fill-1: rgba(243, 230, 238, 0.08) !important;
+  --semi-color-fill-2: rgba(243, 230, 238, 0.12) !important;
+  --semi-color-border: rgba(255, 179, 138, 0.18) !important;
+  --semi-color-disabled-bg: rgba(243, 230, 238, 0.04) !important;
+  --semi-color-disabled-border: rgba(255, 179, 138, 0.09) !important;
+  --semi-color-disabled-fill: rgba(243, 230, 238, 0.04) !important;
+  --semi-color-disabled-text: rgba(169, 138, 156, 0.4) !important;
+  --semi-color-link: #ffb38a !important;
+  --semi-color-link-hover: rgb(224, 158, 121) !important;
+  --semi-color-link-active: rgb(194, 136, 105) !important;
+  --semi-color-link-visited: rgba(255, 179, 138, 0.7) !important;
+  --semi-color-highlight: rgba(255, 179, 138, 0.18) !important;
+  --semi-color-highlight-bg: rgba(255, 179, 138, 0.14) !important;
+  --semi-color-shadow: rgba(255, 179, 138, 0.18) !important;
+  --semi-color-nav-bg: #221620 !important;
+  --semi-color-overlay-bg: rgba(22, 14, 22, 0.6) !important;
+
+  /* Semi semantic color family (2026-08-19, reverse blind-spot) */
+  --semi-color-info: color-mix(in srgb, #ffb38a 88%, black) !important;
+  --semi-color-info-hover: color-mix(in srgb, #ffb38a 82%, black) !important;
+  --semi-color-info-active: color-mix(in srgb, #ffb38a 74%, black) !important;
+  --semi-color-info-disabled: rgba(255, 179, 138, 0.3) !important;
+  --semi-color-success: #2ea043 !important;
+  --semi-color-success-hover: #3fb950 !important;
+  --semi-color-success-active: #2ea043 !important;
+  --semi-color-success-disabled: rgba(46, 160, 67, 0.3) !important;
+  --semi-color-warning: #f5a524 !important;
+  --semi-color-warning-hover: #f7b53d !important;
+  --semi-color-warning-active: #f5a524 !important;
+  --semi-color-warning-disabled: rgba(245, 165, 36, 0.3) !important;
+  --semi-color-danger: #e5484d !important;
+  --semi-color-danger-hover: #ed5f63 !important;
+  --semi-color-danger-active: #e5484d !important;
+  --semi-color-danger-disabled: rgba(229, 72, 77, 0.3) !important;
+  --semi-color-black: #160e16 !important;
+  --semi-color-white: #f3e6ee !important;
+  --semi-color-default: #221620 !important;
+  --semi-color-default-hover: color-mix(in srgb, #221620 90%, #ffb38a 10%) !important;
+  --semi-color-default-active: color-mix(in srgb, #221620 80%, #ffb38a 20%) !important;
+
+  /* Markdown kit */
+  --md-box-samantha-normal-text-color: #f3e6ee !important;
+  --md-box-samantha-deep-text-color: #f3e6ee !important;
+  --md-box-samantha-li-maker-color: #ffb38a !important;
+  --md-box-samantha-split-line-color: rgba(255, 179, 138, 0.18) !important;
+  --md-box-samantha-blockquote-left-border-color: rgba(255, 179, 138, 0.55) !important;
+
+  /* Links */
+  --color-link-text: #ffb38a !important;
+  --color-link-text-active: rgb(204, 143, 110) !important;
+  --gray1: #f3e6ee !important;
+  --gray2: color-mix(in srgb, #f3e6ee 90%, #160e16) !important;
+  --gray3: color-mix(in srgb, #f3e6ee 80%, #160e16) !important;
+  --gray4: color-mix(in srgb, #f3e6ee 70%, #160e16) !important;
+  --gray5: color-mix(in srgb, #f3e6ee 60%, #160e16) !important;
+  --gray6: color-mix(in srgb, #f3e6ee 50%, #160e16) !important;
+  --gray7: color-mix(in srgb, #f3e6ee 40%, #160e16) !important;
+  --gray8: color-mix(in srgb, #f3e6ee 30%, #160e16) !important;
+  --gray9: color-mix(in srgb, #f3e6ee 22%, #160e16) !important;
+  --gray10: color-mix(in srgb, #f3e6ee 15%, #160e16) !important;
+  --gray11: color-mix(in srgb, #f3e6ee 8%, #160e16) !important;
+  --gray12: #160e16 !important;
+
   /* Body bg is handled by the art layer (body::before) — token must be transparent
      so elements referencing it don't paint an opaque block over the hero. */
   --dbx-bg-body-web: transparent !important;

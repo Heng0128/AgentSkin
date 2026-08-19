@@ -1,13 +1,16 @@
-// Verify (fixed scope): inject aurora-glass workbuddy.css into the RUNNING
-// WorkBuddy. The host selector is body[data-application-name="workbuddy"] —
-// NOT an html class. Read computed vars from BODY after injection.
+// Verify: inject aurora-glass doubao.css into the RUNNING Doubao (63551) and
+// confirm the Semi Design layer (--semi-color-*, the live primary visual) gets
+// themed. The dbx namespace is mostly deprecated in the current build (rule
+// decls: dbx≈49 vs semi≈1498), so we verify semi theming actually applies.
+// Mirrors engine Layer-3 path. Reusable debug asset.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..');
-const PORT = process.argv[2] || '50489';
-const THEME_CSS_PATH = join(ROOT, 'themes', 'aurora-glass', 'assets', 'css', 'workbuddy.css');
+const PORT = process.argv[2] || '63551';
+const THEME_CSS_PATH = join(ROOT, 'themes', 'aurora-glass', 'assets', 'css', 'doubao.css');
+const HOST_CLASS = 'agentskin-host-doubao';
 
 class CDP {
   constructor(ws){this.ws=ws;this.id=0;this.pending=new Map();}
@@ -25,38 +28,25 @@ async function run() {
   await c.send('Runtime.enable');
   const js = `(() => {
     const css = ${JSON.stringify(css)};
-    const id = 'agentskin-workbuddy-verify';
+    const id = 'agentskin-doubao-verify';
     const old = document.getElementById(id); if (old) old.remove();
     const s = document.createElement('style'); s.id = id; s.textContent = css;
     document.head.appendChild(s);
-    // WorkBuddy host selector lives on BODY[data-application-name="workbuddy"]
-    const b = document.body;
-    const attrs = {}; for (const a of b.attributes) attrs[a.name] = a.value;
-    const cs = getComputedStyle(b);
-    const rd = (t) => cs.getPropertyValue(t).trim().slice(0, 44) || null;
+    document.documentElement.classList.add('${HOST_CLASS}');
+    const cs = getComputedStyle(document.body);
+    const rd = (t) => cs.getPropertyValue(t).trim().slice(0, 50) || null;
     return {
-      bodyAttrs: attrs,
-      wbBase: { accent: rd('--wb-accent'), surface: rd('--wb-surface'), text: rd('--wb-text') },
-      cbNative: {
-        bgPrimary: rd('--cb-bg-primary'),
-        textPrimary: rd('--cb-text-primary'),
-        textLink: rd('--cb-text-link'),
-        vscodeBg: rd('--cb-vscode-editor-background'),
+      hostClass: document.documentElement.classList.contains('${HOST_CLASS}'),
+      semi: {
+        bg0: rd('--semi-color-bg-0'), bg1: rd('--semi-color-bg-1'), bg2: rd('--semi-color-bg-2'),
+        text0: rd('--semi-color-text-0'), text1: rd('--semi-color-text-1'), text2: rd('--semi-color-text-2'),
+        primary: rd('--semi-color-primary'), primaryHover: rd('--semi-color-primary-hover'),
+        border: rd('--semi-color-border'), fill0: rd('--semi-color-fill-0'),
+        link: rd('--semi-color-link'), focusBorder: rd('--semi-color-focus-border'),
+        navBg: rd('--semi-color-nav-bg'),
       },
-      vscodeWorkbench: {
-        editorBg: rd('--vscode-editor-background'),
-        sideBarBg: rd('--vscode-sideBar-background'),
-        tabBg: rd('--vscode-tab-activeBackground'),
-        panelBg: rd('--vscode-panel-background'),
-        inputBg: rd('--vscode-input-background'),
-        listHover: rd('--vscode-list-hoverBackground'),
-        fg: rd('--vscode-foreground'),
-        buttonBg: rd('--vscode-button-background'),
-        menuBg: rd('--vscode-menu-background'),
-        terminalBg: rd('--vscode-terminal-background'),
-        scrollbar: rd('--vscode-scrollbarSlider-background'),
-        selection: rd('--vscode-editor-selectionBackground'),
-        focusBorder: rd('--vscode-focusBorder'),
+      dbx: {
+        bodyWeb: rd('--dbx-bg-body-web'), base2: rd('--dbx-bg-base-2'), float: rd('--dbx-bg-float'),
       },
     };
   })()`;

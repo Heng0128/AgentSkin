@@ -10,7 +10,9 @@ const workbuddy = {
   },
   lastVerified: {
     darwin: { appVersion: "5.3.5", build: "5.3.5", verifiedAt: "2026-07-25" },
-    win32: { appVersion: "5.3.5", build: "5.3.5", verifiedAt: "2026-07-25" },
+    // 2026-08-19 live probe (port 50489): body attrs data-product-version=5.3.14,
+    // --cb-* / --vscode-* / --wb-* all verified themed after injection.
+    win32: { appVersion: "5.3.14", build: "5.3.14", verifiedAt: "2026-08-19" },
   },
   platforms: {
     darwin: {
@@ -94,6 +96,38 @@ const workbuddy = {
     { var: "--cb-vscode-panel-border", role: "accent", alpha: 0.3 },
     { var: "--cb-input-placeholder", role: "text", alpha: 0.5 },
     { var: "--cb-sidebar-bg", role: "surface", alpha: 0.12 },
+    // Native --vscode-* workbench layer (added 2026-08-19, mirror of the 78
+    // tokens in workbuddyCss.mjs / engines/workbuddy/tokens.css). WorkBuddy is
+    // VS Code arch: the workbench chrome (editor/sidebar/tab/panel/input) reads
+    // these directly, so the bridge must route them onto the semantic roles.
+    { var: "--vscode-editor-background", role: "surface" },
+    { var: "--vscode-sideBar-background", role: "surface", alpha: 0.88 },
+    { var: "--vscode-panel-background", role: "surface" },
+    { var: "--vscode-tab-activeBackground", role: "surface" },
+    { var: "--vscode-menu-background", role: "surface" },
+    { var: "--vscode-dropdown-background", role: "surface" },
+    { var: "--vscode-terminal-background", role: "surface" },
+    { var: "--vscode-input-background", role: "surface", alpha: 0.82 },
+    { var: "--vscode-editorWidget-background", role: "surface" },
+    { var: "--vscode-foreground", role: "text" },
+    { var: "--vscode-editor-foreground", role: "text" },
+    { var: "--vscode-descriptionForeground", role: "text", alpha: 0.7 },
+    { var: "--vscode-input-foreground", role: "text" },
+    { var: "--vscode-dropdown-foreground", role: "text" },
+    { var: "--vscode-menu-foreground", role: "text" },
+    { var: "--vscode-terminal-foreground", role: "text" },
+    { var: "--vscode-icon-foreground", role: "text", alpha: 0.72 },
+    { var: "--vscode-border", role: "border" },
+    { var: "--vscode-panel-border", role: "border" },
+    { var: "--vscode-dropdown-border", role: "border" },
+    { var: "--vscode-menu-border", role: "border" },
+    { var: "--vscode-textLink-foreground", role: "accent" },
+    { var: "--vscode-button-background", role: "accent" },
+    { var: "--vscode-focusBorder", role: "accent", alpha: 0.55 },
+    { var: "--vscode-list-activeSelectionBackground", role: "accent", alpha: 0.16 },
+    { var: "--vscode-list-hoverBackground", role: "accent", alpha: 0.1 },
+    { var: "--vscode-badge-background", role: "accent" },
+    { var: "--vscode-editor-selectionBackground", role: "accent", alpha: 0.18 },
   ],
   verification: {
     // The root landmark is the only blocking check: it doubles as the

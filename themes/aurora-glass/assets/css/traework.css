@@ -80,9 +80,95 @@ html.agentskin-host-traework body {
   /* App-level surface variables → transparent for art punch-through */
   --bg-bg-base-default: transparent !important;
 
-  /* Selection */
+  /* Selection (camelCase is the real token; kebab is dead — 0 refs in app source) */
   --vscode-editor-selectionBackground: rgba(110, 231, 211, 0.18) !important;
-  --vscode-selection-background: rgba(110, 231, 211, 0.24) !important;
+
+  /* ===== icube blind-spot completion (2026-08-19) =====
+     GitLab对标 l77948032-cyber/Trae-Skin: 41/50 blind-spot tokens verified live
+     on 58510 (icube text/bg/icon/invert + menu/dropdown/checkbox/input). */
+  /* Input */
+  --vscode-input-foreground: #e6ecf5 !important;
+  --vscode-input-placeholderForeground: rgba(230, 236, 245, 0.48) !important;
+  --vscode-disabledForeground: rgba(230, 236, 245, 0.42) !important;
+
+  /* icube text system */
+  --vscode-icube-colorTextDefault: #e6ecf5 !important;
+  --vscode-icube-colorTextGray: #8a96ad !important;
+  --vscode-icube--text-text-secondary: #8a96ad !important;
+  --vscode-icube--text-text-brand: #6ee7d3 !important;
+  --vscode-icube--text-text-default-hover: #e6ecf5 !important;
+  --vscode-icube--text-text-default-active: #e6ecf5 !important;
+  --vscode-icube--text-text-tertiary: rgba(138, 150, 173, 0.7) !important;
+  --vscode-icube--text-text-disabled: rgba(230, 236, 245, 0.42) !important;
+  --vscode-icube--text-text-onaccent: #0a0e1a !important;
+
+  /* icube backgrounds */
+  --vscode-icube--bg-bg-base-default: transparent !important;
+  --vscode-icube--bg-bg-base-secondary: color-mix(in srgb, #121829 88%, transparent) !important;
+  --vscode-icube--bg-bg-base-tertiary: color-mix(in srgb, #1a2236 85%, transparent) !important;
+  --vscode-icube--bg-bg-menu: color-mix(in srgb, #1a2236 92%, transparent) !important;
+  --vscode-icube--bg-bg-tooltip: color-mix(in srgb, #1a2236 94%, transparent) !important;
+  --vscode-icube--bg-bg-overlay-l4: color-mix(in srgb, #121829 78%, transparent) !important;
+  --vscode-icube--bg-bg-invert: #1a2236 !important;
+  --vscode-icube--bg-bg-invert-hover: rgba(110, 231, 211, 0.12) !important;
+  --vscode-icube--bg-bg-invert-active: rgba(110, 231, 211, 0.18) !important;
+  --vscode-icube--bg-bg-invert-disabled: rgba(230, 236, 245, 0.04) !important;
+
+  /* icube icons */
+  --vscode-icube--icon-icon-default: #e6ecf5 !important;
+  --vscode-icube--icon-icon-default-hover: #6ee7d3 !important;
+  --vscode-icube--icon-icon-secondary: #8a96ad !important;
+  --vscode-icube--icon-icon-tertiary: rgba(138, 150, 173, 0.7) !important;
+  --vscode-icube--icon-icon-disabled: rgba(230, 236, 245, 0.42) !important;
+  --vscode-icube--icon-icon-onaccent: #0a0e1a !important;
+
+  /* icube borders */
+  --vscode-icube--border-border-neutral-l2: rgba(110, 231, 211, 0.24) !important;
+  --vscode-icube--border-border-neutral-l3: rgba(110, 231, 211, 0.32) !important;
+
+  /* Menu / dropdown / checkbox / list (VS Code workbench chrome) */
+  --vscode-menu-background: color-mix(in srgb, #1a2236 92%, transparent) !important;
+  --vscode-menu-foreground: #e6ecf5 !important;
+  --vscode-menu-border: rgba(110, 231, 211, 0.18) !important;
+  --vscode-menu-separatorBackground: rgba(110, 231, 211, 0.1) !important;
+  --vscode-dropdown-background: color-mix(in srgb, #1a2236 94%, transparent) !important;
+  --vscode-dropdown-foreground: #e6ecf5 !important;
+  --vscode-dropdown-border: rgba(110, 231, 211, 0.18) !important;
+  --vscode-checkbox-background: color-mix(in srgb, #1a2236 90%, transparent) !important;
+  --vscode-checkbox-foreground: #e6ecf5 !important;
+  --vscode-checkbox-border: rgba(110, 231, 211, 0.24) !important;
+  --vscode-list-activeSelectionForeground: #e6ecf5 !important;
+
+  /* ===== Bare-prefix mirror (2026-08-19) =====
+     Same families exist bare (--bg-bg-*/--text-text-*/--icon-icon-*),
+     verified 25/25 native on 58510. Mirror icube mappings 1:1. */
+  --bg-bg-base-tertiary: color-mix(in srgb, #1a2236 85%, transparent) !important;
+  --bg-bg-menu: color-mix(in srgb, #1a2236 92%, transparent) !important;
+  --bg-bg-tooltip: color-mix(in srgb, #1a2236 94%, transparent) !important;
+  --bg-bg-overlay-l3: color-mix(in srgb, #121829 78%, transparent) !important;
+  --bg-bg-overlay-l4: color-mix(in srgb, #121829 82%, transparent) !important;
+  --bg-bg-brand: #6ee7d3 !important;
+  --bg-bg-brand-hover: color-mix(in srgb, #6ee7d3 88%, white) !important;
+  --bg-bg-brand-active: color-mix(in srgb, #6ee7d3 76%, black) !important;
+  --bg-bg-brand-disabled: rgba(110, 231, 211, 0.35) !important;
+  --bg-bg-invert: #1a2236 !important;
+  --bg-bg-invert-hover: rgba(110, 231, 211, 0.12) !important;
+  --bg-bg-invert-active: rgba(110, 231, 211, 0.18) !important;
+  --bg-bg-invert-disabled: rgba(230, 236, 245, 0.04) !important;
+
+  --text-text-default: #e6ecf5 !important;
+  --text-text-secondary: #8a96ad !important;
+  --text-text-tertiary: rgba(138, 150, 173, 0.7) !important;
+  --text-text-default-hover: #e6ecf5 !important;
+  --text-text-default-active: #e6ecf5 !important;
+  --text-text-brand: #6ee7d3 !important;
+
+  --icon-icon-default: #e6ecf5 !important;
+  --icon-icon-secondary: #8a96ad !important;
+  --icon-icon-tertiary: rgba(138, 150, 173, 0.7) !important;
+  --icon-icon-default-hover: #6ee7d3 !important;
+  --icon-icon-onaccent: #0a0e1a !important;
+  --icon-icon-disabled: rgba(230, 236, 245, 0.42) !important;
 
   background: transparent !important;
   color: var(--agentskin-text) !important;

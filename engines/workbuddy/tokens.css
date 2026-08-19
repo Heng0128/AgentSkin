@@ -130,6 +130,134 @@ html.agentskin-host-workbuddy body {
   --cb-tab-active-border: var(--wb-accent) !important;
   --cb-tab-text: var(--wb-text) !important;
   --cb-tab-inactive-text: color-mix(in srgb, var(--wb-text) 60%, transparent) !important;
+
+  /* ===== Native --vscode-* workbench layer =====
+     WorkBuddy is VS Code arch: native --vscode-* (867 tokens) drive the
+     editor/sidebar/tab/panel/input/list/menu/terminal/diff/scrollbar chrome.
+     Previous coverage only touched --cb-* (WorkBuddy's own wrapper), leaving
+     the workbench on native colors. Map the workbench layer to our --wb-*
+     base (already palette-derived), mirroring third-party WorkBuddy themes
+     (Lucky2024 workbuddy-theme) which achieve full theming via --vscode-*
+     alone. Mirrors the theme-layer block in workbuddyCss.mjs. */
+  --vscode-foreground: var(--wb-text) !important;
+  --vscode-descriptionForeground: color-mix(in srgb, var(--wb-text) 70%, transparent) !important;
+  --vscode-disabledForeground: color-mix(in srgb, var(--wb-text) 42%, transparent) !important;
+  --vscode-icon-foreground: color-mix(in srgb, var(--wb-text) 72%, transparent) !important;
+  --vscode-focusBorder: color-mix(in srgb, var(--wb-accent) 55%, transparent) !important;
+  --vscode-errorForeground: #d14860 !important;
+  --vscode-textLink-foreground: var(--wb-accent) !important;
+  --vscode-textLink-activeForeground: var(--wb-accent) !important;
+  --vscode-textPreformat-foreground: var(--wb-text) !important;
+  --vscode-textPreformat-background: color-mix(in srgb, var(--wb-surface) 55%, transparent) !important;
+  --vscode-textBlockQuote-background: color-mix(in srgb, var(--wb-accent) 5%, transparent) !important;
+  --vscode-textBlockQuote-border: color-mix(in srgb, var(--wb-accent) 55%, transparent) !important;
+  --vscode-textCodeBlock-background: color-mix(in srgb, var(--wb-surface) 45%, transparent) !important;
+
+  --vscode-editor-background: var(--wb-surface) !important;
+  --vscode-editor-foreground: var(--wb-text) !important;
+  --vscode-editorWidget-background: var(--wb-surface) !important;
+  --vscode-editorWidget-foreground: var(--wb-text) !important;
+  --vscode-editorWidget-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-editorHoverWidget-background: var(--wb-surface) !important;
+  --vscode-editorHoverWidget-foreground: var(--wb-text) !important;
+  --vscode-editorHoverWidget-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-editor-selectionBackground: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-editor-inactiveSelectionBackground: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --vscode-editorCursor-foreground: var(--wb-accent) !important;
+
+  --vscode-input-background: color-mix(in srgb, var(--wb-surface) 82%, transparent) !important;
+  --vscode-input-foreground: var(--wb-text) !important;
+  --vscode-input-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-input-placeholderForeground: color-mix(in srgb, var(--wb-text) 48%, transparent) !important;
+  --vscode-inputOption-activeBorder: color-mix(in srgb, var(--wb-accent) 55%, transparent) !important;
+  --vscode-inputOption-activeBackground: color-mix(in srgb, var(--wb-accent) 12%, transparent) !important;
+
+  --vscode-button-foreground: var(--agentskin-text, var(--wb-text)) !important;
+  --vscode-button-background: var(--wb-accent) !important;
+  --vscode-button-hoverBackground: color-mix(in srgb, var(--wb-accent) 85%, #000) !important;
+  --vscode-button-secondaryForeground: var(--wb-text) !important;
+  --vscode-button-secondaryBackground: color-mix(in srgb, var(--wb-surface) 70%, var(--wb-accent) 12%) !important;
+  --vscode-button-secondaryHoverBackground: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+
+  --vscode-list-activeSelectionBackground: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --vscode-list-activeSelectionForeground: var(--wb-text) !important;
+  --vscode-list-hoverBackground: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --vscode-list-focusOutline: color-mix(in srgb, var(--wb-accent) 55%, transparent) !important;
+  --vscode-list-highlightForeground: var(--wb-accent) !important;
+
+  --vscode-menu-background: var(--wb-surface) !important;
+  --vscode-menu-foreground: var(--wb-text) !important;
+  --vscode-menu-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-menu-selectionBackground: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --vscode-menu-selectionForeground: var(--wb-text) !important;
+  --vscode-menu-separatorBackground: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --vscode-dropdown-background: var(--wb-surface) !important;
+  --vscode-dropdown-listBackground: var(--wb-surface) !important;
+  --vscode-dropdown-foreground: var(--wb-text) !important;
+  --vscode-dropdown-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+
+  --vscode-sideBar-background: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --vscode-sideBar-foreground: var(--wb-text) !important;
+  --vscode-sideBar-border: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --vscode-sideBarTitle-foreground: var(--wb-text) !important;
+  --vscode-panel-background: var(--wb-surface) !important;
+  --vscode-panel-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-panelTitle-activeForeground: var(--wb-accent) !important;
+  --vscode-panelTitle-inactiveForeground: color-mix(in srgb, var(--wb-text) 60%, transparent) !important;
+  --vscode-tab-activeBackground: var(--wb-surface) !important;
+  --vscode-tab-activeForeground: var(--wb-text) !important;
+  --vscode-tab-activeBorderTop: var(--wb-accent) !important;
+  --vscode-tab-inactiveBackground: color-mix(in srgb, var(--wb-surface) 60%, transparent) !important;
+  --vscode-tab-inactiveForeground: color-mix(in srgb, var(--wb-text) 60%, transparent) !important;
+
+  --vscode-badge-background: var(--wb-accent) !important;
+  --vscode-badge-foreground: var(--agentskin-text, var(--wb-text)) !important;
+
+  --vscode-diffEditor-insertedTextBackground: color-mix(in srgb, #46a758 18%, transparent) !important;
+  --vscode-diffEditor-removedTextBackground: color-mix(in srgb, #d14860 16%, transparent) !important;
+  --vscode-diffEditor-insertedLineBackground: color-mix(in srgb, #46a758 10%, transparent) !important;
+  --vscode-diffEditor-removedLineBackground: color-mix(in srgb, #d14860 10%, transparent) !important;
+
+  --vscode-terminal-background: var(--wb-surface) !important;
+  --vscode-terminal-foreground: var(--wb-text) !important;
+  --vscode-terminal-selectionBackground: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-terminalCursor-foreground: var(--wb-accent) !important;
+
+  --vscode-scrollbarSlider-background: color-mix(in srgb, var(--wb-accent) 14%, transparent) !important;
+  --vscode-scrollbarSlider-hoverBackground: color-mix(in srgb, var(--wb-accent) 22%, transparent) !important;
+  --vscode-scrollbarSlider-activeBackground: color-mix(in srgb, var(--wb-accent) 32%, transparent) !important;
+
+  /* ===== sc-ui component library (2026-08-19) =====
+     Reverse blind-spot scan (50489) found a SEPARATE component library token
+     family --sc-ui-* (text/bg/surface/primary/danger/success/warning/focus-ring,
+     24/25 native, high use) + --sc-* + --cb-icon-button-hover-background that we
+     never themed. It drives WorkBuddy's own UI kit independent of the
+     --cb-*/--vscode-* layers. Map to --wb-* base. */
+  --sc-ui-text: var(--wb-text) !important;
+  --sc-ui-text-muted: color-mix(in srgb, var(--wb-text) 55%, transparent) !important;
+  --sc-ui-text-on-primary: var(--agentskin-bg, var(--wb-surface)) !important;
+  --sc-ui-bg: var(--wb-surface) !important;
+  --sc-ui-bg-subtle: color-mix(in srgb, var(--wb-surface) 92%, transparent) !important;
+  --sc-ui-surface: var(--wb-surface) !important;
+  --sc-ui-surface-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --sc-ui-hover: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --sc-ui-active: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --sc-ui-focus-ring: color-mix(in srgb, var(--wb-accent) 40%, transparent) !important;
+  --sc-ui-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --sc-ui-separator: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --sc-ui-primary: var(--wb-accent) !important;
+  --sc-ui-primary-hover: color-mix(in srgb, var(--wb-accent) 88%, black) !important;
+  --sc-ui-primary-active: color-mix(in srgb, var(--wb-accent) 76%, black) !important;
+  --sc-ui-danger: #e53e3e !important;
+  --sc-ui-success: #10b981 !important;
+  --sc-ui-warning: #f59e0b !important;
+  --sc-ui-info: var(--wb-accent) !important;
+  --sc-text-default: var(--wb-text) !important;
+  --sc-inline-code-bg: var(--agentskin-code-bg, var(--wb-surface)) !important;
+  --sc-bg-grey_background: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --sc-border-grey: color-mix(in srgb, var(--wb-text) 45%, transparent) !important;
+  --sc-divider-default: color-mix(in srgb, var(--wb-accent) 14%, transparent) !important;
+  --cb-icon-button-hover-background: color-mix(in srgb, var(--wb-accent) 12%, transparent) !important;
 }
 
 /* ===== sidebar-next / detail-panel shadowing patch =====

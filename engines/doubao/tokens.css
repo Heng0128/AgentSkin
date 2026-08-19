@@ -561,6 +561,45 @@ html.agentskin-host-doubao:root body {
   --semi-color-shadow: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
   --semi-color-nav-bg: var(--agentskin-surface) !important;
   --semi-color-overlay-bg: color-mix(in srgb, var(--agentskin-bg) 60%, transparent) !important;
+
+  /* ===== Semi semantic color family (2026-08-19) =====
+     Reverse blind-spot scan (63551) found the semantic states
+     (info/success/warning/danger/black/white/default + hover/active/disabled)
+     + md-box-samantha markdown kit + color-link-text were unthemed.
+     Semantic hues kept native (info/success/warning/danger) — only surface/
+     text/neutral/links themed, mirroring the palette contract. */
+  --semi-color-info: color-mix(in srgb, var(--agentskin-accent) 88%, black) !important;
+  --semi-color-info-hover: color-mix(in srgb, var(--agentskin-accent) 82%, black) !important;
+  --semi-color-info-active: color-mix(in srgb, var(--agentskin-accent) 74%, black) !important;
+  --semi-color-info-disabled: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+  --semi-color-success: #2ea043 !important;
+  --semi-color-success-hover: #3fb950 !important;
+  --semi-color-success-active: #2ea043 !important;
+  --semi-color-success-disabled: color-mix(in srgb, #2ea043 30%, transparent) !important;
+  --semi-color-warning: #f5a524 !important;
+  --semi-color-warning-hover: #f7b53d !important;
+  --semi-color-warning-active: #f5a524 !important;
+  --semi-color-warning-disabled: color-mix(in srgb, #f5a524 30%, transparent) !important;
+  --semi-color-danger: #e5484d !important;
+  --semi-color-danger-hover: #ed5f63 !important;
+  --semi-color-danger-active: #e5484d !important;
+  --semi-color-danger-disabled: color-mix(in srgb, #e5484d 30%, transparent) !important;
+  --semi-color-black: var(--agentskin-bg) !important;
+  --semi-color-white: var(--agentskin-text) !important;
+  --semi-color-default: var(--agentskin-surface) !important;
+  --semi-color-default-hover: color-mix(in srgb, var(--agentskin-surface) 90%, var(--agentskin-accent) 10%) !important;
+  --semi-color-default-active: color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-accent) 20%) !important;
+
+  /* Markdown kit */
+  --md-box-samantha-normal-text-color: var(--agentskin-text) !important;
+  --md-box-samantha-deep-text-color: var(--agentskin-text) !important;
+  --md-box-samantha-li-maker-color: var(--agentskin-accent) !important;
+  --md-box-samantha-split-line-color: var(--agentskin-border) !important;
+  --md-box-samantha-blockquote-left-border-color: color-mix(in srgb, var(--agentskin-accent) 55%, transparent) !important;
+
+  /* Links */
+  --color-link-text: var(--agentskin-accent) !important;
+  --color-link-text-active: color-mix(in srgb, var(--agentskin-accent) 80%, black) !important;
 }
 
 /* ===== scrollbar thumb shadowing patch =====

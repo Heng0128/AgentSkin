@@ -598,6 +598,30 @@ export function zcodeColorTokenOverrides(host, t) {
   --color-diff-removed: color-mix(in srgb, #e5484d 40%, transparent) !important;
   --color-find-highlight: color-mix(in srgb, ${c.accent} 30%, transparent) !important;
   --color-find-highlight-active: color-mix(in srgb, ${c.accent} 45%, transparent) !important;
+
+  /* --- Secondary surfaces (2026-08-19, reverse blind-spot) ---
+     Live 50894: popover-foreground / menu-hover / tooltip-tag* /
+     card-selected / *-node (subagent/plugin/skill) / diff-*-foreground were
+     unthemed. Terminal 16-color ANSI palette is intentionally left native
+     (functional semantic colors, like codex charts-blue). */
+  --color-popover-foreground: ${c.foreground} !important;
+  --color-popover-header: ${c.surfaceElevated} !important;
+  --color-menu-hover: color-mix(in srgb, ${c.accent} 12%, transparent) !important;
+  --color-tooltip-tag: color-mix(in srgb, ${c.surfaceElevated} 92%, transparent) !important;
+  --color-tooltip-tag-foreground: ${c.muted} !important;
+  --color-card-selected: color-mix(in srgb, ${c.surface} 72%, ${c.accent} 28%) !important;
+  --color-diff-added-foreground: ${c.foreground} !important;
+  --color-diff-removed-foreground: ${c.foreground} !important;
+  --color-subagent-node: color-mix(in srgb, ${c.surface} 55%, transparent) !important;
+  --color-subagent-node-hover: color-mix(in srgb, ${c.accent} 12%, transparent) !important;
+  --color-subagent-node-foreground: ${c.foreground} !important;
+  --color-plugin-node: color-mix(in srgb, ${c.surface} 55%, transparent) !important;
+  --color-plugin-node-hover: color-mix(in srgb, ${c.accent} 12%, transparent) !important;
+  --color-plugin-node-foreground: ${c.foreground} !important;
+  --color-skill-node: color-mix(in srgb, ${c.surface} 55%, transparent) !important;
+  --color-skill-node-hover: color-mix(in srgb, ${c.accent} 12%, transparent) !important;
+  --color-skill-node-foreground: ${c.foreground} !important;
+  --color-icon-blue: ${c.accent} !important;
 }`;
 }
 

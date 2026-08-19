@@ -59,9 +59,105 @@ html.agentskin-host-traework body {
   /* App-level surface → transparent for art punch-through */
   --bg-bg-base-default: transparent !important;
 
-  /* Selection */
+  /* Selection (camelCase is the real TraeWork/VS Code token; kebab
+     --vscode-selection-background is dead — 0 refs in app source) */
   --vscode-editor-selectionBackground: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
-  --vscode-selection-background: color-mix(in srgb, var(--agentskin-accent) 24%, transparent) !important;
+
+  /* ===== icube blind-spot completion (2026-08-19) =====
+     GitLab对标 l77948032-cyber/Trae-Skin: its skin covers --vscode-icube-*
+     families we missed. Live probe 58510 confirmed 41/50 exist natively
+     (bg-base-*, text-text-*, icon-icon-*, bg-invert-*, menu/dropdown/checkbox,
+     input-foreground). Mapped to --agentskin-* so menu/dropdown/checkbox/icons
+     follow the theme instead of stock greys (#1a1b1d/#3c3c3c). */
+  /* Input */
+  --vscode-input-foreground: var(--agentskin-text) !important;
+  --vscode-input-placeholderForeground: color-mix(in srgb, var(--agentskin-text) 48%, transparent) !important;
+  --vscode-disabledForeground: color-mix(in srgb, var(--agentskin-text) 42%, transparent) !important;
+
+  /* icube text system */
+  --vscode-icube-colorTextDefault: var(--agentskin-text) !important;
+  --vscode-icube-colorTextGray: var(--agentskin-muted) !important;
+  --vscode-icube--text-text-secondary: var(--agentskin-muted) !important;
+  --vscode-icube--text-text-brand: var(--agentskin-accent) !important;
+  --vscode-icube--text-text-default-hover: var(--agentskin-text) !important;
+  --vscode-icube--text-text-default-active: var(--agentskin-text) !important;
+  --vscode-icube--text-text-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --vscode-icube--text-text-disabled: color-mix(in srgb, var(--agentskin-text) 42%, transparent) !important;
+  --vscode-icube--text-text-onaccent: var(--agentskin-bg) !important;
+
+  /* icube backgrounds */
+  --vscode-icube--bg-bg-base-default: transparent !important;
+  --vscode-icube--bg-bg-base-secondary: color-mix(in srgb, var(--agentskin-surface) 88%, transparent) !important;
+  --vscode-icube--bg-bg-base-tertiary: color-mix(in srgb, var(--agentskin-surface-elevated) 85%, transparent) !important;
+  --vscode-icube--bg-bg-menu: color-mix(in srgb, var(--agentskin-surface-elevated) 92%, transparent) !important;
+  --vscode-icube--bg-bg-tooltip: color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent) !important;
+  --vscode-icube--bg-bg-overlay-l4: color-mix(in srgb, var(--agentskin-surface) 78%, transparent) !important;
+  --vscode-icube--bg-bg-invert: var(--agentskin-surface-elevated) !important;
+  --vscode-icube--bg-bg-invert-hover: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --vscode-icube--bg-bg-invert-active: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-icube--bg-bg-invert-disabled: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+
+  /* icube icons */
+  --vscode-icube--icon-icon-default: var(--agentskin-text) !important;
+  --vscode-icube--icon-icon-default-hover: var(--agentskin-accent) !important;
+  --vscode-icube--icon-icon-secondary: var(--agentskin-muted) !important;
+  --vscode-icube--icon-icon-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --vscode-icube--icon-icon-disabled: color-mix(in srgb, var(--agentskin-text) 42%, transparent) !important;
+  --vscode-icube--icon-icon-onaccent: var(--agentskin-bg) !important;
+
+  /* icube borders */
+  --vscode-icube--border-border-neutral-l2: color-mix(in srgb, var(--agentskin-accent) 24%, transparent) !important;
+  --vscode-icube--border-border-neutral-l3: color-mix(in srgb, var(--agentskin-accent) 32%, transparent) !important;
+
+  /* Menu / dropdown / checkbox / list (VS Code workbench chrome) */
+  --vscode-menu-background: color-mix(in srgb, var(--agentskin-surface-elevated) 92%, transparent) !important;
+  --vscode-menu-foreground: var(--agentskin-text) !important;
+  --vscode-menu-border: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-menu-separatorBackground: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+  --vscode-dropdown-background: color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent) !important;
+  --vscode-dropdown-foreground: var(--agentskin-text) !important;
+  --vscode-dropdown-border: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --vscode-checkbox-background: color-mix(in srgb, var(--agentskin-surface-elevated) 90%, transparent) !important;
+  --vscode-checkbox-foreground: var(--agentskin-text) !important;
+  --vscode-checkbox-border: color-mix(in srgb, var(--agentskin-accent) 24%, transparent) !important;
+  --vscode-list-activeSelectionForeground: var(--agentskin-text) !important;
+
+  /* ===== Bare-prefix mirror (2026-08-19) =====
+     TraeWork declares the SAME icube token families BOTH with the
+     --vscode-icube- prefix AND bare (--bg-bg-*, --text-text-*, --icon-icon-*).
+     Reverse blind-spot scan (58510, 25/25 native) found the bare families
+     unthemed (menu/tooltip #171717, brand #4b3fe3, invert, text/icon 3-tier).
+     Mirror the icube mappings 1:1 onto the bare prefix. */
+  /* Bare backgrounds */
+  --bg-bg-base-tertiary: color-mix(in srgb, var(--agentskin-surface-elevated) 85%, transparent) !important;
+  --bg-bg-menu: color-mix(in srgb, var(--agentskin-surface-elevated) 92%, transparent) !important;
+  --bg-bg-tooltip: color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent) !important;
+  --bg-bg-overlay-l3: color-mix(in srgb, var(--agentskin-surface) 78%, transparent) !important;
+  --bg-bg-overlay-l4: color-mix(in srgb, var(--agentskin-surface) 82%, transparent) !important;
+  --bg-bg-brand: var(--agentskin-accent) !important;
+  --bg-bg-brand-hover: color-mix(in srgb, var(--agentskin-accent) 88%, white) !important;
+  --bg-bg-brand-active: color-mix(in srgb, var(--agentskin-accent) 76%, black) !important;
+  --bg-bg-brand-disabled: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
+  --bg-bg-invert: var(--agentskin-surface-elevated) !important;
+  --bg-bg-invert-hover: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+  --bg-bg-invert-active: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
+  --bg-bg-invert-disabled: color-mix(in srgb, var(--agentskin-text) 4%, transparent) !important;
+
+  /* Bare text */
+  --text-text-default: var(--agentskin-text) !important;
+  --text-text-secondary: var(--agentskin-muted) !important;
+  --text-text-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --text-text-default-hover: var(--agentskin-text) !important;
+  --text-text-default-active: var(--agentskin-text) !important;
+  --text-text-brand: var(--agentskin-accent) !important;
+
+  /* Bare icons */
+  --icon-icon-default: var(--agentskin-text) !important;
+  --icon-icon-secondary: var(--agentskin-muted) !important;
+  --icon-icon-tertiary: color-mix(in srgb, var(--agentskin-muted) 70%, transparent) !important;
+  --icon-icon-default-hover: var(--agentskin-accent) !important;
+  --icon-icon-onaccent: var(--agentskin-bg) !important;
+  --icon-icon-disabled: color-mix(in srgb, var(--agentskin-text) 42%, transparent) !important;
 
   background: transparent !important;
   color: var(--agentskin-text) !important;

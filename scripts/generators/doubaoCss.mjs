@@ -132,6 +132,7 @@ ${host}:root {
   --semi-color-primary-light-hover: ${alpha(c.accent, 0.18)} !important;
   --semi-color-primary-light-active: ${alpha(c.accent, 0.24)} !important;
   --semi-color-primary-disabled: ${alpha(c.accent, 0.35)} !important;
+  --semi-color-focus-border: ${alpha(c.accent, 0.85)} !important;
 
   /* Secondary / tertiary */
   --semi-color-secondary: ${c.secondary} !important;
@@ -165,6 +166,40 @@ ${host}:root {
   --semi-color-shadow: ${alpha(c.accent, 0.18)} !important;
   --semi-color-nav-bg: ${c.surface} !important;
   --semi-color-overlay-bg: ${alpha(c.background, 0.6)} !important;
+
+  /* Semi semantic color family (2026-08-19, reverse blind-spot) */
+  --semi-color-info: color-mix(in srgb, ${c.accent} 88%, black) !important;
+  --semi-color-info-hover: color-mix(in srgb, ${c.accent} 82%, black) !important;
+  --semi-color-info-active: color-mix(in srgb, ${c.accent} 74%, black) !important;
+  --semi-color-info-disabled: ${alpha(c.accent, 0.3)} !important;
+  --semi-color-success: #2ea043 !important;
+  --semi-color-success-hover: #3fb950 !important;
+  --semi-color-success-active: #2ea043 !important;
+  --semi-color-success-disabled: ${alpha('#2ea043', 0.3)} !important;
+  --semi-color-warning: #f5a524 !important;
+  --semi-color-warning-hover: #f7b53d !important;
+  --semi-color-warning-active: #f5a524 !important;
+  --semi-color-warning-disabled: ${alpha('#f5a524', 0.3)} !important;
+  --semi-color-danger: #e5484d !important;
+  --semi-color-danger-hover: #ed5f63 !important;
+  --semi-color-danger-active: #e5484d !important;
+  --semi-color-danger-disabled: ${alpha('#e5484d', 0.3)} !important;
+  --semi-color-black: ${c.background} !important;
+  --semi-color-white: ${c.foreground} !important;
+  --semi-color-default: ${c.surface} !important;
+  --semi-color-default-hover: color-mix(in srgb, ${c.surface} 90%, ${c.accent} 10%) !important;
+  --semi-color-default-active: color-mix(in srgb, ${c.surface} 80%, ${c.accent} 20%) !important;
+
+  /* Markdown kit */
+  --md-box-samantha-normal-text-color: ${c.foreground} !important;
+  --md-box-samantha-deep-text-color: ${c.foreground} !important;
+  --md-box-samantha-li-maker-color: ${c.accent} !important;
+  --md-box-samantha-split-line-color: ${c.border} !important;
+  --md-box-samantha-blockquote-left-border-color: ${alpha(c.accent, 0.55)} !important;
+
+  /* Links */
+  --color-link-text: ${c.accent} !important;
+  --color-link-text-active: ${shade(c.accent, 'black', 0.2)} !important;
 
   /* Gray ramp (gray1 lightest -> gray12 darkest) */
   --gray1: ${c.foreground} !important;
@@ -212,8 +247,105 @@ ${host}:root {
 
 /* ===== Body-level overrides =====
    :root[data-theme="dark"] body sets --dbx-bg-body-web at (0,2,1).
-   Our html.agentskin-host-doubao:root body = (0,2,2) beats it. */
+   Our html.agentskin-host-doubao:root body = (0,2,2) beats it.
+
+   Semi Design tokens MUST also be mirrored at body level: Doubao's own CSS
+   redeclares the entire --semi-color-* family directly on body via
+   'body, body[theme-mode="dark"] .semi-always-light { ... }' (0,0,1). A direct
+   body declaration beats the inherited :root override, so the :root-level
+   semi block above was silently falling back to Doubao's stock palette.
+   This body-level block (0,2,2) !important wins on the same element. */
 ${host}:root body {
+  /* --- Semi Design (real token system) body mirror --- */
+  --semi-color-bg-0: ${c.background} !important;
+  --semi-color-bg-1: ${c.surface} !important;
+  --semi-color-bg-2: ${c.surfaceElevated} !important;
+  --semi-color-bg-3: ${c.surfaceElevated} !important;
+  --semi-color-bg-4: color-mix(in srgb, ${c.surfaceElevated} 92%, #fff) !important;
+  --semi-color-text-0: ${c.foreground} !important;
+  --semi-color-text-1: ${c.muted} !important;
+  --semi-color-text-2: ${alpha(c.muted, 0.75)} !important;
+  --semi-color-text-3: ${alpha(c.muted, 0.45)} !important;
+  --semi-color-primary: ${c.accent} !important;
+  --semi-color-primary-hover: ${shade(c.accent, 'black', 0.12)} !important;
+  --semi-color-primary-active: ${shade(c.accent, 'black', 0.24)} !important;
+  --semi-color-primary-light-default: ${alpha(c.accent, 0.12)} !important;
+  --semi-color-primary-light-hover: ${alpha(c.accent, 0.18)} !important;
+  --semi-color-primary-light-active: ${alpha(c.accent, 0.24)} !important;
+  --semi-color-primary-disabled: ${alpha(c.accent, 0.35)} !important;
+  --semi-color-focus-border: ${alpha(c.accent, 0.85)} !important;
+  --semi-color-secondary: ${c.secondary} !important;
+  --semi-color-secondary-hover: ${shade(c.secondary, 'black', 0.12)} !important;
+  --semi-color-secondary-active: ${shade(c.secondary, 'black', 0.24)} !important;
+  --semi-color-secondary-light-default: ${alpha(c.secondary, 0.12)} !important;
+  --semi-color-secondary-light-hover: ${alpha(c.secondary, 0.18)} !important;
+  --semi-color-tertiary: ${alpha(c.foreground, 0.06)} !important;
+  --semi-color-tertiary-hover: ${alpha(c.foreground, 0.1)} !important;
+  --semi-color-tertiary-light-default: ${alpha(c.foreground, 0.06)} !important;
+  --semi-color-fill-0: ${alpha(c.foreground, 0.04)} !important;
+  --semi-color-fill-1: ${alpha(c.foreground, 0.08)} !important;
+  --semi-color-fill-2: ${alpha(c.foreground, 0.12)} !important;
+  --semi-color-border: ${c.border} !important;
+  --semi-color-disabled-bg: ${alpha(c.foreground, 0.04)} !important;
+  --semi-color-disabled-border: ${alpha(c.border, 0.5)} !important;
+  --semi-color-disabled-fill: ${alpha(c.foreground, 0.04)} !important;
+  --semi-color-disabled-text: ${alpha(c.muted, 0.4)} !important;
+  --semi-color-link: ${c.accent} !important;
+  --semi-color-link-hover: ${shade(c.accent, 'black', 0.12)} !important;
+  --semi-color-link-active: ${shade(c.accent, 'black', 0.24)} !important;
+  --semi-color-link-visited: ${alpha(c.accent, 0.7)} !important;
+  --semi-color-highlight: ${alpha(c.accent, 0.18)} !important;
+  --semi-color-highlight-bg: ${alpha(c.accent, 0.14)} !important;
+  --semi-color-shadow: ${alpha(c.accent, 0.18)} !important;
+  --semi-color-nav-bg: ${c.surface} !important;
+  --semi-color-overlay-bg: ${alpha(c.background, 0.6)} !important;
+
+  /* Semi semantic color family (2026-08-19, reverse blind-spot) */
+  --semi-color-info: color-mix(in srgb, ${c.accent} 88%, black) !important;
+  --semi-color-info-hover: color-mix(in srgb, ${c.accent} 82%, black) !important;
+  --semi-color-info-active: color-mix(in srgb, ${c.accent} 74%, black) !important;
+  --semi-color-info-disabled: ${alpha(c.accent, 0.3)} !important;
+  --semi-color-success: #2ea043 !important;
+  --semi-color-success-hover: #3fb950 !important;
+  --semi-color-success-active: #2ea043 !important;
+  --semi-color-success-disabled: ${alpha('#2ea043', 0.3)} !important;
+  --semi-color-warning: #f5a524 !important;
+  --semi-color-warning-hover: #f7b53d !important;
+  --semi-color-warning-active: #f5a524 !important;
+  --semi-color-warning-disabled: ${alpha('#f5a524', 0.3)} !important;
+  --semi-color-danger: #e5484d !important;
+  --semi-color-danger-hover: #ed5f63 !important;
+  --semi-color-danger-active: #e5484d !important;
+  --semi-color-danger-disabled: ${alpha('#e5484d', 0.3)} !important;
+  --semi-color-black: ${c.background} !important;
+  --semi-color-white: ${c.foreground} !important;
+  --semi-color-default: ${c.surface} !important;
+  --semi-color-default-hover: color-mix(in srgb, ${c.surface} 90%, ${c.accent} 10%) !important;
+  --semi-color-default-active: color-mix(in srgb, ${c.surface} 80%, ${c.accent} 20%) !important;
+
+  /* Markdown kit */
+  --md-box-samantha-normal-text-color: ${c.foreground} !important;
+  --md-box-samantha-deep-text-color: ${c.foreground} !important;
+  --md-box-samantha-li-maker-color: ${c.accent} !important;
+  --md-box-samantha-split-line-color: ${c.border} !important;
+  --md-box-samantha-blockquote-left-border-color: ${alpha(c.accent, 0.55)} !important;
+
+  /* Links */
+  --color-link-text: ${c.accent} !important;
+  --color-link-text-active: ${shade(c.accent, 'black', 0.2)} !important;
+  --gray1: ${c.foreground} !important;
+  --gray2: color-mix(in srgb, ${c.foreground} 90%, ${c.background}) !important;
+  --gray3: color-mix(in srgb, ${c.foreground} 80%, ${c.background}) !important;
+  --gray4: color-mix(in srgb, ${c.foreground} 70%, ${c.background}) !important;
+  --gray5: color-mix(in srgb, ${c.foreground} 60%, ${c.background}) !important;
+  --gray6: color-mix(in srgb, ${c.foreground} 50%, ${c.background}) !important;
+  --gray7: color-mix(in srgb, ${c.foreground} 40%, ${c.background}) !important;
+  --gray8: color-mix(in srgb, ${c.foreground} 30%, ${c.background}) !important;
+  --gray9: color-mix(in srgb, ${c.foreground} 22%, ${c.background}) !important;
+  --gray10: color-mix(in srgb, ${c.foreground} 15%, ${c.background}) !important;
+  --gray11: color-mix(in srgb, ${c.foreground} 8%, ${c.background}) !important;
+  --gray12: ${c.background} !important;
+
   /* Body bg is handled by the art layer (body::before) — token must be transparent
      so elements referencing it don't paint an opaque block over the hero. */
   --dbx-bg-body-web: transparent !important;
