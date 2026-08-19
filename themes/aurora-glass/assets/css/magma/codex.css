@@ -1,4 +1,4 @@
-/* 极光琉璃 — OpenAI Codex (--text-*/--bg-* design tokens) */
+/* 极光琉璃 — OpenAI Codex (--color-token-* design tokens) */
 html.agentskin-host-codex {
   color-scheme: dark !important;
   --agentskin-accent: #ffb38a;
@@ -19,73 +19,48 @@ html.agentskin-host-codex {
   text-shadow: var(--agentskin-text-shadow);
 }
 
-/* ===== Native token overrides ===== */
+/* ===== Native token overrides (Codex --color-token-* system) ===== */
 html.agentskin-host-codex {
   color-scheme: dark !important;
 
-  /* Text hierarchy */
-  --text-primary: #f3e6ee !important;
-  --text-secondary: #a98a9c !important;
-  --text-tertiary: rgba(243, 230, 238, 0.55) !important;
-  --text-quaternary: rgba(243, 230, 238, 0.4) !important;
+  /* Accent / brand */
+  --color-token-primary: #ffb38a !important;
+  --color-token-text-link-foreground: #ffb38a !important;
+  --color-token-focus-border: rgba(255, 179, 138, 0.76) !important;
 
-  /* Backgrounds — transparent for art punch-through */
-  --bg-primary: transparent !important;
-  --bg-secondary: rgb(31, 20, 29) !important;
-  --bg-tertiary: color-mix(in srgb, #2e1f2c 85%, #ffb38a 15%) !important;
-  --bg-elevated: #2e1f2c !important;
-  --bg-base: transparent !important;
-  --bg-canvas: transparent !important;
-  --bg-surface: color-mix(in srgb, #221620 80%, transparent) !important;
+  /* App + surface backgrounds */
+  --color-token-bg-primary: #160e16 !important;
+  --color-token-side-bar-background: #160e16 !important;
+  --color-token-bg-secondary: color-mix(in srgb, #160e16 92%, transparent) !important;
+  --color-token-bg-tertiary: color-mix(in srgb, #160e16 85%, transparent) !important;
+  --color-token-main-surface-primary: #221620 !important;
+  --color-token-diff-surface: color-mix(in srgb, #221620 94%, #f3e6ee) !important;
+  --color-token-dropdown-background: #2e1f2c !important;
+  --color-token-dropdown-foreground: #f3e6ee !important;
+
+  /* Foreground / text */
+  --color-token-foreground: #f3e6ee !important;
+  --color-token-text-primary: #f3e6ee !important;
+  --color-token-text-secondary: color-mix(in srgb, #f3e6ee 65%, transparent) !important;
+  --color-token-text-tertiary: rgba(243, 230, 238, 0.498) !important;
+  --color-token-description-foreground: rgba(243, 230, 238, 0.498) !important;
+
+  /* Borders */
+  --color-token-border: rgba(255, 179, 138, 0.09) !important;
+  --color-token-border-default: rgba(255, 179, 138, 0.09) !important;
+  --color-token-border-light: rgba(255, 179, 138, 0.045) !important;
+  --color-token-border-heavy: rgba(255, 179, 138, 0.156) !important;
+  --color-token-input-border: rgba(255, 179, 138, 0.156) !important;
+
+  /* Interaction surfaces */
+  --color-token-list-hover-background: rgba(255, 179, 138, 0.078) !important;
+  --color-token-scrollbar-slider-hover-background: rgba(255, 179, 138, 0.156) !important;
+
+  /* Helper vars consumed by shellStructureCss */
+  --accent: #ffb38a !important;
   --bg-hover: rgba(255, 179, 138, 0.1) !important;
   --bg-active: rgba(255, 179, 138, 0.16) !important;
   --bg-selected: rgba(255, 179, 138, 0.14) !important;
-
-  /* Borders */
-  --border-xsubtle: rgba(255, 179, 138, 0.045) !important;
-  --border-subtle: rgba(255, 179, 138, 0.09) !important;
-  --border-medium: rgba(255, 179, 138, 0.18) !important;
-  --border-strong: rgba(255, 179, 138, 0.144) !important;
-
-  /* Accent / brand */
-  --accent: #ffb38a !important;
-  --accent-hover: rgb(255, 190, 156) !important;
-  --accent-pressed: rgb(255, 198, 167) !important;
-  --accent-soft: rgba(255, 179, 138, 0.12) !important;
-  --accent-soft-hover: rgba(255, 179, 138, 0.18) !important;
-
-  /* Buttons */
-  --button-primary-bg: #ffb38a !important;
-  --button-primary-fg: rgb(3, 2, 3) !important;
-  --button-primary-hover: rgb(255, 190, 156) !important;
-  --button-secondary-bg: rgba(243, 230, 238, 0.12) !important;
-  --button-secondary-fg: #f3e6ee !important;
-
-  /* Links */
-  --link: #ffb38a !important;
-  --link-hover: rgb(255, 190, 156) !important;
-
-  /* Input / composer */
-  --input-bg: color-mix(in srgb, color-mix(in srgb, #221620 82%, #ffb38a 18%) 45%, transparent) !important;
-  --input-border: rgba(255, 179, 138, 0.18) !important;
-  --input-focus-ring: rgba(255, 179, 138, 0.4) !important;
-
-  /* Sidebar / panels */
-  --sidebar-bg: color-mix(in srgb, color-mix(in srgb, #221620 82%, #ffb38a 18%) 22%, transparent) !important;
-  --panel-bg: color-mix(in srgb, #221620 14%, transparent) !important;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
-  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.24) !important;
-
-  /* Selection */
-  --selection-bg: rgba(255, 179, 138, 0.28) !important;
-
-  /* Code blocks */
-  --code-bg: #100810 !important;
-  --code-fg: #e8d6e0 !important;
 }
 /* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
 html.agentskin-host-codex #root {

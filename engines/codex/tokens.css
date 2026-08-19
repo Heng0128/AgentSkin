@@ -1,77 +1,26 @@
 /* ============================================================
-   ENGINE: codex — Layer 0: Token Override
+   ENGINE: codex — Layer 0: Token Override (pass-through)
    ------------------------------------------------------------
-   Pure design-token overrides for the OpenAI Codex (ChatGPT)
-   desktop app. The app uses Tailwind tokens (--text-primary,
-   --bg-* etc.) declared on `main.main-surface` and other
-   containers; we override them on the html host class.
+   NOTE: This layer is intentionally a no-op for Codex.
 
-   Selector: html.agentskin-host-codex:root (0,2,1)
-   beats :root[data-theme] (0,2,0).
+   Codex's native design tokens are the `--color-token-*` family
+   (verified against a live renderer, e.g. build 62640). Those are
+   owned and overridden by the per-theme `codex.css` generator
+   (scripts/generators/codexCss.mjs → codexColorTokenOverrides), and
+   background transparency for the art punch-through is handled by
+   engines/codex/adapter.mjs (discoverAndOverrideTokens).
+
+   The legacy flat `--text-primary` / `--bg-*` / `--accent` / `--border-*`
+   overrides that used to live here were removed: they referenced a token
+   namespace Codex no longer exposes (verified MISSING in a live renderer),
+   so they were pure no-op dead code. Keeping this file as a required
+   placeholder satisfies the engine loader (palette/orchestrator.ts expects
+   the three-file set) and check:contract without injecting dead rules.
+
+   If Codex ever reintroduces a flat token namespace worth centralizing
+   here, add overrides keyed on `--color-token-*` only.
    ============================================================ */
 
 html.agentskin-host-codex:root {
-  /* Text hierarchy — Codex uses --text-* tokens */
-  --text-primary: var(--agentskin-text) !important;
-  --text-secondary: var(--agentskin-muted) !important;
-  --text-tertiary: color-mix(in srgb, var(--agentskin-text) 55%, transparent) !important;
-  --text-quaternary: color-mix(in srgb, var(--agentskin-text) 40%, transparent) !important;
-
-  /* Backgrounds — transparent for art punch-through */
-  --bg-primary: transparent !important;
-  --bg-secondary: color-mix(in srgb, var(--agentskin-surface) 92%, black) !important;
-  --bg-tertiary: color-mix(in srgb, var(--agentskin-surface-elevated) 85%, var(--agentskin-accent) 15%) !important;
-  --bg-elevated: var(--agentskin-surface-elevated) !important;
-  --bg-base: transparent !important;
-  --bg-canvas: transparent !important;
-  --bg-surface: color-mix(in srgb, var(--agentskin-surface) 80%, transparent) !important;
-  --bg-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
-  --bg-active: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
-  --bg-selected: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
-
-  /* Borders */
-  --border-xsubtle: color-mix(in srgb, var(--agentskin-border) 25%, transparent) !important;
-  --border-subtle: color-mix(in srgb, var(--agentskin-border) 50%, transparent) !important;
-  --border-medium: var(--agentskin-border) !important;
-  --border-strong: color-mix(in srgb, var(--agentskin-border) 80%, transparent) !important;
-
-  /* Accent / brand */
-  --accent: var(--agentskin-accent) !important;
-  --accent-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
-  --accent-pressed: color-mix(in srgb, var(--agentskin-accent) 75%, white) !important;
-  --accent-soft: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
-  --accent-soft-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
-
-  /* Buttons */
-  --button-primary-bg: var(--agentskin-accent) !important;
-  --button-primary-fg: var(--agentskin-bg) !important;
-  --button-primary-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
-  --button-secondary-bg: color-mix(in srgb, var(--agentskin-text) 8%, transparent) !important;
-  --button-secondary-fg: var(--agentskin-text) !important;
-
-  /* Links */
-  --link: var(--agentskin-accent) !important;
-  --link-hover: color-mix(in srgb, var(--agentskin-accent) 80%, white) !important;
-
-  /* Input / composer */
-  --input-bg: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent) !important;
-  --input-border: var(--agentskin-border) !important;
-  --input-focus-ring: var(--agentskin-focus-ring) !important;
-
-  /* Sidebar / panels */
-  --sidebar-bg: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 22%, transparent) !important;
-  --panel-bg: color-mix(in srgb, var(--agentskin-surface) 14%, transparent) !important;
-
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
-  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.24) !important;
-
-  /* Selection */
-  --selection-bg: color-mix(in srgb, var(--agentskin-accent) 28%, transparent) !important;
-
-  /* Code blocks */
-  --code-bg: var(--agentskin-code-bg) !important;
-  --code-fg: var(--agentskin-code-fg) !important;
+  /* pass-through: no static token overrides; theme layer owns --color-token-* */
 }

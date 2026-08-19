@@ -2,23 +2,22 @@
 
 import { nativeDefectFixCss } from '../native-defect-fixes.mjs';
 import {
+  codexColorTokenOverrides,
   sharedChromeRules,
   shellStructureCss,
-  shellTokenOverrides,
   tokenBlock,
 } from '../theme-utils.mjs';
 
 function codexCss(t) {
   const host = 'html.agentskin-host-codex';
-  const c = t.colors;
   const hoverBg = `color-mix(in srgb, var(--agentskin-accent) 10%, transparent)`;
   const activeBg = `color-mix(in srgb, var(--agentskin-accent) 16%, transparent)`;
   const focusInputBg = `color-mix(in srgb, var(--agentskin-input-bg) 82%, var(--agentskin-accent) 18%)`;
-  return `/* ${t.name} — OpenAI Codex (--text-*/--bg-* design tokens) */
+  return `/* ${t.name} — OpenAI Codex (--color-token-* design tokens) */
 ${tokenBlock(t, host)}
 
-/* ===== Native token overrides ===== */
-${shellTokenOverrides(host, t)}
+/* ===== Native token overrides (Codex --color-token-* system) ===== */
+${codexColorTokenOverrides(host, t)}
 ${shellStructureCss(host, t)}
 ${sharedChromeRules(host, t)}
 

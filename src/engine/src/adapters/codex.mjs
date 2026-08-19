@@ -76,26 +76,32 @@ const codex = {
   // CSS variable bridge (S3): declaratively re-route the native Tailwind token
   // family Codex reads onto AgentSkin semantic roles. Compiled by the engine
   // at apply time (css-var-bridge.mjs) so both the app's own CSS rules and any
-  // JS getComputedStyle() reads resolve to the active theme. Alphas mirror
-  // engines/codex/tokens.css to preserve translucency/art punch-through.
+  // JS getComputedStyle() reads resolve to the active theme. These map Codex's
+  // LIVE native tokens (--color-token-*, verified against a running renderer)
+  // onto AgentSkin roles — the legacy flat --text-primary/--bg-* namespace was
+  // removed because it no longer exists in current Codex builds (dead no-op).
   bridge: [
-    { var: "--text-primary", role: "text" },
-    { var: "--text-secondary", role: "muted" },
-    { var: "--bg-tertiary", role: "surface-elevated", alpha: 0.85 },
-    { var: "--border-subtle", role: "border", alpha: 0.5 },
-    { var: "--border-medium", role: "border" },
+    { var: "--color-token-text-primary", role: "text" },
+    { var: "--color-token-text-secondary", role: "muted" },
+    { var: "--color-token-bg-tertiary", role: "surface-elevated", alpha: 0.85 },
+    { var: "--color-token-border", role: "border", alpha: 0.5 },
+    { var: "--color-token-border-heavy", role: "border" },
   ],
   verification: {
     // The root landmark is the only blocking check: it doubles as the
     // "app finished booting" signal and the minimal app fingerprint. Everything
     // else warns — the sidebar collapses, and CSS is inert on absent nodes.
     // Codex's main content surface uses a CSS-Modules hashed class
-    // (`_MainContentSurface_xxx`) rather than the `main-surface` class, so
-    // match the hashed prefix and fall back to a bare `<main>`.
-    rootAny: [ "main[class*='MainContentSurface']", "main"],
+    // (`_MainContentSurface_xxx`), so anchor the selector to that prefix.
+    // We deliberately do NOT fall back to a bare `<main>` (matches route
+    // content / auxiliary surfaces — see CodeDrobe PR #7's test guard) and do
+    // NOT use `#root main` (that targets a different Windows build lineage that
+    // wraps the root in #root; our verified renderer at 62640 has no #root
+    // ancestor, so `#root main` would be a dead selector here).
+    rootAny: [ "main[class*='MainContentSurface']" ],
     recommended: [
       { name: "sidebar", any: ["aside.app-shell-left-panel"] },
-      { name: "composer", any: [] },
+      { name: "composer", any: [".composer-surface-chrome"] },
     ],
   },
 };

@@ -9,8 +9,11 @@ import { BaseApplicationAdapter, type InstallHints } from '../base';
  * on macOS (com.openai.codex / ChatGPT.app v26.707.72221, build 5307).
  *
  * The Codex Electron app uses an `app://` renderer scheme (matched by the
- * engine's `matchTarget`), rooted at `main.main-surface`. Theme injection
- * uses the standard palette→tokens→cosmetic→adapter pipeline.
+ * engine's `matchTarget`), rooted at `main[class*='MainContentSurface']`
+ * (CSS-Modules hashed class; verified against a live renderer — NOT the
+ * legacy `main.main-surface`). Theme injection uses the standard
+ * palette→tokens→cosmetic→adapter pipeline (the codex tokens.css layer is a
+ * pass-through; --color-token-* is owned by the per-theme codex.css).
  */
 export class CodexAdapter extends BaseApplicationAdapter {
   readonly id = 'codex';

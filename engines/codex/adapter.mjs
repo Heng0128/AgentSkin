@@ -3,7 +3,8 @@
  * ------------------------------------------------------------
  * Runs inside the OpenAI Codex (ChatGPT desktop app) renderer via CDP
  * Runtime.evaluate. Codex is an Electron app using an `app://` renderer
- * scheme, rooted at `main.main-surface`.
+ * scheme, rooted at `main[class*='MainContentSurface']` (CSS-Modules hashed
+ * class; verified against a running renderer — NOT the legacy `main.main-surface`).
  *
  * Handles everything that CANNOT be expressed as pure token overrides:
  *   - Art layer (body::before with hero image)
@@ -113,10 +114,13 @@ html.${HOST_CLASS} body::before {
 }
 
 /* === Main app surface: transparent for art punch-through ===
-   Codex root: main.main-surface (verified). Avoid bare [class*="main-surface"]
-   which also matches buttons (h-token-button-composer) and fade masks. */
-html.${HOST_CLASS} main.main-surface,
-html.${HOST_CLASS} main[class*="main-surface"] {
+   Codex root: main[class*='MainContentSurface'] (verified against a running
+   renderer at build 62640; the hashed CSS-Modules class, NOT the legacy
+   `main.main-surface`). Bare [class*="main-surface"] is avoided — it would
+   also match buttons (h-token-button-composer) and fade masks. The adapter's
+   discoverAndOverrideTokens() is a secondary safety net that transparents any
+   --color-token-bg-* property regardless of this selector. */
+html.${HOST_CLASS} main[class*='MainContentSurface'] {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;

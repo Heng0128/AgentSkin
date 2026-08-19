@@ -407,6 +407,83 @@ export function shellTokenOverrides(host, t) {
 }`;
 }
 
+// ---------------------------------------------------------------------------
+// Codex native token overrides (--color-token-* system)
+// ---------------------------------------------------------------------------
+
+/**
+ * Codex-native token overrides.
+ *
+ * Live Codex (v26.x, `app://-/`) drives its ENTIRE visual identity through the
+ * `--color-token-*` namespace pinned on :root — 25 tokens as of the v26.814
+ * probe (bg-primary, side-bar-background, main-surface-primary, foreground /
+ * text-*, border*, primary, focus-border, dropdown-*, list-hover-background,
+ * …). The shared `shellTokenOverrides` block instead maps the palette onto a
+ * flat `--text-*` / `--bg-*` / `--accent-*` system that Codex does NOT expose
+ * (confirmed: `:root` 0, aggregated 0) → silent no-op, leaving Codex on its
+ * native colors and making every theme "fake-complete" on Codex.
+ *
+ * This function maps the 14-token palette onto the REAL `--color-token-*`
+ * system. Borders follow the established accent-alpha derivation used by
+ * `shellTokenOverrides` (subtle, theme-tinted). Semantic/fixed tokens are left
+ * native on purpose: `--color-token-editor-warning-foreground` (warning hue)
+ * and `--color-token-charts-blue` (data-viz brand) must not be re-skinned.
+ *
+ * Helper vars (`--accent` / `--bg-hover` / `--bg-active` / `--bg-selected`)
+ * are re-declared here because `shellStructureCss` consumes them and we no
+ * longer call `shellTokenOverrides`.
+ */
+export function codexColorTokenOverrides(host, t) {
+  const c = t.colors;
+  const bLight = alpha(c.accent, 0.045);
+  const bDefault = alpha(c.accent, 0.09);
+  const bHeavy = alpha(c.accent, 0.156);
+  const hoverBg = alpha(c.accent, 0.078);
+  const focusB = alpha(c.accent, 0.76);
+  return `${host} {
+  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+
+  /* Accent / brand */
+  --color-token-primary: ${c.accent} !important;
+  --color-token-text-link-foreground: ${c.accent} !important;
+  --color-token-focus-border: ${focusB} !important;
+
+  /* App + surface backgrounds */
+  --color-token-bg-primary: ${c.background} !important;
+  --color-token-side-bar-background: ${c.background} !important;
+  --color-token-bg-secondary: color-mix(in srgb, ${c.background} 92%, transparent) !important;
+  --color-token-bg-tertiary: color-mix(in srgb, ${c.background} 85%, transparent) !important;
+  --color-token-main-surface-primary: ${c.surface} !important;
+  --color-token-diff-surface: color-mix(in srgb, ${c.surface} 94%, ${c.foreground}) !important;
+  --color-token-dropdown-background: ${c.surfaceElevated} !important;
+  --color-token-dropdown-foreground: ${c.foreground} !important;
+
+  /* Foreground / text */
+  --color-token-foreground: ${c.foreground} !important;
+  --color-token-text-primary: ${c.foreground} !important;
+  --color-token-text-secondary: color-mix(in srgb, ${c.foreground} 65%, transparent) !important;
+  --color-token-text-tertiary: ${alpha(c.foreground, 0.498)} !important;
+  --color-token-description-foreground: ${alpha(c.foreground, 0.498)} !important;
+
+  /* Borders */
+  --color-token-border: ${bDefault} !important;
+  --color-token-border-default: ${bDefault} !important;
+  --color-token-border-light: ${bLight} !important;
+  --color-token-border-heavy: ${bHeavy} !important;
+  --color-token-input-border: ${bHeavy} !important;
+
+  /* Interaction surfaces */
+  --color-token-list-hover-background: ${hoverBg} !important;
+  --color-token-scrollbar-slider-hover-background: ${bHeavy} !important;
+
+  /* Helper vars consumed by shellStructureCss */
+  --accent: ${c.accent} !important;
+  --bg-hover: ${alpha(c.accent, 0.1)} !important;
+  --bg-active: ${alpha(c.accent, 0.16)} !important;
+  --bg-selected: ${alpha(c.accent, 0.14)} !important;
+}`;
+}
+
 /** Structural chrome shared by the shell-style agents (art layer, frosted
  *  sidebar/composer, popovers). Selectors are the heuristic L5 landmarks the
  *  per-agent adapter additionally positions via JS. */
