@@ -50,10 +50,9 @@ function extractFingerprintColors(
 export function StudioStatusBar({ t }: { t: UiMessages }) {
   const snapshot = useStudioStore((s) => s.snapshot);
   const inspectMode = useStudioStore((s) => s.inspectMode);
-  const activeWindowId = useWorkspaceStore((s) => s.activeWindowId);
-  const windows = useWorkspaceStore((s) => s.windows);
+  const window = useWorkspaceStore((s) => s.window);
 
-  const scale = windows.find((w) => w.id === activeWindowId)?.scale ?? 1;
+  const scale = window?.scale ?? 1;
   const zoomPct = Math.round(scale * 100);
 
   const colors = extractFingerprintColors(snapshot);

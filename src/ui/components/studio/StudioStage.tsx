@@ -5,7 +5,7 @@
  *
  * Workspace stage region — renders a single preview window.
  *
- * Multi-window modes (dual / triple / focus / quad) are removed.
+ * Single-window architecture — workspaceStore exposes a single `window` object.
  * Snapshot / Baseline / Inspect / Zoom functionality is preserved.
  */
 
@@ -21,7 +21,7 @@ import type { DomTreeNode } from '@shared/types';
 import { FlaskConical } from 'lucide-react';
 
 export function StudioStage({ t }: { t: UiMessages }) {
-  const { windows, activeWindowId, setActiveWindow, updateWindow } = useWorkspaceStore();
+  const window = useWorkspaceStore((s) => s.window);
 
   const snapshot = useStudioStore((s) => s.snapshot);
   const previewView = useStudioStore((s) => s.previewView);
@@ -51,8 +51,8 @@ export function StudioStage({ t }: { t: UiMessages }) {
     );
   }
 
-  // No windows — should not happen with single-window architecture.
-  if (!windows.length) {
+  // No window — should not happen with single-window architecture.
+  if (!window) {
     return (
       <main className="ws-stage">
         <div className="ws-stage__inner">
@@ -68,17 +68,15 @@ export function StudioStage({ t }: { t: UiMessages }) {
     );
   }
 
-  const win = windows[0];
-
   return (
     <main className="ws-stage">
       <div className="ws-stage__inner" data-view="single">
         <PreviewWindow
-          key={win.id}
-          win={win}
-          active={activeWindowId === win.id}
-          onSelect={() => setActiveWindow(win.id)}
-          onScaleChange={(s) => updateWindow(win.id, { scale: s })}
+          key={window.id}
+          win={window}
+          active={true}
+          onSelect={() => {}}
+          onScaleChange={(s) => {}}
           domTree={domTree}
           rootVars={rootVars}
           t={t}

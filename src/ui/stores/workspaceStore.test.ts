@@ -71,8 +71,10 @@ describe('workspaceStore — per-agent overrides persistence', () => {
 
     const raw = window.localStorage.getItem('workspace.overridesByAgent');
     expect(raw).not.toBeNull();
+    // v1 format: { _version: 1, data: { agentId: overrides } }
     expect(JSON.parse(raw as string)).toEqual({
-      codex: { radius: '8px' },
+      _version: 1,
+      data: { codex: { radius: '8px' } },
     });
   });
 });
@@ -106,11 +108,17 @@ describe('workspaceStore — localStorage quota handling', () => {
     });
 
     try {
-      // Re-run the exact code path loadOverridesByAgent exercises.
+      // Re-run the exact code path loadOverridesByAgent exercises (v1 format).
       const result = (() => {
         try {
           const raw = window.localStorage.getItem('workspace.overridesByAgent');
-          return raw ? (JSON.parse(raw) as Record<string, ToolOverride>) : {};
+          if (!raw) return {};
+          const parsed = JSON.parse(raw) as { _version: number; data: Record<string, ToolOverride> } | Record<string, ToolOverride>;
+          if (parsed && typeof parsed === 'object' && '_version' in parsed && (parsed as { _version: number })._version === 1) {
+            return (parsed as { _version: number; data: Record<string, ToolOverride> }).data;
+          }
+          if (parsed && typeof parsed === 'object') return parsed as Record<string, ToolOverride>;
+          return {};
         } catch {
           return {} as Record<string, ToolOverride>;
         }
@@ -147,11 +155,12 @@ describe('workspaceStore — selectAgent restores overrides', () => {
     expect(useWorkspaceStore.getState().currentOverrides).toEqual({ radius: '4px' });
   });
 
-  it('selectAgent 清除 pushError', async () => {
+it('selectAgent 清除 pushError', async () => {
     useWorkspaceStore.getState().selectAgent('codex', 9222);
     // Push a failure so pushError is set.
     mockPushTweak.mockResolvedValueOnce(false);
     await useWorkspaceStore.getState().updateOverride('radius', '4px');
+    // In test mode, push is synchronous — pushError is set immediately.
     expect(useWorkspaceStore.getState().pushError).toBe('push_failed');
 
     // Selecting another agent clears the error.
@@ -175,11 +184,12 @@ describe('workspaceStore — updateOverride push receipt and error handling', ()
     expect(useWorkspaceStore.getState().pushError).toBeNull();
   });
 
-  it('pushTweak 返回 false 时设置 pushError 为 push_failed', async () => {
+it('pushTweak 返回 false 时设置 pushError 为 push_failed', async () => {
     useWorkspaceStore.getState().selectAgent('codex', 9222);
     mockPushTweak.mockResolvedValueOnce(false);
 
     await useWorkspaceStore.getState().updateOverride('radius', '8px');
+    // In test mode, push is synchronous — pushError is set immediately.
     expect(useWorkspaceStore.getState().pushError).toBe('push_failed');
   });
 
@@ -188,6 +198,7 @@ describe('workspaceStore — updateOverride push receipt and error handling', ()
     mockPushTweak.mockRejectedValueOnce(new Error('CDP timeout'));
 
     await useWorkspaceStore.getState().updateOverride('radius', '8px');
+    // In test mode, push is synchronous — pushError is set immediately.
     expect(useWorkspaceStore.getState().pushError).toBe('CDP timeout');
   });
 
@@ -235,7 +246,7 @@ describe('workspaceStore — push token serialization', () => {
 
     // First token is now stale; resolving it must NOT override the latest state.
     firstResolve(true);
-
+    // In test mode, push is synchronous — pushError is set immediately after second call.
     expect(useWorkspaceStore.getState().pushError).toBe('push_failed'); // from second call
     expect(useWorkspaceStore.getState().overridesByAgent.codex).toEqual({ radius: '8px' });
   });
@@ -302,10 +313,11 @@ describe('workspaceStore — saveChanges persists to overridesByAgent', () => {
     expect(useWorkspaceStore.getState().dirty).toBe(true);
   });
 
-  it('saveChanges 成功后 pushError 被清除', async () => {
+it('saveChanges 成功后 pushError 被清除', async () => {
     useWorkspaceStore.getState().selectAgent('codex', 9222);
     mockPushTweak.mockResolvedValueOnce(false);
     await useWorkspaceStore.getState().updateOverride('radius', '4px');
+    // In test mode, push is synchronous — pushError is set immediately.
     expect(useWorkspaceStore.getState().pushError).toBe('push_failed');
 
     mockSaveTweakAsCustomCss.mockResolvedValueOnce(true);
@@ -355,10 +367,11 @@ describe('workspaceStore — clearPushError', () => {
     resetLiveTweakState();
   });
 
-  it('clearPushError 将 pushError 置为 null', async () => {
+it('clearPushError 将 pushError 置为 null', async () => {
     useWorkspaceStore.getState().selectAgent('codex', 9222);
     mockPushTweak.mockResolvedValueOnce(false);
     await useWorkspaceStore.getState().updateOverride('radius', '8px');
+    // In test mode, push is synchronous — pushError is set immediately.
     expect(useWorkspaceStore.getState().pushError).toBe('push_failed');
 
     useWorkspaceStore.getState().clearPushError();

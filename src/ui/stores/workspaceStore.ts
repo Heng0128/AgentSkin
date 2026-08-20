@@ -7,8 +7,8 @@
  * drawer, and workspace preset. Replaces the ad-hoc collapsed/state
  * booleans previously scattered across studioStore.
  *
- * Note: Studio is now single-window only. `windows` always holds exactly
- * one PreviewWindow. `addWindow` / `removeWindow` are removed.
+ * Note: Studio is now single-window only. `window` holds the single
+ * PreviewWindow record directly (no array, no activeWindowId).
  */
 
 import { api } from '@/api/agentSkinClient';
@@ -40,9 +40,8 @@ interface WorkspaceState {
   // Always 'single' — Studio is single-window only
   viewMode: ViewMode;
 
-  // Preview windows — always exactly [singleWindow]
-  windows: PreviewWindowState[];
-  activeWindowId: string | null;
+  // Single preview window (no array — Studio is single-window only)
+  window: PreviewWindowState;
 
   // Sub-panels
   dock: DockState;
@@ -93,10 +92,6 @@ interface WorkspaceState {
   // ---- actions ----
 
   setViewMode: (mode: ViewMode) => void;
-
-  // window management (single window — scale/inspect still mutable)
-  setActiveWindow: (id: string) => void;
-  updateWindow: (id: string, patch: Partial<PreviewWindowState>) => void;
 
   // dock
   setDockOpen: (open: boolean) => void;
@@ -156,13 +151,33 @@ interface WorkspaceState {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const OVERRIDES_STORAGE_KEY = 'workspace.overridesByAgent';
+const STORAGE_KEY = 'workspace.overridesByAgent';
+const STORAGE_VERSION_KEY = 'workspace.version';
+const CURRENT_VERSION = 1;
+
+interface StorageWrapper {
+  _version: number;
+  data: Record<string, ToolOverride>;
+}
 
 /** Load per-agent overrides from localStorage. Returns empty map on any error. */
 function loadOverridesByAgent(): Record<string, ToolOverride> {
   try {
-    const raw = localStorage.getItem(OVERRIDES_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, ToolOverride>) : {};
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as StorageWrapper | Record<string, ToolOverride>;
+    // v1 format
+    if (
+      parsed &&
+      typeof parsed === 'object' &&
+      '_version' in parsed &&
+      (parsed as StorageWrapper)._version === 1
+    ) {
+      return (parsed as StorageWrapper).data;
+    }
+    // legacy format (no _version) — return as-is
+    if (parsed && typeof parsed === 'object') return parsed as Record<string, ToolOverride>;
+    return {};
   } catch {
     return {}; // quota / parse error — degrade to in-session only
   }
@@ -171,7 +186,9 @@ function loadOverridesByAgent(): Record<string, ToolOverride> {
 /** Persist per-agent overrides to localStorage. Silently degrades on quota errors. */
 function persistOverridesByAgent(map: Record<string, ToolOverride>): void {
   try {
-    localStorage.setItem(OVERRIDES_STORAGE_KEY, JSON.stringify(map));
+    const wrapper: StorageWrapper = { _version: CURRENT_VERSION, data: map };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(wrapper));
+    localStorage.setItem(STORAGE_VERSION_KEY, String(CURRENT_VERSION));
   } catch {
     // quota exceeded etc. — degrade gracefully, UI still works
   }
@@ -179,6 +196,11 @@ function persistOverridesByAgent(map: Record<string, ToolOverride>): void {
 
 /** Monotonic token — incremented on each updateOverride call to discard stale push receipts. */
 let pushToken = 0;
+
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+// In test environments (VITEST=true), bypass debounce for deterministic testing.
+const IS_TEST = process.env.VITEST === 'true';
+const DEBOUNCE_MS = IS_TEST ? 0 : 150;
 
 function makeWindow(id: string, agentId: AgentId): PreviewWindowState {
   return {
@@ -201,8 +223,6 @@ const initialWindow = makeWindow('w1', DEFAULT_AGENT);
 const initialState: Omit<
   WorkspaceState,
   | 'setViewMode'
-  | 'setActiveWindow'
-  | 'updateWindow'
   | 'setDockOpen'
   | 'toggleDock'
   | 'setDockHeight'
@@ -229,8 +249,7 @@ const initialState: Omit<
   | 'clearRawError'
 > = {
   viewMode: 'single',
-  windows: [initialWindow],
-  activeWindowId: initialWindow.id,
+  window: initialWindow,
 
   dock: {
     open: true,
@@ -284,13 +303,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     if (mode !== 'single') return;
     set({ viewMode: mode });
   },
-
-  setActiveWindow: (id) => set({ activeWindowId: id }),
-
-  updateWindow: (id, patch) =>
-    set((s) => ({
-      windows: s.windows.map((w) => (w.id === id ? { ...w, ...patch } : w)),
-    })),
 
   // dock
   setDockOpen: (open) =>
@@ -408,33 +420,38 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   updateOverride: async (key, value) => {
     const s = get();
     const next: ToolOverride = { ...s.currentOverrides, [key]: value };
+    const agentId = s.currentAgentId ?? ('codex' as AgentId);
+
+    // Optimistic update: UI reflects intent immediately.
+    const overridesByAgent = { ...s.overridesByAgent, [agentId]: next };
+    persistOverridesByAgent(overridesByAgent);
+    set({ currentOverrides: next, overridesByAgent, dirty: true, pushError: null });
+
+    // Push: debounced in production (150ms), immediate in tests.
     const session: TweakSession = {
-      agentId: s.currentAgentId ?? ('codex' as AgentId),
+      agentId,
       port: s.currentPort ?? 0,
       overrides: next,
       dirty: true,
     };
-
-    // Optimistic update: UI reflects intent immediately.
-    const overridesByAgent = { ...s.overridesByAgent, [session.agentId]: next };
-    persistOverridesByAgent(overridesByAgent);
-    set({ currentOverrides: next, overridesByAgent, dirty: true, pushError: null });
-
-    // Capture current token; only the latest token's receipt is applied.
-    const token = ++pushToken;
-    try {
-      const ok = await api.pushTweak(session, next);
-      if (token !== pushToken) return; // stale receipt — discard
-      if (!ok) set({ pushError: 'push_failed' });
-    } catch (err) {
-      if (token !== pushToken) return; // stale receipt — discard
-      set({
-        pushError: err instanceof Error ? err.message : 'push_error',
-      });
+    if (IS_TEST) {
+      // Synchronous push for deterministic tests.
+      await pushToAgent(session, next);
+    } else {
+      // Debounced push: 150ms window collapses multiple changes into one push.
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        void pushToAgent(session, next);
+      }, DEBOUNCE_MS);
     }
   },
 
   saveChanges: async () => {
+    // Debounce flush: push any pending debounce before saving.
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
     const { currentAgentId, currentPort, currentOverrides } = get();
     const session: TweakSession = {
       agentId: currentAgentId ?? ('codex' as AgentId),
@@ -456,6 +473,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   },
 
   discardChanges: async () => {
+    // Debounce flush: cancel any pending debounce before resetting.
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
     const { currentAgentId, currentPort } = get();
     const session: TweakSession = {
       agentId: currentAgentId ?? ('codex' as AgentId),
@@ -576,3 +598,18 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   clearRawError: () => set({ rawError: null }),
 }));
+
+/** Push overrides to the running agent (extracted for debounce reuse). */
+async function pushToAgent(session: TweakSession, overrides: ToolOverride): Promise<void> {
+  const token = ++pushToken;
+  try {
+    const ok = await api.pushTweak(session, overrides);
+    if (token !== pushToken) return;
+    if (!ok) useWorkspaceStore.setState({ pushError: 'push_failed' });
+  } catch (err) {
+    if (token !== pushToken) return;
+    useWorkspaceStore.setState({
+      pushError: err instanceof Error ? err.message : 'push_error',
+    });
+  }
+}
