@@ -31,8 +31,10 @@
 
 import {
   ADAPTER_MARKERS,
+  DEEP_CORE_GLOBAL,
   hostClassFor,
   RENDERER_CONFIG_GLOBAL,
+  SHADOW_ORIG_REF,
   SHEET_LAYER_FLAG,
   SHEET_OWNED_FLAG,
 } from './injection-constants';
@@ -150,6 +152,24 @@ const CLEAR_HOST_BODY = [
   `delete window.${RENDERER_CONFIG_GLOBAL};`,
 ].join('\n');
 
+/**
+ * JS body: tear down the DeepCore runtime — restore patched `attachShadow`,
+ * unregister fragment sheets, dispose the runtime handle, and delete the
+ * shadow-orig reference. Best-effort (wrapped in try-catch by caller).
+ * Internal — only consumed by {@link buildClearEngineInjectionExpression}.
+ */
+const CLEAR_DEEP_CORE_BODY = [
+  `if (window.${SHADOW_ORIG_REF}) {`,
+  '  try { Element.prototype.attachShadow = window.__agentskin_shadow_orig__; } catch (e) {}',
+  '}',
+  `delete window.${SHADOW_ORIG_REF};`,
+  `if (window.${DEEP_CORE_GLOBAL} && window.${DEEP_CORE_GLOBAL}.dispose) {`,
+  '  try { window.__AGENTSKIN_DEEP_CORE__.dispose(); } catch (e) {}',
+  '}',
+  `delete window.${DEEP_CORE_GLOBAL};`,
+  'delete window.__AGENTSKIN_DEEP_CORE_LOADED__;',
+].join('\n');
+
 // ---------------------------------------------------------------------------
 // Expression builders (complete IIFEs — for direct session.evaluate())
 // ---------------------------------------------------------------------------
@@ -229,6 +249,7 @@ export function buildClearEngineInjectionExpression(): string {
       ${CLEAR_OWNED_SHEETS_BODY}
       ${CLEAR_ADAPTERS_BODY}
       ${CLEAR_HOST_BODY}
+      ${CLEAR_DEEP_CORE_BODY}
     } catch (e) { /* best-effort */ }
     return 'ok';
   })()`;

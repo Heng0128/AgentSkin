@@ -79,6 +79,15 @@ export default defineConfig({
           pool: 'threads',
         },
       },
+      {
+        test: {
+          name: 'deep-core',
+          environment: 'happy-dom',
+          include: ['tests/unit/**/*.test.ts', 'tests/integrate/**/*.test.ts'],
+          testTimeout: 10000,
+          pool: 'threads',
+        },
+      },
     ],
     coverage: {
       provider: 'v8',

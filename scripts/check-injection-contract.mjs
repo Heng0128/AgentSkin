@@ -137,7 +137,9 @@ if (!existsSync(enginesDir)) {
 } else {
   engineAgents = readdirSync(enginesDir, { withFileTypes: true })
     .filter((d) => d.isDirectory())
-    .map((d) => d.name);
+    .map((d) => d.name)
+    // Exclude non-agent shared directories (e.g. engines/shared/ for deep-core.mjs)
+    .filter((name) => !['shared', '_shared'].includes(name));
 
   if (engineAgents.length === 0) {
     fail(

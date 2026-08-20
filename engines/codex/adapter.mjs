@@ -232,6 +232,22 @@ html.${HOST_CLASS} [class*="tooltip"] {
 }
 `;
 
+  // DEEP_CONFIG — DeepCore configuration (RFC 2026-08-20 §4.9 Step 2)
+  // IMPORTANT: Use double-quote strings only — backtick templates would break
+  // structural-template.ts regex extraction (P1-4 fix).
+  // Position: AFTER STRUCTURAL_CSS to avoid regex mis-match.
+  const DEEP_CONFIG = {
+    shadowMode: "open-only",
+    routes: [
+      { id: "composer-open", test: { selector: "[data-composer-expanded]" }, enterFragment: "panel-composer", exitFragment: null }
+    ],
+    fragments: {
+      "panel-composer": "html." + HOST_CLASS + " .composer-surface-chrome { box-shadow: 0 0 0 2px var(--agentskin-accent) !important; }"
+    },
+    exposedState: [],
+    enabled: true
+  };
+
   // L4: Token auto-discovery — scans agent stylesheets for custom properties
   function discoverAndOverrideTokens() {
     const discovered = new Set();
@@ -278,25 +294,40 @@ html.${HOST_CLASS} [class*="tooltip"] {
     sheet,
   ];
 
-  // Self-healing (with adaptive throttle to prevent observer storms)
+  // ═══════════════════════════════════════════════════════════
+  // DEEP-CORE INTEGRATION (RFC 2026-08-20 §4.9 Step 3)
+  // Try DeepCore first; fall back to legacy self-healing on failure.
+  // ═══════════════════════════════════════════════════════════
+  let deepCoreInstance = null;
+  if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
+    try {
+      deepCoreInstance = new DeepCore(DEEP_CONFIG, { agent: "codex", themeId: config.themeId || "unknown", heroUrl: heroUrl, HOST_CLASS: HOST_CLASS });
+      deepCoreInstance._adapterSheet = sheet;
+      return "applied";
+    } catch (err) {
+      console.warn("[codex-adapter] DeepCore init failed, fallback:", err);
+    }
+  }
+
+  // Legacy self-healing (fallback when DeepCore unavailable)
   let healTimer = null;
   const observer = new AdaptiveMutationObserver((mutations) => {
     const structural = mutations.some(m => m.addedNodes.length > 3 || m.removedNodes.length > 3);
     if (!structural) return;
     if (healTimer) clearTimeout(healTimer);
     healTimer = setTimeout(() => {
-      try { sheet.replaceSync([STRUCTURAL_CSS, discoverAndOverrideTokens()].filter(Boolean).join('\n')); } catch {}
+      try { sheet.replaceSync([STRUCTURAL_CSS, discoverAndOverrideTokens()].filter(Boolean).join("\n")); } catch {}
     }, 300);
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
   const interval = setInterval(() => {
     if (!document.documentElement.classList.contains(HOST_CLASS)) document.documentElement.classList.add(HOST_CLASS);
-    if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
-      document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
+    if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue("--agentskin-art").includes("blob:")) {
+      document.documentElement.style.setProperty("--agentskin-art", `url("${heroUrl}")`);
     }
   }, 5000);
 
   window[MARKER] = { observer, interval, sheet };
-  return 'applied';
+  return "applied";
 })()

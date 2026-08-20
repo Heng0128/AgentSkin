@@ -272,6 +272,16 @@ html.${HOST_CLASS} [class*="suggest-message-list-wrapper"] {
 }
 `;
 
+  // DEEP_CONFIG (RFC 2026-08-20) — double quotes only, after STRUCTURAL_CSS
+  // 豆包使用 chromium-webview，采用 variables-only 模式（T14 确认后可升级）
+  const DEEP_CONFIG = {
+    shadowMode: "variables-only",
+    routes: [],
+    fragments: {},
+    exposedState: [],
+    enabled: true
+  };
+
   // ═══════════════════════════════════════════════════════════
   // L5: HEURISTIC DOM POSITIONING
   // Finds elements by semantic features, applies scoped styles.
@@ -695,7 +705,17 @@ html.${HOST_CLASS} [class*="topic"]:hover {
 
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // 5. Periodic re-check (agent may re-render without DOM mutations)
+  // DEEP-CORE INTEGRATION (RFC 2026-08-20)
+  if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
+    try {
+      const deepCoreInstance = new DeepCore(DEEP_CONFIG, { agent: "doubao", themeId: config.themeId || "unknown", heroUrl: heroUrl, HOST_CLASS: HOST_CLASS });
+      return "applied";
+    } catch (err) {
+      console.warn("[doubao-adapter] DeepCore init failed, fallback:", err);
+    }
+  }
+
+  // 5. Periodic re-check (legacy fallback)
   const interval = setInterval(() => {
     if (!document.documentElement.classList.contains(HOST_CLASS)) {
       document.documentElement.classList.add(HOST_CLASS);
@@ -706,5 +726,5 @@ html.${HOST_CLASS} [class*="topic"]:hover {
   }, 5000);
 
   window[MARKER] = { observer, interval, sheet: finalSheet };
-  return 'applied';
+  return "applied";
 })()

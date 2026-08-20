@@ -321,14 +321,23 @@ html.${HOST_CLASS} [class*="tooltip"] {
     sheet,
   ];
 
-  // Self-healing (with adaptive throttle to prevent observer storms)
+  // DEEP-CORE INTEGRATION (RFC 2026-08-20)
+  if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
+    try {
+      const deepCoreInstance = new DeepCore(DEEP_CONFIG, { agent: "zcode", themeId: config.themeId || "unknown", heroUrl: heroUrl, HOST_CLASS: HOST_CLASS });
+      return "applied";
+    } catch (err) {
+      console.warn("[zcode-adapter] DeepCore init failed, fallback:", err);
+    }
+  }
+
+  // Legacy self-healing (fallback)
   let healTimer = null;
   const observer = new AdaptiveMutationObserver((mutations) => {
     const structural = mutations.some(m => m.addedNodes.length > 3 || m.removedNodes.length > 3);
     if (!structural) return;
     if (healTimer) clearTimeout(healTimer);
     healTimer = setTimeout(() => {
-      // 重新打标（导航/重渲染可能替换侧边栏/composer 节点）后重建样式表
       applySemanticAnchors();
       try { sheet.replaceSync([STRUCTURAL_CSS, discoverAndOverrideTokens()].filter(Boolean).join('\n')); } catch {}
     }, 300);
@@ -337,12 +346,12 @@ html.${HOST_CLASS} [class*="tooltip"] {
 
   const interval = setInterval(() => {
     if (!document.documentElement.classList.contains(HOST_CLASS)) document.documentElement.classList.add(HOST_CLASS);
-    applySemanticAnchors(); // 兜底重打标（应用可能无 DOM 变更但需补标）
+    applySemanticAnchors();
     if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
       document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
     }
   }, 5000);
 
   window[MARKER] = { observer, interval, sheet };
-  return 'applied';
+  return "applied";
 })()

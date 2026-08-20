@@ -224,6 +224,15 @@ html.${HOST_CLASS} [class*="segmented"] [class*="active"] {
 }
 `;
 
+  // DEEP_CONFIG (RFC 2026-08-20) — double quotes only, after STRUCTURAL_CSS
+  const DEEP_CONFIG = {
+    shadowMode: "open-only",
+    routes: [],
+    fragments: {},
+    exposedState: [],
+    enabled: true
+  };
+
   // Injection
   document.documentElement.classList.add(HOST_CLASS);
   if (heroUrl) {
@@ -239,7 +248,17 @@ html.${HOST_CLASS} [class*="segmented"] [class*="active"] {
     sheet,
   ];
 
-  // Self-healing
+  // DEEP-CORE INTEGRATION (RFC 2026-08-20)
+  if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
+    try {
+      const deepCoreInstance = new DeepCore(DEEP_CONFIG, { agent: "traework", themeId: config.themeId || "unknown", heroUrl: heroUrl, HOST_CLASS: HOST_CLASS });
+      return "applied";
+    } catch (err) {
+      console.warn("[traework-adapter] DeepCore init failed, fallback:", err);
+    }
+  }
+
+  // Legacy self-healing (fallback)
   const interval = setInterval(() => {
     if (!document.documentElement.classList.contains(HOST_CLASS)) document.documentElement.classList.add(HOST_CLASS);
     if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
@@ -248,5 +267,5 @@ html.${HOST_CLASS} [class*="segmented"] [class*="active"] {
   }, 5000);
 
   window[MARKER] = { interval, sheet };
-  return 'applied';
+  return "applied";
 })()

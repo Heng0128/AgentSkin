@@ -253,6 +253,16 @@ class AdaptiveMutationObserver {
 }
 `;
 
+  // DEEP_CONFIG (RFC 2026-08-20) — double quotes only, after STRUCTURAL_CSS
+  // WorkBuddy 13+ target，强制 open-only 避免多 target 原型污染（RFC R5）
+  const DEEP_CONFIG = {
+    shadowMode: "open-only",
+    routes: [],
+    fragments: {},
+    exposedState: [],
+    enabled: true
+  };
+
   // ═══════════════════════════════════════════════════════════
   // L5: HEURISTIC DOM POSITIONING
   // Finds elements by semantic features, applies scoped styles.
@@ -453,7 +463,17 @@ class AdaptiveMutationObserver {
 
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // 5. Periodic re-check (agent may re-render without DOM mutations)
+  // DEEP-CORE INTEGRATION (RFC 2026-08-20)
+  if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
+    try {
+      const deepCoreInstance = new DeepCore(DEEP_CONFIG, { agent: "workbuddy", themeId: config.themeId || "unknown", heroUrl: heroUrl, HOST_CLASS: HOST_CLASS });
+      return "applied";
+    } catch (err) {
+      console.warn("[workbuddy-adapter] DeepCore init failed, fallback:", err);
+    }
+  }
+
+  // 5. Periodic re-check (legacy fallback)
   const interval = setInterval(() => {
     if (!document.documentElement.classList.contains(HOST_CLASS)) {
       document.documentElement.classList.add(HOST_CLASS);
@@ -464,5 +484,5 @@ class AdaptiveMutationObserver {
   }, 5000);
 
   window[MARKER] = { observer, interval, sheet: finalSheet };
-  return 'applied';
+  return "applied";
 })()

@@ -220,6 +220,15 @@ html.${HOST_CLASS} select:focus {
     return '';
   }
 
+  // DEEP_CONFIG (RFC 2026-08-20) — double quotes only, after STRUCTURAL_CSS
+  const DEEP_CONFIG = {
+    shadowMode: "open-only",
+    routes: [],
+    fragments: {},
+    exposedState: [],
+    enabled: true
+  };
+
   // Injection
   document.documentElement.classList.add(HOST_CLASS);
   if (heroUrl) {
@@ -236,7 +245,17 @@ html.${HOST_CLASS} select:focus {
     sheet,
   ];
 
-  // Self-healing (with adaptive throttle to prevent observer storms)
+  // DEEP-CORE INTEGRATION (RFC 2026-08-20)
+  if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
+    try {
+      const deepCoreInstance = new DeepCore(DEEP_CONFIG, { agent: "qoderwork", themeId: config.themeId || "unknown", heroUrl: heroUrl, HOST_CLASS: HOST_CLASS });
+      return "applied";
+    } catch (err) {
+      console.warn("[qoderwork-adapter] DeepCore init failed, fallback:", err);
+    }
+  }
+
+  // Legacy self-healing (fallback)
   let healTimer = null;
   const observer = new AdaptiveMutationObserver((mutations) => {
     const structural = mutations.some(m => m.addedNodes.length > 3 || m.removedNodes.length > 3);
@@ -256,5 +275,5 @@ html.${HOST_CLASS} select:focus {
   }, 5000);
 
   window[MARKER] = { observer, interval, sheet };
-  return 'applied';
+  return "applied";
 })()

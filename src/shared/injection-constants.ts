@@ -83,6 +83,25 @@ export const ADAPTER_MARKERS: readonly string[] = Object.freeze(
 );
 
 // ---------------------------------------------------------------------------
+// DeepCore runtime globals (RFC 2026-08-20 §4.3/§4.4)
+// ---------------------------------------------------------------------------
+
+/**
+ * DeepCore runtime handle global — each DeepCore instance writes
+ * `window[DEEP_CORE_GLOBAL]` so cleanup can call dispose() before
+ * the adapter marker is cleared. Mirrors the ADAPTER_MARKER_PREFIX/
+ * SUFFIX convention for consistency.
+ */
+export const DEEP_CORE_GLOBAL = '__AGENTSKIN_DEEP_CORE__';
+
+/**
+ * Saved native attachShadow reference — DeepCore writes the original
+ * `Element.prototype.attachShadow` here during install() so the
+ * main-process removeEngineInjection can restore it on cleanup.
+ */
+export const SHADOW_ORIG_REF = '__agentskin_shadow_orig__';
+
+// ---------------------------------------------------------------------------
 // Wallpaper element IDs and globals
 // ---------------------------------------------------------------------------
 

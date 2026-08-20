@@ -124,19 +124,25 @@ export async function tryEngineInjection(
     const paletteCss = buildPaletteCss(targetTheme.css);
     if (!paletteCss) return null;
 
-    // Load engine files
-    const [tokensCss, adapterJs, cosmeticCss] = await Promise.all([
+    // Load engine files (+ deep-core shared runtime if present)
+    const deepCorePath = path.join(__dirname, '../../../../engines/shared/deep-core.mjs');
+    const [tokensCss, adapterJs, cosmeticCss, deepCoreSource] = await Promise.all([
       fs.readFile(tokensPath, 'utf8'),
       fs.readFile(adapterPath, 'utf8'),
       fs.readFile(cosmeticPath, 'utf8'),
+      fs.readFile(deepCorePath, 'utf8').catch(() => ''),
     ]);
+
+    // P0-1 fix: Source concatenation — prepend deep-core classes into the
+    // evaluate context so adapter.mjs can reference DeepCore without import.
+    const finalAdapterJs = deepCoreSource ? `${deepCoreSource}\n;${adapterJs}` : adapterJs;
 
     const themeId = bundle.theme?.id ?? 'unknown';
     return await injectThemeViaEngine(session, {
       paletteCss,
       tokensCss,
       cosmeticCss,
-      adapterJs,
+      adapterJs: finalAdapterJs,
       // 4th layer: the full per-agent theme CSS (native token overrides +
       // visual styles). Injected AFTER engine layers so theme-specific
       // --dbx-*/--vscode-* values take precedence over engine var() mappings.
