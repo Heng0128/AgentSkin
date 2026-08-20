@@ -1,0 +1,54 @@
+{
+  "agent": "traework",
+  "port": "58510",
+  "timestamp": "2026-08-20T13:23:51.239Z",
+  "runs": 3,
+  "metrics": {
+    "injectTime": {
+      "median": 3,
+      "unit": "ms",
+      "values": [
+        12,
+        3,
+        3
+      ]
+    },
+    "constructTime": {
+      "median": 0.4000000059604645,
+      "unit": "ms",
+      "values": [
+        8.599999994039536,
+        0.4000000059604645,
+        0.3999999910593033
+      ]
+    },
+    "fragmentActivateTime": {
+      "median": 0.09999999403953552,
+      "unit": "ms",
+      "values": [
+        7.700000002980232,
+        0.09999999403953552,
+        0
+      ]
+    },
+    "disposeTime": {
+      "median": 0.10000000894069672,
+      "unit": "ms",
+      "values": [
+        1.2999999970197678,
+        0.10000000894069672,
+        0.10000000894069672
+      ]
+    },
+    "memoryDeltaMB": {
+      "median": 0,
+      "unit": "MB",
+      "values": [
+        0.05,
+        0,
+        0
+      ],
+      "note": null
+    }
+  }
+}

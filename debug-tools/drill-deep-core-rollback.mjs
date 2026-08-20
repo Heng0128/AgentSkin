@@ -146,12 +146,16 @@ async function phase2(cdp) {
     return phase;
   }
 
-  // Simulated adapter: try-catch construct + legacy fallback
+  // Simulated adapter: try-catch construct + legacy fallback.
+  // Uses `window.DeepCore` (not bare `DeepCore`) so that stub injection
+  // via `window.DeepCore = function() { throw }` is observable.
+  // (V8's inline cache may resolve bare `DeepCore` to the class even after
+  // window.DeepCore is reassigned — a known optimization quirk.)
   const simResult = await safeEval(cdp, `
     (() => {
       const DEEP_CONFIG = { shadowMode: 'open-only', routes: [], fragments: {}, exposedState: [], enabled: true };
       try {
-        const dc = new DeepCore(DEEP_CONFIG, { agent: '${AGENT_ID}', themeId: 'drill' });
+        const dc = new window.DeepCore(DEEP_CONFIG, { agent: '${AGENT_ID}', themeId: 'drill' });
         return JSON.stringify({ phase: 'construct', result: 'unexpected-success' });
       } catch (e) {
         // Legacy fallback — simulate injecting a test CSS
