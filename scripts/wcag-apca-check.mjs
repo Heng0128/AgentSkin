@@ -7,7 +7,7 @@
 // colors and verifies auto-generated on-color contrast. All functions are
 // pure: a manifest in, structured result out.
 
-import { apcaContrast, contrastRatio } from './extended-colors.mjs';
+import { apcaContrast, autoOnColor, contrastRatio } from './extended-colors.mjs';
 
 // ---------------------------------------------------------------------------
 // Thresholds (WCAG 2.1 + APCA common text body reference)
@@ -101,17 +101,14 @@ export function checkExtendedContrast(manifest) {
   const bg = colors.background;
   const fg = colors.foreground;
 
-  /** Derive a reasonable on-color for an extended color key. */
-  function autoOn(hex) {
-    const rWithFg = contrastRatio(hex, fg);
-    const rWithBg = contrastRatio(hex, bg);
-    return rWithFg >= rWithBg ? fg : bg;
-  }
+  // Use the same algorithm as the runtime engine (extended-colors.mjs autoOnColor)
+  // to ensure CI validation matches actual generated --agentskin-ext-on-* values.
+  const onFor = autoOnColor;
 
   const out = [];
   for (const [name, hex] of Object.entries(ext)) {
     if (typeof hex !== 'string') continue;
-    const onColor = autoOn(hex);
+    const onColor = onFor(hex);
     const ratio = contrastRatio(hex, onColor);
     out.push({
       name,

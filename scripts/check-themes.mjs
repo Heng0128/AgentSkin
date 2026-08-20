@@ -25,7 +25,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { checkThemeContrast } from './wcag-apca-check.mjs';
+import { checkExtendedContrast, checkThemeContrast } from './wcag-apca-check.mjs';
 
 const THEMES_DIR = path.resolve(process.cwd(), 'themes');
 const ENGINES_DIR = path.resolve(process.cwd(), 'engines');
@@ -175,6 +175,15 @@ async function main() {
       console.warn(
         `  ⚠ ${entry.name}: foreground/background contrast ${contrast.wcag.ratio}:1 < 4.5 (WCAG AA)`,
       );
+    }
+    // Extended colors contrast check (warn-only).
+    const extContrast = checkExtendedContrast(manifest);
+    for (const ec of extContrast) {
+      if (!ec.passesAA) {
+        console.warn(
+          `  ⚠ ${entry.name}: extended color "${ec.name}" contrast ${ec.ratio}:1 < 4.5 (WCAG AA)`,
+        );
+      }
     }
 
     // 1) target CSS files: existence + token coverage + color-scheme match.

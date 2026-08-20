@@ -70,17 +70,20 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
     const isDefault = scheme.id === 'default';
     const cssDir = path.join(themeDir, 'assets', 'css', isDefault ? '' : scheme.id);
     if (!verifyMode) fs.mkdirSync(cssDir, { recursive: true });
+    // Extended semantic colors and Design Language blocks are agent-independent —
+    // compute once per scheme, reuse across all 6 agents.
+    const extBlock = extendedColorsBlock(manifest.colors?.extended);
+    const dlBlock = designLanguageBlock(resolveDesignLanguage(manifest));
+
     for (const [agent, generate] of Object.entries(GENERATORS)) {
       let css = generate(ctx);
       // Extended semantic colors: themes declaring colors.extended get
       // --agentskin-ext-* and --agentskin-ext-on-* variables appended.
-      const extBlock = extendedColorsBlock(manifest.colors?.extended);
       if (extBlock) css += extBlock;
       // Design Language: themes declaring designLanguageConfig (inline) or
       // designLanguage (preset ref) get --agentskin-space-* / --agentskin-radius-* /
       // --agentskin-shadow-float / --agentskin-duration-* variables appended.
       // Omitted when the resolved config equals defaults (no unnecessary output).
-      const dlBlock = designLanguageBlock(resolveDesignLanguage(manifest));
       if (dlBlock) css += dlBlock;
       // Opt-in crafted layer: only themes declaring `signature: "aurora-glass"`
       // get the Aurora Glass signature appended. Deterministic → --verify stays green.
