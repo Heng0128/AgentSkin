@@ -94,7 +94,12 @@
         "inputBackground": { "type": "string", "description": "Input field background" },
         "buttonBackground": { "type": "string", "description": "Button background" },
         "buttonForeground": { "type": "string", "description": "Button text color" },
-        "focusRing": { "type": "string", "description": "Focus ring color" }
+        "focusRing": { "type": "string", "description": "Focus ring color" },
+        "extended": { "type": "object", "additionalProperties": { "type": "string" } },
+        "inference": {
+          "type": "object",
+          "additionalProperties": { "enum": ["provided", "derived", "default"] }
+        }
       },
       "description": "CSS color tokens the theme ships with"
     },
@@ -432,6 +437,19 @@
         }
       },
       "description": "(v2.5+) 主题依赖声明"
+    },
+    "generated": {
+      "type": "object",
+      "properties": {
+        "generatorVersion": { "type": "string" },
+        "appVersion": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "depth": {
+      "type": "string",
+      "enum": ["L1", "L2", "L3"]
     }
   },
   "$defs": {

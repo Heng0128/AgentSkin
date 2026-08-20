@@ -97,6 +97,17 @@ themes/<id>/manifest.json（14 语义 token + 元数据 + targets 验证选择�
 
 分发格式：`.agentskin-theme`（主题）、`.agentskin-bundle`（主题+壁纸组合）。规范见 THEME_SPEC.md / THEME_API.md；权威 schema 为 `src/main/catalog/manifest-v2.schema.json`（docs/ 下为逐字节同步镜像）。
 
+### Schema 扩展字段（RFC 2026-08-20 P0）
+
+manifest-v2 schema 新增 4 个 optional 字段，全部向后兼容（旧包不受影响）：
+
+| 字段 | 位置 | 类型 | 说明 |
+|------|------|------|------|
+| `colors.extended` | ThemeColors | `Record<string, string>` | 扩展色集（Catppuccin 26 色风格），P1 仅存储，P2/P3 由 GENERATORS 消费 |
+| `colors.inference` | ThemeColors | `Record<string, 'provided' \| 'derived' \| 'default'>` | 色值推导来源标记，可追溯可审计 |
+| `generated` | ThemeManifest 顶层 | `{ generatorVersion, appVersion, generatedAt }` | 构建元数据，由 theme-asset 编排器 install 阶段注入 |
+| `depth` | ThemeManifest 顶层 | `'L1' \| 'L2' \| 'L3'` | 整体适配深度，由 verify 阶段根据 6 端 probe 结果短板汇总 |
+
 ## UI（src/ui/）
 
 - 状态管理：UI 状态管理使用 16 个 Zustand stores（src/ui/stores/），useAppController 作为兼容聚合层为新旧组件提供统一接口；IPC 统一经 `api/agentSkinClient.ts`。16 个 store 涵盖：agent、apps、bootProgress、diagnostics、dialog、environment、import-guard、installFlow、notification、secondaryInject、settings、shell、status、studio、theme、wallpaper、workspace、workspace-presets（含辅助模块）。

@@ -249,4 +249,16 @@ export interface ThemeColorsFromImage {
   buttonBackground: string;
   buttonForeground: string;
   focusRing: string;
+
+  /**
+   * 扩展色集（26 色级，Catppuccin 风格）。
+   * - 由 GENERATORS 消费 → 生成 per-agent CSS 变量 --agentskin-ext-*
+   * - 缺失时回退到 14-token 推导
+   */
+  extended?: Record<string, string>;
+
+  /**
+   * 每个色值的推导来源标记（可追溯 / 可审计）。
+   */
+  inference?: Record<string, 'provided' | 'derived' | 'default'>;
 }

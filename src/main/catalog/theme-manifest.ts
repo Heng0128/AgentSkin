@@ -93,6 +93,18 @@ export interface ThemeColors {
   buttonBackground?: string;
   buttonForeground?: string;
   focusRing?: string;
+
+  /**
+   * 扩展色集（26 色级，Catppuccin 风格）。
+   * - 由 GENERATORS 消费 → 生成 per-agent CSS 变量 --agentskin-ext-*
+   * - 缺失时回退到 14-token 推导
+   */
+  extended?: Record<string, string>;
+
+  /**
+   * 每个色值的推导来源标记（可追溯 / 可审计）。
+   */
+  inference?: Record<string, 'provided' | 'derived' | 'default'>;
 }
 
 // --- Unified manifest type (supports both v1 and v2) ---
@@ -354,6 +366,18 @@ export interface ThemeManifest {
     /** 探测失败时的降级行为 */
     fallback?: 'ignore' | 'warn' | 'block';
   };
+
+  /**
+   * 构建元数据（generatorVersion + appVersion + 生成时间）。
+   * 由 `theme-asset/index.ts` 编排器在 install 阶段注入。
+   */
+  generated?: { generatorVersion: string; appVersion: string; generatedAt: string };
+
+  /**
+   * 整体适配深度（L1/L2/L3）——由 verify 阶段根据 6 端 probe 结果汇总判定
+   * （短板原则：取各端最小值）。
+   */
+  depth?: 'L1' | 'L2' | 'L3';
 }
 
 /** Re-export under an unambiguous name for consumers outside this file. */
