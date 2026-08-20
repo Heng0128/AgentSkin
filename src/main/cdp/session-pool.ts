@@ -27,6 +27,10 @@
  * - **Concurrency**: the CDP client's `send`/`evaluate` are concurrency-safe
  *   (unique command ids + a pending map), so pooled sessions may be shared by
  *   overlapping sub-tasks without protocol corruption.
+ * - **Acquire serialization**: a per-key promise chain (`acquireLocks`) guarantees
+ *   that concurrent `acquire()` calls for the same `targetKey` execute `open()`
+ *   strictly sequentially, preventing duplicate session creation at the
+ *   `await open()` yield point.
  *
  * Remote-disconnect auto-removal is handled two ways: the CDP client rejects
  * all pending commands on socket close, and the pool's per-session heartbeat
@@ -115,6 +119,8 @@ export function targetKeyFor(
 export class CdpSessionPool {
   private readonly pools = new Map<AgentId, Map<string, PooledEntry>>();
   private idleScanTimer: ReturnType<typeof setInterval> | null = null;
+  /** Per-key promise chain — serializes concurrent acquire() for the same target. */
+  private readonly acquireLocks = new Map<string, Promise<CdpSession | null>>();
 
   constructor() {
     // Start idle scanner for reclaiming unused sessions
@@ -133,15 +139,14 @@ export class CdpSessionPool {
     const now = Date.now();
     for (const [appId, byTarget] of this.pools) {
       for (const [targetKey, entry] of [...byTarget]) {
-        // Skip in-use sessions
+        // Skip in-use sessions (refCount > 0 means active users)
         if (entry.refCount > 0) {
-          // But force-close retired sessions past grace period
+          // Log warning for long-retired sessions still in use (possible leak)
           if (entry.retired && now - entry.retiredAt > RETIRE_GRACE_MS) {
             mainWarn(
               'SessionPool',
-              `force-closing retired session past grace: ${appId}/${targetKey}`,
+              `retired session still in use (refCount=${entry.refCount}): ${appId}/${targetKey}`,
             );
-            this.discard(appId, targetKey, entry);
           }
           continue;
         }
@@ -169,6 +174,39 @@ export class CdpSessionPool {
     open: () => Promise<CdpSession | null>,
     epoch?: number,
   ): Promise<CdpSession | null> {
+    const lockKey = `${appId}:${targetKey}`;
+
+    // Wait for any prior acquire on the same key to settle
+    const prevLock = this.acquireLocks.get(lockKey);
+    if (prevLock) {
+      try {
+        await prevLock;
+      } catch {
+        /* ignore the previous caller's error */
+      }
+    }
+
+    // Register our own lock so later callers wait for us
+    const acquirePromise = this.doAcquire(appId, targetKey, open, epoch);
+    this.acquireLocks.set(lockKey, acquirePromise);
+
+    try {
+      return await acquirePromise;
+    } finally {
+      // Only clear the lock if no newer caller replaced it
+      if (this.acquireLocks.get(lockKey) === acquirePromise) {
+        this.acquireLocks.delete(lockKey);
+      }
+    }
+  }
+
+  /** Internal acquire logic, guaranteed to run one-at-a-time per target key. */
+  private async doAcquire(
+    appId: AgentId,
+    targetKey: string,
+    open: () => Promise<CdpSession | null>,
+    _epoch?: number,
+  ): Promise<CdpSession | null> {
     let byTarget = this.pools.get(appId);
     if (!byTarget) {
       byTarget = new Map();
@@ -181,9 +219,11 @@ export class CdpSessionPool {
         this.discard(appId, targetKey, existing);
         // fallthrough to create new
       } else {
-        // Reuse: increment refCount
+        // Reuse: increment refCount and clear retired flag
         existing.lastUsedAt = Date.now();
         existing.refCount++;
+        existing.retired = false;
+        existing.retiredAt = 0;
         return existing.session;
       }
     }
@@ -253,8 +293,8 @@ export class CdpSessionPool {
 
   /** Close and clear every pooled session (service dispose). Hard-close all. */
   dispose(): void {
-    for (const [appId, byTarget] of this.pools) {
-      for (const [targetKey, entry] of byTarget) {
+    for (const [_appId, byTarget] of this.pools) {
+      for (const [_targetKey, entry] of byTarget) {
         this.stopHeartbeat(entry);
         try {
           entry.session.close();

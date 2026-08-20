@@ -95,7 +95,23 @@
         "buttonBackground": { "type": "string", "description": "Button background" },
         "buttonForeground": { "type": "string", "description": "Button text color" },
         "focusRing": { "type": "string", "description": "Focus ring color" },
-        "extended": { "type": "object", "additionalProperties": { "type": "string" } },
+        "extended": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "(v2.2+) 扩展色集。key 为语义色名（如 error/success/warning/info），value 为 HEX 颜色。引擎消费此集生成 --agentskin-ext-* 变量。"
+        },
+        "_wcag": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": ["AA", "AAA", "none"],
+              "description": "本主题宣称的 WCAG 对比度等级。'none' 表示不做强制校验。"
+            }
+          },
+          "description": "(v2.6+) WCAG/APCA 对比度元数据。不提供时默认 'AA'。"
+        },
         "inference": {
           "type": "object",
           "additionalProperties": { "enum": ["provided", "derived", "default"] }
@@ -391,6 +407,57 @@
       "type": "string",
       "maxLength": 64,
       "description": "(v2.5+) 声明主题的设计语言 id。用于在 Theme Studio 中识别同语言下的主题变体，并在 manifest 缺失 componentVariations 时给定默认组件形态。"
+    },
+    "designLanguageConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spacing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "density": {
+              "type": "string",
+              "enum": ["compact", "comfortable", "cozy"],
+              "description": "间距密度倍率。compact=0.75x, comfortable=1x, cozy=1.25x"
+            }
+          }
+        },
+        "radius": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scale": {
+              "type": "string",
+              "enum": ["0", "2", "4", "8"],
+              "description": "圆角档位（单位 px）。默认 2"
+            }
+          }
+        },
+        "shadow": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "elevation": {
+              "type": "string",
+              "enum": ["flat", "subtle", "float"],
+              "description": "阴影档位。flat=无, subtle=低, float=高。默认 float"
+            }
+          }
+        },
+        "motion": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "speed": {
+              "type": "string",
+              "enum": ["instant", "fast", "smooth"],
+              "description": "动画节奏。instant=0ms, fast=100ms, smooth=200ms。默认 fast"
+            }
+          }
+        }
+      },
+      "description": "(v2.6+) 内联设计语言配置。使用此块可直接在 manifest 中声明主题的间距/圆角/阴影/动画形态，无需引用外部 designLanguage id。缺失时使用引擎默认值（comfortable / 2 / float / fast）。"
     },
     "componentVariations": {
       "type": "object",

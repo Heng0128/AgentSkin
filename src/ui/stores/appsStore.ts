@@ -277,7 +277,9 @@ export const useAppsStore = create<AppsState>((set, get) => {
         }
         // Removed: manual set({ runningApps: next }) — coordinator drives state now.
       } catch (error) {
-        console.error(`[appsStore] launch(${app.id}) failed —`, error);
+        // Surface IPC failures to the user (e.g. main process crash, IPC timeout).
+        const message = error instanceof Error ? error.message : String(error);
+        useNotificationStore.getState().fail(new Error(`Launch failed: ${message}`));
       } finally {
         launchingGuard.delete(app.id);
         const nextLaunching = new Set(get().launchingApps);

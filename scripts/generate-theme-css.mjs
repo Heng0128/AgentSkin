@@ -21,6 +21,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { designLanguageBlock, resolveDesignLanguage } from './design-language.mjs';
+import { extendedColorsBlock } from './extended-colors.mjs';
 import { buildContext, GENERATORS } from './theme-generators.mjs';
 import { auroraGlassSignature, HOSTS } from './theme-utils.mjs';
 
@@ -70,6 +72,16 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
     if (!verifyMode) fs.mkdirSync(cssDir, { recursive: true });
     for (const [agent, generate] of Object.entries(GENERATORS)) {
       let css = generate(ctx);
+      // Extended semantic colors: themes declaring colors.extended get
+      // --agentskin-ext-* and --agentskin-ext-on-* variables appended.
+      const extBlock = extendedColorsBlock(manifest.colors?.extended);
+      if (extBlock) css += extBlock;
+      // Design Language: themes declaring designLanguageConfig (inline) or
+      // designLanguage (preset ref) get --agentskin-space-* / --agentskin-radius-* /
+      // --agentskin-shadow-float / --agentskin-duration-* variables appended.
+      // Omitted when the resolved config equals defaults (no unnecessary output).
+      const dlBlock = designLanguageBlock(resolveDesignLanguage(manifest));
+      if (dlBlock) css += dlBlock;
       // Opt-in crafted layer: only themes declaring `signature: "aurora-glass"`
       // get the Aurora Glass signature appended. Deterministic → --verify stays green.
       if (ctx.signature === 'aurora-glass' && HOSTS[agent]) {

@@ -72,6 +72,7 @@ import { buildSecondaryInjectExpression, buildSecondaryRemoveExpression } from '
 import {
   acquireSession,
   type CdpSessionPool,
+  releaseSession,
   type SessionHandle,
   targetKeyFor,
 } from './session-pool';
@@ -291,6 +292,7 @@ export async function hardeningPass(
   let failed = 0;
   let firstSession: CdpSession | null = null;
   let firstPooled = false;
+  let firstSessionTargetKey: string | null = null;
   let secondaryLoopStart = 0;
 
   for (const target of domTargets) {
@@ -299,8 +301,14 @@ export async function hardeningPass(
       deps.log(
         `[hardening] ${appId}: epoch changed, aborting after ${engineInjected + legacyInjected}/${domTargets.length}`,
       );
-      // Pooled sessions are closed by epoch invalidation; only close one-shot ones.
-      if (firstSession && !firstPooled) firstSession.close();
+      // Release firstSession (pooled or one-shot).
+      if (firstSession) {
+        if (firstPooled && firstSessionTargetKey) {
+          releaseSession(deps.sessions, appId, firstSessionTargetKey);
+        } else {
+          firstSession.close();
+        }
+      }
       return;
     }
 
@@ -339,6 +347,7 @@ export async function hardeningPass(
           if (!firstSession) {
             firstSession = session;
             firstPooled = handle.pooled;
+            firstSessionTargetKey = targetKeyFor(target.id, target.webSocketDebuggerUrl);
           }
           const layerDetail = watchdogVerification.layers
             ? Object.entries(watchdogVerification.layers)
@@ -397,6 +406,7 @@ export async function hardeningPass(
         if (!firstSession && target.type === 'page') {
           firstSession = session;
           firstPooled = handle.pooled;
+          firstSessionTargetKey = targetKeyFor(target.id, target.webSocketDebuggerUrl);
         }
       } else {
         // --- Non-page targets (webview / iframe): lightweight CSS-only ---
@@ -439,10 +449,15 @@ export async function hardeningPass(
       failed++;
       deps.log(`[hardening] ${appId}: ${target.type} injection failed: ${toMessage(error)}`);
     } finally {
-      // Close one-shot sessions unless kept for the health check. Pooled
-      // sessions are owned by the pool and must never be closed here.
-      if (!handle.pooled && session !== firstSession) {
-        session.close();
+      if (handle.pooled) {
+        // 归还引用计数；pool 拥有生命周期，不可 close
+        releaseSession(deps.sessions, appId, targetKeyFor(target.id, target.webSocketDebuggerUrl));
+      } else if (session !== firstSession) {
+        try {
+          session.close();
+        } catch {
+          /* ignore close errors */
+        }
       }
     }
   }
@@ -543,8 +558,12 @@ export async function hardeningPass(
         );
       }
     } finally {
-      // Pooled sessions are owned by the pool; only close one-shot ones.
-      if (!firstPooled) firstSession.close();
+      if (firstPooled && firstSessionTargetKey) {
+        // 归还 firstSession 的引用计数
+        releaseSession(deps.sessions, appId, firstSessionTargetKey);
+      } else {
+        firstSession?.close();
+      }
     }
   }
 }
@@ -608,7 +627,19 @@ export async function hardeningRemove(
         }
         removed++;
       } finally {
-        if (!handle.pooled) session.close();
+        if (handle.pooled) {
+          releaseSession(
+            deps.sessions,
+            appId,
+            targetKeyFor(target.id, target.webSocketDebuggerUrl),
+          );
+        } else {
+          try {
+            session.close();
+          } catch {
+            /* ignore close errors */
+          }
+        }
       }
     } catch {
       // Best-effort — target may have navigated away or closed.

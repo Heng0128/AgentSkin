@@ -45,10 +45,8 @@
 import { execFile, spawn } from 'node:child_process';
 import net from 'node:net';
 import path from 'node:path';
-import type { BrowserWindow } from 'electron';
 import { requireAdapter } from '../../adapters/registry';
 import { toMessage } from '../../shared/errors';
-import { IpcChannel } from '../../shared/ipc-channels';
 import type { LaunchResult } from '../../shared/types';
 import type { LaunchRequest } from '../../shared/types/launch';
 import { getAppRunStateCoordinator } from './app-run-state-coordinator';
@@ -70,12 +68,6 @@ export interface LauncherDeps {
 // ---------------------------------------------------------------------------
 // Module-level state
 // ---------------------------------------------------------------------------
-
-/**
- * Tracks apps launched by this module: appId → { pid, port }.
- * `port` is `null` for non-adapted apps or when CDP discovery failed.
- */
-const runningApps = new Map<string, { pid: number; port: number | null }>();
 
 /**
  * Whitelist of executable paths the launcher is permitted to spawn. Populated
@@ -138,9 +130,6 @@ export function resetLaunchRateLimit(): void {
 /** Active dependency wiring (log sink). */
 let moduleDeps: LauncherDeps = { log: () => {} };
 
-/** Main window accessor — used to push ELECTRON_STATUS to the renderer. */
-let getMainWindow: () => BrowserWindow | null = () => null;
-
 /** Max number of port-increment retries before giving up. */
 const MAX_PORT_RETRIES = 10;
 
@@ -167,33 +156,6 @@ const RESTART_SETTLE_DELAY = 500;
  */
 export function configureLauncher(deps: LauncherDeps): void {
   moduleDeps = deps;
-}
-
-/**
- * Wire the main-window accessor for status push. Called once during startup
- * (e.g. from `main.ts`) after the main window is created. Without this, the
- * launcher silently skips status pushes (the renderer just doesn't receive
- * `ELECTRON_STATUS` events).
- */
-export function configureLauncherWindow(getter: () => BrowserWindow | null): void {
-  getMainWindow = getter;
-}
-
-/** Push the current running-apps snapshot to the renderer via
- *  `ELECTRON_STATUS`. Best-effort — no-op when the main window is unavailable
- *  (e.g. during tests or early startup).
- *
- *  Adds diagnostic logging when the push fails so we can detect
- *  "silent push loss" during window rebuild (e.g. dev HMR). */
-function pushElectronStatus(): void {
-  const win = getMainWindow();
-  if (win && !win.isDestroyed()) {
-    win.webContents.send(IpcChannel.ELECTRON_STATUS, getRunningApps());
-  } else {
-    // Diagnostic: helps detect silent push loss during window rebuild
-    const reason = !win ? 'no-window' : win.isDestroyed() ? 'window-destroyed' : 'unknown';
-    moduleDeps.log(`[pushElectronStatus] skipped: ${reason}`);
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -280,26 +242,19 @@ function spawnApp(exePath: string, args: string[]): ReturnType<typeof spawn> {
 }
 
 /**
- * Register an exit handler that clears the app from `runningApps` once the
- * spawned process terminates. Without this, `runningApps` only ever grows and
- * the renderer keeps showing a "running" dot for apps that already quit.
- *
- * The pid guard prevents a stale exit event (from a force-restarted process)
- * from deleting a newer entry.
+ * Register an exit handler that updates the coordinator when the spawned
+ * process terminates. The coordinator is the single source of truth for
+ * runtime state.
  */
-function trackExit(child: ReturnType<typeof spawn>, appId: string, pid: number): void {
+function trackExit(child: ReturnType<typeof spawn>, appId: string, _pid: number): void {
   child.on('exit', () => {
-    if (runningApps.get(appId)?.pid === pid) {
-      runningApps.delete(appId);
-      pushElectronStatus();
-      // Sync to coordinator (runtime state single source of truth)
-      getAppRunStateCoordinator().updateState(appId, {
-        running: false,
-        pid: 0,
-        port: null,
-        debugReady: false,
-      });
-    }
+    // Sync to coordinator (runtime state single source of truth)
+    getAppRunStateCoordinator().updateState(appId, {
+      running: false,
+      pid: 0,
+      port: null,
+      debugReady: false,
+    });
   });
 }
 
@@ -456,7 +411,6 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
         const ports = await adapter.resolveDebugPorts(process.platform);
         for (const port of ports) {
           if (await probeTcpPort(port, CDP_PROBE_TIMEOUT)) {
-            runningApps.set(appId, { pid: runningPids[0], port });
             return {
               ok: true,
               pid: runningPids[0],
@@ -505,9 +459,7 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
       actualPort = (await probeTcpPort(port, CDP_PROBE_TIMEOUT)) ? port : null;
     }
 
-    runningApps.set(appId, { pid, port: actualPort });
     trackExit(child, appId, pid);
-    pushElectronStatus();
     // Sync to coordinator (runtime state single source of truth)
     getAppRunStateCoordinator().updateState(appId, {
       running: true,
@@ -567,9 +519,7 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
   const child = spawnApp(exePath, []);
   const pid = child.pid ?? -1;
   _log(`[launcher] ${appId}: spawned PID ${pid} (non-adapted, no CDP)`);
-  runningApps.set(appId, { pid, port: null });
   trackExit(child, appId, pid);
-  pushElectronStatus();
   // Sync to coordinator (runtime state single source of truth)
   getAppRunStateCoordinator().updateState(appId, {
     running: true,
@@ -585,13 +535,4 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
     state: 'launched',
     message: 'App launched (non-adapted, no CDP)',
   };
-}
-
-/**
- * Return a snapshot of all apps tracked as running by this launcher.
- * The returned Map is a shallow copy — callers can inspect but not mutate
- * internal state.
- */
-export function getRunningApps(): Map<string, { pid: number; port: number | null }> {
-  return new Map(runningApps);
 }

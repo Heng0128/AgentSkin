@@ -23,7 +23,6 @@ import { AGENT_IDS } from '../../shared/types';
 import type { ScanProgressEvent } from '../../shared/types/agent';
 import type { MainContext } from '../main-context';
 import {
-  getRunningApps,
   type LaunchRequest,
   launchApp,
   registerAllowedExePaths,
@@ -115,11 +114,5 @@ export function registerElectronIpc(deps: Pick<MainContext, 'settings'>): void {
     if (typeof exePath !== 'string' || exePath.length === 0) return false;
     registerAllowedExePaths([exePath]);
     return true;
-  });
-
-  // Query the current running-apps snapshot (replaces the refreshStatus→scan
-  // workaround with a direct state query).
-  ipcMain.handle(IpcChannel.ELECTRON_GET_RUNNING_APPS, () => {
-    return getRunningApps();
   });
 }

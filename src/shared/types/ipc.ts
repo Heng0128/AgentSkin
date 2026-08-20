@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { AppRunState } from '../../main/services/app-run-state-coordinator';
 import type { AppLocale } from '../i18n';
 import type {
   AgentCatalogItem,
   AgentId,
+  AppRunState,
   ElectronScanResult,
   InstallState,
   LaunchResult,
@@ -638,13 +638,6 @@ export interface AgentSkinApi {
   // --- Electron app discovery & launch ---
   scanElectronApps(force?: boolean): Promise<ElectronScanResult>;
   launchElectronApp(request: LaunchRequest): Promise<LaunchResult>;
-  /** Subscribe to running-status changes for scanned Electron apps (launch /
-   *  exit). The main process pushes the full `getRunningApps()` snapshot via
-   *  `ELECTRON_STATUS` whenever a launch succeeds or an app exits. Returns an
-   *  unsubscribe function. */
-  onElectronStatus(
-    cb: (status: Map<string, { pid: number; port: number | null }>) => void,
-  ): () => void;
   /** Subscribe to streaming scan progress (identity-merged `add`/`update`
    *  events plus async `icon` upgrades). Pushed via `ELECTRON_SCAN_PROGRESS`
    *  while the scan walks the filesystem and icons extract. Returns an
@@ -653,9 +646,6 @@ export interface AgentSkinApi {
   /** Register a custom exe path to the launch whitelist (called after
    *  addCustomApp so the user can launch what they manually added). */
   registerCustomExe(exePath: string): Promise<boolean>;
-  /** Query the current running-apps snapshot from the main process
-   *  (replaces the refreshStatus→scan workaround). */
-  getRunningApps(): Promise<Map<string, { pid: number; port: number | null }>>;
   // --- AppRunStateCoordinator ---
   /** Subscribe to coordinator state changes (app launched, exited, port changed,
    *  debugReady flipped). Pushed via `COORDINATOR_STATUS` whenever the coordinator

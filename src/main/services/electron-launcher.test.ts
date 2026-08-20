@@ -7,7 +7,6 @@ import type { ApplicationAdapter } from '../../adapters/base';
 import * as registry from '../../adapters/registry';
 import {
   configureLauncher,
-  getRunningApps,
   launchApp,
   registerAllowedExePaths,
   resetLaunchRateLimit,
@@ -299,8 +298,6 @@ describe('electron-launcher', () => {
       expect(result.pid).toBe(4242);
       expect(result.port).toBe(9222);
       expect(mockSpawn).not.toHaveBeenCalled();
-      // The running entry must be tracked.
-      expect(getRunningApps().get('app-running-with-cdp')?.port).toBe(9222);
     });
   });
 
@@ -470,59 +467,6 @@ describe('electron-launcher', () => {
           }
         }
       }
-    });
-  });
-
-  // ── Running apps tracking ──────────────────────────────────────────────
-  describe('getRunningApps', () => {
-    it('tracks launched apps and returns a snapshot', async () => {
-      const adapter = createMockAdapter({ runningPids: [] });
-      mockRequireAdapter.mockReturnValue(asAdapter(adapter));
-      mockExecFileSuccess(''); // not running (adapted flow: findRunningPids already mocked)
-      mockSpawnSuccess(1111);
-
-      await launchApp({
-        appId: 'app-tracked',
-        exePath: 'C:\\trae\\trae.exe',
-        adapted: true,
-        adapterId: 'traework',
-      });
-
-      const running = getRunningApps();
-      expect(running.has('app-tracked')).toBe(true);
-      expect(running.get('app-tracked')?.pid).toBe(1111);
-
-      // Verify it's a copy — mutating the returned map must not affect state.
-      running.delete('app-tracked');
-      expect(getRunningApps().has('app-tracked')).toBe(true);
-    });
-
-    it('clears a running app when its spawned process exits', async () => {
-      mockExecFileSuccess(''); // not running → spawn
-      // Capture the exit handler so we can simulate process termination.
-      const captured = { handler: null as (() => void) | null };
-      mockSpawn.mockImplementationOnce(
-        () =>
-          ({
-            pid: 2222,
-            unref: vi.fn(),
-            on: vi.fn((event: string, cb: () => void) => {
-              if (event === 'exit') captured.handler = cb;
-            }),
-          }) as unknown as ReturnType<typeof spawn>,
-      );
-
-      await launchApp({
-        appId: 'app-exit-cleanup',
-        exePath: 'C:\\tools\\tool.exe',
-        adapted: false,
-      });
-
-      expect(getRunningApps().has('app-exit-cleanup')).toBe(true);
-
-      // Simulate the spawned process terminating.
-      captured.handler?.();
-      expect(getRunningApps().has('app-exit-cleanup')).toBe(false);
     });
   });
 

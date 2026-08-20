@@ -25,6 +25,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { checkThemeContrast } from './wcag-apca-check.mjs';
 
 const THEMES_DIR = path.resolve(process.cwd(), 'themes');
 const ENGINES_DIR = path.resolve(process.cwd(), 'engines');
@@ -168,6 +169,14 @@ async function main() {
     }
     checked++;
 
+    // WCAG/APCA contrast check (warn-only, does not block CI).
+    const contrast = checkThemeContrast(manifest);
+    if (contrast && !contrast.wcag.passesAA) {
+      console.warn(
+        `  ⚠ ${entry.name}: foreground/background contrast ${contrast.wcag.ratio}:1 < 4.5 (WCAG AA)`,
+      );
+    }
+
     // 1) target CSS files: existence + token coverage + color-scheme match.
     const targets = manifest.targets ?? {};
     const agentIds = Object.keys(targets);
@@ -269,6 +278,43 @@ async function main() {
     // engines/ may not exist in minimal checkouts — non-fatal
   }
 
+  // 4) Extended colors format validation (blocking for declared keys).
+  for (const entry of dirs) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === '_shared') continue;
+    const exManifestPath = path.join(THEMES_DIR, entry.name, 'manifest.json');
+    let exManifestRaw;
+    try {
+      if (exManifestPath) exManifestRaw = await fs.readFile(exManifestPath, 'utf8');
+    } catch {
+      continue;
+    }
+    if (!exManifestRaw) continue;
+    let exManifest;
+    try {
+      exManifest = JSON.parse(exManifestRaw);
+    } catch {
+      continue;
+    }
+    const ext = exManifest?.colors?.extended;
+    if (!ext || typeof ext !== 'object') continue;
+    const validHex = /^#([0-9a-f]{6})$/i;
+    const reserved = new Set(['on', 'ext', 'raw', 'wcag']);
+    for (const [name, value] of Object.entries(ext)) {
+      if (reserved.has(name)) {
+        errors.push(
+          `${entry.name}: colors.extended.${name} uses reserved key "${name}"\n    Fix: Rename the extended color key to avoid reserved names: ${[...reserved].join(', ')}`,
+        );
+        continue;
+      }
+      if (typeof value !== 'string' || !validHex.test(value)) {
+        errors.push(
+          `${entry.name}: colors.extended.${name} has invalid hex "${value}"\n    Fix: Use a valid 6-digit hex color (e.g. "#ef4444") for extended color "${name}"`,
+        );
+      }
+    }
+  }
+
   if (rawWarnings.length > 0) {
     console.warn(
       `check-themes: ${rawWarnings.length} *-raw fallback observation(s) (non-blocking):`,
@@ -281,7 +327,9 @@ async function main() {
     for (const e of errors) console.error(`  ✗ ${e}`);
     process.exit(1);
   }
-  console.log(`check-themes: OK — ${checked} theme(s) pass (schema+assets+14 tokens+color-scheme)`);
+  console.log(
+    `check-themes: OK — ${checked} theme(s) pass (schema+assets+14 tokens+color-scheme+wcag)`,
+  );
 }
 
 main().catch((e) => {

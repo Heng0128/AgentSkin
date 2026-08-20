@@ -260,8 +260,6 @@ vi.mock('@/api/agentSkinClient', () => ({
     onRuntimeLog: vi.fn().mockReturnValue(vi.fn()),
     onStatusChanged: vi.fn().mockReturnValue(vi.fn()),
     refreshStatus: vi.fn().mockResolvedValue({ platform: 'win32', apps: [] }),
-    onElectronStatus: vi.fn().mockReturnValue(vi.fn()),
-    onElectronScanProgress: vi.fn().mockReturnValue(vi.fn()),
     scanElectronApps: vi.fn().mockResolvedValue({ adapted: [], other: [] }),
     launchElectronApp: vi.fn().mockResolvedValue({
       ok: true,

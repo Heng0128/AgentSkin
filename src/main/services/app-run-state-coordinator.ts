@@ -32,7 +32,6 @@
  */
 
 import { EventEmitter } from 'node:events';
-import type { AgentId } from '../../shared/types';
 import type { AppRunState } from '../../shared/types/agent';
 
 // ---------------------------------------------------------------------------
@@ -99,6 +98,7 @@ export class AppRunStateCoordinator {
 
   /**
    * 更新应用状态并触发事件分发。
+   * 变更检测：如果所有运行时字段均未变化，则跳过 emit 以减少不必要的 re-render。
    * @param appId 应用 ID
    * @param partial 部分状态字段（未提供的字段保持原值）
    */
@@ -112,6 +112,19 @@ export class AppRunStateCoordinator {
       updatedAt: Date.now(),
     };
 
+    // 变更检测：比较除 updatedAt 外的所有字段
+    if (
+      prev &&
+      prev.running === next.running &&
+      prev.pid === next.pid &&
+      prev.port === next.port &&
+      prev.debugReady === next.debugReady
+    ) {
+      // 无变化，跳过 emit（仅更新时间戳）
+      prev.updatedAt = next.updatedAt;
+      return;
+    }
+
     this.stateMap.set(appId, next);
     this.resetIdleTimer(appId, next);
 
@@ -121,18 +134,19 @@ export class AppRunStateCoordinator {
 
   /**
    * 获取单个应用的运行时状态。
-   * @returns 状态副本，或 null（未知应用）
+   * @returns 状态副本（浅拷贝），或 null（未知应用）。返回的对象可安全修改。
    */
   getState(appId: string): AppRunState | null {
-    return this.stateMap.get(appId) ?? null;
+    const state = this.stateMap.get(appId);
+    return state ? { ...state } : null;
   }
 
   /**
    * 获取所有运行时状态的快照副本。
-   * @returns Map<appId, state> 副本（外部修改不影响内部）
+   * @returns Map 和值的深拷贝（外部修改不影响内部）。
    */
   getSnapshot(): Map<string, AppRunState> {
-    return new Map(this.stateMap);
+    return new Map(Array.from(this.stateMap, ([k, v]) => [k, { ...v }]));
   }
 
   /**

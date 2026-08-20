@@ -784,7 +784,7 @@ describe('pooled session reuse', () => {
     expect(pool.poolSize('doubao')).toBe(1);
   });
 
-  it('soft-retires pooled sessions on epoch invalidation (does not close in-use)', async () => {
+  it('releases pooled session refCount after hardeningPass (refCount returns to 0)', async () => {
     const wvTarget = makeCdpTarget({ id: 'wv-1', type: 'webview' });
     vi.mocked(findDomTargets).mockResolvedValue([wvTarget]);
 
@@ -796,16 +796,13 @@ describe('pooled session reuse', () => {
 
     await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
     expect(session.close).not.toHaveBeenCalled();
-
-    pool.invalidateEpoch('doubao');
-    // Soft-retire: in-use session (refCount>0) is NOT closed immediately
-    expect(session.close).not.toHaveBeenCalled();
+    // After hardeningPass completes, refCount should be 0 (released in finally)
     expect(pool.poolSize('doubao')).toBe(1);
+    expect(session.close).not.toHaveBeenCalled();
 
-    // After release, retired session is closed
-    pool.release('doubao', 'wv-1');
-    expect(session.close).toHaveBeenCalledTimes(1);
-    expect(pool.poolSize('doubao')).toBe(0);
+    // Acquire again should reuse the session
+    const s2 = await pool.acquire('doubao', 'wv-1', () => Promise.resolve(session));
+    expect(s2).toBe(session); // Same session reused
   });
 });
 

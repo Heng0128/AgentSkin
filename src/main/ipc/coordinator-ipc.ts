@@ -72,6 +72,7 @@ function pushCoordinatorStatus(appId: string, state: AppRunState): void {
  *  @param win Optional main window reference for status push. If not provided,
  *  the coordinator will attempt to push but silently no-op. */
 export function registerCoordinatorIpc(win?: BrowserWindow | null): void {
+  if (unsubStatusChange) return; // 防止重复注册导致订阅泄漏和重复推送
   const coordinator = getAppRunStateCoordinator();
   if (win) {
     mainWindow = win;
@@ -83,7 +84,8 @@ export function registerCoordinatorIpc(win?: BrowserWindow | null): void {
   });
 
   // One-shot full snapshot on renderer boot / window restore.
-  ipcMain.handle(IpcChannel.COORDINATOR_SNAPSHOT, () => {
+  ipcMain.handle(IpcChannel.COORDINATOR_SNAPSHOT, (event) => {
+    assertTrustedSender(event);
     return withMonitoredTimeout(
       IpcChannel.COORDINATOR_SNAPSHOT,
       QUERY_TIMEOUT_MS,
@@ -108,4 +110,6 @@ export function disposeCoordinatorIpc(): void {
     unsubStatusChange();
     unsubStatusChange = null;
   }
+  ipcMain.removeHandler(IpcChannel.COORDINATOR_SNAPSHOT);
+  ipcMain.removeHandler(IpcChannel.COORDINATOR_QUERY);
 }

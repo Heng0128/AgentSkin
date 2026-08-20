@@ -207,16 +207,11 @@ export const IpcChannel = {
   // --- Electron app discovery & launch (electron-ipc.ts) ---
   ELECTRON_SCAN: 'electron:scan',
   ELECTRON_LAUNCH: 'electron:launch',
-  /** Main→renderer: running status of scanned apps changed (launched / exited). */
-  ELECTRON_STATUS: 'electron:status',
   /** Main→renderer: a single app was discovered mid-scan (streaming progress). */
   ELECTRON_SCAN_PROGRESS: 'electron:scan-progress',
   /** Renderer→main: register a custom exe path to the launch whitelist
    *  (called after addCustomApp so the user can launch what they added). */
   ELECTRON_REGISTER_CUSTOM_EXE: 'electron:register-custom-exe',
-  /** Renderer→main: query the current running-apps snapshot (replaces the
-   *  refreshStatus→scan workaround with a direct state query). */
-  ELECTRON_GET_RUNNING_APPS: 'electron:get-running-apps',
 
   // --- AppRunStateCoordinator (coordinator-ipc.ts) ---
   /** SEND_ONLY — main → renderer event. Pushed whenever coordinator state changes

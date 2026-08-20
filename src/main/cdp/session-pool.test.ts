@@ -110,6 +110,54 @@ describe('CdpSessionPool', () => {
   });
 });
 
+describe('concurrent acquire', () => {
+  it('does not create duplicate sessions when two acquires race for the same key', async () => {
+    const pool = new CdpSessionPool();
+    const open = vi.fn(async () => makeSession());
+
+    // Fire two acquires simultaneously for the same key
+    const [s1, s2] = await Promise.all([
+      pool.acquire(APP, 't1', open),
+      pool.acquire(APP, 't1', open),
+    ]);
+
+    expect(s1).not.toBeNull();
+    expect(s2).toBe(s1); // must be the same pooled instance
+    expect(open).toHaveBeenCalledTimes(1); // open called exactly once
+  });
+
+  it('does not create duplicate sessions with three concurrent acquires', async () => {
+    const pool = new CdpSessionPool();
+    const open = vi.fn(async () => makeSession());
+
+    const [s1, s2, s3] = await Promise.all([
+      pool.acquire(APP, 't1', open),
+      pool.acquire(APP, 't1', open),
+      pool.acquire(APP, 't1', open),
+    ]);
+
+    expect(s1).not.toBeNull();
+    expect(s2).toBe(s1);
+    expect(s3).toBe(s1);
+    expect(open).toHaveBeenCalledTimes(1);
+  });
+
+  it('still allows concurrent acquires for different keys', async () => {
+    const pool = new CdpSessionPool();
+    const open = vi.fn(async () => makeSession());
+
+    const [s1, s2] = await Promise.all([
+      pool.acquire(APP, 't1', open),
+      pool.acquire(APP, 't2', open),
+    ]);
+
+    expect(s1).not.toBeNull();
+    expect(s2).not.toBeNull();
+    expect(s1).not.toBe(s2);
+    expect(open).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('acquireSession', () => {
   it('marks pooled sessions as pooled (caller must not close)', async () => {
     const pool = new CdpSessionPool();

@@ -331,14 +331,6 @@ const api: AgentSkinApi = {
   scanElectronApps: (force?: boolean) => ipcRenderer.invoke(IpcChannel.ELECTRON_SCAN, force),
   launchElectronApp: (request: LaunchRequest) =>
     ipcRenderer.invoke(IpcChannel.ELECTRON_LAUNCH, request),
-  onElectronStatus: (cb) => {
-    const handler = (
-      _event: Electron.IpcRendererEvent,
-      status: Map<string, { pid: number; port: number | null }>,
-    ) => cb(status);
-    ipcRenderer.on(IpcChannel.ELECTRON_STATUS, handler);
-    return () => ipcRenderer.off(IpcChannel.ELECTRON_STATUS, handler);
-  },
   onElectronScanProgress: (cb) => {
     const handler = (_event: Electron.IpcRendererEvent, scanEvent: ScanProgressEvent) =>
       cb(scanEvent);
@@ -347,7 +339,6 @@ const api: AgentSkinApi = {
   },
   registerCustomExe: (exePath: string) =>
     ipcRenderer.invoke(IpcChannel.ELECTRON_REGISTER_CUSTOM_EXE, exePath),
-  getRunningApps: () => ipcRenderer.invoke(IpcChannel.ELECTRON_GET_RUNNING_APPS),
   // --- AppRunStateCoordinator bridge ---
   onCoordinatorStatus: (cb) => {
     const handler = (

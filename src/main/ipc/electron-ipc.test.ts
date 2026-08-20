@@ -30,7 +30,6 @@ vi.mock('../services/electron-scanner', () => ({
 
 vi.mock('../services/electron-launcher', () => ({
   launchApp: vi.fn(),
-  getRunningApps: vi.fn(),
   registerAllowedExePaths: vi.fn(),
 }));
 
