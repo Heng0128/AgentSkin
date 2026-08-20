@@ -60,6 +60,8 @@ export function resetDom(): void {
   delete (window as any).DeepCore;
   delete (window as any).SafeAttachShadowPatcher;
   delete (window as any).FragmentRegistry;
+  // 清除 IIFE 幂等守卫，确保下次 loadDeepCore() 能重新执行脚本
+  delete (window as any).__AGENTSKIN_DEEP_CORE_LOADED__;
   // Reset history to default
   if (history.pushState !== History.prototype.pushState) {
     history.pushState = History.prototype.pushState;
