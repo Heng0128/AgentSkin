@@ -13,11 +13,17 @@ function RealDomPreview({
   overrides,
   colorSets,
   t,
+  onIframeMount,
 }: {
   domTree?: DomTreeNode;
   overrides: ToolOverride | null;
   colorSets?: StudioColorSets;
   t: UiMessages;
+  /**
+   * Optional callback invoked with the iframe element once it mounts.
+   * Used by AgentLivePreview for element-picking click-listener injection.
+   */
+  onIframeMount?: (iframe: HTMLIFrameElement) => void;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const grad = Boolean(overrides?.gradientAccent);
@@ -44,6 +50,13 @@ function RealDomPreview({
   useEffect(() => {
     pushOverrides();
   }, [pushOverrides]);
+
+  // Notify parent of iframe element for element picking (M8).
+  useEffect(() => {
+    if (iframeRef.current && onIframeMount) {
+      onIframeMount(iframeRef.current);
+    }
+  }, [onIframeMount]);
 
   // style: sharp corners, no shadow, mono label bar
   return (

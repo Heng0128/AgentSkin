@@ -18,6 +18,7 @@ import { api } from '@/api/agentSkinClient';
 import type { HealthCheckReport } from '@shared/types/health-check';
 import { create } from 'zustand';
 import type { ConcurrencyMetrics } from '../../shared/types/concurrency';
+import type { DriftStatus } from '../types/drift-status';
 
 interface DiagnosticsState {
   timeoutEvents: Array<{ id: string; channel: string; ms: number; timestamp: number }>;
@@ -27,11 +28,15 @@ interface DiagnosticsState {
   /** Per-agent latest theme health-check report pushed from the main process.
    *  Keyed by agentId so switching agents preserves each report independently. */
   healthReportByAgent: Record<string, HealthCheckReport>;
+  /** Per-agent drift-detection status pushed from the main process after each
+   *  fingerprint capture + drift cycle. Keyed by agentId. */
+  driftStatusByAgent: Record<string, DriftStatus>;
 
   loadTimeouts: (count?: number) => Promise<void>;
   clearTimeouts: () => Promise<void>;
   updateConcurrencyMetrics: (metrics: Partial<ConcurrencyMetrics>) => void;
   setHealthReport: (report: HealthCheckReport) => void;
+  setDriftReport: (report: DriftStatus) => void;
 }
 
 const initialConcurrencyMetrics: ConcurrencyMetrics = {
@@ -51,6 +56,7 @@ export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({
   timeoutsError: null,
   concurrencyMetrics: initialConcurrencyMetrics,
   healthReportByAgent: {},
+  driftStatusByAgent: {},
 
   loadTimeouts: async (count = 10) => {
     set({ timeoutsLoading: true, timeoutsError: null });
@@ -88,6 +94,15 @@ export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({
     set((s) => ({
       healthReportByAgent: {
         ...s.healthReportByAgent,
+        [report.agentId]: report,
+      },
+    }));
+  },
+
+  setDriftReport: (report) => {
+    set((s) => ({
+      driftStatusByAgent: {
+        ...s.driftStatusByAgent,
         [report.agentId]: report,
       },
     }));

@@ -22,15 +22,15 @@ import { Eye, RefreshCw, Search } from 'lucide-react';
 const ZOOM_PRESETS = [0.25, 0.38, 0.45, 0.55, 0.75, 1.0];
 
 export function FloatingToolbar({ t }: { t: UiMessages }) {
-  const { windows, activeWindowId, updateWindow } = useWorkspaceStore();
+  const window = useWorkspaceStore((s) => s.window);
+  const setWindowScale = useWorkspaceStore((s) => s.setWindowScale);
 
   const { snapshotLoading, inspectMode, toggleInspect } = useStudioStore();
 
   const [zoomOpen, setZoomOpen] = useState(false);
 
-  // Resolved active window (single — always windows[0]).
-  const activeWin = windows.find((w) => w.id === activeWindowId) ?? windows[0];
-  const activeAgentId = activeWin?.agentId;
+  // Single window — always the same one.
+  const activeAgentId = window?.agentId;
 
   // --- handlers ---
 
@@ -44,14 +44,13 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
     void captureAgentSnapshot(activeAgentId, 'baseline', { t });
   };
 
-  const handleAgentChange = (agentId: AgentId) => {
-    if (!activeWin) return;
-    updateWindow(activeWin.id, { agentId });
+  const handleAgentChange = (_agentId: AgentId) => {
+    // Single-window: agent change handled by parent via selectAgent.
+    // This is a no-op placeholder — agent switching is done through the drawer.
   };
 
   const handleZoom = (scale: number) => {
-    if (!activeWin) return;
-    updateWindow(activeWin.id, { scale });
+    setWindowScale(scale);
     setZoomOpen(false);
   };
 
@@ -113,7 +112,7 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
           onClick={() => setZoomOpen((v) => !v)}
           title={t.studioZoom}
         >
-          {activeWin ? `${activeWin.scale}×` : t.studioZoomFallback} ▾
+          {window ? `${window.scale}×` : t.studioZoomFallback} ▾
         </button>
         {zoomOpen && (
           <div className="absolute bottom-full right-0 z-10 mb-1 flex flex-col gap-0 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">
@@ -124,8 +123,8 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
                 onClick={() => handleZoom(s)}
                 className="whitespace-nowrap rounded-[var(--r-micro)] px-[var(--space-2)] py-0 text-left font-mono text-[length:10px] hover:bg-[var(--bg-3)]"
                 style={{
-                  background: activeWin?.scale === s ? 'var(--accent-ghost)' : 'transparent',
-                  color: activeWin?.scale === s ? 'var(--accent)' : 'var(--fg-0)',
+                  background: window?.scale === s ? 'var(--accent-ghost)' : 'transparent',
+                  color: window?.scale === s ? 'var(--accent)' : 'var(--fg-0)',
                 }}
               >
                 {s}×

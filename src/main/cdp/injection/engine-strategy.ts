@@ -33,6 +33,7 @@ import {
 import {
   buildClearEngineInjectionExpression,
   CLEAR_ADAPTERS_BODY,
+  isThemeFullyApplied,
 } from '../../../shared/injection-runtime';
 import { mainWarnFromCatch } from '../../logger';
 import type { CdpSession } from '../cdp-client';
@@ -85,6 +86,8 @@ export interface InjectEngineOptions {
   verifyDelayMs?: number;
   /** Poll interval for the verification loop (default 50ms, RFC §4.8). */
   verifyIntervalMs?: number;
+  /** Verification timeout in ms (default 3000). Shorter values speed up tests. */
+  verifyTimeoutMs?: number;
 }
 
 export interface InjectEngineResult {
@@ -138,6 +141,7 @@ export async function injectThemeViaEngine(
     themeId,
     verifyDelayMs = DEFAULT_VERIFY_DELAY_MS,
     verifyIntervalMs = 50,
+    verifyTimeoutMs = 3000,
   } = options;
 
   try {
@@ -261,12 +265,16 @@ export async function injectThemeViaEngine(
 
   // --- Step 6: Verify (polling with timeout) ---
   const verification = await waitForTheme(session, {
-    timeoutMs: 3000,
+    timeoutMs: verifyTimeoutMs,
     intervalMs: verifyIntervalMs,
     minDelayMs: verifyDelayMs,
   });
 
-  const success = layersInjected >= 2 && adapterApplied && verification !== null;
+  const success =
+    layersInjected >= 2 &&
+    adapterApplied &&
+    verification !== null &&
+    isThemeFullyApplied(verification);
 
   return { layersInjected, adapterApplied, heroInjected, imagesInjected, verification, success };
 }

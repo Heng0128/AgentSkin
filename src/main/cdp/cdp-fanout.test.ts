@@ -181,6 +181,7 @@ function makeMockHealthReport(overrides: Partial<HealthCheckReport> = {}): Healt
     hostClassPresent: true,
     adapterPresent: true,
     nativeTokens: { '--semi-color-bg-0': '#1a1a2e' },
+    overriddenVariables: [],
     opaqueLayers: [],
     blockingCount: 0,
     score: 95,

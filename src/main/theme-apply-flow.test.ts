@@ -161,6 +161,7 @@ function makeDeps(overrides: Partial<ApplyFlowDeps> = {}): ApplyFlowDeps {
     baselineInvalidate: vi.fn(),
     probeThemeLiveOnPort: vi.fn(async () => true),
     captureBaselineOnPort: vi.fn(async () => null),
+    captureFingerprintOnPort: vi.fn(async () => {}),
     findTheme: vi.fn(async () => entry),
     bumpEpoch: () => 1,
     isEpochCurrent: () => true,

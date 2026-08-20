@@ -34,6 +34,16 @@ export interface OpaqueLayer {
   backdropFilter: string;
 }
 
+/** A CSS variable whose declared value in the theme sheet differs from its computed value. */
+export interface OverriddenVariable {
+  /** CSS variable name (e.g. "--agentskin-accent"). */
+  name: string;
+  /** Value declared in the adopted theme sheet. */
+  declared: string;
+  /** Actual computed value after cascade resolution. */
+  computed: string;
+}
+
 export interface HealthCheckReport {
   /** Agent ID this report is for. */
   agentId: string;
@@ -51,6 +61,8 @@ export interface HealthCheckReport {
   adapterPresent: boolean;
   /** Sampled native token values (e.g. --dbx-bg-body-web) to verify overrides. */
   nativeTokens: Record<string, string>;
+  /** CSS variables declared in theme sheets but overridden by later cascade rules. */
+  overriddenVariables: OverriddenVariable[];
   /** Opaque layers that block the hero art, sorted by depth. */
   opaqueLayers: OpaqueLayer[];
   /** Summary: how many visible opaque layers remain. */

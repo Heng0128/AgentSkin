@@ -17,8 +17,10 @@ import type { ToolOverride, TweakSession } from '@/types/override';
 import type {
   DockState,
   DrawerState,
+  HistoryEntry,
   InspectorState,
   PreviewWindowState,
+  TweakPreset,
   ViewMode,
 } from '@/types/workspace';
 import {
@@ -64,6 +66,26 @@ interface WorkspaceState {
   overridesByAgent: Record<string, ToolOverride>;
   /** Most recent push error message (null = no error). UI shows banner when set. */
   pushError: string | null;
+  /** Performance baseline: last push-to-agent duration in ms (null = not yet measured). */
+  lastPushDurationMs: number | null;
+  /** Performance baseline: rolling average push duration (null = insufficient samples). */
+  avgPushDurationMs: number | null;
+
+  // --- Undo / Redo history ---
+  /** History stack for undo/redo. Empty array = no history. */
+  history: HistoryEntry[];
+  /** Current position in history. -1 = at initial state (nothing to undo). */
+  historyIndex: number;
+
+  // --- Named tweak presets ---
+  /** User-saved tweak presets, persisted to localStorage. */
+  tweakPresets: TweakPreset[];
+  /** Currently active tweak preset id (null = unsaved / custom). */
+  tweakPresetActiveId: string | null;
+
+  // --- A/B compare ---
+  /** True when the compare preset is active and the preview should split. */
+  dualPreviewActive: boolean;
 
   // --- Raw CSS editing (CenterTabRaw) ---
   /** Discovered stylesheets for the current agent. Empty when not loaded. */
@@ -92,6 +114,10 @@ interface WorkspaceState {
   // ---- actions ----
 
   setViewMode: (mode: ViewMode) => void;
+
+  // single window
+  /** Update the single preview window's scale. */
+  setWindowScale: (scale: number) => void;
 
   // dock
   setDockOpen: (open: boolean) => void;
@@ -132,6 +158,42 @@ interface WorkspaceState {
   discardChanges: () => Promise<boolean>;
   /** Clear the push error banner. */
   clearPushError: () => void;
+  /** Test-only: reset the monotonic push token to 0 for deterministic test isolation. */
+  testResetPushToken: () => void;
+
+  // --- Undo / Redo actions ---
+  /** Step back in history. Returns true if the undo was applied. */
+  undo: () => Promise<boolean>;
+  /** Step forward in history. Returns true if the redo was applied. */
+  redo: () => Promise<boolean>;
+  /** Whether undo is currently possible. */
+  canUndo: () => boolean;
+  /** Whether redo is currently possible. */
+  canRedo: () => boolean;
+
+  // --- Named tweak preset actions ---
+  /** Save current overrides as a named preset. Returns true on success. */
+  saveTweakPreset: (name: string) => Promise<boolean>;
+  /** Load a tweak preset by id. Returns true on success. */
+  loadTweakPreset: (id: string) => Promise<boolean>;
+  /** Delete a tweak preset by id. Returns true on success. */
+  deleteTweakPreset: (id: string) => Promise<boolean>;
+  /** Rename a tweak preset. Returns true on success. */
+  renameTweakPreset: (id: string, name: string) => Promise<boolean>;
+  // --- export / import ---
+  /** Serialize current overrides to a JSON string for cross-device sharing. */
+  exportTweakConfig: () => string;
+  /**
+   * Import a tweak configuration from JSON. Validates schema, applies overrides,
+   * and pushes a history entry. Returns ok + optional error message.
+   */
+  importTweakConfig: (json: string) => Promise<{ ok: boolean; error?: string }>;
+  // --- A/B compare ---
+  /** Set the A/B compare active flag (driven by applyPreset). */
+  setDualPreviewActive: (active: boolean) => void;
+  // --- inspect mode (element picking) ---
+  /** Toggle inspect mode for element picking. */
+  toggleInspectMode: () => void;
   // --- raw CSS editing actions ---
   /** Load the stylesheet list for the current agent. Returns the list (may be empty). */
   loadRawSheets: () => Promise<Array<{ styleSheetId: string; label: string }>>;
@@ -154,6 +216,10 @@ interface WorkspaceState {
 const STORAGE_KEY = 'workspace.overridesByAgent';
 const STORAGE_VERSION_KEY = 'workspace.version';
 const CURRENT_VERSION = 1;
+
+const PRESET_STORAGE_KEY = 'workspace.tweakPresets';
+const MAX_HISTORY = 20;
+const MAX_PRESETS = 50;
 
 interface StorageWrapper {
   _version: number;
@@ -194,8 +260,34 @@ function persistOverridesByAgent(map: Record<string, ToolOverride>): void {
   }
 }
 
+/** Load tweak presets from localStorage. Returns empty array on any error. */
+function loadTweakPresets(): TweakPreset[] {
+  try {
+    const raw = localStorage.getItem(PRESET_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (Array.isArray(parsed)) return parsed as TweakPreset[];
+    return [];
+  } catch {
+    return []; // quota / parse error — degrade to in-session only
+  }
+}
+
+/** Persist tweak presets to localStorage. Silently degrades on quota errors. */
+function persistTweakPresets(presets: TweakPreset[]): void {
+  try {
+    localStorage.setItem(PRESET_STORAGE_KEY, JSON.stringify(presets));
+  } catch {
+    // quota exceeded etc. — degrade gracefully, UI still works
+  }
+}
+
 /** Monotonic token — incremented on each updateOverride call to discard stale push receipts. */
 let pushToken = 0;
+
+/** Rolling buffer of recent push durations (ms) for baseline averaging. */
+const PUSH_DURATION_HISTORY: number[] = [];
+const MAX_PUSH_HISTORY = 20;
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 // In test environments (VITEST=true), bypass debounce for deterministic testing.
@@ -223,6 +315,7 @@ const initialWindow = makeWindow('w1', DEFAULT_AGENT);
 const initialState: Omit<
   WorkspaceState,
   | 'setViewMode'
+  | 'setWindowScale'
   | 'setDockOpen'
   | 'toggleDock'
   | 'setDockHeight'
@@ -241,6 +334,19 @@ const initialState: Omit<
   | 'saveChanges'
   | 'discardChanges'
   | 'clearPushError'
+  | 'testResetPushToken'
+  | 'undo'
+  | 'redo'
+  | 'canUndo'
+  | 'canRedo'
+  | 'saveTweakPreset'
+  | 'loadTweakPreset'
+  | 'deleteTweakPreset'
+  | 'renameTweakPreset'
+  | 'exportTweakConfig'
+  | 'importTweakConfig'
+  | 'setDualPreviewActive'
+  | 'toggleInspectMode'
   | 'loadRawSheets'
   | 'selectRawSheet'
   | 'setRawCss'
@@ -280,6 +386,20 @@ const initialState: Omit<
   dirty: false,
   overridesByAgent: loadOverridesByAgent(),
   pushError: null,
+  // --- performance baseline defaults ---
+  lastPushDurationMs: null,
+  avgPushDurationMs: null,
+
+  // --- undo/redo defaults ---
+  history: [],
+  historyIndex: -1,
+
+  // --- named tweak preset defaults ---
+  tweakPresets: loadTweakPresets(),
+  tweakPresetActiveId: null,
+
+  // --- A/B compare defaults ---
+  dualPreviewActive: false,
 
   // --- raw CSS editing defaults ---
   rawSheets: [],
@@ -303,6 +423,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     if (mode !== 'single') return;
     set({ viewMode: mode });
   },
+
+  // single window
+
+  setWindowScale: (scale) =>
+    set((s) => ({
+      window: { ...s.window, scale: Math.max(0.25, Math.min(2.0, scale)) },
+    })),
 
   // dock
   setDockOpen: (open) =>
@@ -403,6 +530,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           (preset.drawer?.collapsed !== undefined ? !preset.drawer.collapsed : currentDrawer.open),
         width: preset.drawer?.width ?? currentDrawer.width,
       },
+      // A/B compare: enabled only when the preset declares dualPreview.
+      dualPreviewActive: preset.dualPreview === true,
     });
   },
 
@@ -415,6 +544,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       currentOverrides: s.overridesByAgent[agentId] ?? {},
       dirty: false,
       pushError: null,
+      // Reset history when switching agents (different agent = different edit context).
+      history: [],
+      historyIndex: -1,
     })),
 
   updateOverride: async (key, value) => {
@@ -425,7 +557,23 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     // Optimistic update: UI reflects intent immediately.
     const overridesByAgent = { ...s.overridesByAgent, [agentId]: next };
     persistOverridesByAgent(overridesByAgent);
-    set({ currentOverrides: next, overridesByAgent, dirty: true, pushError: null });
+
+    // Record history: discard redo tail, push new entry, trim to MAX_HISTORY.
+    const historyEntry: HistoryEntry = { overrides: { ...next }, timestamp: Date.now() };
+    const newHistory = [...s.history.slice(0, s.historyIndex + 1), historyEntry];
+    if (newHistory.length > MAX_HISTORY) {
+      newHistory.splice(0, newHistory.length - MAX_HISTORY);
+    }
+    const newIndex = newHistory.length - 1;
+
+    set({
+      currentOverrides: next,
+      overridesByAgent,
+      dirty: true,
+      pushError: null,
+      history: newHistory,
+      historyIndex: newIndex,
+    });
 
     // Push: debounced in production (150ms), immediate in tests.
     const session: TweakSession = {
@@ -498,6 +646,225 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   },
 
   clearPushError: () => set({ pushError: null }),
+
+  testResetPushToken: () => {
+    pushToken = 0;
+  },
+
+  // --- undo / redo actions ---
+
+  undo: async () => {
+    const { historyIndex, history } = get();
+    if (historyIndex <= 0) return false;
+    const nextIndex = historyIndex - 1;
+    const entry = history[nextIndex];
+    // Apply the overrides from the previous history entry (without pushing to history).
+    const overridesByAgent = {
+      ...get().overridesByAgent,
+      [get().currentAgentId ?? 'codex']: entry.overrides as ToolOverride,
+    };
+    persistOverridesByAgent(overridesByAgent);
+    set({
+      currentOverrides: entry.overrides as ToolOverride,
+      historyIndex: nextIndex,
+      overridesByAgent,
+      dirty: true,
+      pushError: null,
+    });
+    // Push the undone state to the agent (debounced in production).
+    await pushToAgent(
+      {
+        agentId: get().currentAgentId ?? ('codex' as AgentId),
+        port: get().currentPort ?? 0,
+        overrides: entry.overrides as ToolOverride,
+        dirty: true,
+      },
+      entry.overrides as ToolOverride,
+    );
+    return true;
+  },
+
+  redo: async () => {
+    const { historyIndex, history } = get();
+    if (historyIndex >= history.length - 1) return false;
+    const nextIndex = historyIndex + 1;
+    const entry = history[nextIndex];
+    const overridesByAgent = {
+      ...get().overridesByAgent,
+      [get().currentAgentId ?? 'codex']: entry.overrides as ToolOverride,
+    };
+    persistOverridesByAgent(overridesByAgent);
+    set({
+      currentOverrides: entry.overrides as ToolOverride,
+      historyIndex: nextIndex,
+      overridesByAgent,
+      dirty: true,
+      pushError: null,
+    });
+    await pushToAgent(
+      {
+        agentId: get().currentAgentId ?? ('codex' as AgentId),
+        port: get().currentPort ?? 0,
+        overrides: entry.overrides as ToolOverride,
+        dirty: true,
+      },
+      entry.overrides as ToolOverride,
+    );
+    return true;
+  },
+
+  canUndo: () => get().historyIndex > 0,
+  canRedo: () => get().historyIndex < get().history.length - 1,
+
+  // --- named tweak preset actions ---
+
+  saveTweakPreset: async (name: string) => {
+    if (!name.trim()) return false;
+    const { currentOverrides, currentAgentId, tweakPresets } = get();
+    const now = new Date().toISOString();
+    const preset: TweakPreset = {
+      id: `preset_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      name: name.trim(),
+      agentId: currentAgentId ?? ('codex' as AgentId),
+      overrides: { ...currentOverrides },
+      createdAt: now,
+      updatedAt: now,
+    };
+    // LRU: trim to MAX_PRESETS by dropping oldest.
+    const trimmed = [...tweakPresets, preset].slice(-MAX_PRESETS);
+    persistTweakPresets(trimmed);
+    set({ tweakPresets: trimmed, tweakPresetActiveId: preset.id });
+    return true;
+  },
+
+  loadTweakPreset: async (id: string) => {
+    const preset = get().tweakPresets.find((p) => p.id === id);
+    if (!preset) return false;
+    const overrides = preset.overrides as ToolOverride;
+    const overridesByAgent = {
+      ...get().overridesByAgent,
+      [get().currentAgentId ?? ('codex' as AgentId)]: overrides,
+    };
+    persistOverridesByAgent(overridesByAgent);
+    // Load into current state and push a history entry.
+    set({
+      currentOverrides: overrides,
+      overridesByAgent,
+      dirty: true,
+      tweakPresetActiveId: id,
+      pushError: null,
+    });
+    // Push to agent.
+    await pushToAgent(
+      {
+        agentId: get().currentAgentId ?? ('codex' as AgentId),
+        port: get().currentPort ?? 0,
+        overrides,
+        dirty: true,
+      },
+      overrides,
+    );
+    return true;
+  },
+
+  deleteTweakPreset: async (id: string) => {
+    const { tweakPresets, tweakPresetActiveId } = get();
+    const filtered = tweakPresets.filter((p) => p.id !== id);
+    if (filtered.length === tweakPresets.length) return false;
+    persistTweakPresets(filtered);
+    set({
+      tweakPresets: filtered,
+      tweakPresetActiveId: tweakPresetActiveId === id ? null : tweakPresetActiveId,
+    });
+    return true;
+  },
+
+  renameTweakPreset: async (id: string, name: string) => {
+    if (!name.trim()) return false;
+    const { tweakPresets } = get();
+    const idx = tweakPresets.findIndex((p) => p.id === id);
+    if (idx < 0) return false;
+    const updated = [...tweakPresets];
+    updated[idx] = { ...updated[idx], name: name.trim(), updatedAt: new Date().toISOString() };
+    persistTweakPresets(updated);
+    set({ tweakPresets: updated });
+    return true;
+  },
+
+  // --- export / import ---
+
+  exportTweakConfig: () => {
+    const { currentOverrides, currentAgentId } = get();
+    return JSON.stringify(
+      {
+        version: 1,
+        agentId: currentAgentId,
+        exportedAt: new Date().toISOString(),
+        overrides: currentOverrides,
+      },
+      null,
+      2,
+    );
+  },
+
+  importTweakConfig: async (json: string) => {
+    // JSON Schema validation: must be an object with an `overrides` field.
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(json);
+    } catch {
+      return { ok: false, error: 'invalid_json' };
+    }
+    if (!parsed || typeof parsed !== 'object') {
+      return { ok: false, error: 'not_an_object' };
+    }
+    const obj = parsed as Record<string, unknown>;
+    if (!('overrides' in obj) || !obj.overrides || typeof obj.overrides !== 'object') {
+      return { ok: false, error: 'missing_overrides' };
+    }
+    const overrides = obj.overrides as ToolOverride;
+    // Apply overrides and push to history (same code path as updateOverride).
+    const agentId = get().currentAgentId ?? ('codex' as AgentId);
+    const overridesByAgent = { ...get().overridesByAgent, [agentId]: overrides };
+    persistOverridesByAgent(overridesByAgent);
+    const historyEntry: HistoryEntry = { overrides: { ...overrides }, timestamp: Date.now() };
+    const newHistory = [...get().history.slice(0, get().historyIndex + 1), historyEntry];
+    if (newHistory.length > MAX_HISTORY) {
+      newHistory.splice(0, newHistory.length - MAX_HISTORY);
+    }
+    const newIndex = newHistory.length - 1;
+    set({
+      currentOverrides: overrides,
+      overridesByAgent,
+      dirty: true,
+      pushError: null,
+      tweakPresetActiveId: null,
+      history: newHistory,
+      historyIndex: newIndex,
+    });
+    // Push to agent.
+    await pushToAgent(
+      {
+        agentId,
+        port: get().currentPort ?? 0,
+        overrides,
+        dirty: true,
+      },
+      overrides,
+    );
+    return { ok: true };
+  },
+
+  // --- A/B compare ---
+
+  setDualPreviewActive: (active) => set({ dualPreviewActive: active }),
+
+  // --- inspect mode (element picking) ---
+
+  toggleInspectMode: () =>
+    set((s) => ({
+      window: { ...s.window, inspectMode: !s.window.inspectMode },
+    })),
 
   // --- raw CSS editing actions ---
 
@@ -602,14 +969,35 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 /** Push overrides to the running agent (extracted for debounce reuse). */
 async function pushToAgent(session: TweakSession, overrides: ToolOverride): Promise<void> {
   const token = ++pushToken;
+  // Performance baseline: mark push start. Uses performance.now() for sub-ms
+  // precision without the overhead of performance.mark()/measure() lookups.
+  const pushStart = performance.now();
   try {
     const ok = await api.pushTweak(session, overrides);
     if (token !== pushToken) return;
+    recordPushDuration(performance.now() - pushStart);
     if (!ok) useWorkspaceStore.setState({ pushError: 'push_failed' });
   } catch (err) {
     if (token !== pushToken) return;
+    recordPushDuration(performance.now() - pushStart);
     useWorkspaceStore.setState({
       pushError: err instanceof Error ? err.message : 'push_error',
     });
   }
+}
+
+/**
+ * Record a push duration into the rolling buffer and update the store's
+ * baseline metrics. Called from pushToAgent after each push completes.
+ */
+function recordPushDuration(durationMs: number): void {
+  PUSH_DURATION_HISTORY.push(durationMs);
+  if (PUSH_DURATION_HISTORY.length > MAX_PUSH_HISTORY) {
+    PUSH_DURATION_HISTORY.shift();
+  }
+  const avg = PUSH_DURATION_HISTORY.reduce((a, b) => a + b, 0) / PUSH_DURATION_HISTORY.length;
+  useWorkspaceStore.setState({
+    lastPushDurationMs: Math.round(durationMs * 100) / 100,
+    avgPushDurationMs: Math.round(avg * 100) / 100,
+  });
 }

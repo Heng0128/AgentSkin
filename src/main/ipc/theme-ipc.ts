@@ -22,6 +22,8 @@ import { IpcChannel } from '../../shared/ipc-channels';
 import { type ApplyRequest, isAgentId } from '../../shared/types';
 import { isThemePackagePath } from '../file-open';
 import { type MainContext, notifyStatusChanged, sendLog, wrapCatalog } from '../main-context';
+import type { RegenResult } from '../theme-asset/fingerprint';
+import { regenerateTheme } from '../theme-asset/fingerprint';
 import { assertAgentId, assertNonEmptyString, assertSafeThemeId } from './ipc-validators';
 import { assertTrustedSender } from './trusted-sender';
 import { withMonitoredTimeout } from './with-monitored-timeout';
@@ -217,4 +219,26 @@ export function registerThemeIpc(deps: MainContext, updateTrayMenu: () => Promis
       })(),
     );
   });
+
+  // --- P3 Self-Healing manual regen ---
+  // User-triggered regen from Diagnostics UI. Executes the regen thunk
+  // synchronously and returns the result so the UI can show feedback.
+  ipcMain.handle(
+    IpcChannel.THEME_MANUAL_REGEN,
+    async (_event, agentId: unknown, themeId: unknown): Promise<RegenResult> => {
+      return withMonitoredTimeout(
+        IpcChannel.THEME_MANUAL_REGEN,
+        15000,
+        (async () => {
+          assertAgentId(agentId);
+          assertSafeThemeId(themeId);
+          // Note: manual regen requires colors from the installed theme.
+          // For now, the thunk will fail gracefully if colors are unavailable.
+          // TODO: Pass colors from the Diagnostics UI or look up from library.
+          const thunk = regenerateTheme(agentId, themeId);
+          return await thunk();
+        })(),
+      );
+    },
+  );
 }

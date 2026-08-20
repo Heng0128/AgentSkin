@@ -30,6 +30,7 @@ function makeReport(agentId: string, score = 100): HealthCheckReport {
     hostClassPresent: true,
     adapterPresent: true,
     nativeTokens: {},
+    overriddenVariables: [],
     opaqueLayers: [],
     blockingCount: 0,
     score,

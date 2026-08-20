@@ -23,6 +23,8 @@ export interface WorkspacePreset {
   dock?: Partial<DockState>;
   inspector?: Partial<InspectorState>;
   drawer?: Partial<DrawerState>;
+  /** When true, the preview area splits into A/B (current vs baseline). */
+  dualPreview?: boolean;
 }
 
 /**
@@ -42,11 +44,12 @@ export const WORKSPACE_PRESETS: WorkspacePreset[] = [
   },
   {
     id: 'compare',
-    label: 'Compare',
+    label: 'A/B 对比',
     viewMode: 'single',
     dock: { open: true, height: 320 },
     inspector: { collapsed: false, width: 300 },
     drawer: { collapsed: false, width: 300 },
+    dualPreview: true,
   },
   {
     id: 'multi-agent',

@@ -2,6 +2,7 @@
 
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
+import { DriftStatusPanel } from '@/components/diagnostics/DriftStatusPanel';
 import { PerformancePanel } from '@/components/diagnostics/PerformancePanel';
 import { SecondaryInjectTrace } from '@/components/diagnostics/SecondaryInjectTrace';
 import {
@@ -370,6 +371,16 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                     </AccordionTrigger>
                     <AccordionContent>
                       <CustomCssEditor t={t} showToast={showToast} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="drift-status" className="border-b-0">
+                    <AccordionTrigger className="py-2 text-[13px] font-semibold text-foreground">
+                      {t.settingsDriftStatusTitle}
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <DriftStatusPanel t={t} />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

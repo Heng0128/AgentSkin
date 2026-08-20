@@ -39,6 +39,7 @@
  *     → syncSchemeWithStability           (scheme-sync)
  */
 
+import { dirname } from 'node:path';
 import type { ApplicationAdapter } from '../adapters/base';
 import { ERROR_CODES, type ThemeBundle } from '../legacy/agentskin-core-runtime';
 import { isPort } from '../shared/cdp-discovery';
@@ -53,6 +54,7 @@ import type {
 } from '../shared/types';
 import { resolveSchemeMode, type SchemeMode } from './agent-scheme';
 import type { CdpReadyResult } from './app-discovery';
+import type { ThemeColors } from './catalog/theme-manifest';
 import type { BaselineSnapshot } from './cdp/apply-baseline';
 import { ensureAgentCdpReady } from './cdp/cdp-ready';
 import type { LogCallback, StructuredLogEvent, ThemeEntry } from './services/contracts';
@@ -123,6 +125,17 @@ export interface ApplyFlowDeps {
     appId: AgentId,
     themeId: string,
   ) => Promise<BaselineSnapshot | null>;
+  /**
+   * Capture fingerprint, detect drift, and conditionally dispatch regen.
+   * P3 self-healing loop integration: runs as a background task after apply.
+   */
+  captureFingerprintOnPort: (
+    port: number,
+    appId: AgentId,
+    themeId: string,
+    colors: ThemeColors,
+    themeDir: string,
+  ) => Promise<void>;
 
   // -- Theme library -----------------------------------------------------
 
@@ -580,6 +593,28 @@ async function applyOnResolvedPort(
       if (!live) {
         deps.log(`[apply] ${appId}: light probe failed — invalidating baseline cache`);
         deps.baselineInvalidate(appId);
+      }
+    })(),
+  );
+
+  // P3 self-healing loop: fingerprint capture + drift detection + conditional
+  // regen dispatch. Best-effort background task (non-blocking). Captures the
+  // current fingerprint from the live CDP session, compares against baseline,
+  // and conditionally triggers regeneration if drift exceeds threshold.
+  //
+  // Guarded by the epoch so a newer operation can't have its fingerprint
+  // written over a superseding apply instance. Uses the theme package
+  // directory for baseline persistence.
+  const themeDir = dirname(entry.filePath);
+  const themeColors = installed.colors as unknown as ThemeColors;
+  backgroundTasks.push(
+    (async () => {
+      if (!deps.isEpochCurrent(appId, epoch)) return;
+      try {
+        await deps.captureFingerprintOnPort(port, appId, resolvedThemeId, themeColors, themeDir);
+      } catch (error) {
+        // Best-effort: never crash the apply flow
+        deps.log(`[apply] ${appId}: fingerprint capture failed: ${toMessage(error)}`);
       }
     })(),
   );

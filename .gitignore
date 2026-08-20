@@ -97,3 +97,5 @@ studio-layout-prototype.html
 dev-fresh.err
 
 .fixture-tmp/
+
+playwright.config.ts

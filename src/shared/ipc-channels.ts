@@ -243,6 +243,15 @@ export const IpcChannel = {
   /** Theme health check report — pushed from main to renderer on each probe cycle */
   THEME_HEALTH_REPORT: 'theme:health-report',
 
+  // --- P3 Self-Healing drift status ---
+  // SEND_ONLY — main → renderer event. Pushed after each fingerprint capture
+  // + drift detection cycle so the Diagnostics UI can surface per-agent drift
+  // score, signals, and last regen result. Payload: DriftStatus.
+  THEME_DRIFT_STATUS: 'theme:drift-status',
+  // INVOKE — renderer → main. User-triggered manual regen from Diagnostics UI.
+  // Payload: { agentId, themeId }. Returns RegenResult.
+  THEME_MANUAL_REGEN: 'theme:manual-regen',
+
   // --- Secondary target injection trace ---
   // SEND_ONLY — main → renderer event. Pushed once per secondary target
   // (webview/iframe) after the theme has been applied to the main page, so the

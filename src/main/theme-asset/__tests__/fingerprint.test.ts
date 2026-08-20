@@ -17,9 +17,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import type { AgentId } from '../../shared/types/agent';
-import type { ThemeColors } from '../catalog/theme-manifest';
-import type { FidelityVerdict } from '../cdp/baseline-validator';
+import type { AgentId } from '../../../shared/types/agent';
+import type { ThemeColors } from '../../catalog/theme-manifest';
+import type { FidelityVerdict } from '../../cdp/baseline-validator';
 import {
   computeCssHash,
   computeDriftScore,
@@ -27,6 +27,7 @@ import {
   DRIFT_THRESHOLD,
   loadBaseline,
   normalizedColorDistance,
+  partialRerun,
   regenerateTheme,
   saveBaseline,
   shouldAutoRegen,
@@ -105,11 +106,12 @@ function createSampleBundle(): ThemeFingerprintBundle {
 
 function createFidelityVerdict(overrides: Partial<FidelityVerdict> = {}): FidelityVerdict {
   return {
+    pass: true,
     matchRatio: 0.95,
     degraded: false,
     dimensions: [
-      { key: 'carrierPresent', pass: true, detail: 'carrier found' },
-      { key: 'accentApplied', pass: true, detail: 'accent matches' },
+      { key: 'carrierPresent', pass: true, diff: 0 },
+      { key: 'adoptedSheetCount', pass: true, diff: 0 },
     ],
     ...overrides,
   };
@@ -273,7 +275,7 @@ describe('shouldAutoRegen', () => {
   it('should return manual_required when carrier is missing', () => {
     const fidelity = createFidelityVerdict({
       matchRatio: 0.9,
-      dimensions: [{ key: 'carrierPresent', pass: false, detail: 'carrier missing' }],
+      dimensions: [{ key: 'carrierPresent', pass: false, diff: 1 }],
     });
     const result = shouldAutoRegen(fidelity, 0.8);
     expect(result.action).toBe('manual_required');
@@ -343,6 +345,37 @@ describe('loadBaseline / saveBaseline', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Partial Re-run Pipeline
+// ---------------------------------------------------------------------------
+
+describe('partialRerun', () => {
+  it('should return CSS outputs for all 6 agents', () => {
+    const result = partialRerun(SAMPLE_COLORS, 'test-theme');
+    expect(result.status).toBe('success');
+    expect(result.cssOutputs).toBeDefined();
+    expect(Object.keys(result.cssOutputs!).length).toBe(6);
+  });
+
+  it('should include enhanced surface tokens', () => {
+    const result = partialRerun(SAMPLE_COLORS, 'test-theme');
+    expect(result.status).toBe('success');
+    // Surface layering should produce surfaceL1
+    const traeworkCss = result.cssOutputs!.traework;
+    expect(traeworkCss).toContain('--agentskin-accent');
+  });
+
+  it('should fail when colors lack required tokens', () => {
+    const minimalColors: ThemeColors = {
+      background: '#000000',
+      foreground: '#ffffff',
+    };
+    const result = partialRerun(minimalColors, 'test-theme');
+    // contractCheck should fail due to low token coverage
+    expect(result.status).toBe('failed');
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Regeneration Thunk
 // ---------------------------------------------------------------------------
 
@@ -357,18 +390,25 @@ describe('regenerateTheme', () => {
     expect(typeof thunk).toBe('function');
   });
 
-  it('should execute regen when called', async () => {
-    const thunk = regenerateTheme('qoderwork', 'test-theme');
+  it('should execute regen when called with colors', async () => {
+    const thunk = regenerateTheme('qoderwork', 'test-theme', SAMPLE_COLORS);
     const result = await thunk();
     expect(result.status).toBe('success');
+  });
+
+  it('should fail when no colors provided', async () => {
+    const thunk = regenerateTheme('doubao', 'test-theme');
+    const result = await thunk();
+    expect(result.status).toBe('failed');
+    expect(result.reason).toContain('no colors');
   });
 
   it('should skip when already regenerating (concurrency guard)', async () => {
     const agentId: AgentId = 'workbuddy';
 
     // First call claims the agent
-    const thunk1 = regenerateTheme(agentId, 'test-theme');
-    const thunk2 = regenerateTheme(agentId, 'test-theme');
+    const thunk1 = regenerateTheme(agentId, 'test-theme', SAMPLE_COLORS);
+    const thunk2 = regenerateTheme(agentId, 'test-theme', SAMPLE_COLORS);
 
     // Execute both — second should be skipped
     const [result1, result2] = await Promise.all([thunk1(), thunk2()]);

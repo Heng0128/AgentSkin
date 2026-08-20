@@ -57,7 +57,7 @@ export function DockTabFX({ t }: { t: UiMessages }) {
   // unreachable and would cause silent push failures in tweak-injector.
   useEffect(() => {
     const ws = useWorkspaceStore.getState();
-    const agentId = ws.windows[0]?.agentId;
+    const agentId = ws.window?.agentId;
     if (agentId && !ws.currentAgentId) {
       const runningApp = statusApps?.find((a) => a.appId === agentId);
       const realPort = runningApp?.port ?? 0;

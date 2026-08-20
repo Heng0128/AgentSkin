@@ -14,11 +14,15 @@
  */
 
 import { SHEET_OWNED_FLAG } from '../shared/injection-constants';
-import type { HealthCheckReport, OpaqueLayer } from '../shared/types/health-check';
+import type {
+  HealthCheckReport,
+  OpaqueLayer,
+  OverriddenVariable,
+} from '../shared/types/health-check';
 import type { CdpSession } from './cdp/cdp-client';
 
 // Re-export so existing importers (cdp-fanout, tests) keep working.
-export type { HealthCheckReport, OpaqueLayer };
+export type { HealthCheckReport, OpaqueLayer, OverriddenVariable };
 
 // ---------------------------------------------------------------------------
 // Main entry
@@ -158,9 +162,15 @@ export async function checkThemeHealth(
 
   const blockingCount = opaqueLayers.filter((l) => l.visible).length;
 
+  // --- Overridden variable detection ---
+  // Compare what the theme sheets DECLARE vs what the browser COMPUTES.
+  // A mismatch means a later cascade rule (app CSS, inline style, or JS)
+  // overrode the theme value — a common cause of "theme looks wrong".
+  const overriddenVariables = await detectOverriddenVariables(session);
+
   // Score: start at 100, deduct per visible blocking layer.
   // Large elements (>50% viewport) deduct more.
-  const score = computeScore(opaqueLayers, status.heroArtActive);
+  const score = computeScore(opaqueLayers, status.heroArtActive, overriddenVariables);
 
   return {
     agentId,
@@ -171,6 +181,7 @@ export async function checkThemeHealth(
     hostClassPresent: status.hostClassPresent,
     adapterPresent: status.adapterPresent,
     nativeTokens: status.nativeTokens,
+    overriddenVariables,
     opaqueLayers,
     blockingCount,
     score,
@@ -287,7 +298,60 @@ function buildSelector(layer: OpaqueLayer): string | null {
   return null;
 }
 
-function computeScore(layers: OpaqueLayer[], heroActive: boolean): number {
+/**
+ * Detect CSS variables that are declared in theme sheets but whose computed
+ * value differs from what was declared — indicating a later cascade rule
+ * (app CSS, inline style, or JS) overrode the theme value.
+ *
+ * Strategy: walk every owned adoptedStyleSheet's cssRules, find `:root` rules,
+ * extract custom property declarations (`--*`), then compare each declared
+ * value against the live computed value on `<html>`. Mismatches are reported.
+ */
+async function detectOverriddenVariables(session: CdpSession): Promise<OverriddenVariable[]> {
+  try {
+    const raw = await session.evaluate(`(() => {
+      const rootCs = getComputedStyle(document.documentElement);
+      const sheets = document.adoptedStyleSheets || [];
+      const owned = sheets.filter(function(s) { return s.__agentskin === true; });
+      const mismatches = [];
+
+      for (var i = 0; i < owned.length; i++) {
+        var rules = [];
+        try { rules = owned[i].cssRules || []; } catch(e) { continue; }
+        for (var j = 0; j < rules.length; j++) {
+          var rule = rules[j];
+          // Only inspect :root style rules (selectorText === ':root')
+          if (!rule.selectorText || rule.selectorText !== ':root') continue;
+          var style = rule.style;
+          if (!style) continue;
+          for (var k = 0; k < style.length; k++) {
+            var prop = style[k];
+            if (prop.indexOf('--') !== 0) continue; // only custom properties
+            var declared = style.getPropertyValue(prop).trim();
+            if (!declared) continue;
+            var computed = rootCs.getPropertyValue(prop).trim();
+            // Normalize both for comparison (strip !important, lowercase)
+            var declNorm = declared.replace(/\\s*!important\\s*$/i, '').toLowerCase();
+            var compNorm = computed.replace(/\\s*!important\\s*$/i, '').toLowerCase();
+            if (declNorm !== compNorm) {
+              mismatches.push({ name: prop, declared: declared, computed: computed });
+            }
+          }
+        }
+      }
+      return JSON.stringify(mismatches);
+    })()`);
+    return JSON.parse(raw) as OverriddenVariable[];
+  } catch {
+    return [];
+  }
+}
+
+function computeScore(
+  layers: OpaqueLayer[],
+  heroActive: boolean,
+  overriddenVariables: OverriddenVariable[],
+): number {
   if (!heroActive) return 0; // No art = theme fundamentally broken
   let score = 100;
   for (const layer of layers) {
@@ -303,6 +367,8 @@ function computeScore(layers: OpaqueLayer[], heroActive: boolean): number {
       score -= 5; // Small
     else score -= 2; // Tiny
   }
+  // Overridden variables indicate the theme is being partially suppressed
+  score -= Math.min(30, overriddenVariables.length * 10);
   return Math.max(0, score);
 }
 
@@ -316,6 +382,7 @@ function emptyReport(agentId: string): HealthCheckReport {
     hostClassPresent: false,
     adapterPresent: false,
     nativeTokens: {},
+    overriddenVariables: [],
     opaqueLayers: [],
     blockingCount: 0,
     score: -1,

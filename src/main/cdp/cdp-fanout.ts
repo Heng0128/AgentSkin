@@ -54,6 +54,7 @@ import {
   hostClassFor,
   WALLPAPER_PUNCH_GLOBAL,
 } from '../../shared/injection-constants';
+import { isThemeFullyApplied } from '../../shared/injection-runtime';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { AgentId } from '../../shared/types';
 import { checkThemeHealth } from '../theme-health-check';
@@ -333,15 +334,20 @@ export async function hardeningPass(
         // and re-inject. Page targets are covered by core applyTheme + this
         // engine layer, so the watchdog only skips when those are verified.
         const watchdogVerification = await verifyTheme(session);
-        if (watchdogVerification && watchdogVerification.adoptedSheetCount > 0) {
+        if (watchdogVerification && isThemeFullyApplied(watchdogVerification)) {
           watchdogSkipped++;
           if (!firstSession) {
             firstSession = session;
             firstPooled = handle.pooled;
           }
+          const layerDetail = watchdogVerification.layers
+            ? Object.entries(watchdogVerification.layers)
+                .map(([k, v]) => `${k}:${v}`)
+                .join(',')
+            : 'legacy';
           deps.log(
             `[hardening] ${appId}: WATCHDOG skip ${target.type} "${target.title?.slice(0, 40)}" ` +
-              `(engine sheets already applied: ${watchdogVerification.adoptedSheetCount})`,
+              `(accent=${watchdogVerification.accent || '?'}, sheets=${watchdogVerification.adoptedSheetCount}, layers=[${layerDetail}])`,
           );
         } else {
           // Inject the engine architecture (palette + tokens + cosmetic + theme +

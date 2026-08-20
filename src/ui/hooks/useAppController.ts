@@ -27,6 +27,7 @@ import { useEffect, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { appStatusFor, useAgentStore } from '@/stores/agentStore';
 import { useAppsStore } from '@/stores/appsStore';
+import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 import { useDialogStore } from '@/stores/dialogStore';
 import { useEnvironmentStore } from '@/stores/environmentStore';
 import { selectInstallFlags, useInstallFlowStore } from '@/stores/installFlowStore';
@@ -250,6 +251,19 @@ export function useAppController() {
   // -----------------------------------------------------------------------
   useEffect(() => {
     useSecondaryInjectStore.getState().init();
+  }, []);
+
+  // -----------------------------------------------------------------------
+  // P3 Self-Healing drift status — subscribe once at boot.
+  // Uses getState().setDriftReport() to dispatch into the store without
+  // re-subscribing on every render. Module-level Set guard inside the store
+  // is not needed because useEffect cleanup handles HMR correctly.
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const off = api.onThemeDriftStatus((status) => {
+      useDiagnosticsStore.getState().setDriftReport(status);
+    });
+    return off;
   }, []);
 
   // -----------------------------------------------------------------------

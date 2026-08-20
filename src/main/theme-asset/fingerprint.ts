@@ -16,8 +16,12 @@ import type { AgentId } from '../../shared/types/agent';
 import type { ThemeColors } from '../catalog/theme-manifest';
 import type { FidelityVerdict } from '../cdp/baseline-validator';
 import type { CdpSession } from '../cdp/cdp-client';
+import { adaptAll } from './adapt/registry';
+import { completeSurfaceLayering } from './enhance/layering';
 import { InferenceError, ThemeAssetError } from './ir/errors';
 import { COLOR_KEYS } from './ir/normalize';
+import type { AdapterResult } from './ir/types';
+import { contractCheck } from './verify/contract-check';
 import { probeAgent } from './verify/probe';
 
 // ---------------------------------------------------------------------------
@@ -168,14 +172,25 @@ export async function loadBaseline(themeDir: string): Promise<ThemeFingerprintBu
   try {
     const { readFile } = await import('node:fs/promises');
     const raw = await readFile(path, 'utf-8');
-    const parsed = JSON.parse(raw) as ThemeFingerprintBundle;
+    const parsed = JSON.parse(raw) as unknown;
     // Basic validation
-    if (!parsed.themeId || !parsed.fingerprints) {
+    if (
+      !parsed ||
+      typeof parsed !== 'object' ||
+      !('themeId' in parsed) ||
+      !('fingerprints' in parsed)
+    ) {
       return null;
     }
-    return parsed;
-  } catch {
-    // File not found or JSON parse error → return null
+    // Schema migration (forward compatibility)
+    return migrateBundle(parsed);
+  } catch (error) {
+    // Distinguish file-not-found from IO/permission errors
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null; // File doesn't exist — expected for first capture
+    }
+    // Log unexpected errors but don't crash the apply flow
+    console.warn(`[fingerprint] Failed to load baseline: ${(error as Error).message}`);
     return null;
   }
 }
@@ -270,9 +285,14 @@ export async function captureFingerprint(
 async function getAppVersion(session: CdpSession): Promise<string> {
   try {
     const ua = await session.evaluate('navigator.userAgent');
-    // Try to parse "App/1.2.3" pattern
-    const match = ua.match(/([A-Za-z]+)\/(\d+\.\d+\.\d+)/);
-    return match ? `${match[1]}/${match[2]}` : 'unknown';
+    // Match known Agent app patterns first (e.g., "TRAE/1.2.3", "QoderWork/2.0.0")
+    const knownApps = ua.match(/(?:TRAE|QoderWork|WorkBuddy|Doubao|Codex|ZCode)\/(\d+\.\d+\.\d+)/i);
+    if (knownApps) return knownApps[0];
+    // Fallback: match any "Name/SemVer" pattern (skip common browser tokens)
+    const fallback = ua.match(
+      /(?!Mozilla|AppleWebKit|Chrome|Safari|Edge|Firefox)([A-Za-z][A-Za-z0-9]*)\/(\d+\.\d+\.\d+)/,
+    );
+    return fallback ? `${fallback[1]}/${fallback[2]}` : 'unknown';
   } catch {
     return 'unknown';
   }
@@ -438,12 +458,82 @@ const lastRegenTime = new Map<AgentId, number>();
 const consecutiveRegenFailures = new Map<AgentId, number>();
 
 /**
+ * Partial re-run: adapt → enhance → verify.
+ *
+ * Re-generates CSS outputs from existing ThemeColors (skipping detect/parse/
+ * infer since catalog already has full data). This is the core regen logic
+ * called by `regenerateTheme` thunk.
+ *
+ * Pipeline:
+ *   1. adaptAll(colors) → initial CSS outputs
+ *   2. completeSurfaceLayering(colors) → enhanced colors with surfaceL1
+ *   3. adaptAll(enhancedColors) → final CSS with enhanced surface tokens
+ *   4. contractCheck(enhancedColors) → verify 14-token coverage
+ *
+ * @param colors - Current theme colors (from catalog)
+ * @param themeId - Theme id (for CSS selector generation)
+ * @returns RegenResult with CSS outputs on success
+ */
+export function partialRerun(colors: ThemeColors, themeId: string): RegenResult {
+  try {
+    // Stage 1: Generate initial CSS from current colors
+    const adapterResult: AdapterResult = {
+      colors,
+      meta: { sourceFormat: 'catalog-regen' },
+      confidence: 1.0,
+    };
+    const initialCss = adaptAll(adapterResult, themeId);
+
+    // Stage 2: Enhance surface layering
+    const enhancedColors = completeSurfaceLayering(colors);
+
+    // Stage 3: Re-generate CSS with enhanced colors
+    const enhancedResult: AdapterResult = {
+      colors: enhancedColors,
+      meta: { sourceFormat: 'catalog-regen-enhanced' },
+      confidence: 1.0,
+    };
+    const finalCss = adaptAll(enhancedResult, themeId);
+
+    // Stage 4: Verify token coverage
+    const verifyReport = contractCheck(enhancedColors);
+
+    if (!verifyReport.passed) {
+      return {
+        status: 'failed',
+        reason: `Verify failed: ${verifyReport.warnings.join(', ')}`,
+        cssOutputs: initialCss,
+      };
+    }
+
+    return {
+      status: 'success',
+      reason: 'partial re-run completed',
+      cssOutputs: finalCss,
+    };
+  } catch (error) {
+    return {
+      status: 'failed',
+      reason: `Partial re-run error: ${(error as Error).message}`,
+    };
+  }
+}
+
+/**
  * Regenerate theme via partial re-run (adapt → enhance → verify).
  * Uses deferred thunk pattern — returns a function that executes the regen.
  *
  * Caller (agent-engine-service) is responsible for serialization.
+ *
+ * @param agentId - Target agent
+ * @param themeId - Theme id
+ * @param colors - Theme colors (captured at apply time, passed via closure)
  */
-export function regenerateTheme(agentId: AgentId, _themeId: string): () => Promise<RegenResult> {
+export function regenerateTheme(
+  agentId: AgentId,
+  themeId: string,
+  colors?: ThemeColors,
+): () => Promise<RegenResult> {
   return async (): Promise<RegenResult> => {
     // Concurrency guard
     if (regeneratingAgents.has(agentId)) {
@@ -461,14 +551,30 @@ export function regenerateTheme(agentId: AgentId, _themeId: string): () => Promi
     lastRegenTime.set(agentId, Date.now());
 
     try {
-      // Note: actual regen logic (partial re-run) is implemented in P3b
-      // P3a provides the guard infrastructure + thunk pattern
-      const cssOutputs: Record<string, string> = {};
+      // If no colors provided, cannot regen
+      if (!colors) {
+        return { status: 'failed', reason: 'no colors available for regen' };
+      }
+
+      // Execute partial re-run
+      const result = partialRerun(colors, themeId);
 
       // Reset failure counter on success
-      consecutiveRegenFailures.set(agentId, 0);
+      if (result.status === 'success') {
+        consecutiveRegenFailures.set(agentId, 0);
+      } else {
+        const failures = (consecutiveRegenFailures.get(agentId) ?? 0) + 1;
+        consecutiveRegenFailures.set(agentId, failures);
 
-      return { status: 'success', reason: 'regen completed', cssOutputs };
+        if (failures >= MAX_CONSECUTIVE_REGEN_FAILURES) {
+          return {
+            status: 'failed',
+            reason: `Consecutive failures (${failures}) exceeded limit`,
+          };
+        }
+      }
+
+      return result;
     } catch (error) {
       // Increment failure counter
       const failures = (consecutiveRegenFailures.get(agentId) ?? 0) + 1;
@@ -489,7 +595,7 @@ export function regenerateTheme(agentId: AgentId, _themeId: string): () => Promi
 }
 
 /**
- * Migrate fingerprint data from older schema versions.
+ * Migrate a single fingerprint from older schema versions.
  * Currently only v1 exists; reserved for future v1→v2 migration.
  */
 export function migrateFingerprint(data: unknown): ThemeFingerprint {
@@ -501,6 +607,31 @@ export function migrateFingerprint(data: unknown): ThemeFingerprint {
   }
   // Fallback: return a minimal valid fingerprint
   throw new FingerprintCaptureError('Unsupported fingerprint version');
+}
+
+/**
+ * Migrate a fingerprint bundle from older schema versions.
+ * Handles per-fingerprint migration and bundle-level defaults.
+ */
+function migrateBundle(data: unknown): ThemeFingerprintBundle {
+  if (!data || typeof data !== 'object') {
+    throw new FingerprintCaptureError('Invalid bundle data');
+  }
+  const raw = data as Record<string, unknown>;
+  const fingerprints: Record<AgentId, ThemeFingerprint> = {} as Record<AgentId, ThemeFingerprint>;
+  // Migrate each fingerprint in the bundle
+  if (raw.fingerprints && typeof raw.fingerprints === 'object') {
+    for (const [key, value] of Object.entries(raw.fingerprints)) {
+      fingerprints[key as AgentId] = migrateFingerprint(value);
+    }
+  }
+  return {
+    themeId: String(raw.themeId ?? ''),
+    appVersion: String(raw.appVersion ?? 'unknown'),
+    fingerprints,
+    createdAt: Number(raw.createdAt ?? Date.now()),
+    updatedAt: Number(raw.updatedAt ?? Date.now()),
+  };
 }
 
 // ---------------------------------------------------------------------------

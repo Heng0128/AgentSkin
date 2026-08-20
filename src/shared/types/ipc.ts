@@ -12,6 +12,7 @@ import type {
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
 import type { CssStyleSheetEvent } from './css-event';
+import type { DriftStatus, RegenResult } from './drift-status';
 import type { EnvironmentPreset } from './environment';
 import type { HealthCheckReport } from './health-check';
 import type { LaunchRequest } from './launch';
@@ -584,6 +585,15 @@ export interface AgentSkinApi {
    *  function. No ipcMain.handle is registered — this is a main→renderer push
    *  event sent via webContents.send. */
   onThemeHealthReport(listener: (report: HealthCheckReport) => void): () => void;
+  // --- P3 Self-Healing drift status ---
+  /** Subscribe to per-agent drift detection status pushed from the main process
+   *  after each fingerprint capture + drift cycle. Returns an unsubscribe
+   *  function. No ipcMain.handle is registered — this is a main→renderer push
+   *  event sent via webContents.send. */
+  onThemeDriftStatus(listener: (status: DriftStatus) => void): () => void;
+  /** Trigger a manual theme regeneration for a specific agent + theme.
+   *  Returns the regen result (success / failed / skipped). */
+  triggerManualRegen(agentId: AgentId, themeId: string): Promise<RegenResult>;
   // --- Theme Studio: Wallpaper picker (workspace-scoped) ---
   /** List wallpapers for the Studio WALLPAPER tab. */
   listWallpapersForStudio(): Promise<

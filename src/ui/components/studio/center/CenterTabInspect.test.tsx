@@ -90,6 +90,7 @@ const mockHealthReportFixture: HealthCheckReport = {
     '--vscode-foreground': '#cccccc',
     '--vscode-editor-background': '#1e1e1e',
   },
+  overriddenVariables: [],
   opaqueLayers: [
     {
       depth: 2,

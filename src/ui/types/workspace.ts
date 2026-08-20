@@ -178,3 +178,57 @@ export type DockControlConfig =
   | DockToggleConfig
   | DockColorRowConfig
   | DockTextConfig;
+
+// ---------------------------------------------------------------------------
+// Undo / Redo history
+// ---------------------------------------------------------------------------
+
+/** One immutable snapshot of overrides at a point in time. */
+export interface HistoryEntry {
+  overrides: Record<string, unknown>;
+  timestamp: number;
+}
+
+// ---------------------------------------------------------------------------
+// Named tweak presets
+// ---------------------------------------------------------------------------
+
+/** A user-saved tweak configuration that can be loaded later. */
+export interface TweakPreset {
+  id: string;
+  name: string;
+  agentId: AgentId;
+  overrides: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Parameter grouping
+// ---------------------------------------------------------------------------
+
+export type TweakGroupId = 'shape' | 'typography' | 'color' | 'motion';
+
+export interface TweakGroupConfig {
+  id: TweakGroupId;
+  label: string;
+  fields: Array<string>;
+}
+
+/**
+ * Parameter groups for the TweakPanel. Order matters — groups render
+ * in this order. `color` is expanded by default.
+ */
+export const OVERRIDE_GROUPS: TweakGroupConfig[] = [
+  { id: 'color', label: '颜色', fields: ['accent', 'background', 'foreground', 'surface'] },
+  {
+    id: 'shape',
+    label: '形状',
+    fields: ['radius', 'spacing', 'shadowLevel', 'blurPx', 'borderWidth'],
+  },
+  { id: 'typography', label: '排版', fields: ['fontSize', 'fontFam', 'lineHeight'] },
+  { id: 'motion', label: '动效', fields: ['duration', 'timing'] },
+];
+
+/** Default-expanded group id. */
+export const DEFAULT_EXPANDED_GROUP: TweakGroupId = 'color';

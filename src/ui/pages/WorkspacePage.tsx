@@ -21,9 +21,15 @@
  *   workspaceStore.currentAgentId / currentPort       ◀── click agent
  *   workspaceStore.currentOverrides                   ◀── TweakPanel onChange
  *   └─▶ api.pushTweak (real-time) + AgentDomPreview (local replay)
+ *
+ * Features:
+ *   - M3 undo/redo: Ctrl+Z / Ctrl+Shift+Z
+ *   - M5 A/B compare: dual preview when compare preset is active
+ *   - M8 element picking: click preview to highlight corresponding field
+ *   - M9 export/import: share tweak configs as JSON
  */
 
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
@@ -38,7 +44,15 @@ import type { ToolOverride } from '@/types/override';
 
 import { type UiMessages, uiMessages } from '@shared/i18n';
 import type { AppStatus } from '@shared/types';
-import { AlertTriangle, CheckCircle, RefreshCw, XCircle } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle,
+  Download,
+  RefreshCw,
+  Search,
+  Upload,
+  XCircle,
+} from 'lucide-react';
 
 /** Read current i18n message table (project-standard pattern). */
 function currentT(): UiMessages {
@@ -61,10 +75,28 @@ export function WorkspacePage() {
   const discardChanges = useWorkspaceStore((s) => s.discardChanges);
   const pushError = useWorkspaceStore((s) => s.pushError);
   const clearPushError = useWorkspaceStore((s) => s.clearPushError);
+  // M3 undo/redo
+  const undo = useWorkspaceStore((s) => s.undo);
+  const redo = useWorkspaceStore((s) => s.redo);
+  const canUndo = useWorkspaceStore((s) => s.canUndo);
+  const canRedo = useWorkspaceStore((s) => s.canRedo);
+  // M5 A/B compare
+  const dualPreviewActive = useWorkspaceStore((s) => s.dualPreviewActive);
+  // M8 inspect mode
+  const inspectMode = useWorkspaceStore((s) => s.window.inspectMode);
+  const toggleInspectMode = useWorkspaceStore((s) => s.toggleInspectMode);
+  // M9 export/import
+  const exportTweakConfig = useWorkspaceStore((s) => s.exportTweakConfig);
+  const importTweakConfig = useWorkspaceStore((s) => s.importTweakConfig);
 
   const healthReportByAgent = useDiagnosticsStore((s) => s.healthReportByAgent);
   const healthReport = currentAgentId ? (healthReportByAgent[currentAgentId] ?? null) : null;
   const setHealthReport = useDiagnosticsStore((s) => s.setHealthReport);
+
+  // M8: track the currently highlighted field from element picking.
+  const [highlightedField, setHighlightedField] = useState<string | undefined>(undefined);
+  // M9: import error message.
+  const [importError, setImportError] = useState<string | null>(null);
 
   /** Subscribe to theme health reports pushed from the main process. */
   useEffect(() => {
@@ -72,11 +104,68 @@ export function WorkspacePage() {
     return unsubscribe;
   }, [setHealthReport]);
 
+  /** M3: keyboard shortcuts — Ctrl+Z undo, Ctrl+Shift+Z redo. */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          void redo();
+        } else {
+          void undo();
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo]);
+
   /** Running agents that expose a CDP port — eligible for live tweaking. */
   const runningAgents = useMemo(
     () => (status?.apps ?? []).filter((a) => a.running && a.port !== null) as AppStatus[],
     [status],
   );
+
+  // M8: map a picked element ref to a ToolOverride field key.
+  const handleElementPicked = useCallback((ref: string) => {
+    // The ref is either a data-as-ref value or a tagName. Map common tagNames
+    // to likely override fields; otherwise just store the raw ref.
+    const tagToField: Record<string, string> = {
+      button: 'radius',
+      input: 'radius',
+      select: 'radius',
+      textarea: 'radius',
+      hr: 'borderWidth',
+      img: 'radius',
+    };
+    setHighlightedField(tagToField[ref.toLowerCase()] ?? ref);
+    // Clear highlight after 3 seconds.
+    setTimeout(() => setHighlightedField(undefined), 3000);
+  }, []);
+
+  // M9: export to clipboard.
+  const handleExport = useCallback(() => {
+    const json = exportTweakConfig();
+    void navigator.clipboard.writeText(json);
+  }, [exportTweakConfig]);
+
+  // M9: import from file.
+  const handleImport = useCallback(async () => {
+    setImportError(null);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      const result = await importTweakConfig(text);
+      if (!result.ok) {
+        setImportError(result.error ?? 'import_failed');
+      }
+    };
+    input.click();
+  }, [importTweakConfig]);
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -218,10 +307,33 @@ export function WorkspacePage() {
             <>
               {/* Preview pane */}
               <section className="flex min-h-0 flex-col">
-                <span className="mb-2 text-[11px] tracking-tight text-muted-foreground ">
-                  {t.workspacePreview}
-                </span>
-                <AgentLivePreview agentId={currentAgentId} overrides={currentOverrides} t={t} />
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-[11px] tracking-tight text-muted-foreground ">
+                    {t.workspacePreview}
+                  </span>
+                  {/* M8: inspect mode toggle */}
+                  <button
+                    type="button"
+                    onClick={() => toggleInspectMode()}
+                    className={`flex items-center gap-1 rounded-[2px] px-2 py-0.5 font-mono text-[10px] transition-colors ${
+                      inspectMode
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:bg-[var(--bg-3)]'
+                    }`}
+                    title={inspectMode ? '退出元素选取' : '选取元素以定位参数'}
+                  >
+                    <Search className="size-3" />
+                    {inspectMode ? '退出选取' : '选取元素'}
+                  </button>
+                </div>
+                <AgentLivePreview
+                  agentId={currentAgentId}
+                  overrides={currentOverrides}
+                  t={t}
+                  dualPreview={dualPreviewActive}
+                  inspectMode={inspectMode}
+                  onElementPicked={handleElementPicked}
+                />
               </section>
 
               {/* Tweak controls */}
@@ -252,7 +364,6 @@ export function WorkspacePage() {
                   overrides={currentOverrides}
                   onChange={(next) => {
                     // TweakPanel 每次只改一个 key，找到变化项直接透传。
-                    // break 改为 return 提升可读性。
                     for (const [k, v] of Object.entries(next)) {
                       if (currentOverrides[k as keyof ToolOverride] !== v) {
                         void updateOverride(k as keyof ToolOverride, v);
@@ -261,6 +372,7 @@ export function WorkspacePage() {
                     }
                   }}
                   t={t}
+                  highlightedField={highlightedField}
                 />
 
                 {/* Action buttons */}
@@ -283,7 +395,67 @@ export function WorkspacePage() {
                   >
                     {t.workspaceDiscardChanges}
                   </Button>
+                  {/* M3: undo / redo buttons */}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    disabled={!canUndo()}
+                    onClick={() => void undo()}
+                    title="Ctrl+Z"
+                  >
+                    ↶
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    disabled={!canRedo()}
+                    onClick={() => void redo()}
+                    title="Ctrl+Shift+Z"
+                  >
+                    ↷
+                  </Button>
+                  {/* M9: export / import */}
+                  <div className="ml-auto flex items-center gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleExport}
+                      title="导出配置到剪贴板"
+                    >
+                      <Download className="size-3" />
+                      <span className="text-[11px]">导出</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => void handleImport()}
+                      title="从 JSON 文件导入配置"
+                    >
+                      <Upload className="size-3" />
+                      <span className="text-[11px]">导入</span>
+                    </Button>
+                  </div>
                 </div>
+
+                {/* M9: import error display */}
+                {importError && (
+                  <div
+                    role="alert"
+                    className="flex items-center justify-between gap-3 rounded-md px-3 py-2"
+                    style={{ background: 'var(--redbg)' }}
+                  >
+                    <p className="text-[11px]" style={{ color: 'var(--destructive)' }}>
+                      导入失败：{importError}
+                    </p>
+                    <Button variant="ghost" size="sm" onClick={() => setImportError(null)}>
+                      {t.commonDismiss ?? '关闭'}
+                    </Button>
+                  </div>
+                )}
               </section>
             </>
           )}

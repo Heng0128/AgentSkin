@@ -8,10 +8,12 @@ import type {
   AgentSkinApi,
   ApplyRequest,
   ConcurrencyMetrics,
+  DriftStatus,
   FileImportConfirmRequest,
   FileImportResult,
   HealthCheckReport,
   InspectedNode,
+  RegenResult,
   ScanProgressEvent,
   StudioProject,
   StudioSnapshotOptions,
@@ -314,6 +316,10 @@ const api: AgentSkinApi = {
   // --- Theme health check ---
   onThemeHealthReport: (listener) =>
     subscribe<HealthCheckReport>(IpcChannel.THEME_HEALTH_REPORT, listener),
+  // --- P3 Self-Healing drift status ---
+  onThemeDriftStatus: (listener) => subscribe<DriftStatus>(IpcChannel.THEME_DRIFT_STATUS, listener),
+  triggerManualRegen: (agentId, themeId) =>
+    ipcRenderer.invoke(IpcChannel.THEME_MANUAL_REGEN, agentId, themeId) as Promise<RegenResult>,
   /** Fire-and-forget push of renderer-side primitive sizes so the main
    *  process can include them in the unified metrics broadcast. */
   sendRendererConcurrencyMetrics: (companionBusy: number, switchEpoch: number) =>

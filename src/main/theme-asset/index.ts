@@ -17,6 +17,13 @@ export type { AgentId } from './adapt/registry';
 export { toGeneratorInput } from './adapt/toGeneratorInput';
 export { detectAndParse, registerAllAdapters } from './adapters/index';
 export { buildNativeDefectCss, extractStructuralTemplate } from './bridge/index';
+// P3 自愈闭环 — 延迟 Regen 协调器
+export {
+  captureDetectDispatch,
+  clearDeferredRegens,
+  getDeferredRegensSize,
+  scheduleDeferredRegen,
+} from './deferred-regen';
 export { completeSurfaceLayering } from './enhance/layering';
 export { applyPreset, getDefaultPreset, PRESETS } from './enhance/presets';
 export type {
@@ -38,6 +45,7 @@ export {
   loadBaseline,
   migrateFingerprint,
   normalizedColorDistance,
+  partialRerun,
   REGEN_COOLDOWN_MS,
   REQUIRED_CONSECUTIVE_DRIFT,
   RegenError,

@@ -63,6 +63,7 @@ import {
   probeThemeLiveOnPort,
 } from './cdp/apply-baseline';
 import { type CdpFanoutDeps, injectSecondaryTargets } from './cdp/cdp-fanout';
+import { captureFingerprintOnPort } from './cdp/cdp-fingerprint';
 import { clearTargetsCache } from './cdp/cdp-targets';
 import {
   cleanupEngineInjectionForAgent,
@@ -587,6 +588,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
       baselineInvalidate: (appId) => this.applyBaselineCache.invalidate(appId),
       probeThemeLiveOnPort: (port) => probeThemeLiveOnPort(port),
       captureBaselineOnPort: (port, appId, themeId) => captureBaselineOnPort(port, appId, themeId),
+      captureFingerprintOnPort: (port, appId, themeId, colors, themeDir) =>
+        captureFingerprintOnPort(port, appId, themeId, colors, themeDir),
       findTheme: (themeId) => this.library.find(themeId),
       bumpEpoch: (appId) => this.bumpEpoch(appId),
       isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),

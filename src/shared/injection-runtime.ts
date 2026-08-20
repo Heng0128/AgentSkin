@@ -38,6 +38,33 @@ import {
 } from './injection-constants';
 import { AGENT_IDS } from './types';
 
+/**
+ * Determine whether the theme is fully applied based on a verifyTheme result.
+ *
+ * Three conditions must ALL hold:
+ *   1. accent token is non-empty (CSS variable actually inherited/cascade)
+ *   2. At least one owned adoptedStyleSheet exists
+ *   3. Every required engine layer (palette, tokens, cosmetic) is present
+ *      with ruleCount > 0 (when layer data is available)
+ *
+ * Consumers: waitForTheme (shared.ts), watchdog skip decision (cdp-fanout.ts).
+ */
+export function isThemeFullyApplied(v: {
+  accent: string;
+  adoptedSheetCount: number;
+  layers?: Record<string, number>;
+}): boolean {
+  if (!v || v.adoptedSheetCount <= 0) return false;
+  if (!v.accent) return false;
+  // If layers data is unavailable (old client), fall back to count-only check
+  if (!v.layers) return true;
+  const required = ['palette', 'tokens', 'cosmetic'];
+  for (const layer of required) {
+    if (!v.layers[layer] || v.layers[layer] <= 0) return false;
+  }
+  return true;
+}
+
 // ---------------------------------------------------------------------------
 // CSS escaping
 // ---------------------------------------------------------------------------
@@ -156,9 +183,14 @@ export function buildAdoptLayerExpression(layerName: string, css: string): strin
 
 /**
  * Build a JS IIFE expression that adopts a single unnamed owned stylesheet.
- * Clears ALL previously-owned sheets first, then adds the new one tagged
- * with `__agentskin` but no layer name. Returns `'ok:<ruleCount>'` or
- * `'err:<message>'`.
+ * Clears only previously-owned **unnamed** sheets (no `__agentskin_layer`),
+ * then adds the new one tagged with `__agentskin` but no layer name.
+ * Returns `'ok:<ruleCount>'` or `'err:<message>'`.
+ *
+ * Preserves named engine layers (palette/tokens/cosmetic/theme/custom) so
+ * that legacy fallback injection (via `injectThemeViaCdp`) does not wipe
+ * out the engine's multi-layer architecture. Only the legacy unnamed sheet
+ * from a previous `injectCssAdopted` call is replaced.
  *
  * Replaces the inline logic in `injectCssAdopted()`.
  */
@@ -168,7 +200,9 @@ export function buildAdoptOwnedSheetExpression(css: string): string {
     try {
       const sheet = new CSSStyleSheet();
       sheet.replaceSync(\`${escaped}\`);
-      document.adoptedStyleSheets = (document.adoptedStyleSheets || []).filter(s => s.${SHEET_OWNED_FLAG} !== true);
+      document.adoptedStyleSheets = (document.adoptedStyleSheets || []).filter(
+        s => !(s.${SHEET_OWNED_FLAG} === true && !s.${SHEET_LAYER_FLAG})
+      );
       sheet.${SHEET_OWNED_FLAG} = true;
       document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
       return 'ok:' + sheet.cssRules.length;

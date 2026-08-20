@@ -38,6 +38,8 @@
     "generate:themes": "npm run generate:palette && npm run generate:theme-css",
     "analyze:structure": "node scripts/analyze-structure-compare.mjs",
     "regression": "node scripts/regression-runner.mjs",
+    "e2e": "playwright test",
+    "e2e:debug": "playwright test --debug",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -78,6 +80,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.5",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "4.2.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^26.1.2",

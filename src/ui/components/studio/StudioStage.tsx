@@ -76,7 +76,7 @@ export function StudioStage({ t }: { t: UiMessages }) {
           win={window}
           active={true}
           onSelect={() => {}}
-          onScaleChange={(s) => {}}
+          onScaleChange={(_s) => {}}
           domTree={domTree}
           rootVars={rootVars}
           t={t}

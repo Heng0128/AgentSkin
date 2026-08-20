@@ -21,6 +21,14 @@ export interface ThemeVerification {
   /** Number of adoptedStyleSheets with __agentskin flag */
   adoptedSheetCount: number;
   /**
+   * Per-layer presence tracking — keyed by layer name (palette, tokens,
+   * cosmetic, theme, custom). Each value is the CSSRule count for that layer's
+   * adoptedStyleSheet, or 0 if the layer is absent. The watchdog uses this to
+   * decide whether a re-injection is needed (any required layer missing or
+   * ruleCount === 0 → re-inject).
+   */
+  layers?: Record<string, number>;
+  /**
    * 2a multi-asset: resolved `--agentskin-asset-<id>` values (truncated),
    * keyed by the full custom property name (e.g. `--agentskin-asset-mascot`).
    * Only present when the renderer is a modern build that reports it.

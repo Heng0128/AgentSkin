@@ -13,7 +13,7 @@
  */
 
 import { toMessage } from '../../../shared/errors';
-import { SHEET_OWNED_FLAG } from '../../../shared/injection-constants';
+import { isThemeFullyApplied } from '../../../shared/injection-runtime';
 import { mainWarn } from '../../logger';
 import { PerformanceRecorder } from '../../services/performance';
 import type { CdpSession } from '../cdp-client';
@@ -38,32 +38,52 @@ export type { ThemeVerification } from './types';
 // Verification
 // ===========================================================================
 
+/**
+ * CDP evaluate expression body for verifyTheme.
+ * Collects core token values, per-layer adoption status, and hero state.
+ *
+ * Per-layer tracking reads `sheet.cssRules.length` for each owned sheet that
+ * carries a `__agentskin_layer` flag — this lets the watchdog detect partial
+ * injection (e.g. palette adopted but tokens missing) instead of relying on
+ * a single aggregate count.
+ */
+const VERIFY_THEME_BODY = [
+  'const rootCs = getComputedStyle(document.documentElement);',
+  'const root = document.getElementById("root") || document.body;',
+  'const rootBg = getComputedStyle(root).backgroundImage || "";',
+  'const bodyBg = getComputedStyle(document.body).backgroundImage || "";',
+  'const sheets = document.adoptedStyleSheets || [];',
+  'const owned = sheets.filter(function(s) { return s.__agentskin === true; });',
+  // Per-layer: map layerName → cssRule count
+  'const layers = {};',
+  'for (var i = 0; i < owned.length; i++) {',
+  '  var ln = owned[i].__agentskin_layer;',
+  '  if (ln) layers[ln] = owned[i].cssRules.length;',
+  '}',
+  'var accent = rootCs.getPropertyValue("--agentskin-accent").trim();',
+  'var agentskinArt = rootCs.getPropertyValue("--agentskin-art").trim().slice(0, 60);',
+  'var assets = {};',
+  'for (var j = 0; j < rootCs.length; j++) {',
+  '  var nm = rootCs[j];',
+  '  if (nm.indexOf("--agentskin-asset-") === 0) {',
+  '    var v = rootCs.getPropertyValue(nm).trim();',
+  '    if (v) assets[nm] = v.slice(0, 60);',
+  '  }',
+  '}',
+  'return JSON.stringify({',
+  '  accent: accent,',
+  '  agentskinArt: agentskinArt,',
+  '  heroBlobActive: rootBg.indexOf("blob:") >= 0 || bodyBg.indexOf("blob:") >= 0,',
+  '  adoptedSheetCount: owned.length,',
+  '  layers: layers,',
+  '  assets: assets,',
+  '  assetsActive: Object.keys(assets).length,',
+  '});',
+].join('\n');
+
 export async function verifyTheme(session: CdpSession): Promise<ThemeVerification | null> {
   try {
-    const raw = await session.evaluate(`(() => {
-      const rootCs = getComputedStyle(document.documentElement);
-      const root = document.getElementById('root') || document.body;
-      const rootBg = getComputedStyle(root).backgroundImage || '';
-      const bodyBg = getComputedStyle(document.body).backgroundImage || '';
-      const adopted = (document.adoptedStyleSheets || []).filter(s => s.${SHEET_OWNED_FLAG}).length;
-      // 2a multi-asset: collect every resolved --agentskin-asset-<id> value.
-      const assets = {};
-      for (const name of rootCs) {
-        if (name.startsWith('--agentskin-asset-')) {
-          const value = rootCs.getPropertyValue(name).trim();
-          if (value) assets[name] = value.slice(0, 60);
-        }
-      }
-      return JSON.stringify({
-        accent: rootCs.getPropertyValue('--agentskin-accent').trim(),
-        agentskinArt: rootCs.getPropertyValue('--agentskin-art').trim().slice(0, 60),
-        heroBlobActive: rootBg.includes('blob:') || bodyBg.includes('blob:'),
-        adoptedSheetCount: adopted,
-        assets,
-        assetsActive: Object.keys(assets).length,
-      });
-    })()`);
-
+    const raw = await session.evaluate(`(() => { ${VERIFY_THEME_BODY} })()`);
     return JSON.parse(raw) as ThemeVerification;
   } catch (error) {
     mainWarn('Inject.Verify', `theme-verify CDP evaluate failed: ${toMessage(error)}`);
@@ -121,7 +141,7 @@ export async function waitForTheme(
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     const verification = await verifyTheme(session);
-    if (verification && verification.adoptedSheetCount > 0) {
+    if (verification && isThemeFullyApplied(verification)) {
       PerformanceRecorder.recordNamedStep('waitForTheme', performance.now() - t0);
       return verification;
     }

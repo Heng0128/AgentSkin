@@ -16,9 +16,15 @@
  * into the iframe via `postMessage` (see `RealDomPreview.overridesToCss`).
  * The real-time push to the *live* agent happens in `workspaceStore.updateOverride`,
  * not here. This component is purely a local preview.
+ *
+ * Features:
+ * - **A/B compare** (`dualPreview`): splits the preview into current (left) vs
+ *   baseline (right, no overrides) for visual diff.
+ * - **Element picking** (`inspectMode`): injects a click listener into the
+ *   iframe to map clicked elements back to their `data-as-ref` identifier.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { RealDomPreview } from '@/components/studio/RealDomPreview';
 import type { ToolOverride } from '@/types/override';
@@ -30,15 +36,26 @@ export function AgentLivePreview({
   agentId,
   overrides,
   t,
+  dualPreview = false,
+  inspectMode = false,
+  onElementPicked,
 }: {
   agentId: string;
   overrides: ToolOverride;
   t: UiMessages;
+  /** When true, render a side-by-side A/B comparison (current vs baseline). */
+  dualPreview?: boolean;
+  /** When true, enable element picking inside the preview iframe. */
+  inspectMode?: boolean;
+  /** Callback invoked when the user picks an element in inspect mode. */
+  onElementPicked?: (ref: string) => void;
 }) {
   const [loading, setLoading] = useState(true);
   const [snapshots, setSnapshots] = useState<Record<string, DomTreeNode | undefined>>({});
   const [refreshing, setRefreshing] = useState(false);
   const [refreshFailed, setRefreshFailed] = useState(false);
+  // Track the iframe element for click-listener injection (element picking).
+  const inspectCleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,12 +96,52 @@ export function AgentLivePreview({
         /* leave domTree undefined → RealDomPreview shows fallback */
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
   }, [agentId, snapshots]);
+
+  // --- Element picking: inject click listener into the iframe ---
+  // Clean up previous listener on unmount.
+  useEffect(() => {
+    return () => {
+      if (inspectCleanupRef.current) {
+        inspectCleanupRef.current();
+        inspectCleanupRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleIframeMount = useCallback(
+    (iframe: HTMLIFrameElement) => {
+      // Clean up any previous listener first.
+      if (inspectCleanupRef.current) {
+        inspectCleanupRef.current();
+        inspectCleanupRef.current = null;
+      }
+      if (!inspectMode || !onElementPicked) return;
+      try {
+        const doc = iframe.contentDocument;
+        if (!doc) return;
+        const handler = (e: Event) => {
+          const target = e.target as HTMLElement;
+          const ref = target.getAttribute('data-as-ref') ?? target.tagName.toLowerCase();
+          onElementPicked(ref);
+          e.preventDefault();
+          e.stopPropagation();
+        };
+        doc.addEventListener('click', handler, { capture: true });
+        inspectCleanupRef.current = () => {
+          doc.removeEventListener('click', handler, { capture: true });
+        };
+      } catch {
+        // Cross-origin: contentDocument inaccessible, degrade silently.
+      }
+    },
+    [inspectMode, onElementPicked],
+  );
 
   const domTree = snapshots[agentId];
 
@@ -98,8 +155,9 @@ export function AgentLivePreview({
     );
   }
 
-  return (
-    <div className="relative overflow-hidden rounded-md">
+  // Status bar (shared across single and dual modes).
+  const statusBar = (
+    <>
       {refreshing && !refreshFailed && (
         <div className="absolute inset-x-0 top-0 h-1 bg-primary/30 animate-pulse" />
       )}
@@ -113,7 +171,46 @@ export function AgentLivePreview({
           <span className="sr-only">{t.workspacePreviewRefreshFailed ?? '刷新失败，显示缓存'}</span>
         </div>
       )}
-      <RealDomPreview domTree={domTree} overrides={overrides} t={t} />
+    </>
+  );
+
+  // In dual-preview mode, render A/B side by side.
+  if (dualPreview) {
+    return (
+      <div className="relative overflow-hidden rounded-md">
+        {statusBar}
+        <div className="grid grid-cols-2 gap-px bg-[var(--border-subtle)]">
+          {/* Left: current overrides */}
+          <div className="bg-[var(--surface)]">
+            <div className="px-2 py-1 text-center font-mono text-[10px] tracking-wider text-muted-foreground">
+              A — 当前
+            </div>
+            <RealDomPreview domTree={domTree} overrides={overrides} t={t} />
+          </div>
+          {/* Right: baseline (no overrides) */}
+          <div className="bg-[var(--surface)]">
+            <div className="px-2 py-1 text-center font-mono text-[10px] tracking-wider text-muted-foreground">
+              B — 基线
+            </div>
+            <RealDomPreview domTree={domTree} overrides={null} t={t} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Single preview mode (with optional inspect mode).
+  return (
+    <div className="relative overflow-hidden rounded-md">
+      {statusBar}
+      <div style={{ cursor: inspectMode ? 'crosshair' : 'default' }}>
+        <RealDomPreview
+          domTree={domTree}
+          overrides={overrides}
+          t={t}
+          onIframeMount={inspectMode ? handleIframeMount : undefined}
+        />
+      </div>
     </div>
   );
 }

@@ -9,12 +9,14 @@
  * - updateOverride optimistic update + monotonic token serialization
  * - saveChanges / discardChanges persistence sync / cleanup
  * - localStorage quota + JSON-parse resilience
+ * - undo / redo history stack
+ * - named tweak presets (save / load / delete / rename)
  *
  * `@/api/agentSkinClient` is fully mocked via `vi.hoisted` + `vi.mock`
  * so tests run without Electron IPC connectivity.
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Hoisted mocks — must be defined before the first import that transitively
@@ -51,11 +53,32 @@ function resetLiveTweakState() {
     dirty: false,
     overridesByAgent: {},
     pushError: null,
+    // Reset history and presets for clean test isolation.
+    history: [],
+    historyIndex: -1,
+    tweakPresets: [],
+    tweakPresetActiveId: null,
   });
+  // Reset module-level pushToken to ensure monotonic token isolation between tests.
+  useWorkspaceStore.getState().testResetPushToken();
+}
+
+/**
+ * Flush all pending microtasks so that previously dispatched async operations
+ * (e.g. pushToAgent promise chains) complete before the next test starts.
+ * This prevents cross-test state leakage.
+ */
+async function flushPromises() {
+  for (let i = 0; i < 50; i++) {
+    await Promise.resolve();
+  }
 }
 
 describe('workspaceStore — per-agent overrides persistence', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Wait for any pending async operations from the previous test to complete
+    // before resetting state, preventing cross-test state leakage.
+    await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
     resetLiveTweakState();
@@ -80,10 +103,19 @@ describe('workspaceStore — per-agent overrides persistence', () => {
 });
 
 describe('workspaceStore — localStorage quota handling', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Wait for any pending async operations from the previous test to complete
+    // before resetting state, preventing cross-test state leakage.
+    await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
     resetLiveTweakState();
+  });
+
+  // Restore any spies (e.g. setItem mockImplementation) after each test so
+  // they don't leak into subsequent describe blocks.
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('persistOverridesByAgent 在 setItem throw 时不崩溃', async () => {
@@ -113,8 +145,15 @@ describe('workspaceStore — localStorage quota handling', () => {
         try {
           const raw = window.localStorage.getItem('workspace.overridesByAgent');
           if (!raw) return {};
-          const parsed = JSON.parse(raw) as { _version: number; data: Record<string, ToolOverride> } | Record<string, ToolOverride>;
-          if (parsed && typeof parsed === 'object' && '_version' in parsed && (parsed as { _version: number })._version === 1) {
+          const parsed = JSON.parse(raw) as
+            | { _version: number; data: Record<string, ToolOverride> }
+            | Record<string, ToolOverride>;
+          if (
+            parsed &&
+            typeof parsed === 'object' &&
+            '_version' in parsed &&
+            (parsed as { _version: number })._version === 1
+          ) {
             return (parsed as { _version: number; data: Record<string, ToolOverride> }).data;
           }
           if (parsed && typeof parsed === 'object') return parsed as Record<string, ToolOverride>;
@@ -131,7 +170,10 @@ describe('workspaceStore — localStorage quota handling', () => {
 });
 
 describe('workspaceStore — selectAgent restores overrides', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Wait for any pending async operations from the previous test to complete
+    // before resetting state, preventing cross-test state leakage.
+    await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
     resetLiveTweakState();
@@ -155,7 +197,7 @@ describe('workspaceStore — selectAgent restores overrides', () => {
     expect(useWorkspaceStore.getState().currentOverrides).toEqual({ radius: '4px' });
   });
 
-it('selectAgent 清除 pushError', async () => {
+  it('selectAgent 清除 pushError', async () => {
     useWorkspaceStore.getState().selectAgent('codex', 9222);
     // Push a failure so pushError is set.
     mockPushTweak.mockResolvedValueOnce(false);
@@ -170,7 +212,10 @@ it('selectAgent 清除 pushError', async () => {
 });
 
 describe('workspaceStore — updateOverride push receipt and error handling', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Wait for any pending async operations from the previous test to complete
+    // before resetting state, preventing cross-test state leakage.
+    await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
     resetLiveTweakState();
@@ -184,7 +229,7 @@ describe('workspaceStore — updateOverride push receipt and error handling', ()
     expect(useWorkspaceStore.getState().pushError).toBeNull();
   });
 
-it('pushTweak 返回 false 时设置 pushError 为 push_failed', async () => {
+  it('pushTweak 返回 false 时设置 pushError 为 push_failed', async () => {
     useWorkspaceStore.getState().selectAgent('codex', 9222);
     mockPushTweak.mockResolvedValueOnce(false);
 
@@ -216,7 +261,10 @@ it('pushTweak 返回 false 时设置 pushError 为 push_failed', async () => {
 });
 
 describe('workspaceStore — push token serialization', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Wait for any pending async operations from the previous test to complete
+    // before resetting state, preventing cross-test state leakage.
+    await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
     resetLiveTweakState();
@@ -281,7 +329,10 @@ describe('workspaceStore — push token serialization', () => {
 });
 
 describe('workspaceStore — saveChanges persists to overridesByAgent', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Wait for any pending async operations from the previous test to complete
+    // before resetting state, preventing cross-test state leakage.
+    await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
     resetLiveTweakState();
@@ -313,7 +364,7 @@ describe('workspaceStore — saveChanges persists to overridesByAgent', () => {
     expect(useWorkspaceStore.getState().dirty).toBe(true);
   });
 
-it('saveChanges 成功后 pushError 被清除', async () => {
+  it('saveChanges 成功后 pushError 被清除', async () => {
     useWorkspaceStore.getState().selectAgent('codex', 9222);
     mockPushTweak.mockResolvedValueOnce(false);
     await useWorkspaceStore.getState().updateOverride('radius', '4px');
@@ -327,7 +378,10 @@ it('saveChanges 成功后 pushError 被清除', async () => {
 });
 
 describe('workspaceStore — discardChanges cleans up overridesByAgent', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Wait for any pending async operations from the previous test to complete
+    // before resetting state, preventing cross-test state leakage.
+    await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
     resetLiveTweakState();
@@ -361,13 +415,16 @@ describe('workspaceStore — discardChanges cleans up overridesByAgent', () => {
 });
 
 describe('workspaceStore — clearPushError', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Wait for any pending async operations from the previous test to complete
+    // before resetting state, preventing cross-test state leakage.
+    await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
     resetLiveTweakState();
   });
 
-it('clearPushError 将 pushError 置为 null', async () => {
+  it('clearPushError 将 pushError 置为 null', async () => {
     useWorkspaceStore.getState().selectAgent('codex', 9222);
     mockPushTweak.mockResolvedValueOnce(false);
     await useWorkspaceStore.getState().updateOverride('radius', '8px');
@@ -376,5 +433,231 @@ it('clearPushError 将 pushError 置为 null', async () => {
 
     useWorkspaceStore.getState().clearPushError();
     expect(useWorkspaceStore.getState().pushError).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// M3: undo / redo
+// ---------------------------------------------------------------------------
+
+describe('workspaceStore — undo/redo history', () => {
+  beforeEach(async () => {
+    await flushPromises();
+    vi.clearAllMocks();
+    window.localStorage.clear();
+    resetLiveTweakState();
+  });
+
+  it('每次 updateOverride 压入历史条目', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+
+    await useWorkspaceStore.getState().updateOverride('radius', '4px');
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+
+    const state = useWorkspaceStore.getState();
+    expect(state.history).toHaveLength(2);
+    expect(state.historyIndex).toBe(1);
+  });
+
+  it('undo 回退到上一状态', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+
+    await useWorkspaceStore.getState().updateOverride('radius', '4px');
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+
+    const ok = await useWorkspaceStore.getState().undo();
+    expect(ok).toBe(true);
+    expect(useWorkspaceStore.getState().currentOverrides).toEqual({ radius: '4px' });
+    expect(useWorkspaceStore.getState().historyIndex).toBe(0);
+  });
+
+  it('redo 前进到下一状态', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+
+    await useWorkspaceStore.getState().updateOverride('radius', '4px');
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+
+    await useWorkspaceStore.getState().undo();
+    const ok = await useWorkspaceStore.getState().redo();
+    expect(ok).toBe(true);
+    expect(useWorkspaceStore.getState().currentOverrides).toEqual({ radius: '8px' });
+    expect(useWorkspaceStore.getState().historyIndex).toBe(1);
+  });
+
+  it('canUndo / canRedo 正确反映历史状态', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+
+    // No history initially.
+    expect(useWorkspaceStore.getState().canUndo()).toBe(false);
+    expect(useWorkspaceStore.getState().canRedo()).toBe(false);
+
+    await useWorkspaceStore.getState().updateOverride('radius', '4px');
+    // One entry: canUndo needs at least 2 entries (cursor > 0).
+    expect(useWorkspaceStore.getState().canUndo()).toBe(false);
+
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+    expect(useWorkspaceStore.getState().canUndo()).toBe(true);
+    expect(useWorkspaceStore.getState().canRedo()).toBe(false);
+
+    await useWorkspaceStore.getState().undo();
+    expect(useWorkspaceStore.getState().canRedo()).toBe(true);
+  });
+
+  it('新操作清除 redo 分支', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+
+    await useWorkspaceStore.getState().updateOverride('radius', '4px');
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+    await useWorkspaceStore.getState().undo();
+    // Now canRedo should be true.
+    expect(useWorkspaceStore.getState().canRedo()).toBe(true);
+
+    // New update clears redo tail.
+    await useWorkspaceStore.getState().updateOverride('radius', '12px');
+    expect(useWorkspaceStore.getState().canRedo()).toBe(false);
+    expect(useWorkspaceStore.getState().history).toHaveLength(2);
+  });
+
+  it('selectAgent 重置历史', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+    await useWorkspaceStore.getState().updateOverride('radius', '4px');
+    expect(useWorkspaceStore.getState().history.length).toBeGreaterThan(0);
+
+    useWorkspaceStore.getState().selectAgent('traework', 9223);
+    expect(useWorkspaceStore.getState().history).toHaveLength(0);
+    expect(useWorkspaceStore.getState().historyIndex).toBe(-1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// M7: named tweak presets
+// ---------------------------------------------------------------------------
+
+describe('workspaceStore — named tweak presets', () => {
+  beforeEach(async () => {
+    await flushPromises();
+    vi.clearAllMocks();
+    window.localStorage.clear();
+    resetLiveTweakState();
+  });
+
+  it('saveTweakPreset 保存当前 overrides 到 preset', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+
+    const ok = await useWorkspaceStore.getState().saveTweakPreset('My Preset');
+    expect(ok).toBe(true);
+
+    const { tweakPresets, tweakPresetActiveId } = useWorkspaceStore.getState();
+    expect(tweakPresets).toHaveLength(1);
+    expect(tweakPresets[0].name).toBe('My Preset');
+    expect(tweakPresets[0].overrides).toEqual({ radius: '8px' });
+    expect(tweakPresetActiveId).toBe(tweakPresets[0].id);
+  });
+
+  it('saveTweakPreset 拒绝空名称', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    const ok = await useWorkspaceStore.getState().saveTweakPreset('  ');
+    expect(ok).toBe(false);
+    expect(useWorkspaceStore.getState().tweakPresets).toHaveLength(0);
+  });
+
+  it('saveTweakPreset 写入 localStorage', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+
+    await useWorkspaceStore.getState().saveTweakPreset('Preset A');
+
+    const raw = window.localStorage.getItem('workspace.tweakPresets');
+    expect(raw).not.toBeNull();
+    const parsed = JSON.parse(raw as string);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].name).toBe('Preset A');
+  });
+
+  it('loadTweakPreset 加载 preset 到 currentOverrides', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+    await useWorkspaceStore.getState().saveTweakPreset('Preset A');
+
+    // Change overrides.
+    await useWorkspaceStore.getState().updateOverride('radius', '16px');
+    expect(useWorkspaceStore.getState().currentOverrides).toEqual({ radius: '16px' });
+
+    // Load preset.
+    const presetId = useWorkspaceStore.getState().tweakPresets[0].id;
+    const ok = await useWorkspaceStore.getState().loadTweakPreset(presetId);
+    expect(ok).toBe(true);
+    expect(useWorkspaceStore.getState().currentOverrides).toEqual({ radius: '8px' });
+    expect(useWorkspaceStore.getState().tweakPresetActiveId).toBe(presetId);
+  });
+
+  it('deleteTweakPreset 删除 preset', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+    await useWorkspaceStore.getState().saveTweakPreset('Preset A');
+
+    const presetId = useWorkspaceStore.getState().tweakPresets[0].id;
+    const ok = await useWorkspaceStore.getState().deleteTweakPreset(presetId);
+    expect(ok).toBe(true);
+    expect(useWorkspaceStore.getState().tweakPresets).toHaveLength(0);
+  });
+
+  it('renameTweakPreset 重命名 preset', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+    await useWorkspaceStore.getState().saveTweakPreset('Old Name');
+
+    const presetId = useWorkspaceStore.getState().tweakPresets[0].id;
+    const ok = await useWorkspaceStore.getState().renameTweakPreset(presetId, 'New Name');
+    expect(ok).toBe(true);
+    expect(useWorkspaceStore.getState().tweakPresets[0].name).toBe('New Name');
+  });
+});
+
+describe('workspaceStore — performance baseline (push duration)', () => {
+  beforeEach(() => {
+    resetLiveTweakState();
+  });
+
+  it('records lastPushDurationMs after a successful push', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+
+    // After push completes, lastPushDurationMs should be a non-null number
+    const { lastPushDurationMs } = useWorkspaceStore.getState();
+    expect(lastPushDurationMs).not.toBeNull();
+    expect(typeof lastPushDurationMs).toBe('number');
+    expect(lastPushDurationMs).toBeGreaterThanOrEqual(0);
+  });
+
+  it('records avgPushDurationMs as pushes accumulate', async () => {
+    useWorkspaceStore.getState().selectAgent('codex', 9222);
+    mockPushTweak.mockResolvedValue(true);
+
+    // Trigger multiple pushes
+    await useWorkspaceStore.getState().updateOverride('radius', '8px');
+    await useWorkspaceStore.getState().updateOverride('spacing', 16);
+    await useWorkspaceStore.getState().updateOverride('fontSize', 14);
+
+    const { avgPushDurationMs, lastPushDurationMs } = useWorkspaceStore.getState();
+    expect(avgPushDurationMs).not.toBeNull();
+    expect(typeof avgPushDurationMs).toBe('number');
+    // avg should be between 0 and last (or equal)
+    expect(avgPushDurationMs).toBeGreaterThanOrEqual(0);
+    expect(lastPushDurationMs).not.toBeNull();
   });
 });
