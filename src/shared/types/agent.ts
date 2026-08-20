@@ -14,6 +14,24 @@ export type ExperimentalAgentId = never;
 /** All recognized agent ids (formal + experimental). */
 export type AnyAgentId = AgentId | ExperimentalAgentId;
 
+// ---------------------------------------------------------------------------
+// AppRunState — runtime state of an external Electron app
+// ---------------------------------------------------------------------------
+
+/** Single app runtime state (held by AppRunStateCoordinator). */
+export interface AppRunState {
+  /** Whether the app process is running. */
+  running: boolean;
+  /** Process PID (0 = unknown). */
+  pid: number;
+  /** CDP debug port (null = not available). */
+  port: number | null;
+  /** Whether CDP targets are ready for injection. */
+  debugReady: boolean;
+  /** Last update timestamp (ms since epoch). */
+  updatedAt: number;
+}
+
 /** 14 semantic color tokens used by image-to-theme pipeline and Theme Studio.
  *  Single source of truth — do NOT duplicate this list in renderer code. */
 export type ImagePaletteKey =
@@ -83,7 +101,8 @@ export const AGENT_META: Readonly<Record<AnyAgentId, AgentMeta>> = Object.freeze
   }),
   codex: Object.freeze({
     id: 'codex',
-    displayName: 'OpenAI Codex',
+    // Product was renamed from "OpenAI Codex" to "ChatGPT Desktop"
+    displayName: 'ChatGPT Desktop',
     officialName: 'ChatGPT',
     region: 'Global',
     tier: 'active',

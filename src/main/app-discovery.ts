@@ -155,10 +155,13 @@ const SINGLETON_LOCK_DIRS: Record<AgentId, string[]> = (() => {
       path.join(home, 'AppData', 'Local', 'WorkBuddy'),
       path.join(home, 'AppData', 'Roaming', 'WorkBuddy'),
     ],
-    traework: [path.join(appdata, 'trae'), path.join(appdata, 'TRAE')],
-    qoderwork: [path.join(appdata, 'qoderwork'), path.join(appdata, 'QoderWork')],
+    // TRAE SOLO: userData dir is `%APPDATA%\TRAE SOLO\` or `%APPDATA%\TRAE SOLO CN\`
+    // (devToolsActivePortFile declared in engines/traework/adapter.mjs)
+    traework: [path.join(appdata, 'TRAE SOLO'), path.join(appdata, 'TRAE SOLO CN')],
+    // QoderWork: userData dir is `%APPDATA%\QoderWork\` or `%APPDATA%\QoderWork CN\`
+    qoderwork: [path.join(appdata, 'QoderWork'), path.join(appdata, 'QoderWork CN')],
     doubao: [path.join(appdata, 'doubao'), path.join(appdata, 'Doubao')],
-    codex: [path.join(appdata, 'ChatGPT'), path.join(appdata, 'codex')],
+    codex: [path.join(appdata, 'ChatGPT'), path.join(appdata, 'Codex')],
     zcode: [path.join(appdata, 'ZCode', 'session'), path.join(appdata, 'ZCode')],
   };
 })();

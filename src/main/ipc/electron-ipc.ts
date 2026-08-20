@@ -23,6 +23,7 @@ import { AGENT_IDS } from '../../shared/types';
 import type { ScanProgressEvent } from '../../shared/types/agent';
 import type { MainContext } from '../main-context';
 import {
+  getRunningApps,
   type LaunchRequest,
   launchApp,
   registerAllowedExePaths,
@@ -105,5 +106,20 @@ export function registerElectronIpc(deps: Pick<MainContext, 'settings'>): void {
   ipcMain.handle(IpcChannel.ELECTRON_LAUNCH, async (event, request: LaunchRequest) => {
     assertTrustedSender(event);
     return withMonitoredTimeout(IpcChannel.ELECTRON_LAUNCH, LAUNCH_TIMEOUT_MS, launchApp(request));
+  });
+
+  // Register a custom exe path to the launch whitelist (called after addCustomApp
+  // so the user can launch what they manually added).
+  ipcMain.handle(IpcChannel.ELECTRON_REGISTER_CUSTOM_EXE, async (event, exePath: string) => {
+    assertTrustedSender(event);
+    if (typeof exePath !== 'string' || exePath.length === 0) return false;
+    registerAllowedExePaths([exePath]);
+    return true;
+  });
+
+  // Query the current running-apps snapshot (replaces the refreshStatus→scan
+  // workaround with a direct state query).
+  ipcMain.handle(IpcChannel.ELECTRON_GET_RUNNING_APPS, () => {
+    return getRunningApps();
   });
 }

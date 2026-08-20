@@ -84,6 +84,7 @@ import {
   type PersistedState,
 } from './services/agent-engine-persist';
 import { AgentEngineRegistry } from './services/agent-engine-registry';
+import { getAppRunStateCoordinator } from './services/app-run-state-coordinator';
 import type {
   AgentEngineServiceApi,
   LoggerApi,
@@ -688,6 +689,29 @@ export class AgentEngineService implements AgentEngineServiceApi {
     const result = { platform: platform(), apps };
     this.statusCache = result;
     this.statusCacheAt = now;
+
+    // Sync runtime fields to coordinator (change-detected to avoid no-op emits).
+    // This ensures coordinator reflects apps started outside the launcher
+    // (e.g., already running at boot, or spawned by ensureCdpReady).
+    const coordinator = getAppRunStateCoordinator();
+    for (const app of apps) {
+      if (!app) continue; // Guard: probeAppStatus may return undefined in tests
+      const prev = coordinator.getState(app.appId);
+      if (
+        !prev ||
+        prev.running !== app.running ||
+        prev.port !== app.port ||
+        prev.debugReady !== app.debugReady
+      ) {
+        coordinator.updateState(app.appId, {
+          running: app.running,
+          pid: 0, // probeAppStatus doesn't return pid
+          port: app.port,
+          debugReady: app.debugReady,
+        });
+      }
+    }
+
     return result;
   }
 

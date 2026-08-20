@@ -345,6 +345,20 @@ const api: AgentSkinApi = {
     ipcRenderer.on(IpcChannel.ELECTRON_SCAN_PROGRESS, handler);
     return () => ipcRenderer.off(IpcChannel.ELECTRON_SCAN_PROGRESS, handler);
   },
+  registerCustomExe: (exePath: string) =>
+    ipcRenderer.invoke(IpcChannel.ELECTRON_REGISTER_CUSTOM_EXE, exePath),
+  getRunningApps: () => ipcRenderer.invoke(IpcChannel.ELECTRON_GET_RUNNING_APPS),
+  // --- AppRunStateCoordinator bridge ---
+  onCoordinatorStatus: (cb) => {
+    const handler = (
+      _event: Electron.IpcRendererEvent,
+      event: { appId: string; state: import('@shared/types').AppRunState },
+    ) => cb(event);
+    ipcRenderer.on(IpcChannel.COORDINATOR_STATUS, handler);
+    return () => ipcRenderer.off(IpcChannel.COORDINATOR_STATUS, handler);
+  },
+  getCoordinatorSnapshot: () => ipcRenderer.invoke(IpcChannel.COORDINATOR_SNAPSHOT),
+  queryCoordinatorState: (appId: string) => ipcRenderer.invoke(IpcChannel.COORDINATOR_QUERY, appId),
   // --- Selector probe (selector-validator.ts) ---
   probeSelector: (port: number, selector: string) =>
     ipcRenderer.invoke(IpcChannel.SELECTOR_PROBE, port, selector) as Promise<SelectorProbeResult>,

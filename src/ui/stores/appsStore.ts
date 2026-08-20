@@ -34,6 +34,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { identityKey } from '@shared/app-identity';
 import type {
   AgentId,
+  AppRunState,
   ElectronScanResult,
   LaunchResult,
   ScannedApp,
@@ -52,10 +53,13 @@ interface AppsApiExtension {
     forceRestart?: boolean;
     adapterId?: string;
   }): Promise<LaunchResult>;
-  onElectronStatus(
-    listener: (status: Map<string, { pid: number; port: number | null }>) => void,
-  ): () => void;
   onElectronScanProgress(listener: (event: ScanProgressEvent) => void): () => void;
+  /** Register a custom exe path to the launch whitelist. */
+  registerCustomExe(exePath: string): Promise<boolean>;
+  /** Subscribe to coordinator state changes (running/pid/port/debugReady). */
+  onCoordinatorStatus(listener: (event: { appId: string; state: AppRunState }) => void): () => void;
+  /** One-shot full snapshot on boot. */
+  getCoordinatorSnapshot(): Promise<Map<string, AppRunState>>;
 }
 
 /**
@@ -64,12 +68,6 @@ interface AppsApiExtension {
  * type annotation lets the compiler verify the structural match.
  */
 const appsApi: AppsApiExtension = api;
-
-/** Running-app record. */
-export interface RunningAppInfo {
-  pid: number;
-  port: number | null;
-}
 
 /** Concurrency guard — prevents double-launching the same app. */
 const launchingGuard = new Set<string>();
@@ -135,8 +133,8 @@ interface AppsState {
   scanError: string | null;
   /** AppIds currently being launched (IPC in flight). */
   launchingApps: Set<string>;
-  /** Running apps: appId → { pid, port }. */
-  runningApps: Map<string, RunningAppInfo>;
+  /** Running apps: appId → AppRunState (running/pid/port/debugReady). */
+  runningApps: Map<string, AppRunState>;
   /** User-hidden appIds. */
   hiddenApps: Set<string>;
 
@@ -163,11 +161,24 @@ interface AppsState {
 }
 
 export const useAppsStore = create<AppsState>((set, get) => {
-  // Subscribe to main→renderer status push events. The unsubscribe function
-  // is captured but not exposed — the subscription lives for the lifetime of
-  // the store (process-wide singleton in practice).
-  appsApi.onElectronStatus((status) => {
-    set({ runningApps: new Map(status) });
+  // Boot: hydrate runningApps from coordinator snapshot (avoids blank flash).
+  appsApi.getCoordinatorSnapshot().then((snapshot) => {
+    set({ runningApps: snapshot });
+  });
+
+  // Subscribe to coordinator status changes (running/pid/port/debugReady).
+  // The unsubscribe function is captured but not exposed — the subscription
+  // lives for the lifetime of the store.
+  appsApi.onCoordinatorStatus(({ appId, state }) => {
+    set((s) => {
+      const next = new Map(s.runningApps);
+      if (state.running) {
+        next.set(appId, state);
+      } else {
+        next.delete(appId);
+      }
+      return { runningApps: next };
+    });
   });
 
   return {
@@ -223,7 +234,7 @@ export const useAppsStore = create<AppsState>((set, get) => {
     },
 
     launch: async (app: ScannedApp, options?: { forceRestart?: boolean }) => {
-      const { launchingApps, runningApps } = get();
+      const { launchingApps } = get();
 
       // Guard: don't double-launch.
       if (launchingGuard.has(app.id)) return;
@@ -248,11 +259,10 @@ export const useAppsStore = create<AppsState>((set, get) => {
           forceRestart: options?.forceRestart === true,
         });
 
-        // Update running apps from the launch result.
-        const next = new Map(runningApps);
-        if (result.ok && result.pid) {
-          next.set(app.id, { pid: result.pid, port: result.port ?? null });
-        } else if (result.state === 'needs-restart') {
+        // Note: runningApps is now driven purely by coordinator push.
+        // The launch result here only triggers UI prompts (needs-restart dialog,
+        // failure notification). Coordinator推送会自然更新 runningApps.
+        if (result.state === 'needs-restart') {
           // P0-5 (RFC 2026-08-19 R5): surface the needs-restart state instead
           // of silently swallowing it — the dialog offers a force restart.
           const name = app.productName || app.id;
@@ -265,7 +275,7 @@ export const useAppsStore = create<AppsState>((set, get) => {
           // Generic launch failure — surface it instead of failing silently.
           useNotificationStore.getState().fail(new Error(result.message));
         }
-        set({ runningApps: next });
+        // Removed: manual set({ runningApps: next }) — coordinator drives state now.
       } catch (error) {
         console.error(`[appsStore] launch(${app.id}) failed —`, error);
       } finally {
@@ -295,10 +305,14 @@ export const useAppsStore = create<AppsState>((set, get) => {
       await get().launch(app, { forceRestart: true });
     },
 
-    refreshStatus: () => {
-      // Trigger a re-scan which also refreshes running state via the
-      // ELECTRON_STATUS subscription when the main process detects changes.
-      void get().scan();
+    refreshStatus: async () => {
+      // Query coordinator snapshot (single source of truth for runtime state).
+      try {
+        const snapshot = await appsApi.getCoordinatorSnapshot();
+        set({ runningApps: snapshot });
+      } catch (error) {
+        console.error('[appsStore] refreshStatus failed —', error);
+      }
     },
 
     addCustomApp: async (exePath: string, _preferredPort?: number | null) => {
@@ -329,6 +343,15 @@ export const useAppsStore = create<AppsState>((set, get) => {
         };
         return { scanResult: next };
       });
+
+      // Register the exe path to the launch whitelist so the user can
+      // actually launch what they just added (P0: without this, launch()
+      // silently fails with "exePath not in allowedExePaths").
+      try {
+        await appsApi.registerCustomExe(exePath);
+      } catch (error) {
+        console.error('[appsStore] addCustomApp: registerCustomExe failed —', error);
+      }
 
       return customApp;
     },

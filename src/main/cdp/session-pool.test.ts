@@ -51,24 +51,35 @@ describe('CdpSessionPool', () => {
     expect(open).toHaveBeenCalledTimes(2); // no negative caching
   });
 
-  it('invalidateEpoch closes all sessions and clears the agent pool', async () => {
+  it('invalidateEpoch soft-retires in-use sessions and closes idle ones', async () => {
     const pool = new CdpSessionPool();
     const s1 = makeSession();
     const s2 = makeSession();
+    // Acquire s1 (refCount=1), s2 (refCount=1)
     await pool.acquire(APP, 't1', () => Promise.resolve(s1));
     await pool.acquire(APP, 't2', () => Promise.resolve(s2));
 
     pool.invalidateEpoch(APP);
 
-    expect(s1.close).toHaveBeenCalledTimes(1);
-    expect(s2.close).toHaveBeenCalledTimes(1);
-    expect(pool.poolSize(APP)).toBe(0);
+    // Soft-retire: in-use sessions (refCount>0) are NOT closed immediately
+    expect(s1.close).not.toHaveBeenCalled();
+    expect(s2.close).not.toHaveBeenCalled();
+    // Pool still holds the sessions (not cleared)
+    expect(pool.poolSize(APP)).toBe(2);
+  });
 
-    // A later acquire creates a fresh session.
-    const open = vi.fn(async () => makeSession());
-    const s3 = await pool.acquire(APP, 't1', open);
-    expect(s3).not.toBeNull();
-    expect(open).toHaveBeenCalledTimes(1);
+  it('invalidateEpoch closes idle sessions (refCount=0) immediately', async () => {
+    const pool = new CdpSessionPool();
+    const s1 = makeSession();
+    await pool.acquire(APP, 't1', () => Promise.resolve(s1));
+    // Release to drop refCount to 0
+    pool.release(APP, 't1');
+
+    pool.invalidateEpoch(APP);
+
+    // Idle session is closed immediately
+    expect(s1.close).toHaveBeenCalledTimes(1);
+    expect(pool.poolSize(APP)).toBe(0);
   });
 
   it('invalidateTarget closes only that target', async () => {

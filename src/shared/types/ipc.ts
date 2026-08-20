@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { AppRunState } from '../../main/services/app-run-state-coordinator';
 import type { AppLocale } from '../i18n';
 import type {
   AgentCatalogItem,
@@ -649,6 +650,23 @@ export interface AgentSkinApi {
    *  while the scan walks the filesystem and icons extract. Returns an
    *  unsubscribe function. */
   onElectronScanProgress(cb: (event: ScanProgressEvent) => void): () => void;
+  /** Register a custom exe path to the launch whitelist (called after
+   *  addCustomApp so the user can launch what they manually added). */
+  registerCustomExe(exePath: string): Promise<boolean>;
+  /** Query the current running-apps snapshot from the main process
+   *  (replaces the refreshStatus→scan workaround). */
+  getRunningApps(): Promise<Map<string, { pid: number; port: number | null }>>;
+  // --- AppRunStateCoordinator ---
+  /** Subscribe to coordinator state changes (app launched, exited, port changed,
+   *  debugReady flipped). Pushed via `COORDINATOR_STATUS` whenever the coordinator
+   *  state changes. Returns an unsubscribe function. */
+  onCoordinatorStatus(cb: (event: { appId: string; state: AppRunState }) => void): () => void;
+  /** One-shot full snapshot on renderer boot / window restore.
+   *  Returns Map<appId, AppRunState>. */
+  getCoordinatorSnapshot(): Promise<Map<string, AppRunState>>;
+  /** Point query for a single app (used by detail panels, dialogs).
+   *  Returns AppRunState | null. */
+  queryCoordinatorState(appId: string): Promise<AppRunState | null>;
   // --- Selector probe (selector-validator.ts) ---
   /** Probe a single CSS selector against a running agent by port. */
   probeSelector(port: number, selector: string): Promise<SelectorProbeResult>;

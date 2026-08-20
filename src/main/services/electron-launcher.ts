@@ -51,6 +51,7 @@ import { toMessage } from '../../shared/errors';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { LaunchResult } from '../../shared/types';
 import type { LaunchRequest } from '../../shared/types/launch';
+import { getAppRunStateCoordinator } from './app-run-state-coordinator';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -180,11 +181,18 @@ export function configureLauncherWindow(getter: () => BrowserWindow | null): voi
 
 /** Push the current running-apps snapshot to the renderer via
  *  `ELECTRON_STATUS`. Best-effort — no-op when the main window is unavailable
- *  (e.g. during tests or early startup). */
+ *  (e.g. during tests or early startup).
+ *
+ *  Adds diagnostic logging when the push fails so we can detect
+ *  "silent push loss" during window rebuild (e.g. dev HMR). */
 function pushElectronStatus(): void {
   const win = getMainWindow();
   if (win && !win.isDestroyed()) {
     win.webContents.send(IpcChannel.ELECTRON_STATUS, getRunningApps());
+  } else {
+    // Diagnostic: helps detect silent push loss during window rebuild
+    const reason = !win ? 'no-window' : win.isDestroyed() ? 'window-destroyed' : 'unknown';
+    moduleDeps.log(`[pushElectronStatus] skipped: ${reason}`);
   }
 }
 
@@ -284,6 +292,13 @@ function trackExit(child: ReturnType<typeof spawn>, appId: string, pid: number):
     if (runningApps.get(appId)?.pid === pid) {
       runningApps.delete(appId);
       pushElectronStatus();
+      // Sync to coordinator (runtime state single source of truth)
+      getAppRunStateCoordinator().updateState(appId, {
+        running: false,
+        pid: 0,
+        port: null,
+        debugReady: false,
+      });
     }
   });
 }
@@ -493,6 +508,13 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
     runningApps.set(appId, { pid, port: actualPort });
     trackExit(child, appId, pid);
     pushElectronStatus();
+    // Sync to coordinator (runtime state single source of truth)
+    getAppRunStateCoordinator().updateState(appId, {
+      running: true,
+      pid,
+      port: actualPort,
+      debugReady: actualPort !== null,
+    });
     return {
       ok: true,
       pid,
@@ -548,6 +570,13 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
   runningApps.set(appId, { pid, port: null });
   trackExit(child, appId, pid);
   pushElectronStatus();
+  // Sync to coordinator (runtime state single source of truth)
+  getAppRunStateCoordinator().updateState(appId, {
+    running: true,
+    pid,
+    port: null,
+    debugReady: false,
+  });
 
   return {
     ok: true,

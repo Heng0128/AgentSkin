@@ -211,6 +211,24 @@ export const IpcChannel = {
   ELECTRON_STATUS: 'electron:status',
   /** Main→renderer: a single app was discovered mid-scan (streaming progress). */
   ELECTRON_SCAN_PROGRESS: 'electron:scan-progress',
+  /** Renderer→main: register a custom exe path to the launch whitelist
+   *  (called after addCustomApp so the user can launch what they added). */
+  ELECTRON_REGISTER_CUSTOM_EXE: 'electron:register-custom-exe',
+  /** Renderer→main: query the current running-apps snapshot (replaces the
+   *  refreshStatus→scan workaround with a direct state query). */
+  ELECTRON_GET_RUNNING_APPS: 'electron:get-running-apps',
+
+  // --- AppRunStateCoordinator (coordinator-ipc.ts) ---
+  /** SEND_ONLY — main → renderer event. Pushed whenever coordinator state changes
+   *  (app launched, exited, port changed, debugReady flipped). Subscribed via
+   *  ipcRenderer.on in preload. Payload: { appId: string, state: AppRunState }. */
+  COORDINATOR_STATUS: 'coordinator:status',
+  /** INVOKE — renderer → main. One-shot full snapshot on renderer boot / window
+   *  restore. Returns Map<string, AppRunState>. */
+  COORDINATOR_SNAPSHOT: 'coordinator:snapshot',
+  /** INVOKE — renderer → main. Point query for a single app (used by detail panels,
+   *  dialogs). Returns AppRunState | null. */
+  COORDINATOR_QUERY: 'coordinator:query',
 
   // --- Workspace live tweak (core-ipc.ts) ---
   /** Renderer→main: push override CSS to a running agent in real-time. */

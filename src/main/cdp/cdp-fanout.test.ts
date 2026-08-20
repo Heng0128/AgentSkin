@@ -784,7 +784,7 @@ describe('pooled session reuse', () => {
     expect(pool.poolSize('doubao')).toBe(1);
   });
 
-  it('closes pooled sessions on epoch invalidation', async () => {
+  it('soft-retires pooled sessions on epoch invalidation (does not close in-use)', async () => {
     const wvTarget = makeCdpTarget({ id: 'wv-1', type: 'webview' });
     vi.mocked(findDomTargets).mockResolvedValue([wvTarget]);
 
@@ -798,6 +798,12 @@ describe('pooled session reuse', () => {
     expect(session.close).not.toHaveBeenCalled();
 
     pool.invalidateEpoch('doubao');
+    // Soft-retire: in-use session (refCount>0) is NOT closed immediately
+    expect(session.close).not.toHaveBeenCalled();
+    expect(pool.poolSize('doubao')).toBe(1);
+
+    // After release, retired session is closed
+    pool.release('doubao', 'wv-1');
     expect(session.close).toHaveBeenCalledTimes(1);
     expect(pool.poolSize('doubao')).toBe(0);
   });

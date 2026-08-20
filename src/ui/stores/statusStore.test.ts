@@ -21,13 +21,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Hoisted mocks
 // ---------------------------------------------------------------------------
 
-const { mockRefreshStatus } = vi.hoisted(() => ({
-  mockRefreshStatus: vi.fn(),
-}));
+const { mockRefreshStatus, mockOnCoordinatorStatus, mockGetCoordinatorSnapshot } = vi.hoisted(
+  () => ({
+    mockRefreshStatus: vi.fn(),
+    mockOnCoordinatorStatus: vi.fn(),
+    mockGetCoordinatorSnapshot: vi.fn(),
+  }),
+);
 
 vi.mock('@/api/agentSkinClient', () => ({
   api: {
     refreshStatus: mockRefreshStatus,
+    onCoordinatorStatus: mockOnCoordinatorStatus,
+    getCoordinatorSnapshot: mockGetCoordinatorSnapshot,
   },
 }));
 
@@ -111,6 +117,7 @@ describe('statusStore — error state & clearError', () => {
 
   it('clears error when refreshStatus succeeds', async () => {
     mockRefreshStatus.mockResolvedValueOnce(SAMPLE_STATUS);
+    mockGetCoordinatorSnapshot.mockResolvedValueOnce(new Map());
 
     await useStatusStore.getState().refreshStatus();
 
@@ -157,6 +164,7 @@ describe('statusStore — error state & clearError', () => {
 
     // Success
     mockRefreshStatus.mockResolvedValueOnce(SAMPLE_STATUS);
+    mockGetCoordinatorSnapshot.mockResolvedValueOnce(new Map());
     await useStatusStore.getState().refreshStatus();
     expect(useStatusStore.getState().error).toBeNull();
     expect(useStatusStore.getState().status).toEqual(SAMPLE_STATUS);
@@ -172,6 +180,7 @@ describe('statusStore — error state & clearError', () => {
 
     // Next attempt: success — error should end null.
     mockRefreshStatus.mockResolvedValueOnce(SAMPLE_STATUS);
+    mockGetCoordinatorSnapshot.mockResolvedValueOnce(new Map());
     await useStatusStore.getState().refreshStatus();
     expect(useStatusStore.getState().error).toBeNull();
   });
@@ -186,6 +195,7 @@ describe('statusStore — error state & clearError', () => {
 
   it('isRefreshing is false after a successful refresh settles', async () => {
     mockRefreshStatus.mockResolvedValueOnce(SAMPLE_STATUS);
+    mockGetCoordinatorSnapshot.mockResolvedValueOnce(new Map());
     await useStatusStore.getState().refreshStatus();
     expect(useStatusStore.getState().isRefreshing).toBe(false);
   });

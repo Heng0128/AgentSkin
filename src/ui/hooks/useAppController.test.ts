@@ -278,6 +278,9 @@ vi.mock('@/api/agentSkinClient', () => ({
     onFileImportConfirm: vi.fn().mockReturnValue(vi.fn()),
     onFileImportFailed: vi.fn().mockReturnValue(vi.fn()),
     onTrayApply: vi.fn().mockReturnValue(vi.fn()),
+    onCoordinatorStatus: vi.fn().mockReturnValue(vi.fn()),
+    getCoordinatorSnapshot: vi.fn().mockResolvedValue(new Map()),
+    queryCoordinatorState: vi.fn().mockResolvedValue(null),
     catalog: { themes: { list: vi.fn().mockResolvedValue({ items: [] }) } },
   },
 }));
