@@ -1,5 +1,5 @@
 /* 极光黄昏 — WorkBuddy (--cb-* design tokens) */
-:root {
+html.agentskin-host-workbuddy {
   color-scheme: dark !important;
   --agentskin-accent: #f5a623;
   --agentskin-secondary: #d97f5b;
@@ -14,7 +14,7 @@
   --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #1a1610 82%, #f5a623 18%) 45%, transparent);
   --agentskin-button-bg: #f5a623;
   --agentskin-focus-ring: #f5a6238c;
-  --agentskin-selection: rgba(245, 166, 35, 0.32);
+  --agentskin-selection: color-mix(in srgb, #f5a623 32%, transparent);
   --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
   text-shadow: var(--agentskin-text-shadow);
 }

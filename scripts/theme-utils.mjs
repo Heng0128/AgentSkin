@@ -6,6 +6,8 @@
 // utility module can be imported separately. All functions are pure:
 // colors in, CSS string out.
 
+import { luminance } from './utils/color-utils.mjs';
+
 export function parseColor(input) {
   const raw = String(input ?? '').trim();
   let m = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(raw);
@@ -73,7 +75,11 @@ const COLOR_FALLBACKS = {
   inputBackground: '#2a2a2a',
   buttonBackground: '#4a90d918',
   buttonForeground: '#4a90d9',
-  focusRing: '#4a90d960',
+  // NOTE: focusRing is intentionally NOT in COLOR_FALLBACKS. It is a derived
+  // token (color-mix(accent 40%), see build-palette.mjs + deriveTokens()).
+  // The "absent" state must reach tokenBlock() so it can derive from accent
+  // instead of emitting a hardcoded fallback that ignores the theme accent.
+  // buildContext() handles focusRing explicitly below.
 };
 
 const COLOR_KEYS = Object.keys(COLOR_FALLBACKS);
@@ -96,15 +102,6 @@ function tryParseColor(input, ctx) {
 // ---------------------------------------------------------------------------
 // Per-theme art overlay parameters (derived from color characteristics)
 // ---------------------------------------------------------------------------
-
-/** Relative luminance (0–1) from a parsed color. */
-export function luminance(input) {
-  const c = parseColor(input);
-  const [rs, gs, bs] = [c.r / 255, c.g / 255, c.b / 255].map((v) =>
-    v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4,
-  );
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
-}
 
 /** HSL saturation (0–1) from a parsed color. */
 export function saturation(input) {
@@ -203,8 +200,22 @@ ${host} #root::before {
 // Shared token block (parsed by theme-library extractColors / detectMode)
 // ---------------------------------------------------------------------------
 
-export function tokenBlock(t, host = ':root') {
+/**
+ * Generate the 14-token agentskin palette block.
+ *
+ * @param {object} t - Theme context from buildContext().
+ * @param {string} [host=':root'] - CSS selector to scope variables under.
+ * @param {Record<string,string>|null} [bridge=null] - Optional variable bridge
+ *   map: client-native CSS variable → agentskin token reference or literal color.
+ *   When provided, each entry is emitted inside the same `:root` block so the
+ *   client application resolves its native namespace through the bridge.
+ * @returns {string} CSS declaration block.
+ */
+export function tokenBlock(t, host = ':root', bridge = null) {
   const c = t.colors;
+  const bridgeEntries = bridge && typeof bridge === 'object' ? Object.entries(bridge) : [];
+  const bridgeLines = bridgeEntries.map(([k, v]) => `  ${k}: ${v};`).join('\n');
+  const bridgeBlock = bridgeLines ? `\n${bridgeLines}` : '';
   return `${host} {
   color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
   --agentskin-accent: ${c.accent};
@@ -219,10 +230,10 @@ export function tokenBlock(t, host = ':root') {
   --agentskin-code-fg: ${c.codeForeground};
   --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 45%, transparent);
   --agentskin-button-bg: ${c.accent};
-  --agentskin-focus-ring: ${c.focusRing};
-  --agentskin-selection: ${alpha(c.accent, 0.32)};
+  --agentskin-focus-ring: ${c.focusRing || `color-mix(in srgb, ${c.accent} 40%, transparent)`};
+  --agentskin-selection: color-mix(in srgb, ${c.accent} 32%, transparent);
   --agentskin-text-shadow: ${t.isLight ? '0 1px 2px rgba(255,255,255,0.6)' : '0 1px 3px rgba(0,0,0,0.5)'};
-  text-shadow: var(--agentskin-text-shadow);
+  text-shadow: var(--agentskin-text-shadow);${bridgeBlock}
 }`;
 }
 
@@ -857,6 +868,15 @@ export function buildContext(id, manifest, scheme = null) {
     }
   }
 
+  // focusRing: copy from manifest only when explicitly declared + valid.
+  // Otherwise leave undefined so tokenBlock() falls back to color-mix(accent 40%),
+  // matching deriveTokens() and build-palette.mjs (divergence fix P1-1).
+  if (inputColors.focusRing && tryParseColor(inputColors.focusRing, `${id}/colors.focusRing`)) {
+    colors.focusRing = inputColors.focusRing;
+  } else {
+    delete colors.focusRing; // not a COLOR_KEY, already absent — belt-and-braces
+  }
+
   const mode = (scheme?.mode ?? manifest.mode) === 'light' ? 'light' : 'dark'; // auto → dark (dark canvas)
   return {
     id,
@@ -864,6 +884,10 @@ export function buildContext(id, manifest, scheme = null) {
     mode,
     isLight: mode === 'light',
     signature: manifest.signature ?? null,
+    variableBridge:
+      manifest.variableBridge && typeof manifest.variableBridge === 'object'
+        ? manifest.variableBridge
+        : null,
     colors,
   };
 }

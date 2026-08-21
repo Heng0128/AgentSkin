@@ -29,6 +29,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { BinaryReader } from './binary-reader';
 
 // ---------------------------------------------------------------------------
@@ -56,6 +57,24 @@ export function parsePkg(filePath: string): PkgPackage | null {
   let buf: Buffer;
   try {
     buf = readFileSync(filePath);
+  } catch {
+    return null;
+  }
+  return parsePkgBuffer(buf);
+}
+
+/** Parse a scene.pkg file asynchronously.
+ *
+ *  Uses `fs.promises.readFile` to avoid blocking the event loop on large
+ *  scene.pkg files (10-140 MB). Retains the same parsing logic as `parsePkg`
+ *  (which is synchronous and uses `readFileSync`).
+ *
+ *  For callers that already hold a Buffer (tests, buffers from IPC), use
+ *  `parsePkgBuffer` directly — it stays synchronous. */
+export async function parsePkgAsync(filePath: string): Promise<PkgPackage | null> {
+  let buf: Buffer;
+  try {
+    buf = await readFile(filePath);
   } catch {
     return null;
   }
@@ -136,6 +155,20 @@ export function parsePkgBuffer(buf: Buffer): PkgPackage | null {
     if (error instanceof RangeError) return null;
     throw error;
   }
+}
+
+/** Build a lookup Map from normalized (lowercased) full path → PkgEntry.
+ *
+ *  Use this when a caller performs multiple `findEntry` lookups against the
+ *  same package — the index turns each lookup from O(n) into O(1). Returns a
+ *  fresh Map per call (no caching/mutation on `PkgPackage` to avoid breaking
+ *  downstream consumers that rely on the current interface). */
+export function getEntryIndex(pkg: PkgPackage): Map<string, PkgEntry> {
+  const map = new Map<string, PkgEntry>();
+  for (const entry of pkg.entries) {
+    map.set(entry.fullPath.toLowerCase(), entry);
+  }
+  return map;
 }
 
 /** Find an entry by path (case-insensitive). */

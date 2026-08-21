@@ -16,7 +16,7 @@ import path from 'node:path';
 import type { SceneParticleData } from './particle-parser';
 import { parseParticleJson } from './particle-parser';
 import type { PkgEntry } from './pkg-parser';
-import { findEntry, parsePkg } from './pkg-parser';
+import { findEntry, parsePkg, parsePkgAsync } from './pkg-parser';
 import type { SceneCamera, SceneGeneral, SceneObject } from './scene-json-parser';
 import { parseSceneJson } from './scene-json-parser';
 import type { TexData, TexFrameRendered } from './tex-parser';
@@ -173,6 +173,42 @@ export function extractScene(pkgPath: string): SceneData | null {
 }
 
 /**
+ * Asynchronously extract a complete scene from a scene.pkg file.
+ *
+ * Uses `parsePkgAsync` (which reads the file via `fs.promises.readFile`)
+ * instead of the synchronous `fs.readFileSync`, keeping the main process
+ * event loop responsive during I/O for large (10–140 MB) scene.pkg files.
+ *
+ * Returns null on failure. The synchronous {@link extractScene} is retained
+ * for backward compatibility with existing callers and tests.
+ */
+export async function extractSceneAsync(pkgPath: string): Promise<SceneData | null> {
+  const pkg = await parsePkgAsync(pkgPath);
+  if (!pkg) return null;
+
+  const sceneEntry = findEntry(pkg, 'scene.json');
+  if (!sceneEntry) return null;
+
+  let sceneJson: unknown;
+  try {
+    sceneJson = JSON.parse(sceneEntry.bytes.toString('utf8'));
+  } catch {
+    return null;
+  }
+  const sceneObj = asJsonRecord<SceneRootJson>(sceneJson);
+  if (!sceneObj) return null;
+
+  const textures = extractTextures(pkg.entries);
+  const models = extractModels(pkg.entries);
+  const materials = extractMaterials(pkg.entries);
+  const particleJsons = extractParticleJsons(pkg.entries);
+
+  const { general, camera, objects, version } = parseSceneJson(sceneObj);
+
+  return { general, camera, objects, textures, models, materials, particleJsons, version };
+}
+
+/**
  * Extract all particle-system JSONs from the pkg. Keys are the entries'
  * normalized full paths (`particles/...`), values are the raw JSON values.
  * Malformed entries are skipped — one bad preset must not kill the scene.
@@ -233,42 +269,84 @@ function extractTextures(entries: PkgEntry[]): Map<string, SceneTexture> {
   return textures;
 }
 
-/** Parse all model JSON entries from the PKG into SceneModel records. */
-function extractModels(entries: PkgEntry[]): Map<string, SceneModel> {
-  const models = new Map<string, SceneModel>();
+// ---------------------------------------------------------------------------
+// Generic JSON-entry traversal helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Iterate {@link PkgEntry}s, apply path/extension filters, JSON.parse each
+ * surviving entry, and collect results into a `Map<string, T>` keyed by a
+ * caller-supplied name.
+ *
+ * Used by {@link extractModels} and {@link extractMaterials} to factor out the
+ * common traversal / parse / skip-on-error loop while letting each caller
+ * supply its own path filter, name extractor, and value builder.
+ */
+function mapJsonEntries<T>(
+  entries: PkgEntry[],
+  opts: {
+    /** Path (lowercased) must contain this substring (e.g. 'models/'). */
+    pathContains: string;
+    /** Allowed file extensions, including the leading dot (e.g. ['.json']). */
+    allowedExts: string[];
+    /** Extract the map key from the parsed JSON. Return null to skip entry. */
+    getName: (parsed: unknown, fallbackFullPath: string) => string | null;
+    /** Build the value `T` from parsed JSON. Return null to skip entry. */
+    getValue: (parsed: unknown) => T | null;
+  },
+): Map<string, T> {
+  const map = new Map<string, T>();
   for (const entry of entries) {
     const lower = entry.fullPath.toLowerCase();
-    if (!lower.endsWith('.json') && !lower.endsWith('.model')) continue;
-    if (!lower.includes('models/')) continue;
+    if (!lower.includes(opts.pathContains)) continue;
+    if (!opts.allowedExts.some((ext) => lower.endsWith(ext))) continue;
+    let parsed: unknown;
     try {
-      const modelJson = asJsonRecord<ModelRootJson>(JSON.parse(entry.bytes.toString('utf8')));
+      parsed = JSON.parse(entry.bytes.toString('utf8'));
+    } catch {
+      // skip malformed JSON
+      continue;
+    }
+    const name = opts.getName(parsed, entry.fullPath);
+    if (name === null) continue;
+    const value = opts.getValue(parsed);
+    if (value === null) continue;
+    map.set(name.toLowerCase(), value);
+  }
+  return map;
+}
+
+/** Parse all model JSON entries from the PKG into SceneModel records. */
+function extractModels(entries: PkgEntry[]): Map<string, SceneModel> {
+  return mapJsonEntries<SceneModel>(entries, {
+    pathContains: 'models/',
+    allowedExts: ['.json', '.model'],
+    getName: (_parsed, fallbackFullPath) =>
+      fallbackFullPath.replace(/\.(json|model)$/i, '').replace(/\\/g, '/'),
+    getValue: (parsed) => {
+      const modelJson = asJsonRecord<ModelRootJson>(parsed);
       // Only treat as model if it has a "material" field
-      if (!modelJson?.material) continue;
-      const name = entry.fullPath.replace(/\.(json|model)$/i, '').replace(/\\/g, '/');
-      models.set(name.toLowerCase(), {
+      if (!modelJson?.material) return null;
+      return {
         material: typeof modelJson.material === 'string' ? modelJson.material : '',
         solidLayer: !!modelJson.solidLayer,
         passthrough: !!modelJson.passthrough,
-      });
-    } catch {
-      // skip malformed
-    }
-  }
-  return models;
+      };
+    },
+  });
 }
 
 /** Parse all material JSON entries from the PKG into SceneMaterial records. */
 function extractMaterials(entries: PkgEntry[]): Map<string, SceneMaterial> {
-  const materials = new Map<string, SceneMaterial>();
-  for (const entry of entries) {
-    const lower = entry.fullPath.toLowerCase();
-    if (!lower.endsWith('.json') && !lower.endsWith('.material')) continue;
-    if (!lower.includes('materials/')) continue;
-    try {
-      const matJson = asJsonRecord<MaterialRootJson>(JSON.parse(entry.bytes.toString('utf8')));
+  return mapJsonEntries<SceneMaterial>(entries, {
+    pathContains: 'materials/',
+    allowedExts: ['.json', '.material'],
+    getName: (_parsed, fallbackFullPath) =>
+      fallbackFullPath.replace(/\.(json|material)$/i, '').replace(/\\/g, '/'),
+    getValue: (parsed) => {
+      const matJson = asJsonRecord<MaterialRootJson>(parsed);
       // Only treat as material if it has a "passes" field
-      if (!matJson?.passes) continue;
-      const name = entry.fullPath.replace(/\.(json|material)$/i, '').replace(/\\/g, '/');
+      if (!matJson?.passes) return null;
       const passes: SceneMaterialPass[] = (matJson.passes || [])
         .filter((p): p is MaterialPassJson => !!p && typeof p === 'object')
         .map((p) => ({
@@ -278,12 +356,9 @@ function extractMaterials(entries: PkgEntry[]): Map<string, SceneMaterial> {
             : [],
           blending: typeof p.blending === 'string' ? p.blending : 'normal',
         }));
-      materials.set(name.toLowerCase(), { passes });
-    } catch {
-      // skip malformed
-    }
-  }
-  return materials;
+      return { passes };
+    },
+  });
 }
 
 // ---------------------------------------------------------------------------

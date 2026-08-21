@@ -34,6 +34,7 @@ AI Agent 视觉定制引擎。通过 CDP 注入为 traework、qoderwork、workbu
 | C7 | SPDX 头部 | check-license-header | CONTRIBUTING.md |
 | C8 | 原生缺陷修正一致性 | check-native-defect-consistency | native-defect-fixes.mjs + engines/ |
 | C9 | 缺陷规范文档新鲜度 | check:defect-doc | docs/native-defect-fixes.md |
+| C10 | 变量桥接契约 | check-variable-bridge | docs/ARCHITECTURE.md#变量桥接 |
 
 ## 5. 黄金规则
 

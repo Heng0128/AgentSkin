@@ -21,6 +21,7 @@
 | `check-injection-contract.mjs` | 验证 AgentId 四源一致（C1）：主进程、渲染进程、引擎、Store 中的 AgentId 一致 |
 | `check-native-defect-consistency.mjs` | 验证原生硬编码视觉缺陷修正规则一致性（C8）：adapter 内嵌副本必须覆盖共享注册表 `native-defect-fixes.mjs` |
 | `check-themes.mjs` | 验证 14-token 主题契约（C2）：每个主题包必须包含完整的 14 个设计 token |
+| `check-variable-bridge.mjs` | 验证变量桥接契约（C10）：bridge 无循环依赖、目标变量在 CSS 中被引用、agentskin token 可解析 |
 
 ### 构建脚本（build-*）
 

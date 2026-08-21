@@ -40,6 +40,7 @@ import {
   MAX_THEME_IMAGES,
   SAFE_IMAGE_TYPES,
 } from '../src/engine/src/theme/package.mjs';
+import { hexToRgb, luminance } from './utils/color-utils.mjs';
 
 // ---------------------------------------------------------------------------
 // Default palette (used when the renderer sends nothing / partial)
@@ -71,7 +72,7 @@ const HOST_SELECTOR = {
   qoderwork: 'html.agentskin-host-qoderwork *',
   workbuddy: 'html.agentskin-host-workbuddy body, html.agentskin-host-workbuddy body *',
   doubao: 'html.agentskin-host-doubao *',
-  codex: ':root:root:root.agentskin-host-codex, :root:root:root.agentskin-host-codex *',
+  codex: ':root.agentskin-host-codex, :root.agentskin-host-codex *',
 };
 
 // Representative semantic tokens per agent namespace. These are redirected onto
@@ -220,25 +221,6 @@ const SHADOWS = {
 // ---------------------------------------------------------------------------
 // Color helpers
 // ---------------------------------------------------------------------------
-
-function hexToRgb(hex) {
-  let h = (hex || '').replace('#', '');
-  if (h.length === 3 || h.length === 4)
-    h = h
-      .split('')
-      .map((c) => c + c)
-      .join('');
-  if (h.length === 8) h = h.slice(0, 6);
-  if (h.length !== 6) return null;
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-}
-
-function luminance(hex) {
-  const rgb = hexToRgb(hex);
-  if (!rgb) return 0.5;
-  const [r, g, b] = rgb.map((v) => v / 255);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
 
 /**
  * 优先级规则数组 — 先命中先返回。按语义特异性递减排序。
@@ -505,7 +487,7 @@ function manifestColors(tokens) {
 // CSS assembly
 // ---------------------------------------------------------------------------
 
-function buildAgentCss(agentId, palette, signature) {
+function buildAgentCss(agentId, palette, signature, bridge) {
   const lines = [];
   const mode = palette.mode === 'light' ? 'light' : 'dark';
   lines.push(`/* AgentSkin Studio export — ${agentId} */`);
@@ -513,6 +495,14 @@ function buildAgentCss(agentId, palette, signature) {
   lines.push(`  color-scheme: ${mode} !important;`);
   for (const [k, val] of Object.entries(palette.tokens)) lines.push(`  ${k}: ${val};`);
   lines.push('}');
+  // Variable bridge: when the Studio export request declares a bridge mapping,
+  // emit client-native variable declarations that resolve through agentskin tokens.
+  if (bridge && typeof bridge === 'object' && Object.keys(bridge).length > 0) {
+    lines.push('/* Variable bridge (Studio): client-native → agentskin tokens */');
+    lines.push(':root {');
+    for (const [k, val] of Object.entries(bridge)) lines.push(`  ${k}: ${val};`);
+    lines.push('}');
+  }
   lines.push('');
 
   const host =
@@ -848,7 +838,11 @@ export function buildThemePackage(request, outDir) {
   // 2a multi-asset: normalize + gate the declared image set (null when absent).
   const images = processThemeImages(request);
   const manifest = buildManifest(request, agentId, palette, images);
-  const css = buildAgentCss(agentId, palette, request?.signature);
+  const bridge =
+    request?.variableBridge && typeof request.variableBridge === 'object'
+      ? request.variableBridge
+      : null;
+  const css = buildAgentCss(agentId, palette, request?.signature, bridge);
 
   const pkgDir = path.join(outDir, `${manifest.id}.agentskin-theme`);
   fs.mkdirSync(path.join(pkgDir, 'assets', 'css'), { recursive: true });

@@ -13,7 +13,7 @@ function doubaoCss(t) {
    (text/bg/fill/line/code/brand) while leaving the neutral scale, static alpha
    ramps, and color palettes untouched. Selector specificity (0,2,1) beats both
    :root[data-theme="dark"] (0,1,1) and the light selector list. */
-${tokenBlock(t)}
+${tokenBlock(t, host)}
 
 /* ===== Native token overrides ===== */
 ${host}:root {

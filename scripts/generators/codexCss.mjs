@@ -9,12 +9,12 @@ import {
 } from '../theme-utils.mjs';
 
 function codexCss(t) {
-  const host = 'html.agentskin-host-codex';
+  const host = ':root.agentskin-host-codex';
   const hoverBg = `color-mix(in srgb, var(--agentskin-accent) 10%, transparent)`;
   const activeBg = `color-mix(in srgb, var(--agentskin-accent) 16%, transparent)`;
   const focusInputBg = `color-mix(in srgb, var(--agentskin-input-bg) 82%, var(--agentskin-accent) 18%)`;
   return `/* ${t.name} — OpenAI Codex (--color-token-* design tokens) */
-${tokenBlock(t, host)}
+${tokenBlock(t, host, t.variableBridge)}
 
 /* ===== Native token overrides (Codex --color-token-* system) ===== */
 ${codexColorTokenOverrides(host, t)}

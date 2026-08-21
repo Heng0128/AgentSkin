@@ -12,7 +12,7 @@ import {
 function zcodeCss(t) {
   const host = 'html.agentskin-host-zcode';
   return `/* ${t.name} — ZCode (--color-* Tailwind v4 native tokens + engine flat semantic layer) */
-${tokenBlock(t)}
+${tokenBlock(t, host)}
 
 /* ===== Native token overrides (wins over :root[data-theme]) ===== */
 ${shellTokenOverrides(host, t)}

@@ -35,7 +35,7 @@ function qoderworkCss(t) {
   const highlightBase = t.isLight ? '255, 255, 255' : '255, 255, 255';
 
   return `/* ${t.name} — QoderWork CN (--color-* design tokens) */
-${tokenBlock(t)}
+${tokenBlock(t, host)}
 
 /* ===== Native token overrides (wins over :root[data-theme]) ===== */
 ${host}:root {

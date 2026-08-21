@@ -7,6 +7,8 @@
 // property blocks from extended semantic color maps. No I/O — color in, numbers
 // / CSS out.
 
+import { luminance } from './utils/color-utils.mjs';
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
@@ -21,29 +23,6 @@ function parseHex(hex) {
     parseInt(m[1].slice(2, 4), 16),
     parseInt(m[1].slice(4, 6), 16),
   ];
-}
-
-// ---------------------------------------------------------------------------
-// WCAG 2.1 — relative luminance & contrast ratio
-// ---------------------------------------------------------------------------
-
-/**
- * Compute the relative luminance of a color per WCAG 2.1 (§1.4.3).
- *
- * Each sRGB channel is linearized then combined with the luminance weights
- * (0.2126 R + 0.7152 G + 0.0722 B).
- *
- * @param {string} hex - 6-digit hex color (e.g. "#ef4444").
- * @returns {number} Relative luminance, 0 (black) – 1 (white).
- */
-export function luminance(hex) {
-  const rgb = parseHex(hex);
-  if (!rgb) return 0;
-  const [rs, gs, bs] = rgb.map((v) => {
-    const s = v / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
 /**

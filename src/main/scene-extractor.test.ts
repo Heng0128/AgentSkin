@@ -8,6 +8,7 @@ import type { SceneObject } from './scene/scene-json-parser';
 import {
   deriveWeInstallRoot,
   extractScene,
+  extractSceneAsync,
   findInstallAsset,
   resolveParticleTexture,
   resolveSceneParticle,
@@ -483,5 +484,115 @@ describe('extractScene frames', () => {
     expect(gifTex2!.frames![0].frametime).toBeCloseTo(0.1);
     expect(gifTex2!.frames![1].frametime).toBeCloseTo(0.2);
     expect(gifTex2!.dataUrl).toMatch(/^data:image\/png;base64,/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractSceneAsync — async extraction with fs.promises.readFile
+// ---------------------------------------------------------------------------
+
+describe('extractSceneAsync', () => {
+  /** Build a minimal but complete scene.pkg and write it to a temp file. */
+  async function writeMinimalPkg(): Promise<string> {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-async-'));
+    const pkg = path.join(dir, 'scene.pkg');
+
+    const entries = [
+      {
+        name: 'scene.json',
+        data: Buffer.from(
+          JSON.stringify({
+            general: { clearenabled: true },
+            objects: [],
+          }),
+        ),
+      },
+      {
+        name: 'models/background.json',
+        data: Buffer.from(
+          JSON.stringify({
+            material: 'materials/background.json',
+            solidLayer: false,
+          }),
+        ),
+      },
+      {
+        name: 'materials/background.json',
+        data: Buffer.from(
+          JSON.stringify({
+            passes: [{ shader: 'generic', textures: ['background'], blending: 'normal' }],
+          }),
+        ),
+      },
+    ];
+
+    const parts: Buffer[] = [];
+    const magic = Buffer.from('scene.pkg', 'utf8');
+    const magicLen = Buffer.alloc(4);
+    magicLen.writeInt32LE(magic.length, 0);
+    parts.push(magicLen, magic);
+    const count = Buffer.alloc(4);
+    count.writeInt32LE(entries.length, 0);
+    parts.push(count);
+    const table: Buffer[] = [];
+    let offset = 0;
+    for (const e of entries) {
+      const nb = Buffer.from(e.name, 'utf8');
+      const nbLen = Buffer.alloc(4);
+      nbLen.writeInt32LE(nb.length, 0);
+      const off = Buffer.alloc(4);
+      off.writeInt32LE(offset, 0);
+      const len = Buffer.alloc(4);
+      len.writeInt32LE(e.data.length, 0);
+      table.push(nbLen, nb, off, len);
+      offset += e.data.length;
+    }
+    for (const t of table) parts.push(t);
+    for (const e of entries) parts.push(e.data);
+    await fs.writeFile(pkg, Buffer.concat(parts));
+    return pkg;
+  }
+
+  it('parses a valid scene.pkg asynchronously and returns scene data', async () => {
+    const pkgPath = await writeMinimalPkg();
+    const scene = await extractSceneAsync(pkgPath);
+    expect(scene).not.toBeNull();
+    // scene.json parsed
+    expect(scene!.general).toBeDefined();
+    // models/background.json resolved via extractModels
+    expect(scene!.models.has('models/background')).toBe(true);
+    const model = scene!.models.get('models/background')!;
+    expect(model.material).toBe('materials/background.json');
+    // materials/background.json resolved via extractMaterials
+    expect(scene!.materials.has('materials/background')).toBe(true);
+    const mat = scene!.materials.get('materials/background')!;
+    expect(mat.passes).toHaveLength(1);
+    expect(mat.passes[0].shader).toBe('generic');
+  });
+
+  it('returns null for a non-existent file path', async () => {
+    const result = await extractSceneAsync('/nonexistent/path/to/scene.pkg');
+    expect(result).toBeNull();
+  });
+
+  it('produces the same result as the synchronous extractScene', async () => {
+    const pkgPath = await writeMinimalPkg();
+    const syncScene = extractScene(pkgPath);
+    const asyncScene = await extractSceneAsync(pkgPath);
+
+    // Both should succeed for a valid pkg.
+    expect(syncScene).not.toBeNull();
+    expect(asyncScene).not.toBeNull();
+
+    // Compare maps by serialising to sorted JSON.
+    const sorted = (m: Map<string, unknown>) =>
+      JSON.stringify([...m.entries()].sort((a, b) => a[0].localeCompare(b[0])));
+
+    expect(sorted(syncScene!.models)).toBe(sorted(asyncScene!.models));
+    expect(sorted(syncScene!.materials)).toBe(sorted(asyncScene!.materials));
+    expect(sorted(syncScene!.textures)).toBe(sorted(asyncScene!.textures));
+    expect(syncScene!.general).toEqual(asyncScene!.general);
+    expect(syncScene!.objects).toEqual(asyncScene!.objects);
+    expect(syncScene!.version).toBe(asyncScene!.version);
   });
 });

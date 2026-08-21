@@ -38,6 +38,12 @@ export interface WorkerResponse {
  * Pure handler for a single render request — the exact function the worker
  * thread runs for each message. Exported so vitest can exercise the worker's
  * core path without depending on the build-only `?nodeWorker` wrapper.
+ *
+ * Future migration (not in this change): `renderSceneToHtml` currently calls
+ * the synchronous `extractScene`. When the scene renderer opts into async I/O,
+ * swap to an async rendering pipeline that uses `extractSceneAsync` so the
+ * worker's parse phase doesn't block its own thread on `fs.readFileSync`.
+ * See `extractSceneAsync` in `scene/scene-extractor.ts`.
  */
 export function handleRenderRequest(request: RenderRequest): WorkerResponse {
   try {

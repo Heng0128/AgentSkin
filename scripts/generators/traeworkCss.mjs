@@ -18,7 +18,7 @@ function traeworkCss(t) {
    declares them on plain \`body\` selectors; our host-scoped body rule at
    specificity (0,1,2) always outranks them), then layer hero art + structural
    touches on stable solo-lite landmarks. */
-${tokenBlock(t)}
+${tokenBlock(t, host)}
 
 /* ---- design token override (global restyle via app's own variable system) ---- */
 ${host} body {

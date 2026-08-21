@@ -1,0 +1,144 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90mC:/Users/snowb/Desktop/work/desktop-main[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mcappedTextureDim[2m > [22mclamps oversized textures to the cap and passes smaller ones through[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mpickMipmapForDisplay[2m > [22mpicks the exact 2048 mip when available (closest ≤ cap)[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mpickMipmapForDisplay[2m > [22mpicks a 16:9 1920x1080 mip for a fullscreen texture (best fit ≤ cap)[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mpickMipmapForDisplay[2m > [22mpicks the 2048 mip from an 8192 chain[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mpickMipmapForDisplay[2m > [22mfalls back to the largest mip when every mip is below the cap[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mpickMipmapForDisplay[2m > [22muses the full-res mip when the chain has no cap-fitting mip (then downscaled)[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mboxDownscaleRgba[2m > [22maverages 2x2 blocks for k=2[32m 0[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 4 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mboxDownscaleRgba[2m > [22mleaves the buffer length unchanged (in-place, no extra allocation)[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — 真实格式 fixture[2m > [22mparses a TEXV0005 with an uncompressed RGBA8888 mipmap[32m 2[2mms[22m[39m
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 6 reference vector: known endpoints produce correct interpolation at idx 0
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — 真实格式 fixture[2m > [22mparses a DXT1-compressed 4×4 mipmap (single 16-byte block)[32m 0[2mms[22m[39m
+[31m[1mAssertionError[22m: expected 200 to be 201 // Object.is equality[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — 真实格式 fixture[2m > [22mparses an embedded-PNG TEXB0003 container[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — 真实格式 fixture[2m > [22mparses a GIF texture with frame info (TEXS0001)[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — 真实格式 fixture[2m > [22mreturns null for a non-TEX buffer[32m 0[2mms[22m[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 201[39m
+[31m+ 200[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — 真实格式 fixture[2m > [22mreturns null for a TEX with the wrong magic[32m 0[2mms[22m[39m
+[36m [2m❯[22m src/main/scene/tex-parser.test.ts:[2m700:27[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mtexFramesToDataUrls — GIF 帧渲染[2m > [22mrenders every frame of an animated texture, preserving frametimes[32m 2[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mtexFramesToDataUrls — GIF 帧渲染[2m > [22mreturns null for non-animated textures[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mtexFramesToDataUrls — GIF 帧渲染[2m > [22mcrops sprite-atlas frames to their declared region[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mtexFramesToDataUrls — GIF 帧渲染[2m > [22mskips frames that reference missing images and drops all frames when none decode[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mtexToDataUrl — 嵌入 PNG 优先[2m > [22mreturns the embedded PNG byte-for-byte for TEXB0003 PNG containers[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mBinaryReader 边界（读越界抛错）[2m > [22mthrows when reading past the end[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — 鲁棒性（损坏/恶意尺寸不崩）[2m > [22mreturns null (not throw/OOM) on absurd dimensions[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — 鲁棒性（损坏/恶意尺寸不崩）[2m > [22mreturns null on non-positive / non-finite dimensions[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — 鲁棒性（损坏/恶意尺寸不崩）[2m > [22mreturns null when the source buffer is too short for the block layout[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — 鲁棒性（损坏/恶意尺寸不崩）[2m > [22mreturns null for uncompressed formats whose buffer is too short[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — 鲁棒性（损坏/恶意尺寸不崩）[2m > [22mstill decodes a valid small texture normally[32m 0[2mms[22m[39m
+    [90m698|[39m     [90m// All pixels should decode to ep0:[39m
+    [90m699|[39m     [35mfor[39m ([35mlet[39m i [33m=[39m [34m0[39m[33m;[39m i [33m<[39m [34m16[39m[33m;[39m i[33m++[39m) {
+    [90m700|[39m       [34mexpect[39m(out[33m![39m[i [33m*[39m [34m4[39m])[33m.[39m[34mtoBe[39m(expectedR)[33m;[39m
+    [90m   |[39m                           [31m^[39m
+    [90m701|[39m       [34mexpect[39m(out[33m![39m[i [33m*[39m [34m4[39m [33m+[39m [34m1[39m])[33m.[39m[34mtoBe[39m(expectedG)[33m;[39m
+    [90m702|[39m       [34mexpect[39m(out[33m![39m[i [33m*[39m [34m4[39m [33m+[39m [34m2[39m])[33m.[39m[34mtoBe[39m(expectedB)[33m;[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — 截断/损坏头鲁棒性[2m > [22mreturns null for a header truncated right after the magic[32m 0[2mms[22m[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — 截断/损坏头鲁棒性[2m > [22mparses a header with a malformed short mipmap without throwing, and decode fails gracefully[32m 0[2mms[22m[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯[22m[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — TEXV0006 magic 白名单[2m > [22maccepts TEXV0006 as a valid magic[32m 0[2mms[22m[39m
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 6 reference vector: anchor pixel idx 0 and non-anchor idx 8 interpolation
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — TEXV0006 magic 白名单[2m > [22mstill rejects unknown magics[32m 0[2mms[22m[39m
+[31m[1mAssertionError[22m: expected 200 to be 201 // Object.is equality[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mparseTex — TEXV0006 magic 白名单[2m > [22mstill accepts the original TEXV0005 magic[32m 0[2mms[22m[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 201[39m
+[31m+ 200[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mdecodes a 4×4 BC7 block (mode 0) to a 64-byte RGBA buffer[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mdecodes a BC7 mode 6 block with 4-bit indices (RGBA, single subset)[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mdecodes a BC7 mode 5 block (dual-plane, 7-bit RGB + 8-bit A)[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mdecodes a BC7 mode 4 block (dual-plane, 5-bit RGB + 6-bit A)[32m 1[2mms[22m[39m
+[36m [2m❯[22m src/main/scene/tex-parser.test.ts:[2m728:21[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mdecodes distinct colors for different subsets in a mode 0 block[32m 0[2mms[22m[39m
+    [90m726|[39m
+    [90m727|[39m     [90m// Pixel 0 (index 0, weight 0): output = ep0[39m
+    [90m728|[39m     [34mexpect[39m(out[33m![39m[[34m0[39m])[33m.[39m[34mtoBe[39m([34m201[39m)[33m;[39m
+    [90m   |[39m                     [31m^[39m
+    [90m729|[39m     [34mexpect[39m(out[33m![39m[[34m1[39m])[33m.[39m[34mtoBe[39m([34m151[39m)[33m;[39m
+    [90m730|[39m     [34mexpect[39m(out[33m![39m[[34m2[39m])[33m.[39m[34mtoBe[39m([34m100[39m)[33m;[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mreturns null when the source buffer is too short for BC7 blocks[32m 0[2mms[22m[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mreturns null for absurd BC7 dimensions[32m 0[2mms[22m[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯[22m[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mdecodes a full 8×8 BC7 mipmap (4 blocks) without error[32m 0[2mms[22m[39m
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 4 reference vector: non-zero indices do not gradient to black
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 6 reference vector: all-zero endpoints and indices → all pixels (0,0,0,0)[32m 1[2mms[22m[39m
+[31m[1mAssertionError[22m: expected 255 to be 171 // Object.is equality[39m
+ [31m×[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 6 reference vector: known endpoints produce correct interpolation at idx 0[32m 9[2mms[22m[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 171[39m
+[31m+ 255[39m
+
+[36m [2m❯[22m src/main/scene/tex-parser.test.ts:[2m818:26[22m[39m
+[31m   → expected 200 to be 201 // Object.is equality[39m
+    [90m816|[39m     [90m// A: ((43)*255 + 21*0 + 32) >> 6 = (10965+32)>>6 = 10997>>6 = 171[39m
+    [90m817|[39m     [34mexpect[39m(out2[33m![39m[[34m4[39m])[33m.[39m[34mtoBe[39m([34m255[39m)[33m;[39m [90m// R channel at pixel 1[39m
+    [90m818|[39m     expect(out2![4 + 3]).toBe(171); // A channel at pixel 1 (gradient …
+    [90m   |[39m                          [31m^[39m
+    [90m819|[39m   })[33m;[39m
+    [90m820|[39m
+ [31m×[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 6 reference vector: anchor pixel idx 0 and non-anchor idx 8 interpolation[32m 1[2mms[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯[22m[39m
+
+[31m   → expected 200 to be 201 // Object.is equality[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 4 reference vector: reads both endpoint sets (fix verification)[32m 0[2mms[22m[39m
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 5 reference vector: non-zero indices do not gradient to stale-zero
+ [31m×[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 4 reference vector: non-zero indices do not gradient to black[32m 1[2mms[22m[39m
+[31m[1mAssertionError[22m: expected +0 to be 171 // Object.is equality[39m
+[31m   → expected 255 to be 171 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 171[39m
+[31m+ 0[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 4 reference vector: rotation=1 swaps R and A[32m 0[2mms[22m[39m
+[36m [2m❯[22m src/main/scene/tex-parser.test.ts:[2m888:21[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 5 reference vector: reads both endpoint sets (fix verification)[32m 1[2mms[22m[39m
+    [90m886|[39m     // A: ((21)*0 + 43*255 + 32) >> 6 = (10965 + 32) >> 6 = 10997 >> 6…
+    [90m887|[39m     [34mexpect[39m(out[33m![39m[[34m0[39m])[33m.[39m[34mtoBe[39m([34m255[39m)[33m;[39m
+    [90m888|[39m     [34mexpect[39m(out[33m![39m[[34m3[39m])[33m.[39m[34mtoBe[39m([34m171[39m)[33m;[39m
+    [90m   |[39m                     [31m^[39m
+    [90m889|[39m   })[33m;[39m
+    [90m890|[39m
+ [31m×[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mmode 5 reference vector: non-zero indices do not gradient to stale-zero[32m 1[2mms[22m[39m
+
+[31m   → expected +0 to be 171 // Object.is equality[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mdecodes mode 1 (2-subset, 3-bit indices) without error[32m 0[2mms[22m[39m
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯[22m[39m
+
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mdecompressDxt — BC7 格式[2m > [22mdecodes mode 7 (2-subset RGBA, 2-bit indices) without error[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mrgbaToPngDataUrl — 输入校验[2m > [22mthrows a labelled RangeError on a too-small buffer[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mrgbaToPngDataUrl — 输入校验[2m > [22mthrows on non-positive dimensions[32m 0[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mrgbaToPngDataUrl — 输入校验[2m > [22mthrows when dimensions exceed the decode cap[32m 1[2mms[22m[39m
+ [32m✓[39m [30m[45m main [49m[39m src/main/scene/tex-parser.test.ts[2m > [22mrgbaToPngDataUrl — 输入校验[2m > [22mstill produces a valid data URL for a well-formed 1×1 buffer[32m 0[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[2m | [22m[1m[32m48 passed[39m[22m[90m (52)[39m
+[2m   Start at [22m 05:29:48
+[2m   Duration [22m 555ms[2m (transform 124ms, setup 0ms, import 162ms, tests 38ms, environment 0ms)[22m
+

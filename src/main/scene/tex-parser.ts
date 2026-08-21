@@ -88,34 +88,117 @@ const BC7_WEIGHTS_2 = [0, 21, 43, 64];
 const BC7_WEIGHTS_3 = [0, 9, 18, 27, 37, 46, 55, 64];
 const BC7_WEIGHTS_4 = [0, 4, 9, 13, 17, 21, 26, 30, 34, 38, 43, 47, 51, 55, 60, 64];
 
-// 3-subset partition table (16 entries × 16 pixels), derived from the BC7 spec.
-// g_aPartitionTable[partition][pixel] → subset index (0, 1, or 2).
-// Each entry lists the 16 pixels (y*4 + x order), with the subset assignment.
-// Anchor table: first anchor of each subset in the partition.
+// ---------------------------------------------------------------------------
+// BC7 partition & anchor tables
+// ---------------------------------------------------------------------------
+// Derived from the canonical BC7 specification. Reference source:
+// https://github.com/richgel999/bc7enc  (bc7decomp.cpp, MIT © Richard Geldreich, Jr.)
+// which itself follows the Microsoft D3D11 / DirectXTex tables exactly.
+//
+// BC7 fix-up index rule (per the spec):
+//   For each subset, the "anchor" pixel's most-significant index bit is
+//   implicitly 0, so only (indexBits - 1) bits are stored for that pixel
+//   in the bitstream.  Non-anchor pixels store the full indexBits.
+//   This is why indices MUST be decoded sequentially from bitstream start —
+//   skipping an anchor shifts every subsequent read offset by 1 bit.
+//
+// Tables below are little-endian bit-order (LSB first) to match bc7ReadBits.
+
+// 2-subset partition table (64 entries × 16 pixels), values ∈ {0, 1}.
+// Indexed as BC7_PARTITION_2[partitionSetId * 16 + pixelIndex].
+const BC7_PARTITION_2 = new Uint8Array([
+  0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+  1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0,
+  0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0,
+  1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+  0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0,
+  1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+  0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+  0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1,
+  0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0,
+  1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0,
+  0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1,
+  0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+  0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0,
+  0, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1,
+  0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0,
+  1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1,
+  0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1,
+  0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1,
+  0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1,
+  0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1,
+  0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1,
+  1, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1,
+  0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0,
+  0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1,
+  1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0,
+  1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
+  0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1,
+  1,
+]);
+
+// Anchor pixel for subset 1 in 2-subset modes (modes 1, 3, 7).
+// The subset-0 anchor is always pixel 0 per spec; this table gives the subset-1
+// anchor pixel index, one per partition set ID (0..63).
+const BC7_ANCHOR_INDEX_2_SUB1 = new Uint8Array([
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 2, 8, 2, 2, 8, 8, 15, 2, 8, 2,
+  2, 8, 8, 2, 2, 15, 15, 6, 8, 2, 8, 15, 15, 2, 8, 2, 2, 2, 15, 15, 6, 6, 2, 6, 8, 15, 15, 2, 2, 15,
+  15, 15, 15, 15, 2, 2, 15,
+]);
+
+// 3-subset partition table (64 entries × 16 pixels), values ∈ {0, 1, 2}.
+// Same reference source as above.  Indexed as BC7_PARTITION_3[partitionSetId * 16 + pixelIndex].
 const BC7_PARTITION_3 = new Uint8Array([
-  0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0,
-  0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1,
-  1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0,
-  0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1,
-  1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
-  1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  0, 0, 1, 1, 0, 0, 1, 1, 0, 2, 2, 1, 2, 2, 2, 2, 0, 0, 0, 1, 0, 0, 1, 1, 2, 2, 1, 1, 2, 2, 2, 1, 0,
+  0, 0, 0, 2, 0, 0, 1, 2, 2, 1, 1, 2, 2, 1, 1, 0, 2, 2, 2, 0, 0, 2, 2, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0,
+  0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1, 1, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2,
+  2, 0, 0, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 0, 0, 0, 0,
+  0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 0, 1,
+  1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 1, 2, 0, 0, 1, 2, 0, 0, 1, 2, 0, 0, 1, 2, 0, 1, 1, 2, 0, 1,
+  1, 2, 0, 1, 1, 2, 0, 1, 1, 2, 0, 1, 2, 2, 0, 1, 2, 2, 0, 1, 2, 2, 0, 1, 2, 2, 0, 0, 1, 1, 0, 1, 1,
+  2, 1, 1, 2, 2, 1, 2, 2, 2, 0, 0, 1, 1, 2, 0, 0, 1, 2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 0, 1, 0, 0, 1, 1,
+  0, 1, 1, 2, 1, 1, 2, 2, 0, 1, 1, 1, 0, 0, 1, 1, 2, 0, 0, 1, 2, 2, 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 1,
+  1, 2, 2, 1, 1, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2, 0, 0, 2, 2, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 2,
+  2, 2, 0, 2, 2, 2, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2, 2, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 2,
+  2, 0, 1, 2, 2, 0, 0, 0, 0, 1, 1, 0, 0, 2, 2, 1, 0, 2, 2, 1, 0, 0, 1, 2, 2, 0, 1, 2, 2, 0, 0, 1, 1,
+  0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 1, 2, 1, 1, 2, 2, 2, 2, 2, 2, 0, 1, 1, 0, 1, 2, 2, 1, 1, 2, 2, 1, 0,
+  1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 2, 2, 1, 1, 2, 2, 1, 0, 0, 2, 2, 1, 1, 0, 2, 1, 1, 0, 2, 0, 0,
+  2, 2, 0, 1, 1, 0, 0, 1, 1, 0, 2, 0, 0, 2, 2, 2, 2, 2, 0, 0, 1, 1, 0, 1, 2, 2, 0, 1, 2, 2, 0, 0, 1,
+  1, 0, 0, 0, 0, 2, 0, 0, 0, 2, 2, 1, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 2, 2, 1, 2, 2, 2,
+  0, 2, 2, 2, 0, 0, 2, 2, 0, 0, 1, 2, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 2, 0, 0, 2, 2, 0, 2, 2, 2, 0,
+  1, 2, 0, 0, 1, 2, 0, 0, 1, 2, 0, 0, 1, 2, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 0, 0, 1,
+  2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 0, 0, 1,
+  1, 2, 2, 0, 0, 1, 1, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1,
+  0, 1, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 2, 1, 2, 1, 2, 1, 0, 0, 2, 2, 1,
+  1, 2, 2, 0, 0, 2, 2, 1, 1, 2, 2, 0, 0, 2, 2, 0, 0, 1, 1, 0, 0, 2, 2, 0, 0, 1, 1, 0, 2, 2, 0, 1, 2,
+  2, 1, 0, 2, 2, 0, 1, 2, 2, 1, 0, 1, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 0, 1, 0, 0, 0, 0, 2, 1, 2,
+  1, 2, 1, 2, 1, 2, 1, 2, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 2, 2, 2, 2, 0, 2, 2, 2, 0, 1, 1, 1,
+  0, 2, 2, 2, 0, 1, 1, 1, 0, 0, 0, 2, 1, 1, 1, 2, 0, 0, 0, 2, 1, 1, 1, 2, 0, 0, 0, 0, 2, 1, 1, 2, 2,
+  1, 1, 2, 2, 1, 1, 2, 0, 2, 2, 2, 0, 1, 1, 1, 0, 1, 1, 1, 0, 2, 2, 2, 0, 0, 0, 2, 1, 1, 1, 2, 1, 1,
+  1, 2, 0, 0, 0, 2, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1,
+  2, 2, 1, 1, 2, 0, 1, 1, 0, 0, 1, 1, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 0, 1, 1, 0, 0, 1, 1,
+  0, 0, 2, 2, 0, 0, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+  1, 2, 1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 1, 0, 2, 2, 2, 1, 2, 2, 2, 0, 2, 2, 2, 1, 2,
+  2, 2, 0, 1, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 1, 1, 1, 2, 0, 1, 1, 2, 2, 0, 1, 2, 2, 2,
+  0,
 ]);
 
-const BC7_ANCHOR_INDEX_3 = new Uint8Array([
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
-  2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+// 3-subset anchor tables (one per subset beyond subset-0, which is always pixel 0).
+// Subset 1 anchor pixel index, then subset 2 anchor pixel index, per partition set ID (0..63).
+const BC7_ANCHOR_INDEX_3_SUB1 = new Uint8Array([
+  3, 3, 15, 15, 8, 3, 15, 15, 8, 8, 6, 6, 6, 5, 3, 3, 3, 3, 8, 15, 3, 3, 6, 10, 5, 8, 8, 6, 8, 5,
+  15, 15, 8, 15, 3, 5, 6, 10, 8, 15, 15, 3, 15, 5, 15, 15, 15, 15, 3, 15, 5, 5, 5, 8, 5, 10, 5, 10,
+  8, 13, 15, 12, 3, 3,
 ]);
-// Anchor index for subset 1 (second anchor)
-const BC7_ANCHOR_INDEX_3_SUB1 = new Uint8Array([0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 0]);
-// Anchor index for subset 2 (third anchor)
-const BC7_ANCHOR_INDEX_3_SUB2 = new Uint8Array([0, 1, 1, 2, 2, 1, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2]);
-
-// 2-subset partition table (64 entries × 16 pixels), derived from BC7 spec.
-const BC7_PARTITION_2 = new Uint8Array(64 * 16);
-// Anchor indices for subset 1 (the subset-0 anchor is always pixel 0)
-const BC7_ANCHOR_INDEX_2_SUB1 = new Uint8Array(64);
+const BC7_ANCHOR_INDEX_3_SUB2 = new Uint8Array([
+  15, 8, 8, 3, 15, 15, 3, 8, 15, 15, 15, 15, 15, 15, 15, 8, 15, 8, 15, 3, 15, 8, 15, 8, 3, 15, 6,
+  10, 15, 15, 10, 8, 15, 3, 15, 10, 10, 8, 9, 10, 6, 15, 8, 15, 3, 6, 6, 8, 15, 3, 15, 15, 15, 15,
+  15, 15, 15, 15, 15, 15, 3, 15, 15, 8,
+]);
 
 /**
  * Box-downscale an RGBA buffer by integer factor `k` (2, 4, 8…).
@@ -782,11 +865,7 @@ function decodeBc7Block(
   width: number,
   height: number,
 ): void {
-  // Endpoint storage: [R, G, B, A] per endpoint, up to 6 endpoints (mode 0 = 3 subsets × 2 endpoints)
-  const endpoints: number[][] = [];
-
   let numSubsets = 1;
-  const partition = 0;
   let rotation = 0;
   let idxMode = 0;
 
@@ -981,48 +1060,59 @@ function decodeBc7Block(
       break;
     }
     case 4: {
-      // RGB 5.5.5 + A 6
-      const r = bc7ReadBits(block, bitOfs, 5);
-      bitOfs += 5;
-      const g = bc7ReadBits(block, bitOfs, 5);
-      bitOfs += 5;
-      const b = bc7ReadBits(block, bitOfs, 5);
-      bitOfs += 5;
-      const a = bc7ReadBits(block, bitOfs, 6);
+      // Color+Alpha separate, 1 subset, 2-bit rotation
+      // RGBA endpoints: R0(5), G0(5), B0(5), R1(5), G1(5), B1(5), A0(6), A1(6)
+      const r0r1 = bc7ReadBits(block, bitOfs, 10);
+      bitOfs += 10;
+      const g0g1 = bc7ReadBits(block, bitOfs, 10);
+      bitOfs += 10;
+      const b0b1 = bc7ReadBits(block, bitOfs, 10);
+      bitOfs += 10;
+      const a0 = bc7ReadBits(block, bitOfs, 6);
       bitOfs += 6;
-      rawEndpoints.push([r, g, b, a]);
-      rawEndpoints.push([0, 0, 0, 0]); // second endpoint placeholder
-      // Replicate 5-bit to 8-bit for RGB, 6-bit to 8-bit for A
-      rawEndpoints[0][0] = (rawEndpoints[0][0] << 3) | (rawEndpoints[0][0] >> 2);
-      rawEndpoints[0][1] = (rawEndpoints[0][1] << 3) | (rawEndpoints[0][1] >> 2);
-      rawEndpoints[0][2] = (rawEndpoints[0][2] << 3) | (rawEndpoints[0][2] >> 2);
-      rawEndpoints[0][3] = (rawEndpoints[0][3] << 2) | (rawEndpoints[0][3] >> 4);
-      rawEndpoints[1][0] = (rawEndpoints[1][0] << 3) | (rawEndpoints[1][0] >> 2);
-      rawEndpoints[1][1] = (rawEndpoints[1][1] << 3) | (rawEndpoints[1][1] >> 2);
-      rawEndpoints[1][2] = (rawEndpoints[1][2] << 3) | (rawEndpoints[1][2] >> 2);
-      rawEndpoints[1][3] = (rawEndpoints[1][3] << 2) | (rawEndpoints[1][3] >> 4);
+      const a1 = bc7ReadBits(block, bitOfs, 6);
+      bitOfs += 6;
+      const r0 = (r0r1 >> 0) & 0x1f,
+        r1 = (r0r1 >> 5) & 0x1f;
+      const g0 = (g0g1 >> 0) & 0x1f,
+        g1 = (g0g1 >> 5) & 0x1f;
+      const b0 = (b0b1 >> 0) & 0x1f,
+        b1 = (b0b1 >> 5) & 0x1f;
+      rawEndpoints.push([
+        (r0 << 3) | (r0 >> 2),
+        (g0 << 3) | (g0 >> 2),
+        (b0 << 3) | (b0 >> 2),
+        (a0 << 2) | (a0 >> 4),
+      ]);
+      rawEndpoints.push([
+        (r1 << 3) | (r1 >> 2),
+        (g1 << 3) | (g1 >> 2),
+        (b1 << 3) | (b1 >> 2),
+        (a1 << 2) | (a1 >> 4),
+      ]);
       break;
     }
     case 5: {
-      // RGB 7.7.7 + A 8
-      const r = bc7ReadBits(block, bitOfs, 7);
-      bitOfs += 7;
-      const g = bc7ReadBits(block, bitOfs, 7);
-      bitOfs += 7;
-      const b = bc7ReadBits(block, bitOfs, 7);
-      bitOfs += 7;
-      const a = bc7ReadBits(block, bitOfs, 8);
+      // Color+Alpha separate, 1 subset, 2-bit rotation
+      // RGBA endpoints: R0(7), G0(7), B0(7), R1(7), G1(7), B1(7), A0(8), A1(8)
+      const r0r1 = bc7ReadBits(block, bitOfs, 14);
+      bitOfs += 14;
+      const g0g1 = bc7ReadBits(block, bitOfs, 14);
+      bitOfs += 14;
+      const b0b1 = bc7ReadBits(block, bitOfs, 14);
+      bitOfs += 14;
+      const a0 = bc7ReadBits(block, bitOfs, 8);
       bitOfs += 8;
-      rawEndpoints.push([r, g, b, a]);
-      rawEndpoints.push([0, 0, 0, 0]);
-      // Replicate 7-bit to 8-bit for RGB, A already 8-bit
-      rawEndpoints[0][0] = (rawEndpoints[0][0] << 1) | (rawEndpoints[0][0] >> 6);
-      rawEndpoints[0][1] = (rawEndpoints[0][1] << 1) | (rawEndpoints[0][1] >> 6);
-      rawEndpoints[0][2] = (rawEndpoints[0][2] << 1) | (rawEndpoints[0][2] >> 6);
-      // A already 8 bits, no replication needed
-      rawEndpoints[1][0] = (rawEndpoints[1][0] << 1) | (rawEndpoints[1][0] >> 6);
-      rawEndpoints[1][1] = (rawEndpoints[1][1] << 1) | (rawEndpoints[1][1] >> 6);
-      rawEndpoints[1][2] = (rawEndpoints[1][2] << 1) | (rawEndpoints[1][2] >> 6);
+      const a1 = bc7ReadBits(block, bitOfs, 8);
+      bitOfs += 8;
+      const r0 = (r0r1 >> 0) & 0x7f,
+        r1 = (r0r1 >> 7) & 0x7f;
+      const g0 = (g0g1 >> 0) & 0x7f,
+        g1 = (g0g1 >> 7) & 0x7f;
+      const b0 = (b0b1 >> 0) & 0x7f,
+        b1 = (b0b1 >> 7) & 0x7f;
+      rawEndpoints.push([(r0 << 1) | (r0 >> 6), (g0 << 1) | (g0 >> 6), (b0 << 1) | (b0 >> 6), a0]);
+      rawEndpoints.push([(r1 << 1) | (r1 >> 6), (g1 << 1) | (g1 >> 6), (b1 << 1) | (b1 >> 6), a1]);
       break;
     }
     case 6: {
@@ -1132,8 +1222,37 @@ function decodeBc7Block(
       break;
   }
 
-  // For 3-subset modes (0, 2) partition table has 16 entries, 2-subset modes (1, 3, 7) have 64 entries
+  // For 3-subset modes (0, 2) partition table has 64 entries, 2-subset modes (1, 3, 7) have 64 entries
   const is3Subset = numSubsets === 3;
+
+  // Determine which pixel indices are fix-up anchors for this block.
+  // These anchors have their MSB implicitly 0 → stored with (indexBits - 1) bits.
+  const colorAnchors: number[] = [];
+  if (is3Subset) {
+    // Subset 0 anchor is always pixel 0 per spec
+    colorAnchors.push(0);
+    colorAnchors.push(BC7_ANCHOR_INDEX_3_SUB1[partitionSetId]);
+    colorAnchors.push(BC7_ANCHOR_INDEX_3_SUB2[partitionSetId]);
+  } else if (numSubsets === 2) {
+    // Subset 0 anchor is always pixel 0 per spec
+    colorAnchors.push(0);
+    colorAnchors.push(BC7_ANCHOR_INDEX_2_SUB1[partitionSetId]);
+  } else {
+    // Single subset (modes 4, 5, 6): anchor is pixel 0
+    colorAnchors.push(0);
+  }
+
+  // Decode the color index bitstream once, for all 16 pixels.
+  const colorIndices = decodeBc7Indices(block, bitOfs, colorIndexBits, colorAnchors);
+
+  // For modes 4 and 5, decode a separate alpha index bitstream that follows the color one.
+  // The alpha stream also has pixel 0 as its sole anchor (no multi-subset partitioning).
+  let alphaIndices: Uint8Array | null = null;
+  if (mode === 4 || mode === 5) {
+    // Alpha indices start after the color stream: 16 bits - numAnchors bits.
+    const colorStreamBits = 16 * colorIndexBits - colorAnchors.length;
+    alphaIndices = decodeBc7Indices(block, bitOfs + colorStreamBits, alphaIndexBits, [0]);
+  }
 
   // Process each pixel in the 4×4 block
   for (let py = 0; py < 4; py++) {
@@ -1152,33 +1271,11 @@ function decodeBc7Block(
         subset = BC7_PARTITION_2[partitionSetId * 16 + pixelIndex];
       }
 
-      // For 2-subset modes, re-read partition if needed
-      // (partition table lookup is done above)
-
       const epStart = rawEndpoints[subset * 2];
       const epEnd = rawEndpoints[subset * 2 + 1];
 
-      // Extract color index for this pixel
-      // Fix-up: the anchor pixel's most significant index bit is implicitly 0
-      let fixUpIndex = false;
-      if (is3Subset) {
-        // For 3-subset modes, find anchor pixels
-        const anchor0 = BC7_ANCHOR_INDEX_3[partitionSetId];
-        const anchor1 = BC7_ANCHOR_INDEX_3_SUB1[partitionSetId];
-        const anchor2 = BC7_ANCHOR_INDEX_3_SUB2[partitionSetId];
-        if (subset === 0 && pixelIndex === anchor0) fixUpIndex = true;
-        else if (subset === 1 && pixelIndex === anchor1) fixUpIndex = true;
-        else if (subset === 2 && pixelIndex === anchor2) fixUpIndex = true;
-      } else if (numSubsets === 2) {
-        const anchor1 = BC7_ANCHOR_INDEX_2_SUB1[partitionSetId];
-        if (subset === 0 && pixelIndex === 0) fixUpIndex = true;
-        else if (subset === 1 && pixelIndex === anchor1) fixUpIndex = true;
-      } else {
-        // Single subset: fix-up at pixel 0
-        if (pixelIndex === 0) fixUpIndex = true;
-      }
-
-      const colorIdx = extractIndex(block, bitOfs, pixelIndex, colorIndexBits, fixUpIndex);
+      // Color index for this pixel (already decoded)
+      const colorIdx = colorIndices[pixelIndex];
 
       // Interpolate RGB
       const r = bc7Interpolate(epStart[0], epEnd[0], colorIdx, colorIndexBits);
@@ -1189,13 +1286,7 @@ function decodeBc7Block(
       let a: number;
       if (mode === 4 || mode === 5) {
         // Separate alpha channel with its own index
-        const alphaIdx = extractIndex(
-          block,
-          bitOfs + 16 * colorIndexBits,
-          pixelIndex,
-          alphaIndexBits,
-          fixUpIndex,
-        );
+        const alphaIdx = alphaIndices![pixelIndex];
         a = bc7Interpolate(epStart[3], epEnd[3], alphaIdx, alphaIndexBits);
       } else if (mode >= 6) {
         // Combined: alpha uses same index as color
@@ -1238,46 +1329,43 @@ function decodeBc7Block(
 }
 
 /**
- * Extract a palette index for the given pixel from the BC7 index bitstream.
- * Handles fix-up indices (the anchor pixel's MSB is implicitly 0).
+ * Decode all 16 pixel indices from a BC7 block's P-bit-free index bitstream.
+ *
+ * BC7 fix-up rule (per D3D11 spec):
+ *   For each subset, its "anchor" pixel's MSB is implicitly 0, so only
+ *   (indexBits - 1) bits are stored.  Non-anchor pixels store the full
+ *   indexBits.  Indices are packed sequentially in the bitstream, so the
+ *   offset for pixel `p` depends on how many anchors precede it.
+ *
+ *   For N anchors among the 16 pixels, total bit cost is:
+ *     (16 - N) * indexBits + N * (indexBits - 1) = 16 * indexBits - N
+ *
+ * The function reads ALL 16 indices at once and returns them as a
+ * Uint8Array(16), so each pixel's index can be looked up in O(1).
+ *
+ * @param block       16-byte BC7 block
+ * @param baseBitOfs  bit offset where the index stream starts
+ * @param indexBits   bits per non-anchor index (2, 3, or 4)
+ * @param anchors     pixel indices that are fix-up anchors (MSB = 0)
+ * @returns           16 decoded indices, one per pixel (row-major 4×4)
  */
-function extractIndex(
+function decodeBc7Indices(
   block: Uint8Array,
   baseBitOfs: number,
-  pixelIndex: number,
-  bits: number,
-  isAnchor: boolean,
-): number {
-  if (isAnchor) {
-    // Anchor pixel: MSB is implicitly 0, only (bits-1) bits stored
-    const storedBits = bits - 1;
-    const idx = bc7ReadBits(block, baseBitOfs + pixelIndex * storedBits, storedBits);
-    // The MSB is 0, so the value is already correct as-is
-    return idx;
+  indexBits: number,
+  anchors: number[],
+): Uint8Array {
+  const indices = new Uint8Array(16);
+  const isAnchor = new Uint8Array(16);
+  for (const p of anchors) isAnchor[p] = 1;
+
+  let bitOfs = baseBitOfs;
+  for (let p = 0; p < 16; p++) {
+    const storedBits = isAnchor[p] ? indexBits - 1 : indexBits;
+    indices[p] = bc7ReadBits(block, bitOfs, storedBits);
+    bitOfs += storedBits;
   }
-  // Non-anchor: read full `bits` bits
-  // But need to account for anchor pixels before this one having one fewer bit
-  // This is the tricky part: the bitstream is packed with variable-width indices
-  // because anchor indices are one bit shorter.
-
-  // Count how many anchor pixels come before this one
-  // For simplicity, recalculate from scratch: the bitstream has N indices,
-  // with the anchor position(s) compressed to (bits-1) bits and the rest at `bits`.
-  // The exact bit offset depends on position of anchor(s) relative to this pixel.
-
-  // For now, use a simpler layout: anchor pixels are scattered, but in BC7
-  // the index bits are packed with the fix-up index omitting its MSB.
-  // So for pixel p:
-  //   - if p < anchorBitPosition: read `bits` bits starting at p * bits
-  //   - if p > anchorBitPosition: read `bits` bits starting at anchorBitPosition * bits + (p - anchorBitPosition) * bits
-  // Hmm, actually the fix is simpler: all non-anchor pixels use full bits, anchor uses bits-1.
-  // So total bits = (16 - numAnchors) * bits + numAnchors * (bits - 1)
-  // And the offset for pixel p depends on how many anchors are before it.
-
-  // This function needs to know which pixel is the anchor and iterate.
-  // Let me refactor the approach: decode all 16 indices at once.
-
-  return 0; // placeholder
+  return indices;
 }
 
 function bc7Interpolate(e0: number, e1: number, index: number, precision: number): number {

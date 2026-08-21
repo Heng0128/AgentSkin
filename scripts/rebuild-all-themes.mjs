@@ -49,6 +49,7 @@ for (const id of dirs) {
       '--agentskin-input-bg': c.inputBackground,
       '--agentskin-button-bg': c.buttonBackground,
       '--agentskin-focus-ring': c.focusRing,
+      '--agentskin-selection': c.selection,
     };
     // Remove undefined entries so build-theme-package.mjs falls back to defaults
     for (const k of Object.keys(tokens)) {

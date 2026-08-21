@@ -1,7 +1,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { findEntries, findEntry, type PkgPackage, parsePkgBuffer } from './pkg-parser';
+import {
+  findEntries,
+  findEntry,
+  type PkgPackage,
+  parsePkg,
+  parsePkgAsync,
+  parsePkgBuffer,
+} from './pkg-parser';
 
 // ---------------------------------------------------------------------------
 // Helpers — build a scene.pkg container.
@@ -287,5 +297,76 @@ describe('findEntries', () => {
 
   it('returns an empty list when nothing matches', () => {
     expect(findEntries(samplePkg(), 'textures')).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// parsePkgAsync / parsePkg (file-based API)
+// ---------------------------------------------------------------------------
+
+describe('parsePkgAsync', () => {
+  it('correctly parses a valid PKG file', async () => {
+    const tmpDir = await mkdtemp(join(tmpdir(), 'pkg-test-'));
+    try {
+      const pkgPath = join(tmpDir, 'scene.pkg');
+      const buf = buildPkg([
+        { name: 'scene.json', data: Buffer.from('{}') },
+        { name: 'materials/Bg.tex', data: Buffer.from([1]) },
+      ]);
+      await writeFile(pkgPath, buf);
+
+      const result = await parsePkgAsync(pkgPath);
+      expect(result).not.toBeNull();
+      expect(result!.entries).toHaveLength(2);
+      expect(result!.entries[0].fullPath).toBe('scene.json');
+      expect(result!.entries[0].bytes.toString()).toBe('{}');
+      expect(result!.entries[1].fullPath).toBe('materials/Bg.tex');
+    } finally {
+      await rm(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('returns null for a non-existent file', async () => {
+    const result = await parsePkgAsync('/nonexistent/path/scene.pkg');
+    expect(result).toBeNull();
+  });
+
+  it('produces identical output to parsePkg for the same file', async () => {
+    const tmpDir = await mkdtemp(join(tmpdir(), 'pkg-test-'));
+    try {
+      const pkgPath = join(tmpDir, 'scene.pkg');
+      const buf = buildPkg([
+        { name: 'scene.json', data: Buffer.from('{"version":2}') },
+        { name: 'preview.png', data: Buffer.from([0x89, 0x50]) },
+      ]);
+      await writeFile(pkgPath, buf);
+
+      const sync = parsePkg(pkgPath);
+      const async_ = await parsePkgAsync(pkgPath);
+
+      expect(sync).not.toBeNull();
+      expect(async_).not.toBeNull();
+      expect(async_!.entries.length).toBe(sync!.entries.length);
+      expect(async_!.magic).toBe(sync!.magic);
+      for (let i = 0; i < sync!.entries.length; i++) {
+        expect(async_!.entries[i].fullPath).toBe(sync!.entries[i].fullPath);
+        expect(async_!.entries[i].bytes.equals(sync!.entries[i].bytes)).toBe(true);
+      }
+    } finally {
+      await rm(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it('returns null for a too-small buffer (invalid PKG)', async () => {
+    const tmpDir = await mkdtemp(join(tmpdir(), 'pkg-test-'));
+    try {
+      const pkgPath = join(tmpDir, 'invalid.pkg');
+      await writeFile(pkgPath, Buffer.from([0x01, 0x02, 0x03]));
+
+      const result = await parsePkgAsync(pkgPath);
+      expect(result).toBeNull();
+    } finally {
+      await rm(tmpDir, { recursive: true, force: true });
+    }
   });
 });

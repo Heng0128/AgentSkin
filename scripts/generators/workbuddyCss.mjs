@@ -5,11 +5,12 @@ import { alpha, artLayerCss, tokenBlock } from '../theme-utils.mjs';
 
 function workbuddyCss(t) {
   const c = t.colors;
+  const host = 'html.agentskin-host-workbuddy';
   const titleBarFg = t.isLight ? '#1f2937' : '#ffffff';
   const hoverMix = t.isLight ? '#000000' : '#000000';
 
   return `/* ${t.name} — WorkBuddy (--cb-* design tokens) */
-${tokenBlock(t)}
+${tokenBlock(t, host)}
 
 body[data-application-name="workbuddy"] {
   color-scheme: ${t.isLight ? 'light' : 'dark'} !important;

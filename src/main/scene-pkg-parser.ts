@@ -26,7 +26,13 @@
 // ---------------------------------------------------------------------------
 
 export type { PkgEntry, PkgPackage } from './scene/pkg-parser';
-export { findEntries, findEntry, parsePkg, parsePkgBuffer } from './scene/pkg-parser';
+export {
+  findEntries,
+  findEntry,
+  parsePkg,
+  parsePkgAsync,
+  parsePkgBuffer,
+} from './scene/pkg-parser';
 
 // ---------------------------------------------------------------------------
 // TEX Texture Parser
@@ -89,6 +95,7 @@ export type {
 export {
   deriveWeInstallRoot,
   extractScene,
+  extractSceneAsync,
   findInstallAsset,
   resolveObjectTexture,
   resolveParticleTexture,
