@@ -163,7 +163,7 @@ function SegmentedControl<T extends string>({
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`rounded-[2px] border px-2 py-1 font-mono text-[10px] transition-colors ${
+            className={`rounded-[var(--dl-radius,2px)] border px-2 py-1 font-mono text-[10px] transition-colors ${
               isSelected
                 ? 'border-[var(--accent)] bg-[var(--bg-surface-elevated)] text-[var(--fg-0)]'
                 : 'border-[var(--border-subtle)] bg-[var(--bg-2)] text-[var(--fg-2)] hover:border-[var(--fg-3)]'
@@ -271,7 +271,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
   }
 
   return (
-    <div className="flex h-full flex-col rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
+    <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header */}
       <div>
         <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">
@@ -284,7 +284,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
       </div>
 
       {/* Live CSS preview bar */}
-      <div className="mt-4 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
+      <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
         <h4 className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
           {t.studioDLCssPreview ?? 'CSS Variables'}
         </h4>
@@ -395,7 +395,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
             />
             {/* Shadow preview swatch */}
             <div
-              className="h-6 w-6 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)]"
+              className="h-6 w-6 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)]"
               style={{ boxShadow: shadowValue(elevation) }}
             />
           </div>
@@ -431,7 +431,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
       </div>
 
       {/* Color Token display */}
-      <div className="mt-4 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
+      <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
         <h4 className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
           {t.studioThemeColors ?? 'Color Tokens (14)'}
         </h4>
@@ -440,7 +440,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         </p>
 
         {colorTokens.length === 0 ? (
-          <div className="mt-4 rounded-[2px] border border-dashed border-[var(--border-subtle)] p-6 text-center">
+          <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-dashed border-[var(--border-subtle)] p-6 text-center">
             <p className="font-mono text-[10px] text-[var(--fg-3)]">
               {t.studioThemeNoSelection ?? 'Select a theme to inspect its color tokens.'}
             </p>
@@ -458,12 +458,12 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
                   key={key}
                   type="button"
                   onClick={() => handleTokenClick(key)}
-                  className="flex items-center gap-2 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-2 text-left transition-colors hover:border-[var(--fg-3)]"
+                  className="flex items-center gap-2 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-2 text-left transition-colors hover:border-[var(--fg-3)]"
                   title={`Click to rotate hue +30°`}
                 >
                   {/* Color swatch */}
                   <div
-                    className="h-6 w-6 shrink-0 rounded-[2px] border border-[var(--border-subtle)]"
+                    className="h-6 w-6 shrink-0 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)]"
                     style={{ backgroundColor: displayHex }}
                   />
                   {/* Token info */}

@@ -10,7 +10,7 @@
  * importAndInstallBundle, deleteBundle).
  *
  * Visual style follows Swiss/International design tokens:
- *   · rounded-[2px] corners
+ *   · rounded-[var(--dl-radius,2px)] corners
  *   · spacing from the 4/8/16/24/32/48 Tailwind scale only
  *   · typography: text-[10px] mono for body, text-xs for headings
  *   · all colors via CSS custom properties (no bare hex/rgba)
@@ -54,7 +54,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
   };
 
   return (
-    <div className="flex h-full flex-col rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
+    <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -68,7 +68,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
             type="button"
             onClick={handleRefresh}
             disabled={bundlesLoading}
-            className="flex items-center gap-1 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] px-2 py-1 font-mono text-[10px] text-[var(--fg-1)] transition-colors hover:bg-[var(--bg-3)] disabled:opacity-50"
+            className="flex items-center gap-1 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] px-2 py-1 font-mono text-[10px] text-[var(--fg-1)] transition-colors hover:bg-[var(--bg-3)] disabled:opacity-50"
           >
             <RefreshCw className={`h-3 w-3 ${bundlesLoading ? 'animate-spin' : ''}`} />
             {t.studioBundleRefresh}
@@ -77,7 +77,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
             type="button"
             onClick={handleImport}
             disabled={bundlesLoading}
-            className="flex items-center gap-1 rounded-[2px] border border-[var(--primary)] bg-[var(--primary)] px-2 py-1 font-mono text-[10px] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="flex items-center gap-1 rounded-[var(--dl-radius,2px)] border border-[var(--primary)] bg-[var(--primary)] px-2 py-1 font-mono text-[10px] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             <Plus className="h-3 w-3" />
             {t.studioBundleImportBtn}
@@ -97,7 +97,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
             <p className="font-mono text-[10px] text-[var(--fg-3)]">{t.studioBundleLoading}</p>
           </div>
         ) : bundles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-[2px] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-2)] py-12">
+          <div className="flex flex-col items-center justify-center rounded-[var(--dl-radius,2px)] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-2)] py-12">
             <Package className="h-6 w-6 text-[var(--fg-3)]" />
             <p className="mt-2 font-mono text-[10px] text-[var(--fg-3)]">{t.studioBundleEmpty}</p>
             <p className="mt-1 font-mono text-[10px] text-[var(--fg-3)]">
@@ -109,7 +109,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
             {bundles.map((bundle) => (
               <div
                 key={bundle.id}
-                className="flex items-center justify-between rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-3"
+                className="flex items-center justify-between rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-3"
               >
                 <div className="flex flex-col gap-1">
                   <span className="font-mono text-xs font-bold text-[var(--fg-0)]">
@@ -120,7 +120,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
                       {t.studioBundleTagTheme}: {bundle.themeId ?? '—'}
                     </span>
                     {bundle.hasWallpaper && (
-                      <span className="rounded-[2px] bg-[var(--bg-3)] px-1 py-0.5 font-mono text-[10px] text-[var(--fg-1)]">
+                      <span className="rounded-[var(--dl-radius,2px)] bg-[var(--bg-3)] px-1 py-0.5 font-mono text-[10px] text-[var(--fg-1)]">
                         {t.studioBundleHasWallpaper}
                       </span>
                     )}
@@ -134,7 +134,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
                 <button
                   type="button"
                   onClick={() => handleDelete(bundle.id)}
-                  className="flex items-center gap-1 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] px-2 py-1 font-mono text-[10px] text-[var(--fg-2)] transition-colors hover:border-red-500 hover:text-red-500"
+                  className="flex items-center gap-1 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] px-2 py-1 font-mono text-[10px] text-[var(--fg-2)] transition-colors hover:border-red-500 hover:text-red-500"
                 >
                   <Trash2 className="h-3 w-3" />
                   {t.studioBundleDeleteBtn}

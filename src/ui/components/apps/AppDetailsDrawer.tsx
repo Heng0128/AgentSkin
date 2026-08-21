@@ -18,7 +18,10 @@ import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAppsStore } from '@/stores/appsStore';
+import { useShellStore } from '@/stores/shellStore';
 
+import type { UiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
 import type { ScannedApp } from '@shared/types';
 import { Eye, EyeOff, Play, X } from 'lucide-react';
 
@@ -30,6 +33,8 @@ export function AppDetailsDrawer() {
   const hiddenApps = useAppsStore((s) => s.hiddenApps);
   const launch = useAppsStore((s) => s.launch);
   const toggleHidden = useAppsStore((s) => s.toggleHidden);
+  const locale = useShellStore((s) => s.locale);
+  const t: UiMessages = uiMessages[locale];
 
   // Resolve the app from scan result (adapted + other).
   const app: ScannedApp | undefined = drawerAppId
@@ -50,7 +55,7 @@ export function AppDetailsDrawer() {
       aria-hidden={!drawerAppId}
       className={cn(
         'absolute bottom-0 left-0 right-0 z-20 h-[300px] border-t border-border-strong bg-card shadow-float',
-        'transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)]',
+        'transition-transform duration-slow ease-[cubic-bezier(.16,1,.3,1)]',
         drawerAppId ? 'translate-y-0' : 'translate-y-full pointer-events-none',
       )}
     >
@@ -58,8 +63,8 @@ export function AppDetailsDrawer() {
       <button
         type="button"
         onClick={handleClose}
-        aria-label="关闭"
-        className="absolute right-3 top-3 z-10 flex size-6 items-center justify-center rounded-[2px] bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        aria-label={t.appDetailsClose}
+        className="absolute right-3 top-3 z-10 flex size-6 items-center justify-center rounded-[var(--dl-radius,2px)] bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <X size={14} />
       </button>
@@ -67,7 +72,7 @@ export function AppDetailsDrawer() {
       {!app ? (
         /* App not found (e.g. uninstalled while drawer was open) */
         <div className="flex h-full items-center justify-center">
-          <p className="font-mono text-[11px] text-muted-foreground">应用已不可用</p>
+          <p className="as-mono">{t.appDetailsAppUnavailable}</p>
         </div>
       ) : (
         <div className="flex h-full gap-6 px-6 py-5">
@@ -89,32 +94,32 @@ export function AppDetailsDrawer() {
           <div className="flex min-w-0 flex-1 flex-col gap-4">
             {/* Metadata grid */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-              <DetailRow label="路径" value={app.exePath} mono />
+              <DetailRow label={t.appDetailsPath} value={app.exePath} mono />
               <DetailRow
-                label="状态"
+                label={t.appDetailsStatus}
                 value={
                   isRunning ? (
                     <span className="flex items-center gap-1.5">
                       <span className="inline-block size-2 rounded-full bg-cr-success" />
-                      运行中
+                      {t.appDetailsRunning}
                     </span>
                   ) : (
                     <span className="flex items-center gap-1.5">
                       <span className="inline-block size-2 rounded-full bg-[var(--muted-foreground)] opacity-25" />
-                      未启动
+                      {t.appDetailsNotStarted}
                     </span>
                   )
                 }
               />
               <DetailRow
-                label="CDP 端口"
+                label={t.appDetailsCdpPort}
                 value={
                   running?.port !== undefined && running.port !== null ? `:${running.port}` : '—'
                 }
               />
-              <DetailRow label="PID" value={running?.pid ? String(running.pid) : '—'} />
-              <DetailRow label="适配器" value={app.adapterMatch ?? '—'} />
-              <DetailRow label="来源" value={app.source ?? '—'} />
+              <DetailRow label={t.appDetailsPid} value={running?.pid ? String(running.pid) : '—'} />
+              <DetailRow label={t.appDetailsAdapter} value={app.adapterMatch ?? '—'} />
+              <DetailRow label={t.appDetailsSource} value={app.source ?? '—'} />
             </div>
 
             {/* Action buttons */}
@@ -126,18 +131,18 @@ export function AppDetailsDrawer() {
                 disabled={isRunning}
               >
                 <Play size={12} />
-                {isRunning ? '运行中' : '启动'}
+                {isRunning ? t.appDetailsRunning : t.appDetailsLaunch}
               </Button>
               <Button variant="outline" size="sm" onClick={() => toggleHidden(app.id)}>
                 {isHidden ? (
                   <>
                     <Eye size={12} />
-                    显示
+                    {t.appDetailsShow}
                   </>
                 ) : (
                   <>
                     <EyeOff size={12} />
-                    隐藏
+                    {t.appDetailsHide}
                   </>
                 )}
               </Button>

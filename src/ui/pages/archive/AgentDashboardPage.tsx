@@ -138,7 +138,7 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
           </div>
 
           {/* 最近的环境 — 快捷入口 */}
-          <section className="mb-5 rounded-[2px] border border-border bg-card p-4">
+          <section className="mb-5 rounded-[var(--dl-radius,2px)] border border-border bg-card p-4">
             <h2 className="mb-3 font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
               {t.recentEnvironments}
             </h2>
@@ -157,9 +157,9 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
                     <button
                       type="button"
                       onClick={() => setRoute('workspace')}
-                      className="group flex w-full items-center gap-2 rounded-[2px] border border-border/60 bg-background px-3 py-2 text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
+                      className="group flex w-full items-center gap-2 rounded-[var(--dl-radius,2px)] border border-border/60 bg-background px-3 py-2 text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
                     >
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-[2px] bg-card2 text-[12px] font-semibold text-muted-foreground">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-[var(--dl-radius,2px)] bg-card2 text-[12px] font-semibold text-muted-foreground">
                         {(env.name || env.agentId).charAt(0).toUpperCase()}
                       </span>
                       <span className="min-w-0">
@@ -178,7 +178,7 @@ export default function AgentDashboardPage({ controller }: { controller: AppCont
           </section>
 
           {/* 最近活动 — 已接入真实 apply trace 数据 */}
-          <section className="rounded-[2px] border border-border bg-card p-4">
+          <section className="rounded-[var(--dl-radius,2px)] border border-border bg-card p-4">
             <h2 className="mb-3 font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
               {t.recentActivity}
             </h2>
@@ -228,7 +228,7 @@ function ActivityRow({
   const relativeTime = formatRelativeTime(trace.finishedAt);
 
   return (
-    <li className="flex items-center gap-2 rounded-[2px] px-1.5 py-1">
+    <li className="flex items-center gap-2 rounded-[var(--dl-radius,2px)] px-1.5 py-1">
       <span className="font-mono text-[11px] text-foreground leading-tight">{description}</span>
       <span className="ml-auto flex shrink-0 items-center gap-1.5">
         <span className="font-mono text-[10px] text-muted-foreground/60 font-mono">
@@ -264,7 +264,7 @@ function StatTile({
     <button
       type="button"
       onClick={onClick}
-      className="cursor-pointer rounded-[2px] border border-border bg-card p-4 text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
+      className="cursor-pointer rounded-[var(--dl-radius,2px)] border border-border bg-card p-4 text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
     >
       <div className="mb-2">
         <span className="font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">

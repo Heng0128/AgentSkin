@@ -320,8 +320,8 @@ export function DetailPanel({
             <PaintBucket className="size-8 opacity-50" />
           </div>
         )}
-        {/* Subtle inner shadow for depth */}
-        <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_24px_var(--border)]" />
+        {/* Subtle border for depth */}
+        <div className="pointer-events-none absolute inset-0 shadow-none border border-border" />
       </div>
 
       {/* Right: info + actions */}

@@ -201,7 +201,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
       {stats.overflowCount > 0 && (
         <div className="flex items-center gap-2 rounded-md border border-cr-warning/30 bg-cr-warning/10 px-3 py-2">
           <span className="font-mono text-[11px] text-cr-warning">
-            ⚠ 历史记录已截断，较早的 trace 被丢弃 (overflow: {stats.overflowCount})
+            ⚠ {t.settingsPerfOverflow(stats.overflowCount)}
           </span>
         </div>
       )}

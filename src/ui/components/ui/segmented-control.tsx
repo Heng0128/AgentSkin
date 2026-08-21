@@ -29,6 +29,7 @@ export function SegmentedControl<T extends string>({
   onChange,
   size = 'md',
   bordered = false,
+  disabled = false,
   className,
 }: {
   options: SegmentedOption<T>[];
@@ -36,6 +37,7 @@ export function SegmentedControl<T extends string>({
   onChange: (value: T) => void;
   size?: 'sm' | 'md';
   bordered?: boolean;
+  disabled?: boolean;
   className?: string;
 }) {
   const iconOnly = options.every((opt) => !opt.label);
@@ -43,6 +45,7 @@ export function SegmentedControl<T extends string>({
   // radiogroup ←/→ arrow-key navigation: move selection to the neighbouring
   // option, wrapping around at the ends.
   const onKeyDown = (e: ReactKeyboardEvent) => {
+    if (disabled) return;
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
     e.preventDefault();
     const idx = options.findIndex((opt) => opt.value === value);
@@ -54,10 +57,12 @@ export function SegmentedControl<T extends string>({
   return (
     <div
       role="radiogroup"
+      aria-disabled={disabled}
       onKeyDown={onKeyDown}
       className={cn(
         'inline-flex items-center gap-1 rounded-md bg-muted p-1',
         bordered && 'border border-border',
+        disabled && 'pointer-events-none opacity-50',
         className,
       )}
     >
@@ -72,6 +77,7 @@ export function SegmentedControl<T extends string>({
             role="radio"
             aria-checked={active}
             title={opt.title}
+            disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
               'inline-flex items-center justify-center rounded-md font-medium transition-all duration-fast',

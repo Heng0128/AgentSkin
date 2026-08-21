@@ -33,7 +33,7 @@ export function ThemeCard({
       className={cn(
         'group flex h-full flex-col overflow-hidden rounded-md  bg-card text-left transition-all duration-fast ease-out',
         selected
-          ? 'border-primary/60 shadow-[inset_3px_0_0_var(--primary)]'
+          ? 'border-primary/60 border-l-[3px] border-primary'
           : '',
       )}
     >

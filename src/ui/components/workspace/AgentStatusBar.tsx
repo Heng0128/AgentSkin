@@ -228,7 +228,7 @@ export function AgentStatusBar({
                 className={cn(
                   'relative flex size-8 shrink-0 items-center justify-center rounded-md',
                   'bg-accent',
-                  'transition-transform duration-base group-hover/pill:scale-105',
+                  'transition-colors duration-base group-hover/pill:bg-accent',
                 )}
               >
                 <AppMark appId={env.agent.id} size={20} />

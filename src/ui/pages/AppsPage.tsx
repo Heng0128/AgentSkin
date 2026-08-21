@@ -169,7 +169,7 @@ export function AppsPage() {
               <h1 className="font-display text-sm font-bold tracking-tight text-foreground">
                 应用
               </h1>
-              <p className="mt-1 text-[10px] text-muted-foreground">
+              <p className="mt-1 as-micro">
                 单击查看详情 · 双击启动应用 · 已适配应用自动注入 CDP 端口
               </p>
             </div>
@@ -190,7 +190,7 @@ export function AppsPage() {
                 type="button"
                 onClick={() => setCategoryFilter(tab.key)}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-[2px] px-3 py-1.5 text-[12px] font-medium transition-colors duration-fast',
+                  'flex items-center gap-1.5 rounded-[var(--dl-radius,2px)] px-3 py-1.5 text-[12px] font-medium transition-colors duration-fast',
                   categoryFilter === tab.key
                     ? 'bg-accent text-foreground'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -212,12 +212,12 @@ export function AppsPage() {
           {/* Scan progress bar */}
           {scanning && (
             <div
-              className="mb-5 h-1 overflow-hidden rounded-[2px] bg-muted"
+              className="mb-5 h-1 overflow-hidden rounded-[var(--dl-radius,2px)] bg-muted"
               role="progressbar"
               aria-valuenow={scanProgress}
             >
               <div
-                className="h-full bg-cr-primary transition-all duration-300"
+                className="h-full bg-cr-primary transition-all duration-slow"
                 style={{ width: `${scanProgress}%` }}
               />
             </div>
@@ -242,7 +242,7 @@ export function AppsPage() {
           )}
 
           {/* Status legend */}
-          <div className="mb-5 flex items-center gap-4 text-[10px] text-muted-foreground">
+          <div className="mb-5 flex items-center gap-4 as-micro">
             <span className="flex items-center gap-2">
               <span className="inline-block size-2 rounded-full bg-cr-success" />
               运行中

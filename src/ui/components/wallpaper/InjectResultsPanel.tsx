@@ -227,7 +227,7 @@ export function InjectResultsPanel({
                             : isInstalled
                               ? 'border-cr-warning/30 bg-cr-warning/5 opacity-60'
                               : 'bg-muted/20 opacity-35 cursor-not-allowed',
-                    isApplying && 'opacity-60 scale-95',
+                    isApplying && 'opacity-60',
                   )}
                 >
                   {isApplying ? (

@@ -81,7 +81,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
           aria-label={t.studioProgress}
         >
           <div
-            className="h-full bg-[var(--accent)] transition-[width] duration-300"
+            className="h-full bg-[var(--accent)] transition-[width] duration-slow"
             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
           />
         </div>
@@ -100,9 +100,9 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
                 className={[
                   'size-[3px]',
                   isComplete && 'rounded-[1px] bg-[var(--accent)]',
-                  isCurrent && 'rounded-[2px] bg-[var(--accent)] animate-pulse',
+                  isCurrent && 'rounded-[var(--dl-radius,2px)] bg-[var(--accent)] animate-pulse',
                   isPending &&
-                    'rounded-[2px] bg-[var(--bg-4)] border border-[var(--border-subtle)]',
+                    'rounded-[var(--dl-radius,2px)] bg-[var(--bg-4)] border border-[var(--border-subtle)]',
                 ]
                   .filter(Boolean)
                   .join(' ')}

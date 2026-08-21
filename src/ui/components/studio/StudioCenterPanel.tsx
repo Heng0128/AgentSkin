@@ -41,7 +41,10 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
   return (
     <div className="flex h-full flex-col">
       {/* Tab bar */}
-      <div className="flex items-center gap-0 rounded-[2px]" style={{ background: 'var(--bg-2)' }}>
+      <div
+        className="flex items-center gap-0 rounded-[var(--dl-radius,2px)]"
+        style={{ background: 'var(--bg-2)' }}
+      >
         {CENTER_TABS.map((tab) => (
           <button
             key={tab.view}

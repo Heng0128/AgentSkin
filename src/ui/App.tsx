@@ -16,6 +16,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { type Selection, useAppController } from '@/hooks/useAppController';
 import { useCommandPalette } from '@/hooks/useCommandPalette';
 import { cn } from '@/lib/utils';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 // Lazy-load page components so each route is a separate chunk. On first
 // navigation, only the requested page's JS is fetched — the initial bundle
@@ -40,6 +41,31 @@ export default function App() {
   const controller = useAppController();
   const palette = useCommandPalette();
   const lastSelection = useRef<Selection>(null);
+  const radiusScale = useSettingsStore((s) => s.radiusScale);
+  const density = useSettingsStore((s) => s.density);
+  const motion = useSettingsStore((s) => s.motion);
+
+  // Sync the user-selected corner-radius scale to the CSS variable on
+  // :root so every component using rounded-[var(--dl-radius,2px)] reacts.
+  useEffect(() => {
+    document.documentElement.style.setProperty('--dl-radius', `${radiusScale}px`);
+  }, [radiusScale]);
+
+  // Sync the user-selected density to a CSS variable so spacing-aware
+  // components can scale proportionally (--dl-density-scale).
+  useEffect(() => {
+    const scale = density === 'compact' ? '0.85' : density === 'cozy' ? '1.15' : '1';
+    document.documentElement.style.setProperty('--dl-density-scale', scale);
+  }, [density]);
+
+  // Sync the user-selected motion intensity: reduce half, none = 0.
+  // Also toggles data-motion on <html> for targeted selectors and honors
+  // prefers-reduced-motion automatically via the 'none' branch.
+  useEffect(() => {
+    const multiplier = motion === 'reduced' ? '0.5' : motion === 'none' ? '0' : '1';
+    document.documentElement.style.setProperty('--duration-multiplier', multiplier);
+    document.documentElement.dataset.motion = motion;
+  }, [motion]);
   // P2-6: Previously this assignment ran inside the render function body,
   // violating React's purity requirement (writing to a ref during render is a
   // side-effect visible outside the render). In Strict Mode renders can run

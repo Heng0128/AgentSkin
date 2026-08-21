@@ -255,7 +255,7 @@ function SliderRow({
       <div className="relative h-4 flex items-center">
         {/* Track background ( thin + flat) */}
         <div
-          className="absolute inset-x-0 h-[4px] rounded-[2px]"
+          className="absolute inset-x-0 h-[4px] rounded-[var(--dl-radius,2px)]"
           style={{ background: 'var(--border)' }}
         />
         {/* Filled portion (primary red) */}
@@ -280,7 +280,7 @@ function SliderRow({
         />
         {/* Thumb indicator */}
         <div
-          className="pointer-events-none absolute size-[11px] -translate-x-1/2 rounded-[2px] border-2"
+          className="pointer-events-none absolute size-[11px] -translate-x-1/2 rounded-[var(--dl-radius,2px)] border-2"
           style={{
             left: `${pct}%`,
             borderColor: 'var(--primary)',
@@ -458,7 +458,10 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
       className="flex items-center gap-2  pb-1 pt-2 font-mono text-[10px] font-semibold "
       style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)' }}
     >
-      <span className="size-[3px] rounded-[2px]" style={{ background: 'var(--primary)' }} />
+      <span
+        className="size-[3px] rounded-[var(--dl-radius,2px)]"
+        style={{ background: 'var(--primary)' }}
+      />
       <span>{children}</span>
     </div>
   );
@@ -618,7 +621,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
                 style={{ borderRadius: 'var(--radius)' }}
               >
                 <div className="flex min-w-0 flex-1 items-center gap-1">
-                  <span className="flex shrink-0 overflow-hidden rounded-[2px] ">
+                  <span className="flex shrink-0 overflow-hidden rounded-[var(--dl-radius,2px)] ">
                     {['accent', 'background', 'foreground', 'surface'].map((k) =>
                       p.colors[k] ? (
                         <span

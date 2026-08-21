@@ -28,15 +28,70 @@ function currentT() {
   return uiMessages[locale];
 }
 
-export type SettingsSection = 'general' | 'system' | 'about' | 'advanced';
+export type SettingsSection = 'general' | 'appearance' | 'system' | 'about' | 'advanced';
+
+/** User-selectable corner-radius scale (string-valued so it satisfies SegmentedOption<string>). Persisted to localStorage (UI-shell only). */
+export type RadiusScale = '0' | '2' | '4' | '8';
+
+/** User-selectable density (UI-shell CSS variable). Persisted to localStorage. */
+export type Density = 'compact' | 'comfortable' | 'cozy';
+
+/** User-selectable motion intensity (UI-shell CSS variable). Persisted to localStorage. */
+export type Motion = 'full' | 'reduced' | 'none';
+
+const RADIUS_SCALE_KEY = 'agentskin.radiusScale';
+const DENSITY_KEY = 'agentskin.density';
+const MOTION_KEY = 'agentskin.motion';
+
+function loadRadiusScale(): RadiusScale {
+  try {
+    const raw = localStorage.getItem(RADIUS_SCALE_KEY);
+    if (raw === '0' || raw === '2' || raw === '4' || raw === '8') return raw;
+  } catch {
+    // localStorage unavailable (private mode) — fall through to default.
+  }
+  return '2';
+}
+
+function loadDensity(): Density {
+  try {
+    const raw = localStorage.getItem(DENSITY_KEY);
+    if (raw === 'compact' || raw === 'comfortable' || raw === 'cozy') return raw;
+  } catch {
+    // localStorage unavailable — fall through to default.
+  }
+  return 'comfortable';
+}
+
+function loadMotion(): Motion {
+  try {
+    const raw = localStorage.getItem(MOTION_KEY);
+    if (raw === 'full' || raw === 'reduced' || raw === 'none') return raw;
+  } catch {
+    // localStorage unavailable — fall through to default.
+  }
+  return 'full';
+}
 
 interface SettingsState {
   settingsOpen: boolean;
   settingsSection: SettingsSection;
   settings: DesktopSettings | null;
+  /** User-selected corner-radius scale (UI-shell CSS variable). */
+  radiusScale: RadiusScale;
+  /** User-selected density (UI-shell CSS variable). */
+  density: Density;
+  /** User-selected motion intensity (UI-shell CSS variable). */
+  motion: Motion;
 
   setSettingsOpen: (open: boolean) => void;
   setSettingsSection: (section: SettingsSection) => void;
+  /** Persist and apply a new corner-radius scale. */
+  setRadiusScale: (value: RadiusScale) => void;
+  /** Persist and apply a new density. */
+  setDensity: (value: Density) => void;
+  /** Persist and apply a new motion intensity. */
+  setMotion: (value: Motion) => void;
   /** Load settings so the page is ready when the route switches. */
   openSettings: (section?: SettingsSection) => Promise<void>;
   /** Load settings data without mutating the active section. */
@@ -51,9 +106,36 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   settingsOpen: false,
   settingsSection: 'general',
   settings: null,
+  radiusScale: loadRadiusScale(),
+  density: loadDensity(),
+  motion: loadMotion(),
 
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setSettingsSection: (settingsSection) => set({ settingsSection }),
+  setRadiusScale: (radiusScale) => {
+    try {
+      localStorage.setItem(RADIUS_SCALE_KEY, String(radiusScale));
+    } catch {
+      // localStorage unavailable — state still updates so the current session reflects the change.
+    }
+    set({ radiusScale });
+  },
+  setDensity: (density) => {
+    try {
+      localStorage.setItem(DENSITY_KEY, density);
+    } catch {
+      // localStorage unavailable — state still updates so the current session reflects the change.
+    }
+    set({ density });
+  },
+  setMotion: (motion) => {
+    try {
+      localStorage.setItem(MOTION_KEY, motion);
+    } catch {
+      // localStorage unavailable — state still updates so the current session reflects the change.
+    }
+    set({ motion });
+  },
 
   openSettings: async (section = 'general') => {
     set({ settingsSection: section });

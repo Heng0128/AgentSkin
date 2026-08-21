@@ -35,7 +35,7 @@ const NavButton = ({ item, active, collapsed, onClick }: NavButtonProps) => {
         'group relative h-9 justify-start gap-2 rounded-md m-[4px_8px] text-muted-foreground font-medium transition-all duration-fast ease-out',
         collapsed && 'justify-center m-[4px_8px] p-0',
         'hover:bg-card2 hover:text-foreground',
-        active && 'bg-accent text-foreground shadow-[inset_3px_0_0_var(--primary)]',
+        active && 'bg-accent text-foreground border-l-[3px] border-primary',
         active && '[&_svg]:text-primary',
       )}
     >

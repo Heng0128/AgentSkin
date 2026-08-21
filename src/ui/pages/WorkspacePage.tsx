@@ -191,7 +191,7 @@ export function WorkspacePage() {
       {/* Health status bar — theme injection diagnostics                  */}
       {/* ---------------------------------------------------------------- */}
       {healthReport ? (
-        <div className="flex items-center gap-4  px-4 py-2 bg-[var(--bg-2)] border border-[var(--border-subtle)] rounded-[2px] mx-4 mb-3">
+        <div className="flex items-center gap-4  px-4 py-2 bg-[var(--bg-2)] border border-[var(--border-subtle)] rounded-[var(--dl-radius,2px)] mx-4 mb-3">
           {/* Score with color indicator */}
           <span className="flex items-center gap-2">
             {healthReport.score >= 80 ? (
@@ -246,7 +246,7 @@ export function WorkspacePage() {
           </span>
         </div>
       ) : (
-        <div className="flex items-center  px-4 py-2 bg-[var(--bg-2)] border border-[var(--border-subtle)] rounded-[2px] mx-4 mb-3">
+        <div className="flex items-center  px-4 py-2 bg-[var(--bg-2)] border border-[var(--border-subtle)] rounded-[var(--dl-radius,2px)] mx-4 mb-3">
           <span className="text-[11px] text-muted-foreground">{t.workspaceHealthSelectAgent}</span>
         </div>
       )}
@@ -315,7 +315,7 @@ export function WorkspacePage() {
                   <button
                     type="button"
                     onClick={() => toggleInspectMode()}
-                    className={`flex items-center gap-1 rounded-[2px] px-2 py-0.5 font-mono text-[10px] transition-colors ${
+                    className={`flex items-center gap-1 rounded-[var(--dl-radius,2px)] px-2 py-0.5 font-mono text-[10px] transition-colors ${
                       inspectMode
                         ? 'bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:bg-[var(--bg-3)]'

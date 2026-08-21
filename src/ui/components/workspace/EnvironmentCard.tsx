@@ -174,7 +174,7 @@ export function EnvironmentCard({
           <Avatar
             size="default"
             className={cn(
-              'size-10 shrink-0 transition-transform duration-base group-hover/card:scale-105',
+              'size-10 shrink-0 transition-[border-color] duration-base group-hover/card:border-primary/40',
               'ring-1 ring-border-strong/50',
             )}
           >
@@ -198,7 +198,7 @@ export function EnvironmentCard({
                 </span>
               )}
             </div>
-            <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+            <p className="mt-0.5 truncate as-micro">
               {env.agent.displayName}
               {' · '}
               {env.theme?.name || t.statusNoTheme}

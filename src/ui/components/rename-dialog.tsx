@@ -51,7 +51,7 @@ export function RenameDialog({
       {/* biome-ignore lint/a11y/noStaticElementInteractions: stopPropagation only — prevents background close when clicking inside the dialog content. No keyboard equivalent needed. */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: stopPropagation only — no keyboard action needed. */}
       <div
-        className="w-80 rounded-md  bg-card p-4 shadow-float scale-in-95 animate-in zoom-in-95 duration-fast"
+        className="w-80 rounded-md  bg-card p-4 shadow-float animate-page-enter duration-fast"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-sm font-semibold">{title}</h3>

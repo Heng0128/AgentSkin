@@ -84,12 +84,12 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
 
   // Icon button class — transparent by default, reveals bg + border on hover.
   const iconBtn =
-    'flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-[background-color,border-color,color] duration-150 hover:bg-card2 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent';
+    'flex h-7 w-7 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-[background-color,border-color,color] duration-fast hover:bg-card2 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-transparent disabled:hover:bg-transparent';
 
   return (
     <header
       className={cn(
-        'relative flex h-[38px] shrink-0 items-center justify-between gap-2 px-2 transition-[background] duration-400',
+        'relative flex h-[38px] shrink-0 items-center justify-between gap-2 px-2 transition-[background] duration-slower',
         '',
         // Surface solid default; glass switch when wallpaper active.
         hasWallpaper

@@ -1,15 +1,1 @@
-src/main/scene/ce-parser.ts(140,27): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/ce-parser.ts(141,27): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/ce-parser.ts(147,26): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/ce-parser.ts(148,27): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/ce-parser.ts(153,27): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/ce-parser.ts(154,24): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/ce-parser.ts(155,24): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/ce-parser.ts(156,24): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/ce-parser.ts(161,26): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/ce-parser.ts(196,31): error TS2341: Property 'buf' is private and only accessible within class 'BinaryReader'.
-src/main/scene/sce-parser.ts(193,36): error TS2345: Argument of type 'number | { min: number; max: number; } | undefined' is not assignable to parameter of type 'number | { x: number; y: number; } | undefined'.
-  Type '{ min: number; max: number; }' is not assignable to type 'number | { x: number; y: number; } | undefined'.
-src/ui/components/studio/center/CenterTabDesignLanguage.tsx(121,14): error TS2339: Property 'studioTabDesignLanguage' does not exist on type '{ installedNav: string; navGroupCore: string; navGroupSystem: string; navDashboard: string; navWorkspace: string; navApps: string; navAgents: string; navThemes: string; navSettings: string; ... 1042 more ...; tokenLockedCount: (locked: number, total: number) => string; }'.
-src/ui/components/studio/center/CenterTabDesignLanguage.tsx(124,14): error TS2339: Property 'studioTabDesignLanguageDesc' does not exist on type '{ installedNav: string; navGroupCore: string; navGroupSystem: string; navDashboard: string; navWorkspace: string; navApps: string; navAgents: string; navThemes: string; navSettings: string; ... 1042 more ...; tokenLockedCount: (locked: number, total: number) => string; }'.
-src/ui/pages/AppsPage.tsx(77,47): error TS2304: Cannot find name 'useState'.
+error TS5112: tsconfig.json is present but will not be loaded if files are specified on commandline. Use '--ignoreConfig' to skip this error.

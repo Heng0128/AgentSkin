@@ -15,7 +15,7 @@ export function CenterTabWallpaper({ t }: { t: UiMessages }) {
   const desc = t.studioTabWallpaperDesc;
 
   return (
-    <div className="rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
+    <div className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">{t.studioTabWallpaper}</h3>
       <p className="mt-2 font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">{desc}</p>
       <div className="mt-4">

@@ -48,7 +48,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
   const isDebugReady = appStatus?.debugReady ?? false;
 
   return (
-    <div className="rounded-[2px] border border-border bg-card overflow-hidden">
+    <div className="rounded-[var(--dl-radius,2px)] border border-border bg-card overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border px-4 py-2">
         <AppMark appId={appId} size={18} />
@@ -116,7 +116,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
           value={portDraft}
           inputMode="numeric"
           placeholder={defaultPort > 0 ? String(defaultPort) : '—'}
-          className="h-[30px] w-24 rounded-[2px] border-border bg-muted font-mono text-[11px] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25"
+          className="h-[30px] w-24 rounded-[var(--dl-radius,2px)] border-border bg-muted font-mono text-[11px] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25"
           onChange={(event) => setPortDraft(event.target.value)}
           onBlur={() => void commitPort()}
           onKeyDown={(event) => {

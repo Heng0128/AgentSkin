@@ -185,7 +185,7 @@ export function EnvironmentGrid({
       <div className="mt-6">
         {/* section header */}
         <div className="mb-3 flex items-center gap-2">
-          <span className="text-[11px] font-medium text-muted-foreground">{title}</span>
+          <span className="as-label">{title}</span>
         </div>
         <StatusErrorBanner
           error={error ?? null}
@@ -197,7 +197,7 @@ export function EnvironmentGrid({
           <div className="mx-auto mb-3 flex size-10 items-center justify-center rounded-md bg-card2">
             <Bot className="size-5 text-muted-foreground/50" />
           </div>
-          <p className="font-mono text-[11px] text-muted-foreground">{t.emptyEnvironmentsHint}</p>
+          <p className="as-mono">{t.emptyEnvironmentsHint}</p>
           {onBrowseThemes && (
             <Button
               size="sm"
@@ -217,7 +217,7 @@ export function EnvironmentGrid({
     <div className="mt-5">
       {/* section header with mono label */}
       <div className="mb-3 flex items-center gap-2 px-1">
-        <span className="text-[11px] font-medium text-muted-foreground">{title}</span>
+        <span className="as-label">{title}</span>
         <span className="inline-flex size-[18px] items-center justify-center rounded-md bg-card2 font-mono text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
           {environments.length}
         </span>

@@ -73,11 +73,7 @@ export function AgentDetailSheet({
                   <AgentStatusDot variant={envToDotVariant(env)} size="sm" />
                   <span className="text-sm font-medium text-foreground">{statusLabel(env, t)}</span>
                 </div>
-                {env.theme && (
-                  <span className="font-mono text-[11px] text-muted-foreground">
-                    {env.theme.name}
-                  </span>
-                )}
+                {env.theme && <span className="as-mono">{env.theme.name}</span>}
               </div>
 
               {/* 主题预览 — 视觉锚点 */}

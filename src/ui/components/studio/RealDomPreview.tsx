@@ -71,9 +71,9 @@ function RealDomPreview({
       {/* traffic-light status bar */}
       <div className="flex h-7 items-center gap-2  px-3" style={{ background: 'var(--card)' }}>
         <div className="flex gap-1">
-          <span className="size-[7px] rounded-[2px] bg-[var(--destructive)]" />
-          <span className="size-[7px] rounded-[2px] bg-[var(--cr-warning)]" />
-          <span className="size-[7px] rounded-[2px] bg-[var(--cr-success)]" />
+          <span className="size-[7px] rounded-[var(--dl-radius,2px)] bg-[var(--destructive)]" />
+          <span className="size-[7px] rounded-[var(--dl-radius,2px)] bg-[var(--cr-warning)]" />
+          <span className="size-[7px] rounded-[var(--dl-radius,2px)] bg-[var(--cr-success)]" />
         </div>
         <span
           className="ml-2 truncate font-mono text-[10px]"

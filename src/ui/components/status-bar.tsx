@@ -97,11 +97,11 @@ export function StatusBar() {
   const injectedCount = status?.apps.filter((app) => app.activeThemeId !== null).length ?? 0;
 
   return (
-    <footer className="flex h-[28px] shrink-0 items-center justify-between gap-4  bg-[var(--surface)] px-3 [-webkit-app-region:drag] transition-[background] duration-400">
+    <footer className="flex h-[28px] shrink-0 items-center justify-between gap-4  bg-[var(--surface)] px-3 [-webkit-app-region:drag] transition-[background] duration-slower">
       {/* Left cluster: LED + CDP status. */}
       <div className="flex items-center gap-1 [-webkit-app-region:no-drag]">
         <span className={cn('size-2 shrink-0 rounded-full', led.dot)} aria-hidden />
-        <span className="text-[11px] font-medium text-muted-foreground">{cdpLabel}</span>
+        <span className="as-label">{cdpLabel}</span>
       </div>
 
       {/* Center cluster: platform count · injected · status error with retry. */}
@@ -143,7 +143,7 @@ export function StatusBar() {
           aria-pressed={injectDockOpen}
           onClick={() => setInjectDockOpen((open) => !open)}
           className={cn(
-            'inline-grid place-items-center size-7 rounded-md border bg-transparent text-[11px] transition-[background,border-color] duration-400 active:translate-y-[1px]',
+            'inline-grid place-items-center size-7 rounded-md border bg-transparent text-[11px] transition-[background,border-color] duration-slower active:translate-y-[1px]',
             injectDockOpen
               ? 'border-primary bg-card2 text-primary'
               : 'text-muted-foreground hover:bg-card2 hover:text-foreground',

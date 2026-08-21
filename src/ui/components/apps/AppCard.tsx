@@ -97,9 +97,9 @@ export function AppCard({
       onDoubleClick={onDoubleClick}
       className={cn(
         'group flex h-auto w-full flex-col items-center gap-2 rounded-md p-2',
-        'transition-transform duration-200 ease-out hover:bg-muted/40',
-        'hover:scale-[1.02]',
-        'active:scale-95',
+        'transition-colors duration-base ease-out hover:bg-muted/40',
+        'hover:bg-accent/50',
+        'active:bg-accent/70',
         isRunning && 'ring-2 ring-cr-success/50',
       )}
     >

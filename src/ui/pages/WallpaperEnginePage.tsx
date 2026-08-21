@@ -311,7 +311,7 @@ function Toolbar({
         <button
           type="button"
           onClick={onImport}
-          className="flex items-center gap-1 rounded-md  bg-card2 px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+          className="flex items-center gap-1 rounded-md  bg-card2 px-2 py-1 as-label transition-colors hover:border-primary hover:text-primary"
         >
           <Download className="size-3" />
           {t.wallpaperImport}

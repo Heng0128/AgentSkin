@@ -183,7 +183,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                     if (!tokens || !brand) return null;
                     const strategyKey = getStrategyKey(tokens.dark);
                     return (
-                      <div className="flex flex-col gap-[var(--space-1)] p-[var(--space-2)] rounded-[2px] border border-[var(--bg-3)]">
+                      <div className="flex flex-col gap-[var(--space-1)] p-[var(--space-2)] rounded-[var(--dl-radius,2px)] border border-[var(--bg-3)]">
                         <div className="flex items-center justify-between">
                           <span className="font-mono text-[length:10px] text-[var(--fg-2)] uppercase tracking-wider">
                             {t.studioProfileSummary}
@@ -453,7 +453,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                     )}
 
                     <span
-                      className="size-[5px] rounded-[2px]"
+                      className="size-[5px] rounded-[var(--dl-radius,2px)]"
                       style={{
                         background: status?.installed ? 'var(--cr-ok)' : 'var(--fg-3)',
                       }}

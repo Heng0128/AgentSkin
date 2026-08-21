@@ -60,7 +60,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
       className={cn(
         'fixed bottom-11 left-1/2 z-[90] -translate-x-1/2',
         'flex items-center gap-2 rounded-md  bg-popover px-4 py-2 shadow-float backdrop-blur-none',
-        'transition-[opacity,filter] duration-300',
+        'transition-[opacity,filter] duration-slow',
         dimmed && 'opacity-40 saturate-[0.6]',
       )}
       role="dialog"

@@ -126,7 +126,7 @@ function DriftAgentCard({
           onClick={() => void handleRegen()}
           disabled={regenLoading}
           className={cn(
-            'inline-flex items-center gap-1 rounded-md  bg-muted/30 px-2 py-1 font-mono text-[11px]   text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50',
+            'inline-flex items-center gap-1 rounded-md  bg-muted/30 px-2 py-1 as-mono transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50',
           )}
           title={t.settingsDriftStatusManualRegen}
         >

@@ -50,7 +50,7 @@ function StatTile({
     <button
       type="button"
       onClick={onClick}
-      className="cursor-pointer rounded-[2px] border border-border bg-card p-4 text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
+      className="cursor-pointer rounded-[var(--dl-radius,2px)] border border-border bg-card p-4 text-left transition-colors duration-fast hover:border-border-strong hover:bg-card2"
     >
       <div className="mb-2">
         <span className="font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground">
@@ -92,7 +92,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
   const isDebugReady = appStatus?.debugReady ?? false;
 
   return (
-    <div className="rounded-[2px] border border-border bg-card overflow-hidden">
+    <div className="rounded-[var(--dl-radius,2px)] border border-border bg-card overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border px-4 py-2">
         <AppMark appId={appId} size={18} />
@@ -160,7 +160,7 @@ function AgentConfigCard({ controller, appId }: { controller: AppController; app
           value={portDraft}
           inputMode="numeric"
           placeholder={defaultPort > 0 ? String(defaultPort) : '—'}
-          className="h-[30px] w-24 rounded-[2px] border-border bg-muted font-mono text-[11px] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25"
+          className="h-[30px] w-24 rounded-[var(--dl-radius,2px)] border-border bg-muted font-mono text-[11px] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25"
           onChange={(event) => setPortDraft(event.target.value)}
           onBlur={() => void commitPort()}
           onKeyDown={(event) => {
@@ -200,7 +200,7 @@ function SwissPanel({
   return (
     <div
       className={cn(
-        'rounded-[2px] border border-border bg-card overflow-hidden',
+        'rounded-[var(--dl-radius,2px)] border border-border bg-card overflow-hidden',
         'transition-[border-color,background-color] duration-200 hover:border-border-strong',
         className,
       )}
@@ -236,7 +236,7 @@ function QuickButton({
       disabled={disabled}
       className={cn(
         'group/qbtn relative flex flex-col items-start gap-1.5 overflow-hidden',
-        'rounded-[2px] border border-border bg-card2 px-3 py-3 pb-2',
+        'rounded-[var(--dl-radius,2px)] border border-border bg-card2 px-3 py-3 pb-2',
         'text-left text-foreground transition-[background-color,border-color] duration-[180ms]',
         'hover:border-border-strong',
         disabled && 'pointer-events-none opacity-40',
@@ -487,7 +487,7 @@ export function UnifiedWorkspacePage({ controller }: { controller: AppController
 
           {/* 4. Agent config collapsible section */}
           <section className="mt-4">
-            <details className="rounded-[2px] border border-border bg-card overflow-hidden">
+            <details className="rounded-[var(--dl-radius,2px)] border border-border bg-card overflow-hidden">
               <summary className="cursor-pointer select-none px-4 py-3 font-mono text-[9.5px] font-semibold tracking-[0.14em] uppercase text-muted-foreground transition-colors duration-fast hover:bg-card2">
                 Agent · 配置
               </summary>

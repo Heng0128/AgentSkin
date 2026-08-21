@@ -12,6 +12,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import {
   Select,
   SelectContent,
@@ -24,7 +25,12 @@ import type { ThemeMode } from '@/design/theme-mode';
 import type { AppController, SettingsSection } from '@/hooks/useAppController';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
-import { useSettingsStore } from '@/stores/settingsStore';
+import {
+  type Density,
+  type Motion,
+  type RadiusScale,
+  useSettingsStore,
+} from '@/stores/settingsStore';
 
 import {
   ArrowLeft,
@@ -33,6 +39,7 @@ import {
   FileText,
   Info,
   LayoutDashboard,
+  Palette,
   Settings,
 } from 'lucide-react';
 
@@ -178,6 +185,12 @@ export function SettingsPage({ controller }: { controller: AppController }) {
   const { mode, setMode } = useThemeMode();
   const section = controller.settingsSection;
   const setSection = controller.setSettingsSection;
+  const radiusScale = useSettingsStore((s) => s.radiusScale);
+  const setRadiusScale = useSettingsStore((s) => s.setRadiusScale);
+  const density = useSettingsStore((s) => s.density);
+  const setDensity = useSettingsStore((s) => s.setDensity);
+  const motion = useSettingsStore((s) => s.motion);
+  const setMotion = useSettingsStore((s) => s.setMotion);
 
   // Copy logs to clipboard — moved from the old LogDrawer sheet.
   const [copied, setCopied] = useState(false);
@@ -230,9 +243,30 @@ export function SettingsPage({ controller }: { controller: AppController }) {
 
   const sections: Array<{ id: SettingsSection; label: string; icon: typeof Settings }> = [
     { id: 'general', label: t.settingsGeneralTitle, icon: Settings },
+    { id: 'appearance', label: t.settingsAppearance, icon: Palette },
     { id: 'system', label: t.settingsSystemTitle, icon: FileText },
     { id: 'about', label: t.settingsAbout, icon: Info },
     { id: 'advanced', label: t.settingsAdvancedTitle, icon: LayoutDashboard },
+  ];
+
+  /** Options for the radius SegmentedControl on the appearance section. */
+  const radiusOptions: SegmentedOption<RadiusScale>[] = [
+    { value: '0', label: t.settingsRadiusSharp },
+    { value: '2', label: t.settingsRadiusSubtle },
+    { value: '4', label: t.settingsRadiusDefault },
+    { value: '8', label: t.settingsRadiusSoft },
+  ];
+  /** Options for the density SegmentedControl on the appearance section. */
+  const densityOptions: SegmentedOption<Density>[] = [
+    { value: 'compact', label: t.settingsDensityCompact },
+    { value: 'comfortable', label: t.settingsDensityComfortable },
+    { value: 'cozy', label: t.settingsDensityCozy },
+  ];
+  /** Options for the motion SegmentedControl on the appearance section. */
+  const motionOptions: SegmentedOption<Motion>[] = [
+    { value: 'full', label: t.settingsMotionFull },
+    { value: 'reduced', label: t.settingsMotionReduced },
+    { value: 'none', label: t.settingsMotionNone },
   ];
   const activeSection = sections.find((item) => item.id === section) ?? sections[0];
 
@@ -271,8 +305,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               aria-current={section === item.id ? 'page' : undefined}
               className={cn(
                 'justify-start rounded-md h-8 px-3 text-muted-foreground',
-                section === item.id &&
-                  'bg-card text-foreground shadow-[inset_3px_0_0_var(--primary)]',
+                section === item.id && 'bg-card text-foreground border-l-[3px] border-primary',
               )}
               onClick={() => setSection(item.id)}
             >
@@ -345,6 +378,37 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                   </SelectContent>
                 </Select>
               </SettingRow>
+            )}
+            {section === 'appearance' && (
+              <>
+                <SettingRow title={t.settingsRadiusLabel} description={t.settingsRadiusDescription}>
+                  <SegmentedControl
+                    options={radiusOptions}
+                    value={radiusScale}
+                    onChange={(v) => setRadiusScale(v)}
+                    size="sm"
+                  />
+                </SettingRow>
+                <SettingRow
+                  title={t.settingsDensityLabel}
+                  description={t.settingsDensityDescription}
+                >
+                  <SegmentedControl
+                    options={densityOptions}
+                    value={density}
+                    onChange={(v) => setDensity(v)}
+                    size="sm"
+                  />
+                </SettingRow>
+                <SettingRow title={t.settingsMotionLabel} description={t.settingsMotionDescription}>
+                  <SegmentedControl
+                    options={motionOptions}
+                    value={motion}
+                    onChange={(v) => setMotion(v)}
+                    size="sm"
+                  />
+                </SettingRow>
+              </>
             )}
             {section === 'system' &&
               (logs.length === 0 ? (

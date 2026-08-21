@@ -11,7 +11,7 @@
  * Data source: themeStore (designLanguage, setDesignLanguage).
  *
  * Visual style follows Swiss/International design tokens:
- *   · rounded-[2px] corners
+ *   · rounded-[var(--dl-radius,2px)] corners
  *   · spacing from the 4/8/16 Tailwind scale only
  *   · typography: text-[10px] mono for body, text-xs for headings
  *   · all colors via CSS custom properties (no bare hex/rgba)
@@ -63,7 +63,7 @@ function SegmentedControl<T extends string>({
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`rounded-[2px] border px-2 py-1 font-mono text-[10px] transition-colors ${
+            className={`rounded-[var(--dl-radius,2px)] border px-2 py-1 font-mono text-[10px] transition-colors ${
               isSelected
                 ? 'border-[var(--accent)] bg-[var(--bg-surface-elevated)] text-[var(--fg-0)]'
                 : 'border-[var(--border-subtle)] bg-[var(--bg-2)] text-[var(--fg-2)] hover:border-[var(--fg-3)]'
@@ -91,7 +91,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
   const speed = designLanguage.motion?.speed;
 
   return (
-    <div className="flex h-full flex-col rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
+    <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header */}
       <div>
         <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">
@@ -205,7 +205,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
             />
             {/* Shadow preview swatch */}
             <div
-              className="h-6 w-6 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)]"
+              className="h-6 w-6 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)]"
               style={{ boxShadow: shadowValue(elevation) }}
             />
           </div>
@@ -241,7 +241,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
       </div>
 
       {/* Live CSS variable preview */}
-      <div className="mt-4 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
+      <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
         <h4 className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
           {t.studioDLCssPreview ?? 'CSS Variables'}
         </h4>

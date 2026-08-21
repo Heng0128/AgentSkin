@@ -187,7 +187,7 @@ export function PreviewWindow({
             <button
               type="button"
               onClick={refresh}
-              className="rounded-[2px] border border-[var(--border-subtle)] px-[var(--space-2)] py-0 font-mono text-[length:10px] text-[var(--fg-2)] hover:bg-[var(--bg-3)]"
+              className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] px-[var(--space-2)] py-0 font-mono text-[length:10px] text-[var(--fg-2)] hover:bg-[var(--bg-3)]"
             >
               {t.studioPreviewRetry}
             </button>
@@ -216,7 +216,7 @@ export function PreviewWindow({
             {t.studioZoomTrigger} ▾
           </button>
           {zoomOpen && (
-            <div className="absolute bottom-full right-0 z-10 mb-1 flex flex-col gap-0 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">
+            <div className="absolute bottom-full right-0 z-10 mb-1 flex flex-col gap-0 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">
               {SCALE_PRESETS.map((s) => (
                 <button
                   key={s}

@@ -94,7 +94,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           mono counter + hairline separator */}
       <div className="mb-3 flex items-center gap-3">
         <h2 className="font-display text-sm font-bold tracking-tight">{t.navThemes}</h2>
-        <span className="rounded-[2px] bg-muted px-1 py-0 text-xs text-muted-foreground">
+        <span className="rounded-[var(--dl-radius,2px)] bg-muted px-1 py-0 text-xs text-muted-foreground">
           {tc.allCount}
         </span>
         <span className="h-3 w-px bg-border" aria-hidden />
@@ -112,7 +112,10 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         </span>
 
         {/* Search box — rounded-md h-7 */}
-        <InputGroup className="ml-auto h-7 rounded-[2px]" style={{ width: '200px' }}>
+        <InputGroup
+          className="ml-auto h-7 rounded-[var(--dl-radius,2px)]"
+          style={{ width: '200px' }}
+        >
           <InputGroupInput
             value={tc.query}
             onChange={(e) => tc.setQuery(e.target.value)}
@@ -130,7 +133,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <SelectTrigger
-                  className="h-7 w-[130px] rounded-[2px] border-input bg-muted text-xs focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.13)]"
+                  className="h-7 w-[130px] rounded-[var(--dl-radius,2px)] border-input bg-muted text-xs focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.13)]"
                   aria-label={t.sortName}
                 >
                   <SelectValue />
@@ -141,7 +144,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <SelectContent className="rounded-[2px] border-border bg-card">
+          <SelectContent className="rounded-[var(--dl-radius,2px)] border-border bg-card">
             <SelectItem value="name" className="text-xs">
               {t.sortName}
             </SelectItem>
@@ -158,14 +161,14 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         </Select>
 
         {/* View toggle — sort direction */}
-        <div className="inline-flex items-center gap-0 rounded-[2px] bg-muted p-0.5">
+        <div className="inline-flex items-center gap-0 rounded-[var(--dl-radius,2px)] bg-muted p-0.5">
           <button
             type="button"
             onClick={() => tc.setSortOrder(tc.sortOrder === 'asc' ? 'desc' : 'asc')}
             aria-label={tc.sortOrder === 'asc' ? t.sortDesc : t.sortAsc}
             aria-pressed={tc.sortOrder === 'asc'}
             className={cn(
-              'h-6 rounded-[2px] px-2 text-xs font-medium transition-all duration-150',
+              'h-6 rounded-[var(--dl-radius,2px)] px-2 text-xs font-medium transition-all duration-fast',
               'bg-card text-foreground',
             )}
           >
@@ -177,7 +180,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         <Button
           size="sm"
           variant="ghost"
-          className="h-7 rounded-[2px] bg-card2 text-foreground transition-[border-color,color] duration-150 hover:border-primary hover:text-primary"
+          className="h-7 rounded-[var(--dl-radius,2px)] bg-card2 text-foreground transition-[border-color,color] duration-fast hover:border-primary hover:text-primary"
           disabled={controller.isInstalling}
           onClick={() => void controller.importTheme()}
         >
@@ -192,7 +195,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         {/* Studio — btn-red */}
         <Button
           size="sm"
-          className="h-7 rounded-[2px] bg-primary text-primary-foreground border border-primary transition-[background-color,transform] duration-150 hover:bg-primary/90 active:translate-y-px active:scale-[.99]"
+          className="h-7 rounded-[var(--dl-radius,2px)] bg-primary text-primary-foreground border border-primary transition-[background-color] duration-fast hover:bg-primary/90 active:bg-primary/80"
           onClick={() => {
             void api.openStudioWindow();
           }}
@@ -236,7 +239,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             onClick={() => tc.setDynamicFilter(tc.dynamicFilter === 'dynamic' ? 'all' : 'dynamic')}
             title={t.themeDynamicHint}
             className={cn(
-              'inline-flex h-6 items-center gap-1 rounded-[2px] px-2 text-xs font-medium transition-all duration-150',
+              'inline-flex h-6 items-center gap-1 rounded-[var(--dl-radius,2px)] px-2 text-xs font-medium transition-all duration-fast',
               tc.dynamicFilter === 'dynamic'
                 ? 'bg-card text-foreground '
                 : 'bg-muted text-muted-foreground hover:text-foreground ',
@@ -326,10 +329,10 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           }}
         >
           <div
-            className="flex flex-col items-center gap-3 rounded-[2px] border-2 border-dashed border-border bg-card px-12 py-9 text-center"
+            className="flex flex-col items-center gap-3 rounded-[var(--dl-radius,2px)] border-2 border-dashed border-border bg-card px-12 py-9 text-center"
             style={{ boxShadow: 'var(--shadow, 0 10px 28px rgba(0,0,0,0.4))' }}
           >
-            <div className="flex size-14 items-center justify-center rounded-[2px] bg-accent">
+            <div className="flex size-14 items-center justify-center rounded-[var(--dl-radius,2px)] bg-accent">
               <UploadCloud className="size-7 text-primary" />
             </div>
             <p className="text-sm font-semibold text-foreground">{t.dropThemeHere}</p>

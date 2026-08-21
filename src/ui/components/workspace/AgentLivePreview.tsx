@@ -148,9 +148,7 @@ export function AgentLivePreview({
   if (loading && !domTree) {
     return (
       <div className="flex h-[280px] items-center justify-center rounded-md bg-card">
-        <span className="font-mono text-[11px] text-muted-foreground">
-          {t.workspacePreviewLoading}
-        </span>
+        <span className="as-mono">{t.workspacePreviewLoading}</span>
       </div>
     );
   }
@@ -166,9 +164,9 @@ export function AgentLivePreview({
           role="alert"
           className="absolute inset-x-0 top-0 h-1"
           style={{ background: 'var(--destructive)' }}
-          title={t.workspacePreviewRefreshFailed ?? '刷新失败，显示缓存'}
+          title={t.workspacePreviewRefreshFailed}
         >
-          <span className="sr-only">{t.workspacePreviewRefreshFailed ?? '刷新失败，显示缓存'}</span>
+          <span className="sr-only">{t.workspacePreviewRefreshFailed}</span>
         </div>
       )}
     </>
@@ -183,14 +181,14 @@ export function AgentLivePreview({
           {/* Left: current overrides */}
           <div className="bg-[var(--surface)]">
             <div className="px-2 py-1 text-center font-mono text-[10px] tracking-wider text-muted-foreground">
-              A — 当前
+              {t.workspacePreviewDualA}
             </div>
             <RealDomPreview domTree={domTree} overrides={overrides} t={t} />
           </div>
           {/* Right: baseline (no overrides) */}
           <div className="bg-[var(--surface)]">
             <div className="px-2 py-1 text-center font-mono text-[10px] tracking-wider text-muted-foreground">
-              B — 基线
+              {t.workspacePreviewDualB}
             </div>
             <RealDomPreview domTree={domTree} overrides={null} t={t} />
           </div>

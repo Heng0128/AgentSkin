@@ -195,9 +195,7 @@ export function TweakPanel({
               onChange={(e) => setField('radius', `${e.target.value}px`)}
               aria-label={label}
             />
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-              {overrides.radius ?? '0px'}
-            </span>
+            <span className="as-mono tabular-nums">{overrides.radius ?? '0px'}</span>
           </FieldRow>
         );
       case 'spacing':
@@ -219,9 +217,7 @@ export function TweakPanel({
               onChange={(e) => setField('spacing', Number(e.target.value))}
               aria-label={label}
             />
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-              {overrides.spacing ?? 8}px
-            </span>
+            <span className="as-mono tabular-nums">{overrides.spacing ?? 8}px</span>
           </FieldRow>
         );
       case 'fontSize':
@@ -243,9 +239,7 @@ export function TweakPanel({
               onChange={(e) => setField('fontSize', Number(e.target.value))}
               aria-label={label}
             />
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-              {overrides.fontSize ?? 13}px
-            </span>
+            <span className="as-mono tabular-nums">{overrides.fontSize ?? 13}px</span>
           </FieldRow>
         );
       case 'shadowLevel':
@@ -353,7 +347,7 @@ function FieldRow({
 }) {
   return (
     <div
-      className={`flex flex-col gap-2 rounded-[2px] px-1 py-0.5 transition-colors ${
+      className={`flex flex-col gap-2 rounded-[var(--dl-radius,2px)] px-1 py-0.5 transition-colors ${
         highlighted ? 'bg-[var(--accent-ghost)] ring-1 ring-[var(--accent)]' : ''
       }`}
     >
