@@ -3,31 +3,36 @@
 /**
  * # PreviewWindow
  *
- * A single preview window in the Stage — header (identity + actions),
- * body (iframe with srcDoc), footer (dimensions + scale + motion).
+ * A single preview window in the Stage — status bar (live CDP state),
+ * header (identity + actions), body (iframe with srcDoc), footer
+ * (dimensions + scale + motion).
  *
  * Rendering protocol:
- *   · When a domTree is provided (from studioStore.snapshot.domTree),
- *     the iframe is built via buildSrcDoc with sanitized DOM replay, role-
- *     aware CSS variable binding, and tool-override cascade injection.
- *   · When only rootVars exist (legacy snapshot), a minimal var-stub page
- *     is rendered so the preview still shows the agent's native look.
- *   · Without either, an empty-state placeholder is shown.
+ *   · DOM data is sourced via the `useLiveDom` hook (real-time CDP +
+ *     degraded cache), replacing the legacy manual-snapshot props.
+ *   · When a domTree is available, the iframe is built via buildSrcDoc
+ *     with sanitized DOM replay, role-aware CSS variable binding, and
+ *     tool-override cascade injection.
+ *   · During loading / idle with no cached tree, a loading placeholder
+ *     is shown.
+ *   · On error with no cached tree, an error placeholder with a retry
+ *     button (calling `refresh()`) is shown.
  *
- * Live override updates are pushed via direct DOM write to `#ov` style element
- * — the same protocol consumed by RealDomPreview's runtime bridge. This
- * keeps style edits 60 fps without rebuilding the srcDoc.
+ * Live override updates are pushed via direct DOM write to `#ov` style
+ * element — the same protocol consumed by RealDomPreview's runtime bridge.
+ * This keeps style edits 60 fps without rebuilding the srcDoc.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppMark } from '@/components/app-mark';
+import { useLiveDom } from '@/hooks/useLiveDom';
 import { buildSrcDoc, overridesToCss } from '@/lib/dom-export';
+import { useSettingsStore } from '@/stores/settingsStore';
 import { useStudioStore } from '@/stores/studioStore';
 import type { PreviewWindowState } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 import { sanitizeCSS } from '@shared/safe-css';
-import type { DomTreeNode } from '@shared/types';
 import { AGENT_META } from '@shared/types';
 import { Maximize, X } from 'lucide-react';
 
@@ -37,15 +42,21 @@ interface PreviewWindowProps {
   onSelect: () => void;
   onScaleChange: (scale: number) => void;
   onClose?: () => void;
-  /** Real DOM tree captured from the agent (optional). */
-  domTree?: DomTreeNode;
-  /** Native :root CSS custom properties captured at snapshot time (optional). */
-  rootVars?: Record<string, string>;
   t: UiMessages;
 }
 
 const SCALE_PRESETS = [0.25, 0.38, 0.45, 0.55, 0.75, 1.0];
 const PREVIEW_DEFAULT_SIZE = '800×600';
+
+const STATUS_BAR_HEIGHT = 'h-[2px]';
+
+const STATUS_COLORS: Record<string, string> = {
+  success: 'bg-green-500',
+  degraded: 'bg-yellow-500',
+  error: 'bg-red-500',
+  loading: 'bg-blue-500',
+  idle: 'bg-gray-500',
+};
 
 export function PreviewWindow({
   win,
@@ -53,38 +64,31 @@ export function PreviewWindow({
   onSelect,
   onScaleChange,
   onClose,
-  domTree,
-  rootVars,
   t,
 }: PreviewWindowProps) {
   const toolOverrides = useStudioStore((s) => s.toolOverrides);
   const meta = AGENT_META[win.agentId];
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // Read the live DOM auto-refresh interval from settings (0 = disabled).
+  const liveDomRefreshInterval = useSettingsStore((s) => s.settings?.liveDomRefreshInterval ?? 0);
+
+  // Live DOM data — real-time CDP with degraded-cache fallback.
+  const { domTree, status, error, refresh } = useLiveDom(win.agentId, {
+    cacheTTL: 30_000,
+    refreshInterval: liveDomRefreshInterval,
+  });
+
   // local zoom select (does not persist — per-window session state)
   const [zoomOpen, setZoomOpen] = useState(false);
 
-  // Build the iframe srcDoc from the domTree + rootVars when available.
-  // Falls back to a minimal rootVars-only stub for legacy snapshots.
+  // Build the iframe srcDoc from the domTree when available.
   const srcDoc = useMemo(() => {
     if (domTree) {
       return buildSrcDoc(domTree, undefined, false, FALLBACK_HTML);
     }
-    if (rootVars && Object.keys(rootVars).length > 0) {
-      const styleEntries = Object.entries(rootVars)
-        .map(([k, v]) => `${k}: ${v};`)
-        .join('');
-      return (
-        '<!doctype html><html><head>' +
-        `<style>:root{${styleEntries}}</style>` +
-        '<style id="ov"></style>' +
-        `</head><body><div style="padding:32px;font-family:system-ui;color:var(--fg,#e8e2ff);background:var(--bg,#1a1a2e);">` +
-        `<h3 style="font-family:monospace;font-size:12px;opacity:.5">${meta.displayName} · Preview</h3>` +
-        `</div></body></html>`
-      );
-    }
     return null;
-  }, [domTree, rootVars, meta.displayName]);
+  }, [domTree]);
 
   // Convert tool overrides to CSS (same pipeline as RealDomPreview).
   const overrideCss = useMemo(
@@ -123,8 +127,19 @@ export function PreviewWindow({
     [onSelect],
   );
 
+  // Status bar title for accessibility / tooltip.
+  const statusTitle = error ? `${status} — ${error}` : status;
+
   return (
     <div className="pw" data-active={active}>
+      {/* Status bar — 2px tall, color-coded by live CDP state */}
+      <div
+        className={`${STATUS_BAR_HEIGHT} w-full ${STATUS_COLORS[status] ?? STATUS_COLORS.idle}`}
+        title={statusTitle}
+        role="status"
+        aria-label={statusTitle}
+      />
+
       {/* Header — 28px mono */}
       <div className="pw__header">
         <button type="button" className="pw__title-btn" onClick={handleHeaderClick}>
@@ -144,7 +159,7 @@ export function PreviewWindow({
         )}
       </div>
 
-      {/* Body — iframe real DOM or empty state */}
+      {/* Body — iframe real DOM, loading, or error state */}
       <div className="pw__body">
         {srcDoc ? (
           <iframe
@@ -158,6 +173,25 @@ export function PreviewWindow({
             title={`${meta.displayName} · ${t.studioPreviewStatus}`}
             tabIndex={-1}
           />
+        ) : status === 'loading' || status === 'idle' ? (
+          <div className="flex h-full w-full items-center justify-center bg-[var(--bg-0)]">
+            <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+              {t.studioPreviewLoading}
+            </span>
+          </div>
+        ) : status === 'error' ? (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[var(--bg-0)]">
+            <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+              {error ?? t.studioPreviewError}
+            </span>
+            <button
+              type="button"
+              onClick={refresh}
+              className="rounded-[2px] border border-[var(--border-subtle)] px-[var(--space-2)] py-0 font-mono text-[length:10px] text-[var(--fg-2)] hover:bg-[var(--bg-3)]"
+            >
+              {t.studioPreviewRetry}
+            </button>
+          </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-[var(--bg-0)]">
             <span className="font-mono text-[length:10px] text-[var(--fg-3)]">

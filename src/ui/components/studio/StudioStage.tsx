@@ -6,41 +6,25 @@
  * Workspace stage region — renders a single preview window.
  *
  * Single-window architecture — workspaceStore exposes a single `window` object.
- * Snapshot / Baseline / Inspect / Zoom functionality is preserved.
+ * PreviewWindow uses the useLiveDom hook for real-time CDP DOM streaming
+ * with snapshot fallback caching. Inspect / Zoom functionality is preserved.
  */
 
 import { CenterStageTab } from '@/components/studio/CenterStageTab';
 import { FloatingToolbar } from '@/components/studio/FloatingToolbar';
 import { PreviewWindow } from '@/components/studio/PreviewWindow';
-import { StudioImageToThemePanel } from '@/components/studio/StudioImageToThemePanel';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 import type { UiMessages } from '@shared/i18n';
-import type { DomTreeNode } from '@shared/types';
 import { FlaskConical } from 'lucide-react';
 
 export function StudioStage({ t }: { t: UiMessages }) {
   const window = useWorkspaceStore((s) => s.window);
 
-  const snapshot = useStudioStore((s) => s.snapshot);
   const previewView = useStudioStore((s) => s.previewView);
 
-  const domTree: DomTreeNode | undefined = snapshot?.domTree;
-  const rootVars = snapshot?.rootVars;
-
-  // Generator (image → theme) panel replaces the preview stage.
-  if (previewView === 'generator') {
-    return (
-      <main className="ws-stage">
-        <div className="ws-stage__inner" data-view="generator">
-          <StudioImageToThemePanel t={t} />
-        </div>
-      </main>
-    );
-  }
-
-  // Non-theme center tabs (wallpaper / bundle / inspect / raw).
+  // Non-theme center tabs (wallpaper / bundle / raw).
   if (previewView !== 'theme') {
     return (
       <main className="ws-stage">
@@ -77,8 +61,6 @@ export function StudioStage({ t }: { t: UiMessages }) {
           active={true}
           onSelect={() => {}}
           onScaleChange={(_s) => {}}
-          domTree={domTree}
-          rootVars={rootVars}
           t={t}
         />
       </div>

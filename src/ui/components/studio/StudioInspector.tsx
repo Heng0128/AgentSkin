@@ -3,23 +3,15 @@
 /**
  * # StudioInspector
  *
- * Right sidebar inspector — collapsible 240px panel with tab bar
- * (Landmarks · Computed · Cascade · Fingerprint · Profile), window indicator
- * chip for cross-window linkage, and content routing per tab.
+ * Right sidebar inspector — collapsible 240px panel with Profile tab,
+ * window indicator chip for cross-window linkage, and content routing per tab.
  *
  * State:
  *   · workspaceStore: open / width / activeTab / collapsed
  *   · studioStore: activeProject (for window indicator chip)
- *
- * Note: InspectorCascadeTab is a standalone component (InspectorCascadeTab.tsx)
- * that self-subscribes to the snapshot — no snapshot prop passed from here.
  */
 
 import { AppMark } from '@/components/app-mark';
-import { InspectorCascadeTab } from '@/components/studio/InspectorCascadeTab';
-import { InspectorDetails } from '@/components/studio/InspectorDetails';
-import { InspectorFingerprint } from '@/components/studio/InspectorFingerprint';
-import { InspectorLandmarks } from '@/components/studio/InspectorLandmarks';
 import { InspectorProfile } from '@/components/studio/InspectorProfile';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
@@ -30,10 +22,6 @@ import { AGENT_META } from '@shared/types';
 
 /** Map inspector tab IDs to their i18n label keys. */
 const TAB_LABEL: Record<InspectorTabId, (t: UiMessages) => string> = {
-  landmarks: (t) => t.studioTabLandmarks,
-  computed: (t) => t.studioTabComputed,
-  cascade: (t) => t.studioTabCascade,
-  fingerprint: (t) => t.studioTabFingerprint,
   profile: (t) => t.studioTabProfile,
 };
 
@@ -78,27 +66,21 @@ export function StudioInspector({ t }: { t: UiMessages }) {
 
       {/* Tab bar */}
       <div className="ws-inspector__tabs">
-        {(['landmarks', 'computed', 'cascade', 'fingerprint', 'profile'] as InspectorTabId[]).map(
-          (id) => (
-            <button
-              key={id}
-              type="button"
-              className="ws-inspector__tab"
-              data-active={inspector.activeTab === id ? 'true' : undefined}
-              onClick={() => setInspectorTab(id)}
-            >
-              {TAB_LABEL[id](t)}
-            </button>
-          ),
-        )}
+        {(['profile'] as InspectorTabId[]).map((id) => (
+          <button
+            key={id}
+            type="button"
+            className="ws-inspector__tab"
+            data-active={inspector.activeTab === id ? 'true' : undefined}
+            onClick={() => setInspectorTab(id)}
+          >
+            {TAB_LABEL[id](t)}
+          </button>
+        ))}
       </div>
 
       {/* Scrollable content */}
       <div className="ws-inspector__scroll">
-        {inspector.activeTab === 'landmarks' && <InspectorLandmarks t={t} />}
-        {inspector.activeTab === 'computed' && <InspectorDetails t={t} />}
-        {inspector.activeTab === 'cascade' && <InspectorCascadeTab t={t} />}
-        {inspector.activeTab === 'fingerprint' && <InspectorFingerprint t={t} />}
         {inspector.activeTab === 'profile' && <InspectorProfile t={t} />}
       </div>
     </aside>

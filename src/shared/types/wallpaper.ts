@@ -156,4 +156,6 @@ export interface DesktopSettings {
   /** Global user-authored CSS injected as the highest-priority theme layer
    *  (custom.css). Never overwritten by theme applies; cleared on restore. */
   customThemeCss?: string;
+  /** Live DOM 自动刷新间隔（毫秒），0=不自动刷新。默认 0 */
+  liveDomRefreshInterval?: number;
 }

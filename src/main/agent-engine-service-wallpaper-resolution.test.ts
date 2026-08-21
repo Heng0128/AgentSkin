@@ -151,6 +151,8 @@ function makeSettings(wp?: ReturnType<typeof wallpaperSettings>): SettingsServic
     setAgentWallpaper: vi.fn(async () => {}),
     customThemeCss: vi.fn(() => ''),
     setCustomThemeCss: vi.fn(async () => {}),
+    liveDomRefreshInterval: vi.fn(() => 0),
+    setLiveDomRefreshInterval: vi.fn(async () => {}),
   } as SettingsServiceApi;
 }
 

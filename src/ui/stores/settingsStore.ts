@@ -44,6 +44,7 @@ interface SettingsState {
   chooseAppPath: (appId: AgentId) => Promise<void>;
   clearAppPath: (appId: AgentId) => Promise<void>;
   saveAppPort: (appId: AgentId, port: number | null) => Promise<boolean>;
+  saveLiveDomRefreshInterval: (interval: number) => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -111,6 +112,16 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         useNotificationStore.getState().fail(error);
       }
       return false;
+    }
+  },
+
+  saveLiveDomRefreshInterval: async (interval) => {
+    try {
+      const result = await api.setLiveDomRefreshInterval(interval);
+      set({ settings: result.settings });
+      useNotificationStore.getState().showToast(currentT().settingsSaved);
+    } catch (error) {
+      useNotificationStore.getState().fail(error);
     }
   },
 }));

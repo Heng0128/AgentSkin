@@ -24,11 +24,11 @@ export const VIEW_MODE_LABELS: Record<ViewMode, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Preview view (theme vs generator)
+// Preview view (theme / wallpaper / bundle / raw)
 // ---------------------------------------------------------------------------
 
-/** What the center stage is currently displaying — theme / wallpaper / bundle / inspect / generator / raw. */
-export type PreviewView = 'theme' | 'wallpaper' | 'bundle' | 'inspect' | 'generator' | 'raw';
+/** What the center stage is currently displaying — theme / wallpaper / bundle / raw. */
+export type PreviewView = 'theme' | 'wallpaper' | 'bundle' | 'raw';
 
 // ---------------------------------------------------------------------------
 // Preview Window
@@ -78,13 +78,9 @@ export const DOCK_HEIGHT_COLLAPSED = 32;
 // Inspector
 // ---------------------------------------------------------------------------
 
-export type InspectorTabId = 'landmarks' | 'computed' | 'cascade' | 'fingerprint' | 'profile';
+export type InspectorTabId = 'profile';
 
 export const INSPECTOR_TABS: { id: InspectorTabId; label: string }[] = [
-  { id: 'landmarks', label: 'Landmarks' },
-  { id: 'computed', label: 'Computed' },
-  { id: 'cascade', label: 'Cascade' },
-  { id: 'fingerprint', label: 'Fingerprint' },
   { id: 'profile', label: 'Profile' },
 ];
 

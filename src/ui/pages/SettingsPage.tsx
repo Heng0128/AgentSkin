@@ -24,6 +24,7 @@ import type { ThemeMode } from '@/design/theme-mode';
 import type { AppController, SettingsSection } from '@/hooks/useAppController';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 import {
   ArrowLeft,
@@ -123,6 +124,45 @@ function CustomCssEditor({
         className="min-h-32 w-full resize-y rounded-md bg-card font-mono text-[11px] leading-5"
       />
     </div>
+  );
+}
+
+/** Live DOM refresh interval editor — dropdown select bound to settings store. */
+function LiveDomRefreshIntervalEditor({ t }: { t: AppController['t'] }) {
+  const settings = useSettingsStore((s) => s.settings);
+  const saveLiveDomRefreshInterval = useSettingsStore((s) => s.saveLiveDomRefreshInterval);
+
+  const current = settings?.liveDomRefreshInterval ?? 0;
+
+  const options: { value: number; label: string }[] = [
+    { value: 0, label: t.settingsLiveDomRefreshIntervalOff },
+    { value: 5000, label: t.settingsLiveDomRefreshInterval5s },
+    { value: 15000, label: t.settingsLiveDomRefreshInterval15s },
+    { value: 30000, label: t.settingsLiveDomRefreshInterval30s },
+    { value: 60000, label: t.settingsLiveDomRefreshInterval60s },
+  ];
+
+  return (
+    <SettingRow
+      title={t.settingsLiveDomRefreshInterval}
+      description={t.settingsLiveDomRefreshIntervalDesc}
+    >
+      <Select
+        value={String(current)}
+        onValueChange={(v) => void saveLiveDomRefreshInterval(Number(v))}
+      >
+        <SelectTrigger className="h-7 w-[140px] rounded-md border-border bg-muted text-[11px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="rounded-md border-border bg-card">
+          {options.map((opt) => (
+            <SelectItem key={opt.value} value={String(opt.value)} className="text-[11px]">
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </SettingRow>
   );
 }
 
@@ -344,6 +384,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 <p className="font-mono text-[11px]  text-muted-foreground/70">
                   {t.settingsAdvancedDesc}
                 </p>
+                <LiveDomRefreshIntervalEditor t={t} />
                 <Accordion type="single" collapsible>
                   <AccordionItem value="diagnostics" className="border-b-0">
                     <AccordionTrigger className="py-2 text-[13px] font-semibold text-foreground">

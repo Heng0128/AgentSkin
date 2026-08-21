@@ -111,6 +111,10 @@ export interface SettingsServiceApi {
   customThemeCss(): string;
   /** Replace the global user-authored theme CSS. Empty string clears it. */
   setCustomThemeCss(css: string): Promise<void>;
+  /** Read the live DOM auto-refresh interval (ms). 0 = disabled. */
+  liveDomRefreshInterval(): number;
+  /** Set the live DOM auto-refresh interval (ms). 0 disables auto-refresh. */
+  setLiveDomRefreshInterval(interval: number): Promise<void>;
 }
 
 /**

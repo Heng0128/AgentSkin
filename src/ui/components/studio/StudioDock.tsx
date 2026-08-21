@@ -4,7 +4,7 @@
  * # StudioDock
  *
  * Bottom dock panel — fixed overlay with draggable height, tab bar
- * (FX / Export), and content routing.
+ * (Export), and content routing.
  *
  * Features:
  *   · 5px drag handle for height adjustment (clamped via workspaceStore)
@@ -20,14 +20,12 @@ const MIN_DOCK_HEIGHT = 160;
 const MAX_DOCK_HEIGHT = 600;
 
 import { DockTabExport } from '@/components/studio/DockTabExport';
-import { DockTabFX } from '@/components/studio/DockTabFX';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { DockTabId } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 
-const DOCK_TABS: { id: DockTabId; labelKey: 'studioDockTabFx' | 'studioDockTabExport' }[] = [
-  { id: 'fx', labelKey: 'studioDockTabFx' },
+const DOCK_TABS: { id: DockTabId; labelKey: 'studioDockTabExport' }[] = [
   { id: 'export', labelKey: 'studioDockTabExport' },
 ];
 
@@ -117,12 +115,7 @@ export function StudioDock({ t }: { t: UiMessages }) {
       </div>
 
       {/* Content (hidden when collapsed) */}
-      {!dock.collapsed && (
-        <>
-          {dock.activeTab === 'fx' && <DockTabFX t={t} />}
-          {dock.activeTab === 'export' && <DockTabExport t={t} />}
-        </>
-      )}
+      {!dock.collapsed && <>{dock.activeTab === 'export' && <DockTabExport t={t} />}</>}
     </div>
   );
 }

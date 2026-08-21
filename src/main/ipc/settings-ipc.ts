@@ -99,6 +99,29 @@ export function registerSettingsIpc(deps: MainContext): void {
   ipcMain.handle(IpcChannel.SETTINGS_GET_CUSTOM_CSS, () => deps.settings.customThemeCss());
 
   ipcMain.handle(
+    IpcChannel.SETTINGS_SET_LIVE_DOM_REFRESH_INTERVAL,
+    async (_event, interval: unknown): Promise<SettingsUpdateResult> => {
+      return withMonitoredTimeout(
+        IpcChannel.SETTINGS_SET_LIVE_DOM_REFRESH_INTERVAL,
+        15000,
+        (async () => {
+          if (
+            typeof interval !== 'number' ||
+            !Number.isFinite(interval) ||
+            interval < 0 ||
+            !Number.isInteger(interval)
+          ) {
+            throw new Error(getMainMessages().invalidLiveDomRefreshInterval);
+          }
+          await deps.settings.setLiveDomRefreshInterval(interval);
+          notifyStatusChanged();
+          return { settings: settingsDto(deps), status: await deps.core.status() };
+        })(),
+      );
+    },
+  );
+
+  ipcMain.handle(
     IpcChannel.SETTINGS_SET_CUSTOM_CSS,
     async (event, css: unknown): Promise<SettingsUpdateResult> => {
       assertTrustedSender(event);

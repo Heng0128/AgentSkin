@@ -64,6 +64,7 @@ export const IpcChannel = {
   SETTINGS_SET_APP_PORT: 'settings:set-app-port',
   SETTINGS_GET_CUSTOM_CSS: 'settings:get-custom-css',
   SETTINGS_SET_CUSTOM_CSS: 'settings:set-custom-css',
+  SETTINGS_SET_LIVE_DOM_REFRESH_INTERVAL: 'settings:set-live-dom-refresh-interval',
 
   // --- Wallpaper (wallpaper-ipc.ts) ---
   WALLPAPER_LIST: 'wallpaper:list',
@@ -126,6 +127,12 @@ export const IpcChannel = {
   /** Capture the agent's NATIVE (un-themed) appearance, then automatically
    *  re-apply the previously active theme. Returns the native snapshot. */
   THEME_STUDIO_SNAPSHOT_BASELINE: 'studio:snapshot:baseline',
+  /** Real-time DOM tree capture (no store, returns directly to useLiveDom hook). */
+  THEME_STUDIO_LIVE_DOM: 'theme:studio-live-dom',
+  /** 写入 domTree 磁盘缓存 */
+  STUDIO_LIVE_DOM_CACHE_WRITE: 'studio:live-dom-cache-write',
+  /** 读取 domTree 磁盘缓存 */
+  STUDIO_LIVE_DOM_CACHE_READ: 'studio:live-dom-cache-read',
   THEME_STUDIO_EXPORT: 'studio:export',
   /** Live-inspect: renderer asks main to enter DevTools-style pick mode. */
   THEME_STUDIO_INSPECT_START: 'studio:inspect:start',

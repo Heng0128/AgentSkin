@@ -16,15 +16,28 @@
  *   skeletons); this module no longer exposes any probe IPC channels.
  */
 
+import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
-import type { AgentId, StudioSnapshotOptions, ThemeVisualSnapshot } from '../../shared/types';
+import type {
+  AgentId,
+  DomTreeNode,
+  StudioLiveDomCacheReadRequest,
+  StudioLiveDomCacheReadResponse,
+  StudioLiveDomCacheWriteRequest,
+  StudioLiveDomRequest,
+  StudioSnapshotOptions,
+  ThemeVisualSnapshot,
+} from '../../shared/types';
 import { isIpcTimeoutError, withTimeout } from '../../shared/withTimeout';
+import { connectCdp } from '../cdp/cdp-client';
 import { findDomTargets } from '../cdp/cdp-targets';
+import { captureDomTree } from '../cdp/dom-tree';
 import { type InspectController, startInspect } from '../cdp/inspect-session';
 import { snapshotThemeVisuals } from '../cdp/snapshot-theme';
+import { writeJsonAtomic } from '../fs-utils';
 import { assertAgentId, assertSafeThemeId } from './ipc-validators';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
@@ -258,6 +271,94 @@ export function registerStudioIpc(deps: {
           });
         }
         throw error; // continue propagating the timeout error to the renderer
+      }
+    },
+  );
+
+  /**
+   * `theme:studio-live-dom` -- real-time DOM tree capture. Connects CDP,
+   * walks the agent's rendered DOM, and returns the full `DomTreeNode` tree
+   * directly (no store involvement). Used by the `useLiveDom` hook for the
+   * Studio's live preview pane.
+   */
+  ipcMain.handle(
+    IpcChannel.THEME_STUDIO_LIVE_DOM,
+    async (_event, req: StudioLiveDomRequest): Promise<DomTreeNode> => {
+      return withMonitoredTimeout(
+        IpcChannel.THEME_STUDIO_LIVE_DOM,
+        30000,
+        (async () => {
+          const { agentId } = req;
+          assertAgentId(agentId);
+
+          const port = await deps.resolveLivePort(agentId);
+          if (!port) {
+            throw new Error(`Agent ${agentId} 未运行或无法找到 CDP 端口`);
+          }
+
+          const targets = await findDomTargets(port);
+          const wsUrl = targets.find((t) => Boolean(t.webSocketDebuggerUrl))?.webSocketDebuggerUrl;
+          if (!wsUrl) {
+            throw new Error(`Agent ${agentId} 无可用 CDP target`);
+          }
+
+          const session = await connectCdp(wsUrl, 5000, 30000);
+          try {
+            const tree = await captureDomTree(session, 'body');
+            if (!tree) {
+              throw new Error(`Agent ${agentId} DOM 树为空 — 目标页面可能未加载`);
+            }
+            return tree;
+          } finally {
+            session.close();
+          }
+        })(),
+      );
+    },
+  );
+
+  // 缓存文件路径函数
+  function getLiveDomCachePath(agentId: AgentId): string {
+    const userDataRoot = app.getPath('userData');
+    return path.join(userDataRoot, 'cache', `live-dom-${agentId}.json`);
+  }
+
+  /**
+   * `studio:live-dom-cache-write` -- 写入 domTree 磁盘缓存。
+   * 将 DomTreeNode 原子写入 userData/cache/live-dom-{agentId}.json，
+   * 确保崩溃时不会损坏已有的缓存文件。
+   */
+  ipcMain.handle(
+    IpcChannel.STUDIO_LIVE_DOM_CACHE_WRITE,
+    async (_event, req: StudioLiveDomCacheWriteRequest) => {
+      const { agentId, domTree } = req;
+      assertAgentId(agentId);
+      const filePath = getLiveDomCachePath(agentId);
+      const envelope = { version: 1, timestamp: Date.now(), domTree };
+      await writeJsonAtomic(filePath, envelope);
+    },
+  );
+
+  /**
+   * `studio:live-dom-cache-read` -- 读取 domTree 磁盘缓存。
+   * 返回缓存的 DomTreeNode 及时间戳；文件不存在或损坏时返回 null。
+   */
+  ipcMain.handle(
+    IpcChannel.STUDIO_LIVE_DOM_CACHE_READ,
+    async (_event, req: StudioLiveDomCacheReadRequest): Promise<StudioLiveDomCacheReadResponse> => {
+      const { agentId } = req;
+      assertAgentId(agentId);
+      const filePath = getLiveDomCachePath(agentId);
+      try {
+        const raw = await fs.readFile(filePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && parsed.version === 1 && parsed.domTree) {
+          return { domTree: parsed.domTree as DomTreeNode, timestamp: parsed.timestamp ?? 0 };
+        }
+        return { domTree: null, timestamp: 0 };
+      } catch {
+        // 文件不存在或损坏
+        return { domTree: null, timestamp: 0 };
       }
     },
   );

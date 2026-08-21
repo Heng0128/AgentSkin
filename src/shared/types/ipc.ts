@@ -234,6 +234,28 @@ export interface DomTreeNode {
   children: DomTreeNode[];
 }
 
+/** The input for THEME_STUDIO_LIVE_DOM. */
+export interface StudioLiveDomRequest {
+  agentId: AgentId;
+}
+
+/** The input for STUDIO_LIVE_DOM_CACHE_WRITE */
+export interface StudioLiveDomCacheWriteRequest {
+  agentId: AgentId;
+  domTree: DomTreeNode;
+}
+
+/** The input for STUDIO_LIVE_DOM_CACHE_READ */
+export interface StudioLiveDomCacheReadRequest {
+  agentId: AgentId;
+}
+
+/** The output for STUDIO_LIVE_DOM_CACHE_READ */
+export interface StudioLiveDomCacheReadResponse {
+  domTree: DomTreeNode | null;
+  timestamp: number;
+}
+
 export interface ThemeVisualLandmark {
   selector: string;
   tag: string;
@@ -332,6 +354,8 @@ export interface AgentSkinApi {
   getCustomThemeCss(): Promise<string>;
   /** Replace the global user-authored theme CSS. Empty string clears it. */
   setCustomThemeCss(css: string): Promise<SettingsUpdateResult>;
+  /** Set the live DOM auto-refresh interval (ms). 0 disables auto-refresh. */
+  setLiveDomRefreshInterval(interval: number): Promise<SettingsUpdateResult>;
   // --- Dynamic wallpapers (Wallpaper Engine integration) ---
   listWallpapers(): Promise<WallpaperInfo[]>;
   /** Extract a wallpaper's dominant colors into a generated `.agentskin-theme`
@@ -625,6 +649,12 @@ export interface AgentSkinApi {
    *  its default look, captures the live DOM, then re-applies the previously
    *  active theme. Returns the native snapshot for side-by-side comparison. */
   snapshotBaseline(agentId: AgentId, options?: StudioSnapshotOptions): Promise<ThemeVisualSnapshot>;
+  /** Real-time DOM tree capture (no store, returns directly to useLiveDom hook). */
+  captureLiveDom(agentId: AgentId): Promise<DomTreeNode>;
+  /** 写入 domTree 磁盘缓存 */
+  writeLiveDomCache(req: StudioLiveDomCacheWriteRequest): Promise<void>;
+  /** 读取 domTree 磁盘缓存 */
+  readLiveDomCache(req: StudioLiveDomCacheReadRequest): Promise<StudioLiveDomCacheReadResponse>;
   // --- Visual Analysis ---
   /** Get a visual analysis target by name. Returns null if not found. */
   getVisualAnalysisTarget(agentName: string): Promise<Record<string, unknown> | null>;

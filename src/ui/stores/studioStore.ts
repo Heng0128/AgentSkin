@@ -12,8 +12,7 @@
  */
 
 import { api } from '@/api/agentSkinClient';
-import { buildStudioPalette, mergeOverridesToSkinTokens } from '@/lib/palette';
-import { extractOverrideFromSnapshot } from '@/lib/snapshot-to-override';
+import { mergeOverridesToSkinTokens } from '@/lib/palette';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';
 import type { ToolOverride } from '@/types/override';
@@ -104,11 +103,7 @@ interface StudioStoreState {
   bundles: StudioBundle[];
   bundlesLoading: boolean;
 
-  // --- Snapshot / baseline ---
-  snapshot: ThemeVisualSnapshot | null;
-  snapshotLoading: boolean;
-  snapshotError: string | null;
-  snapshotThemeName: string;
+  // --- Baseline (A/B compare mode) ---
   baselines: Partial<Record<AgentId, ThemeVisualSnapshot>>;
   baselineLoadingMap: Partial<Record<AgentId, boolean>>;
   baselineErrorMap: Partial<Record<AgentId, string>>;
@@ -184,13 +179,7 @@ interface StudioStoreState {
   installBundle(id: string): Promise<void>;
   /** Delete a bundle by id. */
   deleteBundle(id: string): Promise<void>;
-  /** Reload the persisted current/baseline snapshots for the active project. */
-  loadProjectSnapshots(): Promise<void>;
-  /** Auto-capture the agent's native baseline once per agent (switching agents). */
-  ensureBaseline(): Promise<void>;
-
   // --- Capture actions ---
-  captureSnapshot(): Promise<void>;
   baselineSnapshot(): Promise<void>;
   restoreAgent(): Promise<void>;
   exportTheme(): Promise<void>;
@@ -225,8 +214,6 @@ interface StudioStoreState {
   applyImageToTheme(): void;
   /** Reset all image→theme state to idle. */
   clearImageToTheme(): void;
-  /** Extract a ToolOverride baseline from the current snapshot and merge into toolOverrides. */
-  applyOverrideFromSnapshot: () => void;
   /** Override the accent within the extracted palette (live preview only). */
   setImageAccent(hex: string): void;
 
@@ -341,10 +328,6 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   bundles: [],
   bundlesLoading: false,
 
-  snapshot: null,
-  snapshotLoading: false,
-  snapshotError: null,
-  snapshotThemeName: '',
   baselines: {},
   baselineLoadingMap: {},
   baselineErrorMap: {},
@@ -461,7 +444,6 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       schemeView: null,
       inspectingIdx: null,
     });
-    void get().loadProjectSnapshots();
   },
 
   createProject: async () => {
@@ -481,7 +463,6 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
         newAuthor: '',
         creatingProject: false,
       }));
-      void get().loadProjectSnapshots();
     } catch (e) {
       showToast(currentT().studioCreateProjectFailed(toMessage(e)), 'destructive');
     }
@@ -498,7 +479,6 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
           activeProjectId: p.id,
         }));
         showToast(currentT().studioImportProjectSuccess(p.name));
-        void get().loadProjectSnapshots();
       }
     } catch (err) {
       showToast(currentT().studioImportProjectFailed(toMessage(err)), 'destructive');
@@ -518,7 +498,6 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
           activeProjectId: s.activeProjectId === id ? (next[0]?.id ?? null) : s.activeProjectId,
         };
       });
-      void get().loadProjectSnapshots();
     } catch (err) {
       showToast(currentT().studioDeleteProjectFailed(toMessage(err)), 'destructive');
     }
@@ -568,11 +547,10 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   },
 
   changeAgent: async (agentId) => {
-    const { saveActiveProject, previewView, inspectMode } = get();
+    const { saveActiveProject, inspectMode } = get();
     void saveActiveProject({ agentId });
     undoCoalesce.key = null;
-    set({ snapshot: null, inspectingIdx: null, undoStack: [], redoStack: [] });
-    if (previewView === 'generator') set({ previewView: 'theme' });
+    set({ inspectingIdx: null, undoStack: [], redoStack: [] });
     if (inspectMode || busyLocks.has('inspect')) {
       busyLocks.add('inspect');
       try {
@@ -619,93 +597,6 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       showToast(currentT().studioPaletteLoaded(item.name));
     } catch {
       showToast(currentT().studioLoadPaletteFailed, 'destructive');
-    }
-  },
-
-  loadProjectSnapshots: async () => {
-    const project = get().getActiveProject();
-    if (!project) {
-      set({
-        snapshot: null,
-        snapshotLoading: false,
-        snapshotError: null,
-        snapshotThemeName: '',
-        baselines: {},
-        baselineLoadingMap: {},
-        baselineErrorMap: {},
-      });
-      return;
-    }
-    const capturedId = project.id;
-    const { id, agentId, name, author } = project;
-    set((s) => ({
-      snapshot: null,
-      snapshotLoading: true,
-      snapshotError: null,
-      baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: true },
-      baselineErrorMap: {},
-      // Keep export name/author in sync with the active project.
-      exportName: name,
-      exportAuthor: author || '',
-    }));
-    try {
-      const [snap, base] = await Promise.all([
-        api.loadStudioSnapshot(id, 'current'),
-        api.loadStudioSnapshot(id, 'baseline'),
-      ]);
-      if (get().activeProjectId !== capturedId) return;
-      set((s) => ({
-        snapshot: snap,
-        snapshotLoading: false,
-        snapshotError: null,
-        snapshotThemeName: snap?.themeName ?? '',
-        baselines: base && agentId ? { ...s.baselines, [agentId]: base } : s.baselines,
-        baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: false },
-      }));
-    } catch (e) {
-      if (get().activeProjectId !== capturedId) return;
-      // Capture the error so the UI can distinguish "load failed" from
-      // "no snapshot yet". Previously this silently reset snapshotError to null.
-      set((s) => ({
-        snapshot: null,
-        snapshotLoading: false,
-        snapshotError: toMessage(e),
-        snapshotThemeName: '',
-        baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: false },
-      }));
-    }
-  },
-
-  ensureBaseline: async () => {
-    const project = get().getActiveProject();
-    if (!project) return;
-    const { agentId, id: projectId } = project;
-    const { baselines, pseudoStates, captureSchemes } = get();
-    if (baselines[agentId]) return;
-    if (busyLocks.has('baseline')) return;
-    busyLocks.add('baseline');
-    set((s) => ({
-      baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: true },
-      baselineErrorMap: { ...s.baselineErrorMap, [agentId]: '' },
-      previewView: 'theme',
-    }));
-    try {
-      const snap = await api.snapshotBaseline(agentId, { pseudoStates, captureSchemes });
-      set((s) => ({ baselines: { ...s.baselines, [agentId]: snap } }));
-      try {
-        await api.saveStudioSnapshot(projectId, snap, 'baseline');
-      } catch (e) {
-        set((s) => ({
-          baselineErrorMap: { ...s.baselineErrorMap, [agentId]: `基线保存失败：${toMessage(e)}` },
-        }));
-      }
-    } catch (e) {
-      set((s) => ({
-        baselineErrorMap: { ...s.baselineErrorMap, [agentId]: `基线抓取失败：${toMessage(e)}` },
-      }));
-    } finally {
-      set((s) => ({ baselineLoadingMap: { ...s.baselineLoadingMap, [agentId]: false } }));
-      releaseLock('baseline');
     }
   },
 
@@ -789,48 +680,6 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   // Capture actions
   // ------------------------------------------------------------------
 
-  captureSnapshot: async () => {
-    const showToast = useNotificationStore.getState().showToast;
-    const project = get().getActiveProject();
-    if (!project) return;
-    const { agentId, id: projectId, name } = project;
-    const { pinnedSelectors, pseudoStates, captureSchemes } = get();
-    const liveName = name;
-    set({
-      snapshot: null,
-      snapshotLoading: true,
-      snapshotError: null,
-      snapshotThemeName: liveName,
-    });
-    try {
-      const snap = await api.snapshotThemeDom(agentId, undefined, {
-        extraSelectors: pinnedSelectors,
-        pseudoStates,
-        captureSchemes,
-      });
-      set({
-        snapshot: snap,
-        snapshotLoading: false,
-        snapshotError: null,
-        snapshotThemeName: liveName,
-        inspectingIdx: 0,
-        pseudoView: null,
-        schemeView: null,
-      });
-      await api.saveStudioSnapshot(projectId, snap);
-      void get().saveActiveProject({ hasSnapshot: true });
-    } catch (err) {
-      const msg = toMessage(err);
-      set({
-        snapshot: null,
-        snapshotLoading: false,
-        snapshotError: `Snapshot failed: ${msg}`,
-        snapshotThemeName: liveName,
-      });
-      showToast(currentT().studioSnapshotFailed, 'destructive');
-    }
-  },
-
   baselineSnapshot: async () => {
     const showToast = useNotificationStore.getState().showToast;
     const project = get().getActiveProject();
@@ -880,11 +729,11 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     const showToast = useNotificationStore.getState().showToast;
     const project = get().getActiveProject();
     if (!project) return;
-    const { snapshot, toolOverrides, exportName, exportAuthor } = get();
-    if (!snapshot) return;
+    const { toolOverrides, exportName, exportAuthor } = get();
+    if (!toolOverrides) return;
     set({ exportState: { loading: true, dir: null, error: null } });
     try {
-      const merged = mergeOverridesToSkinTokens(buildStudioPalette(snapshot), toolOverrides);
+      const merged = mergeOverridesToSkinTokens({}, toolOverrides);
       const payload = {
         meta: {
           name: exportName.trim() || project.name,
@@ -897,7 +746,6 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       const res = await api.exportStudioTheme(payload);
       set({ exportState: { loading: false, dir: res.packageDir, error: null } });
       void get().saveActiveProject({
-        hasSnapshot: true,
         exportedDir: res.packageDir,
         palette: merged,
         signature: payload.signature,
@@ -1149,27 +997,6 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
       imageToThemeMode: null,
       imageToThemeError: null,
     });
-  },
-
-  applyOverrideFromSnapshot: () => {
-    const showToast = useNotificationStore.getState().showToast;
-    const snapshot = get().snapshot;
-    if (!snapshot) {
-      showToast(currentT().studioNoPalette, 'destructive');
-      return;
-    }
-    const extracted = extractOverrideFromSnapshot(snapshot);
-    if (Object.keys(extracted).length === 0) {
-      showToast(currentT().studioNoPalette, 'destructive');
-      return;
-    }
-    set((s) => ({
-      undoStack: pushUndo(s.undoStack, s.toolOverrides),
-      redoStack: [],
-      toolOverrides: asToolOverride({ ...(s.toolOverrides ?? {}), ...extracted }),
-      previewView: 'theme',
-    }));
-    showToast(currentT().studioGeneratorApplied);
   },
 
   clearImageToTheme: () =>

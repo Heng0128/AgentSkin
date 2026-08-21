@@ -20,7 +20,7 @@ import type { UiMessages } from '@shared/i18n';
 import { Download, FolderOpen } from 'lucide-react';
 
 export function DockTabExport({ t }: { t: UiMessages }) {
-  const snapshot = useStudioStore((s) => s.snapshot);
+  const toolOverrides = useStudioStore((s) => s.toolOverrides);
   const exportName = useStudioStore((s) => s.exportName);
   const exportAuthor = useStudioStore((s) => s.exportAuthor);
   const exportState = useStudioStore((s) => s.exportState);
@@ -47,7 +47,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
           {t.studioLandmark} · {t.studioExport}
         </Kicker>
 
-        {!snapshot ? (
+        {!toolOverrides ? (
           <p className="font-mono text-[10px] text-[var(--fg-2)]">{t.studioInspectorEmpty}</p>
         ) : (
           <>

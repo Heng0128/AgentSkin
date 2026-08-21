@@ -3,21 +3,20 @@
 /**
  * # FloatingToolbar
  *
- * Floating bottom-center toolbar on the Stage — zoom control and quick
- * actions (Snapshot · Baseline · Inspect Pick).
+ * Floating bottom-center toolbar on the Stage — zoom control and
+ * inspect toggle.
  *
  * Multi-window view-mode switching and window/agent selectors are removed.
  * Single-window Studio only renders one PreviewWindow.
  */
 
 import { useState } from 'react';
-import { captureAgentSnapshot } from '@/components/studio/actions/capturePipeline';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 import type { UiMessages } from '@shared/i18n';
 import type { AgentId } from '@shared/types';
-import { Eye, RefreshCw, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 const ZOOM_PRESETS = [0.25, 0.38, 0.45, 0.55, 0.75, 1.0];
 
@@ -25,7 +24,7 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
   const window = useWorkspaceStore((s) => s.window);
   const setWindowScale = useWorkspaceStore((s) => s.setWindowScale);
 
-  const { snapshotLoading, inspectMode, toggleInspect } = useStudioStore();
+  const { inspectMode, toggleInspect } = useStudioStore();
 
   const [zoomOpen, setZoomOpen] = useState(false);
 
@@ -33,16 +32,6 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
   const activeAgentId = window?.agentId;
 
   // --- handlers ---
-
-  const handleSnapshot = () => {
-    if (!activeAgentId) return;
-    void captureAgentSnapshot(activeAgentId, 'current', { t });
-  };
-
-  const handleBaseline = () => {
-    if (!activeAgentId) return;
-    void captureAgentSnapshot(activeAgentId, 'baseline', { t });
-  };
 
   const handleAgentChange = (_agentId: AgentId) => {
     // Single-window: agent change handled by parent via selectAgent.
@@ -74,24 +63,7 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
 
       <div className="h-5 w-px bg-[var(--border-default)]" />
 
-      {/* Capture actions */}
-      <button
-        type="button"
-        onClick={handleSnapshot}
-        disabled={snapshotLoading}
-        className="ws-btn ws-btn--sm ws-btn--primary"
-      >
-        <Eye className="size-3" />
-        {t.studioSnapshotButton}
-      </button>
-      <button
-        type="button"
-        onClick={handleBaseline}
-        className="ws-btn ws-btn--sm"
-        title={t.studioBaselineTooltip}
-      >
-        <RefreshCw className="size-3" />
-      </button>
+      {/* Inspect toggle */}
       <button
         type="button"
         onClick={() => void toggleInspect()}

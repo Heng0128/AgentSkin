@@ -3,47 +3,33 @@
 /**
  * # StudioTopBar
  *
- * Workspace top bar — brand cluster, undo/redo, panel toggles,
- * restore, export. 52px fixed height.
+ * Workspace top bar — brand cluster, undo/redo, panel toggles.
+ * 52px fixed height.
  *
  * Multi-mode view switcher and workspace preset dropdown are removed
  * (single-window only).
  *
  * State wiring:
  *   · undo() / redo()                     studioStore (undoStack / redoStack)
- *   · exportTheme()                       studioStore
- *   · restoreAgent()                      studioStore
  *   · activeProject / getActiveProject()  studioStore
- *   · baselines                           studioStore (Restore visible when baseline exists)
  *   · dock / drawer / inspector toggle    workspaceStore
  */
 
-import { useState } from 'react';
-import { useNotificationStore } from '@/stores/notificationStore';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { PreviewView } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
-import { ChevronsLeft, ChevronsRight, Download, RefreshCw } from 'lucide-react';
-import { ExportDialog } from './ExportDialog';
+import { ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 /** Ordered list of center tabs for the TopBar view switcher. */
 const TOPBAR_TABS: {
   view: PreviewView;
-  labelKey:
-    | 'studioTabTheme'
-    | 'studioTabWallpaper'
-    | 'studioTabBundle'
-    | 'studioTabInspect'
-    | 'studioTabGenerator'
-    | 'studioTabRaw';
+  labelKey: 'studioTabTheme' | 'studioTabWallpaper' | 'studioTabBundle' | 'studioTabRaw';
 }[] = [
   { view: 'theme', labelKey: 'studioTabTheme' },
   { view: 'wallpaper', labelKey: 'studioTabWallpaper' },
   { view: 'bundle', labelKey: 'studioTabBundle' },
-  { view: 'inspect', labelKey: 'studioTabInspect' },
-  { view: 'generator', labelKey: 'studioTabGenerator' },
   { view: 'raw', labelKey: 'studioTabRaw' },
 ];
 
@@ -52,33 +38,16 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
     useWorkspaceStore();
 
   const activeProject = useStudioStore((s) => s.getActiveProject());
-  const { snapshot, exportState, undoStack, redoStack, baselines, previewView } = useStudioStore();
+  const { undoStack, redoStack, previewView } = useStudioStore();
 
   const undoDisabled = undoStack.length === 0;
   const redoDisabled = redoStack.length === 0;
-
-  // Local UI state
-  const [exportDialogOpen, setExportDialogOpen] = useState(false);
-  const showToast = useNotificationStore((s) => s.showToast);
-
-  const hasBaseline = activeProject ? Boolean(baselines[activeProject.agentId]) : false;
 
   const handleUndo = () => {
     if (!undoDisabled) useStudioStore.getState().undo();
   };
   const handleRedo = () => {
     if (!redoDisabled) useStudioStore.getState().redo();
-  };
-  const handleExport = () => {
-    if (exportState.loading) return;
-    if (!snapshot) {
-      showToast(t.studioToastCaptureSnapshotFirst, 'destructive');
-      return;
-    }
-    setExportDialogOpen(true);
-  };
-  const handleRestore = () => {
-    void useStudioStore.getState().restoreAgent();
   };
 
   return (
@@ -136,7 +105,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
           </button>
         </div>
 
-        {/* Center view switcher: 6 tabs (theme / wallpaper / bundle / inspect / generator / raw) */}
+        {/* Center view switcher: 4 tabs (theme / wallpaper / bundle / raw) */}
         <div
           className="flex items-center gap-0 ml-[var(--space-2)] rounded-[var(--r-md)] p-0"
           style={{ background: 'var(--bg-3)' }}
@@ -189,36 +158,6 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
           </button>
         </div>
       </div>
-
-      {/* Right: Restore + Export */}
-      <div className="ws-topbar__right">
-        {/* Restore: only when baseline exists for current agent */}
-        {hasBaseline && (
-          <button
-            type="button"
-            className="ws-btn"
-            onClick={handleRestore}
-            title={t.studioRestoreBaseline}
-          >
-            <RefreshCw className="size-3" />
-            {t.studioRestore}
-          </button>
-        )}
-
-        {/* Export */}
-        <button
-          type="button"
-          className="ws-btn ws-btn--primary"
-          disabled={!snapshot || exportState.loading}
-          onClick={handleExport}
-        >
-          <Download className="size-3" />
-          {exportState.loading ? t.studioExporting : t.studioExportButton}
-        </button>
-      </div>
-
-      {/* Export dialog */}
-      <ExportDialog open={exportDialogOpen} onClose={() => setExportDialogOpen(false)} t={t} />
     </header>
   );
 }

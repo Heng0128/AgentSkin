@@ -3,11 +3,10 @@
 /**
  * # StudioCenterPanel
  *
- * Center work-area container with a 6-tab bar (theme / wallpaper / bundle /
- * inspect / generator / raw). Each tab renders a corresponding content panel.
+ * Center work-area container with a 4-tab bar (theme / wallpaper / bundle /
+ * raw). Each tab renders a corresponding content panel.
  *
- * This is the canonical center workspace — the missing piece that i18n
- * reserved (6 studioTab* keys) but no component ever rendered.
+ * This is the canonical center workspace.
  *
  * Active tab is driven by `studioStore.previewView` (getState().setPreviewView).
  */
@@ -17,8 +16,6 @@ import type { PreviewView } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 import { CenterTabBundle } from './center/CenterTabBundle';
-import { CenterTabGenerator } from './center/CenterTabGenerator';
-import { CenterTabInspect } from './center/CenterTabInspect';
 import { CenterTabRaw } from './center/CenterTabRaw';
 import { CenterTabThemeEditor } from './center/CenterTabThemeEditor';
 import { CenterTabWallpaper } from './center/CenterTabWallpaper';
@@ -26,19 +23,11 @@ import { CenterTabWallpaper } from './center/CenterTabWallpaper';
 /** Ordered list of center tabs with their i18n label keys. */
 const CENTER_TABS: {
   view: PreviewView;
-  labelKey:
-    | 'studioTabTheme'
-    | 'studioTabWallpaper'
-    | 'studioTabBundle'
-    | 'studioTabInspect'
-    | 'studioTabGenerator'
-    | 'studioTabRaw';
+  labelKey: 'studioTabTheme' | 'studioTabWallpaper' | 'studioTabBundle' | 'studioTabRaw';
 }[] = [
   { view: 'theme', labelKey: 'studioTabTheme' },
   { view: 'wallpaper', labelKey: 'studioTabWallpaper' },
   { view: 'bundle', labelKey: 'studioTabBundle' },
-  { view: 'inspect', labelKey: 'studioTabInspect' },
-  { view: 'generator', labelKey: 'studioTabGenerator' },
   { view: 'raw', labelKey: 'studioTabRaw' },
 ];
 
@@ -72,8 +61,6 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
         {previewView === 'theme' && <CenterTabThemeEditor t={t} />}
         {previewView === 'wallpaper' && <CenterTabWallpaper t={t} />}
         {previewView === 'bundle' && <CenterTabBundle t={t} />}
-        {previewView === 'inspect' && <CenterTabInspect t={t} />}
-        {previewView === 'generator' && <CenterTabGenerator t={t} />}
         {previewView === 'raw' && <CenterTabRaw t={t} />}
       </div>
     </div>

@@ -367,7 +367,7 @@ const initialState: Omit<
   inspector: {
     open: true,
     width: INSPECTOR_WIDTH_DEFAULT,
-    activeTab: 'landmarks',
+    activeTab: 'profile',
     collapsed: false,
   },
 

@@ -8,6 +8,7 @@ import type {
   AgentSkinApi,
   ApplyRequest,
   ConcurrencyMetrics,
+  DomTreeNode,
   DriftStatus,
   FileImportConfirmRequest,
   FileImportResult,
@@ -15,6 +16,8 @@ import type {
   InspectedNode,
   RegenResult,
   ScanProgressEvent,
+  StudioLiveDomCacheReadRequest,
+  StudioLiveDomCacheWriteRequest,
   StudioProject,
   StudioSnapshotOptions,
   ThemeColorsFromImage,
@@ -72,6 +75,8 @@ const api: AgentSkinApi = {
     ipcRenderer.invoke(IpcChannel.SETTINGS_SET_APP_PORT, appId, port),
   getCustomThemeCss: () => ipcRenderer.invoke(IpcChannel.SETTINGS_GET_CUSTOM_CSS),
   setCustomThemeCss: (css: string) => ipcRenderer.invoke(IpcChannel.SETTINGS_SET_CUSTOM_CSS, css),
+  setLiveDomRefreshInterval: (interval: number) =>
+    ipcRenderer.invoke(IpcChannel.SETTINGS_SET_LIVE_DOM_REFRESH_INTERVAL, interval),
   listWallpapers: () => ipcRenderer.invoke(IpcChannel.WALLPAPER_LIST),
   extractThemeFromWallpaper: (wallpaperId: string) =>
     ipcRenderer.invoke(IpcChannel.WALLPAPER_EXTRACT_THEME, wallpaperId),
@@ -151,6 +156,14 @@ const api: AgentSkinApi = {
       agentId,
       options,
     }) as Promise<ThemeVisualSnapshot>,
+  // --- Theme Studio: real-time DOM tree capture (no store) ---
+  captureLiveDom: (agentId: AgentId) =>
+    ipcRenderer.invoke(IpcChannel.THEME_STUDIO_LIVE_DOM, { agentId }) as Promise<DomTreeNode>,
+  // --- Theme Studio: domTree disk cache ---
+  writeLiveDomCache: (req: StudioLiveDomCacheWriteRequest) =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_LIVE_DOM_CACHE_WRITE, req),
+  readLiveDomCache: (req: StudioLiveDomCacheReadRequest) =>
+    ipcRenderer.invoke(IpcChannel.STUDIO_LIVE_DOM_CACHE_READ, req),
   // --- Theme Studio: export crafted theme package ---
   exportStudioTheme: (payload: ThemeStudioExportRequest) =>
     ipcRenderer.invoke(IpcChannel.THEME_STUDIO_EXPORT, payload),

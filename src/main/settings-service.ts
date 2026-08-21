@@ -32,6 +32,8 @@ interface PersistedSettings {
   /** Global user-authored CSS injected as the highest-priority theme layer
    *  (custom.css). Never overwritten by theme applies; cleared on restore. */
   customThemeCss?: string;
+  /** Live DOM 自动刷新间隔（毫秒），0=不自动刷新。默认 0 */
+  liveDomRefreshInterval?: number;
 }
 
 /** Upper bound on user custom CSS (256 KB) — generous for a CSS file, small
@@ -45,6 +47,14 @@ function normalizeCustomThemeCss(raw: unknown): string | undefined {
   const trimmed = raw.trim();
   if (!trimmed || trimmed.length > MAX_CUSTOM_THEME_CSS_CHARS) return undefined;
   return trimmed;
+}
+
+/** Read the persisted live DOM refresh interval; non-negative finite integers
+ *  are accepted, everything else is dropped (falls through to default 0). */
+function normalizeLiveDomRefreshInterval(raw: unknown): number | undefined {
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return undefined;
+  if (raw < 0 || !Number.isInteger(raw)) return undefined;
+  return raw;
 }
 
 // R6-10: 运行时验证 apps 字段结构，避免 `as unknown as PersistedSettings` 绕过类型检查。
@@ -247,6 +257,9 @@ export class SettingsService implements SettingsServiceApi {
             customThemeCss: normalizeCustomThemeCss(
               (parsed as { customThemeCss?: unknown }).customThemeCss,
             ),
+            liveDomRefreshInterval: normalizeLiveDomRefreshInterval(
+              (parsed as { liveDomRefreshInterval?: unknown }).liveDomRefreshInterval,
+            ),
           };
         } else if (parsed.version === 2) {
           // Schema 结构异常但版本号匹配 — 走安全降级
@@ -314,6 +327,18 @@ export class SettingsService implements SettingsServiceApi {
     await this.persist();
   }
 
+  /** Read the live DOM auto-refresh interval (ms). 0 = disabled. */
+  liveDomRefreshInterval(): number {
+    return this.data.liveDomRefreshInterval ?? 0;
+  }
+
+  /** Set the live DOM auto-refresh interval (ms). 0 disables auto-refresh. */
+  async setLiveDomRefreshInterval(interval: number): Promise<void> {
+    const normalized = normalizeLiveDomRefreshInterval(interval);
+    this.data.liveDomRefreshInterval = normalized;
+    await this.persist();
+  }
+
   toDto(defaultPorts: Record<AgentId, number>): DesktopSettings {
     const apps = {} as Record<AgentId, AppOverride>;
     for (const appId of AGENT_IDS) apps[appId] = this.overridesFor(appId);
@@ -322,6 +347,7 @@ export class SettingsService implements SettingsServiceApi {
       defaultPorts,
       wallpaper: this.wallpaper(),
       ...(this.data.customThemeCss ? { customThemeCss: this.data.customThemeCss } : {}),
+      liveDomRefreshInterval: this.data.liveDomRefreshInterval ?? 0,
     };
   }
 
