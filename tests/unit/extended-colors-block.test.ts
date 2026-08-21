@@ -192,3 +192,37 @@ describe('Extended color block', () => {
     expect(onVars).toBe(3);
   });
 });
+
+describe('Coverage gaps', () => {
+  it('skips 3-digit hex values (#f00) — only accepts 6-digit', () => {
+    const css = extendedColorsBlock({ bad: '#f00', good: '#ff0000' });
+    expect(css).not.toContain('--agentskin-ext-bad');
+    expect(css).toContain('--agentskin-ext-good: #ff0000');
+  });
+
+  it('skips 8-digit hex with alpha channel', () => {
+    const css = extendedColorsBlock({ translucent: '#ff000080' });
+    expect(css).not.toContain('--agentskin-ext-translucent');
+  });
+
+  it('handles mixed valid and invalid entries gracefully', () => {
+    const css = extendedColorsBlock({
+      error: '#ef4444',
+      invalid: 'not-a-color',
+      success: '#22c55e',
+    });
+    expect(css).toContain('--agentskin-ext-error: #ef4444');
+    expect(css).toContain('--agentskin-ext-success: #22c55e');
+    expect(css).not.toContain('--agentskin-ext-invalid');
+  });
+
+  it('generates on-color for dark extended color', () => {
+    const css = extendedColorsBlock({ dark: '#1a1a2e' });
+    expect(css).toContain('--agentskin-ext-on-dark: #ffffff');
+  });
+
+  it('generates on-color for light extended color', () => {
+    const css = extendedColorsBlock({ light: '#f0f0f0' });
+    expect(css).toContain('--agentskin-ext-on-light: #000000');
+  });
+});

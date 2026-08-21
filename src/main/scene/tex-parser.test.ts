@@ -484,6 +484,88 @@ describe('parseTex — 截断/损坏头鲁棒性', () => {
   });
 });
 
+describe('parseTex — TEXV0006 magic 白名单', () => {
+  it('accepts TEXV0006 as a valid magic', () => {
+    const texBuf = buildTex({ format: TEX_FORMAT.RGBA8888 });
+    // Overwrite the magic at offset 0 from TEXV0005 to TEXV0006.
+    texBuf.write('TEXV0006', 0, 8, 'utf8');
+    const tex = parseTex(texBuf);
+    expect(tex).not.toBeNull();
+    expect(tex!.format).toBe(TEX_FORMAT.RGBA8888);
+  });
+
+  it('still rejects unknown magics', () => {
+    const texBuf = buildTex({ format: TEX_FORMAT.RGBA8888 });
+    texBuf.write('TEXV0099', 0, 8, 'utf8');
+    expect(parseTex(texBuf)).toBeNull();
+  });
+
+  it('still accepts the original TEXV0005 magic', () => {
+    const texBuf = buildTex({ format: TEX_FORMAT.RGBA8888 });
+    const tex = parseTex(texBuf);
+    expect(tex).not.toBeNull();
+  });
+});
+
+describe('decompressDxt — BC7 格式', () => {
+  it('decodes a 4×4 BC7 block (mode 0) to a 64-byte RGBA buffer', () => {
+    // Construct a minimal BC7 block: mode byte with bit 0 set = mode 0.
+    const block = Buffer.alloc(16, 0);
+    block[0] = 0x01; // mode 0 (first set bit at position 0)
+    block[2] = 100; // r0
+    block[3] = 150; // g0
+    block[4] = 200; // b0
+    block[6] = 50; // r1
+    block[7] = 80; // g1
+    block[8] = 30; // b1
+
+    const out = decompressDxt(TEX_FORMAT.BC7, 4, 4, block);
+    expect(out).not.toBeNull();
+    expect(out!.length).toBe(4 * 4 * 4);
+    // First pixel (t=0) should be close to endpoint 0.
+    expect(out![0]).toBe(100); // R ≈ r0
+    expect(out![1]).toBe(150); // G ≈ g0
+    expect(out![2]).toBe(200); // B ≈ b0
+    expect(out![3]).toBe(255); // A
+  });
+
+  it('uses magenta placeholder for BC7 modes 4–7', () => {
+    const block = Buffer.alloc(16, 0);
+    block[0] = 0x10; // mode 4 (first set bit at position 4)
+
+    const out = decompressDxt(TEX_FORMAT.BC7, 4, 4, block);
+    expect(out).not.toBeNull();
+    // All pixels should be magenta placeholder.
+    expect(out![0]).toBe(255); // R
+    expect(out![1]).toBe(0); // G
+    expect(out![2]).toBe(255); // B
+    expect(out![3]).toBe(255); // A
+  });
+
+  it('returns null when the source buffer is too short for BC7 blocks', () => {
+    // 8×8 BC7 needs 2×2×16 = 64 bytes; provide fewer.
+    expect(decompressDxt(TEX_FORMAT.BC7, 8, 8, Buffer.alloc(32))).toBeNull();
+    // 4×4 BC7 needs 16 bytes; provide fewer.
+    expect(decompressDxt(TEX_FORMAT.BC7, 4, 4, Buffer.alloc(8))).toBeNull();
+  });
+
+  it('returns null for absurd BC7 dimensions', () => {
+    expect(decompressDxt(TEX_FORMAT.BC7, 65535, 65535, Buffer.alloc(16))).toBeNull();
+  });
+
+  it('decodes a full 8×8 BC7 mipmap (4 blocks) without error', () => {
+    // 8×8 = 4 blocks × 16 bytes = 64 bytes.
+    const blocks = Buffer.alloc(64, 0);
+    // Set each block's mode byte to mode 0.
+    for (let i = 0; i < 4; i++) {
+      blocks[i * 16] = 0x01;
+    }
+    const out = decompressDxt(TEX_FORMAT.BC7, 8, 8, blocks);
+    expect(out).not.toBeNull();
+    expect(out!.length).toBe(8 * 8 * 4);
+  });
+});
+
 describe('rgbaToPngDataUrl — 输入校验', () => {
   it('throws a labelled RangeError on a too-small buffer', () => {
     const rgba = Buffer.alloc(4); // enough for 1×1, but we claim 2×2 (needs 16)

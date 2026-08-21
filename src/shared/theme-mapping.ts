@@ -18,6 +18,7 @@ export const SEMANTIC_TO_AGENTSKIN: Record<string, string> = {
   background: '--agentskin-bg',
   foreground: '--agentskin-text',
   accent: '--agentskin-accent',
+  accentMuted: '--agentskin-accent-muted',
   secondary: '--agentskin-secondary',
   surface: '--agentskin-surface',
   surfaceElevated: '--agentskin-surface-elevated',
@@ -48,7 +49,7 @@ export function semanticColorsToPalette(colors?: Record<string, unknown>): Recor
     const token = SEMANTIC_TO_AGENTSKIN[semantic];
     if (token && typeof value === 'string') {
       palette[token] = value;
-    } else if (process.env.NODE_ENV !== 'production') {
+    } else if (import.meta.env.MODE !== 'production') {
       console.warn('[theme-mapping] unmapped semantic color:', semantic);
     }
   }
@@ -67,7 +68,7 @@ export function paletteToSemanticColors(palette?: Record<string, unknown>): Reco
     const semantic = AGENTSKIN_TO_SEMANTIC[token];
     if (semantic && typeof value === 'string') {
       colors[semantic] = value;
-    } else if (process.env.NODE_ENV !== 'production') {
+    } else if (import.meta.env.MODE !== 'production') {
       console.warn('[theme-mapping] unmapped palette token:', token);
     }
   }

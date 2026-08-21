@@ -236,6 +236,8 @@ export interface ImagePixelSample {
 export interface ThemeColorsFromImage {
   mode: 'light' | 'dark';
   accent: string;
+  /** accent 的低饱和变体，用于次级强调（标签、badge、subtle 高亮）。 */
+  accentMuted: string;
   secondary: string;
   background: string;
   foreground: string;

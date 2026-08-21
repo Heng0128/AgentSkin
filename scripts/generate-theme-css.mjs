@@ -25,6 +25,7 @@ import { designLanguageBlock, resolveDesignLanguage } from './design-language.mj
 import { extendedColorsBlock } from './extended-colors.mjs';
 import { buildContext, GENERATORS } from './theme-generators.mjs';
 import { auroraGlassSignature, HOSTS } from './theme-utils.mjs';
+import { filterByAgent, loadVariations } from './variations-loader.mjs';
 
 const THEMES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'themes');
 
@@ -62,6 +63,10 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
     console.log(`[generate-theme-css] ${id}: skipped (flat theme, art=false)`);
     continue;
   }
+  // Component variations: loaded once per theme (not per-scheme or per-agent),
+  // as variation files are shared across all schemes of a theme.
+  const variations = await loadVariations(themeDir);
+
   const schemes = loadColorSchemes(id, themeDir, manifest);
   for (const scheme of schemes) {
     const ctx = buildContext(id, manifest, scheme);
@@ -85,6 +90,13 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
       // --agentskin-shadow-float / --agentskin-duration-* variables appended.
       // Omitted when the resolved config equals defaults (no unnecessary output).
       if (dlBlock) css += dlBlock;
+      // Component variations: append agent-compatible variation CSS (if any).
+      if (variations.length > 0) {
+        const compatible = filterByAgent(variations, agent);
+        for (const v of compatible) {
+          if (v.css) css += `\n/* variation:${v.id} */\n${v.css}`;
+        }
+      }
       // Opt-in crafted layer: only themes declaring `signature: "aurora-glass"`
       // get the Aurora Glass signature appended. Deterministic → --verify stays green.
       if (ctx.signature === 'aurora-glass' && HOSTS[agent]) {

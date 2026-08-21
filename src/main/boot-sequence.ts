@@ -53,6 +53,7 @@ import { registerIpc } from './ipc';
 import { disposeCoordinatorIpc } from './ipc/coordinator-ipc';
 import { loadLocalePreference } from './locale-preferences';
 import { brandingRoot, ctx, registerDisposable, sendLog } from './main-context';
+import { terminateSceneWorkerPool } from './scene-renderer-async';
 import { performanceLogger } from './services/performance';
 import { SettingsService } from './settings-service';
 import { ThemeLibrary } from './theme-library';
@@ -363,6 +364,10 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
       // down on quit via registerDisposable so the interval never blocks exit.
       performanceLogger.startMemorySampler();
       registerDisposable(() => performanceLogger.stopMemorySampler());
+
+      // Scene renderer Worker pool — terminate idle workers on quit so they
+      // don't leak past app shutdown.
+      registerDisposable(() => terminateSceneWorkerPool());
 
       for (const filePath of extractThemeFilesFromArgv(process.argv))
         ctx.fileOpens.handlePath(filePath);

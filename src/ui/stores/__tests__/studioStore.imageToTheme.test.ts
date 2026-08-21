@@ -58,6 +58,7 @@ import { useStudioStore } from '../studioStore';
 const mockPalette: ThemeColorsFromImage = {
   mode: 'dark',
   accent: '#abc',
+  accentMuted: '#8fa8d4',
   secondary: '#9ece6a',
   background: '#0f1419',
   foreground: '#e6edf3',

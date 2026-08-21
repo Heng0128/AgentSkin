@@ -80,6 +80,12 @@ export async function parseWorkshopProject(
   dir: string,
   entry: string,
 ): Promise<DiscoveredItem | null> {
+  // Validate directory name to prevent malformed paths from becoming item IDs
+  if (/[<>:"|?*]/.test(entry) || entry.includes('..')) {
+    console.warn(`[wallpaper] skipping malformed directory name: ${dir}`);
+    return null;
+  }
+
   const projectFile = path.join(dir, 'project.json');
   let project: ProjectJson;
   try {

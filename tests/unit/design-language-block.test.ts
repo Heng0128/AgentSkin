@@ -255,3 +255,53 @@ describe('resolveDesignLanguage', () => {
     expect(DESIGN_LANGUAGES['compact-flat'].shadow.elevation).toBe('flat');
   });
 });
+
+describe('Edge cases & coverage gaps', () => {
+  it('generates correct radius when scale=0 (radius-sm floors at 0, not -1)', () => {
+    const css = designLanguageBlock({ radius: { scale: '0' } });
+    expect(css).toContain('--agentskin-radius-sm: 0px');
+    expect(css).toContain('--agentskin-radius-md: 0px');
+    expect(css).toContain('--agentskin-radius-lg: 4px');
+  });
+
+  it('generates correct radius when scale=4', () => {
+    const css = designLanguageBlock({ radius: { scale: '4' } });
+    expect(css).toContain('--agentskin-radius-sm: 3px');
+    expect(css).toContain('--agentskin-radius-md: 4px');
+    expect(css).toContain('--agentskin-radius-lg: 8px');
+  });
+
+  it('generates correct radius when scale=8 (radius-lg caps at 8)', () => {
+    const css = designLanguageBlock({ radius: { scale: '8' } });
+    expect(css).toContain('--agentskin-radius-sm: 7px');
+    expect(css).toContain('--agentskin-radius-md: 8px');
+    expect(css).toContain('--agentskin-radius-lg: 8px');
+  });
+
+  it('returns empty string for empty designLanguageConfig (all defaults)', () => {
+    const css = designLanguageBlock(DL_DEFAULTS);
+    expect(css).toBe('');
+  });
+
+  it('handles partial inline config (only spacing, rest defaults)', () => {
+    const dl = resolveDesignLanguage({ designLanguageConfig: { spacing: { density: 'compact' } } });
+    // Only spacing differs; radius/shadow/motion should be defaults
+    expect(dl.spacing.density).toBe('compact');
+    expect(dl.radius.scale).toBe('2');
+    expect(dl.shadow.elevation).toBe('float');
+    expect(dl.motion.speed).toBe('fast');
+    // Output should NOT be empty (spacing is non-default)
+    const css = designLanguageBlock(dl);
+    expect(css).not.toBe('');
+    expect(css).toContain('--agentskin-space-3: 12px');
+  });
+
+  it('handles partial inline config (only radius, rest defaults)', () => {
+    const dl = resolveDesignLanguage({ designLanguageConfig: { radius: { scale: '8' } } });
+    expect(dl.radius.scale).toBe('8');
+    expect(dl.spacing.density).toBe('comfortable');
+    const css = designLanguageBlock(dl);
+    expect(css).not.toBe('');
+    expect(css).toContain('--agentskin-radius-md: 8px');
+  });
+});

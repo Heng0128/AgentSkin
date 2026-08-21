@@ -10,11 +10,22 @@
  * Extracted from `scene-pkg-parser.ts` as part of the SRP refactor (P0-3).
  *
  * ## Format
- * - Header: magic (length-prefixed string), entry count (int32 LE)
+ *
+ * ### V0001 / V0002 (new)
+ * - Header: magic "PKG\0" (4-byte NString), headerSize (int32 LE)
+ * - If headerSize > 8: extended header of `(headerSize - 8)` bytes to skip
  * - File table: per entry — name (length-prefixed string), offset (int32 LE),
  *   length (int32 LE)
  * - Data section: raw file bytes at `dataStart + entry.offset`
  * - No compression at the PKG level
+ *
+ * ### Legacy (length-prefixed magic)
+ * - Header: magic (length-prefixed string), entry count (int32 LE)
+ * - Same file table and data section layout.
+ *
+ * The parser auto-detects the format: if the first 4 bytes decode to "PKG" as
+ * an NString, the new header structure is used; otherwise the cursor rewinds
+ * and the legacy layout is parsed.
  */
 
 import { readFileSync } from 'node:fs';
@@ -56,11 +67,29 @@ export function parsePkgBuffer(buf: Buffer): PkgPackage | null {
   const reader = new BinaryReader(buf);
   let magic: string;
   try {
-    magic = reader.readStringI32();
-    // An empty magic string means this is not a real scene.pkg container — a
-    // length-prefix of 0 in the header is either a corrupt file or a different
-    // format. Reject it so callers treat it as "unparseable, skip" (null).
-    if (!magic) return null;
+    // Auto-detect format: try the new V0001/V0002 magic "PKG\0" first.
+    // readNString(4) reads up to 4 bytes until NUL — for "PKG\0" it returns
+    // "PKG" and advances the cursor by 4. If the result is not "PKG", this is
+    // the legacy format and we rewind to parse the length-prefixed magic.
+    const detected = reader.readNString(4);
+    if (detected === 'PKG') {
+      // V0001 / V0002: read headerSize and skip extended header if present.
+      // V0001: headerSize = 0 (or 8), no extended header.
+      // V0002: headerSize > 8, extended header of (headerSize - 8) bytes.
+      magic = detected;
+      const headerSize = reader.readInt32();
+      if (headerSize > 8) {
+        reader.seek(reader.position + headerSize - 8);
+      }
+    } else {
+      // Legacy format: rewind and read the length-prefixed magic string.
+      reader.seek(0);
+      magic = reader.readStringI32();
+      // An empty magic string means this is not a real scene.pkg container — a
+      // length-prefix of 0 in the header is either a corrupt file or a different
+      // format. Reject it so callers treat it as "unparseable, skip" (null).
+      if (!magic) return null;
+    }
     const entryCount = reader.readInt32();
     if (entryCount < 0 || entryCount > 10000) return null;
 

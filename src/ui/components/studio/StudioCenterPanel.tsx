@@ -20,6 +20,7 @@ import { CenterTabBundle } from './center/CenterTabBundle';
 import { CenterTabGenerator } from './center/CenterTabGenerator';
 import { CenterTabInspect } from './center/CenterTabInspect';
 import { CenterTabRaw } from './center/CenterTabRaw';
+import { CenterTabThemeEditor } from './center/CenterTabThemeEditor';
 import { CenterTabWallpaper } from './center/CenterTabWallpaper';
 
 /** Ordered list of center tabs with their i18n label keys. */
@@ -68,13 +69,7 @@ export function StudioCenterPanel({ t }: { t: UiMessages }) {
 
       {/* Content area */}
       <div className="min-h-0 flex-1 overflow-auto p-4">
-        {previewView === 'theme' && (
-          <div className="rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
-            <p className="font-mono text-[10px] text-[var(--fg-2)]">
-              {t.studioTabTheme} — Preview mode (see PreviewWindow in Stage)
-            </p>
-          </div>
-        )}
+        {previewView === 'theme' && <CenterTabThemeEditor t={t} />}
         {previewView === 'wallpaper' && <CenterTabWallpaper t={t} />}
         {previewView === 'bundle' && <CenterTabBundle t={t} />}
         {previewView === 'inspect' && <CenterTabInspect t={t} />}

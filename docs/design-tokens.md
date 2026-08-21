@@ -1,9 +1,9 @@
 # AgentSkin 设计系统 Token 文档
 
-> 版本：v1.0
-> 日期：2026-08-10
-> 来源：`src/ui/globals.css`（唯一事实源）
-> 说明：本文件完整记录 AgentSkin 的 Swiss / International Typographic Style 设计 token。所有值均从 globals.css 提取，dark 与 light 主题差异已标注。
+> 版本：v2.0
+> 日期：2026-08-21
+> 来源：`src/ui/globals.css`（唯一事实源）、`scripts/design-language.mjs`、`scripts/extended-colors.mjs`
+> 说明：本文件完整记录 AgentSkin 的 Swiss / International Typographic Style 设计 token。所有值均从 globals.css 提取，dark 与 light 主题差异已标注。本文档同时记录主题层 Design Language 变量和 Extended Colors 系统。
 
 ---
 
@@ -18,7 +18,10 @@
 7. [间距与布局网格](#7-间距与布局网格)
 8. [语义色与状态](#8-语义色与状态)
 9. [组件级 token](#9-组件级-token)
-10. [已知问题与建议](#10-已知问题与建议)
+10. [Design Language 系统（v2.6+）](#10-design-language-系统v26)
+11. [Extended Colors 语义色（v2.6+）](#11-extended-colors-语义色v26)
+12. [WCAG/APCA 对比度引擎（v2.6+）](#12-wcagapca-对比度引擎v26)
+13. [已知问题与建议](#13-已知问题与建议)
 
 ---
 
@@ -318,9 +321,161 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 ---
 
-## 10. 已知问题与建议
+## 10. Design Language 系统（v2.6+）
 
-### 10.1 命名不一致
+> 来源：`scripts/design-language.mjs`（注册表 + CSS 生成）
+> 注入层：L0（`tokenBlock()` 之后、Aurora Glass 签名之前）
+> 设计原则：主题可声明 `designLanguageConfig` 内联配置间距/圆角/阴影/动画形态，无需引用外部 designLanguage id。
+
+### 10.1 变量清单
+
+| 变量 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `--agentskin-space-1` | length | 4px | 4px 网格 × density |
+| `--agentskin-space-2` | length | 8px | 8px 网格 × density |
+| `--agentskin-space-3` | length | 16px | 16px 网格 × density |
+| `--agentskin-space-4` | length | 24px | 24px 网格 × density |
+| `--agentskin-space-5` | length | 32px | 32px 网格 × density |
+| `--agentskin-space-6` | length | 48px | 48px 网格 × density |
+| `--agentskin-radius-sm` | length | 1px | max(0, scale-1) |
+| `--agentskin-radius-md` | length | 2px | 等于 scale |
+| `--agentskin-radius-lg` | length | 6px | min(8, scale+4) |
+| `--agentskin-shadow-float` | shadow | `0 4px 16px rgba(0,0,0,0.12)` | 阴影档位 |
+| `--agentskin-duration-fast` | duration | 100ms | 动画节奏 |
+| `--agentskin-duration-normal` | duration | 200ms | fast × 2（最小 50ms） |
+
+### 10.2 密度倍率
+
+| density | 倍率 | 用途 |
+|---------|------|------|
+| compact | 0.75x | 数据密集型界面 |
+| comfortable | 1x | 默认 |
+| cozy | 1.25x | 宽松阅读型界面 |
+
+### 10.3 圆角档位
+
+| scale | radius-sm | radius-md | radius-lg |
+|-------|-----------|-----------|-----------|
+| 0 | 0px | 0px | 4px |
+| 2 | 1px | 2px | 6px |
+| 4 | 3px | 4px | 8px |
+| 8 | 7px | 8px | 8px |
+
+### 10.4 阴影档位
+
+| elevation | 值 |
+|-----------|-----|
+| flat | none |
+| subtle | 0 1px 3px rgba(0,0,0,0.08) |
+| float | 0 4px 16px rgba(0,0,0,0.12) |
+
+### 10.5 动画节奏
+
+| speed | duration-fast | duration-normal |
+|-------|---------------|-----------------|
+| instant | 0ms | 50ms |
+| fast | 100ms | 200ms |
+| smooth | 200ms | 400ms |
+
+### 10.6 预设注册表
+
+| id | 名称 | spacing | radius | shadow | motion |
+|----|------|---------|--------|--------|--------|
+| swiss-default | Swiss Default | comfortable | 2 | float | fast |
+| soft-rounded | Soft Rounded | cozy | 8 | subtle | smooth |
+| compact-flat | Compact Flat | compact | 0 | flat | instant |
+
+### 10.7 默认值优化
+
+当主题的 `designLanguageConfig` 解析结果等于默认值时，`designLanguageBlock()` 返回空字符串，不生成任何 CSS 变量。这确保存量主题的 CSS 输出 byte-identical。
+
+---
+
+## 11. Extended Colors 语义色（v2.6+）
+
+> 来源：`scripts/extended-colors.mjs`（语义色块 + WCAG/APCA 引擎）
+> 注入层：L0（Design Language 块之前）
+> 设计原则：主题可声明 `colors.extended` 自由语义色 key，引擎自动生成 `--agentskin-ext-*` + `--agentskin-ext-on-*` 变量。
+
+### 11.1 变量命名
+
+对于 `extended` 中的每个 `{ name: hex }` 键值对：
+- `--agentskin-ext-<name>` → 存储 hex 值
+- `--agentskin-ext-on-<name>` → 自动选择黑色或白色文字（luminance > 0.45 → #000000，否则 #ffffff）
+
+### 11.2 示例
+
+manifest.json 声明：
+```json
+{
+  "colors": {
+    "extended": {
+      "error": "#ef4444",
+      "success": "#22c55e",
+      "warning": "#f59e0b",
+      "info": "#3b82f6"
+    }
+  }
+}
+```
+
+生成 CSS：
+```css
+:root {
+  --agentskin-ext-error: #ef4444;
+  --agentskin-ext-on-error: #ffffff;
+  --agentskin-ext-success: #22c55e;
+  --agentskin-ext-on-success: #ffffff;
+  --agentskin-ext-warning: #f59e0b;
+  --agentskin-ext-on-warning: #000000;
+  --agentskin-ext-info: #3b82f6;
+  --agentskin-ext-on-info: #ffffff;
+}
+```
+
+### 11.3 格式校验
+
+- 仅接受 6 位 hex（`#rrggbb`），3 位 hex 和 8 位 hex（含 alpha）被静默跳过
+- 保留 key：`on`、`ext`、`raw`、`wcag` 不可作为扩展色 key（CI 阻塞级校验）
+
+---
+
+## 12. WCAG/APCA 对比度引擎（v2.6+）
+
+> 来源：`scripts/extended-colors.mjs`（对比度计算）+ `scripts/wcag-apca-check.mjs`（校验）
+> 校验层：`check-themes.mjs`（warn-only，不阻塞 CI）
+
+### 12.1 WCAG 2.1 对比度
+
+- 公式：(L1 + 0.05) / (L2 + 0.05)，其中 L 为相对亮度
+- AA 阈值：≥ 4.5:1（普通文本）
+- AAA 阈值：≥ 7.0:1（普通文本）
+
+### 12.2 APCA 对比度（WCAG 3 草案）
+
+- 简化公式：Lc = |Ys^0.56 - Yt^0.57| × 1.25 × 100
+- Lc ≥ 60：普通文本可读
+- Lc ≥ 90：高置信度可读
+- APCA 在暗色模式下的对比度预测比 WCAG 2.x 更准确
+
+### 12.3 校验策略
+
+| 校验项 | 级别 | 行为 |
+|--------|------|------|
+| foreground/background | warn-only | 不满足 AA 时输出警告 |
+| extended colors | warn-only | 不满足 AA 时输出警告 |
+| `_wcag.level` | 配置 | AA / AAA / none |
+
+### 12.4 向后兼容
+
+- 不填写 `designLanguageConfig` 和 `extended` 的主题，CSS 输出与改动前 byte-identical
+- 所有新字段均为可选
+
+---
+
+## 13. 已知问题与建议
+
+### 13.1 命名不一致
 
 | # | 问题 | 位置 |
 |---|------|------|
@@ -329,15 +484,17 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 | 3 | `--shadow-xs` 在 light 未单独定义（继承 dark） | `.light` |
 | 4 | `--cr-brand-amber` 命名为「amber」但值与 warning 相同 | `:root` |
 
-### 10.2 建议
+### 13.2 建议
 
 1. **颜色 token 分立**：品牌红在 dark/light 值不同（`#ff453a` vs `#e30613`），建议统一为「dark 用亮红、light 用深红」的显式两套 token，避免依赖巧合。
-2. **间距 token 化**：当前间距直接用 Tailwind 数值，建议抽为 `--space-1/2/3/4` 等 token，便于统一调整。
+2. **间距 token 化**：✅ 已解决（v2.6 Design Language 系统）。当前间距已通过 `--agentskin-space-1..6` token化，支持密度倍率缩放。
 3. **命名纠正**：`--cr-brand-violet` 应改名（值实为红），或该值改为真正的紫色。
 4. **shadow-xs 补全**：light 下补 `--shadow-xs` 定义。
 5. **文档订阅**：此文档应随 globals.css 变更同步更新，建议在 globals.css 头部加注释链接本文档。
 6. **字号下限**：明确「CRITICAL 数据 ≥10px，辅助 mono 标签可 8.5–9px」的规范，避免新组件误用。
+7. **消费 componentVariations 字段**：v2.5 schema 已定义组件形态变体注册表，建议后续与 designLanguageConfig 对齐。
+8. **Studio UI 可视化面板**：为 designLanguageConfig 提供图形化调节。
 
 ---
 
-*本文档基于 `src/ui/globals.css` 当前内容生成，日期 2026-08-10。*
+*本文档基于 `src/ui/globals.css` 当前内容生成，日期 2026-08-21。*

@@ -52,6 +52,13 @@ export default defineConfig({
     },
   },
   renderer: {
+    // Vite 不会在渲染进程注入 Node.js 的 process 全局变量，但部分 shared 模块
+    // （theme-mapping.ts、workspaceStore.ts）在模块顶层访问了 process.env.*。
+    // 通过 define 在编译时将这些字面量替换为字符串常量，避免运行时 ReferenceError。
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'development'),
+      'process.env.VITEST': JSON.stringify(process.env.VITEST ?? ''),
+    },
     root: path.resolve(__dirname),
     build: {
       rollupOptions: {

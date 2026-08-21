@@ -119,3 +119,88 @@ export function renderSceneToHtml(
 
   return buildHtmlDocument(scene, layers);
 }
+
+// ---------------------------------------------------------------------------
+// L1 static renderer (zero-runtime fallback)
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate a static preview HTML for a scene (L1 degradation tier).
+ *
+ * Renders the first frame of the scene as a single `<img>` — no rAF loop,
+ * no particles, no interaction. Intended for low-power devices or when the
+ * user selects "energy saver" mode.
+ *
+ * The output contains **zero `<script>` tags**, so there is no runtime
+ * overhead beyond the browser's image decode + paint.
+ *
+ * @param layers The resolved render layers (same shape as produced by
+ *        `buildRenderLayers`). Expected to be sorted back-to-front by
+ *        `parallaxDepth` — the function picks the rearmost image layer
+ *        as the static preview source.
+ * @param options Optional viewport dimensions for the `<img>` tag.
+ * @returns A complete HTML document string. When `layers` is empty or
+ *          contains no image data, returns a pure-black background page.
+ */
+export function renderSceneToStaticHtml(
+  layers: RenderLayer[],
+  options: { width?: number; height?: number } = {},
+): string {
+  const width = options.width || 1920;
+  const height = options.height || 1080;
+
+  // Find the first frame's dataURL from layers. Layers are sorted by
+  // parallaxDepth (back to front), so we pick the rearmost image layer
+  // as the static preview source — equivalent to "the background".
+  let imageUrl: string | null = null;
+  for (const layer of layers) {
+    if (layer.frames && layer.frames.length > 0 && layer.frames[0].dataUrl) {
+      imageUrl = layer.frames[0].dataUrl;
+      break;
+    }
+    if (layer.dataUrl) {
+      imageUrl = layer.dataUrl;
+      break;
+    }
+  }
+
+  // No image layer found — return a pure-black static page. Zero scripts.
+  if (!imageUrl) {
+    return (
+      '<!DOCTYPE html>\n' +
+      '<html lang="en">\n' +
+      '<head>\n' +
+      '<meta charset="UTF-8">\n' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+      '<title>Scene Wallpaper (Static)</title>\n' +
+      '<style>\n' +
+      '  * { margin: 0; padding: 0; box-sizing: border-box; }\n' +
+      '  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }\n' +
+      '</style>\n' +
+      '</head>\n' +
+      '<body>\n' +
+      '</body>\n' +
+      '</html>'
+    );
+  }
+
+  // Single <img> with the first frame — no JavaScript, no canvas, no rAF.
+  return (
+    '<!DOCTYPE html>\n' +
+    '<html lang="en">\n' +
+    '<head>\n' +
+    '<meta charset="UTF-8">\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
+    '<title>Scene Wallpaper (Static)</title>\n' +
+    '<style>\n' +
+    '  * { margin: 0; padding: 0; box-sizing: border-box; }\n' +
+    '  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }\n' +
+    '  img { display: block; width: 100%; height: 100%; object-fit: cover; }\n' +
+    '</style>\n' +
+    '</head>\n' +
+    '<body>\n' +
+    `<img src="${imageUrl}" width="${width}" height="${height}" alt="">\n` +
+    '</body>\n' +
+    '</html>'
+  );
+}

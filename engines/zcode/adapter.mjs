@@ -321,6 +321,15 @@ html.${HOST_CLASS} [class*="tooltip"] {
     sheet,
   ];
 
+  // DEEP_CONFIG (RFC 2026-08-20) — double quotes only, after STRUCTURAL_CSS
+  const DEEP_CONFIG = {
+    shadowMode: "open-only",
+    routes: [],
+    fragments: {},
+    exposedState: [],
+    enabled: true
+  };
+
   // DEEP-CORE INTEGRATION (RFC 2026-08-20)
   if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
     try {
@@ -331,10 +340,72 @@ html.${HOST_CLASS} [class*="tooltip"] {
     }
   }
 
-  // Legacy self-healing (fallback)
+  // ═══════════════════════════════════════════════════════════
+  // ELEMENT-LEVEL HEURISTIC GUARDS
+  // Checks if a mutated element matches structural patterns and
+  // applies targeted styles when style/class attributes change.
+  // ═══════════════════════════════════════════════════════════
+
+  function matchesHeuristicRules(el) {
+    if (!el || !(el instanceof Element)) return false;
+    const cls = typeof el.className === 'string' ? el.className : '';
+    const tag = el.tagName ? el.tagName.toLowerCase() : '';
+    const role = el.getAttribute('role') || '';
+    if (['dialog', 'menu', 'tooltip', 'listbox'].includes(role)) return true;
+    if (tag === 'nav' || tag === 'aside') return true;
+    if (el.hasAttribute('data-agentskin-sidebar')) return true;
+    if (el.hasAttribute('data-agentskin-composer')) return true;
+    if (el.hasAttribute('contenteditable') || tag === 'textarea' || role === 'textbox') return true;
+    if (/(?:sidebar|surface|composer|main-area|dialog|modal|popover|dropdown|header|container|wrapper|content|input)/i.test(cls)) return true;
+    const style = el.getAttribute('style') || '';
+    if (/background(?:-color)?\s*:/i.test(style) && !/transparent/i.test(style)) return true;
+    return false;
+  }
+
+  function applyHeuristicStylesToElement(el) {
+    if (!el || !(el instanceof Element)) return;
+    const cls = typeof el.className === 'string' ? el.className : '';
+    const tag = el.tagName ? el.tagName.toLowerCase() : '';
+    const role = el.getAttribute('role') || '';
+    if (['dialog', 'menu', 'tooltip', 'listbox'].includes(role)) {
+      el.style.setProperty('background', 'color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent)', 'important');
+      el.style.setProperty('border', 'none', 'important');
+      return;
+    }
+    if (tag === 'nav' || tag === 'aside' || /sidebar/i.test(cls) || el.hasAttribute('data-agentskin-sidebar')) {
+      el.style.setProperty('background', 'var(--sidebar-bg, color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 22%, transparent))', 'important');
+      el.style.setProperty('border-right', 'none', 'important');
+      return;
+    }
+    if (el.hasAttribute('contenteditable') || tag === 'textarea' || role === 'textbox' || /composer/i.test(cls) || el.hasAttribute('data-agentskin-composer')) {
+      el.style.setProperty('background', 'var(--input-bg, color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent))', 'important');
+      el.style.setProperty('border', '1px solid color-mix(in srgb, var(--agentskin-accent) 20%, transparent)', 'important');
+      el.style.setProperty('border-radius', '14px', 'important');
+      return;
+    }
+    el.style.setProperty('background', 'transparent', 'important');
+    el.style.setProperty('background-color', 'transparent', 'important');
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // SELF-HEALING: MutationObserver (with adaptive throttle)
+  // Re-applies structural styles when DOM changes significantly.
+  // Wrapped in AdaptiveMutationObserver to prevent observer storms
+  // from third-party agent re-renders.
+  // Enhanced: observes style/class attributes, lowered threshold,
+  // element-level heuristic guards.
+  // ═══════════════════════════════════════════════════════════
+
   let healTimer = null;
   const observer = new AdaptiveMutationObserver((mutations) => {
-    const structural = mutations.some(m => m.addedNodes.length > 3 || m.removedNodes.length > 3);
+    // Guard: handle style/class attribute changes on existing elements
+    for (const m of mutations) {
+      if (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class')) {
+        if (matchesHeuristicRules(m.target)) applyHeuristicStylesToElement(m.target);
+      }
+    }
+    // Guard: handle structural DOM changes (lowered threshold: >1)
+    const structural = mutations.some(m => m.addedNodes.length > 1 || m.removedNodes.length > 1);
     if (!structural) return;
     if (healTimer) clearTimeout(healTimer);
     healTimer = setTimeout(() => {
@@ -342,16 +413,69 @@ html.${HOST_CLASS} [class*="tooltip"] {
       try { sheet.replaceSync([STRUCTURAL_CSS, discoverAndOverrideTokens()].filter(Boolean).join('\n')); } catch {}
     }, 300);
   });
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
 
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: scheduleReinject (debounced reinject)
+  // 100ms debounce coalesces rapid mutation bursts into a single
+  // reinject, preventing observer storms from React re-renders.
+  // ═══════════════════════════════════════════════════════════
+  let reinjectTimeout = null;
+  function scheduleReinject() {
+    if (reinjectTimeout) clearTimeout(reinjectTimeout);
+    reinjectTimeout = setTimeout(() => {
+      applySemanticAnchors();
+      try { sheet.replaceSync([STRUCTURAL_CSS, discoverAndOverrideTokens()].filter(Boolean).join('\n')); } catch {}
+      // Ensure host class survives React re-renders
+      if (!document.documentElement.classList.contains(HOST_CLASS)) {
+        document.documentElement.classList.add(HOST_CLASS);
+      }
+      reinjectTimeout = null;
+    }, 100);
+  }
+
+  // Expected adoptedStyleSheets layers (adapter sheet = 1)
+  const expectedLayers = 1;
+
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: 2s periodic re-check (enhanced from 5s)
+  // Checks host class, hero URL, and adoptedStyleSheets presence.
+  // Triggers debounced reinject if any layer is missing.
+  // ═══════════════════════════════════════════════════════════
   const interval = setInterval(() => {
-    if (!document.documentElement.classList.contains(HOST_CLASS)) document.documentElement.classList.add(HOST_CLASS);
+    let needsReinject = false;
+    // Check host class
+    if (!document.documentElement.classList.contains(HOST_CLASS)) {
+      document.documentElement.classList.add(HOST_CLASS);
+      needsReinject = true;
+    }
+    // Re-apply semantic anchors (findSidebar/findComposer may have moved)
     applySemanticAnchors();
+    // Check hero URL
     if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
       document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
+      needsReinject = true;
     }
-  }, 5000);
+    // Check adoptedStyleSheets — host may have replaced the array
+    const agentskinSheets = document.adoptedStyleSheets.filter(s => s.__agentskin);
+    if (agentskinSheets.length < expectedLayers) {
+      needsReinject = true;
+    }
+    if (needsReinject) scheduleReinject();
+  }, 2000);
 
-  window[MARKER] = { observer, interval, sheet };
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: adoptedStyleSheets watchdog (1.5s)
+  // Ensures adapter sheet survives host overrides. Reinjects the
+  // full sheet if it was removed from the adoptedStyleSheets array.
+  // ═══════════════════════════════════════════════════════════
+  const sheetGuardInterval = setInterval(() => {
+    const sheets = document.adoptedStyleSheets.filter(s => s.__agentskin_layer === 'adapter');
+    if (sheets.length < expectedLayers) {
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+    }
+  }, 1500);
+
+  window[MARKER] = { observer, interval, sheetGuardInterval, sheet };
   return "applied";
 })()

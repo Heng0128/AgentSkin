@@ -13,15 +13,20 @@
  *      `electron-scanner.ts`) and stores the result.
  *   2. `launch(app)` invokes `api.launchElectronApp(request)` (IPC to main's
  *      `electron-launcher.ts`), tracks the app as "launching" until the
- *      promise settles, then updates `runningApps` from the result.
- *   3. The main process pushes `ELECTRON_STATUS` events when running apps
+ *      promise settles. Running state is driven by the coordinator.
+ *   3. The coordinator pushes `COORDINATOR_STATUS` events when running apps
  *      change (launched / exited); the subscription inside `create()` updates
- *      `runningApps` in real time.
+ *      `runningApps` in real time via `onCoordinatorStatus`.
  *
  * ## Concurrency
  *
  * A module-level `launchingGuard` Set prevents double-launching the same app
  * while a previous launch IPC is in flight. The guard is keyed by `appId`.
+ *
+ * ## UI State
+ *
+ * The store also tracks `scanProgress` for animated progress indicators and
+ * `drawerAppId` for the bottom detail drawer.
  */
 
 import { api } from '@/api/agentSkinClient';
@@ -129,6 +134,8 @@ interface AppsState {
   scanResult: ElectronScanResult | null;
   /** True while a scan IPC is in flight. */
   scanning: boolean;
+  /** Scan progress (0-100) for animated progress bar. */
+  scanProgress: number;
   /** Non-null when the last scan failed (drives the error banner + retry). */
   scanError: string | null;
   /** AppIds currently being launched (IPC in flight). */
@@ -137,6 +144,8 @@ interface AppsState {
   runningApps: Map<string, AppRunState>;
   /** User-hidden appIds. */
   hiddenApps: Set<string>;
+  /** Currently selected app for detail drawer (null = closed). */
+  drawerAppId: string | null;
 
   // --- Actions ---
   /** Scan locally installed Electron applications. `force=true` bypasses the
@@ -158,6 +167,10 @@ interface AppsState {
    * (`adapterMatch: null`) and appends it to `scanResult.other`.
    */
   addCustomApp: (exePath: string, _preferredPort?: number | null) => Promise<ScannedApp | null>;
+  /** Set the scan progress (0-100). */
+  setScanProgress: (progress: number) => void;
+  /** Open the detail drawer for an app. */
+  openDrawer: (appId: string | null) => void;
 }
 
 export const useAppsStore = create<AppsState>((set, get) => {
@@ -184,10 +197,12 @@ export const useAppsStore = create<AppsState>((set, get) => {
   return {
     scanResult: null,
     scanning: false,
+    scanProgress: 0,
     scanError: null,
     launchingApps: new Set(),
     runningApps: new Map(),
     hiddenApps: new Set(),
+    drawerAppId: null,
 
     scan: async (force = false) => {
       // Guard against concurrent scans: the button is disabled while scanning,
@@ -204,7 +219,13 @@ export const useAppsStore = create<AppsState>((set, get) => {
       // finishes. Tiles appear one-by-one (no empty-state flash — the old
       // list stays until the first event) and the final response only
       // enriches the same data, never replacing it wholesale.
+      let streamedCount = 0;
       const unsubscribe = appsApi.onElectronScanProgress((event) => {
+        streamedCount++;
+        // Animate progress: estimate ~30 apps total, progress ramps up
+        const estimatedTotal = Math.max(streamedCount, 30);
+        const progress = Math.min(95, Math.round((streamedCount / estimatedTotal) * 100));
+        set({ scanProgress: progress });
         set((s) => ({ scanResult: applyScanEvent(s.scanResult, event) }));
       });
 
@@ -222,10 +243,12 @@ export const useAppsStore = create<AppsState>((set, get) => {
             other: dedupeByProductName(result.other),
           }),
           scanning: false,
+          scanProgress: 100,
         }));
       } catch (error) {
         set({
           scanning: false,
+          scanProgress: 0,
           scanError: error instanceof Error ? error.message : String(error),
         });
       } finally {
@@ -357,5 +380,9 @@ export const useAppsStore = create<AppsState>((set, get) => {
 
       return customApp;
     },
+
+    setScanProgress: (progress: number) => set({ scanProgress: progress }),
+
+    openDrawer: (appId: string | null) => set({ drawerAppId: appId }),
   };
 });

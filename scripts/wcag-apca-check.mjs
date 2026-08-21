@@ -81,10 +81,9 @@ export function checkThemeContrast(manifest) {
 
 /**
  * Walk any `manifest.colors.extended` entries and verify each extended color
- * against its auto-generated on-color (the auto on-color is computed as a
- * 50/50 mix of the extended color and whichever of {background, foreground}
- * yields the higher contrast — a pragmatic approximation of the engine's
- * own --agentskin-ext-* derivation).
+ * against its auto-generated on-color via `autoOnColor(hex)` (luminance > 0.45
+ * → black text, else white text). This matches the runtime engine's
+ * `--agentskin-ext-on-*` derivation in `extended-colors.mjs` exactly.
  *
  * @param {Record<string, any>} manifest
  * @returns {Array<{ name: string, fg: string, bg: string, ratio: number,

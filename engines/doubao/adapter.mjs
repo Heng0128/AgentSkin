@@ -673,7 +673,7 @@ html.${HOST_CLASS} [class*="topic"]:hover {
   // Rebuild with the line-frame override + suggestion killer appended LAST
   // so they beat L4's token auto-discovery.
   const finalCss = [fullCss, INPUT_LINE_FRAME_CSS, SUGGEST_GLASS_KILLER].filter(Boolean).join('\n');
-  const finalSheet = new CSSStyleSheet();
+  let finalSheet = new CSSStyleSheet();
   finalSheet.replaceSync(finalCss);
   finalSheet.__agentskin = true;
   finalSheet.__agentskin_layer = 'adapter';
@@ -690,9 +690,39 @@ html.${HOST_CLASS} [class*="topic"]:hover {
   // ═══════════════════════════════════════════════════════════
 
   let healTimer = null;
+
+  /**
+   * Matches elements that the L5 heuristics target. Used by the inline
+   * style guard to decide whether a style/class mutation warrants a
+   * re-run of applyHeuristicStyles without waiting for a structural change.
+   */
+  function matchesHeuristicRules(el) {
+    if (!el || el.nodeType !== 1) return false;
+    return el.matches(
+      '[data-testid="chat_input"], [class*="input-guidance"], ' +
+      '[class*="input-container"], [class*="chat-input"], ' +
+      '[contenteditable="true"], textarea, [role="textbox"], ' +
+      '[class*="greeting"], [class*="welcome-text"], h1, h2, ' +
+      '[data-testid="chat_route_layout_leftside_nav"], ' +
+      '[data-testid="flow_chat_sidebar"], nav, ' +
+      'main, [role="main"]'
+    );
+  }
+
   const observer = new AdaptiveMutationObserver((mutations) => {
-    // Debounce: only re-apply if structural changes (added/removed nodes)
-    const structural = mutations.some(m => m.addedNodes.length > 2 || m.removedNodes.length > 2);
+    // Inline style guard: when style/class mutates on heuristic targets,
+    // re-apply heuristic styles immediately (prevents flash of
+    // unthemed content after Doubao re-renders an input/greeting/sidebar).
+    for (const m of mutations) {
+      if (m.type !== 'attributes') continue;
+      if (m.attributeName === 'style' || m.attributeName === 'class') {
+        if (matchesHeuristicRules(m.target)) applyHeuristicStyles();
+      }
+    }
+
+    // Structural change guard: lowered threshold (>1 instead of >2)
+    // catches smaller re-renders that still break layout/theme.
+    const structural = mutations.some(m => m.addedNodes.length > 1 || m.removedNodes.length > 1);
     if (!structural) return;
     if (healTimer) clearTimeout(healTimer);
     healTimer = setTimeout(() => {
@@ -703,7 +733,7 @@ html.${HOST_CLASS} [class*="topic"]:hover {
     }, 300);
   });
 
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
 
   // DEEP-CORE INTEGRATION (RFC 2026-08-20)
   if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
@@ -715,16 +745,81 @@ html.${HOST_CLASS} [class*="topic"]:hover {
     }
   }
 
-  // 5. Periodic re-check (legacy fallback)
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: scheduleReinject (debounced reinject)
+  // 100ms debounce coalesces rapid mutation bursts into a single
+  // reinject, preventing observer storms from React re-renders.
+  // Wraps the existing reinjectSheet() with debounce + host class guard.
+  // ═══════════════════════════════════════════════════════════
+  let reinjectTimeout = null;
+  function scheduleReinject() {
+    if (reinjectTimeout) clearTimeout(reinjectTimeout);
+    reinjectTimeout = setTimeout(() => {
+      reinjectSheet();
+      // Ensure host class survives React re-renders
+      if (!document.documentElement.classList.contains(HOST_CLASS)) {
+        document.documentElement.classList.add(HOST_CLASS);
+      }
+      reinjectTimeout = null;
+    }, 100);
+  }
+
+  // Expected adoptedStyleSheets layers (adapter sheet = 1)
+  const expectedLayers = 1;
+
+  // Reinject helper: rebuilds the full CSS sheet and re-adds it to
+  // document.adoptedStyleSheets. Doubao's chromium-webview can silently
+  // drop adoptedStyleSheets after navigation or over-aggressive internal
+  // style resets, so this is the canonical recovery path.
+  function reinjectSheet() {
+    const newSheet = finalSheet = new CSSStyleSheet();
+    const currentHeuristic = applyHeuristicStyles();
+    const currentDiscovered = discoverAndOverrideTokens();
+    const css = [STRUCTURAL_CSS, currentHeuristic, currentDiscovered, INPUT_LINE_FRAME_CSS, SUGGEST_GLASS_KILLER].filter(Boolean).join('\n');
+    newSheet.replaceSync(css);
+    newSheet.__agentskin = true;
+    newSheet.__agentskin_layer = 'adapter';
+    document.adoptedStyleSheets = [
+      ...document.adoptedStyleSheets.filter(s => s.__agentskin_layer !== 'adapter'),
+      newSheet,
+    ];
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: 2s periodic re-check (enhanced from 5s)
+  // Checks host class, hero URL, and adoptedStyleSheets presence.
+  // Triggers debounced reinject if any layer is missing.
+  // ═══════════════════════════════════════════════════════════
   const interval = setInterval(() => {
+    let needsReinject = false;
+    // Check host class
     if (!document.documentElement.classList.contains(HOST_CLASS)) {
       document.documentElement.classList.add(HOST_CLASS);
+      needsReinject = true;
     }
+    // Check hero URL
     if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
       document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
+      needsReinject = true;
     }
-  }, 5000);
+    // Check adoptedStyleSheets — host may have replaced the array
+    const agentskinSheets = document.adoptedStyleSheets.filter(s => s.__agentskin);
+    if (agentskinSheets.length < expectedLayers) {
+      needsReinject = true;
+    }
+    if (needsReinject) scheduleReinject();
+  }, 2000);
 
-  window[MARKER] = { observer, interval, sheet: finalSheet };
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: adoptedStyleSheets watchdog (1.5s)
+  // Ensures adapter sheet survives host overrides. Reinjects the
+  // full sheet if it was removed from the adoptedStyleSheets array.
+  // ═══════════════════════════════════════════════════════════
+  const sheetPoll = setInterval(() => {
+    const sheets = document.adoptedStyleSheets.filter(s => s.__agentskin);
+    if (sheets.length < expectedLayers) reinjectSheet();
+  }, 1500);
+
+  window[MARKER] = { observer, interval, sheetPoll, sheet: finalSheet };
   return "applied";
 })()

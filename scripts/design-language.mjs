@@ -61,17 +61,17 @@ export const DL_DEFAULTS = Object.freeze({
 // ---------------------------------------------------------------------------
 
 /** Spacing density multipliers applied to the 4px grid base values. */
-const SPACING_MULTIPLIERS = Object.freeze({
+export const SPACING_MULTIPLIERS = Object.freeze({
   compact: 0.75,
   comfortable: 1,
   cozy: 1.25,
 });
 
 /** 4px grid base spacing scale (px). Mirrors design-tokens.md spacing tokens. */
-const SPACING_BASE = Object.freeze([4, 8, 16, 24, 32, 48]);
+export const SPACING_BASE = Object.freeze([4, 8, 16, 24, 32, 48]);
 
 /** Radius scale values (px). */
-const RADIUS_VALUES = Object.freeze({
+export const RADIUS_VALUES = Object.freeze({
   0: 0,
   2: 2,
   4: 4,
@@ -79,14 +79,14 @@ const RADIUS_VALUES = Object.freeze({
 });
 
 /** Shadow elevation presets (CSS box-shadow value). */
-const SHADOW_VALUES = Object.freeze({
+export const SHADOW_VALUES = Object.freeze({
   flat: 'none',
   subtle: '0 1px 3px rgba(0,0,0,0.08)',
   float: '0 4px 16px rgba(0,0,0,0.12)',
 });
 
 /** Motion speed presets (ms). */
-const MOTION_VALUES = Object.freeze({
+export const MOTION_VALUES = Object.freeze({
   instant: 0,
   fast: 100,
   smooth: 200,

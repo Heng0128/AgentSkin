@@ -50,8 +50,14 @@ export class WallpaperService implements WallpaperServiceApi {
    */
   rescan(): void {
     this.scanned = false;
-    this.items.clear();
     this.root = null;
+    // Release theme: items individually (theme wallpapers need to be re-registered by the theme system)
+    for (const [id] of this.items) {
+      if (id.startsWith('theme:')) {
+        this.media.releaseForId(id);
+      }
+    }
+    this.items.clear();
     this.media.releaseAll();
   }
 

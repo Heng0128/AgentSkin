@@ -442,15 +442,69 @@ class AdaptiveMutationObserver {
   ];
 
   // ═══════════════════════════════════════════════════════════
+  // ELEMENT-LEVEL HEURISTIC GUARDS
+  // Checks if a mutated element matches structural patterns and
+  // applies targeted styles when style/class attributes change.
+  // ═══════════════════════════════════════════════════════════
+
+  function matchesHeuristicRules(el) {
+    if (!el || !(el instanceof Element)) return false;
+    const cls = typeof el.className === 'string' ? el.className : '';
+    const tag = el.tagName ? el.tagName.toLowerCase() : '';
+    const role = el.getAttribute('role') || '';
+    if (['dialog', 'menu', 'tooltip', 'listbox'].includes(role)) return true;
+    if (tag === 'nav' || tag === 'aside') return true;
+    if (el.hasAttribute('data-view-id')) return true;
+    if (el.hasAttribute('contenteditable') || tag === 'textarea' || role === 'textbox') return true;
+    if (/(?:sidebar|panel|surface|composer|main-area|dialog|modal|popover|dropdown|header|container|wrapper|content)/i.test(cls)) return true;
+    const style = el.getAttribute('style') || '';
+    if (/background(?:-color)?\s*:/i.test(style) && !/transparent/i.test(style)) return true;
+    return false;
+  }
+
+  function applyHeuristicStylesToElement(el) {
+    if (!el || !(el instanceof Element)) return;
+    const cls = typeof el.className === 'string' ? el.className : '';
+    const tag = el.tagName ? el.tagName.toLowerCase() : '';
+    const role = el.getAttribute('role') || '';
+    if (['dialog', 'menu', 'tooltip', 'listbox'].includes(role)) {
+      el.style.setProperty('background', 'color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent)', 'important');
+      el.style.setProperty('border', 'none', 'important');
+      return;
+    }
+    if (tag === 'nav' || tag === 'aside' || /sidebar/i.test(cls) || el.getAttribute('data-view-id') === 'sidebar') {
+      el.style.setProperty('background', 'color-mix(in srgb, var(--agentskin-surface) 12%, transparent)', 'important');
+      el.style.setProperty('border-right', 'none', 'important');
+      return;
+    }
+    if (el.hasAttribute('contenteditable') || tag === 'textarea' || role === 'textbox' || /composer|main-area/i.test(cls)) {
+      el.style.setProperty('background', 'color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 80%, var(--agentskin-accent) 20%) 48%, transparent)', 'important');
+      el.style.setProperty('border', '1px solid color-mix(in srgb, var(--agentskin-accent) 20%, transparent)', 'important');
+      el.style.setProperty('border-radius', '14px', 'important');
+      return;
+    }
+    el.style.setProperty('background', 'transparent', 'important');
+    el.style.setProperty('background-color', 'transparent', 'important');
+  }
+
+  // ═══════════════════════════════════════════════════════════
   // SELF-HEALING: MutationObserver (with adaptive throttle)
   // Re-applies heuristic styles when DOM changes significantly.
   // Wrapped in AdaptiveMutationObserver to prevent observer storms
   // from third-party agent re-renders.
+  // Enhanced: observes style/class attributes, lowered threshold.
   // ═══════════════════════════════════════════════════════════
 
   let healTimer = null;
   const observer = new AdaptiveMutationObserver((mutations) => {
-    const structural = mutations.some(m => m.addedNodes.length > 2 || m.removedNodes.length > 2);
+    // Guard: handle style/class attribute changes on existing elements
+    for (const m of mutations) {
+      if (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class')) {
+        if (matchesHeuristicRules(m.target)) applyHeuristicStylesToElement(m.target);
+      }
+    }
+    // Guard: handle structural DOM changes (lowered threshold: >1)
+    const structural = mutations.some(m => m.addedNodes.length > 1 || m.removedNodes.length > 1);
     if (!structural) return;
     if (healTimer) clearTimeout(healTimer);
     healTimer = setTimeout(() => {
@@ -460,8 +514,7 @@ class AdaptiveMutationObserver {
       try { finalSheet.replaceSync(updatedCss); } catch {}
     }, 300);
   });
-
-  observer.observe(document.body, { childList: true, subtree: true });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
 
   // DEEP-CORE INTEGRATION (RFC 2026-08-20)
   if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
@@ -473,16 +526,67 @@ class AdaptiveMutationObserver {
     }
   }
 
-  // 5. Periodic re-check (legacy fallback)
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: scheduleReinject (debounced reinject)
+  // 100ms debounce coalesces rapid mutation bursts into a single
+  // reinject, preventing observer storms from React re-renders.
+  // ═══════════════════════════════════════════════════════════
+  let reinjectTimeout = null;
+  function scheduleReinject() {
+    if (reinjectTimeout) clearTimeout(reinjectTimeout);
+    reinjectTimeout = setTimeout(() => {
+      const newRules = applyHeuristicStyles();
+      const newDiscovered = discoverAndOverrideTokens();
+      const updatedCss = [STRUCTURAL_CSS, newRules, newDiscovered].filter(Boolean).join('\n');
+      try { finalSheet.replaceSync(updatedCss); } catch {}
+      // Ensure host class survives React re-renders
+      if (!document.documentElement.classList.contains(HOST_CLASS)) {
+        document.documentElement.classList.add(HOST_CLASS);
+      }
+      reinjectTimeout = null;
+    }, 100);
+  }
+
+  // Expected adoptedStyleSheets layers (adapter sheet = 1)
+  const expectedLayers = 1;
+
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: 2s periodic re-check (enhanced from 5s)
+  // Checks host class, hero URL, and adoptedStyleSheets presence.
+  // Triggers debounced reinject if any layer is missing.
+  // ═══════════════════════════════════════════════════════════
   const interval = setInterval(() => {
+    let needsReinject = false;
+    // Check host class
     if (!document.documentElement.classList.contains(HOST_CLASS)) {
       document.documentElement.classList.add(HOST_CLASS);
+      needsReinject = true;
     }
+    // Check hero URL
     if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
       document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
+      needsReinject = true;
     }
-  }, 5000);
+    // Check adoptedStyleSheets — host may have replaced the array
+    const agentskinSheets = document.adoptedStyleSheets.filter(s => s.__agentskin);
+    if (agentskinSheets.length < expectedLayers) {
+      needsReinject = true;
+    }
+    if (needsReinject) scheduleReinject();
+  }, 2000);
 
-  window[MARKER] = { observer, interval, sheet: finalSheet };
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: adoptedStyleSheets watchdog (1.5s)
+  // Ensures adapter sheet survives host overrides. Reinjects the
+  // full sheet if it was removed from the adoptedStyleSheets array.
+  // ═══════════════════════════════════════════════════════════
+  const sheetGuardInterval = setInterval(() => {
+    const sheets = document.adoptedStyleSheets.filter(s => s.__agentskin_layer === 'adapter');
+    if (sheets.length < expectedLayers) {
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, finalSheet];
+    }
+  }, 1500);
+
+  window[MARKER] = { observer, interval, sheetGuardInterval, sheet: finalSheet };
   return "applied";
 })()

@@ -78,6 +78,23 @@ import {
 } from './session-pool';
 
 // ---------------------------------------------------------------------------
+// Concurrency constants
+// ---------------------------------------------------------------------------
+
+/** Default maximum concurrency for non-page target injection. */
+const DEFAULT_CONCURRENCY = 4;
+
+/** Result of a single non-page target injection. */
+interface SecondaryInjectResult {
+  targetId: string;
+  targetType: string;
+  title?: string;
+  success: boolean;
+  error?: string;
+  elapsed: number;
+}
+
+// ---------------------------------------------------------------------------
 // Deps slice
 // ---------------------------------------------------------------------------
 
@@ -183,6 +200,84 @@ export async function connectWithRetry(
 }
 
 // ---------------------------------------------------------------------------
+// Single non-page target injection (used by concurrent fan-out)
+// ---------------------------------------------------------------------------
+
+/**
+ * Inject lightweight CSS into a single non-page target (webview/iframe).
+ * Self-contained: acquires a session, runs the secondary CSS injection,
+ * and releases the session. Returns a result descriptor for the caller
+ * to update counters and emit progress events.
+ */
+async function injectSingleSecondaryTarget(
+  target: CdpTarget,
+  appId: AgentId,
+  targetTheme: ResolvedThemeTarget,
+  deps: CdpFanoutDeps,
+): Promise<SecondaryInjectResult> {
+  const targetStart = Date.now();
+  let handle: SessionHandle = { session: null, pooled: false };
+  try {
+    handle = await acquireSession(
+      deps.sessions,
+      appId,
+      targetKeyFor(target.id, target.webSocketDebuggerUrl),
+      () => connectWithRetry(target.webSocketDebuggerUrl!, 4000),
+    );
+  } catch {
+    handle = { session: null, pooled: false };
+  }
+  const session = handle.session;
+  if (!session) {
+    deps.log(
+      `[hardening] ${appId}: ${target.type} "${target.title?.slice(0, 40)}" connect failed after retries`,
+    );
+    return {
+      targetId: target.id ?? 'unknown',
+      targetType: target.type ?? 'unknown',
+      title: target.title,
+      success: false,
+      error: 'connect failed after retries',
+      elapsed: Date.now() - targetStart,
+    };
+  }
+
+  try {
+    let targetSuccess = false;
+    let targetError: string | undefined;
+    let targetResult = '';
+    try {
+      targetResult = await session.evaluate(buildSecondaryInjectExpression(appId, targetTheme));
+      if (targetResult.includes('"installed":true')) {
+        targetSuccess = true;
+      } else {
+        targetError = `unexpected result: ${targetResult}`;
+      }
+    } catch (error) {
+      targetError = toMessage(error);
+    }
+    return {
+      targetId: target.id ?? 'unknown',
+      targetType: target.type ?? 'unknown',
+      title: target.title,
+      success: targetSuccess,
+      error: targetError,
+      elapsed: Date.now() - targetStart,
+    };
+  } finally {
+    if (handle.pooled) {
+      releaseSession(deps.sessions, appId, targetKeyFor(target.id, target.webSocketDebuggerUrl));
+    } else {
+      try {
+        session.close();
+      } catch {
+        /* ignore close errors */
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Hardening pass — engine multi-layer injection into ALL DOM targets
 // ---------------------------------------------------------------------------
 
@@ -284,6 +379,14 @@ export async function hardeningPass(
       : {}),
   };
   const resolvedImages = Object.keys(imageDataUrls).length > 0 ? imageDataUrls : null;
+
+  // Split page and non-page targets. Page targets are processed serially
+  // (they compete for firstSession); non-page targets (webview/iframe) are
+  // injected concurrently with controlled concurrency to avoid CDP channel
+  // overload.
+  const pageTargets = domTargets.filter((t) => t.type === 'page');
+  const nonPageTargets = domTargets.filter((t) => t.type !== 'page');
+
   let engineInjected = 0;
   let legacyInjected = 0;
   let watchdogSkipped = 0;
@@ -294,12 +397,14 @@ export async function hardeningPass(
   let firstPooled = false;
   let firstSessionTargetKey: string | null = null;
   let secondaryLoopStart = 0;
+  let processedCount = 0;
 
-  for (const target of domTargets) {
+  // --- Page targets: serial (compete for firstSession) ---
+  for (const target of pageTargets) {
     // Abort if a newer apply/restore superseded this one mid-loop.
     if (!deps.isEpochCurrent(appId, epoch)) {
       deps.log(
-        `[hardening] ${appId}: epoch changed, aborting after ${engineInjected + legacyInjected}/${domTargets.length}`,
+        `[hardening] ${appId}: epoch changed, aborting after ${processedCount}/${domTargets.length}`,
       );
       // Release firstSession (pooled or one-shot).
       if (firstSession) {
@@ -329,121 +434,84 @@ export async function hardeningPass(
       deps.log(
         `[hardening] ${appId}: ${target.type} "${target.title?.slice(0, 40)}" connect failed after retries`,
       );
+      processedCount++;
       continue;
     }
 
     try {
-      if (target.type === 'page') {
-        // --- RFC 2026-08-18 P3: watchdog gate (page targets only) ---
-        // Verify the engine's owned adoptedStyleSheets are already present. If
-        // they are, a previous pass already applied them — inject nothing (skip
-        // the duplicate write and the flicker it causes). `verifyTheme` is
-        // error-tolerant (returns null on evaluate failure) → treat as "absent"
-        // and re-inject. Page targets are covered by core applyTheme + this
-        // engine layer, so the watchdog only skips when those are verified.
-        const watchdogVerification = await verifyTheme(session);
-        if (watchdogVerification && isThemeFullyApplied(watchdogVerification)) {
-          watchdogSkipped++;
-          if (!firstSession) {
-            firstSession = session;
-            firstPooled = handle.pooled;
-            firstSessionTargetKey = targetKeyFor(target.id, target.webSocketDebuggerUrl);
-          }
-          const layerDetail = watchdogVerification.layers
-            ? Object.entries(watchdogVerification.layers)
-                .map(([k, v]) => `${k}:${v}`)
-                .join(',')
-            : 'legacy';
-          deps.log(
-            `[hardening] ${appId}: WATCHDOG skip ${target.type} "${target.title?.slice(0, 40)}" ` +
-              `(accent=${watchdogVerification.accent || '?'}, sheets=${watchdogVerification.adoptedSheetCount}, layers=[${layerDetail}])`,
-          );
-        } else {
-          // Inject the engine architecture (palette + tokens + cosmetic + theme +
-          // adapter.mjs). `injectThemeViaEngine` internally verifies adoption and
-          // returns the per-layer outcome.
-          const engineResult = await deps.tryEngineInjection(
-            session,
-            appId,
-            bundle,
-            targetTheme,
-            resolvedImages,
-          );
-
-          if (engineResult) {
-            engineInjected++;
-            if (!firstSession) {
-              deps.log(
-                `[hardening] ${appId}: ENGINE [${target.type}] layers=${engineResult.layersInjected} ` +
-                  `adapter=${engineResult.adapterApplied} hero=${engineResult.heroInjected} ` +
-                  `images=${engineResult.imagesInjected} ` +
-                  `accent=${engineResult.verification?.accent || '?'}`,
-              );
-            }
-          } else {
-            // Fallback: legacy single-CSS injection (when engine files missing).
-            // Page targets can still fall back to the core's CSS.
-            const result = await injectThemeViaCdp(session, {
-              css: targetTheme.css,
-              imageDataUrls: resolvedImages,
-              hostClass: hostClassFor(appId),
-              retries: 1,
-              verifyDelayMs: DEFAULT_VERIFY_DELAY_MS,
-            });
-            legacyInjected++;
-            if (!firstSession) {
-              deps.log(
-                `[hardening] ${appId}: LEGACY [page] css=${result.cssInjected} ` +
-                  `hero=${result.heroInjected} images=${result.imagesInjected} ` +
-                  `verified=${result.verification?.heroBlobActive ?? 'n/a'} ` +
-                  `accent=${result.verification?.accent || '?'}`,
-              );
-            }
-          }
-        }
-
-        // Keep the first successful page session for the health check below.
-        if (!firstSession && target.type === 'page') {
+      // --- RFC 2026-08-18 P3: watchdog gate (page targets only) ---
+      // Verify the engine's owned adoptedStyleSheets are already present. If
+      // they are, a previous pass already applied them — inject nothing (skip
+      // the duplicate write and the flicker it causes). `verifyTheme` is
+      // error-tolerant (returns null on evaluate failure) → treat as "absent"
+      // and re-inject. Page targets are covered by core applyTheme + this
+      // engine layer, so the watchdog only skips when those are verified.
+      const watchdogVerification = await verifyTheme(session);
+      if (watchdogVerification && isThemeFullyApplied(watchdogVerification)) {
+        watchdogSkipped++;
+        if (!firstSession) {
           firstSession = session;
           firstPooled = handle.pooled;
           firstSessionTargetKey = targetKeyFor(target.id, target.webSocketDebuggerUrl);
         }
+        const layerDetail = watchdogVerification.layers
+          ? Object.entries(watchdogVerification.layers)
+              .map(([k, v]) => `${k}:${v}`)
+              .join(',')
+          : 'legacy';
+        deps.log(
+          `[hardening] ${appId}: WATCHDOG skip ${target.type} "${target.title?.slice(0, 40)}" ` +
+            `(accent=${watchdogVerification.accent || '?'}, sheets=${watchdogVerification.adoptedSheetCount}, layers=[${layerDetail}])`,
+        );
       } else {
-        // --- Non-page targets (webview / iframe): lightweight CSS-only ---
-        // These (MCP webviews, ardot iframes) are filtered out of the core's
-        // matchTarget/preflight, so they have no other writer. Inject the CSS
-        // variables + stylesheet + host class via buildSecondaryInjectExpression
-        // exactly once here — the previous architecture ALSO injected these
-        // targets with the full engine layer via a separate injectSecondaryTargets
-        // pass, double-writing them. This loop is now their single channel.
-        if (secondaryLoopStart === 0) secondaryLoopStart = Date.now();
-        const targetStart = Date.now();
-        let targetSuccess = false;
-        let targetError: string | undefined;
-        let targetResult = '';
-        try {
-          targetResult = await session.evaluate(buildSecondaryInjectExpression(appId, targetTheme));
-          if (targetResult.includes('"installed":true')) {
-            targetSuccess = true;
-            secondaryInjected++;
-          } else {
-            targetError = `unexpected result: ${targetResult}`;
-            secondaryFailed++;
+        // Inject the engine architecture (palette + tokens + cosmetic + theme +
+        // adapter.mjs). `injectThemeViaEngine` internally verifies adoption and
+        // returns the per-layer outcome.
+        const engineResult = await deps.tryEngineInjection(
+          session,
+          appId,
+          bundle,
+          targetTheme,
+          resolvedImages,
+        );
+
+        if (engineResult) {
+          engineInjected++;
+          if (!firstSession) {
+            deps.log(
+              `[hardening] ${appId}: ENGINE [${target.type}] layers=${engineResult.layersInjected} ` +
+                `adapter=${engineResult.adapterApplied} hero=${engineResult.heroInjected} ` +
+                `images=${engineResult.imagesInjected} ` +
+                `accent=${engineResult.verification?.accent || '?'}`,
+            );
           }
-        } catch (error) {
-          targetError = toMessage(error);
-          secondaryFailed++;
+        } else {
+          // Fallback: legacy single-CSS injection (when engine files missing).
+          // Page targets can still fall back to the core's CSS.
+          const result = await injectThemeViaCdp(session, {
+            css: targetTheme.css,
+            imageDataUrls: resolvedImages,
+            hostClass: hostClassFor(appId),
+            retries: 1,
+            verifyDelayMs: DEFAULT_VERIFY_DELAY_MS,
+          });
+          legacyInjected++;
+          if (!firstSession) {
+            deps.log(
+              `[hardening] ${appId}: LEGACY [page] css=${result.cssInjected} ` +
+                `hero=${result.heroInjected} images=${result.imagesInjected} ` +
+                `verified=${result.verification?.heroBlobActive ?? 'n/a'} ` +
+                `accent=${result.verification?.accent || '?'}`,
+            );
+          }
         }
-        // Emit per-target progress event for the renderer timeline.
-        deps.onSecondaryProgress?.({
-          agent: appId,
-          targetId: target.id ?? `secondary-${secondaryInjected + secondaryFailed}`,
-          targetType: target.type ?? 'unknown',
-          title: target.title,
-          success: targetSuccess,
-          error: targetError,
-          elapsed: Date.now() - targetStart,
-        });
+      }
+
+      // Keep the first successful page session for the health check below.
+      if (!firstSession && target.type === 'page') {
+        firstSession = session;
+        firstPooled = handle.pooled;
+        firstSessionTargetKey = targetKeyFor(target.id, target.webSocketDebuggerUrl);
       }
     } catch (error) {
       failed++;
@@ -459,6 +527,77 @@ export async function hardeningPass(
           /* ignore close errors */
         }
       }
+    }
+    processedCount++;
+  }
+
+  // --- Non-page targets: concurrent with controlled concurrency ---
+  // Non-page targets (webview/iframe) are independent — they don't compete
+  // for firstSession and have no interdependencies. We inject them concurrently
+  // in batches of DEFAULT_CONCURRENCY to avoid overloading the CDP channel.
+  // Promise.allSettled ensures failure isolation: a single target failure does
+  // not interrupt other targets in the batch.
+  if (nonPageTargets.length > 0) {
+    secondaryLoopStart = Date.now();
+    for (let i = 0; i < nonPageTargets.length; i += DEFAULT_CONCURRENCY) {
+      // Epoch check between batches — abort if a newer apply/restore
+      // superseded this one.
+      if (!deps.isEpochCurrent(appId, epoch)) {
+        deps.log(
+          `[hardening] ${appId}: epoch changed, aborting after ${processedCount}/${domTargets.length}`,
+        );
+        if (firstSession) {
+          if (firstPooled && firstSessionTargetKey) {
+            releaseSession(deps.sessions, appId, firstSessionTargetKey);
+          } else {
+            firstSession.close();
+          }
+        }
+        return;
+      }
+
+      const batch = nonPageTargets.slice(i, i + DEFAULT_CONCURRENCY);
+      const results = await Promise.allSettled(
+        batch.map((t) => injectSingleSecondaryTarget(t, appId, targetTheme, deps)),
+      );
+
+      // Process results in target order (preserves deterministic ordering
+      // for progress events even though injection ran concurrently).
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          const r = result.value;
+          if (r.success) {
+            secondaryInjected++;
+          } else {
+            secondaryFailed++;
+          }
+          // Emit per-target progress event for the renderer timeline.
+          deps.onSecondaryProgress?.({
+            agent: appId,
+            targetId: r.targetId,
+            targetType: r.targetType,
+            title: r.title,
+            success: r.success,
+            error: r.error,
+            elapsed: r.elapsed,
+          });
+        } else {
+          // Defensive: injectSingleSecondaryTarget catches internally,
+          // so this branch should never trigger. Handle for completeness.
+          const target = batch[index];
+          secondaryFailed++;
+          deps.onSecondaryProgress?.({
+            agent: appId,
+            targetId: target.id ?? `secondary-${secondaryInjected + secondaryFailed}`,
+            targetType: target.type ?? 'unknown',
+            title: target.title,
+            success: false,
+            error: toMessage(result.reason),
+            elapsed: 0,
+          });
+        }
+      });
+      processedCount += batch.length;
     }
   }
 

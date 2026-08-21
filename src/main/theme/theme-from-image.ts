@@ -77,6 +77,7 @@ export function deriveThemeFromImage(sample: ImagePixelSample): ThemeColorsFromI
     return {
       mode: 'dark',
       accent: '#7aa2f7',
+      accentMuted: '#5a7fd4',
       secondary: '#9ece6a',
       background: '#0f1419',
       foreground: '#e6edf3',
@@ -143,6 +144,7 @@ export function deriveThemeFromImage(sample: ImagePixelSample): ThemeColorsFromI
   return {
     mode,
     accent: toHex(accent),
+    accentMuted: toHex(shift(accent, isLight ? BLACK : WHITE, 0.15)),
     secondary: toHex(shift(accent, isLight ? BLACK : WHITE, 0.25)),
     background: toHex(bgPulled),
     foreground: toHex(text),

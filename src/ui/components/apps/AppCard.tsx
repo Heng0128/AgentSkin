@@ -37,6 +37,8 @@ interface AppCardProps {
   port: number | null;
   /** Whether to show the running-status indicator and port number. */
   showRunningStatus?: boolean;
+  /** Callback when the card is clicked (single click — opens detail drawer). */
+  onClick?: () => void;
   /** Callback when the card is double-clicked. */
   onDoubleClick?: () => void;
 }
@@ -71,6 +73,7 @@ export function AppCard({
   isLaunching,
   port,
   showRunningStatus = true,
+  onClick,
   onDoubleClick,
 }: AppCardProps) {
   const [imgError, setImgError] = useState(false);
@@ -90,10 +93,14 @@ export function AppCard({
   return (
     <Button
       variant="ghost"
+      onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
         'group flex h-auto w-full flex-col items-center gap-2 rounded-md p-2',
-        'transition-all duration-fast ease-out hover:bg-muted/40',
+        'transition-transform duration-200 ease-out hover:bg-muted/40',
+        'hover:scale-[1.02]',
+        'active:scale-95',
+        isRunning && 'ring-2 ring-cr-success/50',
       )}
     >
       {/* Icon — rendered directly (desktop-shortcut style), no container block */}

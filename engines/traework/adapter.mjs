@@ -3,6 +3,64 @@
  * TraeWork CN (VS Code / solo-lite shell).
  * Art layer on #root::before, punch-through on chat panels.
  */
+/*
+ * AdaptiveMutationObserver — three-layer throttle wrapper
+ * Embedded from src/engine/src/runtime/adaptive-observer.mjs
+ * Prevents observer storms from third-party agent re-renders.
+ */
+class AdaptiveMutationObserver {
+  constructor(callback, opts = {}) {
+    this.callback = callback;
+    this.throttleWindow = opts.throttleWindow ?? 10000;
+    this.throttleMaxAttempts = opts.throttleMaxAttempts ?? 50;
+    this.retryTimeout = opts.retryTimeout ?? 2000;
+    this.loopThreshold = opts.loopThreshold ?? 1000;
+    this.loopMaxCycles = opts.loopMaxCycles ?? 10;
+    this.attemptCount = 0;
+    this.windowStart = Date.now();
+    this.isThrottled = false;
+    this.elementChanges = new WeakMap();
+    this._throttleTimer = null;
+    this.observer = new MutationObserver((records) => {
+      this._handleMutations(records);
+    });
+  }
+  observe(target, options) { this.observer.observe(target, options); }
+  disconnect() {
+    this.observer.disconnect();
+    if (this._throttleTimer) { clearTimeout(this._throttleTimer); this._throttleTimer = null; }
+  }
+  takeRecords() { return this.observer.takeRecords(); }
+  _handleMutations(records) {
+    const filtered = records.filter(r => !this._isLooping(r.target));
+    if (filtered.length === 0) return;
+    if (this.isThrottled) return;
+    const now = Date.now();
+    if (now - this.windowStart > this.throttleWindow) { this.windowStart = now; this.attemptCount = 0; }
+    this.attemptCount++;
+    if (this.attemptCount > this.throttleMaxAttempts) { this._enterCooldown(); return; }
+    this.callback(filtered);
+  }
+  _isLooping(node) {
+    const last = this.elementChanges.get(node);
+    const now = Date.now();
+    if (!last || now - last.time > this.loopThreshold) {
+      this.elementChanges.set(node, { count: 1, time: now });
+      return false;
+    }
+    last.count++; last.time = now;
+    return last.count > this.loopMaxCycles;
+  }
+  _enterCooldown() {
+    this.isThrottled = true;
+    console.warn(`[AgentSkin] MutationObserver throttled for ${this.retryTimeout}ms`);
+    this._throttleTimer = setTimeout(() => {
+      this.isThrottled = false; this.attemptCount = 0;
+      this.windowStart = Date.now(); this._throttleTimer = null;
+    }, this.retryTimeout);
+  }
+}
+
 (() => {
   'use strict';
   const HOST_CLASS = 'agentskin-host-traework';
@@ -258,14 +316,138 @@ html.${HOST_CLASS} [class*="segmented"] [class*="active"] {
     }
   }
 
-  // Legacy self-healing (fallback)
+  // ═══════════════════════════════════════════════════════════
+  // ELEMENT-LEVEL HEURISTIC GUARDS
+  // Checks if a mutated element matches structural patterns and
+  // applies targeted styles when style/class attributes change.
+  // ═══════════════════════════════════════════════════════════
+
+  function matchesHeuristicRules(el) {
+    if (!el || !(el instanceof Element)) return false;
+    const cls = typeof el.className === 'string' ? el.className : '';
+    const tag = el.tagName ? el.tagName.toLowerCase() : '';
+    const role = el.getAttribute('role') || '';
+    if (['dialog', 'menu', 'tooltip', 'listbox'].includes(role)) return true;
+    if (tag === 'nav' || tag === 'aside') return true;
+    if (el.hasAttribute('contenteditable') || tag === 'textarea' || role === 'textbox') return true;
+    if (/(?:sidebar|panel|surface|composer|main-area|dialog|modal|popover|dropdown|header|container|wrapper|content|chat-input|message-list|task-list|solo-lite)/i.test(cls)) return true;
+    const style = el.getAttribute('style') || '';
+    if (/background(?:-color)?\s*:/i.test(style) && !/transparent/i.test(style)) return true;
+    return false;
+  }
+
+  function applyHeuristicStylesToElement(el) {
+    if (!el || !(el instanceof Element)) return;
+    const cls = typeof el.className === 'string' ? el.className : '';
+    const tag = el.tagName ? el.tagName.toLowerCase() : '';
+    const role = el.getAttribute('role') || '';
+    if (['dialog', 'menu', 'tooltip', 'listbox'].includes(role)) {
+      el.style.setProperty('background', 'color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent)', 'important');
+      el.style.setProperty('border', 'none', 'important');
+      return;
+    }
+    if (tag === 'nav' || tag === 'aside' || /sidebar|task-list/i.test(cls)) {
+      el.style.setProperty('background', 'color-mix(in srgb, var(--agentskin-surface) 15%, transparent)', 'important');
+      el.style.setProperty('border-right', 'none', 'important');
+      return;
+    }
+    if (el.hasAttribute('contenteditable') || tag === 'textarea' || role === 'textbox' || /chat-input|composer|editor-part/i.test(cls)) {
+      el.style.setProperty('background', 'color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent)', 'important');
+      el.style.setProperty('border', '1px solid color-mix(in srgb, var(--agentskin-accent) 25%, transparent)', 'important');
+      el.style.setProperty('border-radius', '14px', 'important');
+      return;
+    }
+    if (/panel-container|solo-lite|message-list|conversation|main-content|workspace/i.test(cls)) {
+      el.style.setProperty('background', 'transparent', 'important');
+      el.style.setProperty('background-color', 'transparent', 'important');
+      el.style.setProperty('background-image', 'none', 'important');
+      return;
+    }
+    el.style.setProperty('background-color', 'transparent', 'important');
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // SELF-HEALING: MutationObserver (with adaptive throttle)
+  // Re-applies heuristic styles when DOM changes significantly.
+  // Enhanced: observes style/class attributes, lowered threshold.
+  // ═══════════════════════════════════════════════════════════
+
+  let healTimer = null;
+  const observer = new AdaptiveMutationObserver((mutations) => {
+    // Guard: handle style/class attribute changes on existing elements
+    for (const m of mutations) {
+      if (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class')) {
+        if (matchesHeuristicRules(m.target)) applyHeuristicStylesToElement(m.target);
+      }
+    }
+    // Guard: handle structural DOM changes (lowered threshold: >1)
+    const structural = mutations.some(m => m.addedNodes.length > 1 || m.removedNodes.length > 1);
+    if (!structural) return;
+    if (healTimer) clearTimeout(healTimer);
+    healTimer = setTimeout(() => {
+      try { sheet.replaceSync(STRUCTURAL_CSS); } catch {}
+    }, 300);
+  });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: scheduleReinject (debounced reinject)
+  // 100ms debounce coalesces rapid mutation bursts into a single
+  // reinject, preventing observer storms from React re-renders.
+  // ═══════════════════════════════════════════════════════════
+  let reinjectTimeout = null;
+  function scheduleReinject() {
+    if (reinjectTimeout) clearTimeout(reinjectTimeout);
+    reinjectTimeout = setTimeout(() => {
+      try { sheet.replaceSync(STRUCTURAL_CSS); } catch {}
+      // Ensure host class survives React re-renders
+      if (!document.documentElement.classList.contains(HOST_CLASS)) {
+        document.documentElement.classList.add(HOST_CLASS);
+      }
+      reinjectTimeout = null;
+    }, 100);
+  }
+
+  // Expected adoptedStyleSheets layers (adapter sheet = 1)
+  const expectedLayers = 1;
+
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: 2s periodic re-check (enhanced from 5s)
+  // Checks host class, hero URL, and adoptedStyleSheets presence.
+  // Triggers debounced reinject if any layer is missing.
+  // ═══════════════════════════════════════════════════════════
   const interval = setInterval(() => {
-    if (!document.documentElement.classList.contains(HOST_CLASS)) document.documentElement.classList.add(HOST_CLASS);
+    let needsReinject = false;
+    // Check host class
+    if (!document.documentElement.classList.contains(HOST_CLASS)) {
+      document.documentElement.classList.add(HOST_CLASS);
+      needsReinject = true;
+    }
+    // Check hero URL
     if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
       document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
+      needsReinject = true;
     }
-  }, 5000);
+    // Check adoptedStyleSheets — host may have replaced the array
+    const agentskinSheets = document.adoptedStyleSheets.filter(s => s.__agentskin);
+    if (agentskinSheets.length < expectedLayers) {
+      needsReinject = true;
+    }
+    if (needsReinject) scheduleReinject();
+  }, 2000);
 
-  window[MARKER] = { interval, sheet };
+  // ═══════════════════════════════════════════════════════════
+  // ANTI-RERENDER: adoptedStyleSheets watchdog (1.5s)
+  // Ensures adapter sheet survives host overrides. Reinjects the
+  // full sheet if it was removed from the adoptedStyleSheets array.
+  // ═══════════════════════════════════════════════════════════
+  const sheetGuardInterval = setInterval(() => {
+    const sheets = document.adoptedStyleSheets.filter(s => s.__agentskin_layer === 'adapter');
+    if (sheets.length < expectedLayers) {
+      document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+    }
+  }, 1500);
+
+  window[MARKER] = { observer, interval, sheetGuardInterval, sheet };
   return "applied";
 })()

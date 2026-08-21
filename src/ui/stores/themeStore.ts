@@ -194,6 +194,17 @@ let offTrayApply: (() => void) | null = null;
 // state shape
 // ---------------------------------------------------------------------------
 
+/**
+ * Design Language inline configuration.
+ * Maps 1:1 to manifest.designLanguageConfig. null = use engine defaults.
+ */
+export interface DesignLanguageConfig {
+  spacing?: { density?: 'compact' | 'comfortable' | 'cozy' };
+  radius?: { scale?: '0' | '2' | '4' | '8' };
+  shadow?: { elevation?: 'flat' | 'subtle' | 'float' };
+  motion?: { speed?: 'instant' | 'fast' | 'smooth' };
+}
+
 interface ThemeState {
   installed: ThemeCatalogItem[];
   loading: boolean;
@@ -203,10 +214,14 @@ interface ThemeState {
   busy: Record<AgentId, BusyKey | null>;
   /** Global busy key (import/export/delete/bundle — non-agent operations). */
   globalBusy: BusyKey | null;
+  /** Design Language inline config (v2.6+). Drives Studio UI + generated CSS. */
+  designLanguage: DesignLanguageConfig;
 
   // --- queries ---
   installedById: (id: string) => ThemeCatalogItem | undefined;
   setSelection: (sel: Selection) => void;
+  /** Update Design Language config (partial merge). */
+  setDesignLanguage: (dl: Partial<DesignLanguageConfig>) => void;
   /** Internal per-agent busy setter — used by withAgentBusy so busy writes
    *  stay inside the store action boundary instead of calling setState directly. */
   _setAgentBusy: (appId: AgentId, key: BusyKey | null) => void;
@@ -281,9 +296,11 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     selection: null,
     busy: emptyAgentBusy(),
     globalBusy: null,
+    designLanguage: {},
 
     installedById: (id) => get().installed.find((theme) => theme.id === id),
     setSelection: (selection) => set({ selection }),
+    setDesignLanguage: (dl) => set((s) => ({ designLanguage: { ...s.designLanguage, ...dl } })),
     _setAgentBusy: (appId, key) => set((current) => ({ busy: { ...current.busy, [appId]: key } })),
     _setGlobalBusy: (key) => set({ globalBusy: key }),
 

@@ -7,6 +7,7 @@ import {
   formatContrastReport,
   assertContrast,
 } from '../../scripts/wcag-apca-check.mjs';
+import { apcaContrast, wcagCheck } from '../../scripts/extended-colors.mjs';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -258,5 +259,53 @@ describe('Assert contrast', () => {
   it('does not throw when colors are missing (no assertion possible)', () => {
     expect(() => assertContrast({})).not.toThrow();
     expect(() => assertContrast({ colors: {} })).not.toThrow();
+  });
+});
+
+describe('Coverage gaps', () => {
+  it('APCA returns positive Lc for high-contrast pair', () => {
+    const lc = apcaContrast('#ffffff', '#000000');
+    expect(lc).toBeGreaterThan(50);
+  });
+
+  it('APCA returns lower Lc for low-contrast pair', () => {
+    const lc = apcaContrast('#ffffff', '#cccccc');
+    expect(lc).toBeLessThan(35);
+  });
+
+  it('AAA threshold (7.0) correctly distinguishes from AA (4.5)', () => {
+    const midGray = wcagCheck('#767676', '#ffffff');
+    expect(midGray.passesAA).toBe(true);
+    expect(midGray.passesAAA).toBe(false);
+
+    const black = wcagCheck('#000000', '#ffffff');
+    expect(black.passesAA).toBe(true);
+    expect(black.passesAAA).toBe(true);
+  });
+
+  it('extended contrast skips non-string values', () => {
+    const manifest = {
+      colors: {
+        foreground: '#000000',
+        background: '#ffffff',
+        extended: { bad: 123, ok: '#ef4444' },
+      },
+    };
+    const result = checkExtendedContrast(manifest);
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('ok');
+  });
+
+  it('extended contrast uses autoOnColor (luminance-based)', () => {
+    const manifest = {
+      colors: {
+        foreground: '#000000',
+        background: '#ffffff',
+        extended: { darkRed: '#8b0000' },
+      },
+    };
+    const result = checkExtendedContrast(manifest);
+    // #8b0000 luminance ≈ 0.07 < 0.45 → autoOnColor returns #ffffff
+    expect(result[0].bg).toBe('#ffffff');
   });
 });
