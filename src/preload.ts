@@ -75,6 +75,10 @@ const api: AgentSkinApi = {
   listWallpapers: () => ipcRenderer.invoke(IpcChannel.WALLPAPER_LIST),
   extractThemeFromWallpaper: (wallpaperId: string) =>
     ipcRenderer.invoke(IpcChannel.WALLPAPER_EXTRACT_THEME, wallpaperId),
+  previewThemeFromWallpaper: (wallpaperId: string) =>
+    ipcRenderer.invoke(IpcChannel.WALLPAPER_PREVIEW_THEME, wallpaperId),
+  applyThemeFromWallpaper: (wallpaperId: string, appId?: AgentId) =>
+    ipcRenderer.invoke(IpcChannel.WALLPAPER_APPLY_THEME, wallpaperId, appId),
   setWallpaper: (wallpaper: Pick<WallpaperSettings, 'enabled' | 'id'>) =>
     ipcRenderer.invoke(IpcChannel.WALLPAPER_SET, wallpaper),
   importWallpaper: () => ipcRenderer.invoke(IpcChannel.WALLPAPER_IMPORT),

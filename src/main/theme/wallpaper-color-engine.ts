@@ -22,7 +22,7 @@
 import { argbFromRgb, Hct, TonalPalette } from '@material/material-color-utilities';
 import { getPalette } from 'colorthief';
 import type { ThemeColorsFromImage } from '../../shared/types/theme';
-import { type Rgba, toHex } from '../profile/color-quantize';
+import type { Rgba } from '../profile/color-quantize';
 import { mapTonalToTokens } from './token-generator';
 
 // ---------------------------------------------------------------------------

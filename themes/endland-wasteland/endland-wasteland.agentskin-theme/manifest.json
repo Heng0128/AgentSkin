@@ -1,0 +1,71 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "format": "agentskin-theme",
+  "id": "endland-wasteland",
+  "name": "Endland Wasteland",
+  "displayName": "Endland Wasteland",
+  "version": "1.0.0",
+  "description": "由 AgentSkin 工作室导出（traework）",
+  "author": {
+    "name": "AgentSkin Team"
+  },
+  "mode": "dark",
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "colors": {
+    "accent": "#c44536",
+    "secondary": "#d4a574",
+    "background": "#0d0d0f",
+    "foreground": "#e8e0d5",
+    "muted": "#8a7e70",
+    "surface": "#1a1a1d",
+    "surfaceElevated": "#252529",
+    "border": "rgba(196, 69, 54, 0.18)",
+    "codeBackground": "#0a0a0c",
+    "codeForeground": "#c9bfb0",
+    "inputBackground": "#1e1614",
+    "buttonBackground": "#c44536",
+    "buttonForeground": "#ffffff",
+    "focusRing": "rgba(196, 69, 54, 0.6)",
+    "selection": "color-mix(in srgb, #c44536 32%, transparent)"
+  },
+  "preview": "preview.png",
+  "icon": "icon.png",
+  "category": "studio",
+  "tags": [
+    "studio",
+    "custom",
+    "dark"
+  ],
+  "unofficial": true,
+  "supportedAgents": [
+    "traework"
+  ],
+  "probe": {
+    "tokenNamespaces": [
+      "--agentskin-",
+      "--cb-",
+      "--vscode-",
+      "--color-",
+      "--dbx-",
+      "--wb-",
+      "--text-"
+    ],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

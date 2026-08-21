@@ -21,7 +21,11 @@ const isDev = process.env.NODE_ENV === 'development';
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    // @material/material-color-utilities 和 colorthief 是 ESM-only 包，externalize 后运行时报
+    // ERR_MODULE_NOT_FOUND 或浏览器 API 缺失。通过 exclude 将其打包进主进程产物，避免运行时
+    // Node.js ESM 解析问题。colorthief 的 Node 入口依赖 document.createElement("canvas")，
+    // 在主进程无法运行，必须打包后由 Vite 的 browser condition 解析到正确入口。
+    plugins: [externalizeDepsPlugin({ exclude: ['@material/material-color-utilities', 'colorthief'] })],
     build: {
       sourcemap: isDev,
       rollupOptions: {

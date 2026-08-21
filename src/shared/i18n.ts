@@ -807,6 +807,8 @@ export const uiMessages = {
     studioWallpaperApplyFailed: (detail: string) => `应用失败: ${detail}`,
     studioWallpaperImported: (count: number) => `已导入 ${count} 张壁纸`,
     studioWallpaperImportFailed: (detail: string) => `导入失败: ${detail}`,
+    studioWallpaperThemeApplied: (name: string) => `已应用壁纸主题「${name}」`,
+    studioWallpaperThemeApplyFailed: (detail: string) => `壁纸主题应用失败: ${detail}`,
     // --- ImageToThemePanel (pywal-style image → palette extraction) ---
     studioImageToThemePanelTitle: '图片主题',
     studioImageToThemeModeDark: '暗色',
@@ -847,6 +849,8 @@ export const uiMessages = {
     harmonyTetradic: '四边',
     harmonyMonochromatic: '单色',
     // --- StudioCenterPanel ---
+    studioTabDesignLanguage: '设计语言',
+    studioTabDesignLanguageDesc: '配置主题的间距、圆角、阴影和动画形态。缺失时使用引擎默认值。',
     studioTabTheme: '主题',
     studioTabThemeDesc: '可视化主题编辑器 — 调整设计语言参数并检查色彩令牌对比度。',
     studioDLCssPreview: 'CSS 变量',
@@ -874,6 +878,25 @@ export const uiMessages = {
     studioTabWallpaperDesc: '从壁纸提取主题配色，生成 14-token 工程。',
     studioTabBundle: '打包',
     studioTabInspect: '检查',
+    // --- ExtendedColorsEditor ---
+    studioExtColors: '扩展颜色',
+    studioExtColorsDesc:
+      '语义色彩令牌（error、success、warning、info、glow…），支持 WCAG 对比度与 OKLCH 调整。',
+    studioExtAddColor: '添加颜色',
+    studioExtNamePlaceholder: '颜色名称',
+    studioExtPickColor: '选择颜色',
+    studioExtAdd: '添加',
+    studioExtPresets: '预设：',
+    studioExtCurrent: '当前颜色',
+    studioExtEmpty: '暂无扩展颜色，请在上方添加。',
+    studioExtDelete: '删除',
+    studioExtOklch: 'OKLCH 调整',
+    studioExtCloseOklch: '关闭 OKLCH 面板',
+    studioExtLightness: '亮度',
+    studioExtChroma: '饱和度',
+    studioExtHue: '色相',
+    studioExtContrast: '对比度',
+    studioExtOnColor: '叠加色',
     // --- StudioInspect (Compliance Inspection Panel) ---
     studioInspectPanelDesc: '前端主题合规检查：对比度、字号、间距、色值一致性',
     studioInspectOverview: '概览',
@@ -1029,6 +1052,7 @@ export const uiMessages = {
     studioRenameFailed: (r: string) => `重命名失败：${r}`,
     studioSaveFailed: (r: string) => `保存失败：${r}`,
     studioNoPalette: '该主题不包含可加载的调色板',
+    studioNoActiveProject: '当前没有活动的工程',
     studioPaletteLoaded: (n: string) => `已从「${n}」加载调色板`,
     studioLoadPaletteFailed: '加载主题调色板失败',
     studioSnapshotFailed: '主题快照失败',
@@ -1986,6 +2010,9 @@ export const uiMessages = {
     studioWallpaperImported: (count: number) =>
       `Imported ${count} wallpaper${count === 1 ? '' : 's'}`,
     studioWallpaperImportFailed: (detail: string) => `Import failed: ${detail}`,
+    studioWallpaperThemeApplied: (name: string) => `Applied wallpaper theme "${name}"`,
+    studioWallpaperThemeApplyFailed: (detail: string) =>
+      `Failed to apply wallpaper theme: ${detail}`,
     // --- ImageToThemePanel (pywal-style image → palette extraction) ---
     studioImageToThemePanelTitle: 'Image to Theme',
     studioImageToThemeModeDark: 'Dark',
@@ -2027,6 +2054,9 @@ export const uiMessages = {
     harmonyTetradic: 'Tetradic',
     harmonyMonochromatic: 'Monochromatic',
     // --- StudioCenterPanel ---
+    studioTabDesignLanguage: 'Design Language',
+    studioTabDesignLanguageDesc:
+      'Configure spacing, radius, shadow, and motion. Uses engine defaults when omitted.',
     studioTabTheme: 'Theme',
     studioTabThemeDesc:
       'Visual theme editor — adjust design language parameters and inspect color token contrast.',
@@ -2055,6 +2085,25 @@ export const uiMessages = {
     studioTabWallpaperDesc: 'Extract theme colors from wallpaper, generate 14-token project.',
     studioTabBundle: 'Bundle',
     studioTabInspect: 'Inspect',
+    // --- ExtendedColorsEditor ---
+    studioExtColors: 'Extended Colors',
+    studioExtColorsDesc:
+      'Semantic color tokens (error, success, warning, info, glow…) with WCAG contrast and OKLCH adjustment.',
+    studioExtAddColor: 'Add Color',
+    studioExtNamePlaceholder: 'color name',
+    studioExtPickColor: 'Pick color',
+    studioExtAdd: 'Add',
+    studioExtPresets: 'Presets:',
+    studioExtCurrent: 'Current Colors',
+    studioExtEmpty: 'No extended colors yet. Add one above.',
+    studioExtDelete: 'Delete',
+    studioExtOklch: 'OKLCH Adjust',
+    studioExtCloseOklch: 'Close OKLCH panel',
+    studioExtLightness: 'Lightness',
+    studioExtChroma: 'Chroma',
+    studioExtHue: 'Hue',
+    studioExtContrast: 'Contrast',
+    studioExtOnColor: 'on-color',
     // --- StudioInspect (Compliance Inspection Panel) ---
     studioInspectPanelDesc: 'Theme compliance: contrast, font-size, spacing, color consistency',
     studioInspectOverview: 'Overview',
@@ -2213,6 +2262,7 @@ export const uiMessages = {
     studioRenameFailed: (r: string) => `Rename failed: ${r}`,
     studioSaveFailed: (r: string) => `Save failed: ${r}`,
     studioNoPalette: 'This theme has no loadable palette',
+    studioNoActiveProject: 'No active project',
     studioPaletteLoaded: (n: string) => `Palette loaded from "${n}"`,
     studioLoadPaletteFailed: 'Failed to load theme palette',
     studioSnapshotFailed: 'Theme snapshot failed',
@@ -2426,6 +2476,10 @@ export const mainMessages = {
     portOccupiedMessage: (port: number) =>
       `端口 ${port} 被其他进程占用，AgentSkin 无法连接或重启该应用。请关闭占用端口的程序，或在设置中为该应用更换端口后重试。`,
     themeApplied: (name: string, app: string) => `${name} 已应用到 ${app}。`,
+    shuffle: '打乱',
+    tokenLocked: '已锁定',
+    tokenUnlocked: '未锁定',
+    tokenLockedCount: (locked: number, total: number) => `${locked}/${total} 已锁定`,
   },
   en: {
     trayTooltip: 'AgentSkin Theme Manager',

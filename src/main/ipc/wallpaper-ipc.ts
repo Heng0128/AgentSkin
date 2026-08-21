@@ -23,10 +23,13 @@ import type {
   WallpaperInfo,
   WallpaperSettings,
 } from '../../shared/types';
+import { isAgentId } from '../../shared/types';
+import type { ThemeColorsFromImage } from '../../shared/types/theme';
 import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
 import { type MainContext, notifyStatusChanged, sendLog, settingsDto } from '../main-context';
-import { buildWallpaperTheme } from '../theme/wallpaper-theme';
+import { deriveThemeFromImageAsync } from '../theme/theme-from-image';
+import { buildWallpaperTheme, sampleFromImagePath } from '../theme/wallpaper-theme';
 import { registerThemeWallpaperForInstalled } from '../wallpaper/theme-wallpaper';
 import { assertAgentId, assertNonEmptyString } from './ipc-validators';
 import { withMonitoredTimeout } from './with-monitored-timeout';
@@ -253,6 +256,82 @@ export function registerWallpaperIpc(deps: MainContext): void {
           // 主题自带视频壁纸 → 注册为 theme:<id>，使 UI/apply 可解析（pywal
           // 主题在 userData 下，boot 的 themesDir 路径拼接不适用）。
           await registerThemeWallpaperForInstalled(deps, installed, outRoot);
+          notifyStatusChanged();
+          return installed;
+        })(),
+      );
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_PREVIEW_URL,
+    async (_event, id: unknown): Promise<string | null> => {
+      return withMonitoredTimeout(
+        IpcChannel.WALLPAPER_PREVIEW_URL,
+        15000,
+        (async () => {
+          assertNonEmptyString(id, getMainMessages().invalidPath);
+          return deps.wallpapers?.previewUrlFor(id) ?? null;
+        })(),
+      );
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_PREVIEW_THEME,
+    async (_event, wallpaperId: unknown): Promise<ThemeColorsFromImage | null> => {
+      return withMonitoredTimeout(
+        IpcChannel.WALLPAPER_PREVIEW_THEME,
+        15000,
+        (async () => {
+          assertNonEmptyString(wallpaperId, getMainMessages().invalidPath);
+          if (!deps.wallpapers) return null;
+          const previewPath = await deps.wallpapers.previewPathFor(wallpaperId);
+          if (!previewPath) return null;
+          // Lightweight: sample pixels + derive palette without writing any
+          // package to disk. Returns null when the image cannot be decoded.
+          const sample = sampleFromImagePath(previewPath);
+          if (!sample || sample.colors.length === 0) return null;
+          return await deriveThemeFromImageAsync(sample, previewPath);
+        })(),
+      );
+    },
+  );
+
+  ipcMain.handle(
+    IpcChannel.WALLPAPER_APPLY_THEME,
+    async (_event, wallpaperId: unknown, appId?: unknown): Promise<InstalledTheme> => {
+      return withMonitoredTimeout(
+        IpcChannel.WALLPAPER_APPLY_THEME,
+        30000,
+        (async () => {
+          assertNonEmptyString(wallpaperId, getMainMessages().invalidPath);
+          if (!deps.wallpapers) throw new Error('Wallpaper service unavailable');
+          const copy = getMainMessages();
+          const previewPath = await deps.wallpapers.previewPathFor(wallpaperId);
+          if (!previewPath) throw new Error(copy.wallpaperThemeNoPreview);
+          const items = await deps.wallpapers.list();
+          const title = items.find((w) => w.id === wallpaperId)?.title ?? wallpaperId;
+          const outRoot = path.join(deps.userDataRoot, 'wallpaper-themes');
+          let videoPath: string | undefined;
+          const info = await deps.wallpapers.mediaInfoFor(wallpaperId);
+          if (info?.type === 'video') videoPath = info.path;
+          const built = await buildWallpaperTheme({
+            wallpaperId,
+            title,
+            previewPath,
+            outRoot,
+            videoPath,
+          });
+          const loader = new ThemePackageLoader(outRoot);
+          const pkg = await loader.load(built.themeId);
+          const installer = new ThemeInstaller(deps.library);
+          const installed = await installer.install(pkg, outRoot);
+          await registerThemeWallpaperForInstalled(deps, installed, outRoot);
+          // Optionally apply to a specific agent when appId is provided and valid.
+          if (appId !== undefined && isAgentId(appId)) {
+            await deps.core.apply({ themeId: installed.id, appId });
+          }
           notifyStatusChanged();
           return installed;
         })(),

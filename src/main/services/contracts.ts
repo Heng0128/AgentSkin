@@ -141,6 +141,21 @@ export interface WallpaperServiceApi {
    *  a web/scene type. */
   webUrlFor(id: string): Promise<string | null>;
   previewPathFor(id: string): Promise<string | null>;
+  /**
+   * Background warmup of L1 preview cache for the given wallpapers.
+   * Called during the boot warm-up phase to pre-generate high-def previews
+   * for wallpapers most likely to be visible in the grid.
+   *
+   * @param itemIds - Ordered list of wallpaper ids to warm up (visible first).
+   * @param sourcePaths - Map of wallpaper id → absolute preview-source path.
+   */
+  warmupPreviewCache(itemIds: string[], sourcePaths: Map<string, string>): Promise<void>;
+  /**
+   * Resolve a streamable preview URL for a single wallpaper (L1 lazy load).
+   * Uses PreviewCache for 1920px cached previews; falls back to the media
+   * server loopback URL. Returns null when no preview exists.
+   */
+  previewUrlFor(id: string): Promise<string | null>;
   videoPathFor(id: string): Promise<string | null>;
   mediaInfoFor(id: string): Promise<{
     type: 'video' | 'image' | 'web' | 'scene';

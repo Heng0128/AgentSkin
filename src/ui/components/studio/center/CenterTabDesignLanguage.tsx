@@ -21,9 +21,13 @@ import { useThemeStore } from '@/stores/themeStore';
 
 import type { UiMessages } from '@shared/i18n';
 import {
+  motionMs,
+  radiusPx,
   SHADOW_VALUES,
   SPACING_BASE,
   SPACING_MULTIPLIERS,
+  shadowValue,
+  spacingPx,
 } from '../../../../../scripts/design-language.mjs';
 
 // ---------------------------------------------------------------------------
@@ -71,33 +75,6 @@ function SegmentedControl<T extends string>({
       })}
     </div>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Preview helpers — map config values to CSS variable output
-// ---------------------------------------------------------------------------
-
-/** Preview the spacing value that `designLanguageBlock` will actually emit
- *  for `--agentskin-space-3` (SPACING_BASE[2] × multiplier). */
-function spacingPx(density: SpacingDensity | undefined): string {
-  const mult = SPACING_MULTIPLIERS[density ?? 'comfortable'];
-  const px = SPACING_BASE[2] * mult; // index 2 = 16px base
-  return `${parseFloat(px.toFixed(1))}px`;
-}
-
-function radiusPx(scale: RadiusScale | undefined): string {
-  const rp = { '0': 0, '2': 2, '4': 4, '8': 8 } as const;
-  return `${rp[scale ?? '2']}px`;
-}
-
-/** Shadow value from the same SHADOW_VALUES table used by `designLanguageBlock`. */
-function shadowValue(elevation: ShadowElevation | undefined): string {
-  return SHADOW_VALUES[elevation ?? 'float'];
-}
-
-function motionMs(speed: MotionSpeed | undefined): string {
-  const mp = { instant: 0, fast: 100, smooth: 200 } as const;
-  return `${mp[speed ?? 'fast']}ms`;
 }
 
 // ---------------------------------------------------------------------------

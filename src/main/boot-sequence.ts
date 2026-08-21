@@ -198,6 +198,7 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
     .addStep('预编译主题样式...', 5)
     .addStep('建立缩略图索引...', 5)
     .addStep('预加载适配器模块...', 5)
+    .addStep('预热壁纸预览...', 5)
     .addStep('注册 IPC 处理器...', 10)
     .addStep('打开主窗口...', 10);
 

@@ -22,6 +22,7 @@
 
 import type { ImagePixelSample, ThemeColorsFromImage } from '../../shared/types/theme';
 import { luminanceOf, medianCut, parseColor, toHex } from '../profile/color-quantize';
+import { generateThemeFromWallpaper } from './wallpaper-color-engine';
 
 // Re-export the shared types so existing importers (`wallpaper-theme.ts`, the
 // vitest suite) keep working without a churn of import paths. The single source
@@ -70,6 +71,9 @@ function saturation(c: { r: number; g: number; b: number }): number {
 
 /**
  * 从图片像素样本派生主题色板。返回可直接写入 manifest.colors 的字段。
+ *
+ * 同步版本：走 median-cut 管线（纯 TS、零额外依赖）。当需要 HCT 感知均匀
+ * 色彩空间管线时，使用 {@link deriveThemeFromImageAsync}。
  */
 export function deriveThemeFromImage(sample: ImagePixelSample): ThemeColorsFromImage {
   if (sample.colors.length === 0) {
@@ -159,6 +163,29 @@ export function deriveThemeFromImage(sample: ImagePixelSample): ThemeColorsFromI
     buttonForeground: toHex(isLight ? BLACK : WHITE),
     focusRing: alphaHex(toHex(accent), 0.6),
   };
+}
+
+/**
+ * 异步版本：优先调用 wallpaper-color-engine（HCT 感知均匀色彩空间 +
+ * Tonal Pipeline + mapTonalToTokens），成功则直接返回；失败时 fallback
+ * 到同步 median-cut 管线（{@link deriveThemeFromImage}）。
+ *
+ * 与同步版的区别：
+ *   - 需要图片文件路径（`imagePath`）以喂给 color-thief 提取主色。
+ *   - 返回 Promise，调用方需 await。
+ *   - 输出与同步版同构（`ThemeColorsFromImage`），下游 GENERATORS 无需改动。
+ *
+ * @param sample    降采样后的像素样本（fallback 用）。
+ * @param imagePath 壁纸图片文件绝对路径——喂给 HCT 管线。
+ */
+export async function deriveThemeFromImageAsync(
+  sample: ImagePixelSample,
+  imagePath: string,
+): Promise<ThemeColorsFromImage> {
+  const hctResult = await generateThemeFromWallpaper(imagePath);
+  if (hctResult) return hctResult;
+  // Fallback: median-cut 管线（纯 TS、零额外依赖）。
+  return deriveThemeFromImage(sample);
 }
 
 /**

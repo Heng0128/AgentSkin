@@ -14,7 +14,7 @@
  *     is rendered so the preview still shows the agent's native look.
  *   · Without either, an empty-state placeholder is shown.
  *
- * Live override updates are pushed via postMessage `{ type: 'as-ov', css }`
+ * Live override updates are pushed via direct DOM write to `#ov` style element
  * — the same protocol consumed by RealDomPreview's runtime bridge. This
  * keeps style edits 60 fps without rebuilding the srcDoc.
  */
@@ -78,9 +78,6 @@ export function PreviewWindow({
         '<!doctype html><html><head>' +
         `<style>:root{${styleEntries}}</style>` +
         '<style id="ov"></style>' +
-        '<script>(function(){window.addEventListener("message",function(e){' +
-        'if(e.data&&e.data.type==="as-ov"){var s=document.getElementById("ov");' +
-        'if(s)s.textContent=e.data.css;}});})();</script>' +
         `</head><body><div style="padding:32px;font-family:system-ui;color:var(--fg,#e8e2ff);background:var(--bg,#1a1a2e);">` +
         `<h3 style="font-family:monospace;font-size:12px;opacity:.5">${meta.displayName} · Preview</h3>` +
         `</div></body></html>`
@@ -96,15 +93,19 @@ export function PreviewWindow({
   );
 
   // Push override CSS whenever it changes or the iframe reloads.
-  // Uses the `as-ov` protocol (RealDomPreview runtime bridge) so edits
-  // apply without rebuilding the srcDoc.
+  // Writes override CSS directly into the iframe's #ov style element so
+  // edits apply without rebuilding the srcDoc.
   const pushOverrides = useCallback(() => {
-    const w = iframeRef.current?.contentWindow;
-    if (w) {
+    // Direct DOM write — the iframe has allow-same-origin, so contentDocument
+    // is accessible. This avoids the postMessage + inline-script pattern that
+    // violated the parent page's CSP (script-src 'self').
+    const doc = iframeRef.current?.contentDocument;
+    if (doc) {
       try {
-        w.postMessage({ type: 'as-ov', css: overrideCss }, '*');
+        const ov = doc.getElementById('ov');
+        if (ov) ov.textContent = overrideCss;
       } catch {
-        /* ignore cross-origin postMessage races */
+        /* ignore rare access races during iframe teardown */
       }
     }
   }, [overrideCss]);

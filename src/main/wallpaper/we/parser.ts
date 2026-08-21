@@ -20,6 +20,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { WallpaperProjectType } from '../../../shared/types';
+import { isCeProject, parseCeMetadata } from '../../scene/ce-parser';
+import { isSceProject, parseSceMetadata } from '../../scene/sce-parser';
 import {
   BROWSER_DECODABLE_IMAGE,
   type DiscoveredItem,
@@ -154,6 +156,77 @@ export async function parseWorkshopProject(
         type = 'image';
         mediaPath = path.join(dir, project.file);
       }
+    }
+  }
+
+  // --- SCE / CE scene detection (fallback when no WE type matched) ---
+  // SCE (Sucrose Wallpaper Engine) and CE (Cyclone Engine) are alternative
+  // scene formats that don't use scene.pkg. Probe them after the standard
+  // WE type detection (project.type + project.file) so that projects with
+  // a recognizable WE type or inferable media file are handled first.
+  //
+  // Guard: only probe SCE/CE when project.json does NOT declare a known WE
+  // type. Standard WE projects always have a `type` field (video/image/web/
+  // scene/application); SCE projects omit it. Without this guard, every
+  // workshop directory with project.json would match isSceProject (which
+  // only checks for project.json existence) and be misclassified as scene.
+  const KNOWN_WE_TYPES = new Set(['video', 'image', 'web', 'scene', 'application']);
+  if (!type && !KNOWN_WE_TYPES.has(projectType)) {
+    if (await isSceProject(dir)) {
+      const sceMeta = (await parseSceMetadata(dir)) ?? {};
+      type = 'scene';
+      mediaPath = previewPath ?? path.join(dir, 'project.json');
+      // SCE projects are directory-based; sizeBytes reflects the project file.
+      try {
+        const projStat = await fs.stat(path.join(dir, 'project.json'));
+        sizeBytes = projStat.size;
+      } catch {
+        sizeBytes = 0;
+      }
+      return {
+        id: entry,
+        title: sceMeta.title ?? entry,
+        type,
+        projectType: 'scene',
+        playback: playbackFor('scene', mediaPath),
+        mediaPath,
+        dirPath: dir,
+        pkgPath: null,
+        previewPath,
+        sizeBytes,
+        tags: [],
+        source: 'workshop',
+        previewOnly: !previewPath,
+        sceneFormat: 'sce',
+      };
+    }
+
+    if (await isCeProject(dir)) {
+      const ceMeta = (await parseCeMetadata(dir)) ?? {};
+      type = 'scene';
+      mediaPath = previewPath ?? path.join(dir, 'scene.dat');
+      try {
+        const datStat = await fs.stat(path.join(dir, 'scene.dat'));
+        sizeBytes = datStat.size;
+      } catch {
+        sizeBytes = 0;
+      }
+      return {
+        id: entry,
+        title: ceMeta.title ?? entry,
+        type,
+        projectType: 'scene',
+        playback: playbackFor('scene', mediaPath),
+        mediaPath,
+        dirPath: dir,
+        pkgPath: null,
+        previewPath,
+        sizeBytes,
+        tags: [],
+        source: 'workshop',
+        previewOnly: !previewPath,
+        sceneFormat: 'ce',
+      };
     }
   }
 

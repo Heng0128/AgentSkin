@@ -339,6 +339,16 @@ export interface AgentSkinApi {
    *  pywal-style wallpaper→theme linkage. Throws when the wallpaper has no
    *  decodable preview image. */
   extractThemeFromWallpaper(wallpaperId: string): Promise<InstalledTheme>;
+  /** Preview a wallpaper's derived 14-token palette without installing or
+   *  applying anything. Returns null when the wallpaper has no decodable
+   *  preview image. Lightweight — runs the pixel-sampling + derivation
+   *  pipeline in-memory, no filesystem writes. */
+  previewThemeFromWallpaper(wallpaperId: string): Promise<ThemeColorsFromImage | null>;
+  /** Build + install + optionally apply a wallpaper-derived theme. Generates
+   *  the `.agentskin-theme` package, installs it into the library, and returns
+   *  the installed theme. When `appId` is provided, also applies the theme to
+   *  that agent (pywal-style one-click from Studio). */
+  applyThemeFromWallpaper(wallpaperId: string, appId?: AgentId): Promise<InstalledTheme>;
   /** Persist the AgentSkin UI wallpaper preference (enabled + id). Per-agent
    *  settings are preserved server-side and not overwritten by this call. */
   setWallpaper(

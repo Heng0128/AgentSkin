@@ -85,6 +85,18 @@ export const IpcChannel = {
    *  package, install it into the library, and return the installed theme
    *  (pywal-style wallpaper→theme linkage). */
   WALLPAPER_EXTRACT_THEME: 'wallpaper:extract-theme',
+  /** Resolve a single wallpaper's L1 preview URL for lazy grid-card loading.
+   *  Returns a cached `file://` URL (1920px PNG) or falls back to the media
+   *  server loopback URL. Null when no preview exists. */
+  WALLPAPER_PREVIEW_URL: 'wallpaper:preview-url',
+  /** Preview a wallpaper's derived theme colors (no install, no apply — returns
+   *  the 14-token `ThemeColorsFromImage` only). Lightweight: samples pixels and
+   *  runs the derivation pipeline without writing any package to disk. */
+  WALLPAPER_PREVIEW_THEME: 'wallpaper:preview-theme',
+  /** Build + install + optionally apply a wallpaper-derived theme. Installs the
+   *  generated `.agentskin-theme` package into the library. When `appId` is
+   *  provided, also applies the theme to that agent (pywal-style one-click). */
+  WALLPAPER_APPLY_THEME: 'wallpaper:apply-theme',
   WE_DETECT: 'we:detect',
 
   // --- Bundles (.agentskin-bundle: theme + wallpaper combo packages) ---

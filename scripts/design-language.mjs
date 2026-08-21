@@ -93,6 +93,34 @@ export const MOTION_VALUES = Object.freeze({
 });
 
 // ---------------------------------------------------------------------------
+// Preview helpers — shared by UI panels and theme generators
+// ---------------------------------------------------------------------------
+
+/** Compute the `--agentskin-space-3` value (SPACING_BASE[2] × multiplier). */
+export function spacingPx(density) {
+  const mult = SPACING_MULTIPLIERS[density ?? 'comfortable'];
+  const px = SPACING_BASE[2] * mult; // index 2 = 16px base
+  return `${parseFloat(px.toFixed(1))}px`;
+}
+
+/** Map a radius scale key to its pixel value. */
+export function radiusPx(scale) {
+  const rp = { 0: 0, 2: 2, 4: 4, 8: 8 };
+  return `${rp[scale ?? '2']}px`;
+}
+
+/** Resolve a shadow elevation key to its CSS box-shadow value. */
+export function shadowValue(elevation) {
+  return SHADOW_VALUES[elevation ?? 'float'];
+}
+
+/** Map a motion speed key to its millisecond value. */
+export function motionMs(speed) {
+  const mp = { instant: 0, fast: 100, smooth: 200 };
+  return `${mp[speed ?? 'fast']}ms`;
+}
+
+// ---------------------------------------------------------------------------
 // Resolution
 // ---------------------------------------------------------------------------
 

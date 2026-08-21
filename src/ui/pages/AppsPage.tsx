@@ -38,7 +38,7 @@
  * from the store and delegates user actions back to store actions.
  */
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppCard } from '@/components/apps/AppCard';
 import { AppDetailsDrawer } from '@/components/apps/AppDetailsDrawer';
 import { Button } from '@/components/ui/button';

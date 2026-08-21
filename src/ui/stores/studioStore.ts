@@ -144,6 +144,19 @@ interface StudioStoreState {
   /** User-tweaked accent (hex). Falls back to palette.accent when null. */
   imageToThemeAccent: string | null;
 
+  // --- Wallpaper → Theme live preview (pywal-style Studio linkage) ---
+  /** Preview palette derived from the currently selected wallpaper. Null when
+   *  no wallpaper has been picked or derivation returned nothing. */
+  wallpaperPreviewPalette: ThemeColorsFromImage | null;
+  /** True while a wallpaper preview request is in-flight. */
+  wallpaperPreviewLoading: boolean;
+  /** Error message from the last failed preview attempt (null = no error). */
+  wallpaperPreviewError: string | null;
+  /** True while a wallpaper→theme apply request is in-flight. */
+  wallpaperApplyLoading: boolean;
+  /** Error message from the last failed apply attempt (null = no error). */
+  wallpaperApplyError: string | null;
+
   // --- Export ---
   exportName: string;
   exportAuthor: string;
@@ -217,6 +230,21 @@ interface StudioStoreState {
   /** Override the accent within the extracted palette (live preview only). */
   setImageAccent(hex: string): void;
 
+  // --- Wallpaper → Theme live preview (pywal-style Studio linkage) ---
+  /**
+   * Preview a wallpaper's derived palette (debounced 150ms). Lightweight —
+   * does NOT install or apply; stores the result in `wallpaperPreviewPalette`
+   * for the Studio preview pane. No-op when wallpaperId is empty.
+   */
+  previewWallpaperTheme(wallpaperId: string): void;
+  /**
+   * Build + install + apply a wallpaper-derived theme to the active project's
+   * agent. Returns true on success, surfaces a toast on failure.
+   */
+  applyWallpaperTheme(wallpaperId: string): Promise<boolean>;
+  /** Clear the cached wallpaper preview palette + error state. */
+  clearWallpaperPreview(): void;
+
   // --- Visual analysis progress ---
   /** Current visual-analysis progress (from main process via IPC). Null when idle. */
   analysisProgress: { agent: string; step: string; progress: number } | null;
@@ -268,6 +296,13 @@ function tryAcquireLock(key: string): boolean {
 function releaseLock(key: string): void {
   busyLocks.delete(key);
 }
+
+/**
+ * Wallpaper→theme preview debounce: 150ms coalescing so sliding the wallpaper
+ * picker across many entries doesn't fire a burst of IPC calls. Each new
+ * call cancels the previous pending timer. Module-scoped (single Studio window).
+ */
+let wallpaperPreviewTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Undo coalescing: rapid edits to the *same* override key within this window
@@ -337,6 +372,13 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
   imageToThemeMode: null,
   imageToThemePalette: null,
   imageToThemeAccent: null,
+
+  // --- Wallpaper → Theme live preview ---
+  wallpaperPreviewPalette: null,
+  wallpaperPreviewLoading: false,
+  wallpaperPreviewError: null,
+  wallpaperApplyLoading: false,
+  wallpaperApplyError: null,
 
   exportName: '',
   exportAuthor: '',
@@ -1140,6 +1182,72 @@ export const useStudioStore = create<StudioStoreState>()((set, get) => ({
     }),
 
   setImageAccent: (hex) => set({ imageToThemeAccent: hex }),
+
+  // ------------------------------------------------------------------
+  // Wallpaper → Theme live preview (pywal-style Studio linkage)
+  // ------------------------------------------------------------------
+
+  previewWallpaperTheme: (wallpaperId) => {
+    if (!wallpaperId) return;
+    // Cancel any pending preview so rapid picks coalesce into a single call.
+    if (wallpaperPreviewTimer) clearTimeout(wallpaperPreviewTimer);
+    wallpaperPreviewTimer = setTimeout(async () => {
+      wallpaperPreviewTimer = null;
+      set({ wallpaperPreviewLoading: true, wallpaperPreviewError: null });
+      try {
+        const palette = await api.previewThemeFromWallpaper(wallpaperId);
+        // Guard: ignore stale results if the user already cleared or switched.
+        if (!get().wallpaperPreviewLoading) return;
+        set({
+          wallpaperPreviewPalette: palette,
+          wallpaperPreviewLoading: false,
+          wallpaperPreviewError: null,
+        });
+      } catch (e) {
+        set({
+          wallpaperPreviewPalette: null,
+          wallpaperPreviewLoading: false,
+          wallpaperPreviewError: toMessage(e),
+        });
+      }
+    }, 150);
+  },
+
+  applyWallpaperTheme: async (wallpaperId) => {
+    const showToast = useNotificationStore.getState().showToast;
+    if (!wallpaperId) return false;
+    // Coalesce: fire a preview only when no apply is already running.
+    if (get().wallpaperApplyLoading) return false;
+    const project = get().getActiveProject();
+    if (!project) {
+      showToast(currentT().studioNoActiveProject, 'destructive');
+      return false;
+    }
+    set({ wallpaperApplyLoading: true, wallpaperApplyError: null });
+    try {
+      const installed = await api.applyThemeFromWallpaper(wallpaperId, project.agentId);
+      set({ wallpaperApplyLoading: false, wallpaperApplyError: null });
+      showToast(currentT().studioWallpaperThemeApplied(installed.displayName));
+      return true;
+    } catch (e) {
+      const msg = toMessage(e);
+      set({ wallpaperApplyLoading: false, wallpaperApplyError: msg });
+      showToast(currentT().studioWallpaperThemeApplyFailed(msg), 'destructive');
+      return false;
+    }
+  },
+
+  clearWallpaperPreview: () => {
+    if (wallpaperPreviewTimer) {
+      clearTimeout(wallpaperPreviewTimer);
+      wallpaperPreviewTimer = null;
+    }
+    set({
+      wallpaperPreviewPalette: null,
+      wallpaperPreviewLoading: false,
+      wallpaperPreviewError: null,
+    });
+  },
 
   // ------------------------------------------------------------------
   // Simple setters

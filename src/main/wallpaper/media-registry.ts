@@ -20,6 +20,12 @@
  */
 
 import { renderSceneToHtmlAsync } from '../scene-renderer-async';
+import { detectWebGLCapability, resolveRenderTier } from '../scene-renderer-capability';
+import {
+  parseSceneLayers,
+  renderSceneToStaticHtml,
+  renderSceneToWebGLHtml,
+} from '../scene-renderer-html';
 import { wallpaperMediaServer } from '../wallpaper-server';
 import type { DiscoveredItem } from './types';
 import { wallpaperMimeForPath } from './utils';
@@ -98,18 +104,62 @@ export class MediaRegistry {
       return url;
     }
 
-    // Scene wallpaper: parse scene.pkg → HTML canvas renderer (in a worker
-    // thread so large scenes don't block the main process event loop).
+    // Scene wallpaper: parse scene.pkg → HTML canvas renderer.
+    // Render tier is determined by GPU capability analysis:
+    //   L3 (WebGL, placeholder → falls back to L2 Canvas 2D)
+    //   L2 (Canvas 2D, async worker-pooled)
+    //   L1 (Static image, zero-runtime fallback)
     if (item.type === 'scene' && item.pkgPath) {
+      const capability = detectWebGLCapability();
+      const tier = resolveRenderTier('auto', capability.tier);
+
+      console.log(
+        `[wallpaper] Scene "${item.id}" render tier: ${tier} ` +
+          `(software: ${capability.isSoftwareRenderer}, reason: ${capability.reason || 'n/a'})`,
+      );
+
       let html: string | null;
-      try {
-        html = await renderSceneToHtmlAsync(item.pkgPath);
-      } catch (error) {
-        console.error('[wallpaper-service] renderSceneToHtml threw:', error);
-        return null;
+
+      switch (tier) {
+        case 'L3': {
+          // L3 placeholder: future WebGL renderer (PixiJS/Three.js).
+          // Currently falls back to L2 async render.
+          // TODO: Replace with real WebGL renderer when L3 is implemented.
+          const parsed = parseSceneLayers(item.pkgPath);
+          if (!parsed) {
+            console.error('[wallpaper-service] parseSceneLayers returned null for', item.pkgPath);
+            return null;
+          }
+          html = renderSceneToWebGLHtml(parsed.scene, parsed.layers);
+          break;
+        }
+        case 'L1': {
+          // L1: synchronous parse + static image (no rAF, no scripts).
+          // Synchronous is acceptable here — the user explicitly chose
+          // "energy saver" mode for low-power devices.
+          const parsed = parseSceneLayers(item.pkgPath);
+          if (!parsed) {
+            console.error('[wallpaper-service] parseSceneLayers returned null for', item.pkgPath);
+            return null;
+          }
+          html = renderSceneToStaticHtml(parsed.layers);
+          break;
+        }
+        case 'L2':
+        default: {
+          // L2: async render via worker pool (avoids blocking main process).
+          try {
+            html = await renderSceneToHtmlAsync(item.pkgPath);
+          } catch (error) {
+            console.error('[wallpaper-service] renderSceneToHtmlAsync threw:', error);
+            return null;
+          }
+          break;
+        }
       }
+
       if (!html) {
-        console.error('[wallpaper-service] renderSceneToHtml returned null for', item.pkgPath);
+        console.error('[wallpaper-service] Scene render returned null for', item.pkgPath);
         return null;
       }
       const registered = await wallpaperMediaServer.registerHtml(html);

@@ -1,0 +1,402 @@
+/* 终末之地 — ZCode (--color-* Tailwind v4 native tokens + engine flat semantic layer) */
+:root {
+  color-scheme: dark !important;
+  --agentskin-accent: #c44536;
+  --agentskin-secondary: #d4a574;
+  --agentskin-bg: #0d0d0f;
+  --agentskin-surface: #1a1a1d;
+  --agentskin-surface-elevated: #252529;
+  --agentskin-text: #e8e0d5;
+  --agentskin-muted: #8a7e70;
+  --agentskin-border: rgba(196, 69, 54, 0.18);
+  --agentskin-code-bg: #0a0a0c;
+  --agentskin-code-fg: #c9bfb0;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #1a1a1d 82%, #c44536 18%) 45%, transparent);
+  --agentskin-button-bg: #c44536;
+  --agentskin-focus-ring: rgba(196, 69, 54, 0.6);
+  --agentskin-selection: rgba(196, 69, 54, 0.32);
+  --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  text-shadow: var(--agentskin-text-shadow);
+}
+
+/* ===== Native token overrides (wins over :root[data-theme]) ===== */
+html.agentskin-host-zcode {
+  color-scheme: dark !important;
+
+  /* Text hierarchy */
+  --text-primary: #e8e0d5 !important;
+  --text-secondary: #8a7e70 !important;
+  --text-tertiary: rgba(232, 224, 213, 0.55) !important;
+  --text-quaternary: rgba(232, 224, 213, 0.4) !important;
+
+  /* Backgrounds — transparent for art punch-through */
+  --bg-primary: transparent !important;
+  --bg-secondary: rgb(23, 23, 26) !important;
+  --bg-tertiary: color-mix(in srgb, #252529 85%, #c44536 15%) !important;
+  --bg-elevated: #252529 !important;
+  --bg-base: transparent !important;
+  --bg-canvas: transparent !important;
+  --bg-surface: color-mix(in srgb, #1a1a1d 80%, transparent) !important;
+  --bg-hover: rgba(196, 69, 54, 0.1) !important;
+  --bg-active: rgba(196, 69, 54, 0.16) !important;
+  --bg-selected: rgba(196, 69, 54, 0.14) !important;
+
+  /* Borders */
+  --border-xsubtle: rgba(196, 69, 54, 0.045) !important;
+  --border-subtle: rgba(196, 69, 54, 0.09) !important;
+  --border-medium: rgba(196, 69, 54, 0.18) !important;
+  --border-strong: rgba(196, 69, 54, 0.144) !important;
+
+  /* Accent / brand */
+  --accent: #c44536 !important;
+  --accent-hover: rgb(205, 97, 84) !important;
+  --accent-pressed: rgb(211, 116, 104) !important;
+  --accent-soft: rgba(196, 69, 54, 0.12) !important;
+  --accent-soft-hover: rgba(196, 69, 54, 0.18) !important;
+
+  /* Buttons */
+  --button-primary-bg: #c44536 !important;
+  --button-primary-fg: rgb(2, 2, 2) !important;
+  --button-primary-hover: rgb(205, 97, 84) !important;
+  --button-secondary-bg: rgba(232, 224, 213, 0.12) !important;
+  --button-secondary-fg: #e8e0d5 !important;
+
+  /* Links */
+  --link: #c44536 !important;
+  --link-hover: rgb(205, 97, 84) !important;
+
+  /* Input / composer */
+  --input-bg: color-mix(in srgb, color-mix(in srgb, #1a1a1d 82%, #c44536 18%) 45%, transparent) !important;
+  --input-border: rgba(196, 69, 54, 0.18) !important;
+  --input-focus-ring: rgba(196, 69, 54, 0.4) !important;
+
+  /* Sidebar / panels */
+  --sidebar-bg: color-mix(in srgb, color-mix(in srgb, #1a1a1d 82%, #c44536 18%) 22%, transparent) !important;
+  --panel-bg: color-mix(in srgb, #1a1a1d 14%, transparent) !important;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18) !important;
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.24) !important;
+
+  /* Selection */
+  --selection-bg: rgba(196, 69, 54, 0.28) !important;
+
+  /* Code blocks */
+  --code-bg: #0a0a0c !important;
+  --code-fg: #c9bfb0 !important;
+}
+html.agentskin-host-zcode {
+  color-scheme: dark !important;
+
+  /* --- Backgrounds: transparent for art punch-through --- */
+  --color-background: transparent !important;
+  --color-surface: transparent !important;
+
+  /* Surfaces — SEMI-TRANSPARENT (frosted glass): hero art shows through.
+     Opaque surfaces would hide the background, which is the point. */
+  --color-card: color-mix(in srgb, #1a1a1d 55%, transparent) !important;
+  --color-panel: color-mix(in srgb, #1a1a1d 45%, transparent) !important;
+  --color-sidebar: color-mix(in srgb, #1a1a1d 40%, transparent) !important;
+  --color-header: color-mix(in srgb, #1a1a1d 50%, transparent) !important;
+  --color-tab: color-mix(in srgb, #1a1a1d 50%, transparent) !important;
+  --color-tab-active: color-mix(in srgb, #252529 65%, transparent) !important;
+  --color-popover: color-mix(in srgb, #252529 82%, transparent) !important;
+  --color-menu: color-mix(in srgb, #1a1a1d 75%, transparent) !important;
+  --color-toast: color-mix(in srgb, #252529 85%, transparent) !important;
+  --color-tooltip: color-mix(in srgb, #252529 85%, transparent) !important;
+  --color-input: color-mix(in srgb, #1a1a1d 72%, transparent) !important;
+  --color-input-focused: color-mix(in srgb, #252529 78%, transparent) !important;
+  --color-background-alt: color-mix(in srgb, #1a1a1d 40%, transparent) !important;
+  --color-background-win-alt: color-mix(in srgb, #1a1a1d 40%, transparent) !important;
+
+  /* Hover / selected tints (transparent-based so the background still shows) */
+  --color-surface-hover: color-mix(in srgb, #c44536 10%, transparent) !important;
+  --color-selected: color-mix(in srgb, #c44536 16%, transparent) !important;
+  --color-hover: color-mix(in srgb, #c44536 10%, transparent) !important;
+
+  /* --- Foregrounds --- */
+  --color-foreground: #e8e0d5 !important;
+  --color-foreground-subtle: #8a7e70 !important;
+  --color-foreground-subtlest: color-mix(in srgb, #8a7e70 65%, transparent) !important;
+  --color-foreground-inverse: #0d0d0f !important;
+
+  /* --- Borders --- */
+  --color-border: rgba(196, 69, 54, 0.18) !important;
+  --color-border-hover: color-mix(in srgb, #c44536 30%, transparent) !important;
+  --color-input-border: rgba(196, 69, 54, 0.18) !important;
+  --color-input-border-hover: color-mix(in srgb, #c44536 35%, transparent) !important;
+  --color-input-border-focused: #c44536 !important;
+  --color-card-border: rgba(196, 69, 54, 0.18) !important;
+  --color-tab-border: rgba(196, 69, 54, 0.18) !important;
+  --color-popover-border: rgba(196, 69, 54, 0.18) !important;
+
+  /* --- Accent / brand (primary actions, active states) --- */
+  --color-accent: #c44536 !important;
+  --color-brand: #c44536 !important;
+  --color-primary: #c44536 !important;
+  --color-primary-foreground: #0d0d0f !important;
+  --color-secondary: color-mix(in srgb, #252529 60%, transparent) !important;
+  --color-destructive: #e5484d !important;
+  --color-destructive-foreground: #fff !important;
+  --color-success: #46a758 !important;
+  --color-success-foreground: #fff !important;
+  --color-warning: #f5a524 !important;
+  --color-warning-foreground: #1a1a1a !important;
+
+  /* --- Interaction ask (agent message surfaces) — frosted --- */
+  --color-interaction-ask-fill: color-mix(in srgb, #c44536 12%, transparent) !important;
+  --color-interaction-ask-surface: color-mix(in srgb, #1a1a1d 40%, transparent) !important;
+  --color-interaction-ask-foreground: #e8e0d5 !important;
+  --color-interaction-confirmation-surface: color-mix(in srgb, #1a1a1d 40%, transparent) !important;
+  --color-interaction-confirmation-foreground: #e8e0d5 !important;
+
+  /* --- Node / command / file tree surfaces — frosted --- */
+  --color-command-node: color-mix(in srgb, #1a1a1d 40%, transparent) !important;
+  --color-command-node-hover: color-mix(in srgb, #c44536 10%, transparent) !important;
+  --color-command-node-foreground: #e8e0d5 !important;
+  --color-session-node: color-mix(in srgb, #1a1a1d 40%, transparent) !important;
+  --color-session-node-hover: color-mix(in srgb, #c44536 10%, transparent) !important;
+  --color-session-node-foreground: #e8e0d5 !important;
+  --color-file-node: color-mix(in srgb, #1a1a1d 40%, transparent) !important;
+  --color-file-node-hover: color-mix(in srgb, #c44536 10%, transparent) !important;
+  --color-file-node-foreground: #e8e0d5 !important;
+
+  /* --- Terminal --- */
+  --color-terminal-bg: #0a0a0c !important;
+  --color-terminal-fg: #c9bfb0 !important;
+  --color-terminal-selection: color-mix(in srgb, #c44536 32%, transparent) !important;
+  --color-terminal-selection-inactive: color-mix(in srgb, #c44536 20%, transparent) !important;
+
+  /* --- Code / diff / find --- */
+  --color-markdown-inline-code: #c9bfb0 !important;
+  --color-diff-added: color-mix(in srgb, #46a758 40%, transparent) !important;
+  --color-diff-removed: color-mix(in srgb, #e5484d 40%, transparent) !important;
+  --color-find-highlight: color-mix(in srgb, #c44536 30%, transparent) !important;
+  --color-find-highlight-active: color-mix(in srgb, #c44536 45%, transparent) !important;
+
+  /* --- Secondary surfaces (2026-08-19, reverse blind-spot) ---
+     Live 50894: popover-foreground / menu-hover / tooltip-tag* /
+     card-selected / *-node (subagent/plugin/skill) / diff-*-foreground were
+     unthemed. Terminal 16-color ANSI palette is intentionally left native
+     (functional semantic colors, like codex charts-blue). */
+  --color-popover-foreground: #e8e0d5 !important;
+  --color-popover-header: #252529 !important;
+  --color-menu-hover: color-mix(in srgb, #c44536 12%, transparent) !important;
+  --color-tooltip-tag: color-mix(in srgb, #252529 92%, transparent) !important;
+  --color-tooltip-tag-foreground: #8a7e70 !important;
+  --color-card-selected: color-mix(in srgb, #1a1a1d 72%, #c44536 28%) !important;
+  --color-diff-added-foreground: #e8e0d5 !important;
+  --color-diff-removed-foreground: #e8e0d5 !important;
+  --color-subagent-node: color-mix(in srgb, #1a1a1d 55%, transparent) !important;
+  --color-subagent-node-hover: color-mix(in srgb, #c44536 12%, transparent) !important;
+  --color-subagent-node-foreground: #e8e0d5 !important;
+  --color-plugin-node: color-mix(in srgb, #1a1a1d 55%, transparent) !important;
+  --color-plugin-node-hover: color-mix(in srgb, #c44536 12%, transparent) !important;
+  --color-plugin-node-foreground: #e8e0d5 !important;
+  --color-skill-node: color-mix(in srgb, #1a1a1d 55%, transparent) !important;
+  --color-skill-node-hover: color-mix(in srgb, #c44536 12%, transparent) !important;
+  --color-skill-node-foreground: #e8e0d5 !important;
+  --color-icon-blue: #c44536 !important;
+}
+/* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
+html.agentskin-host-zcode #root {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+html.agentskin-host-zcode #root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--agentskin-surface) 26%, transparent) 0 16%,
+      color-mix(in srgb, var(--agentskin-surface) 8%, transparent) 44%,
+      transparent 70%),
+    linear-gradient(180deg, transparent 0 50%,
+      color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
+    radial-gradient(120% 80% at 84% 14%,
+      color-mix(in srgb, var(--agentskin-secondary) 27%, transparent), transparent 60%),
+    var(--agentskin-art, none) right center / cover no-repeat !important;
+}
+
+/* Root + main surfaces transparent so #root art shows through */
+html.agentskin-host-zcode #root,
+html.agentskin-host-zcode main,
+html.agentskin-host-zcode [role="main"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* Sidebar: frosted glass over art */
+html.agentskin-host-zcode aside,
+html.agentskin-host-zcode nav {
+  background: color-mix(in srgb, color-mix(in srgb, #1a1a1d 82%, #c44536 18%) 22%, transparent) !important;
+  border-right: 1px solid rgba(196, 69, 54, 0.1) !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+
+html.agentskin-host-zcode aside [class*="item"]:hover,
+html.agentskin-host-zcode nav [class*="item"]:hover {
+  background: var(--bg-hover) !important;
+}
+
+html.agentskin-host-zcode aside [class*="active"],
+html.agentskin-host-zcode nav [class*="active"] {
+  background: var(--bg-active) !important;
+  box-shadow: inset 3px 0 0 0 var(--accent) !important;
+}
+
+/* Composer / input: frosted glass */
+html.agentskin-host-zcode [contenteditable="true"],
+html.agentskin-host-zcode textarea {
+  background: color-mix(in srgb, color-mix(in srgb, #1a1a1d 82%, #c44536 18%) 45%, transparent) !important;
+  backdrop-filter: blur(14px) saturate(1.1) !important;
+  color: var(--agentskin-text) !important;
+  caret-color: var(--agentskin-accent) !important;
+  border: 1px solid rgba(196, 69, 54, 0.25) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+html.agentskin-host-zcode [contenteditable="true"]:focus,
+html.agentskin-host-zcode [contenteditable="true"]:focus-within,
+html.agentskin-host-zcode textarea:focus {
+  border-color: rgba(196, 69, 54, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(196, 69, 54, 0.1), 0 4px 18px rgba(212, 165, 116, 0.12) !important;
+}
+
+/* Buttons */
+html.agentskin-host-zcode button[class*="primary"],
+html.agentskin-host-zcode button[class*="send"],
+html.agentskin-host-zcode button[class*="submit"] {
+  background: linear-gradient(135deg, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 62%, var(--agentskin-secondary) 38%) 100%) !important;
+  color: rgb(2, 2, 2) !important;
+  border: none !important;
+  box-shadow: 0 2px 10px var(--agentskin-focus-ring) !important;
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
+}
+
+html.agentskin-host-zcode button[class*="primary"]:hover,
+html.agentskin-host-zcode button[class*="send"]:hover,
+html.agentskin-host-zcode button[class*="submit"]:hover {
+  filter: brightness(1.07) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Message text */
+html.agentskin-host-zcode [class*="message"],
+html.agentskin-host-zcode article {
+  color: var(--agentskin-text);
+}
+
+/* Popovers / modals: frosted glass */
+html.agentskin-host-zcode [role="dialog"],
+html.agentskin-host-zcode [role="menu"],
+html.agentskin-host-zcode [role="tooltip"],
+html.agentskin-host-zcode [class*="popover"],
+html.agentskin-host-zcode [class*="modal"] {
+  background: color-mix(in srgb, #252529 94%, transparent) !important;
+  border: none !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}
+
+/* Text readability on frosted glass */
+html.agentskin-host-zcode body {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+html.agentskin-host-zcode input,
+html.agentskin-host-zcode textarea,
+html.agentskin-host-zcode [contenteditable="true"] {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+/* Links */
+html.agentskin-host-zcode a {
+  color: var(--agentskin-accent) !important;
+}
+
+/* Selection */
+html.agentskin-host-zcode ::selection {
+  background: var(--agentskin-selection) !important;
+}
+
+/* Generic inputs */
+html.agentskin-host-zcode input,
+html.agentskin-host-zcode textarea,
+html.agentskin-host-zcode select {
+  background: var(--agentskin-input-bg) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
+}
+
+html.agentskin-host-zcode input:focus,
+html.agentskin-host-zcode textarea:focus,
+html.agentskin-host-zcode select:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px var(--agentskin-focus-ring) !important;
+}
+
+/* Inline code & code blocks */
+html.agentskin-host-zcode code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(196, 69, 54, 0.108) !important;
+  border-radius: 6px !important;
+}
+
+html.agentskin-host-zcode pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(196, 69, 54, 0.108) !important;
+  border-left: 3px solid rgba(196, 69, 54, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+html.agentskin-host-zcode pre code {
+  border: none !important;
+}
+
+/* Scrollbars */
+html.agentskin-host-zcode ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html.agentskin-host-zcode ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.agentskin-host-zcode ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(196, 69, 54, 0.3) 0%, rgba(212, 165, 116, 0.3) 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+html.agentskin-host-zcode ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(196, 69, 54, 0.5) 0%, rgba(212, 165, 116, 0.5) 100%) !important;
+  background-clip: padding-box !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html.agentskin-host-zcode *,
+  html.agentskin-host-zcode *::before,
+  html.agentskin-host-zcode *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ----
+   ZCode 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 结构着色块消解）；
+   注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
+

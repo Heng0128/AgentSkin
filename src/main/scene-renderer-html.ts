@@ -121,6 +121,36 @@ export function renderSceneToHtml(
 }
 
 // ---------------------------------------------------------------------------
+// Scene parsing helper (for tier-based dispatch)
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse a scene.pkg file and return the scene data + render layers.
+ *
+ * This is the shared parsing step for all render tiers (L1/L2/L3).
+ * Call once, then dispatch to the appropriate renderer based on tier.
+ *
+ * @param pkgPath Absolute path to the `.pkg` file.
+ * @param options Optional resolution context (same as `renderSceneToHtml`).
+ * @returns `{ scene, layers }` on success, `null` on parse failure.
+ */
+export function parseSceneLayers(
+  pkgPath: string,
+  options?: { weInstallRoot?: string },
+): { scene: SceneData; layers: RenderLayer[] } | null {
+  try {
+    const scene = extractScene(pkgPath);
+    if (!scene) return null;
+    const weInstallRoot = options?.weInstallRoot ?? deriveWeInstallRoot(pkgPath);
+    const layers = buildRenderLayers(scene, weInstallRoot);
+    if (layers.length === 0 && !scene.general.clearEnabled) return null;
+    return { scene, layers };
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // L1 static renderer (zero-runtime fallback)
 // ---------------------------------------------------------------------------
 
@@ -203,4 +233,45 @@ export function renderSceneToStaticHtml(
     '</body>\n' +
     '</html>'
   );
+}
+
+// ---------------------------------------------------------------------------
+// L3 WebGL renderer (placeholder — falls back to L2)
+// ---------------------------------------------------------------------------
+
+/** Render options for L3 (WebGL) scene rendering. */
+export interface RenderSceneOptions {
+  /** Target viewport width in CSS px. */
+  width?: number;
+  /** Target viewport height in CSS px. */
+  height?: number;
+}
+
+/**
+ * Attempt to render a scene using WebGL (L3 tier — placeholder).
+ *
+ * **Current behavior**: Falls back to L2 (Canvas 2D) via `buildHtmlDocument`.
+ * The input `scene` and `layers` are produced by {@link parseSceneLayers}.
+ *
+ * **Future**: Replace the body of this function with a PixiJS or Three.js
+ * renderer for true GPU-accelerated scene rendering. The `options` parameter
+ * is reserved for future use (e.g., MSAA sample count, anisotropy level).
+ *
+ * @param scene The parsed scene data (provides clearColor, projection, parallax).
+ * @param layers The resolved render layers sorted back-to-front by parallaxDepth.
+ * @param _options Optional render parameters (reserved for future WebGL use).
+ * @returns A complete HTML document string.
+ */
+export function renderSceneToWebGLHtml(
+  scene: SceneData,
+  layers: RenderLayer[],
+  _options?: RenderSceneOptions,
+): string {
+  // TODO: Future — instantiate PixiJS Application or Three.js WebGLRenderer,
+  // render layers as textured quads with shaders, composite to canvas.
+  //
+  // For now, reuse the L2 Canvas 2D path. This ensures identical output
+  // across all tiers so that switching from L2 to L3 is a safe no-op
+  // until the real WebGL renderer lands.
+  return buildHtmlDocument(scene, layers);
 }

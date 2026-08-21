@@ -350,14 +350,15 @@ export function buildSrcDoc(
   fallbackHtml: string,
 ): string {
   const body = domTree ? nodeToHtml(domTree, colorSets, gradientAccent) : fallbackHtml;
+  // NOTE: No inline <script> here. The iframe has sandbox="allow-scripts
+  // allow-same-origin", so the parent can write override CSS directly via
+  // contentDocument.getElementById('ov").textContent — this avoids a CSP
+  // 'script-src self' violation that blocks inline scripts in srcdoc iframes.
   return (
     '<!doctype html><html><head><meta charset="utf-8">' +
     '<style>html,body{margin:0}*{box-sizing:border-box}' +
     'img{max-width:100%}a{color:inherit;text-decoration:none}</style>' +
     '<style id="ov"></style>' +
-    '<script>(function(){window.addEventListener("message",function(e){' +
-    'if(e.data&&e.data.type==="as-ov"){var s=document.getElementById("ov");' +
-    'if(s)s.textContent=e.data.css;}});})();</script>' +
     `</head><body>${body}</body></html>`
   );
 }

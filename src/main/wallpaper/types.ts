@@ -41,6 +41,10 @@ export interface DiscoveredItem {
   dirPath: string | null;
   /** Absolute path to the scene.pkg file (type='scene' only). */
   pkgPath: string | null;
+  /** Scene format discriminator for type='scene' items. 'we' = Wallpaper Engine
+   *  scene.pkg, 'sce' = Sucrose Wallpaper Engine project, 'ce' = Cyclone Engine
+   *  project. Absent for non-scene types and legacy WE scene items. */
+  sceneFormat?: 'we' | 'sce' | 'ce';
   /** Absolute path to the preview image (preview.jpg/png/gif or the image
    *  file itself for image wallpapers). Null when no preview exists. */
   previewPath: string | null;

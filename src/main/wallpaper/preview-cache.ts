@@ -75,6 +75,12 @@ const MAX_DISK_BYTES = 200 * 1024 * 1024;
 /** L1 preview longest-edge target in pixels. */
 const L1_MAX_EDGE = 1920;
 
+/** Max concurrent L1 generation tasks during warmup (avoids UI jank). */
+const WARMUP_CONCURRENCY = 2;
+
+/** Max number of wallpapers to warm up in a single pass (visible viewport cap). */
+const WARMUP_BATCH_LIMIT = 30;
+
 /** PNG output quality is lossless — no quality parameter needed. */
 const SCOPE = 'PreviewCache';
 
@@ -96,7 +102,7 @@ export class PreviewCache {
   // -------------------------------------------------------------------------
 
   /**
-   * Generate the L1 (1920px) preview for a wallpaper source image.
+   * Resolve an L1 (1920px) preview for a wallpaper source image.
    *
    * Resolution order:
    *   1. In-memory index hit → return cached `file://` URL, bump LRU.
@@ -107,6 +113,18 @@ export class PreviewCache {
    * Returns `null` when the source cannot be decoded or resized.
    */
   async getL1Preview(sourcePath: string, mtimeMs: number): Promise<string | null> {
+    return this.getOrGenerateL1(sourcePath, mtimeMs);
+  }
+
+  /**
+   * Combined L1 query + generate logic shared by on-demand loading
+   * (`getL1Preview`) and background warmup (`warmup`).
+   *
+   * Checks the in-memory index first, then disk, then generates a new PNG
+   * preview on miss. Returns the `file://` URL of the cached preview or
+   * `null` when the source cannot be decoded.
+   */
+  async getOrGenerateL1(sourcePath: string, mtimeMs: number): Promise<string | null> {
     const key = this.computeKey(sourcePath, mtimeMs, 'L1');
 
     // 1. Memory cache hit.
@@ -190,6 +208,64 @@ export class PreviewCache {
       mainWarnFromCatch(SCOPE, error, 'L1 preview generation failed');
       return null;
     }
+  }
+
+  /**
+   * 后台预热指定壁纸的 L1 预览图
+   *
+   * Called during app boot (after `runWarmUp`) to pre-generate high-def
+   * previews for the wallpapers most likely to be visible in the grid.
+   *
+   * Design:
+   * - Iterates `itemIds` in priority order (visible-first).
+   * - Checks L1 cache (memory → disk) before generating.
+   * - Limits concurrency to {@link WARMUP_CONCURRENCY} to avoid I/O storms.
+   * - Yields to the event loop via `setImmediate` between items so the main
+   *   thread stays responsive.
+   * - Individual failures are swallowed — the on-demand path
+   *   (`getL1Preview`) will retry when the card scrolls into view.
+   *
+   * @param itemIds - Ordered list of wallpaper ids to warm up (visible first).
+   * @param sourcePaths - Map of wallpaper id → absolute preview-source path.
+   */
+  async warmup(itemIds: string[], sourcePaths: Map<string, string>): Promise<void> {
+    // Cap batch size to avoid overloading the first paint of the wallpaper page.
+    const ids = itemIds.slice(0, WARMUP_BATCH_LIMIT);
+    if (ids.length === 0) return;
+
+    const CONCURRENCY = WARMUP_CONCURRENCY;
+    let cursor = 0;
+
+    const worker = async (): Promise<void> => {
+      while (true) {
+        // Atomically grab the next index so two workers never process the
+        // same item.
+        const idx = cursor++;
+        if (idx >= ids.length) return;
+
+        const id = ids[idx];
+        const sourcePath = sourcePaths.get(id);
+        if (!sourcePath) continue;
+
+        try {
+          const stat = await fs.stat(sourcePath);
+          await this.getOrGenerateL1(sourcePath, stat.mtimeMs);
+        } catch {
+          // Source missing / inaccessible / decode failure — skip silently.
+          // The on-demand path (getL1Preview → previewUrlFor) retries when
+          // the card actually scrolls into view.
+        }
+
+        // Yield to the event loop so the main thread stays responsive.
+        await new Promise<void>((resolve) => setImmediate(resolve));
+      }
+    };
+
+    const workers: Promise<void>[] = [];
+    for (let i = 0; i < CONCURRENCY; i++) {
+      workers.push(worker());
+    }
+    await Promise.all(workers);
   }
 
   /**

@@ -22,11 +22,13 @@
  */
 
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import type { WallpaperInfo } from '../../shared/types';
 import type { WallpaperServiceApi } from '../services/contracts';
 import { resolveWorkshopRoot } from '../steam-path-resolver';
 import { deleteLocalWallpaperFile, importMedia, scanCustomDir } from './local/importer';
 import { MediaRegistry } from './media-registry';
+import { PreviewCache } from './preview-cache';
 import type { DiscoveredItem } from './types';
 import { playbackFor } from './utils';
 import { scanWorkshop } from './we/scanner';
@@ -37,10 +39,15 @@ export class WallpaperService implements WallpaperServiceApi {
   private items = new Map<string, DiscoveredItem>();
   private scanned = false;
   private media = new MediaRegistry();
+  private previewCache: PreviewCache | null = null;
 
   /** Set the user-data directory for locally imported wallpapers. */
   setCustomDir(dir: string): void {
     this.customDir = dir;
+    // Initialize preview cache under <customDir>/preview-cache. Uses the
+    // same parent directory as imported wallpapers so both share the same
+    // app-data lifecycle (deleted together on uninstall).
+    this.previewCache = new PreviewCache(path.join(dir, 'preview-cache'));
   }
 
   /**
@@ -51,6 +58,13 @@ export class WallpaperService implements WallpaperServiceApi {
   rescan(): void {
     this.scanned = false;
     this.root = null;
+    // Invalidate preview cache entries before clearing — file contents may
+    // have changed on rescan.
+    if (this.previewCache) {
+      for (const id of this.items.keys()) {
+        this.previewCache.invalidate(id);
+      }
+    }
     // Release theme: items individually (theme wallpapers need to be re-registered by the theme system)
     for (const [id] of this.items) {
       if (id.startsWith('theme:')) {
@@ -92,19 +106,31 @@ export class WallpaperService implements WallpaperServiceApi {
     }
   }
 
-  /** List discovered wallpapers with streamable preview URLs. */
+  /**
+   * List discovered wallpapers for the grid view.
+   *
+   * Returns L0 metadata (title/type/size) immediately without loading any
+   * preview images. The UI uses this for instant first paint, then lazily
+   * requests L1 previews via {@link previewUrlFor} as cards scroll into view.
+   */
   async list(): Promise<WallpaperInfo[]> {
     await this.scan();
     const result: WallpaperInfo[] = [];
     for (const item of this.items.values()) {
-      const previewUrl = await this.media.previewUrlForItem(item);
-      result.push({
+      // L0: lightweight metadata only — no image decoding or media-server
+      // registration. Preview URLs are generated on demand via previewUrlFor().
+      const l0 = this.previewCache?.getL0Metadata(item) ?? {
         id: item.id,
         title: item.title,
         type: item.type,
+      };
+      result.push({
+        id: l0.id,
+        title: l0.title,
+        type: item.type,
         projectType: item.projectType,
         playback: item.playback,
-        previewUrl,
+        previewUrl: null, // Deferred — loaded on card scroll-into-view.
         sizeBytes: item.sizeBytes,
         tags: item.tags,
         source: item.source,
@@ -116,11 +142,49 @@ export class WallpaperService implements WallpaperServiceApi {
     return result;
   }
 
+  /**
+   * Resolve a streamable preview URL for a single wallpaper (L1 lazy load).
+   * Called by the UI when a grid card scrolls into view. Uses PreviewCache
+   * for L1 (1920px) cached preview; falls back to the media server.
+   */
+  async previewUrlFor(id: string): Promise<string | null> {
+    await this.scan();
+    const item = this.items.get(id);
+    if (!item?.previewPath) return null;
+    // PreviewCache path: stat the source to get mtime for cache key, then
+    // generate or retrieve the L1 preview.
+    if (this.previewCache) {
+      try {
+        const stat = await fs.stat(item.previewPath);
+        const cached = await this.previewCache.getL1Preview(item.previewPath, stat.mtimeMs);
+        if (cached) return cached;
+      } catch {
+        // stat failed or cache miss — fall through to media server.
+      }
+    }
+    // Fallback: media server loopback URL (original resolution).
+    return this.media.previewUrlForItem(item);
+  }
+
   /** Resolve the absolute preview image path for a wallpaper id, or null. */
   async previewPathFor(id: string): Promise<string | null> {
     await this.scan();
     const item = this.items.get(id);
     return item ? item.previewPath : null;
+  }
+
+  /**
+   * Background warmup of L1 preview cache for the given wallpapers.
+   *
+   * Delegates to {@link PreviewCache.warmup}. No-op when the preview cache
+   * has not been initialized (customDir not set).
+   *
+   * @param itemIds - Ordered list of wallpaper ids to warm up (visible first).
+   * @param sourcePaths - Map of wallpaper id → absolute preview-source path.
+   */
+  async warmupPreviewCache(itemIds: string[], sourcePaths: Map<string, string>): Promise<void> {
+    if (!this.previewCache) return;
+    await this.previewCache.warmup(itemIds, sourcePaths);
   }
 
   /**

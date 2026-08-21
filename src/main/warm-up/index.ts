@@ -43,6 +43,8 @@ export interface WarmUpResult {
   thumbnailCacheCount: number;
   /** Number of adapter modules preloaded. */
   preloadedAdapterCount: number;
+  /** Number of wallpaper L1 previews warmed up. */
+  warmedUpPreviewCount: number;
   /** Any warnings collected during warm-up. */
   warnings: string[];
 }
@@ -56,13 +58,14 @@ export interface WarmUpResult {
  * @param reporter - Boot progress reporter (advances the pre-registered warm-up steps)
  */
 export async function runWarmUp(
-  ctx: Pick<MainContext, 'library'>,
+  ctx: Pick<MainContext, 'library' | 'wallpapers'>,
   reporter: BootProgressReporter,
 ): Promise<WarmUpResult> {
   const warnings: string[] = [];
   let compiledThemeCount = 0;
   let thumbnailCacheCount = 0;
   let preloadedAdapterCount = 0;
+  let warmedUpPreviewCount = 0;
 
   // ── Task 1: Pre-compile theme CSS ──────────────────────────────────
   reporter.startWarmUp('预编译主题样式...');
@@ -100,9 +103,27 @@ export async function runWarmUp(
   }
   reporter.endWarmUp();
 
+  // ── Task 4: Warm up L1 preview cache ──────────────────────────────
+  reporter.startWarmUp('预热壁纸预览...');
+  try {
+    warmedUpPreviewCount = await warmupPreviewCache(ctx, (done, total) =>
+      reporter.reportWarmUp(done / total),
+    );
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    warnings.push(`warmup preview cache: ${msg}`);
+  }
+  reporter.endWarmUp();
+
   reporter.completeWarmUp();
 
-  return { compiledThemeCount, thumbnailCacheCount, preloadedAdapterCount, warnings };
+  return {
+    compiledThemeCount,
+    thumbnailCacheCount,
+    preloadedAdapterCount,
+    warmedUpPreviewCount,
+    warnings,
+  };
 }
 
 /**
@@ -241,6 +262,60 @@ async function preloadAdapters(onProgress: BatchProgress): Promise<number> {
   }
 
   return count;
+}
+
+// ── Task 4: Warm up L1 preview cache ─────────────────────────────────
+
+/**
+ * Pre-generate L1 (1920px) preview PNGs for wallpapers most likely to be
+ * visible in the grid.
+ *
+ * The wallpaper service's `list()` returns items sorted by size (smallest
+ * first), which approximates the visible viewport order. We resolve each
+ * item's `previewPath` and pass the ordered id list + source-path map to
+ * `WallpaperService.warmupPreviewCache()`, which delegates to
+ * `PreviewCache.warmup()` for concurrent, throttled generation.
+ *
+ * Video / web / scene wallpapers without a preview image are skipped
+ * (their `previewPath` is null).
+ */
+async function warmupPreviewCache(
+  ctx: Pick<MainContext, 'wallpapers'>,
+  onProgress: BatchProgress,
+): Promise<number> {
+  if (!ctx.wallpapers) return 0;
+
+  // list() triggers a scan on first call; subsequent calls are memoized.
+  const items = await ctx.wallpapers.list();
+
+  // Build ordered id list + source-path map. Only include items that have
+  // a preview image (image wallpapers and workshop items with preview.jpg).
+  const itemIds: string[] = [];
+  const sourcePaths = new Map<string, string>();
+  const total = Math.max(1, items.length);
+  let resolved = 0;
+
+  for (const item of items) {
+    try {
+      const previewPath = await ctx.wallpapers.previewPathFor(item.id);
+      if (previewPath) {
+        itemIds.push(item.id);
+        sourcePaths.set(item.id, previewPath);
+      }
+    } catch {
+      // Individual item failure is non-fatal.
+    }
+    resolved++;
+    onProgress(resolved, total);
+  }
+
+  if (itemIds.length === 0) return 0;
+
+  // Delegate to PreviewCache.warmup() which handles concurrency (2),
+  // setImmediate yielding, and per-item error isolation.
+  await ctx.wallpapers.warmupPreviewCache(itemIds, sourcePaths);
+
+  return itemIds.length;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────

@@ -1,0 +1,137 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.10 [39m[90mC:/Users/snowb/Desktop/work/desktop-main[39m
+
+ [31m❯[39m [30m[45m main [49m[39m src/main/wallpaper/we/parser.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m6 failed[39m[2m)[22m[32m 65[2mms[22m[39m
+     [32m✓[39m detects a web wallpaper from index.html[32m 10[2mms[22m[39m
+     [32m✓[39m detects a scene wallpaper from scene.pkg[32m 5[2mms[22m[39m
+[31m     [31m×[31m detects a video wallpaper from project.type + file[39m[32m 12[2mms[22m[39m
+[31m     [31m×[31m treats a .gif declared as video as an image (browsers can't play gif in <video>)[39m[32m 6[2mms[22m[39m
+[31m     [31m×[31m infers video from a .mp4 file when project.type is missing[39m[32m 6[2mms[22m[39m
+[31m     [31m×[31m falls back to scanning the directory for the largest video when type is unknown[39m[32m 6[2mms[22m[39m
+[31m     [31m×[31m marks preview-only when only a preview image exists for an unknown type[39m[32m 5[2mms[22m[39m
+[31m     [31m×[31m returns null when the directory has no usable content[39m[32m 6[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 6 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+     [32m✓[39m parses a bare image directory without project.json[32m 4[2mms[22m[39m
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/wallpaper/we/parser.test.ts[2m > [22mparseWorkshopProject — type 分发[2m > [22mdetects a video wallpaper from project.type + file
+     [32m✓[39m resolves a custom preview filename from project.json[32m 4[2mms[22m[39m
+[31m[1mAssertionError[22m: expected 'scene' to be 'video' // Object.is equality[39m
+
+Expected: [32m"video"[39m
+Received: [31m"scene"[39m
+
+[36m [2m❯[22m src/main/wallpaper/we/parser.test.ts:[2m59:24[22m[39m
+    [90m 57|[39m     [35mconst[39m item [33m=[39m [35mawait[39m [34mparseWorkshopProject[39m(dir[33m,[39m [32m'wp-video'[39m)[33m;[39m
+    [90m 58|[39m     [34mexpect[39m(item)[33m.[39mnot[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m 59|[39m     [34mexpect[39m(item[33m![39m[33m.[39mtype)[33m.[39m[34mtoBe[39m([32m'video'[39m)[33m;[39m
+    [90m   |[39m                        [31m^[39m
+    [90m 60|[39m     [34mexpect[39m(item[33m![39m[33m.[39mmediaPath)[33m.[39m[34mtoBe[39m(path[33m.[39m[34mjoin[39m(dir[33m,[39m [32m'movie.mp4'[39m))[33m;[39m
+    [90m 61|[39m     [34mexpect[39m(item[33m![39m[33m.[39mtitle)[33m.[39m[34mtoBe[39m([32m'V'[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/wallpaper/we/parser.test.ts[2m > [22mparseWorkshopProject — type 分发[2m > [22mtreats a .gif declared as video as an image (browsers can't play gif in <video>)
+[31m[1mAssertionError[22m: expected 'scene' to be 'image' // Object.is equality[39m
+
+
+Expected: [32m"[7mimag[27me"[39m
+Received: [31m"[7mscen[27me"[39m
+
+[36m [2m❯[22m src/main/wallpaper/we/parser.test.ts:[2m71:24[22m[39m
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+    [90m 69|[39m     [35mconst[39m item [33m=[39m [35mawait[39m [34mparseWorkshopProject[39m(dir[33m,[39m [32m'wp-gif'[39m)[33m;[39m
+    [90m 70|[39m     [34mexpect[39m(item)[33m.[39mnot[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m 71|[39m     [34mexpect[39m(item[33m![39m[33m.[39mtype)[33m.[39m[34mtoBe[39m([32m'image'[39m)[33m;[39m
+    [90m   |[39m                        [31m^[39m
+    [90m 72|[39m     [34mexpect[39m(item[33m![39m[33m.[39mplayback)[33m.[39m[34mtoBe[39m([32m'gif'[39m)[33m;[39m
+    [90m 73|[39m   })[33m;[39m
+[2m      Tests [22m [1m[31m6 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (10)[39m
+
+[2m   Start at [22m 15:14:23
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯[22m[39m
+
+[2m   Duration [22m 555ms[2m (transform 79ms, setup 0ms, import 105ms, tests 65ms, environment 0ms)[22m
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/wallpaper/we/parser.test.ts[2m > [22mparseWorkshopProject — type 分发[2m > [22minfers video from a .mp4 file when project.type is missing
+
+[31m[1mAssertionError[22m: expected 'scene' to be 'video' // Object.is equality[39m
+
+Expected: [32m"video"[39m
+Received: [31m"scene"[39m
+
+[36m [2m❯[22m src/main/wallpaper/we/parser.test.ts:[2m82:24[22m[39m
+    [90m 80|[39m     [35mconst[39m item [33m=[39m [35mawait[39m [34mparseWorkshopProject[39m(dir[33m,[39m [32m'wp-infer'[39m)[33m;[39m
+    [90m 81|[39m     [34mexpect[39m(item)[33m.[39mnot[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m 82|[39m     [34mexpect[39m(item[33m![39m[33m.[39mtype)[33m.[39m[34mtoBe[39m([32m'video'[39m)[33m;[39m
+    [90m   |[39m                        [31m^[39m
+    [90m 83|[39m   })[33m;[39m
+    [90m 84|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/wallpaper/we/parser.test.ts[2m > [22mparseWorkshopProject — type 分发[2m > [22mfalls back to scanning the directory for the largest video when type is unknown
+[31m[1mAssertionError[22m: expected 'scene' to be 'video' // Object.is equality[39m
+
+Expected: [32m"video"[39m
+Received: [31m"scene"[39m
+
+[36m [2m❯[22m src/main/wallpaper/we/parser.test.ts:[2m93:24[22m[39m
+    [90m 91|[39m     [35mconst[39m item [33m=[39m [35mawait[39m [34mparseWorkshopProject[39m(dir[33m,[39m [32m'wp-scan'[39m)[33m;[39m
+    [90m 92|[39m     [34mexpect[39m(item)[33m.[39mnot[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m 93|[39m     [34mexpect[39m(item[33m![39m[33m.[39mtype)[33m.[39m[34mtoBe[39m([32m'video'[39m)[33m;[39m
+    [90m   |[39m                        [31m^[39m
+    [90m 94|[39m     [34mexpect[39m(item[33m![39m[33m.[39mmediaPath)[33m.[39m[34mtoBe[39m(path[33m.[39m[34mjoin[39m(dir[33m,[39m [32m'big.mp4'[39m))[33m;[39m
+    [90m 95|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/wallpaper/we/parser.test.ts[2m > [22mparseWorkshopProject — type 分发[2m > [22mmarks preview-only when only a preview image exists for an unknown type
+[31m[1mAssertionError[22m: expected 'scene' to be 'image' // Object.is equality[39m
+
+Expected: [32m"[7mimag[27me"[39m
+Received: [31m"[7mscen[27me"[39m
+
+[36m [2m❯[22m src/main/wallpaper/we/parser.test.ts:[2m104:24[22m[39m
+    [90m102|[39m     [35mconst[39m item [33m=[39m [35mawait[39m [34mparseWorkshopProject[39m(dir[33m,[39m [32m'wp-prevonly'[39m)[33m;[39m
+    [90m103|[39m     [34mexpect[39m(item)[33m.[39mnot[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m104|[39m     [34mexpect[39m(item[33m![39m[33m.[39mtype)[33m.[39m[34mtoBe[39m([32m'image'[39m)[33m;[39m
+    [90m   |[39m                        [31m^[39m
+    [90m105|[39m     [34mexpect[39m(item[33m![39m[33m.[39mpreviewOnly)[33m.[39m[34mtoBe[39m([35mtrue[39m)[33m;[39m
+    [90m106|[39m     [34mexpect[39m(item[33m![39m[33m.[39mmediaPath)[33m.[39m[34mtoBe[39m(path[33m.[39m[34mjoin[39m(dir[33m,[39m [32m'preview.jpg'[39m))[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/wallpaper/we/parser.test.ts[2m > [22mparseWorkshopProject — type 分发[2m > [22mreturns null when the directory has no usable content
+[31m[1mAssertionError[22m: expected { id: 'wp-empty', …(13) } to be null[39m
+
+[32m- Expected:[39m
+null
+
+[31m+ Received:[39m
+{
+  "dirPath": "C:\\Users\\snowb\\AppData\\Local\\Temp\\we-parser-test-zznWFd\\wp-empty",
+  "id": "wp-empty",
+  "mediaPath": "C:\\Users\\snowb\\AppData\\Local\\Temp\\we-parser-test-zznWFd\\wp-empty\\project.json",
+  "pkgPath": null,
+  "playback": "scene",
+  "previewOnly": true,
+  "previewPath": null,
+  "projectType": "scene",
+  "sceneFormat": "sce",
+  "sizeBytes": 34,
+  "source": "workshop",
+  "tags": [],
+  "title": "wp-empty",
+  "type": "scene",
+}
+
+[36m [2m❯[22m src/main/wallpaper/we/parser.test.ts:[2m114:18[22m[39m
+    [90m112|[39m     await writeJson(dir, 'project.json', { type: 'video', file: 'gone.…
+    [90m113|[39m     [35mconst[39m item [33m=[39m [35mawait[39m [34mparseWorkshopProject[39m(dir[33m,[39m [32m'wp-empty'[39m)[33m;[39m
+    [90m114|[39m     [34mexpect[39m(item)[33m.[39m[34mtoBeNull[39m()[33m;[39m
+    [90m   |[39m                  [31m^[39m
+    [90m115|[39m   })[33m;[39m
+    [90m116|[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯[22m[39m
+

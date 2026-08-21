@@ -13,7 +13,7 @@
  * `domTree` and {@link RealDomPreview} shows its built-in fallback message.
  *
  * Overrides never reach this component over the network — they are rendered
- * into the iframe via `postMessage` (see `RealDomPreview.overridesToCss`).
+ * into the iframe via direct DOM write (see `RealDomPreview.pushOverrides`).
  * The real-time push to the *live* agent happens in `workspaceStore.updateOverride`,
  * not here. This component is purely a local preview.
  *

@@ -28,9 +28,13 @@ import { useThemeStore } from '@/stores/themeStore';
 
 import type { UiMessages } from '@shared/i18n';
 import {
+  motionMs,
+  radiusPx,
   SHADOW_VALUES,
   SPACING_BASE,
   SPACING_MULTIPLIERS,
+  shadowValue,
+  spacingPx,
 } from '../../../../../scripts/design-language.mjs';
 import { wcagCheck } from '../../../../../scripts/extended-colors.mjs';
 
@@ -133,30 +137,6 @@ function rotateHue(hex: string, deg = 30): string {
   const newH = (h + deg + 360) % 360;
   const [nr, ng, nb] = hslToRgb(newH, s, l);
   return rgbToHex(nr, ng, nb);
-}
-
-// ---------------------------------------------------------------------------
-// Preview helpers — mirror the logic inside designLanguageBlock
-// ---------------------------------------------------------------------------
-
-function spacingPx(density: SpacingDensity | undefined): string {
-  const mult = SPACING_MULTIPLIERS[density ?? 'comfortable'];
-  const px = SPACING_BASE[2] * mult; // index 2 = 16px base
-  return `${parseFloat(px.toFixed(1))}px`;
-}
-
-function radiusPx(scale: RadiusScale | undefined): string {
-  const rp = { '0': 0, '2': 2, '4': 4, '8': 8 } as const;
-  return `${rp[scale ?? '2']}px`;
-}
-
-function shadowValue(elevation: ShadowElevation | undefined): string {
-  return SHADOW_VALUES[elevation ?? 'float'];
-}
-
-function motionMs(speed: MotionSpeed | undefined): string {
-  const mp = { instant: 0, fast: 100, smooth: 200 } as const;
-  return `${mp[speed ?? 'fast']}ms`;
 }
 
 // ---------------------------------------------------------------------------

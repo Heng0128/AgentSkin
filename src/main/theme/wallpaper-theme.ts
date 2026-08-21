@@ -26,7 +26,7 @@ import { nativeImage } from 'electron';
 // scripts/ 不在 asar 会导致运行时 import 失败）。生成器是纯函数、无 I/O。
 import { buildContext, GENERATORS } from '../../../scripts/theme-generators.mjs';
 import { toMessage } from '../../shared/errors';
-import { deriveThemeFromImage, type ImagePixelSample } from './theme-from-image';
+import { deriveThemeFromImageAsync, type ImagePixelSample } from './theme-from-image';
 
 /** 降采样目标：最长边像素数（median-cut 的输入规模，够聚类、快）。 */
 const SAMPLE_MAX_EDGE = 48;
@@ -199,7 +199,7 @@ export async function buildWallpaperTheme(
   if (!sample || sample.colors.length === 0) {
     throw new Error(`无法从壁纸「${input.title}」解码出颜色`);
   }
-  const derived = deriveThemeFromImage(sample);
+  const derived = await deriveThemeFromImageAsync(sample, input.previewPath);
 
   // 6 agent CSS：与 generate-theme-css.mjs 同一来源（静态 import 的纯模块）。
   const ctx = buildContext('wallpaper-theme', {

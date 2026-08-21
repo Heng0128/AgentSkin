@@ -35,12 +35,16 @@ function RealDomPreview({
   const overrideCss = useMemo(() => sanitizeCSS(overridesToCss(overrides)).clean, [overrides]);
 
   const pushOverrides = useCallback(() => {
-    const w = iframeRef.current?.contentWindow;
-    if (w) {
+    // Direct DOM write — the iframe has allow-same-origin, so contentDocument
+    // is accessible. This avoids the postMessage + inline-script pattern that
+    // violated the parent page's CSP (script-src 'self').
+    const doc = iframeRef.current?.contentDocument;
+    if (doc) {
       try {
-        w.postMessage({ type: 'as-ov', css: overrideCss }, '*');
+        const ov = doc.getElementById('ov');
+        if (ov) ov.textContent = overrideCss;
       } catch {
-        /* ignore cross-origin postMessage races */
+        /* ignore rare access races during iframe teardown */
       }
     }
   }, [overrideCss]);
