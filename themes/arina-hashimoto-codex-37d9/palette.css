@@ -1,0 +1,26 @@
+/* palette.css — arina-hashimoto-codex-37d9 (Arina Hashimoto Codex) */
+/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+:root {
+  --agentskin-bg: #fff5f7;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #8b4557;
+  --agentskin-muted: #b87d8c;
+  --agentskin-accent: #bf778c;
+  --agentskin-secondary: #5a8a6e;
+  --agentskin-border: #f0c4d0;
+  --agentskin-code-bg: #fff5f7;
+  --agentskin-code-fg: #8b4557;
+  --agentskin-focus-ring: #d4849c;
+  --agentskin-selection: color-mix(in srgb, #bf778c 32%, transparent);
+
+  /* Derived raw RGB values */
+  --agentskin-accent-raw: 191, 119, 140;
+  --agentskin-secondary-raw: 90, 138, 110;
+  --agentskin-text-raw: 139, 69, 87;
+  --agentskin-muted-raw: 184, 125, 140;
+  --agentskin-surface-raw: 255, 255, 255;
+  --agentskin-surface-elevated-raw: 255, 255, 255;
+  --agentskin-bg-raw: 255, 245, 247;
+  --agentskin-border-raw: 240, 196, 208;
+}

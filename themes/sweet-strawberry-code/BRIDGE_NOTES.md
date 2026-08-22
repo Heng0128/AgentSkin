@@ -5,8 +5,8 @@
 - mode: light
 - palette keys: canvas, surface, raised, input, text, muted, accent, border, focus, success, warning, danger, terminalBackground, terminalForeground
 - has source CSS: yes (bridged)
-- art: none
-- preview: none
+- art: extracted to assets/art.png
+- preview: present (base64)
 
 ## TODO
 - [ ] Add icon.png / preview.png

@@ -91,84 +91,87 @@ describe('Theme Pipeline E2E', () => {
     return;
   }
 
-  describe('1. aurora-glass manifest 包含 14 个必需 token', () => {
-    it('should contain all 14 required color tokens', () => {
-      const manifest = readManifest('aurora-glass');
-      for (const token of REQUIRED_COLOR_TOKENS) {
-        expect(manifest.colors[token], `Missing color token: ${token}`).toBeDefined();
-        expect(typeof manifest.colors[token]).toBe('string');
-        expect(manifest.colors[token].length).toBeGreaterThan(0);
-      }
-    });
+  // 生成器允许两种合法的宿主选择器格式：
+  //   - `:root {` / `:root.agentskin-host-<agent> {`（如 codex 用 :root 前缀挂载）
+  //   - `html.agentskin-host-<agent> {`（如 traework / doubao 等用 html 前缀挂载）
+  const HOST_SELECTOR = /(?::root(?:\.agentskin-host-\w+)?|html\.agentskin-host-\w+)\s*\{/;
+
+  // NOTE (2026-08-23): all theme-specific assertions iterate availableThemes —
+  // the repo's theme set is now built by bridge-codex-theme.mjs and is not
+  // fixed to aurora-glass / aurora-dusk anymore.
+
+  describe('1. 每个主题 manifest 包含 14 个必需 token', () => {
+    for (const themeId of availableThemes) {
+      it(`${themeId} should contain all 14 required color tokens`, () => {
+        const manifest = readManifest(themeId);
+        for (const token of REQUIRED_COLOR_TOKENS) {
+          expect(manifest.colors[token], `${themeId} missing token ${token}`).toBeDefined();
+          expect(typeof manifest.colors[token]).toBe('string');
+          expect(manifest.colors[token].length).toBeGreaterThan(0);
+        }
+      });
+    }
   });
 
-  describe('2. aurora-glass CSS 文件存在', () => {
-    it('should have CSS files for all 6 agents', () => {
-      const manifest = readManifest('aurora-glass');
-      for (const agent of EXPECTED_AGENTS) {
-        const relPath: string | undefined = manifest.targets[agent]?.css;
-        expect(relPath, `targets.${agent}.css missing`).toBeDefined();
-        const cssPath = join(THEMES_DIR, 'aurora-glass', relPath!);
-        expect(existsSync(cssPath), `CSS file missing: ${cssPath}`).toBe(true);
-      }
-    });
+  describe('2. 每个主题的 CSS 文件存在（6 agent）', () => {
+    for (const themeId of availableThemes) {
+      it(`${themeId} should have CSS files for all 6 agents`, () => {
+        const manifest = readManifest(themeId);
+        for (const agent of EXPECTED_AGENTS) {
+          const relPath: string | undefined = manifest.targets[agent]?.css;
+          expect(relPath, `${themeId} targets.${agent}.css missing`).toBeDefined();
+          const cssPath = join(THEMES_DIR, themeId, relPath!);
+          expect(existsSync(cssPath), `CSS file missing: ${cssPath}`).toBe(true);
+        }
+      });
+    }
   });
 
   describe('3. CSS 文件包含 --agentskin-accent 变量', () => {
-    it('should declare --agentskin-accent in traework.css', () => {
-      const cssPath = join(THEMES_DIR, 'aurora-glass', 'assets', 'css', 'traework.css');
-      const css = readFileSync(cssPath, 'utf-8');
-      expect(css).toContain('--agentskin-accent:');
-    });
-
-    it('should declare --agentskin-accent for every agent CSS', () => {
-      const manifest = readManifest('aurora-glass');
-      for (const agent of Object.keys(manifest.targets)) {
-        const relPath = manifest.targets[agent].css;
-        const cssPath = join(THEMES_DIR, 'aurora-glass', relPath);
-        if (!existsSync(cssPath)) continue;
-        const css = readFileSync(cssPath, 'utf-8');
-        expect(css, `Agent ${agent} CSS missing --agentskin-accent`).toContain('--agentskin-accent:');
-      }
-    });
+    for (const themeId of availableThemes) {
+      it(`${themeId} — every agent CSS declares --agentskin-accent`, () => {
+        const manifest = readManifest(themeId);
+        for (const agent of Object.keys(manifest.targets)) {
+          const relPath = manifest.targets[agent].css;
+          const cssPath = join(THEMES_DIR, themeId, relPath);
+          if (!existsSync(cssPath)) continue;
+          const css = readFileSync(cssPath, 'utf-8');
+          expect(css, `${themeId}/${agent} missing --agentskin-accent`).toContain('--agentskin-accent:');
+        }
+      });
+    }
   });
 
   describe('4. CSS 文件包含 --agentskin-bg 变量', () => {
-    it('should declare --agentskin-bg in traework.css', () => {
-      const cssPath = join(THEMES_DIR, 'aurora-glass', 'assets', 'css', 'traework.css');
-      const css = readFileSync(cssPath, 'utf-8');
-      expect(css).toContain('--agentskin-bg:');
-    });
-
-    it('should declare --agentskin-bg for every agent CSS', () => {
-      const manifest = readManifest('aurora-glass');
-      for (const agent of Object.keys(manifest.targets)) {
-        const relPath = manifest.targets[agent].css;
-        const cssPath = join(THEMES_DIR, 'aurora-glass', relPath);
-        if (!existsSync(cssPath)) continue;
-        const css = readFileSync(cssPath, 'utf-8');
-        expect(css, `Agent ${agent} CSS missing --agentskin-bg`).toContain('--agentskin-bg:');
-      }
-    });
+    for (const themeId of availableThemes) {
+      it(`${themeId} — every agent CSS declares --agentskin-bg`, () => {
+        const manifest = readManifest(themeId);
+        for (const agent of Object.keys(manifest.targets)) {
+          const relPath = manifest.targets[agent].css;
+          const cssPath = join(THEMES_DIR, themeId, relPath);
+          if (!existsSync(cssPath)) continue;
+          const css = readFileSync(cssPath, 'utf-8');
+          expect(css, `${themeId}/${agent} missing --agentskin-bg`).toContain('--agentskin-bg:');
+        }
+      });
+    }
   });
 
   describe('5. CSS 文件包含 color-scheme 声明', () => {
-    it('should declare color-scheme in aurora-glass/traework.css', () => {
-      const cssPath = join(THEMES_DIR, 'aurora-glass', 'assets', 'css', 'traework.css');
-      const css = readFileSync(cssPath, 'utf-8');
-      expect(css).toMatch(/color-scheme:\s*(dark|light)\s*(!important)?;/);
-    });
-
-    it('should declare color-scheme for all agents', () => {
-      const manifest = readManifest('aurora-glass');
-      for (const agent of Object.keys(manifest.targets)) {
-        const relPath = manifest.targets[agent].css;
-        const cssPath = join(THEMES_DIR, 'aurora-glass', relPath);
-        if (!existsSync(cssPath)) continue;
-        const css = readFileSync(cssPath, 'utf-8');
-        expect(css, `Agent ${agent} CSS missing color-scheme`).toMatch(/color-scheme:\s*(dark|light)\s*(!important)?;/);
-      }
-    });
+    for (const themeId of availableThemes) {
+      it(`${themeId} — every agent CSS declares color-scheme`, () => {
+        const manifest = readManifest(themeId);
+        for (const agent of Object.keys(manifest.targets)) {
+          const relPath = manifest.targets[agent].css;
+          const cssPath = join(THEMES_DIR, themeId, relPath);
+          if (!existsSync(cssPath)) continue;
+          const css = readFileSync(cssPath, 'utf-8');
+          expect(css, `${themeId}/${agent} missing color-scheme`).toMatch(
+            /color-scheme:\s*(dark|light)\s*(!important)?;/,
+          );
+        }
+      });
+    }
   });
 
   describe('6. 所有主题目录都有 manifest.json', () => {
@@ -204,41 +207,20 @@ describe('Theme Pipeline E2E', () => {
   });
 
   describe('8. CSS 文件非空且格式正确', () => {
-    // 生成器允许两种合法的宿主选择器格式：
-    //   - `:root {` / `:root.agentskin-host-<agent> {`（如 codex 用 :root 前缀挂载）
-    //   - `html.agentskin-host-<agent> {`（如 traework / doubao 等用 html 前缀挂载）
-    const HOST_SELECTOR = /(?::root(?:\.agentskin-host-\w+)?|html\.agentskin-host-\w+)\s*\{/;
-
-    it('traework.css should not be empty and contain a host/:root block', () => {
-      const cssPath = join(THEMES_DIR, 'aurora-glass', 'assets', 'css', 'traework.css');
-      const css = readFileSync(cssPath, 'utf-8');
-      expect(css.length).toBeGreaterThan(0);
-      expect(css).toMatch(HOST_SELECTOR);
-    });
-
-    it('every agent CSS for aurora-glass should be non-empty with host/:root block', () => {
-      const manifest = readManifest('aurora-glass');
-      for (const agent of Object.keys(manifest.targets)) {
-        const relPath = manifest.targets[agent].css;
-        const cssPath = join(THEMES_DIR, 'aurora-glass', relPath);
-        if (!existsSync(cssPath)) continue;
-        const css = readFileSync(cssPath, 'utf-8');
-        expect(css.length, `Agent ${agent} CSS is empty`).toBeGreaterThan(0);
-        expect(css, `Agent ${agent} CSS missing :root or host selector`).toMatch(HOST_SELECTOR);
-      }
-    });
-
-    it('every agent CSS for aurora-dusk should be non-empty with host/:root block', () => {
-      if (!availableThemes.includes('aurora-dusk')) return;
-      const manifest = readManifest('aurora-dusk');
-      for (const agent of Object.keys(manifest.targets)) {
-        const relPath = manifest.targets[agent].css;
-        const cssPath = join(THEMES_DIR, 'aurora-dusk', relPath);
-        if (!existsSync(cssPath)) continue;
-        const css = readFileSync(cssPath, 'utf-8');
-        expect(css.length, `Agent ${agent} CSS is empty`).toBeGreaterThan(0);
-        expect(css, `Agent ${agent} CSS missing :root or host selector`).toMatch(HOST_SELECTOR);
-      }
-    });
+    for (const themeId of availableThemes) {
+      it(`${themeId} — every agent CSS non-empty with host/:root block`, () => {
+        const manifest = readManifest(themeId);
+        for (const agent of Object.keys(manifest.targets)) {
+          const relPath = manifest.targets[agent].css;
+          const cssPath = join(THEMES_DIR, themeId, relPath);
+          if (!existsSync(cssPath)) continue;
+          const css = readFileSync(cssPath, 'utf-8');
+          expect(css.length, `${themeId}/${agent} CSS is empty`).toBeGreaterThan(0);
+          expect(css, `${themeId}/${agent} CSS missing :root or host selector`).toMatch(
+            HOST_SELECTOR,
+          );
+        }
+      });
+    }
   });
 });

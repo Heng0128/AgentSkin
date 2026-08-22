@@ -607,7 +607,11 @@ describe('WCAG AA contrast compliance', () => {
   }
 });
 
-describe('colorSchemes CSS coverage', () => {
+// colorSchemes suites only run when at least one theme declares them —
+// an empty suite fails vitest ("No test found in suite").
+const hasColorSchemes = themes.some((t) => (t.colorSchemes ?? []).length > 0);
+
+describe.skipIf(!hasColorSchemes)('colorSchemes CSS coverage', () => {
   for (const t of themes) {
     const schemes = t.colorSchemes ?? [];
     for (const scheme of schemes) {
@@ -633,7 +637,7 @@ describe('colorSchemes CSS coverage', () => {
   }
 });
 
-describe('colorSchemes color-scheme match', () => {
+describe.skipIf(!hasColorSchemes)('colorSchemes color-scheme match', () => {
   for (const t of themes) {
     const schemes = t.colorSchemes ?? [];
     for (const scheme of schemes) {

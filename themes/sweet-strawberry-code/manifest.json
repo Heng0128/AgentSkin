@@ -18,7 +18,7 @@
   "icon": "icon.png",
   "preview": "preview.png",
   "colors": {
-    "accent": "#e14d6b",
+    "accent": "#e5607c",
     "secondary": "#4caf7c",
     "background": "#fff7f9",
     "foreground": "#5a3d44",
@@ -29,9 +29,9 @@
     "codeBackground": "#fff7f9",
     "codeForeground": "#5a3d44",
     "inputBackground": "#fffafb",
-    "buttonBackground": "#e14d6b",
+    "buttonBackground": "#e5607c",
     "buttonForeground": "#5a3d44",
-    "focusRing": "#e14d6b"
+    "focusRing": "#ff6b8a"
   },
   "targets": {
     "traework": {

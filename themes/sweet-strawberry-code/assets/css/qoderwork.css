@@ -1,7 +1,7 @@
 /* Sweet Strawberry Code — QoderWork CN (--color-* design tokens) */
 html.agentskin-host-qoderwork {
   color-scheme: light !important;
-  --agentskin-accent: #e14d6b;
+  --agentskin-accent: #e5607c;
   --agentskin-secondary: #4caf7c;
   --agentskin-bg: #fff7f9;
   --agentskin-surface: rgba(255, 252, 253, 0.94);
@@ -11,10 +11,10 @@ html.agentskin-host-qoderwork {
   --agentskin-border: #f5d7df;
   --agentskin-code-bg: #fff7f9;
   --agentskin-code-fg: #5a3d44;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e14d6b 18%) 45%, transparent);
-  --agentskin-button-bg: #e14d6b;
-  --agentskin-focus-ring: #e14d6b;
-  --agentskin-selection: color-mix(in srgb, #e14d6b 32%, transparent);
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e5607c 18%) 45%, transparent);
+  --agentskin-button-bg: #e5607c;
+  --agentskin-focus-ring: #ff6b8a;
+  --agentskin-selection: color-mix(in srgb, #e5607c 32%, transparent);
   --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
   text-shadow: var(--agentskin-text-shadow);
 }
@@ -24,16 +24,16 @@ html.agentskin-host-qoderwork:root {
   color-scheme: light !important;
 
   /* Primary / brand */
-  --color-primary: #e14d6b !important;
-  --color-primary-hover: rgb(191, 65, 91) !important;
-  --color-primary-active: rgb(169, 58, 80) !important;
-  --color-primary-bg: rgba(225, 77, 107, 0.08) !important;
-  --color-primary-bg-hover: rgba(225, 77, 107, 0.14) !important;
-  --color-primary-border: rgba(225, 77, 107, 0.35) !important;
-  --color-primary-border-hover: rgba(225, 77, 107, 0.55) !important;
+  --color-primary: #e5607c !important;
+  --color-primary-hover: rgb(195, 82, 105) !important;
+  --color-primary-active: rgb(172, 72, 93) !important;
+  --color-primary-bg: rgba(229, 96, 124, 0.08) !important;
+  --color-primary-bg-hover: rgba(229, 96, 124, 0.14) !important;
+  --color-primary-border: rgba(229, 96, 124, 0.35) !important;
+  --color-primary-border-hover: rgba(229, 96, 124, 0.55) !important;
   --color-primary-text: #5a3d44 !important;
-  --color-primary-text-hover: rgb(191, 65, 91) !important;
-  --color-primary-text-active: rgb(169, 58, 80) !important;
+  --color-primary-text-hover: rgb(195, 82, 105) !important;
+  --color-primary-text-active: rgb(172, 72, 93) !important;
   --color-text-on-primary: #ffffff !important;
 
   /* Text hierarchy */
@@ -47,13 +47,13 @@ html.agentskin-host-qoderwork:root {
 
   /* Backgrounds */
   --color-bg-container: #fff7f9 !important;
-  --color-bg-elevated: color-mix(in srgb, #ffffff 85%, #e14d6b 15%) !important;
+  --color-bg-elevated: color-mix(in srgb, #ffffff 85%, #e5607c 15%) !important;
   --color-bg-layout: rgb(255, 247, 249) !important;
   --color-bg-spotlight: rgb(255, 247, 249) !important;
   --color-bg-base: #fff7f9 !important;
   --color-bg-mask: rgba(255, 247, 249, 0.6) !important;
-  --color-bg-highlight: rgba(225, 77, 107, 0.06) !important;
-  --color-bg-highlight-hover: rgba(225, 77, 107, 0.1) !important;
+  --color-bg-highlight: rgba(229, 96, 124, 0.06) !important;
+  --color-bg-highlight-hover: rgba(229, 96, 124, 0.1) !important;
   --color-background: var(--color-bg-container) !important;
   --color-popover: #000 !important;
   --color-white-opacity: #000 !important;
@@ -72,7 +72,7 @@ html.agentskin-host-qoderwork:root {
   --color-fill-disable: rgba(90, 61, 68, 0.08) !important;
 
   /* Links */
-  --color-link: #e14d6b !important;
+  --color-link: #e5607c !important;
 
   /* Semantic: error */
   --color-error: #ff4d4f !important;
@@ -91,12 +91,12 @@ html.agentskin-host-qoderwork:root {
   --color-info-border-hover: #87d1ff !important;
 
   /* Semantic: success (tied to accent) */
-  --color-success: #e14d6b !important;
-  --color-success-hover: rgb(191, 65, 91) !important;
-  --color-success-bg: rgba(225, 77, 107, 0.08) !important;
-  --color-success-bg-hover: rgba(225, 77, 107, 0.14) !important;
-  --color-success-border: rgba(225, 77, 107, 0.35) !important;
-  --color-success-border-hover: rgba(225, 77, 107, 0.55) !important;
+  --color-success: #e5607c !important;
+  --color-success-hover: rgb(195, 82, 105) !important;
+  --color-success-bg: rgba(229, 96, 124, 0.08) !important;
+  --color-success-bg-hover: rgba(229, 96, 124, 0.14) !important;
+  --color-success-border: rgba(229, 96, 124, 0.35) !important;
+  --color-success-border-hover: rgba(229, 96, 124, 0.55) !important;
 
   /* Semantic: warning */
   --color-warning: #faad14 !important;
@@ -107,8 +107,8 @@ html.agentskin-host-qoderwork:root {
   --color-warning-border-hover: #ffd666 !important;
 
   /* Diff */
-  --color-diff-insert: rgba(225, 77, 107, 0.7) !important;
-  --color-diff-insert-bg: rgba(225, 77, 107, 0.12) !important;
+  --color-diff-insert: rgba(229, 96, 124, 0.7) !important;
+  --color-diff-insert-bg: rgba(229, 96, 124, 0.12) !important;
   --color-diff-remove: #fc6b83 !important;
   --color-diff-remove-bg: #e3d1d5 !important;
 
@@ -116,18 +116,18 @@ html.agentskin-host-qoderwork:root {
   --color-pink: #4caf7c !important;
   --color-pink-bg: rgba(76, 175, 124, 0.1) !important;
   --color-pink-hover: rgb(112, 191, 150) !important;
-  --color-purple: rgb(180, 62, 86) !important;
-  --color-purple-bg: rgba(225, 77, 107, 0.08) !important;
-  --color-purple-hover: rgb(231, 113, 137) !important;
+  --color-purple: rgb(183, 77, 99) !important;
+  --color-purple-bg: rgba(229, 96, 124, 0.08) !important;
+  --color-purple-hover: rgb(234, 128, 150) !important;
   --color-yellow: #fac414 !important;
   --color-yellow-bg: #fff3cf !important;
   --color-yellow-hover: #f1d372 !important;
   --color-orange: #fa8125 !important;
   --color-orange-bg: #ffefde !important;
   --color-orange-hover: #e88c45 !important;
-  --color-teal: rgb(203, 69, 96) !important;
-  --color-teal-bg: rgba(225, 77, 107, 0.08) !important;
-  --color-teal-hover: rgb(230, 104, 129) !important;
+  --color-teal: rgb(206, 86, 112) !important;
+  --color-teal-bg: rgba(229, 96, 124, 0.08) !important;
+  --color-teal-hover: rgb(233, 120, 144) !important;
   --color-blue: #0090ff !important;
   --color-blue-bg: #deedff !important;
   --color-blue-hover: #72bcf5 !important;
@@ -140,9 +140,9 @@ html.agentskin-host-qoderwork:root {
   --color-lavender: rgb(130, 199, 163) !important;
   --color-lavender-bg: rgba(76, 175, 124, 0.08) !important;
   --color-lavender-hover: rgb(166, 215, 190) !important;
-  --color-sage: rgb(191, 65, 91) !important;
-  --color-sage-bg: rgba(225, 77, 107, 0.06) !important;
-  --color-sage-hover: rgba(225, 77, 107, 0.12) !important;
+  --color-sage: rgb(195, 82, 105) !important;
+  --color-sage-bg: rgba(229, 96, 124, 0.06) !important;
+  --color-sage-hover: rgba(229, 96, 124, 0.12) !important;
 
   /* Shadows */
   --color-shadow-2xs: rgba(0, 0, 0, 0.03) !important;
@@ -171,7 +171,7 @@ html.agentskin-host-qoderwork:root {
   --settings-nav-row-selected-bg: var(--color-fill-secondary) !important;
 
   /* Chat input parchment — keep extremely subtle to avoid jarring border */
-  --chat-input-parchment-edge: rgba(225, 77, 107, 0.12) !important;
+  --chat-input-parchment-edge: rgba(229, 96, 124, 0.12) !important;
   --chat-input-parchment-glow: rgba(76, 175, 124, 0.06) !important;
   --chat-input-parchment-halo: transparent !important;
 }
@@ -217,7 +217,7 @@ html.agentskin-host-qoderwork [class*="workspace-panel"] {
 /* Sidebar: frosted glass over art (only the actual .agents-sidebar element) */
 html.agentskin-host-qoderwork .agents-sidebar {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
-  border-right: 1px solid rgba(225, 77, 107, 0.1) !important;
+  border-right: 1px solid rgba(229, 96, 124, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
@@ -239,7 +239,7 @@ html.agentskin-host-qoderwork .agents-sidebar [data-active="true"] {
 /* Right panel: frosted glass matching left sidebar */
 html.agentskin-host-qoderwork [data-resizable-sidebar]:not(.agents-sidebar) {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
-  border-left: 1px solid rgba(225, 77, 107, 0.1) !important;
+  border-left: 1px solid rgba(229, 96, 124, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
@@ -252,7 +252,7 @@ html.agentskin-host-qoderwork .chat-input-editor-text:focus-within {
 
 /* Selection */
 html.agentskin-host-qoderwork ::selection {
-  background: rgba(225, 77, 107, 0.28) !important;
+  background: rgba(229, 96, 124, 0.28) !important;
 }
 
 /* Links */
@@ -276,7 +276,7 @@ html.agentskin-host-qoderwork pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
   border: 1px solid rgba(245, 215, 223, 0.6) !important;
-  border-left: 3px solid rgba(225, 77, 107, 0.5) !important;
+  border-left: 3px solid rgba(229, 96, 124, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -290,7 +290,7 @@ html.agentskin-host-qoderwork textarea:focus,
 html.agentskin-host-qoderwork select:focus {
   outline: none !important;
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 2px rgba(225, 77, 107, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(229, 96, 124, 0.15) !important;
 }
 
 /* Scrollbars */
@@ -304,14 +304,14 @@ html.agentskin-host-qoderwork ::-webkit-scrollbar-track {
 }
 
 html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(225, 77, 107, 0.3) 0%, rgba(76, 175, 124, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(229, 96, 124, 0.3) 0%, rgba(76, 175, 124, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(225, 77, 107, 0.5) 0%, rgba(76, 175, 124, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(229, 96, 124, 0.5) 0%, rgba(76, 175, 124, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 

@@ -113,6 +113,115 @@ function autoFg(bgHex, isLight) {
   return lum > 0.3 ? '#0d0d0f' : '#ffffff';
 }
 
+/** WCAG contrast ratio between two hex colors (≥1). */
+function contrast(a, b) {
+  const la = luminance(a);
+  const lb = luminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+/**
+ * Ensure accent/bg contrast meets WCAG UI-component floor (3:1).
+ *
+ * Codex source themes sometimes ship a pale accent on a near-white canvas
+ * (e.g. arina-hashimoto #d4849c on #fff5f7 = 2.59:1) — that fails the
+ * theme-token-consistency WCAG gate. Walk the accent toward black (keep the
+ * hue, drop lightness) until 3:1, in small steps.
+ */
+function ensureAccentContrast(accentHex, bgHex) {
+  const MIN = 3.0;
+  if (!/^#[0-9a-f]{6}$/i.test(accentHex) || !/^#[0-9a-f]{6}$/i.test(bgHex)) return accentHex;
+  let best = accentHex;
+  let c = contrast(accentHex, bgHex);
+  if (c >= MIN) return accentHex;
+  const rgb = parseHex(accentHex);
+  if (!rgb) return accentHex;
+  const [r0, g0, b0] = [rgb.r, rgb.g, rgb.b];
+  // Darken by scaling toward black; try up to ~70 % of the way (stays on-hue).
+  for (let f = 0.95; f >= 0.3; f -= 0.05) {
+    const cand = `#${[r0 * f, g0 * f, b0 * f].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+    const cc = contrast(cand, bgHex);
+    if (cc >= MIN) {
+      best = cand;
+      c = cc;
+      break;
+    }
+  }
+  if (best !== accentHex) {
+    console.warn(
+      `  [wcag] accent ${accentHex} vs bg ${bgHex} = ${contrast(accentHex, bgHex).toFixed(2)}:1 < 3 — darkened to ${best} (${c.toFixed(2)}:1)`,
+    );
+  }
+  return best;
+}
+
+/**
+ * Ensure surface is visually lighter than background (luminance ratio > 1.03).
+ *
+ * The theme-token-consistency "luminance hierarchy" test requires
+ * surfaceLum / bgLum > 1.02 (surface above the page backdrop). Some Codex
+ * light themes ship a surface DARKER than the canvas (e.g. arina-hashimoto
+ * surface=rgba(253,232,238,.92) on #fff5f7, ratio 0.909). Walk the surface
+ * toward white (scaled up) until the ratio clears 1.03.
+ */
+function ensureSurfaceHierarchy(surfaceColor, bgHex, raisedCandidate) {
+  if (!/^#[0-9a-f]{6}$/i.test(bgHex)) return surfaceColor;
+  // Surface may be rgba() with alpha — blend against white first.
+  let sHex = surfaceColor;
+  const mRgba = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/i.exec(
+    surfaceColor,
+  );
+  if (mRgba) {
+    const a = mRgba[4] === undefined ? 1 : Math.min(1, parseFloat(mRgba[4]));
+    const [r, g, b] = [mRgba[1], mRgba[2], mRgba[3]].map((v) => Math.round(+v * a + 255 * (1 - a)));
+    sHex = `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+  }
+  if (!/^#[0-9a-f]{6}$/i.test(sHex)) return surfaceColor;
+
+  const ratio = luminance(sHex) / luminance(bgHex);
+  if (ratio > 1.03) return surfaceColor; // already fine
+
+  // Strategy 1: if the raised/elevated layer is lighter than bg, swap it in —
+  // it is semantically the layer above surface and satisfies the hierarchy.
+  if (raisedCandidate) {
+    const rHex = raisedCandidate;
+    const mR2 = /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)/i.exec(rHex);
+    let rClean = rHex;
+    if (mR2) {
+      const a = mR2[4] === undefined ? 1 : Math.min(1, parseFloat(mR2[4]));
+      const [r, g, b] = [mR2[1], mR2[2], mR2[3]].map((v) => Math.round(+v * a + 255 * (1 - a)));
+      rClean = `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+    }
+    if (/^#[0-9a-f]{6}$/i.test(rClean) && luminance(rClean) / luminance(bgHex) > 1.03) {
+      console.warn(
+        `  [surface] surface ${sHex} vs bg ${bgHex} ratio ${ratio.toFixed(3)} < 1.03 — used raised ${rClean} (${(luminance(rClean) / luminance(bgHex)).toFixed(3)})`,
+      );
+      return rClean;
+    }
+  }
+
+  // Strategy 2: lighten the surface toward white.
+  const rgb = parseHex(sHex);
+  if (!rgb) return surfaceColor;
+  for (let f = 0.97; f <= 1.4; f += 0.02) {
+    const cand = `#${[255 - (255 - rgb.r) * f, 255 - (255 - rgb.g) * f, 255 - (255 - rgb.b) * f]
+      .map((v) =>
+        Math.round(Math.max(0, Math.min(255, v)))
+          .toString(16)
+          .padStart(2, '0'),
+      )
+      .join('')}`;
+    const nr = luminance(cand) / luminance(bgHex);
+    if (nr > 1.03) {
+      console.warn(
+        `  [surface] surface ${sHex} vs bg ${bgHex} ratio ${ratio.toFixed(3)} < 1.03 — lightened to ${cand} (${nr.toFixed(3)})`,
+      );
+      return cand;
+    }
+  }
+  return surfaceColor;
+}
+
 // =============================================================================
 // Palette → AgentSkin 14 tokens 映射
 // =============================================================================
@@ -145,17 +254,24 @@ function mapPaletteToColors(palette, mode) {
   const c = palette;
 
   // 直接可达的 14 tokens 映射 (Codex 使用 camelCase palette keys)
-  const accent = c.accent || c.accent_bright || c.accentBright || '#3b82f6';
+  let accent = c.accent || c.accent_bright || c.accentBright || '#3b82f6';
   let secondary = c.accent_bright || c.accentBright || c.success || c.warning || accent;
+  const background = c.canvas || '#1e1e1e';
+  // P2 fix (2026-08-23): 校正 accent/bg 对比度（WCAG UI 组件下限 3:1），
+  // 避免移植后主题在 theme-token-consistency 的 WCAG gate 失败。
+  accent = ensureAccentContrast(accent, background);
   // P1 fix: 当 secondary 候选值与 accent 完全相同时，派生一个对比色，
   // 避免 14-token 契约中 secondary ≡ accent 丧失语义区分度。
   if (secondary === accent) {
     secondary = deriveDistinctSecondary(accent);
   }
-  const background = c.canvas || '#1e1e1e';
   const foreground = c.text || '#e5e5e5';
   const muted = c.muted || c.faint || '#888888';
-  const surface = c.surface || background;
+  const raisedCandidate = c.raised || c.surface_raised || c.surfaceRaised || c.surface;
+  // P3 fix (2026-08-23): 保证 surface 亮度 > bg 亮度（luminance hierarchy
+  // 契约 surfaceLum/bgLum > 1.02）。Codex 浅色主题常见 surface 比 canvas 暗
+  // （如 arina-hashimoto ratio 0.909），优先用 raised 层，其次向白调亮。
+  const surface = ensureSurfaceHierarchy(c.surface || background, background, raisedCandidate);
   const surfaceElevated = c.raised || c.surface_raised || c.surfaceRaised || surface;
   const border =
     c.border ||
@@ -362,12 +478,16 @@ function detectAndParse(raw, inputPath) {
 
   if (parsed.format === 'codex-theme') {
     // Standard format: full CSS string in parsed.css
+    // art/preview may be a base64 string OR an object { base64, ... }.
+    const artStr = typeof parsed.art === 'string' ? parsed.art : parsed.art?.base64 || null;
+    const prevStr =
+      typeof parsed.preview === 'string' ? parsed.preview : parsed.preview?.base64 || null;
     return {
       format: 'codex-theme',
       manifest: parsed.manifest,
       css: parsed.css,
-      artBase64: typeof parsed.art === 'string' ? parsed.art : null,
-      previewBase64: typeof parsed.preview === 'string' ? parsed.preview : null,
+      artBase64: artStr,
+      previewBase64: prevStr,
       _raw: parsed,
     };
   }
@@ -482,17 +602,29 @@ async function bridgeTheme(inputPath, baseOutDir) {
     console.log(`  - codex.css: no source CSS to bridge (metadata-only export)`);
   }
 
-  // 7) 放置 icon / preview（Codex 不内嵌这些，仅写占位说明）
-  // 7a) 保存 base64 art（如果格式包含 art.base64）
+  // 7) 放置 icon / preview（manifest 契约要求 icon.png + preview.png）
+  // 7a) art → icon.png（Codex art 是主题品牌图，用作主题图标）
   if (detected.artBase64) {
-    const artDir = path.join(themeDir, 'assets');
-    fs.mkdirSync(artDir, { recursive: true });
-    const artPath = path.join(artDir, 'art.png');
+    const artPath = path.join(themeDir, 'icon.png');
     try {
       fs.writeFileSync(artPath, Buffer.from(detected.artBase64, 'base64'));
-      console.log(`  ✓ assets/art.png extracted`);
+      console.log(
+        `  ✓ icon.png extracted (${Math.round(detected.artBase64.length / 1024)} KB base64)`,
+      );
     } catch (e) {
-      console.warn(`  [warn] art base64 decode failed: ${e.message}`);
+      console.warn(`  [warn] icon base64 decode failed: ${e.message}`);
+    }
+  }
+  // 7b) preview → preview.png（Codex preview 是界面截图，用作主题预览）
+  if (detected.previewBase64) {
+    const previewPath = path.join(themeDir, 'preview.png');
+    try {
+      fs.writeFileSync(previewPath, Buffer.from(detected.previewBase64, 'base64'));
+      console.log(
+        `  ✓ preview.png extracted (${Math.round(detected.previewBase64.length / 1024)} KB base64)`,
+      );
+    } catch (e) {
+      console.warn(`  [warn] preview base64 decode failed: ${e.message}`);
     }
   }
 

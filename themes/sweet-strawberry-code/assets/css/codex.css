@@ -1,7 +1,7 @@
 /* Sweet Strawberry Code — OpenAI Codex (--color-token-* design tokens) */
 :root.agentskin-host-codex {
   color-scheme: light !important;
-  --agentskin-accent: #e14d6b;
+  --agentskin-accent: #e5607c;
   --agentskin-secondary: #4caf7c;
   --agentskin-bg: #fff7f9;
   --agentskin-surface: rgba(255, 252, 253, 0.94);
@@ -11,10 +11,10 @@
   --agentskin-border: #f5d7df;
   --agentskin-code-bg: #fff7f9;
   --agentskin-code-fg: #5a3d44;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e14d6b 18%) 45%, transparent);
-  --agentskin-button-bg: #e14d6b;
-  --agentskin-focus-ring: #e14d6b;
-  --agentskin-selection: color-mix(in srgb, #e14d6b 32%, transparent);
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e5607c 18%) 45%, transparent);
+  --agentskin-button-bg: #e5607c;
+  --agentskin-focus-ring: #ff6b8a;
+  --agentskin-selection: color-mix(in srgb, #e5607c 32%, transparent);
   --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
   text-shadow: var(--agentskin-text-shadow);
 }
@@ -24,9 +24,9 @@
   color-scheme: light !important;
 
   /* Accent / brand */
-  --color-token-primary: #e14d6b !important;
-  --color-token-text-link-foreground: #e14d6b !important;
-  --color-token-focus-border: rgba(225, 77, 107, 0.76) !important;
+  --color-token-primary: #e5607c !important;
+  --color-token-text-link-foreground: #e5607c !important;
+  --color-token-focus-border: rgba(229, 96, 124, 0.76) !important;
 
   /* App + surface backgrounds */
   --color-token-bg-primary: #fff7f9 !important;
@@ -46,21 +46,21 @@
   --color-token-description-foreground: rgba(90, 61, 68, 0.498) !important;
 
   /* Borders */
-  --color-token-border: rgba(225, 77, 107, 0.09) !important;
-  --color-token-border-default: rgba(225, 77, 107, 0.09) !important;
-  --color-token-border-light: rgba(225, 77, 107, 0.045) !important;
-  --color-token-border-heavy: rgba(225, 77, 107, 0.156) !important;
-  --color-token-input-border: rgba(225, 77, 107, 0.156) !important;
+  --color-token-border: rgba(229, 96, 124, 0.09) !important;
+  --color-token-border-default: rgba(229, 96, 124, 0.09) !important;
+  --color-token-border-light: rgba(229, 96, 124, 0.045) !important;
+  --color-token-border-heavy: rgba(229, 96, 124, 0.156) !important;
+  --color-token-input-border: rgba(229, 96, 124, 0.156) !important;
 
   /* Interaction surfaces */
-  --color-token-list-hover-background: rgba(225, 77, 107, 0.078) !important;
-  --color-token-scrollbar-slider-hover-background: rgba(225, 77, 107, 0.156) !important;
+  --color-token-list-hover-background: rgba(229, 96, 124, 0.078) !important;
+  --color-token-scrollbar-slider-hover-background: rgba(229, 96, 124, 0.156) !important;
 
   /* Helper vars consumed by shellStructureCss */
-  --accent: #e14d6b !important;
-  --bg-hover: rgba(225, 77, 107, 0.1) !important;
-  --bg-active: rgba(225, 77, 107, 0.16) !important;
-  --bg-selected: rgba(225, 77, 107, 0.14) !important;
+  --accent: #e5607c !important;
+  --bg-hover: rgba(229, 96, 124, 0.1) !important;
+  --bg-active: rgba(229, 96, 124, 0.16) !important;
+  --bg-selected: rgba(229, 96, 124, 0.14) !important;
 }
 /* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
 :root.agentskin-host-codex #root {
@@ -97,28 +97,28 @@
 
 /* Sidebar: frosted glass over art (PROBE-VERIFIED exact root) */
 :root.agentskin-host-codex .app-shell-left-panel {
-  background: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e14d6b 18%) 22%, transparent) !important;
-  border-right: 1px solid rgba(225, 77, 107, 0.1) !important;
+  background: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e5607c 18%) 22%, transparent) !important;
+  border-right: 1px solid rgba(229, 96, 124, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 :root.agentskin-host-codex button.sidebar-item:hover,
 :root.agentskin-host-codex [data-app-action-sidebar-project-id]:hover {
-  background: rgba(225, 77, 107, 0.1) !important;
+  background: rgba(229, 96, 124, 0.1) !important;
 }
 :root.agentskin-host-codex [data-app-action-sidebar-thread-selected="true"],
 :root.agentskin-host-codex [data-app-action-sidebar-thread-active="true"] {
-  background: rgba(225, 77, 107, 0.16) !important;
+  background: rgba(229, 96, 124, 0.16) !important;
   box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
 }
 
 /* Composer / input: frosted glass */
 :root.agentskin-host-codex .composer-surface-chrome,
 :root.agentskin-host-codex [class*="_multilineSurface_"] {
-  background: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e14d6b 18%) 45%, transparent) !important;
+  background: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e5607c 18%) 45%, transparent) !important;
   backdrop-filter: blur(14px) saturate(1.1) !important;
   color: var(--agentskin-text) !important;
   caret-color: var(--agentskin-accent) !important;
-  border: 1px solid rgba(225, 77, 107, 0.25) !important;
+  border: 1px solid rgba(229, 96, 124, 0.25) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
 }
@@ -127,8 +127,8 @@
 :root.agentskin-host-codex [class*="_multilineSurface_"]:focus,
 :root.agentskin-host-codex [contenteditable="true"]:focus,
 :root.agentskin-host-codex [contenteditable="true"]:focus-within {
-  border-color: rgba(225, 77, 107, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(225, 77, 107, 0.1), 0 4px 18px rgba(76, 175, 124, 0.12) !important;
+  border-color: rgba(229, 96, 124, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(229, 96, 124, 0.1), 0 4px 18px rgba(76, 175, 124, 0.12) !important;
 }
 
 /* Message text (role-scoped — no [class*="message"] sub-string spray) */
@@ -197,7 +197,7 @@
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
   border: 1px solid rgba(245, 215, 223, 0.6) !important;
-  border-left: 3px solid rgba(225, 77, 107, 0.5) !important;
+  border-left: 3px solid rgba(229, 96, 124, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -216,14 +216,14 @@
 }
 
 :root.agentskin-host-codex ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(225, 77, 107, 0.3) 0%, rgba(76, 175, 124, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(229, 96, 124, 0.3) 0%, rgba(76, 175, 124, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 :root.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(225, 77, 107, 0.5) 0%, rgba(76, 175, 124, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(229, 96, 124, 0.5) 0%, rgba(76, 175, 124, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
@@ -272,4 +272,79 @@
 /* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ----
    Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
    注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
+
+/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */
+:root.agentskin-host-codex {
+  --color-background-surface: var(--agentskin-bg) !important;
+  --color-background-surface-under: var(--agentskin-surface) !important;
+  --color-background-panel: var(--agentskin-surface) !important;
+  --color-background-control: var(--agentskin-surface-elevated) !important;
+  --color-background-control-opaque: var(--agentskin-surface-elevated) !important;
+  --color-background-editor-opaque: var(--agentskin-bg) !important;
+  --color-background-elevated-primary: var(--agentskin-surface-elevated) !important;
+  --color-background-elevated-primary-opaque: var(--agentskin-surface-elevated) !important;
+  --color-background-elevated-secondary: var(--agentskin-surface) !important;
+  --color-background-elevated-secondary-opaque: var(--agentskin-surface) !important;
+  --color-text-foreground: var(--agentskin-text) !important;
+  --color-text-foreground-secondary: var(--agentskin-muted) !important;
+  --color-text-foreground-tertiary: var(--agentskin-muted) !important;
+  --color-icon-primary: var(--agentskin-text) !important;
+  --color-icon-secondary: var(--agentskin-muted) !important;
+  --color-icon-tertiary: var(--agentskin-muted) !important;
+  --color-border: var(--agentskin-border) !important;
+  --color-border-light: var(--agentskin-border) !important;
+  --color-border-heavy: var(--agentskin-border) !important;
+  --color-border-focus: var(--agentskin-focus-ring) !important;
+  --color-token-bg-primary: var(--agentskin-bg) !important;
+  --color-token-bg-secondary: var(--agentskin-surface) !important;
+  --color-token-bg-tertiary: var(--agentskin-surface-elevated) !important;
+  --color-token-main-surface-primary: var(--agentskin-bg) !important;
+  --color-token-side-bar-background: var(--agentskin-surface) !important;
+  --color-token-foreground: var(--agentskin-text) !important;
+  --color-token-text-primary: var(--agentskin-text) !important;
+  --color-token-text-secondary: var(--agentskin-muted) !important;
+  --color-token-text-tertiary: var(--agentskin-muted) !important;
+  --color-token-description-foreground: var(--agentskin-muted) !important;
+  --color-token-icon-foreground: var(--agentskin-muted) !important;
+  --color-token-input-background: var(--agentskin-surface-elevated) !important;
+  --color-token-input-foreground: var(--agentskin-text) !important;
+  --color-token-input-placeholder-foreground: var(--agentskin-muted) !important;
+  --color-token-input-border: var(--agentskin-border) !important;
+  --color-token-border: var(--agentskin-border) !important;
+  --color-token-border-default: var(--agentskin-border) !important;
+  --color-token-border-heavy: var(--agentskin-border) !important;
+  --color-token-border-light: var(--agentskin-border) !important;
+  --color-token-list-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-list-active-selection-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-list-active-selection-foreground: var(--agentskin-text) !important;
+  --color-token-toolbar-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-button-background: var(--agentskin-accent) !important;
+  --color-token-button-foreground: var(--agentskin-surface-elevated) !important;
+  --color-token-button-border: var(--agentskin-border) !important;
+  --color-token-link: var(--agentskin-accent) !important;
+  --color-token-text-link-foreground: var(--agentskin-accent) !important;
+  --color-token-text-link-active-foreground: var(--agentskin-accent) !important;
+  --color-token-primary: var(--agentskin-accent) !important;
+  --color-token-focus-border: var(--agentskin-focus-ring) !important;
+  --color-token-dropdown-background: var(--agentskin-surface-elevated) !important;
+  --color-token-dropdown-foreground: var(--agentskin-text) !important;
+  --color-token-menu-background: var(--agentskin-surface-elevated) !important;
+  --color-token-menu-border: var(--agentskin-border) !important;
+  --color-token-checkbox-background: var(--agentskin-surface-elevated) !important;
+  --color-token-checkbox-border: var(--agentskin-border) !important;
+  --color-token-checkbox-foreground: var(--agentskin-accent) !important;
+  --color-token-badge-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-badge-foreground: var(--agentskin-text) !important;
+  --color-token-scrollbar-slider-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-scrollbar-slider-hover-background: var(--agentskin-accent) !important;
+  --color-token-scrollbar-slider-active-background: var(--agentskin-accent) !important;
+  --color-token-conversation-header: var(--agentskin-muted) !important;
+  --color-token-conversation-body: var(--agentskin-text) !important;
+  --color-token-conversation-summary-leading: var(--agentskin-muted) !important;
+  --color-token-conversation-summary-trailing: var(--agentskin-muted) !important;
+  --color-token-non-assistant-body-descendant: var(--agentskin-muted) !important;
+  --color-token-text-preformat-foreground: var(--agentskin-text) !important;
+  --color-token-text-preformat-background: var(--agentskin-surface) !important;
+  --color-token-text-code-block-background: var(--agentskin-surface-elevated) !important;
+}
 

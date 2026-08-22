@@ -1,0 +1,26 @@
+/* palette.css — misty-morning (Misty Morning) */
+/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+:root {
+  --agentskin-bg: #F1F4F8;
+  --agentskin-surface: #FFFFFF;
+  --agentskin-surface-elevated: #FFFFFF;
+  --agentskin-text: #2C3A4A;
+  --agentskin-muted: #5F7183;
+  --agentskin-accent: #4C87B4;
+  --agentskin-secondary: #4E8E6B;
+  --agentskin-border: #D7E0E9;
+  --agentskin-code-bg: #F1F4F8;
+  --agentskin-code-fg: #2C3A4A;
+  --agentskin-focus-ring: #3C749C;
+  --agentskin-selection: color-mix(in srgb, #4C87B4 32%, transparent);
+
+  /* Derived raw RGB values */
+  --agentskin-accent-raw: 76, 135, 180;
+  --agentskin-secondary-raw: 78, 142, 107;
+  --agentskin-text-raw: 44, 58, 74;
+  --agentskin-muted-raw: 95, 113, 131;
+  --agentskin-surface-raw: 255, 255, 255;
+  --agentskin-surface-elevated-raw: 255, 255, 255;
+  --agentskin-bg-raw: 241, 244, 248;
+  --agentskin-border-raw: 215, 224, 233;
+}
