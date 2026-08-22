@@ -31,6 +31,7 @@ import type { InstalledTheme } from '../../shared/types';
 import { AGENT_IDS } from '../../shared/types';
 import { mainErrorFromCatch } from '../logger';
 import type { ThemeLibraryApi } from '../services/contracts';
+import { validateThemeColors } from './theme-contract';
 import { getSupportedAgents, isV2Manifest, type ThemeManifest } from './theme-manifest';
 import type { InstalledThemePackage } from './theme-package-loader';
 
@@ -316,6 +317,27 @@ async function resolvePerAgentCssChunks(
 }
 
 /**
+ * Additive contract observability. Emits a dev-only warning when a color map
+ * does not satisfy the 14-token contract (missing / malformed / unknown keys).
+ * Never throws — install must remain backward-compatible with themes that
+ * only satisfy the looser authoritative schema. Mirrors the existing
+ * dev-only `console.warn` pattern in `shared/theme-mapping.ts`.
+ */
+function warnIfContractIncomplete(schemeId: string, colors: ThemeManifest['colors']): void {
+  if (process.env.NODE_ENV === 'production') return;
+  const issues = validateThemeColors(colors as unknown as Record<string, string>);
+  if (issues.missing.length || issues.invalid.length || issues.unknown.length) {
+    const parts: string[] = [];
+    if (issues.missing.length) parts.push(`missing=[${issues.missing.join(',')}]`);
+    if (issues.invalid.length) parts.push(`invalid=[${issues.invalid.join(',')}]`);
+    if (issues.unknown.length) parts.push(`unknown=[${issues.unknown.join(',')}]`);
+    console.warn(
+      `[ThemeInstaller] scheme "${schemeId}" violates 14-token contract: ${parts.join(' ')}`,
+    );
+  }
+}
+
+/**
  * Resolve a theme's color-scheme list. The implicit 'default' scheme (the
  * manifest's own colors) always comes first, followed by each declared
  * `colorSchemes` id resolved from color-schemes/<id>.json. Missing or
@@ -334,6 +356,13 @@ async function resolveColorSchemes(
     mode?: ThemeManifest['mode'];
     colors: ThemeManifest['colors'];
   }> = [{ id: 'default', name: 'Default', mode: manifest.mode, colors: manifest.colors }];
+
+  // Additive contract observability: surface incomplete color maps at install
+  // time WITHOUT rejecting the theme (the authoritative schema is the breaking
+  // contract and is intentionally left unchanged). A theme missing tokens will
+  // still install but its gap is now logged for operators to catch.
+  warnIfContractIncomplete('default', manifest.colors);
+
   for (const schemeId of manifest.colorSchemes ?? []) {
     const raw = await fs.readFile(
       path.join(packagePath, 'color-schemes', `${schemeId}.json`),
@@ -349,6 +378,7 @@ async function resolveColorSchemes(
       scheme.mode === 'light' || scheme.mode === 'dark' || scheme.mode === 'auto'
         ? scheme.mode
         : manifest.mode;
+    warnIfContractIncomplete(schemeId, colors);
     schemes.push({
       id: schemeId,
       name: typeof scheme.name === 'string' && scheme.name ? scheme.name : schemeId,
