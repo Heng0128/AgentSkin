@@ -635,6 +635,9 @@ export class AgentEngineService implements AgentEngineServiceApi {
    *
    * Persistence failures are logged and swallowed so a single failed write
    * does not poison the promise chain (which would stall all later writes).
+   * On failure, the `lastPersistError()` signal is set and a `persist_failed`
+   * structured-log event is emitted so the in-memory/disk desync window is
+   * observable (additive — it does not change the swallow contract).
    */
   private async writeState(): Promise<void> {
     try {
