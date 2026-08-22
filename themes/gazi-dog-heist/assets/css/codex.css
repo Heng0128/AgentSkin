@@ -273,84 +273,107 @@
    Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
    注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
 
-/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */
+/* ===== Bridge: FULL source Codex theme CSS (faithful reproduction) ===== */
+/* 嘎子偷狗 · 黑金追逐 — native geometry, immersive materials. */
 :root.agentskin-host-codex {
-  --color-background-surface: var(--agentskin-bg) !important;
+  color-scheme: dark;
+  --ct-canvas: #080c0a;
+  --ct-deep: #050806;
+  --ct-surface: #111714;
+  --ct-surface-alpha: rgba(17, 23, 20, .88);
+  --ct-raised: #18201b;
+  --ct-input: #0d120f;
+  --ct-text: #f0dfc4;
+  --ct-muted: #bda98c;
+  --ct-disabled: #766b5c;
+  --ct-accent: #d8ae75;
+  --ct-accent-strong: #f1c98f;
+  --ct-accent-soft: rgba(216, 174, 117, .15);
+  --ct-border: #8b6a42;
+  --ct-line: rgba(216, 174, 117, .28);
+  --ct-focus: #f1c98f;
+  --ct-success: #77b27a;
+  --ct-warning: #d4a64e;
+  --ct-danger: #d76b5e;
+  --ct-art: url("./assets/artwork.webp");
+
+  --color-background-surface: var(--ct-canvas) !important;
   --color-background-surface-under: var(--ct-deep) !important;
-  --color-background-panel: var(--agentskin-surface) !important;
-  --color-background-control: var(--agentskin-surface-elevated) !important;
-  --color-background-control-opaque: var(--agentskin-surface-elevated) !important;
+  --color-background-panel: var(--ct-surface) !important;
+  --color-background-control: var(--ct-input) !important;
+  --color-background-control-opaque: var(--ct-input) !important;
   --color-background-editor-opaque: var(--ct-deep) !important;
-  --color-background-elevated-primary: var(--agentskin-surface-elevated) !important;
-  --color-background-elevated-primary-opaque: var(--agentskin-surface-elevated) !important;
-  --color-background-elevated-secondary: var(--agentskin-surface) !important;
-  --color-background-elevated-secondary-opaque: var(--agentskin-surface) !important;
-  --color-text-foreground: var(--agentskin-text) !important;
-  --color-text-foreground-secondary: var(--agentskin-muted) !important;
+  --color-background-elevated-primary: var(--ct-raised) !important;
+  --color-background-elevated-primary-opaque: var(--ct-raised) !important;
+  --color-background-elevated-secondary: var(--ct-surface) !important;
+  --color-background-elevated-secondary-opaque: var(--ct-surface) !important;
+  --color-text-foreground: var(--ct-text) !important;
+  --color-text-foreground-secondary: var(--ct-muted) !important;
   --color-text-foreground-tertiary: var(--ct-disabled) !important;
-  --color-icon-primary: var(--agentskin-text) !important;
-  --color-icon-secondary: var(--agentskin-muted) !important;
+  --color-icon-primary: var(--ct-text) !important;
+  --color-icon-secondary: var(--ct-muted) !important;
   --color-icon-tertiary: var(--ct-disabled) !important;
   --color-border: var(--ct-line) !important;
   --color-border-light: var(--ct-line) !important;
-  --color-border-heavy: var(--agentskin-border) !important;
-  --color-border-focus: var(--agentskin-focus-ring) !important;
-  --color-token-bg-primary: var(--agentskin-bg) !important;
-  --color-token-bg-secondary: var(--agentskin-surface) !important;
-  --color-token-bg-tertiary: var(--agentskin-surface-elevated) !important;
-  --color-token-main-surface-primary: var(--agentskin-bg) !important;
-  --color-token-side-bar-background: var(--agentskin-surface) !important;
-  --color-token-foreground: var(--agentskin-text) !important;
-  --color-token-text-primary: var(--agentskin-text) !important;
-  --color-token-text-secondary: var(--agentskin-muted) !important;
+  --color-border-heavy: var(--ct-border) !important;
+  --color-border-focus: var(--ct-focus) !important;
+
+  --color-token-bg-primary: var(--ct-canvas) !important;
+  --color-token-bg-secondary: var(--ct-surface) !important;
+  --color-token-bg-tertiary: var(--ct-raised) !important;
+  --color-token-main-surface-primary: var(--ct-canvas) !important;
+  --color-token-side-bar-background: var(--ct-surface) !important;
+  --color-token-foreground: var(--ct-text) !important;
+  --color-token-text-primary: var(--ct-text) !important;
+  --color-token-text-secondary: var(--ct-muted) !important;
   --color-token-text-tertiary: var(--ct-disabled) !important;
-  --color-token-description-foreground: var(--agentskin-muted) !important;
-  --color-token-icon-foreground: var(--agentskin-muted) !important;
-  --color-token-input-background: var(--agentskin-surface-elevated) !important;
-  --color-token-input-foreground: var(--agentskin-text) !important;
-  --color-token-input-placeholder-foreground: var(--agentskin-muted) !important;
-  --color-token-input-border: var(--agentskin-border) !important;
+  --color-token-description-foreground: var(--ct-muted) !important;
+  --color-token-icon-foreground: var(--ct-muted) !important;
+  --color-token-input-background: var(--ct-input) !important;
+  --color-token-input-foreground: var(--ct-text) !important;
+  --color-token-input-placeholder-foreground: var(--ct-muted) !important;
+  --color-token-input-border: var(--ct-border) !important;
   --color-token-border: var(--ct-line) !important;
   --color-token-border-default: var(--ct-line) !important;
-  --color-token-border-heavy: var(--agentskin-border) !important;
+  --color-token-border-heavy: var(--ct-border) !important;
   --color-token-border-light: var(--ct-line) !important;
   --color-token-list-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
   --color-token-list-active-selection-background: rgba(139, 106, 66, .34) !important;
-  --color-token-list-active-selection-foreground: var(--agentskin-text) !important;
-  --color-token-list-active-selection-icon-foreground: var(--agentskin-text) !important;
+  --color-token-list-active-selection-foreground: var(--ct-text) !important;
+  --color-token-list-active-selection-icon-foreground: var(--ct-text) !important;
   --color-token-toolbar-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-button-background: var(--agentskin-accent) !important;
+  --color-token-button-background: var(--ct-accent) !important;
   --color-token-button-foreground: var(--ct-deep) !important;
-  --color-token-button-border: var(--agentskin-border) !important;
+  --color-token-button-border: var(--ct-border) !important;
   --color-token-button-secondary-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
   --color-token-link: var(--ct-accent-strong) !important;
   --color-token-text-link-foreground: var(--ct-accent-strong) !important;
   --color-token-text-link-active-foreground: #ffe0ad !important;
-  --color-token-primary: var(--agentskin-accent) !important;
-  --color-token-focus-border: var(--agentskin-focus-ring) !important;
-  --color-token-dropdown-background: var(--agentskin-surface-elevated) !important;
-  --color-token-dropdown-foreground: var(--agentskin-text) !important;
-  --color-token-menu-background: var(--agentskin-surface-elevated) !important;
-  --color-token-menu-border: var(--agentskin-border) !important;
-  --color-token-checkbox-background: var(--agentskin-surface-elevated) !important;
-  --color-token-checkbox-border: var(--agentskin-border) !important;
+  --color-token-primary: var(--ct-accent) !important;
+  --color-token-focus-border: var(--ct-focus) !important;
+  --color-token-dropdown-background: var(--ct-raised) !important;
+  --color-token-dropdown-foreground: var(--ct-text) !important;
+  --color-token-menu-background: var(--ct-raised) !important;
+  --color-token-menu-border: var(--ct-border) !important;
+  --color-token-checkbox-background: var(--ct-input) !important;
+  --color-token-checkbox-border: var(--ct-border) !important;
   --color-token-checkbox-foreground: var(--ct-deep) !important;
   --color-token-radio-active-foreground: var(--ct-deep) !important;
-  --color-token-radio-inactive-border: var(--agentskin-border) !important;
+  --color-token-radio-inactive-border: var(--ct-border) !important;
   --color-token-badge-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-badge-foreground: var(--agentskin-text) !important;
+  --color-token-badge-foreground: var(--ct-text) !important;
   --color-token-scrollbar-slider-background: rgba(216, 174, 117, .18) !important;
   --color-token-scrollbar-slider-hover-background: rgba(216, 174, 117, .30) !important;
   --color-token-scrollbar-slider-active-background: rgba(216, 174, 117, .42) !important;
-  --color-token-conversation-header: var(--agentskin-muted) !important;
-  --color-token-conversation-body: var(--agentskin-text) !important;
-  --color-token-conversation-summary-leading: var(--agentskin-muted) !important;
-  --color-token-conversation-summary-trailing: var(--agentskin-muted) !important;
-  --color-token-non-assistant-body-descendant: var(--agentskin-muted) !important;
+  --color-token-conversation-header: var(--ct-muted) !important;
+  --color-token-conversation-body: var(--ct-text) !important;
+  --color-token-conversation-summary-leading: var(--ct-muted) !important;
+  --color-token-conversation-summary-trailing: var(--ct-muted) !important;
+  --color-token-non-assistant-body-descendant: var(--ct-muted) !important;
   --color-token-disabled-foreground: var(--ct-disabled) !important;
-  --color-token-editor-foreground: var(--agentskin-text) !important;
-  --color-token-editor-group-drop-into-prompt-foreground: var(--agentskin-text) !important;
-  --color-token-menubar-selection-foreground: var(--agentskin-text) !important;
+  --color-token-editor-foreground: var(--ct-text) !important;
+  --color-token-editor-group-drop-into-prompt-foreground: var(--ct-text) !important;
+  --color-token-menubar-selection-foreground: var(--ct-text) !important;
   --color-token-activity-bar-badge-foreground: var(--ct-deep) !important;
   --color-token-text-preformat-foreground: #ead9bd !important;
   --color-token-text-preformat-background: #0b100d !important;
@@ -358,10 +381,411 @@
   --color-token-terminal-foreground: #e8d4b3 !important;
   --color-token-terminal-border: var(--ct-line) !important;
   --color-token-terminal-ansi-black: var(--ct-deep) !important;
-  --color-token-terminal-ansi-bright-black: var(--agentskin-muted) !important;
+  --color-token-terminal-ansi-bright-black: var(--ct-muted) !important;
   --color-token-terminal-ansi-white: #e8d4b3 !important;
-  --color-token-terminal-ansi-bright-white: var(--agentskin-text) !important;
-  --color-token-terminal-ansi-magenta: var(--agentskin-accent) !important;
+  --color-token-terminal-ansi-bright-white: var(--ct-text) !important;
+  --color-token-terminal-ansi-magenta: var(--ct-warning) !important;
   --color-token-terminal-ansi-bright-magenta: var(--ct-accent-strong) !important;
+}
+
+:root.agentskin-host-codex body {
+  color: var(--ct-text);
+  background: var(--ct-canvas);
+  font-family: var(--ct-font-body);
+}
+
+/* Native Windows caption buttons are drawn above the renderer. The current
+   Codex build uses dark glyphs, so an antique-gold strip supplies contrast
+   without changing the native hit targets. */
+:root.agentskin-host-codex body::after {
+  content: "";
+  position: fixed;
+  z-index: 2147483640;
+  top: 0;
+  right: 0;
+  width: 144px;
+  height: 38px;
+  pointer-events: none;
+  background: #d8ae75 !important;
+  border-left: 1px solid #8b6a42;
+  border-bottom: 1px solid #8b6a42;
+  box-shadow: inset 0 -1px rgba(5, 8, 6, .26), 0 10px 24px rgba(0, 0, 0, .22);
+}
+
+/* gazi-decoration-status: the original VIP certification medallion. */
+:root.agentskin-host-codex body:has(main.main-surface[data-codexthemes-page="home"])::before,
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] body:has(main.main-surface[data-codexthemes-page="conversation"])::before {
+  content: "嘎子认证\A偷狗大师\A VIP";
+  position: fixed;
+  z-index: 6;
+  top: 66px;
+  right: 58px;
+  width: 124px;
+  height: 124px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  color: var(--ct-accent);
+  border: 2px double var(--ct-accent);
+  border-radius: 50%;
+  background: rgba(8, 12, 10, .76);
+  box-shadow: 0 0 0 6px rgba(216, 174, 117, .10), 0 10px 28px rgba(0, 0, 0, .30);
+  font: 700 12px/1.45 var(--ct-font-body);
+  letter-spacing: .08em;
+  text-align: center;
+  white-space: pre-line;
+  text-shadow: 0 2px 12px rgba(5, 8, 6, .96);
+  transform: rotate(7deg);
+  pointer-events: none;
+}
+
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] body:has(main.main-surface[data-codexthemes-page="conversation"])::before {
+  width: 92px;
+  height: 92px;
+  top: 56px;
+  right: 34px;
+  padding: 11px;
+  font-size: 9px;
+  opacity: .20;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"],
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="conversation"] {
+  position: relative;
+  isolation: isolate;
+  color: var(--ct-text);
+  background: var(--ct-canvas);
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]::before,
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: linear-gradient(90deg, rgba(5, 8, 6, .94) 0 28%, rgba(5, 8, 6, .55) 49%, rgba(5, 8, 6, .18) 76%), var(--ct-art);
+  background-position: center, 76% 34%;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"]::before {
+  background-image: linear-gradient(90deg, rgba(5, 8, 6, .94), rgba(5, 8, 6, .82)), var(--ct-art);
+  opacity: .82;
+}
+
+/* gazi-decoration-chase-trail: antique-gold route dots plus the paw trail. */
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]::after,
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"]::after {
+  content: "🐾   ·   ·   ·   🐾";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 42px 88px 0;
+  color: rgba(216, 174, 117, .58);
+  background:
+    radial-gradient(circle, rgba(216, 174, 117, .70) 0 2px, transparent 3px) 28px 94px / 74px 34px repeat-x,
+    linear-gradient(176deg, transparent 0 92px, rgba(216, 174, 117, .30) 93px, transparent 94px);
+  font: 600 18px/1 var(--ct-font-body);
+  letter-spacing: .24em;
+  text-shadow: 0 2px 12px rgba(5, 8, 6, .96);
+  transform: rotate(-1deg);
+  opacity: .54;
+  pointer-events: none;
+}
+
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"]::after {
+  padding: 0 38px 76px 0;
+  opacity: .12;
+}
+
+:root.agentskin-host-codex aside.app-shell-left-panel {
+  color: var(--ct-text);
+  background: linear-gradient(180deg, rgba(8, 12, 10, .96), rgba(17, 23, 20, .94));
+  border-right: 1px solid var(--ct-line);
+  box-shadow: 10px 0 30px rgba(0, 0, 0, .16);
+}
+
+:root.agentskin-host-codex aside.app-shell-left-panel button:hover {
+  color: var(--ct-text);
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+}
+
+:root.agentskin-host-codex aside.app-shell-left-panel button svg {
+  color: var(--ct-accent-strong) !important;
+}
+
+/* Keep only verified project-row actions readable while preserving the
+   native show/hide behavior of unrelated sidebar controls. */
+:root.agentskin-host-codex aside.app-shell-left-panel
+  [data-testid="sidebar-project-row"]
+  :is(button[aria-label], div:has(> button[aria-label])) {
+  color: var(--ct-accent-strong) !important;
+  opacity: .92 !important;
+  visibility: visible !important;
+}
+
+:root.agentskin-host-codex aside.app-shell-left-panel [aria-current="page"],
+:root.agentskin-host-codex aside.app-shell-left-panel [class~="bg-token-list-hover-background"] {
+  color: var(--ct-text);
+  background: linear-gradient(90deg, rgba(139, 106, 66, .34), rgba(104, 112, 90, .16));
+  box-shadow: inset 3px 0 var(--ct-accent);
+}
+
+:root.agentskin-host-codex main.main-surface > header.app-header-tint {
+  color: var(--ct-text);
+  background: rgba(8, 12, 10, .94);
+  border-bottom: 1px solid var(--ct-line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] > header.app-header-tint::after,
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"] > header.app-header-tint::after {
+  content: "CODEX · 黑金追逐  🐾";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--ct-muted);
+  font: 600 11px/1 var(--ct-font-body);
+  letter-spacing: .18em;
+  pointer-events: none;
+}
+
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"] > header.app-header-tint::after {
+  opacity: .32;
+}
+
+/* gazi-decoration-quote: the original lower-corner motto capsule. */
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] > header.app-header-tint::before,
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"] > header.app-header-tint::before {
+  content: "魔性整活 · 快乐加倍";
+  position: fixed;
+  z-index: 5;
+  right: 42px;
+  bottom: 50px;
+  padding: 8px 18px;
+  color: var(--ct-accent);
+  border: 1px dashed rgba(216, 174, 117, .58);
+  border-radius: 999px;
+  background: rgba(8, 12, 10, .72);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .26);
+  font: 650 12px/1 var(--ct-font-body);
+  letter-spacing: .10em;
+  text-shadow: 0 2px 12px rgba(5, 8, 6, .96);
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"] > header.app-header-tint::before {
+  opacity: .18;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] [data-feature="game-source"] {
+  color: var(--ct-text);
+  font-family: var(--ct-font-display);
+  text-shadow: 0 2px 18px var(--ct-deep);
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] [data-feature="game-source"]::after {
+  content: "今天一起写代码？";
+  display: block;
+  margin-top: 10px;
+  color: var(--ct-accent);
+  font: 500 15px/1.4 var(--ct-font-body);
+  letter-spacing: .08em;
+  pointer-events: none;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] .group\/home-suggestions {
+  position: relative;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] .group\/home-suggestions::after {
+  content: "🐾";
+  position: absolute;
+  right: -12px;
+  top: -22px;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  color: var(--ct-accent);
+  border: 1px dashed var(--ct-accent);
+  border-radius: 50%;
+  background: rgba(8, 12, 10, .76);
+  transform: rotate(9deg);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .26);
+  pointer-events: none;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] .group\/home-suggestions button {
+  color: var(--ct-text);
+  border: 1px solid var(--ct-line);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(24, 32, 27, .92), rgba(13, 18, 15, .82));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .24);
+  backdrop-filter: blur(8px) saturate(.9);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] .group\/home-suggestions button:hover {
+  transform: translateY(-2px);
+  border-color: var(--ct-accent);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, .30), 0 0 22px rgba(216, 174, 117, .12);
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] .group\/home-suggestions button svg {
+  box-sizing: border-box;
+  width: 32px !important;
+  height: 32px !important;
+  padding: 6px;
+  color: var(--ct-accent) !important;
+  border: 1px solid rgba(216, 174, 117, .48);
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(139, 106, 66, .30), rgba(8, 12, 10, .92));
+  box-shadow: inset 0 0 0 1px rgba(241, 201, 143, .08), 0 5px 14px rgba(0, 0, 0, .24);
+  filter: drop-shadow(0 0 4px rgba(216, 174, 117, .16));
+  transition: color .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease, filter .18s ease, transform .18s ease;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] .group\/home-suggestions button:hover svg {
+  color: var(--ct-accent-strong) !important;
+  border-color: var(--ct-accent);
+  background: linear-gradient(145deg, rgba(216, 174, 117, .34), rgba(17, 23, 20, .96));
+  box-shadow: inset 0 0 0 1px rgba(241, 201, 143, .18), 0 7px 18px rgba(0, 0, 0, .28);
+  filter: drop-shadow(0 0 7px rgba(241, 201, 143, .30));
+  transform: scale(1.06) rotate(-3deg);
+}
+
+:root.agentskin-host-codex .composer-surface-chrome,
+:root.agentskin-host-codex .dream-home-utility {
+  color: var(--ct-text);
+  border-color: var(--ct-border);
+  background: linear-gradient(180deg, rgba(17, 23, 20, .96), rgba(8, 12, 10, .96));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .30), inset 0 0 0 1px rgba(216, 174, 117, .13);
+}
+
+:root.agentskin-host-codex .composer-surface-chrome:focus-within {
+  border-color: var(--ct-focus);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, .34), 0 0 0 2px rgba(241, 201, 143, .15);
+}
+
+:root.agentskin-host-codex [role="menu"],
+:root.agentskin-host-codex [role="dialog"],
+:root.agentskin-host-codex [data-codexthemes-surface="output"],
+:root.agentskin-host-codex [data-codexthemes-surface="diff"] {
+  --color-token-foreground: var(--ct-text) !important;
+  --color-token-text-primary: var(--ct-text) !important;
+  --color-token-text-secondary: var(--ct-muted) !important;
+  --color-token-text-tertiary: var(--ct-muted) !important;
+  --color-token-description-foreground: var(--ct-accent-strong) !important;
+  --color-token-icon-foreground: var(--ct-accent-strong) !important;
+  --color-token-input-foreground: var(--ct-text) !important;
+  --color-token-input-placeholder-foreground: var(--ct-accent-strong) !important;
+  --color-token-charts-purple: var(--ct-accent-strong) !important;
+  color: var(--ct-text);
+  background: var(--ct-raised);
+  border-color: var(--ct-border);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .46);
+}
+
+:root.agentskin-host-codex :is([role="menu"], [role="dialog"]) svg {
+  color: var(--ct-accent-strong) !important;
+}
+
+/* Rich thread previews are portaled and can redeclare token colors locally. */
+:root.agentskin-host-codex
+  [role="tooltip"][class~="rounded-xl"]:has([class~="min-w-56"][class~="flex-col"]) {
+  --color-token-foreground: var(--ct-text) !important;
+  --color-token-text-primary: var(--ct-text) !important;
+  --color-token-text-secondary: var(--ct-muted) !important;
+  --color-token-text-tertiary: var(--ct-muted) !important;
+  --color-token-description-foreground: var(--ct-accent-strong) !important;
+  --color-token-icon-foreground: var(--ct-accent-strong) !important;
+  --color-token-charts-purple: var(--ct-accent-strong) !important;
+  color: var(--ct-text) !important;
+  background: var(--ct-raised) !important;
+  border-color: var(--ct-border) !important;
+  opacity: 1 !important;
+}
+
+:root.agentskin-host-codex
+  [role="tooltip"][class~="rounded-xl"]:has([class~="min-w-56"][class~="flex-col"])
+  :is(.text-token-foreground, .text-token-text-primary, .text-token-text-secondary, .text-token-text-tertiary, .text-token-description-foreground, .text-token-charts-purple) {
+  color: var(--ct-text) !important;
+  opacity: 1 !important;
+}
+
+:root.agentskin-host-codex
+  [role="tooltip"][class~="rounded-xl"]:has([class~="min-w-56"][class~="flex-col"]) svg {
+  color: var(--ct-accent-strong) !important;
+  opacity: 1 !important;
+}
+
+/* Current Codex exposes response actions with stable accessible labels.
+   Keep copy and feedback controls visible without exposing other hover tools. */
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="conversation"]
+  :is(button[aria-label="Copy"], button[aria-label="复制"], button[aria-label="Good response"], button[aria-label="Bad response"], button[aria-label="赞"], button[aria-label="赞同"], button[aria-label="有帮助"], button[aria-label="不喜欢"], button[aria-label="反对"], button[aria-label="没有帮助"]) {
+  color: var(--ct-accent-strong) !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="conversation"]
+  :is(button[aria-label="Copy"], button[aria-label="复制"], button[aria-label="Good response"], button[aria-label="Bad response"], button[aria-label="赞"], button[aria-label="赞同"], button[aria-label="有帮助"], button[aria-label="不喜欢"], button[aria-label="反对"], button[aria-label="没有帮助"]) svg {
+  color: currentColor !important;
+}
+
+:root.agentskin-host-codex [data-codex-terminal="true"] {
+  --vscode-terminal-background: #050806 !important;
+  --vscode-terminal-foreground: #e8d4b3 !important;
+  --color-background-panel: #050806 !important;
+  --color-background-editor-opaque: #050806 !important;
+  color: #e8d4b3 !important;
+  background: #050806 !important;
+}
+
+:root.agentskin-host-codex .xterm,
+:root.agentskin-host-codex .xterm-viewport,
+:root.agentskin-host-codex .xterm-screen,
+:root.agentskin-host-codex [data-codexthemes-surface="terminal"] {
+  color: #e8d4b3 !important;
+  background: #050806 !important;
+}
+
+:root.agentskin-host-codex :focus-visible {
+  outline-color: var(--ct-focus);
+}
+
+@media (max-width: 1050px) {
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]::before {
+    background-position: center, 72% 34%;
+  }
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] > header.app-header-tint::after,
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] > header.app-header-tint::before,
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] .group\/home-suggestions::after,
+  :root.agentskin-host-codex body:has(main.main-surface[data-codexthemes-page="home"])::before,
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]::after,
+  :root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"] > header.app-header-tint::after,
+  :root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"] > header.app-header-tint::before,
+  :root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] body:has(main.main-surface[data-codexthemes-page="conversation"])::before,
+  :root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"]::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] .group\/home-suggestions button {
+    transition: none;
+  }
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"] .group\/home-suggestions button svg {
+    transition: none;
+  }
 }
 

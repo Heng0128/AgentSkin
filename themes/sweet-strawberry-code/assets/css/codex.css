@@ -273,78 +273,472 @@
    Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
    注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
 
-/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */
-:root.agentskin-host-codex {
-  --color-background-surface: var(--agentskin-bg) !important;
-  --color-background-surface-under: var(--agentskin-surface) !important;
-  --color-background-panel: var(--agentskin-surface) !important;
-  --color-background-control: var(--agentskin-surface-elevated) !important;
-  --color-background-control-opaque: var(--agentskin-surface-elevated) !important;
-  --color-background-editor-opaque: var(--agentskin-bg) !important;
-  --color-background-elevated-primary: var(--agentskin-surface-elevated) !important;
-  --color-background-elevated-primary-opaque: var(--agentskin-surface-elevated) !important;
-  --color-background-elevated-secondary: var(--agentskin-surface) !important;
-  --color-background-elevated-secondary-opaque: var(--agentskin-surface) !important;
-  --color-text-foreground: var(--agentskin-text) !important;
-  --color-text-foreground-secondary: var(--agentskin-muted) !important;
-  --color-text-foreground-tertiary: var(--agentskin-muted) !important;
-  --color-icon-primary: var(--agentskin-text) !important;
-  --color-icon-secondary: var(--agentskin-muted) !important;
-  --color-icon-tertiary: var(--agentskin-muted) !important;
-  --color-border: var(--agentskin-border) !important;
-  --color-border-light: var(--agentskin-border) !important;
-  --color-border-heavy: var(--agentskin-border) !important;
-  --color-border-focus: var(--agentskin-focus-ring) !important;
-  --color-token-bg-primary: var(--agentskin-bg) !important;
-  --color-token-bg-secondary: var(--agentskin-surface) !important;
-  --color-token-bg-tertiary: var(--agentskin-surface-elevated) !important;
-  --color-token-main-surface-primary: var(--agentskin-bg) !important;
-  --color-token-side-bar-background: var(--agentskin-surface) !important;
-  --color-token-foreground: var(--agentskin-text) !important;
-  --color-token-text-primary: var(--agentskin-text) !important;
-  --color-token-text-secondary: var(--agentskin-muted) !important;
-  --color-token-text-tertiary: var(--agentskin-muted) !important;
-  --color-token-description-foreground: var(--agentskin-muted) !important;
-  --color-token-icon-foreground: var(--agentskin-muted) !important;
-  --color-token-input-background: var(--agentskin-surface-elevated) !important;
-  --color-token-input-foreground: var(--agentskin-text) !important;
-  --color-token-input-placeholder-foreground: var(--agentskin-muted) !important;
-  --color-token-input-border: var(--agentskin-border) !important;
-  --color-token-border: var(--agentskin-border) !important;
-  --color-token-border-default: var(--agentskin-border) !important;
-  --color-token-border-heavy: var(--agentskin-border) !important;
-  --color-token-border-light: var(--agentskin-border) !important;
+/* ===== Bridge: FULL source Codex theme CSS (faithful reproduction) ===== */
+/* sweet-strawberry-code
+   Layout: native-immersive
+   Background scope: home
+   Decor density: rich
+   Mode: light
+
+   Inspired by the soft strawberry-and-bow aesthetic of the "Yujie Sweet Code"
+   preview: a pastel pink canvas, fresh strawberry accents, lace-trimmed cards,
+   and sweet chrome details while preserving native Codex geometry and controls.
+*/
+
+:root.agentskin-host-codex[data-codexthemes-background-scope="home"] {
+  /* Semantic palette */
+  --ct-canvas: #fff7f9;
+  --ct-surface: rgba(255, 252, 253, 0.94);
+  --ct-raised: #ffffff;
+  --ct-input: #fffafb;
+  --ct-text: #5a3d44;
+  --ct-muted: #a87e88;
+  --ct-accent: #ff6b8a;
+  --ct-accent-soft: rgba(255, 107, 138, 0.14);
+  --ct-accent-hover: rgba(255, 107, 138, 0.22);
+  --ct-border: #f5d7df;
+  --ct-border-light: #fdeff3;
+  --ct-focus: #ff6b8a;
+  --ct-shadow-lg: rgba(90, 61, 68, 0.16);
+  --ct-art: url("./assets/artwork.png");
+
+  /* Font pairing: friendly rounded body + elegant display for brand moments */
+
+  color-scheme: light;
+
+  /* Direct semantic bridge */
+  --color-background-surface: var(--ct-canvas) !important;
+  --color-background-surface-under: var(--ct-surface) !important;
+  --color-background-panel: var(--ct-surface) !important;
+  --color-background-control: var(--ct-raised) !important;
+  --color-background-control-opaque: var(--ct-raised) !important;
+  --color-background-editor-opaque: var(--ct-canvas) !important;
+  --color-background-elevated-primary: var(--ct-raised) !important;
+  --color-background-elevated-primary-opaque: var(--ct-raised) !important;
+  --color-background-elevated-secondary: var(--ct-surface) !important;
+  --color-background-elevated-secondary-opaque: var(--ct-surface) !important;
+  --color-text-foreground: var(--ct-text) !important;
+  --color-text-foreground-secondary: var(--ct-muted) !important;
+  --color-text-foreground-tertiary: var(--ct-muted) !important;
+  --color-icon-primary: var(--ct-text) !important;
+  --color-icon-secondary: var(--ct-muted) !important;
+  --color-icon-tertiary: var(--ct-muted) !important;
+  --color-border: var(--ct-border) !important;
+  --color-border-light: var(--ct-border-light) !important;
+  --color-border-heavy: var(--ct-border) !important;
+  --color-border-focus: var(--ct-focus) !important;
+
+  /* Native token sweep — full set so the theme renders identically in native light or dark */
+  --color-token-bg-primary: var(--ct-canvas) !important;
+  --color-token-bg-secondary: var(--ct-surface) !important;
+  --color-token-bg-tertiary: var(--ct-raised) !important;
+  --color-token-main-surface-primary: var(--ct-canvas) !important;
+  --color-token-side-bar-background: var(--ct-surface) !important;
+  --color-token-foreground: var(--ct-text) !important;
+  --color-token-text-primary: var(--ct-text) !important;
+  --color-token-text-secondary: var(--ct-muted) !important;
+  --color-token-text-tertiary: var(--ct-muted) !important;
+  --color-token-description-foreground: var(--ct-muted) !important;
+  --color-token-icon-foreground: var(--ct-muted) !important;
+  --color-token-input-background: var(--ct-input) !important;
+  --color-token-input-foreground: var(--ct-text) !important;
+  --color-token-input-placeholder-foreground: var(--ct-muted) !important;
+  --color-token-input-border: var(--ct-border) !important;
+  --color-token-border: var(--ct-border) !important;
+  --color-token-border-default: var(--ct-border) !important;
+  --color-token-border-heavy: var(--ct-border) !important;
+  --color-token-border-light: var(--ct-border-light) !important;
   --color-token-list-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
   --color-token-list-active-selection-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-list-active-selection-foreground: var(--agentskin-text) !important;
+  --color-token-list-active-selection-foreground: var(--ct-text) !important;
   --color-token-toolbar-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-button-background: var(--agentskin-accent) !important;
-  --color-token-button-foreground: var(--agentskin-surface-elevated) !important;
-  --color-token-button-border: var(--agentskin-border) !important;
-  --color-token-link: var(--agentskin-accent) !important;
-  --color-token-text-link-foreground: var(--agentskin-accent) !important;
-  --color-token-text-link-active-foreground: var(--agentskin-accent) !important;
-  --color-token-primary: var(--agentskin-accent) !important;
-  --color-token-focus-border: var(--agentskin-focus-ring) !important;
-  --color-token-dropdown-background: var(--agentskin-surface-elevated) !important;
-  --color-token-dropdown-foreground: var(--agentskin-text) !important;
-  --color-token-menu-background: var(--agentskin-surface-elevated) !important;
-  --color-token-menu-border: var(--agentskin-border) !important;
-  --color-token-checkbox-background: var(--agentskin-surface-elevated) !important;
-  --color-token-checkbox-border: var(--agentskin-border) !important;
-  --color-token-checkbox-foreground: var(--agentskin-accent) !important;
+  --color-token-button-background: var(--ct-accent) !important;
+  --color-token-button-foreground: var(--ct-raised) !important;
+  --color-token-button-border: var(--ct-border) !important;
+  --color-token-link: var(--ct-accent) !important;
+  --color-token-text-link-foreground: var(--ct-accent) !important;
+  --color-token-text-link-active-foreground: var(--ct-accent) !important;
+  --color-token-primary: var(--ct-accent) !important;
+  --color-token-focus-border: var(--ct-focus) !important;
+  --color-token-dropdown-background: var(--ct-raised) !important;
+  --color-token-dropdown-foreground: var(--ct-text) !important;
+  --color-token-menu-background: var(--ct-raised) !important;
+  --color-token-menu-border: var(--ct-border) !important;
+  --color-token-checkbox-background: var(--ct-raised) !important;
+  --color-token-checkbox-border: var(--ct-border) !important;
+  --color-token-checkbox-foreground: var(--ct-accent) !important;
   --color-token-badge-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-badge-foreground: var(--agentskin-text) !important;
+  --color-token-badge-foreground: var(--ct-text) !important;
   --color-token-scrollbar-slider-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-scrollbar-slider-hover-background: var(--agentskin-accent) !important;
-  --color-token-scrollbar-slider-active-background: var(--agentskin-accent) !important;
-  --color-token-conversation-header: var(--agentskin-muted) !important;
-  --color-token-conversation-body: var(--agentskin-text) !important;
-  --color-token-conversation-summary-leading: var(--agentskin-muted) !important;
-  --color-token-conversation-summary-trailing: var(--agentskin-muted) !important;
-  --color-token-non-assistant-body-descendant: var(--agentskin-muted) !important;
-  --color-token-text-preformat-foreground: var(--agentskin-text) !important;
-  --color-token-text-preformat-background: var(--agentskin-surface) !important;
-  --color-token-text-code-block-background: var(--agentskin-surface-elevated) !important;
+  --color-token-scrollbar-slider-hover-background: var(--ct-accent-hover) !important;
+  --color-token-scrollbar-slider-active-background: var(--ct-accent) !important;
+  --color-token-conversation-header: var(--ct-muted) !important;
+  --color-token-conversation-body: var(--ct-text) !important;
+  --color-token-conversation-summary-leading: var(--ct-muted) !important;
+  --color-token-conversation-summary-trailing: var(--ct-muted) !important;
+  --color-token-non-assistant-body-descendant: var(--ct-muted) !important;
+  --color-token-text-preformat-foreground: var(--ct-text) !important;
+  --color-token-text-preformat-background: var(--ct-surface) !important;
+  --color-token-text-code-block-background: var(--ct-raised) !important;
+}
+
+/* Page canvas */
+main.main-surface[data-codexthemes-page="home"],
+main.main-surface[data-codexthemes-page="conversation"] {
+  color: var(--ct-text);
+  background: var(--ct-canvas);
+}
+
+/* Home artwork layer: positioned behind content, clear on the left for text */
+main.main-surface[data-codexthemes-page="home"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 247, 249, 0.82) 0%, rgba(255, 247, 249, 0.45) 48%, rgba(255, 247, 249, 0.28) 100%),
+    var(--ct-art) 70% 35% / cover no-repeat;
+}
+
+/* Ambient sparkle layer */
+main.main-surface[data-codexthemes-page="home"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.45;
+  background:
+    radial-gradient(circle at 78% 18%, color-mix(in srgb, var(--agentskin-accent) 13%, transparent) 0 3px, transparent 4px),
+    radial-gradient(circle at 88% 52%, color-mix(in srgb, var(--agentskin-accent) 13%, transparent) 0 2px, transparent 3px),
+    radial-gradient(circle at 18% 28%, color-mix(in srgb, var(--agentskin-accent) 13%, transparent) 0 2px, transparent 3px),
+    radial-gradient(circle at 12% 78%, color-mix(in srgb, var(--agentskin-accent) 13%, transparent) 0 3px, transparent 4px),
+    radial-gradient(circle at 68% 82%, color-mix(in srgb, var(--agentskin-accent) 13%, transparent) 0 2px, transparent 3px);
+  background-size: 120px 120px, 90px 90px, 80px 80px, 110px 110px, 95px 95px;
+  animation: ct-sweet-strawberry-code-sparkle 7s ease-in-out infinite alternate;
+}
+
+@keyframes ct-sweet-strawberry-code-sparkle {
+  from { opacity: 0.32; }
+  to { opacity: 0.58; }
+}
+
+/* Layered surfaces: sidebar, composer, menus, dialogs, output/diff, code panels */
+aside.app-shell-left-panel,
+.composer-surface-chrome,
+.composer-surface,
+[role="menu"],
+[role="dialog"],
+[role="alertdialog"],
+[data-codexthemes-surface="output"],
+[data-codexthemes-surface="diff"],
+[data-codexthemes-surface="terminal"] {
+  color: var(--ct-text);
+  background: var(--ct-surface);
+  border-color: var(--ct-border);
+}
+
+/* Header: solid readable surface, no gradient through controls */
+header.app-shell-header,
+.app-shell-header {
+  color: var(--ct-text);
+  background: var(--ct-surface);
+  border-bottom: 1px solid var(--ct-border);
+}
+
+/* Home stage — hero banner card behind the heading region */
+main.main-surface[data-codexthemes-page="home"] .home-hero-container,
+main.main-surface[data-codexthemes-page="home"] h1,
+main.main-surface[data-codexthemes-page="home"] .welcome-heading {
+  position: relative;
+  z-index: 1;
+}
+
+main.main-surface[data-codexthemes-page="home"] .home-hero-container::before {
+  content: "";
+  position: absolute;
+  inset: -18px -24px -24px -24px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 28px;
+  border: 1px solid var(--ct-border);
+  background:
+    linear-gradient(110deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 252, 253, 0.88) 52%, rgba(255, 247, 249, 0.45) 100%);
+  box-shadow: 0 14px 38px var(--ct-shadow-lg);
+}
+
+/* Display typography for the home heading */
+main.main-surface[data-codexthemes-page="home"] h1,
+main.main-surface[data-codexthemes-page="home"] .welcome-heading {
+  font-family: var(--ct-font-display);
+  color: var(--ct-text);
+}
+
+/* Tagline under the heading */
+main.main-surface[data-codexthemes-page="home"] .welcome-subheading::after,
+main.main-surface[data-codexthemes-page="home"] h1 + div::after {
+  content: "🍓 与甜心一起，用灵感构建可爱代码  ✦";
+  display: block;
+  margin-top: 8px;
+  font-family: var(--ct-font-body);
+  font-size: 0.92em;
+  color: var(--ct-muted);
+  pointer-events: none;
+}
+
+/* Suggestion cards */
+main.main-surface[data-codexthemes-page="home"] .suggestion-card,
+main.main-surface[data-codexthemes-page="home"] [data-testid="suggestion"] {
+  position: relative;
+  z-index: 1;
+  color: var(--ct-text);
+  background: linear-gradient(180deg, var(--ct-raised) 0%, var(--ct-surface) 100%);
+  border: 1px solid var(--ct-border);
+  border-radius: 22px;
+  box-shadow: 0 8px 20px var(--ct-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+main.main-surface[data-codexthemes-page="home"] .suggestion-card:hover,
+main.main-surface[data-codexthemes-page="home"] [data-testid="suggestion"]:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px var(--ct-shadow-lg);
+}
+
+main.main-surface[data-codexthemes-page="home"] .suggestion-card svg,
+main.main-surface[data-codexthemes-page="home"] [data-testid="suggestion"] svg {
+  color: var(--ct-accent) !important;
+}
+
+/* Project selector chip */
+main.main-surface[data-codexthemes-page="home"] .project-selector,
+main.main-surface[data-codexthemes-page="home"] [data-testid="project"] {
+  color: var(--ct-text);
+  background: var(--ct-raised);
+  border: 1px solid var(--ct-border);
+  border-radius: 999px;
+}
+
+/* Composer chrome accent */
+.composer-surface-chrome,
+.composer-surface {
+  position: relative;
+  border-radius: 20px;
+  background: var(--ct-raised);
+  border: 1px solid var(--ct-border);
+  box-shadow: 0 6px 22px var(--ct-shadow);
+}
+
+.composer-surface-chrome::before,
+.composer-surface::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 24px;
+  width: 48px;
+  height: 6px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--agentskin-accent) 13%, transparent), var(--ct-accent));
+  pointer-events: none;
+}
+
+/* Sidebar accents */
+aside.app-shell-left-panel {
+  border-right: 1px solid var(--ct-border);
+}
+
+aside.app-shell-left-panel [role="treeitem"] {
+  color: var(--ct-text);
+  border-radius: 10px;
+}
+
+aside.app-shell-left-panel [role="treeitem"]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+}
+
+aside.app-shell-left-panel [role="treeitem"][aria-selected="true"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+  border-left: 3px solid var(--ct-accent);
+}
+
+/* Header lockup: a tiny strawberry brand mark at a header edge */
+header.app-shell-header::after,
+.app-shell-header::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 35% 35%, #ffb6c1 0 4px, transparent 5px),
+    radial-gradient(circle at 50% 60%, #ff6b8a 0 7px, transparent 8px),
+    conic-gradient(from 120deg at 50% 15%, #96cd96 0deg 60deg, transparent 60deg);
+  border-radius: 50% 50% 45% 45%;
+  opacity: 0.75;
+}
+
+/* Token sweep: scrollbars, selection, caret, focus */
+main.main-surface[data-codexthemes-page="home"]::-webkit-scrollbar,
+main.main-surface[data-codexthemes-page="conversation"]::-webkit-scrollbar,
+aside.app-shell-left-panel::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+main.main-surface[data-codexthemes-page="home"]::-webkit-scrollbar-thumb,
+main.main-surface[data-codexthemes-page="conversation"]::-webkit-scrollbar-thumb,
+aside.app-shell-left-panel::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+main.main-surface[data-codexthemes-page="home"]::-webkit-scrollbar-thumb:hover,
+main.main-surface[data-codexthemes-page="conversation"]::-webkit-scrollbar-thumb:hover,
+aside.app-shell-left-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--ct-accent-hover);
+}
+
+main.main-surface[data-codexthemes-page="home"],
+main.main-surface[data-codexthemes-page="conversation"],
+aside.app-shell-left-panel {
+  scrollbar-color: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+::selection {
+  color: var(--ct-raised);
+  background: var(--ct-accent);
+}
+
+:focus-visible { outline-color: var(--ct-focus); }
+
+/* Links */
+a, .link {
+  color: var(--ct-accent);
+}
+
+/* Menus and dialogs */
+[role="menu"],
+[role="dialog"],
+[role="alertdialog"] {
+  border-radius: 16px;
+  box-shadow: 0 16px 42px var(--ct-shadow-lg);
+}
+
+[role="menuitem"]:hover,
+[role="menuitemcheckbox"]:hover,
+[role="menuitemradio"]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+}
+
+[role="menuitem"][aria-disabled="true"] {
+  color: var(--ct-muted);
+}
+
+/* Output / diff surfaces */
+[data-codexthemes-surface="output"],
+[data-codexthemes-surface="diff"] {
+  border-radius: 16px;
+}
+
+pre,
+code,
+.preformat,
+.code-block {
+  color: var(--ct-text);
+  background: var(--ct-raised);
+  border: 1px solid var(--ct-border);
+  border-radius: 10px;
+}
+
+/* Terminal contract */
+[data-codex-terminal="true"] {
+  --vscode-terminal-background: var(--ct-canvas) !important;
+  --vscode-terminal-foreground: var(--ct-text) !important;
+  --color-background-panel: var(--ct-canvas) !important;
+  --color-background-editor-opaque: var(--ct-canvas) !important;
+  color: var(--ct-text) !important;
+  background: var(--ct-canvas) !important;
+}
+
+.xterm,
+.xterm-viewport,
+.xterm-screen,
+[data-codexthemes-surface="terminal"] {
+  color: var(--ct-text) !important;
+  background: var(--ct-canvas) !important;
+}
+
+.xterm-viewport {
+  background: var(--ct-canvas) !important;
+}
+
+.xterm-screen {
+  background: transparent !important;
+}
+
+/* Conversation surfaces stay calm and readable */
+main.main-surface[data-codexthemes-page="conversation"] {
+  color: var(--ct-text);
+}
+
+main.main-surface[data-codexthemes-page="conversation"] .message-content {
+  color: var(--ct-text);
+}
+
+/* Settings / system pages: light surfaces, no native dark leftovers */
+main.main-surface[data-codexthemes-page="settings"],
+main.main-surface[data-codexthemes-page="plugins"],
+main.main-surface[data-codexthemes-page="sites"],
+main.main-surface[data-codexthemes-page="tasks"] {
+  color: var(--ct-text);
+  background: var(--ct-canvas);
+}
+
+main.main-surface[data-codexthemes-page="settings"] [role="tab"],
+main.main-surface[data-codexthemes-page="settings"] input,
+main.main-surface[data-codexthemes-page="settings"] select,
+main.main-surface[data-codexthemes-page="settings"] textarea {
+  color: var(--ct-text);
+  background: var(--ct-raised);
+  border-color: var(--ct-border);
+}
+
+main.main-surface[data-codexthemes-page="settings"] [role="tab"][aria-selected="true"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+  border-color: var(--ct-accent);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Narrow window */
+@media (max-width: 980px) {
+  main.main-surface[data-codexthemes-page="home"]::before {
+    background-position: 62% 50%;
+  }
+  main.main-surface[data-codexthemes-page="home"]::after {
+    display: none;
+  }
+  header.app-shell-header::after,
+  .app-shell-header::after {
+    display: none;
+  }
+  main.main-surface[data-codexthemes-page="home"] .home-hero-container::before {
+    inset: -12px -14px -16px -14px;
+    border-radius: 20px;
+  }
 }
 

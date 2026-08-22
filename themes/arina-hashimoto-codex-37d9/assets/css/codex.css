@@ -273,78 +273,448 @@
    Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
    注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
 
-/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */
+/* ===== Bridge: FULL source Codex theme CSS (faithful reproduction) ===== */
+/* Arina Hashimoto Codex — native-immersive | rich | home | light
+   Warm pastel pink palette with rose gold accents, watercolor floral motifs,
+   hero banner treatment, ambient sparkle particles, and soft glassmorphism. */
+
+/* =========================================================================
+   Layer 1: Semantic tokens
+   ========================================================================= */
 :root.agentskin-host-codex {
-  --color-background-surface: var(--agentskin-bg) !important;
-  --color-background-surface-under: var(--agentskin-surface) !important;
-  --color-background-panel: var(--agentskin-surface) !important;
-  --color-background-control: var(--agentskin-surface-elevated) !important;
-  --color-background-control-opaque: var(--agentskin-surface-elevated) !important;
-  --color-background-editor-opaque: var(--agentskin-bg) !important;
-  --color-background-elevated-primary: var(--agentskin-surface-elevated) !important;
-  --color-background-elevated-primary-opaque: var(--agentskin-surface-elevated) !important;
-  --color-background-elevated-secondary: var(--agentskin-surface) !important;
-  --color-background-elevated-secondary-opaque: var(--agentskin-surface) !important;
-  --color-text-foreground: var(--agentskin-text) !important;
-  --color-text-foreground-secondary: var(--agentskin-muted) !important;
-  --color-text-foreground-tertiary: var(--agentskin-muted) !important;
-  --color-icon-primary: var(--agentskin-text) !important;
-  --color-icon-secondary: var(--agentskin-muted) !important;
-  --color-icon-tertiary: var(--agentskin-muted) !important;
-  --color-border: var(--agentskin-border) !important;
-  --color-border-light: var(--agentskin-border) !important;
-  --color-border-heavy: var(--agentskin-border) !important;
-  --color-border-focus: var(--agentskin-focus-ring) !important;
-  --color-token-bg-primary: var(--agentskin-bg) !important;
-  --color-token-bg-secondary: var(--agentskin-surface) !important;
-  --color-token-bg-tertiary: var(--agentskin-surface-elevated) !important;
-  --color-token-main-surface-primary: var(--agentskin-bg) !important;
-  --color-token-side-bar-background: var(--agentskin-surface) !important;
-  --color-token-foreground: var(--agentskin-text) !important;
-  --color-token-text-primary: var(--agentskin-text) !important;
-  --color-token-text-secondary: var(--agentskin-muted) !important;
-  --color-token-text-tertiary: var(--agentskin-muted) !important;
-  --color-token-description-foreground: var(--agentskin-muted) !important;
-  --color-token-icon-foreground: var(--agentskin-muted) !important;
-  --color-token-input-background: var(--agentskin-surface-elevated) !important;
-  --color-token-input-foreground: var(--agentskin-text) !important;
-  --color-token-input-placeholder-foreground: var(--agentskin-muted) !important;
-  --color-token-input-border: var(--agentskin-border) !important;
-  --color-token-border: var(--agentskin-border) !important;
-  --color-token-border-default: var(--agentskin-border) !important;
-  --color-token-border-heavy: var(--agentskin-border) !important;
-  --color-token-border-light: var(--agentskin-border) !important;
+  --ct-canvas: #fff5f7;
+  --ct-surface: rgba(253, 232, 238, 0.92);
+  --ct-raised: #ffffff;
+  --ct-text: #8b4557;
+  --ct-muted: #b87d8c;
+  --ct-accent: #d4849c;
+  --ct-accent-soft: rgba(212, 132, 156, 0.16);
+  --ct-accent-gold: #d4af7a;
+  --ct-accent-gold-soft: rgba(212, 175, 122, 0.18);
+  --ct-border: #f0c4d0;
+  --ct-border-light: rgba(240, 196, 208, 0.5);
+  --ct-focus: #d4849c;
+  --ct-shadow-heavy: rgba(139, 69, 87, 0.16);
+  --ct-art: url("./assets/artwork.jpg");
+
+  /* Layer 2: Native token sweep */
+  color-scheme: light;
+
+  --color-background-surface: var(--ct-canvas) !important;
+  --color-background-surface-under: var(--ct-surface) !important;
+  --color-background-panel: var(--ct-surface) !important;
+  --color-background-control: var(--ct-raised) !important;
+  --color-background-control-opaque: var(--ct-raised) !important;
+  --color-background-editor-opaque: var(--ct-canvas) !important;
+  --color-background-elevated-primary: var(--ct-raised) !important;
+  --color-background-elevated-primary-opaque: var(--ct-raised) !important;
+  --color-background-elevated-secondary: var(--ct-surface) !important;
+  --color-background-elevated-secondary-opaque: var(--ct-surface) !important;
+  --color-text-foreground: var(--ct-text) !important;
+  --color-text-foreground-secondary: var(--ct-muted) !important;
+  --color-text-foreground-tertiary: var(--ct-muted) !important;
+  --color-icon-primary: var(--ct-text) !important;
+  --color-icon-secondary: var(--ct-muted) !important;
+  --color-icon-tertiary: var(--ct-muted) !important;
+  --color-border: var(--ct-border) !important;
+  --color-border-light: var(--ct-border-light) !important;
+  --color-border-heavy: var(--ct-border) !important;
+  --color-border-focus: var(--ct-focus) !important;
+
+  --color-token-bg-primary: var(--ct-canvas) !important;
+  --color-token-bg-secondary: var(--ct-surface) !important;
+  --color-token-bg-tertiary: var(--ct-raised) !important;
+  --color-token-main-surface-primary: var(--ct-canvas) !important;
+  --color-token-side-bar-background: var(--ct-surface) !important;
+  --color-token-foreground: var(--ct-text) !important;
+  --color-token-text-primary: var(--ct-text) !important;
+  --color-token-text-secondary: var(--ct-muted) !important;
+  --color-token-text-tertiary: var(--ct-muted) !important;
+  --color-token-description-foreground: var(--ct-muted) !important;
+  --color-token-icon-foreground: var(--ct-muted) !important;
+  --color-token-input-background: var(--ct-raised) !important;
+  --color-token-input-foreground: var(--ct-text) !important;
+  --color-token-input-placeholder-foreground: var(--ct-muted) !important;
+  --color-token-input-border: var(--ct-border) !important;
+  --color-token-border: var(--ct-border) !important;
+  --color-token-border-default: var(--ct-border) !important;
+  --color-token-border-heavy: var(--ct-border) !important;
+  --color-token-border-light: var(--ct-border-light) !important;
   --color-token-list-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
   --color-token-list-active-selection-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-list-active-selection-foreground: var(--agentskin-text) !important;
+  --color-token-list-active-selection-foreground: var(--ct-text) !important;
   --color-token-toolbar-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-button-background: var(--agentskin-accent) !important;
-  --color-token-button-foreground: var(--agentskin-surface-elevated) !important;
-  --color-token-button-border: var(--agentskin-border) !important;
-  --color-token-link: var(--agentskin-accent) !important;
-  --color-token-text-link-foreground: var(--agentskin-accent) !important;
-  --color-token-text-link-active-foreground: var(--agentskin-accent) !important;
-  --color-token-primary: var(--agentskin-accent) !important;
-  --color-token-focus-border: var(--agentskin-focus-ring) !important;
-  --color-token-dropdown-background: var(--agentskin-surface-elevated) !important;
-  --color-token-dropdown-foreground: var(--agentskin-text) !important;
-  --color-token-menu-background: var(--agentskin-surface-elevated) !important;
-  --color-token-menu-border: var(--agentskin-border) !important;
-  --color-token-checkbox-background: var(--agentskin-surface-elevated) !important;
-  --color-token-checkbox-border: var(--agentskin-border) !important;
-  --color-token-checkbox-foreground: var(--agentskin-accent) !important;
+  --color-token-button-background: var(--ct-accent) !important;
+  --color-token-button-foreground: var(--ct-raised) !important;
+  --color-token-button-border: var(--ct-border) !important;
+  --color-token-link: var(--ct-accent) !important;
+  --color-token-text-link-foreground: var(--ct-accent) !important;
+  --color-token-text-link-active-foreground: var(--ct-accent) !important;
+  --color-token-primary: var(--ct-accent) !important;
+  --color-token-focus-border: var(--ct-focus) !important;
+  --color-token-dropdown-background: var(--ct-raised) !important;
+  --color-token-dropdown-foreground: var(--ct-text) !important;
+  --color-token-menu-background: var(--ct-raised) !important;
+  --color-token-menu-border: var(--ct-border) !important;
+  --color-token-checkbox-background: var(--ct-raised) !important;
+  --color-token-checkbox-border: var(--ct-border) !important;
+  --color-token-checkbox-foreground: var(--ct-accent) !important;
   --color-token-badge-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-badge-foreground: var(--agentskin-text) !important;
+  --color-token-badge-foreground: var(--ct-text) !important;
   --color-token-scrollbar-slider-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
   --color-token-scrollbar-slider-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
   --color-token-scrollbar-slider-active-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-conversation-header: var(--agentskin-muted) !important;
-  --color-token-conversation-body: var(--agentskin-text) !important;
-  --color-token-conversation-summary-leading: var(--agentskin-muted) !important;
-  --color-token-conversation-summary-trailing: var(--agentskin-muted) !important;
-  --color-token-non-assistant-body-descendant: var(--agentskin-muted) !important;
-  --color-token-text-preformat-foreground: var(--agentskin-text) !important;
-  --color-token-text-preformat-background: var(--agentskin-surface) !important;
-  --color-token-text-code-block-background: var(--agentskin-surface-elevated) !important;
+  --color-token-conversation-header: var(--ct-muted) !important;
+  --color-token-conversation-body: var(--ct-text) !important;
+  --color-token-conversation-summary-leading: var(--ct-muted) !important;
+  --color-token-conversation-summary-trailing: var(--ct-muted) !important;
+  --color-token-non-assistant-body-descendant: var(--ct-muted) !important;
+  --color-token-text-preformat-foreground: var(--ct-text) !important;
+  --color-token-text-preformat-background: var(--ct-surface) !important;
+  --color-token-text-code-block-background: var(--ct-raised) !important;
+}
+
+/* =========================================================================
+   Layer 3: Shell surfaces
+   ========================================================================= */
+
+/* Canvas — warm cream gradient */
+main[data-codexthemes-page="home"],
+main[data-codexthemes-page="conversation"],
+main[data-codexthemes-page="settings"] {
+  color: var(--ct-text);
+  background: linear-gradient(135deg, #fff5f7 0%, #fde8ee 30%, #fff0f3 60%, #fef5f7 100%);
+  font-family: var(--ct-font-body);
+}
+
+/* Sidebar — soft pink surface */
+aside.app-shell-left-panel {
+  color: var(--ct-text);
+  background: linear-gradient(180deg, #fde8ee 0%, #fdf0f3 40%, #fef5f7 100%);
+  border-right: 1px solid var(--ct-border-light);
+  font-family: var(--ct-font-body);
+}
+
+/* Header — solid readable surface */
+header.app-shell-header {
+  background: var(--ct-raised);
+  border-bottom: 1px solid var(--ct-border-light);
+}
+
+/* =========================================================================
+   Layer 4: Route-scoped backgrounds — home page
+   ========================================================================= */
+
+/* Home background: artwork with soft veil */
+main[data-codexthemes-page="home"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg,
+      rgba(255,245,247,.45) 0%,
+      rgba(253,232,238,.35) 40%,
+      rgba(255,240,243,.5) 70%,
+      rgba(254,245,247,.55) 100%
+    ),
+    var(--ct-art) 65% 30% / auto 130% no-repeat;
+}
+
+/* =========================================================================
+   Layer 5: Native component roots
+   ========================================================================= */
+
+/* Composer surface */
+div[class*="composer"] {
+  background: var(--ct-raised);
+  border: 1px solid var(--ct-border-light);
+  border-radius: 20px;
+  box-shadow: 0 4px 18px var(--ct-shadow);
+}
+
+/* Suggestion cards */
+main[data-codexthemes-page="home"] div[class*="suggestion"],
+main[data-codexthemes-page="home"] div[class*="prompt"] {
+  background: linear-gradient(135deg, var(--ct-raised), var(--ct-surface));
+  border: 1px solid var(--ct-border-light);
+  border-radius: 18px;
+  box-shadow: 0 6px 16px var(--ct-shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Suggestion card hover */
+main[data-codexthemes-page="home"] div[class*="suggestion"]:hover,
+main[data-codexthemes-page="home"] div[class*="prompt"]:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px var(--ct-shadow-heavy);
+}
+
+/* Project selector */
+div[class*="project-selector"] {
+  background: var(--ct-raised);
+  border: 1px solid var(--ct-border-light);
+  border-radius: 12px;
+}
+
+/* =========================================================================
+   Layer 6: Interaction states
+   ========================================================================= */
+
+/* Sidebar row hover */
+aside.app-shell-left-panel div[class*="row"]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+}
+
+/* Sidebar selected row */
+aside.app-shell-left-panel div[class*="selected"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+  border-left: 3px solid var(--ct-accent);
+}
+
+/* Button primary */
+button[class*="primary"],
+button[class*="send"] {
+  background: var(--ct-accent);
+  color: var(--ct-raised);
+  border-radius: 12px;
+}
+
+/* Link */
+a, span[class*="link"] {
+  color: var(--ct-accent);
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--ct-focus);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: rgba(212, 132, 156, 0.3);
+  color: var(--ct-text);
+}
+
+/* =========================================================================
+   Layer 7: Non-interactive decoration (rich density)
+   ========================================================================= */
+
+/* --- Hero treatment --- */
+main[data-codexthemes-page="home"] h1,
+main[data-codexthemes-page="home"] h2 {
+  position: relative;
+  z-index: 1;
+  border: 1px solid var(--ct-border-light);
+  border-radius: 28px;
+  background: linear-gradient(90deg,
+      rgba(255,255,255,.92) 0%,
+      rgba(255,245,247,.88) 50%,
+      rgba(253,232,238,.3) 82%,
+      rgba(255,240,243,.1) 100%);
+  box-shadow: 0 10px 32px var(--ct-shadow);
+}
+
+/* --- Tagline (rich) --- */
+main[data-codexthemes-page="home"] h1::after,
+main[data-codexthemes-page="home"] h2::after {
+  content: "\4E0E\6709\83DC\4E00\8D77\FF0C\7528\7075\611F\521B\9020\65E0\9650\53EF\80FD \2728";
+  display: block;
+  font-family: var(--ct-font-display);
+  font-size: 0.95em;
+  font-style: italic;
+  color: var(--ct-accent-gold);
+  margin-top: 0.5em;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* --- Header lockup (rich) --- */
+header.app-shell-header::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent 0%, rgba(253,232,238,.15) 40%, rgba(212,132,156,.08) 100%);
+}
+
+/* --- Corner emblem (rich) --- */
+main[data-codexthemes-page="home"]::after {
+  content: "";
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  width: 80px;
+  height: 80px;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--agentskin-accent) 13%, transparent) 0%, transparent 60%),
+    radial-gradient(circle at 70% 70%, var(--ct-accent-gold-soft) 0%, transparent 50%);
+  border-radius: 50%;
+  border: 1px solid var(--ct-border-light);
+  box-shadow: 0 4px 18px var(--ct-shadow);
+  opacity: 0.7;
+}
+
+/* --- Ambient sparkle particles (rich) --- */
+html[data-codexthemes-theme="arina-hashimoto-codex-37d9"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(212, 175, 122, 0.25) 0 2px, transparent 3px),
+    radial-gradient(circle at 85% 15%, rgba(212, 132, 156, 0.2) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 78% 72%, rgba(212, 175, 122, 0.18) 0 1px, transparent 2px),
+    radial-gradient(circle at 22% 65%, rgba(212, 132, 156, 0.22) 0 2px, transparent 3px),
+    radial-gradient(circle at 92% 42%, rgba(212, 175, 122, 0.15) 0 1px, transparent 2px),
+    radial-gradient(circle at 8% 85%, rgba(212, 132, 156, 0.2) 0 1.5px, transparent 2.5px);
+  background-size: 120px 120px, 90px 90px, 140px 140px, 100px 100px, 130px 130px, 110px 110px;
+  opacity: 0.55;
+  animation: ct-arina-sparkle-drift 9s ease-in-out infinite alternate;
+}
+
+@keyframes ct-arina-sparkle-drift {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.65; }
+  100% { opacity: 0.45; }
+}
+
+/* --- Composer accent (rich) --- */
+div[class*="composer"]::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: 21px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--agentskin-accent) 13%, transparent), var(--ct-accent-gold-soft), color-mix(in srgb, var(--agentskin-accent) 13%, transparent));
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* --- Sidebar glyph flourish (rich) --- */
+aside.app-shell-left-panel::after {
+  content: "";
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--ct-accent-gold-soft), color-mix(in srgb, var(--agentskin-accent) 13%, transparent), var(--ct-accent-gold-soft), transparent);
+  opacity: 0.5;
+}
+
+/* =========================================================================
+   Layer 8: Terminal, scrollbars, and system surfaces
+   ========================================================================= */
+
+/* Terminal host */
+[data-codex-terminal="true"] {
+  --vscode-terminal-background: var(--ct-canvas) !important;
+  --vscode-terminal-foreground: var(--ct-text) !important;
+  --color-background-panel: var(--ct-canvas) !important;
+  --color-background-editor-opaque: var(--ct-canvas) !important;
+  color: var(--ct-text) !important;
+  background: var(--ct-canvas) !important;
+}
+
+.xterm,
+.xterm-viewport,
+.xterm-screen {
+  color: var(--ct-text) !important;
+  background: var(--ct-canvas) !important;
+}
+
+/* Scrollbars */
+main[data-codexthemes-page="home"],
+main[data-codexthemes-page="conversation"],
+aside.app-shell-left-panel {
+  scrollbar-color: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Settings, menus, dialogs */
+[role="menu"],
+[role="dialog"],
+[role="listbox"],
+div[class*="dropdown"],
+div[class*="menu"] {
+  background: var(--ct-raised);
+  border: 1px solid var(--ct-border-light);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px var(--ct-shadow-heavy);
+  color: var(--ct-text);
+}
+
+/* Code blocks and inline code */
+code,
+pre,
+div[class*="code-block"],
+div[class*="preformat"] {
+  background: var(--ct-surface);
+  color: var(--ct-text);
+  border-radius: 8px;
+  font-family: "Fira Code", "Cascadia Code", "Consolas", monospace;
+}
+
+/* Diff / output panels */
+div[class*="diff"],
+div[class*="output"],
+div[class*="changed-files"],
+div[class*="file-card"] {
+  background: var(--ct-surface);
+  border: 1px solid var(--ct-border-light);
+  border-radius: 12px;
+  color: var(--ct-text);
+}
+
+/* =========================================================================
+   Layer 9: Responsive and reduced-motion rules
+   ========================================================================= */
+
+/* Narrow viewport: drop corner emblem and ambient particles */
+@media (max-width: 980px) {
+  main[data-codexthemes-page="home"]::before {
+    background-position: 62% 50%;
+  }
+  main[data-codexthemes-page="home"]::after {
+    display: none;
+  }
+  html[data-codexthemes-theme="arina-hashimoto-codex-37d9"] body::before {
+    display: none;
+  }
+  header.app-shell-header::after {
+    display: none;
+  }
+}
+
+/* Reduced motion: kill all animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 

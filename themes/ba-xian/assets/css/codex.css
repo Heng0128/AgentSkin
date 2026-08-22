@@ -273,23 +273,47 @@
    Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
    注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
 
-/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */
+/* ===== Bridge: FULL source Codex theme CSS (faithful reproduction) ===== */
+/* 八仙 — native-immersive, workspace artwork, rich decoration.
+   Native geometry and interaction remain untouched. */
+
 :root.agentskin-host-codex {
-  --color-background-surface: var(--agentskin-bg) !important;
+  --ct-canvas: #090b18;
+  --ct-surface: rgba(18, 23, 42, 0.96);
+  --ct-surface-soft: rgba(18, 23, 42, 0.84);
+  --ct-raised: #1b2340;
+  --ct-input: #0e1325;
+  --ct-text: #f7f2ec;
+  --ct-muted: #b8b3d0;
+  --ct-disabled: #77758e;
+  --ct-accent: #e45b5f;
+  --ct-accent-hover: #f07477;
+  --ct-accent-soft: rgba(228, 91, 95, 0.18);
+  --ct-violet: #8c73ff;
+  --ct-violet-soft: rgba(140, 115, 255, 0.2);
+  --ct-gold: #d7a94b;
+  --ct-jade: #55b79a;
+  --ct-danger: #f06a74;
+  --ct-border: #3b4266;
+  --ct-border-soft: rgba(122, 126, 173, 0.28);
+  --ct-art: url("./assets/artwork-cropped.jpg");
+
+  color-scheme: dark;
+  --color-background-surface: var(--ct-canvas) !important;
   --color-background-surface-under: #070914 !important;
-  --color-background-panel: var(--agentskin-surface) !important;
+  --color-background-panel: var(--ct-surface) !important;
   --color-background-control: rgba(14, 19, 37, 0.96) !important;
-  --color-background-control-opaque: var(--agentskin-surface-elevated) !important;
+  --color-background-control-opaque: var(--ct-input) !important;
   --color-background-editor-opaque: #080a14 !important;
   --color-background-elevated-primary: rgba(27, 35, 64, 0.96) !important;
-  --color-background-elevated-primary-opaque: var(--agentskin-surface-elevated) !important;
+  --color-background-elevated-primary-opaque: var(--ct-raised) !important;
   --color-background-elevated-secondary: rgba(18, 23, 42, 0.96) !important;
   --color-background-elevated-secondary-opaque: #12172a !important;
   --color-background-accent: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
   --color-background-accent-hover: rgba(228, 91, 95, 0.26) !important;
   --color-background-accent-active: rgba(228, 91, 95, 0.34) !important;
-  --color-background-button-primary: var(--agentskin-accent) !important;
-  --color-background-button-primary-hover: var(--agentskin-accent) !important;
+  --color-background-button-primary: var(--ct-accent) !important;
+  --color-background-button-primary-hover: var(--ct-accent-hover) !important;
   --color-background-button-primary-active: #c94c51 !important;
   --color-background-button-primary-inactive: rgba(228, 91, 95, 0.42) !important;
   --color-background-button-secondary: var(--ct-violet-soft) !important;
@@ -299,65 +323,65 @@
   --color-background-button-tertiary: rgba(27, 35, 64, 0.92) !important;
   --color-background-button-tertiary-hover: var(--ct-violet-soft) !important;
   --color-background-button-tertiary-active: rgba(140, 115, 255, 0.3) !important;
-  --color-text-foreground: var(--agentskin-text) !important;
-  --color-text-foreground-secondary: var(--agentskin-muted) !important;
+  --color-text-foreground: var(--ct-text) !important;
+  --color-text-foreground-secondary: var(--ct-muted) !important;
   --color-text-foreground-tertiary: #9c98b7 !important;
   --color-text-accent: #b4a4ff !important;
   --color-text-on-accent: #fff9f1 !important;
   --color-text-button-primary: #fff9f1 !important;
-  --color-text-button-secondary: var(--agentskin-text) !important;
-  --color-text-button-tertiary: var(--agentskin-text) !important;
-  --color-icon-primary: var(--agentskin-text) !important;
-  --color-icon-secondary: var(--agentskin-muted) !important;
+  --color-text-button-secondary: var(--ct-text) !important;
+  --color-text-button-tertiary: var(--ct-text) !important;
+  --color-icon-primary: var(--ct-text) !important;
+  --color-icon-secondary: var(--ct-muted) !important;
   --color-icon-tertiary: #9c98b7 !important;
-  --color-icon-accent: var(--agentskin-accent) !important;
-  --color-border: var(--agentskin-border) !important;
+  --color-icon-accent: var(--ct-accent) !important;
+  --color-border: var(--ct-border) !important;
   --color-border-light: var(--ct-border-soft) !important;
   --color-border-heavy: #59618e !important;
   --color-border-focus: var(--ct-violet) !important;
   --color-decoration-added: var(--ct-jade) !important;
-  --color-decoration-deleted: var(--agentskin-accent) !important;
+  --color-decoration-deleted: var(--ct-danger) !important;
   --color-editor-added: rgba(85, 183, 154, 0.17) !important;
   --color-editor-deleted: rgba(240, 106, 116, 0.17) !important;
   --color-simple-scrim: rgba(1, 2, 10, 0.54) !important;
-  --color-token-bg-primary: var(--agentskin-bg) !important;
+  --color-token-bg-primary: var(--ct-canvas) !important;
   --color-token-bg-secondary: #12172a !important;
-  --color-token-bg-tertiary: var(--agentskin-surface-elevated) !important;
+  --color-token-bg-tertiary: var(--ct-raised) !important;
   --color-token-bg-fog: rgba(27, 35, 64, 0.92) !important;
-  --color-token-main-surface-primary: var(--agentskin-bg) !important;
+  --color-token-main-surface-primary: var(--ct-canvas) !important;
   --color-token-side-bar-background: #101426 !important;
-  --color-token-foreground: var(--agentskin-text) !important;
-  --color-token-text-primary: var(--agentskin-text) !important;
-  --color-token-text-secondary: var(--agentskin-muted) !important;
+  --color-token-foreground: var(--ct-text) !important;
+  --color-token-text-primary: var(--ct-text) !important;
+  --color-token-text-secondary: var(--ct-muted) !important;
   --color-token-text-tertiary: #9c98b7 !important;
-  --color-token-description-foreground: var(--agentskin-muted) !important;
+  --color-token-description-foreground: var(--ct-muted) !important;
   --color-token-icon-foreground: #d3cde5 !important;
-  --color-token-input-background: var(--agentskin-surface-elevated) !important;
-  --color-token-input-foreground: var(--agentskin-text) !important;
+  --color-token-input-background: var(--ct-input) !important;
+  --color-token-input-foreground: var(--ct-text) !important;
   --color-token-input-placeholder-foreground: #9691ae !important;
-  --color-token-input-border: var(--agentskin-border) !important;
-  --color-token-border: var(--agentskin-border) !important;
-  --color-token-border-default: var(--agentskin-border) !important;
+  --color-token-input-border: var(--ct-border) !important;
+  --color-token-border: var(--ct-border) !important;
+  --color-token-border-default: var(--ct-border) !important;
   --color-token-border-heavy: #59618e !important;
   --color-token-border-light: var(--ct-border-soft) !important;
   --color-token-list-hover-background: var(--ct-violet-soft) !important;
   --color-token-list-active-selection-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --color-token-list-active-selection-foreground: var(--agentskin-text) !important;
+  --color-token-list-active-selection-foreground: var(--ct-text) !important;
   --color-token-toolbar-hover-background: var(--ct-violet-soft) !important;
-  --color-token-button-background: var(--agentskin-accent) !important;
+  --color-token-button-background: var(--ct-accent) !important;
   --color-token-button-foreground: #fff9f1 !important;
   --color-token-button-border: rgba(255, 216, 203, 0.34) !important;
-  --color-token-button-tertiary-foreground: var(--agentskin-text) !important;
+  --color-token-button-tertiary-foreground: var(--ct-text) !important;
   --color-token-link: #b4a4ff !important;
   --color-token-text-link-foreground: #b4a4ff !important;
   --color-token-text-link-active-foreground: #d0c6ff !important;
-  --color-token-primary: var(--agentskin-accent) !important;
+  --color-token-primary: var(--ct-accent) !important;
   --color-token-focus-border: var(--ct-violet) !important;
   --color-token-dropdown-background: #1b2340 !important;
-  --color-token-dropdown-foreground: var(--agentskin-text) !important;
+  --color-token-dropdown-foreground: var(--ct-text) !important;
   --color-token-menu-background: #171d35 !important;
-  --color-token-menu-border: var(--agentskin-border) !important;
-  --color-token-checkbox-background: var(--agentskin-surface-elevated) !important;
+  --color-token-menu-border: var(--ct-border) !important;
+  --color-token-checkbox-background: var(--ct-input) !important;
   --color-token-checkbox-border: #696f99 !important;
   --color-token-checkbox-foreground: #fff9f1 !important;
   --color-token-badge-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
@@ -366,80 +390,88 @@
   --color-token-scrollbar-slider-hover-background: rgba(184, 179, 208, 0.34) !important;
   --color-token-scrollbar-slider-active-background: rgba(228, 91, 95, 0.48) !important;
   --color-token-conversation-header: #c9c3dd !important;
-  --color-token-conversation-body: var(--agentskin-text) !important;
+  --color-token-conversation-body: var(--ct-text) !important;
   --color-token-conversation-summary-leading: #c9c3dd !important;
-  --color-token-conversation-summary-trailing: var(--agentskin-muted) !important;
+  --color-token-conversation-summary-trailing: var(--ct-muted) !important;
   --color-token-non-assistant-body-descendant: #d8d2e4 !important;
   --color-token-text-preformat-foreground: #ffe6d0 !important;
   --color-token-text-preformat-background: #17182b !important;
   --color-token-text-code-block-background: #0b0e1c !important;
-  --vscode-foreground: var(--agentskin-text) !important;
-  --vscode-descriptionForeground: var(--agentskin-muted) !important;
+  --vscode-foreground: var(--ct-text) !important;
+  --vscode-descriptionForeground: var(--ct-muted) !important;
   --vscode-icon-foreground: #d3cde5 !important;
+
+  /* Current Codex builds still consume VS Code surface tokens in settings,
+     terminal, diff, menus and dynamically mounted portals. Keep these mapped
+     to the same semantic system as the canonical Codex token sweep. */
   --vscode-sideBar-background: #101426 !important;
-  --vscode-sideBar-foreground: var(--agentskin-text) !important;
+  --vscode-sideBar-foreground: var(--ct-text) !important;
   --vscode-sideBarTitle-background: #101426 !important;
-  --vscode-sideBarTitle-foreground: var(--agentskin-text) !important;
+  --vscode-sideBarTitle-foreground: var(--ct-text) !important;
   --vscode-sideBar-border: var(--ct-border-soft) !important;
-  --vscode-editorPane-background: var(--agentskin-bg) !important;
+  --vscode-editorPane-background: var(--ct-canvas) !important;
   --vscode-editor-background: #0b0e1c !important;
-  --vscode-editor-foreground: var(--agentskin-text) !important;
+  --vscode-editor-foreground: var(--ct-text) !important;
   --vscode-panel-background: #0b0e1c !important;
-  --vscode-panel-border: var(--agentskin-border) !important;
+  --vscode-panel-border: var(--ct-border) !important;
   --vscode-panelSectionHeader-background: #12172a !important;
-  --vscode-panelSectionHeader-foreground: var(--agentskin-text) !important;
-  --vscode-panelTitle-activeForeground: var(--agentskin-text) !important;
-  --vscode-panelTitle-inactiveForeground: var(--agentskin-muted) !important;
-  --vscode-panelTitle-activeBorder: var(--agentskin-accent) !important;
-  --vscode-input-background: var(--agentskin-surface-elevated) !important;
-  --vscode-input-foreground: var(--agentskin-text) !important;
+  --vscode-panelSectionHeader-foreground: var(--ct-text) !important;
+  --vscode-panelTitle-activeForeground: var(--ct-text) !important;
+  --vscode-panelTitle-inactiveForeground: var(--ct-muted) !important;
+  --vscode-panelTitle-activeBorder: var(--ct-accent) !important;
+  --vscode-input-background: var(--ct-input) !important;
+  --vscode-input-foreground: var(--ct-text) !important;
   --vscode-input-placeholderForeground: #9691ae !important;
-  --vscode-input-border: var(--agentskin-border) !important;
-  --vscode-dropdown-background: var(--agentskin-surface-elevated) !important;
-  --vscode-dropdown-foreground: var(--agentskin-text) !important;
-  --vscode-dropdown-border: var(--agentskin-border) !important;
-  --vscode-dropdown-listBackground: var(--agentskin-surface-elevated) !important;
+  --vscode-input-border: var(--ct-border) !important;
+  --vscode-dropdown-background: var(--ct-raised) !important;
+  --vscode-dropdown-foreground: var(--ct-text) !important;
+  --vscode-dropdown-border: var(--ct-border) !important;
+  --vscode-dropdown-listBackground: var(--ct-raised) !important;
   --vscode-menu-background: #171d35 !important;
-  --vscode-menu-foreground: var(--agentskin-text) !important;
-  --vscode-menu-border: var(--agentskin-border) !important;
+  --vscode-menu-foreground: var(--ct-text) !important;
+  --vscode-menu-border: var(--ct-border) !important;
   --vscode-menu-selectionBackground: var(--ct-violet-soft) !important;
-  --vscode-menu-selectionForeground: var(--agentskin-text) !important;
+  --vscode-menu-selectionForeground: var(--ct-text) !important;
   --vscode-menu-separatorBackground: var(--ct-border-soft) !important;
   --vscode-list-hoverBackground: var(--ct-violet-soft) !important;
   --vscode-list-activeSelectionBackground: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
-  --vscode-list-activeSelectionForeground: var(--agentskin-text) !important;
+  --vscode-list-activeSelectionForeground: var(--ct-text) !important;
   --vscode-list-inactiveSelectionBackground: rgba(140, 115, 255, 0.13) !important;
   --vscode-focusBorder: var(--ct-violet) !important;
   --vscode-disabledForeground: var(--ct-disabled) !important;
-  --vscode-settings-headerForeground: var(--agentskin-text) !important;
+
+  /* Settings: sidebar, row cards, search, selects, toggles and dialogs. */
+  --vscode-settings-headerForeground: var(--ct-text) !important;
   --vscode-settings-headerBorder: var(--ct-border-soft) !important;
   --vscode-settings-rowHoverBackground: rgba(140, 115, 255, 0.1) !important;
   --vscode-settings-focusedRowBorder: var(--ct-violet) !important;
   --vscode-settings-sashBorder: var(--ct-border-soft) !important;
-  --vscode-settings-textInputBackground: var(--agentskin-surface-elevated) !important;
-  --vscode-settings-textInputForeground: var(--agentskin-text) !important;
-  --vscode-settings-textInputBorder: var(--agentskin-border) !important;
-  --vscode-settings-dropdownBackground: var(--agentskin-surface-elevated) !important;
-  --vscode-settings-dropdownForeground: var(--agentskin-text) !important;
-  --vscode-settings-dropdownBorder: var(--agentskin-border) !important;
-  --vscode-settings-checkboxBackground: var(--agentskin-surface-elevated) !important;
-  --vscode-settings-checkboxForeground: var(--agentskin-text) !important;
-  --vscode-settings-checkboxBorder: var(--agentskin-border) !important;
-  --vscode-settings-numberInputBackground: var(--agentskin-surface-elevated) !important;
-  --vscode-settings-numberInputForeground: var(--agentskin-text) !important;
-  --vscode-settings-numberInputBorder: var(--agentskin-border) !important;
-  --vscode-checkbox-background: var(--agentskin-surface-elevated) !important;
-  --vscode-checkbox-foreground: var(--agentskin-text) !important;
-  --vscode-checkbox-border: var(--agentskin-border) !important;
-  --vscode-radio-activeBackground: var(--agentskin-accent) !important;
+  --vscode-settings-textInputBackground: var(--ct-input) !important;
+  --vscode-settings-textInputForeground: var(--ct-text) !important;
+  --vscode-settings-textInputBorder: var(--ct-border) !important;
+  --vscode-settings-dropdownBackground: var(--ct-raised) !important;
+  --vscode-settings-dropdownForeground: var(--ct-text) !important;
+  --vscode-settings-dropdownBorder: var(--ct-border) !important;
+  --vscode-settings-checkboxBackground: var(--ct-input) !important;
+  --vscode-settings-checkboxForeground: var(--ct-text) !important;
+  --vscode-settings-checkboxBorder: var(--ct-border) !important;
+  --vscode-settings-numberInputBackground: var(--ct-input) !important;
+  --vscode-settings-numberInputForeground: var(--ct-text) !important;
+  --vscode-settings-numberInputBorder: var(--ct-border) !important;
+  --vscode-checkbox-background: var(--ct-input) !important;
+  --vscode-checkbox-foreground: var(--ct-text) !important;
+  --vscode-checkbox-border: var(--ct-border) !important;
+  --vscode-radio-activeBackground: var(--ct-accent) !important;
   --vscode-radio-activeForeground: #fff9f1 !important;
-  --vscode-radio-activeBorder: var(--agentskin-accent) !important;
-  --vscode-radio-inactiveBackground: var(--agentskin-surface-elevated) !important;
-  --vscode-radio-inactiveForeground: var(--agentskin-muted) !important;
-  --vscode-radio-inactiveBorder: var(--agentskin-border) !important;
+  --vscode-radio-activeBorder: var(--ct-accent-hover) !important;
+  --vscode-radio-inactiveBackground: var(--ct-input) !important;
+  --vscode-radio-inactiveForeground: var(--ct-muted) !important;
+  --vscode-radio-inactiveBorder: var(--ct-border) !important;
+
+  /* Terminal ownership: tab strip, panel host and xterm share one contrast panel. */
   --color-token-terminal-background: #080a14 !important;
-  --color-token-terminal-foreground: var(--agentskin-text) !important;
-  --color-token-terminal-border: var(--agentskin-border) !important;
+  --color-token-terminal-foreground: var(--ct-text) !important;
+  --color-token-terminal-border: var(--ct-border) !important;
   --color-token-terminal-ansi-black: #080a14 !important;
   --color-token-terminal-ansi-bright-black: #77758e !important;
   --color-token-terminal-ansi-red: #f06a74 !important;
@@ -457,9 +489,9 @@
   --color-token-terminal-ansi-white: #d8d2e4 !important;
   --color-token-terminal-ansi-bright-white: #fff9f1 !important;
   --vscode-terminal-background: #080a14 !important;
-  --vscode-terminal-foreground: var(--agentskin-text) !important;
-  --vscode-terminal-border: var(--agentskin-border) !important;
-  --vscode-terminalCursor-foreground: var(--agentskin-accent) !important;
+  --vscode-terminal-foreground: var(--ct-text) !important;
+  --vscode-terminal-border: var(--ct-border) !important;
+  --vscode-terminalCursor-foreground: var(--ct-accent) !important;
   --vscode-terminal-selectionBackground: rgba(140, 115, 255, 0.35) !important;
   --vscode-terminal-inactiveSelectionBackground: rgba(140, 115, 255, 0.22) !important;
   --vscode-terminal-ansiBlack: #080a14 !important;
@@ -479,31 +511,414 @@
   --vscode-terminal-ansiWhite: #d8d2e4 !important;
   --vscode-terminal-ansiBrightWhite: #fff9f1 !important;
   --vscode-editorGroupHeader-tabsBackground: #0b0e1c !important;
-  --vscode-tab-activeBackground: var(--agentskin-surface-elevated) !important;
-  --vscode-tab-activeForeground: var(--agentskin-text) !important;
+  --vscode-tab-activeBackground: var(--ct-raised) !important;
+  --vscode-tab-activeForeground: var(--ct-text) !important;
   --vscode-tab-inactiveBackground: #101426 !important;
-  --vscode-tab-inactiveForeground: var(--agentskin-muted) !important;
+  --vscode-tab-inactiveForeground: var(--ct-muted) !important;
   --vscode-tab-border: var(--ct-border-soft) !important;
+
+  /* Diff, output, widgets and late-mounted portals. */
   --color-token-diff-surface: #0f1426 !important;
   --color-token-diff-editor-inserted-line-background: rgba(85, 183, 154, 0.17) !important;
   --color-token-diff-editor-removed-line-background: rgba(240, 106, 116, 0.17) !important;
-  --color-token-editor-widget-background: var(--agentskin-surface-elevated) !important;
+  --color-token-editor-widget-background: var(--ct-raised) !important;
   --vscode-diffEditor-insertedLineBackground: rgba(85, 183, 154, 0.17) !important;
   --vscode-diffEditor-insertedTextBackground: rgba(85, 183, 154, 0.25) !important;
   --vscode-diffEditor-removedLineBackground: rgba(240, 106, 116, 0.17) !important;
   --vscode-diffEditor-removedTextBackground: rgba(240, 106, 116, 0.25) !important;
-  --vscode-multiDiffEditor-background: var(--agentskin-bg) !important;
-  --vscode-editorWidget-background: var(--agentskin-surface-elevated) !important;
-  --vscode-editorWidget-foreground: var(--agentskin-text) !important;
-  --vscode-editorWidget-border: var(--agentskin-border) !important;
-  --vscode-editorHoverWidget-background: var(--agentskin-surface-elevated) !important;
-  --vscode-editorHoverWidget-foreground: var(--agentskin-text) !important;
-  --vscode-editorHoverWidget-border: var(--agentskin-border) !important;
-  --vscode-notifications-background: var(--agentskin-surface-elevated) !important;
-  --vscode-notifications-foreground: var(--agentskin-text) !important;
-  --vscode-notificationToast-border: var(--agentskin-border) !important;
-  --vscode-commandCenter-background: var(--agentskin-surface-elevated) !important;
-  --vscode-commandCenter-foreground: var(--agentskin-text) !important;
-  --vscode-commandCenter-border: var(--agentskin-border) !important;
+  --vscode-multiDiffEditor-background: var(--ct-canvas) !important;
+  --vscode-editorWidget-background: var(--ct-raised) !important;
+  --vscode-editorWidget-foreground: var(--ct-text) !important;
+  --vscode-editorWidget-border: var(--ct-border) !important;
+  --vscode-editorHoverWidget-background: var(--ct-raised) !important;
+  --vscode-editorHoverWidget-foreground: var(--ct-text) !important;
+  --vscode-editorHoverWidget-border: var(--ct-border) !important;
+  --vscode-notifications-background: var(--ct-raised) !important;
+  --vscode-notifications-foreground: var(--ct-text) !important;
+  --vscode-notificationToast-border: var(--ct-border) !important;
+  --vscode-commandCenter-background: var(--ct-raised) !important;
+  --vscode-commandCenter-foreground: var(--ct-text) !important;
+  --vscode-commandCenter-border: var(--ct-border) !important;
+}
+
+/* 1. Shell materials */
+:root.agentskin-host-codex body {
+  background: var(--ct-canvas);
+  color: var(--ct-text);
+  font-family: var(--ct-font-body);
+}
+
+:root.agentskin-host-codex body:has([data-settings-panel-slug]) {
+  background: var(--ct-canvas);
+  color: var(--ct-text);
+}
+
+:root.agentskin-host-codex body:has([data-settings-panel-slug]) .main-surface {
+  color: var(--ct-text);
+  background: var(--ct-canvas);
+}
+
+/* Current settings cards do not expose a component attribute; this exact
+   versioned fallback anchors to the verified settings card root and does not
+   alter its dimensions, overflow ownership or interaction behavior. */
+:root.agentskin-host-codex body:has([data-settings-panel-slug]) .main-surface
+  .flex.flex-col.overflow-hidden.rounded-2xl.border.border-token-border {
+  color: var(--ct-text);
+  background: linear-gradient(145deg, rgba(27, 35, 64, 0.96), rgba(18, 23, 42, 0.98));
+  border-color: var(--ct-border);
+  box-shadow: 0 12px 28px rgba(1, 2, 10, 0.24);
+}
+
+:root.agentskin-host-codex body:has([data-settings-panel-slug]) .main-surface
+  button.bg-token-bg-fog {
+  color: var(--ct-text);
+  background: var(--ct-input);
+  border-color: var(--ct-border);
+}
+
+:root.agentskin-host-codex aside.app-shell-left-panel {
+  color: var(--ct-text);
+  background:
+    radial-gradient(circle at 0 0, rgba(140, 115, 255, 0.13), transparent 34%),
+    linear-gradient(180deg, #151a31 0%, #0f1325 62%, #0b0f20 100%);
+  border-right: 1px solid var(--ct-border-soft);
+  box-shadow: 8px 0 28px rgba(3, 4, 14, 0.24);
+}
+
+:root.agentskin-host-codex header {
+  color: var(--ct-text);
+  background: #101426;
+  border-color: var(--ct-border-soft);
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page] {
+  isolation: isolate;
+  color: var(--ct-text);
+  background:
+    radial-gradient(circle at 82% 8%, rgba(140, 115, 255, 0.1), transparent 26%),
+    linear-gradient(145deg, #0d1021 0%, #090b18 68%);
+}
+
+/* 2. Exact route-scoped home artwork */
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"]))::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(7, 9, 20, 0.98) 0%, rgba(10, 12, 27, 0.88) 36%, rgba(11, 12, 27, 0.34) 66%, rgba(9, 10, 23, 0.22) 100%),
+    linear-gradient(0deg, rgba(8, 10, 22, 0.86) 0%, transparent 44%),
+    var(--ct-art) 58% 59% / cover no-repeat;
+  filter: saturate(0.92) contrast(1.04);
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"]))::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 84% 17%, rgba(255, 203, 162, 0.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 30%, rgba(213, 189, 255, 0.6) 0 1.5px, transparent 3px),
+    radial-gradient(circle at 91% 43%, rgba(228, 91, 95, 0.55) 0 1px, transparent 2px);
+  background-size: 83px 83px, 121px 121px, 67px 67px;
+  opacity: 0.4;
+  animation: ct-ba-xian-cloud-breath 8s ease-in-out infinite alternate;
+}
+
+/* Verified conversation shell. The denser veil keeps long-form prose calm while
+   leaving the immortals visible at the right edge and in open workspace areas. */
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"]::before,
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface:has([data-thread-find-target="conversation"])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(7, 9, 20, 0.97) 0%, rgba(9, 11, 25, 0.91) 42%, rgba(10, 11, 25, 0.74) 70%, rgba(9, 10, 23, 0.56) 100%),
+    linear-gradient(0deg, rgba(8, 10, 22, 0.94) 0%, rgba(8, 10, 22, 0.42) 52%, rgba(8, 10, 22, 0.68) 100%),
+    var(--ct-art) 66% 59% / cover no-repeat;
+  filter: saturate(0.78) contrast(1.02);
+}
+
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"]::after,
+:root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface:has([data-thread-find-target="conversation"])::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 82% 24%, rgba(140, 115, 255, 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(7, 9, 20, 0.28), transparent 24%, rgba(7, 9, 20, 0.3) 72%, rgba(7, 9, 20, 0.72));
+}
+
+/* 3. Native surface roots */
+:root.agentskin-host-codex :is(
+  .composer-surface-chrome,
+  [role="menu"],
+  [role="dialog"],
+  [data-codexthemes-surface="output"],
+  [data-codexthemes-surface="diff"]
+) {
+  color: var(--ct-text);
+  background:
+    linear-gradient(145deg, rgba(31, 39, 70, 0.98), rgba(18, 23, 42, 0.98));
+  border-color: var(--ct-border);
+  box-shadow: 0 16px 38px var(--ct-shadow);
+}
+
+:root.agentskin-host-codex .composer-surface-chrome {
+  position: relative;
+  border-color: rgba(140, 115, 255, 0.55);
+  box-shadow: 0 12px 34px rgba(4, 5, 16, 0.46), 0 0 0 1px rgba(228, 91, 95, 0.1);
+}
+
+:root.agentskin-host-codex .composer-surface-chrome::after {
+  content: "☁";
+  position: absolute;
+  right: 14px;
+  top: -13px;
+  color: rgba(215, 169, 75, 0.72);
+  font-size: 16px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+:root.agentskin-host-codex :is(
+  [role="menu"],
+  [role="dialog"],
+  [data-radix-popper-content-wrapper]
+) {
+  font-family: var(--ct-font-body);
+}
+
+:root.agentskin-host-codex :is(
+  input,
+  textarea,
+  select,
+  [contenteditable="true"]
+) {
+  caret-color: var(--ct-accent);
+}
+
+:root.agentskin-host-codex :is(pre, code, .xterm) {
+  font-family: "SFMono-Regular", "Cascadia Code", "JetBrains Mono", monospace;
+}
+
+/* 4. Home stage and rich decoration */
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) h1,
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) h2 {
+  font-family: var(--ct-font-display);
+  letter-spacing: 0.04em;
+  text-shadow: 0 3px 20px rgba(3, 4, 16, 0.72);
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) h1::after {
+  content: "云海同舟 · 各显其能";
+  display: block;
+  margin-top: 0.55rem;
+  color: #d5cfea;
+  font-family: var(--ct-font-body);
+  font-size: 0.34em;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  pointer-events: none;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) h1::before {
+  content: "八仙";
+  display: inline-grid;
+  place-items: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  margin-right: 0.8rem;
+  border: 1px solid rgba(255, 214, 188, 0.72);
+  border-radius: 0.45rem;
+  color: #fff0df;
+  background: linear-gradient(145deg, #be3f49, #7f2235);
+  box-shadow: 0 7px 22px rgba(88, 18, 32, 0.45);
+  font-size: 0.42em;
+  line-height: 1;
+  vertical-align: middle;
+  transform: rotate(-3deg);
+  pointer-events: none;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) :is(button, [role="button"]):not(.composer-surface-chrome *) {
+  border-color: var(--ct-border-soft);
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) :is(button, [role="button"]):hover {
+  border-color: rgba(140, 115, 255, 0.58);
+}
+
+/* Suggestion cards use existing clickable roots; no dimensions or hit targets change. */
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) :is(
+  [data-testid="suggestion-card"],
+  [data-testid="prompt-suggestion"]
+) {
+  color: var(--ct-text);
+  background:
+    radial-gradient(circle at 100% 0, rgba(228, 91, 95, 0.15), transparent 42%),
+    linear-gradient(145deg, rgba(29, 36, 66, 0.94), rgba(16, 20, 38, 0.96));
+  border: 1px solid var(--ct-border-soft);
+  box-shadow: 0 10px 24px rgba(2, 3, 12, 0.32);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) :is(
+  [data-testid="suggestion-card"],
+  [data-testid="prompt-suggestion"]
+):hover {
+  transform: translateY(-3px);
+  border-color: rgba(228, 91, 95, 0.58);
+  box-shadow: 0 15px 30px rgba(4, 4, 16, 0.44), 0 0 18px rgba(140, 115, 255, 0.12);
+}
+
+/* 5. Interaction states */
+:root.agentskin-host-codex :focus-visible {
+  outline-color: var(--ct-violet);
+  outline-offset: 2px;
+}
+
+:root.agentskin-host-codex ::selection {
+  color: #fff;
+  background: rgba(140, 115, 255, 0.48);
+}
+
+:root.agentskin-host-codex :disabled,
+:root.agentskin-host-codex [aria-disabled="true"] {
+  color: var(--ct-disabled);
+}
+
+:root.agentskin-host-codex aside.app-shell-left-panel [aria-current="page"],
+:root.agentskin-host-codex aside.app-shell-left-panel [data-state="active"] {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--agentskin-accent) 13%, transparent), var(--ct-violet-soft));
+  box-shadow: inset 3px 0 0 var(--ct-accent);
+}
+
+:root.agentskin-host-codex aside.app-shell-left-panel [data-thread-title="true"] {
+  color: var(--ct-muted) !important;
+}
+
+:root.agentskin-host-codex aside.app-shell-left-panel [data-app-action-sidebar-thread-active="true"] [data-thread-title="true"] {
+  color: var(--ct-text) !important;
+}
+
+:root.agentskin-host-codex aside.app-shell-left-panel :is(button, [role="button"]):hover {
+  background-color: var(--ct-violet-soft);
+}
+
+/* 6. Diff, code and terminal stay in the same night system */
+:root.agentskin-host-codex :is(pre, [data-codexthemes-surface="code"]) {
+  color: #f4eee7;
+  background: #0b0e1c;
+  border-color: #303754;
+}
+
+:root.agentskin-host-codex [data-codex-terminal="true"] {
+  --vscode-terminal-background: #080a14 !important;
+  --vscode-terminal-foreground: #f7f2ec !important;
+  --vscode-terminal-border: var(--ct-border) !important;
+  --vscode-terminalCursor-foreground: var(--ct-accent) !important;
+  --color-background-surface: #080a14 !important;
+  --color-background-panel: #080a14 !important;
+  --color-background-editor-opaque: #080a14 !important;
+  --color-text-foreground: #f7f2ec !important;
+  --color-text-foreground-secondary: #b8b3d0 !important;
+  color: #f7f2ec !important;
+  background: #080a14 !important;
+}
+
+:root.agentskin-host-codex :is(
+  .xterm,
+  .xterm-viewport,
+  .xterm-screen,
+  [data-codexthemes-surface="terminal"]
+) {
+  color: #f7f2ec !important;
+  background: #080a14 !important;
+}
+
+/* xterm materializes ANSI colors into owner-scoped classes when a session is
+   mounted. Reassert the full readable palette so pre-existing terminals do not
+   retain colors from the native light theme after a live theme switch. */
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-0 { color: #77758e !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-1 { color: #f06a74 !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-2 { color: #55b79a !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-3 { color: #d7a94b !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-4 { color: #81a7ff !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-5 { color: #c792ea !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-6 { color: #65d1cf !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-7 { color: #d8d2e4 !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-8 { color: #9491aa !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-9 { color: #ff8790 !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-10 { color: #76d2b4 !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-11 { color: #f0c96d !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-12 { color: #a2bdff !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-13 { color: #deb2f5 !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-14 { color: #89e4e2 !important; }
+:root.agentskin-host-codex [data-codex-terminal="true"] .xterm-fg-15 { color: #fff9f1 !important; }
+
+:root.agentskin-host-codex [data-diff-type="added"],
+:root.agentskin-host-codex .diff-added {
+  background: rgba(85, 183, 154, 0.17);
+}
+
+:root.agentskin-host-codex [data-diff-type="removed"],
+:root.agentskin-host-codex .diff-removed {
+  background: rgba(240, 106, 116, 0.17);
+}
+
+:root.agentskin-host-codex main.main-surface[data-codexthemes-page],
+:root.agentskin-host-codex aside.app-shell-left-panel {
+  scrollbar-color: rgba(184, 179, 208, 0.24) transparent;
+}
+
+@keyframes ct-ba-xian-cloud-breath {
+  from { opacity: 0.28; transform: translate3d(0, 0, 0); }
+  to { opacity: 0.5; transform: translate3d(-8px, 5px, 0); }
+}
+
+@media (max-width: 980px) {
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"]))::before {
+    background:
+      linear-gradient(90deg, rgba(7, 9, 20, 0.94) 0%, rgba(9, 11, 25, 0.7) 58%, rgba(9, 10, 23, 0.36) 100%),
+      linear-gradient(0deg, rgba(8, 10, 22, 0.9), transparent 46%),
+      var(--ct-art) 61% 54% / cover no-repeat;
+  }
+
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"]))::after {
+    display: none;
+  }
+
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) h1::before {
+    display: none;
+  }
+
+  :root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface[data-codexthemes-page="conversation"]::before,
+  :root.agentskin-host-codex[data-codexthemes-background-scope="workspace"] main.main-surface:has([data-thread-find-target="conversation"])::before {
+    background:
+      linear-gradient(90deg, rgba(7, 9, 20, 0.98), rgba(9, 11, 25, 0.88) 72%, rgba(9, 10, 23, 0.72)),
+      linear-gradient(0deg, rgba(8, 10, 22, 0.96), rgba(8, 10, 22, 0.56) 58%, rgba(8, 10, 22, 0.76)),
+      var(--ct-art) 64% 55% / cover no-repeat;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"]))::after {
+    animation: none;
+  }
+
+  :root.agentskin-host-codex main.main-surface[data-codexthemes-page="home"]:not(:has([data-thread-find-target="conversation"])) :is(
+    [data-testid="suggestion-card"],
+    [data-testid="prompt-suggestion"]
+  ) {
+    transition: none;
+  }
 }
 

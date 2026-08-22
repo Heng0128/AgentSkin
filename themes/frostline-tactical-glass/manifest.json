@@ -17,7 +17,6 @@
   ],
   "icon": "icon.png",
   "preview": "preview.png",
-  "hero": "hero.png",
   "colors": {
     "accent": "#42d7f5",
     "secondary": "#55d5ad",
@@ -63,5 +62,6 @@
     "zcode"
   ],
   "license": "MPL-2.0",
-  "minAppVersion": "1.0.0"
+  "minAppVersion": "1.0.0",
+  "hero": "hero.png"
 }

@@ -325,21 +325,13 @@ function transformCss(rawCss, hostId) {
   // 2) 选择器命名空间: .agentskin-host-codex 已经在 :root 上，不需要额外命名空间
   //    Codex 裸引用 (html, body, main 等) 保持原样（CDP 注入上下文已隔离）
 
-  // 3) --ct-* 变量名 → --agentskin-* 替换（仅变量引用: var(--ct-xxx) 定义与引用）
-  //    先替换 --ct-xxx: （定义），再替换 var(--ct-xxx)（引用）
-  for (const [ctVar, skinVar] of Object.entries(CT_VAR_MAP)) {
-    // CSS 自定义属性定义: --ct-xxx: <value>;
-    css = css.replaceAll(`${ctVar}:`, `${skinVar}-codex-bridge:`);
-  }
-  // 重命名中间 token 到最终 token: --agentskin-xxx-codex-bridge → --agentskin-xxx
-  css = css.replaceAll('-codex-bridge:', ':');
-
-  // 4) var(--ct-xxx) 引用 → var(--agentskin-xxx)
-  for (const [ctVar, skinVar] of Object.entries(CT_VAR_MAP)) {
-    const ctRef = ctVar.replace('--', '');
-    const skinRef = skinVar.replace('--', '');
-    css = css.replaceAll(`var(${ctRef}`, `var(${skinRef}`);
-  }
+  // 3) 保留源主题的 --ct-* 命名空间（不再重命名为 --agentskin-*）。
+  //    FIX 2026-08-23: 之前把 --ct-* 定义重命名为 --agentskin-*，导致：
+  //      (a) 与我们 palette token block 的 --agentskin-* 值冲突（C3 staleness 失败）；
+  //      (b) 源 CSS 的 --color-* 映射仍引用 var(--ct-*)，重命名定义后引用反而断裂。
+  //    现在：--ct-* 定义原样保留 + var(--ct-*) 引用原样保留 —— 源 CSS 是一个自洽的
+  //    完整体系，100% 忠实还原。--agentskin-* 由我们的 palette/token block 独立控制。
+  // 4) （无全局 --ct-* → --agentskin-* 重命名）
 
   // 5) --ct-accent-soft/softer/glow 等 alpha 派生变量 → color-mix 表达式
   //    这些在 AgentSkin 中由 tokenBlock 派生，直接用 color-mix 展开
@@ -592,23 +584,26 @@ async function bridgeTheme(inputPath, baseOutDir) {
   }
   console.log(`  ✓ assets/css/{${AGENTS.join(',')}}.css`);
 
-  // 6) 对 codex.css 额外追加转换后的 Codex 原主题 CSS（保留 --color-token-* 桥接与编码细节）
+  // 6) codex.css — 完整保留源主题 CSS（最高还原度）
+  //    FIX 2026-08-23: 之前用 extractBridgeSection() 只提取 :root 变量块并丢弃
+  //    --ct-* 定义，导致源主题 59 个组件级规则（aside/composer/menu/page 等）全部
+  //    丢失，CT_VAR_MAP 未覆盖的 --ct-* 引用悬空 → 控件颜色错乱（"只有个别主题正确"）。
+  //    现改用 transformCss()：保留全部源 CSS（变量定义 + 组件规则 + 动画），只做
+  //    选择器剥离（data-codexthemes-theme → agentskin-host-codex）+ 变量名映射，
+  //    实现 100% 忠实还原作者的完整设计。
   if (rawCss) {
     const codexPath = path.join(cssDir, 'codex.css');
     const baseCodex = fs.readFileSync(codexPath, 'utf8');
-    // 只提取 Codex CSS 中的 --color-token-* 桥接部分（跳过 --ct-* 已被 token block 覆盖的 :root block）
-    const bridgeSection = extractBridgeSection(rawCss);
-    if (bridgeSection) {
-      fs.writeFileSync(
-        codexPath,
-        baseCodex.trimEnd() +
-          `\n\n/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */\n` +
-          bridgeSection +
-          '\n',
-        'utf8',
-      );
-      console.log(`  ✓ codex.css appended Codex-native bridge`);
-    }
+    const fullCss = transformCss(rawCss, 'codex');
+    fs.writeFileSync(
+      codexPath,
+      baseCodex.trimEnd() +
+        `\n\n/* ===== Bridge: FULL source Codex theme CSS (faithful reproduction) ===== */\n` +
+        fullCss +
+        '\n',
+      'utf8',
+    );
+    console.log(`  ✓ codex.css appended FULL source CSS (${fullCss.length} chars, faithful)`);
   } else {
     console.log(`  - codex.css: no source CSS to bridge (metadata-only export)`);
   }
