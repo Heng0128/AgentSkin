@@ -162,8 +162,7 @@ export function AgentLivePreview({
       {refreshFailed && (
         <div
           role="alert"
-          className="absolute inset-x-0 top-0 h-1"
-          style={{ background: 'var(--destructive)' }}
+          className="absolute inset-x-0 top-0 h-1 bg-destructive"
           title={t.workspacePreviewRefreshFailed}
         >
           <span className="sr-only">{t.workspacePreviewRefreshFailed}</span>

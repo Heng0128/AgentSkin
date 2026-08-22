@@ -226,13 +226,10 @@ export function AppsPage() {
           {/* Scan error banner */}
           {scanError && (
             <div
-              className="mb-5 flex items-center justify-between gap-3 rounded-md px-4 py-3"
-              style={{ background: 'var(--redbg)' }}
+              role="alert"
+              className="mb-5 flex items-center justify-between gap-3 rounded-md bg-destructive/10 px-4 py-3"
             >
-              <p
-                className="min-w-0 flex-1 truncate text-[12px]"
-                style={{ color: 'var(--destructive)' }}
-              >
+              <p className="min-w-0 flex-1 truncate text-[12px] text-destructive">
                 扫描失败：{scanError}
               </p>
               <Button variant="ghost" size="sm" onClick={() => void scan(true)}>
