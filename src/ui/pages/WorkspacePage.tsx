@@ -42,7 +42,7 @@ import { useStatusStore } from '@/stores/statusStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { ToolOverride } from '@/types/override';
 
-import { type UiMessages, uiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
 import type { AppStatus } from '@shared/types';
 import {
   AlertTriangle,
