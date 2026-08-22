@@ -614,45 +614,46 @@ async function bridgeTheme(inputPath, baseOutDir) {
   }
 
   // 7) 放置 hero / preview / icon（manifest 契约要求 icon.png + preview.png）
-  // 映射（2026-08-23 修正，方案 B）：
-  //   - Codex art  → hero.png     背景艺术图（注入 --agentskin-art，纯背景无 DOM）
-  //   - Codex preview → preview.png  带 UI 的真实截图（主题预览）
-  //   - Codex preview → icon.png  缩略（preview 截图缩为 256px 缩略图）
-  // 注意：art 是干净背景，preview 是带 DOM 的截图 —— 两者不可互换。
-  // 7a) art → hero.png（背景图）
+  // 三资源完全独立（2026-08-23 修正）：
+  //   - hero.png    ← Codex art（背景艺术图，注入 --agentskin-art，纯背景无 DOM）
+  //   - preview.png ← Codex preview（带 UI 的真实截图，仅作预览）
+  //   - icon.png    ← Codex art 缩略（256px，与 hero 同源于 art 背景图家族；
+  //                  绝不从 preview 派生 —— 预览截图与背景/图标是两个世界）
+  // art 是干净背景，preview 是带 DOM 的截图 —— 两者不可互换、互不派生。
+  // 7a) art → hero.png（背景图）+ icon.png（独立缩略图）
   if (detected.artBase64) {
+    const artBuf = Buffer.from(detected.artBase64, 'base64');
     const heroPath = path.join(themeDir, 'hero.png');
     try {
-      fs.writeFileSync(heroPath, Buffer.from(detected.artBase64, 'base64'));
+      fs.writeFileSync(heroPath, artBuf);
       console.log(
         `  ✓ hero.png extracted (${Math.round(detected.artBase64.length / 1024)} KB base64)`,
       );
     } catch (e) {
       console.warn(`  [warn] hero base64 decode failed: ${e.message}`);
     }
+    // art 缩略为 icon.png（256px —— 独立图标，来源于背景图，不依赖 preview）
+    try {
+      const iconBuf = await sharp(artBuf)
+        .resize(256, 256, { fit: 'cover', position: 'centre' })
+        .png({ compressionLevel: 9 })
+        .toBuffer();
+      fs.writeFileSync(path.join(themeDir, 'icon.png'), iconBuf);
+      console.log(`  ✓ icon.png generated (256px thumbnail from art, ${iconBuf.length} bytes)`);
+    } catch (e) {
+      console.warn(`  [warn] icon thumbnail failed: ${e.message}`);
+    }
   }
-  // 7b) preview → preview.png + icon.png（缩略）
+  // 7b) preview → preview.png（仅预览，独立来源，不派生其他资源）
   if (detected.previewBase64) {
-    const previewBuf = Buffer.from(detected.previewBase64, 'base64');
     const previewPath = path.join(themeDir, 'preview.png');
     try {
-      fs.writeFileSync(previewPath, previewBuf);
+      fs.writeFileSync(previewPath, Buffer.from(detected.previewBase64, 'base64'));
       console.log(
         `  ✓ preview.png extracted (${Math.round(detected.previewBase64.length / 1024)} KB base64)`,
       );
     } catch (e) {
       console.warn(`  [warn] preview base64 decode failed: ${e.message}`);
-    }
-    // preview 截图缩略为 icon.png（256px，quality 80 —— 缩略图只需辨识度）
-    try {
-      const iconBuf = await sharp(previewBuf)
-        .resize(256, 256, { fit: 'cover', position: 'centre' })
-        .png({ compressionLevel: 9 })
-        .toBuffer();
-      fs.writeFileSync(path.join(themeDir, 'icon.png'), iconBuf);
-      console.log(`  ✓ icon.png generated (256px thumbnail from preview, ${iconBuf.length} bytes)`);
-    } catch (e) {
-      console.warn(`  [warn] icon thumbnail failed: ${e.message}`);
     }
   }
 
