@@ -103,6 +103,7 @@ playwright.config.ts
 # Tooling/IDE local state
 .codebuddy/
 .solidify/
+.meituan-catpaw/
 
 # Debug/probe scripts and artifacts
 debug-tools/

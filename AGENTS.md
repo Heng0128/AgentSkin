@@ -47,7 +47,7 @@ AI Agent 视觉定制引擎。通过 CDP 注入为 traework、qoderwork、workbu
 5. UI 页面新增需 RFC 评审——六页封顶为默认约束（dashboard/workspace/themes/wallpaper/settings/studio）。确需新增时提交 RFC 文档，经评审后可突破上限。
 6. 禁止间距使用任意散值（如 `gap-[9px]`、`px-[13px]`）；间距应使用 Tailwind 标准档（4px 网格，2–96px，含 12/14px 等实际档位）；`w-*`/`h-*` 布局尺寸不受限——由 `check-design-tokens.mjs`（C6）强制，允许集以脚本为准（2026-08-20 校准，对齐 design-tokens.md §3.3/§7.2 实际字阶与间距）
 7. 禁止未经 npm run check 全绿就 push
-8. **禁止路径污染**（详见 §8「文件与路径卫生规范」）
+8. **禁止路径污染**（全仓库任何位置，详见 §8「文件与路径卫生规范」）
 
 ## 6. RFC 触发条件
 
@@ -70,11 +70,11 @@ RFC 模板见 docs/rfc/TEMPLATE.md（待创建）
 
 ## 8. 文件与路径卫生规范
 
-**根目录不是垃圾桶，路径污染是被禁止的违规行为。** 以下规则必须无条件遵守：
+**整个仓库的任何位置都不允许路径污染——不只是根目录。** 路径污染是指在 `src/`、`scripts/`、`themes/`、`tests/` 等任何目录下创建不属于该目录用途的临时文件、命令输出、调试残留、工具副本。以下规则对**全仓库**无条件生效。
 
 ### 8.1 禁止创建的命令输出文件
 
-运行 `npm run check` / `tsc` / `biome` / `vitest` / `playwright` / `node scripts/xxx.mjs` 时，**禁止**通过 `>` 重定向在根目录生成 `.txt` / `.log` 输出文件。此类文件是历史污染的主要来源。
+运行 `npm run check` / `tsc` / `biome` / `vitest` / `playwright` / `node scripts/xxx.mjs` 时，**禁止**通过 `>` 重定向生成 `.txt` / `.log` 输出文件。此类文件是历史污染的主要来源。
 
 | ❌ 禁止 | ✅ 正确做法 |
 |--------|------------|
@@ -86,16 +86,22 @@ RFC 模板见 docs/rfc/TEMPLATE.md（待创建）
 
 **例外**：确需持久保存输出时，唯一合法位置是 `test-output/`（已 gitignore）。
 
-### 8.2 禁止在根目录创建的文件类型
+### 8.2 全仓库禁止的文件 / 目录类型
 
-以下文件类型禁止出现在仓库根目录：
+以下内容**在任何目录**下都禁止进入仓库（尤其注意子目录）：
 
-- 命令输出捕获：`*.txt` / `*.log`（见 8.1）
-- 编译器缓存：`*.tsbuildinfo`
-- 以绝对路径命名的垃圾文件（如 `CUsers*.txt` —— PowerShell 重定向误产物）
-- 咨询/审计交付物：`项目审计报告.md` / `战略审计报告.md`
-- 探针截图 / 临时预览：`splash-preview.png` 等
-- 一次性调试脚本：`test-*.mjs` / `run-*.mjs` / `_verify_*.mjs`
+| 禁止项 | 说明 |
+|--------|------|
+| 命令输出捕获 `*.txt` / `*.log` | 根目录、`scripts/`、`tests/` 等一律禁止（8.1） |
+| 编译器缓存 `*.tsbuildinfo` | tsc 增量缓存，可再生成 |
+| 工具/IDE 项目副本目录 | 如 `.meituan-catpaw/`（美团 CatPaw 生成的 worktree 副本，2389 文件）——**已确认是重大污染源** |
+| 探针 / 调试产物目录 | `debug-tools/` 输出、`*.png` 截图、`probe-*` 结果 |
+| 一次性调试脚本 | `test-*.mjs` / `run-*.mjs` / `_verify_*.mjs`（散落于根目录或 `scripts/`） |
+| 临时目录 | `tmp/` / `temp/` / `*.tmp` / `*.bak` |
+| 以绝对路径命名的垃圾文件 | 如 `CUsers*.txt`（PowerShell 重定向误产物） |
+| 咨询/审计交付物 | `项目审计报告.md` / `战略审计报告.md` |
+
+**注意**：`licenses/*.txt`（如 `Apache-2.0.txt`）是**正常**的第三方许可证，不算污染。
 
 ### 8.3 文件应放哪里
 
@@ -104,6 +110,7 @@ RFC 模板见 docs/rfc/TEMPLATE.md（待创建）
 | 核心源码 | `src/` |
 | 校验/构建/生成脚本 | `scripts/`（新增须登记 `scripts/INDEX.md`） |
 | 主题 | `themes/` |
+| 测试 | `tests/`（对应 `src/**` 单元测试放各自目录） |
 | 架构/设计/规范文档 | `docs/` |
 | 审计/巡检/实施报告 | `docs/reports/`（登记 `docs/reports/INDEX.md`） |
 | RFC 方案与实施报告 | `docs/rfc/` |
@@ -112,14 +119,16 @@ RFC 模板见 docs/rfc/TEMPLATE.md（待创建）
 
 ### 8.4 新增文件的默认判断流程
 
-1. 该文件是否属于 `src/` 核心源码 → 否进入下一步
-2. 是否属于 `scripts/` 工具脚本 → 否进入下一步
-3. 是否属于 `themes/` / `engines/` 主题与适配器 → 否进入下一步
+1. 该文件是否属于 `src/` 核心源码 → 放入对应子目录
+2. 是否属于 `scripts/` 工具脚本 → 放入 `scripts/` 并登记 INDEX
+3. 是否属于 `themes/` / `engines/` 主题与适配器 → 放入对应目录
 4. 是否属于 `docs/` 体系文档 → 按类型放入对应子目录
-5. 都不是 → **默认放进 `test-output/` 或询问用户，严禁直接丢根目录**
+5. 是否属于 `tests/` 测试资产 → 放入 `tests/`
+6. 都不是（命令输出 / 临时产物 / 工具残留）→ **严禁提交，放 `test-output/` 或询问用户，绝不落入任何源码目录**
 
 ### 8.5 遵守方式
 
-- **AI/Agent 每次写完代码或运行命令后，自查是否在根目录留了文件**。
-- 验收标准：`git status` 的根目录应只出现 `CONTRIBUTING.md`「根目录允许的文件」清单中的工程文件。
+- **AI/Agent 每次写完代码或运行命令后，自查是否在仓库任何位置留了污染文件**（`git status` 排查未跟踪文件）。
+- 验收标准：`git status` 应只出现 `CONTRIBUTING.md`「根目录允许的文件」清单中的工程文件 + 各源码目录内正当的文件。
+- 发现工具/IDE 自动生成的副本目录（如 `.meituan-catpaw/`、`.codebuddy/`），立即加入 `.gitignore` 并清理，禁止放任。
 - 违反此规范会导致仓库重新污染、历史重建（代价极高），属严重违规。
