@@ -48,6 +48,7 @@ export default defineConfig({
         resolve: {
           alias: {
             '@agentskin/engine': corePkg,
+            '@shared': path.resolve(root, 'src/shared'),
           },
         },
       },
