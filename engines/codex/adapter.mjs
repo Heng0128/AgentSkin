@@ -135,30 +135,23 @@ html.${HOST_CLASS} .app-header-tint {
 }
 
 /* === Sidebar: frosted glass ===
-   Codex sidebar: nav.sidebar-foreground-muted (verified).
-   [class*="sidebar"] matches 43 elements (items, scroll masks, resize handles)
-   which is acceptable — they all need the frosted treatment. */
-html.${HOST_CLASS} nav,
-html.${HOST_CLASS} [class*="sidebar"] {
+   Codex sidebar root: div.app-shell-left-panel (probe-verified 2026-08-23).
+   PROBE NOTE: [class*="sidebar"] matched 43 elements (items, scroll masks,
+   resize handles) — over-rendering. Use the exact panel root only. */
+html.${HOST_CLASS} .app-shell-left-panel {
   background: var(--sidebar-bg, color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 22%, transparent)) !important;
 }
-html.${HOST_CLASS} nav a:hover,
-html.${HOST_CLASS} [class*="sidebar"] a:hover,
-html.${HOST_CLASS} nav button:hover,
-html.${HOST_CLASS} aside button:hover,
-html.${HOST_CLASS} [class*="sidebar"] button:hover {
+/* Sidebar item hover: exact class only — no broad aside/nav/[class*=sidebar]
+   button sprays. PROBE-VERIFIED: sidebar rows are button.sidebar-item. */
+html.${HOST_CLASS} button.sidebar-item:hover,
+html.${HOST_CLASS} [data-app-action-sidebar-project-id]:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
 }
-/* Codex chat rows are <button class="sidebar-item">; the active thread is flagged
-   with the data-app-action-sidebar-thread-selected attribute, not [aria-current]. */
-html.${HOST_CLASS} button.sidebar-item[data-app-action-sidebar-thread-selected],
-html.${HOST_CLASS} [data-app-action-sidebar-thread-selected],
-html.${HOST_CLASS} nav a[aria-current="true"],
-html.${HOST_CLASS} nav a[aria-current="page"],
-html.${HOST_CLASS} nav button[data-state="active"],
-html.${HOST_CLASS} [class*="sidebar"] [aria-current="true"],
-html.${HOST_CLASS} [class*="sidebar"] [aria-current="page"],
-html.${HOST_CLASS} [class*="sidebar"] button[data-state="active"] {
+/* Active thread / project: exact data-app-action-* state attributes
+   (probe-verified), NOT [aria-current] / [class*=active] / [data-state=active]. */
+html.${HOST_CLASS} button.sidebar-item[data-app-action-sidebar-thread-selected="true"],
+html.${HOST_CLASS} [data-app-action-sidebar-thread-selected="true"],
+html.${HOST_CLASS} [data-app-action-sidebar-thread-active="true"] {
   background: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
   box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
 }
@@ -184,18 +177,14 @@ html.${HOST_CLASS} textarea:focus {
   border-color: var(--agentskin-accent) !important;
 }
 
-/* === Buttons: accent-tinted, no extra shadow ===
-   Codex primary buttons: button[class*="primary"] (verified, 4 matches).
-   Dead selectors removed: button[class*="send"], [class*="btn-primary"]. */
-html.${HOST_CLASS} button[class*="primary"] {
-  background: var(--button-primary-bg, var(--agentskin-accent)) !important;
-  color: var(--button-primary-fg, #ffffff) !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-html.${HOST_CLASS} button[class*="primary"]:hover {
-  background: var(--button-primary-hover, color-mix(in srgb, var(--agentskin-accent) 85%, white)) !important;
-}
+/* === Buttons ===
+   PROBE-VERIFIED 2026-08-23: Codex primary button colors are driven by the
+   native --color-token-* design tokens (--color-token-primary / --color-token-
+   bg-primary), overridden in the per-theme codex.css. A DOM-level
+   button[class*="primary"] selector matched 6 toolbar buttons (hide-sidebar,
+   back, forward, mode-switch, search) — NOT the composer send button — and
+   painted them accent-bg (over-rendering). Removed: no DOM button override.
+   The theme token layer owns button styling. */
 
 /* === Code blocks (visible in chat view) === */
 html.${HOST_CLASS} pre {

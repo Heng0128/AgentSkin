@@ -18,33 +18,31 @@ ${tokenBlock(t, host, t.variableBridge)}
 
 /* ===== Native token overrides (Codex --color-token-* system) ===== */
 ${codexColorTokenOverrides(host, t)}
-${shellStructureCss(host, t)}
+${shellStructureCss(host, t, 'codex')}
 ${sharedChromeRules(host, t)}
 
 /* ===== Codex component-level interaction layering =====
    Codex sidebar rows are <button class="sidebar-item">; the active thread is
-   flagged with the data-app-action-sidebar-thread-selected attribute (Tailwind
-   data-* variant), NOT [aria-current] / [class*=active]. Give hover + selected
-   an accent-tinted lift so the sidebar reads before/after instead of blending
-   into the frosted base — restores hover/selected interaction-state feedback.
-   Colors stay alpha-based so the frosted/backdrop-filter surfaces are preserved. */
-${host} button.sidebar-item,
-${host} [class*="sidebar"] button,
-${host} nav button,
-${host} aside button {
+   flagged with data-app-action-sidebar-thread-selected="true" (Tailwind data-*
+   variant), NOT [aria-current] / [class*=active]. PROBE-VERIFIED 2026-08-23:
+   - sidebar items: button.sidebar-item (exact class; do NOT use [class*="item"])
+   - active thread: [data-app-action-sidebar-thread-selected="true"]
+   - active thread row: [data-app-action-sidebar-thread-active="true"]
+   - project rows: [data-app-action-sidebar-project-id] (exact, not [class*=active])
+   Give hover + selected an accent-tinted lift so the sidebar reads before/after
+   instead of blending into the frosted base. Scoped to .sidebar-item and the
+   verified data-app-action-* state attributes ONLY — no broad descendants. */
+${host} button.sidebar-item {
   transition: background-color 120ms ease !important;
 }
 ${host} button.sidebar-item:hover,
-${host} [class*="sidebar"] button:hover,
-${host} nav button:hover,
-${host} aside button:hover {
+${host} [data-app-action-sidebar-project-id]:hover {
   background: ${hoverBg} !important;
 }
-${host} button.sidebar-item[data-app-action-sidebar-thread-selected],
-${host} [data-app-action-sidebar-thread-selected],
-${host} nav button[data-state="active"],
-${host} [class*="sidebar"] button[data-state="active"],
-${host} aside [class*="active"] {
+${host} button.sidebar-item[data-app-action-sidebar-thread-selected="true"],
+${host} [data-app-action-sidebar-thread-selected="true"],
+${host} [data-app-action-sidebar-thread-active="true"],
+${host} button.sidebar-item[data-app-action-sidebar-project-collapsed="false"] {
   background: ${activeBg} !important;
   box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
 }

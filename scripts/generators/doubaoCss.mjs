@@ -687,22 +687,23 @@ ${host} body::before {
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
-/* ===== Transparency punch-through ===== */
-${host} [class*="container"],
-${host} [class*="chat-wrapper"],
-${host} [class*="message-list"],
-${host} [class*="conversation"],
-${host} [class*="sidebar"],
-${host} [class*="panel"]:not([class*="float"]):not([class*="modal"]) {
+/* ===== Transparency punch-through =====
+   PROBE-VERIFIED 2026-08-23: [class*="item"] matched 217 elements,
+   [class*="sidebar"] button matched 32. Doubao exposes precise data-testid
+   anchors — use them exclusively (no sub-string class matching). */
+${host} [data-testid="chat_route_layout_leftside_nav"],
+${host} [data-testid="flow_chat_sidebar"],
+${host} [data-testid="chat_route_layout"],
+${host} [data-testid="chat_content"],
+${host} [role="main"] {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
 }
 
 /* Main layout containers — fully transparent so body art shows through directly */
-${host} [class*="bg-s-color-bg-body"],
-${host} [class*="center-bg"],
-${host} [class*="main-with-nav"] {
+${host} [data-testid="chat_route_layout_leftside_nav"] > div,
+${host} [data-testid="flow_chat_sidebar"] > div {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
@@ -847,24 +848,25 @@ ${host} [class*="input-guidance"] [class*="editor"] {
   background: transparent !important;
 }
 
-/* ===== Frosted sidebar — ultra transparent ===== */
-${host} [class*="sidebar"] {
+/* ===== Frosted sidebar — ultra transparent =====
+   PROBE-VERIFIED anchors: data-testid="flow_chat_sidebar" is the sidebar root;
+   nav items carry the Tailwind group marker "group/sidebar_nav_item" (exact,
+   NOT [class*="item"] which matched 217 elements). */
+${host} [data-testid="flow_chat_sidebar"],
+${host} [data-testid="chat_route_layout_leftside_nav"] {
   background: color-mix(in srgb, var(--agentskin-surface) 10%, transparent) !important;
   border-right: none !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
 /* Sidebar conversation items — transparent with accent hover */
-${host} [class*="sidebar"] [class*="item"],
-${host} [class*="sidebar"] [class*="session"],
-${host} [class*="sidebar"] a,
-${host} [class*="nav-list"] [class*="item"] {
+${host} [class~="group/sidebar_nav_item"],
+${host} [data-testid="flow_chat_sidebar"] a {
   background: transparent !important;
 }
 
-${host} [class*="sidebar"] [class*="item"]:hover,
-${host} [class*="sidebar"] [class*="session"]:hover,
-${host} [class*="sidebar"] a:hover {
+${host} [class~="group/sidebar_nav_item"]:hover,
+${host} [data-testid="flow_chat_sidebar"] a:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
 }
 
@@ -885,52 +887,50 @@ ${host} [class*="body-wrapper"] {
   background-image: none !important;
 }
 
-/* ===== Message bubbles: subtle surface tint, no border ===== */
-${host} [class*="message"][class*="bubble"],
-${host} [class*="msg-content"],
-${host} [class*="message-content"],
-${host} [class*="bubble"] {
+/* ===== Message bubbles: subtle surface tint, no border =====
+   PROBE-VERIFIED 2026-08-23: doubao DOM has no [class*="message"] bubbles;
+   chat renders via data-testid anchors. Drop sub-string guesses. */
+${host} [data-testid$="_message"],
+${host} [data-testid*="message_bubble"],
+${host} [data-testid*="msg_bubble"] {
   background: color-mix(in srgb, var(--agentskin-surface) 25%, transparent) !important;
   border: none !important;
   backdrop-filter: blur(6px) !important;
 }
 
-/* ===== Active nav / selected items: accent tint only ===== */
-${host} [class*="active"],
-${host} [class*="selected"],
-${host} [aria-selected="true"] {
+/* ===== Active nav / selected items: accent tint only =====
+   PROBE-VERIFIED: doubao nav uses data-active="true" (exact attr), NOT
+   [class*="active"] (which also matches "inactive", "reactive", …). */
+${host} [data-active="true"],
+${host} [aria-selected="true"],
+${host} [class~="group/sidebar_nav_item"][data-active="true"] {
   background: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
   border: none !important;
 }
 
 /* ===== Button color harmonization =====
-   Unify all button variants around a coherent palette:
-   - Primary/brand: accent fill + clean white text (not muddy background brown)
-   - Outlined/secondary: transparent + accent border + accent text
-   - Ghost/icon: transparent + accent hover tint
-   - AI buttons: keep gradient but align text color */
-${host} button[class*="primary"],
-${host} button[class*="send"],
-${host} [class*="btn-primary"],
-${host} [class*="btn-brand"] {
-  background: ${c.accent} !important;
-  color: #ffffff !important;
-  border: none !important;
+   PROBE-VERIFIED 2026-08-23: doubao buttons use data-dbx-name="button" +
+   data-testid (e.g. "siderbar_close_btn", "global-search-icon-entry"); there is
+   no [class*="primary"] / [class*="send"] class — those matched 24 toolbar
+   buttons and over-painted them. Theme buttons are driven by doubao's own
+   --s-color-* tokens; only the non-controlled sentinel needs our tint. */
+${host} button:not(.agentskin-non-controlled)[data-dbx-name="button"]:not([data-disabled="true"]) {
   transition: filter 140ms ease, background 140ms ease !important;
 }
 
-${host} button[class*="primary"]:hover,
-${host} button[class*="send"]:hover,
-${host} [class*="btn-primary"]:hover,
-${host} [class*="btn-brand"]:hover {
+${host} [data-testid="send_btn"],
+${host} [data-testid="send_btn"]:hover {
+  background: ${c.accent} !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+${host} [data-testid="send_btn"]:hover {
   background: ${shade(c.accent, 'black', 0.12)} !important;
   filter: brightness(1.05) !important;
 }
 
-${host} button[class*="primary"]:active,
-${host} button[class*="send"]:active,
-${host} [class*="btn-primary"]:active,
-${host} [class*="btn-brand"]:active {
+${host} [data-testid="send_btn"]:active {
   background: ${shade(c.accent, 'black', 0.24)} !important;
   filter: brightness(0.95) !important;
 }

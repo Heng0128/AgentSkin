@@ -637,14 +637,64 @@ export function zcodeColorTokenOverrides(host, t) {
 }
 
 /** Structural chrome shared by the shell-style agents (art layer, frosted
- *  sidebar/composer, popovers). Selectors are the heuristic L5 landmarks the
- *  per-agent adapter additionally positions via JS. */
-export function shellStructureCss(host, t) {
+ *  sidebar/composer, popovers).
+ *
+ *  OVER-RENDERING FIX (2026-08-23): the legacy `[class*="item"]` /
+ *  `[class*="active"]` / `button[class*="primary"]` sub-string selectors
+ *  over-matched container internals (probe-verified: doubao 217 items, codex
+ *  137 items, zcode 139 items). All selectors below now use per-agent PROBE-
+ *  VERIFIED exact anchors:
+ *    - codex: nav.app-shell-left-panel / button.sidebar-item /
+ *             [data-app-action-sidebar-thread-selected="true"]
+ *    - zcode: [data-workspace-sidebar-panel="true"] / [data-slot="button"] /
+ *             [data-state="active"] / [data-testid="..."]
+ *  `agent` selects the anchor set; unknown agents fall back to host-scoped
+ *  role selectors only (no class sub-string matching). */
+export function shellStructureCss(host, t, agent = 'generic') {
   const c = t.colors;
   const inputMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 45%, transparent)`;
   const sidebarMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 22%, transparent)`;
   const popoverBg = `color-mix(in srgb, ${c.surfaceElevated} 94%, transparent)`;
-  const buttonPrimaryFg = t.isLight ? '#ffffff' : shade(c.background, 'black', 0.85);
+
+  // PROBE-VERIFIED sidebar anchors per agent (2026-08-23).
+  const SIDEBAR_ROOT = {
+    codex: '.app-shell-left-panel',
+    zcode: '[data-workspace-sidebar-panel="true"]',
+  };
+  // PROBE-VERIFIED sidebar item hover + active anchors per agent.
+  const ITEM_HOVER = {
+    codex: 'button.sidebar-item:hover, [data-app-action-sidebar-project-id]:hover',
+    zcode: '[data-slot="button"]:hover',
+  };
+  const ITEM_ACTIVE = {
+    codex:
+      '[data-app-action-sidebar-thread-selected="true"], [data-app-action-sidebar-thread-active="true"]',
+    zcode: '[data-state="active"], [aria-current]',
+  };
+
+  const sidebarRoot = SIDEBAR_ROOT[agent] ?? 'aside, nav';
+  const itemHover = ITEM_HOVER[agent] ?? '';
+  const itemActive = ITEM_ACTIVE[agent] ?? '';
+
+  // Prefix every comma-separated selector in the per-agent anchors with the host
+  // scope — otherwise the 2nd+ selectors leak globally (over-rendering).
+  const scopeAll = (sel) =>
+    sel
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((s) => `${host} ${s}`)
+      .join(',\n');
+  const hoverScoped = itemHover ? scopeAll(itemHover) : '';
+  const activeScoped = itemActive ? scopeAll(itemActive) : '';
+
+  // Composer / input anchor (kept generic — contenteditable is a standard role).
+  const composerSel =
+    agent === 'codex'
+      ? '.composer-surface-chrome, [class*="_multilineSurface_"]'
+      : '[contenteditable="true"], textarea';
+  const composerScoped = scopeAll(composerSel);
+
   return `/* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
 ${artLayerCss(host, t)}
 
@@ -658,28 +708,30 @@ ${host} [role="main"] {
   color: var(--agentskin-text) !important;
 }
 
-/* Sidebar: frosted glass over art */
-${host} aside,
-${host} nav {
+/* Sidebar: frosted glass over art (PROBE-VERIFIED exact root) */
+${host} ${sidebarRoot} {
   background: ${sidebarMix} !important;
   border-right: 1px solid ${alpha(c.accent, 0.1)} !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
-
-${host} aside [class*="item"]:hover,
-${host} nav [class*="item"]:hover {
-  background: var(--bg-hover) !important;
+${
+  hoverScoped
+    ? `${hoverScoped} {
+  background: ${alpha(c.accent, 0.1)} !important;
+}`
+    : ''
 }
-
-${host} aside [class*="active"],
-${host} nav [class*="active"] {
-  background: var(--bg-active) !important;
-  box-shadow: inset 3px 0 0 0 var(--accent) !important;
+${
+  activeScoped
+    ? `${activeScoped} {
+  background: ${alpha(c.accent, 0.16)} !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
+}`
+    : ''
 }
 
 /* Composer / input: frosted glass */
-${host} [contenteditable="true"],
-${host} textarea {
+${composerScoped} {
   background: ${inputMix} !important;
   backdrop-filter: blur(14px) saturate(1.1) !important;
   color: var(--agentskin-text) !important;
@@ -689,43 +741,24 @@ ${host} textarea {
   box-shadow: none !important;
 }
 
+${composerScoped}:focus,
 ${host} [contenteditable="true"]:focus,
-${host} [contenteditable="true"]:focus-within,
-${host} textarea:focus {
+${host} [contenteditable="true"]:focus-within {
   border-color: ${alpha(c.accent, 0.5)} !important;
   box-shadow: 0 0 0 2px ${alpha(c.accent, 0.1)}, 0 4px 18px ${alpha(c.secondary, 0.12)} !important;
 }
 
-/* Buttons */
-${host} button[class*="primary"],
-${host} button[class*="send"],
-${host} button[class*="submit"] {
-  background: linear-gradient(135deg, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 62%, var(--agentskin-secondary) 38%) 100%) !important;
-  color: ${buttonPrimaryFg} !important;
-  border: none !important;
-  box-shadow: 0 2px 10px var(--agentskin-focus-ring) !important;
-  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
-}
-
-${host} button[class*="primary"]:hover,
-${host} button[class*="send"]:hover,
-${host} button[class*="submit"]:hover {
-  filter: brightness(1.07) !important;
-  transform: translateY(-1px) !important;
-}
-
-/* Message text */
-${host} [class*="message"],
+/* Message text (role-scoped — no [class*="message"] sub-string spray) */
+${host} [role="log"],
 ${host} article {
   color: var(--agentskin-text);
 }
 
-/* Popovers / modals: frosted glass */
+/* Popovers / modals: frosted glass (role-scoped + exact classes only) */
 ${host} [role="dialog"],
 ${host} [role="menu"],
 ${host} [role="tooltip"],
-${host} [class*="popover"],
-${host} [class*="modal"] {
+${host} [role="listbox"] {
   background: ${popoverBg} !important;
   border: none !important;
   backdrop-filter: blur(18px) saturate(1.08) !important;

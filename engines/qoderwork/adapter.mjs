@@ -104,10 +104,14 @@ html.${HOST_CLASS} [class*="workspace-panel"] {
 html.${HOST_CLASS} .agents-sidebar {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
 }
-html.${HOST_CLASS} .agents-sidebar [class*="item"]:hover {
+/* PROBE-VERIFIED 2026-08-23: nav items are button.group/extensions-nav;
+   active is data-active="true". [class*="item"] also matched the resize
+   handle (cursor-col-resize) — removed. */
+html.${HOST_CLASS} .agents-sidebar button[class~="group/extensions-nav"]:hover,
+html.${HOST_CLASS} .agents-sidebar [data-extension-nav-item="true"]:hover {
   background: var(--color-primary-bg-hover) !important;
 }
-html.${HOST_CLASS} .agents-sidebar [class*="active"] {
+html.${HOST_CLASS} .agents-sidebar [data-active="true"] {
   background: var(--color-primary-bg-hover) !important;
 }
 

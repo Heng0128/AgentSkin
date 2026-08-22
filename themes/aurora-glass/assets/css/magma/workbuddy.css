@@ -383,20 +383,17 @@ body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb:hover {
 
 /* Component touches — buttons, code, links, sidebar motion. Brings WorkBuddy
    to the same polish level as the qoderwork/traework sheets so all three
-   agents feel equally crafted instead of workbuddy being the plain one. */
-button[class*="primary"],
-button[class*="send"],
-[class*="composer"] button[class*="submit"] {
-  background: linear-gradient(135deg, var(--wb-accent) 0%, color-mix(in srgb, var(--wb-accent) 62%, var(--wb-secondary) 38%) 100%) !important;
-  color: #ffffff !important;
-  border: none !important;
-  box-shadow: 0 2px 10px var(--agentskin-focus-ring) !important;
+   agents feel equally crafted instead of workbuddy being the plain one.
+   PROBE-VERIFIED 2026-08-23: WorkBuddy buttons are .wb-button (BEM) —
+   wb-button--ghost / --medium / --icon-only for toolbar icons; there is no
+   [class*="primary"] / [class*="send"] class in the DOM (those selectors
+   matched nothing and are removed). */
+.wb-button {
   transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
-button[class*="primary"]:hover,
-button[class*="send"]:hover,
-[class*="composer"] button[class*="submit"]:hover {
+.wb-button--primary:hover,
+.wb-button--filled:hover {
   filter: brightness(1.07);
   transform: translateY(-1px);
 }
@@ -429,9 +426,13 @@ a:hover {
   opacity: 0.82;
 }
 
-/* Sidebar item motion */
-[data-view-id="sidebar"] [class*="item"],
-.conversation-list [class*="item"] {
+/* Sidebar item motion
+   PROBE-VERIFIED 2026-08-23: WorkBuddy sidebar is .conversation-sidebar →
+   .conversation-list; rows are conversation-item-* (exact BEM). Use the
+   precise .conversation-list scope only — [class*="item"] matched 31
+   unrelated elements and over-animated them. */
+.conversation-sidebar .conversation-list button,
+.conversation-sidebar [class*="conversation-item"] {
   transition: background 140ms ease;
 }
 

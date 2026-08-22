@@ -108,12 +108,20 @@ html.${HOST_CLASS} .task-list-panel {
   border-right: none !important;
   color: var(--agentskin-text) !important;
 }
-html.${HOST_CLASS} .task-list-base [class*="item"]:hover,
-html.${HOST_CLASS} .task-list-panel [class*="item"]:hover {
+/* PROBE-VERIFIED 2026-08-23: TRAE task rows are div.task-list-new-task-item
+   (exact BEM-ish class; active = trailing "active" class, aria-selected for
+   tabs). [class*="item"] matched 105 unrelated elements — replaced with the
+   exact task-list-* item classes. */
+html.${HOST_CLASS} .task-list-base [class*="task-list-new-task-item"]:hover,
+html.${HOST_CLASS} .task-list-base [class*="task-list-skills-item"]:hover,
+html.${HOST_CLASS} .task-list-panel [class*="task-list-new-task-item"]:hover,
+html.${HOST_CLASS} .task-list-panel [class*="task-list-skills-item"]:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
 }
-html.${HOST_CLASS} .task-list-base [class*="active"],
-html.${HOST_CLASS} .task-list-panel [class*="active"] {
+html.${HOST_CLASS} .task-list-base [class*="task-list-new-task-item"].active,
+html.${HOST_CLASS} .task-list-base [class*="task-list-skills-item"].active,
+html.${HOST_CLASS} .task-list-panel [class*="task-list-new-task-item"].active,
+html.${HOST_CLASS} .task-list-panel [class*="task-list-skills-item"].active {
   background: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
 }
 
@@ -204,20 +212,23 @@ html.${HOST_CLASS} [class*="messageInputPluginToolbar"] {
   color: var(--agentskin-text) !important;
 }
 
-/* === Message text === */
-html.${HOST_CLASS} [class*="message"],
+/* === Message text ===
+   PROBE-VERIFIED 2026-08-23: [class*="message"] matched 120 elements
+   (messageInputContainer, messageInputToolbar, message-count, message-icon…)
+   — over-broad. Use role-scoped + article only. */
+html.${HOST_CLASS} [role="log"],
 html.${HOST_CLASS} article {
   color: var(--agentskin-text);
 }
 
 /* === Message bubbles: kill native squared box-shadow on side bubbles ===
    The host applies a harsh square box-shadow to chat bubbles; our frosted
-   surface tint replaces it, so the native shadow must be removed. */
+   surface tint replaces it, so the native shadow must be removed.
+   Scoped to explicit bubble-ish classes only (no bare [class*="bubble"]). */
 html.${HOST_CLASS} [class*="message-bubble"],
 html.${HOST_CLASS} [class*="messageBubble"],
 html.${HOST_CLASS} [class*="msg-bubble"],
 html.${HOST_CLASS} [class*="chat-bubble"],
-html.${HOST_CLASS} [class*="bubble"],
 html.${HOST_CLASS} [class*="message-content"],
 html.${HOST_CLASS} [class*="msg-content"] {
   box-shadow: none !important;
@@ -267,16 +278,17 @@ html.${HOST_CLASS} a[class*="link"]:hover {
   color: var(--agentskin-secondary) !important;
 }
 
-/* === Mode switcher / tabs === */
-html.${HOST_CLASS} [class*="mode-switcher"] [class*="btn"],
-html.${HOST_CLASS} [class*="tab-item"],
-html.${HOST_CLASS} [class*="segmented"] [class*="item"] {
+/* === Mode switcher / tabs ===
+   PROBE-VERIFIED 2026-08-23: TRAE uses exact classes — mode-switcher-btn,
+   tab-* (CSS-module hash) with aria-selected for active state. Drop
+   [class*="segmented"] [class*="item"] and bare [class*="active"] guesses
+   ([class*="item"] matched 105 elements). */
+html.${HOST_CLASS} [class*="mode-switcher-btn"] {
   color: var(--agentskin-text) !important;
   background: transparent !important;
 }
-html.${HOST_CLASS} [class*="mode-switcher"] [class*="active"],
-html.${HOST_CLASS} [class*="tab-item"][class*="active"],
-html.${HOST_CLASS} [class*="segmented"] [class*="active"] {
+html.${HOST_CLASS} [class*="mode-switcher-btn"][class*="active"],
+html.${HOST_CLASS} button[role="tab"][aria-selected="true"] {
   color: var(--agentskin-accent) !important;
   background: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
 }

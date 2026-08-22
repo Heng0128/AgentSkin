@@ -219,11 +219,17 @@ ${host} .agents-sidebar {
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
-${host} .agents-sidebar [class*="item"]:hover {
+/* PROBE-VERIFIED 2026-08-23: qoderwork nav items are
+   button.group/extensions-nav (exact Tailwind group marker); active state is
+   data-active="true" (exact attr). [class*="item"] also hit the resize
+   handle (cursor-col-resize) — removed. */
+${host} .agents-sidebar button[class~="group/extensions-nav"]:hover,
+${host} .agents-sidebar [data-extension-nav-item="true"]:hover {
   background: var(--color-primary-bg-hover) !important;
 }
 
-${host} .agents-sidebar [class*="active"] {
+${host} .agents-sidebar button[class~="group/extensions-nav"][data-active="true"],
+${host} .agents-sidebar [data-active="true"] {
   background: var(--color-primary-bg-hover) !important;
   box-shadow: inset 3px 0 0 0 var(--color-primary), inset 0 0 0 1px var(--color-primary-border) !important;
 }

@@ -210,13 +210,20 @@ ${host} .task-list-panel {
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
-${host} .task-list-base [class*="item"]:hover,
-${host} .task-list-panel [class*="item"]:hover {
+/* PROBE-VERIFIED 2026-08-23: TRAE task rows are div.task-list-new-task-item
+   (exact class; active = trailing "active" class). Scope to the exact
+   task-list-* item classes under the exact containers. */
+${host} .task-list-base .task-list-new-task-item,
+${host} .task-list-base [class*="task-list-skills-item"],
+${host} .task-list-panel .task-list-new-task-item,
+${host} .task-list-panel [class*="task-list-skills-item"]:hover {
   background: ${hoverBg} !important;
 }
 
-${host} .task-list-base [class*="active"],
-${host} .task-list-panel [class*="active"] {
+${host} .task-list-base .task-list-new-task-item.active,
+${host} .task-list-base [class*="task-list-skills-item"].active,
+${host} .task-list-panel .task-list-new-task-item.active,
+${host} .task-list-panel [class*="task-list-skills-item"].active {
   background: ${hoverBg2} !important;
   box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px ${alpha(c.accent, 0.32)} !important;
 }
@@ -257,23 +264,26 @@ ${host} [class*="chat-input-primary-glow"]:focus-within {
 }
 
 /* ---- buttons ---- */
-${host} button[class*="primary"],
-${host} button[class*="send"] {
-  background: linear-gradient(135deg, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 62%, var(--agentskin-secondary) 38%) 100%) !important;
-  color: ${t.isLight ? '#ffffff' : shade(c.background, 'black', 0.85)} !important;
-  border: none !important;
-  box-shadow: 0 2px 10px var(--agentskin-focus-ring) !important;
+/* PROBE-VERIFIED 2026-08-23: TRAE buttons are .solo-common-button /
+   .solo-header-btn / .solo-icon-btn (exact BEM). No [class*="primary"] /
+   [class*="send"] classes exist in the DOM. */
+${host} .solo-common-button,
+${host} .solo-header-btn,
+${host} [class*="solo-common-button"] {
   transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
 }
 
-${host} button[class*="primary"]:hover,
-${host} button[class*="send"]:hover {
+${host} .solo-common-button:hover,
+${host} .solo-header-btn:hover {
   filter: brightness(1.07) !important;
   transform: translateY(-1px) !important;
 }
 
 /* ---- message text ---- */
-${host} [class*="message"],
+/* PROBE-VERIFIED 2026-08-23: [class*="message"] matched 120 elements
+   (message-icon, message-count, message-list …) — over-broad. Use role-scoped
+   log/status + exact article only. */
+${host} [role="log"],
 ${host} article {
   color: var(--agentskin-text);
 }
@@ -361,16 +371,15 @@ ${host} a[class*="link"]:hover {
   color: var(--agentskin-secondary) !important;
 }
 
-/* ---- contrast fix: mode switcher / tab buttons ---- */
-${host} [class*="mode-switcher"] [class*="btn"],
-${host} [class*="tab-item"],
-${host} [class*="segmented"] [class*="item"] {
+/* ---- contrast fix: tab buttons ----
+   PROBE-VERIFIED 2026-08-23: TRAE tabs are button[role="tab"] (CSS-module
+   hash class, aria-selected="true" for active). Use the ARIA role — no
+   class sub-string guessing. */
+${host} button[role="tab"] {
   color: var(--agentskin-text) !important;
   background: transparent !important;
 }
-${host} [class*="mode-switcher"] [class*="active"],
-${host} [class*="tab-item"][class*="active"],
-${host} [class*="segmented"] [class*="active"] {
+${host} button[role="tab"][aria-selected="true"] {
   color: var(--agentskin-accent) !important;
   background: ${hoverBg} !important;
 }

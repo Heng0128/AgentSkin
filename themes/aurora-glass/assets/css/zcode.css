@@ -233,23 +233,19 @@ html.agentskin-host-zcode [role="main"] {
   color: var(--agentskin-text) !important;
 }
 
-/* Sidebar: frosted glass over art */
-html.agentskin-host-zcode aside,
-html.agentskin-host-zcode nav {
+/* Sidebar: frosted glass over art (PROBE-VERIFIED exact root) */
+html.agentskin-host-zcode [data-workspace-sidebar-panel="true"] {
   background: color-mix(in srgb, color-mix(in srgb, #121829 82%, #6ee7d3 18%) 22%, transparent) !important;
   border-right: 1px solid rgba(110, 231, 211, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
-
-html.agentskin-host-zcode aside [class*="item"]:hover,
-html.agentskin-host-zcode nav [class*="item"]:hover {
-  background: var(--bg-hover) !important;
+html.agentskin-host-zcode [data-slot="button"]:hover {
+  background: rgba(110, 231, 211, 0.1) !important;
 }
-
-html.agentskin-host-zcode aside [class*="active"],
-html.agentskin-host-zcode nav [class*="active"] {
-  background: var(--bg-active) !important;
-  box-shadow: inset 3px 0 0 0 var(--accent) !important;
+html.agentskin-host-zcode [data-state="active"],
+html.agentskin-host-zcode [aria-current] {
+  background: rgba(110, 231, 211, 0.16) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
 }
 
 /* Composer / input: frosted glass */
@@ -264,43 +260,25 @@ html.agentskin-host-zcode textarea {
   box-shadow: none !important;
 }
 
+html.agentskin-host-zcode [contenteditable="true"],
+html.agentskin-host-zcode textarea:focus,
 html.agentskin-host-zcode [contenteditable="true"]:focus,
-html.agentskin-host-zcode [contenteditable="true"]:focus-within,
-html.agentskin-host-zcode textarea:focus {
+html.agentskin-host-zcode [contenteditable="true"]:focus-within {
   border-color: rgba(110, 231, 211, 0.5) !important;
   box-shadow: 0 0 0 2px rgba(110, 231, 211, 0.1), 0 4px 18px rgba(155, 140, 255, 0.12) !important;
 }
 
-/* Buttons */
-html.agentskin-host-zcode button[class*="primary"],
-html.agentskin-host-zcode button[class*="send"],
-html.agentskin-host-zcode button[class*="submit"] {
-  background: linear-gradient(135deg, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 62%, var(--agentskin-secondary) 38%) 100%) !important;
-  color: rgb(2, 2, 4) !important;
-  border: none !important;
-  box-shadow: 0 2px 10px var(--agentskin-focus-ring) !important;
-  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
-}
-
-html.agentskin-host-zcode button[class*="primary"]:hover,
-html.agentskin-host-zcode button[class*="send"]:hover,
-html.agentskin-host-zcode button[class*="submit"]:hover {
-  filter: brightness(1.07) !important;
-  transform: translateY(-1px) !important;
-}
-
-/* Message text */
-html.agentskin-host-zcode [class*="message"],
+/* Message text (role-scoped — no [class*="message"] sub-string spray) */
+html.agentskin-host-zcode [role="log"],
 html.agentskin-host-zcode article {
   color: var(--agentskin-text);
 }
 
-/* Popovers / modals: frosted glass */
+/* Popovers / modals: frosted glass (role-scoped + exact classes only) */
 html.agentskin-host-zcode [role="dialog"],
 html.agentskin-host-zcode [role="menu"],
 html.agentskin-host-zcode [role="tooltip"],
-html.agentskin-host-zcode [class*="popover"],
-html.agentskin-host-zcode [class*="modal"] {
+html.agentskin-host-zcode [role="listbox"] {
   background: color-mix(in srgb, #1a2236 94%, transparent) !important;
   border: none !important;
   backdrop-filter: blur(18px) saturate(1.08) !important;

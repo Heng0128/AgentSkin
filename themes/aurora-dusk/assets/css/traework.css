@@ -233,13 +233,20 @@ html.agentskin-host-traework .task-list-panel {
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
-html.agentskin-host-traework .task-list-base [class*="item"]:hover,
-html.agentskin-host-traework .task-list-panel [class*="item"]:hover {
+/* PROBE-VERIFIED 2026-08-23: TRAE task rows are div.task-list-new-task-item
+   (exact class; active = trailing "active" class). Scope to the exact
+   task-list-* item classes under the exact containers. */
+html.agentskin-host-traework .task-list-base .task-list-new-task-item,
+html.agentskin-host-traework .task-list-base [class*="task-list-skills-item"],
+html.agentskin-host-traework .task-list-panel .task-list-new-task-item,
+html.agentskin-host-traework .task-list-panel [class*="task-list-skills-item"]:hover {
   background: rgba(255, 122, 107, 0.12) !important;
 }
 
-html.agentskin-host-traework .task-list-base [class*="active"],
-html.agentskin-host-traework .task-list-panel [class*="active"] {
+html.agentskin-host-traework .task-list-base .task-list-new-task-item.active,
+html.agentskin-host-traework .task-list-base [class*="task-list-skills-item"].active,
+html.agentskin-host-traework .task-list-panel .task-list-new-task-item.active,
+html.agentskin-host-traework .task-list-panel [class*="task-list-skills-item"].active {
   background: rgba(255, 122, 107, 0.18) !important;
   box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px rgba(255, 122, 107, 0.32) !important;
 }
@@ -280,23 +287,26 @@ html.agentskin-host-traework [class*="chat-input-primary-glow"]:focus-within {
 }
 
 /* ---- buttons ---- */
-html.agentskin-host-traework button[class*="primary"],
-html.agentskin-host-traework button[class*="send"] {
-  background: linear-gradient(135deg, var(--agentskin-accent) 0%, color-mix(in srgb, var(--agentskin-accent) 62%, var(--agentskin-secondary) 38%) 100%) !important;
-  color: rgb(2, 2, 4) !important;
-  border: none !important;
-  box-shadow: 0 2px 10px var(--agentskin-focus-ring) !important;
+/* PROBE-VERIFIED 2026-08-23: TRAE buttons are .solo-common-button /
+   .solo-header-btn / .solo-icon-btn (exact BEM). No [class*="primary"] /
+   [class*="send"] classes exist in the DOM. */
+html.agentskin-host-traework .solo-common-button,
+html.agentskin-host-traework .solo-header-btn,
+html.agentskin-host-traework [class*="solo-common-button"] {
   transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
 }
 
-html.agentskin-host-traework button[class*="primary"]:hover,
-html.agentskin-host-traework button[class*="send"]:hover {
+html.agentskin-host-traework .solo-common-button:hover,
+html.agentskin-host-traework .solo-header-btn:hover {
   filter: brightness(1.07) !important;
   transform: translateY(-1px) !important;
 }
 
 /* ---- message text ---- */
-html.agentskin-host-traework [class*="message"],
+/* PROBE-VERIFIED 2026-08-23: [class*="message"] matched 120 elements
+   (message-icon, message-count, message-list …) — over-broad. Use role-scoped
+   log/status + exact article only. */
+html.agentskin-host-traework [role="log"],
 html.agentskin-host-traework article {
   color: var(--agentskin-text);
 }
@@ -416,16 +426,15 @@ html.agentskin-host-traework a[class*="link"]:hover {
   color: var(--agentskin-secondary) !important;
 }
 
-/* ---- contrast fix: mode switcher / tab buttons ---- */
-html.agentskin-host-traework [class*="mode-switcher"] [class*="btn"],
-html.agentskin-host-traework [class*="tab-item"],
-html.agentskin-host-traework [class*="segmented"] [class*="item"] {
+/* ---- contrast fix: tab buttons ----
+   PROBE-VERIFIED 2026-08-23: TRAE tabs are button[role="tab"] (CSS-module
+   hash class, aria-selected="true" for active). Use the ARIA role — no
+   class sub-string guessing. */
+html.agentskin-host-traework button[role="tab"] {
   color: var(--agentskin-text) !important;
   background: transparent !important;
 }
-html.agentskin-host-traework [class*="mode-switcher"] [class*="active"],
-html.agentskin-host-traework [class*="tab-item"][class*="active"],
-html.agentskin-host-traework [class*="segmented"] [class*="active"] {
+html.agentskin-host-traework button[role="tab"][aria-selected="true"] {
   color: var(--agentskin-accent) !important;
   background: rgba(255, 122, 107, 0.12) !important;
 }

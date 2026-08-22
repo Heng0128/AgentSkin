@@ -17,7 +17,7 @@ ${tokenBlock(t, host)}
 /* ===== Native token overrides (wins over :root[data-theme]) ===== */
 ${shellTokenOverrides(host, t)}
 ${zcodeColorTokenOverrides(host, t)}
-${shellStructureCss(host, t)}
+${shellStructureCss(host, t, 'zcode')}
 ${sharedChromeRules(host, t)}
 
 /* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ----
