@@ -59,6 +59,48 @@ function currentT(): UiMessages {
   return uiMessages[useShellStore.getState().locale];
 }
 
+/**
+ * i18n fallbacks for error banners. These are narrowly-scoped fallbacks used
+ * only when a locale omits the corresponding key; the canonical copy lives in
+ * the i18n message tables (see direction E — i18n completeness). Kept as
+ * module constants so the hardcoded Chinese strings are not duplicated inline.
+ */
+const PUSH_FAILED_FALLBACK = '实时推送失败：';
+const IMPORT_FAILED_FALLBACK = '导入失败：';
+
+/**
+ * Shared error-banner shell. Replaces the previously inline, CSS-variable
+ * driven alert with semantic design-system classes (destructive tint), so the
+ * styling stays consistent with the rest of the app instead of reaching for
+ * the internal `--redbg` alias directly.
+ */
+function ErrorBanner({
+  message,
+  label,
+  onDismiss,
+  dismissLabel,
+}: {
+  message: string;
+  label: string;
+  onDismiss: () => void;
+  dismissLabel: string;
+}) {
+  return (
+    <div
+      role="alert"
+      className="flex items-center justify-between gap-3 rounded-md bg-destructive/10 px-4 py-3"
+    >
+      <p className="min-w-0 flex-1 truncate text-[12px] text-destructive">
+        {label}
+        {message}
+      </p>
+      <Button variant="ghost" size="sm" onClick={onDismiss}>
+        {dismissLabel}
+      </Button>
+    </div>
+  );
+}
+
 export function WorkspacePage() {
   const t = currentT();
 
@@ -342,21 +384,13 @@ export function WorkspacePage() {
                   {t.workspaceTweakControls}
                 </span>
                 {pushError && (
-                  <div
-                    role="alert"
-                    className="mb-5 flex items-center justify-between gap-3 rounded-md px-4 py-3"
-                    style={{ background: 'var(--redbg)' }}
-                  >
-                    <p
-                      className="min-w-0 flex-1 truncate text-[12px]"
-                      style={{ color: 'var(--destructive)' }}
-                    >
-                      {t.workspacePushFailed ?? '实时推送失败：'}
-                      {pushError}
-                    </p>
-                    <Button variant="ghost" size="sm" onClick={clearPushError}>
-                      {t.commonDismiss ?? '关闭'}
-                    </Button>
+                  <div className="mb-5">
+                    <ErrorBanner
+                      message={pushError}
+                      label={t.workspacePushFailed ?? PUSH_FAILED_FALLBACK}
+                      onDismiss={clearPushError}
+                      dismissLabel={t.commonDismiss ?? '关闭'}
+                    />
                   </div>
                 )}
 
@@ -443,18 +477,12 @@ export function WorkspacePage() {
 
                 {/* M9: import error display */}
                 {importError && (
-                  <div
-                    role="alert"
-                    className="flex items-center justify-between gap-3 rounded-md px-3 py-2"
-                    style={{ background: 'var(--redbg)' }}
-                  >
-                    <p className="text-[11px]" style={{ color: 'var(--destructive)' }}>
-                      导入失败：{importError}
-                    </p>
-                    <Button variant="ghost" size="sm" onClick={() => setImportError(null)}>
-                      {t.commonDismiss ?? '关闭'}
-                    </Button>
-                  </div>
+                  <ErrorBanner
+                    message={importError}
+                    label={IMPORT_FAILED_FALLBACK}
+                    onDismiss={() => setImportError(null)}
+                    dismissLabel={t.commonDismiss ?? '关闭'}
+                  />
                 )}
               </section>
             </>
