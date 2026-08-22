@@ -1,0 +1,170 @@
+// SPDX-License-Identifier: MPL-2.0
+
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
+import { useShellStore } from '@/stores/shellStore';
+import { useStatusStore } from '@/stores/statusStore';
+
+import type { UiMessages } from '@shared/i18n';
+import { uiMessages } from '@shared/i18n';
+import type { SystemStatus } from '@shared/types';
+
+/**
+ * # StatusBar
+ *
+ * Fixed 28px strip pinned to the bottom of the window.
+ *
+ *   Left   → LED + CDP status (running / standby / offline)
+ *   Center → platform count · injected count
+ *   Right  → inject dock · local · clock · version
+ *
+ * No controller dependency — reads directly from shellStore + statusStore.
+ */
+
+/** Derive CDP/aggregate status from live system snapshot. */
+function deriveCdpState(status: SystemStatus | null): 'running' | 'standby' | 'offline' {
+  if (!status || status.apps.length === 0) return 'offline';
+  const allReady = status.apps.every((app) => app.debugReady);
+  if (allReady) return 'running';
+  const anyRunning = status.apps.some((app) => app.running);
+  return anyRunning ? 'standby' : 'offline';
+}
+
+interface LedState {
+  variant: 'running' | 'standby' | 'offline';
+  label: string;
+}
+
+/** Local HH:mm:ss tick — re-renders only once a second. */
+function useTick(): string {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+/**
+ * Clock — isolated into its own component so the 1s ticker re-renders only
+ * this <span>, not the whole StatusBar (which holds store subscriptions that
+ * would otherwise re-read on every second).
+ */
+function Clock() {
+  return (
+    <span className="font-mono tabular-nums text-[11px] font-medium text-muted-foreground/70">
+      {useTick()}
+    </span>
+  );
+}
+
+const LED_STYLE: Record<LedState['variant'], { dot: string }> = {
+  running: {
+    dot: 'bg-cr-success',
+  },
+  standby: {
+    dot: 'bg-cr-warning',
+  },
+  offline: {
+    dot: 'bg-muted-foreground/30',
+  },
+};
+
+export function StatusBar() {
+  const locale = useShellStore((s) => s.locale);
+  const appVersion = useShellStore((s) => s.appVersion);
+  const injectDockOpen = useShellStore((s) => s.injectDockOpen);
+  const setInjectDockOpen = useShellStore((s) => s.setInjectDockOpen);
+  const status = useStatusStore((s) => s.status);
+  const statusError = useStatusStore((s) => s.error);
+  const statusRefreshing = useStatusStore((s) => s.isRefreshing);
+  const refreshStatus = useStatusStore((s) => s.refreshStatus);
+  const t: UiMessages = uiMessages[locale];
+
+  const variant = deriveCdpState(status);
+  const cdpLabel =
+    variant === 'running'
+      ? t.statusLedRunning
+      : variant === 'standby'
+        ? t.statusLedStandby
+        : t.statusLedOffline;
+
+  const led = LED_STYLE[variant];
+
+  // Aggregate counts from the live status snapshot.
+  const totalPlatforms = status?.apps.length ?? 0;
+  const onlineCount = status?.apps.filter((app) => app.running).length ?? 0;
+  const injectedCount = status?.apps.filter((app) => app.activeThemeId !== null).length ?? 0;
+
+  return (
+    <footer className="flex h-[28px] shrink-0 items-center justify-between gap-4  bg-[var(--surface)] px-3 [-webkit-app-region:drag] transition-[background] duration-slower">
+      {/* Left cluster: LED + CDP status. */}
+      <div className="flex items-center gap-1 [-webkit-app-region:no-drag]">
+        <span className={cn('size-2 shrink-0 rounded-full', led.dot)} aria-hidden />
+        <span className="as-label">{cdpLabel}</span>
+      </div>
+
+      {/* Center cluster: platform count · injected · status error with retry. */}
+      <div className="hidden items-center gap-1 text-[11px] font-medium lg:flex [-webkit-app-region:no-drag]">
+        <span className="text-muted-foreground">
+          {t.statusPlatformOnline(onlineCount, totalPlatforms)}
+        </span>
+        <span className="text-muted-foreground/40">·</span>
+        <span className="text-muted-foreground">{t.statusInjected(injectedCount)}</span>
+        {statusError ? (
+          <>
+            <span className="text-muted-foreground/40">·</span>
+            <button
+              type="button"
+              disabled={statusRefreshing}
+              onClick={() => void refreshStatus()}
+              title={statusError}
+              className={cn(
+                'inline-flex items-center gap-0 rounded-md border border-destructive/30 bg-card2 px-1 py-0',
+                'text-[11px] leading-tight text-destructive transition-colors duration-fast',
+                statusRefreshing
+                  ? 'cursor-not-allowed opacity-50'
+                  : 'hover:bg-destructive/10 active:translate-y-[1px]',
+              )}
+            >
+              {statusRefreshing ? '···' : '↻'}
+            </button>
+          </>
+        ) : null}
+      </div>
+
+      {/* Right cluster: inject dock · local · no upload · clock · version. */}
+      <div className="flex items-center gap-2 [-webkit-app-region:no-drag]">
+        {/* Inject dock — icon button (⏏ symbol, 27x27px rounded-md). */}
+        <button
+          type="button"
+          title={t.injectDockTitle}
+          aria-label={t.injectDockTitle}
+          aria-pressed={injectDockOpen}
+          onClick={() => setInjectDockOpen((open) => !open)}
+          className={cn(
+            'inline-grid place-items-center size-7 rounded-md border bg-transparent text-[11px] transition-[background,border-color] duration-slower active:translate-y-[1px]',
+            injectDockOpen
+              ? 'border-primary bg-card2 text-primary'
+              : 'text-muted-foreground hover:bg-card2 hover:text-foreground',
+          )}
+        >
+          ⏏
+        </button>
+        <span className="text-[11px] font-medium text-muted-foreground/60">
+          {t.statusLocalOnly}
+        </span>
+        <Clock />
+        <button
+          type="button"
+          title={t.statusVersionTip}
+          aria-label={t.statusVersionTip}
+          onClick={() => void navigator.clipboard?.writeText(appVersion)}
+          className="text-[11px] font-medium text-muted-foreground/50 transition-colors duration-fast hover:text-foreground"
+        >
+          v{appVersion}
+        </button>
+      </div>
+    </footer>
+  );
+}

@@ -1,0 +1,619 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentskin.dev/schema/manifest-v2.json",
+  "title": "AgentSkin Theme Manifest v2",
+  "description": "Schema for AgentSkin theme package manifest.json files (v2.1+)",
+  "type": "object",
+  "required": ["id", "name", "version", "icon", "preview", "colors"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor validation"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "enum": [1, 2, 3],
+      "description": "Manifest schema version (1=legacy, 2=expanded, 2.5+=design language support)"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "description": "Stable theme identifier (lowercase alphanumeric + hyphens)"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "description": "Human-readable display name"
+    },
+    "displayName": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "Optional localized display name (e.g. 赛博霓虹)"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+      "description": "Semantic version string"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Optional human-readable description"
+    },
+    "icon": {
+      "type": "string",
+      "pattern": "^[^/\\\\]+$",
+      "description": "Filename (relative to manifest) pointing to the theme icon PNG"
+    },
+    "preview": {
+      "type": "string",
+      "description": "Filename (relative to manifest) pointing to the preview screenshot"
+    },
+    "hero": {
+      "type": "string",
+      "description": "Optional filename pointing to hero artwork (png/webp/jpeg)"
+    },
+    "art": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this theme ships hero artwork (default true)"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["dark", "light", "auto"],
+      "description": "Preferred color mode"
+    },
+    "colorSchemes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9][a-z0-9_-]*$"
+      },
+      "maxItems": 20,
+      "description": "Alternative color scheme ids (v2.2+). Each id resolves to color-schemes/<id>.json whose colors match the manifest colors shape. The id 'default' is reserved for the manifest's own colors."
+    },
+    "colors": {
+      "type": "object",
+      "required": ["background", "foreground"],
+      "additionalProperties": false,
+      "properties": {
+        "primary": { "type": "string", "description": "v1 compat alias for accent" },
+        "text": { "type": "string", "description": "v1 compat alias for foreground" },
+        "accent": { "type": "string", "description": "Primary accent color" },
+        "secondary": { "type": "string", "description": "Secondary accent color" },
+        "background": { "type": "string", "description": "Base background color (required)" },
+        "foreground": { "type": "string", "description": "Base text color (required)" },
+        "muted": { "type": "string", "description": "Muted text color" },
+        "surface": { "type": "string", "description": "Surface/panel background" },
+        "surfaceElevated": { "type": "string", "description": "Elevated surface background" },
+        "border": { "type": "string", "description": "Border color" },
+        "codeBackground": { "type": "string", "description": "Code block background" },
+        "codeForeground": { "type": "string", "description": "Code block text color" },
+        "inputBackground": { "type": "string", "description": "Input field background" },
+        "buttonBackground": { "type": "string", "description": "Button background" },
+        "buttonForeground": { "type": "string", "description": "Button text color" },
+        "focusRing": { "type": "string", "description": "Focus ring color" },
+        "extended": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "(v2.2+) 扩展色集。key 为语义色名（如 error/success/warning/info），value 为 HEX 颜色。引擎消费此集生成 --agentskin-ext-* 变量。"
+        },
+        "_wcag": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": ["AA", "AAA", "none"],
+              "description": "本主题宣称的 WCAG 对比度等级。'none' 表示不做强制校验。"
+            }
+          },
+          "description": "(v2.6+) WCAG/APCA 对比度元数据。不提供时默认 'AA'。"
+        },
+        "inference": {
+          "type": "object",
+          "additionalProperties": { "enum": ["provided", "derived", "default"] }
+        }
+      },
+      "description": "CSS color tokens the theme ships with"
+    },
+    "assets": {
+      "type": "object",
+      "properties": {
+        "background": {
+          "oneOf": [
+            { "type": "string" },
+            {
+              "type": "object",
+              "properties": {
+                "default": { "type": "string" },
+                "16x10": { "type": "string" },
+                "16x9": { "type": "string" },
+                "4x3": { "type": "string" },
+                "fallback": { "type": "string" }
+              }
+            }
+          ],
+          "description": "@deprecated Use manifest.hero instead"
+        },
+        "images": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "maxProperties": 32,
+          "description": "(2a multi-asset) Additional coordinated images: id → relative file path (png/jpeg/webp/gif). Each is embedded into the bundle's assets.images and exposed to the injected CSS as --agentskin-asset-<id>. The special id 'hero' is the backdrop (alias of manifest.hero); 'icon'/'preview' are reserved for the system-managed cover assets. The engine enforces the final quantity (MAX_THEME_IMAGES=32) and 8MB cumulative base64 budget at install time."
+        }
+      },
+      "description": "Optional asset references relative to the package root"
+    },
+    "decorations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "layouts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "required": ["asset", "anchor"],
+            "additionalProperties": false,
+            "properties": {
+              "asset": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9_-]*$",
+                "description": "References an id in manifest.assets.images"
+              },
+              "anchor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024,
+                "description": "Stable application semantic selector for the anchor surface"
+              },
+              "anchorPosition": {
+                "type": "string",
+                "enum": [
+                  "topLeft",
+                  "topCenter",
+                  "topRight",
+                  "centerLeft",
+                  "center",
+                  "centerRight",
+                  "bottomLeft",
+                  "bottomCenter",
+                  "bottomRight"
+                ],
+                "default": "bottomRight",
+                "description": "Five-grid alignment relative to the anchor surface"
+              },
+              "offset": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "x": { "type": "number", "description": "Pixel offset along +x (right)" },
+                  "y": { "type": "number", "description": "Pixel offset along +y (down)" }
+                },
+                "description": "Pixel offset relative to the anchor position"
+              },
+              "width": {
+                "oneOf": [{ "type": "number", "minimum": 1 }, { "type": "null" }],
+                "default": null,
+                "description": "Overlay width; null = auto (aspect-ratio keeps height when omitted)"
+              },
+              "height": {
+                "oneOf": [{ "type": "number", "minimum": 1 }, { "type": "null" }],
+                "default": null,
+                "description": "Overlay height; null = auto"
+              },
+              "zIndex": {
+                "type": "integer",
+                "default": 0,
+                "description": "Overlay z-index"
+              },
+              "motion": {
+                "oneOf": [{ "type": "string", "enum": ["idle-fade", "float"] }, { "type": "null" }],
+                "default": null,
+                "description": "Optional preset motion id (RFC 2b §2.4: idle-fade/float; reduced-motion downgrades to static; complex motion lands in 2c)"
+              },
+              "flash": {
+                "type": "boolean",
+                "default": false,
+                "description": "Mount flash/animation toggle"
+              }
+            }
+          },
+          "description": "Declarative surface layouts: each entry mounts an asset onto an anchor surface (RFC themes-surface-layout-2b §2.2)"
+        }
+      },
+      "description": "(2b surface layouts) Theme decoration declarations mapping assets onto stable anchor surfaces"
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["css"],
+        "properties": {
+          "css": {
+            "type": "string",
+            "description": "Path to agent-specific CSS relative to manifest directory"
+          },
+          "verification": {
+            "type": "object",
+            "properties": {
+              "required": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "any"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "any": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              },
+              "recommended": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "any"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "any": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "description": "Per-agent target configurations (v2). Keys must be known agent ids (see src/shared/types.ts AGENT_IDS) — enforced at runtime by manifest-validator."
+    },
+    "supportedAgents": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Explicit supported agent ids (v2)"
+    },
+    "author": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "format": "uri" }
+      },
+      "description": "Theme author (v2)"
+    },
+    "category": {
+      "type": "string",
+      "description": "Theme category slug (v2)"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "maxItems": 10,
+      "description": "Theme tags for search/filter (v2)"
+    },
+    "license": {
+      "type": "string",
+      "description": "License identifier (v2), e.g. MIT, MPL-2.0"
+    },
+    "unofficial": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is an unofficial/community theme (v2)"
+    },
+    "dynamic": {
+      "oneOf": [
+        { "type": "string", "enum": ["aurora", "particles", "gradient", "waves"] },
+        { "type": "boolean", "enum": [false] }
+      ],
+      "description": "Dynamic visual effect type (v2.1+). Set false to disable."
+    },
+    "wallpaper": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": ["workshopId"],
+          "description": "Wallpaper Engine Steam workshop reference (video not bundled)"
+        },
+        { "required": ["video"], "description": "Bundled video file relative to package root" }
+      ],
+      "properties": {
+        "workshopId": {
+          "type": "string",
+          "pattern": "^\\d+$",
+          "description": "Wallpaper Engine workshop item id (numeric string). Takes precedence over video when both present."
+        },
+        "video": {
+          "type": "string",
+          "description": "Path to video file relative to package root (mp4/webm)"
+        },
+        "poster": {
+          "type": "string",
+          "description": "Optional poster image shown before video loads (png/webp)"
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 3.0,
+          "default": 1.0,
+          "description": "Playback speed multiplier"
+        },
+        "loop": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to loop the video"
+        },
+        "scrimOpacity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 55,
+          "description": "Overlay scrim opacity 0-100"
+        }
+      },
+      "description": "Video wallpaper configuration (v2.1+)"
+    },
+    "fonts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["family", "src"],
+        "additionalProperties": false,
+        "properties": {
+          "family": { "type": "string", "minLength": 1 },
+          "src": { "type": "string" },
+          "weight": { "oneOf": [{ "type": "number" }, { "type": "string" }] },
+          "style": { "type": "string", "enum": ["normal", "italic", "oblique"] },
+          "preload": { "type": "boolean", "default": false }
+        }
+      },
+      "maxItems": 5,
+      "description": "Custom web fonts shipped with the theme (v2.1+)"
+    },
+    "minAppVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Minimum AgentSkin desktop version required (v2.1+)"
+    },
+    "homepage": {
+      "type": "string",
+      "format": "uri",
+      "description": "Theme homepage URL (v2.1+)"
+    },
+    "repository": {
+      "type": "string",
+      "format": "uri",
+      "description": "Source repository URL (v2.1+)"
+    },
+    "probe": {
+      "type": "object",
+      "description": "样式探针契约声明（CDP probe style contract）。声明本主题贡献的设计 token 命名空间；具体 computed-style 字段集见 $defs.ProbeStyleContract。",
+      "additionalProperties": false,
+      "properties": {
+        "tokenNamespaces": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "本主题在 DOM 上设置的 CSS 自定义属性（设计 token）命名空间，探针会捕获这些 --* 变量。"
+        },
+        "styleContract": {
+          "type": "string",
+          "description": "指向主题接口规范中『探针样式契约』章节的引用（如 THEME_SPEC.md#探针样式契约）。"
+        }
+      }
+    },
+    "designLanguage": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "(v2.5+) 声明主题的设计语言 id。用于在 Theme Studio 中识别同语言下的主题变体，并在 manifest 缺失 componentVariations 时给定默认组件形态。"
+    },
+    "designLanguageConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spacing": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "density": {
+              "type": "string",
+              "enum": ["compact", "comfortable", "cozy"],
+              "description": "间距密度倍率。compact=0.75x, comfortable=1x, cozy=1.25x"
+            }
+          }
+        },
+        "radius": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "scale": {
+              "type": "string",
+              "enum": ["0", "2", "4", "8"],
+              "description": "圆角档位（单位 px）。默认 2"
+            }
+          }
+        },
+        "shadow": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "elevation": {
+              "type": "string",
+              "enum": ["flat", "subtle", "float"],
+              "description": "阴影档位。flat=无, subtle=低, float=高。默认 float"
+            }
+          }
+        },
+        "motion": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "speed": {
+              "type": "string",
+              "enum": ["instant", "fast", "smooth"],
+              "description": "动画节奏。instant=0ms, fast=100ms, smooth=200ms。默认 fast"
+            }
+          }
+        }
+      },
+      "description": "(v2.6+) 内联设计语言配置。使用此块可直接在 manifest 中声明主题的间距/圆角/阴影/动画形态，无需引用外部 designLanguage id。缺失时使用引擎默认值（comfortable / 2 / float / fast）。"
+    },
+    "componentVariations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["path"],
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path to variations/<id>.json relative to package root"
+          },
+          "name": { "type": "string", "maxLength": 64, "description": "显示名" },
+          "default": { "type": "boolean", "description": "是否为该主题的默认变体" }
+        }
+      },
+      "description": "(v2.5+) 声明主题可选的组件形态变体（圆角 / 字体 / 阴影 / 间距 / 材质）。每个 id 对应 variations/<id>.json。不声明时使用 Engine 默认形态。"
+    },
+    "palettes": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "(v2.5+) 声明主题可选的配色方案映射表：调色板 id → palette CSS 文件路径（相对包根）。'tefault' 保留给 manifest.colors 生成的 L0 调色板。"
+    },
+    "cosmetics": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_-]*$" },
+      "maxItems": 10,
+      "description": "(v2.5+) 声明主题包含的可选润色模块 id 列表。每个 id 对应 cosmetics/<id>.css（滚动条、选区高亮、动态光标等）。不声明时使用 Engine 默认 cosmetic.css。"
+    },
+    "depends": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "type": "string",
+          "pattern": "^>=?\\d+\\.\\d+\\.\\d+$",
+          "description": "最低 Engine 版本 (semver range, e.g. '>=1.3.0')"
+        },
+        "fonts": {
+          "type": "array",
+          "items": { "type": "string", "maxLength": 64 },
+          "maxItems": 5,
+          "description": "主题依赖的字体族名列表（必须在 manifest.fonts 或系统已安装中能找到），用于提前提示用户或阻止应用"
+        }
+      },
+      "description": "(v2.5+) 主题依赖声明"
+    },
+    "generated": {
+      "type": "object",
+      "properties": {
+        "generatorVersion": { "type": "string" },
+        "appVersion": { "type": "string" },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "variableBridge": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "(v2.7+) 双层变量桥接映射表。键为客户端原生 CSS 变量名（如 --color-background-surface），值为对应的 agentskin token 引用（如 var(--agentskin-surface)）或自定义色值。纯可选字段，缺失时回退到生成器内置映射逻辑，不影响现有主题。"
+    },
+    "depth": {
+      "type": "string",
+      "enum": ["L1", "L2", "L3"]
+    }
+  },
+  "$defs": {
+    "ProbeStyleContract": {
+      "description": "CDP 探针（src/main/cdp/dom-snapshot.mjs 的 buildDomSnapshotExpression）读取的样式契约全集。",
+      "computedStyleFields": [
+        "display",
+        "position",
+        "zIndex",
+        "boxSizing",
+        "flexDirection",
+        "alignItems",
+        "justifyContent",
+        "gap",
+        "padding",
+        "margin",
+        "width",
+        "height",
+        "minWidth",
+        "maxWidth",
+        "minHeight",
+        "maxHeight",
+        "overflowX",
+        "overflowY",
+        "color",
+        "backgroundColor",
+        "backgroundImage",
+        "background",
+        "backgroundPosition",
+        "backgroundSize",
+        "backgroundRepeat",
+        "backgroundClip",
+        "backgroundOrigin",
+        "border",
+        "borderRadius",
+        "borderColor",
+        "borderWidth",
+        "borderStyle",
+        "borderTopColor",
+        "borderTopWidth",
+        "borderTopStyle",
+        "borderBottomColor",
+        "outline",
+        "outlineColor",
+        "outlineWidth",
+        "outlineStyle",
+        "boxShadow",
+        "textShadow",
+        "opacity",
+        "fill",
+        "stroke",
+        "cursor",
+        "transition",
+        "transform",
+        "textDecoration",
+        "textTransform",
+        "letterSpacing",
+        "wordSpacing",
+        "whiteSpace",
+        "fontFamily",
+        "fontSize",
+        "fontWeight",
+        "lineHeight",
+        "textAlign",
+        "gridTemplateColumns",
+        "gridTemplateRows",
+        "flex",
+        "flexWrap",
+        "flexGrow",
+        "flexShrink",
+        "flexBasis",
+        "alignSelf",
+        "justifySelf",
+        "objectFit",
+        "mixBlendMode",
+        "filter",
+        "backdropFilter",
+        "pointerEvents",
+        "userSelect",
+        "contentVisibility",
+        "appearance"
+      ],
+      "tokenCapture": "捕获每个 DOM 节点相对父节点 override 的 --* CSS 变量；根节点报告其全部自身 token（无父级可去重）。继承项自动跳过，使 payload 有界。",
+      "perAgentTokenNamespaces": {
+        "brand": "--agentskin-*",
+        "workbuddy": "--cb-*",
+        "traework": "--vscode-*",
+        "qoderwork": "--color-* (antd)",
+        "doubao": "--dbx-*"
+      }
+    }
+  }
+}

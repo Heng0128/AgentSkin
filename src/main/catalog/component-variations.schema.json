@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agentskin.dev/schema/component-variations-v1.json",
+  "title": "AgentSkin Component Variations v1",
+  "description": "声明主题的组件形态变量覆盖（圆角 / 边框 / 字体 / 阴影 / 间距 / 质感 / 组件级样式）。由 engine-strategy.ts 在 Layer 5.5 注入。",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor validation"
+    },
+    "id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$",
+      "description": "变体唯一 id（需与 manifest.componentVariations 中的 key 或文件名匹配）"
+    },
+    "name": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "显示名"
+    },
+    "nameZh": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "中文显示名"
+    },
+    "tokenOverrides": {
+      "type": "object",
+      "description": "CSS custom property overrides injected as :root {} in adoptedStyleSheet Layer 5.5. 所有值必须可被 CSS var() 直接引用。",
+      "properties": {
+        "--radius": { "type": "string", "description": "基础圆角（按钮、输入框、卡片等）" },
+        "--radius-lg": { "type": "string", "description": "大圆角（模态、弹窗、大面板）" },
+        "--radius-full": { "type": "string", "description": "全圆（胶囊按钮、头像）" },
+        "--border-width": { "type": "string", "description": "基础边框宽度" },
+        "--border-width-strong": {
+          "type": "string",
+          "description": "强调边框宽度（表格分割线、Brutalist）"
+        },
+        "--font-display": { "type": "string", "description": "标题字体栈" },
+        "--font-body": { "type": "string", "description": "正文字体栈" },
+        "--font-mono": { "type": "string", "description": "等宽字体栈" },
+        "--shadow-card": { "type": "string", "description": "卡片阴影" },
+        "--shadow-popover": { "type": "string", "description": "弹出层阴影" },
+        "--shadow-dropdown": { "type": "string", "description": "下拉菜单阴影" },
+        "--shadow-button": { "type": "string", "description": "按钮阴影" },
+        "--bg-surface": { "type": "string", "description": "表面背景色（通常引用 palette token）" },
+        "--bg-surface-elevated": { "type": "string", "description": "浮层表面背景色" },
+        "--bg-backdrop-filter": {
+          "type": "string",
+          "description": "backdrop-filter 值（如 'blur(24px) saturate(180%)' 或 'none'）"
+        },
+        "--transition-base": { "type": "string", "description": "基础过渡" },
+        "--letter-spacing-display": {
+          "type": "string",
+          "description": "标题字距（紧凑标题，如 -0.01em）"
+        },
+        "--tracking-wide": { "type": "string", "description": "宽字距（装饰性标签用）" }
+      },
+      "additionalProperties": {
+        "type": "string",
+        "description": "其他 CSS 自定义属性值（自由扩展）"
+      }
+    },
+    "componentSpecific": {
+      "type": "object",
+      "description": "按组件名称附加的额外 CSS 规则块。引擎将按组件名分组拼接为 CSS 注入。键为组件名（button/badge/card/input/dialog/tabs/table/tooltip...），值为该组件的额外 CSS 声明（不含花括号）。",
+      "properties": {
+        "button": { "type": "string", "description": "额外按钮 CSS 声明" },
+        "badge": { "type": "string", "description": "额外 Badge CSS 声明" },
+        "card": { "type": "string", "description": "额外 Card CSS 声明" },
+        "input": { "type": "string", "description": "额外 Input CSS 声明" },
+        "select": { "type": "string", "description": "额外 Select CSS 声明" },
+        "textarea": { "type": "string", "description": "额外 Textarea CSS 声明" },
+        "dialog": { "type": "string", "description": "额外 Dialog CSS 声明" },
+        "sheet": { "type": "string", "description": "额外 Sheet CSS 声明" },
+        "tooltip": { "type": "string", "description": "额外 Tooltip CSS 声明" },
+        "tabs": { "type": "string", "description": "额外 Tabs CSS 声明" },
+        "table": { "type": "string", "description": "额外 Table CSS 声明" },
+        "accordion": { "type": "string", "description": "额外 Accordion CSS 声明" },
+        "navigation-menu": { "type": "string", "description": "额外 NavigationMenu CSS 声明" }
+      },
+      "additionalProperties": {
+        "type": "string",
+        "description": "自定义组件名对应的额外 CSS 声明"
+      }
+    },
+    "decorative": {
+      "type": "object",
+      "description": "装饰性属性标记（UI Font Studio 显示用途）。引擎不直接使用，仅用于 Theme Studio 预览声明。",
+      "properties": {
+        "activeIndicatorWidth": { "type": "string", "description": "导航项左侧活跃指示器宽度" },
+        "activeIndicatorColor": {
+          "type": "string",
+          "description": "导航项活跃指示器颜色（CSS 表达式）"
+        },
+        "patternImage": { "type": "string", "description": "背景平铺图案文件路径（相对包根）" },
+        "backgroundTexture": { "type": "string", "description": "大背景纹理文件路径" },
+        "scanlines": {
+          "type": "boolean",
+          "description": "是否启用扫描线效果（CRT / Terminal 风格）"
+        }
+      },
+      "additionalProperties": false
+    },
+    "supportedAgents": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "本变体明确支持的 agent id 列表。若缺失，视为支持所有 agent。"
+    }
+  },
+  "required": ["id"]
+}

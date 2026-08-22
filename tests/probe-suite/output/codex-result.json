@@ -1,0 +1,47 @@
+{
+  "probe": {
+    "agentId": "codex",
+    "timestamp": "2026-08-17T05:27:42.339Z",
+    "status": "CDP_TARGET_UNAVAILABLE",
+    "config": {
+      "port": 58360,
+      "hostSelector": "html.agentskin-host-codex",
+      "tokenNamespaces": [
+        "--text-",
+        "--color-"
+      ]
+    },
+    "probe": {
+      "variables": {
+        "light": null,
+        "dark": null,
+        "note": "Target application not running"
+      },
+      "dom": {
+        "light": null,
+        "dark": null,
+        "note": "Target application not running"
+      },
+      "styles": {
+        "light": null,
+        "dark": null,
+        "note": "Target application not running"
+      }
+    },
+    "summary": {
+      "totalVariables": 0,
+      "totalNodes": 0,
+      "truncated": false,
+      "themesAvailable": 0,
+      "errors": [
+        "Agent codex (port 58360) is not running. Start the application with --remote-debugging-port=58360"
+      ]
+    }
+  },
+  "unpack": {
+    "agentId": "codex",
+    "timestamp": "2026-08-17T05:27:42.347Z",
+    "themes": [],
+    "errors": []
+  }
+}

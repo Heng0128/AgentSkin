@@ -1,0 +1,10 @@
+/* =================================================================
+ * AgentSkin Studio — Layout Tokens
+ *
+ * 工作室（Studio 编辑器）的布局 token。
+ *
+ * 此文件已拆分为 workspace/tokens.css，此处保留为向后兼容的
+ * 重导出入口。新代码请直接引用 workspace/tokens.css。
+ * ================================================================= */
+
+@import "./workspace/tokens.css";

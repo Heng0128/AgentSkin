@@ -1,0 +1,95 @@
+{
+  "agentId": "traework",
+  "displayName": "TRAE Work CN",
+  "schemaVer": "1.3",
+  "_generated": {
+    "at": "2026-08-17T06:25:33.184Z",
+    "from": null,
+    "note": "asar 静态解包 + CDP 运行时探测自动生成的初始模板；globalApiCandidates/globalStorePathCandidates/canSilentSwitch/switchSideEffects 需人工补全后生效"
+  },
+  "themePersistCandidates": [
+    {
+      "type": "dataset",
+      "key": "theme",
+      "sampleValue": "dark"
+    },
+    {
+      "type": "dataset",
+      "key": "agentskinTheme",
+      "sampleValue": "nordic-minimal"
+    },
+    {
+      "type": "dataset",
+      "key": "agentskinThemeVersion",
+      "sampleValue": "1.0.0"
+    },
+    {
+      "type": "localStorage",
+      "key": "trae-foundation-theme",
+      "sampleValue": "{\"value\":\"dark\"}"
+    }
+  ],
+  "globalApiCandidates": [],
+  "globalStorePathCandidates": [],
+  "lazyRiskComponents": [
+    "Modal",
+    "Dropdown",
+    "Popover",
+    "Select",
+    "Tooltip",
+    "Dialog"
+  ],
+  "shadowDomRiskSelectors": [
+    "input[type=\"range\"]",
+    "input[type=\"color\"]",
+    "input[type=\"file\"]",
+    "input[type=\"date\"]",
+    "input[type=\"time\"]",
+    "input[type=\"datetime-local\"]",
+    "input[type=\"month\"]",
+    "input[type=\"week\"]",
+    "video",
+    "audio",
+    "select"
+  ],
+  "themeImplMode": "adopted",
+  "canSilentSwitch": false,
+  "switchSideEffects": [],
+  "lightFingerprint": {
+    "dataset": null,
+    "cssVars": {}
+  },
+  "darkFingerprint": {
+    "dataset": {
+      "theme": "dark",
+      "agentskinTheme": "nordic-minimal",
+      "agentskinThemeVersion": "1.0.0"
+    },
+    "cssVars": {
+      "--vscode-icube-colorBtnHover---vscode-input-background": "var(--vscode-input-background)",
+      "--vscode-icube-colorLine1---vscode-keybindingLabel-border": "var(--vscode-keybindingLabel-border)",
+      "--permission-trigger-bg": "transparent",
+      "--permission-settings-card-title-font-weight": "var(--font-weight-default)",
+      "--vscode-foreground": "#d1d3db",
+      "--vscode-disabledForeground": "#666b75",
+      "--vscode-errorForeground": "#cc4b53",
+      "--vscode-descriptionForeground": "#9599a6",
+      "--vscode-icon-foreground": "#9599a6",
+      "--vscode-focusBorder": "rgba(0, 0, 0, 0)",
+      "--vscode-textLink-foreground": "#dadde5",
+      "--vscode-textLink-activeForeground": "#979aa4",
+      "--vscode-textSeparator-foreground": "rgba(255, 255, 255, 0.18)",
+      "--vscode-textPreformat-foreground": "#d7ba7d",
+      "--vscode-textPreformat-background": "rgba(255, 255, 255, 0.1)",
+      "--vscode-textBlockQuote-background": "#222222",
+      "--vscode-textBlockQuote-border": "rgba(0, 122, 204, 0.5)",
+      "--vscode-textCodeBlock-background": "rgba(10, 10, 10, 0.4)",
+      "--vscode-sash-hoverBorder": "#32f08c",
+      "--vscode-badge-background": "#4d4d4d",
+      "--vscode-badge-foreground": "#ffffff",
+      "--vscode-activityWarningBadge-foreground": "#ffffff",
+      "--vscode-activityWarningBadge-background": "#b27c00",
+      "--vscode-activityErrorBadge-foreground": "#000000"
+    }
+  }
+}

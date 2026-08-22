@@ -1,0 +1,218 @@
+// SPDX-License-Identifier: MPL-2.0
+
+/**
+ * # Batch 6 · Real apply + hot-switch + restore (all 6 agents)
+ *
+ * MANUAL integration test (NOT part of `npm run check`). For each of the 6
+ * agents with a live CDP port: applies a real installed theme (B1), hot-
+ * switches to a second theme (B2), verifies via `waitForTheme`, then restores
+ * the original theme per-agent in `finally`.
+ *
+ * Run explicitly (manual gate): `AGENTSKIN_MANUAL=1 npx vitest run src/main/cdp/live-apply-all.manual.test.ts`
+ * Without `AGENTSKIN_MANUAL=1` the suite is skipped so `npm run check` never
+ * touches live agents (the vitest `main` project glob would otherwise collect
+ * `*.manual.test.ts` and run real apply/hot-switch/restore on every running app).
+ */
+
+import { describe, expect, it } from 'vitest';
+import { getAdapter, registerBuiltinAdapters } from '../../adapters/registry';
+import { resolveLivePort } from '../../shared/cdp-discovery';
+import { ThemeLibrary } from '../theme-library';
+import { connectCdp } from './cdp-client';
+import { waitForTheme } from './injection/shared';
+
+const THEMES_ROOT = 'C:/Users/snowb/AppData/Roaming/AgentSkin/themes';
+// Theme A/B to apply during the smoke. Override via THEME_A / THEME_B; defaults
+// to installed themes (aurora-dusk / aurora-glass) so real apply works without
+// forcing a reseed of test-only package names (sakura-noir / ocean-tide).
+const THEME_A = process.env.THEME_A ?? 'aurora-dusk';
+const THEME_B = process.env.THEME_B ?? 'aurora-glass';
+const ALL_AGENT_IDS = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'] as const;
+// Optional env override: `AGENTS=qoderwork,workbuddy npx vitest ...` to probe a
+// subset without touching agents that are busy (e.g. traework mid-session).
+const AGENT_IDS = (
+  process.env.AGENTS
+    ? process.env.AGENTS.split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : ALL_AGENT_IDS
+) as readonly string[];
+// Manual gate: the suite only runs when explicitly requested via
+// `AGENTSKIN_MANUAL=1`, so `npm run check` skips it (see header note).
+const MANUAL = process.env.AGENTSKIN_MANUAL === '1';
+
+const noop = (): void => {};
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+registerBuiltinAdapters();
+
+async function openMainSession(agentId: string, port: number) {
+  const targets = (await getAdapter(agentId)!.findTargets(port, 1200)) as {
+    webSocketDebuggerUrl?: string;
+  }[];
+  const wsUrl = targets.find((t) => t.webSocketDebuggerUrl)?.webSocketDebuggerUrl;
+  if (!wsUrl) throw new Error('no webSocketDebuggerUrl in targets');
+  return connectCdp(wsUrl, 5000, 8000);
+}
+
+interface AgentResult {
+  agentId: string;
+  port: number | null;
+  b1Adopted: number;
+  b2Adopted: number;
+  restored: string;
+  error?: string;
+}
+
+async function verifyApplied(agentId: string, port: number): Promise<number> {
+  if (agentId === 'codex') {
+    // Codex has multiple page targets (main app://-/index.html and the
+    // avatar-overlay). The engine injects into every compatible target, and
+    // the style element + __AGENTSKIN__ host state can appear on any of them.
+    // Scan ALL page targets (instead of only the first) so a strong-adversary
+    // target that delayed self-heal isn't mistaken for a failed injection.
+    return verifyCodexApplied(port);
+  }
+
+  const session = await openMainSession(agentId, port);
+  try {
+    const v = await waitForTheme(session, { timeoutMs: 5000, intervalMs: 50 });
+    return v?.adoptedSheetCount ?? 0;
+  } finally {
+    session.close();
+  }
+}
+
+/** Probe every Codex page target; report 1 if any target shows the engine host
+ * state mounted. `applyTheme` (legacy core channel) mounts
+ * `window.__AGENTSKIN__.hosts.codex`; the engine's
+ * `<style id="agentskin-theme-style-codex">` belongs to the hardening channel
+ * (`tryEngineInjection`), which this test does NOT drive — so host-state
+ * presence is the correct positive signal for this test. */
+async function verifyCodexApplied(port: number): Promise<number> {
+  const adapter = getAdapter('codex')!;
+  const targets = (await adapter.findTargets(port, 1200)) as {
+    url?: string;
+    webSocketDebuggerUrl?: string;
+  }[];
+  const wsTargets = targets.filter((t) => t.webSocketDebuggerUrl);
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    for (const t of wsTargets) {
+      const session = await connectCdp(t.webSocketDebuggerUrl!, 5000, 8000);
+      try {
+        const raw = await session.evaluate(`(() => {
+          const state = window.__AGENTSKIN__?.hosts?.codex;
+          return JSON.stringify({ url: location.href, statePresent: !!state });
+        })()`);
+        const v = JSON.parse(raw) as { url: string; statePresent: boolean };
+        console.log(`[codex-probe] ${v.url} state=${v.statePresent}`);
+        if (v.statePresent) return 1;
+      } catch {
+        // Reconnect next poll — target may be mid-navigation.
+      } finally {
+        session.close();
+      }
+    }
+    await sleep(100);
+  }
+  return 0;
+}
+
+describe.skipIf(!MANUAL)('batch-6 real apply on all agents (manual)', () => {
+  it('applies + hot-switches + restores a real theme on every live agent', async () => {
+    const library = new ThemeLibrary(THEMES_ROOT);
+    const themeA = (await library.find(THEME_A)).bundle;
+    const themeB = (await library.find(THEME_B)).bundle;
+
+    const results: AgentResult[] = [];
+    for (const agentId of AGENT_IDS) {
+      const adapter = getAdapter(agentId);
+      if (!adapter) {
+        results.push({
+          agentId,
+          port: null,
+          b1Adopted: 0,
+          b2Adopted: 0,
+          restored: 'adapter-missing',
+        });
+        continue;
+      }
+
+      let port: number | null = null;
+      try {
+        port = await resolveLivePort(adapter, agentId, noop);
+      } catch (error) {
+        results.push({
+          agentId,
+          port: null,
+          b1Adopted: 0,
+          b2Adopted: 0,
+          restored: 'port-error',
+          error: String(error),
+        });
+        console.log(`[probe] ${agentId}: port discovery failed (${String(error)})`);
+        continue;
+      }
+      if (port == null) {
+        results.push({ agentId, port: null, b1Adopted: 0, b2Adopted: 0, restored: 'no-port' });
+        console.log(`[skipped] ${agentId}: no live CDP port`);
+        continue;
+      }
+
+      let b1Adopted = 0;
+      let b2Adopted = 0;
+      let restored = 'ok';
+      try {
+        const resA = await adapter.applyTheme(themeA, {
+          port,
+          launch: false,
+          appPath: null,
+          restartExisting: false,
+        });
+        b1Adopted = await verifyApplied(agentId, port);
+        console.log(
+          `[B1] ${agentId}: applied sakura-noir adopted=${b1Adopted} res=${JSON.stringify(resA).slice(0, 120)}`,
+        );
+
+        const resB = await adapter.applyTheme(themeB, {
+          port,
+          launch: false,
+          appPath: null,
+          restartExisting: false,
+        });
+        b2Adopted = await verifyApplied(agentId, port);
+        console.log(
+          `[B2] ${agentId}: hot-switched to ocean-tide adopted=${b2Adopted} res=${JSON.stringify(resB).slice(0, 120)}`,
+        );
+      } catch (error) {
+        restored = `apply-error: ${String(error)}`;
+        console.log(`[apply] ${agentId}: FAILED (${String(error)})`);
+      } finally {
+        try {
+          const r = await adapter.restoreTheme(port);
+          console.log(`[restore] ${agentId}: restored=${r?.renderer?.restored ?? false}`);
+          if (r?.renderer && r.renderer.restored === false) restored = 'restore-false';
+        } catch (error) {
+          restored = `restore-error: ${String(error)}`;
+          console.log(`[restore] ${agentId}: FAILED (${String(error)})`);
+        }
+      }
+      results.push({ agentId, port, b1Adopted, b2Adopted, restored });
+    }
+
+    console.log(`\n[summary] ${results.length} agents probed`);
+    for (const r of results) {
+      console.log(
+        `        ${r.agentId}: port=${r.port ?? 'none'} B1=${r.b1Adopted} B2=${r.b2Adopted} restored=${r.restored}`,
+      );
+    }
+
+    const ran = results.filter((r) => r.port != null);
+    for (const r of ran) {
+      expect(r.b1Adopted, `${r.agentId} B1 should adopt stylesheets`).toBeGreaterThan(0);
+      expect(r.b2Adopted, `${r.agentId} B2 hot-switch should adopt stylesheets`).toBeGreaterThan(0);
+      expect(r.restored, `${r.agentId} should be restored`).toBe('ok');
+    }
+  }, 120000);
+});

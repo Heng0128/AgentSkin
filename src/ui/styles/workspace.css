@@ -1,0 +1,20 @@
+/* =================================================================
+ * AgentSkin Workspace — Stage + Dock Layout System
+ *
+ * Layout (grid on .ws-root):
+ *   · topbar    52px fixed
+ *   · drawer    200px  → collapsible to 48px
+ *   · stage     flex-1 (preview canvas)
+ *   · inspector 240px  → collapsible to 4px
+ *   · status    24px fixed
+ *   · dock      0~320px draggable overlay at bottom
+ *
+ * Reference: Premiere Pro · After Effects · CapCut
+ * ================================================================= */
+
+@import "./workspace/tokens.css";
+@import "./workspace/layout.css";
+@import "./workspace/dock.css";
+@import "./workspace/dialog.css";
+@import "./workspace/components.css";
+@import "./workspace/animations.css";

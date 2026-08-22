@@ -1,0 +1,271 @@
+// SPDX-License-Identifier: MPL-2.0
+
+import path from 'node:path';
+import { app, type BrowserWindow, type Tray } from 'electron';
+import { toMessage } from '../shared/errors';
+import { type AppLocale, DEFAULT_LOCALE } from '../shared/i18n';
+import { IpcChannel } from '../shared/ipc-channels';
+import { AGENT_IDS, type AgentId } from '../shared/types';
+import type { AgentCatalog } from './catalog/agent-catalog';
+import type { ThemeCatalog } from './catalog/theme-catalog';
+import { BUNDLE_EXTENSION, FileOpenQueue } from './file-open';
+import { installBundleFromPath } from './ipc/bundle-ipc';
+import type {
+  AgentEngineServiceApi,
+  SettingsServiceApi,
+  ThemeLibraryApi,
+  WallpaperServiceApi,
+} from './services/contracts';
+
+/**
+ * # Main Context
+ *
+ * Shared mutable runtime state for the main process. Extracted from the
+ * module-level `let` declarations that used to live at the top of `main.ts`.
+ *
+ * Fields marked as definite-assigned (`!` semantically — enforced here via
+ * the `MainContext` type) are populated during the boot sequence
+ * (see `boot-sequence.ts`) before any IPC handler or tray action can fire.
+ * Electron guarantees `app.whenReady()` resolves before `ipcMain.handle`
+ * invocations arrive from the renderer, so late initialization is safe.
+ */
+export interface MainContext {
+  mainWindow: BrowserWindow | null;
+  /** Lightweight splash window shown during boot. Closed when the main
+   *  window's `ready-to-show` fires. Null after splash is dismissed. */
+  splashWindow: BrowserWindow | null;
+  /** Dedicated, independently-closable Theme Studio window (opened on demand
+   *  from the main window's sidebar). Null until first opened; reset to null
+   *  on the window's `closed` event. */
+  studioWindow: BrowserWindow | null;
+  /** Invoked when the Theme Studio window is closed. Lets IPC domains (e.g.
+   *  the live-inspect controller) release CDP sessions that would otherwise
+   *  leak past the window's lifetime. Set during IPC registration; null when
+   *  no cleanup is needed. */
+  onStudioWindowClosed: (() => void) | null;
+  /** One-shot teardown callbacks registered during boot (lifecycle cleanup,
+   *  media server stop, tray destroy). Drained in before-quit. */
+  disposables: Array<() => void>;
+  tray: Tray | null;
+  isQuitting: boolean;
+  /** True after `runBootSequence` completes successfully. IPC handlers and
+   *  tray actions should check this before accessing late-bound services
+   *  to avoid race conditions during shutdown or early access. */
+  bootComplete: boolean;
+  library: ThemeLibraryApi;
+  core: AgentEngineServiceApi;
+  settings: SettingsServiceApi;
+  agentCatalog: AgentCatalog;
+  themeCatalog: ThemeCatalog;
+  /** Wallpaper service — optional because its initialization is degradable
+   *  (wrapped in try-catch in boot-sequence). Null when wallpaper init failed;
+   *  callers must null-check before using. */
+  wallpapers: WallpaperServiceApi | null;
+  fileOpens: FileOpenQueue;
+  locale: AppLocale;
+  userDataRoot: string;
+}
+
+/**
+ * Singleton runtime context. The `as MainContext` cast bypasses the
+ * missing initializers for late-bound fields (`library`, `core`, etc.) —
+ * these are assigned in `runBootSequence` before any consumer reads them,
+ * mirroring the original `let library: ThemeLibrary;` pattern.
+ */
+export const ctx: MainContext = {
+  mainWindow: null,
+  splashWindow: null,
+  studioWindow: null,
+  onStudioWindowClosed: null,
+  disposables: [] as Array<() => void>,
+  tray: null,
+  isQuitting: false,
+  bootComplete: false,
+  wallpapers: null,
+  fileOpens: new FileOpenQueue(),
+  locale: DEFAULT_LOCALE,
+  userDataRoot: '',
+} as MainContext;
+
+// ---------------------------------------------------------------------------
+// Disposable registry — one-shot teardown callbacks for boot-registered
+// cleanups. main.ts before-quit drains these; boot-sequence registers them.
+// ---------------------------------------------------------------------------
+
+/**
+ * Register a one-shot teardown callback. Callers (e.g. boot-sequence) store
+ * cleanup functions here during boot; before-quit drains them in order.
+ *
+ * Idempotent drain: after invocation the array is cleared, so re-entrant
+ * before-quit does not double-invoke.
+ */
+export function registerDisposable(fn: () => void): void {
+  ctx.disposables.push(fn);
+}
+
+/**
+ * Drain all registered disposables. Called from main.ts before-quit.
+ * Each fn is try/catch wrapped so a throwing cleanup never blocks quit.
+ */
+export function drainDisposables(): void {
+  const pending = ctx.disposables.splice(0);
+  for (const fn of pending) {
+    try {
+      fn();
+    } catch {
+      // swallow — never block quit on cleanup failure
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helpers that operate on ctx (kept here so all main-process modules share
+// the same definitions of brandingRoot / sendLog / settingsDto / etc.)
+// ---------------------------------------------------------------------------
+
+/** Resolve the runtime/branding assets directory (packaged vs dev). */
+export function brandingRoot(): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'runtime')
+    : path.resolve(app.getAppPath(), 'assets', 'runtime');
+}
+
+/** Forward a log line to the renderer's runtime-log panel (if attached). */
+export function sendLog(line: string): void {
+  // Check both reference presence and isDestroyed(): after close-to-tray the
+  // window reference may linger but webContents.send on a destroyed window
+  // throws "Object has been destroyed".
+  if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+    ctx.mainWindow.webContents.send(IpcChannel.RUNTIME_LOG, line);
+  }
+}
+
+/**
+ * Fan-out STATUS_CHANGED to mainWindow + studioWindow after any mutation
+ * (apply/restore/delete, tray actions, boot-restore). Keeps Studio's 5s-poll
+ * status snapshot in sync without waiting for its next tick. Renderer
+ * subscribes via `onStatusChanged` → immediate `refreshStatus()`.
+ *
+ * Debounced (50ms): a single user action often fans out through several IPC
+ * handlers (e.g. theme apply + wallpaper apply + tray update), and each used
+ * to push one STATUS_CHANGED — a 4x redundant fan-out per action. The timer
+ * coalesces a burst into one push. Final-state pushes that must not be
+ * coalesced use {@link notifyStatusChangedNow}.
+ */
+const STATUS_NOTIFY_DEBOUNCE_MS = 50;
+let statusNotifyTimer: ReturnType<typeof setTimeout> | null = null;
+
+function sendStatusChanged(): void {
+  // Fan-out STATUS_CHANGED to both windows so Studio's status snapshot
+  // (activeThemeId, running, debugReady) stays in sync after apply/restore
+  // without waiting for its 5s poll tick. Cross-module integration fix:
+  // previously only mainWindow received the push, leaving Studio stale.
+  if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+    ctx.mainWindow.webContents.send(IpcChannel.STATUS_CHANGED);
+  }
+  if (ctx.studioWindow && !ctx.studioWindow.isDestroyed()) {
+    ctx.studioWindow.webContents.send(IpcChannel.STATUS_CHANGED);
+  }
+}
+
+/** Coalesced STATUS_CHANGED push (50ms debounce). Safe to call freely. */
+export function notifyStatusChanged(): void {
+  if (statusNotifyTimer !== null) return;
+  statusNotifyTimer = setTimeout(() => {
+    statusNotifyTimer = null;
+    sendStatusChanged();
+  }, STATUS_NOTIFY_DEBOUNCE_MS);
+}
+
+/** Immediate STATUS_CHANGED push, flushing any pending debounce. */
+export function notifyStatusChangedNow(): void {
+  if (statusNotifyTimer !== null) {
+    clearTimeout(statusNotifyTimer);
+    statusNotifyTimer = null;
+  }
+  sendStatusChanged();
+}
+
+/**
+ * Fan-out PERSIST_FAILURE_WARNING to mainWindow + studioWindow when
+ * persistFailures reaches threshold. Keeps the user informed about
+ * disk-persistence issues without waiting for the next poll tick.
+ */
+export function notifyPersistFailure(failureCount: number): void {
+  if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+    ctx.mainWindow.webContents.send(IpcChannel.PERSIST_FAILURE_WARNING, { failureCount });
+  }
+  if (ctx.studioWindow && !ctx.studioWindow.isDestroyed()) {
+    ctx.studioWindow.webContents.send(IpcChannel.PERSIST_FAILURE_WARNING, { failureCount });
+  }
+}
+
+/**
+ * Wrap catalog items with a version + timestamp envelope. The renderer uses
+ * `updatedAt` to bust its in-memory cache when the catalog changes.
+ */
+export function wrapCatalog<T>(items: T[]): { version: number; updatedAt: string; items: T[] } {
+  return { version: 1, updatedAt: new Date().toISOString(), items };
+}
+
+/**
+ * Build the settings DTO exposed to the renderer. All agents default to
+ * port 0 (auto-detect) — the legacy hardcoded default ports (9336/9337/9338)
+ * were removed because they misled users into setting dead-port overrides.
+ * The port field is reserved for an explicit user override only.
+ */
+export function settingsDto(context: MainContext) {
+  const defaultPorts = Object.fromEntries(AGENT_IDS.map((appId) => [appId, 0])) as Record<
+    AgentId,
+    number
+  >;
+  return context.settings.toDto(defaultPorts);
+}
+
+/**
+ * Auto-import a theme package opened from the OS (double-click, "Open with",
+ * drag-drop). New theme ids install silently; when the id is already taken
+ * the renderer asks the user before replacing (imports never overwrite
+ * silently). Used as the `fileOpens` sink and by `theme:open-file`.
+ *
+ * `.agentskin-bundle` combo packages take a different path: they are
+ * directory-package archives (theme + wallpaper video) that must be unpacked
+ * and installed via the bundle installer, not `library.importPackage` (which
+ * only accepts single-file engine bundles).
+ */
+export async function handleThemeFileOpen(
+  context: MainContext,
+  filePath: string,
+  updateTrayMenu: () => Promise<void>,
+): Promise<void> {
+  context.mainWindow?.show();
+  context.mainWindow?.focus();
+  try {
+    if (filePath.endsWith(BUNDLE_EXTENSION)) {
+      const theme = await installBundleFromPath(context, filePath);
+      void updateTrayMenu();
+      context.mainWindow?.webContents.send(IpcChannel.FILE_IMPORTED, {
+        theme,
+        themes: await context.library.summaries(),
+      });
+      return;
+    }
+    const inspection = await context.library.inspectPackage(filePath);
+    if (inspection.existing) {
+      context.mainWindow?.webContents.send(IpcChannel.FILE_IMPORT_CONFIRM, {
+        path: filePath,
+        incoming: inspection.incoming,
+        existing: inspection.existing,
+      });
+      return;
+    }
+    const theme = await context.library.importPackage(filePath);
+    void updateTrayMenu();
+    context.mainWindow?.webContents.send(IpcChannel.FILE_IMPORTED, {
+      theme,
+      themes: await context.library.summaries(),
+    });
+  } catch (error) {
+    context.mainWindow?.webContents.send(IpcChannel.FILE_IMPORT_FAILED, toMessage(error));
+  }
+}

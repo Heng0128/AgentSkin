@@ -1,0 +1,49 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "demo-bridge-v2",
+  "name": "Demo Bridge v2",
+  "displayName": "桥接演示 v2",
+  "version": "1.0.0",
+  "description": "演示 variableBridge 双层变量桥接模式：将 Codex 客户端原生 --color-background-surface / --color-accent 等变量桥接到 agentskin token。",
+  "mode": "dark",
+  "targets": {
+    "codex":       { "css": "assets/css/codex.css" }
+  },
+  "supportedAgents": ["codex"],
+  "colors": {
+    "accent": "#4a90d9",
+    "secondary": "#7a8a99",
+    "background": "#1e1e1e",
+    "foreground": "#e0e0e0",
+    "muted": "#888888",
+    "surface": "#2a2a2a",
+    "surfaceElevated": "#333333",
+    "border": "rgba(74, 144, 217, 0.18)",
+    "codeBackground": "#161616",
+    "codeForeground": "#cdd6e0",
+    "inputBackground": "#2a2a2a",
+    "buttonBackground": "#4a90d9",
+    "buttonForeground": "#1e1e1e",
+    "focusRing": "rgba(74, 144, 217, 0.4)"
+  },
+  "variableBridge": {
+    "--color-background-surface": "var(--agentskin-surface)",
+    "--color-accent": "var(--agentskin-accent)",
+    "--color-accent-hover": "color-mix(in srgb, var(--agentskin-accent) 85%, #fff)",
+    "--color-background-primary": "var(--agentskin-bg)",
+    "--color-text-primary": "var(--agentskin-text)",
+    "--color-text-secondary": "var(--agentskin-muted)",
+    "--color-border": "var(--agentskin-border)"
+  },
+  "icon": "icon.png",
+  "preview": "preview.png",
+  "author": { "name": "AgentSkin Team" },
+  "category": "demo",
+  "tags": ["demo", "bridge", "codex"],
+  "license": "MPL-2.0",
+  "probe": {
+    "tokenNamespaces": ["--agentskin-", "--color-"],
+    "styleContract": "THEME_SPEC.md#探针样式契约"
+  }
+}

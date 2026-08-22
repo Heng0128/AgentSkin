@@ -1,0 +1,158 @@
+appId: com.agentskin.desktop
+productName: AgentSkin
+executableName: AgentSkin
+
+directories:
+  # Versioned output dir set by build.bat via ELECTRON_BUILDER_OUT_DIR env var.
+  # Each build gets a fresh dir (out/make/v{version}/) so we never need to
+  # clean stale win-unpacked/ from the previous build — that cleanup fails
+  # when Windows Defender locks app.asar during real-time scanning, causing
+  # old+new files to mix. Falls back to out/make/dist for standalone runs.
+  output: ${env.ELECTRON_BUILDER_OUT_DIR}
+
+# Packaged app contents (asar). electron-vite builds to out/{main,preload,renderer}/
+# so we include that plus the built-in themes directory (seed data) and package.json
+# (required for Electron to resolve the main entry point).
+asar: true
+files:
+  - out/main/**
+  - out/preload/**
+  - out/renderer/**
+  - themes/**
+  - package.json
+  - "!**/*.map"
+
+# Use the electron binary already installed in node_modules/electron/dist
+# instead of unpacking the cached zip (which stalls on Defender-heavy
+# workstations). This is a TOP-LEVEL option (not under `win:`) — placing it
+# under `win:` breaks the schema and makes electron-builder reject the entire
+# win block. This skips the slow "unpacking default Electron distribution" step.
+electronDist: node_modules/electron/dist
+
+# No native dependencies (all pure JS: React, clsx, tailwind-merge, etc.)
+# Skip @electron/rebuild which wastes 10-20s scanning for binding.gyp files.
+npmRebuild: false
+
+# Engine files (L3/L4/L5 theme architecture) — loaded at runtime via
+# process.resourcesPath/engines/{agent}/ for multi-sheet injection.
+# Also bundle runtime tray icons, license files, and file-association icons.
+extraResources:
+  - from: splash.html
+    to: splash.html
+  - from: engines/
+    to: engines/
+    filter:
+      - "**/*.css"
+      - "**/*.mjs"
+  - from: agents-profiles/
+    to: agents-profiles/
+    filter:
+      - "**/*.json"
+  - from: assets/runtime/
+    to: runtime/
+  - from: assets/branding/theme-file.ico
+    to: theme-file.ico
+  - from: assets/branding/theme-file.icns
+    to: theme-file.icns
+  - from: LICENSE
+    to: LICENSE
+  - from: SOURCE_CODE.md
+    to: SOURCE_CODE.md
+  - from: THIRD_PARTY_NOTICES.md
+    to: THIRD_PARTY_NOTICES.md
+  - from: TRADEMARKS.md
+    to: TRADEMARKS.md
+  - from: ASSETS_LICENSE.md
+    to: ASSETS_LICENSE.md
+  - from: licenses/
+    to: licenses/
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: assets/branding/icon.ico
+  artifactName: ${productName}-${version}-x64-Setup.exe
+
+# NSIS installer configuration (built-in electron-builder NSIS)
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: ${productName}
+  include: build/installer.nsh
+  license: null
+  warningsAsErrors: false
+
+# Registered by the NSIS installer (HKCU) so "Open with -> AgentSkin" and
+# argv file handling work for theme packages.
+fileAssociations:
+  - ext: agenttheme
+    name: AgentSkin Theme
+    description: AgentSkin theme package
+    role: Viewer
+    icon: assets/branding/theme-file.ico
+  - ext: agentskin-theme
+    name: AgentSkin Theme Package
+    description: AgentSkin theme package (new + legacy format)
+    role: Viewer
+    icon: assets/branding/theme-file.ico
+  - ext: codex-theme
+    name: AgentSkin Codex Theme
+    description: AgentSkin Codex legacy theme package
+    role: Viewer
+    icon: assets/branding/theme-file.ico
+
+# electron-builder built-in NSIS is used (target: nsis in win block above).
+
+# === macOS ===
+# Migrated from the old forge.config.ts packagerConfig + MakerDMG/MakerZIP.
+# appId (top-level) is reused as the bundle id (com.agentskin.desktop).
+# The top-level `fileAssociations` block above is auto-translated by
+# electron-builder into CFBundleDocumentTypes for macOS, so extendInfo only
+# needs to register the custom UTI types (so Finder shows "AgentSkin Theme"
+# instead of a generic document icon).
+mac:
+  category: public.app-category.developer-tools
+  icon: assets/branding/icon.icns
+  target:
+    - dmg
+    - zip
+  # Register custom UTI types for Finder file associations. CFBundleDocumentTypes
+  # are generated automatically from the top-level fileAssociations block.
+  extendInfo:
+    UTExportedTypeDeclarations:
+      - UTTypeIdentifier: app.agentskin.theme
+        UTTypeDescription: AgentSkin Theme
+        UTTypeConformsTo:
+          - public.data
+          - public.json
+        UTTypeTagSpecification:
+          public.filename-extension:
+            - agenttheme
+            - agentskin-theme
+      - UTTypeIdentifier: app.agentskin.legacy-theme
+        UTTypeDescription: Legacy Codex Theme
+        UTTypeConformsTo:
+          - public.data
+          - public.json
+        UTTypeTagSpecification:
+          public.filename-extension:
+            - codex-theme
+  # Code signing & notarization are driven by environment variables (matches
+  # the old forge behavior: MACOS_SIGN=1 to sign, APPLE_API_KEY_* to notarize).
+  # electron-builder reads CSC_LINK / CSC_KEY_PASSWORD for signing and
+  # APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD / APPLE_TEAM_ID for notarization.
+  # When these are unset, electron-builder skips signing (ad-hoc / no-sign).
+  hardenedRuntime: true
+  gatekeeperAssess: false
+
+dmg:
+  format: ULFO
+  icon: assets/branding/icon.icns
+
+publish: null

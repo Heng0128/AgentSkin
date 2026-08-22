@@ -1,0 +1,26 @@
+/* palette.css — demo-bridge-v2 (桥接演示 v2) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #1e1e1e;
+  --agentskin-surface: #2a2a2a;
+  --agentskin-surface-elevated: #333333;
+  --agentskin-text: #e0e0e0;
+  --agentskin-muted: #888888;
+  --agentskin-accent: #4a90d9;
+  --agentskin-secondary: #7a8a99;
+  --agentskin-border: rgba(74, 144, 217, 0.18);
+  --agentskin-code-bg: #161616;
+  --agentskin-code-fg: #cdd6e0;
+  --agentskin-focus-ring: rgba(74, 144, 217, 0.4);
+  --agentskin-selection: color-mix(in srgb, #4a90d9 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 74, 144, 217;
+  --agentskin-secondary-raw: 122, 138, 153;
+  --agentskin-text-raw: 224, 224, 224;
+  --agentskin-muted-raw: 136, 136, 136;
+  --agentskin-surface-raw: 42, 42, 42;
+  --agentskin-surface-elevated-raw: 51, 51, 51;
+  --agentskin-bg-raw: 30, 30, 30;
+  --agentskin-border-raw: 74, 144, 217;
+}

@@ -1,0 +1,22 @@
+{
+  "id": "aurora-green",
+  "name": "Aurora Green",
+  "mode": "dark",
+  "description": "极光绿——北极夜空中最常见的翠绿极光，在深色背景上如水波流淌。",
+  "colors": {
+    "accent": "#5fd9a7",
+    "secondary": "#7fb8d9",
+    "background": "#0a0e1a",
+    "foreground": "#e8edf5",
+    "muted": "#7a859a",
+    "surface": "#141b2d",
+    "surfaceElevated": "#1c2540",
+    "border": "rgba(95, 217, 167, 0.16)",
+    "codeBackground": "#0d1220",
+    "codeForeground": "#d0d8e8",
+    "inputBackground": "#141b2d",
+    "buttonBackground": "#5fd9a7",
+    "buttonForeground": "#0a0e1a",
+    "focusRing": "#5fd9a78c"
+  }
+}

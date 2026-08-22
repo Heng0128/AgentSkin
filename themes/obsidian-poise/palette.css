@@ -1,0 +1,26 @@
+/* palette.css — obsidian-poise (Obsidian Poise 玄曜) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #0b0d10;
+  --agentskin-surface: #11151a;
+  --agentskin-surface-elevated: #181d23;
+  --agentskin-text: #f1eee7;
+  --agentskin-muted: #a7a9aa;
+  --agentskin-accent: #c8a96b;
+  --agentskin-secondary: #75b798;
+  --agentskin-border: #30363d;
+  --agentskin-code-bg: #090b0e;
+  --agentskin-code-fg: #e8e5de;
+  --agentskin-focus-ring: #e0c486;
+  --agentskin-selection: color-mix(in srgb, #c8a96b 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 200, 169, 107;
+  --agentskin-secondary-raw: 117, 183, 152;
+  --agentskin-text-raw: 241, 238, 231;
+  --agentskin-muted-raw: 167, 169, 170;
+  --agentskin-surface-raw: 17, 21, 26;
+  --agentskin-surface-elevated-raw: 24, 29, 35;
+  --agentskin-bg-raw: 11, 13, 16;
+  --agentskin-border-raw: 48, 54, 61;
+}

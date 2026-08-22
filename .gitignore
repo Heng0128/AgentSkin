@@ -1,0 +1,162 @@
+node_modules/
+.vite/
+out/
+coverage/
+*.log
+.DS_Store
+.env
+.env.*
+*.p12
+*.p8
+*.pem
+*.pfx
+*.key
+credentials.json
+id_rsa
+id_rsa.pub
+.tsbuildinfo
+
+# Standalone vite build output (verification runs)
+dist/
+
+# Build artifacts and debug residue
+out_make_trash_*/
+tmp-check*/
+extracted-icons/
+.build-tmp/
+logs/
+$null
+
+# PowerShell backup / transient files
+*.ps1.bak
+find--result.txt
+find-*-result.txt
+
+# Tooling workspace caches (local-only)
+.agnes/
+.workbuddy/
+.zcode/
+
+# Windows reserved-name artifact (accidentally created by `> NUL` redirect)
+/NUL
+
+# CDP raw extraction dumps (large, regeneratable from live agents)
+agents-raw-data/
+
+# Probe screenshots (local-only capture artifacts)
+assets/probe-shots/
+
+# Consulting audit deliverables (not project source)
+项目审计报告.md
+战略审计报告.md
+
+# Local tool-run output captures (typecheck / lint / test / preview)
+.tsc-err.txt
+.tsc-out.txt
+tsc_output.txt
+tsc-out.txt
+tsc_out.txt
+tsc-output.txt
+biome-out.txt
+biome_output.txt
+test-output.txt
+*test-output.txt
+vit-*.txt
+srcdiff.txt
+stderr.txt
+splash-preview.png
+
+# Orphaned temp captures (numbered / ad-hoc / diff dumps)
+headsrc.txt
+bio*.txt
+tsc-out*.txt
+tsc-output*.txt
+tsc_out*.txt
+tsc_result.txt
+biome_result.txt
+
+# Tool-run artifacts in subdirectories (local-only)
+test-output/
+
+# Blueprint — static HTML/CSS/JS visual reference (outside build/test scope)
+blueprint/
+
+# Phase5 hygiene: debug/temp artifacts (2026-08-15)
+test-*.mjs
+run-*.mjs
+_verify_*.mjs
+check-*.txt
+child-*.txt
+direct-output.txt
+script-output.txt
+violations-report.txt
+test-quality-scan-report.md
+studio-layout-prototype.html
+dev-fresh.err
+
+.fixture-tmp/
+
+playwright.config.ts
+
+# --- Cleanup: pollution files removed 2026-08-22 ---
+
+# Tooling/IDE local state
+.codebuddy/
+.solidify/
+
+# Debug/probe scripts and artifacts
+debug-tools/
+agents-run-now/
+agents-profiles/
+
+# Temp directories
+tmp/
+tmp*/
+
+# Port/Reference directories
+port-sources/
+
+# Dependency patches (local-only)
+patches/
+
+# Third-party themes (engine-only, not source)
+themes/github-noir/
+
+# Root-level utility scripts
+.select_dir.ps1
+
+# Scene test result artifacts
+scene-test-results.json
+
+# OS junk
+Thumbs.db
+$RECYCLE.BIN/
+Desktop.ini
+
+# --- Cleanup round 2: pollution files removed 2026-08-23 ---
+
+# Root-level tool-output captures (typecheck / lint / check / start)
+.start-err*.log
+.start-out*.log
+biome-check*.txt
+biome-result*.txt
+check-final.txt
+check-out*.txt
+check-result.txt
+tmptsc-*.txt
+tsc-out*.txt
+tsc-output*.log
+typecheck.log
+vitest-fresh.log
+vitest_output*.txt
+test-main.log
+test-ui.log
+test-ui.txt
+test-visual.log
+test-all*.txt
+
+# Windows path-mangling artifact (redirect used an absolute path as filename)
+CUsers*.txt
+
+# Quality tool workspace (auto-generated benchmarks / reports / logs)
+.quality/

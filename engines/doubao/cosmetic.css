@@ -1,0 +1,54 @@
+/* ============================================================
+   ENGINE: doubao — Layer 2: Cosmetic Enhancement
+   ------------------------------------------------------------
+   Visual polish that enhances the theme but is NOT critical.
+   If any rule here fails (agent renames a class, removes an
+   element), the theme still works — just with slightly less
+   visual flair.
+
+   Stability: LOW — these target visual details that agents
+   change frequently. All rules use !important but are designed
+   to fail silently (no layout breakage if selector misses).
+   ============================================================ */
+
+/* === Scrollbars: accent gradient thumb === */
+html.agentskin-host-doubao ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+html.agentskin-host-doubao ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html.agentskin-host-doubao ::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 30%, transparent) 100%
+  ) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+html.agentskin-host-doubao ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--agentskin-accent) 50%, transparent) 0%,
+    color-mix(in srgb, var(--agentskin-secondary, var(--agentskin-accent)) 50%, transparent) 100%
+  ) !important;
+  background-clip: padding-box !important;
+}
+
+/* === Selection: accent tint === */
+html.agentskin-host-doubao ::selection {
+  background: color-mix(in srgb, var(--agentskin-accent) 32%, transparent) !important;
+}
+
+/* === Reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+  html.agentskin-host-doubao *,
+  html.agentskin-host-doubao *::before,
+  html.agentskin-host-doubao *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

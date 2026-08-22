@@ -1,0 +1,22 @@
+{
+  "id": "polar",
+  "name": "Polar Night",
+  "mode": "dark",
+  "description": "极夜版：把极光压到冰蓝，深空更冷。像北纬八十度的冬夜。",
+  "colors": {
+    "accent": "#7fd4e8",
+    "secondary": "#8fa8d9",
+    "background": "#080d16",
+    "foreground": "#dce8f5",
+    "muted": "#7e8aa3",
+    "surface": "#0f1726",
+    "surfaceElevated": "#172033",
+    "border": "rgba(127, 212, 232, 0.18)",
+    "codeBackground": "#050912",
+    "codeForeground": "#c6d6e6",
+    "inputBackground": "#13203a",
+    "buttonBackground": "rgba(127, 212, 232, 0.14)",
+    "buttonForeground": "#7fd4e8",
+    "focusRing": "#7fd4e860"
+  }
+}

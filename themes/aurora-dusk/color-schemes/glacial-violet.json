@@ -1,0 +1,22 @@
+{
+  "id": "glacial-violet",
+  "name": "Glacial Violet",
+  "mode": "dark",
+  "description": "冰河紫——冰川裂缝中透出的幽蓝紫色光芒，冷冽而神秘。",
+  "colors": {
+    "accent": "#9b8ae8",
+    "secondary": "#7fb8d9",
+    "background": "#0a0a18",
+    "foreground": "#e0def0",
+    "muted": "#7a7a96",
+    "surface": "#14142a",
+    "surfaceElevated": "#1c1c3a",
+    "border": "rgba(155, 138, 232, 0.16)",
+    "codeBackground": "#08081a",
+    "codeForeground": "#cfcae0",
+    "inputBackground": "#14142a",
+    "buttonBackground": "#9b8ae8",
+    "buttonForeground": "#0a0a18",
+    "focusRing": "#9b8ae88c"
+  }
+}

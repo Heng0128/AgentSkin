@@ -1,0 +1,11 @@
+/* =================================================================
+ * AgentSkin Workspace — Animations & Keyframes
+ *
+ * This module is reserved for @keyframes definitions and animation
+ * utility classes. Currently all motion in the workspace uses CSS
+ * `transition` properties defined inline within each component
+ * (see tokens.css for --dur-* and --ease-* timing tokens).
+ *
+ * Add @keyframes here when introducing entrance/exit animations
+ * (e.g., dialog slide-in, dock expand, notification fade).
+ * ================================================================= */

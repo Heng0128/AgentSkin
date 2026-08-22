@@ -1,0 +1,19 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
+<!-- Dedicated entry for the Theme Studio standalone window. Loads the same
+     preload bridge (window.agentSkin) and the same global stylesheet as the
+     main window, but mounts StudioApp (a sidebar-less, wallpaper-less shell
+     that renders ThemeStudioPage) instead of the full App. -->
+<html lang="zh-CN" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https: http://localhost:* http://127.0.0.1:*; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' http://127.0.0.1:*; media-src 'self' data: blob: http://localhost:* http://127.0.0.1:*;" />
+    <title>AgentSkin Studio</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/studio.tsx"></script>
+  </body>
+</html>

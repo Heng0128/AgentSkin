@@ -1,0 +1,49 @@
+/* AgentSkin Studio export — traework */
+:root {
+  color-scheme: dark !important;
+  --agentskin-accent: #ff7a6b;
+  --agentskin-secondary: #a8b4e6;
+  --agentskin-bg: #0a0e1a;
+  --agentskin-surface: #141b2d;
+  --agentskin-surface-elevated: #1c2540;
+  --agentskin-text: #e8edf5;
+  --agentskin-muted: #7a859a;
+  --agentskin-border: rgba(255, 122, 107, 0.16);
+  --agentskin-code-bg: #0d1220;
+  --agentskin-code-fg: #d0d8e8;
+  --agentskin-input-bg: #141b2d;
+  --agentskin-button-bg: #ff7a6b;
+  --agentskin-focus-ring: #ff7a6b8c;
+  --agentskin-selection: color-mix(in srgb, #ff7a6b 32%, transparent);
+}
+
+/* Redirect traework native design tokens onto the crafted palette */
+html.agentskin-host-traework body {
+  color-scheme: dark !important;
+  --vscode-editor-background: var(--agentskin-bg) !important;
+  --vscode-foreground: var(--agentskin-text) !important;
+  --vscode-editor-foreground: var(--agentskin-text) !important;
+  --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-activityBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-statusBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-titleBar-activeBackground: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-titleBar-activeForeground: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-titleBar-inactiveBackground: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-tab-activeBackground: var(--agentskin-bg) !important;
+  --vscode-input-background: var(--agentskin-input-bg) !important;
+  --vscode-dropdown-background: var(--agentskin-bg) !important;
+  --vscode-list-hoverBackground: var(--agentskin-bg) !important;
+  --vscode-toolbar-hoverBackground: var(--agentskin-bg) !important;
+  --vscode-textLink-foreground: var(--agentskin-text) !important;
+  --vscode-button-background: var(--agentskin-accent) !important;
+  --vscode-button-foreground: var(--agentskin-text) !important;
+  --vscode-button-hoverBackground: color-mix(in srgb, var(--agentskin-accent) 85%, #000) !important;
+  --vscode-focusBorder: var(--agentskin-border) !important;
+  --vscode-panel-border: var(--agentskin-surface) !important;
+  --vscode-widget-border: var(--agentskin-border) !important;
+  --vscode-scrollbarSlider-background: var(--agentskin-focus-ring) !important;
+  --vscode-scrollbarSlider-hoverBackground: var(--agentskin-focus-ring) !important;
+  --vscode-descriptionForeground: var(--agentskin-muted) !important;
+  --vscode-icube-bg: var(--agentskin-bg) !important;
+  --vscode-icube-fg: var(--agentskin-text) !important;
+}
