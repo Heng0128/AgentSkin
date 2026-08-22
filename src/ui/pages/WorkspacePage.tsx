@@ -54,11 +54,6 @@ import {
   XCircle,
 } from 'lucide-react';
 
-/** Read current i18n message table (project-standard pattern). */
-function currentT(): UiMessages {
-  return uiMessages[useShellStore.getState().locale];
-}
-
 /**
  * i18n fallbacks for error banners. These are narrowly-scoped fallbacks used
  * only when a locale omits the corresponding key; the canonical copy lives in
@@ -102,7 +97,10 @@ function ErrorBanner({
 }
 
 export function WorkspacePage() {
-  const t = currentT();
+  // Subscribe to locale so the page re-renders on language change and stays
+  // outside the useSyncExternalStore tearing window (INDEX.md invariant §render).
+  const locale = useShellStore((s) => s.locale);
+  const t = uiMessages[locale];
 
   const status = useStatusStore((s) => s.status);
   const isRefreshing = useStatusStore((s) => s.isRefreshing);
