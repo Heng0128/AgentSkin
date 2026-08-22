@@ -1,0 +1,210 @@
+{
+  "agent": "traework",
+  "cdpVersion": "vscode-file://vscode-app/c:/Users/snowb/AppData/Local/Programs/TRAE%20SOLO%20CN/resources/app/out/vs/code/electron-browser/solo/solo-lite.html",
+  "staticVersion": "1.107.1",
+  "rootVarSource": "root",
+  "stats": {
+    "staticNamespaces": 26,
+    "runtimeNamespaces": 42,
+    "staticOnlyNamespaces": 18,
+    "sharedNamespaces": 8,
+    "staticTestIds": 1,
+    "verifiedTestIds": 0,
+    "unverifiedTestIds": 0
+  },
+  "staticOnlyNamespaces": [
+    {
+      "ns": "input",
+      "varCount": 4,
+      "sampleVars": [
+        "input-padding-vertical",
+        "input-padding-horizontal",
+        "input-margin-vertical",
+        "input-margin-horizontal"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "dropdown",
+      "varCount": 2,
+      "sampleVars": [
+        "dropdown-padding-top",
+        "dropdown-padding-bottom"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "color",
+      "varCount": 2,
+      "sampleVars": [
+        "color-icon-rect",
+        "color-icon-path"
+      ],
+      "hint": "design-token 可能走 distributed/component-inline，非 :root 暴露——需核是否在核心渲染面"
+    },
+    {
+      "ns": "DarkMode-Line-line-1",
+      "varCount": 1,
+      "sampleVars": [
+        "DarkMode-Line-line-1"
+      ],
+      "hint": "VS Code 可变色（inline/style 变量），CDP rootVars 收集不到——常见盲区"
+    },
+    {
+      "ns": "DarkMode-Bg-bg-tr-1",
+      "varCount": 1,
+      "sampleVars": [
+        "DarkMode-Bg-bg-tr-1"
+      ],
+      "hint": "VS Code 可变色（inline/style 变量），CDP rootVars 收集不到——常见盲区"
+    },
+    {
+      "ns": "duplicate",
+      "varCount": 1,
+      "sampleVars": [
+        "duplicate"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiEdit-family",
+      "varCount": 1,
+      "sampleVars": [
+        "multiEdit-family"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiEdit-background",
+      "varCount": 1,
+      "sampleVars": [
+        "multiEdit-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiEdit-border",
+      "varCount": 1,
+      "sampleVars": [
+        "multiEdit-border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiEdit-button-border",
+      "varCount": 1,
+      "sampleVars": [
+        "multiEdit-button-border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiEdit-button-background",
+      "varCount": 1,
+      "sampleVars": [
+        "multiEdit-button-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiEdit-icon-hover-background",
+      "varCount": 1,
+      "sampleVars": [
+        "multiEdit-icon-hover-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiEdit-icon-line-border",
+      "varCount": 1,
+      "sampleVars": [
+        "multiEdit-icon-line-border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiEdit-hint-background",
+      "varCount": 1,
+      "sampleVars": [
+        "multiEdit-hint-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiEdit-card-item-hover-background",
+      "varCount": 1,
+      "sampleVars": [
+        "multiEdit-card-item-hover-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "expanded",
+      "varCount": 1,
+      "sampleVars": [
+        "expanded-width"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "container",
+      "varCount": 1,
+      "sampleVars": [
+        "container-paddding"
+      ],
+      "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
+    },
+    {
+      "ns": "subtle",
+      "varCount": 1,
+      "sampleVars": [
+        "subtle-bg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    }
+  ],
+  "sharedNamespaces": [
+    {
+      "ns": "vscode",
+      "staticVars": 44,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "motion",
+      "staticVars": 6,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "icube",
+      "staticVars": 1,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "chat",
+      "staticVars": 1,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "inline",
+      "staticVars": 1,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "prop",
+      "staticVars": 1,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "monaco",
+      "staticVars": 1,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "text",
+      "staticVars": 1,
+      "runtimeCount": 3
+    }
+  ],
+  "unverifiedTestIds": [],
+  "verifiedTestIds": []
+}

@@ -1,0 +1,3083 @@
+{
+  "agent": "workbuddy",
+  "cdpVersion": "file:///C:/Program%20Files/WorkBuddy/resources/app.asar/renderer/index.html",
+  "staticVersion": "5.3.14",
+  "rootVarSource": "distributed",
+  "stats": {
+    "staticNamespaces": 341,
+    "runtimeNamespaces": 48,
+    "staticOnlyNamespaces": 293,
+    "sharedNamespaces": 48,
+    "staticTestIds": 44,
+    "verifiedTestIds": 0,
+    "unverifiedTestIds": 1
+  },
+  "staticOnlyNamespaces": [
+    {
+      "ns": "td",
+      "varCount": 249,
+      "sampleVars": [
+        "td-brand-color-1",
+        "td-brand-color-2",
+        "td-brand-color-3",
+        "td-brand-color-4",
+        "td-brand-color-5",
+        "td-brand-color-6",
+        "td-brand-color-7",
+        "td-brand-color-8",
+        "td-brand-color-9",
+        "td-brand-color-10",
+        "td-warning-color-1",
+        "td-warning-color-2"
+      ],
+      "hint": "脚手架/独立功能库变量——大概率未加载 chunk，非当前渲染面，CDP 看不到属预期，无需补采"
+    },
+    {
+      "ns": "color",
+      "varCount": 75,
+      "sampleVars": [
+        "color",
+        "color-slider-track",
+        "color-selection",
+        "color-icon-white",
+        "color-primary",
+        "color-primary-darker",
+        "color-primary-darkest",
+        "color-primary-light",
+        "color-primary-light-darker",
+        "color-primary-hover",
+        "color-disabled",
+        "color-text-warning"
+      ],
+      "hint": "design-token 可能走 distributed/component-inline，非 :root 暴露——需核是否在核心渲染面"
+    },
+    {
+      "ns": "base",
+      "varCount": 36,
+      "sampleVars": [
+        "base-menu-item-padding-left",
+        "base-button-classic-active-padding-top",
+        "base-button-height",
+        "base-menu-content-padding",
+        "base-menu-item-padding-right",
+        "base-menu-item-height",
+        "base-card-classic-border-color",
+        "base-card-classic-hover-border-color",
+        "base-card-classic-active-border-color",
+        "base-card-padding-top",
+        "base-card-padding-right",
+        "base-card-padding-bottom"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "accent",
+      "varCount": 28,
+      "sampleVars": [
+        "accent-1",
+        "accent-2",
+        "accent-3",
+        "accent-4",
+        "accent-5",
+        "accent-6",
+        "accent-7",
+        "accent-8",
+        "accent-9",
+        "accent-10",
+        "accent-11",
+        "accent-12"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "focus",
+      "varCount": 25,
+      "sampleVars": [
+        "focus-highlight-color",
+        "focus-1",
+        "focus-2",
+        "focus-3",
+        "focus-4",
+        "focus-5",
+        "focus-6",
+        "focus-7",
+        "focus-8",
+        "focus-9",
+        "focus-10",
+        "focus-11"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "project",
+      "varCount": 23,
+      "sampleVars": [
+        "project-plan-column-accent",
+        "project-plan-subtodos-accent",
+        "project-plan-column-count",
+        "project-experts-surface",
+        "project-experts-surface-hover",
+        "project-experts-border",
+        "project-experts-border-soft",
+        "project-experts-text-primary",
+        "project-experts-text-secondary",
+        "project-experts-text-muted",
+        "project-experts-text-disabled",
+        "project-experts-overlay"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "button",
+      "varCount": 18,
+      "sampleVars": [
+        "button-ghost-padding-x",
+        "button-ghost-padding-y",
+        "button-bg",
+        "button-hover-bg",
+        "button-border",
+        "button-active-bg",
+        "button-width",
+        "button-hover-color",
+        "button-hover-border",
+        "button-destructive-bg-color",
+        "button-destructive-color",
+        "button-gray-1"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "font",
+      "varCount": 15,
+      "sampleVars": [
+        "font-size-slider-thumb",
+        "font-size-slider-thumb-border",
+        "font-size-1",
+        "font-size-2",
+        "font-size-3",
+        "font-size-4",
+        "font-size-5",
+        "font-size-6",
+        "font-size-7",
+        "font-size-8",
+        "font-size-9",
+        "font-weight-light"
+      ],
+      "hint": "design-token 可能走 distributed/component-inline，非 :root 暴露——需核是否在核心渲染面"
+    },
+    {
+      "ns": "heading",
+      "varCount": 15,
+      "sampleVars": [
+        "heading-font-family",
+        "heading-font-size-adjust",
+        "heading-font-style",
+        "heading-leading-trim-start",
+        "heading-leading-trim-end",
+        "heading-letter-spacing",
+        "heading-line-height-1",
+        "heading-line-height-2",
+        "heading-line-height-3",
+        "heading-line-height-4",
+        "heading-line-height-5",
+        "heading-line-height-6"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "colleague",
+      "varCount": 13,
+      "sampleVars": [
+        "colleague-card-accent",
+        "colleague-card-accent-deep",
+        "colleague-card-tint",
+        "colleague-detail-online-dot-color",
+        "colleague-detail-border",
+        "colleague-status-idle-color",
+        "colleague-status-working-color",
+        "colleague-status-offline-color",
+        "colleague-detail-muted-border",
+        "colleague-detail-surface",
+        "colleague-detail-muted-surface",
+        "colleague-detail-sidebar-bg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "default",
+      "varCount": 13,
+      "sampleVars": [
+        "default",
+        "default-bg-color",
+        "default-button-size",
+        "default-icon-size",
+        "default-border-color",
+        "default-font-family",
+        "default-font-size",
+        "default-font-style",
+        "default-font-weight",
+        "default-line-height",
+        "default-letter-spacing",
+        "default-leading-trim-start"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "stp",
+      "varCount": 13,
+      "sampleVars": [
+        "stp-bg",
+        "stp-fg",
+        "stp-border",
+        "stp-hljs-comment",
+        "stp-hljs-keyword",
+        "stp-hljs-string",
+        "stp-hljs-number",
+        "stp-hljs-function",
+        "stp-hljs-variable",
+        "stp-hljs-constant",
+        "stp-hljs-tag",
+        "stp-hljs-error"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "security",
+      "varCount": 12,
+      "sampleVars": [
+        "security-center-card-bg",
+        "security-center-row-bg",
+        "security-center-border",
+        "security-center-hover-bg",
+        "security-center-sandbox-switch-gap",
+        "security-center-sandbox-switch-offset-y",
+        "security-center-sandbox-switch-active-bg",
+        "security-center-sandbox-switch-track-width",
+        "security-center-sandbox-switch-track-height",
+        "security-center-sandbox-switch-track-padding",
+        "security-center-sandbox-switch-thumb-size",
+        "security-center-sandbox-switch-thumb-translate-x"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "space",
+      "varCount": 11,
+      "sampleVars": [
+        "space",
+        "space-factor",
+        "space-1",
+        "space-2",
+        "space-3",
+        "space-4",
+        "space-5",
+        "space-6",
+        "space-7",
+        "space-8",
+        "space-9"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "inset",
+      "varCount": 11,
+      "sampleVars": [
+        "inset-border-radius-calc",
+        "inset-padding-top-calc",
+        "inset-padding-right-calc",
+        "inset-padding-bottom-calc",
+        "inset-padding-left-calc",
+        "inset-padding-top",
+        "inset-padding-right",
+        "inset-padding-bottom",
+        "inset-padding-left",
+        "inset-border-width",
+        "inset-border-radius"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "checkbox",
+      "varCount": 11,
+      "sampleVars": [
+        "checkbox-size",
+        "checkbox-indicator-size",
+        "checkbox-border-radius",
+        "checkbox-cards-item-padding-top",
+        "checkbox-cards-item-padding-bottom",
+        "checkbox-cards-item-padding-left",
+        "checkbox-cards-item-border-radius",
+        "checkbox-cards-item-checkbox-size",
+        "checkbox-cards-item-border-width",
+        "checkbox-cards-item-background-color",
+        "checkbox-cards-item-padding-right"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "artifact",
+      "varCount": 11,
+      "sampleVars": [
+        "artifact-tab-strip-bg",
+        "artifact-tab-list-edge-inset",
+        "artifact-tab-idle-bg",
+        "artifact-tab-idle-border",
+        "artifact-tab-idle-foreground",
+        "artifact-tab-hover-bg",
+        "artifact-tab-hover-border",
+        "artifact-tab-hover-foreground",
+        "artifact-tab-active-bg",
+        "artifact-tab-active-border",
+        "artifact-tab-active-foreground"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "radius",
+      "varCount": 10,
+      "sampleVars": [
+        "radius-factor",
+        "radius-full",
+        "radius-thumb",
+        "radius",
+        "radius-1",
+        "radius-2",
+        "radius-3",
+        "radius-4",
+        "radius-5",
+        "radius-6"
+      ],
+      "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
+    },
+    {
+      "ns": "sidebar",
+      "varCount": 10,
+      "sampleVars": [
+        "sidebar-next-panel-motion-duration",
+        "sidebar-next-panel-motion-easing",
+        "sidebar-next-window-control-inset",
+        "sidebar-shadow",
+        "sidebar-border-color",
+        "sidebar-bg-color",
+        "sidebar-next-top-rail-height",
+        "sidebar-next-preview-titlebar-height",
+        "sidebar-next-top-rail-x",
+        "sidebar-next-sidebar-content-min-width"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "idle",
+      "varCount": 10,
+      "sampleVars": [
+        "idle-cap-accent-text",
+        "idle-cap-action-text",
+        "idle-cap-action-text-disabled",
+        "idle-cap-divider",
+        "idle-cap-list-border",
+        "idle-cap-card-border",
+        "idle-cap-secondary-bg",
+        "idle-cap-secondary-bg-hover",
+        "idle-cap-row-hover-bg",
+        "idle-cap-badge-bg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "switch",
+      "varCount": 10,
+      "sampleVars": [
+        "switch-height",
+        "switch-border-radius",
+        "switch-surface-checked-active-filter",
+        "switch-disabled-blend-mode",
+        "switch-high-contrast-checked-color-overlay",
+        "switch-high-contrast-checked-active-before-filter",
+        "switch-width",
+        "switch-thumb-inset",
+        "switch-thumb-size",
+        "switch-thumb-translate-x"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "line",
+      "varCount": 10,
+      "sampleVars": [
+        "line-height",
+        "line-height-1",
+        "line-height-2",
+        "line-height-3",
+        "line-height-4",
+        "line-height-5",
+        "line-height-6",
+        "line-height-7",
+        "line-height-8",
+        "line-height-9"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "letter",
+      "varCount": 10,
+      "sampleVars": [
+        "letter-spacing",
+        "letter-spacing-1",
+        "letter-spacing-2",
+        "letter-spacing-3",
+        "letter-spacing-4",
+        "letter-spacing-5",
+        "letter-spacing-6",
+        "letter-spacing-7",
+        "letter-spacing-8",
+        "letter-spacing-9"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "code",
+      "varCount": 10,
+      "sampleVars": [
+        "code-variant-font-size-adjust",
+        "code-font-family",
+        "code-font-size-adjust",
+        "code-font-style",
+        "code-font-weight",
+        "code-letter-spacing",
+        "code-padding-top",
+        "code-padding-bottom",
+        "code-padding-left",
+        "code-padding-right"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "scrollarea",
+      "varCount": 10,
+      "sampleVars": [
+        "scrollarea-scrollbar-size",
+        "scrollarea-scrollbar-border-radius",
+        "scrollarea-scrollbar-horizontal-margin-left",
+        "scrollarea-scrollbar-horizontal-margin-right",
+        "scrollarea-scrollbar-vertical-margin-top",
+        "scrollarea-scrollbar-vertical-margin-bottom",
+        "scrollarea-scrollbar-horizontal-margin-top",
+        "scrollarea-scrollbar-horizontal-margin-bottom",
+        "scrollarea-scrollbar-vertical-margin-left",
+        "scrollarea-scrollbar-vertical-margin-right"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "data",
+      "varCount": 10,
+      "sampleVars": [
+        "data-list-value-trim-start",
+        "data-list-value-trim-end",
+        "data-list-first-item-value-trim-start",
+        "data-list-last-item-value-trim-end",
+        "data-list-value-margin-top",
+        "data-list-value-margin-bottom",
+        "data-list-first-item-value-margin-top",
+        "data-list-last-item-value-margin-bottom",
+        "data-list-leading-trim-start",
+        "data-list-leading-trim-end"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "input",
+      "varCount": 9,
+      "sampleVars": [
+        "input-bg-color",
+        "input-border-color",
+        "input-hover-bg-color",
+        "input-label-color",
+        "input-focus-border-color",
+        "input-unfocused-border-color",
+        "input-disabled-border-color",
+        "input-hover-border-color",
+        "input-focus-outline"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "select",
+      "varCount": 9,
+      "sampleVars": [
+        "select-trigger-height",
+        "select-trigger-ghost-padding-x",
+        "select-trigger-ghost-padding-y",
+        "select-content-padding",
+        "select-item-height",
+        "select-item-indicator-width",
+        "select-separator-margin-right",
+        "select-highlight-color",
+        "select-trigger-classic-box-shadow"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "cursor",
+      "varCount": 9,
+      "sampleVars": [
+        "cursor-button",
+        "cursor-checkbox",
+        "cursor-disabled",
+        "cursor-link",
+        "cursor-menu-item",
+        "cursor-radio",
+        "cursor-slider-thumb",
+        "cursor-slider-thumb-active",
+        "cursor-switch"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "tab",
+      "varCount": 9,
+      "sampleVars": [
+        "tab-height",
+        "tab-padding-x",
+        "tab-inner-padding-x",
+        "tab-inner-padding-y",
+        "tab-inner-border-radius",
+        "tab-active-letter-spacing",
+        "tab-active-word-spacing",
+        "tab-inactive-letter-spacing",
+        "tab-inactive-word-spacing"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "quota",
+      "varCount": 9,
+      "sampleVars": [
+        "quota-toast-bg",
+        "quota-toast-border",
+        "quota-toast-text-primary",
+        "quota-toast-text-secondary",
+        "quota-toast-text-tertiary",
+        "quota-toast-hover-bg",
+        "quota-toast-action-bg",
+        "quota-toast-action-fg",
+        "quota-toast-shadow"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "shadow",
+      "varCount": 8,
+      "sampleVars": [
+        "shadow-1",
+        "shadow-2",
+        "shadow-3",
+        "shadow-4",
+        "shadow-5",
+        "shadow-6",
+        "shadow-hover",
+        "shadow-island"
+      ],
+      "hint": "design-token 可能走 distributed/component-inline，非 :root 暴露——需核是否在核心渲染面"
+    },
+    {
+      "ns": "logo",
+      "varCount": 8,
+      "sampleVars": [
+        "logo-icon--xs",
+        "logo-text--xs",
+        "logo-icon--small",
+        "logo-text--small",
+        "logo-icon--normal",
+        "logo-text--normal",
+        "logo-icon--large",
+        "logo-text--large"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "progress",
+      "varCount": 8,
+      "sampleVars": [
+        "progress-height",
+        "progress-indicator-indeterminate-animation-start",
+        "progress-indicator-indeterminate-animation-repeat",
+        "progress",
+        "progress-indicator-after-linear-gradient",
+        "progress-value",
+        "progress-max",
+        "progress-duration"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "margin",
+      "varCount": 8,
+      "sampleVars": [
+        "margin-top",
+        "margin-right",
+        "margin-bottom",
+        "margin-left",
+        "margin-top-override",
+        "margin-right-override",
+        "margin-bottom-override",
+        "margin-left-override"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "tool",
+      "varCount": 8,
+      "sampleVars": [
+        "tool-ui-text-primary",
+        "tool-ui-text-secondary",
+        "tool-ui-bg-primary",
+        "tool-ui-bg-secondary",
+        "tool-ui-bg-tertiary",
+        "tool-ui-border-light",
+        "tool-ui-accent",
+        "tool-ui-error"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "variant",
+      "varCount": 7,
+      "sampleVars": [
+        "variant-outline",
+        "variant-base",
+        "variant-text",
+        "variant-dashed",
+        "variant-filled",
+        "variant-outlined",
+        "variant-icon"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "claw",
+      "varCount": 6,
+      "sampleVars": [
+        "claw-welcome-activity-title-gradient",
+        "claw-agent-chat-content-max-width",
+        "claw-sidebar-pin-tooltip-arrow-height",
+        "claw-welcome-activity-description-collapsed-height",
+        "claw-welcome-activity-accent",
+        "claw-welcome-activity-accent-hover"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "hover",
+      "varCount": 6,
+      "sampleVars": [
+        "hover-underline",
+        "hover-color",
+        "hover-card-content-padding",
+        "hover",
+        "hover-highlight",
+        "hover-border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "skeleton",
+      "varCount": 6,
+      "sampleVars": [
+        "skeleton",
+        "skeleton-animation-gradient",
+        "skeleton-height-override",
+        "skeleton-radius-override",
+        "skeleton-radius",
+        "skeleton-height"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "container",
+      "varCount": 6,
+      "sampleVars": [
+        "container-padding-y",
+        "container-padding-x",
+        "container-1",
+        "container-2",
+        "container-3",
+        "container-4"
+      ],
+      "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
+    },
+    {
+      "ns": "settings",
+      "varCount": 6,
+      "sampleVars": [
+        "settings-surface",
+        "settings-border",
+        "settings-title",
+        "settings-body",
+        "settings-muted",
+        "settings-accent"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "memory",
+      "varCount": 6,
+      "sampleVars": [
+        "memory-modal-surface",
+        "memory-modal-card",
+        "memory-modal-field",
+        "memory-modal-divider",
+        "memory-modal-primary-button-bg",
+        "memory-modal-primary-button-fg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "radio",
+      "varCount": 6,
+      "sampleVars": [
+        "radio-cards-item-padding-x",
+        "radio-cards-item-padding-y",
+        "radio-cards-item-border-radius",
+        "radio-size",
+        "radio-cards-item-border-width",
+        "radio-cards-item-background-color"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "eb",
+      "varCount": 6,
+      "sampleVars": [
+        "eb-border",
+        "eb-bg",
+        "eb-accent",
+        "eb-retry-bg",
+        "eb-retry-text",
+        "eb-text-secondary"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "card",
+      "varCount": 5,
+      "sampleVars": [
+        "card-padding",
+        "card-border-radius",
+        "card",
+        "card-border-width",
+        "card-background-color"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "fixed",
+      "varCount": 5,
+      "sampleVars": [
+        "fixed-left-last",
+        "fixed-right-first",
+        "fixed-left",
+        "fixed-right",
+        "fixed"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "icon",
+      "varCount": 5,
+      "sampleVars": [
+        "icon-button-ghost-padding",
+        "icon-fill-color",
+        "icon",
+        "icon-green-fill-color",
+        "icon-only"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "slider",
+      "varCount": 5,
+      "sampleVars": [
+        "slider-track-size",
+        "slider-range-high-contrast-background-image",
+        "slider-thumb-box-shadow",
+        "slider-thumb-size",
+        "slider-disabled-blend-mode"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "models",
+      "varCount": 5,
+      "sampleVars": [
+        "models-surface",
+        "models-border",
+        "models-title",
+        "models-body",
+        "models-muted"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "strong",
+      "varCount": 5,
+      "sampleVars": [
+        "strong-font-family",
+        "strong-font-size-adjust",
+        "strong-font-style",
+        "strong-font-weight",
+        "strong-letter-spacing"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "em",
+      "varCount": 5,
+      "sampleVars": [
+        "em-font-family",
+        "em-font-size-adjust",
+        "em-font-style",
+        "em-font-weight",
+        "em-letter-spacing"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "quote",
+      "varCount": 5,
+      "sampleVars": [
+        "quote-font-family",
+        "quote-font-size-adjust",
+        "quote-font-style",
+        "quote-font-weight",
+        "quote-letter-spacing"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "table",
+      "varCount": 5,
+      "sampleVars": [
+        "table-border-radius",
+        "table-cell-padding",
+        "table-cell-min-height",
+        "table-row-background-color",
+        "table-row-box-shadow"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "with",
+      "varCount": 4,
+      "sampleVars": [
+        "with-tag",
+        "with-text",
+        "with-text-left",
+        "with-text-right"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "highlight",
+      "varCount": 4,
+      "sampleVars": [
+        "highlight",
+        "highlight-bg-color",
+        "highlight-selected-bg-color",
+        "highlight-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "avatar",
+      "varCount": 4,
+      "sampleVars": [
+        "avatar-size",
+        "avatar-fallback-one-letter-font-size",
+        "avatar-fallback-two-letters-font-size",
+        "avatar-border-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "userlist",
+      "varCount": 4,
+      "sampleVars": [
+        "userlist-hint-bg-color",
+        "userlist-hint-heading-color",
+        "userlist-hint-text-color",
+        "userlist-collaborators-border-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "popup",
+      "varCount": 4,
+      "sampleVars": [
+        "popup-secondary-bg-color",
+        "popup-text-color",
+        "popup-text-inverted-color",
+        "popup-bg-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "link",
+      "varCount": 3,
+      "sampleVars": [
+        "link",
+        "link-color",
+        "link-outline"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "active",
+      "varCount": 3,
+      "sampleVars": [
+        "active",
+        "active-start",
+        "active-end"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "dropdown",
+      "varCount": 3,
+      "sampleVars": [
+        "dropdown-padding-top",
+        "dropdown-padding-bottom",
+        "dropdown-icon"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "animation",
+      "varCount": 3,
+      "sampleVars": [
+        "animation-gradient",
+        "animation-duration",
+        "animation-direction"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "spinner",
+      "varCount": 3,
+      "sampleVars": [
+        "spinner-color",
+        "spinner-opacity",
+        "spinner-animation-duration"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "border",
+      "varCount": 3,
+      "sampleVars": [
+        "border-color",
+        "border-radius-md",
+        "border-radius-lg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "preview",
+      "varCount": 3,
+      "sampleVars": [
+        "preview-padding",
+        "preview-fullscreen-motion-duration",
+        "preview-fullscreen-motion-easing"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "mask",
+      "varCount": 3,
+      "sampleVars": [
+        "mask-top",
+        "mask-bottom",
+        "mask"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "try",
+      "varCount": 3,
+      "sampleVars": [
+        "try-loading",
+        "try",
+        "try-standalone"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "segmented",
+      "varCount": 3,
+      "sampleVars": [
+        "segmented-control-border-radius",
+        "segmented-control-indicator-background-color",
+        "segmented-control-transition-duration"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "markdown",
+      "varCount": 3,
+      "sampleVars": [
+        "markdown-content-gap",
+        "markdown-list-padding-left",
+        "markdown-line-gap"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "create",
+      "varCount": 2,
+      "sampleVars": [
+        "create",
+        "create-colleague-control-border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "back",
+      "varCount": 2,
+      "sampleVars": [
+        "back-color",
+        "back"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "tip",
+      "varCount": 2,
+      "sampleVars": [
+        "tip-top",
+        "tip-bottom"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "background",
+      "varCount": 2,
+      "sampleVars": [
+        "background",
+        "background-color-badge"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "dialog",
+      "varCount": 2,
+      "sampleVars": [
+        "dialog-content-padding",
+        "dialog-border-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "overlay",
+      "varCount": 2,
+      "sampleVars": [
+        "overlay-bg-color",
+        "overlay"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "lg",
+      "varCount": 2,
+      "sampleVars": [
+        "lg-button-size",
+        "lg-icon-size"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "scrollbar",
+      "varCount": 2,
+      "sampleVars": [
+        "scrollbar-thumb",
+        "scrollbar-thumb-hover"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "workbuddy",
+      "varCount": 2,
+      "sampleVars": [
+        "workbuddy",
+        "workbuddy-collapsed"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "closable",
+      "varCount": 2,
+      "sampleVars": [
+        "closable-close",
+        "closable-wrapper"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "has",
+      "varCount": 2,
+      "sampleVars": [
+        "has-overflow",
+        "has-overflow-bottom"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "image",
+      "varCount": 2,
+      "sampleVars": [
+        "image-preview-motion-duration",
+        "image-preview-motion-curve"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "fade",
+      "varCount": 2,
+      "sampleVars": [
+        "fade-right",
+        "fade-left"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "leading",
+      "varCount": 2,
+      "sampleVars": [
+        "leading-trim-start",
+        "leading-trim-end"
+      ],
+      "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
+    },
+    {
+      "ns": "react",
+      "varCount": 2,
+      "sampleVars": [
+        "react-pdf-annotation-layer",
+        "react-pdf-text-layer"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "todo",
+      "varCount": 2,
+      "sampleVars": [
+        "todo-delegate-head-angle",
+        "todo-delegate-head-stroke"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "automation",
+      "varCount": 2,
+      "sampleVars": [
+        "automation-connector-picker-bg",
+        "automation-connector-picker-selected-bg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "installed",
+      "varCount": 2,
+      "sampleVars": [
+        "installed-list-mode",
+        "installed"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "loading",
+      "varCount": 1,
+      "sampleVars": [
+        "loading"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ghost",
+      "varCount": 1,
+      "sampleVars": [
+        "ghost"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "filled",
+      "varCount": 1,
+      "sampleVars": [
+        "filled"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "compact",
+      "varCount": 1,
+      "sampleVars": [
+        "compact"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "archivable",
+      "varCount": 1,
+      "sampleVars": [
+        "archivable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "archived",
+      "varCount": 1,
+      "sampleVars": [
+        "archived"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "primary",
+      "varCount": 1,
+      "sampleVars": [
+        "primary"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "top",
+      "varCount": 1,
+      "sampleVars": [
+        "top"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "scrollable",
+      "varCount": 1,
+      "sampleVars": [
+        "scrollable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "clickable",
+      "varCount": 1,
+      "sampleVars": [
+        "clickable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "danger",
+      "varCount": 1,
+      "sampleVars": [
+        "danger"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "pending",
+      "varCount": 1,
+      "sampleVars": [
+        "pending"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "expanded",
+      "varCount": 1,
+      "sampleVars": [
+        "expanded"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "completed",
+      "varCount": 1,
+      "sampleVars": [
+        "completed"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "selected",
+      "varCount": 1,
+      "sampleVars": [
+        "selected"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "outline",
+      "varCount": 1,
+      "sampleVars": [
+        "outline"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "solid",
+      "varCount": 1,
+      "sampleVars": [
+        "solid"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "info",
+      "varCount": 1,
+      "sampleVars": [
+        "info"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "success",
+      "varCount": 1,
+      "sampleVars": [
+        "success"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "warning",
+      "varCount": 1,
+      "sampleVars": [
+        "warning"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "error",
+      "varCount": 1,
+      "sampleVars": [
+        "error"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "empty",
+      "varCount": 1,
+      "sampleVars": [
+        "empty"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "monaco",
+      "varCount": 1,
+      "sampleVars": [
+        "monaco-monospace-font"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ripple",
+      "varCount": 1,
+      "sampleVars": [
+        "ripple-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "borderless",
+      "varCount": 1,
+      "sampleVars": [
+        "borderless"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "suffix",
+      "varCount": 1,
+      "sampleVars": [
+        "suffix"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "finish",
+      "varCount": 1,
+      "sampleVars": [
+        "finish"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "process",
+      "varCount": 1,
+      "sampleVars": [
+        "process"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "disabled",
+      "varCount": 1,
+      "sampleVars": [
+        "disabled"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "check",
+      "varCount": 1,
+      "sampleVars": [
+        "check"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "dark",
+      "varCount": 1,
+      "sampleVars": [
+        "dark"
+      ],
+      "hint": "VS Code 可变色（inline/style 变量），CDP rootVars 收集不到——常见盲区"
+    },
+    {
+      "ns": "checked",
+      "varCount": 1,
+      "sampleVars": [
+        "checked"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "break",
+      "varCount": 1,
+      "sampleVars": [
+        "break-line"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "auto",
+      "varCount": 1,
+      "sampleVars": [
+        "auto-width"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "multiple",
+      "varCount": 1,
+      "sampleVars": [
+        "multiple"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "more",
+      "varCount": 1,
+      "sampleVars": [
+        "more"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "obvious",
+      "varCount": 1,
+      "sampleVars": [
+        "obvious"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "bordered",
+      "varCount": 1,
+      "sampleVars": [
+        "bordered"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "striped",
+      "varCount": 1,
+      "sampleVars": [
+        "striped"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "hoverable",
+      "varCount": 1,
+      "sampleVars": [
+        "hoverable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "editable",
+      "varCount": 1,
+      "sampleVars": [
+        "editable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "column",
+      "varCount": 1,
+      "sampleVars": [
+        "column-resizable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "plain",
+      "varCount": 1,
+      "sampleVars": [
+        "plain"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "scroll",
+      "varCount": 1,
+      "sampleVars": [
+        "scroll"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "left",
+      "varCount": 1,
+      "sampleVars": [
+        "left"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "right",
+      "varCount": 1,
+      "sampleVars": [
+        "right"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "bottom",
+      "varCount": 1,
+      "sampleVars": [
+        "bottom"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "fullscreen",
+      "varCount": 1,
+      "sampleVars": [
+        "fullscreen"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "draggable",
+      "varCount": 1,
+      "sampleVars": [
+        "draggable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "level",
+      "varCount": 1,
+      "sampleVars": [
+        "level"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "hscale",
+      "varCount": 1,
+      "sampleVars": [
+        "hscale"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "iconSize",
+      "varCount": 1,
+      "sampleVars": [
+        "iconSize"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "first",
+      "varCount": 1,
+      "sampleVars": [
+        "first"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "leaf",
+      "varCount": 1,
+      "sampleVars": [
+        "leaf"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "dashed",
+      "varCount": 1,
+      "sampleVars": [
+        "dashed"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "timePickerPanelOffsetTop",
+      "varCount": 1,
+      "sampleVars": [
+        "timePickerPanelOffsetTop"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "timePickerPanelOffsetBottom",
+      "varCount": 1,
+      "sampleVars": [
+        "timePickerPanelOffsetBottom"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "required",
+      "varCount": 1,
+      "sampleVars": [
+        "required"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "range",
+      "varCount": 1,
+      "sampleVars": [
+        "range"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "additional",
+      "varCount": 1,
+      "sampleVars": [
+        "additional"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "item",
+      "varCount": 1,
+      "sampleVars": [
+        "item"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "focused",
+      "varCount": 1,
+      "sampleVars": [
+        "focused"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "square",
+      "varCount": 1,
+      "sampleVars": [
+        "square"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "keybinding",
+      "varCount": 1,
+      "sampleVars": [
+        "keybinding-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "padding",
+      "varCount": 1,
+      "sampleVars": [
+        "padding"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "no",
+      "varCount": 1,
+      "sampleVars": [
+        "no-focus-visible"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "list",
+      "varCount": 1,
+      "sampleVars": [
+        "list-border-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ui",
+      "varCount": 1,
+      "sampleVars": [
+        "ui-font"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "readonly",
+      "varCount": 1,
+      "sampleVars": [
+        "readonly"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "offset",
+      "varCount": 1,
+      "sampleVars": [
+        "offset"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "gap",
+      "varCount": 1,
+      "sampleVars": [
+        "gap"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "at",
+      "varCount": 1,
+      "sampleVars": [
+        "at-bottom"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--color",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--label-color",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--label-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--background",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--readonly--background",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--readonly--background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--readonly--color",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--readonly--color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--border",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--readonly--border",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--readonly--border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--border-hover",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--border-hover"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--border-active",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--border-active"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ExcTextField--placeholder",
+      "varCount": 1,
+      "sampleVars": [
+        "ExcTextField--placeholder"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-background",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-border",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-choice-color-off",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-choice-color-off"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-choice-color-off-hover",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-choice-color-off-hover"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-choice-background-off",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-choice-background-off"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-choice-background-off-active",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-choice-background-off-active"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-choice-color-on",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-choice-color-on"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-choice-background-on",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-choice-background-on"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-choice-background-on-hover",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-choice-background-on-hover"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "RadioGroup-choice-background-on-active",
+      "varCount": 1,
+      "sampleVars": [
+        "RadioGroup-choice-background-on-active"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "Switch-disabled-color",
+      "varCount": 1,
+      "sampleVars": [
+        "Switch-disabled-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "Switch-disabled-toggled-background",
+      "varCount": 1,
+      "sampleVars": [
+        "Switch-disabled-toggled-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "Switch-disabled-border",
+      "varCount": 1,
+      "sampleVars": [
+        "Switch-disabled-border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "Switch-track-background",
+      "varCount": 1,
+      "sampleVars": [
+        "Switch-track-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "Switch-thumb-background",
+      "varCount": 1,
+      "sampleVars": [
+        "Switch-thumb-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "Switch-hover-background",
+      "varCount": 1,
+      "sampleVars": [
+        "Switch-hover-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "Switch-active-background",
+      "varCount": 1,
+      "sampleVars": [
+        "Switch-active-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ImageExportModal-preview-border",
+      "varCount": 1,
+      "sampleVars": [
+        "ImageExportModal-preview-border"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "avatarList-gap",
+      "varCount": 1,
+      "sampleVars": [
+        "avatarList-gap"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "userList-padding",
+      "varCount": 1,
+      "sampleVars": [
+        "userList-padding"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "max",
+      "varCount": 1,
+      "sampleVars": [
+        "max-size"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "size",
+      "varCount": 1,
+      "sampleVars": [
+        "size"
+      ],
+      "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
+    },
+    {
+      "ns": "island",
+      "varCount": 1,
+      "sampleVars": [
+        "island-bg-color"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "editor",
+      "varCount": 1,
+      "sampleVars": [
+        "editor-container-padding"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "modal",
+      "varCount": 1,
+      "sampleVars": [
+        "modal-shadow"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "library",
+      "varCount": 1,
+      "sampleVars": [
+        "library-dropdown-shadow"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-canvas",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-canvas"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-interactiveCanvas",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-interactiveCanvas"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-svgLayer",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-svgLayer"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-wysiwyg",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-wysiwyg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-canvasButtons",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-canvasButtons"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-layerUI",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-layerUI"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-eyeDropperBackdrop",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-eyeDropperBackdrop"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-eyeDropperPreview",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-eyeDropperPreview"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-hyperlinkContainer",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-hyperlinkContainer"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-modal",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-modal"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-popup",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-popup"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "zIndex-toast",
+      "varCount": 1,
+      "sampleVars": [
+        "zIndex-toast"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "sab",
+      "varCount": 1,
+      "sampleVars": [
+        "sab"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "sal",
+      "varCount": 1,
+      "sampleVars": [
+        "sal"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "sar",
+      "varCount": 1,
+      "sampleVars": [
+        "sar"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "sat",
+      "varCount": 1,
+      "sampleVars": [
+        "sat"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "bar",
+      "varCount": 1,
+      "sampleVars": [
+        "bar-padding"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "secondary",
+      "varCount": 1,
+      "sampleVars": [
+        "secondary"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "selectable",
+      "varCount": 1,
+      "sampleVars": [
+        "selectable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "grey",
+      "varCount": 1,
+      "sampleVars": [
+        "grey"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "status",
+      "varCount": 1,
+      "sampleVars": [
+        "status-error"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "elevated",
+      "varCount": 1,
+      "sampleVars": [
+        "elevated"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "outlined",
+      "varCount": 1,
+      "sampleVars": [
+        "outlined"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "invalid",
+      "varCount": 1,
+      "sampleVars": [
+        "invalid"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "indeterminate",
+      "varCount": 1,
+      "sampleVars": [
+        "indeterminate"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "incompatible",
+      "varCount": 1,
+      "sampleVars": [
+        "incompatible"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "cancellable",
+      "varCount": 1,
+      "sampleVars": [
+        "cancellable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "reset",
+      "varCount": 1,
+      "sampleVars": [
+        "reset"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "connector",
+      "varCount": 1,
+      "sampleVars": [
+        "connector-fade-solid"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "mac",
+      "varCount": 1,
+      "sampleVars": [
+        "mac"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "workspace",
+      "varCount": 1,
+      "sampleVars": [
+        "workspace"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "confirm",
+      "varCount": 1,
+      "sampleVars": [
+        "confirm"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "cancel",
+      "varCount": 1,
+      "sampleVars": [
+        "cancel"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "user",
+      "varCount": 1,
+      "sampleVars": [
+        "user-menu-hover-bg"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "nc",
+      "varCount": 1,
+      "sampleVars": [
+        "nc-tone"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "light",
+      "varCount": 1,
+      "sampleVars": [
+        "light"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "coming",
+      "varCount": 1,
+      "sampleVars": [
+        "coming-soon"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "muted",
+      "varCount": 1,
+      "sampleVars": [
+        "muted"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "delete",
+      "varCount": 1,
+      "sampleVars": [
+        "delete"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "approve",
+      "varCount": 1,
+      "sampleVars": [
+        "approve"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "cloud",
+      "varCount": 1,
+      "sampleVars": [
+        "cloud-assistant-child"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "batch",
+      "varCount": 1,
+      "sampleVars": [
+        "batch"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "medium",
+      "varCount": 1,
+      "sampleVars": [
+        "medium"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "small",
+      "varCount": 1,
+      "sampleVars": [
+        "small"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "picked",
+      "varCount": 1,
+      "sampleVars": [
+        "picked"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "ima",
+      "varCount": 1,
+      "sampleVars": [
+        "ima-scroll-size"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "sheet",
+      "varCount": 1,
+      "sampleVars": [
+        "sheet"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "narrow",
+      "varCount": 1,
+      "sampleVars": [
+        "narrow"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "kbd",
+      "varCount": 1,
+      "sampleVars": [
+        "kbd-box-shadow"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "backdrop",
+      "varCount": 1,
+      "sampleVars": [
+        "backdrop-filter-panel"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "scaling",
+      "varCount": 1,
+      "sampleVars": [
+        "scaling"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "callout",
+      "varCount": 1,
+      "sampleVars": [
+        "callout-icon-height"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "popover",
+      "varCount": 1,
+      "sampleVars": [
+        "popover-content-padding"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "separator",
+      "varCount": 1,
+      "sampleVars": [
+        "separator-size"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "reject",
+      "varCount": 1,
+      "sampleVars": [
+        "reject"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "truncated",
+      "varCount": 1,
+      "sampleVars": [
+        "truncated"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "working",
+      "varCount": 1,
+      "sampleVars": [
+        "working"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "article",
+      "varCount": 1,
+      "sampleVars": [
+        "article"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "flagship",
+      "varCount": 1,
+      "sampleVars": [
+        "flagship"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "resizable",
+      "varCount": 1,
+      "sampleVars": [
+        "resizable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "action",
+      "varCount": 1,
+      "sampleVars": [
+        "action"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "sticky",
+      "varCount": 1,
+      "sampleVars": [
+        "sticky"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "closeable",
+      "varCount": 1,
+      "sampleVars": [
+        "closeable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "name",
+      "varCount": 1,
+      "sampleVars": [
+        "name"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "time",
+      "varCount": 1,
+      "sampleVars": [
+        "time"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "close",
+      "varCount": 1,
+      "sampleVars": [
+        "close"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "full",
+      "varCount": 1,
+      "sampleVars": [
+        "full"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "current",
+      "varCount": 1,
+      "sampleVars": [
+        "current"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "folder",
+      "varCount": 1,
+      "sampleVars": [
+        "folder"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "openable",
+      "varCount": 1,
+      "sampleVars": [
+        "openable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "annotation",
+      "varCount": 1,
+      "sampleVars": [
+        "annotation-unfocused-field-background"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "collab",
+      "varCount": 1,
+      "sampleVars": [
+        "collab-active"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "running",
+      "varCount": 1,
+      "sampleVars": [
+        "running"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "comment",
+      "varCount": 1,
+      "sampleVars": [
+        "comment"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "md",
+      "varCount": 1,
+      "sampleVars": [
+        "md"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "test",
+      "varCount": 1,
+      "sampleVars": [
+        "test"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "updating",
+      "varCount": 1,
+      "sampleVars": [
+        "updating"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "update",
+      "varCount": 1,
+      "sampleVars": [
+        "update"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "skip",
+      "varCount": 1,
+      "sampleVars": [
+        "skip"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "upgrade",
+      "varCount": 1,
+      "sampleVars": [
+        "upgrade"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "exceed",
+      "varCount": 1,
+      "sampleVars": [
+        "exceed-width"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "pseudo",
+      "varCount": 1,
+      "sampleVars": [
+        "pseudo-element-display"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "custom",
+      "varCount": 1,
+      "sampleVars": [
+        "custom"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "static",
+      "varCount": 1,
+      "sampleVars": [
+        "static"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "on",
+      "varCount": 1,
+      "sampleVars": [
+        "on"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "menu",
+      "varCount": 1,
+      "sampleVars": [
+        "menu-shadow-fallback"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "allow",
+      "varCount": 1,
+      "sampleVars": [
+        "allow"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "always",
+      "varCount": 1,
+      "sampleVars": [
+        "always-allow"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "deny",
+      "varCount": 1,
+      "sampleVars": [
+        "deny"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "tree",
+      "varCount": 1,
+      "sampleVars": [
+        "tree"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "expert",
+      "varCount": 1,
+      "sampleVars": [
+        "expert-accent"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "pin",
+      "varCount": 1,
+      "sampleVars": [
+        "pin"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "pinned",
+      "varCount": 1,
+      "sampleVars": [
+        "pinned"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "drag",
+      "varCount": 1,
+      "sampleVars": [
+        "drag-clone"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "done",
+      "varCount": 1,
+      "sampleVars": [
+        "done"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "sortable",
+      "varCount": 1,
+      "sampleVars": [
+        "sortable"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    },
+    {
+      "ns": "editing",
+      "varCount": 1,
+      "sampleVars": [
+        "editing"
+      ],
+      "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
+    }
+  ],
+  "sharedNamespaces": [
+    {
+      "ns": "wb",
+      "staticVars": 873,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "vscode",
+      "staticVars": 867,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "cb",
+      "staticVars": 562,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "oneid",
+      "staticVars": 206,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "cr",
+      "staticVars": 197,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "sc",
+      "staticVars": 178,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "ec",
+      "staticVars": 106,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "dc",
+      "staticVars": 31,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "gray",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "mauve",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "slate",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "sage",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "olive",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "sand",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "amber",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "blue",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "bronze",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "brown",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "crimson",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "cyan",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "gold",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "grass",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "green",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "indigo",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "iris",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "jade",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "lime",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "mint",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "orange",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "pink",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "plum",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "purple",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "red",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "ruby",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "sky",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "teal",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "tomato",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "violet",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "yellow",
+      "staticVars": 28,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "theme",
+      "staticVars": 15,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "text",
+      "staticVars": 15,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "black",
+      "staticVars": 12,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "white",
+      "staticVars": 12,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "fe",
+      "staticVars": 9,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "ic",
+      "staticVars": 5,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "qad",
+      "staticVars": 3,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "chat",
+      "staticVars": 2,
+      "runtimeCount": 3
+    },
+    {
+      "ns": "conversation",
+      "staticVars": 1,
+      "runtimeCount": 3
+    }
+  ],
+  "unverifiedTestIds": [
+    "virtuoso-scroller"
+  ],
+  "verifiedTestIds": []
+}

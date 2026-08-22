@@ -1,0 +1,738 @@
+{
+  "meta": {
+    "agentId": "codex",
+    "source": "extract-summary.json",
+    "generatedAt": "2026-08-19T07:47:21.340Z",
+    "totalSeeds": 2228,
+    "mappedSeeds": 33,
+    "filterRate": "99%"
+  },
+  "candidates": [
+    {
+      "selector": "[data-testid=\"popcorn-annotation-editor\"]",
+      "source": {
+        "kind": "data-testid",
+        "anchor": "popcorn-annotation-editor",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "composer"
+      ]
+    },
+    {
+      "selector": "[data-testid=\"math-block-layout-content\"]",
+      "source": {
+        "kind": "data-testid",
+        "anchor": "math-block-layout-content",
+        "stability": "high"
+      },
+      "suggestedSemantics": []
+    },
+    {
+      "selector": "[data-testid=\"popcorn-viewport-host\"]",
+      "source": {
+        "kind": "data-testid",
+        "anchor": "popcorn-viewport-host",
+        "stability": "high"
+      },
+      "suggestedSemantics": []
+    },
+    {
+      "selector": "[data-testid=\"popcorn-edit-toolbar\"]",
+      "source": {
+        "kind": "data-testid",
+        "anchor": "popcorn-edit-toolbar",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "toolbar"
+      ]
+    },
+    {
+      "selector": "[data-testid=\"popcorn-find-bar\"]",
+      "source": {
+        "kind": "data-testid",
+        "anchor": "popcorn-find-bar",
+        "stability": "high"
+      },
+      "suggestedSemantics": []
+    },
+    {
+      "selector": "[data-testid=\"popcorn-presentation-stage\"]",
+      "source": {
+        "kind": "data-testid",
+        "anchor": "popcorn-presentation-stage",
+        "stability": "high"
+      },
+      "suggestedSemantics": []
+    },
+    {
+      "selector": "#root",
+      "source": {
+        "kind": "id",
+        "anchor": "root",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-mcp-app-portal-target]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-mcp-app-portal-target",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-tab-close-button]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-tab-close-button",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-tab-controller]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-tab-controller",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-above-composer-portal]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-above-composer-portal",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "composer"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-tab-strip-controller]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-tab-strip-controller",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-focus-area]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-focus-area",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-main-content-layout]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-main-content-layout",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-tab-separator]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-tab-separator",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-tab-separator-index]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-tab-separator-index",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-sidebar-trigger]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-sidebar-trigger",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "sidebar",
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-mcp-app-card]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-mcp-app-card",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-aura-tab-strip]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-aura-tab-strip",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-tabs]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-tabs",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-tab-panel-controller]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-tab-panel-controller",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-application-menu-bar]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-application-menu-bar",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "sidebar",
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-header-edge-scroll]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-header-edge-scroll",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-main-surface]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-main-surface",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-right-panel-full-width]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-right-panel-full-width",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-thread-edge-divider]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-thread-edge-divider",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "messageList",
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-app-shell-main-content-top-fade]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-app-shell-main-content-top-fade",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-mcp-app-side-panel-frame-container]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-mcp-app-side-panel-frame-container",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-mcp-app-loading]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-mcp-app-loading",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-mcp-app-expanded]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-mcp-app-expanded",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-mcp-app-inline-surface]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-mcp-app-inline-surface",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-mcp-app-navigation-controls]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-mcp-app-navigation-controls",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "sidebar",
+        "root"
+      ]
+    },
+    {
+      "selector": "[data-mcp-app-expanding-placeholder]",
+      "source": {
+        "kind": "data-attr",
+        "anchor": "data-mcp-app-expanding-placeholder",
+        "stability": "high"
+      },
+      "suggestedSemantics": [
+        "root"
+      ]
+    }
+  ],
+  "byKind": {
+    "data-testid": [
+      {
+        "selector": "[data-testid=\"popcorn-annotation-editor\"]",
+        "source": {
+          "kind": "data-testid",
+          "anchor": "popcorn-annotation-editor",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "composer"
+        ]
+      },
+      {
+        "selector": "[data-testid=\"math-block-layout-content\"]",
+        "source": {
+          "kind": "data-testid",
+          "anchor": "math-block-layout-content",
+          "stability": "high"
+        },
+        "suggestedSemantics": []
+      },
+      {
+        "selector": "[data-testid=\"popcorn-viewport-host\"]",
+        "source": {
+          "kind": "data-testid",
+          "anchor": "popcorn-viewport-host",
+          "stability": "high"
+        },
+        "suggestedSemantics": []
+      },
+      {
+        "selector": "[data-testid=\"popcorn-edit-toolbar\"]",
+        "source": {
+          "kind": "data-testid",
+          "anchor": "popcorn-edit-toolbar",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "toolbar"
+        ]
+      },
+      {
+        "selector": "[data-testid=\"popcorn-find-bar\"]",
+        "source": {
+          "kind": "data-testid",
+          "anchor": "popcorn-find-bar",
+          "stability": "high"
+        },
+        "suggestedSemantics": []
+      },
+      {
+        "selector": "[data-testid=\"popcorn-presentation-stage\"]",
+        "source": {
+          "kind": "data-testid",
+          "anchor": "popcorn-presentation-stage",
+          "stability": "high"
+        },
+        "suggestedSemantics": []
+      }
+    ],
+    "id": [
+      {
+        "selector": "#root",
+        "source": {
+          "kind": "id",
+          "anchor": "root",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      }
+    ],
+    "data-attr": [
+      {
+        "selector": "[data-mcp-app-portal-target]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-mcp-app-portal-target",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-tab-close-button]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-tab-close-button",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-tab-controller]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-tab-controller",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-above-composer-portal]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-above-composer-portal",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "composer"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-tab-strip-controller]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-tab-strip-controller",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-focus-area]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-focus-area",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-main-content-layout]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-main-content-layout",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-tab-separator]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-tab-separator",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-tab-separator-index]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-tab-separator-index",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-sidebar-trigger]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-sidebar-trigger",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "sidebar",
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-mcp-app-card]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-mcp-app-card",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-aura-tab-strip]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-aura-tab-strip",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-tabs]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-tabs",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-tab-panel-controller]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-tab-panel-controller",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-application-menu-bar]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-application-menu-bar",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "sidebar",
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-header-edge-scroll]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-header-edge-scroll",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-main-surface]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-main-surface",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-right-panel-full-width]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-right-panel-full-width",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-thread-edge-divider]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-thread-edge-divider",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "messageList",
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-app-shell-main-content-top-fade]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-app-shell-main-content-top-fade",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-mcp-app-side-panel-frame-container]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-mcp-app-side-panel-frame-container",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-mcp-app-loading]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-mcp-app-loading",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-mcp-app-expanded]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-mcp-app-expanded",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-mcp-app-inline-surface]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-mcp-app-inline-surface",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-mcp-app-navigation-controls]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-mcp-app-navigation-controls",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "sidebar",
+          "root"
+        ]
+      },
+      {
+        "selector": "[data-mcp-app-expanding-placeholder]",
+        "source": {
+          "kind": "data-attr",
+          "anchor": "data-mcp-app-expanding-placeholder",
+          "stability": "high"
+        },
+        "suggestedSemantics": [
+          "root"
+        ]
+      }
+    ]
+  }
+}

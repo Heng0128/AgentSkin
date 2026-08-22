@@ -1,0 +1,324 @@
+{
+  "agent": "zcode",
+  "family": "react-app",
+  "distributedVars": false,
+  "sweepOverride": true,
+  "staticAppVersion": null,
+  "staticSource": null,
+  "extractedAt": "2026-08-18T13:47:17.009Z",
+  "port": null,
+  "wsDebugUrl": "ws://127.0.0.1:64293/devtools/page/E9FF27467BB8EBF609BD4FB247249CA4",
+  "frame": {
+    "url": "file:///C:/Program%20Files/ZCode/resources/app.asar/out/renderer/index.html?restoreSession=true&supportsSettings=true&zcodeLaunchMarks=%7B%22createdAt%22%3A1787041642532.9%2C%22mainStart%22%3A1787041644219%2C%22appReady%22%3A1787041645039%2C%22loadUrl%22%3A1787041647384%7D",
+    "securityOrigin": "file://",
+    "frameId": "E9FF27467BB8EBF609BD4FB247249CA4"
+  },
+  "dataQuality": {
+    "totalNodes": {
+      "default": 227,
+      "dark": 227,
+      "light": 227
+    },
+    "corsBlockedSheets": 0,
+    "failedSchemes": [],
+    "truncated": {
+      "default": false,
+      "dark": null,
+      "light": null
+    },
+    "multiFrame": false,
+    "iframeCount": 0,
+    "apiNative": true
+  },
+  "stats": {
+    "rootVars": {
+      "default": 390,
+      "dark": 390,
+      "light": 390
+    },
+    "domNodes": {
+      "default": 227,
+      "dark": 227,
+      "light": 227
+    },
+    "styleVars": {
+      "dark": 410,
+      "light": 390,
+      "neutral": 476
+    }
+  },
+  "rootVariables": {
+    "perScheme": {
+      "default": {
+        "count": 390,
+        "namespaces": [
+          [
+            "color",
+            256
+          ],
+          [
+            "tw",
+            46
+          ],
+          [
+            "text",
+            23
+          ],
+          [
+            "beam",
+            14
+          ],
+          [
+            "container",
+            10
+          ],
+          [
+            "radius",
+            7
+          ],
+          [
+            "font",
+            6
+          ],
+          [
+            "blur",
+            6
+          ],
+          [
+            "default",
+            4
+          ],
+          [
+            "leading",
+            4
+          ],
+          [
+            "tracking",
+            4
+          ],
+          [
+            "animate",
+            3
+          ],
+          [
+            "ease",
+            2
+          ],
+          [
+            "animated",
+            2
+          ],
+          [
+            "aspect",
+            1
+          ],
+          [
+            "none",
+            1
+          ],
+          [
+            "ui",
+            1
+          ]
+        ]
+      },
+      "dark": {
+        "count": 390,
+        "namespaces": [
+          [
+            "color",
+            256
+          ],
+          [
+            "tw",
+            46
+          ],
+          [
+            "text",
+            23
+          ],
+          [
+            "beam",
+            14
+          ],
+          [
+            "container",
+            10
+          ],
+          [
+            "radius",
+            7
+          ],
+          [
+            "font",
+            6
+          ],
+          [
+            "blur",
+            6
+          ],
+          [
+            "default",
+            4
+          ],
+          [
+            "leading",
+            4
+          ],
+          [
+            "tracking",
+            4
+          ],
+          [
+            "animate",
+            3
+          ],
+          [
+            "ease",
+            2
+          ],
+          [
+            "animated",
+            2
+          ],
+          [
+            "aspect",
+            1
+          ],
+          [
+            "none",
+            1
+          ],
+          [
+            "ui",
+            1
+          ]
+        ]
+      },
+      "light": {
+        "count": 390,
+        "namespaces": [
+          [
+            "color",
+            256
+          ],
+          [
+            "tw",
+            46
+          ],
+          [
+            "text",
+            23
+          ],
+          [
+            "beam",
+            14
+          ],
+          [
+            "container",
+            10
+          ],
+          [
+            "radius",
+            7
+          ],
+          [
+            "font",
+            6
+          ],
+          [
+            "blur",
+            6
+          ],
+          [
+            "default",
+            4
+          ],
+          [
+            "leading",
+            4
+          ],
+          [
+            "tracking",
+            4
+          ],
+          [
+            "animate",
+            3
+          ],
+          [
+            "ease",
+            2
+          ],
+          [
+            "animated",
+            2
+          ],
+          [
+            "aspect",
+            1
+          ],
+          [
+            "none",
+            1
+          ],
+          [
+            "ui",
+            1
+          ]
+        ]
+      }
+    },
+    "hostKind": null
+  },
+  "stylesheets": {
+    "count": 7,
+    "corsErrors": 0
+  },
+  "anchors": {
+    "count": 203,
+    "sample": [
+      ".*:[a]:hover:text-foreground",
+      ".*:[a]:underline",
+      ".*:[a]:underline-offset-3",
+      ".-translate-x-1/2",
+      ".-translate-y-1/2",
+      ".@container/conversation",
+      ".@container/topoverlayer",
+      ".[--markdown-table-lay",
+      ".[--markdown-table-layout-left-inset:16px]",
+      ".[app-region:drag]",
+      ".[app-region:no-drag]",
+      ".[scrollbar-gutter:stable]",
+      ".absolute",
+      ".afte",
+      ".after:absolute",
+      ".after:inset-0",
+      ".after:rounded-full",
+      ".aspect-square",
+      ".before:block",
+      ".before:content-[",
+      ".before:flex-1",
+      ".before:min-h-[52px]",
+      ".before:w-full",
+      ".bg-background",
+      ".bg-background-win-alt",
+      ".bg-clip-padding",
+      ".bg-transparent",
+      ".border",
+      ".border-0",
+      ".border-border",
+      ".border-l",
+      ".border-t",
+      ".border-transparent",
+      ".cursor-grab",
+      ".dark",
+      ".data-[state=closed]:animate-collaps",
+      ".data-[state=open]:animate-collapsible-down",
+      ".data-horizontal:flex-col",
+      ".duration",
+      ".duration-150"
+    ]
+  },
+  "domNodeCount": 227
+}
