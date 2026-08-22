@@ -291,28 +291,98 @@ function sanitizeId(id) {
     .toLowerCase();
 }
 
-async function bridgeTheme(inputPath, baseOutDir) {
-  const raw = fs.readFileSync(inputPath, 'utf8').replace(/^\uFEFF/, '');
-  const parsed = JSON.parse(raw);
-
-  if (parsed.format !== 'codex-theme') {
-    console.warn(`  [skip] ${inputPath}: not a codex-theme (format=${parsed.format})`);
-    return { ok: false, reason: 'not-codex-theme' };
+/**
+ * Detect Codex export format variant:
+ *   A) "codex-theme"  — { manifest, css, art?, preview? }  (full CSS embedded)
+ *   B) "codex-meta"   — { manifest, readme, art{base64} }  (no CSS, metadata-only)
+ * Variant B uses manifest.css as a filename reference, not inline CSS.
+ */
+function detectAndParse(raw, inputPath) {
+  // Try standard JSON parse first
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (jsonErr) {
+    // Attempt graceful repair: if the file has a manifest object followed by
+    // other fields (readme, art), try slicing at the manifest boundary.
+    const manifestStart = raw.indexOf('"manifest": {');
+    if (manifestStart === -1) throw jsonErr;
+    // Find the matching close brace for the manifest object
+    let depth = 0;
+    let manifestEnd = -1;
+    for (let i = manifestStart; i < raw.length; i++) {
+      if (raw[i] === '{') depth++;
+      if (raw[i] === '}') {
+        depth--;
+        if (depth === 0) {
+          manifestEnd = i + 1;
+          break;
+        }
+      }
+    }
+    if (manifestEnd === -1) throw jsonErr;
+    // Build a synthetic parsed object with only the manifest
+    const manifestStr = raw.substring(manifestStart + '"manifest": '.length, manifestEnd);
+    const manifest = JSON.parse(manifestStr);
+    console.warn(
+      `  [repair] Recovered manifest from ${path.basename(inputPath)} (truncated after manifest)`,
+    );
+    return {
+      format: 'codex-meta-repaired',
+      manifest,
+      css: null,
+      artBase64: null,
+      previewBase64: null,
+      _raw: null,
+    };
   }
 
-  const manifest = parsed.manifest;
+  if (parsed.format === 'codex-theme') {
+    // Standard format: full CSS string in parsed.css
+    return {
+      format: 'codex-theme',
+      manifest: parsed.manifest,
+      css: parsed.css,
+      artBase64: typeof parsed.art === 'string' ? parsed.art : null,
+      previewBase64: typeof parsed.preview === 'string' ? parsed.preview : null,
+      _raw: parsed,
+    };
+  }
+
+  // No manifest wrapper: check if it's a flat export (manifest fields at top level)
+  if (parsed.manifest && parsed.manifest.palette) {
+    return {
+      format: 'codex-meta',
+      manifest: parsed.manifest,
+      css: typeof parsed.css === 'string' && parsed.css.includes('{') ? parsed.css : null,
+      artBase64: parsed.art?.base64 || null,
+      previewBase64: parsed.preview?.base64 || null,
+      _raw: parsed,
+    };
+  }
+
+  throw new Error(`Unrecognized Codex export format: keys=${Object.keys(parsed).join(',')}`);
+}
+
+async function bridgeTheme(inputPath, baseOutDir) {
+  const raw = fs.readFileSync(inputPath, 'utf8').replace(/^\uFEFF/, '');
+  const detected = detectAndParse(raw, inputPath);
+
+  const manifest = detected.manifest;
   const palette = manifest.palette;
-  const rawCss = parsed.css;
+  const rawCss = detected.css; // may be null for metadata-only exports
   const displayName = manifest.displayName || manifest.id;
   const version = manifest.version || '1.0.0';
   const declaredMode = manifest.mode;
   const mode = detectMode(palette, declaredMode);
   const id = sanitizeId(manifest.id);
 
-  console.log(`\n=== Bridging: ${id} (${displayName}) [${mode}] ===`);
+  console.log(`\n=== Bridging: ${id} (${displayName}) [${mode}] (${detected.format}) ===`);
   console.log(`  Palette keys: ${Object.keys(palette).join(', ')}`);
-  console.log(`  CSS length: ${rawCss.length} chars`);
-  console.log(`  Has art: ${!!parsed.art}, Has preview: ${!!parsed.preview}`);
+  console.log(
+    `  CSS length: ${rawCss ? rawCss.length : 0} chars ${rawCss ? '' : '(no source CSS — generator-only)'}`,
+  );
+  console.log(`  Has art: ${!!detected.artBase64}, Has preview: ${!!detected.previewBase64}`);
 
   // 1) Map palette → colors
   const colors = mapPaletteToColors(palette, mode);
@@ -345,8 +415,8 @@ async function bridgeTheme(inputPath, baseOutDir) {
   };
   const ctx = buildContext(id, fakeManifest);
 
-  // 3) 输出目录
-  const themeDir = path.join(baseOutDir, `new-${id}`);
+  // 3) 输出目录 — use sanitized id as the canonical directory name
+  const themeDir = path.join(baseOutDir, id);
   const cssDir = path.join(themeDir, 'assets', 'css');
   fs.mkdirSync(cssDir, { recursive: true });
 
@@ -369,33 +439,51 @@ async function bridgeTheme(inputPath, baseOutDir) {
   console.log(`  ✓ assets/css/{${AGENTS.join(',')}}.css`);
 
   // 6) 对 codex.css 额外追加转换后的 Codex 原主题 CSS（保留 --color-token-* 桥接与编码细节）
-  const codexTransformed = transformCss(rawCss, 'codex');
-  // 找到 codex.css 并追加（替换生成器产的 token block 之后）
-  const codexPath = path.join(cssDir, 'codex.css');
-  const baseCodex = fs.readFileSync(codexPath, 'utf8');
-  // 只提取 Codex CSS 中的 --color-token-* 桥接部分（跳过 --ct-* 已被 token block 覆盖的 :root block）
-  const bridgeSection = extractBridgeSection(rawCss);
-  if (bridgeSection) {
-    fs.writeFileSync(
-      codexPath,
-      baseCodex.trimEnd() +
-        `\n\n/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */\n` +
-        bridgeSection +
-        '\n',
-      'utf8',
-    );
-    console.log(`  ✓ codex.css appended Codex-native bridge`);
+  if (rawCss) {
+    const codexPath = path.join(cssDir, 'codex.css');
+    const baseCodex = fs.readFileSync(codexPath, 'utf8');
+    // 只提取 Codex CSS 中的 --color-token-* 桥接部分（跳过 --ct-* 已被 token block 覆盖的 :root block）
+    const bridgeSection = extractBridgeSection(rawCss);
+    if (bridgeSection) {
+      fs.writeFileSync(
+        codexPath,
+        baseCodex.trimEnd() +
+          `\n\n/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */\n` +
+          bridgeSection +
+          '\n',
+        'utf8',
+      );
+      console.log(`  ✓ codex.css appended Codex-native bridge`);
+    }
+  } else {
+    console.log(`  - codex.css: no source CSS to bridge (metadata-only export)`);
   }
 
   // 7) 放置 icon / preview（Codex 不内嵌这些，仅写占位说明）
+  // 7a) 保存 base64 art（如果格式包含 art.base64）
+  if (detected.artBase64) {
+    const artDir = path.join(themeDir, 'assets');
+    fs.mkdirSync(artDir, { recursive: true });
+    const artPath = path.join(artDir, 'art.png');
+    try {
+      fs.writeFileSync(artPath, Buffer.from(detected.artBase64, 'base64'));
+      console.log(`  ✓ assets/art.png extracted`);
+    } catch (e) {
+      console.warn(`  [warn] art base64 decode failed: ${e.message}`);
+    }
+  }
+
+  // 7b) 写入占位说明
   fs.writeFileSync(
     path.join(themeDir, 'BRIDGE_NOTES.md'),
     `# ${displayName} — Bridged from Codex\n\n` +
       `- source: ${path.basename(inputPath)}\n` +
+      `- format: ${detected.format}\n` +
       `- mode: ${mode}\n` +
       `- palette keys: ${Object.keys(palette).join(', ')}\n` +
-      `- art: ${parsed.art ? 'present (base64, not extracted)' : 'none'}\n` +
-      `- preview: ${parsed.preview ? 'present (base64, not extracted)' : 'none'}\n\n` +
+      `- has source CSS: ${rawCss ? 'yes (bridged)' : 'no (metadata-only export)'}\n` +
+      `- art: ${detected.artBase64 ? 'extracted to assets/art.png' : 'none'}\n` +
+      `- preview: ${detected.previewBase64 ? 'present (base64)' : 'none'}\n\n` +
       `## TODO\n` +
       `- [ ] Add icon.png / preview.png\n` +
       `- [ ] Verify visual fidelity manually\n` +

@@ -68,11 +68,13 @@ const DEFAULT_TOKENS = {
 // ---------------------------------------------------------------------------
 
 const HOST_SELECTOR = {
-  traework: 'html.agentskin-host-traework body, html.agentskin-host-traework body *',
-  qoderwork: 'html.agentskin-host-qoderwork *',
-  workbuddy: 'html.agentskin-host-workbuddy body, html.agentskin-host-workbuddy body *',
-  doubao: 'html.agentskin-host-doubao *',
-  codex: ':root.agentskin-host-codex, :root.agentskin-host-codex *',
+  // Aligned with THEME_SPEC.md L262-269 — no wildcards, precise scope.
+  // CSS custom properties inherit naturally; no need for `body *`.
+  traework: 'html.agentskin-host-traework body',
+  qoderwork: 'html.agentskin-host-qoderwork:root',
+  workbuddy: 'html.agentskin-host-workbuddy body',
+  doubao: 'html.agentskin-host-doubao:root',
+  codex: 'html.agentskin-host-codex',
 };
 
 // Representative semantic tokens per agent namespace. These are redirected onto
@@ -505,9 +507,7 @@ function buildAgentCss(agentId, palette, signature, bridge) {
   }
   lines.push('');
 
-  const host =
-    HOST_SELECTOR[agentId] ||
-    `html.agentskin-host-${agentId} body, html.agentskin-host-${agentId} body *`;
+  const host = HOST_SELECTOR[agentId] || `html.agentskin-host-${agentId} body`;
   const remap = AGENT_REMAP[agentId] || [];
   lines.push(`/* Redirect ${agentId} native design tokens onto the crafted palette */`);
   lines.push(`${host} {`);
@@ -591,7 +591,7 @@ function buildCraft(agentId, signature) {
     );
   }
   if (signature.foreground) {
-    out.push(`${el} body, ${el} body * { color: ${signature.foreground} !important; }`);
+    out.push(`${el} body { color: ${signature.foreground} !important; }`);
     out.push(
       `:root { --agentskin-foreground: ${signature.foreground}; --as-fg: ${signature.foreground}; }`,
     );
@@ -622,7 +622,7 @@ function buildCraft(agentId, signature) {
     );
   }
   if (signature.lineHeight != null) {
-    out.push(`${el} body, ${el} body * { line-height: ${signature.lineHeight} !important; }`);
+    out.push(`${el} body { line-height: ${signature.lineHeight} !important; }`);
   }
   return out.join('\n');
 }

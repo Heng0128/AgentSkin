@@ -1,0 +1,26 @@
+/* palette.css — sweet-strawberry-code (Sweet Strawberry Code) */
+/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+:root {
+  --agentskin-bg: #fff7f9;
+  --agentskin-surface: rgba(255, 252, 253, 0.94);
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #5a3d44;
+  --agentskin-muted: #a87e88;
+  --agentskin-accent: #ff6b8a;
+  --agentskin-secondary: #4caf7c;
+  --agentskin-border: #f5d7df;
+  --agentskin-code-bg: #fff7f9;
+  --agentskin-code-fg: #5a3d44;
+  --agentskin-focus-ring: #ff6b8a;
+  --agentskin-selection: color-mix(in srgb, #ff6b8a 32%, transparent);
+
+  /* Derived raw RGB values */
+  --agentskin-accent-raw: 255, 107, 138;
+  --agentskin-secondary-raw: 76, 175, 124;
+  --agentskin-text-raw: 90, 61, 68;
+  --agentskin-muted-raw: 168, 126, 136;
+  --agentskin-surface-raw: 255, 252, 253;
+  --agentskin-surface-elevated-raw: 255, 255, 255;
+  --agentskin-bg-raw: 255, 247, 249;
+  --agentskin-border-raw: 245, 215, 223;
+}

@@ -749,7 +749,7 @@ export const HOSTS = Object.freeze({
   qoderwork: 'html.agentskin-host-qoderwork',
   workbuddy: 'body[data-application-name="workbuddy"]',
   doubao: 'html.agentskin-host-doubao',
-  codex: 'html.agentskin-host-codex',
+  codex: ':root.agentskin-host-codex',
   zcode: 'html.agentskin-host-zcode',
 });
 

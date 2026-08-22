@@ -25,7 +25,7 @@
     "lint:fix": "biome check --write src/",
     "check:contract": "node scripts/check-injection-contract.mjs",
     "check:themes": "node scripts/check-themes.mjs",
-    "check:theme-staleness": "node scripts/build-palette.mjs --verify && node scripts/generate-theme-css.mjs --verify",
+    "check:theme-staleness": "node scripts/check-theme-staleness.mjs",
     "check:architecture": "node scripts/check-architecture-boundaries.mjs",
     "check:semantic-contract": "node scripts/check-semantic-contract.mjs",
     "check:defects": "node scripts/check-native-defect-consistency.mjs",

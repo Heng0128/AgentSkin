@@ -47,7 +47,7 @@
 | WorkBuddy (`workbuddy`) | `body[data-application-name="workbuddy"]` | 2 |
 | 豆包 (`doubao`) | `html.agentskin-host-doubao` | 2 |
 | QoderWork CN (`qoderwork`) | `html.agentskin-host-qoderwork` | 0 |
-| OpenAI Codex (`codex`) | `html.agentskin-host-codex` | 0 |
+| OpenAI Codex (`codex`) | `:root.agentskin-host-codex` | 0 |
 | ZCode (`zcode`) | `html.agentskin-host-zcode` | 0 |
 
 ### TRAE Work CN — `scripts/generators/traeworkCss.mjs`

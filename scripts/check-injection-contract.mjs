@@ -54,7 +54,7 @@ function warn(msg) {
 
 /**
  * Known scope selectors per agent. Most agents use the host class
- * (`html.codedrobe-host-<agent>`), but WorkBuddy historically uses
+ * (`html.<HOST_CLASS_PREFIX><agent>`), but WorkBuddy historically uses
  * `body[data-application-name="workbuddy"]`. Both are valid engine contracts;
  * we just need each theme CSS to use at least one of them.
  */
@@ -115,7 +115,7 @@ const constantsSrc = readFileSync(constantsPath, 'utf8');
 const prefixMatch = /export const HOST_CLASS_PREFIX = '([^']+)';/.exec(constantsSrc);
 if (!prefixMatch) {
   fail(
-    `Could not extract HOST_CLASS_PREFIX from ${constantsPath}\n    Fix: Ensure src/shared/injection-constants.ts contains "export const HOST_CLASS_PREFIX = 'codedrobe-host';" or similar valid declaration`,
+    `Could not extract HOST_CLASS_PREFIX from ${constantsPath}\n    Fix: Ensure src/shared/injection-constants.ts contains "export const HOST_CLASS_PREFIX = 'agentskin-host-';" or similar valid declaration`,
   );
   console.error('\n--- Injection Contract FAIL ---');
   for (const e of errors) console.error('[FAIL]', e);
@@ -153,7 +153,7 @@ if (!existsSync(enginesDir)) {
     if (!engineAgentSet.has(agent)) {
       fail(
         `engines/${agent}/ missing — AgentId union in src/shared/types.ts declares '${agent}' ` +
-          `but no engine directory exists.\n    Fix: Create engines/${agent}/ directory with adapter.mjs (containing const HOST_CLASS = 'codedrobe-host-${agent}'), tokens.css, and cosmetic.css`,
+          `but no engine directory exists.\n    Fix: Create engines/${agent}/ directory with adapter.mjs (containing const HOST_CLASS = 'agentskin-host-${agent}'), tokens.css, and cosmetic.css`,
       );
     }
   }
@@ -184,7 +184,7 @@ if (!existsSync(enginesDir)) {
     }
     const adapterSrc = readFileSync(adapterPath, 'utf8');
 
-    // adapter.mjs typically defines `const HOST_CLASS = 'codedrobe-host-<agent>';`.
+    // adapter.mjs typically defines `const HOST_CLASS = '<HOST_CLASS_PREFIX><agent>';`.
     // WorkBuddy is an exception — it scopes via body[data-application-name]
     // and may not define HOST_CLASS. Skip the strict check for agents that
     // have a documented alternative scope.
@@ -198,7 +198,7 @@ if (!existsSync(enginesDir)) {
         // Acceptable — this agent uses a non-host-class scope (e.g. WorkBuddy).
       } else {
         fail(
-          `engines/${agent}/adapter.mjs: no const HOST_CLASS = '...' found\n    Fix: Add 'const HOST_CLASS = "codedrobe-host-${agent}";' at the top of engines/${agent}/adapter.mjs — the value must match '<HOST_CLASS_PREFIX><agentId>' from src/shared/injection-constants.ts`,
+          `engines/${agent}/adapter.mjs: no const HOST_CLASS = '...' found\n    Fix: Add 'const HOST_CLASS = "agentskin-host-${agent}";' at the top of engines/${agent}/adapter.mjs — the value must match '<HOST_CLASS_PREFIX><agentId>' from src/shared/injection-constants.ts`,
         );
         continue;
       }

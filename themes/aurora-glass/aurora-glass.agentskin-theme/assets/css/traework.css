@@ -18,7 +18,7 @@
 }
 
 /* Redirect traework native design tokens onto the crafted palette */
-html.agentskin-host-traework body, html.agentskin-host-traework body * {
+html.agentskin-host-traework body {
   color-scheme: dark !important;
   --vscode-editor-background: var(--agentskin-bg) !important;
   --vscode-foreground: var(--agentskin-text) !important;
