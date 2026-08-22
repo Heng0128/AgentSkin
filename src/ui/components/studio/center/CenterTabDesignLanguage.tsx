@@ -23,7 +23,6 @@ import type { UiMessages } from '@shared/i18n';
 import {
   motionMs,
   radiusPx,
-  SHADOW_VALUES,
   SPACING_BASE,
   SPACING_MULTIPLIERS,
   shadowValue,
@@ -206,7 +205,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
             {/* Shadow preview swatch */}
             <div
               className="h-6 w-6 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)]"
-              style={{ boxShadow: shadowValue(elevation) }}
+              style={{ boxShadow: 'var(--shadow-float)' }}
             />
           </div>
         </div>

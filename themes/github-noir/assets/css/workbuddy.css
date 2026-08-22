@@ -2,7 +2,7 @@
 html.agentskin-host-workbuddy {
   color-scheme: dark !important;
   --agentskin-accent: #3fb950;
-  --agentskin-secondary: #3fb950;
+  --agentskin-secondary: #8fa84a;
   --agentskin-bg: #090d0a;
   --agentskin-surface: #0e140f;
   --agentskin-surface-elevated: #17211a;
@@ -22,7 +22,7 @@ html.agentskin-host-workbuddy {
 body[data-application-name="workbuddy"] {
   color-scheme: dark !important;
   --wb-accent: #3fb950;
-  --wb-secondary: #3fb950;
+  --wb-secondary: #8fa84a;
   --wb-surface: #090d0a;
   --wb-text: #e9f3ea;
 
@@ -235,7 +235,7 @@ body[data-application-name="workbuddy"] {
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-accent) 26%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 26%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -352,7 +352,7 @@ body[data-application-name="workbuddy"] {
 [role="textbox"][contenteditable="true"]:focus,
 .wb-home-composer [contenteditable="true"]:focus {
   outline: none !important;
-  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.4), 0 4px 18px rgba(63, 185, 80, 0.2) !important;
+  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.4), 0 4px 18px rgba(143, 168, 74, 0.2) !important;
 }
 
 /* Selection & scrollbars */
@@ -370,14 +370,14 @@ body[data-application-name="workbuddy"] ::-webkit-scrollbar-track {
 }
 
 body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(63, 185, 80, 0.3) 0%, rgba(63, 185, 80, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.3) 0%, rgba(143, 168, 74, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(63, 185, 80, 0.5) 0%, rgba(63, 185, 80, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.5) 0%, rgba(143, 168, 74, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
@@ -507,7 +507,7 @@ a:hover {
 [class*="messageBubble"][class*="assistant"],
 [class*="msg-content"][class*="bot"] {
   background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
-  border-color: rgba(63, 185, 80, 0.15) !important;
+  border-color: rgba(143, 168, 74, 0.15) !important;
 }
 
 /* Composer container focus glow */

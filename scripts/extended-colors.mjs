@@ -9,6 +9,8 @@
 
 import { luminance } from './utils/color-utils.mjs';
 
+export { luminance } from './utils/color-utils.mjs';
+
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------

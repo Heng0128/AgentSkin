@@ -23,6 +23,43 @@ import type { TexData, TexFrameRendered } from './tex-parser';
 import { parseTex, texFramesToDataUrls, texToDataUrl } from './tex-parser';
 
 // ---------------------------------------------------------------------------
+// SceneData cache — avoids repeated parsing of the same scene.pkg
+// ---------------------------------------------------------------------------
+
+interface CacheEntry {
+  data: SceneData;
+  cachedAt: number;
+}
+
+const sceneDataCache = new Map<string, CacheEntry>();
+const SCENE_CACHE_TTL_MS = 30_000; // 30 seconds
+const SCENE_CACHE_MAX_ENTRIES = 10;
+
+function getCachedSceneData(pkgPath: string): SceneData | null {
+  const entry = sceneDataCache.get(pkgPath);
+  if (!entry) return null;
+  if (Date.now() - entry.cachedAt > SCENE_CACHE_TTL_MS) {
+    sceneDataCache.delete(pkgPath);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCachedSceneData(pkgPath: string, data: SceneData): void {
+  // Evict oldest entries if cache is full
+  if (sceneDataCache.size >= SCENE_CACHE_MAX_ENTRIES) {
+    const oldestKey = sceneDataCache.keys().next().value;
+    if (oldestKey) sceneDataCache.delete(oldestKey);
+  }
+  sceneDataCache.set(pkgPath, { data, cachedAt: Date.now() });
+}
+
+/** Clear the scene data cache. Exported for test isolation. */
+export function clearSceneCache(): void {
+  sceneDataCache.clear();
+}
+
+// ---------------------------------------------------------------------------
 // Types — scene asset structures (textures, models, materials)
 // ---------------------------------------------------------------------------
 
@@ -183,6 +220,21 @@ export function extractScene(pkgPath: string): SceneData | null {
  * for backward compatibility with existing callers and tests.
  */
 export async function extractSceneAsync(pkgPath: string): Promise<SceneData | null> {
+  // 获取 mtime 用于缓存 key，确保文件更新后不会命中旧缓存
+  let mtimeMs = 0;
+  try {
+    const stat = await fs.promises.stat(pkgPath);
+    mtimeMs = stat.mtimeMs;
+  } catch {
+    // stat 失败时 mtimeMs 保持 0，回退到仅用 pkgPath
+  }
+
+  const cacheKey = mtimeMs > 0 ? `${pkgPath}:${mtimeMs}` : pkgPath;
+
+  // Check cache first
+  const cached = getCachedSceneData(cacheKey);
+  if (cached) return cached;
+
   const pkg = await parsePkgAsync(pkgPath);
   if (!pkg) return null;
 
@@ -205,7 +257,19 @@ export async function extractSceneAsync(pkgPath: string): Promise<SceneData | nu
 
   const { general, camera, objects, version } = parseSceneJson(sceneObj);
 
-  return { general, camera, objects, textures, models, materials, particleJsons, version };
+  const scene: SceneData = {
+    general,
+    camera,
+    objects,
+    textures,
+    models,
+    materials,
+    particleJsons,
+    version,
+  };
+
+  setCachedSceneData(cacheKey, scene);
+  return scene;
 }
 
 /**

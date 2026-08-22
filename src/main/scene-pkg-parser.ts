@@ -93,6 +93,7 @@ export type {
 // ---------------------------------------------------------------------------
 
 export {
+  clearSceneCache,
   deriveWeInstallRoot,
   extractScene,
   extractSceneAsync,

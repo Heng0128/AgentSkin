@@ -3,6 +3,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   generate14TokenPalette,
+  generateFromHue,
   generateLeonardoTheme,
   suggestForeground,
 } from './leonardo-wrapper.mjs';
@@ -98,6 +99,83 @@ describe('generate14TokenPalette', () => {
     for (const [key, value] of Object.entries(palette)) {
       expect(value, `key: ${key}`).toMatch(/^#[0-9a-f]{6}$/i);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// generateFromHue
+// ---------------------------------------------------------------------------
+
+describe('generateFromHue', () => {
+  const TOKEN_NAMES = [
+    'accent',
+    'secondary',
+    'background',
+    'foreground',
+    'muted',
+    'surface',
+    'surfaceElevated',
+    'border',
+    'codeBackground',
+    'codeForeground',
+    'inputBackground',
+    'buttonBackground',
+    'buttonForeground',
+    'focusRing',
+  ];
+
+  it('返回全部 14 个 token（dark 模式）', () => {
+    const palette = generateFromHue(145, 'dark');
+    expect(Object.keys(palette)).toHaveLength(14);
+    for (const name of TOKEN_NAMES) {
+      expect(palette).toHaveProperty(name);
+    }
+  });
+
+  it('返回全部 14 个 token（light 模式）', () => {
+    const palette = generateFromHue(210, 'light');
+    expect(Object.keys(palette)).toHaveLength(14);
+  });
+
+  it('所有 token 值为合法 hex 格式', () => {
+    const palette = generateFromHue(0, 'dark');
+    for (const [key, value] of Object.entries(palette)) {
+      expect(value, `key: ${key}`).toMatch(/^#[0-9a-f]{6}$/i);
+    }
+  });
+
+  it('hue 包装：380 等价 20', () => {
+    const a = generateFromHue(380, 'dark');
+    const b = generateFromHue(20, 'dark');
+    expect(a.accent).toBe(b.accent);
+  });
+
+  it('负 hue 包装：-30 等价 330', () => {
+    const a = generateFromHue(-30, 'dark');
+    const b = generateFromHue(330, 'dark');
+    expect(a.accent).toBe(b.accent);
+  });
+
+  it('dark 与 light 模式产生不同背景', () => {
+    const dark = generateFromHue(145, 'dark');
+    const light = generateFromHue(145, 'light');
+    expect(dark.background).not.toBe(light.background);
+    expect(relativeLuminance(dark.background)).toBeLessThan(relativeLuminance(light.background));
+  });
+
+  it('多种 hue (0/120/240) 均返回完整 token', () => {
+    for (const h of [0, 120, 240]) {
+      const palette = generateFromHue(h, 'dark');
+      expect(Object.keys(palette)).toHaveLength(14);
+      for (const [key, value] of Object.entries(palette)) {
+        expect(value, `hue ${h}, key ${key}`).toMatch(/^#[0-9a-f]{6}$/i);
+      }
+    }
+  });
+
+  it('无效 hue (NaN) 时返回 fallback 调色板', () => {
+    const palette = generateFromHue(NaN, 'dark');
+    expect(palette.background).toBe('#1e1e1e');
   });
 });
 

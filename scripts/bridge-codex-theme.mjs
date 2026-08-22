@@ -54,6 +54,9 @@ const CT_VAR_MAP = {
   '--ct-success': '--agentskin-secondary',
   '--ct-warning': '--agentskin-accent',
   '--ct-danger': '--agentskin-accent',
+  '--ct-border-light': '--agentskin-border',
+  '--ct-accent-hover': '--agentskin-accent',
+  '--ct-input': '--agentskin-surface-elevated',
 };
 
 /** Codex palette key → AgentSkin colors prop key 映射 */
@@ -122,13 +125,33 @@ function detectMode(palette, declaredMode) {
   return lum < 0.3 ? 'dark' : 'light';
 }
 
+/**
+ * 当 Codex 源数据的 secondary 候选值全部与 accent 相同时，
+ * 派生一个色相偏移的对比绿（黄绿色阶），避免 secondary ≡ accent。
+ */
+function deriveDistinctSecondary(accentHex) {
+  const rgb = parseHex(accentHex);
+  if (!rgb) return accentHex;
+  // 例: #3fb950 (63,185,80) → #8fa84a (143,168,74)：R+80 G-17 B-6
+  // 保持明度接近但色相偏向黄绿，视觉上与 accent 可区分。
+  const r = Math.min(255, rgb.r + 80);
+  const g = Math.max(0, rgb.g - 17);
+  const b = Math.max(0, rgb.b - 6);
+  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}
+
 function mapPaletteToColors(palette, mode) {
   const isLight = mode === 'light';
   const c = palette;
 
   // 直接可达的 14 tokens 映射 (Codex 使用 camelCase palette keys)
   const accent = c.accent || c.accent_bright || c.accentBright || '#3b82f6';
-  const secondary = c.accent_bright || c.accentBright || c.success || c.warning || accent;
+  let secondary = c.accent_bright || c.accentBright || c.success || c.warning || accent;
+  // P1 fix: 当 secondary 候选值与 accent 完全相同时，派生一个对比色，
+  // 避免 14-token 契约中 secondary ≡ accent 丧失语义区分度。
+  if (secondary === accent) {
+    secondary = deriveDistinctSecondary(accent);
+  }
   const background = c.canvas || '#1e1e1e';
   const foreground = c.text || '#e5e5e5';
   const muted = c.muted || c.faint || '#888888';
@@ -540,6 +563,33 @@ function toRaw(color) {
   return '128, 128, 128';
 }
 
+/**
+ * 将桥接块值中残留的 var(--ct-*) 引用转换为 --agentskin-* 引用。
+ * --ct-accent-soft/softer/glow 等 alpha 派生变量直接展开为 color-mix 表达式，
+ * 其余按 CT_VAR_MAP 映射保序替换（长键优先避免误匹配）。
+ */
+function transformBridgeReferences(css) {
+  css = css.replaceAll(
+    /var\(--ct-accent-soft\)/g,
+    'color-mix(in srgb, var(--agentskin-accent) 13%, transparent)',
+  );
+  css = css.replaceAll(
+    /var\(--ct-accent-softer\)/g,
+    'color-mix(in srgb, var(--agentskin-accent) 8%, transparent)',
+  );
+  css = css.replaceAll(
+    /var\(--ct-accent-glow\)/g,
+    'color-mix(in srgb, var(--agentskin-accent) 30%, transparent)',
+  );
+  const entries = Object.entries(CT_VAR_MAP).sort((a, b) => b[0].length - a[0].length);
+  for (const [ctVar, skinVar] of entries) {
+    const escaped = ctVar.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    const re = new RegExp(`var\\(${escaped}\\)`, 'g');
+    css = css.replaceAll(re, `var(${skinVar})`);
+  }
+  return css;
+}
+
 /** 提取 Codex CSS 中的 --color-token-* 桥接块（从 ":root {" 开始到第一个 "}" 之前的整个块之后的 rules），用于追加到 agentskin codex.css */
 function extractBridgeSection(rawCss) {
   // Codex CSS 中包含一个 block 将 --ct-* bridge 到 --color-token-* / --color-background-* / --color-text-*
@@ -583,6 +633,9 @@ function extractBridgeSection(rawCss) {
   let result = `:root.agentskin-host-codex {\n`;
   result += bridgeLines.map((l) => `  ${l.trim()}`).join('\n');
   result += '\n}\n';
+
+  // 将 output block 中残留的 var(--ct-*) 引用转换为 --agentskin-*
+  result = transformBridgeReferences(result);
 
   return result;
 }

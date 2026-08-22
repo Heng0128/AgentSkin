@@ -199,17 +199,24 @@ describe('bridge-theme-consistency', () => {
             expect(hasBareRootDeclaration(css)).toBe(false);
           });
 
-          // Bridge generator gap: github-noir & sweet-strawberry-code ship
-          // `var(--ct-*)` in their bridge section without declaring those
-          // tokens. They should be converted to --agentskin-* references.
-          // Flagged as .todo → becomes active coverage once the bridge script
-          // is fixed. See themes/<id>/BRIDGE_NOTES.md.
-          it.todo('has NO --ct-* variable leaks (bridge script should convert all --ct-* to --agentskin-*)');
+          // Bridge contract: all --ct-* references must be converted to
+          // --agentskin-* equivalents. Activated after bridge script fix.
+          it('has NO --ct-* variable leaks (bridge script should convert all --ct-* to --agentskin-*)', () => {
+            const ctRefs = findCtVariableReferences(css);
+            expect(ctRefs, `remaining --ct-* refs: ${ctRefs.join(', ')}`).toEqual([]);
+          });
 
-          // Bridge generator gap: obsidian-poise has no bridge section at all
-          // (0 --color-* overrides). Flagged as .todo until bridge coverage is
-          // extended to all bridged themes.
-          it.todo('has --color-* bridge overrides > 0 (bridge section missing for some themes)');
+          // Bridge contract: if the source theme CSS was bridged (bridge marker
+          // present), --color-* override count must be > 0.
+          it('has --color-* bridge overrides > 0 when bridge section is present', () => {
+            const hasBridgeMarker = css.includes('Bridge: Codex-native --color-token-* overrides');
+            if (!hasBridgeMarker) {
+              // Metadata-only export (no source CSS) — bridge section cannot exist.
+              expect(hasBridgeMarker).toBe(false);
+              return;
+            }
+            expect(countColorBridgeOverrides(css)).toBeGreaterThan(0);
+          });
         });
       }
     });

@@ -6,7 +6,7 @@
 html.agentskin-host-traework {
   color-scheme: dark !important;
   --agentskin-accent: #3fb950;
-  --agentskin-secondary: #3fb950;
+  --agentskin-secondary: #8fa84a;
   --agentskin-bg: #090d0a;
   --agentskin-surface: #0e140f;
   --agentskin-surface-elevated: #17211a;
@@ -38,7 +38,7 @@ html.agentskin-host-traework body {
 
   /* Brand / links / buttons */
   --vscode-textLink-foreground: #3fb950 !important;
-  --vscode-textLink-activeForeground: #3fb950 !important;
+  --vscode-textLink-activeForeground: #8fa84a !important;
   --vscode-button-background: #3fb950 !important;
   --vscode-button-foreground: rgb(1, 2, 2) !important;
   --vscode-button-hoverBackground: rgba(63, 185, 80, 0.85) !important;
@@ -205,7 +205,7 @@ html.agentskin-host-traework #root::before {
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-accent) 26%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 26%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -259,7 +259,7 @@ html.agentskin-host-traework .chat-input-v2-input-box-editable {
 html.agentskin-host-traework .chat-input-v2-input-box-editable:focus,
 html.agentskin-host-traework .chat-input-v2-input-box-editable:focus-within {
   border-color: rgba(63, 185, 80, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.1), 0 4px 18px rgba(63, 185, 80, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.1), 0 4px 18px rgba(143, 168, 74, 0.12) !important;
 }
 
 html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
@@ -276,7 +276,7 @@ html.agentskin-host-traework [class*="chat-input-primary-glow"] {
 
 html.agentskin-host-traework [class*="chat-input-primary-glow"]:focus-within {
   border-color: rgba(63, 185, 80, 0.45) !important;
-  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.08), 0 4px 16px rgba(63, 185, 80, 0.1) !important;
+  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.08), 0 4px 16px rgba(143, 168, 74, 0.1) !important;
 }
 
 /* ---- buttons ---- */
@@ -499,14 +499,14 @@ html.agentskin-host-traework ::-webkit-scrollbar-track {
 }
 
 html.agentskin-host-traework ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(63, 185, 80, 0.3) 0%, rgba(63, 185, 80, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.3) 0%, rgba(143, 168, 74, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 html.agentskin-host-traework ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(63, 185, 80, 0.5) 0%, rgba(63, 185, 80, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.5) 0%, rgba(143, 168, 74, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 

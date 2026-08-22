@@ -514,6 +514,13 @@
       },
       "additionalProperties": false
     },
+    "variableBridge": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "(v2.7+) 双层变量桥接映射表。键为客户端原生 CSS 变量名（如 --color-background-surface），值为对应的 agentskin token 引用（如 var(--agentskin-surface)）或自定义色值。纯可选字段，缺失时回退到生成器内置映射逻辑，不影响现有主题。"
+    },
     "depth": {
       "type": "string",
       "enum": ["L1", "L2", "L3"]

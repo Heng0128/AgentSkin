@@ -7,6 +7,7 @@
 // All functions are pure: inputs in, token map out. No I/O, no side effects.
 
 import { BackgroundColor, Color, Theme } from '@adobe/leonardo-contrast-colors';
+import { oklchToHex } from './oklch-utils.mjs';
 
 // ---------------------------------------------------------------------------
 // 14-token contract — maps each token to its target contrast ratio against
@@ -431,4 +432,66 @@ function contrastRatio(l1, l2) {
   const lighter = Math.max(l1, l2);
   const darker = Math.min(l1, l2);
   return (lighter + 0.05) / (darker + 0.05);
+}
+
+// ---------------------------------------------------------------------------
+// Hue-entry API — thin wrapper over generate14TokenPalette
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate a 14-token palette from a single hue angle.
+ *
+ * Thin wrapper: converts hue to OKLCH base color (L=0.55, C=0.14) then
+ * delegates to generate14TokenPalette for contrast-driven generation.
+ *
+ * @param {number} hue - Input hue (0-360).
+ * @param {'dark'|'light'} [mode='dark'] - Theme mode.
+ * @returns {{ accent: string, secondary: string, ... }} 14-token palette.
+ */
+export function generateFromHue(hue, mode = 'dark') {
+  const h = ((hue % 360) + 360) % 360;
+  const baseHex = oklchToHex(0.55, 0.14, h);
+  return generate14TokenPalette(baseHex, { theme: mode });
+}
+
+// ---------------------------------------------------------------------------
+// CLI entry point
+// ---------------------------------------------------------------------------
+
+/**
+ * Detect direct execution (not import) cross-platform.
+ * On Windows import.meta.url uses forward slashes, process.argv[1] uses backslashes.
+ */
+const isDirectRun = (() => {
+  if (!process.argv[1]) return false;
+  const urlPath = import.meta.url.replace(/^file:\/\/\/?/, '/').replace(/\\/g, '/');
+  const argvPath = process.argv[1].replace(/\\/g, '/');
+  return urlPath.endsWith(argvPath) || argvPath.endsWith(urlPath);
+})();
+
+if (isDirectRun) {
+  const args = process.argv.slice(2);
+  let hue = null;
+  let accent = null;
+  let mode = 'dark';
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--hue') hue = Number(args[++i]);
+    else if (args[i] === '--accent') accent = args[++i];
+    else if (args[i] === '--light') mode = 'light';
+  }
+
+  let result;
+  if (hue != null && !Number.isNaN(hue)) {
+    result = generateFromHue(hue, mode);
+  } else if (accent) {
+    result = generate14TokenPalette(accent, { theme: mode });
+  } else {
+    console.error(
+      'Usage: node scripts/leonardo-wrapper.mjs --hue <0-360> | --accent <hex> [--dark|--light]',
+    );
+    process.exit(1);
+  }
+
+  console.log(JSON.stringify(result, null, 2));
 }

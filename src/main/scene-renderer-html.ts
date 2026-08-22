@@ -71,6 +71,47 @@ export {
 // ---------------------------------------------------------------------------
 
 /**
+ * Generate a static preview HTML for a scene asynchronously (L1 energy-saver
+ * path in non-blocking mode).
+ *
+ * Parses the scene via {@link extractSceneAsync} (which uses `fs.promises`
+ * instead of `fs.readFileSync`, keeping the main process event loop
+ * responsive during I/O), then delegates to {@link renderSceneToStaticHtml}
+ * which outputs pure static HTML — no `<script>` tags, no rAF loop, no
+ * particles, no interaction.
+ *
+ * The output contains **zero `<script>` tags**, so there is no runtime
+ * overhead beyond the browser's image decode + paint.
+ *
+ * @param pkgPath Absolute path to the `.pkg` file.
+ * @param options Optional resolution context (same as `renderSceneToHtml`).
+ * @returns A complete HTML document string, or `null` if the pkg could not
+ *          be parsed or contains no renderable content.
+ */
+export async function renderSceneToStaticHtmlAsync(
+  pkgPath: string,
+  options?: { weInstallRoot?: string },
+): Promise<string | null> {
+  const { extractSceneAsync } = await import('./scene/scene-extractor');
+  const scene = await extractSceneAsync(pkgPath);
+  if (!scene) return null;
+
+  const weInstallRoot = options?.weInstallRoot ?? deriveWeInstallRoot(pkgPath);
+  let layers: RenderLayer[];
+  try {
+    layers = buildRenderLayers(scene, weInstallRoot);
+  } catch {
+    return null;
+  }
+  if (layers.length === 0 && !scene.general.clearEnabled) return null;
+  return renderSceneToStaticHtml(layers);
+}
+
+// ---------------------------------------------------------------------------
+// L2 Canvas 2D renderer (animated, rAF loop)
+// ---------------------------------------------------------------------------
+
+/**
  * Render a scene.pkg file into a self-contained HTML string.
  *
  * @param pkgPath Absolute path to the `.pkg` file.
@@ -233,45 +274,4 @@ export function renderSceneToStaticHtml(
     '</body>\n' +
     '</html>'
   );
-}
-
-// ---------------------------------------------------------------------------
-// L3 WebGL renderer (placeholder — falls back to L2)
-// ---------------------------------------------------------------------------
-
-/** Render options for L3 (WebGL) scene rendering. */
-export interface RenderSceneOptions {
-  /** Target viewport width in CSS px. */
-  width?: number;
-  /** Target viewport height in CSS px. */
-  height?: number;
-}
-
-/**
- * Attempt to render a scene using WebGL (L3 tier — placeholder).
- *
- * **Current behavior**: Falls back to L2 (Canvas 2D) via `buildHtmlDocument`.
- * The input `scene` and `layers` are produced by {@link parseSceneLayers}.
- *
- * **Future**: Replace the body of this function with a PixiJS or Three.js
- * renderer for true GPU-accelerated scene rendering. The `options` parameter
- * is reserved for future use (e.g., MSAA sample count, anisotropy level).
- *
- * @param scene The parsed scene data (provides clearColor, projection, parallax).
- * @param layers The resolved render layers sorted back-to-front by parallaxDepth.
- * @param _options Optional render parameters (reserved for future WebGL use).
- * @returns A complete HTML document string.
- */
-export function renderSceneToWebGLHtml(
-  scene: SceneData,
-  layers: RenderLayer[],
-  _options?: RenderSceneOptions,
-): string {
-  // TODO: Future — instantiate PixiJS Application or Three.js WebGLRenderer,
-  // render layers as textured quads with shaders, composite to canvas.
-  //
-  // For now, reuse the L2 Canvas 2D path. This ensures identical output
-  // across all tiers so that switching from L2 to L3 is a safe no-op
-  // until the real WebGL renderer lands.
-  return buildHtmlDocument(scene, layers);
 }

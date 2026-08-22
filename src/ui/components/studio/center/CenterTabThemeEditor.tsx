@@ -396,7 +396,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
             {/* Shadow preview swatch */}
             <div
               className="h-6 w-6 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)]"
-              style={{ boxShadow: shadowValue(elevation) }}
+              style={{ boxShadow: 'var(--shadow-float)' }}
             />
           </div>
         </div>

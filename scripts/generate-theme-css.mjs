@@ -80,7 +80,13 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
     const extBlock = extendedColorsBlock(manifest.colors?.extended);
     const dlBlock = designLanguageBlock(resolveDesignLanguage(manifest));
 
-    for (const [agent, generate] of Object.entries(GENERATORS)) {
+    // P1 fix: 仅按 manifest.supportedAgents 或 targets 声明的 agent 生成 CSS，
+    // 避免为未声明的 agent 产出冗余文件（如 demo-bridge-v2 仅 codex）。
+    const declaredAgents = manifest.supportedAgents ?? Object.keys(manifest.targets ?? {});
+    const agentsToGenerate = Object.entries(GENERATORS).filter(([agent]) =>
+      declaredAgents.includes(agent),
+    );
+    for (const [agent, generate] of agentsToGenerate) {
       let css = generate(ctx);
       // Extended semantic colors: themes declaring colors.extended get
       // --agentskin-ext-* and --agentskin-ext-on-* variables appended.

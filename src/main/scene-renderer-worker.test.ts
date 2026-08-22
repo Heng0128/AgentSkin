@@ -26,7 +26,7 @@ describe('scene render worker — handleRenderRequest protocol', () => {
     let exercised = false;
     for (const d of dirs) {
       const pkgPath = `${workshop}/${d}/scene.pkg`;
-      const res = handleRenderRequest({ requestId: 42, pkgPath });
+      const res = await handleRenderRequest({ requestId: 42, pkgPath });
       expect(res.requestId).toBe(42);
       if (res.html) {
         expect(res.error).toBeUndefined();
@@ -53,7 +53,7 @@ describe('scene render worker — handleRenderRequest protocol', () => {
       } catch {
         continue;
       }
-      const res = handleRenderRequest({ requestId: 7, pkgPath });
+      const res = await handleRenderRequest({ requestId: 7, pkgPath });
       expect(res.requestId).toBe(7);
       // A scene that parses but has no renderable layers yields null — and
       // that is a *normal* outcome, so no error field is set.
@@ -64,16 +64,57 @@ describe('scene render worker — handleRenderRequest protocol', () => {
     expect(exercised).toBe(true);
   }, 120000);
 
-  it('degrades to html:null without an error for an unreadable/missing pkg', () => {
+  it('degrades to html:null without an error for an unreadable/missing pkg', async () => {
     // renderSceneToHtml swallows parse/read failures and returns null — the
     // worker surfaces that same contract (null html, no error field). The
     // error branch is a defensive fallback for truly unexpected throws.
-    const res = handleRenderRequest({
+    const res = await handleRenderRequest({
       requestId: 1,
       pkgPath: 'C:/definitely/not/a/scene.pkg',
     });
     expect(res.requestId).toBe(1);
     expect(res.html).toBeNull();
+    expect(res.error).toBeUndefined();
+  });
+
+  it('static mode produces a zero-script HTML document', async () => {
+    const workshop = await resolveWorkshopOrSkip();
+    if (!workshop) return; // skipped: WE not installed
+    const { readdir } = await import('node:fs/promises');
+    const dirs = await readdir(workshop);
+    let exercised = false;
+    for (const d of dirs) {
+      const pkgPath = `${workshop}/${d}/scene.pkg`;
+      const staticRes = await handleRenderRequest({
+        requestId: 100,
+        pkgPath,
+        mode: 'static',
+      });
+      // Even for layers-only scenes the static output must be a string with
+      // zero <script> tags — the L1 zero-runtime contract.
+      if (staticRes.html) {
+        expect(staticRes.html).not.toContain('<script');
+        expect(staticRes.html).toContain('<img');
+        exercised = true;
+        break;
+      }
+    }
+    // At least one real scene should produce a static image; otherwise the
+    // workshop dir contains no renderable assets, which is an environment
+    // issue — not a code bug.
+    expect(exercised).toBe(true);
+  }, 120000);
+
+  it('static mode degrades to null (no error) for a missing pkg', async () => {
+    const res = await handleRenderRequest({
+      requestId: 2,
+      pkgPath: 'C:/definitely/not/a/scene.pkg',
+      mode: 'static',
+    });
+    expect(res.requestId).toBe(2);
+    expect(res.html).toBeNull();
+    // extractScene returns null on parse failure; the static path swallows
+    // it to null (same contract as full mode).
     expect(res.error).toBeUndefined();
   });
 });

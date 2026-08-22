@@ -2,7 +2,7 @@
 html.agentskin-host-qoderwork {
   color-scheme: dark !important;
   --agentskin-accent: #3fb950;
-  --agentskin-secondary: #3fb950;
+  --agentskin-secondary: #8fa84a;
   --agentskin-bg: #090d0a;
   --agentskin-surface: #0e140f;
   --agentskin-surface-elevated: #17211a;
@@ -113,9 +113,9 @@ html.agentskin-host-qoderwork:root {
   --color-diff-remove-bg: rgba(252, 107, 131, 0.12) !important;
 
   /* Accent palette (derived from theme secondary + accent) */
-  --color-pink: #3fb950 !important;
-  --color-pink-bg: rgba(63, 185, 80, 0.1) !important;
-  --color-pink-hover: rgb(101, 199, 115) !important;
+  --color-pink: #8fa84a !important;
+  --color-pink-bg: rgba(143, 168, 74, 0.1) !important;
+  --color-pink-hover: rgb(165, 185, 110) !important;
   --color-purple: rgb(50, 148, 64) !important;
   --color-purple-bg: rgba(63, 185, 80, 0.08) !important;
   --color-purple-hover: rgb(101, 199, 115) !important;
@@ -137,9 +137,9 @@ html.agentskin-host-qoderwork:root {
   --color-slate: #94a3b8 !important;
   --color-slate-bg: rgba(148, 163, 184, 0.1) !important;
   --color-slate-hover: #cbd5e1 !important;
-  --color-lavender: rgb(121, 206, 133) !important;
-  --color-lavender-bg: rgba(63, 185, 80, 0.08) !important;
-  --color-lavender-hover: rgb(159, 220, 168) !important;
+  --color-lavender: rgb(177, 194, 128) !important;
+  --color-lavender-bg: rgba(143, 168, 74, 0.08) !important;
+  --color-lavender-hover: rgb(199, 212, 165) !important;
   --color-sage: rgb(54, 157, 68) !important;
   --color-sage-bg: rgba(63, 185, 80, 0.06) !important;
   --color-sage-hover: rgba(63, 185, 80, 0.12) !important;
@@ -172,7 +172,7 @@ html.agentskin-host-qoderwork:root {
 
   /* Chat input parchment — keep extremely subtle to avoid jarring border */
   --chat-input-parchment-edge: rgba(63, 185, 80, 0.12) !important;
-  --chat-input-parchment-glow: rgba(63, 185, 80, 0.06) !important;
+  --chat-input-parchment-glow: rgba(143, 168, 74, 0.06) !important;
   --chat-input-parchment-halo: transparent !important;
 }
 
@@ -195,7 +195,7 @@ html.agentskin-host-qoderwork #root::before {
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-accent) 26%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 26%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -241,7 +241,7 @@ html.agentskin-host-qoderwork [data-resizable-sidebar]:not(.agents-sidebar) {
 html.agentskin-host-qoderwork .chat-input-editor-text:focus,
 html.agentskin-host-qoderwork .chat-input-editor-text:focus-within {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 3px var(--color-primary-bg-hover), 0 4px 18px rgba(63, 185, 80, 0.2) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-bg-hover), 0 4px 18px rgba(143, 168, 74, 0.2) !important;
 }
 
 /* Selection */
@@ -298,14 +298,14 @@ html.agentskin-host-qoderwork ::-webkit-scrollbar-track {
 }
 
 html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(63, 185, 80, 0.3) 0%, rgba(63, 185, 80, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.3) 0%, rgba(143, 168, 74, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(63, 185, 80, 0.5) 0%, rgba(63, 185, 80, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.5) 0%, rgba(143, 168, 74, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 

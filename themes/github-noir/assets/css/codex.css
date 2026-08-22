@@ -2,7 +2,7 @@
 :root.agentskin-host-codex {
   color-scheme: dark !important;
   --agentskin-accent: #3fb950;
-  --agentskin-secondary: #3fb950;
+  --agentskin-secondary: #8fa84a;
   --agentskin-bg: #090d0a;
   --agentskin-surface: #0e140f;
   --agentskin-surface-elevated: #17211a;
@@ -81,7 +81,7 @@
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-accent) 26%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 26%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -130,7 +130,7 @@
 :root.agentskin-host-codex [contenteditable="true"]:focus-within,
 :root.agentskin-host-codex textarea:focus {
   border-color: rgba(63, 185, 80, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.1), 0 4px 18px rgba(63, 185, 80, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(63, 185, 80, 0.1), 0 4px 18px rgba(143, 168, 74, 0.12) !important;
 }
 
 /* Buttons */
@@ -237,14 +237,14 @@
 }
 
 :root.agentskin-host-codex ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(63, 185, 80, 0.3) 0%, rgba(63, 185, 80, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.3) 0%, rgba(143, 168, 74, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 :root.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(63, 185, 80, 0.5) 0%, rgba(63, 185, 80, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.5) 0%, rgba(143, 168, 74, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
@@ -295,251 +295,4 @@
 /* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ----
    Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
    注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
-
-/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */
-:root.agentskin-host-codex {
-  --color-background-surface: var(--ct-canvas) !important;
-  --color-background-surface-under: var(--ct-canvas-deep) !important;
-  --color-background-panel: var(--ct-surface) !important;
-  --color-background-control: var(--ct-raised) !important;
-  --color-background-control-opaque: var(--ct-raised) !important;
-  --color-background-editor-opaque: var(--ct-code) !important;
-  --color-background-elevated-primary: rgba(23, 33, 26, 0.96) !important;
-  --color-background-elevated-primary-opaque: var(--ct-raised) !important;
-  --color-background-elevated-secondary: rgba(18, 26, 20, 0.96) !important;
-  --color-background-elevated-secondary-opaque: var(--ct-surface-raised) !important;
-  --color-text-foreground: var(--ct-text) !important;
-  --color-text-foreground-secondary: var(--ct-muted) !important;
-  --color-text-foreground-tertiary: var(--ct-faint) !important;
-  --color-icon-primary: var(--ct-text) !important;
-  --color-icon-secondary: var(--ct-muted) !important;
-  --color-icon-tertiary: var(--ct-faint) !important;
-  --color-border: var(--ct-border) !important;
-  --color-border-light: var(--ct-border-subtle) !important;
-  --color-border-heavy: var(--ct-border-strong) !important;
-  --color-border-focus: var(--ct-focus) !important;
-  --color-token-bg-primary: #0b100d !important;
-  --color-token-bg-secondary: var(--ct-surface) !important;
-  --color-token-bg-tertiary: var(--ct-raised) !important;
-  --color-token-main-surface-primary: var(--ct-canvas) !important;
-  --color-token-side-bar-background: #0b100d !important;
-  --color-token-foreground: var(--ct-text) !important;
-  --color-token-text-primary: var(--ct-text) !important;
-  --color-token-text-secondary: var(--ct-muted) !important;
-  --color-token-text-tertiary: var(--ct-faint) !important;
-  --color-token-description-foreground: var(--ct-muted) !important;
-  --color-token-icon-foreground: var(--ct-muted) !important;
-  --color-token-input-background: var(--ct-raised) !important;
-  --color-token-input-foreground: var(--ct-text) !important;
-  --color-token-input-placeholder-foreground: var(--ct-faint) !important;
-  --color-token-input-border: var(--ct-border-strong) !important;
-  --color-token-border: var(--ct-border) !important;
-  --color-token-border-default: var(--ct-border) !important;
-  --color-token-border-heavy: var(--ct-border-strong) !important;
-  --color-token-border-light: var(--ct-border-subtle) !important;
-  --color-token-list-hover-background: var(--ct-accent-soft) !important;
-  --color-token-list-active-selection-background: var(--ct-accent-soft) !important;
-  --color-token-list-active-selection-foreground: var(--ct-text) !important;
-  --color-token-toolbar-hover-background: var(--ct-accent-soft) !important;
-  --color-token-button-background: var(--ct-accent-deep) !important;
-  --color-token-button-foreground: #051008 !important;
-  --color-token-button-border: rgba(94, 224, 128, 0.42) !important;
-  --color-token-link: var(--ct-accent-bright) !important;
-  --color-token-text-link-foreground: var(--ct-accent-bright) !important;
-  --color-token-text-link-active-foreground: #8cf09a !important;
-  --color-token-primary: var(--ct-accent) !important;
-  --color-token-focus-border: var(--ct-focus) !important;
-  --color-token-dropdown-background: var(--ct-raised) !important;
-  --color-token-dropdown-foreground: var(--ct-text) !important;
-  --color-token-menu-background: var(--ct-raised) !important;
-  --color-token-menu-border: var(--ct-border) !important;
-  --color-token-checkbox-background: var(--ct-raised) !important;
-  --color-token-checkbox-border: var(--ct-border-strong) !important;
-  --color-token-checkbox-foreground: var(--ct-accent-bright) !important;
-  --color-token-badge-background: var(--ct-accent-soft) !important;
-  --color-token-badge-foreground: var(--ct-accent-bright) !important;
-  --color-token-scrollbar-slider-background: rgba(124, 158, 133, 0.30) !important;
-  --color-token-scrollbar-slider-hover-background: rgba(124, 158, 133, 0.46) !important;
-  --color-token-scrollbar-slider-active-background: var(--ct-accent) !important;
-  --color-token-conversation-header: var(--ct-muted) !important;
-  --color-token-conversation-body: var(--ct-text) !important;
-  --color-token-conversation-summary-leading: var(--ct-muted) !important;
-  --color-token-conversation-summary-trailing: var(--ct-faint) !important;
-  --color-token-non-assistant-body-descendant: var(--ct-muted) !important;
-  --color-token-text-preformat-foreground: #d7f5db !important;
-  --color-token-text-preformat-background: var(--ct-code) !important;
-  --color-token-text-code-block-background: var(--ct-code) !important;
-  --color-token-diff-surface: #0d130e !important;
-  --color-token-charts-blue: #58a6ff !important;
-  --color-token-editor-warning-foreground: var(--ct-warning) !important;
-  --color-surface: var(--ct-canvas) !important;
-  --color-surface-secondary: #0b100d !important;
-  --color-surface-tertiary: var(--ct-code) !important;
-  --color-surface-elevated: var(--ct-raised) !important;
-  --color-surface-elevated-secondary: var(--ct-raised-strong) !important;
-  --color-background-primary: var(--ct-accent) !important;
-  --color-background-primary-soft: rgba(63, 185, 80, 0.12) !important;
-  --color-background-primary-soft-alpha: rgba(63, 185, 80, 0.08) !important;
-  --color-background-primary-soft-active: rgba(63, 185, 80, 0.20) !important;
-  --color-background-primary-soft-hover: rgba(63, 185, 80, 0.16) !important;
-  --color-background-primary-soft-alt: #102716 !important;
-  --color-background-primary-ghost-hover: rgba(63, 185, 80, 0.11) !important;
-  --color-background-primary-outline-hover: rgba(63, 185, 80, 0.14) !important;
-  --color-background-primary-outline-active: rgba(63, 185, 80, 0.20) !important;
-  --color-background-primary-solid: var(--ct-accent-deep) !important;
-  --color-background-primary-solid-hover: var(--ct-accent) !important;
-  --color-background-primary-solid-active: var(--ct-accent-bright) !important;
-  --color-background-primary-surface: #0d1b11 !important;
-  --color-background-secondary-soft: rgba(233, 243, 234, 0.07) !important;
-  --color-background-secondary-soft-alpha: rgba(233, 243, 234, 0.04) !important;
-  --color-background-secondary-soft-hover: rgba(233, 243, 234, 0.09) !important;
-  --color-background-secondary-soft-active: rgba(233, 243, 234, 0.12) !important;
-  --color-background-secondary-soft-alt: var(--ct-raised) !important;
-  --color-background-button-primary: var(--ct-accent-deep) !important;
-  --color-background-button-primary-hover: var(--ct-accent) !important;
-  --color-background-button-primary-active: var(--ct-accent-bright) !important;
-  --color-background-button-primary-inactive: rgba(46, 160, 67, 0.32) !important;
-  --color-background-button-secondary: rgba(233, 243, 234, 0.06) !important;
-  --color-background-button-secondary-hover: rgba(233, 243, 234, 0.10) !important;
-  --color-background-button-secondary-active: rgba(233, 243, 234, 0.14) !important;
-  --color-background-button-secondary-inactive: rgba(233, 243, 234, 0.04) !important;
-  --color-background-button-tertiary: transparent !important;
-  --color-background-button-tertiary-hover: var(--ct-accent-soft) !important;
-  --color-background-button-tertiary-active: rgba(63, 185, 80, 0.18) !important;
-  --color-background-accent: rgba(63, 185, 80, 0.16) !important;
-  --color-background-accent-hover: rgba(63, 185, 80, 0.22) !important;
-  --color-background-accent-active: rgba(63, 185, 80, 0.28) !important;
-  --color-text: var(--ct-text) !important;
-  --color-text-emphasis: #f4fbf5 !important;
-  --color-text-secondary: var(--ct-muted) !important;
-  --color-text-tertiary: var(--ct-faint) !important;
-  --color-text-disabled: #5c6e60 !important;
-  --color-text-accent: var(--ct-accent-bright) !important;
-  --color-text-info: var(--ct-accent-bright) !important;
-  --color-text-success: var(--ct-accent-bright) !important;
-  --color-text-warning: #e3b341 !important;
-  --color-text-danger: #ff7b72 !important;
-  --color-text-error: #ff7b72 !important;
-  --color-text-on-accent: #051008 !important;
-  --color-text-inverse: #051008 !important;
-  --color-text-button-primary: #051008 !important;
-  --color-text-button-secondary: var(--ct-text) !important;
-  --color-text-button-tertiary: var(--ct-muted) !important;
-  --color-text-primary-solid: var(--ct-text) !important;
-  --color-text-primary-soft: var(--ct-accent-bright) !important;
-  --color-icon-accent: var(--ct-accent-bright) !important;
-  --color-icon-success: var(--ct-accent-bright) !important;
-  --color-icon-warning: #e3b341 !important;
-  --color-icon-error: #ff7b72 !important;
-  --color-ring: var(--ct-focus) !important;
-  --color-ring-primary: var(--ct-focus) !important;
-  --color-ring-success: var(--ct-focus) !important;
-  --color-ring-danger: #ff7b72 !important;
-  --color-ring-warning: #e3b341 !important;
-  --color-border-strong: var(--ct-border-strong) !important;
-  --color-border-subtle: var(--ct-border-subtle) !important;
-  --color-border-primary-outline: rgba(94, 224, 128, 0.44) !important;
-  --color-border-primary-outline-hover: var(--ct-focus) !important;
-  --color-border-primary-surface: rgba(63, 185, 80, 0.28) !important;
-  --color-border-success-outline: rgba(63, 185, 80, 0.52) !important;
-  --color-border-danger-outline: rgba(248, 81, 73, 0.56) !important;
-  --color-border-warning-outline: rgba(210, 153, 34, 0.56) !important;
-  --color-background-success-surface: #0d2012 !important;
-  --color-background-success-solid: var(--ct-accent-deep) !important;
-  --color-background-danger-surface: #2a1210 !important;
-  --color-background-danger-solid: #b62324 !important;
-  --color-background-warning-surface: #251d0b !important;
-  --color-background-warning-solid: #9e6a03 !important;
-  --color-background-status-success: rgba(63, 185, 80, 0.18) !important;
-  --color-background-status-warning: rgba(210, 153, 34, 0.18) !important;
-  --color-background-status-error: rgba(248, 81, 73, 0.18) !important;
-  --color-background-info-soft: rgba(63, 185, 80, 0.16) !important;
-  --color-background-info-solid: var(--ct-accent-deep) !important;
-  --color-background-tip-soft: rgba(63, 185, 80, 0.13) !important;
-  --color-background-tip-badge: rgba(63, 185, 80, 0.22) !important;
-  --color-background-disabled: rgba(233, 243, 234, 0.05) !important;
-  --color-accent-green: var(--ct-accent-bright) !important;
-  --color-accent-blue: #58a6ff !important;
-  --color-accent-red: #ff7b72 !important;
-  --color-accent-yellow: #e3b341 !important;
-  --color-accent-orange: #d29922 !important;
-  --color-accent-purple: #bc8cff !important;
-  --color-chart-green: var(--ct-accent-bright) !important;
-  --color-chart-blue: #58a6ff !important;
-  --color-chart-red: #ff7b72 !important;
-  --color-chart-yellow: #e3b341 !important;
-  --color-chart-orange: #d29922 !important;
-  --color-chart-purple: #bc8cff !important;
-  --color-codex-description: var(--ct-muted) !important;
-  --color-codex-icon: var(--ct-muted) !important;
-  --color-codex-icon-active: var(--ct-accent-bright) !important;
-  --color-codex-radio-inactive: var(--ct-border-strong) !important;
-  --color-codex-application-menu: var(--ct-raised) !important;
-  --color-codex-application-menu-selection: var(--ct-accent-soft) !important;
-  --color-codex-git-added: var(--ct-accent-bright) !important;
-  --color-codex-git-deleted: #ff7b72 !important;
-  --color-codex-git-modified: #e3b341 !important;
-  --color-codex-git-ignored: var(--ct-faint) !important;
-  --color-codex-diff-added: rgba(46, 160, 67, 0.22) !important;
-  --color-codex-diff-deleted: rgba(248, 81, 73, 0.20) !important;
-  --color-codex-diff-surface: #0d130e !important;
-  --color-codex-drop-overlay: rgba(63, 185, 80, 0.18) !important;
-  --color-codex-drop-prompt: #102416 !important;
-  --color-codex-editor-cursor: var(--ct-focus) !important;
-  --color-codex-editor-line-highlight: rgba(63, 185, 80, 0.06) !important;
-  --color-codex-editor-inline-code-background: rgba(63, 185, 80, 0.12) !important;
-  --color-codex-editor-inline-code-foreground: #a6f3b0 !important;
-  --color-decoration-added: var(--ct-accent-bright) !important;
-  --color-decoration-modified: #e3b341 !important;
-  --color-decoration-deleted: #ff7b72 !important;
-  --color-decoration-unchanged: var(--ct-faint) !important;
-  --color-editor-added: rgba(46, 160, 67, 0.24) !important;
-  --color-editor-deleted: rgba(248, 81, 73, 0.22) !important;
-  --vscode-terminal-background: var(--ct-code) !important;
-  --vscode-terminal-foreground: #d7f5db !important;
-  --vscode-terminal-selectionBackground: rgba(63, 185, 80, 0.34) !important;
-  --vscode-terminal-inactiveSelectionBackground: rgba(63, 185, 80, 0.18) !important;
-  --vscode-terminalCursor-background: var(--ct-focus) !important;
-  --vscode-terminalCursor-foreground: var(--ct-focus) !important;
-  --vscode-terminal-ansiBlack: #0b100d !important;
-  --vscode-terminal-ansiRed: #ff7b72 !important;
-  --vscode-terminal-ansiGreen: #56d364 !important;
-  --vscode-terminal-ansiYellow: #e3b341 !important;
-  --vscode-terminal-ansiBlue: #58a6ff !important;
-  --vscode-terminal-ansiMagenta: #bc8cff !important;
-  --vscode-terminal-ansiCyan: #39c5cf !important;
-  --vscode-terminal-ansiWhite: #c9d8cc !important;
-  --vscode-terminal-ansiBrightBlack: #4b5a4e !important;
-  --vscode-terminal-ansiBrightRed: #ffa198 !important;
-  --vscode-terminal-ansiBrightGreen: #8cf09a !important;
-  --vscode-terminal-ansiBrightYellow: #f0c674 !important;
-  --vscode-terminal-ansiBrightBlue: #79c0ff !important;
-  --vscode-terminal-ansiBrightMagenta: #d2a8ff !important;
-  --vscode-terminal-ansiBrightCyan: #76e1e8 !important;
-  --vscode-terminal-ansiBrightWhite: #f4fbf5 !important;
-  --color-codex-terminal-background: var(--ct-code) !important;
-  --color-codex-terminal-foreground: #d7f5db !important;
-  --color-codex-terminal-selection: rgba(63, 185, 80, 0.34) !important;
-  --color-codex-terminal-selection-inactive: rgba(63, 185, 80, 0.18) !important;
-  --color-codex-terminal-ansi-black: #0b100d !important;
-  --color-codex-terminal-ansi-red: #ff7b72 !important;
-  --color-codex-terminal-ansi-green: #56d364 !important;
-  --color-codex-terminal-ansi-yellow: #e3b341 !important;
-  --color-codex-terminal-ansi-blue: #58a6ff !important;
-  --color-codex-terminal-ansi-magenta: #bc8cff !important;
-  --color-codex-terminal-ansi-cyan: #39c5cf !important;
-  --color-codex-terminal-ansi-white: #c9d8cc !important;
-  --color-codex-terminal-ansi-bright-black: #4b5a4e !important;
-  --color-codex-terminal-ansi-bright-red: #ffa198 !important;
-  --color-codex-terminal-ansi-bright-green: #8cf09a !important;
-  --color-codex-terminal-ansi-bright-yellow: #f0c674 !important;
-  --color-codex-terminal-ansi-bright-blue: #79c0ff !important;
-  --color-codex-terminal-ansi-bright-magenta: #d2a8ff !important;
-  --color-codex-terminal-ansi-bright-cyan: #76e1e8 !important;
-  --color-codex-terminal-ansi-bright-white: #f4fbf5 !important;
-  --color-simple-scrim: rgba(0, 0, 0, 0.42) !important;
-  --color-background-application-menu: var(--ct-raised) !important;
-  --color-foreground-application-menu: var(--ct-text) !important;
-  --color-border-application-menu-separator: var(--ct-border) !important;
-}
 

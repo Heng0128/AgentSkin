@@ -23,7 +23,7 @@
  * Previously each `renderSceneToHtmlAsync` call spawned a fresh Worker and
  * terminated it after a single round-trip — the spawn / teardown overhead
  * (~50-100 ms per call) caused visible UI stutter during rapid wallpaper
- * switching. Workers are now pooled (max 2) and reused across calls:
+ * switching. Workers are now pooled (configurable `maxSize`, default 2) and reused across calls:
  *
  *   - Up to 2 workers are kept alive and shared via a FIFO task queue.
  *   - Idle workers are reused; new ones are created lazily up to `maxSize`.
@@ -33,7 +33,7 @@
  *     task creates a replacement.
  */
 import type { Worker } from 'node:worker_threads';
-import type { WorkerResponse } from './scene-renderer-worker';
+import type { RenderMode, WorkerResponse } from './scene-renderer-worker';
 
 export type { RenderLayer } from './scene-renderer-types';
 
@@ -46,6 +46,11 @@ interface WorkerTask {
   requestId: number;
   pkgPath: string;
   options?: { weInstallRoot?: string };
+  /**
+   * Render mode forwarded to the worker. `'full'` (default) produces the L2
+   * Canvas 2D renderer; `'static'` produces the L1 zero-runtime document.
+   */
+  mode?: RenderMode;
 }
 
 /** Resolved result from a pooled worker. */
@@ -132,6 +137,16 @@ class PooledWorker {
 // WorkerPool — manages up to maxSize workers with task queuing
 // ---------------------------------------------------------------------------
 
+/** Options for configuring a {@link WorkerPool}. */
+export interface WorkerPoolOptions {
+  /**
+   * Maximum number of concurrent workers kept alive in the pool.
+   * Additional tasks wait in the FIFO queue until a worker becomes free.
+   * @default 2
+   */
+  maxSize?: number;
+}
+
 class WorkerPool {
   /** Idle workers available for reuse. */
   private idleWorkers: PooledWorker[] = [];
@@ -148,7 +163,11 @@ class WorkerPool {
   /** Cached factory — imported once, shared by every worker. */
   private factoryPromise: Promise<WorkerFactory> | null = null;
 
-  constructor(private maxSize = 2) {}
+  private readonly maxSize: number;
+
+  constructor(options?: WorkerPoolOptions) {
+    this.maxSize = options?.maxSize ?? 2;
+  }
 
   /**
    * Lazily resolve and cache the `?nodeWorker` factory. Safe to call
@@ -260,7 +279,7 @@ class WorkerPool {
 // ---------------------------------------------------------------------------
 
 let requestSeq = 0;
-const pool = new WorkerPool(2);
+const pool = new WorkerPool();
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -281,6 +300,36 @@ export async function renderSceneToHtmlAsync(
 ): Promise<string | null> {
   const requestId = ++requestSeq;
   return pool.execute({ requestId, pkgPath, options });
+}
+
+/**
+ * Render a scene.pkg into a zero-runtime static document (L1 energy-saver)
+ * without blocking the main process. The worker parses the pkg via the
+ * synchronous `extractScene` (the worker thread itself is already off the
+ * main process event loop, so blocking I/O inside it is acceptable) and
+ * outputs pure static HTML — no `<script>` tags, no rAF loop, no particles,
+ * no interaction.
+ *
+ * The returned HTML string contains zero `<script>` tags, so there is no
+ * runtime overhead beyond the browser's image decode + paint — the L1
+ * zero-runtime contract.
+ *
+ * **Pool semantics**: follows the same pooled-worker,
+ * FIFO-queued model as {@link renderSceneToHtmlAsync}. Workers are shared
+ * between L1 and L2 requests; the `mode` field on the wire message selects
+ * the code path inside the worker.
+ *
+ * @param pkgPath Absolute path to the `.pkg` file.
+ * @param options Optional resolution context (see `renderSceneToHtml`).
+ * @returns A complete static HTML document string, or `null` if the pkg
+ *          could not be parsed or contains no renderable content.
+ */
+export async function renderSceneToStaticHtmlAsync(
+  pkgPath: string,
+  options?: { weInstallRoot?: string },
+): Promise<string | null> {
+  const requestId = ++requestSeq;
+  return pool.execute({ requestId, pkgPath, options, mode: 'static' });
 }
 
 /**
