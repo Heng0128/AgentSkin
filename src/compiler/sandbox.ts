@@ -71,12 +71,13 @@ export function runInSandbox<T>(
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const memoryMB = opts.memoryMB ?? DEFAULT_MEMORY_MB;
   const outputSchema = opts.outputSchema;
+  const allowedAPIs = opts.allowedAPIs ?? DEFAULT_ALLOWED_APIS;
 
   const started = Date.now();
 
   return new Promise<SandboxResult<T>>((resolveResult) => {
     const serializedInput = JSON.stringify(input);
-    const childSnippet = buildShim(code, serializedInput);
+    const childSnippet = buildShim(code, serializedInput, allowedAPIs);
 
     const proc = spawn(
       process.execPath,
@@ -234,7 +235,7 @@ export function runInSandbox<T>(
  *
  * User code + input injected via JSON.stringify — no shell interpolation.
  */
-function buildShim(code: string, serializedInput: string): string {
+function buildShim(code: string, serializedInput: string, allowedAPIs: string[]): string {
   // NOTE: We deliberately omit "use strict" from the top-level script
   // because `const eval = undefined` is a syntax error in strict mode.
   // Instead, `--disallow-code-generation-from-strings` (passed via CLI
@@ -255,6 +256,10 @@ function buildShim(code: string, serializedInput: string): string {
   const __dirname = undefined;
   const __filename = undefined;
   const Buffer = undefined;
+
+  // --- Expose only whitelisted APIs for this execution ---
+  // Accessing any global not in this list resolves to undefined above.
+  var _allowed = { ${allowedAPIs.map((a) => `${a}: ${a}`).join(', ')} };
 
   // --- User hook (function expression, no scope leakage) ---
   var _hook = (${code});

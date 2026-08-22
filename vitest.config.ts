@@ -35,7 +35,7 @@ export default defineConfig({
         test: {
           name: 'main',
           environment: 'node',
-          include: ['src/main/**/*.test.ts', 'src/shared/**/*.test.ts'],
+          include: ['src/main/**/*.test.ts', 'src/shared/**/*.test.ts', 'src/compiler/**/*.test.ts'],
           testTimeout: 15000,
           pool: 'threads',
         },

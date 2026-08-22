@@ -912,6 +912,10 @@ describe('decompressDxt — BC7 格式', () => {
 
   // ---------------------------------------------------------------------------
   // BC7 mode 0-3 precision regression — bit-exact reference vectors
+  //
+  // The BC7 spec mandates per-channel endpoint storage: all R values first,
+  // then all G, then all B. The decoder must read in that order. These tests
+  // verify the fix for D1 (endpoint read order) and D2 (mode 3 P-bit count).
   // ---------------------------------------------------------------------------
 
   it('BC7 mode 0-3 precision regression: mode 0 detects correctly (byte 0 = 0x01)', () => {
@@ -942,41 +946,44 @@ describe('decompressDxt — BC7 格式', () => {
     expect(out![3]).toBe(255);
   });
 
-  it('BC7 mode 0-3 precision regression: mode 0 per-endpoint reading (D1 regression)', () => {
-    // BC7 spec stores endpoint data as R0,G0,B0,R1,G1,B1,... (per-endpoint order).
-    // A per-channel bug (R0,R1,...,G0,G1,...,B0,B1,...) would misread G0 from
-    // the bit position where R1 should be.
+  it('BC7 mode 0-3 precision regression: mode 0 per-channel endpoint reading (D1 regression)', () => {
+    // BC7 spec mandates per-channel storage: R0,R1,...,R5,G0,G1,...,G5,B0,B1,...,B5.
+    // A per-endpoint bug (R0,G0,B0,R1,G1,B1,...) would misread G0 from the bit
+    // position where R1 should be in per-channel order.
     //
     // Mode 0 layout (dataBitOfs=1):
     //   bit 0:     mode (=1)
     //   bits 1-4:  partition (4 bits)
-    //   bits 5-8:  R0 (4 bits)
-    //   bits 9-12: G0 (4 bits)
-    //   bits 13-16: B0 (4 bits)
-    //   ... (remaining endpoints)
-    //   bits 77-82: P-bits (6 bits)
+    //   bits 5-8:  R0 (4 bits)    — per-channel: R0,R1,R2,R3,R4,R5
+    //   bits 9-12: R1 (4 bits)
+    //   ...
+    //   bits 25-28: R5 (4 bits)
+    //   bits 29-32: G0 (4 bits)   — per-channel: G0,G1,G2,G3,G4,G5
+    //   ...
+    //   bits 73-76: B5 (4 bits)
+    //   bits 77-82: P0-P5 (6 bits)
     //   bits 83-127: indices (45 bits = 16x3 - 3 anchors)
     //
-    // Set R0=0xF and G0=0xF, all else zero, all P=0, all indices=0.
-    // Per-endpoint reading: ep0 = (243, 243, 0)
-    // Per-channel reading:  ep0 = (243, 0, 0) — G0 reads from R1 position (=0)
+    // Set R0=0xF at bits 5-8 and G0=0xF at bits 29-32, all P=0.
+    // Per-channel (correct): ep0.G = (0xF << 1) | 0 = 30 → replicate → 247
+    // Per-endpoint (buggy):  ep0.G reads from bits 9-12 (=R1=0) → 0
     const block = Buffer.alloc(16, 0);
     block[0] = 0x01; // mode 0
     // R0 = 0xF at bits 5-8
     setBits(block, 5, 0xf, 4);
-    // G0 = 0xF at bits 9-12
-    setBits(block, 9, 0xf, 4);
+    // G0 = 0xF at bits 29-32 (per-channel position)
+    setBits(block, 29, 0xf, 4);
     // All other endpoints = 0, all P-bits = 0, all indices = 0
 
     const out = decompressDxt(TEX_FORMAT.BC7, 4, 4, block);
     expect(out).not.toBeNull();
 
     // Pixel 0 (subset 0, anchor, index 0) = ep0
-    // R0 = (0xF << 1) | 0 = 30 → (30 << 3) | (30 >> 2) = 240 | 3 = 243
-    // G0 = (0xF << 1) | 0 = 30 → (30 << 3) | (30 >> 2) = 240 | 3 = 243
+    // R0 = (0xF << 1) | 0 = 30 → (30 << 3) | (30 >> 2) = 240 | 7 = 247
+    // G0 = (0xF << 1) | 0 = 30 → (30 << 3) | (30 >> 2) = 240 | 7 = 247
     // B0 = 0
-    expect(out![0]).toBe(243); // R
-    expect(out![1]).toBe(243); // G — would be 0 if per-channel bug
+    expect(out![0]).toBe(247); // R
+    expect(out![1]).toBe(247); // G — would be 0 if per-endpoint bug
     expect(out![2]).toBe(0); // B
     expect(out![3]).toBe(255); // A
   });
@@ -985,51 +992,56 @@ describe('decompressDxt — BC7 格式', () => {
     // Mode 3 spec: "unique P-bit per endpoint" = 4 P-bits total.
     // Bug: reading only 2 P-bits (shared per subset) shifts index offset by 2 bits.
     //
-    // Mode 3 layout (dataBitOfs=4):
+    // Mode 3 layout (dataBitOfs=4, per-channel):
     //   bits 0-3:   mode (=0x08, bit 3 set)
     //   bits 4-9:   partition (6 bits)
-    //   bits 10-16: R0 (7 bits)
-    //   bits 17-23: G0 (7 bits)
-    //   bits 24-30: B0 (7 bits)
-    //   bits 31-37: R1 (7 bits)
-    //   ... (remaining endpoints)
+    //   bits 10-16: R0 (7 bits)   — per-channel: R0,R1,R2,R3
+    //   bits 17-23: R1 (7 bits)
+    //   ...
+    //   bits 38-44: G0 (7 bits)   — per-channel: G0,G1,G2,G3
+    //   ...
+    //   bits 66-72: B0 (7 bits)   — per-channel: B0,B1,B2,B3
+    //   ...
     //   bits 87-93: B3 (7 bits)
     //   bits 94-97: P0,P1,P2,P3 (4 bits, one per endpoint)
     //   bits 98-127: indices (30 bits = 16x2 - 2 anchors)
     //
-    // Set R0=0x7F, R1=0x7F, P0=1, P1=0, P2=0, P3=0.
-    // Correct (4 P-bits): ep0.R = 255, ep1.R = 254
-    // Buggy (2 P-bits):   ep0.R = 255, ep1.R = 255 (both use p0=1)
+    // Set R0=0x7F, R1=0x7F, P0=1, P1=0. Other channels = 0.
+    // P0 applies to all channels of ep0: R0=(0x7F<<1)|1=255, G0=(0<<1)|1=1→2, B0=2
+    // P1 applies to all channels of ep1: R1=(0x7F<<1)|0=254, G1=0, B1=0
     //
-    // Also set pixel 4's index to 3 (weight=64). Pixel 4 is at offset 7-8
-    // from index start (bit 105-106 in correct layout, bit 103-104 in buggy).
+    // Also set pixel 4's index to 3 (weight=64). With 2-bit indices:
+    // pixel 0 (anchor) = 1 bit, pixels 1-3 = 2 bits each, pixel 4 starts at bit 7.
+    // Index stream at bit 98 → pixel 4 at bits 105-106.
     const block = Buffer.alloc(16, 0);
     block[0] = 0x08; // mode 3
     // R0 = 0x7F at bits 10-16
     setBits(block, 10, 0x7f, 7);
-    // R1 = 0x7F at bits 31-37
-    setBits(block, 31, 0x7f, 7);
+    // R1 = 0x7F at bits 17-23 (per-channel: second R value)
+    setBits(block, 17, 0x7f, 7);
     // P0=1 at bit 94, P1=0 at bit 95, P2=0 at bit 96, P3=0 at bit 97
     setBits(block, 94, 1, 1);
     setBits(block, 95, 0, 1);
     setBits(block, 96, 0, 1);
     setBits(block, 97, 0, 1);
     // Pixel 4 index = 3 (binary 11) at bits 105-106
-    // Index stream starts at bit 98; pixel 4 is at offset 7-8
     setBits(block, 105, 3, 2);
 
     const out = decompressDxt(TEX_FORMAT.BC7, 4, 4, block);
     expect(out).not.toBeNull();
 
-    // Pixel 0 (subset 0, anchor, index 0) = ep0 = (255, 0, 0, 255)
+    // Pixel 0 (subset 0, anchor, index 0) = ep0
+    // R0 = (0x7F << 1) | 1 = 255
+    // G0 = (0 << 1) | 1 = 1 → 8-bit no-op replication = 1
+    // B0 = same = 1
     expect(out![0]).toBe(255); // R
-    expect(out![1]).toBe(0); // G
-    expect(out![2]).toBe(0); // B
+    expect(out![1]).toBe(1); // G — P0 injects into all channels
+    expect(out![2]).toBe(1); // B
     expect(out![3]).toBe(255); // A
 
     // Pixel 4 (subset 0, index 3, weight 64):
-    // Correct: ((0)*255 + 64*254 + 32) >> 6 = 254
-    // Buggy:   ((64)*255 + 0*255 + 32) >> 6 = 255 (wrong index=0 due to offset)
+    // Correct (4 P-bits, correct index): ((0)*255 + 64*254 + 32) >> 6 = 254
+    // Buggy (2 P-bits, index offset wrong): index reads as 0 → ((64)*255 + 0*255 + 32) >> 6 = 255
     expect(out![4 * 4]).toBe(254); // R at pixel 4
   });
 
@@ -1037,12 +1049,17 @@ describe('decompressDxt — BC7 格式', () => {
     // Mode 2: 3 subsets, RGB 5.5.5, NO P-bits, 2-bit indices.
     // Verify endpoint reading and index offset (no P-bits to skip).
     //
-    // Mode 2 layout (dataBitOfs=3):
+    // Mode 2 layout (dataBitOfs=3, per-channel):
     //   bits 0-2:   mode (=0x04, bit 2 set)
     //   bits 3-8:   partition (6 bits)
-    //   bits 9-13:  R0 (5 bits)
-    //   ... (remaining endpoints at 5 bits each)
-    //   bits 97-98: P0 nothing (no P-bits in mode 2)
+    //   bits 9-13:  R0 (5 bits)   — per-channel: R0,R1,R2,R3,R4,R5
+    //   ...
+    //   bits 34-38: R5 (5 bits)
+    //   bits 39-43: G0 (5 bits)   — per-channel: G0,G1,G2,G3,G4,G5
+    //   ...
+    //   bits 69-73: B0 (5 bits)   — per-channel: B0,B1,B2,B3,B4,B5
+    //   ...
+    //   bits 94-98: B5 (5 bits)
     //   bits 99-127: indices (29 bits = 16x2 - 3 anchors)
     //
     // Set R0=0x1F, all other endpoints=0, all indices=0.
@@ -1071,60 +1088,75 @@ describe('decompressDxt — BC7 格式', () => {
     // Mode 1: 2 subsets, RGBP 6.6.6.1, 2 shared P-bits (one per subset), 3-bit indices.
     // Verify shared P-bit application: p0 applies to both endpoints of subset 0.
     //
-    // Mode 1 layout (dataBitOfs=2):
+    // Mode 1 layout (dataBitOfs=2, per-channel):
     //   bits 0-1:   mode (=0x02, bit 1 set)
     //   bits 2-7:   partition (6 bits)
-    //   bits 8-13:  R0 (6 bits)
-    //   ... (remaining endpoints)
-    //   bits 74-75: P0, P1 (2 bits, shared per subset)
-    //   bits 76-127: indices (52 bits = 16x3 - 2 anchors)
+    //   bits 8-13:  R0 (6 bits)   — per-channel: R0,R1,R2,R3
+    //   bits 14-19: R1 (6 bits)
+    //   bits 20-25: R2 (6 bits)
+    //   bits 26-31: R3 (6 bits)
+    //   bits 32-37: G0 (6 bits)   — per-channel: G0,G1,G2,G3
+    //   ...
+    //   bits 74-79: B3 (6 bits)
+    //   bit 80:     P0 (shared by subset 0 endpoints 0,1)
+    //   bit 81:     P1 (shared by subset 1 endpoints 2,3)
+    //   bits 82-127: indices (46 bits = 16x3 - 2 anchors)
     //
     // Set R0=0x3F (subset 0), R2=0x3F (subset 1), P0=1, P1=0.
+    // P0=1 injects into all channels of ep0 and ep1 (subset 0).
     const block = Buffer.alloc(16, 0);
     block[0] = 0x02; // mode 1
     // R0 = 0x3F at bits 8-13
     setBits(block, 8, 0x3f, 6);
-    // R2 = 0x3F at bits 44-49 (R1=bits 26-31, G1=bits 32-37, B1=bits 38-43, R2=bits 44-49)
-    // Wait, let me recalculate: R0(8-13), G0(14-19), B0(20-25), R1(26-31), G1(32-37), B1(38-43), R2(44-49)
-    setBits(block, 44, 0x3f, 6);
-    // P0=1 at bit 74, P1=0 at bit 75
-    setBits(block, 74, 1, 1);
-    setBits(block, 75, 0, 1);
+    // R2 = 0x3F at bits 20-25 (per-channel: third R value)
+    setBits(block, 20, 0x3f, 6);
+    // P0=1 at bit 80, P1=0 at bit 81
+    setBits(block, 80, 1, 1);
+    setBits(block, 81, 0, 1);
 
     const out = decompressDxt(TEX_FORMAT.BC7, 4, 4, block);
     expect(out).not.toBeNull();
 
-    // ep0.R = (0x3F << 1) | 1 = 127 → (127 << 1) | (127 >> 6) = 254 | 1 = 255
-    // ep2.R = (0x3F << 1) | 0 = 126 → (126 << 1) | (126 >> 6) = 252 | 1 = 253
+    // ep0 (subset 0, endpoint 0): R0=(0x3F<<1)|1=127→255, G0=(0<<1)|1=1→2, B0=2
+    // ep2 (subset 1, endpoint 0): R2=(0x3F<<1)|0=126→253, G2=0, B2=0
 
     // Pixel 0 (subset 0, anchor, index 0) = ep0
     expect(out![0]).toBe(255); // R
-    expect(out![1]).toBe(0); // G
-    expect(out![2]).toBe(0); // B
+    expect(out![1]).toBe(2); // G — P0 injects into all channels
+    expect(out![2]).toBe(2); // B
 
     // With partition 0: BC7_PARTITION_2[2] = 1 → pixel 2 is in subset 1
-    // Pixel 2 (subset 1, anchor for subset 1 = pixel 15, so pixel 2 stores 3 bits)
-    // Index 0 → ep2 = (253, 0, 0, 255)
+    // Pixel 2 (subset 1, index 0) = ep2 = (253, 0, 0, 255)
     expect(out![2 * 4]).toBe(253); // R at pixel 2 (subset 1, P1=0)
     expect(out![2 * 4 + 3]).toBe(255); // A
   });
 
   it('BC7 mode 0-3 precision regression: mode 0 P-bit injection extends precision', () => {
     // Mode 0: 4-bit endpoints + 1 P-bit = 5 bits precision, replicated to 8.
-    // With P=1: (0xF << 1) | 1 = 31 → (31 << 3) | (31 >> 2) = 248 | 7 = 255
-    // With P=0: (0xF << 1) | 0 = 30 → (30 << 3) | (30 >> 2) = 240 | 3 = 243
+    // P=1: (0xF << 1) | 1 = 31 → (31 << 3) | (31 >> 2) = 248 | 7 = 255
+    // P=0: (0xF << 1) | 0 = 30 → (30 << 3) | (30 >> 2) = 240 | 7 = 247
     //
     // This test verifies that each endpoint's P-bit independently controls
     // the LSB injection for that endpoint's channels.
+    //
+    // Mode 0 layout (per-channel):
+    //   bits 5-8:   R0 (4 bits)   — per-channel: R0,R1,R2,...
+    //   bits 9-12:  R1 (4 bits)
+    //   bits 13-16: R2 (4 bits)
+    //   ...
+    //   bits 77:    P0
+    //   bits 79:    P2
+    //
+    // Set R0=0xF with P0=1, R2=0xF with P2=0.
     const block = Buffer.alloc(16, 0);
     block[0] = 0x01; // mode 0
-    // R0=0xF at bits 5-8, G0=0x0, B0=0x0
+    // R0 = 0xF at bits 5-8
     setBits(block, 5, 0xf, 4);
-    // R1=0x0, G1=0xF at bits 21-24, B1=0x0
-    setBits(block, 21, 0xf, 4);
-    // P0=1 at bit 77, P1=0 at bit 78
+    // R2 = 0xF at bits 13-16 (per-channel: third R value)
+    setBits(block, 13, 0xf, 4);
+    // P0=1 at bit 77, P2=0 at bit 79
     setBits(block, 77, 1, 1);
-    setBits(block, 78, 0, 1);
+    setBits(block, 79, 0, 1);
     // All indices=0
 
     const out = decompressDxt(TEX_FORMAT.BC7, 4, 4, block);
@@ -1132,27 +1164,16 @@ describe('decompressDxt — BC7 格式', () => {
 
     // Pixel 0 (subset 0, index 0) = ep0
     // R0: (0xF << 1) | 1 = 31 → (31 << 3) | (31 >> 2) = 248 | 7 = 255
+    // G0: (0 << 1) | 1 = 1 → (1 << 3) | (1 >> 2) = 8 | 0 = 8
     expect(out![0]).toBe(255); // R with P0=1
-    expect(out![1]).toBe(0); // G0=0
-    expect(out![2]).toBe(0); // B0=0
+    expect(out![1]).toBe(8); // G — P0 injects into all channels (even when 0)
 
     // Pixel 2 (subset 1 with partition 0: BC7_PARTITION_3[2] = 1)
-    // ep1 = endpoint pair for subset 1 = (ep2, ep3) = (R1,G1,B1), (R3,G3,B3)
-    // Wait, mode 0 has 3 subsets: subset 0 = (ep0,ep1), subset 1 = (ep2,ep3), subset 2 = (ep4,ep5)
-    // BC7_PARTITION_3[2] = 1 → pixel 2 in subset 1 → ep2
-    // ep2 = (R2, G2, B2) at bits 29-32(R2), 33-36(G2), 37-40(B2)
-    // We set G1=0xF at bits 21-24, but G1 is part of ep1 (subset 0, endpoint 1)
-    // ep2.G = G2 = 0 (not set)
-    //
-    // Actually, re-checking: with partition 0, pixel 2 → subset 1 → ep2, ep3
-    // ep2 = (R2, G2, B2), ep3 = (R3, G3, B3)
-    // We set bits 21-24 = 0xF, which is G1 (ep1.G, subset 0 endpoint 1)
-    // So this doesn't affect pixel 2.
-    //
-    // For a cleaner test, let me check a pixel that uses ep2 (pixel 9, subset 2):
-    // BC7_PARTITION_3[9] = 2 → pixel 9 in subset 2 → ep4, ep5
-    // Neither ep4 nor ep5 have any bits set, so pixel 9 = (0, 0, 0, 255)
-    expect(out![9 * 4]).toBe(0); // R at pixel 9 (subset 2, all zero)
+    // ep2 = (R2, G2, B2) — R2=0xF with P2=0
+    // R2: (0xF << 1) | 0 = 30 → (30 << 3) | (30 >> 2) = 240 | 7 = 247
+    // G2: 0
+    expect(out![2 * 4]).toBe(247); // R at pixel 2 with P2=0
+    expect(out![2 * 4 + 1]).toBe(0); // G
   });
 });
 
