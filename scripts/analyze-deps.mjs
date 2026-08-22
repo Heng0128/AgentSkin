@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // Custom dependency graph analyzer for AgentSkin
 // Detects circular dependencies without relying on madge
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 export type SupportedPlatform = "darwin" | "win32";
 
 export interface CdpTarget {

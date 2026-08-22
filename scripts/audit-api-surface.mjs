@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // API Surface Auditor for AgentSkin
 // Extracts exported symbols and validates against documentation
 

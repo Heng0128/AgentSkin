@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 /**
  * build-palette.mjs — Generate palette.css from theme manifest.json
  *

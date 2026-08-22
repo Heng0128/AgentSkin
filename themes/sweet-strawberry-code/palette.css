@@ -6,16 +6,16 @@
   --agentskin-surface-elevated: #ffffff;
   --agentskin-text: #5a3d44;
   --agentskin-muted: #a87e88;
-  --agentskin-accent: #ff6b8a;
+  --agentskin-accent: #e14d6b;
   --agentskin-secondary: #4caf7c;
   --agentskin-border: #f5d7df;
   --agentskin-code-bg: #fff7f9;
   --agentskin-code-fg: #5a3d44;
-  --agentskin-focus-ring: #ff6b8a;
-  --agentskin-selection: color-mix(in srgb, #ff6b8a 32%, transparent);
+  --agentskin-focus-ring: #e14d6b;
+  --agentskin-selection: color-mix(in srgb, #e14d6b 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
-  --agentskin-accent-raw: 255, 107, 138;
+  --agentskin-accent-raw: 225, 77, 107;
   --agentskin-secondary-raw: 76, 175, 124;
   --agentskin-text-raw: 90, 61, 68;
   --agentskin-muted-raw: 168, 126, 136;

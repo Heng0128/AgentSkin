@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 export const APP_LOCALES = ['zh-CN', 'en'] as const;
 export type AppLocale = (typeof APP_LOCALES)[number];
 export const DEFAULT_LOCALE: AppLocale = 'zh-CN';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import type { LucideProps } from 'lucide-react';
 
 export type HugeIconProps = LucideProps;

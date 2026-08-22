@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 /**
  * CDP Full Extract - 完整 Agent 样式探针
  *

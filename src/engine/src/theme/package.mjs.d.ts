@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // Type declarations for package.mjs (JS-only engine layer).
 // This .d.ts sits alongside .mjs so TypeScript's bundler resolution picks it up.
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // Dead Code Detector for AgentSkin
 // Identifies unused exports and duplicate implementations
 

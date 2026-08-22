@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // CDP Probe Screenshot v2 — Use browser-level sessions for reliability
 
 import { execSync } from 'node:child_process';

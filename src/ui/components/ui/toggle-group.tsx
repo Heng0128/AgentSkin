@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import * as React from 'react';
 import { toggleVariants } from '@/components/ui/toggle';
 import { cn } from '@/lib/utils';

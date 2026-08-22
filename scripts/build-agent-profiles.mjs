@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 /**
  * Build Agent Profile - 构建 Theme Studio 可用的 Agent Profile
  *

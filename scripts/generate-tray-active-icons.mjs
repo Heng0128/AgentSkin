@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // Generates "active" tray-icon variants by compositing a status dot badge
 // onto the existing tray icons. Run with Node 22 (sharp requirement).
 import { createRequire } from 'node:module';

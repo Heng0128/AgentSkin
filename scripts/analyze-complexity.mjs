@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // Complexity hotspot analyzer for AgentSkin
 // Identifies high-complexity files based on nesting, function length, and file size
 

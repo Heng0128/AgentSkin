@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import { cn } from '@/lib/utils';
 
 import { mergeProps } from '@base-ui/react/merge-props';

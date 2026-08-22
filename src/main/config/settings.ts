@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 

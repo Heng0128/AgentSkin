@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: MPL-2.0  —  Desktop icon asset generator.
+// SPDX-License-Identifier: MPL-2.0
+// Desktop icon asset generator.
 //
 // Renders the AgentSkin SVG brand assets into PNG, Windows ICO, macOS ICNS
 //   and Electron tray images via sharp (prebuilt librsvg).

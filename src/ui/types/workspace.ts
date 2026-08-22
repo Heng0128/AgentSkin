@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 /**
  * Workspace types — preview window, dock, view mode, workspace layout state.
  *

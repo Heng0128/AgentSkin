@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // CDP Probe Screenshot — Capture all 6 Agent windows via CDP
 // Fallback: Windows GDI for non-CDP agents (TRAE)
 // Usage: node scripts/cdp-probe-screenshot.mjs

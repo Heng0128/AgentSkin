@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 /**
  * rebuild-all-themes.mjs — Batch rebuild all .agentskin-theme packages
  * from their manifest.json (already regenerated).

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import { cn } from '@/lib/utils';
 
 import { Button as ButtonPrimitive } from '@base-ui/react/button';

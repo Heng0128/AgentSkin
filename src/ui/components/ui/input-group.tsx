@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 'use client';
 
 import type * as React from 'react';

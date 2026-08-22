@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 export {
   MAX_THEME_PACKAGE_BYTES,
   MAX_THEME_IMAGES,
