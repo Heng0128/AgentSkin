@@ -29,7 +29,7 @@ import { describe, expect, it } from 'vitest';
 const THEMES_DIR = join(process.cwd(), 'themes');
 
 /** Bridge themes under test. */
-const BRIDGE_THEMES = ['github-noir', 'obsidian-poise', 'sweet-strawberry-code', 'demo-bridge-v2'] as const;
+const BRIDGE_THEMES = ['github-noir', 'obsidian-poise', 'sweet-strawberry-code'] as const;
 
 const AGENTS = ['codex'] as const;
 

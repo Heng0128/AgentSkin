@@ -86,9 +86,6 @@ const DIRECT_TOKEN_MAP: ReadonlyArray<[manifestKey: string, token: string]> = [
   ['border', '--agentskin-border'],
 ];
 
-/** Per-agent targets each built-in theme must provide. */
-const AGENTS = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'] as const;
-
 /** WCAG AA thresholds. */
 const WCAG_NORMAL = 4.5;
 const WCAG_SECONDARY = 3.0;
@@ -278,6 +275,7 @@ interface ThemeManifest {
   colors: Record<string, string>;
   targets: Record<string, { css: string }>;
   colorSchemes?: string[];
+  supportedAgents?: string[];
 }
 
 /**
@@ -422,6 +420,28 @@ function discoverThemes(): ThemeManifest[] {
   return manifests;
 }
 
+/**
+ * The set of agents a theme actually supports.
+ *
+ * Prefer the manifest's `supportedAgents` declaration; fall back to the keys
+ * of `targets`. This lets single-agent themes (e.g. `demo-bridge-v2`, which
+ * is a codex-only variableBridge demo) validate correctly instead of being
+ * forced to cover all 6 agents.
+ */
+function themeAgents(t: ThemeManifest): string[] {
+  if (t.supportedAgents && t.supportedAgents.length > 0) {
+    return t.supportedAgents;
+  }
+  return Object.keys(t.targets);
+}
+
+/** Resolve an agent's CSS path safely, or null when not configured. */
+function agentCssPath(t: ThemeManifest, agent: string): string | null {
+  const cfg = t.targets[agent];
+  if (!cfg || !cfg.css) return null;
+  return join(THEMES_DIR, t.id, cfg.css);
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -444,11 +464,12 @@ describe('theme discovery', () => {
 
 describe('required agent CSS coverage', () => {
   for (const t of themes) {
-    it(`${t.id} — provides CSS for all 6 agents`, () => {
-      for (const agent of AGENTS) {
-        expect(t.targets[agent], `${t.id} missing target for agent "${agent}"`).toBeDefined();
-        const cssPath = join(THEMES_DIR, t.id, t.targets[agent].css);
-        expect(existsSync(cssPath), `${t.id}/${agent}: CSS file not found at ${cssPath}`).toBe(
+    const agents = themeAgents(t);
+    it(`${t.id} — provides CSS for every supported agent`, () => {
+      for (const agent of agents) {
+        const cssPath = agentCssPath(t, agent);
+        expect(cssPath, `${t.id} missing target for agent "${agent}"`).not.toBeNull();
+        expect(existsSync(cssPath!), `${t.id}/${agent}: CSS file not found at ${cssPath}`).toBe(
           true,
         );
       }
@@ -458,9 +479,9 @@ describe('required agent CSS coverage', () => {
 
 describe('required token presence', () => {
   for (const t of themes) {
-    for (const agent of AGENTS) {
-      const cssPath = join(THEMES_DIR, t.id, t.targets[agent].css);
-      if (!existsSync(cssPath)) continue;
+    for (const agent of themeAgents(t)) {
+      const cssPath = agentCssPath(t, agent);
+      if (!cssPath || !existsSync(cssPath)) continue;
 
       it(`${t.id}/${agent} — declares all 14 required tokens`, () => {
         const css = readFileSync(cssPath, 'utf8');
@@ -475,9 +496,9 @@ describe('required token presence', () => {
 
 describe('manifest-color ↔ CSS-token consistency', () => {
   for (const t of themes) {
-    for (const agent of AGENTS) {
-      const cssPath = join(THEMES_DIR, t.id, t.targets[agent].css);
-      if (!existsSync(cssPath)) continue;
+    for (const agent of themeAgents(t)) {
+      const cssPath = agentCssPath(t, agent);
+      if (!cssPath || !existsSync(cssPath)) continue;
 
       it(`${t.id}/${agent} — authored tokens match manifest colors`, () => {
         const css = readFileSync(cssPath, 'utf8');
@@ -502,9 +523,9 @@ describe('manifest-color ↔ CSS-token consistency', () => {
 
 describe('color-scheme matches manifest mode', () => {
   for (const t of themes) {
-    for (const agent of AGENTS) {
-      const cssPath = join(THEMES_DIR, t.id, t.targets[agent].css);
-      if (!existsSync(cssPath)) continue;
+    for (const agent of themeAgents(t)) {
+      const cssPath = agentCssPath(t, agent);
+      if (!cssPath || !existsSync(cssPath)) continue;
 
       it(`${t.id}/${agent} — CSS color-scheme matches mode="${t.mode}"`, () => {
         const css = readFileSync(cssPath, 'utf8');
@@ -569,9 +590,9 @@ describe('luminance hierarchy', () => {
 
 describe('WCAG AA contrast compliance', () => {
   for (const t of themes) {
-    for (const agent of AGENTS) {
-      const cssPath = join(THEMES_DIR, t.id, t.targets[agent].css);
-      if (!existsSync(cssPath)) continue;
+    for (const agent of themeAgents(t)) {
+      const cssPath = agentCssPath(t, agent);
+      if (!cssPath || !existsSync(cssPath)) continue;
 
       it(`${t.id}/${agent} — passes WCAG AA`, () => {
         const css = readFileSync(cssPath, 'utf8');
@@ -591,7 +612,7 @@ describe('colorSchemes CSS coverage', () => {
     const schemes = t.colorSchemes ?? [];
     for (const scheme of schemes) {
       it(`${t.id} — scheme "${scheme}" has CSS for every agent`, () => {
-        for (const agent of AGENTS) {
+        for (const agent of themeAgents(t)) {
           const agentCfg = t.targets[agent];
           if (!agentCfg) continue;
           const cssPath = join(
@@ -624,7 +645,7 @@ describe('colorSchemes color-scheme match', () => {
       } catch {
         continue;
       }
-      for (const agent of AGENTS) {
+      for (const agent of themeAgents(t)) {
         const agentCfg = t.targets[agent];
         if (!agentCfg) continue;
         const cssPath = join(

@@ -1,7 +1,7 @@
 /* Sweet Strawberry Code — WorkBuddy (--cb-* design tokens) */
 html.agentskin-host-workbuddy {
   color-scheme: light !important;
-  --agentskin-accent: #ff6b8a;
+  --agentskin-accent: #e14d6b;
   --agentskin-secondary: #4caf7c;
   --agentskin-bg: #fff7f9;
   --agentskin-surface: rgba(255, 252, 253, 0.94);
@@ -11,17 +11,17 @@ html.agentskin-host-workbuddy {
   --agentskin-border: #f5d7df;
   --agentskin-code-bg: #fff7f9;
   --agentskin-code-fg: #5a3d44;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #ff6b8a 18%) 45%, transparent);
-  --agentskin-button-bg: #ff6b8a;
-  --agentskin-focus-ring: #ff6b8a;
-  --agentskin-selection: color-mix(in srgb, #ff6b8a 32%, transparent);
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e14d6b 18%) 45%, transparent);
+  --agentskin-button-bg: #e14d6b;
+  --agentskin-focus-ring: #e14d6b;
+  --agentskin-selection: color-mix(in srgb, #e14d6b 32%, transparent);
   --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
   text-shadow: var(--agentskin-text-shadow);
 }
 
 body[data-application-name="workbuddy"] {
   color-scheme: light !important;
-  --wb-accent: #ff6b8a;
+  --wb-accent: #e14d6b;
   --wb-secondary: #4caf7c;
   --wb-surface: #fff7f9;
   --wb-text: #5a3d44;
@@ -235,7 +235,7 @@ body[data-application-name="workbuddy"] {
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 38%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary) 26%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 23%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -294,7 +294,7 @@ body[data-application-name="workbuddy"] {
 [class*="_mainArea_"] {
   background: color-mix(in srgb, var(--agentskin-surface) 50%, transparent) !important;
   backdrop-filter: blur(14px) !important;
-  border: 1px solid rgba(255, 107, 138, 0.25) !important;
+  border: 1px solid rgba(225, 77, 107, 0.25) !important;
   border-radius: 12px !important;
 }
 
@@ -320,7 +320,7 @@ body[data-application-name="workbuddy"] {
 /* Sidebar search box */
 .my-files-search {
   background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
-  border: 1px solid rgba(255, 107, 138, 0.15) !important;
+  border: 1px solid rgba(225, 77, 107, 0.15) !important;
   border-radius: 8px !important;
   backdrop-filter: blur(8px) !important;
 }
@@ -352,12 +352,12 @@ body[data-application-name="workbuddy"] {
 [role="textbox"][contenteditable="true"]:focus,
 .wb-home-composer [contenteditable="true"]:focus {
   outline: none !important;
-  box-shadow: 0 0 0 2px rgba(255, 107, 138, 0.4), 0 4px 18px rgba(76, 175, 124, 0.2) !important;
+  box-shadow: 0 0 0 2px rgba(225, 77, 107, 0.4), 0 4px 18px rgba(76, 175, 124, 0.2) !important;
 }
 
 /* Selection & scrollbars */
 body[data-application-name="workbuddy"] ::selection {
-  background: rgba(255, 107, 138, 0.32) !important;
+  background: rgba(225, 77, 107, 0.32) !important;
 }
 
 body[data-application-name="workbuddy"] ::-webkit-scrollbar {
@@ -370,14 +370,14 @@ body[data-application-name="workbuddy"] ::-webkit-scrollbar-track {
 }
 
 body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(255, 107, 138, 0.3) 0%, rgba(76, 175, 124, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(225, 77, 107, 0.3) 0%, rgba(76, 175, 124, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(255, 107, 138, 0.5) 0%, rgba(76, 175, 124, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(225, 77, 107, 0.5) 0%, rgba(76, 175, 124, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
@@ -404,15 +404,15 @@ button[class*="send"]:hover,
 code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(255, 107, 138, 0.14) !important;
+  border: 1px solid rgba(225, 77, 107, 0.14) !important;
   border-radius: 6px !important;
 }
 
 pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(255, 107, 138, 0.14) !important;
-  border-left: 3px solid rgba(255, 107, 138, 0.5) !important;
+  border: 1px solid rgba(225, 77, 107, 0.14) !important;
+  border-left: 3px solid rgba(225, 77, 107, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -450,20 +450,20 @@ a:hover {
 .wb-home-composer__input-slot {
   background: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
   backdrop-filter: blur(12px) saturate(1.1) !important;
-  border: 1px solid rgba(255, 107, 138, 0.22) !important;
+  border: 1px solid rgba(225, 77, 107, 0.22) !important;
   border-radius: 18px !important;
   transition: border-color 180ms ease, box-shadow 180ms ease !important;
 }
 
 .wb-home-composer__input-slot:focus-within {
-  border-color: rgba(255, 107, 138, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(255, 107, 138, 0.12), 0 4px 20px rgba(255, 107, 138, 0.08) !important;
+  border-color: rgba(225, 77, 107, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(225, 77, 107, 0.12), 0 4px 20px rgba(225, 77, 107, 0.08) !important;
 }
 
 /* Quick action pills: semi-transparent accent tint instead of opaque rgb(31,31,31) */
 .quick-actions__item {
   background: color-mix(in srgb, var(--agentskin-surface) 35%, transparent) !important;
-  border: 1px solid rgba(255, 107, 138, 0.18) !important;
+  border: 1px solid rgba(225, 77, 107, 0.18) !important;
   color: var(--cb-text-secondary) !important;
   backdrop-filter: blur(8px) !important;
   box-shadow: none !important;
@@ -473,7 +473,7 @@ a:hover {
 
 .quick-actions__item:hover {
   background: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
-  border-color: rgba(255, 107, 138, 0.4) !important;
+  border-color: rgba(225, 77, 107, 0.4) !important;
   color: var(--cb-text-primary) !important;
 }
 
@@ -499,7 +499,7 @@ a:hover {
 [class*="msg-content"] {
   background: color-mix(in srgb, var(--agentskin-surface) 38%, transparent) !important;
   backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(255, 107, 138, 0.12) !important;
+  border: 1px solid rgba(225, 77, 107, 0.12) !important;
   border-radius: 14px !important;
 }
 
@@ -512,8 +512,8 @@ a:hover {
 
 /* Composer container focus glow */
 .wb-home-composer:focus-within [class*="_mainArea_"] {
-  border-color: rgba(255, 107, 138, 0.4) !important;
-  box-shadow: 0 2px 24px rgba(255, 107, 138, 0.1) !important;
+  border-color: rgba(225, 77, 107, 0.4) !important;
+  box-shadow: 0 2px 24px rgba(225, 77, 107, 0.1) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

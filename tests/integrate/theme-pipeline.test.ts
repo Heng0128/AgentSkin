@@ -204,14 +204,19 @@ describe('Theme Pipeline E2E', () => {
   });
 
   describe('8. CSS 文件非空且格式正确', () => {
-    it('traework.css should not be empty and contain :root block', () => {
+    // 生成器允许两种合法的宿主选择器格式：
+    //   - `:root {` / `:root.agentskin-host-<agent> {`（如 codex 用 :root 前缀挂载）
+    //   - `html.agentskin-host-<agent> {`（如 traework / doubao 等用 html 前缀挂载）
+    const HOST_SELECTOR = /(?::root(?:\.agentskin-host-\w+)?|html\.agentskin-host-\w+)\s*\{/;
+
+    it('traework.css should not be empty and contain a host/:root block', () => {
       const cssPath = join(THEMES_DIR, 'aurora-glass', 'assets', 'css', 'traework.css');
       const css = readFileSync(cssPath, 'utf-8');
       expect(css.length).toBeGreaterThan(0);
-      expect(css).toMatch(/:root\s*\{/);
+      expect(css).toMatch(HOST_SELECTOR);
     });
 
-    it('every agent CSS for aurora-glass should be non-empty with :root block', () => {
+    it('every agent CSS for aurora-glass should be non-empty with host/:root block', () => {
       const manifest = readManifest('aurora-glass');
       for (const agent of Object.keys(manifest.targets)) {
         const relPath = manifest.targets[agent].css;
@@ -219,11 +224,11 @@ describe('Theme Pipeline E2E', () => {
         if (!existsSync(cssPath)) continue;
         const css = readFileSync(cssPath, 'utf-8');
         expect(css.length, `Agent ${agent} CSS is empty`).toBeGreaterThan(0);
-        expect(css, `Agent ${agent} CSS missing :root or host selector`).toMatch(/(:root|html\.agentskin-host-\w+)\s*\{/);
+        expect(css, `Agent ${agent} CSS missing :root or host selector`).toMatch(HOST_SELECTOR);
       }
     });
 
-    it('every agent CSS for aurora-dusk should be non-empty with :root block', () => {
+    it('every agent CSS for aurora-dusk should be non-empty with host/:root block', () => {
       if (!availableThemes.includes('aurora-dusk')) return;
       const manifest = readManifest('aurora-dusk');
       for (const agent of Object.keys(manifest.targets)) {
@@ -232,7 +237,7 @@ describe('Theme Pipeline E2E', () => {
         if (!existsSync(cssPath)) continue;
         const css = readFileSync(cssPath, 'utf-8');
         expect(css.length, `Agent ${agent} CSS is empty`).toBeGreaterThan(0);
-        expect(css, `Agent ${agent} CSS missing :root or host selector`).toMatch(/(:root|html\.agentskin-host-\w+)\s*\{/);
+        expect(css, `Agent ${agent} CSS missing :root or host selector`).toMatch(HOST_SELECTOR);
       }
     });
   });

@@ -1,7 +1,7 @@
 /* Sweet Strawberry Code — OpenAI Codex (--color-token-* design tokens) */
 :root.agentskin-host-codex {
   color-scheme: light !important;
-  --agentskin-accent: #ff6b8a;
+  --agentskin-accent: #e14d6b;
   --agentskin-secondary: #4caf7c;
   --agentskin-bg: #fff7f9;
   --agentskin-surface: rgba(255, 252, 253, 0.94);
@@ -11,10 +11,10 @@
   --agentskin-border: #f5d7df;
   --agentskin-code-bg: #fff7f9;
   --agentskin-code-fg: #5a3d44;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #ff6b8a 18%) 45%, transparent);
-  --agentskin-button-bg: #ff6b8a;
-  --agentskin-focus-ring: #ff6b8a;
-  --agentskin-selection: color-mix(in srgb, #ff6b8a 32%, transparent);
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e14d6b 18%) 45%, transparent);
+  --agentskin-button-bg: #e14d6b;
+  --agentskin-focus-ring: #e14d6b;
+  --agentskin-selection: color-mix(in srgb, #e14d6b 32%, transparent);
   --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
   text-shadow: var(--agentskin-text-shadow);
 }
@@ -24,9 +24,9 @@
   color-scheme: light !important;
 
   /* Accent / brand */
-  --color-token-primary: #ff6b8a !important;
-  --color-token-text-link-foreground: #ff6b8a !important;
-  --color-token-focus-border: rgba(255, 107, 138, 0.76) !important;
+  --color-token-primary: #e14d6b !important;
+  --color-token-text-link-foreground: #e14d6b !important;
+  --color-token-focus-border: rgba(225, 77, 107, 0.76) !important;
 
   /* App + surface backgrounds */
   --color-token-bg-primary: #fff7f9 !important;
@@ -46,21 +46,21 @@
   --color-token-description-foreground: rgba(90, 61, 68, 0.498) !important;
 
   /* Borders */
-  --color-token-border: rgba(255, 107, 138, 0.09) !important;
-  --color-token-border-default: rgba(255, 107, 138, 0.09) !important;
-  --color-token-border-light: rgba(255, 107, 138, 0.045) !important;
-  --color-token-border-heavy: rgba(255, 107, 138, 0.156) !important;
-  --color-token-input-border: rgba(255, 107, 138, 0.156) !important;
+  --color-token-border: rgba(225, 77, 107, 0.09) !important;
+  --color-token-border-default: rgba(225, 77, 107, 0.09) !important;
+  --color-token-border-light: rgba(225, 77, 107, 0.045) !important;
+  --color-token-border-heavy: rgba(225, 77, 107, 0.156) !important;
+  --color-token-input-border: rgba(225, 77, 107, 0.156) !important;
 
   /* Interaction surfaces */
-  --color-token-list-hover-background: rgba(255, 107, 138, 0.078) !important;
-  --color-token-scrollbar-slider-hover-background: rgba(255, 107, 138, 0.156) !important;
+  --color-token-list-hover-background: rgba(225, 77, 107, 0.078) !important;
+  --color-token-scrollbar-slider-hover-background: rgba(225, 77, 107, 0.156) !important;
 
   /* Helper vars consumed by shellStructureCss */
-  --accent: #ff6b8a !important;
-  --bg-hover: rgba(255, 107, 138, 0.1) !important;
-  --bg-active: rgba(255, 107, 138, 0.16) !important;
-  --bg-selected: rgba(255, 107, 138, 0.14) !important;
+  --accent: #e14d6b !important;
+  --bg-hover: rgba(225, 77, 107, 0.1) !important;
+  --bg-active: rgba(225, 77, 107, 0.16) !important;
+  --bg-selected: rgba(225, 77, 107, 0.14) !important;
 }
 /* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
 :root.agentskin-host-codex #root {
@@ -81,7 +81,7 @@
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 38%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary) 26%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 23%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -98,8 +98,8 @@
 /* Sidebar: frosted glass over art */
 :root.agentskin-host-codex aside,
 :root.agentskin-host-codex nav {
-  background: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #ff6b8a 18%) 22%, transparent) !important;
-  border-right: 1px solid rgba(255, 107, 138, 0.1) !important;
+  background: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e14d6b 18%) 22%, transparent) !important;
+  border-right: 1px solid rgba(225, 77, 107, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
@@ -117,11 +117,11 @@
 /* Composer / input: frosted glass */
 :root.agentskin-host-codex [contenteditable="true"],
 :root.agentskin-host-codex textarea {
-  background: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #ff6b8a 18%) 45%, transparent) !important;
+  background: color-mix(in srgb, color-mix(in srgb, rgba(255, 252, 253, 0.94) 82%, #e14d6b 18%) 45%, transparent) !important;
   backdrop-filter: blur(14px) saturate(1.1) !important;
   color: var(--agentskin-text) !important;
   caret-color: var(--agentskin-accent) !important;
-  border: 1px solid rgba(255, 107, 138, 0.25) !important;
+  border: 1px solid rgba(225, 77, 107, 0.25) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
 }
@@ -129,8 +129,8 @@
 :root.agentskin-host-codex [contenteditable="true"]:focus,
 :root.agentskin-host-codex [contenteditable="true"]:focus-within,
 :root.agentskin-host-codex textarea:focus {
-  border-color: rgba(255, 107, 138, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(255, 107, 138, 0.1), 0 4px 18px rgba(76, 175, 124, 0.12) !important;
+  border-color: rgba(225, 77, 107, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(225, 77, 107, 0.1), 0 4px 18px rgba(76, 175, 124, 0.12) !important;
 }
 
 /* Buttons */
@@ -218,7 +218,7 @@
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
   border: 1px solid rgba(245, 215, 223, 0.6) !important;
-  border-left: 3px solid rgba(255, 107, 138, 0.5) !important;
+  border-left: 3px solid rgba(225, 77, 107, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -237,14 +237,14 @@
 }
 
 :root.agentskin-host-codex ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(255, 107, 138, 0.3) 0%, rgba(76, 175, 124, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(225, 77, 107, 0.3) 0%, rgba(76, 175, 124, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 :root.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(255, 107, 138, 0.5) 0%, rgba(76, 175, 124, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(225, 77, 107, 0.5) 0%, rgba(76, 175, 124, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 
