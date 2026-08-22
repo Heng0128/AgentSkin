@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { ScannedApp } from '@shared/types/agent';
 import { describe, expect, it } from 'vitest';
-import type { ScannedApp } from '../../../../shared/types/agent';
 import { StreamMerge } from './stream-merge';
 
 function app(overrides: Partial<ScannedApp>): ScannedApp {

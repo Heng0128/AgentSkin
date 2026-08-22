@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { ExecFileResult } from '@shared/exec-async';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ExecFileResult } from '../../../../shared/exec-async';
 
 const mockExecFileAsync = vi.fn();
-vi.mock('../../../../shared/exec-async', () => ({
+vi.mock('@shared/exec-async', () => ({
   execFileAsync: mockExecFileAsync,
 }));
 
