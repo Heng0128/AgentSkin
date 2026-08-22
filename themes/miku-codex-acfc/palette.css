@@ -1,0 +1,26 @@
+/* palette.css — miku-codex-acfc (Miku Codex) */
+/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+:root {
+  --agentskin-bg: #0a0e1a;
+  --agentskin-surface: rgba(14, 20, 36, 0.88);
+  --agentskin-surface-elevated: rgba(20, 28, 50, 0.92);
+  --agentskin-text: #e0eaf5;
+  --agentskin-muted: #7a8da6;
+  --agentskin-accent: #39c5bb;
+  --agentskin-secondary: #4ade80;
+  --agentskin-border: rgba(57, 197, 187, 0.18);
+  --agentskin-code-bg: #0a0e1a;
+  --agentskin-code-fg: #e0eaf5;
+  --agentskin-focus-ring: #39c5bb;
+  --agentskin-selection: color-mix(in srgb, #39c5bb 32%, transparent);
+
+  /* Derived raw RGB values */
+  --agentskin-accent-raw: 57, 197, 187;
+  --agentskin-secondary-raw: 74, 222, 128;
+  --agentskin-text-raw: 224, 234, 245;
+  --agentskin-muted-raw: 122, 141, 166;
+  --agentskin-surface-raw: 14, 20, 36;
+  --agentskin-surface-elevated-raw: 20, 28, 50;
+  --agentskin-bg-raw: 10, 14, 26;
+  --agentskin-border-raw: 57, 197, 187;
+}

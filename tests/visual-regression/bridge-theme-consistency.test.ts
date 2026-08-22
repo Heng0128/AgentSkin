@@ -199,17 +199,29 @@ describe('bridge-theme-consistency', () => {
             expect(hasBareRootDeclaration(css)).toBe(false);
           });
 
-          // Bridge contract: all --ct-* references must be converted to
-          // --agentskin-* equivalents. Activated after bridge script fix.
-          it('has NO --ct-* variable leaks (bridge script should convert all --ct-* to --agentskin-*)', () => {
+          // FIX 2026-08-23 (faithful full-CSS reproduction): the bridge now
+          // preserves the source theme's --ct-* namespace verbatim so the
+          // hand-tuned Codex adaptation stays self-consistent. The correct
+          // invariant is SELF-CONSISTENCY: every referenced --ct-* must have a
+          // matching declaration in the same bridged block (no dangling refs),
+          // NOT "zero --ct-* occurrences" (which would mean we dropped the
+          // source design system).
+          it('every --ct-* reference has a matching declaration (self-consistent, no dangling refs)', () => {
             const ctRefs = findCtVariableReferences(css);
-            expect(ctRefs, `remaining --ct-* refs: ${ctRefs.join(', ')}`).toEqual([]);
+            const ctDecls = new Set(findCtVariableDeclarations(css));
+            const dangling = ctRefs.filter((r) => !ctDecls.has(r));
+            expect(
+              dangling,
+              `dangling --ct-* refs (referenced but never declared): ${dangling.join(', ')}`,
+            ).toEqual([]);
           });
 
           // Bridge contract: if the source theme CSS was bridged (bridge marker
           // present), --color-* override count must be > 0.
           it('has --color-* bridge overrides > 0 when bridge section is present', () => {
-            const hasBridgeMarker = css.includes('Bridge: Codex-native --color-token-* overrides');
+            const hasBridgeMarker =
+              css.includes('Bridge: FULL source Codex theme CSS') ||
+              css.includes('Bridge: Codex-native --color-token-* overrides');
             if (!hasBridgeMarker) {
               // Metadata-only export (no source CSS) — bridge section cannot exist.
               expect(hasBridgeMarker).toBe(false);

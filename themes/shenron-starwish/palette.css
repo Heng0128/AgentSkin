@@ -1,0 +1,26 @@
+/* palette.css — shenron-starwish (神龙星愿) */
+/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+:root {
+  --agentskin-bg: #050b20;
+  --agentskin-surface: #091430;
+  --agentskin-surface-elevated: #10234a;
+  --agentskin-text: #f5f8ff;
+  --agentskin-muted: #aebddd;
+  --agentskin-accent: #ff9d00;
+  --agentskin-secondary: #63d98c;
+  --agentskin-border: #39537f;
+  --agentskin-code-bg: #071127;
+  --agentskin-code-fg: #dbe8ff;
+  --agentskin-focus-ring: #ffd35c;
+  --agentskin-selection: color-mix(in srgb, #ff9d00 32%, transparent);
+
+  /* Derived raw RGB values */
+  --agentskin-accent-raw: 255, 157, 0;
+  --agentskin-secondary-raw: 99, 217, 140;
+  --agentskin-text-raw: 245, 248, 255;
+  --agentskin-muted-raw: 174, 189, 221;
+  --agentskin-surface-raw: 9, 20, 48;
+  --agentskin-surface-elevated-raw: 16, 35, 74;
+  --agentskin-bg-raw: 5, 11, 32;
+  --agentskin-border-raw: 57, 83, 127;
+}

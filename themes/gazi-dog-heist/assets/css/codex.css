@@ -292,10 +292,13 @@
   --ct-border: #8b6a42;
   --ct-line: rgba(216, 174, 117, .28);
   --ct-focus: #f1c98f;
+  --ct-shadow: rgba(0, 0, 0, .42);
   --ct-success: #77b27a;
   --ct-warning: #d4a64e;
   --ct-danger: #d76b5e;
   --ct-art: url("./assets/artwork.webp");
+  --ct-font-display: "STKaiti", "KaiTi", "FangSong", serif;
+  --ct-font-body: "Segoe UI Variable Text", "Microsoft YaHei UI", system-ui, sans-serif;
 
   --color-background-surface: var(--ct-canvas) !important;
   --color-background-surface-under: var(--ct-deep) !important;

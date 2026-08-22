@@ -288,11 +288,14 @@
   --ct-accent-soft: rgba(76, 135, 180, 0.16);
   --ct-border: #D7E0E9;
   --ct-focus: #3C749C;
+  --ct-shadow: rgba(35, 50, 64, 0.12);
   --ct-veil-alpha: 0.70;
   --ct-header-alpha: 0.20;
   --ct-menubar-alpha: 0.70;
   --ct-art: url("./assets/artwork.jpg");
   /* Typography pairing: display stack for headings/brand moments, body stack for prose. */
+  --ct-font-display: "Iowan Old Style", "Songti SC", serif;
+  --ct-font-body: "Avenir Next", "PingFang SC", sans-serif;
 
   /* Native token sweep (required): Codex components resolve colors from the app's
      own --color-token-* variables, which follow the USER's native light/dark mode.

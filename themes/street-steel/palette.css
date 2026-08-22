@@ -1,0 +1,26 @@
+/* palette.css — street-steel (Street Steel) */
+/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+:root {
+  --agentskin-bg: #eef2ea;
+  --agentskin-surface: #f7f8f3;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #18201d;
+  --agentskin-muted: #5f6f67;
+  --agentskin-accent: #c52824;
+  --agentskin-secondary: #2d7654;
+  --agentskin-border: #c9d2cc;
+  --agentskin-code-bg: #f1f4ef;
+  --agentskin-code-fg: #18201d;
+  --agentskin-focus-ring: #e23b34;
+  --agentskin-selection: color-mix(in srgb, #c52824 32%, transparent);
+
+  /* Derived raw RGB values */
+  --agentskin-accent-raw: 197, 40, 36;
+  --agentskin-secondary-raw: 45, 118, 84;
+  --agentskin-text-raw: 24, 32, 29;
+  --agentskin-muted-raw: 95, 111, 103;
+  --agentskin-surface-raw: 247, 248, 243;
+  --agentskin-surface-elevated-raw: 255, 255, 255;
+  --agentskin-bg-raw: 238, 242, 234;
+  --agentskin-border-raw: 201, 210, 204;
+}

@@ -294,8 +294,11 @@
   --ct-border: #f0c4d0;
   --ct-border-light: rgba(240, 196, 208, 0.5);
   --ct-focus: #d4849c;
+  --ct-shadow: rgba(139, 69, 87, 0.10);
   --ct-shadow-heavy: rgba(139, 69, 87, 0.16);
   --ct-art: url("./assets/artwork.jpg");
+  --ct-font-display: "Georgia", "Noto Serif SC", "Songti SC", serif;
+  --ct-font-body: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
 
   /* Layer 2: Native token sweep */
   color-scheme: light;

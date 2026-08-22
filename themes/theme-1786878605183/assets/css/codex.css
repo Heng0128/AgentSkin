@@ -289,7 +289,10 @@
   --ct-accent-soft: rgba(74, 168, 255, 0.16);
   --ct-border: #24405c;
   --ct-focus: #5ec8ff;
+  --ct-shadow: rgba(2, 8, 18, 0.55);
   --ct-art: url("./assets/artwork.png");
+  --ct-font-display: "Arial Rounded MT Bold", "Nunito", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --ct-font-body: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
 
   /* 原生 token 全量覆盖：与用户系统深浅色无关，主题恒为深色海洋系统 */
   color-scheme: dark;

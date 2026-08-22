@@ -1,0 +1,26 @@
+/* palette.css — three-body-sophon (三体·智子深空) */
+/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+:root {
+  --agentskin-bg: #080d1d;
+  --agentskin-surface: #10172b;
+  --agentskin-surface-elevated: #18233d;
+  --agentskin-text: #eef3ff;
+  --agentskin-muted: #9aa8c7;
+  --agentskin-accent: #d84b5b;
+  --agentskin-secondary: #65d6a0;
+  --agentskin-border: #2e3d61;
+  --agentskin-code-bg: #070b17;
+  --agentskin-code-fg: #d9e4ff;
+  --agentskin-focus-ring: #f0777d;
+  --agentskin-selection: color-mix(in srgb, #d84b5b 32%, transparent);
+
+  /* Derived raw RGB values */
+  --agentskin-accent-raw: 216, 75, 91;
+  --agentskin-secondary-raw: 101, 214, 160;
+  --agentskin-text-raw: 238, 243, 255;
+  --agentskin-muted-raw: 154, 168, 199;
+  --agentskin-surface-raw: 16, 23, 43;
+  --agentskin-surface-elevated-raw: 24, 35, 61;
+  --agentskin-bg-raw: 8, 13, 29;
+  --agentskin-border-raw: 46, 61, 97;
+}

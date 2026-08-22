@@ -1,0 +1,527 @@
+/* Shaolin Football — WorkBuddy (--cb-* design tokens) */
+html.agentskin-host-workbuddy {
+  color-scheme: dark !important;
+  --agentskin-accent: #66f06b;
+  --agentskin-secondary: #52df79;
+  --agentskin-bg: #07150f;
+  --agentskin-surface: #0b2216;
+  --agentskin-surface-elevated: #123b25;
+  --agentskin-text: #edf8e7;
+  --agentskin-muted: #9eb9a0;
+  --agentskin-border: #39763d;
+  --agentskin-code-bg: #040d09;
+  --agentskin-code-fg: #dff5d8;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #0b2216 82%, #66f06b 18%) 45%, transparent);
+  --agentskin-button-bg: #66f06b;
+  --agentskin-focus-ring: #b8ff78;
+  --agentskin-selection: color-mix(in srgb, #66f06b 32%, transparent);
+  --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  text-shadow: var(--agentskin-text-shadow);
+}
+
+body[data-application-name="workbuddy"] {
+  color-scheme: dark !important;
+  --wb-accent: #66f06b;
+  --wb-secondary: #52df79;
+  --wb-surface: #07150f;
+  --wb-text: #edf8e7;
+
+  /* Backgrounds */
+  --cb-bg-primary: var(--wb-surface) !important;
+  --cb-bg-secondary: color-mix(in srgb, var(--wb-surface) 94%, transparent) !important;
+  --cb-panel-bg-primary: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --cb-team-member-card-background: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+
+  /* Text */
+  --cb-text-primary: var(--wb-text) !important;
+  --cb-text-secondary: color-mix(in srgb, var(--wb-text) 70%, transparent) !important;
+  --cb-text-disabled: color-mix(in srgb, var(--wb-text) 42%, transparent) !important;
+  --cb-text-link: var(--wb-accent) !important;
+  --cb-text-error-active: var(--wb-accent) !important;
+
+  /* VS Code token wrappers */
+  --cb-vscode-editor-background: var(--wb-surface) !important;
+  --cb-vscode-sideBar-background: color-mix(in srgb, var(--wb-surface) 15%, transparent) !important;
+  --cb-vscode-foreground: var(--wb-text) !important;
+  --cb-vscode-editor-foreground: var(--wb-text) !important;
+  --cb-vscode-descriptionForeground: color-mix(in srgb, var(--wb-text) 70%, transparent) !important;
+  --cb-vscode-titleBar-activeBackground: var(--wb-accent) !important;
+  --cb-vscode-titleBar-activeForeground: #ffffff !important;
+  --cb-vscode-titleBar-inactiveBackground: color-mix(in srgb, var(--wb-accent) 80%, var(--wb-surface)) !important;
+  --cb-vscode-titleBar-inactiveForeground: color-mix(in srgb, #ffffff 70%, transparent) !important;
+  --cb-titlebar-control-hover-background: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --cb-vscode-input-background: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --cb-vscode-dropdown-background: color-mix(in srgb, var(--wb-surface) 94%, transparent) !important;
+  --cb-vscode-list-hoverBackground: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --cb-vscode-toolbar-hoverBackground: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --cb-vscode-scrollbarSlider-background: color-mix(in srgb, var(--wb-accent) 30%, transparent) !important;
+  --cb-vscode-scrollbarSlider-hoverBackground: color-mix(in srgb, var(--wb-accent) 50%, transparent) !important;
+  --cb-vscode-textLink-foreground: var(--wb-accent) !important;
+  --cb-vscode-widget-border: color-mix(in srgb, var(--wb-accent) 45%, transparent) !important;
+  --cb-vscode-panel-border: color-mix(in srgb, var(--wb-accent) 30%, transparent) !important;
+
+  /* Buttons */
+  --cb-button-dark-background: var(--wb-accent) !important;
+  --cb-button-dark-foreground: #ffffff !important;
+  --cb-button-dark-hover-background: color-mix(in srgb, var(--wb-accent) 85%, #000000) !important;
+  --cb-vscode-button-background: var(--wb-accent) !important;
+  --cb-vscode-button-foreground: #ffffff !important;
+  --cb-vscode-button-hoverBackground: color-mix(in srgb, var(--wb-accent) 85%, #000000) !important;
+
+  /* Strokes */
+  --cb-stroke-secondary: color-mix(in srgb, var(--wb-accent) 45%, transparent) !important;
+  --cb-markdown-hr-border-color: color-mix(in srgb, var(--wb-accent) 30%, transparent) !important;
+
+  /* Additional backgrounds */
+  --cb-bg-tertiary: color-mix(in srgb, var(--wb-surface) 82%, var(--wb-accent) 6%) !important;
+  --cb-bg-overlay: color-mix(in srgb, var(--wb-surface) 90%, transparent) !important;
+  --cb-panel-bg-secondary: color-mix(in srgb, var(--wb-surface) 78%, var(--wb-accent) 10%) !important;
+
+  /* Additional text */
+  --cb-text-tertiary: color-mix(in srgb, var(--wb-text) 50%, transparent) !important;
+  --cb-text-link-hover: var(--wb-secondary) !important;
+
+  /* Ghost / secondary buttons */
+  --cb-button-ghost-hover-background: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --cb-vscode-button-secondaryBackground: color-mix(in srgb, var(--wb-surface) 70%, var(--wb-accent) 12%) !important;
+
+  /* Focus & selection */
+  --cb-vscode-focusBorder: color-mix(in srgb, var(--wb-accent) 40%, transparent) !important;
+  --cb-vscode-list-activeSelectionForeground: var(--wb-text) !important;
+  --cb-vscode-list-inactiveSelectionBackground: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+
+  /* ===== Native --vscode-* workbench layer =====
+     WorkBuddy is VS Code arch: native --vscode-* (867 tokens) drive the
+     editor/sidebar/tab/panel/input/list/menu/terminal/diff/scrollbar chrome.
+     Our previous coverage only touched --cb-* (WorkBuddy's own wrapper),
+     leaving the workbench on native colors. Map the workbench layer to our
+     --wb-* base (already palette-derived), mirroring third-party WorkBuddy
+     themes (Lucky2024 workbuddy-theme) which achieve full theming via
+     --vscode-* alone. */
+  --vscode-foreground: var(--wb-text) !important;
+  --vscode-descriptionForeground: color-mix(in srgb, var(--wb-text) 70%, transparent) !important;
+  --vscode-disabledForeground: color-mix(in srgb, var(--wb-text) 42%, transparent) !important;
+  --vscode-icon-foreground: color-mix(in srgb, var(--wb-text) 72%, transparent) !important;
+  --vscode-focusBorder: color-mix(in srgb, var(--wb-accent) 55%, transparent) !important;
+  --vscode-errorForeground: #d14860 !important;
+  --vscode-textLink-foreground: var(--wb-accent) !important;
+  --vscode-textLink-activeForeground: var(--wb-accent) !important;
+  --vscode-textPreformat-foreground: var(--wb-text) !important;
+  --vscode-textPreformat-background: color-mix(in srgb, var(--wb-surface) 55%, transparent) !important;
+  --vscode-textBlockQuote-background: color-mix(in srgb, var(--wb-accent) 5%, transparent) !important;
+  --vscode-textBlockQuote-border: color-mix(in srgb, var(--wb-accent) 55%, transparent) !important;
+  --vscode-textCodeBlock-background: color-mix(in srgb, var(--wb-surface) 45%, transparent) !important;
+
+  --vscode-editor-background: var(--wb-surface) !important;
+  --vscode-editor-foreground: var(--wb-text) !important;
+  --vscode-editorWidget-background: var(--wb-surface) !important;
+  --vscode-editorWidget-foreground: var(--wb-text) !important;
+  --vscode-editorWidget-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-editorHoverWidget-background: var(--wb-surface) !important;
+  --vscode-editorHoverWidget-foreground: var(--wb-text) !important;
+  --vscode-editorHoverWidget-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-editor-selectionBackground: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-editor-inactiveSelectionBackground: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --vscode-editorCursor-foreground: var(--wb-accent) !important;
+
+  --vscode-input-background: color-mix(in srgb, var(--wb-surface) 82%, transparent) !important;
+  --vscode-input-foreground: var(--wb-text) !important;
+  --vscode-input-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-input-placeholderForeground: color-mix(in srgb, var(--wb-text) 48%, transparent) !important;
+  --vscode-inputOption-activeBorder: color-mix(in srgb, var(--wb-accent) 55%, transparent) !important;
+  --vscode-inputOption-activeBackground: color-mix(in srgb, var(--wb-accent) 12%, transparent) !important;
+
+  --vscode-button-foreground: #ffffff !important;
+  --vscode-button-background: var(--wb-accent) !important;
+  --vscode-button-hoverBackground: color-mix(in srgb, var(--wb-accent) 85%, #000000) !important;
+  --vscode-button-secondaryForeground: var(--wb-text) !important;
+  --vscode-button-secondaryBackground: color-mix(in srgb, var(--wb-surface) 70%, var(--wb-accent) 12%) !important;
+  --vscode-button-secondaryHoverBackground: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+
+  --vscode-list-activeSelectionBackground: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --vscode-list-activeSelectionForeground: var(--wb-text) !important;
+  --vscode-list-hoverBackground: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --vscode-list-focusOutline: color-mix(in srgb, var(--wb-accent) 55%, transparent) !important;
+  --vscode-list-highlightForeground: var(--wb-accent) !important;
+
+  --vscode-menu-background: var(--wb-surface) !important;
+  --vscode-menu-foreground: var(--wb-text) !important;
+  --vscode-menu-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-menu-selectionBackground: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --vscode-menu-selectionForeground: var(--wb-text) !important;
+  --vscode-menu-separatorBackground: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --vscode-dropdown-background: var(--wb-surface) !important;
+  --vscode-dropdown-listBackground: var(--wb-surface) !important;
+  --vscode-dropdown-foreground: var(--wb-text) !important;
+  --vscode-dropdown-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+
+  --vscode-sideBar-background: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --vscode-sideBar-foreground: var(--wb-text) !important;
+  --vscode-sideBar-border: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --vscode-sideBarTitle-foreground: var(--wb-text) !important;
+  --vscode-panel-background: var(--wb-surface) !important;
+  --vscode-panel-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-panelTitle-activeForeground: var(--wb-accent) !important;
+  --vscode-panelTitle-inactiveForeground: color-mix(in srgb, var(--wb-text) 60%, transparent) !important;
+  --vscode-tab-activeBackground: var(--wb-surface) !important;
+  --vscode-tab-activeForeground: var(--wb-text) !important;
+  --vscode-tab-activeBorderTop: var(--wb-accent) !important;
+  --vscode-tab-inactiveBackground: color-mix(in srgb, var(--wb-surface) 60%, transparent) !important;
+  --vscode-tab-inactiveForeground: color-mix(in srgb, var(--wb-text) 60%, transparent) !important;
+
+  --vscode-badge-background: var(--wb-accent) !important;
+  --vscode-badge-foreground: #ffffff !important;
+
+  --vscode-diffEditor-insertedTextBackground: color-mix(in srgb, #46a758 18%, transparent) !important;
+  --vscode-diffEditor-removedTextBackground: color-mix(in srgb, #d14860 16%, transparent) !important;
+  --vscode-diffEditor-insertedLineBackground: color-mix(in srgb, #46a758 10%, transparent) !important;
+  --vscode-diffEditor-removedLineBackground: color-mix(in srgb, #d14860 10%, transparent) !important;
+
+  --vscode-terminal-background: var(--wb-surface) !important;
+  --vscode-terminal-foreground: var(--wb-text) !important;
+  --vscode-terminal-selectionBackground: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --vscode-terminalCursor-foreground: var(--wb-accent) !important;
+
+  --vscode-scrollbarSlider-background: color-mix(in srgb, var(--wb-accent) 14%, transparent) !important;
+  --vscode-scrollbarSlider-hoverBackground: color-mix(in srgb, var(--wb-accent) 22%, transparent) !important;
+  --vscode-scrollbarSlider-activeBackground: color-mix(in srgb, var(--wb-accent) 32%, transparent) !important;
+
+  /* ===== sc-ui component library (2026-08-19) =====
+     Separate --sc-ui-* kit (24/25 native) + --sc-* + icon hover, previously
+     unthemed. Maps to --wb-* base; semantic states kept native-branded. */
+  --sc-ui-text: var(--wb-text) !important;
+  --sc-ui-text-muted: color-mix(in srgb, var(--wb-text) 55%, transparent) !important;
+  --sc-ui-text-on-primary: #ffffff !important;
+  --sc-ui-bg: var(--wb-surface) !important;
+  --sc-ui-bg-subtle: color-mix(in srgb, var(--wb-surface) 92%, transparent) !important;
+  --sc-ui-surface: var(--wb-surface) !important;
+  --sc-ui-surface-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --sc-ui-hover: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --sc-ui-active: color-mix(in srgb, var(--wb-accent) 16%, transparent) !important;
+  --sc-ui-focus-ring: color-mix(in srgb, var(--wb-accent) 40%, transparent) !important;
+  --sc-ui-border: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  --sc-ui-separator: color-mix(in srgb, var(--wb-accent) 10%, transparent) !important;
+  --sc-ui-primary: var(--wb-accent) !important;
+  --sc-ui-primary-hover: color-mix(in srgb, var(--wb-accent) 88%, black) !important;
+  --sc-ui-primary-active: color-mix(in srgb, var(--wb-accent) 76%, black) !important;
+  --sc-ui-danger: #e53e3e !important;
+  --sc-ui-success: #10b981 !important;
+  --sc-ui-warning: #f59e0b !important;
+  --sc-ui-info: var(--wb-accent) !important;
+  --sc-text-default: var(--wb-text) !important;
+  --sc-inline-code-bg: var(--agentskin-code-bg) !important;
+  --sc-bg-grey_background: color-mix(in srgb, var(--wb-surface) 88%, transparent) !important;
+  --sc-border-grey: color-mix(in srgb, var(--wb-text) 45%, transparent) !important;
+  --sc-divider-default: color-mix(in srgb, var(--wb-accent) 14%, transparent) !important;
+  --cb-icon-button-hover-background: color-mix(in srgb, var(--wb-accent) 12%, transparent) !important;
+}
+
+/* Hero art layer: palette-driven wash, hero visible right side */
+#root {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+ #root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--agentskin-surface) 26%, transparent) 0 16%,
+      color-mix(in srgb, var(--agentskin-surface) 8%, transparent) 44%,
+      transparent 70%),
+    linear-gradient(180deg, transparent 0 50%,
+      color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
+    radial-gradient(120% 80% at 84% 14%,
+      color-mix(in srgb, var(--agentskin-secondary) 32%, transparent), transparent 60%),
+    var(--agentskin-art, none) right center / cover no-repeat !important;
+}
+
+/* teams-container is #root's direct child and ships an opaque grey base */
+.teams-container,
+.teams-container.is-mac {
+  background: transparent !important;
+}
+
+/* Grid item containers go transparent so the art shows through */
+[data-view-id] {
+  background: transparent !important;
+}
+
+/* Inner content layers transparent (otherwise they cover the art) */
+.conversation-list,
+.chat-container,
+.wb-cb-chat,
+.chat-main,
+.message-list,
+.main-content,
+.main-content--welcome,
+.sidebar-next,
+.teams-content-wrapper,
+.teams-main-content {
+  background: transparent !important;
+}
+
+/* Topbar: menubar + window controls (both outside #root, need explicit styling) */
+#workbuddy-menubar-container,
+.codebuddy-menubar,
+#workbuddy-window-controls-container,
+.workbuddy-window-controls {
+  background: color-mix(in srgb, var(--agentskin-surface) 8%, transparent) !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
+  border-bottom: none !important;
+}
+
+.workbuddy-window-control-button {
+  background: transparent !important;
+  color: var(--agentskin-text) !important;
+  transition: background 140ms ease, color 140ms ease !important;
+}
+
+.workbuddy-window-control-button:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
+  color: var(--agentskin-text) !important;
+}
+
+.workbuddy-window-control-button.close:hover {
+  background: #e53935 !important;
+  color: #ffffff !important;
+}
+
+/* Composer main area: semi-transparent instead of opaque rgb(31,31,31) */
+[class*="_mainArea_"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 50%, transparent) !important;
+  backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(102, 240, 107, 0.25) !important;
+  border-radius: 12px !important;
+}
+
+/* Sidebar section labels & collapsible headers: transparent (incl. CSS module variants) */
+.conversation-section-label,
+.collapsible-section-header[class*="_header_"][class*="_headerSticky_"],
+[class*="_headerTopPadding_"][class*="collapsible"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Anonymous layout panels directly under .teams-container (504x502 opaque blocks) */
+.teams-container > div {
+  background: transparent !important;
+}
+
+/* Grid view internal containers */
+[class*="_gridViewItem_"] > div,
+[class*="_gridView_"] > div > div {
+  background: transparent !important;
+}
+
+/* Sidebar search box */
+.my-files-search {
+  background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
+  border: 1px solid rgba(102, 240, 107, 0.15) !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Tencent docs auth guide strip */
+.tencent-docs-auth-guide__permissions {
+  background: transparent !important;
+}
+
+/* Sidebar: frosted glass */
+[data-view-id="sidebar"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  border-right: none !important;
+  backdrop-filter: blur(24px) saturate(1.15);
+}
+
+/* Main content: open top, light bottom for readability */
+[data-view-id="main-content"] {
+  background: linear-gradient(180deg, transparent 0 55%, color-mix(in srgb, var(--agentskin-bg) 42%, transparent) 100%) !important;
+}
+
+/* Detail panel: frosted glass */
+[data-view-id="detail-panel"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 72%, transparent) !important;
+  backdrop-filter: blur(18px) saturate(1.08);
+}
+
+/* Composer focus ring */
+[role="textbox"][contenteditable="true"]:focus,
+.wb-home-composer [contenteditable="true"]:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(102, 240, 107, 0.4), 0 4px 18px rgba(82, 223, 121, 0.2) !important;
+}
+
+/* Selection & scrollbars */
+body[data-application-name="workbuddy"] ::selection {
+  background: rgba(102, 240, 107, 0.32) !important;
+}
+
+body[data-application-name="workbuddy"] ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body[data-application-name="workbuddy"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(102, 240, 107, 0.3) 0%, rgba(82, 223, 121, 0.3) 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(102, 240, 107, 0.5) 0%, rgba(82, 223, 121, 0.5) 100%) !important;
+  background-clip: padding-box !important;
+}
+
+/* Component touches — buttons, code, links, sidebar motion. Brings WorkBuddy
+   to the same polish level as the qoderwork/traework sheets so all three
+   agents feel equally crafted instead of workbuddy being the plain one.
+   PROBE-VERIFIED 2026-08-23: WorkBuddy buttons are .wb-button (BEM) —
+   wb-button--ghost / --medium / --icon-only for toolbar icons; there is no
+   [class*="primary"] / [class*="send"] class in the DOM (those selectors
+   matched nothing and are removed). */
+.wb-button {
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.wb-button--primary:hover,
+.wb-button--filled:hover {
+  filter: brightness(1.07);
+  transform: translateY(-1px);
+}
+
+code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(102, 240, 107, 0.14) !important;
+  border-radius: 6px !important;
+}
+
+pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(102, 240, 107, 0.14) !important;
+  border-left: 3px solid rgba(102, 240, 107, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+pre code {
+  border: none !important;
+}
+
+a {
+  color: var(--wb-accent) !important;
+  transition: opacity 120ms ease;
+}
+
+a:hover {
+  opacity: 0.82;
+}
+
+/* Sidebar item motion
+   PROBE-VERIFIED 2026-08-23: WorkBuddy sidebar is .conversation-sidebar →
+   .conversation-list; rows are conversation-item-* (exact BEM). Use the
+   precise .conversation-list scope only — [class*="item"] matched 31
+   unrelated elements and over-animated them. */
+.conversation-sidebar .conversation-list button,
+.conversation-sidebar [class*="conversation-item"] {
+  transition: background 140ms ease;
+}
+
+.menubar-menu-title,
+[class*="menubar"] [class*="title"],
+[class*="menu-bar"] [class*="label"] {
+  color: var(--cb-text-secondary) !important;
+}
+.menubar-menu-title:hover,
+[class*="menubar"] [class*="title"]:hover,
+[class*="menu-bar"] [class*="label"]:hover {
+  color: var(--cb-text-primary) !important;
+}
+
+/* Input slot: frosted glass instead of opaque rgb(41,41,41) */
+.wb-home-composer__input-slot {
+  background: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
+  backdrop-filter: blur(12px) saturate(1.1) !important;
+  border: 1px solid rgba(102, 240, 107, 0.22) !important;
+  border-radius: 18px !important;
+  transition: border-color 180ms ease, box-shadow 180ms ease !important;
+}
+
+.wb-home-composer__input-slot:focus-within {
+  border-color: rgba(102, 240, 107, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(102, 240, 107, 0.12), 0 4px 20px rgba(102, 240, 107, 0.08) !important;
+}
+
+/* Quick action pills: semi-transparent accent tint instead of opaque rgb(31,31,31) */
+.quick-actions__item {
+  background: color-mix(in srgb, var(--agentskin-surface) 35%, transparent) !important;
+  border: 1px solid rgba(102, 240, 107, 0.18) !important;
+  color: var(--cb-text-secondary) !important;
+  backdrop-filter: blur(8px) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease !important;
+}
+
+.quick-actions__item:hover {
+  background: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
+  border-color: rgba(102, 240, 107, 0.4) !important;
+  color: var(--cb-text-primary) !important;
+}
+
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
+/* ---- kill native side shadows on the recommendation chips above the input ---- */
+.quick-actions,
+.quick-actions__list,
+[class*="quick-action"]:not(.quick-actions__item) {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ---- kill stacked side shadows on descendants of the quick-action chips ---- */
+.quick-actions *,
+.quick-actions__list * {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Message bubbles: subtle frosted surfaces */
+[class*="message-bubble"],
+[class*="messageBubble"],
+[class*="msg-content"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 38%, transparent) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(102, 240, 107, 0.12) !important;
+  border-radius: 14px !important;
+}
+
+[class*="message-bubble"][class*="assistant"],
+[class*="messageBubble"][class*="assistant"],
+[class*="msg-content"][class*="bot"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
+  border-color: rgba(82, 223, 121, 0.15) !important;
+}
+
+/* Composer container focus glow */
+.wb-home-composer:focus-within [class*="_mainArea_"] {
+  border-color: rgba(102, 240, 107, 0.4) !important;
+  box-shadow: 0 2px 24px rgba(102, 240, 107, 0.1) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-application-name="workbuddy"] *,
+  body[data-application-name="workbuddy"] *::before,
+  body[data-application-name="workbuddy"] *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

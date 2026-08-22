@@ -296,7 +296,10 @@
   --ct-danger: #f06a74;
   --ct-border: #3b4266;
   --ct-border-soft: rgba(122, 126, 173, 0.28);
+  --ct-shadow: rgba(1, 2, 10, 0.5);
   --ct-art: url("./assets/artwork-cropped.jpg");
+  --ct-font-display: "Songti SC", "STSong", "Iowan Old Style", serif;
+  --ct-font-body: "PingFang SC", "Avenir Next", system-ui, sans-serif;
 
   color-scheme: dark;
   --color-background-surface: var(--ct-canvas) !important;

@@ -301,7 +301,10 @@
   --ct-code: #efedeb;
   --ct-terminal-bg: #eeecea;
   --ct-terminal-text: #1d1a1c;
+  --ct-shadow: rgba(38, 30, 33, 0.13);
   --ct-art: url("./assets/artwork.png");
+  --ct-font-display: "Iowan Old Style", "Songti SC", "Noto Serif CJK SC", serif;
+  --ct-font-body: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
 
   color-scheme: light;
 

@@ -351,15 +351,8 @@ function transformCss(rawCss, hostId) {
   css = css.replaceAll(/var\(--ct-accent-deep\)/g, 'var(--agentskin-accent)');
   css = css.replaceAll(/var\(--ct-raised-strong\)/g, 'var(--agentskin-surface-elevated)');
 
-  // 6) 移除 Codex 特有 typography 变量（AgentSkin 不消费它们）
-  //    --ct-font-display/body/mono — 不映射，直接删除声明
-  css = css.replace(/\s*--ct-font-[a-z]+:\s*[^;]+;/g, '');
-
-  // 7) 移除 --ct-shadow（AgentSkin 不消费）
-  css = css.replace(/\s*--ct-shadow:\s*[^;]+;/g, '');
-
-  // 8) 确保 CSS 中 color-scheme 与 mode 匹配（:root block 内）
-  //    已在步骤 1 替换选择器时保留了原有 color-scheme，由调用方确保正确
+  // 6) 保留 --ct-font-* / --ct-shadow（FIX 2026-08-23: 之前删除它们导致源 CSS 里
+  //    引用悬空。方案 A 完整保留源主题 CSS，这些定义必须随源保留以保持自洽。）
 
   return css;
 }

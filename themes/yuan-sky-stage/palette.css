@@ -1,0 +1,26 @@
+/* palette.css — yuan-sky-stage (王源 · 晴蓝舞台) */
+/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+:root {
+  --agentskin-bg: #f4f8ff;
+  --agentskin-surface: #f9fcff;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #142b4d;
+  --agentskin-muted: #5d6f89;
+  --agentskin-accent: #216bb1;
+  --agentskin-secondary: #23725c;
+  --agentskin-border: #c7d9ee;
+  --agentskin-code-bg: #edf5ff;
+  --agentskin-code-fg: #102949;
+  --agentskin-focus-ring: #c83d9e;
+  --agentskin-selection: color-mix(in srgb, #216bb1 32%, transparent);
+
+  /* Derived raw RGB values */
+  --agentskin-accent-raw: 33, 107, 177;
+  --agentskin-secondary-raw: 35, 114, 92;
+  --agentskin-text-raw: 20, 43, 77;
+  --agentskin-muted-raw: 93, 111, 137;
+  --agentskin-surface-raw: 249, 252, 255;
+  --agentskin-surface-elevated-raw: 255, 255, 255;
+  --agentskin-bg-raw: 244, 248, 255;
+  --agentskin-border-raw: 199, 217, 238;
+}

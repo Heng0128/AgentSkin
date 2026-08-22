@@ -290,8 +290,11 @@
   --ct-accent-soft: rgba(66, 215, 245, 0.15);
   --ct-border: #648494;
   --ct-focus: #72e8ff;
+  --ct-shadow: rgba(1, 9, 15, 0.48);
   --ct-art: url("./assets/artwork.jpg");
   /* Typography pairing: display stack for headings/brand moments, body stack for prose. */
+  --ct-font-display: "DIN Condensed", "Avenir Next Condensed", "PingFang SC", sans-serif;
+  --ct-font-body: "SF Pro Text", "Segoe UI", "PingFang SC", sans-serif;
 
   /* Native token sweep (required): Codex components resolve colors from the app's
      own --color-token-* variables, which follow the USER's native light/dark mode.

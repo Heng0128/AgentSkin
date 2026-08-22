@@ -304,8 +304,11 @@
   --ct-removed-text: #9d2626;
   --ct-code: #e8f5fd;
   --ct-terminal: #f4faff;
+  --ct-shadow: rgba(18, 57, 86, 0.14);
   --ct-shadow-blue: rgba(7, 136, 207, 0.22);
   --ct-art: url("./assets/artwork.png");
+  --ct-font-display: "Avenir Next Rounded", "SF Pro Rounded", "PingFang SC", sans-serif;
+  --ct-font-body: "Avenir Next", "SF Pro Text", "PingFang SC", sans-serif;
 
   color-scheme: light;
   --color-background-surface: var(--ct-canvas) !important;

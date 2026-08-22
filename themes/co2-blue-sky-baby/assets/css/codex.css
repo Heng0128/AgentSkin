@@ -1,0 +1,656 @@
+/* CO₂ 蓝天宝宝 — OpenAI Codex (--color-token-* design tokens) */
+:root.agentskin-host-codex {
+  color-scheme: light !important;
+  --agentskin-accent: #8a3b2f;
+  --agentskin-secondary: #2f7d62;
+  --agentskin-bg: #eaf2f9;
+  --agentskin-surface: #f8fbfe;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #403a3c;
+  --agentskin-muted: #7d787a;
+  --agentskin-border: #d5e0ea;
+  --agentskin-code-bg: #eaf2f9;
+  --agentskin-code-fg: #403a3c;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #f8fbfe 82%, #8a3b2f 18%) 45%, transparent);
+  --agentskin-button-bg: #8a3b2f;
+  --agentskin-focus-ring: #8a3b2f;
+  --agentskin-selection: color-mix(in srgb, #8a3b2f 32%, transparent);
+  --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+  text-shadow: var(--agentskin-text-shadow);
+}
+
+/* ===== Native token overrides (Codex --color-token-* system) ===== */
+:root.agentskin-host-codex {
+  color-scheme: light !important;
+
+  /* Accent / brand */
+  --color-token-primary: #8a3b2f !important;
+  --color-token-text-link-foreground: #8a3b2f !important;
+  --color-token-focus-border: rgba(138, 59, 47, 0.76) !important;
+
+  /* App + surface backgrounds */
+  --color-token-bg-primary: #eaf2f9 !important;
+  --color-token-side-bar-background: #eaf2f9 !important;
+  --color-token-bg-secondary: color-mix(in srgb, #eaf2f9 92%, transparent) !important;
+  --color-token-bg-tertiary: color-mix(in srgb, #eaf2f9 85%, transparent) !important;
+  --color-token-main-surface-primary: #f8fbfe !important;
+  --color-token-diff-surface: color-mix(in srgb, #f8fbfe 94%, #403a3c) !important;
+  --color-token-dropdown-background: #ffffff !important;
+  --color-token-dropdown-foreground: #403a3c !important;
+
+  /* Foreground / text */
+  --color-token-foreground: #403a3c !important;
+  --color-token-text-primary: #403a3c !important;
+  --color-token-text-secondary: color-mix(in srgb, #403a3c 65%, transparent) !important;
+  --color-token-text-tertiary: rgba(64, 58, 60, 0.498) !important;
+  --color-token-description-foreground: rgba(64, 58, 60, 0.498) !important;
+
+  /* Borders */
+  --color-token-border: rgba(138, 59, 47, 0.09) !important;
+  --color-token-border-default: rgba(138, 59, 47, 0.09) !important;
+  --color-token-border-light: rgba(138, 59, 47, 0.045) !important;
+  --color-token-border-heavy: rgba(138, 59, 47, 0.156) !important;
+  --color-token-input-border: rgba(138, 59, 47, 0.156) !important;
+
+  /* Interaction surfaces */
+  --color-token-list-hover-background: rgba(138, 59, 47, 0.078) !important;
+  --color-token-scrollbar-slider-hover-background: rgba(138, 59, 47, 0.156) !important;
+
+  /* Helper vars consumed by shellStructureCss */
+  --accent: #8a3b2f !important;
+  --bg-hover: rgba(138, 59, 47, 0.1) !important;
+  --bg-active: rgba(138, 59, 47, 0.16) !important;
+  --bg-selected: rgba(138, 59, 47, 0.14) !important;
+}
+/* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
+:root.agentskin-host-codex #root {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+:root.agentskin-host-codex #root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--agentskin-surface) 42%, transparent) 0 16%,
+      color-mix(in srgb, var(--agentskin-surface) 14%, transparent) 44%,
+      transparent 70%),
+    linear-gradient(180deg, transparent 0 50%,
+      color-mix(in srgb, var(--agentskin-surface) 38%, transparent) 86% 100%),
+    radial-gradient(120% 80% at 84% 14%,
+      color-mix(in srgb, var(--agentskin-secondary) 20%, transparent), transparent 60%),
+    var(--agentskin-art, none) right center / cover no-repeat !important;
+}
+
+/* Root + main surfaces transparent so #root art shows through */
+:root.agentskin-host-codex #root,
+:root.agentskin-host-codex main,
+:root.agentskin-host-codex [role="main"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* Sidebar: frosted glass over art (PROBE-VERIFIED exact root) */
+:root.agentskin-host-codex .app-shell-left-panel {
+  background: color-mix(in srgb, color-mix(in srgb, #f8fbfe 82%, #8a3b2f 18%) 22%, transparent) !important;
+  border-right: 1px solid rgba(138, 59, 47, 0.1) !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+:root.agentskin-host-codex button.sidebar-item:hover,
+:root.agentskin-host-codex [data-app-action-sidebar-project-id]:hover {
+  background: rgba(138, 59, 47, 0.1) !important;
+}
+:root.agentskin-host-codex [data-app-action-sidebar-thread-selected="true"],
+:root.agentskin-host-codex [data-app-action-sidebar-thread-active="true"] {
+  background: rgba(138, 59, 47, 0.16) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
+}
+
+/* Composer / input: frosted glass */
+:root.agentskin-host-codex .composer-surface-chrome,
+:root.agentskin-host-codex [class*="_multilineSurface_"] {
+  background: color-mix(in srgb, color-mix(in srgb, #f8fbfe 82%, #8a3b2f 18%) 45%, transparent) !important;
+  backdrop-filter: blur(14px) saturate(1.1) !important;
+  color: var(--agentskin-text) !important;
+  caret-color: var(--agentskin-accent) !important;
+  border: 1px solid rgba(138, 59, 47, 0.25) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+:root.agentskin-host-codex .composer-surface-chrome,
+:root.agentskin-host-codex [class*="_multilineSurface_"]:focus,
+:root.agentskin-host-codex [contenteditable="true"]:focus,
+:root.agentskin-host-codex [contenteditable="true"]:focus-within {
+  border-color: rgba(138, 59, 47, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(138, 59, 47, 0.1), 0 4px 18px rgba(47, 125, 98, 0.12) !important;
+}
+
+/* Message text (role-scoped — no [class*="message"] sub-string spray) */
+:root.agentskin-host-codex [role="log"],
+:root.agentskin-host-codex article {
+  color: var(--agentskin-text);
+}
+
+/* Popovers / modals: frosted glass (role-scoped + exact classes only) */
+:root.agentskin-host-codex [role="dialog"],
+:root.agentskin-host-codex [role="menu"],
+:root.agentskin-host-codex [role="tooltip"],
+:root.agentskin-host-codex [role="listbox"] {
+  background: color-mix(in srgb, #ffffff 94%, transparent) !important;
+  border: none !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}
+
+/* Text readability on frosted glass */
+:root.agentskin-host-codex body {
+  text-shadow: 0 1px 2px rgba(255,255,255,0.6) !important;
+}
+
+:root.agentskin-host-codex input,
+:root.agentskin-host-codex textarea,
+:root.agentskin-host-codex [contenteditable="true"] {
+  text-shadow: 0 1px 2px rgba(255,255,255,0.6) !important;
+}
+
+/* Links */
+:root.agentskin-host-codex a {
+  color: var(--agentskin-accent) !important;
+}
+
+/* Selection */
+:root.agentskin-host-codex ::selection {
+  background: var(--agentskin-selection) !important;
+}
+
+/* Generic inputs */
+:root.agentskin-host-codex input,
+:root.agentskin-host-codex textarea,
+:root.agentskin-host-codex select {
+  background: var(--agentskin-input-bg) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
+}
+
+:root.agentskin-host-codex input:focus,
+:root.agentskin-host-codex textarea:focus,
+:root.agentskin-host-codex select:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px var(--agentskin-focus-ring) !important;
+}
+
+/* Inline code & code blocks */
+:root.agentskin-host-codex code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(213, 224, 234, 0.6) !important;
+  border-radius: 6px !important;
+}
+
+:root.agentskin-host-codex pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(213, 224, 234, 0.6) !important;
+  border-left: 3px solid rgba(138, 59, 47, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+:root.agentskin-host-codex pre code {
+  border: none !important;
+}
+
+/* Scrollbars */
+:root.agentskin-host-codex ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+:root.agentskin-host-codex ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:root.agentskin-host-codex ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(138, 59, 47, 0.3) 0%, rgba(47, 125, 98, 0.3) 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+:root.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(138, 59, 47, 0.5) 0%, rgba(47, 125, 98, 0.5) 100%) !important;
+  background-clip: padding-box !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root.agentskin-host-codex *,
+  :root.agentskin-host-codex *::before,
+  :root.agentskin-host-codex *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Codex component-level interaction layering =====
+   Codex sidebar rows are <button class="sidebar-item">; the active thread is
+   flagged with data-app-action-sidebar-thread-selected="true" (Tailwind data-*
+   variant), NOT [aria-current] / [class*=active]. PROBE-VERIFIED 2026-08-23:
+   - sidebar items: button.sidebar-item (exact class; do NOT use [class*="item"])
+   - active thread: [data-app-action-sidebar-thread-selected="true"]
+   - active thread row: [data-app-action-sidebar-thread-active="true"]
+   - project rows: [data-app-action-sidebar-project-id] (exact, not [class*=active])
+   Give hover + selected an accent-tinted lift so the sidebar reads before/after
+   instead of blending into the frosted base. Scoped to .sidebar-item and the
+   verified data-app-action-* state attributes ONLY — no broad descendants. */
+:root.agentskin-host-codex button.sidebar-item {
+  transition: background-color 120ms ease !important;
+}
+:root.agentskin-host-codex button.sidebar-item:hover,
+:root.agentskin-host-codex [data-app-action-sidebar-project-id]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+}
+:root.agentskin-host-codex button.sidebar-item[data-app-action-sidebar-thread-selected="true"],
+:root.agentskin-host-codex [data-app-action-sidebar-thread-selected="true"],
+:root.agentskin-host-codex [data-app-action-sidebar-thread-active="true"],
+:root.agentskin-host-codex button.sidebar-item[data-app-action-sidebar-project-collapsed="false"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
+}
+
+/* Composer focus: keep frosted but leaner so focus reads without a solid fill */
+:root.agentskin-host-codex [contenteditable="true"]:focus,
+:root.agentskin-host-codex [contenteditable="true"]:focus-within {
+  background: color-mix(in srgb, var(--agentskin-input-bg) 82%, var(--agentskin-accent) 18%) !important;
+}
+
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ----
+   Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
+   注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
+
+/* ===== Bridge: FULL source Codex theme CSS (faithful reproduction) ===== */
+/* ============================================================
+   CO₂ 蓝天宝宝 · co2-blue-sky-baby
+   Codex desktop theme — native-immersive · backgroundScope home · light
+   Subject: a baby in a brick-red beanie under a bright blue sky.
+   Colors: sky blue, warm white, brick rust.
+   Concept: plants turn CO₂ into oxygen — a fresh, breathing workspace.
+   ============================================================ */
+
+:root.agentskin-host-codex {
+  color-scheme: light;
+
+  /* ---------- Semantic palette ---------- */
+  --ct-canvas: #eaf2f9;
+  --ct-surface: rgba(255, 253, 250, 0.92);
+  --ct-panel: #f8fbfe;
+  --ct-raised: #ffffff;
+  --ct-text: #403a3c;
+  --ct-muted: #7d787a;
+  --ct-disabled: #b2adae;
+  --ct-accent: #8a3b2f;
+  --ct-accent-deep: #6f2c22;
+  --ct-accent-soft: rgba(138, 59, 47, 0.13);
+  --ct-sky: #a9cbe4;
+  --ct-sky-soft: rgba(169, 203, 228, 0.42);
+  --ct-border: #d5e0ea;
+  --ct-focus: #8a3b2f;
+  --ct-shadow: rgba(64, 58, 60, 0.14);
+  --ct-art: url("./assets/artwork.jpg");
+
+  /* Typography pairing: display stack for headings/brand, body stack for prose. */
+  --ct-font-display: "Iowan Old Style", "Songti SC", "STSong", serif;
+  --ct-font-body: "Avenir Next", "PingFang SC", "Helvetica Neue", sans-serif;
+
+  /* ---------- Direct semantic bridge (settings, panels, mounted roots) ---------- */
+  --color-background-surface: var(--ct-canvas) !important;
+  --color-background-surface-under: var(--ct-panel) !important;
+  --color-background-panel: var(--ct-panel) !important;
+  --color-background-control: var(--ct-raised) !important;
+  --color-background-control-opaque: var(--ct-raised) !important;
+  --color-background-editor-opaque: var(--ct-canvas) !important;
+  --color-background-elevated-primary: var(--ct-raised) !important;
+  --color-background-elevated-primary-opaque: var(--ct-raised) !important;
+  --color-background-elevated-secondary: var(--ct-panel) !important;
+  --color-background-elevated-secondary-opaque: var(--ct-panel) !important;
+  --color-text-foreground: var(--ct-text) !important;
+  --color-text-foreground-secondary: var(--ct-muted) !important;
+  --color-text-foreground-tertiary: var(--ct-muted) !important;
+  --color-icon-primary: var(--ct-text) !important;
+  --color-icon-secondary: var(--ct-muted) !important;
+  --color-icon-tertiary: var(--ct-muted) !important;
+  --color-border: var(--ct-border) !important;
+  --color-border-light: var(--ct-border) !important;
+  --color-border-heavy: var(--ct-border) !important;
+  --color-border-focus: var(--ct-focus) !important;
+
+  /* ---------- Native token sweep (required) ---------- */
+  --color-token-bg-primary: var(--ct-canvas) !important;
+  --color-token-bg-secondary: var(--ct-panel) !important;
+  --color-token-bg-tertiary: var(--ct-raised) !important;
+  --color-token-main-surface-primary: var(--ct-canvas) !important;
+  --color-token-side-bar-background: var(--ct-panel) !important;
+  --color-token-foreground: var(--ct-text) !important;
+  --color-token-text-primary: var(--ct-text) !important;
+  --color-token-text-secondary: var(--ct-muted) !important;
+  --color-token-text-tertiary: var(--ct-muted) !important;
+  --color-token-description-foreground: var(--ct-muted) !important;
+  --color-token-icon-foreground: var(--ct-muted) !important;
+  --color-token-input-background: var(--ct-raised) !important;
+  --color-token-input-foreground: var(--ct-text) !important;
+  --color-token-input-placeholder-foreground: var(--ct-muted) !important;
+  --color-token-input-border: var(--ct-border) !important;
+  --color-token-border: var(--ct-border) !important;
+  --color-token-border-default: var(--ct-border) !important;
+  --color-token-border-heavy: var(--ct-border) !important;
+  --color-token-border-light: var(--ct-border) !important;
+  --color-token-list-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-list-active-selection-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-list-active-selection-foreground: var(--ct-text) !important;
+  --color-token-toolbar-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-button-background: var(--ct-accent) !important;
+  --color-token-button-foreground: var(--ct-raised) !important;
+  --color-token-button-border: var(--ct-border) !important;
+  --color-token-link: var(--ct-accent) !important;
+  --color-token-text-link-foreground: var(--ct-accent) !important;
+  --color-token-text-link-active-foreground: var(--agentskin-accent) !important;
+  --color-token-primary: var(--ct-accent) !important;
+  --color-token-focus-border: var(--ct-focus) !important;
+  --color-token-dropdown-background: var(--ct-raised) !important;
+  --color-token-dropdown-foreground: var(--ct-text) !important;
+  --color-token-menu-background: var(--ct-raised) !important;
+  --color-token-menu-border: var(--ct-border) !important;
+  --color-token-checkbox-background: var(--ct-raised) !important;
+  --color-token-checkbox-border: var(--ct-border) !important;
+  --color-token-checkbox-foreground: var(--ct-accent) !important;
+  --color-token-badge-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-badge-foreground: var(--agentskin-accent) !important;
+  --color-token-scrollbar-slider-background: var(--ct-sky-soft) !important;
+  --color-token-scrollbar-slider-hover-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-scrollbar-slider-active-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --color-token-conversation-header: var(--ct-muted) !important;
+  --color-token-conversation-body: var(--ct-text) !important;
+  --color-token-conversation-summary-leading: var(--ct-muted) !important;
+  --color-token-conversation-summary-trailing: var(--ct-muted) !important;
+  --color-token-non-assistant-body-descendant: var(--ct-muted) !important;
+  --color-token-text-preformat-foreground: var(--ct-text) !important;
+  --color-token-text-preformat-background: var(--ct-panel) !important;
+  --color-token-text-code-block-background: var(--ct-raised) !important;
+}
+
+/* ---------- Base canvases: every page belongs to one light semantic system ---------- */
+main.main-surface[data-codexthemes-page] {
+  color: var(--ct-text);
+  background: var(--ct-canvas);
+  font-family: var(--ct-font-body);
+}
+
+main.main-surface[data-codexthemes-page="home"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 250, 0.93) 0%, rgba(255, 253, 250, 0.72) 22%, rgba(255, 253, 250, 0.56) 46%, rgba(255, 253, 250, 0.66) 66%, rgba(234, 242, 249, 0.9) 100%),
+    var(--ct-art) 50% 48% / cover no-repeat;
+}
+
+/* ---------- Shell surfaces: sidebar, header, composer, menus, dialogs, output/diff ---------- */
+aside.app-shell-left-panel {
+  color: var(--ct-text);
+  background:
+    linear-gradient(180deg, rgba(248, 251, 254, 0.98) 0%, rgba(255, 253, 250, 0.97) 46%, rgba(234, 242, 249, 0.96) 100%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.32) 0 1px, transparent 1px 7px);
+  border-right: 1px solid var(--ct-border);
+}
+
+header,
+[data-codexthemes-surface="header"] {
+  color: var(--ct-text);
+  background: var(--ct-raised);
+  border-bottom: 1px solid var(--ct-border);
+}
+
+.composer-surface-chrome,
+[data-codexthemes-surface="composer"] {
+  color: var(--ct-text);
+  background: linear-gradient(180deg, var(--ct-raised), rgba(255, 253, 250, 0.97));
+  border: 1px solid var(--ct-border);
+  border-radius: 18px;
+  box-shadow: 0 10px 26px var(--ct-shadow);
+}
+
+[role="menu"],
+[role="dialog"],
+[data-codexthemes-surface="output"],
+[data-codexthemes-surface="diff"] {
+  color: var(--ct-text);
+  background: var(--ct-raised);
+  border-color: var(--ct-border);
+}
+
+[role="menuitem"] {
+  color: var(--ct-text);
+}
+
+[role="menuitem"]:hover,
+[role="menuitem"][data-highlighted] {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+}
+
+/* ---------- Home stage: hero heading banner ---------- */
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-hero] {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 253, 250, 0.76) 55%, rgba(255, 253, 250, 0.4) 100%);
+  box-shadow: 0 12px 30px var(--ct-shadow);
+}
+
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-hero] h1 {
+  font-family: var(--ct-font-display);
+  letter-spacing: 0.01em;
+  color: var(--ct-text);
+}
+
+/* Tagline (rich): one short themed line under the heading. */
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-hero]::after {
+  content: "CO₂ 变氧气 · 每一天都是清新清晨";
+  display: block;
+  pointer-events: none;
+  font-family: var(--ct-font-display);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--ct-muted);
+}
+
+/* ---------- Home stage: suggestion cards ---------- */
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-suggestion-card] {
+  border: 1px solid var(--ct-border);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(255, 253, 250, 0.92));
+  box-shadow: 0 8px 18px var(--ct-shadow);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-suggestion-card]:hover {
+  transform: translateY(-3px);
+  border-color: rgba(138, 59, 47, 0.34);
+  box-shadow: 0 14px 26px var(--ct-shadow);
+}
+
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-card-icon] {
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+  color: var(--agentskin-accent);
+}
+
+/* ---------- Home stage: project selector chip ---------- */
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-project-chip] {
+  border: 1px solid var(--ct-border);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--ct-raised), var(--ct-panel));
+  color: var(--ct-text);
+  box-shadow: 0 3px 10px rgba(64, 58, 60, 0.08);
+}
+
+/* ---------- Chrome accents (rich) ---------- */
+/* Header lockup: tiny brand motto at a header edge; never covers native actions. */
+[data-codexthemes-surface="header"]::after {
+  content: "☁ 蓝 · 呼吸";
+  position: absolute;
+  right: 96px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-family: var(--ct-font-display);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ct-muted);
+  opacity: 0.85;
+}
+
+/* Corner emblem + ambient cloud motes on the home stage (pointer-events: none). */
+main.main-surface[data-codexthemes-page="home"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 88% 18%, var(--ct-sky-soft) 0 2px, transparent 3px),
+    radial-gradient(circle at 12% 26%, var(--ct-sky-soft) 0 1px, transparent 2px),
+    radial-gradient(circle at 76% 72%, var(--ct-sky-soft) 0 2px, transparent 3px),
+    radial-gradient(circle at 22% 70%, var(--ct-sky-soft) 0 1px, transparent 2px),
+    radial-gradient(circle, transparent 0 29px, rgba(255, 255, 255, 0.94) 29px 30px, transparent 31px);
+  background-size: 97px 97px, 71px 71px, 83px 83px, 61px 61px, 72px 72px;
+  background-position: 0 0, 0 0, 0 0, 0 0, calc(100% - 40px) calc(100% - 40px);
+  background-repeat: repeat, repeat, repeat, repeat, no-repeat;
+  opacity: 0.9;
+  animation: ct-co2-blue-sky-baby-drift 9s ease-in-out infinite alternate;
+}
+
+@keyframes ct-co2-blue-sky-baby-drift {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+/* Composer accent: one small decorative marker on the composer chrome edge. */
+.composer-surface-chrome::after,
+[data-codexthemes-surface="composer"]::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: -4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ct-accent);
+  pointer-events: none;
+}
+
+/* Sidebar accents: coordinated hover/selected materials plus a soft sky tint on hovered rows. */
+aside.app-shell-left-panel [data-codexthemes-sidebar-item] {
+  border-radius: 12px;
+  color: var(--ct-text);
+}
+
+aside.app-shell-left-panel [data-codexthemes-sidebar-item]:hover {
+  background: var(--ct-sky-soft);
+}
+
+aside.app-shell-left-panel [data-codexthemes-sidebar-item][data-selected] {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+  color: var(--agentskin-accent);
+}
+
+/* ---------- Interaction tokens: selection, caret, focus, scrollbars ---------- */
+::selection {
+  background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent);
+  color: var(--ct-text);
+}
+
+input,
+textarea {
+  caret-color: var(--ct-accent);
+}
+
+main.main-surface[data-codexthemes-page],
+aside.app-shell-left-panel {
+  scrollbar-color: var(--ct-sky-soft) transparent;
+}
+
+:focus-visible {
+  outline-color: var(--ct-focus);
+}
+
+/* ---------- Terminal contract: same light material system ---------- */
+[data-codex-terminal="true"] {
+  --vscode-terminal-background: var(--ct-canvas) !important;
+  --vscode-terminal-foreground: var(--ct-text) !important;
+  --vscode-terminal-selection-background: color-mix(in srgb, var(--agentskin-accent) 13%, transparent) !important;
+  --vscode-terminal-ansiBlack: #2e2a2b !important;
+  --vscode-terminal-ansiRed: #b33d4c !important;
+  --vscode-terminal-ansiGreen: #2f7d62 !important;
+  --vscode-terminal-ansiYellow: #9a671f !important;
+  --vscode-terminal-ansiBlue: #2f6d9e !important;
+  --vscode-terminal-ansiMagenta: #a84a7a !important;
+  --vscode-terminal-ansiCyan: #2f7f8a !important;
+  --vscode-terminal-ansiWhite: #eef3f8 !important;
+  --vscode-terminal-ansiBrightBlack: #7d787a !important;
+  --vscode-terminal-ansiBrightRed: #c24d5c !important;
+  --vscode-terminal-ansiBrightGreen: #3b9375 !important;
+  --vscode-terminal-ansiBrightYellow: #b57b2a !important;
+  --vscode-terminal-ansiBrightBlue: #3d7fb0 !important;
+  --vscode-terminal-ansiBrightMagenta: #b95d89 !important;
+  --vscode-terminal-ansiBrightCyan: #3f93a0 !important;
+  --vscode-terminal-ansiBrightWhite: #ffffff !important;
+  --color-background-panel: var(--ct-canvas) !important;
+  --color-background-editor-opaque: var(--ct-canvas) !important;
+  color: var(--ct-text) !important;
+  background: var(--ct-canvas) !important;
+}
+
+.xterm,
+.xterm-screen,
+[data-codexthemes-surface="terminal"] {
+  color: var(--ct-text) !important;
+  background: var(--ct-canvas) !important;
+}
+
+.xterm-viewport {
+  background-color: var(--ct-canvas) !important;
+}
+
+/* ---------- Responsive: keep materials, drop ornaments at narrow widths ---------- */
+@media (max-width: 980px) {
+  main.main-surface[data-codexthemes-page="home"]::before {
+    background-position: 62% 44%, 50% 48%;
+  }
+  main.main-surface[data-codexthemes-page="home"]::after {
+    display: none;
+  }
+  [data-codexthemes-surface="header"]::after {
+    display: none;
+  }
+  .composer-surface-chrome::after,
+  [data-codexthemes-surface="composer"]::after {
+    display: none;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+

@@ -299,10 +299,13 @@
   --ct-border: #f5d7df;
   --ct-border-light: #fdeff3;
   --ct-focus: #ff6b8a;
+  --ct-shadow: rgba(90, 61, 68, 0.10);
   --ct-shadow-lg: rgba(90, 61, 68, 0.16);
   --ct-art: url("./assets/artwork.png");
 
   /* Font pairing: friendly rounded body + elegant display for brand moments */
+  --ct-font-display: "Iowan Old Style", "Songti SC", "STSong", serif;
+  --ct-font-body: "Avenir Next", "PingFang SC", "Microsoft YaHei", sans-serif;
 
   color-scheme: light;
 

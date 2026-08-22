@@ -1,0 +1,940 @@
+/* Crow Brother WorkBuddy — OpenAI Codex (--color-token-* design tokens) */
+:root.agentskin-host-codex {
+  color-scheme: dark !important;
+  --agentskin-accent: #d4a853;
+  --agentskin-secondary: #5a9e6f;
+  --agentskin-bg: #0d0d0f;
+  --agentskin-surface: rgba(18, 18, 22, 0.90);
+  --agentskin-surface-elevated: rgba(22, 22, 28, 0.93);
+  --agentskin-text: #e8e0d4;
+  --agentskin-muted: #8a7e6b;
+  --agentskin-border: rgba(212, 168, 83, 0.14);
+  --agentskin-code-bg: #0d0d0f;
+  --agentskin-code-fg: #e8e0d4;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, rgba(18, 18, 22, 0.90) 82%, #d4a853 18%) 45%, transparent);
+  --agentskin-button-bg: #d4a853;
+  --agentskin-focus-ring: #d4a853;
+  --agentskin-selection: color-mix(in srgb, #d4a853 32%, transparent);
+  --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  text-shadow: var(--agentskin-text-shadow);
+}
+
+/* ===== Native token overrides (Codex --color-token-* system) ===== */
+:root.agentskin-host-codex {
+  color-scheme: dark !important;
+
+  /* Accent / brand */
+  --color-token-primary: #d4a853 !important;
+  --color-token-text-link-foreground: #d4a853 !important;
+  --color-token-focus-border: rgba(212, 168, 83, 0.76) !important;
+
+  /* App + surface backgrounds */
+  --color-token-bg-primary: #0d0d0f !important;
+  --color-token-side-bar-background: #0d0d0f !important;
+  --color-token-bg-secondary: color-mix(in srgb, #0d0d0f 92%, transparent) !important;
+  --color-token-bg-tertiary: color-mix(in srgb, #0d0d0f 85%, transparent) !important;
+  --color-token-main-surface-primary: rgba(18, 18, 22, 0.90) !important;
+  --color-token-diff-surface: color-mix(in srgb, rgba(18, 18, 22, 0.90) 94%, #e8e0d4) !important;
+  --color-token-dropdown-background: rgba(22, 22, 28, 0.93) !important;
+  --color-token-dropdown-foreground: #e8e0d4 !important;
+
+  /* Foreground / text */
+  --color-token-foreground: #e8e0d4 !important;
+  --color-token-text-primary: #e8e0d4 !important;
+  --color-token-text-secondary: color-mix(in srgb, #e8e0d4 65%, transparent) !important;
+  --color-token-text-tertiary: rgba(232, 224, 212, 0.498) !important;
+  --color-token-description-foreground: rgba(232, 224, 212, 0.498) !important;
+
+  /* Borders */
+  --color-token-border: rgba(212, 168, 83, 0.09) !important;
+  --color-token-border-default: rgba(212, 168, 83, 0.09) !important;
+  --color-token-border-light: rgba(212, 168, 83, 0.045) !important;
+  --color-token-border-heavy: rgba(212, 168, 83, 0.156) !important;
+  --color-token-input-border: rgba(212, 168, 83, 0.156) !important;
+
+  /* Interaction surfaces */
+  --color-token-list-hover-background: rgba(212, 168, 83, 0.078) !important;
+  --color-token-scrollbar-slider-hover-background: rgba(212, 168, 83, 0.156) !important;
+
+  /* Helper vars consumed by shellStructureCss */
+  --accent: #d4a853 !important;
+  --bg-hover: rgba(212, 168, 83, 0.1) !important;
+  --bg-active: rgba(212, 168, 83, 0.16) !important;
+  --bg-selected: rgba(212, 168, 83, 0.14) !important;
+}
+/* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
+:root.agentskin-host-codex #root {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+:root.agentskin-host-codex #root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--agentskin-surface) 26%, transparent) 0 16%,
+      color-mix(in srgb, var(--agentskin-surface) 8%, transparent) 44%,
+      transparent 70%),
+    linear-gradient(180deg, transparent 0 50%,
+      color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
+    radial-gradient(120% 80% at 84% 14%,
+      color-mix(in srgb, var(--agentskin-accent) 28%, transparent), transparent 60%),
+    var(--agentskin-art, none) right center / cover no-repeat !important;
+}
+
+/* Root + main surfaces transparent so #root art shows through */
+:root.agentskin-host-codex #root,
+:root.agentskin-host-codex main,
+:root.agentskin-host-codex [role="main"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* Sidebar: frosted glass over art (PROBE-VERIFIED exact root) */
+:root.agentskin-host-codex .app-shell-left-panel {
+  background: color-mix(in srgb, color-mix(in srgb, rgba(18, 18, 22, 0.90) 82%, #d4a853 18%) 22%, transparent) !important;
+  border-right: 1px solid rgba(212, 168, 83, 0.1) !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+:root.agentskin-host-codex button.sidebar-item:hover,
+:root.agentskin-host-codex [data-app-action-sidebar-project-id]:hover {
+  background: rgba(212, 168, 83, 0.1) !important;
+}
+:root.agentskin-host-codex [data-app-action-sidebar-thread-selected="true"],
+:root.agentskin-host-codex [data-app-action-sidebar-thread-active="true"] {
+  background: rgba(212, 168, 83, 0.16) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
+}
+
+/* Composer / input: frosted glass */
+:root.agentskin-host-codex .composer-surface-chrome,
+:root.agentskin-host-codex [class*="_multilineSurface_"] {
+  background: color-mix(in srgb, color-mix(in srgb, rgba(18, 18, 22, 0.90) 82%, #d4a853 18%) 45%, transparent) !important;
+  backdrop-filter: blur(14px) saturate(1.1) !important;
+  color: var(--agentskin-text) !important;
+  caret-color: var(--agentskin-accent) !important;
+  border: 1px solid rgba(212, 168, 83, 0.25) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+:root.agentskin-host-codex .composer-surface-chrome,
+:root.agentskin-host-codex [class*="_multilineSurface_"]:focus,
+:root.agentskin-host-codex [contenteditable="true"]:focus,
+:root.agentskin-host-codex [contenteditable="true"]:focus-within {
+  border-color: rgba(212, 168, 83, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(212, 168, 83, 0.1), 0 4px 18px rgba(90, 158, 111, 0.12) !important;
+}
+
+/* Message text (role-scoped — no [class*="message"] sub-string spray) */
+:root.agentskin-host-codex [role="log"],
+:root.agentskin-host-codex article {
+  color: var(--agentskin-text);
+}
+
+/* Popovers / modals: frosted glass (role-scoped + exact classes only) */
+:root.agentskin-host-codex [role="dialog"],
+:root.agentskin-host-codex [role="menu"],
+:root.agentskin-host-codex [role="tooltip"],
+:root.agentskin-host-codex [role="listbox"] {
+  background: color-mix(in srgb, rgba(22, 22, 28, 0.93) 94%, transparent) !important;
+  border: none !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}
+
+/* Text readability on frosted glass */
+:root.agentskin-host-codex body {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+:root.agentskin-host-codex input,
+:root.agentskin-host-codex textarea,
+:root.agentskin-host-codex [contenteditable="true"] {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+/* Links */
+:root.agentskin-host-codex a {
+  color: var(--agentskin-accent) !important;
+}
+
+/* Selection */
+:root.agentskin-host-codex ::selection {
+  background: var(--agentskin-selection) !important;
+}
+
+/* Generic inputs */
+:root.agentskin-host-codex input,
+:root.agentskin-host-codex textarea,
+:root.agentskin-host-codex select {
+  background: var(--agentskin-input-bg) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
+}
+
+:root.agentskin-host-codex input:focus,
+:root.agentskin-host-codex textarea:focus,
+:root.agentskin-host-codex select:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px var(--agentskin-focus-ring) !important;
+}
+
+/* Inline code & code blocks */
+:root.agentskin-host-codex code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(212, 168, 83, 0.084) !important;
+  border-radius: 6px !important;
+}
+
+:root.agentskin-host-codex pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(212, 168, 83, 0.084) !important;
+  border-left: 3px solid rgba(212, 168, 83, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+:root.agentskin-host-codex pre code {
+  border: none !important;
+}
+
+/* Scrollbars */
+:root.agentskin-host-codex ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+:root.agentskin-host-codex ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:root.agentskin-host-codex ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(212, 168, 83, 0.3) 0%, rgba(90, 158, 111, 0.3) 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+:root.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(212, 168, 83, 0.5) 0%, rgba(90, 158, 111, 0.5) 100%) !important;
+  background-clip: padding-box !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root.agentskin-host-codex *,
+  :root.agentskin-host-codex *::before,
+  :root.agentskin-host-codex *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Codex component-level interaction layering =====
+   Codex sidebar rows are <button class="sidebar-item">; the active thread is
+   flagged with data-app-action-sidebar-thread-selected="true" (Tailwind data-*
+   variant), NOT [aria-current] / [class*=active]. PROBE-VERIFIED 2026-08-23:
+   - sidebar items: button.sidebar-item (exact class; do NOT use [class*="item"])
+   - active thread: [data-app-action-sidebar-thread-selected="true"]
+   - active thread row: [data-app-action-sidebar-thread-active="true"]
+   - project rows: [data-app-action-sidebar-project-id] (exact, not [class*=active])
+   Give hover + selected an accent-tinted lift so the sidebar reads before/after
+   instead of blending into the frosted base. Scoped to .sidebar-item and the
+   verified data-app-action-* state attributes ONLY — no broad descendants. */
+:root.agentskin-host-codex button.sidebar-item {
+  transition: background-color 120ms ease !important;
+}
+:root.agentskin-host-codex button.sidebar-item:hover,
+:root.agentskin-host-codex [data-app-action-sidebar-project-id]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+}
+:root.agentskin-host-codex button.sidebar-item[data-app-action-sidebar-thread-selected="true"],
+:root.agentskin-host-codex [data-app-action-sidebar-thread-selected="true"],
+:root.agentskin-host-codex [data-app-action-sidebar-thread-active="true"],
+:root.agentskin-host-codex button.sidebar-item[data-app-action-sidebar-project-collapsed="false"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
+}
+
+/* Composer focus: keep frosted but leaner so focus reads without a solid fill */
+:root.agentskin-host-codex [contenteditable="true"]:focus,
+:root.agentskin-host-codex [contenteditable="true"]:focus-within {
+  background: color-mix(in srgb, var(--agentskin-input-bg) 82%, var(--agentskin-accent) 18%) !important;
+}
+
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ----
+   Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
+   注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
+
+/* ===== Bridge: FULL source Codex theme CSS (faithful reproduction) ===== */
+/* crow-brother-workbuddy-2856 v0.2.0 — Dark gothic theme with crow/raven aesthetics.
+   Deep charcoal canvas, warm amber (#d4a853) accents, dark purple undertones,
+   feather-motif decorations, and ambient ember particles.
+   Layout: native-immersive | Scope: workspace | Density: rich */
+
+/* ============================================================
+   Layer 1 — Semantic custom properties
+   ============================================================ */
+:root.agentskin-host-codex {
+  /* Core palette */
+  --ct-canvas: #0d0d0f;
+  --ct-canvas-deep: #070708;
+  --ct-surface: rgba(18, 18, 22, 0.90);
+  --ct-surface-solid: #121216;
+  --ct-raised: rgba(22, 22, 28, 0.93);
+  --ct-raised-solid: #16161c;
+  --ct-glass: rgba(18, 18, 22, 0.75);
+  --ct-glass-border: rgba(212, 168, 83, 0.14);
+
+  /* Text */
+  --ct-text: #e8e0d4;
+  --ct-text-secondary: #c4b99a;
+  --ct-muted: #8a7e6b;
+  --ct-disabled: #4a4438;
+
+  /* Accent — warm amber/golden (crow's eye, treasure glow) */
+  --ct-accent: #d4a853;
+  --ct-accent-bright: #e8c46d;
+  --ct-accent-dim: rgba(212, 168, 83, 0.12);
+  --ct-accent-glow: rgba(212, 168, 83, 0.25);
+  --ct-accent-soft: rgba(212, 168, 83, 0.07);
+
+  /* Secondary accent — dark plum/purple (gothic undertone) */
+  --ct-accent2: #7b4f8a;
+  --ct-accent2-soft: rgba(123, 79, 138, 0.10);
+  --ct-accent2-dim: rgba(123, 79, 138, 0.06);
+
+  /* Tertiary accent — deep burgundy */
+  --ct-accent3: #8b3a4a;
+  --ct-accent3-soft: rgba(139, 58, 74, 0.08);
+
+  /* Borders & focus */
+  --ct-border: rgba(212, 168, 83, 0.10);
+  --ct-border-strong: rgba(212, 168, 83, 0.22);
+  --ct-focus: #d4a853;
+
+  /* Semantic colors */
+  --ct-success: #5a9e6f;
+  --ct-warning: #d4a853;
+  --ct-danger: #c4554d;
+
+  /* Shadows */
+  --ct-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.50);
+  --ct-shadow-md: 0 6px 20px rgba(0, 0, 0, 0.60);
+  --ct-shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.70);
+  --ct-shadow-glow: 0 0 24px rgba(212, 168, 83, 0.12);
+
+  /* Artwork */
+  --ct-art: url("./assets/artwork.jpg");
+
+  /* Typography */
+  --ct-font-display: "Cinzel", "Playfair Display", "Georgia", "SimSun", serif;
+  --ct-font-body: "Inter", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --ct-font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", "Consolas", monospace;
+
+  color-scheme: dark;
+
+  /* ============================================================
+     Layer 2 — Native token sweep (full set, mode-independent)
+     ============================================================ */
+  --color-token-bg-primary: var(--ct-canvas) !important;
+  --color-token-bg-secondary: var(--ct-surface-solid) !important;
+  --color-token-bg-tertiary: var(--ct-raised-solid) !important;
+  --color-token-main-surface-primary: var(--ct-canvas) !important;
+  --color-token-side-bar-background: var(--ct-surface-solid) !important;
+  --color-token-foreground: var(--ct-text) !important;
+  --color-token-text-primary: var(--ct-text) !important;
+  --color-token-text-secondary: var(--ct-text-secondary) !important;
+  --color-token-text-tertiary: var(--ct-muted) !important;
+  --color-token-description-foreground: var(--ct-muted) !important;
+  --color-token-icon-foreground: var(--ct-muted) !important;
+  --color-token-input-background: var(--ct-raised-solid) !important;
+  --color-token-input-foreground: var(--ct-text) !important;
+  --color-token-input-placeholder-foreground: var(--ct-muted) !important;
+  --color-token-input-border: var(--ct-border-strong) !important;
+  --color-token-border: var(--ct-border) !important;
+  --color-token-border-default: var(--ct-border) !important;
+  --color-token-border-heavy: var(--ct-border-strong) !important;
+  --color-token-border-light: var(--ct-border) !important;
+  --color-token-list-hover-background: var(--ct-accent-dim) !important;
+  --color-token-list-active-selection-background: var(--ct-accent-dim) !important;
+  --color-token-list-active-selection-foreground: var(--ct-accent) !important;
+  --color-token-toolbar-hover-background: var(--ct-accent-dim) !important;
+  --color-token-button-background: var(--ct-accent) !important;
+  --color-token-button-foreground: var(--ct-canvas-deep) !important;
+  --color-token-button-border: var(--ct-accent) !important;
+  --color-token-link: var(--ct-accent) !important;
+  --color-token-text-link-foreground: var(--ct-accent) !important;
+  --color-token-text-link-active-foreground: var(--agentskin-accent) !important;
+  --color-token-primary: var(--ct-accent) !important;
+  --color-token-focus-border: var(--ct-focus) !important;
+  --color-token-dropdown-background: var(--ct-raised-solid) !important;
+  --color-token-dropdown-foreground: var(--ct-text) !important;
+  --color-token-menu-background: var(--ct-raised-solid) !important;
+  --color-token-menu-border: var(--ct-border-strong) !important;
+  --color-token-checkbox-background: var(--ct-raised-solid) !important;
+  --color-token-checkbox-border: var(--ct-border-strong) !important;
+  --color-token-checkbox-foreground: var(--ct-accent) !important;
+  --color-token-badge-background: var(--ct-accent-dim) !important;
+  --color-token-badge-foreground: var(--ct-accent) !important;
+  --color-token-scrollbar-slider-background: var(--ct-accent-dim) !important;
+  --color-token-scrollbar-slider-hover-background: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+  --color-token-scrollbar-slider-active-background: var(--ct-accent) !important;
+  --color-token-conversation-header: var(--ct-text-secondary) !important;
+  --color-token-conversation-body: var(--ct-text) !important;
+  --color-token-conversation-summary-leading: var(--ct-muted) !important;
+  --color-token-conversation-summary-trailing: var(--ct-muted) !important;
+  --color-token-non-assistant-body-descendant: var(--ct-text-secondary) !important;
+  --color-token-text-preformat-foreground: var(--agentskin-accent) !important;
+  --color-token-text-preformat-background: rgba(212, 168, 83, 0.06) !important;
+  --color-token-text-code-block-background: rgba(7, 7, 8, 0.95) !important;
+
+  /* ============================================================
+     Layer 3 — Semantic bridge tokens
+     ============================================================ */
+  --color-background-surface: var(--ct-canvas) !important;
+  --color-background-surface-under: var(--ct-canvas-deep) !important;
+  --color-background-panel: var(--ct-surface-solid) !important;
+  --color-background-control: var(--ct-raised-solid) !important;
+  --color-background-control-opaque: var(--ct-raised-solid) !important;
+  --color-background-editor-opaque: var(--ct-canvas) !important;
+  --color-background-elevated-primary: var(--ct-raised-solid) !important;
+  --color-background-elevated-primary-opaque: var(--ct-raised-solid) !important;
+  --color-background-elevated-secondary: var(--ct-surface-solid) !important;
+  --color-background-elevated-secondary-opaque: var(--ct-surface-solid) !important;
+  --color-text-foreground: var(--ct-text) !important;
+  --color-text-foreground-secondary: var(--ct-text-secondary) !important;
+  --color-text-foreground-tertiary: var(--ct-muted) !important;
+  --color-icon-primary: var(--ct-text) !important;
+  --color-icon-secondary: var(--ct-muted) !important;
+  --color-icon-tertiary: var(--ct-disabled) !important;
+  --color-border: var(--ct-border) !important;
+  --color-border-light: var(--ct-border) !important;
+  --color-border-heavy: var(--ct-border-strong) !important;
+  --color-border-focus: var(--ct-focus) !important;
+}
+
+/* ============================================================
+   Layer 4 — Shell surfaces: sidebar, header, main canvas
+   ============================================================ */
+
+body {
+  background: var(--ct-canvas);
+  color: var(--ct-text);
+}
+
+/* Sidebar — dark charcoal with subtle golden edge */
+aside.app-shell-left-panel {
+  background: var(--ct-surface-solid) !important;
+  border-right: 1px solid var(--ct-border) !important;
+  color: var(--ct-text) !important;
+}
+
+/* Sidebar hover/selected — warm amber glow */
+aside.app-shell-left-panel [data-codex-sidebar-row]:hover {
+  background: var(--ct-accent-dim) !important;
+}
+
+aside.app-shell-left-panel [data-codex-sidebar-row][aria-selected="true"] {
+  background: var(--ct-accent-dim) !important;
+  border-left: 2px solid var(--ct-accent) !important;
+}
+
+/* Header — solid dark, never transparent */
+header,
+[role="banner"] {
+  background: var(--ct-canvas) !important;
+  border-bottom: 1px solid var(--ct-border) !important;
+  color: var(--ct-text) !important;
+}
+
+/* ============================================================
+   Layer 5 — Page backgrounds (workspace scope)
+   ============================================================ */
+
+/* Home canvas — full artwork with dark veil */
+main.main-surface[data-codexthemes-page="home"] {
+  color: var(--ct-text);
+  background: var(--ct-canvas);
+  position: relative;
+}
+
+main.main-surface[data-codexthemes-page="home"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(
+      100deg,
+      var(--ct-canvas) 0%,
+      rgba(13, 13, 15, 0.90) 28%,
+      rgba(13, 13, 15, 0.52) 54%,
+      rgba(13, 13, 15, 0.22) 72%,
+      rgba(13, 13, 15, 0.08) 100%
+    ),
+    var(--ct-art) 65% 38% / cover no-repeat;
+  pointer-events: none;
+}
+
+/* Conversation page — stronger veil for readability */
+main.main-surface[data-codexthemes-page="conversation"] {
+  color: var(--ct-text);
+  background: var(--ct-canvas);
+  position: relative;
+}
+
+main.main-surface[data-codexthemes-page="conversation"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(
+      100deg,
+      var(--ct-canvas) 0%,
+      rgba(13, 13, 15, 0.94) 35%,
+      rgba(13, 13, 15, 0.70) 60%,
+      rgba(13, 13, 15, 0.42) 78%,
+      rgba(13, 13, 15, 0.18) 100%
+    ),
+    var(--ct-art) 65% 38% / cover no-repeat;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Layer 6 — Native component roots
+   ============================================================ */
+
+/* Suggestion cards — glass with golden border glow */
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-surface="suggestion"] {
+  background: var(--ct-glass) !important;
+  border: 1px solid var(--ct-glass-border) !important;
+  border-radius: 14px !important;
+  color: var(--ct-text) !important;
+  box-shadow: var(--ct-shadow-sm), var(--ct-shadow-glow) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-surface="suggestion"]:hover {
+  transform: translateY(-3px);
+  border-color: var(--ct-accent) !important;
+  box-shadow: var(--ct-shadow-md), 0 0 32px rgba(212, 168, 83, 0.18) !important;
+}
+
+/* Project selector chip */
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-surface="project-selector"] {
+  background: var(--ct-glass) !important;
+  border: 1px solid var(--ct-glass-border) !important;
+  border-radius: 12px !important;
+  color: var(--ct-text) !important;
+}
+
+/* Composer — glass with golden accent */
+.composer-surface-chrome,
+[data-codexthemes-surface="composer"] {
+  background: var(--ct-glass) !important;
+  border: 1px solid var(--ct-glass-border) !important;
+  border-radius: 14px !important;
+  color: var(--ct-text) !important;
+  box-shadow: var(--ct-shadow-sm) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.composer-surface-chrome:focus-within,
+[data-codexthemes-surface="composer"]:focus-within {
+  border-color: var(--ct-accent) !important;
+  box-shadow: var(--ct-shadow-sm), 0 0 22px rgba(212, 168, 83, 0.15) !important;
+}
+
+/* Conversation message bubbles — warm tinted glass */
+main.main-surface[data-codexthemes-page="conversation"] [data-codexthemes-surface="message"] {
+  background: var(--ct-glass) !important;
+  border: 1px solid var(--ct-border) !important;
+  border-radius: 12px !important;
+  color: var(--ct-text) !important;
+}
+
+/* Menus, dialogs, dropdowns */
+[role="menu"],
+[role="dialog"],
+[role="listbox"] {
+  background: var(--ct-raised-solid) !important;
+  border: 1px solid var(--ct-border-strong) !important;
+  border-radius: 10px !important;
+  color: var(--ct-text) !important;
+  box-shadow: var(--ct-shadow-lg) !important;
+}
+
+[role="menuitem"],
+[role="option"] {
+  color: var(--ct-text) !important;
+}
+
+[role="menuitem"]:hover,
+[role="option"]:hover {
+  background: var(--ct-accent-dim) !important;
+  color: var(--ct-text) !important;
+}
+
+/* Settings */
+[data-codexthemes-surface="settings"] {
+  background: var(--ct-surface-solid) !important;
+  border: 1px solid var(--ct-border) !important;
+  border-radius: 12px !important;
+  color: var(--ct-text) !important;
+}
+
+[data-codexthemes-surface="settings"] input,
+[data-codexthemes-surface="settings"] select {
+  background: var(--ct-raised-solid) !important;
+  border: 1px solid var(--ct-border-strong) !important;
+  color: var(--ct-text) !important;
+  border-radius: 8px !important;
+}
+
+[data-codexthemes-surface="settings"] input:focus {
+  border-color: var(--ct-accent) !important;
+  box-shadow: 0 0 0 2px var(--ct-accent-dim) !important;
+}
+
+[role="switch"] {
+  background: var(--ct-raised-solid) !important;
+  border: 1px solid var(--ct-border-strong) !important;
+}
+
+[role="switch"][aria-checked="true"] {
+  background: var(--ct-accent) !important;
+  border-color: var(--ct-accent) !important;
+}
+
+/* Output/diff */
+[data-codexthemes-surface="output"],
+[data-codexthemes-surface="diff"] {
+  background: var(--ct-canvas) !important;
+  border: 1px solid var(--ct-border) !important;
+  color: var(--ct-text) !important;
+}
+
+[data-codexthemes-surface="file-card"] {
+  background: var(--ct-surface-solid) !important;
+  border: 1px solid var(--ct-border) !important;
+  border-radius: 10px !important;
+  color: var(--ct-text) !important;
+}
+
+[data-codexthemes-surface="diff"] [data-codexthemes-line="addition"] {
+  background: rgba(90, 158, 111, 0.10) !important;
+  color: var(--ct-success) !important;
+}
+
+[data-codexthemes-surface="diff"] [data-codexthemes-line="deletion"] {
+  background: rgba(196, 85, 77, 0.10) !important;
+  color: var(--ct-danger) !important;
+}
+
+/* Code */
+code,
+pre {
+  font-family: var(--ct-font-mono) !important;
+}
+
+:not(pre) > code {
+  background: rgba(212, 168, 83, 0.06) !important;
+  color: var(--agentskin-accent) !important;
+  border: 1px solid rgba(212, 168, 83, 0.10) !important;
+  border-radius: 4px !important;
+  padding: 0.15em 0.4em !important;
+}
+
+pre {
+  background: rgba(7, 7, 8, 0.95) !important;
+  border: 1px solid var(--ct-border) !important;
+  border-radius: 10px !important;
+  color: var(--ct-text) !important;
+}
+
+/* System pages */
+[data-codexthemes-page="plugins"],
+[data-codexthemes-page="sites"],
+[data-codexthemes-page="scheduled"],
+[data-codexthemes-page="apps"] {
+  background: var(--ct-canvas) !important;
+  color: var(--ct-text) !important;
+}
+
+/* ============================================================
+   Layer 7 — Interaction states
+   ============================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--ct-focus) !important;
+  outline-offset: 2px !important;
+}
+
+main.main-surface[data-codexthemes-page="home"],
+main.main-surface[data-codexthemes-page="conversation"],
+aside.app-shell-left-panel,
+[data-codexthemes-surface="settings"],
+[role="dialog"] {
+  scrollbar-color: var(--ct-accent-dim) transparent;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+  color: var(--ct-text) !important;
+}
+
+a {
+  color: var(--ct-accent) !important;
+}
+
+a:hover {
+  color: var(--agentskin-accent) !important;
+  text-decoration: underline;
+}
+
+[disabled],
+[aria-disabled="true"] {
+  color: var(--ct-disabled) !important;
+  opacity: 0.6;
+}
+
+/* ============================================================
+   Layer 8 — Non-interactive decoration (rich density)
+   ============================================================ */
+
+/* Ambient ember particles — floating golden sparks */
+main.main-surface[data-codexthemes-page="home"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(212, 168, 83, 0.22) 0px, rgba(212, 168, 83, 0.22) 1.5px, transparent 2px),
+    radial-gradient(circle at 68% 32%, rgba(212, 168, 83, 0.16) 0px, rgba(212, 168, 83, 0.16) 1px, transparent 1.5px),
+    radial-gradient(circle at 88% 52%, rgba(212, 168, 83, 0.18) 0px, rgba(212, 168, 83, 0.18) 1.2px, transparent 1.8px),
+    radial-gradient(circle at 60% 68%, rgba(212, 168, 83, 0.14) 0px, rgba(212, 168, 83, 0.14) 0.8px, transparent 1.2px),
+    radial-gradient(circle at 78% 80%, rgba(212, 168, 83, 0.20) 0px, rgba(212, 168, 83, 0.20) 1px, transparent 1.5px),
+    radial-gradient(circle at 12% 85%, rgba(123, 79, 138, 0.10) 0px, rgba(123, 79, 138, 0.10) 1px, transparent 1.5px),
+    radial-gradient(circle at 40% 10%, rgba(123, 79, 138, 0.08) 0px, rgba(123, 79, 138, 0.08) 0.8px, transparent 1.2px),
+    radial-gradient(circle at 92% 90%, rgba(139, 58, 74, 0.10) 0px, rgba(139, 58, 74, 0.10) 0.8px, transparent 1.2px);
+  background-size: 120px 120px, 90px 90px, 150px 150px, 100px 100px, 130px 130px, 110px 110px, 80px 80px, 140px 140px;
+  opacity: 0.55;
+  animation: ct-crow-brother-drift 14s ease-in-out infinite alternate;
+}
+
+@keyframes ct-crow-brother-drift {
+  0% { opacity: 0.35; transform: translateY(0px); }
+  50% { opacity: 0.60; transform: translateY(-3px); }
+  100% { opacity: 0.40; transform: translateY(1px); }
+}
+
+/* Corner emblem — crow feather seal */
+main.main-surface[data-codexthemes-page="home"] [data-codexthemes-surface="suggestion"]:first-of-type::before {
+  content: "\2726"; /* Four-pointed star */
+  position: absolute;
+  top: -36px;
+  left: 10px;
+  z-index: 1;
+  font-size: 22px;
+  color: var(--ct-accent);
+  opacity: 0.28;
+  pointer-events: none;
+  text-shadow: 0 0 10px color-mix(in srgb, var(--agentskin-accent) 30%, transparent);
+  animation: ct-crow-brother-pulse 5s ease-in-out infinite;
+}
+
+@keyframes ct-crow-brother-pulse {
+  0%, 100% { opacity: 0.22; transform: scale(1) rotate(0deg); }
+  50% { opacity: 0.40; transform: scale(1.10) rotate(15deg); }
+}
+
+/* Header lockup */
+header::after,
+[role="banner"]::after {
+  content: "CROW \00D7  CODEX";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 0;
+  font-family: var(--ct-font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ct-accent);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* Composer accent — golden left-edge marker */
+.composer-surface-chrome::before,
+[data-codexthemes-surface="composer"]::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 20%;
+  bottom: 20%;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, var(--ct-accent), transparent);
+  border-radius: 2px;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* Sidebar accent — golden top-edge glow */
+aside.app-shell-left-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--ct-accent) 0%, transparent 65%);
+  opacity: 0.25;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Feather texture overlay on sidebar */
+aside.app-shell-left-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0px,
+      transparent 28px,
+      rgba(212, 168, 83, 0.015) 28px,
+      rgba(212, 168, 83, 0.015) 29px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0px,
+      transparent 28px,
+      rgba(212, 168, 83, 0.015) 28px,
+      rgba(212, 168, 83, 0.015) 29px
+    );
+  opacity: 0.5;
+}
+
+/* Conversation page — subtle ember ambient */
+main.main-surface[data-codexthemes-page="conversation"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 88% 22%, rgba(212, 168, 83, 0.12) 0px, rgba(212, 168, 83, 0.12) 1px, transparent 1.5px),
+    radial-gradient(circle at 78% 58%, rgba(212, 168, 83, 0.10) 0px, rgba(212, 168, 83, 0.10) 0.8px, transparent 1.2px),
+    radial-gradient(circle at 92% 78%, rgba(212, 168, 83, 0.14) 0px, rgba(212, 168, 83, 0.14) 1px, transparent 1.5px),
+    radial-gradient(circle at 15% 90%, rgba(123, 79, 138, 0.06) 0px, rgba(123, 79, 138, 0.06) 0.8px, transparent 1.2px);
+  background-size: 140px 140px, 110px 110px, 160px 160px, 100px 100px;
+  opacity: 0.50;
+  animation: ct-crow-brother-drift 16s ease-in-out infinite alternate;
+}
+
+/* ============================================================
+   Layer 9 — Terminal
+   ============================================================ */
+
+[data-codex-terminal="true"] {
+  --vscode-terminal-background: var(--ct-canvas) !important;
+  --vscode-terminal-foreground: var(--ct-text) !important;
+  --color-background-panel: var(--ct-canvas) !important;
+  --color-background-editor-opaque: var(--ct-canvas) !important;
+  color: var(--ct-text) !important;
+  background: var(--ct-canvas) !important;
+}
+
+.xterm,
+.xterm-viewport,
+.xterm-screen,
+[data-codexthemes-surface="terminal"] {
+  color: var(--ct-text) !important;
+  background: var(--ct-canvas) !important;
+}
+
+.xterm .xterm-cursor {
+  background-color: var(--ct-accent) !important;
+  color: var(--ct-canvas) !important;
+}
+
+.xterm .xterm-selection-background {
+  background: var(--ct-accent-dim) !important;
+}
+
+[data-codex-terminal="true"] [role="tablist"] {
+  background: var(--ct-surface-solid) !important;
+  border-bottom: 1px solid var(--ct-border) !important;
+}
+
+[data-codex-terminal="true"] [role="tab"] {
+  color: var(--ct-muted) !important;
+}
+
+[data-codex-terminal="true"] [role="tab"][aria-selected="true"] {
+  color: var(--ct-accent) !important;
+  border-bottom-color: var(--ct-accent) !important;
+}
+
+/* ============================================================
+   Layer 10 — Responsive and reduced-motion
+   ============================================================ */
+
+@media (max-width: 980px) {
+  main.main-surface[data-codexthemes-page="home"]::before,
+  main.main-surface[data-codexthemes-page="conversation"]::before {
+    background-position: 62% 38%;
+  }
+
+  main.main-surface[data-codexthemes-page="home"]::after,
+  main.main-surface[data-codexthemes-page="conversation"]::after {
+    display: none;
+  }
+
+  main.main-surface[data-codexthemes-page="home"] [data-codexthemes-surface="suggestion"]:first-of-type::before {
+    display: none;
+  }
+
+  header::after,
+  [role="banner"]::after {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .composer-surface-chrome::before,
+  [data-codexthemes-surface="composer"]::before {
+    display: none;
+  }
+
+  aside.app-shell-left-panel::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

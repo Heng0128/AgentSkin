@@ -301,8 +301,11 @@
   --ct-diff-removed: #ffe3e5;
   --ct-code: #e4f6f8;
   --ct-terminal: #e5f8fb;
+  --ct-shadow: rgba(16, 45, 58, 0.15);
   --ct-shadow-strong: rgba(16, 45, 58, 0.23);
   --ct-art: url("./assets/artwork.jpeg");
+  --ct-font-display: "Avenir Next", "Trebuchet MS", "PingFang SC", sans-serif;
+  --ct-font-body: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
 
   color-scheme: light;
 
