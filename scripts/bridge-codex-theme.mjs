@@ -20,6 +20,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 import { buildContext, GENERATORS } from './theme-generators.mjs';
 import { HOSTS } from './theme-utils.mjs';
 
@@ -381,8 +382,8 @@ function generateAgentCss(ctx, agentId) {
   return gen(ctx);
 }
 
-function generateManifest(id, displayName, version, mode, colors) {
-  return {
+function generateManifest(id, displayName, version, mode, colors, hasHero = true) {
+  const manifest = {
     $schema: 'https://agentskin.dev/schema/manifest-v2.json',
     schemaVersion: 2,
     id,
@@ -417,6 +418,9 @@ function generateManifest(id, displayName, version, mode, colors) {
     license: 'MPL-2.0',
     minAppVersion: '1.0.0',
   };
+  // hero is optional: only reference hero.png when the source shipped art.
+  if (hasHero) manifest.hero = 'hero.png';
+  return manifest;
 }
 
 // =============================================================================
@@ -564,7 +568,14 @@ async function bridgeTheme(inputPath, baseOutDir) {
   fs.mkdirSync(cssDir, { recursive: true });
 
   // 4) 生成 manifest.json
-  const outManifest = generateManifest(id, displayName, version, mode, colors);
+  const outManifest = generateManifest(
+    id,
+    displayName,
+    version,
+    mode,
+    colors,
+    !!detected.artBase64,
+  );
   fs.writeFileSync(
     path.join(themeDir, 'manifest.json'),
     JSON.stringify(outManifest, null, 2) + '\n',
@@ -602,29 +613,46 @@ async function bridgeTheme(inputPath, baseOutDir) {
     console.log(`  - codex.css: no source CSS to bridge (metadata-only export)`);
   }
 
-  // 7) 放置 icon / preview（manifest 契约要求 icon.png + preview.png）
-  // 7a) art → icon.png（Codex art 是主题品牌图，用作主题图标）
+  // 7) 放置 hero / preview / icon（manifest 契约要求 icon.png + preview.png）
+  // 映射（2026-08-23 修正，方案 B）：
+  //   - Codex art  → hero.png     背景艺术图（注入 --agentskin-art，纯背景无 DOM）
+  //   - Codex preview → preview.png  带 UI 的真实截图（主题预览）
+  //   - Codex preview → icon.png  缩略（preview 截图缩为 256px 缩略图）
+  // 注意：art 是干净背景，preview 是带 DOM 的截图 —— 两者不可互换。
+  // 7a) art → hero.png（背景图）
   if (detected.artBase64) {
-    const artPath = path.join(themeDir, 'icon.png');
+    const heroPath = path.join(themeDir, 'hero.png');
     try {
-      fs.writeFileSync(artPath, Buffer.from(detected.artBase64, 'base64'));
+      fs.writeFileSync(heroPath, Buffer.from(detected.artBase64, 'base64'));
       console.log(
-        `  ✓ icon.png extracted (${Math.round(detected.artBase64.length / 1024)} KB base64)`,
+        `  ✓ hero.png extracted (${Math.round(detected.artBase64.length / 1024)} KB base64)`,
       );
     } catch (e) {
-      console.warn(`  [warn] icon base64 decode failed: ${e.message}`);
+      console.warn(`  [warn] hero base64 decode failed: ${e.message}`);
     }
   }
-  // 7b) preview → preview.png（Codex preview 是界面截图，用作主题预览）
+  // 7b) preview → preview.png + icon.png（缩略）
   if (detected.previewBase64) {
+    const previewBuf = Buffer.from(detected.previewBase64, 'base64');
     const previewPath = path.join(themeDir, 'preview.png');
     try {
-      fs.writeFileSync(previewPath, Buffer.from(detected.previewBase64, 'base64'));
+      fs.writeFileSync(previewPath, previewBuf);
       console.log(
         `  ✓ preview.png extracted (${Math.round(detected.previewBase64.length / 1024)} KB base64)`,
       );
     } catch (e) {
       console.warn(`  [warn] preview base64 decode failed: ${e.message}`);
+    }
+    // preview 截图缩略为 icon.png（256px，quality 80 —— 缩略图只需辨识度）
+    try {
+      const iconBuf = await sharp(previewBuf)
+        .resize(256, 256, { fit: 'cover', position: 'centre' })
+        .png({ compressionLevel: 9 })
+        .toBuffer();
+      fs.writeFileSync(path.join(themeDir, 'icon.png'), iconBuf);
+      console.log(`  ✓ icon.png generated (256px thumbnail from preview, ${iconBuf.length} bytes)`);
+    } catch (e) {
+      console.warn(`  [warn] icon thumbnail failed: ${e.message}`);
     }
   }
 

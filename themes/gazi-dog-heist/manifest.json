@@ -17,6 +17,7 @@
   ],
   "icon": "icon.png",
   "preview": "preview.png",
+  "hero": "hero.png",
   "colors": {
     "accent": "#D8AE75",
     "secondary": "#77B27A",

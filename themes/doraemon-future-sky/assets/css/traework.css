@@ -1,24 +1,24 @@
-/* God of Wealth Codex Lite — TRAE Work CN (solo-lite shell)
+/* 哆啦 A 梦 · 未来晴空 — TRAE Work CN (solo-lite shell)
    Strategy: override --vscode-* / --vscode-icube-* design tokens (the app
    declares them on plain `body` selectors; our host-scoped body rule at
    specificity (0,1,2) always outranks them), then layer hero art + structural
    touches on stable solo-lite landmarks. */
 html.agentskin-host-traework {
   color-scheme: light !important;
-  --agentskin-accent: #b91f16;
-  --agentskin-secondary: #2f7a43;
-  --agentskin-bg: #fff7df;
-  --agentskin-surface: #fffaf0;
-  --agentskin-surface-elevated: #fffaf0;
-  --agentskin-text: #4a1d13;
-  --agentskin-muted: #8a5b2e;
-  --agentskin-border: #e2b95f;
-  --agentskin-code-bg: #27150b;
-  --agentskin-code-fg: #f8df9d;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #fffaf0 82%, #b91f16 18%) 45%, transparent);
-  --agentskin-button-bg: #b91f16;
-  --agentskin-focus-ring: #d89a17;
-  --agentskin-selection: color-mix(in srgb, #b91f16 32%, transparent);
+  --agentskin-accent: #0788cf;
+  --agentskin-secondary: #14866d;
+  --agentskin-bg: #eef8ff;
+  --agentskin-surface: #f8fcff;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #123956;
+  --agentskin-muted: #4f728b;
+  --agentskin-border: #b8d9ec;
+  --agentskin-code-bg: #f4faff;
+  --agentskin-code-fg: #123956;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #f8fcff 82%, #0788cf 18%) 45%, transparent);
+  --agentskin-button-bg: #0788cf;
+  --agentskin-focus-ring: #e53935;
+  --agentskin-selection: color-mix(in srgb, #0788cf 32%, transparent);
   --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
   text-shadow: var(--agentskin-text-shadow);
 }
@@ -28,147 +28,147 @@ html.agentskin-host-traework body {
   color-scheme: light !important;
 
   /* Ink / text */
-  --vscode-foreground: #4a1d13 !important;
-  --vscode-icube-colorDefaultText: #4a1d13 !important;
-  --vscode-icube--text-text-default: #4a1d13 !important;
-  --vscode-icube-colorHighlightText: #4a1d13 !important;
-  --vscode-descriptionForeground: #8a5b2e !important;
-  --vscode-icube-colorGrayText: #8a5b2e !important;
-  --vscode-icube-colorDisableText: rgba(74, 29, 19, 0.42) !important;
+  --vscode-foreground: #123956 !important;
+  --vscode-icube-colorDefaultText: #123956 !important;
+  --vscode-icube--text-text-default: #123956 !important;
+  --vscode-icube-colorHighlightText: #123956 !important;
+  --vscode-descriptionForeground: #4f728b !important;
+  --vscode-icube-colorGrayText: #4f728b !important;
+  --vscode-icube-colorDisableText: rgba(18, 57, 86, 0.42) !important;
 
   /* Brand / links / buttons */
-  --vscode-textLink-foreground: #b91f16 !important;
-  --vscode-textLink-activeForeground: #2f7a43 !important;
-  --vscode-button-background: #b91f16 !important;
+  --vscode-textLink-foreground: #0788cf !important;
+  --vscode-textLink-activeForeground: #14866d !important;
+  --vscode-button-background: #0788cf !important;
   --vscode-button-foreground: #ffffff !important;
-  --vscode-button-hoverBackground: rgba(185, 31, 22, 0.85) !important;
-  --vscode-icube-colorBrand: #b91f16 !important;
-  --vscode-focusBorder: rgba(185, 31, 22, 0.6) !important;
+  --vscode-button-hoverBackground: rgba(7, 136, 207, 0.85) !important;
+  --vscode-icube-colorBrand: #0788cf !important;
+  --vscode-focusBorder: rgba(7, 136, 207, 0.6) !important;
 
   /* Lines / borders */
-  --vscode-icube-colorLine1: rgba(185, 31, 22, 0.18) !important;
-  --vscode-icube-colorLine2: rgba(185, 31, 22, 0.32) !important;
-  --vscode-icube--border-border-neutral-l1: rgba(185, 31, 22, 0.18) !important;
-  --vscode-chat-requestBorder: rgba(185, 31, 22, 0.25) !important;
-  --vscode-widget-border: rgba(185, 31, 22, 0.18) !important;
-  --vscode-panel-border: rgba(185, 31, 22, 0.18) !important;
+  --vscode-icube-colorLine1: rgba(7, 136, 207, 0.18) !important;
+  --vscode-icube-colorLine2: rgba(7, 136, 207, 0.32) !important;
+  --vscode-icube--border-border-neutral-l1: rgba(7, 136, 207, 0.18) !important;
+  --vscode-chat-requestBorder: rgba(7, 136, 207, 0.25) !important;
+  --vscode-widget-border: rgba(7, 136, 207, 0.18) !important;
+  --vscode-panel-border: rgba(7, 136, 207, 0.18) !important;
 
   /* Fills / hovers */
-  --vscode-toolbar-hoverBackground: rgba(185, 31, 22, 0.12) !important;
-  --vscode-icube-colorBtnHover: rgba(185, 31, 22, 0.12) !important;
-  --vscode-icube-colorBtnHover2: rgba(185, 31, 22, 0.18) !important;
-  --vscode-list-hoverBackground: rgba(185, 31, 22, 0.12) !important;
-  --vscode-list-activeSelectionBackground: rgba(185, 31, 22, 0.18) !important;
-  --vscode-icube--bg-bg-overlay-l2: rgba(185, 31, 22, 0.12) !important;
-  --vscode-icube--bg-bg-overlay-l3: rgba(185, 31, 22, 0.18) !important;
-  --vscode-input-background: rgba(185, 31, 22, 0.07) !important;
+  --vscode-toolbar-hoverBackground: rgba(7, 136, 207, 0.12) !important;
+  --vscode-icube-colorBtnHover: rgba(7, 136, 207, 0.12) !important;
+  --vscode-icube-colorBtnHover2: rgba(7, 136, 207, 0.18) !important;
+  --vscode-list-hoverBackground: rgba(7, 136, 207, 0.12) !important;
+  --vscode-list-activeSelectionBackground: rgba(7, 136, 207, 0.18) !important;
+  --vscode-icube--bg-bg-overlay-l2: rgba(7, 136, 207, 0.12) !important;
+  --vscode-icube--bg-bg-overlay-l3: rgba(7, 136, 207, 0.18) !important;
+  --vscode-input-background: rgba(7, 136, 207, 0.07) !important;
 
   /* Surfaces */
-  --vscode-editor-background: #fff7df !important;
-  --vscode-icube-colorBg1: #fff7df !important;
-  --vscode-icube-colorBg2: #fffaf0 !important;
-  --vscode-icube-colorBg3: #fffaf0 !important;
-  --vscode-editorWidget-background: #fffaf0 !important;
+  --vscode-editor-background: #eef8ff !important;
+  --vscode-icube-colorBg1: #eef8ff !important;
+  --vscode-icube-colorBg2: #f8fcff !important;
+  --vscode-icube-colorBg3: #ffffff !important;
+  --vscode-editorWidget-background: #f8fcff !important;
   --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
-  --vscode-widget-shadow: rgba(185, 31, 22, 0.15) !important;
-  --vscode-badge-background: rgba(185, 31, 22, 0.65) !important;
+  --vscode-widget-shadow: rgba(7, 136, 207, 0.15) !important;
+  --vscode-badge-background: rgba(7, 136, 207, 0.65) !important;
   --vscode-badge-foreground: #ffffff !important;
-  --vscode-scrollbarSlider-background: rgba(185, 31, 22, 0.22) !important;
-  --vscode-scrollbarSlider-hoverBackground: rgba(185, 31, 22, 0.38) !important;
-  --vscode-scrollbarSlider-activeBackground: rgba(185, 31, 22, 0.52) !important;
+  --vscode-scrollbarSlider-background: rgba(7, 136, 207, 0.22) !important;
+  --vscode-scrollbarSlider-hoverBackground: rgba(7, 136, 207, 0.38) !important;
+  --vscode-scrollbarSlider-activeBackground: rgba(7, 136, 207, 0.52) !important;
 
   /* App-level surface variables → transparent for art punch-through */
   --bg-bg-base-default: transparent !important;
 
   /* Selection (camelCase is the real token; kebab is dead — 0 refs in app source) */
-  --vscode-editor-selectionBackground: rgba(185, 31, 22, 0.18) !important;
+  --vscode-editor-selectionBackground: rgba(7, 136, 207, 0.18) !important;
 
   /* ===== icube blind-spot completion (2026-08-19) =====
      GitLab对标 l77948032-cyber/Trae-Skin: 41/50 blind-spot tokens verified live
      on 58510 (icube text/bg/icon/invert + menu/dropdown/checkbox/input). */
   /* Input */
-  --vscode-input-foreground: #4a1d13 !important;
-  --vscode-input-placeholderForeground: rgba(74, 29, 19, 0.48) !important;
-  --vscode-disabledForeground: rgba(74, 29, 19, 0.42) !important;
+  --vscode-input-foreground: #123956 !important;
+  --vscode-input-placeholderForeground: rgba(18, 57, 86, 0.48) !important;
+  --vscode-disabledForeground: rgba(18, 57, 86, 0.42) !important;
 
   /* icube text system */
-  --vscode-icube-colorTextDefault: #4a1d13 !important;
-  --vscode-icube-colorTextGray: #8a5b2e !important;
-  --vscode-icube--text-text-secondary: #8a5b2e !important;
-  --vscode-icube--text-text-brand: #b91f16 !important;
-  --vscode-icube--text-text-default-hover: #4a1d13 !important;
-  --vscode-icube--text-text-default-active: #4a1d13 !important;
-  --vscode-icube--text-text-tertiary: rgba(138, 91, 46, 0.7) !important;
-  --vscode-icube--text-text-disabled: rgba(74, 29, 19, 0.42) !important;
-  --vscode-icube--text-text-onaccent: #fff7df !important;
+  --vscode-icube-colorTextDefault: #123956 !important;
+  --vscode-icube-colorTextGray: #4f728b !important;
+  --vscode-icube--text-text-secondary: #4f728b !important;
+  --vscode-icube--text-text-brand: #0788cf !important;
+  --vscode-icube--text-text-default-hover: #123956 !important;
+  --vscode-icube--text-text-default-active: #123956 !important;
+  --vscode-icube--text-text-tertiary: rgba(79, 114, 139, 0.7) !important;
+  --vscode-icube--text-text-disabled: rgba(18, 57, 86, 0.42) !important;
+  --vscode-icube--text-text-onaccent: #eef8ff !important;
 
   /* icube backgrounds */
   --vscode-icube--bg-bg-base-default: transparent !important;
-  --vscode-icube--bg-bg-base-secondary: color-mix(in srgb, #fffaf0 88%, transparent) !important;
-  --vscode-icube--bg-bg-base-tertiary: color-mix(in srgb, #fffaf0 85%, transparent) !important;
-  --vscode-icube--bg-bg-menu: color-mix(in srgb, #fffaf0 92%, transparent) !important;
-  --vscode-icube--bg-bg-tooltip: color-mix(in srgb, #fffaf0 94%, transparent) !important;
-  --vscode-icube--bg-bg-overlay-l4: color-mix(in srgb, #fffaf0 78%, transparent) !important;
-  --vscode-icube--bg-bg-invert: #fffaf0 !important;
-  --vscode-icube--bg-bg-invert-hover: rgba(185, 31, 22, 0.12) !important;
-  --vscode-icube--bg-bg-invert-active: rgba(185, 31, 22, 0.18) !important;
-  --vscode-icube--bg-bg-invert-disabled: rgba(74, 29, 19, 0.04) !important;
+  --vscode-icube--bg-bg-base-secondary: color-mix(in srgb, #f8fcff 88%, transparent) !important;
+  --vscode-icube--bg-bg-base-tertiary: color-mix(in srgb, #ffffff 85%, transparent) !important;
+  --vscode-icube--bg-bg-menu: color-mix(in srgb, #ffffff 92%, transparent) !important;
+  --vscode-icube--bg-bg-tooltip: color-mix(in srgb, #ffffff 94%, transparent) !important;
+  --vscode-icube--bg-bg-overlay-l4: color-mix(in srgb, #f8fcff 78%, transparent) !important;
+  --vscode-icube--bg-bg-invert: #ffffff !important;
+  --vscode-icube--bg-bg-invert-hover: rgba(7, 136, 207, 0.12) !important;
+  --vscode-icube--bg-bg-invert-active: rgba(7, 136, 207, 0.18) !important;
+  --vscode-icube--bg-bg-invert-disabled: rgba(18, 57, 86, 0.04) !important;
 
   /* icube icons */
-  --vscode-icube--icon-icon-default: #4a1d13 !important;
-  --vscode-icube--icon-icon-default-hover: #b91f16 !important;
-  --vscode-icube--icon-icon-secondary: #8a5b2e !important;
-  --vscode-icube--icon-icon-tertiary: rgba(138, 91, 46, 0.7) !important;
-  --vscode-icube--icon-icon-disabled: rgba(74, 29, 19, 0.42) !important;
-  --vscode-icube--icon-icon-onaccent: #fff7df !important;
+  --vscode-icube--icon-icon-default: #123956 !important;
+  --vscode-icube--icon-icon-default-hover: #0788cf !important;
+  --vscode-icube--icon-icon-secondary: #4f728b !important;
+  --vscode-icube--icon-icon-tertiary: rgba(79, 114, 139, 0.7) !important;
+  --vscode-icube--icon-icon-disabled: rgba(18, 57, 86, 0.42) !important;
+  --vscode-icube--icon-icon-onaccent: #eef8ff !important;
 
   /* icube borders */
-  --vscode-icube--border-border-neutral-l2: rgba(185, 31, 22, 0.24) !important;
-  --vscode-icube--border-border-neutral-l3: rgba(185, 31, 22, 0.32) !important;
+  --vscode-icube--border-border-neutral-l2: rgba(7, 136, 207, 0.24) !important;
+  --vscode-icube--border-border-neutral-l3: rgba(7, 136, 207, 0.32) !important;
 
   /* Menu / dropdown / checkbox / list (VS Code workbench chrome) */
-  --vscode-menu-background: color-mix(in srgb, #fffaf0 92%, transparent) !important;
-  --vscode-menu-foreground: #4a1d13 !important;
-  --vscode-menu-border: rgba(185, 31, 22, 0.18) !important;
-  --vscode-menu-separatorBackground: rgba(185, 31, 22, 0.1) !important;
-  --vscode-dropdown-background: color-mix(in srgb, #fffaf0 94%, transparent) !important;
-  --vscode-dropdown-foreground: #4a1d13 !important;
-  --vscode-dropdown-border: rgba(185, 31, 22, 0.18) !important;
-  --vscode-checkbox-background: color-mix(in srgb, #fffaf0 90%, transparent) !important;
-  --vscode-checkbox-foreground: #4a1d13 !important;
-  --vscode-checkbox-border: rgba(185, 31, 22, 0.24) !important;
-  --vscode-list-activeSelectionForeground: #4a1d13 !important;
+  --vscode-menu-background: color-mix(in srgb, #ffffff 92%, transparent) !important;
+  --vscode-menu-foreground: #123956 !important;
+  --vscode-menu-border: rgba(7, 136, 207, 0.18) !important;
+  --vscode-menu-separatorBackground: rgba(7, 136, 207, 0.1) !important;
+  --vscode-dropdown-background: color-mix(in srgb, #ffffff 94%, transparent) !important;
+  --vscode-dropdown-foreground: #123956 !important;
+  --vscode-dropdown-border: rgba(7, 136, 207, 0.18) !important;
+  --vscode-checkbox-background: color-mix(in srgb, #ffffff 90%, transparent) !important;
+  --vscode-checkbox-foreground: #123956 !important;
+  --vscode-checkbox-border: rgba(7, 136, 207, 0.24) !important;
+  --vscode-list-activeSelectionForeground: #123956 !important;
 
   /* ===== Bare-prefix mirror (2026-08-19) =====
      Same families exist bare (--bg-bg-*/--text-text-*/--icon-icon-*),
      verified 25/25 native on 58510. Mirror icube mappings 1:1. */
-  --bg-bg-base-tertiary: color-mix(in srgb, #fffaf0 85%, transparent) !important;
-  --bg-bg-menu: color-mix(in srgb, #fffaf0 92%, transparent) !important;
-  --bg-bg-tooltip: color-mix(in srgb, #fffaf0 94%, transparent) !important;
-  --bg-bg-overlay-l3: color-mix(in srgb, #fffaf0 78%, transparent) !important;
-  --bg-bg-overlay-l4: color-mix(in srgb, #fffaf0 82%, transparent) !important;
-  --bg-bg-brand: #b91f16 !important;
-  --bg-bg-brand-hover: color-mix(in srgb, #b91f16 88%, white) !important;
-  --bg-bg-brand-active: color-mix(in srgb, #b91f16 76%, black) !important;
-  --bg-bg-brand-disabled: rgba(185, 31, 22, 0.35) !important;
-  --bg-bg-invert: #fffaf0 !important;
-  --bg-bg-invert-hover: rgba(185, 31, 22, 0.12) !important;
-  --bg-bg-invert-active: rgba(185, 31, 22, 0.18) !important;
-  --bg-bg-invert-disabled: rgba(74, 29, 19, 0.04) !important;
+  --bg-bg-base-tertiary: color-mix(in srgb, #ffffff 85%, transparent) !important;
+  --bg-bg-menu: color-mix(in srgb, #ffffff 92%, transparent) !important;
+  --bg-bg-tooltip: color-mix(in srgb, #ffffff 94%, transparent) !important;
+  --bg-bg-overlay-l3: color-mix(in srgb, #f8fcff 78%, transparent) !important;
+  --bg-bg-overlay-l4: color-mix(in srgb, #f8fcff 82%, transparent) !important;
+  --bg-bg-brand: #0788cf !important;
+  --bg-bg-brand-hover: color-mix(in srgb, #0788cf 88%, white) !important;
+  --bg-bg-brand-active: color-mix(in srgb, #0788cf 76%, black) !important;
+  --bg-bg-brand-disabled: rgba(7, 136, 207, 0.35) !important;
+  --bg-bg-invert: #ffffff !important;
+  --bg-bg-invert-hover: rgba(7, 136, 207, 0.12) !important;
+  --bg-bg-invert-active: rgba(7, 136, 207, 0.18) !important;
+  --bg-bg-invert-disabled: rgba(18, 57, 86, 0.04) !important;
 
-  --text-text-default: #4a1d13 !important;
-  --text-text-secondary: #8a5b2e !important;
-  --text-text-tertiary: rgba(138, 91, 46, 0.7) !important;
-  --text-text-default-hover: #4a1d13 !important;
-  --text-text-default-active: #4a1d13 !important;
-  --text-text-brand: #b91f16 !important;
+  --text-text-default: #123956 !important;
+  --text-text-secondary: #4f728b !important;
+  --text-text-tertiary: rgba(79, 114, 139, 0.7) !important;
+  --text-text-default-hover: #123956 !important;
+  --text-text-default-active: #123956 !important;
+  --text-text-brand: #0788cf !important;
 
-  --icon-icon-default: #4a1d13 !important;
-  --icon-icon-secondary: #8a5b2e !important;
-  --icon-icon-tertiary: rgba(138, 91, 46, 0.7) !important;
-  --icon-icon-default-hover: #b91f16 !important;
-  --icon-icon-onaccent: #fff7df !important;
-  --icon-icon-disabled: rgba(74, 29, 19, 0.42) !important;
+  --icon-icon-default: #123956 !important;
+  --icon-icon-secondary: #4f728b !important;
+  --icon-icon-tertiary: rgba(79, 114, 139, 0.7) !important;
+  --icon-icon-default-hover: #0788cf !important;
+  --icon-icon-onaccent: #eef8ff !important;
+  --icon-icon-disabled: rgba(18, 57, 86, 0.42) !important;
 
   background: transparent !important;
   color: var(--agentskin-text) !important;
@@ -205,7 +205,7 @@ html.agentskin-host-traework #root::before {
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 38%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary) 23%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 25%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -240,15 +240,15 @@ html.agentskin-host-traework .task-list-base .task-list-new-task-item,
 html.agentskin-host-traework .task-list-base [class*="task-list-skills-item"],
 html.agentskin-host-traework .task-list-panel .task-list-new-task-item,
 html.agentskin-host-traework .task-list-panel [class*="task-list-skills-item"]:hover {
-  background: rgba(185, 31, 22, 0.12) !important;
+  background: rgba(7, 136, 207, 0.12) !important;
 }
 
 html.agentskin-host-traework .task-list-base .task-list-new-task-item.active,
 html.agentskin-host-traework .task-list-base [class*="task-list-skills-item"].active,
 html.agentskin-host-traework .task-list-panel .task-list-new-task-item.active,
 html.agentskin-host-traework .task-list-panel [class*="task-list-skills-item"].active {
-  background: rgba(185, 31, 22, 0.18) !important;
-  box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px rgba(185, 31, 22, 0.32) !important;
+  background: rgba(7, 136, 207, 0.18) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px rgba(7, 136, 207, 0.32) !important;
 }
 
 /* ---- composer ---- */
@@ -257,7 +257,7 @@ html.agentskin-host-traework .chat-input-v2-input-box-editable {
   backdrop-filter: blur(14px) saturate(1.1) !important;
   color: var(--agentskin-text) !important;
   caret-color: var(--agentskin-accent) !important;
-  border: 1px solid rgba(185, 31, 22, 0.25) !important;
+  border: 1px solid rgba(7, 136, 207, 0.25) !important;
   border-radius: 14px !important;
   box-shadow: none !important;
   transition: border-color 160ms ease, box-shadow 160ms ease !important;
@@ -265,8 +265,8 @@ html.agentskin-host-traework .chat-input-v2-input-box-editable {
 
 html.agentskin-host-traework .chat-input-v2-input-box-editable:focus,
 html.agentskin-host-traework .chat-input-v2-input-box-editable:focus-within {
-  border-color: rgba(185, 31, 22, 0.5) !important;
-  box-shadow: 0 0 0 2px rgba(185, 31, 22, 0.1), 0 4px 18px rgba(47, 122, 67, 0.12) !important;
+  border-color: rgba(7, 136, 207, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(7, 136, 207, 0.1), 0 4px 18px rgba(20, 134, 109, 0.12) !important;
 }
 
 html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
@@ -277,13 +277,13 @@ html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
 html.agentskin-host-traework [class*="chat-input-primary-glow"] {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 40%, transparent) !important;
   backdrop-filter: blur(14px) saturate(1.1) !important;
-  border: 1px solid rgba(185, 31, 22, 0.2) !important;
+  border: 1px solid rgba(7, 136, 207, 0.2) !important;
   box-shadow: none !important;
 }
 
 html.agentskin-host-traework [class*="chat-input-primary-glow"]:focus-within {
-  border-color: rgba(185, 31, 22, 0.45) !important;
-  box-shadow: 0 0 0 2px rgba(185, 31, 22, 0.08), 0 4px 16px rgba(47, 122, 67, 0.1) !important;
+  border-color: rgba(7, 136, 207, 0.45) !important;
+  box-shadow: 0 0 0 2px rgba(7, 136, 207, 0.08), 0 4px 16px rgba(20, 134, 109, 0.1) !important;
 }
 
 /* ---- buttons ---- */
@@ -384,7 +384,7 @@ html.agentskin-host-traework [class*="chat-file"],
 html.agentskin-host-traework [class*="chatFile"] {
   background: transparent !important;
   background-color: transparent !important;
-  border-color: rgba(185, 31, 22, 0.15) !important;
+  border-color: rgba(7, 136, 207, 0.15) !important;
 }
 html.agentskin-host-traework [class*="file-change"]:hover,
 html.agentskin-host-traework [class*="fileChange"]:hover,
@@ -436,7 +436,7 @@ html.agentskin-host-traework button[role="tab"] {
 }
 html.agentskin-host-traework button[role="tab"][aria-selected="true"] {
   color: var(--agentskin-accent) !important;
-  background: rgba(185, 31, 22, 0.12) !important;
+  background: rgba(7, 136, 207, 0.12) !important;
 }
 
 /* Text readability on frosted glass */
@@ -481,15 +481,15 @@ html.agentskin-host-traework select:focus {
 html.agentskin-host-traework code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(226, 185, 95, 0.6) !important;
+  border: 1px solid rgba(184, 217, 236, 0.6) !important;
   border-radius: 6px !important;
 }
 
 html.agentskin-host-traework pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(226, 185, 95, 0.6) !important;
-  border-left: 3px solid rgba(185, 31, 22, 0.5) !important;
+  border: 1px solid rgba(184, 217, 236, 0.6) !important;
+  border-left: 3px solid rgba(7, 136, 207, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -508,14 +508,14 @@ html.agentskin-host-traework ::-webkit-scrollbar-track {
 }
 
 html.agentskin-host-traework ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(185, 31, 22, 0.3) 0%, rgba(47, 122, 67, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(7, 136, 207, 0.3) 0%, rgba(20, 134, 109, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 html.agentskin-host-traework ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(185, 31, 22, 0.5) 0%, rgba(47, 122, 67, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(7, 136, 207, 0.5) 0%, rgba(20, 134, 109, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 

@@ -1,20 +1,20 @@
-/* God of Wealth Codex Lite — QoderWork CN (--color-* design tokens) */
+/* 哆啦 A 梦 · 未来晴空 — QoderWork CN (--color-* design tokens) */
 html.agentskin-host-qoderwork {
   color-scheme: light !important;
-  --agentskin-accent: #b91f16;
-  --agentskin-secondary: #2f7a43;
-  --agentskin-bg: #fff7df;
-  --agentskin-surface: #fffaf0;
-  --agentskin-surface-elevated: #fffaf0;
-  --agentskin-text: #4a1d13;
-  --agentskin-muted: #8a5b2e;
-  --agentskin-border: #e2b95f;
-  --agentskin-code-bg: #27150b;
-  --agentskin-code-fg: #f8df9d;
-  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #fffaf0 82%, #b91f16 18%) 45%, transparent);
-  --agentskin-button-bg: #b91f16;
-  --agentskin-focus-ring: #d89a17;
-  --agentskin-selection: color-mix(in srgb, #b91f16 32%, transparent);
+  --agentskin-accent: #0788cf;
+  --agentskin-secondary: #14866d;
+  --agentskin-bg: #eef8ff;
+  --agentskin-surface: #f8fcff;
+  --agentskin-surface-elevated: #ffffff;
+  --agentskin-text: #123956;
+  --agentskin-muted: #4f728b;
+  --agentskin-border: #b8d9ec;
+  --agentskin-code-bg: #f4faff;
+  --agentskin-code-fg: #123956;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #f8fcff 82%, #0788cf 18%) 45%, transparent);
+  --agentskin-button-bg: #0788cf;
+  --agentskin-focus-ring: #e53935;
+  --agentskin-selection: color-mix(in srgb, #0788cf 32%, transparent);
   --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
   text-shadow: var(--agentskin-text-shadow);
 }
@@ -24,55 +24,55 @@ html.agentskin-host-qoderwork:root {
   color-scheme: light !important;
 
   /* Primary / brand */
-  --color-primary: #b91f16 !important;
-  --color-primary-hover: rgb(157, 26, 19) !important;
-  --color-primary-active: rgb(139, 23, 17) !important;
-  --color-primary-bg: rgba(185, 31, 22, 0.08) !important;
-  --color-primary-bg-hover: rgba(185, 31, 22, 0.14) !important;
-  --color-primary-border: rgba(185, 31, 22, 0.35) !important;
-  --color-primary-border-hover: rgba(185, 31, 22, 0.55) !important;
-  --color-primary-text: #4a1d13 !important;
-  --color-primary-text-hover: rgb(157, 26, 19) !important;
-  --color-primary-text-active: rgb(139, 23, 17) !important;
+  --color-primary: #0788cf !important;
+  --color-primary-hover: rgb(6, 116, 176) !important;
+  --color-primary-active: rgb(5, 102, 155) !important;
+  --color-primary-bg: rgba(7, 136, 207, 0.08) !important;
+  --color-primary-bg-hover: rgba(7, 136, 207, 0.14) !important;
+  --color-primary-border: rgba(7, 136, 207, 0.35) !important;
+  --color-primary-border-hover: rgba(7, 136, 207, 0.55) !important;
+  --color-primary-text: #123956 !important;
+  --color-primary-text-hover: rgb(6, 116, 176) !important;
+  --color-primary-text-active: rgb(5, 102, 155) !important;
   --color-text-on-primary: #ffffff !important;
 
   /* Text hierarchy */
-  --color-text: #4a1d13 !important;
-  --color-text-secondary: #8a5b2e !important;
-  --color-text-tertiary: rgba(74, 29, 19, 0.55) !important;
-  --color-text-quaternary: rgba(74, 29, 19, 0.4) !important;
-  --color-text-base: #4a1d13 !important;
-  --color-muted: #8a5b2e !important;
-  --color-muted-foreground: rgba(138, 91, 46, 0.8) !important;
+  --color-text: #123956 !important;
+  --color-text-secondary: #4f728b !important;
+  --color-text-tertiary: rgba(18, 57, 86, 0.55) !important;
+  --color-text-quaternary: rgba(18, 57, 86, 0.4) !important;
+  --color-text-base: #123956 !important;
+  --color-muted: #4f728b !important;
+  --color-muted-foreground: rgba(79, 114, 139, 0.8) !important;
 
   /* Backgrounds */
-  --color-bg-container: #fff7df !important;
-  --color-bg-elevated: color-mix(in srgb, #fffaf0 85%, #b91f16 15%) !important;
-  --color-bg-layout: rgb(255, 247, 224) !important;
-  --color-bg-spotlight: rgb(255, 247, 224) !important;
-  --color-bg-base: #fff7df !important;
-  --color-bg-mask: rgba(255, 247, 223, 0.6) !important;
-  --color-bg-highlight: rgba(185, 31, 22, 0.06) !important;
-  --color-bg-highlight-hover: rgba(185, 31, 22, 0.1) !important;
+  --color-bg-container: #eef8ff !important;
+  --color-bg-elevated: color-mix(in srgb, #ffffff 85%, #0788cf 15%) !important;
+  --color-bg-layout: rgb(238, 248, 255) !important;
+  --color-bg-spotlight: rgb(239, 248, 255) !important;
+  --color-bg-base: #eef8ff !important;
+  --color-bg-mask: rgba(238, 248, 255, 0.6) !important;
+  --color-bg-highlight: rgba(7, 136, 207, 0.06) !important;
+  --color-bg-highlight-hover: rgba(7, 136, 207, 0.1) !important;
   --color-background: var(--color-bg-container) !important;
   --color-popover: #000 !important;
   --color-white-opacity: #000 !important;
   --color-black-opacity: #fff !important;
 
   /* Borders */
-  --color-border: #e2b95f !important;
-  --color-border-secondary: rgba(226, 185, 95, 0.6) !important;
-  --color-border-tertiary: rgba(226, 185, 95, 0.35) !important;
+  --color-border: #b8d9ec !important;
+  --color-border-secondary: rgba(184, 217, 236, 0.6) !important;
+  --color-border-tertiary: rgba(184, 217, 236, 0.35) !important;
 
   /* Fills */
-  --color-fill: rgba(74, 29, 19, 0.12) !important;
-  --color-fill-secondary: rgba(74, 29, 19, 0.07) !important;
-  --color-fill-tertiary: rgba(74, 29, 19, 0.04) !important;
-  --color-fill-quaternary: rgba(74, 29, 19, 0.02) !important;
-  --color-fill-disable: rgba(74, 29, 19, 0.08) !important;
+  --color-fill: rgba(18, 57, 86, 0.12) !important;
+  --color-fill-secondary: rgba(18, 57, 86, 0.07) !important;
+  --color-fill-tertiary: rgba(18, 57, 86, 0.04) !important;
+  --color-fill-quaternary: rgba(18, 57, 86, 0.02) !important;
+  --color-fill-disable: rgba(18, 57, 86, 0.08) !important;
 
   /* Links */
-  --color-link: #b91f16 !important;
+  --color-link: #0788cf !important;
 
   /* Semantic: error */
   --color-error: #ff4d4f !important;
@@ -91,12 +91,12 @@ html.agentskin-host-qoderwork:root {
   --color-info-border-hover: #87d1ff !important;
 
   /* Semantic: success (tied to accent) */
-  --color-success: #b91f16 !important;
-  --color-success-hover: rgb(157, 26, 19) !important;
-  --color-success-bg: rgba(185, 31, 22, 0.08) !important;
-  --color-success-bg-hover: rgba(185, 31, 22, 0.14) !important;
-  --color-success-border: rgba(185, 31, 22, 0.35) !important;
-  --color-success-border-hover: rgba(185, 31, 22, 0.55) !important;
+  --color-success: #0788cf !important;
+  --color-success-hover: rgb(6, 116, 176) !important;
+  --color-success-bg: rgba(7, 136, 207, 0.08) !important;
+  --color-success-bg-hover: rgba(7, 136, 207, 0.14) !important;
+  --color-success-border: rgba(7, 136, 207, 0.35) !important;
+  --color-success-border-hover: rgba(7, 136, 207, 0.55) !important;
 
   /* Semantic: warning */
   --color-warning: #faad14 !important;
@@ -107,42 +107,42 @@ html.agentskin-host-qoderwork:root {
   --color-warning-border-hover: #ffd666 !important;
 
   /* Diff */
-  --color-diff-insert: rgba(185, 31, 22, 0.7) !important;
-  --color-diff-insert-bg: rgba(185, 31, 22, 0.12) !important;
+  --color-diff-insert: rgba(7, 136, 207, 0.7) !important;
+  --color-diff-insert-bg: rgba(7, 136, 207, 0.12) !important;
   --color-diff-remove: #fc6b83 !important;
   --color-diff-remove-bg: #e3d1d5 !important;
 
   /* Accent palette (derived from theme secondary + accent) */
-  --color-pink: #2f7a43 !important;
-  --color-pink-bg: rgba(47, 122, 67, 0.1) !important;
-  --color-pink-hover: rgb(89, 149, 105) !important;
-  --color-purple: rgb(148, 25, 18) !important;
-  --color-purple-bg: rgba(185, 31, 22, 0.08) !important;
-  --color-purple-hover: rgb(199, 76, 69) !important;
+  --color-pink: #14866d !important;
+  --color-pink-bg: rgba(20, 134, 109, 0.1) !important;
+  --color-pink-hover: rgb(67, 158, 138) !important;
+  --color-purple: rgb(6, 109, 166) !important;
+  --color-purple-bg: rgba(7, 136, 207, 0.08) !important;
+  --color-purple-hover: rgb(57, 160, 217) !important;
   --color-yellow: #fac414 !important;
   --color-yellow-bg: #fff3cf !important;
   --color-yellow-hover: #f1d372 !important;
   --color-orange: #fa8125 !important;
   --color-orange-bg: #ffefde !important;
   --color-orange-hover: #e88c45 !important;
-  --color-teal: rgb(167, 28, 20) !important;
-  --color-teal-bg: rgba(185, 31, 22, 0.08) !important;
-  --color-teal-hover: rgb(196, 65, 57) !important;
+  --color-teal: rgb(6, 122, 186) !important;
+  --color-teal-bg: rgba(7, 136, 207, 0.08) !important;
+  --color-teal-hover: rgb(44, 154, 214) !important;
   --color-blue: #0090ff !important;
   --color-blue-bg: #deedff !important;
   --color-blue-hover: #72bcf5 !important;
-  --color-mauve: rgba(138, 91, 46, 0.7) !important;
-  --color-mauve-bg: rgba(138, 91, 46, 0.06) !important;
-  --color-mauve-hover: rgba(138, 91, 46, 0.4) !important;
+  --color-mauve: rgba(79, 114, 139, 0.7) !important;
+  --color-mauve-bg: rgba(79, 114, 139, 0.06) !important;
+  --color-mauve-hover: rgba(79, 114, 139, 0.4) !important;
   --color-slate: #1e293b !important;
   --color-slate-bg: #e2e8f0 !important;
   --color-slate-hover: #475569 !important;
-  --color-lavender: rgb(109, 162, 123) !important;
-  --color-lavender-bg: rgba(47, 122, 67, 0.08) !important;
-  --color-lavender-hover: rgb(151, 189, 161) !important;
-  --color-sage: rgb(157, 26, 19) !important;
-  --color-sage-bg: rgba(185, 31, 22, 0.06) !important;
-  --color-sage-hover: rgba(185, 31, 22, 0.12) !important;
+  --color-lavender: rgb(91, 170, 153) !important;
+  --color-lavender-bg: rgba(20, 134, 109, 0.08) !important;
+  --color-lavender-hover: rgb(138, 195, 182) !important;
+  --color-sage: rgb(6, 116, 176) !important;
+  --color-sage-bg: rgba(7, 136, 207, 0.06) !important;
+  --color-sage-hover: rgba(7, 136, 207, 0.12) !important;
 
   /* Shadows */
   --color-shadow-2xs: rgba(0, 0, 0, 0.03) !important;
@@ -171,8 +171,8 @@ html.agentskin-host-qoderwork:root {
   --settings-nav-row-selected-bg: var(--color-fill-secondary) !important;
 
   /* Chat input parchment — keep extremely subtle to avoid jarring border */
-  --chat-input-parchment-edge: rgba(185, 31, 22, 0.12) !important;
-  --chat-input-parchment-glow: rgba(47, 122, 67, 0.06) !important;
+  --chat-input-parchment-edge: rgba(7, 136, 207, 0.12) !important;
+  --chat-input-parchment-glow: rgba(20, 134, 109, 0.06) !important;
   --chat-input-parchment-halo: transparent !important;
 }
 
@@ -195,7 +195,7 @@ html.agentskin-host-qoderwork #root::before {
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 38%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary) 23%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 25%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
@@ -217,7 +217,7 @@ html.agentskin-host-qoderwork [class*="workspace-panel"] {
 /* Sidebar: frosted glass over art (only the actual .agents-sidebar element) */
 html.agentskin-host-qoderwork .agents-sidebar {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
-  border-right: 1px solid rgba(185, 31, 22, 0.1) !important;
+  border-right: 1px solid rgba(7, 136, 207, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
@@ -239,7 +239,7 @@ html.agentskin-host-qoderwork .agents-sidebar [data-active="true"] {
 /* Right panel: frosted glass matching left sidebar */
 html.agentskin-host-qoderwork [data-resizable-sidebar]:not(.agents-sidebar) {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
-  border-left: 1px solid rgba(185, 31, 22, 0.1) !important;
+  border-left: 1px solid rgba(7, 136, 207, 0.1) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
@@ -247,12 +247,12 @@ html.agentskin-host-qoderwork [data-resizable-sidebar]:not(.agents-sidebar) {
 html.agentskin-host-qoderwork .chat-input-editor-text:focus,
 html.agentskin-host-qoderwork .chat-input-editor-text:focus-within {
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 3px var(--color-primary-bg-hover), 0 4px 18px rgba(47, 122, 67, 0.2) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-bg-hover), 0 4px 18px rgba(20, 134, 109, 0.2) !important;
 }
 
 /* Selection */
 html.agentskin-host-qoderwork ::selection {
-  background: rgba(185, 31, 22, 0.28) !important;
+  background: rgba(7, 136, 207, 0.28) !important;
 }
 
 /* Links */
@@ -268,15 +268,15 @@ html.agentskin-host-qoderwork a:hover {
 html.agentskin-host-qoderwork code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(226, 185, 95, 0.6) !important;
+  border: 1px solid rgba(184, 217, 236, 0.6) !important;
   border-radius: 6px !important;
 }
 
 html.agentskin-host-qoderwork pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
-  border: 1px solid rgba(226, 185, 95, 0.6) !important;
-  border-left: 3px solid rgba(185, 31, 22, 0.5) !important;
+  border: 1px solid rgba(184, 217, 236, 0.6) !important;
+  border-left: 3px solid rgba(7, 136, 207, 0.5) !important;
   border-radius: 10px !important;
 }
 
@@ -290,7 +290,7 @@ html.agentskin-host-qoderwork textarea:focus,
 html.agentskin-host-qoderwork select:focus {
   outline: none !important;
   border-color: var(--color-primary) !important;
-  box-shadow: 0 0 0 2px rgba(185, 31, 22, 0.15) !important;
+  box-shadow: 0 0 0 2px rgba(7, 136, 207, 0.15) !important;
 }
 
 /* Scrollbars */
@@ -304,14 +304,14 @@ html.agentskin-host-qoderwork ::-webkit-scrollbar-track {
 }
 
 html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(185, 31, 22, 0.3) 0%, rgba(47, 122, 67, 0.3) 100%) !important;
+  background: linear-gradient(180deg, rgba(7, 136, 207, 0.3) 0%, rgba(20, 134, 109, 0.3) 100%) !important;
   border-radius: 8px !important;
   border: 2px solid transparent !important;
   background-clip: padding-box !important;
 }
 
 html.agentskin-host-qoderwork ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(185, 31, 22, 0.5) 0%, rgba(47, 122, 67, 0.5) 100%) !important;
+  background: linear-gradient(180deg, rgba(7, 136, 207, 0.5) 0%, rgba(20, 134, 109, 0.5) 100%) !important;
   background-clip: padding-box !important;
 }
 

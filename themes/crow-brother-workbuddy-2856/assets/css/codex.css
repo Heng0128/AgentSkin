@@ -273,3 +273,78 @@
    Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
    注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
 
+/* ===== Bridge: Codex-native --color-token-* overrides (from source theme) ===== */
+:root.agentskin-host-codex {
+  --color-token-bg-primary: var(--agentskin-bg) !important;
+  --color-token-bg-secondary: var(--ct-surface-solid) !important;
+  --color-token-bg-tertiary: var(--ct-raised-solid) !important;
+  --color-token-main-surface-primary: var(--agentskin-bg) !important;
+  --color-token-side-bar-background: var(--ct-surface-solid) !important;
+  --color-token-foreground: var(--agentskin-text) !important;
+  --color-token-text-primary: var(--agentskin-text) !important;
+  --color-token-text-secondary: var(--ct-text-secondary) !important;
+  --color-token-text-tertiary: var(--agentskin-muted) !important;
+  --color-token-description-foreground: var(--agentskin-muted) !important;
+  --color-token-icon-foreground: var(--agentskin-muted) !important;
+  --color-token-input-background: var(--ct-raised-solid) !important;
+  --color-token-input-foreground: var(--agentskin-text) !important;
+  --color-token-input-placeholder-foreground: var(--agentskin-muted) !important;
+  --color-token-input-border: var(--agentskin-border) !important;
+  --color-token-border: var(--agentskin-border) !important;
+  --color-token-border-default: var(--agentskin-border) !important;
+  --color-token-border-heavy: var(--agentskin-border) !important;
+  --color-token-border-light: var(--agentskin-border) !important;
+  --color-token-list-hover-background: var(--ct-accent-dim) !important;
+  --color-token-list-active-selection-background: var(--ct-accent-dim) !important;
+  --color-token-list-active-selection-foreground: var(--agentskin-accent) !important;
+  --color-token-toolbar-hover-background: var(--ct-accent-dim) !important;
+  --color-token-button-background: var(--agentskin-accent) !important;
+  --color-token-button-foreground: var(--agentskin-bg) !important;
+  --color-token-button-border: var(--agentskin-accent) !important;
+  --color-token-link: var(--agentskin-accent) !important;
+  --color-token-text-link-foreground: var(--agentskin-accent) !important;
+  --color-token-text-link-active-foreground: var(--agentskin-accent) !important;
+  --color-token-primary: var(--agentskin-accent) !important;
+  --color-token-focus-border: var(--agentskin-focus-ring) !important;
+  --color-token-dropdown-background: var(--ct-raised-solid) !important;
+  --color-token-dropdown-foreground: var(--agentskin-text) !important;
+  --color-token-menu-background: var(--ct-raised-solid) !important;
+  --color-token-menu-border: var(--agentskin-border) !important;
+  --color-token-checkbox-background: var(--ct-raised-solid) !important;
+  --color-token-checkbox-border: var(--agentskin-border) !important;
+  --color-token-checkbox-foreground: var(--agentskin-accent) !important;
+  --color-token-badge-background: var(--ct-accent-dim) !important;
+  --color-token-badge-foreground: var(--agentskin-accent) !important;
+  --color-token-scrollbar-slider-background: var(--ct-accent-dim) !important;
+  --color-token-scrollbar-slider-hover-background: color-mix(in srgb, var(--agentskin-accent) 30%, transparent) !important;
+  --color-token-scrollbar-slider-active-background: var(--agentskin-accent) !important;
+  --color-token-conversation-header: var(--ct-text-secondary) !important;
+  --color-token-conversation-body: var(--agentskin-text) !important;
+  --color-token-conversation-summary-leading: var(--agentskin-muted) !important;
+  --color-token-conversation-summary-trailing: var(--agentskin-muted) !important;
+  --color-token-non-assistant-body-descendant: var(--ct-text-secondary) !important;
+  --color-token-text-preformat-foreground: var(--agentskin-accent) !important;
+  --color-token-text-preformat-background: rgba(212, 168, 83, 0.06) !important;
+  --color-token-text-code-block-background: rgba(7, 7, 8, 0.95) !important;
+  --color-background-surface: var(--agentskin-bg) !important;
+  --color-background-surface-under: var(--agentskin-bg) !important;
+  --color-background-panel: var(--ct-surface-solid) !important;
+  --color-background-control: var(--ct-raised-solid) !important;
+  --color-background-control-opaque: var(--ct-raised-solid) !important;
+  --color-background-editor-opaque: var(--agentskin-bg) !important;
+  --color-background-elevated-primary: var(--ct-raised-solid) !important;
+  --color-background-elevated-primary-opaque: var(--ct-raised-solid) !important;
+  --color-background-elevated-secondary: var(--ct-surface-solid) !important;
+  --color-background-elevated-secondary-opaque: var(--ct-surface-solid) !important;
+  --color-text-foreground: var(--agentskin-text) !important;
+  --color-text-foreground-secondary: var(--ct-text-secondary) !important;
+  --color-text-foreground-tertiary: var(--agentskin-muted) !important;
+  --color-icon-primary: var(--agentskin-text) !important;
+  --color-icon-secondary: var(--agentskin-muted) !important;
+  --color-icon-tertiary: var(--ct-disabled) !important;
+  --color-border: var(--agentskin-border) !important;
+  --color-border-light: var(--agentskin-border) !important;
+  --color-border-heavy: var(--agentskin-border) !important;
+  --color-border-focus: var(--agentskin-focus-ring) !important;
+}
+

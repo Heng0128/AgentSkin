@@ -1,11 +1,11 @@
-# God of Wealth Codex Lite — Bridged from Codex
+# 哆啦 A 梦 · 未来晴空 — Bridged from Codex
 
-- source: god-of-wealth-codex-lite.zip
+- source: doraemon-future-sky.zip
 - format: codex-theme
 - mode: light
 - palette keys: canvas, surface, raised, text, muted, accent, border, focus, success, warning, danger, terminalBackground, terminalForeground
 - has source CSS: yes (bridged)
-- art: none
+- art: extracted to assets/art.png
 - preview: present (base64)
 
 ## TODO
