@@ -2,7 +2,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { ScannedApp } from '../../../../shared/types/agent';
+import type { ScannedApp } from '@shared/types/agent';
 import { DIR_CONCURRENCY_LIMIT, mapConcurrent } from '../infra/concurrency';
 import { readExeInfo } from '../infra/ps';
 import { matchAgainstHints } from '../pipeline/match';

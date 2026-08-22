@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { ElectronScanResult } from '../../../../shared/types/agent';
+import type { ElectronScanResult } from '@shared/types/agent';
 import type { ScanCache } from '../types';
 
 /** How long a completed scan result stays fresh in the in-memory cache. */

@@ -2,8 +2,8 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import type { ScannedApp } from '@shared/types/agent';
 import type { InstallHints } from '../../../../adapters/base';
-import type { ScannedApp } from '../../../../shared/types/agent';
 import { detectInstallation } from '../../../install-detection';
 import { mainWarnFromCatch } from '../../../logger';
 import { readExeInfo } from '../infra/ps';

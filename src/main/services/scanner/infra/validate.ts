@@ -19,7 +19,7 @@
  */
 
 import fs from 'node:fs/promises';
-import type { ElectronScanResult, ScannedApp } from '../../../../shared/types/agent';
+import type { ElectronScanResult, ScannedApp } from '@shared/types/agent';
 import { mainWarn } from '../../../logger';
 
 /** Access-mode constant: test for file existence only (no r/w check). */

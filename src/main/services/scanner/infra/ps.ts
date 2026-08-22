@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { execFileAsync } from '../../../../shared/exec-async';
+import { execFileAsync } from '@shared/exec-async';
 import { withPsConcurrency } from './concurrency';
 
 /** PE version metadata extracted from an executable. */

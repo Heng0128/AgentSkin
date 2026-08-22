@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { compareVersions, identityKey, isHigherPriority } from '../../../../shared/app-identity';
-import type { ScannedApp } from '../../../../shared/types/agent';
+import { compareVersions, identityKey, isHigherPriority } from '@shared/app-identity';
+import type { ScannedApp } from '@shared/types/agent';
 
 /**
  * # Identity-based multi-version merge (v2)

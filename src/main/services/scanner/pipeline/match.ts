@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { AgentId } from '../../../../shared/types/agent';
+import type { AgentId } from '@shared/types/agent';
 import { AGENT_PROBES } from '../probes';
 
 /**

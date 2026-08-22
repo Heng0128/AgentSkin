@@ -29,7 +29,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import type { ElectronScanResult } from '../../../../shared/types/agent';
+import type { ElectronScanResult } from '@shared/types/agent';
 import { writeJsonAtomic } from '../../../fs-utils';
 import { mainDebug, mainWarn } from '../../../logger';
 
