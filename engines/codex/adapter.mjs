@@ -116,7 +116,7 @@ html.${HOST_CLASS} body::before {
 /* === Main app surface: transparent for art punch-through ===
    Codex root: main[class*='MainContentSurface'] (verified against a running
    renderer at build 62640; the hashed CSS-Modules class, NOT the legacy
-   `main.main-surface`). Bare [class*="main-surface"] is avoided — it would
+   main.main-surface). Bare [class*="main-surface"] is avoided — it would
    also match buttons (h-token-button-composer) and fade masks. The adapter's
    discoverAndOverrideTokens() is a secondary safety net that transparents any
    --color-token-bg-* property regardless of this selector. */
@@ -237,34 +237,45 @@ html.${HOST_CLASS} [class*="tooltip"] {
     enabled: true
   };
 
-  // L4: Token auto-discovery — scans agent stylesheets for custom properties
+  // L4: Token auto-discovery — scans agent stylesheets for custom properties.
+  //
+  // PROBE-VERIFIED 2026-08-23 (see docs/reports/codex-injection-benchmark):
+  // Codex is a single-layer CSS-variable architecture — components do NOT paint
+  // their own background (buttons/inputs/sidebar items compute to transparent);
+  // all surfaces come from a small set of page-level --color-token-* variables.
+  // Overriding ONLY those page-level background tokens lets the art backdrop show
+  // through while keeping control surfaces (dropdown/menu/list-hover/input-border/
+  // border-*) intact. The previous blanket rule (any prop matching
+  // /bg|background|container|layout|surface/) also zeroed --color-token-side-bar-
+  // background, --color-token-bg-primary, --color-token-main-surface-primary and
+  // --vscode-token-* (a namespace that is referenced but never assigned) — that
+  // erased every surface and produced the "错杂 / 难看" rendering.
   function discoverAndOverrideTokens() {
-    const discovered = new Set();
-    for (const sheet of document.styleSheets) {
-      try {
-        for (const rule of sheet.cssRules) {
-          if (!rule.style) continue;
-          for (let i = 0; i < rule.style.length; i++) {
-            const prop = rule.style[i];
-            if (prop.startsWith('--') && !prop.includes('agentskin')) discovered.add(prop);
-          }
-        }
-      } catch {}
-    }
+    // Page-level background tokens that should go transparent so the hero art
+    // shows through. Components reference these via Tailwind @theme; they are
+    // the ONLY surfaces we want to let the backdrop pierce.
+    const PAGE_BG_TOKENS = [
+      "--color-token-bg-primary",
+      "--color-token-bg-secondary",
+      "--color-token-bg-tertiary",
+      "--color-token-side-bar-background",
+      "--color-token-main-surface-primary",
+      "--color-token-diff-surface",
+    ];
     const rootStyle = getComputedStyle(document.documentElement);
     const overrides = [];
-    for (const prop of discovered) {
+    for (const prop of PAGE_BG_TOKENS) {
       const value = rootStyle.getPropertyValue(prop).trim();
-      if (!value || value === 'transparent' || value.includes('--agentskin')) continue;
-      if (/bg|background|container|layout|surface/.test(prop)
-          && (value.startsWith('#') || value.startsWith('rgb'))) {
+      if (!value || value === "transparent" || value.includes("--agentskin")) continue;
+      // Only transparent solid colors we can see; skip empty/fallback chains.
+      if (value.startsWith("#") || value.startsWith("rgb")) {
         overrides.push(`${prop}: transparent`);
       }
     }
     if (overrides.length > 0) {
-      return `html.${HOST_CLASS}:root {\n  ${overrides.map(o => o + ' !important').join(';\n  ')};\n}`;
+      return `html.${HOST_CLASS}:root {\n  ${overrides.map(o => o + " !important").join(";\n  ")};\n}`;
     }
-    return '';
+    return "";
   }
 
   // Injection
@@ -299,65 +310,16 @@ html.${HOST_CLASS} [class*="tooltip"] {
   }
 
   // ═══════════════════════════════════════════════════════════
-  // ELEMENT-LEVEL HEURISTIC GUARDS
-  // Checks if a mutated element matches structural patterns and
-  // applies targeted styles when style/class attributes change.
-  // ═══════════════════════════════════════════════════════════
-
-  function matchesHeuristicRules(el) {
-    if (!el || !(el instanceof Element)) return false;
-    const cls = typeof el.className === 'string' ? el.className : '';
-    const tag = el.tagName ? el.tagName.toLowerCase() : '';
-    const role = el.getAttribute('role') || '';
-    if (['dialog', 'menu', 'tooltip', 'listbox'].includes(role)) return true;
-    if (tag === 'nav' || tag === 'aside') return true;
-    if (el.hasAttribute('contenteditable') || tag === 'textarea' || role === 'textbox') return true;
-    if (/(?:sidebar|surface|composer|main-content|header|tint|popover|modal|dropdown|primary)/i.test(cls)) return true;
-    const style = el.getAttribute('style') || '';
-    if (/background(?:-color)?\s*:/i.test(style) && !/transparent/i.test(style)) return true;
-    return false;
-  }
-
-  function applyHeuristicStylesToElement(el) {
-    if (!el || !(el instanceof Element)) return;
-    const cls = typeof el.className === 'string' ? el.className : '';
-    const tag = el.tagName ? el.tagName.toLowerCase() : '';
-    const role = el.getAttribute('role') || '';
-    if (['dialog', 'menu', 'tooltip', 'listbox'].includes(role)) {
-      el.style.setProperty('background', 'color-mix(in srgb, var(--agentskin-surface-elevated) 94%, transparent)', 'important');
-      el.style.setProperty('border', 'none', 'important');
-      return;
-    }
-    if (tag === 'nav' || tag === 'aside' || /sidebar/i.test(cls)) {
-      el.style.setProperty('background', 'var(--sidebar-bg, color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 22%, transparent))', 'important');
-      return;
-    }
-    if (/composer|multilineSurface/i.test(cls)) {
-      el.style.setProperty('background', 'var(--input-bg, color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent))', 'important');
-      el.style.setProperty('border', '1px solid color-mix(in srgb, var(--agentskin-accent) 20%, transparent)', 'important');
-      el.style.setProperty('border-radius', '16px', 'important');
-      return;
-    }
-    if (/MainContentSurface/i.test(cls)) {
-      el.style.setProperty('background', 'transparent', 'important');
-      el.style.setProperty('background-color', 'transparent', 'important');
-      return;
-    }
-    el.style.setProperty('background', 'transparent', 'important');
-    el.style.setProperty('background-color', 'transparent', 'important');
-  }
-
-  // Legacy self-healing (fallback when DeepCore unavailable)
-  // Enhanced: observes style/class attributes, lowered threshold, element-level guards.
+  // SELF-HEALING (fallback when DeepCore unavailable)
+  // Rebuilds the adopted sheet on structural DOM changes. NO element-level
+  // heuristic guards — PROBE-VERIFIED 2026-08-23: the previous regex guards
+  // (applyHeuristicStylesToElement with /sidebar|composer|header|popover|primary/)
+  // painted toolbar buttons / text spans against Codex's Tailwind utility DOM
+  // (87 elements), producing the "错乱 / 像把别的组件安到 Codex" rendering.
+  // All component styling now lives in the theme CSS layer with exact anchors.
   let healTimer = null;
   const observer = new AdaptiveMutationObserver((mutations) => {
-    // Guard: handle style/class attribute changes on existing elements
-    for (const m of mutations) {
-      if (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class')) {
-        if (matchesHeuristicRules(m.target)) applyHeuristicStylesToElement(m.target);
-      }
-    }
-    // Guard: handle structural DOM changes (lowered threshold: >1)
+    // Only structural changes (new/removed subtrees) need a sheet rebuild.
     const structural = mutations.some(m => m.addedNodes.length > 1 || m.removedNodes.length > 1);
     if (!structural) return;
     if (healTimer) clearTimeout(healTimer);
@@ -365,7 +327,7 @@ html.${HOST_CLASS} [class*="tooltip"] {
       try { sheet.replaceSync([STRUCTURAL_CSS, discoverAndOverrideTokens()].filter(Boolean).join("\n")); } catch {}
     }, 300);
   });
-  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+  observer.observe(document.body, { childList: true, subtree: true });
 
   // ═══════════════════════════════════════════════════════════
   // ANTI-RERENDER: scheduleReinject (debounced reinject)
