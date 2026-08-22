@@ -13,7 +13,7 @@
 
 import { api } from '@/api/agentSkinClient';
 
-import type { AppRunState, SystemStatus } from '@shared/types';
+import type { SystemStatus } from '@shared/types';
 import { create } from 'zustand';
 
 interface StatusState {

@@ -205,7 +205,7 @@ export interface DesignLanguageConfig {
   motion?: { speed?: 'instant' | 'fast' | 'smooth' };
 }
 
-interface ThemeState {
+export interface ThemeState {
   installed: ThemeCatalogItem[];
   loading: boolean;
   selection: Selection;

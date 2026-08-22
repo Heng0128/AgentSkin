@@ -23,8 +23,6 @@ import type { UiMessages } from '@shared/i18n';
 import {
   motionMs,
   radiusPx,
-  SPACING_BASE,
-  SPACING_MULTIPLIERS,
   shadowValue,
   spacingPx,
 } from '../../../../../scripts/design-language.mjs';
@@ -247,19 +245,23 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         <div className="mt-2 space-y-1 font-mono text-[10px] text-[var(--fg-2)]">
           <div>
             <span className="text-[var(--fg-3)]">--agentskin-space-3:</span>{' '}
-            <span className="text-[var(--fg-0)]">{spacingPx(density)}</span>;
+            <span className="text-[var(--fg-0)]">{spacingPx(density)}</span>
+            {';'}
           </div>
           <div>
             <span className="text-[var(--fg-3)]">--agentskin-radius-md:</span>{' '}
-            <span className="text-[var(--fg-0)]">{radiusPx(scale)}</span>;
+            <span className="text-[var(--fg-0)]">{radiusPx(scale)}</span>
+            {';'}
           </div>
           <div>
             <span className="text-[var(--fg-3)]">--agentskin-shadow-float:</span>{' '}
-            <span className="text-[var(--fg-0)]">{shadowValue(elevation)}</span>;
+            <span className="text-[var(--fg-0)]">{shadowValue(elevation)}</span>
+            {';'}
           </div>
           <div>
             <span className="text-[var(--fg-3)]">--agentskin-duration-fast:</span>{' '}
-            <span className="text-[var(--fg-0)]">{motionMs(speed)}</span>;
+            <span className="text-[var(--fg-0)]">{motionMs(speed)}</span>
+            {';'}
           </div>
         </div>
       </div>

@@ -842,19 +842,11 @@ html.agentskin-host-doubao [class*="composer"]::after {
   display: none !important;
 }
 
-/* Inner elements: no extra borders, only harmonized accent tint */
-html.agentskin-host-doubao [class*="input-box"] *,
-html.agentskin-host-doubao [class*="chat-input"] *,
-html.agentskin-host-doubao [class*="composer"] *,
-html.agentskin-host-doubao [class*="input-container"] *,
-html.agentskin-host-doubao [class*="input-guidance"] * {
-  border-color: rgba(185, 31, 22, 0.1) !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
 /* Innermost editor/textarea (where the cursor lives): remove border entirely
-   so the user only sees the outer container's border, not a stacked inner one. */
+   so the user only sees the outer container's border, not a stacked inner one.
+   PROBE-VERIFIED 2026-08-23: a blanket [class*="input-box"] * universal
+   descendant rule hit every inner div (217+ elements) — removed. Only the
+   actual input surfaces are styled below. */
 html.agentskin-host-doubao [class*="input-box"] textarea,
 html.agentskin-host-doubao [class*="chat-input"] textarea,
 html.agentskin-host-doubao [class*="composer"] textarea,

@@ -817,19 +817,11 @@ ${host} [class*="composer"]::after {
   display: none !important;
 }
 
-/* Inner elements: no extra borders, only harmonized accent tint */
-${host} [class*="input-box"] *,
-${host} [class*="chat-input"] *,
-${host} [class*="composer"] *,
-${host} [class*="input-container"] *,
-${host} [class*="input-guidance"] * {
-  border-color: ${alpha(c.accent, 0.1)} !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
 /* Innermost editor/textarea (where the cursor lives): remove border entirely
-   so the user only sees the outer container's border, not a stacked inner one. */
+   so the user only sees the outer container's border, not a stacked inner one.
+   PROBE-VERIFIED 2026-08-23: a blanket [class*="input-box"] * universal
+   descendant rule hit every inner div (217+ elements) — removed. Only the
+   actual input surfaces are styled below. */
 ${host} [class*="input-box"] textarea,
 ${host} [class*="chat-input"] textarea,
 ${host} [class*="composer"] textarea,

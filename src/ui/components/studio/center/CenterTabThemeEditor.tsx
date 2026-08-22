@@ -65,8 +65,6 @@ const COLOR_TOKENS = [
   'focusRing',
 ] as const;
 
-type ColorTokenKey = (typeof COLOR_TOKENS)[number];
-
 // ---------------------------------------------------------------------------
 // HSL hue-rotation helper
 // ---------------------------------------------------------------------------

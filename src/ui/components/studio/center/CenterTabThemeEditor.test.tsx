@@ -16,6 +16,7 @@
  * - Shows "no selection" message when theme is null.
  */
 
+import type { ThemeState } from '@/stores/themeStore';
 import { useThemeStore } from '@/stores/themeStore';
 
 import type { UiMessages } from '@shared/i18n';
@@ -65,7 +66,7 @@ beforeEach(() => {
         },
       },
       setDesignLanguage: mockSetDL,
-    } as any),
+    } as unknown as ThemeState),
   );
   mockSetDL.mockClear();
 });
@@ -151,7 +152,7 @@ describe('CenterTabThemeEditor', () => {
         },
         selection: null,
         setDesignLanguage: mockSetDL,
-      } as any),
+      } as Partial<ThemeState> as ThemeState),
     );
 
     const { container } = render(<CenterTabThemeEditor t={mockT} />);

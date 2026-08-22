@@ -20,7 +20,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import type { UiMessages } from '@shared/i18n';
 import { X } from 'lucide-react';
-import { autoOnColor, wcagCheck } from '../../../../../scripts/extended-colors.mjs';
+import { autoOnColor } from '../../../../../scripts/extended-colors.mjs';
 import { hexToOklch, oklchToHex } from '../../../../../scripts/oklch-utils.mjs';
 import { ContrastBadge } from '../ContrastBadge';
 

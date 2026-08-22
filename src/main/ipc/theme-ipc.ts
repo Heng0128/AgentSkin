@@ -15,13 +15,13 @@
  */
 
 import { dialog, ipcMain } from 'electron';
-import { MAX_THEME_PACKAGE_BYTES as MAX_IMPORT_BYTES } from '../../../src/engine/src/theme/package.mjs';
 import { agentThemeExtension } from '../../legacy/agentskin-core-runtime';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { type ApplyRequest, isAgentId } from '../../shared/types';
 import { isThemePackagePath } from '../file-open';
 import { type MainContext, notifyStatusChanged, sendLog, wrapCatalog } from '../main-context';
+import { MAX_THEME_PACKAGE_BYTES as MAX_IMPORT_BYTES } from '../theme/utils';
 import type { RegenResult } from '../theme-asset/fingerprint';
 import { regenerateTheme } from '../theme-asset/fingerprint';
 import { assertAgentId, assertNonEmptyString, assertSafeThemeId } from './ipc-validators';

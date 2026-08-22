@@ -123,6 +123,10 @@ const CLEAR_OWNED_SHEETS_BODY =
 /**
  * JS body: disconnect all adapter markers (observer + interval) and delete them.
  * No scope variables required — iterates the constant marker list.
+ *
+ * C-3 fix (2026-08-23): adapters also stash `sheetGuardInterval` (and doubao
+ * `sheetPoll`) inside the marker — clear those too, otherwise the interval
+ * survives restore and keeps re-injecting sheets on later targets.
  */
 export const CLEAR_ADAPTERS_BODY = [
   `var markers = ${JSON.stringify(ADAPTER_MARKERS)};`,
@@ -131,6 +135,8 @@ export const CLEAR_ADAPTERS_BODY = [
   '  if (window[m]) {',
   '    if (window[m].observer) window[m].observer.disconnect();',
   '    if (window[m].interval) clearInterval(window[m].interval);',
+  '    if (window[m].sheetGuardInterval) clearInterval(window[m].sheetGuardInterval);',
+  '    if (window[m].sheetPoll) clearInterval(window[m].sheetPoll);',
   '    delete window[m];',
   '  }',
   '}',

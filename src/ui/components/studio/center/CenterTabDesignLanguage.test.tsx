@@ -16,6 +16,7 @@
  * - Applies `border-[var(--accent)]` to the currently selected option.
  */
 
+import type { ThemeState } from '@/stores/themeStore';
 import { useThemeStore } from '@/stores/themeStore';
 
 import type { UiMessages } from '@shared/i18n';
@@ -50,7 +51,7 @@ beforeEach(() => {
         radius: { scale: '2' },
       },
       setDesignLanguage: mockSetDL,
-    } as any),
+    } as unknown as ThemeState),
   );
   mockSetDL.mockClear();
 });
