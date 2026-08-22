@@ -39,6 +39,7 @@ export default defineConfig({
     resolve: {
       alias: {
         '@agentskin/engine': path.resolve(__dirname, 'src/engine/src/index.mjs'),
+        '@shared': path.resolve(__dirname, 'src/shared'),
       },
     },
   },
