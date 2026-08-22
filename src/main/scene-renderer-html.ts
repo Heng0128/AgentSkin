@@ -70,43 +70,6 @@ export {
 // Composition root
 // ---------------------------------------------------------------------------
 
-/**
- * Generate a static preview HTML for a scene asynchronously (L1 energy-saver
- * path in non-blocking mode).
- *
- * Parses the scene via {@link extractSceneAsync} (which uses `fs.promises`
- * instead of `fs.readFileSync`, keeping the main process event loop
- * responsive during I/O), then delegates to {@link renderSceneToStaticHtml}
- * which outputs pure static HTML — no `<script>` tags, no rAF loop, no
- * particles, no interaction.
- *
- * The output contains **zero `<script>` tags**, so there is no runtime
- * overhead beyond the browser's image decode + paint.
- *
- * @param pkgPath Absolute path to the `.pkg` file.
- * @param options Optional resolution context (same as `renderSceneToHtml`).
- * @returns A complete HTML document string, or `null` if the pkg could not
- *          be parsed or contains no renderable content.
- */
-export async function renderSceneToStaticHtmlAsync(
-  pkgPath: string,
-  options?: { weInstallRoot?: string },
-): Promise<string | null> {
-  const { extractSceneAsync } = await import('./scene/scene-extractor');
-  const scene = await extractSceneAsync(pkgPath);
-  if (!scene) return null;
-
-  const weInstallRoot = options?.weInstallRoot ?? deriveWeInstallRoot(pkgPath);
-  let layers: RenderLayer[];
-  try {
-    layers = buildRenderLayers(scene, weInstallRoot);
-  } catch {
-    return null;
-  }
-  if (layers.length === 0 && !scene.general.clearEnabled) return null;
-  return renderSceneToStaticHtml(layers);
-}
-
 // ---------------------------------------------------------------------------
 // L2 Canvas 2D renderer (animated, rAF loop)
 // ---------------------------------------------------------------------------

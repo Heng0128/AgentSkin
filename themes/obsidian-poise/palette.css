@@ -1,5 +1,5 @@
 /* palette.css — obsidian-poise (Obsidian Poise 玄曜) */
-/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+/* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #0b0d10;
   --agentskin-surface: #11151a;
@@ -14,7 +14,7 @@
   --agentskin-focus-ring: #e0c486;
   --agentskin-selection: color-mix(in srgb, #c8a96b 32%, transparent);
 
-  /* Derived raw RGB values */
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
   --agentskin-accent-raw: 200, 169, 107;
   --agentskin-secondary-raw: 117, 183, 152;
   --agentskin-text-raw: 241, 238, 231;

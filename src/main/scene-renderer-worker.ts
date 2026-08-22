@@ -21,7 +21,7 @@
  *   { requestId, error }       — unexpected throw
  */
 import { parentPort } from 'node:worker_threads';
-import { deriveWeInstallRoot, extractScene } from './scene-pkg-parser';
+import { deriveWeInstallRoot, extractSceneAsync } from './scene-pkg-parser';
 import { renderSceneToHtml, renderSceneToStaticHtml } from './scene-renderer-html';
 import { buildRenderLayers } from './scene-renderer-layers';
 import type { RenderLayer } from './scene-renderer-types';
@@ -49,28 +49,24 @@ export interface WorkerResponse {
 }
 
 /**
- * Synchronous L1 core: parse + build layers + render pure static HTML.
+ * Asynchronous L1 core: parse + build layers + render pure static HTML.
  *
- * Runs entirely synchronously inside the worker thread (no worker-for-a-worker
- * needed — the worker thread itself is already off the main process event
- * loop, so blocking I/O here is acceptable and avoids an extra layer of
- * message-passing).
- *
- * The returned string contains zero `<script>` tags, so there is no runtime
- * overhead beyond the browser's image decode + paint — the L1 zero-runtime
- * contract.
+ * Uses `extractSceneAsync` which enjoys mtime-based caching — repeated renders
+ * of the same scene.pkg skip the costly `parsePkg` step. The returned string
+ * contains zero `<script>` tags, so there is no runtime overhead beyond the
+ * browser's image decode + paint — the L1 zero-runtime contract.
  */
-function renderStaticFromPkgSync(
+async function renderStaticFromPkgAsync(
   pkgPath: string,
   options?: { weInstallRoot?: string },
-): string | null {
+): Promise<string | null> {
   // Mirror `renderSceneToHtml`'s parse-failure contract: capture any throw
-  // from extractScene and degrade to null — no error field surfaces to the
-  // caller. A "missing / unreadable / truncated" pkg therefore yields the
+  // from extractSceneAsync and degrade to null — no error field surfaces to
+  // the caller. A "missing / unreadable / truncated" pkg therefore yields the
   // same { html: null, error: undefined } shape as the L2 full path.
-  let scene: ReturnType<typeof extractScene> = null;
+  let scene = null;
   try {
-    scene = extractScene(pkgPath);
+    scene = await extractSceneAsync(pkgPath);
   } catch {
     return null;
   }
@@ -94,21 +90,15 @@ function renderStaticFromPkgSync(
  * thread runs for each message. Exported so vitest can exercise the worker's
  * core path without depending on the build-only `?nodeWorker` wrapper.
  *
- * `async` for forward-compatibility with an eventual async parse (`extractSceneAsync`
- * would let the worker offload its own synchronous I/O without yielding the
- * main process). Today the body still runs synchronously — the returned
- * promise is the zero-cost bridge.
- *
- * Future migration (not in this change): when the scene renderer opts into
- * async I/O, swap `extractScene` → `extractSceneAsync` so the worker's parse
- * phase doesn't block its own thread on `fs.readFileSync`.
+ * The static ('L1') path uses `extractSceneAsync` which enjoys mtime-based
+ * caching — repeated renders of the same scene.pkg skip the costly parse step.
  * See `extractSceneAsync` in `scene/scene-extractor.ts`.
  */
 export async function handleRenderRequest(request: RenderRequest): Promise<WorkerResponse> {
   try {
     const html =
       request.mode === 'static'
-        ? renderStaticFromPkgSync(request.pkgPath, request.options)
+        ? await renderStaticFromPkgAsync(request.pkgPath, request.options)
         : renderSceneToHtml(request.pkgPath, request.options);
     return { requestId: request.requestId, html };
   } catch (error) {

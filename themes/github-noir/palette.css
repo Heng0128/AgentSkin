@@ -1,6 +1,5 @@
 /* palette.css — github-noir (GitHub Noir) */
-/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
-/* NOTE (P1 fix): secondary was #3fb950 (== accent); overridden to #8fa84a for visual distinction. */
+/* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #090d0a;
   --agentskin-surface: #0e140f;
@@ -15,7 +14,7 @@
   --agentskin-focus-ring: #5ee080;
   --agentskin-selection: color-mix(in srgb, #3fb950 32%, transparent);
 
-  /* Derived raw RGB values */
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
   --agentskin-accent-raw: 63, 185, 80;
   --agentskin-secondary-raw: 143, 168, 74;
   --agentskin-text-raw: 233, 243, 234;

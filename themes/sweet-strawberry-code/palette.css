@@ -1,5 +1,5 @@
 /* palette.css — sweet-strawberry-code (Sweet Strawberry Code) */
-/* Auto-generated from Codex palette by bridge-codex-theme.mjs — do not edit. */
+/* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #fff7f9;
   --agentskin-surface: rgba(255, 252, 253, 0.94);
@@ -14,7 +14,7 @@
   --agentskin-focus-ring: #ff6b8a;
   --agentskin-selection: color-mix(in srgb, #ff6b8a 32%, transparent);
 
-  /* Derived raw RGB values */
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
   --agentskin-accent-raw: 255, 107, 138;
   --agentskin-secondary-raw: 76, 175, 124;
   --agentskin-text-raw: 90, 61, 68;

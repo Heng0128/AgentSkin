@@ -47,6 +47,15 @@ export default defineConfig({
       },
       {
         test: {
+          name: 'compiler',
+          environment: 'node',
+          include: ['src/compiler/**/*.test.ts'],
+          testTimeout: 30000,
+          pool: 'threads',
+        },
+      },
+      {
+        test: {
           name: 'ui',
           environment: 'node',
           include: ['src/ui/**/*.test.ts', 'src/ui/**/*.test.tsx'],

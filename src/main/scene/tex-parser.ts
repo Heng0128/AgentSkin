@@ -942,17 +942,19 @@ function decodeBc7Block(
 
   switch (mode) {
     case 0: {
-      for (let i = 0; i < numSubsets * 2; i++) {
-        const r = bc7ReadBits(block, bitOfs, 4);
-        bitOfs += 4;
-        const g = bc7ReadBits(block, bitOfs, 4);
-        bitOfs += 4;
-        const b = bc7ReadBits(block, bitOfs, 4);
-        bitOfs += 4;
-        rawEndpoints.push([r, g, b, 0]);
+      const numEp = numSubsets * 2; // 6
+      // Per-channel endpoint reading (BC7 spec: all R, then all G, then all B)
+      for (let i = 0; i < numEp; i++) {
+        rawEndpoints.push([0, 0, 0, 0]);
       }
-      // 6 P-bits follow
-      for (let i = 0; i < numSubsets * 2; i++) {
+      for (let c = 0; c < 3; c++) {
+        for (let e = 0; e < numEp; e++) {
+          rawEndpoints[e][c] = bc7ReadBits(block, bitOfs, 4);
+          bitOfs += 4;
+        }
+      }
+      // 6 P-bits follow (one per endpoint)
+      for (let i = 0; i < numEp; i++) {
         const p = bc7ReadBits(block, bitOfs, 1);
         bitOfs += 1;
         rawEndpoints[i][0] = (rawEndpoints[i][0] << 1) | p;
@@ -969,14 +971,16 @@ function decodeBc7Block(
       break;
     }
     case 1: {
-      for (let i = 0; i < numSubsets * 2; i++) {
-        const r = bc7ReadBits(block, bitOfs, 6);
-        bitOfs += 6;
-        const g = bc7ReadBits(block, bitOfs, 6);
-        bitOfs += 6;
-        const b = bc7ReadBits(block, bitOfs, 6);
-        bitOfs += 6;
-        rawEndpoints.push([r, g, b, 0]);
+      const numEp = numSubsets * 2; // 4
+      // Per-channel endpoint reading (BC7 spec: all R, then all G, then all B)
+      for (let i = 0; i < numEp; i++) {
+        rawEndpoints.push([0, 0, 0, 0]);
+      }
+      for (let c = 0; c < 3; c++) {
+        for (let e = 0; e < numEp; e++) {
+          rawEndpoints[e][c] = bc7ReadBits(block, bitOfs, 6);
+          bitOfs += 6;
+        }
       }
       // Shared P-bits: 2 bits, one per subset
       const p0 = bc7ReadBits(block, bitOfs, 1);
@@ -1006,14 +1010,16 @@ function decodeBc7Block(
       break;
     }
     case 2: {
-      for (let i = 0; i < numSubsets * 2; i++) {
-        const r = bc7ReadBits(block, bitOfs, 5);
-        bitOfs += 5;
-        const g = bc7ReadBits(block, bitOfs, 5);
-        bitOfs += 5;
-        const b = bc7ReadBits(block, bitOfs, 5);
-        bitOfs += 5;
-        rawEndpoints.push([r, g, b, 0]);
+      const numEp = numSubsets * 2; // 6
+      // Per-channel endpoint reading (BC7 spec: all R, then all G, then all B)
+      for (let i = 0; i < numEp; i++) {
+        rawEndpoints.push([0, 0, 0, 0]);
+      }
+      for (let c = 0; c < 3; c++) {
+        for (let e = 0; e < numEp; e++) {
+          rawEndpoints[e][c] = bc7ReadBits(block, bitOfs, 5);
+          bitOfs += 5;
+        }
       }
       // No P-bits. Replicate 5-bit to 8-bit.
       for (let i = 0; i < rawEndpoints.length; i++) {
@@ -1025,30 +1031,24 @@ function decodeBc7Block(
       break;
     }
     case 3: {
-      for (let i = 0; i < numSubsets * 2; i++) {
-        const r = bc7ReadBits(block, bitOfs, 7);
-        bitOfs += 7;
-        const g = bc7ReadBits(block, bitOfs, 7);
-        bitOfs += 7;
-        const b = bc7ReadBits(block, bitOfs, 7);
-        bitOfs += 7;
-        rawEndpoints.push([r, g, b, 0]);
+      const numEp = numSubsets * 2; // 4
+      // Per-channel endpoint reading (BC7 spec: all R, then all G, then all B)
+      for (let i = 0; i < numEp; i++) {
+        rawEndpoints.push([0, 0, 0, 0]);
       }
-      // Unique P-bit per subset (NOT per endpoint, per MS spec: "unique P-bit per subset")
-      // Wait — re-reading the mode 3 spec: "RGBP 7.7.7.1 endpoints with a unique P-bit per subset"
-      // So 2 P-bits total, one per subset
-      const p0 = bc7ReadBits(block, bitOfs, 1);
-      bitOfs += 1;
-      const p1 = bc7ReadBits(block, bitOfs, 1);
-      bitOfs += 1;
-      for (let s = 0; s < numSubsets; s++) {
-        const p = s === 0 ? p0 : p1;
-        for (let e = 0; e < 2; e++) {
-          const idx = s * 2 + e;
-          rawEndpoints[idx][0] = (rawEndpoints[idx][0] << 1) | p;
-          rawEndpoints[idx][1] = (rawEndpoints[idx][1] << 1) | p;
-          rawEndpoints[idx][2] = (rawEndpoints[idx][2] << 1) | p;
+      for (let c = 0; c < 3; c++) {
+        for (let e = 0; e < numEp; e++) {
+          rawEndpoints[e][c] = bc7ReadBits(block, bitOfs, 7);
+          bitOfs += 7;
         }
+      }
+      // 4 P-bits (unique per endpoint, NOT shared per subset)
+      for (let i = 0; i < numEp; i++) {
+        const p = bc7ReadBits(block, bitOfs, 1);
+        bitOfs += 1;
+        rawEndpoints[i][0] = (rawEndpoints[i][0] << 1) | p;
+        rawEndpoints[i][1] = (rawEndpoints[i][1] << 1) | p;
+        rawEndpoints[i][2] = (rawEndpoints[i][2] << 1) | p;
       }
       // Replicate 8-bit to 8-bit (no-op, already 8 bits after P)
       for (let i = 0; i < rawEndpoints.length; i++) {

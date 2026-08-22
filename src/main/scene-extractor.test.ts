@@ -3,9 +3,11 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SceneObject } from './scene/scene-json-parser';
+import type { SceneData } from './scene-pkg-parser';
 import {
+  clearSceneCache,
   deriveWeInstallRoot,
   extractScene,
   extractSceneAsync,
@@ -594,5 +596,164 @@ describe('extractSceneAsync', () => {
     expect(syncScene!.general).toEqual(asyncScene!.general);
     expect(syncScene!.objects).toEqual(asyncScene!.objects);
     expect(syncScene!.version).toBe(asyncScene!.version);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// extractSceneAsync cache — mtime, TTL, eviction, clear, stat-fallback
+// ---------------------------------------------------------------------------
+
+describe('extractSceneAsync cache', () => {
+  /** Build a minimal but complete scene.pkg and write it to a temp file. */
+  async function buildPkg(): Promise<string> {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-cache-'));
+    const pkg = path.join(dir, 'scene.pkg');
+
+    const entries = [
+      {
+        name: 'scene.json',
+        data: Buffer.from(
+          JSON.stringify({
+            general: { clearenabled: true },
+            objects: [],
+          }),
+        ),
+      },
+      {
+        name: 'models/background.json',
+        data: Buffer.from(
+          JSON.stringify({
+            material: 'materials/background.json',
+            solidLayer: false,
+          }),
+        ),
+      },
+      {
+        name: 'materials/background.json',
+        data: Buffer.from(
+          JSON.stringify({
+            passes: [{ shader: 'generic', textures: ['background'], blending: 'normal' }],
+          }),
+        ),
+      },
+    ];
+
+    const parts: Buffer[] = [];
+    const magic = Buffer.from('scene.pkg', 'utf8');
+    const magicLen = Buffer.alloc(4);
+    magicLen.writeInt32LE(magic.length, 0);
+    parts.push(magicLen, magic);
+    const count = Buffer.alloc(4);
+    count.writeInt32LE(entries.length, 0);
+    parts.push(count);
+    const table: Buffer[] = [];
+    let offset = 0;
+    for (const e of entries) {
+      const nb = Buffer.from(e.name, 'utf8');
+      const nbLen = Buffer.alloc(4);
+      nbLen.writeInt32LE(nb.length, 0);
+      const off = Buffer.alloc(4);
+      off.writeInt32LE(offset, 0);
+      const len = Buffer.alloc(4);
+      len.writeInt32LE(e.data.length, 0);
+      table.push(nbLen, nb, off, len);
+      offset += e.data.length;
+    }
+    for (const t of table) parts.push(t);
+    for (const e of entries) parts.push(e.data);
+    await fs.writeFile(pkg, Buffer.concat(parts));
+    return pkg;
+  }
+
+  it('returns the same object reference on the second call (cache hit)', async () => {
+    clearSceneCache();
+    const pkgPath = await buildPkg();
+    const first = await extractSceneAsync(pkgPath);
+    const second = await extractSceneAsync(pkgPath);
+    expect(first).not.toBeNull();
+    expect(second).toBe(first);
+  });
+
+  it('invalidates cache when the file mtime changes', async () => {
+    clearSceneCache();
+    const pkgPath = await buildPkg();
+    const first = await extractSceneAsync(pkgPath);
+    expect(first).not.toBeNull();
+
+    // Touch the file — set mtime 60s into the future so the cache key changes.
+    const future = new Date(Date.now() + 60_000);
+    await fs.utimes(pkgPath, future, future);
+
+    const second = await extractSceneAsync(pkgPath);
+    expect(second).not.toBeNull();
+    expect(second).not.toBe(first);
+  });
+
+  it('expires cached entry after TTL (30s) via fake timers', async () => {
+    clearSceneCache();
+    vi.useFakeTimers();
+    try {
+      const pkgPath = await buildPkg();
+      const first = await extractSceneAsync(pkgPath);
+      expect(first).not.toBeNull();
+
+      // Advance virtual clock past the 30s TTL.
+      vi.setSystemTime(Date.now() + 31_000);
+
+      const second = await extractSceneAsync(pkgPath);
+      expect(second).not.toBeNull();
+      expect(second).not.toBe(first);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('evicts the oldest entry when cache exceeds maxEntries (10)', async () => {
+    clearSceneCache();
+    const pkgPaths: string[] = [];
+    const results: (SceneData | null)[] = [];
+
+    // Populate cache with 11 distinct entries (maxEntries = 10).
+    for (let i = 0; i < 11; i++) {
+      const p = await buildPkg();
+      pkgPaths.push(p);
+      results.push(await extractSceneAsync(p));
+    }
+
+    // The first entry (index 0) should have been evicted by the 11th insert.
+    // Re-extracting it must produce a fresh object, not the stale reference.
+    const reparsed = await extractSceneAsync(pkgPaths[0]);
+    expect(reparsed).not.toBeNull();
+    expect(reparsed).not.toBe(results[0]);
+  });
+
+  it('clearSceneCache removes all cached entries', async () => {
+    clearSceneCache();
+    const pkgPath = await buildPkg();
+    const first = await extractSceneAsync(pkgPath);
+    expect(first).not.toBeNull();
+
+    clearSceneCache();
+
+    const second = await extractSceneAsync(pkgPath);
+    expect(second).not.toBeNull();
+    expect(second).not.toBe(first);
+  });
+
+  it('falls back to pkgPath-only key when fs.promises.stat fails', async () => {
+    clearSceneCache();
+    // node:fs/promises exports `stat` directly; the source calls
+    // `fs.promises.stat` which resolves to the same function reference.
+    const statSpy = vi.spyOn(fs, 'stat').mockRejectedValue(new Error('stat failed'));
+
+    try {
+      const pkgPath = await buildPkg();
+      const first = await extractSceneAsync(pkgPath);
+      const second = await extractSceneAsync(pkgPath);
+      expect(first).not.toBeNull();
+      expect(second).toBe(first); // cache hit with pkgPath-only key
+    } finally {
+      statSpy.mockRestore();
+    }
   });
 });
