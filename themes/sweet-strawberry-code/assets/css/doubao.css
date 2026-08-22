@@ -695,22 +695,23 @@ html.agentskin-host-doubao body::before {
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
-/* ===== Transparency punch-through ===== */
-html.agentskin-host-doubao [class*="container"],
-html.agentskin-host-doubao [class*="chat-wrapper"],
-html.agentskin-host-doubao [class*="message-list"],
-html.agentskin-host-doubao [class*="conversation"],
-html.agentskin-host-doubao [class*="sidebar"],
-html.agentskin-host-doubao [class*="panel"]:not([class*="float"]):not([class*="modal"]) {
+/* ===== Transparency punch-through =====
+   PROBE-VERIFIED 2026-08-23: [class*="item"] matched 217 elements,
+   [class*="sidebar"] button matched 32. Doubao exposes precise data-testid
+   anchors — use them exclusively (no sub-string class matching). */
+html.agentskin-host-doubao [data-testid="chat_route_layout_leftside_nav"],
+html.agentskin-host-doubao [data-testid="flow_chat_sidebar"],
+html.agentskin-host-doubao [data-testid="chat_route_layout"],
+html.agentskin-host-doubao [data-testid="chat_content"],
+html.agentskin-host-doubao [role="main"] {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
 }
 
 /* Main layout containers — fully transparent so body art shows through directly */
-html.agentskin-host-doubao [class*="bg-s-color-bg-body"],
-html.agentskin-host-doubao [class*="center-bg"],
-html.agentskin-host-doubao [class*="main-with-nav"] {
+html.agentskin-host-doubao [data-testid="chat_route_layout_leftside_nav"] > div,
+html.agentskin-host-doubao [data-testid="flow_chat_sidebar"] > div {
   background: transparent !important;
   background-color: transparent !important;
   background-image: none !important;
@@ -872,24 +873,25 @@ html.agentskin-host-doubao [class*="input-guidance"] [class*="editor"] {
   background: transparent !important;
 }
 
-/* ===== Frosted sidebar — ultra transparent ===== */
-html.agentskin-host-doubao [class*="sidebar"] {
+/* ===== Frosted sidebar — ultra transparent =====
+   PROBE-VERIFIED anchors: data-testid="flow_chat_sidebar" is the sidebar root;
+   nav items carry the Tailwind group marker "group/sidebar_nav_item" (exact,
+   NOT [class*="item"] which matched 217 elements). */
+html.agentskin-host-doubao [data-testid="flow_chat_sidebar"],
+html.agentskin-host-doubao [data-testid="chat_route_layout_leftside_nav"] {
   background: color-mix(in srgb, var(--agentskin-surface) 10%, transparent) !important;
   border-right: none !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
 /* Sidebar conversation items — transparent with accent hover */
-html.agentskin-host-doubao [class*="sidebar"] [class*="item"],
-html.agentskin-host-doubao [class*="sidebar"] [class*="session"],
-html.agentskin-host-doubao [class*="sidebar"] a,
-html.agentskin-host-doubao [class*="nav-list"] [class*="item"] {
+html.agentskin-host-doubao [class~="group/sidebar_nav_item"],
+html.agentskin-host-doubao [data-testid="flow_chat_sidebar"] a {
   background: transparent !important;
 }
 
-html.agentskin-host-doubao [class*="sidebar"] [class*="item"]:hover,
-html.agentskin-host-doubao [class*="sidebar"] [class*="session"]:hover,
-html.agentskin-host-doubao [class*="sidebar"] a:hover {
+html.agentskin-host-doubao [class~="group/sidebar_nav_item"]:hover,
+html.agentskin-host-doubao [data-testid="flow_chat_sidebar"] a:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
 }
 
@@ -910,52 +912,50 @@ html.agentskin-host-doubao [class*="body-wrapper"] {
   background-image: none !important;
 }
 
-/* ===== Message bubbles: subtle surface tint, no border ===== */
-html.agentskin-host-doubao [class*="message"][class*="bubble"],
-html.agentskin-host-doubao [class*="msg-content"],
-html.agentskin-host-doubao [class*="message-content"],
-html.agentskin-host-doubao [class*="bubble"] {
+/* ===== Message bubbles: subtle surface tint, no border =====
+   PROBE-VERIFIED 2026-08-23: doubao DOM has no [class*="message"] bubbles;
+   chat renders via data-testid anchors. Drop sub-string guesses. */
+html.agentskin-host-doubao [data-testid$="_message"],
+html.agentskin-host-doubao [data-testid*="message_bubble"],
+html.agentskin-host-doubao [data-testid*="msg_bubble"] {
   background: color-mix(in srgb, var(--agentskin-surface) 25%, transparent) !important;
   border: none !important;
   backdrop-filter: blur(6px) !important;
 }
 
-/* ===== Active nav / selected items: accent tint only ===== */
-html.agentskin-host-doubao [class*="active"],
-html.agentskin-host-doubao [class*="selected"],
-html.agentskin-host-doubao [aria-selected="true"] {
+/* ===== Active nav / selected items: accent tint only =====
+   PROBE-VERIFIED: doubao nav uses data-active="true" (exact attr), NOT
+   [class*="active"] (which also matches "inactive", "reactive", …). */
+html.agentskin-host-doubao [data-active="true"],
+html.agentskin-host-doubao [aria-selected="true"],
+html.agentskin-host-doubao [class~="group/sidebar_nav_item"][data-active="true"] {
   background: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
   border: none !important;
 }
 
 /* ===== Button color harmonization =====
-   Unify all button variants around a coherent palette:
-   - Primary/brand: accent fill + clean white text (not muddy background brown)
-   - Outlined/secondary: transparent + accent border + accent text
-   - Ghost/icon: transparent + accent hover tint
-   - AI buttons: keep gradient but align text color */
-html.agentskin-host-doubao button[class*="primary"],
-html.agentskin-host-doubao button[class*="send"],
-html.agentskin-host-doubao [class*="btn-primary"],
-html.agentskin-host-doubao [class*="btn-brand"] {
-  background: #e14d6b !important;
-  color: #ffffff !important;
-  border: none !important;
+   PROBE-VERIFIED 2026-08-23: doubao buttons use data-dbx-name="button" +
+   data-testid (e.g. "siderbar_close_btn", "global-search-icon-entry"); there is
+   no [class*="primary"] / [class*="send"] class — those matched 24 toolbar
+   buttons and over-painted them. Theme buttons are driven by doubao's own
+   --s-color-* tokens; only the non-controlled sentinel needs our tint. */
+html.agentskin-host-doubao button:not(.agentskin-non-controlled)[data-dbx-name="button"]:not([data-disabled="true"]) {
   transition: filter 140ms ease, background 140ms ease !important;
 }
 
-html.agentskin-host-doubao button[class*="primary"]:hover,
-html.agentskin-host-doubao button[class*="send"]:hover,
-html.agentskin-host-doubao [class*="btn-primary"]:hover,
-html.agentskin-host-doubao [class*="btn-brand"]:hover {
+html.agentskin-host-doubao [data-testid="send_btn"],
+html.agentskin-host-doubao [data-testid="send_btn"]:hover {
+  background: #e14d6b !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+html.agentskin-host-doubao [data-testid="send_btn"]:hover {
   background: rgb(198, 68, 94) !important;
   filter: brightness(1.05) !important;
 }
 
-html.agentskin-host-doubao button[class*="primary"]:active,
-html.agentskin-host-doubao button[class*="send"]:active,
-html.agentskin-host-doubao [class*="btn-primary"]:active,
-html.agentskin-host-doubao [class*="btn-brand"]:active {
+html.agentskin-host-doubao [data-testid="send_btn"]:active {
   background: rgb(171, 59, 81) !important;
   filter: brightness(0.95) !important;
 }
