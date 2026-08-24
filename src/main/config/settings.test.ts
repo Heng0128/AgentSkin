@@ -93,18 +93,19 @@ describe('wallpaper settings (config/settings.ts)', () => {
     expect(Number.isFinite(result.imageBlobThresholdMB)).toBe(true);
   });
 
-  it('loadSettings clamps out-of-range threshold back to default', async () => {
-    // Test each bad value separately to get clear failure diagnostics.
-    // NaN is intentionally excluded here because JSON.stringify(NaN) => null,
-    // so a file-based write cannot exercise the !Number.isFinite(NaN) branch.
-    // That branch requires a raw runtime value and must be tested separately.
-    const valuesToTest = [
-      { value: -5, label: '-5' },
-      { value: 0, label: '0' },
-      { value: 1e10, label: '1e10' },
-    ];
+  // Test each bad value separately to get clear failure diagnostics.
+  // NaN is intentionally excluded here because JSON.stringify(NaN) => null,
+  // so a file-based write cannot exercise the !Number.isFinite(NaN) branch.
+  // That branch requires a raw runtime value and must be tested separately.
+  const valuesToTest = [
+    { value: -5, label: '-5' },
+    { value: 0, label: '0' },
+    { value: 1e10, label: '1e10' },
+  ];
 
-    for (const { value } of valuesToTest) {
+  it.each(valuesToTest.map(({ value }) => [value]))(
+    'loadSettings clamps out-of-range threshold %s back to default',
+    async (value) => {
       // resetModules so each write is a fresh load
       vi.resetModules();
       await fs.mkdir(path.dirname(settingsFile(tmpDir)), { recursive: true });
@@ -116,8 +117,8 @@ describe('wallpaper settings (config/settings.ts)', () => {
       const { getImageBlobThresholdBytes } = await import('./settings');
       // Clamped to the default 20MB, never a nonsense cap.
       expect(getImageBlobThresholdBytes()).toBe(20 * 1024 * 1024);
-    }
-  });
+    },
+  );
 
   it('updateSetting rejects an out-of-range threshold', async () => {
     const { updateSetting } = await import('./settings');

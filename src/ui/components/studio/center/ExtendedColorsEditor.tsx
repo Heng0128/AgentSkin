@@ -45,7 +45,7 @@ interface ExtendedColorsEditorProps {
 // ---------------------------------------------------------------------------
 
 const PRESETS: Array<{ name: string; hex: string }> = [
-  { name: 'error', hex: '#ef4444' },
+  { name: 'error', hex: '#dc2626' },
   { name: 'success', hex: '#22c55e' },
   { name: 'warning', hex: '#f59e0b' },
   { name: 'info', hex: '#3b82f6' },

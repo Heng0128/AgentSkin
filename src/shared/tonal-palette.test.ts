@@ -79,14 +79,15 @@ describe('deriveTonalPalette', () => {
     }
   });
 
-  it('hue stability: all steps within ±8° of input', () => {
-    const inputH = hexToHsl(INPUT).h;
-    const p = deriveTonalPalette(INPUT);
-    for (const step of TONAL_STEPS) {
+  it.each(TONAL_STEPS.map((step) => [step]))(
+    'hue stability: step %s within ±8° of input',
+    (step) => {
+      const inputH = hexToHsl(INPUT).h;
+      const p = deriveTonalPalette(INPUT);
       const stepH = hexToHsl(p[step]).h;
       expect(hueDistance(inputH, stepH)).toBeLessThan(8);
-    }
-  });
+    },
+  );
 
   it('saturation peaks near the middle steps (30-60) and drops at extremes', () => {
     const p = deriveTonalPalette(INPUT);
@@ -107,13 +108,14 @@ describe('deriveTonalPalette', () => {
     expect(p[10]).not.toBe('#000000');
   });
 
-  it('low-saturation input (grey) produces an all-grey ramp', () => {
-    const p = deriveTonalPalette('#808080');
-    for (const step of TONAL_STEPS) {
+  it.each(TONAL_STEPS.map((step) => [step]))(
+    'low-saturation input (grey): step %s produces grey ramp',
+    (step) => {
+      const p = deriveTonalPalette('#808080');
       const { s } = hexToHsl(p[step]);
       expect(s).toBeLessThan(0.02);
-    }
-  });
+    },
+  );
 });
 
 // ---------------------------------------------------------------------------

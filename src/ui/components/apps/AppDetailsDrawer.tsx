@@ -166,7 +166,7 @@ function DetailRow({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
-      <span className="text-micro uppercase tracking-wider text-muted-foreground">
+      <span className="text-micro text-muted-foreground">
         {label}
       </span>
       <span className={cn('truncate text-[11px] text-foreground', mono && 'font-mono tabular-nums')}>

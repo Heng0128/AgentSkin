@@ -91,7 +91,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
           const isCurrent = i === currentStepIndex;
           const isPending = i > currentStepIndex;
           return (
-            <div key={s.id} className="flex items-center gap-1 py-[3px]">
+            <div key={s.id} className="flex items-center gap-1 py-1">
               {/* Status dot — shape differs by state so it is not colour-only */}
               <span
                 className={[

@@ -10,13 +10,15 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { setupElectronMock } from '../../fixtures/mocks/electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 
 // ---------------------------------------------------------------------------
 // Mocks — capture handlers registered by registerPerformanceIpc()
 // ---------------------------------------------------------------------------
 
-const handlers = new Map<string, (...args: unknown[]) => unknown>();
+// Must declare before setupElectronMock() because vi.mock is hoisted.
+let handlers: Map<string, (...args: unknown[]) => unknown>;
 
 // Mock function references declared outside the factory so tests can assert
 // on call arguments after invocation.
@@ -25,13 +27,7 @@ const mockGetRecentTimeouts = vi.fn<(count: number) => unknown>();
 const mockClearTimeouts = vi.fn();
 const mockGetMemorySamples = vi.fn();
 
-vi.mock('electron', () => ({
-  ipcMain: {
-    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
-      handlers.set(channel, handler);
-    }),
-  },
-}));
+({ handlers } = setupElectronMock());
 
 vi.mock('../services/performance', () => ({
   performanceLogger: {

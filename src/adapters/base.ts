@@ -49,16 +49,7 @@ import {
   applyTheme as runtimeApplyTheme,
   restoreTheme as runtimeRestoreTheme,
 } from '../legacy/agentskin-core-runtime';
-
-/**
- * 主 renderer 语义锚点（与 src/main/cdp/renderer-rank.ts 的 RendererHints 结构对齐）。
- * 当应用暴露多个兼容的 page target 时，用于稳定判定"哪个是可见主窗口"。
- */
-export interface RendererHints {
-  preferredUrlPatterns?: string[];
-  score?: (target: CdpTarget) => number;
-  secondaryPatterns?: string[];
-}
+import type { RendererHints } from '../main/cdp/renderer-rank';
 
 export type ApplicationType = 'agent' | 'ide' | 'desktop';
 export type AdapterTier = 'active' | 'experimental';

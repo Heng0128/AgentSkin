@@ -73,7 +73,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
   );
 
   return (
-    <div className="mt-[8px] grid grid-cols-2 gap-x-2 gap-y-1 rounded-md  bg-card2/80 p-[12px_16px_4px]">
+    <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 rounded-md bg-card2/80 pt-3 px-4 pb-1">
       <div className="col-span-2 flex items-center gap-2">
         <span className="text-[11px] font-normal text-muted-foreground ">RENDER_SETTINGS</span>
         <span className="h-px flex-1 bg-border" />
@@ -196,7 +196,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       </div>
 
       {/* Image filters */}
-      <div className="col-span-2 mt-[6px] grid grid-cols-2 gap-x-[9px] gap-y-[9px]">
+      <div className="col-span-2 mt-1.5 grid grid-cols-2 gap-x-2 gap-y-2">
         <span className="col-span-2 flex items-center gap-2">
           <span className="text-[11px] font-normal text-muted-foreground ">IMAGE_FILTERS</span>
           <span className="h-px flex-1 bg-border" />

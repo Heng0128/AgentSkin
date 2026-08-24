@@ -23,7 +23,7 @@ import { ExtendedColorsEditor } from './ExtendedColorsEditor';
 
 // --- Mock data ------------------------------------------------------------
 
-const mockColors = { error: '#ef4444', success: '#22c55e' };
+const mockColors = { error: '#dc2626', success: '#22c55e' };
 
 const mockT = {
   studioExtColors: 'Extended Colors',
@@ -96,11 +96,11 @@ describe('ExtendedColorsEditor', () => {
     );
 
     // Both hex values should be visible in the current colors list
-    expect(screen.getByText('#ef4444')).toBeTruthy();
+    expect(screen.getByText('#dc2626')).toBeTruthy();
     expect(screen.getByText('#22c55e')).toBeTruthy();
 
     // Swatches for existing colors (unique titles: only appear in Current Colors section)
-    expect(screen.getAllByTitle('error — #ef4444')).toBeTruthy();
+    expect(screen.getAllByTitle('error — #dc2626')).toBeTruthy();
     expect(screen.getAllByTitle('success — #22c55e')).toBeTruthy();
   });
 
@@ -140,7 +140,7 @@ describe('ExtendedColorsEditor', () => {
 
     // Click the "error" color swatch in the Current Colors list.
     // Index [0] is the disabled preset button — use [1] for the swatch.
-    const swatches = screen.getAllByTitle('error — #ef4444');
+    const swatches = screen.getAllByTitle('error — #dc2626');
     fireEvent.click(swatches[1]);
 
     // OKLCH panel should now be visible (evidenced by slider presence)
@@ -162,7 +162,7 @@ describe('ExtendedColorsEditor', () => {
 
     // Select the "error" color to reveal OKLCH panel.
     // Index [0] is the disabled preset button — use [1] for the swatch.
-    const swatches = screen.getAllByTitle('error — #ef4444');
+    const swatches = screen.getAllByTitle('error — #dc2626');
     fireEvent.click(swatches[1]);
 
     // Find slider elements (they have role="slider")

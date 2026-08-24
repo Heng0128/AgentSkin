@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { setupElectronMock } from '../../fixtures/mocks/electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { SystemStatus } from '../../shared/types';
 
@@ -8,18 +9,7 @@ import type { SystemStatus } from '../../shared/types';
 // Mocks
 // ---------------------------------------------------------------------------
 
-const handlers = new Map<string, (...args: unknown[]) => unknown>();
-
-vi.mock('electron', () => ({
-  app: {
-    getAppPath: vi.fn().mockReturnValue('/app-root'),
-  },
-  ipcMain: {
-    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
-      handlers.set(channel, handler);
-    }),
-  },
-}));
+const { handlers } = setupElectronMock();
 
 const mockReaddir = vi.fn();
 const mockReadFile = vi.fn();

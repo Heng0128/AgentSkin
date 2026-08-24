@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
+import { setupElectronMock } from '../../fixtures/mocks/electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { isIpcTimeoutError } from '../../shared/withTimeout';
@@ -10,19 +11,7 @@ import type { MainContext } from '../main-context';
 // Mocks
 // ---------------------------------------------------------------------------
 
-const handlers = new Map<string, (...args: unknown[]) => unknown>();
-
-vi.mock('electron', () => ({
-  ipcMain: {
-    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
-      handlers.set(channel, handler);
-    }),
-  },
-  dialog: {
-    showOpenDialog: vi.fn().mockResolvedValue({ canceled: true, filePaths: [] }),
-    showSaveDialog: vi.fn().mockResolvedValue({ canceled: true, filePath: undefined }),
-  },
-}));
+const { handlers } = setupElectronMock();
 
 vi.mock('../main-context', () => ({
   settingsDto: vi.fn(() => ({

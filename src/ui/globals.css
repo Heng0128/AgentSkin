@@ -134,10 +134,10 @@
   --z-studio-dialog: 200;
 
   /* ---- Deprecated aliases (backward compat) ---- */
-  --brand-red: #ef4444;
-  --red: #ef4444;
-  --red2: #dc2626;
-  --redbg: rgba(239, 68, 68, 0.12);
+  --brand-red: #dc2626;
+  --red: #dc2626;
+  --red2: #b91c1c;
+  --redbg: rgba(220, 38, 38, 0.12);
   --grn: #22c55e;
   --amb: #eab308;
   --blu: #3b82f6;

@@ -186,7 +186,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                     return (
                       <div className="flex flex-col gap-1 p-2 rounded-sm border border-muted">
                         <div className="flex items-center justify-between">
-                          <span className="text-micro text-muted-foreground uppercase tracking-wider">
+                          <span className="text-micro text-muted-foreground">
                             {t.studioProfileSummary}
                           </span>
                           <span className="text-micro text-muted-foreground tabular-nums font-mono">

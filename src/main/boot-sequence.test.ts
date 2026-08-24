@@ -6,24 +6,17 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setupElectronMock } from '../../fixtures/mocks/electron';
 
 // Mock electron BEFORE any real import runs. The IPC modules pulled in by
 // boot-sequence.ts call app.getPath() at module scope, which crashes in a
 // bare node environment. We stub it out so we can unit-test runStep in
 // isolation.
-vi.mock('electron', () => ({
+setupElectronMock({
   app: {
-    getName: () => 'AgentSkin',
     getPath: () => '/tmp/agentskin-test',
-    getLocale: () => 'en-US',
-    isPackaged: false,
-    setName: vi.fn(),
-    dock: undefined,
   },
-  nativeImage: {
-    createFromPath: () => ({ isEmpty: () => true }),
-  },
-}));
+});
 
 import { BootProfiler } from './boot-profiler';
 import { BootProgressReporter } from './boot-reporter';

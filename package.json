@@ -74,6 +74,7 @@
     "@types/node": "^26.2.0",
     "@types/yauzl": "^2.10.3",
     "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "electron": "^34.5.8",
     "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
