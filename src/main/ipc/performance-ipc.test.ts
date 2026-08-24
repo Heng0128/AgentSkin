@@ -10,7 +10,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { setupElectronMock } from '../../../fixtures/mocks/electron';
+import { electronMockFactory } from '../../../fixtures/mocks/electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 
 // ---------------------------------------------------------------------------
@@ -18,22 +18,43 @@ import { IpcChannel } from '../../shared/ipc-channels';
 // ---------------------------------------------------------------------------
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>();
+vi.mock('electron', electronMockFactory(handlers));
 
 // Mock function references declared outside the factory so tests can assert
 // on call arguments after invocation.
+const mockLog = vi.fn();
+const mockGetRecent = vi.fn<(count: number) => unknown>();
+const mockGetStats = vi.fn();
 const mockGetHistory = vi.fn<(count: number) => unknown>();
+const mockClear = vi.fn();
+const mockLogTimeout = vi.fn();
 const mockGetRecentTimeouts = vi.fn<(count: number) => unknown>();
+const mockGetAllTimeouts = vi.fn();
 const mockClearTimeouts = vi.fn();
+const mockStartMemorySampler = vi.fn();
+const mockStopMemorySampler = vi.fn();
 const mockGetMemorySamples = vi.fn();
+const mockGetLatestMemory = vi.fn();
+const mockClearMemorySamples = vi.fn();
 
-setupElectronMock(handlers);
-
+// Full PerformanceLoggerApi mock — all 14 methods to prevent "is not a function"
+// runtime errors if new IPC handlers are added.
 vi.mock('../services/performance', () => ({
   performanceLogger: {
+    log: (trace: unknown) => mockLog(trace),
+    getRecent: (count: number) => mockGetRecent(count),
+    getStats: () => mockGetStats(),
     getHistory: (count: number) => mockGetHistory(count),
+    clear: () => mockClear(),
+    logTimeout: (event: unknown) => mockLogTimeout(event),
     getRecentTimeouts: (count: number) => mockGetRecentTimeouts(count),
+    getAllTimeouts: () => mockGetAllTimeouts(),
     clearTimeouts: () => mockClearTimeouts(),
+    startMemorySampler: (intervalMs?: number) => mockStartMemorySampler(intervalMs),
+    stopMemorySampler: () => mockStopMemorySampler(),
     getMemorySamples: () => mockGetMemorySamples(),
+    getLatestMemory: () => mockGetLatestMemory(),
+    clearMemorySamples: () => mockClearMemorySamples(),
   },
 }));
 
@@ -64,10 +85,20 @@ function invoke(channel: string, ...args: unknown[]): unknown {
 describe('performance-ipc — clamp behavior', () => {
   beforeEach(() => {
     handlers.clear();
+    mockLog.mockReset();
+    mockGetRecent.mockReset();
+    mockGetStats.mockReset();
     mockGetHistory.mockReset();
+    mockClear.mockReset();
+    mockLogTimeout.mockReset();
     mockGetRecentTimeouts.mockReset();
+    mockGetAllTimeouts.mockReset();
     mockClearTimeouts.mockReset();
+    mockStartMemorySampler.mockReset();
+    mockStopMemorySampler.mockReset();
     mockGetMemorySamples.mockReset();
+    mockGetLatestMemory.mockReset();
+    mockClearMemorySamples.mockReset();
     mockGetMemorySamples.mockReturnValue([...SAMPLES]);
     // Re-register handlers after each clear (registerPerformanceIpc runs once
     // at import time, but handlers Map is cleared in beforeEach).
