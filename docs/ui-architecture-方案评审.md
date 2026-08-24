@@ -24,7 +24,7 @@
 | # | 问题 |
 |---|------|
 | B1 | 快捷键冲突：⌘W/⌘I 在 Workspace 与 CommandPalette 指向不同命令 |
-| B2 | 两套设计语言并存（Swiss 克制 vs EnvironmentHero 炫酷玻璃拟态） |
+| B2 | 两套设计语言并存（（历史）Swiss 克制 vs EnvironmentHero 炫酷玻璃拟态） |
 | B3 | 色彩原则冲突：宣称「仅红强调」，但语义色（绿/黄/灰）+ 红色被滥用 |
 | B4 | 动效两极分化（环境区堆满动画 vs 工具面板无动画） |
 | B5 | 信息密度过载：StatusBar 8 段信息、RenderSettings 15+ 滑块、ThemeCard 徽章墙 |
@@ -186,7 +186,7 @@ Agent 管理：不设独立页面
 
 阶段 2（细节一致性）    —— 前两轮 B 类问题打包处理
   ├ 修复快捷键冲突（⌘W/⌘I 全局注册表 + 冲突检测）
-  ├ 统一设计语言：收敛 EnvironmentHero 玻璃拟态，对齐 Swiss token
+  ├ 统一设计语言：收敛 EnvironmentHero 玻璃拟态，对齐项目 token
   ├ 语义色与品牌色分离，红色收敛为关键动作专属
   ├ 信息密度：StatusBar 精简 / RenderSettings 分级 / ThemeCard 减徽章
   ├ 9px 字号提升至 11px+，缩写图标加 tooltip

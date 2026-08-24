@@ -249,7 +249,7 @@
 
 #### 波次 3（中期 — 测试与联动）
 
-13. E2E 集成测试（`tests/integration/theme-pipeline.test.ts`）
+13. 主题验证脚本（`scripts/validate-themes.mjs`，原 tests/integrate/theme-pipeline.test.ts 已迁移为独立脚本）
 14. Inspect ↔ Inspector 选中态联动
 15. TopBar 缩放控件去重
 

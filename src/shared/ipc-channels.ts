@@ -57,6 +57,18 @@ export const IpcChannel = {
   THEME_EXPORT: 'theme:export',
   THEME_DELETE: 'theme:delete',
 
+  // --- Community Theme (community-theme-ipc.ts) ---
+  /** INVOKE — renderer → main. Fetch the community theme list (paginated, filterable). */
+  COMMUNITY_THEME_LIST: 'community:theme:list',
+  /** INVOKE — renderer → main. Fetch a single community theme's full detail. */
+  COMMUNITY_THEME_GET: 'community:theme:get',
+  /** INVOKE — renderer → main. Download, verify, and install a community theme. */
+  COMMUNITY_THEME_DOWNLOAD: 'community:theme:download',
+  /** SEND_ONLY — main → renderer. Pushed to report download progress (bytes, phase). */
+  COMMUNITY_DOWNLOAD_PROGRESS: 'community:download:progress',
+  /** INVOKE — renderer → main. Cancel an in-progress community theme download. */
+  COMMUNITY_DOWNLOAD_CANCEL: 'community:download:cancel',
+
   // --- Settings (settings-ipc.ts) ---
   SETTINGS_GET: 'settings:get',
   SETTINGS_PICK_APP_PATH: 'settings:pick-app-path',

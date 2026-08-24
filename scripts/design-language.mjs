@@ -17,9 +17,9 @@
  *  radius scale (px), shadow elevation, and motion speed (ms). Themes reference
  *  a preset by id via manifest.designLanguage. */
 export const DESIGN_LANGUAGES = Object.freeze({
-  'swiss-default': {
-    id: 'swiss-default',
-    label: 'Swiss Default',
+  'default': {
+    id: 'default',
+    label: 'Default',
     spacing: { density: 'comfortable' },
     radius: { scale: '2' },
     shadow: { elevation: 'float' },
@@ -48,7 +48,7 @@ export const DESIGN_LANGUAGES = Object.freeze({
 // ---------------------------------------------------------------------------
 
 /** Fallback values when manifest declares neither designLanguage nor
- *  designLanguageConfig — matches the swiss-default preset. */
+ *  designLanguageConfig — matches the default preset. */
 export const DL_DEFAULTS = Object.freeze({
   spacing: { density: 'comfortable' },
   radius: { scale: '2' },

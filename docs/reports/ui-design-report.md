@@ -19,7 +19,7 @@
 - **UI组件**: Radix UI + shadcn/ui 风格封装
 
 ### 设计语言
-- **风格**: Swiss / International Typographic Style
+- **风格**: （历史）Swiss / International Typographic Style
 - **圆角**: 全域 2px 方角，锐利几何
 - **色彩**: 仅主色红色用于强调，中性灰阶主导
 - **字体层级**: Space Grotesk (品牌) / Mono (标签) / 系统字体 (正文)
@@ -131,7 +131,7 @@ AppController → status?.apps → Connected Agents 列表
 │  │  │  │  … = dropdown menu (rename/duplicate/delete)           │ │ │ │
 │  │  │  └─────────────────────────────────────────────────────────┘ │ │ │
 │  │  │                                                              │ │ │
-│  │  │  ┌─ SwissPanel: QUICK · 快捷操作 ──────────────────────────┐ │ │ │
+│  │  │  ┌─ SectionPanel: QUICK · 快捷操作 ──────────────────────────┐ │ │ │
 │  │  │  │  ┌─ QuickBtn ┐ ┌─ QuickBtn ┐ ┌─ QuickBtn ┐ ┌─ QuickBtn ┐ │ │ │
 │  │  │  │  │⊞ 新建工程 │ │⌕ 浏览主题 │ │📦 导入主题 │ │🖼 壁纸中心│ │ │ │
 │  │  │  │  │  ⌘N       │ │  ⌘T       │ │  ⌘I       │ │  ⌘W      │ │ │ │
@@ -182,7 +182,7 @@ AgentDetailSheet (right slide-in, max-w-md):
 | `QuickEnvironmentCreate` | 内联快速创建表单（工程名/作者/壁纸/Agent选择） |
 | `EnvironmentGrid` | 环境卡片网格 + 标题 + 刷新指示器 |
 | `EnvironmentCard` | 环境卡片（顶边线+Avatar+名称+Meta网格+进度条） |
-| `SwissPanel` | 瑞士风格带标签面板容器 |
+| `SectionPanel` | 带标签面板容器 |
 | `QuickButton` | 快捷操作按钮（hover红条效果） |
 | `AgentDetailSheet` | 右侧滑入详情面板 |
 
@@ -570,7 +570,7 @@ Diagnostics 分区 (PerformancePanel):
 | `WallpaperStudioPanel` | 壁纸工作室 |
 | `FitGeneratorPanel` | 主题搭配生成器 |
 | `AgentRawPreview` | Agent原生对照预览 |
-| `Kicker` | Swiss段落标签 |
+| `Kicker` | （历史）Swiss 段落标签 |
 
 **交互点 (50+)**
 
@@ -1170,7 +1170,7 @@ Wallpaper Store ←── wallpaper/render ──→ DynamicBackground, DetailPa
 15. ✅ EnvironmentGrid - 环境网格
 16. ✅ AgentDetailSheet - Agent详情面板
 17. ✅ QuickEnvironmentCreate - 快速创建表单
-18. ✅ SwissPanel/QuickButton - 瑞士面板/快捷按钮
+18. ✅ SectionPanel/QuickButton - 面板/快捷按钮
 19. ✅ RenameDialog - 重命名对话框
 20. ✅ ErrorBoundary - 错误边界
 21. ✅ Logo - Logo组件
@@ -1219,7 +1219,7 @@ Wallpaper Store ←── wallpaper/render ──→ DynamicBackground, DetailPa
 3. **主题Studio完善**: 继续开发v1.4重构中的Theme Studio功能
 
 ### 中优先级
-4. **设计系统文档**: 建立Swiss设计系统的Token文档（颜色/间距/字体/圆角规范）
+4. **设计系统文档**: 建立项目设计系统的Token文档（颜色/间距/字体/圆角规范）
 5. **组件库补全**: 完善UI基础组件的文档和Storybook
 6. **国际化完善**: 部分组件存在硬编码中文，需完善i18n
 

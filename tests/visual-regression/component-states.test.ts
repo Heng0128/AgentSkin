@@ -19,84 +19,16 @@
  *   3. State-dependent classes are correctly applied (loading, disabled,
  *      indeterminate, focus-visible, read-only).
  *
- * CVA definitions are re-declared here from first principles — see
- * `src/ui/components/ui/button.tsx` and `src/ui/components/ui/badge.tsx` for
- * the canonical implementations. We deliberately do NOT import those modules
- * because the test file sits in the `visual-regression` vitest project which
- * lacks the `@/` path alias; inlining keeps this suite hermetic and
- * CI-portable. These are pure functions with no I/O.
+ * CVA definitions are imported dynamically from the canonical source modules
+ * to prevent "parallel specification drift" — when `button.tsx` or `badge.tsx`
+ * change, the tests automatically pick up the new values. The `visual-regression`
+ * vitest project is configured with the `@/` alias (same as the `ui` project)
+ * so that transitive imports (e.g. `@/lib/utils`) resolve correctly.
  */
 
 import { describe, expect, it } from 'vitest';
-import { cva } from 'class-variance-authority';
-
-// ---------------------------------------------------------------------------
-// Re-declared CVA definitions (from src/ui/components/ui/button.tsx)
-// ---------------------------------------------------------------------------
-
-const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-md border border-border-strong bg-card2 text-sm font-medium whitespace-nowrap transition-[background-color,border-color,color] outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-45 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 hover:border-primary hover:text-primary [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-  {
-    variants: {
-      variant: {
-        default:
-          'bg-card2 text-foreground border-border-strong shadow-none hover:border-primary hover:text-primary',
-        primary:
-          'bg-primary text-primary-foreground border-primary hover:bg-primary/85 hover:text-primary-foreground hover:border-primary/85',
-        outline:
-          'border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50',
-        secondary:
-          'bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
-        ghost:
-          'bg-transparent border-transparent hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50 hover:border-transparent hover:text-primary',
-        destructive:
-          'bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40',
-        link: 'text-primary border-transparent bg-transparent underline-offset-4 hover:underline hover:border-transparent',
-      },
-      size: {
-        default:
-          'h-[30px] gap-1.5 px-3.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2',
-        xs: "h-6 gap-1 rounded-md px-2 text-xs in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-[26px] gap-1 rounded-md px-[10px] text-[11px] in-data-[slot=button-group]:rounded-md has-data-[icon=inline-end]:pr-1 has-data-[icon=inline-start]:pl-1 [&_svg:not([class*='size-'])]:size-3",
-        lg: 'h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2',
-        icon: 'size-[30px] rounded-md',
-        'icon-xs':
-          "size-6 rounded-md in-data-[slot=button-group]:rounded-md [&_svg:not([class*='size-'])]:size-3",
-        'icon-sm': 'size-[26px] rounded-md in-data-[slot=button-group]:rounded-md',
-        'icon-lg': 'size-9 rounded-md',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
-  },
-);
-
-// ---------------------------------------------------------------------------
-// Re-declared CVA definitions (from src/ui/components/ui/badge.tsx)
-// ---------------------------------------------------------------------------
-
-const badgeVariants = cva(
-  'group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md font-mono text-[9.5px] font-medium tracking-wider whitespace-nowrap border border-transparent px-2 py-0.5 transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!',
-  {
-    variants: {
-      variant: {
-        default: 'bg-primary text-primary-foreground [a]:hover:bg-primary/80',
-        secondary: 'bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80',
-        destructive:
-          'bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:bg-destructive/20',
-        outline: 'border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground',
-        ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
-        dot: 'size-2 rounded-full bg-primary p-0 border-transparent',
-        red: 'text-primary border-primary/45 bg-accent',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-    },
-  },
-);
+import { buttonVariants } from '../../src/ui/components/ui/button';
+import { badgeVariants } from '../../src/ui/components/ui/badge';
 
 // ---------------------------------------------------------------------------
 // CSS class patterns (from src/ui/components/ui/progress.tsx)
@@ -205,7 +137,7 @@ describe('Button', () => {
       const sizeHeights: Record<string, string> = {
         default: 'h-[30px]',
         xs: 'h-6',
-        sm: 'h-[26px]',
+        sm: 'h-6',
         lg: 'h-9',
         icon: 'size-[30px]',
         'icon-xs': 'size-6',

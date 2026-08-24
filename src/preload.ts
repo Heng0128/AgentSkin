@@ -393,6 +393,42 @@ const api: AgentSkinApi = {
       error?: string;
       alreadyStopped?: boolean;
     }>,
+  // --- Community Theme (DreamSkin) ---
+  listCommunityThemes: (params?: import('./shared/types').CommunityThemeListParams) =>
+    ipcRenderer.invoke(IpcChannel.COMMUNITY_THEME_LIST, params) as Promise<{
+      success: true;
+      data: import('./shared/types').CommunityThemeListResult;
+    } | {
+      success: false;
+      error: string;
+    }>,
+  getCommunityTheme: (themeId: string) =>
+    ipcRenderer.invoke(IpcChannel.COMMUNITY_THEME_GET, themeId) as Promise<{
+      success: true;
+      data: import('./shared/types').CommunityThemeDetail;
+    } | {
+      success: false;
+      error: string;
+    }>,
+  downloadCommunityTheme: (themeId: string) =>
+    ipcRenderer.invoke(IpcChannel.COMMUNITY_THEME_DOWNLOAD, themeId) as Promise<{
+      success: true;
+      data: import('./shared/types').InstallResult;
+    } | {
+      success: false;
+      data: import('./shared/types').InstallResult;
+    }>,
+  cancelCommunityDownload: (themeId: string) =>
+    ipcRenderer.invoke(IpcChannel.COMMUNITY_DOWNLOAD_CANCEL, themeId) as Promise<{
+      success: boolean;
+      error?: string;
+    }>,
+  onCommunityDownloadProgress: (listener: (progress: import('./shared/types').DownloadProgress) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, payload: import('./shared/types').DownloadProgress) =>
+      listener(payload);
+    ipcRenderer.on(IpcChannel.COMMUNITY_DOWNLOAD_PROGRESS, handler);
+    return () => ipcRenderer.removeListener(IpcChannel.COMMUNITY_DOWNLOAD_PROGRESS, handler);
+  },
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);

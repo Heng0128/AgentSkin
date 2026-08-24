@@ -186,10 +186,10 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                     return (
                       <div className="flex flex-col gap-1 p-2 rounded-sm border border-muted">
                         <div className="flex items-center justify-between">
-                          <span className="font-mono text-micro text-muted-foreground uppercase tracking-wider">
+                          <span className="text-micro text-muted-foreground uppercase tracking-wider">
                             {t.studioProfileSummary}
                           </span>
-                          <span className="font-mono text-micro text-muted-foreground tabular-nums">
+                          <span className="text-micro text-muted-foreground tabular-nums font-mono">
                             {AGENT_META[newAgent]?.displayName ?? newAgent}
                           </span>
                         </div>
@@ -207,24 +207,24 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                               title={`${t.studioProfileAccent} (light)`}
                             />
                           </div>
-                          <span className="font-mono text-micro text-muted-foreground">
+                          <span className="text-micro text-muted-foreground">
                             {t.studioProfileTokens}:
                           </span>
-                          <span className="font-mono text-micro text-foreground tabular-nums">
+                          <span className="text-micro text-foreground tabular-nums font-mono">
                             {tokens.dark}
                           </span>
-                          <span className="font-mono text-micro text-muted-foreground">
+                          <span className="text-micro text-muted-foreground">
                             {t.studioProfileCategories}:
                           </span>
-                          <span className="font-mono text-micro text-foreground tabular-nums">
+                          <span className="text-micro text-foreground tabular-nums font-mono">
                             {tokens.categories}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="font-mono text-micro text-muted-foreground">
+                          <span className="text-micro text-muted-foreground">
                             {t.studioProfileStrategy}:
                           </span>
-                          <span className="font-mono text-micro text-secondary">
+                          <span className="text-micro text-secondary font-mono">
                             {t[strategyKey]}
                           </span>
                         </div>
@@ -264,7 +264,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                   }}
                 >
                   <AppMark appId={p.agentId} size={12} />
-                  <span className="font-mono text-micro text-foreground truncate flex-1 text-left">
+                  <span className="text-micro text-foreground truncate flex-1 text-left">
                     {p.name}
                   </span>
                   {p.hasSnapshot && <span className="ws-badge ws-badge--success">snap</span>}
@@ -294,7 +294,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
               <div>
                 <div className="flex items-center gap-1 mb-1">
                   <Layers className="size-3 text-muted-foreground" />
-                  <span className="font-mono text-micro text-muted-foreground">
+                  <span className="text-micro text-muted-foreground">
                     {t.themeLibrary}
                   </span>
                 </div>
@@ -316,7 +316,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                           className="size-[10px] rounded-sm border border-border"
                           style={{ background: theme.colors?.accent || 'var(--muted)' }}
                         />
-                        <span className="font-mono text-micro text-foreground truncate flex-1">
+                        <span className="text-micro text-foreground truncate flex-1">
                           {theme.name}
                         </span>
                       </div>
@@ -329,7 +329,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
               <div>
                 <div className="flex items-center gap-1 mb-1">
                   <Image className="size-3 text-muted-foreground" />
-                  <span className="font-mono text-micro text-muted-foreground">
+                  <span className="text-micro text-muted-foreground">
                     {t.studioWallpaperAllTitle}
                   </span>
                 </div>
@@ -348,7 +348,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                         className="flex items-center gap-1 p-0 rounded-sm hover:bg-muted"
                       >
                         <Image className="size-2.5 text-muted-foreground" />
-                        <span className="font-mono text-micro text-foreground truncate flex-1">
+                        <span className="text-micro text-foreground truncate flex-1">
                           {wp.title ?? wp.id}
                         </span>
                       </div>
@@ -361,7 +361,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
               <div>
                 <div className="flex items-center gap-1 mb-1">
                   <Package className="size-3 text-muted-foreground" />
-                  <span className="font-mono text-micro text-muted-foreground">
+                  <span className="text-micro text-muted-foreground">
                     {t.studioTabBundle}
                   </span>
                 </div>
@@ -394,7 +394,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
           {agentsOpen && (
             <div className="flex flex-col gap-1 mt-1">
               {/* Security posture sub-header */}
-              <span className="font-mono text-micro text-muted-foreground px-1">
+              <span className="text-micro text-muted-foreground px-1">
                 {t.studioSecurityLabel}
               </span>
 
@@ -426,7 +426,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                 return (
                   <div key={id} className="flex items-center gap-1 p-1 rounded-sm">
                     <AppMark appId={id} size={14} />
-                    <span className="font-mono text-micro text-foreground truncate flex-1">
+                    <span className="text-micro text-foreground truncate flex-1">
                       {meta.displayName}
                     </span>
 
@@ -487,7 +487,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
         onClick={() => setDrawerCollapsed(true)}
         title={t.collapseSidebar}
       >
-        <span className="font-mono text-micro text-muted-foreground">◀</span>
+        <span className="text-micro text-muted-foreground">◀</span>
       </button>
     </aside>
   );

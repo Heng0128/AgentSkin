@@ -248,7 +248,7 @@ CSSPipeline 的默认 Layer 序列产出与当前 `generate-theme-css.mjs` 字�
    - `.agentskin-glass` / `.agentskin-elevation-{1-5}` / `.agentskin-scrim` 工具类
    - `prefers-reduced-motion: reduce` 时禁用所有 ambient 动画
 
-3. **Design Language 预设库扩展**：当前 presets（swiss-default / soft-rounded / compact-flat）各自附带 motion 预设（swiss=sharp/fast, soft=smooth/bounce, compact=instant/none），主题作者可引用预设而非逐一声明。
+3. **Design Language 预设库扩展**：当前 presets（default / soft-rounded / compact-flat）各自附带 motion 预设（default=sharp/fast, soft=smooth/bounce, compact=instant/none），主题作者可引用预设而非逐一声明。
 
 4. **Studio 中动画编辑器**：`CenterTabDesignLanguage` 迁移为 `CenterTabDesignLanguageMotion`，增加 `motion` 和 `material` 的滑块与预设选择。
 
@@ -326,7 +326,7 @@ motion 和 material 均为 manifest 顶层可选字段；不声明时无额外�
 
 **致命漏洞预分析**:
 - 图谱节点的 OKLCH 色彩距离计算在感知均匀性上可能不精确（OKLCH 本身已比 Lab 更均匀，但仍有感知偏差）；阈值设定需要大量视觉验证
-- 自动变体主题的质量高度依赖 `autoVariants` 算法；_generated_ 主题可能不符合 Swiss 设计语言约束，需要后处理规则（确保变体仍遵循 4/8/16 间距规范、rounded-[2px] 等）
+- 自动变体主题的质量高度依赖 `autoVariants` 算法；_generated_ 主题可能不符合项目设计语言约束，需要后处理规则（确保变体仍遵循 4/8/16 间距规范、rounded-[2px] 等）
 
 **与现有 14-token 契约的兼容策略**:
 图谱引擎消费 14-token 作为主题节点的"色特征向量"接入图谱；14-token 不做任何结构变更。图谱层完全独立运行，主题包的 manifest 不声明 `graph` 块也可以被引擎自动分析。
@@ -425,7 +425,7 @@ npx @agentskin/theme-compiler build <themeId|all> [--verify] [--incremental]
 | 🥇 | λ 全集成主题编译器 | **8.52** | 根治度最高 + 可工程化最优 + 长期演进最强，是最终形态 |
 | 🥈 | θ 三位一体（Studio + 诊断） | 8.40 | 故障安全 + 边界健壮双 9 分，最稳的大方案 |
 | 🥉 | ζ 样式引擎全量重写 | 8.04 | 架构一致 9 + 长期演进 9，技术最优雅 |
-| 4 | ι 第三维材质与动效 | 8.03 | 直接回应用户的 Swiss 设计语言诉求 |
+| 4 | ι 第三维材质与动效 | 8.03 | 直接回应用户的项目设计语言诉求 |
 | 5 | ε DTCG 重写 | 7.37 | 开放生态最友好，但当前 W3C 标准未定 |
 | 6 | κ 语义图谱 | 7.43 | 长期演进满分，但短期业务根治偏弱 |
 | 7 | η 运行时注入重构 | 7.26 | 故障安全和边界健壮双低，Electron 版本碎片化风险 |

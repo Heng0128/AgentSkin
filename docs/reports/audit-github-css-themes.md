@@ -83,7 +83,7 @@
 - **移植到 AgentSkin**：直接 import `@import 'open-props/colors'` 替换手搓色板；`--ease-3` 等缓动 token 替代硬编码动画曲线；渐进增强动画 token 天然支持 `prefers-reduced-motion`
 - **适合模块**：A + B（Theme 构建 + Theme Library）
 
-> 特别标注：Open Props 是唯一提供完整 animation/easing/gradient token体系的零依赖方案，直接对齐 AgentSwiss/International 设计系统的间距与缓动语义。
+> 特别标注：Open Props 是唯一提供完整 animation/easing/gradient token体系的零依赖方案，直接对齐项目设计系统的间距与缓动语义。
 
 ---
 
@@ -239,7 +239,7 @@
 
 ## 四、关键发现
 
-1. **Open Props** 是当前唯一将 animation token、easing token、size token、color token 以零依赖方式打包的方案，与 AgentSkin Swiss 设计系统的克制美学高度吻合。
+1. **Open Props** 是当前唯一将 animation token、easing token、size token、color token 以零依赖方式打包的方案，与项目设计系统的克制美学高度吻合。
 2. **construct-style-sheets** 的 `replaceSync()` 是 CDP 注入场景下最优的增量更新 API，比传统 `<style>` 重写快 3-5x（Chromium 性能报告）。
 3. **Style Dictionary** 的 `transform pipeline` 理念可迁移为 AgentSkin 的 "Token → CSS Variables → CDP Payload" 三层流水线。
 4. **Shiki** 的 TextMate theme JSON 格式（`colors` + `settings`）是语义化 token → 颜色映射的最成熟实践，可直接迁移为 AgentSkin 的主题描述格式。
@@ -415,11 +415,11 @@
 | 最后更新 | 2024-11-22 |
 
 **3 个可移植设计点：**
-1. **Ark UI primitives + Panda CSS presets**：无样式原子组件 + 类型安全 token 的 Swiss-style 组合
+1. **Ark UI primitives + Panda CSS presets**：无样式原子组件 + 类型安全 token 的组合
 2. **shadcn/registry 兼容的 cli 安装模式**：`park-ui add button` 通过 CLI 添加组件到项目
 3. **多框架（React / Vue / Svelte / Solid）同款组件库**：Ark UI 行为层 + zag JS 驱动
 
-**移植方案**：AgentSkin Studio 可采用类似的 shadcn/registry CLI 模式分发主题；Panda CSS 的 presets 方式特别适合 Swiss 设计系统的 token 结构定义。
+**移植方案**：AgentSkin Studio 可采用类似的 shadcn/registry CLI 模式分发主题；Panda CSS 的 presets 方式特别适合项目设计系统的 token 结构定义。
 
 #### 候选 B：Mantine Monorepo
 
@@ -442,6 +442,6 @@
 
 1. **StyleX 的 babel-plugin 编译路径** 是目前最强的 zero-runtime CSS-in-JS 方案（8.5k stars），其 `data-theme` 属性切换 + atomic class 输出可直接用于 manifest 编译产线。
 2. **Zag UI 的状态机驱动行为层** 是对 AgentSkin 适配器时序逻辑的最佳参考——连接 / 注入 / 监听 / 销毁 天然适合 state machine 建模。
-3. **Park UI 的 Ark UI + Panda CSS 组合** 是当前最契合 Swiss 国际风格的最小化工具链（无样式原子 + 类型安全 token + shadcn CLI 安装模式）。
+3. **Park UI 的 Ark UI + Panda CSS 组合** 是当前最契合国际主义风格的最小化工具链（无样式原子 + 类型安全 token + shadcn CLI 安装模式）。
 4. **figma-export** 的 rc 配置 + 双模式导出架构 可直接被 AgentSkin Theme Studio 参考，作为 Figma-to-manifest 导入器的设计基础。
 5. **css-vars-ponyfill 的 AST 级 CSS 变量替换** 是主进程 Token Resolver 的最成熟参考实现，但 2024 年未更新需人工维护 fork。

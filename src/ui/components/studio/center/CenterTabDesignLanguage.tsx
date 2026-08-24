@@ -10,7 +10,7 @@
  *
  * Data source: themeStore (designLanguage, setDesignLanguage).
  *
- * Visual style follows Swiss/International design tokens:
+ * Visual style follows Quiet Workbench design tokens:
  *   · rounded-[var(--dl-radius,2px)] corners
  *   · spacing from the 4/8/16 Tailwind scale only
  *   · typography: text-[10px] mono for body, text-xs for headings
@@ -60,7 +60,7 @@ function SegmentedControl<T extends string>({
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`rounded-[var(--dl-radius,2px)] border px-2 py-1 font-mono text-[10px] transition-colors ${
+            className={`rounded-[var(--dl-radius,2px)] border px-2 py-1 text-[10px] transition-colors ${
               isSelected
                 ? 'border-[var(--accent)] bg-[var(--bg-surface-elevated)] text-[var(--fg-0)]'
                 : 'border-[var(--border-subtle)] bg-[var(--bg-2)] text-[var(--fg-2)] hover:border-[var(--fg-3)]'
@@ -91,10 +91,10 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
     <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header */}
       <div>
-        <h3 className="font-mono text-[11px] font-normal text-[var(--fg-0)]">
+        <h3 className="text-[11px] font-normal text-[var(--fg-0)]">
           {t.studioTabDesignLanguage ?? 'Design Language'}
         </h3>
-        <p className="mt-2 font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">
+        <p className="mt-2 text-[10px] leading-relaxed text-[var(--fg-2)]">
           {t.studioTabDesignLanguageDesc ??
             'Adjust spacing, radius, shadow, and motion parameters for the active theme.'}
         </p>
@@ -105,7 +105,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Spacing Density */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLSpacing ?? 'Spacing Density'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -133,7 +133,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Radius Scale */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLRadius ?? 'Radius Scale'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -178,7 +178,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Shadow Elevation */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLShadow ?? 'Shadow Elevation'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -211,7 +211,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Motion Speed */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLMotion ?? 'Motion Speed'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -239,7 +239,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
 
       {/* Live CSS variable preview */}
       <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
+        <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
           {t.studioDLCssPreview ?? 'CSS Variables'}
         </h4>
         <div className="mt-2 space-y-1 font-mono text-[10px] text-[var(--fg-2)]">

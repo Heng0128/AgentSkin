@@ -20,6 +20,7 @@ import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
 import { createStudioWindow } from '../window-manager';
 import { registerBundleIpc } from './bundle-ipc';
+import { registerCommunityThemeIpc } from './community-theme-ipc';
 import { registerConcurrencyMetricsIpc } from './concurrency-metrics-ipc';
 import { registerCoordinatorIpc } from './coordinator-ipc';
 import { registerCoreIpc } from './core-ipc';
@@ -121,4 +122,7 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
 
   // MCP (Model Context Protocol) — runtime start/stop from Settings UI.
   registerMcpIpc(ctx);
+
+  // Community Theme (DreamSkin) — list / get / download / cancel.
+  registerCommunityThemeIpc(ctx);
 }

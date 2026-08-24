@@ -107,9 +107,9 @@
 
 ### Design Language（设计语言）
 - 主题可声明 `designLanguageConfig` 内联配置间距/圆角/阴影/动画
-- 预设注册表：swiss-default / soft-rounded / compact-flat
+- 预设注册表：default / soft-rounded / compact-flat
 - 缺失时使用引擎默认值（comfortable / 2 / float / fast）
-- 所有数值遵循 Swiss 4px 网格约束
+- 所有数值遵循项目 4px 网格约束
 - 默认值优化：配置等于默认值时不生成 CSS（保持存量主题 byte-identical）
 
 ### Extended Colors（语义色）

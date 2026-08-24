@@ -2,7 +2,7 @@
  * AgentSkin Workspace — Reusable Components
  *
  * Generic UI building blocks used across workspace panels:
- * buttons, chips, badges, app marks, form inputs, and range slider.
+ * buttons, chips, badges, and form inputs.
  * ================================================================= */
 
 /* -------------------------------------------------------------------
@@ -19,7 +19,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-xs);
   background: transparent;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 500;
   color: var(--fg-0);
@@ -87,7 +87,7 @@
   padding: 0 var(--space-2);
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-micro);
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   background: var(--bg-3);
   color: var(--fg-0);
@@ -116,7 +116,7 @@
   height: 14px;
   padding: 0 4px;
   border-radius: var(--r-micro);
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 600;
 }
@@ -124,38 +124,6 @@
 .ws-badge--success {
   color: var(--cr-ok);
   border: 1px solid color-mix(in srgb, var(--cr-ok) 40%, transparent);
-}
-
-.ws-badge--idle {
-  color: var(--fg-2);
-  border: 1px solid var(--border-subtle);
-}
-
-.ws-badge--warning {
-  color: var(--cr-warn);
-  border: 1px solid color-mix(in srgb, var(--cr-warn) 40%, transparent);
-}
-
-.ws-badge--red {
-  color: var(--accent);
-  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
-}
-
-/* -------------------------------------------------------------------
- * App mark
- * ------------------------------------------------------------------- */
-
-.ws-app-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--r-micro);
-  flex-shrink: 0;
-  font-family: var(--font-mono);
-  font-size: 7px;
-  font-weight: 700;
-  line-height: 1;
 }
 
 /* -------------------------------------------------------------------
@@ -168,7 +136,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-sm);
   background: var(--bg-3);
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 11px;
   color: var(--fg-0);
   outline: none;
@@ -181,99 +149,4 @@
 
 .ws-input::placeholder {
   color: var(--fg-3);
-}
-
-.ws-select {
-  height: var(--h-input);
-  padding: 0 var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
-  background: var(--bg-3);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--fg-0);
-  outline: none;
-  cursor: pointer;
-  transition: border-color var(--dur-fast);
-}
-
-.ws-select:focus {
-  border-color: var(--accent);
-}
-
-.ws-textarea {
-  min-height: 72px;
-  padding: var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
-  background: var(--bg-3);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--fg-0);
-  outline: none;
-  resize: vertical;
-}
-
-.ws-textarea:focus {
-  border-color: var(--accent);
-}
-
-/* -------------------------------------------------------------------
- * Live Tweak slider (native range input, native styling)
- * ------------------------------------------------------------------- */
-
-.ws-range {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 3px;
-  border-radius: var(--radius-base);
-  background: var(--border-default);
-  outline: none;
-  cursor: pointer;
-  transition: background var(--dur-fast);
-}
-
-.ws-range::-webkit-slider-runnable-track {
-  height: 3px;
-  border-radius: var(--radius-base);
-  background: var(--border-default);
-}
-
-.ws-range::-moz-range-track {
-  height: 3px;
-  border-radius: var(--radius-base);
-  background: var(--border-default);
-}
-
-.ws-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 11px;
-  height: 11px;
-  border-radius: var(--radius-base);
-  border: 2px solid var(--accent);
-  background: var(--bg-2);
-  margin-top: -4px;
-  transition: border-color var(--dur-fast);
-}
-
-.ws-range::-moz-range-thumb {
-  width: 11px;
-  height: 11px;
-  border-radius: var(--radius-base);
-  border: 2px solid var(--accent);
-  background: var(--bg-2);
-}
-
-.ws-range:hover::-webkit-slider-thumb {
-  border-color: var(--accent-hover);
-}
-
-.ws-range:hover::-moz-range-thumb {
-  border-color: var(--accent-hover);
-}
-
-.ws-range:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
 }

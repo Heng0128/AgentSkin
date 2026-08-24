@@ -24,8 +24,12 @@
  *   `AGENTSKIN_MANUAL=1 npx vitest run src/main/cdp/live-doubao-engine.manual.test.ts`
  * Without `AGENTSKIN_MANUAL=1` the suite is skipped so `npm run check` never
  * touches live agents.
+ *
+ * Environment variables:
+ *   AGENTSKIN_THEMES_PATH — override themes directory (default: ~/AppData/Roaming/AgentSkin/themes)
  */
 
+import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { getAdapter, registerBuiltinAdapters } from '../../adapters/registry';
@@ -37,7 +41,7 @@ import { ThemeLibrary } from '../theme-library';
 import { connectCdp } from './cdp-client';
 import { waitForTheme } from './injection/shared';
 
-const THEMES_ROOT = 'C:/Users/snowb/AppData/Roaming/AgentSkin/themes';
+const THEMES_ROOT = process.env.AGENTSKIN_THEMES_PATH || path.join(os.homedir(), 'AppData', 'Roaming', 'AgentSkin', 'themes');
 const THEME_ID = process.env.THEME_ID ?? 'aurora-dusk';
 const MANUAL = process.env.AGENTSKIN_MANUAL === '1';
 const noop = (): void => {};

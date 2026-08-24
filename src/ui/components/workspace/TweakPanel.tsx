@@ -403,7 +403,7 @@ function ColorField({
       <Input
         value={hex}
         onChange={(e) => onChange(e.target.value)}
-        className="h-7 flex-1 rounded-md px-2 font-mono text-[11px] tabular-nums"
+        className="h-7 flex-1 rounded-md px-2 text-[11px] tabular-nums"
       />
     </div>
   );

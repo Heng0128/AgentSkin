@@ -74,7 +74,7 @@ function OklchSlider({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="w-16 shrink-0 font-mono text-[10px] text-[var(--fg-2)]">{label}</span>
+      <span className="w-16 shrink-0 text-[10px] text-[var(--fg-2)]">{label}</span>
       <input
         type="range"
         min={min}
@@ -182,10 +182,10 @@ export function ExtendedColorsEditor({
     <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header */}
       <div>
-        <h3 className="font-mono text-[11px] font-normal text-[var(--fg-0)]">
+        <h3 className="text-[11px] font-normal text-[var(--fg-0)]">
           {t.studioExtColors ?? 'Extended Colors'}
         </h3>
-        <p className="mt-2 font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">
+        <p className="mt-2 text-[10px] leading-relaxed text-[var(--fg-2)]">
           {t.studioExtColorsDesc ??
             'Semantic color tokens (error, success, warning, info, glow…) with WCAG contrast and OKLCH adjustment.'}
         </p>
@@ -193,7 +193,7 @@ export function ExtendedColorsEditor({
 
       {/* ── Add new color ─────────────────────────────────────────────── */}
       <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
+        <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
           {t.studioExtAddColor ?? 'Add Color'}
         </h4>
 
@@ -235,7 +235,7 @@ export function ExtendedColorsEditor({
 
         {/* Preset buttons */}
         <div className="mt-2 flex items-center gap-2">
-          <span className="font-mono text-[10px] text-[var(--fg-3)]">
+          <span className="text-[10px] text-[var(--fg-3)]">
             {t.studioExtPresets ?? 'Presets:'}
           </span>
           {PRESETS.map((p) => {
@@ -246,7 +246,7 @@ export function ExtendedColorsEditor({
                 type="button"
                 onClick={() => handlePreset(p.name, p.hex)}
                 disabled={disabled}
-                className="flex items-center gap-1 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] px-2 py-1 font-mono text-[10px] text-[var(--fg-2)] transition-colors hover:border-[var(--fg-3)] disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] px-2 py-1 text-[10px] text-[var(--fg-2)] transition-colors hover:border-[var(--fg-3)] disabled:cursor-not-allowed disabled:opacity-40"
                 title={`${p.name} — ${p.hex}`}
               >
                 <span
@@ -263,13 +263,13 @@ export function ExtendedColorsEditor({
 
       {/* ── Existing colors list ──────────────────────────────────────── */}
       <div className="mt-4 flex-1 overflow-y-auto rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
+        <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
           {t.studioExtCurrent ?? 'Current Colors'} ({entries.length})
         </h4>
 
         {entries.length === 0 ? (
           <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-dashed border-[var(--border-subtle)] p-6 text-center">
-            <p className="font-mono text-[10px] text-[var(--fg-3)]">
+            <p className="text-[10px] text-[var(--fg-3)]">
               {t.studioExtEmpty ?? 'No extended colors yet. Add one above.'}
             </p>
           </div>
@@ -333,7 +333,7 @@ export function ExtendedColorsEditor({
       {selectedName && selectedHex && (
         <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
+            <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioExtOklch ?? 'OKLCH Adjust'} — {selectedName}
             </h4>
             <button

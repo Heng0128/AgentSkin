@@ -33,7 +33,7 @@ Electron 渲染进程的 React 应用层，包含全部 12 个 Zustand Store、7
 | `design/` | 设计令牌与主题模式定义 |
 | `api/` | 渲染进程 API 客户端（AgentSkinClient） |
 | `utils/` | 通用工具（色彩理论、渲染日志） |
-| `styles/` | 页面级样式（workspace-tokens.css, workspace.css） |
+| `styles/` | 页面级样式（workspace.css 及 workspace/ 子模块） |
 | `storage/` | 持久化存储（环境预设 store） |
 | `types/` | 渲染进程局部类型定义 |
 | `assets/` | 静态资源 |

@@ -90,7 +90,7 @@ export function AgentDetailSheet({
               )}
 
               {/* 次要信息 — 紧凑一行 */}
-              <div className="flex items-center justify-between font-mono text-[10px] text-muted-foreground">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                 <span>
                   {env.detectedVersion ? t.versionLabel(env.detectedVersion) : t.detailNotInstalled}
                 </span>

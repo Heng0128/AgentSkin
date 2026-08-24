@@ -17,7 +17,7 @@
 |------|------|---------|
 | **方案冲突** | 3 个 P0 + 4 个 P1 | `danger` vs `destructive` 命名冲突；`--brand-red` 未定义；浮层组件遗漏 |
 | **架构深层** | 2 个 P0 + 7 个 P1 + 15 个 P2 | 三套 Token 系统并行；Toast 双重实现；useAppController 上帝 Hook |
-| **GitHub 对标** | 14 个项目 | Cherry Studio 主题切换、Open Design token-first、Swiss Post 三级分层 |
+| **GitHub 对标** | 14 个项目 | Cherry Studio 主题切换、Open Design token-first、Swiss Post（历史参考）三级分层 |
 | **多维评分** | 3 方案 | Dual Theme Balanced 8.46 分最高 |
 
 ### 最优方案
@@ -189,7 +189,7 @@
 | 项目 | Stars | 技术栈 | 可借鉴点 | 适配度 |
 |------|-------|--------|---------|--------|
 | **Open Design** (nexu-io) | 36.4k | Tailwind v4 | token-first 方法学 + lint guard 拦截硬编码色值 | 极高 |
-| **Swiss Post DS** (swisspost) | 93 | SCSS+Web Components | 三级 token 分层 (core -> utility -> component) | 极高 |
+| **Swiss Post DS** (swisspost) | 93 | SCSS+Web Components | 三级 token 分层 (core -> utility -> component)（历史参考） | 极高 |
 | **shadcn/ui** | 78k+ | Radix+Tailwind | HSL CSS 变量主题体系 + 组件源码所有权 | 极高 |
 | **Cherry Studio** (CherryHQ) | 41.6k | Electron+AntD | `[theme-mode]` 属性选择器主题切换 + AI 桌面交互 | 高 |
 | **Onlook** (onlook-dev) | 25.6k | Tailwind+shadcn | Linear/Cursor 风格极简灰阶 + AI 交互面板 | 高 |
@@ -207,7 +207,7 @@
 - ESLint guard 拦截硬编码色值
 - **适用**: AgentSkin 的 14-token 契约 + Theme Studio
 
-#### 模式 B: 三级 token 分层 (来自 Swiss Post DS)
+#### 模式 B: 三级 token 分层 (来自 Swiss Post DS，历史参考)
 - core token (原始值) -> utility token (语义映射) -> component token (组件绑定)
 - **适用**: AgentSkin 的 Palette-CSS 同步契约 (C3)
 

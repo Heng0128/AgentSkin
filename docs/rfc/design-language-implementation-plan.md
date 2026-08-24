@@ -166,13 +166,13 @@
 // # design-language.mjs — Design Language registry and CSS generator.
 //
 // Provides named design languages (presets) and inline config → CSS block.
-// A manifest can either reference a known DL by id ("designLanguage": "swiss-default")
+// A manifest can either reference a known DL by id ("designLanguage": "default")
 // or provide inline config ("designLanguageConfig": { ... }).
 
 /** Design Language presets registry. */
 export const DESIGN_LANGUAGES = {
-  'swiss-default': {
-    name: 'Swiss Default',
+  'default': {
+    name: 'Default',
     spacing: { density: 'comfortable' },
     radius: { scale: '2' },
     shadow: { elevation: 'float' },
@@ -468,7 +468,7 @@ import { designLanguageBlock, resolveDesignLanguage, DESIGN_LANGUAGES } from '..
 
 describe('designLanguageBlock', () => {
   it('generates spacing vars with 4px grid at comfortable (1x)', () => {
-    const css = designLanguageBlock(DESIGN_LANGUAGES['swiss-default']);
+    const css = designLanguageBlock(DESIGN_LANGUAGES['default']);
     expect(css).toContain('--agentskin-space-4: 4.0px');
     expect(css).toContain('--agentskin-space-16: 16.0px');
     expect(css).toContain('--agentskin-space-48: 48.0px');

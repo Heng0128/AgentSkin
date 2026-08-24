@@ -7,8 +7,6 @@
  *   · stage     flex-1 (preview canvas)
  *   · inspector 240px  → collapsible to 4px
  *   · status    24px fixed
- *
- * Also includes scrollbar styling and generic workspace utilities.
  * ================================================================= */
 
 /* -------------------------------------------------------------------
@@ -62,12 +60,6 @@
   min-width: 0;
 }
 
-.ws-topbar__right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-shrink: 0;
-}
 
 .ws-topbar__brand-icon {
   font-size: 14px;
@@ -77,14 +69,14 @@
 }
 
 .ws-topbar__brand-name {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 600;
   color: var(--fg-0);
 }
 
 .ws-topbar__project-name {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   color: var(--fg-2);
   margin-left: 4px;
@@ -130,7 +122,7 @@
   border-radius: var(--r-xs);
   cursor: pointer;
   user-select: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 600;
   color: var(--fg-1);
@@ -244,13 +236,6 @@
   align-items: stretch;
 }
 
-.ws-focus-side {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Empty state */
 
 .ws-stage__placeholder {
   display: flex;
@@ -276,14 +261,14 @@
 }
 
 .ws-stage__placeholder-title {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 12px;
   font-weight: 500;
   color: var(--fg-0);
 }
 
 .ws-stage__placeholder-hint {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 11px;
   color: var(--fg-2);
   max-width: 280px;
@@ -329,7 +314,7 @@
 }
 
 .pw__title {
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 500;
   color: var(--fg-0);
@@ -383,7 +368,7 @@
   padding: 0 var(--space-2);
   background: var(--bg-1);
   border-top: 1px solid var(--border-subtle);
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   color: var(--fg-2);
   flex-shrink: 0;
@@ -445,7 +430,7 @@
   border: 1px solid var(--accent-ghost);
   border-radius: var(--r-xs);
   margin-bottom: var(--space-3);
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 600;
   color: var(--accent);
@@ -463,7 +448,7 @@
   padding: 0 var(--space-3);
   border: none;
   background: transparent;
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 500;
   color: var(--fg-2);
@@ -486,132 +471,9 @@
   background: var(--accent);
 }
 
-/* Landmark chips */
 
-.ws-landmark-chip {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--r-xs);
-  cursor: pointer;
-  border: 1px solid transparent;
-  background: transparent;
-  transition: background var(--dur-fast);
-}
 
-.ws-landmark-chip:hover {
-  background: var(--bg-3);
-}
 
-.ws-landmark-chip[data-active="true"] {
-  background: var(--accent-subtle);
-  border-color: var(--accent-ghost);
-}
-
-.ws-landmark-chip .lm-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-}
-
-.ws-landmark-chip .lm-sel {
-  flex: 1;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--fg-0);
-}
-
-.ws-landmark-chip .lm-dim {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--fg-3);
-}
-
-/* Style rows (inside inspector details) */
-
-.ws-style-row {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-1);
-  padding: 2px var(--space-1);
-  font-family: var(--font-mono);
-  font-size: 10px;
-}
-
-.ws-style-row .prop {
-  width: 110px;
-  flex-shrink: 0;
-  color: var(--fg-2);
-  opacity: 0.7;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.ws-style-row .val {
-  color: var(--fg-0);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Dimension fingerprint card */
-
-.ws-dim-card {
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-xs);
-  background: var(--bg-3);
-  padding: var(--space-2);
-  margin-bottom: var(--space-3);
-}
-
-.ws-dim-card__title {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--fg-2);
-  opacity: 0.7;
-  margin-bottom: var(--space-1);
-}
-
-.ws-dim-row {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  padding: 1px 0;
-}
-
-.ws-dim-row .dk {
-  color: var(--fg-2);
-}
-.ws-dim-row .dv {
-  color: var(--fg-0);
-  font-weight: 500;
-}
-
-/* Inspector detail group (box + title) */
-
-.ws-detail-group {
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-xs);
-  background: var(--bg-1);
-  padding: var(--space-2);
-  margin-bottom: var(--space-2);
-}
-
-.ws-detail-group__title {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--fg-0);
-  margin-bottom: var(--space-1);
-}
 
 /* -------------------------------------------------------------------
  * Status Bar (24px fixed bottom)
@@ -626,7 +488,7 @@
   height: var(--h-status);
   background: var(--bg-1);
   border-top: 1px solid var(--border-subtle);
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   color: var(--fg-2);
   z-index: var(--z-status);
@@ -639,53 +501,3 @@
   color: var(--fg-0);
 }
 
-/* -------------------------------------------------------------------
- * Scrollbar
- * ------------------------------------------------------------------- */
-
-.ws-root ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-.ws-root ::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.ws-root ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-base);
-}
-
-.ws-root ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-
-/* -------------------------------------------------------------------
- * Generic workspace utilities
- * ------------------------------------------------------------------- */
-
-.ws-divider {
-  border: none;
-  border-top: 1px solid var(--border-subtle);
-  margin: var(--space-2) 0;
-}
-
-.ws-section-label {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--fg-1);
-  opacity: 0.7;
-}
-
-.ws-dot {
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex-shrink: 0;
-}

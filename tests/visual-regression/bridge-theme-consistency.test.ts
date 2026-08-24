@@ -134,7 +134,7 @@ function countColorBridgeOverrides(css: string): number {
 }
 
 // ---------------------------------------------------------------------------
-// Test suite
+// Test suite (flattened: max describe depth = 2)
 // ---------------------------------------------------------------------------
 
 describe('bridge-theme-consistency', () => {
@@ -143,7 +143,7 @@ describe('bridge-theme-consistency', () => {
     existsSync(join(THEMES_DIR, id, 'manifest.json')),
   );
 
-  it('target bridge themes exist on disk', () => {
+  it('should confirm target bridge themes exist on disk', () => {
     // Bridge themes (github-noir, obsidian-poise, sweet-strawberry-code) are a
     // planned feature — they do not exist on disk yet. The per-theme loop below
     // iterates `availableThemes`, so when none exist the suite is effectively
@@ -152,90 +152,88 @@ describe('bridge-theme-consistency', () => {
     expect(availableThemes.length).toBeGreaterThanOrEqual(0);
   });
 
-  // — Per-theme tests ——————————————————————————————————————————————
+  // ── 1. variableBridge format (flattened — one describe per theme) ────
   for (const themeId of availableThemes) {
-    describe(`theme: ${themeId}`, () => {
+    describe(`theme: ${themeId} — variableBridge format`, () => {
       const manifest = readManifest(themeId);
+      const vb = manifest.variableBridge as Record<string, string> | undefined;
 
-      // ── 1. variableBridge format ──────────────────────────────────────
-      describe('variableBridge format', () => {
-        const vb = manifest.variableBridge as Record<string, string> | undefined;
-
-        it('variableBridge (if present) has valid CSS var names as keys', () => {
-          if (!vb) {
-            // Not all bridge themes declare variableBridge in manifest — skip
-            expect(vb).toBeUndefined();
-            return;
-          }
-          for (const key of Object.keys(vb)) {
-            expect(isValidCssVarName(key), `key "${key}" is not a valid CSS variable name`).toBe(true);
-          }
-        });
-
-        it('variableBridge values reference valid --agentskin-* tokens', () => {
-          if (!vb) {
-            expect(vb).toBeUndefined();
-            return;
-          }
-          for (const [key, value] of Object.entries(vb)) {
-            expect(
-              referencesAgentskinToken(value),
-              `value for "${key}" should reference --agentskin-* token, got: "${value}"`,
-            ).toBe(true);
-          }
-        });
+      it('should have valid CSS var names as keys when variableBridge is present', () => {
+        if (!vb) {
+          // Not all bridge themes declare variableBridge in manifest — skip
+          expect(vb).toBeUndefined();
+          return;
+        }
+        for (const key of Object.keys(vb)) {
+          expect(isValidCssVarName(key), `key "${key}" is not a valid CSS variable name`).toBe(true);
+        }
       });
 
-      // ── 2-5. CSS-level checks (per agent) ─────────────────────────────
-      for (const agent of AGENTS) {
-        describe(`agent CSS: ${agent}`, () => {
-          const css = readThemeCss(themeId, agent);
-
-          it('declares --agentskin-* tokens inside :root.agentskin-host-codex', () => {
-            const varsInHost = extractAgentskinVarsInHostSelector(css);
-            expect(varsInHost.length).toBeGreaterThan(0);
-            // Core tokens must be present
-            expect(varsInHost).toContain('--agentskin-accent');
-            expect(varsInHost).toContain('--agentskin-bg');
-            expect(varsInHost).toContain('--agentskin-text');
-          });
-
-          it('has NO bare :root declarations (THEME_SPEC violation)', () => {
-            expect(hasBareRootDeclaration(css)).toBe(false);
-          });
-
-          // FIX 2026-08-23 (faithful full-CSS reproduction): the bridge now
-          // preserves the source theme's --ct-* namespace verbatim so the
-          // hand-tuned Codex adaptation stays self-consistent. The correct
-          // invariant is SELF-CONSISTENCY: every referenced --ct-* must have a
-          // matching declaration in the same bridged block (no dangling refs),
-          // NOT "zero --ct-* occurrences" (which would mean we dropped the
-          // source design system).
-          it('every --ct-* reference has a matching declaration (self-consistent, no dangling refs)', () => {
-            const ctRefs = findCtVariableReferences(css);
-            const ctDecls = new Set(findCtVariableDeclarations(css));
-            const dangling = ctRefs.filter((r) => !ctDecls.has(r));
-            expect(
-              dangling,
-              `dangling --ct-* refs (referenced but never declared): ${dangling.join(', ')}`,
-            ).toEqual([]);
-          });
-
-          // Bridge contract: if the source theme CSS was bridged (bridge marker
-          // present), --color-* override count must be > 0.
-          it('has --color-* bridge overrides > 0 when bridge section is present', () => {
-            const hasBridgeMarker =
-              css.includes('Bridge: FULL source Codex theme CSS') ||
-              css.includes('Bridge: Codex-native --color-token-* overrides');
-            if (!hasBridgeMarker) {
-              // Metadata-only export (no source CSS) — bridge section cannot exist.
-              expect(hasBridgeMarker).toBe(false);
-              return;
-            }
-            expect(countColorBridgeOverrides(css)).toBeGreaterThan(0);
-          });
-        });
-      }
+      it('should reference valid --agentskin-* tokens in variableBridge values when present', () => {
+        if (!vb) {
+          expect(vb).toBeUndefined();
+          return;
+        }
+        for (const [key, value] of Object.entries(vb)) {
+          expect(
+            referencesAgentskinToken(value),
+            `value for "${key}" should reference --agentskin-* token, got: "${value}"`,
+          ).toBe(true);
+        }
+      });
     });
+  }
+
+  // ── 2-5. CSS-level checks (flattened — one describe per theme×agent) —
+  for (const themeId of availableThemes) {
+    for (const agent of AGENTS) {
+      describe(`theme: ${themeId} — agent CSS: ${agent}`, () => {
+        const css = readThemeCss(themeId, agent);
+
+        it('should declare --agentskin-* tokens inside :root.agentskin-host-codex', () => {
+          const varsInHost = extractAgentskinVarsInHostSelector(css);
+          expect(varsInHost.length).toBeGreaterThan(0);
+          // Core tokens must be present
+          expect(varsInHost).toContain('--agentskin-accent');
+          expect(varsInHost).toContain('--agentskin-bg');
+          expect(varsInHost).toContain('--agentskin-text');
+        });
+
+        it('should NOT have bare :root declarations (THEME_SPEC violation)', () => {
+          expect(hasBareRootDeclaration(css)).toBe(false);
+        });
+
+        // FIX 2026-08-23 (faithful full-CSS reproduction): the bridge now
+        // preserves the source theme's --ct-* namespace verbatim so the
+        // hand-tuned Codex adaptation stays self-consistent. The correct
+        // invariant is SELF-CONSISTENCY: every referenced --ct-* must have a
+        // matching declaration in the same bridged block (no dangling refs),
+        // NOT "zero --ct-* occurrences" (which would mean we dropped the
+        // source design system).
+        it('should have every --ct-* reference paired with a matching declaration (no dangling refs)', () => {
+          const ctRefs = findCtVariableReferences(css);
+          const ctDecls = new Set(findCtVariableDeclarations(css));
+          const dangling = ctRefs.filter((r) => !ctDecls.has(r));
+          expect(
+            dangling,
+            `dangling --ct-* refs (referenced but never declared): ${dangling.join(', ')}`,
+          ).toEqual([]);
+        });
+
+        // Bridge contract: if the source theme CSS was bridged (bridge marker
+        // present), --color-* override count must be > 0.
+        it('should have --color-* bridge overrides > 0 when bridge section is present', () => {
+          const hasBridgeMarker =
+            css.includes('Bridge: FULL source Codex theme CSS') ||
+            css.includes('Bridge: Codex-native --color-token-* overrides');
+          if (!hasBridgeMarker) {
+            // Metadata-only export (no source CSS) — bridge section cannot exist.
+            expect(hasBridgeMarker).toBe(false);
+            return;
+          }
+          expect(countColorBridgeOverrides(css)).toBeGreaterThan(0);
+        });
+      });
+    }
   }
 });

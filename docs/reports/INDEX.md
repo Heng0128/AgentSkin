@@ -47,3 +47,4 @@
 | `theme-system-v2-selection-report.md` | — | 主题系统 v2 选型报告 |
 | `theme-system-v3-FINAL-report.md` | — | 主题系统 v3 最终报告 |
 | `ui-design-report.md` | — | UI 设计报告 |
+| `DreamSkin-Community-Integration-Plan.md` | 2026-08-20 | DreamSkin 社区主题系统集成实施计划（P0/P1/P2 分阶段 + 5 天路线图） |

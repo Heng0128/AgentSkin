@@ -276,8 +276,8 @@ C 的收益局限于交互层，且：
 | 3 | designLanguage 的 DL 变量注入顺序是否影响 signature 层？ | DL 变量在 L0 palette 之后注入，signature 依赖 surface/bg 变量，顺序正确 | 已纳入 P0 |
 | 4 | 现有主题不填写 designLanguage / extended 时行为是否完全不变？ | 是。两个字段均为可选，缺失时使用生成器当前硬编码默认值 | 已纳入 P0 |
 | 5 | extended colors 的 WCAG 校验是否会导致大量存量构建失败？ | 否。WCAG 校验仅作用于填写了 extended 的主题，未填写的不触发 | 已纳入 P1 |
-| 6 | 间距密度 compact/cozy 是否破坏 Swiss 4px 网格？ | 否。0.75x/1.25x 倍数仍落在 4px 网格上（3px/5px 极少数派生值需用 `gap-[3px]` 兜底） | 已备注 |
-| 7 | radius 0/2/4/8 是否与 Swiss rounded-[2px] 矛盾？ | 否。默认值 2px 对齐 Swiss 风格，扩展值供主题选择 | 已纳入 P0 |
+| 6 | 间距密度 compact/cozy 是否破坏 4px 网格？ | 否。0.75x/1.25x 倍数仍落在 4px 网格上（3px/5px 极少数派生值需用 `gap-[3px]` 兜底） | 已备注 |
+| 7 | radius 0/2/4/8 是否与 rounded-[2px] 矛盾？ | 否。默认值 2px 对齐项目风格，扩展值供主题选择 | 已纳入 P0 |
 | 8 | motion speed instant(0ms) 是否与 prefers-reduced-motion 冲突？ | 否。Studio 生成时应检测系统 `prefers-reduced-motion` 并自动降级 | 已备注 |
 
 ### 5.2 发现的隐性风险

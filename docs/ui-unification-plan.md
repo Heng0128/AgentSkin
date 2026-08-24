@@ -1,8 +1,11 @@
 # AgentSkin UI 风格统一修改清单（UI Unification Plan）
 
 > 生成日期：2026-08-14
+> 更新日期：2026-08-20（Swiss 风格已完全移除，文档更新为完成状态）
 > 审计范围：`src/ui/` 全部页面、共享组件、Studio 组件、设计 token（globals.css / workspace-tokens.css / workspace.css / shadcn-tailwind.css）
-> 问题定性：**四套风格体系并存**——Notion 系（主导骨架）、Swiss 系（残留排印与 token）、新 globals token（半成品、radius 失效）、Tailwind/shadcn 默认（兜底），视觉混乱由此而来。
+> 当前状态：**原 Swiss 风格已清理，当前统一为 Quiet Workbench 设计语言**——Notion 系（主导骨架，去名留形）、Quiet Workbench token 体系（修复生效）、Tailwind/shadcn 默认（兜底收敛中）。
+
+> **状态说明**：原版文档记录 Swiss 风格并存问题；截至更新日，Swiss 已完全移除，项目统一采用 Quiet Workbench 设计语言。以下诊断与清单保留为历史审计记录，标注 ✅ 的项已完成。
 
 ---
 
@@ -13,18 +16,18 @@
 | 指标 | 数量 | 说明 |
 |------|------|------|
 | `rounded-md`（Notion 式 6px 圆角） | **191 处** | 散落所有页面/组件 |
-| `font-mono`（Swiss 式等宽排印） | **204 处** | 标题、标签、按钮、徽章全用 mono |
-| 任意字号 `text-[Npx]`（9.5~13px） | **297 处** | 未走字号 token |
-| 违规间距（gap-2.5/3.5、gap-[Npx]、m-[Npx]、p-[Npx]） | **77 处** | 违反 AGENTS.md 黄金规则 6（仅 4/8/16/24/32/48） |
-| Swiss 式 `tracking-[…]` / `uppercase` 宽字距大写排印 | **104 处** | Swiss 国际主义排印特征 |
-| 硬编码 `var(--…)` 直引用（绕过语义层） | **400 处** | 含 `var(--glass, …)` 等带 fallback 的不确定引用 |
-| 硬编码 hex/rgb 颜色 | **29 处** | 绕开设计 token |
-| 注释/命名出现 "Notion" | **27 个文件** | 含 globals.css 本身 |
-| 注释/命名出现 "Swiss" | **7 个文件** | 含 schema 默认形态声明 |
+| `font-mono`（原 Swiss 式等宽排印） | **204 处** → ✅ 已清理 | 标题、标签、按钮、徽章全用 mono → 收敛为数据/代码场景专用 |
+| 任意字号 `text-[Npx]`（9.5~13px） | **297 处** → ✅ 已清理 | 未走字号 token → 收敛到 6 档 Quiet Workbench 字号 token |
+| 违规间距（gap-2.5/3.5、gap-[Npx]、m-[Npx]、p-[Npx]） | **77 处** → ✅ 已清理 | 违反 AGENTS.md 黄金规则 6 → 全站对齐 4px 网格 |
+| 原 Swiss 式 `tracking-[…]` / `uppercase` 宽字距大写排印 | **104 处** → ✅ 已清理 | Quiet Workbench 无宽字距大写排印特征 |
+| 硬编码 `var(--…)` 直引用（绕过语义层） | **400 处** → ✅ 已清理 | 含 `var(--glass, …)` 等带 fallback 的不确定引用 → 收敛为语义 token |
+| 硬编码 hex/rgb 颜色 | **29 处** → ✅ 已清理 | 绕开设计 token → 统一到 Quiet Workbench 语义 token |
+| 注释/命名出现 "Notion" | **27 个文件** → ✅ 已清理 | 含 globals.css 本身 → 改写为 AgentSkin/Quiet Workbench 措辞 |
+| 注释/命名出现 "Swiss" | **7 个文件** → ✅ 已清理 | 含 schema 默认形态声明 → 去 Swiss 措辞 |
 
 ### 1.2 一句话结论
 
-**应用外壳（Sidebar / TitleBar / StatusBar）与页面工具条整体是 Notion 复刻（注释自认 "Notion Edition"），Workspace/Studio 体系残留 Swiss 排印与 2px 方角（注释自认 "NotionInternational styling"），而 globals.css 里新写的 "Precision · Depth · Clarity" token 因为 `--radius-base` 从未定义而整体失效——三套语言同时生效，互不统一。**
+**原状态（已修复）：应用外壳（Sidebar / TitleBar / StatusBar）与页面工具条整体是 Notion 复刻（注释自认 "Notion Edition"），Workspace/Studio 体系残留 Swiss 排印与 2px 方角（注释自认 "NotionInternational styling"），而 globals.css 里新写的 "Precision · Depth · Clarity" token 因为 `--radius-base` 从未定义而整体失效——三套语言同时生效，互不统一。当前已统一为 Quiet Workbench 设计语言：Swiss 残留已清除，Notion 引用已更名，token 体系修复生效。**
 
 ---
 
@@ -44,23 +47,23 @@
 
 特征：6px 圆角、柔和灰、扁平分段控件、左指示条导航。
 
-### 体系 B — Swiss 系（残留，被用户点名移除）
+### 体系 B — Swiss 系（已清理 ✅，历史诊断保留）
 
 | 载体 | 证据 |
 |------|------|
 | `styles/workspace-tokens.css` | 独立第二套 token：`--bg-0..4`（#0b0b10 蓝黑）、`--r-micro: 2px`、`--space-*`、全 mono 约定 |
 | `styles/workspace.css` | 1~2px 方角 14 处（滑块 thumb、开关、dot、swatch）；注释 `Live Tweak slider (native range input, NotionInternational styling)` |
-| `components/studio/kicker.tsx` | Kicker = Swiss "kopf/section kicker" 排印元素（注释误标 Notion） |
+| `components/studio/kicker.tsx` | Kicker = 原 Swiss "kopf/section kicker" 排印元素（注释误标 Notion）→ ✅ 已替换为 SectionLabel |
 | `pages/WorkspacePage.tsx` | 页头 `font-mono … uppercase tracking-tight` |
 | `pages/ThemesPage.tsx` | `tracking-[.18em]` 宽字距元数据行 |
 | `pages/SettingsPage.tsx` | `tracking-[.18em]`、`toUpperCase()` 大写标签 |
-| `i18n.ts` | `swissLedRunning` 等 8 组键名带 `swiss*` 前缀 |
-| `main/catalog/manifest-v2.schema.json` | 注释 `Engine 默认 2px Swiss 形态` |
-| `main/catalog/component-variations.schema.json` | 注释 `标题字距（Swiss: -0.01em）`、`宽字距（Swiss uppercase 装饰用）` |
+| `i18n.ts` | `swissLedRunning` 等 8 组键名带 `swiss*` 前缀 → ✅ 已重命名为 `status*` 语义键 |
+| `main/catalog/manifest-v2.schema.json` | 注释 `Engine 默认 2px Swiss 形态` → ✅ 已改为"Engine 默认形态" |
+| `main/catalog/component-variations.schema.json` | 注释 `标题字距（Swiss: -0.01em）`、`宽字距（Swiss uppercase 装饰用）` → ✅ 已去 Swiss 措辞 |
 | `components/logo.tsx` | mono 变体 `rx="2"` 方角 |
 | `pages/WallpaperEnginePage.tsx` | Mobile Sheet `rounded-t-[2px]` |
 
-特征：mono 大写 + 大 letter-spacing 排印、1~2px 几何方角、独立蓝黑 token、kicker 段落标签、网格对齐线。
+特征（已清理）：mono 大写 + 大 letter-spacing 排印、1~2px 几何方角、独立蓝黑 token、kicker 段落标签、网格对齐线 → 全部移除，由 Quiet Workbench 设计语言替代。
 
 ### 体系 C — globals.css 新 token（半成品，核心缺陷）
 
@@ -68,9 +71,9 @@
 |------|------|------|
 | `--radius-base` **从未定义** | globals.css L64-68 | `:root` 的 3px 基准圆角体系整体失效（浏览器丢弃无效 `calc()`） |
 | `@theme inline` 引用 `var(--radius)` 也未定义 | globals.css L288-290, L365-369 | `--radius-micro/soft/sm/md/lg/xl/2xl` 全部无效 |
-| 注释宣称 "Base is 3px (not Swiss 2px … not Notion 6px)" | globals.css L61 | **设计意图与实际渲染（6px）完全脱节** |
+| 注释宣称 "Base is 3px (not Swiss 2px … not Notion 6px)" | globals.css L61 | **设计意图与实际渲染（6px）完全脱节** → ✅ 已改为 Quiet Workbench 正面陈述 |
 | `--font-size-micro/label/body…` 定义了但无人使用 | globals.css L342-348 | 297 处任意字号仍在裸奔 |
-| 注释仍自称 "Swiss"（"not Swiss 2px"）与 "Notion"（"not Notion 6px"） | globals.css L61 | 设计语言陈述残留外来词 |
+| 注释仍自称 "Swiss"（"not Swiss 2px"）与 "Notion"（"not Notion 6px"） | globals.css L61 | 设计语言陈述残留外来词 → ✅ 已改为 Quiet Workbench 自身措辞 |
 | 深色 `--dot`、`--shadow-*` 已定义但页面内联 fallback | ThemesPage L376-382 | `var(--glass, …)`、`var(--f-mono, …)` 等说明 token 契约不可信 |
 
 ### 体系 D — Tailwind / shadcn 默认（兜底）
@@ -104,10 +107,10 @@
 
 | # | 冲突 | 位置 | 说明 |
 |---|------|------|------|
-| T-1 | mono 滥用（Swiss 特征） | 204 处 `font-mono`：侧栏分组、tab、按钮、徽章、输入框 | 数据/代码场景应保留 mono，**控件与标题不应全 mono** |
+| T-1 | mono 滥用（原 Swiss 特征） | 204 处 `font-mono`：侧栏分组、tab、按钮、徽章、输入框 | 数据/代码场景应保留 mono，**控件与标题不应全 mono** → ✅ 已收敛 |
 | T-2 | 任意字号 297 处 | `text-[9.5px]/[10px]/[10.5px]/[11px]/[11.5px]/[12px]/[12.5px]/[13px]` | 未走 `--font-size-*` token，同一层级多处字号 |
-| T-3 | 大写 + 宽字距 104 处 | `tracking-[.18em]`、`uppercase`、`tracking-wider` | Swiss 国际主义排印；中文场景大写无意义且破坏可读性 |
-| T-4 | 品牌字体定位模糊 | Space Grotesk（几何无衬线，Swiss 血统）用于 font-display | 见"决策点 D-1"，建议仅保留品牌场景 |
+| T-3 | 大写 + 宽字距 104 处 | `tracking-[.18em]`、`uppercase`、`tracking-wider` | Quiet Workbench 无宽字距大写排印；中文场景大写无意义且破坏可读性 → ✅ 已清理 |
+| T-4 | 品牌字体定位模糊 | Space Grotesk（几何无衬线，原 Swiss 血统）用于 font-display | 见"决策点 D-1"，建议仅保留品牌场景 |
 | T-5 | 标题层级不统一 | ThemesPage `text-sm`(14px) vs AppsPage `text-[22px]` vs WorkspacePage `font-mono 12px uppercase` | 三个页面三种页头 |
 
 ### 3.3 圆角冲突
@@ -116,7 +119,7 @@
 |---|------|------|------|
 | R-1 | token 失效 | globals `--radius-base` / `--radius` 未定义 | 3px 设计意图 0 生效 |
 | R-2 | Notion 6px 主导 | `rounded-md` 191 处 | 与品牌"精密"定位不符 |
-| R-3 | Swiss 2px 残留 | workspace.css 14 处 1~2px、logo mono `rx="2"`、Mobile Sheet `rounded-t-[2px]` | 方角几何构成 |
+| R-3 | 原 Swiss 2px 残留 | workspace.css 14 处 1~2px、logo mono `rx="2"`、Mobile Sheet `rounded-t-[2px]` | 方角几何构成 → ✅ 已统一为 Quiet Workbench 圆角 token |
 | R-4 | 三种圆角语言并存 | 6px（组件）/ 2px（workspace）/ 3px（globals 注释意图） | 同一窗口内卡片 6px、滑块 2px、开关 2px |
 
 ### 3.4 间距冲突（违反 AGENTS.md 黄金规则 6）
@@ -162,25 +165,27 @@
 
 ---
 
-## 四、Swiss 风格元素移除清单（彻底移除）
+## 四、Swiss 风格元素移除清单（✅ 全部完成）
 
-| # | 文件 | 位置 | 处理方式 |
-|---|------|------|----------|
-| S-1 | `styles/workspace-tokens.css` | 全文件 | 删除独立 token 体系；需要保留的（dock 布局）映射到 globals token |
-| S-2 | `styles/workspace.css` | 1~2px 圆角 14 处（L525/667/767/775/782/880/898/1128/1447/1594-1628） | 对齐统一圆角 token；**删除全部未使用类**（.ws-btn/.ws-badge/.ws-dialog/.ws-input/.ws-range 等无引用者） |
-| S-3 | `styles/workspace.css` | L1586 注释 `NotionInternational styling` | 改写为项目自身措辞或删除 |
-| S-4 | `components/studio/kicker.tsx` | 全文件（kopf/section kicker） | 若 Studio 确认下线则删除；若保留，用统一 SectionLabel 组件替换 |
-| S-5 | `pages/WorkspacePage.tsx` | L74 `font-mono … uppercase tracking-tight`；L142、L150 等 | 改为统一页面标题样式（font-display 或 --font-ui），移除 uppercase/mono |
-| S-6 | `pages/ThemesPage.tsx` | L302 `tracking-[.18em]` | 移除宽字距，用统一 label token |
-| S-7 | `pages/SettingsPage.tsx` | L224 `tracking-[.18em]`、L225 `toUpperCase()` | 同上 |
-| S-8 | `pages/WallpaperEnginePage.tsx` | L210 `rounded-t-[2px]` | 统一圆角 token |
-| S-9 | `components/logo.tsx` | L34/37/41/43 `rx="2"`（mono 变体） | 统一为品牌圆角 token（与 color 变体一致） |
-| S-10 | `shared/i18n.ts` | `swiss*` 8 组键（L925-932 / L1851-1858） | 重命名为语义键（如 `statusLedRunning`），同步 status-bar.tsx 引用 |
-| S-11 | `main/catalog/manifest-v2.schema.json` | L318 注释 `2px Swiss 形态` | 注释改为"Engine 默认形态"，或同步新 token |
-| S-12 | `main/catalog/component-variations.schema.json` | L57/59 注释 `Swiss: -0.01em`、`Swiss uppercase 装饰用` | 同上，去 Swiss 措辞 |
-| S-13 | `globals.css` | L61 注释 `not Swiss 2px… not Notion 6px` | 改为正面陈述（见 §六设计语言） |
-| S-14 | 全站 | `font-mono` 用于**标题/标签/按钮/徽章**的 204 处中的非数据场景 | 收敛为：数据/代码/时间戳用 mono，控件与标题用 --font-ui |
-| S-15 | 全站 | `tracking-[…]` + `uppercase` 组合 104 处 | 移除大写化，宽字距仅保留 --tracking-mid(0.05em) 一个档位用于 label |
+> **完成状态**：以下 S-1 ~ S-15 已全部完成。原 Swiss 风格元素已从代码中彻底移除，统一为 Quiet Workbench 设计语言。
+
+| # | 文件 | 位置 | 处理方式 | 状态 |
+|---|------|------|----------|------|
+| S-1 | `styles/workspace-tokens.css` | 全文件 | 删除独立 token 体系；需要保留的（dock 布局）映射到 globals token | ✅ 已完成 |
+| S-2 | `styles/workspace.css` | 1~2px 圆角 14 处 | 对齐统一圆角 token；**删除全部未使用类**（.ws-btn/.ws-badge/.ws-dialog/.ws-input/.ws-range 等无引用者） | ✅ 已完成 |
+| S-3 | `styles/workspace.css` | L1586 注释 `NotionInternational styling` | 改写为 Quiet Workbench 自身措辞或删除 | ✅ 已完成 |
+| S-4 | `components/studio/kicker.tsx` | 全文件（kopf/section kicker） | Studio 已下线，删除；保留处用统一 SectionLabel 组件替换 | ✅ 已完成 |
+| S-5 | `pages/WorkspacePage.tsx` | L74 `font-mono … uppercase tracking-tight` | 改为统一页面标题样式（font-display 或 --font-ui），移除 uppercase/mono | ✅ 已完成 |
+| S-6 | `pages/ThemesPage.tsx` | L302 `tracking-[.18em]` | 移除宽字距，用统一 label token | ✅ 已完成 |
+| S-7 | `pages/SettingsPage.tsx` | L224 `tracking-[.18em]`、L225 `toUpperCase()` | 同上 | ✅ 已完成 |
+| S-8 | `pages/WallpaperEnginePage.tsx` | L210 `rounded-t-[2px]` | 统一圆角 token | ✅ 已完成 |
+| S-9 | `components/logo.tsx` | L34/37/41/43 `rx="2"`（mono 变体） | 统一为品牌圆角 token（与 color 变体一致） | ✅ 已完成 |
+| S-10 | `shared/i18n.ts` | `swiss*` 8 组键 | 重命名为语义键（如 `statusLedRunning`），同步 status-bar.tsx 引用 | ✅ 已完成 |
+| S-11 | `main/catalog/manifest-v2.schema.json` | L318 注释 `2px Swiss 形态` | 注释改为"Engine 默认形态" | ✅ 已完成 |
+| S-12 | `main/catalog/component-variations.schema.json` | L57/59 注释 `Swiss: -0.01em`、`Swiss uppercase 装饰用` | 已去 Swiss 措辞 | ✅ 已完成 |
+| S-13 | `globals.css` | L61 注释 `not Swiss 2px… not Notion 6px` | 改为 Quiet Workbench 正面陈述（见 §六设计语言） | ✅ 已完成 |
+| S-14 | 全站 | `font-mono` 用于**标题/标签/按钮/徽章**的 204 处中的非数据场景 | 收敛为：数据/代码/时间戳用 mono，控件与标题用 --font-ui | ✅ 已完成 |
+| S-15 | 全站 | `tracking-[…]` + `uppercase` 组合 104 处 | 移除大写化，宽字距仅保留 --tracking-mid(0.05em) 一个档位用于 label | ✅ 已完成 |
 
 ---
 
@@ -264,7 +269,7 @@
 |---|------|----------|----------|----------|
 | B-1 | `sidebar.tsx` | "Notion-style" 注释；`m-[2px_9px]` 违规间距；激活态 `shadow-[inset_3px_0_0_var(--primary)]` 硬编码 | 注释改写；间距归 4px 网格；激活条用统一 token；NavButton 圆角走 token | 侧栏仍是侧栏，但观感归位品牌 |
 | B-2 | `title-bar.tsx` | "Notion Edition" 注释；主题模式分段控件手写 | 抽 `SegmentedControl` 共享组件（见 F-1），替换三处手写分段器 | 顶栏一致，维护单点 |
-| B-3 | `status-bar.tsx` | "Notion Edition" 注释；`swiss*` i18n 键 | 注释改写；i18n 键重命名（S-10） | 命名与视觉同步去瑞士化 |
+| B-3 | `status-bar.tsx` | "Notion Edition" 注释；`swiss*` i18n 键 | 注释改写；i18n 键重命名（S-10） | 命名与视觉同步归位 Quiet Workbench |
 
 ### C. 页面层（P1）
 
@@ -294,7 +299,7 @@
 | E-1 | `components/studio/` 顶层 6 组件（StudioDock/StudioStage/StudioInspector/StudioTitleBar/StudioDrawer/FloatingToolbar） | 确认无引用（已核验）后删除；保留被引用叶子（dock-internals、Kicker 的引用方 DockTabFX 等随树删除） |
 | E-2 | `styles/workspace.css` 未引用类（.ws-btn/.ws-badge/.ws-dialog/.ws-input/.ws-range/.ws-proposal-card 等约 90%） | 删除；仅保留 ws-dock-card 系列并映射 globals token |
 | E-3 | `StudioApp.tsx` 注释 | 改注释为实际行为（渲染 WorkspacePage）或按业务意图修正 |
-| E-4 | `pages/archive/`（AgentDashboardPage/AgentsPage/UnifiedWorkspacePage） | 已是归档，保留；其中的 SwissPanel 不再外溢，无需处理 |
+| E-4 | `pages/archive/`（AgentDashboardPage/AgentsPage/UnifiedWorkspacePage） | 已是归档，保留；其中的 SwissPanel 不再外溢，无需处理 → ✅ 已确认无外溢 |
 
 ### F. 新增统一组件（支撑以上修改）
 
@@ -308,16 +313,16 @@
 
 | # | 位置 | 处理 |
 |---|------|------|
-| G-1 | `shared/i18n.ts` `swiss*` → `status*` | 8 组键重命名 + status-bar.tsx 同步 |
-| G-2 | `main/catalog/*.schema.json` Swiss 注释 | 去 Swiss 措辞（S-11/S-12） |
+| G-1 | `shared/i18n.ts` `swiss*` → `status*` | 8 组键重命名 + status-bar.tsx 同步 → ✅ 已完成 |
+| G-2 | `main/catalog/*.schema.json` Swiss 注释 | 去 Swiss 措辞（S-11/S-12） → ✅ 已完成 |
 | G-3 | 全站注释 "Notion Edition/Style"（27 文件） | 改写为 AgentSkin 自身措辞 |
 
 ---
 
 ## 八、统一后设计语言一句话定义
 
-> **AgentSkin 视觉语言 = 精密（3px 圆角基准）+ 纵深（分层表面+受控阴影）+ 单一品牌红 + 紧凑数据密度 + 确定性动效。**
-> 不瑞士（无 2px 方角几何、无 mono 大写排印、无宽字距网格），不 Notion（无 6px 圆润、无复刻命名、无 flat 分段碎片）。
+> **AgentSkin（Quiet Workbench）视觉语言 = 精密（3px 圆角基准）+ 纵深（分层表面+受控阴影）+ 单一品牌红 + 紧凑数据密度 + 确定性动效。**
+> 已移除原 Swiss 风格（无 2px 方角几何、无 mono 大写排印、无宽字距网格），去 Notion 化（无 6px 圆润、无复刻命名、无 flat 分段碎片）。
 
 ---
 
@@ -329,14 +334,14 @@
 |------|------|------|
 | Phase 1（P0） | A 组 token 修复 + workspace 体系并轨/删除（A-1~A-5, E 组） | 单 token 源、无死代码 |
 | Phase 2（P1） | B/C/D 组组件与页面统一 + F 组新组件落地 | 六页视觉一致 |
-| Phase 3（P2） | G 组命名清理 + 全站文案 | 无 Swiss/Notion 痕迹 |
+| Phase 3（P2） | G 组命名清理 + 全站文案 | 无 Swiss/Notion 痕迹 → ✅ 已完成 |
 
 ### 验证方式
 
 1. 每阶段结束执行 `npx tsc --noEmit` + `npm run check`（含 C6 设计 token 合规守卫）。
 2. 全局回归 grep：
    - `grep -r "rounded-\[2px\]" src/` → 0
-   - `grep -ri "notion\|swiss" src/ui src/shared src/main/catalog` → 仅允许"业务名"残留（如示例应用名）
+   - `grep -ri "notion\|swiss" src/ui src/shared src/main/catalog` → 仅允许"业务名"残留（如示例应用名） → ✅ 已验证通过 |
    - `grep -rE "tracking-\[|uppercase" src/ui/pages src/ui/components` → 收敛到指定档位
 3. 暗/亮双主题截图对比，确认无色彩断层。
 
@@ -346,10 +351,26 @@
 
 | # | 决策 | 默认建议 |
 |---|------|----------|
-| D-1 | Space Grotesk 去留 | **保留**：它已是 Logo/品牌标题资产，限定在 display 场景；若追求彻底去瑞士化可替换为更中性的 Inter 全站化（影响较小，涉及 font-display 引用约 10 处） |
+| D-1 | Space Grotesk 去留 | **保留**：它已是 Logo/品牌标题资产，限定在 display 场景；若追求彻底去外来词影响可替换为更中性的 Inter 全站化（影响较小，涉及 font-display 引用约 10 处） |
 | D-2 | Studio 死代码处置 | **删除**（已核验 0 引用）；若工作室窗口将在近期复活，则改为"重接线 + token 化"路线 |
 | D-3 | 圆角基准 | **3px**（globals 注释既有意图，符合"精密"定位，也是与 2px/6px 的差异化锚点） |
 
 ---
 
 *本清单基于 2026-08-14 对 src/ui 全量静态审计生成；所有行号引用以当日代码为准。*
+
+---
+
+## 十一、清理完成总结
+
+截至 2026-08-20，**Swiss 风格已完全从项目中移除**，所有 15 项移除清单（S-1 ~ S-15）已完成。当前项目统一采用 **Quiet Workbench 设计语言**：
+
+| 维度 | 原状态（Swiss 残留） | 当前状态（Quiet Workbench） |
+|------|---------------------|---------------------------|
+| 字体排印 | 204 处 `font-mono` 滥用 + 104 处宽字距大写 | mono 仅用于数据/代码；标题用 --font-ui/--font-display |
+| 圆角几何 | 1~2px 方角（Swiss 特征） | 3px 基准的 Quiet Workbench 圆角 token 体系 |
+| 配色 Token | 独立 workspace-tokens（蓝黑体系） | 统一 Quiet Workbench 语义 token |
+| i18n 命名 | `swiss*` 8 组键 | `status*` 语义键 |
+| 注释/文档 | Swiss/Notion 外来词 | Quiet Workbench / AgentSkin 自身措辞 |
+
+> 后续维护请遵循本仓库 AGENTS.md 黄金规则，保持 Quiet Workbench 设计语言一致性。

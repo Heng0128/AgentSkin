@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { aggregateRegression } from '../../scripts/regression-runner.mjs';
+import { aggregateRegression } from '../../../scripts/regression-runner.mjs';
 
 describe('aggregateRegression', () => {
   it('exit 0 when every agent passes', () => {

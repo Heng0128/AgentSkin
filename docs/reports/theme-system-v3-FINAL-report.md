@@ -26,13 +26,13 @@
 | 模式 | 来源 | AgentSkin 当前能否表达 | 移植难度 |
 |------|------|:---------:|:--------:|
 | `:has()` 路由感知背景切换 | GitHub Noir | ❌ | 中（需 adapter 改造） |
-| Header 品牌竖线（::before + box-shadow 发光） | GitHub Noir | ⚠️ 可模拟但规格超标 | 低（需 Swiss token 适配） |
-| 纯 CSS 草莓图形（conic-gradient + radial-gradient） | Sweet Strawberry | ❌ Swiss 禁止 | 不适合 |
+| Header 品牌竖线（::before + box-shadow 发光） | GitHub Noir | ⚠️ 可模拟但规格超标 | 低（需项目 token 适配） |
+| 纯 CSS 草莓图形（conic-gradient + radial-gradient） | Sweet Strawberry | ❌ 项目设计语言禁止 | 不适合 |
 | 纯 CSS 星空斜纹（linear-gradient 125deg 条纹重复） | Digital Horizon | ⚠️ 不禁止但规格超标 | 低 |
-| 多层 box-shadow 樱花（单一元素投影模拟多形状） | Kaori Sakura | ❌ Swiss 单档位限制 | 不适合 |
+| 多层 box-shadow 樱花（单一元素投影模拟多形状） | Kaori Sakura | ❌ 项目设计语言单档位限制 | 不适合 |
 | 克制 reduced-motion 降级（仅靶向 2 选择器） | Ligurian | ⚠️ 可实现但需范式升级 | 中（需双层防护架构） |
 
-**结论**：当前 Swiss 设计语言对主题视觉表现力有实质约束，**第三代瑞士国际设计语言（Swiss/International 3.0）的视觉丰富度是长远方向**。
+**结论**：当前项目设计语言对主题视觉表现力有实质约束，**第三代国际主义设计语言（Swiss/International 3.0，历史参考）的视觉丰富度是长远方向**。
 
 ---
 

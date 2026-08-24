@@ -9,7 +9,7 @@
  * Data source: studioStore (bundles, bundlesLoading, refreshBundles,
  * importAndInstallBundle, deleteBundle).
  *
- * Visual style follows Swiss/International design tokens:
+ * Visual style follows Quiet Workbench design tokens:
  *   · rounded-[var(--dl-radius,2px)] corners
  *   · spacing from the 4/8/16/24/32/48 Tailwind scale only
  *   · typography: text-[10px] mono for body, text-xs for headings

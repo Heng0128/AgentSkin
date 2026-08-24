@@ -12,6 +12,13 @@ import type {
   ScanProgressEvent,
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
+import type {
+  CommunityThemeDetail,
+  CommunityThemeListParams,
+  CommunityThemeListResult,
+  DownloadProgress,
+  InstallResult,
+} from './community';
 import type { DriftStatus, RegenResult } from './drift-status';
 import type { EnvironmentPreset } from './environment';
 import type { HealthCheckReport } from './health-check';
@@ -717,4 +724,22 @@ export interface AgentSkinApi {
   startMcp(): Promise<{ ok: boolean; url?: string; error?: string; alreadyRunning?: boolean }>;
   /** Stop the MCP HTTP server. */
   stopMcp(): Promise<{ ok: boolean; error?: string; alreadyStopped?: boolean }>;
+  // --- Community Theme (DreamSkin community theme system) ---
+  /** Fetch a paginated, filterable list of community themes. */
+  listCommunityThemes(
+    params?: CommunityThemeListParams,
+  ): Promise<{ success: true; data: CommunityThemeListResult } | { success: false; error: string }>;
+  /** Fetch the full detail of a single community theme. */
+  getCommunityTheme(
+    themeId: string,
+  ): Promise<{ success: true; data: CommunityThemeDetail } | { success: false; error: string }>;
+  /** Download, verify, and install a community theme into the local library. */
+  downloadCommunityTheme(
+    themeId: string,
+  ): Promise<{ success: true; data: InstallResult } | { success: false; data: InstallResult }>;
+  /** Cancel an in-progress community theme download. */
+  cancelCommunityDownload(themeId: string): Promise<{ success: boolean; error?: string }>;
+  /** Subscribe to download progress events pushed from the main process.
+   *  Returns an unsubscribe function. */
+  onCommunityDownloadProgress(listener: (progress: DownloadProgress) => void): () => void;
 }

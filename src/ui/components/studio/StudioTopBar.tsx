@@ -57,7 +57,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
         <span className="ws-topbar__brand-icon">✦</span>
         <span className="ws-topbar__brand-name">{t.studioBrand}</span>
         <span
-          className="badge-beta inline-flex items-center h-4 px-1 rounded-sm font-mono text-micro font-normal"
+          className="badge-beta inline-flex items-center h-4 px-1 rounded-sm text-micro font-normal"
           style={{
             background: 'var(--accent)',
             color: 'rgb(165 180 252)',

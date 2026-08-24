@@ -1,13 +1,11 @@
 /* =================================================================
  * AgentSkin Workspace — Dialog System
  *
- * Modal dialog shell with CapCut / Premiere reference styling.
- * Includes form fields, agent chips, drop zone, proposal cards,
- * swatch picker, and sub-tab navigation.
+ * Dialog shell, agent chips, and overlay styles.
  * ================================================================= */
 
 /* -------------------------------------------------------------------
- * Dialog Shell (CapCut / Premiere modal reference)
+ * Dialog Overlay
  * ------------------------------------------------------------------- */
 
 .ws-dialog-overlay {
@@ -20,34 +18,9 @@
   justify-content: center;
 }
 
-.ws-dialog {
-  width: var(--dialog-w, 440px);
-  background: var(--bg-2);
-  border: 1px solid var(--border-default);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow-dialog);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  max-height: 80vh;
-}
-
-.ws-dialog__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 48px;
-  padding: 0 var(--space-4);
-  border-bottom: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-
-.ws-dialog__title {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--fg-0);
-}
+/* -------------------------------------------------------------------
+ * Dialog Close Button
+ * ------------------------------------------------------------------- */
 
 .ws-dialog__close {
   width: 24px;
@@ -68,57 +41,9 @@
   color: var(--fg-0);
 }
 
-.ws-dialog__body {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--space-4);
-}
-
-.ws-dialog__footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border-top: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-
-.ws-dialog__footer--center {
-  justify-content: center;
-}
-
-.ws-dialog__footer--space {
-  justify-content: space-between;
-}
-
 /* -------------------------------------------------------------------
- * Form field
+ * Agent Chip
  * ------------------------------------------------------------------- */
-
-.ws-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  margin-bottom: var(--space-3);
-}
-
-.ws-field__label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--fg-1);
-}
-
-/* -------------------------------------------------------------------
- * Agent chips row in dialog
- * ------------------------------------------------------------------- */
-
-.ws-agent-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-}
 
 .ws-agent-chip {
   display: inline-flex;
@@ -129,7 +54,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--r-micro);
   background: var(--bg-3);
-  font-family: var(--font-mono);
+  font-family: var(--font-ui);
   font-size: 10px;
   cursor: pointer;
   transition: all var(--dur-fast);
@@ -144,268 +69,4 @@
   border-color: var(--accent);
   background: var(--accent-ghost);
   color: var(--accent);
-}
-
-/* -------------------------------------------------------------------
- * Drop zone
- * ------------------------------------------------------------------- */
-
-.ws-drop-zone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  border: 1.5px dashed var(--border-default);
-  border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.02);
-  padding: var(--space-6);
-  cursor: pointer;
-  transition:
-    border-color var(--dur-fast),
-    background var(--dur-fast);
-}
-
-.ws-drop-zone:hover,
-.ws-drop-zone[data-drag="true"] {
-  border-color: var(--accent);
-  background: var(--accent-ghost);
-}
-
-.ws-drop-zone__icon {
-  font-size: 20px;
-  color: var(--fg-2);
-}
-
-.ws-drop-zone__label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--fg-0);
-}
-
-.ws-drop-zone__hint {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--fg-2);
-  opacity: 0.7;
-}
-
-/* -------------------------------------------------------------------
- * Swatch (preset theme preview)
- * ------------------------------------------------------------------- */
-
-.ws-swatch-row {
-  display: flex;
-  height: 28px;
-  border-radius: var(--r-micro);
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-}
-
-.ws-swatch-row > div {
-  flex: 1;
-}
-
-/* -------------------------------------------------------------------
- * Proposal card
- * ------------------------------------------------------------------- */
-
-.ws-proposal-card {
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-xs);
-  background: rgba(255, 255, 255, 0.02);
-  padding: var(--space-3);
-  cursor: pointer;
-  transition: border-color var(--dur-fast);
-}
-
-.ws-proposal-card:hover {
-  border-color: var(--border-strong);
-}
-
-.ws-proposal-card[data-recommended="true"] {
-  border-color: color-mix(in srgb, var(--cr-warn) 30%, transparent);
-  background: color-mix(in srgb, var(--cr-warn) 3%, transparent);
-}
-
-.ws-proposal-card__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-2);
-}
-
-.ws-proposal-card__rank {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--fg-3);
-}
-
-.ws-proposal-card__score {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.ws-proposal-card__score--aaa {
-  color: var(--cr-ok);
-}
-.ws-proposal-card__score--aa {
-  color: var(--cr-warn);
-}
-.ws-proposal-card__score--low {
-  color: var(--accent);
-}
-
-.ws-proposal-card__strip {
-  display: flex;
-  gap: 2px;
-  margin-bottom: var(--space-2);
-}
-
-.ws-proposal-card__strip > div {
-  flex: 1;
-  height: 28px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-subtle);
-  transition: flex var(--dur-mid);
-}
-
-.ws-proposal-card__strip > div:hover {
-  flex: 2;
-}
-
-.ws-proposal-card__meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.ws-proposal-card__info {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--fg-2);
-}
-
-.ws-proposal-card__actions {
-  display: flex;
-  gap: var(--space-1);
-  opacity: 0;
-  transition: opacity var(--dur-fast);
-}
-
-.ws-proposal-card:hover .ws-proposal-card__actions {
-  opacity: 1;
-}
-
-/* -------------------------------------------------------------------
- * Color picker row (ImageExtract)
- * ------------------------------------------------------------------- */
-
-.ws-swatch-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--r-micro);
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  width: 100%;
-  text-align: left;
-  transition: background var(--dur-fast);
-}
-
-.ws-swatch-item:hover {
-  background: var(--bg-3);
-}
-
-.ws-swatch-item .si-color {
-  width: 22px;
-  height: 22px;
-  border-radius: var(--r-micro);
-  border: 1px solid var(--border-subtle);
-  flex-shrink: 0;
-}
-
-.ws-swatch-item .si-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.ws-swatch-item .si-hex {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--fg-0);
-}
-
-.ws-swatch-item .si-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--fg-2);
-  opacity: 0.6;
-}
-
-.ws-swatch-item .si-badge {
-  padding: 1px 4px;
-  border-radius: var(--r-micro);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--foreground);
-}
-
-/* -------------------------------------------------------------------
- * Export dialog sub-tabs (if needed)
- * ------------------------------------------------------------------- */
-
-.ws-dialog__sub-tabs {
-  display: flex;
-  gap: 2px;
-  margin-bottom: var(--space-3);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.ws-dialog__sub-tab {
-  height: 24px;
-  padding: 0 var(--space-2);
-  border: none;
-  background: transparent;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--fg-2);
-  cursor: pointer;
-  position: relative;
-}
-
-.ws-dialog__sub-tab[data-active="true"] {
-  color: var(--fg-0);
-}
-
-.ws-dialog__sub-tab[data-active="true"]::after {
-  content: "";
-  position: absolute;
-  bottom: -9px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--accent);
-}
-
-/* -------------------------------------------------------------------
- * Dialog divider line
- * ------------------------------------------------------------------- */
-
-.ws-dialog-divider {
-  border: none;
-  border-top: 1px solid var(--border-subtle);
-  margin: var(--space-2) 0;
 }

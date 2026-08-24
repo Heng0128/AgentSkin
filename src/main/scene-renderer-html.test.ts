@@ -147,7 +147,7 @@ afterEach(async () => {
 // ---------------------------------------------------------------------------
 
 describe('scene HTML — agent signal bridge (pointer/audio forwarding)', () => {
-  it('renders HTML for a clear-enabled scene with no layers', async () => {
+  it('should render HTML for a clear-enabled scene with no layers', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const html = await renderPkgJson({
       general: { clearenabled: true, orthogonalprojection: { width: 1920, height: 1080 } },
@@ -158,7 +158,7 @@ describe('scene HTML — agent signal bridge (pointer/audio forwarding)', () => 
     expect(html!).toContain('<canvas');
   });
 
-  it('returns null when a scene has no layers and clears are disabled', async () => {
+  it('should return null when a scene has no layers and clears are disabled', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const html = await renderPkgJson({
       general: { clearenabled: false, orthogonalprojection: { width: 1920, height: 1080 } },
@@ -168,7 +168,7 @@ describe('scene HTML — agent signal bridge (pointer/audio forwarding)', () => 
     expect(html).toBeNull();
   });
 
-  it('embeds the postMessage bridge that resurrects parallax in agent windows', async () => {
+  it('should embed the postMessage bridge that resurrects parallax in agent windows', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const html = (await renderPkgJson({
       general: {
@@ -195,7 +195,7 @@ describe('scene HTML — agent signal bridge (pointer/audio forwarding)', () => 
     expect(html).toContain('var PARALLAX = true');
   });
 
-  it('smooths audio levels with an attack/decay envelope', async () => {
+  it('should smooth audio levels with an attack/decay envelope', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const html = (await renderPkgJson({
       general: { clearenabled: true, orthogonalprojection: { width: 1920, height: 1080 } },
@@ -207,7 +207,7 @@ describe('scene HTML — agent signal bridge (pointer/audio forwarding)', () => 
 });
 
 describe('scene HTML — animated (GIF) texture frame rendering', () => {
-  it('carries animated frames into the layer JSON with frametimes preserved', async () => {
+  it('should carry animated frames into the layer JSON with frametimes preserved', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     // 2-frame animated texture: flags 4 (IS_GIF), TEXS0001 with per-frame durations.
     const tex = buildTex({
@@ -226,7 +226,7 @@ describe('scene HTML — animated (GIF) texture frame rendering', () => {
     expect(html).toContain('"frametime":0.05');
   });
 
-  it('embeds the frame-advance loop and per-frame preload', async () => {
+  it('should embed the frame-advance loop and per-frame preload', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const tex = buildTex({
       images: [Buffer.alloc(4, 0xff), Buffer.alloc(4, 0x00)],
@@ -244,7 +244,7 @@ describe('scene HTML — animated (GIF) texture frame rendering', () => {
     expect(html).toContain('current[i] = (idx + 1) % fr.length');
   });
 
-  it('renders static textures with frames:null (no animation data)', async () => {
+  it('should render static textures with frames:null (no animation data)', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const tex = buildTex({ images: [Buffer.alloc(4, 0xff)] });
     const html = (await renderPkgWithTexture(tex))!;
@@ -370,7 +370,7 @@ async function renderPkgWithParticle(installRoot: string): Promise<string> {
 }
 
 describe('scene HTML — particle layers', () => {
-  it('emits a particle config when the preset resolves from the install', async () => {
+  it('should emit a particle config when the preset resolves from the install', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const install = await createFakeInstall();
     const html = await renderPkgWithParticle(install);
@@ -388,7 +388,7 @@ describe('scene HTML — particle layers', () => {
     expect(html).toContain('"image":"data:image/png;base64,');
   });
 
-  it('embeds the particle simulation loop (emit/integrate/draw)', async () => {
+  it('should embed the particle simulation loop (emit/integrate/draw)', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const install = await createFakeInstall();
     const html = await renderPkgWithParticle(install);
@@ -402,7 +402,7 @@ describe('scene HTML — particle layers', () => {
     );
   });
 
-  it('keeps particle layers off non-particle objects (particle:null)', async () => {
+  it('should keep particle layers off non-particle objects (particle:null)', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const install = await createFakeInstall();
     const tex = buildTex({ images: [Buffer.alloc(4, 0xff)] });
@@ -411,7 +411,7 @@ describe('scene HTML — particle layers', () => {
     expect(install).toBeTruthy(); // silence unused warning — install not used here
   });
 
-  it('falls back to static when the particle preset is missing', async () => {
+  it('should fall back to static when the particle preset is missing', async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'scene-html-'));
     const install = await createFakeInstall();
     // Scene references a preset that doesn't exist in the fake install.
@@ -443,7 +443,7 @@ describe('scene HTML — particle layers', () => {
 });
 
 describe('layerDrawSize (texture cover-fit into the quad, aspect preserved)', () => {
-  it('draws a square texture on a 16:9 quad width-driven, cropping top/bottom', () => {
+  it('should draw a square texture on a 16:9 quad width-driven, cropping top/bottom', () => {
     // Square 2048² source on a 1920x1080 quad: width-driven, height = 1920
     // (the texture is NOT stretched to 1080 — that flattening was the
     // "壁纸被压扁/压缩" symptom).
@@ -452,26 +452,26 @@ describe('layerDrawSize (texture cover-fit into the quad, aspect preserved)', ()
     expect(s.height).toBeCloseTo(1920);
   });
 
-  it('draws a 16:9 texture on a square quad height-driven, cropping left/right', () => {
+  it('should draw a 16:9 texture on a square quad height-driven, cropping left/right', () => {
     const s = layerDrawSize(1000, 1000, 16 / 9);
     expect(s.height).toBeCloseTo(1000);
     expect(s.width).toBeCloseTo(1000 * (16 / 9));
   });
 
-  it('draws a matching-aspect texture exactly at the quad size (no crop)', () => {
+  it('should draw a matching-aspect texture exactly at the quad size (no crop)', () => {
     const s = layerDrawSize(1920, 1080, 16 / 9);
     expect(s.width).toBeCloseTo(1920);
     expect(s.height).toBeCloseTo(1080);
   });
 
-  it('falls back to the quad size for degenerate inputs', () => {
+  it('should fall back to the quad size for degenerate inputs', () => {
     expect(layerDrawSize(0, 0, 1)).toEqual({ width: 0, height: 0 });
     expect(layerDrawSize(100, 100, 0)).toEqual({ width: 100, height: 100 });
   });
 });
 
 describe('sceneLayerCenter (scene → canvas coordinate mapping)', () => {
-  it('maps the projection-center fullscreen layer to the viewport center', () => {
+  it('should map the projection-center fullscreen layer to the viewport center', () => {
     // A fullscreen image in a 1920x1080 scene sits at origin (960, 540) —
     // the projection center (verified against real workshop items). On an
     // identical viewport it must land exactly at the viewport center.
@@ -481,7 +481,7 @@ describe('sceneLayerCenter (scene → canvas coordinate mapping)', () => {
     expect(pos.scale).toBeCloseTo(1);
   });
 
-  it('scales a 4K projection down to a 1080p viewport and keeps the center', () => {
+  it('should scale a 4K projection down to a 1080p viewport and keeps the center', () => {
     // 3840x2160 scene, fullscreen layer at (1920, 1080), 1920x1080 viewport:
     // scale = max(1920/3840, 1080/2160) = 0.5, and the fullscreen layer still
     // lands dead-center (cover-fit crops the edges evenly).
@@ -491,7 +491,7 @@ describe('sceneLayerCenter (scene → canvas coordinate mapping)', () => {
     expect(pos.scale).toBeCloseTo(0.5);
   });
 
-  it('maps the projection bottom-left corner to the viewport bottom-left', () => {
+  it('should map the projection bottom-left corner to the viewport bottom-left', () => {
     // Scene origin (0,0) is the bottom-left corner (WE convention, +y up).
     // It must map to the viewport's bottom-left, NOT the center — the old
     // formula (centerX + x, centerY - y) drew it at the center, which was the
@@ -501,13 +501,13 @@ describe('sceneLayerCenter (scene → canvas coordinate mapping)', () => {
     expect(pos.y).toBeCloseTo(1080);
   });
 
-  it('maps the projection top-right corner to the viewport top-right', () => {
+  it('should map the projection top-right corner to the viewport top-right', () => {
     const pos = sceneLayerCenter(1920, 1080, 1920, 1080, 1920, 1080);
     expect(pos.x).toBeCloseTo(1920);
     expect(pos.y).toBeCloseTo(0);
   });
 
-  it('is center-correct on a wider viewport (cover fit crops vertically)', () => {
+  it('should be center-correct on a wider viewport (cover fit crops vertically)', () => {
     // 16:9 scene in a 21:9 viewport: scale is driven by width.
     const pos = sceneLayerCenter(960, 540, 1920, 1080, 2560, 1080);
     expect(pos.x).toBeCloseTo(1280);
@@ -515,14 +515,14 @@ describe('sceneLayerCenter (scene → canvas coordinate mapping)', () => {
     expect(pos.scale).toBeCloseTo(2560 / 1920);
   });
 
-  it('is center-correct on a taller viewport (cover fit crops horizontally)', () => {
+  it('should be center-correct on a taller viewport (cover fit crops horizontally)', () => {
     const pos = sceneLayerCenter(960, 540, 1920, 1080, 1600, 1200);
     expect(pos.x).toBeCloseTo(800);
     expect(pos.y).toBeCloseTo(600);
     expect(pos.scale).toBeCloseTo(1200 / 1080);
   });
 
-  it('keeps non-center layers offset from the projection center by scale', () => {
+  it('should keep non-center layers offset from the projection center by scale', () => {
     // A layer 100px left of the projection center (+x right) lands 100*scale
     // left of the viewport center, and 100px above-center lands above (scene
     // +y is up).
@@ -537,7 +537,7 @@ describe('sceneLayerCenter (scene → canvas coordinate mapping)', () => {
 // ---------------------------------------------------------------------------
 
 describe('scene HTML — real workshop scenes (parallax revival)', () => {
-  it('every scene.pkg embeds the postMessage bridge and a working mousemove fallback', async () => {
+  it('should embed the postMessage bridge and a working mousemove fallback in every scene.pkg', async () => {
     const WORKSHOP = await resolveWorkshopOrSkip();
     if (!WORKSHOP) return; // WE not installed — skip
     const { readdir, access } = await import('node:fs/promises');

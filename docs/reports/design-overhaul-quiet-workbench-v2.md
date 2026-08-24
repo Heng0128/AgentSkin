@@ -21,7 +21,7 @@
 
 | 禁止 | 原因 |
 |------|------|
-| `border-l-[3px]` 左边框指示器 | Swiss 风格遗存，用背景色替代 |
+| `border-l-[3px]` 左边框指示器 | （历史）Swiss 风格遗存，用背景色替代 |
 | `animate-ping` / `animate-card-enter` / `animate-page-enter` | 过度动效，违反静谧原则 |
 | `shadow-float` 硬阴影 | 用 ring + 灰阶替代 |
 | `bg-cr-success` / `bg-cr-warning` 等硬编码色 | 使用语义 token |
@@ -804,7 +804,7 @@
 
 | 行号范围 | 当前 | 改造后 |
 |----------|------|--------|
-| `:root` 变量块 | 旧 Swiss token | 新 Quiet Workbench token |
+| `:root` 变量块 | 旧（历史）Swiss token | 新 Quiet Workbench token |
 | `@theme inline` | 旧映射 | 新映射 |
 | `.as-label` | `11px 500 0.02em` | `text-xs` |
 | `.as-micro` | `10px` | `text-micro` |
@@ -884,7 +884,7 @@
 - [ ] 无 `font-display` (Space Grotesk)
 - [ ] 六款 Agent 注入后视觉和谐
 - [ ] Electron 中 60fps 稳定
-- [ ] 一眼不像 Swiss、不像暖色 Claude
+- [ ] 一眼不像（历史）Swiss、不像暖色 Claude
 - [ ] 像 2025-2026 年的主流工具
 
 ---

@@ -429,7 +429,7 @@ html.agentskin-host-traework .titlebar {
 
 html.agentskin-host-traework {
   font-family: 'Press Start 2P', monospace !important;
-  font-size: 10px; /* Swiss 设计系统底线 */
+  font-size: 10px; /* 项目设计系统底线 */
 }
 
 /* 像素按钮：直角 + 黑色边框 + 灰色 face */

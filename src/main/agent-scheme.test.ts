@@ -101,16 +101,16 @@ function scriptedSession(script: string[]): { calls: string[]; session: CdpSessi
 }
 
 describe('resolveSchemeMode', () => {
-  it('maps explicit light/dark straight through', () => {
+  it('should map explicit light/dark straight through', () => {
     expect(resolveSchemeMode('light')).toBe('light');
     expect(resolveSchemeMode('dark')).toBe('dark');
   });
 
-  it("maps auto to dark to match the generator's dark canvas", () => {
+  it("should map auto to dark to match the generator's dark canvas", () => {
     expect(resolveSchemeMode('auto')).toBe('dark');
   });
 
-  it('returns null for missing/unknown modes', () => {
+  it('should return null for missing/unknown modes', () => {
     expect(resolveSchemeMode(undefined)).toBeNull();
     expect(resolveSchemeMode('sepia')).toBeNull();
     expect(resolveSchemeMode(null)).toBeNull();
@@ -118,7 +118,7 @@ describe('resolveSchemeMode', () => {
 });
 
 describe('captureScheme', () => {
-  it('reads data-theme and tracked localStorage keys', async () => {
+  it('should read data-theme and tracked localStorage keys', async () => {
     const { calls, session } = scriptedSession([
       JSON.stringify({
         dataTheme: 'light-parchment',
@@ -144,20 +144,20 @@ describe('captureScheme', () => {
     expect(calls[0]).toContain('preferences:theme-color');
   });
 
-  it('returns null for agents with no renderer scheme (workbuddy)', async () => {
+  it('should return null for agents with no renderer scheme (workbuddy)', async () => {
     const { calls, session } = scriptedSession([]);
     expect(await captureScheme(session, 'workbuddy')).toBeNull();
     expect(calls).toHaveLength(0);
   });
 
-  it('returns null when the page read fails', async () => {
+  it('should return null when the page read fails', async () => {
     const { session } = scriptedSession(['null']);
     expect(await captureScheme(session, 'traework')).toBeNull();
   });
 });
 
 describe('applyScheme', () => {
-  it('flips qoderwork to dark while preserving the colour variant (mode-first)', async () => {
+  it('should flip qoderwork to dark while preserving the colour variant (mode-first)', async () => {
     const { calls, session } = scriptedSession([
       JSON.stringify({ dataTheme: 'light-parchment', storage: {} }),
       'ok',
@@ -170,7 +170,7 @@ describe('applyScheme', () => {
     expect(write).not.toContain('preferences:theme-color');
   });
 
-  it('flips qoderwork colour-first variants (classic-light -> classic-dark)', async () => {
+  it('should flip qoderwork colour-first variants (classic-light -> classic-dark)', async () => {
     const { calls, session } = scriptedSession([
       JSON.stringify({ dataTheme: 'classic-light', storage: {} }),
       'ok',
@@ -179,7 +179,7 @@ describe('applyScheme', () => {
     expect(calls[1]).toContain('"classic-dark"');
   });
 
-  it('falls back to the bare mode when there is no current variant', async () => {
+  it('should fall back to the bare mode when there is no current variant', async () => {
     const { calls, session } = scriptedSession([
       JSON.stringify({ dataTheme: null, storage: {} }),
       'ok',
@@ -188,7 +188,7 @@ describe('applyScheme', () => {
     expect(calls[1]).toContain('setAttribute(\'data-theme\', "light")');
   });
 
-  it('switches traework and syncs body classes + JSON storage format', async () => {
+  it('should switch traework and sync body classes + JSON storage format', async () => {
     const { calls, session } = scriptedSession([
       JSON.stringify({ dataTheme: 'dark', storage: {} }),
       'ok',
@@ -206,13 +206,13 @@ describe('applyScheme', () => {
     expect(write).toContain('value');
   });
 
-  it('is a successful no-op for workbuddy (no evaluate calls)', async () => {
+  it('should be a successful no-op for workbuddy (no evaluate calls)', async () => {
     const { calls, session } = scriptedSession([]);
     expect(await applyScheme(session, 'workbuddy', 'dark')).toBe(true);
     expect(calls).toHaveLength(0);
   });
 
-  it('reports failure when the injected write throws', async () => {
+  it('should report failure when the injected write throws', async () => {
     const { session } = scriptedSession([
       JSON.stringify({ dataTheme: 'dark', storage: {} }),
       'err',
@@ -222,7 +222,7 @@ describe('applyScheme', () => {
 });
 
 describe('restoreScheme', () => {
-  it('writes back the captured attribute and storage, removing absent keys', async () => {
+  it('should write back the captured attribute and storage, removing absent keys', async () => {
     const snapshot: SchemeSnapshot = {
       agentId: 'qoderwork',
       dataTheme: 'light-parchment',
@@ -240,14 +240,14 @@ describe('restoreScheme', () => {
     expect(write).toContain('localStorage.removeItem("preferences:theme-color")');
   });
 
-  it('removes the data-theme attribute when it was originally absent', async () => {
+  it('should remove the data-theme attribute when it was originally absent', async () => {
     const snapshot: SchemeSnapshot = { agentId: 'traework', dataTheme: null, storage: {} };
     const { calls, session } = scriptedSession(['ok']);
     expect(await restoreScheme(session, snapshot)).toBe(true);
     expect(calls[0]).toContain("removeAttribute('data-theme')");
   });
 
-  it('is a successful no-op for workbuddy', async () => {
+  it('should be a successful no-op for workbuddy', async () => {
     const { calls, session } = scriptedSession([]);
     const snapshot: SchemeSnapshot = { agentId: 'workbuddy', dataTheme: null, storage: {} };
     expect(await restoreScheme(session, snapshot)).toBe(true);

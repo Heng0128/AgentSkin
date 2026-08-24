@@ -243,7 +243,7 @@ function SliderRow({
     <div className="space-y-1 py-1">
       <div className="flex items-baseline justify-between">
         <span
-          className="font-mono text-[10px] font-normal "
+          className="text-[10px] font-normal "
           style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
         >
           {label}
@@ -308,7 +308,7 @@ function SelectRow({
   return (
     <div className="space-y-1 py-1">
       <span
-        className="font-mono text-[10px] font-normal "
+        className="text-[10px] font-normal "
         style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
       >
         {label}
@@ -317,7 +317,7 @@ function SelectRow({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         title={hint}
-        className="h-6 w-full border border-input bg-muted px-2 font-mono text-[10px] outline-none transition-colors focus:border-primary/60"
+        className="h-6 w-full border border-input bg-muted px-2 text-[10px] outline-none transition-colors focus:border-primary/60"
         style={{ borderRadius: 'var(--radius)' }}
       >
         {options.map((o) => (
@@ -344,7 +344,7 @@ function TextRow({
   return (
     <div className="space-y-1 py-1">
       <span
-        className="font-mono text-[10px] font-normal "
+        className="text-[10px] font-normal "
         style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
       >
         {label}
@@ -354,7 +354,7 @@ function TextRow({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-6 w-full border border-input bg-muted px-2 font-mono text-[10px] outline-none transition-colors focus:border-primary/60"
+        className="h-6 w-full border border-input bg-muted px-2 text-[10px] outline-none transition-colors focus:border-primary/60"
       />
     </div>
   );
@@ -376,7 +376,7 @@ function ColorRow({
   return (
     <div className="space-y-1 py-1">
       <span
-        className="font-mono text-[10px] font-normal "
+        className="text-[10px] font-normal "
         style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
       >
         {label}
@@ -416,7 +416,7 @@ function ToggleRow({
   return (
     <label className="flex cursor-pointer items-center justify-between py-1" title={hint}>
       <span
-        className="font-mono text-[10px] font-normal "
+        className="text-[10px] font-normal "
         style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
       >
         {label}
@@ -455,7 +455,7 @@ function ToggleRow({
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="flex items-center gap-2  pb-1 pt-2 font-mono text-[10px] font-normal "
+      className="flex items-center gap-2  pb-1 pt-2 text-[10px] font-normal "
       style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)' }}
     >
       <span
@@ -553,14 +553,14 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="size-3 text-primary" />
           <span
-            className="font-mono text-[10px] font-normal "
+            className="text-[10px] font-normal "
             style={{ letterSpacing: '0.12em', color: 'var(--foreground)' }}
           >
             {t.studioToolboxTitle}
           </span>
           {activeCount > 0 && (
             <span
-              className="rounded px-1 py-0 font-mono text-[10px] font-normal"
+              className="rounded px-1 py-0 text-[10px] font-normal"
               style={{
                 background: 'var(--primary)',
                 color: 'var(--primary-foreground)',
@@ -575,10 +575,10 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
           type="button"
           onClick={onReset}
           disabled={!overrides}
-          className="font-mono text-[10px]   disabled:opacity-30"
+          className="text-[10px]   disabled:opacity-30"
           style={{ color: 'var(--muted-foreground)' }}
         >
-          <span className="flex items-center gap-1 font-mono text-[10px]   disabled:opacity-30">
+          <span className="flex items-center gap-1 text-[10px]   disabled:opacity-30">
             <RotateCcw className="size-3" />
             {t.studioToolboxReset}
           </span>
@@ -594,14 +594,14 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
             value={presetName}
             onChange={(e) => setPresetName(e.target.value)}
             placeholder={t.studioToolboxPresetNamePlaceholder}
-            className="h-6 min-w-0 flex-1 border border-input bg-muted px-2 font-mono text-[10px] outline-none transition-colors focus:border-primary/60"
+            className="h-6 min-w-0 flex-1 border border-input bg-muted px-2 text-[10px] outline-none transition-colors focus:border-primary/60"
             style={{ borderRadius: 'var(--radius)' }}
           />
           <button
             type="button"
             onClick={handleSavePreset}
             disabled={!presetName.trim() || !toolOverrides?.colors}
-            className="h-6 shrink-0  px-2 font-mono text-[10px]  transition-colors hover:bg-accent disabled:opacity-30"
+            className="h-6 shrink-0  px-2 text-[10px]  transition-colors hover:bg-accent disabled:opacity-30"
             style={{ borderRadius: 'var(--radius)', letterSpacing: '0.06em' }}
             title={t.studioToolboxSavePresetHint}
           >
@@ -610,7 +610,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         </div>
         {presets.length === 0 ? (
           <p
-            className="font-mono text-[10px]"
+            className="text-[10px]"
             style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}
           >
             {t.studioToolboxNoPresets}
@@ -637,7 +637,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
                     )}
                   </span>
                   <span
-                    className="truncate font-mono text-[10px]"
+                    className="truncate text-[10px]"
                     style={{ color: 'var(--foreground)' }}
                     title={p.name}
                   >
@@ -647,7 +647,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
                 <button
                   type="button"
                   onClick={() => setPaletteLoaded(p.colors)}
-                  className="h-5 shrink-0  px-1 font-mono text-[10px]  transition-colors hover:bg-accent"
+                  className="h-5 shrink-0  px-1 text-[10px]  transition-colors hover:bg-accent"
                   style={{ borderRadius: 'var(--radius)', letterSpacing: '0.04em' }}
                   title={t.studioToolboxLoadPresetHint}
                 >
@@ -656,7 +656,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
                 <button
                   type="button"
                   onClick={() => handleDeletePreset(p.id)}
-                  className="h-5 shrink-0  px-1 font-mono text-[10px]  transition-colors hover:bg-accent"
+                  className="h-5 shrink-0  px-1 text-[10px]  transition-colors hover:bg-accent"
                   style={{ borderRadius: 'var(--radius)', letterSpacing: '0.04em' }}
                   title={t.studioToolboxDeletePresetHint}
                 >
@@ -861,7 +861,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       {/* Summary of effective values */}
       <div className="mt-2  p-2 bg-muted">
         <p
-          className="mb-1 font-mono text-[10px] font-normal "
+          className="mb-1 text-[10px] font-normal "
           style={{ letterSpacing: '0.12em', color: 'var(--muted-foreground)' }}
         >
           {t.studioToolboxCurrentProps}
@@ -895,7 +895,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       </div>
 
       {Object.keys(overrides ?? {}).length > 0 && (
-        <p className="mt-1 font-mono text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+        <p className="mt-1 text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
           {t.studioToolboxExportNote}
         </p>
       )}

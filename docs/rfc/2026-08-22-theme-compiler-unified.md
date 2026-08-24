@@ -195,7 +195,7 @@ src/compiler/
 ├── sourcemap.ts             ← JSON SourceMap 生成（CSS 属性 → manifest 字段映射）
 ├── cache.ts                 ← AST hash + 持久化（.agentskin-cache/）
 ├── types.ts                 ← ThemeAst / TokenMap / OptimizedAst 类型
-├── constants.ts             ← HOOKS / 动画预设清单 / WCAG 阈值 / Swiss token 限制
+├── constants.ts             ← HOOKS / 动画预设清单 / WCAG 阈值 / 项目 token 限制
 └── hooks.ts                 ← pre/post transform hook 注册
 
 src/shared/token/
@@ -485,7 +485,7 @@ export const ANIMATION_PRESETS: Record<AnimationId, KeyframeDeclaration> = {
 - [ ] manifest schema v3 升级路径（需 λ-0 阶段验证）
 - [ ] 向后兼容 7 主题产物 byte-identical（需 λ-1 阶段验证）
 - [ ] 旧脚本 deprecated 后 CI 无断裂（需 λ-6 阶段验证）
-- [x] Swiss 设计语言约束：5 预设动画全部 ≤200ms + cubic-bezier Swiss 缓动
+- [x] 项目设计语言约束：5 预设动画全部 ≤200ms + cubic-bezier 缓动
 - [x] prefers-reduced-motion 双层防护
 
 ---

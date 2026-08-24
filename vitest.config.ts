@@ -92,6 +92,12 @@ export default defineConfig({
           testTimeout: 30000,
           pool: 'threads',
         },
+        resolve: {
+          alias: {
+            '@': path.resolve(root, 'src/ui'),
+            '@shared': path.resolve(root, 'src/shared'),
+          },
+        },
       },
       {
         test: {

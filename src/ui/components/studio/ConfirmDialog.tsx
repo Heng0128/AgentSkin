@@ -47,7 +47,7 @@ export function ConfirmDialog({
       width={440}
     >
       {/* Body intentionally sparse — the description carries the explanation */}
-      <div className="font-mono text-[11px] leading-relaxed" style={{ color: 'var(--fg-2)' }}>
+      <div className="text-[11px] leading-relaxed" style={{ color: 'var(--fg-2)' }}>
         {description && <p className="mt-[var(--space-1)]">{description}</p>}
       </div>
 

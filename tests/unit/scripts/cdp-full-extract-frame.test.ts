@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { flattenFrameTree } from '../../scripts/cdp-full-extract.mjs';
+import { flattenFrameTree } from '../../../scripts/cdp-full-extract.mjs';
 
 describe('flattenFrameTree', () => {
   it('returns [] for empty / missing tree', () => {

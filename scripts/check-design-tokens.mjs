@@ -252,7 +252,7 @@ function checkLine(line, _fileName, lineNum, relPath) {
     }
 
     // Skip if it's inside a comment or string heuristic (we check raw line)
-    // We accept the Swiss sequence units
+    // We accept the project spacing sequence units
     if (ALLOWED_SPACING_UNITS.has(unit)) {
       m = next;
       continue;
@@ -266,7 +266,7 @@ function checkLine(line, _fileName, lineNum, relPath) {
 
     // gap-3.5 is 3.5 (not in set) — flag it
     // space-x-0.5 etc — we want to allow half units only for 0.5 (=2px) — but
-    // per Swiss rules we flag anything not in the sequence
+    // per project design system rules we flag anything not in the sequence
     if (unit === 0.5) {
       m = next;
       continue; // 2px — below minimum but used in sub-pixel cases
@@ -313,7 +313,7 @@ function checkLine(line, _fileName, lineNum, relPath) {
     }
 
     // Inset values (top-0, left-4) — these follow the spacing scale, keep checking
-    // but allow some Swiss exceptions
+    // but allow some project-specific exceptions
     if (['top', 'bottom', 'left', 'right', 'inset'].some((p) => className.startsWith(p))) {
       // inset-0, top-0 are fine
       if (unit === 0) {
@@ -326,7 +326,7 @@ function checkLine(line, _fileName, lineNum, relPath) {
     addViolation(
       relPath,
       lineNum,
-      `间距 ${className} (${pxValue}px) 不在 Swiss 序列 (4/8/16/24/32/48)`,
+      `间距 ${className} (${pxValue}px) 不在项目间距序列`,
       `改为 ${nearest.tw} (${nearest.px}px)`,
     );
     m = next;
@@ -359,7 +359,7 @@ function checkLine(line, _fileName, lineNum, relPath) {
       addViolation(
         relPath,
         lineNum,
-        `间距 ${className} (${val}px) 不在 Swiss 序列 (4/8/16/24/32/48)`,
+        `间距 ${className} (${val}px) 不在项目间距序列`,
         `改为 ${nearest.tw} (${nearest.px}px) 或内联 style`,
       );
     }
@@ -376,7 +376,7 @@ function checkLine(line, _fileName, lineNum, relPath) {
       addViolation(
         relPath,
         lineNum,
-        `间距 ${className} 约 ${pxApprox}px 不在 Swiss 序列 (4/8/16/24/32/48)`,
+        `间距 ${className} 约 ${pxApprox}px 不在项目间距序列`,
         `改为 ${nearest.tw} (${nearest.px}px)`,
       );
     }
@@ -407,7 +407,7 @@ function checkLine(line, _fileName, lineNum, relPath) {
       addViolation(
         relPath,
         lineNum,
-        `间距 ${className} (${val}px) 不在 Swiss 序列 (4/8/16/24/32/48)`,
+        `间距 ${className} (${val}px) 不在项目间距序列`,
         `改为 ${nearest.tw} (${nearest.px}px)`,
       );
     }
@@ -459,7 +459,7 @@ function checkLine(line, _fileName, lineNum, relPath) {
         addViolation(
           relPath,
           lineNum,
-          `字号 ${className} (约 ${pxApprox}px) 低于 Swiss 最小字号 10px`,
+          `字号 ${className} (约 ${pxApprox}px) 低于项目最小字号 10px`,
           '改为 text-[10px] 或 text-xs (12px)',
         );
       }
@@ -523,8 +523,8 @@ function checkLine(line, _fileName, lineNum, relPath) {
     addViolation(
       relPath,
       lineNum,
-      `圆角 ${className} 不在 Swiss 圆角系统 (仅 rounded-none, rounded-[2px])`,
-      '改为 rounded-[2px] 或 rounded-none',
+      `圆角 ${className} 不在项目圆角系统`,
+      '改为 rounded-sm/md/lg 或 rounded-none',
     );
     m = next;
   }
@@ -547,8 +547,8 @@ function checkLine(line, _fileName, lineNum, relPath) {
     addViolation(
       relPath,
       lineNum,
-      `阴影 ${className} 不在 Swiss 阴影系统 (仅 shadow-none, shadow-float)`,
-      '改为 shadow-float 或 shadow-none',
+      `阴影 ${className} 不在项目阴影系统`,
+      '改为 shadow-sm/md/lg/xl 或 shadow-none',
     );
     m = next;
   }
@@ -582,7 +582,7 @@ function checkLine(line, _fileName, lineNum, relPath) {
         addViolation(
           relPath,
           lineNum,
-          `内联 box-shadow 使用了非 Swiss shadow token: ${value}`,
+          `内联 box-shadow 使用了非项目 shadow token: ${value}`,
           '改为 var(--shadow-float) 或 shadow-none',
         );
       }
@@ -640,9 +640,9 @@ function checkLine(line, _fileName, lineNum, relPath) {
     addViolation(
       relPath,
       lineNum,
-      `内联 ${property}: ${val}px 不在 Swiss 序列 (4/8/16/24/32/48)${note}`,
+      `内联 ${property}: ${val}px 不在项目间距序列${note}`,
       isLikelyBorder
-        ? `如需 Swiss 对齐改为 ${nearest.px}px；如为 border-width 可忽略`
+        ? `如需项目间距对齐改为 ${nearest.px}px；如为 border-width 可忽略`
         : `改为 ${nearest.px}px 或提取为 Tailwind 工具类`,
     );
     m = next;
@@ -653,8 +653,8 @@ function checkLine(line, _fileName, lineNum, relPath) {
 // Nearest-value helpers (used only for violation fix suggestions)
 // ---------------------------------------------------------------------------
 
-const SWISS_SPACING_PX = [4, 8, 12, 14, 16, 20, 22, 24, 28, 30, 32, 48];
-const SWISS_TW_MAP = {
+const PROJECT_SPACING_PX = [4, 8, 12, 14, 16, 20, 22, 24, 28, 30, 32, 48];
+const PROJECT_TW_MAP = {
   4: 'p-1',
   8: 'p-2',
   12: 'p-3',
@@ -670,20 +670,20 @@ const SWISS_TW_MAP = {
 };
 
 function findNearestSpacing(px) {
-  let best = SWISS_SPACING_PX[0];
+  let best = PROJECT_SPACING_PX[0];
   let bestDist = Math.abs(px - best);
-  for (const v of SWISS_SPACING_PX) {
+  for (const v of PROJECT_SPACING_PX) {
     const dist = Math.abs(px - v);
     if (dist < bestDist) {
       bestDist = dist;
       best = v;
     }
   }
-  return { px: best, tw: SWISS_TW_MAP[best] };
+  return { px: best, tw: PROJECT_TW_MAP[best] };
 }
 
-const SWISS_FONT_PX = [9.5, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 30, 36, 44];
-const SWISS_FONT_TW_MAP = {
+const PROJECT_FONT_PX = [9.5, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 30, 36, 44];
+const PROJECT_FONT_TW_MAP = {
   9.5: 'text-[9.5px]',
   10: 'text-[10px]',
   11: 'text-[11px]',
@@ -701,16 +701,16 @@ const SWISS_FONT_TW_MAP = {
 };
 
 function findNearestFontSize(px) {
-  let best = SWISS_FONT_PX[0];
+  let best = PROJECT_FONT_PX[0];
   let bestDist = Math.abs(px - best);
-  for (const v of SWISS_FONT_PX) {
+  for (const v of PROJECT_FONT_PX) {
     const dist = Math.abs(px - v);
     if (dist < bestDist) {
       bestDist = dist;
       best = v;
     }
   }
-  return SWISS_FONT_TW_MAP[best];
+  return PROJECT_FONT_TW_MAP[best];
 }
 
 // ---------------------------------------------------------------------------
@@ -770,4 +770,4 @@ if (violations.length > 0) {
   process.exit(1);
 }
 
-console.log(`✓ Design tokens OK — checked ${checkedFiles} files, all within Swiss system`);
+console.log(`✓ Design tokens OK — checked ${checkedFiles} files, all within project design system`);

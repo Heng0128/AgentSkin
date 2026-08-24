@@ -44,7 +44,7 @@ export function WallpaperGrid({
 
   if (wallpapers.length === 0) {
     return (
-      <div className="flex h-40 items-center justify-center font-mono text-[11px] text-muted-foreground/60">
+      <div className="flex h-40 items-center justify-center text-[11px] text-muted-foreground/60">
         {onEmptyNode}
       </div>
     );

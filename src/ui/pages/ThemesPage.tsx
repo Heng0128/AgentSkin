@@ -2,6 +2,7 @@
 
 import { type DragEvent, useMemo, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
+import { CommunityTabPanel } from '@/components/themes/CommunityTabPanel';
 import { VirtualThemeGrid } from '@/components/themes/VirtualThemeGrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,11 +16,14 @@ import { useThemeCenter } from '@/hooks/useThemeCenter';
 import { cn } from '@/lib/utils';
 
 import type { AgentId } from '@shared/types';
-import { Package, PaintBucket, Palette, UploadCloud } from 'lucide-react';
+import { Package, PaintBucket, Palette, UploadCloud, Users } from 'lucide-react';
+
+type ThemesTab = 'installed' | 'community';
 
 export function ThemesPage({ controller }: { controller: AppController }) {
   const { t } = controller;
   const tc = useThemeCenter();
+  const [activeTab, setActiveTab] = useState<ThemesTab>('installed');
 
   // Drag-and-drop theme import: a depth counter keeps the overlay stable
   // across child dragenter/leave events (which fire on every nested element).
@@ -78,11 +82,50 @@ export function ThemesPage({ controller }: { controller: AppController }) {
     <section
       aria-label={t.navThemes}
       className="relative flex h-full min-h-0 flex-col"
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
     >
+      {/* Tab navigation */}
+      <div className="flex items-center gap-4 border-b border-border px-6 py-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab('installed')}
+          className={cn(
+            'flex items-center gap-1.5 text-[13px] font-medium transition-colors',
+            activeTab === 'installed'
+              ? 'text-foreground'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          <Palette className="size-3.5" />
+          {t.installedTitle}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('community')}
+          className={cn(
+            'flex items-center gap-1.5 text-[13px] font-medium transition-colors',
+            activeTab === 'community'
+              ? 'text-foreground'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          <Users className="size-3.5" />
+          {t.sourceCommunity}
+        </button>
+      </div>
+
+      {/* Content area */}
+      {activeTab === 'community' ? (
+        <div className="flex-1 overflow-auto p-6">
+          <CommunityTabPanel />
+        </div>
+      ) : (
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
       {/* Toolbar — title integrated inline */}
       <PageHeader
         title={t.navThemes}
@@ -234,6 +277,8 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             </p>
           </div>
         </div>
+      )}
+      </div>
       )}
     </section>
   );

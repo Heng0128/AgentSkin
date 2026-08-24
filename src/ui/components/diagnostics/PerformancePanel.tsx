@@ -158,7 +158,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
         <div className="flex items-center justify-between  bg-card2 px-3 py-2">
           <div className="flex items-center gap-2">
             <Hourglass className="size-4 text-muted-foreground" />
-            <span className="font-mono text-[11px] font-normal  text-foreground">
+            <span className="text-[11px] font-normal  text-foreground">
               {t.settingsPerfRecentHistory}
             </span>
           </div>
@@ -168,7 +168,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
         </div>
 
         {error ? (
-          <div className="px-3 py-4 text-[11px] text-destructive font-mono">{error}</div>
+          <div className="px-3 py-4 text-[11px] text-destructive">{error}</div>
         ) : traces.length === 0 ? (
           <div className="flex items-center justify-center py-12">
             <EmptyState icon={<Activity />} title={t.settingsPerfEmpty} iconSize="md" />
@@ -198,7 +198,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
       {/* Overflow warning — visible only when the ring buffer has discarded traces */}
       {stats.overflowCount > 0 && (
         <div className="flex items-center gap-2 rounded-md border border-cr-warning/30 bg-cr-warning/10 px-3 py-2">
-          <span className="font-mono text-[11px] text-cr-warning">
+          <span className="text-[11px] text-cr-warning">
             ⚠ {t.settingsPerfOverflow(stats.overflowCount)}
           </span>
         </div>
@@ -209,7 +209,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
         <div className="flex items-center justify-between  bg-card2 px-3 py-2">
           <div className="flex items-center gap-2">
             <Trash2 className="size-4 text-muted-foreground" />
-            <span className="font-mono text-[11px] font-normal  text-foreground">
+            <span className="text-[11px] font-normal  text-foreground">
               {t.settingsPerfTimeoutTitle}
             </span>
           </div>
@@ -417,7 +417,7 @@ function TimeoutRow({
 function TH({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <th
-      className={cn('px-3 py-2 text-left text-[10px] font-mono text-muted-foreground', className)}
+      className={cn('px-3 py-2 text-left text-[10px] text-muted-foreground', className)}
     >
       {children}
     </th>
@@ -461,7 +461,7 @@ function AppMarkSmall({ appId }: { appId: keyof typeof APP_META }) {
     return <img src={iconUrl} className="size-4 rounded-md" width={14} height={14} alt="" />;
   }
   return (
-    <span className="inline-flex size-4 items-center justify-center rounded-md bg-muted font-mono text-[10px] text-muted-foreground/50">
+    <span className="inline-flex size-4 items-center justify-center rounded-md bg-muted text-[10px] text-muted-foreground/50">
       ?
     </span>
   );

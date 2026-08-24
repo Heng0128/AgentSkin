@@ -13,7 +13,7 @@
  *
  * Empty state when no drift data has been captured yet.
  *
- * Swiss/International design: 11px font, tabular-nums, mono accents,
+ * Quiet Workbench design: 11px font, tabular-nums, mono accents,
  * single accent color, no scale/slide animations.
  */
 

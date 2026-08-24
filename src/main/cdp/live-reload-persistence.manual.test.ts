@@ -21,15 +21,20 @@
  * Without `AGENTSKIN_MANUAL=1` the suite is skipped so `npm run check` never
  * touches live agents (the vitest `main` project glob would otherwise collect
  * `*.manual.test.ts` and run real apply/reload/restore on every running app).
+ *
+ * Environment variables:
+ *   AGENTSKIN_THEMES_PATH — override themes directory (default: ~/AppData/Roaming/AgentSkin/themes)
  */
 
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { getAdapter, registerBuiltinAdapters } from '../../adapters/registry';
 import { resolveLivePort } from '../../shared/cdp-discovery';
 import { ThemeLibrary } from '../theme-library';
 import { type CdpSession, connectCdp } from './cdp-client';
 
-const THEMES_ROOT = 'C:/Users/snowb/AppData/Roaming/AgentSkin/themes';
+const THEMES_ROOT = process.env.AGENTSKIN_THEMES_PATH || path.join(os.homedir(), 'AppData', 'Roaming', 'AgentSkin', 'themes');
 // Theme to apply during the live smoke. Override via `THEME_ID=<id>`; defaults
 // to an installed theme so the smoke doesn't fail on a missing bundle.
 const THEME_ID = process.env.THEME_ID ?? 'aurora-dusk';

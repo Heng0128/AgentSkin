@@ -113,7 +113,7 @@ export function TokenToolbar({
           {t.shuffle}
         </button>
 
-        <span className="font-mono text-[10px] text-[var(--fg-2)]">
+        <span className="text-[10px] text-[var(--fg-2)]">
           {t.tokenLockedCount(lockedCount, totalCount)}
         </span>
       </div>

@@ -11,20 +11,27 @@
  *   - Exception handling → logs error + returns null
  *   - Custom CSS layer passthrough
  *   - Default verify timing values
+ *   - Image data URL vs file path priority
  */
 
-import { describe, expect, it, vi } from 'vitest';
-import type { ResolvedThemeTarget, ThemeBundle } from '../../legacy/agentskin-core-runtime';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ResolvedThemeTarget } from '../../legacy/agentskin-core-runtime';
 import type { CdpSession } from '../cdp/cdp-client';
 import { type EngineInjectionDeps, tryEngineInjection } from './orchestrator';
+
+// ---------------------------------------------------------------------------
+// Mock state (shared across tests, reset in beforeEach)
+// ---------------------------------------------------------------------------
+
+const mockAccess = vi.fn();
+const mockReadFile = vi.fn();
+let mockInjectThemeViaEngine: ReturnType<typeof vi.fn>;
+let mockBuildPaletteCss: ReturnType<typeof vi.fn>;
 
 // ---------------------------------------------------------------------------
 // Module mocks
 // ---------------------------------------------------------------------------
 
-// Mock fs.promises so we control file existence and content
-const mockAccess = vi.fn();
-const mockReadFile = vi.fn();
 vi.mock('node:fs', () => ({
   promises: {
     access: (...args: unknown[]) => mockAccess(...args),
@@ -32,17 +39,21 @@ vi.mock('node:fs', () => ({
   },
 }));
 
-vi.mock('../cdp/cdp-inject', () => ({
-  injectThemeViaEngine: vi.fn(),
-}));
+vi.mock('../cdp/cdp-inject', async () => {
+  const actual = await vi.importActual<typeof import('../cdp/cdp-inject')>('../cdp/cdp-inject');
+  return {
+    ...actual,
+    injectThemeViaEngine: vi.fn(),
+  };
+});
 
-vi.mock('./generator', () => ({
-  buildPaletteCss: vi.fn(),
-}));
-
-// Imports after mocks
-import { type InjectEngineResult, injectThemeViaEngine } from '../cdp/cdp-inject';
-import { buildPaletteCss } from './generator';
+vi.mock('./generator', async () => {
+  const actual = await vi.importActual<typeof import('./generator')>('./generator');
+  return {
+    ...actual,
+    buildPaletteCss: vi.fn(),
+  };
+});
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -50,9 +61,9 @@ import { buildPaletteCss } from './generator';
 
 const MOCK_SESSION = {} as unknown as CdpSession;
 
-const MOCK_BUNDLE: ThemeBundle = {
+const MOCK_BUNDLE = {
   theme: { id: 'test-theme', name: 'Test', version: '1.0.0' },
-} as unknown as ThemeBundle;
+} as unknown as Parameters<typeof tryEngineInjection>[2];
 
 const MOCK_TARGET: ResolvedThemeTarget = {
   css: ':root { --agentskin-bg: #ffffff; --agentskin-fg: #000000; }',
@@ -68,7 +79,8 @@ function makeDeps(opts: {
   return {
     resolveEngineDir: vi.fn(async () => opts.engineDir ?? '/engines/traework'),
     log: vi.fn(),
-    customThemeCss: opts.customCss ? () => opts.customCss : undefined,
+    // customCss is guaranteed to be defined when the ternary selects this branch
+    customThemeCss: opts.customCss !== undefined ? () => opts.customCss! : undefined,
     verifyDelayMs: opts.verifyDelayMs,
     verifyIntervalMs: opts.verifyIntervalMs,
   };
@@ -80,14 +92,8 @@ function setupEngineFiles(opts: {
   adapterJs?: string;
   cosmeticCss?: string;
   sharedFilesExist?: boolean;
-}) {
-  mockAccess.mockReset();
-  mockReadFile.mockReset();
-
-  // All access checks succeed (files exist)
+} = {}) {
   mockAccess.mockResolvedValue(undefined);
-
-  // readFile returns content based on path
   mockReadFile.mockImplementation(async (filePath: string) => {
     if (filePath.includes('tokens.css')) return opts.tokensCss ?? '/* tokens */';
     if (filePath.includes('adapter.mjs')) return opts.adapterJs ?? '/* adapter */';
@@ -104,14 +110,23 @@ function setupEngineFiles(opts: {
 // ---------------------------------------------------------------------------
 
 describe('tryEngineInjection', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     mockAccess.mockReset();
     mockReadFile.mockReset();
+
+    // Re-acquire mock references after clearAllMocks
+    const cdpInject = await import('../cdp/cdp-inject');
+    const generator = await import('./generator');
+    mockInjectThemeViaEngine = vi.mocked(cdpInject.injectThemeViaEngine);
+    mockBuildPaletteCss = vi.mocked(generator.buildPaletteCss);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('returns null when engine files do not exist (triggers legacy fallback)', async () => {
-    // Make adapter.mjs access fail → engine files incomplete → null
     mockAccess.mockImplementation(async (filePath: string) => {
       if (filePath.includes('adapter.mjs')) {
         throw new Error('ENOENT');
@@ -130,12 +145,12 @@ describe('tryEngineInjection', () => {
     );
 
     expect(result).toBeNull();
-    expect(injectThemeViaEngine).not.toHaveBeenCalled();
+    expect(mockInjectThemeViaEngine).not.toHaveBeenCalled();
   });
 
   it('returns null when palette CSS build fails', async () => {
-    setupEngineFiles({});
-    vi.mocked(buildPaletteCss).mockReturnValue(null);
+    setupEngineFiles();
+    mockBuildPaletteCss.mockReturnValue(null);
 
     const result = await tryEngineInjection(
       MOCK_SESSION,
@@ -148,7 +163,7 @@ describe('tryEngineInjection', () => {
     );
 
     expect(result).toBeNull();
-    expect(injectThemeViaEngine).not.toHaveBeenCalled();
+    expect(mockInjectThemeViaEngine).not.toHaveBeenCalled();
   });
 
   it('calls injectThemeViaEngine with correct CSS layers on success', async () => {
@@ -158,10 +173,8 @@ describe('tryEngineInjection', () => {
       adapterJs: '/* adapter-code */',
       cosmeticCss: '/* cosmetic-css */',
     });
-    vi.mocked(buildPaletteCss).mockReturnValue(paletteCss);
-    vi.mocked(injectThemeViaEngine).mockResolvedValue({
-      ok: true,
-    } as InjectEngineResult);
+    mockBuildPaletteCss.mockReturnValue(paletteCss);
+    mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
     const result = await tryEngineInjection(
       MOCK_SESSION,
@@ -174,9 +187,9 @@ describe('tryEngineInjection', () => {
     );
 
     expect(result).toEqual({ ok: true });
-    expect(injectThemeViaEngine).toHaveBeenCalledTimes(1);
+    expect(mockInjectThemeViaEngine).toHaveBeenCalledTimes(1);
 
-    const callArgs = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
+    const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.paletteCss).toBe(paletteCss);
     expect(callArgs.tokensCss).toBe('/* tokens-css */');
     expect(callArgs.themeCss).toBe(MOCK_TARGET.css);
@@ -185,26 +198,15 @@ describe('tryEngineInjection', () => {
   });
 
   it('concatenates shared modules before adapter in correct order', async () => {
-    setupEngineFiles({
-      adapterJs: '/* adapter-code */',
-    });
-    vi.mocked(buildPaletteCss).mockReturnValue('/* palette */');
-    vi.mocked(injectThemeViaEngine).mockResolvedValue({ ok: true } as InjectEngineResult);
+    setupEngineFiles({ adapterJs: '/* adapter-code */' });
+    mockBuildPaletteCss.mockReturnValue('/* palette */');
+    mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
-    await tryEngineInjection(
-      MOCK_SESSION,
-      'traework',
-      MOCK_BUNDLE,
-      MOCK_TARGET,
-      null,
-      null,
-      makeDeps(),
-    );
+    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, makeDeps());
 
-    const callArgs = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
+    const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     const adapterJs = callArgs.adapterJs;
 
-    // Verify concatenation order: adopted-sheets → token-discovery → deep-core → adapter
     const adoptedIdx = adapterJs.indexOf('/* adopted-sheets */');
     const discoveryIdx = adapterJs.indexOf('/* token-discovery */');
     const deepCoreIdx = adapterJs.indexOf('/* deep-core */');
@@ -217,25 +219,13 @@ describe('tryEngineInjection', () => {
   });
 
   it('omits shared modules from concatenation when they do not exist', async () => {
-    setupEngineFiles({
-      adapterJs: '/* adapter-code */',
-      sharedFilesExist: false,
-    });
-    vi.mocked(buildPaletteCss).mockReturnValue('/* palette */');
-    vi.mocked(injectThemeViaEngine).mockResolvedValue({ ok: true } as InjectEngineResult);
+    setupEngineFiles({ adapterJs: '/* adapter-code */', sharedFilesExist: false });
+    mockBuildPaletteCss.mockReturnValue('/* palette */');
+    mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
-    await tryEngineInjection(
-      MOCK_SESSION,
-      'traework',
-      MOCK_BUNDLE,
-      MOCK_TARGET,
-      null,
-      null,
-      makeDeps(),
-    );
+    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, makeDeps());
 
-    const callArgs = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
-    // When shared files don't exist, adapterJs should only contain adapter code
+    const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.adapterJs).not.toContain('/* adopted-sheets */');
     expect(callArgs.adapterJs).not.toContain('/* token-discovery */');
     expect(callArgs.adapterJs).not.toContain('/* deep-core */');
@@ -243,29 +233,21 @@ describe('tryEngineInjection', () => {
   });
 
   it('uses default verifyDelayMs=500 and verifyIntervalMs=50 when not provided', async () => {
-    setupEngineFiles({});
-    vi.mocked(buildPaletteCss).mockReturnValue('/* palette */');
-    vi.mocked(injectThemeViaEngine).mockResolvedValue({ ok: true } as InjectEngineResult);
+    setupEngineFiles();
+    mockBuildPaletteCss.mockReturnValue('/* palette */');
+    mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
-    await tryEngineInjection(
-      MOCK_SESSION,
-      'traework',
-      MOCK_BUNDLE,
-      MOCK_TARGET,
-      null,
-      null,
-      makeDeps(),
-    );
+    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, makeDeps());
 
-    const callArgs = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
+    const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.verifyDelayMs).toBe(500);
     expect(callArgs.verifyIntervalMs).toBe(50);
   });
 
   it('uses custom verifyDelayMs and verifyIntervalMs from deps', async () => {
-    setupEngineFiles({});
-    vi.mocked(buildPaletteCss).mockReturnValue('/* palette */');
-    vi.mocked(injectThemeViaEngine).mockResolvedValue({ ok: true } as InjectEngineResult);
+    setupEngineFiles();
+    mockBuildPaletteCss.mockReturnValue('/* palette */');
+    mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
     await tryEngineInjection(
       MOCK_SESSION,
@@ -277,15 +259,15 @@ describe('tryEngineInjection', () => {
       makeDeps({ verifyDelayMs: 1000, verifyIntervalMs: 75 }),
     );
 
-    const callArgs = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
+    const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.verifyDelayMs).toBe(1000);
     expect(callArgs.verifyIntervalMs).toBe(75);
   });
 
   it('passes customThemeCss as the final CSS layer when provided', async () => {
-    setupEngineFiles({});
-    vi.mocked(buildPaletteCss).mockReturnValue('/* palette */');
-    vi.mocked(injectThemeViaEngine).mockResolvedValue({ ok: true } as InjectEngineResult);
+    setupEngineFiles();
+    mockBuildPaletteCss.mockReturnValue('/* palette */');
+    mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
     await tryEngineInjection(
       MOCK_SESSION,
@@ -294,34 +276,26 @@ describe('tryEngineInjection', () => {
       MOCK_TARGET,
       null,
       null,
-      makeDeps({ customCss: '/* user-override a { color: red; } */' }),
+      makeDeps({ customCss: '/* user-override */' }),
     );
 
-    const callArgs = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
-    expect(callArgs.customCss).toBe('/* user-override a { color: red; } */');
+    const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
+    expect(callArgs.customCss).toBe('/* user-override */');
   });
 
   it('does not pass customThemeCss when not provided', async () => {
-    setupEngineFiles({});
-    vi.mocked(buildPaletteCss).mockReturnValue('/* palette */');
-    vi.mocked(injectThemeViaEngine).mockResolvedValue({ ok: true } as InjectEngineResult);
+    setupEngineFiles();
+    mockBuildPaletteCss.mockReturnValue('/* palette */');
+    mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
-    await tryEngineInjection(
-      MOCK_SESSION,
-      'traework',
-      MOCK_BUNDLE,
-      MOCK_TARGET,
-      null,
-      null,
-      makeDeps(),
-    );
+    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, makeDeps());
 
-    const callArgs = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
+    const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.customCss).toBeUndefined();
   });
 
   it('logs error and returns null on unexpected exception', async () => {
-    vi.mocked(buildPaletteCss).mockImplementation(() => {
+    mockBuildPaletteCss.mockImplementation(() => {
       throw new Error('Unexpected generator failure');
     });
     const deps = makeDeps();
@@ -340,53 +314,34 @@ describe('tryEngineInjection', () => {
     expect(deps.log).toHaveBeenCalledWith(
       expect.stringContaining('engine injection failed'),
     );
-    expect(injectThemeViaEngine).not.toHaveBeenCalled();
+    expect(mockInjectThemeViaEngine).not.toHaveBeenCalled();
   });
 
-  it('passes imageDataUrls and heroPath correctly', async () => {
-    setupEngineFiles({});
-    vi.mocked(buildPaletteCss).mockReturnValue('/* palette */');
-    vi.mocked(injectThemeViaEngine).mockResolvedValue({ ok: true } as InjectEngineResult);
+  it('passes imageDataUrls correctly when hero is embedded', async () => {
+    setupEngineFiles();
+    mockBuildPaletteCss.mockReturnValue('/* palette */');
+    mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
     const imageDataUrls = { hero: 'data:image/png;base64,abc' };
-    const imageFilePaths = { hero: '/path/to/hero.jpg' };
 
-    await tryEngineInjection(
-      MOCK_SESSION,
-      'traework',
-      MOCK_BUNDLE,
-      MOCK_TARGET,
-      imageDataUrls,
-      imageFilePaths,
-      makeDeps(),
-    );
+    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, imageDataUrls, null, makeDeps());
 
-    const callArgs = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
-    // When imageDataUrls.hero is present, heroPath should NOT be set
-    // (embedded data URL wins over file path)
+    const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.imageDataUrls).toEqual(imageDataUrls);
     expect(callArgs.heroPath).toBeUndefined();
   });
 
-  it('uses heroPath when imageDataUrls is present but has no hero', async () => {
-    setupEngineFiles({});
-    vi.mocked(buildPaletteCss).mockReturnValue('/* palette */');
-    vi.mocked(injectThemeViaEngine).mockResolvedValue({ ok: true } as InjectEngineResult);
+  it('uses heroPath when imageDataUrls has no hero but file path exists', async () => {
+    setupEngineFiles();
+    mockBuildPaletteCss.mockReturnValue('/* palette */');
+    mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
     const imageDataUrls = { thumbnail: 'data:image/png;base64,xyz' };
     const imageFilePaths = { hero: '/path/to/hero.jpg' };
 
-    await tryEngineInjection(
-      MOCK_SESSION,
-      'traework',
-      MOCK_BUNDLE,
-      MOCK_TARGET,
-      imageDataUrls,
-      imageFilePaths,
-      makeDeps(),
-    );
+    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, imageDataUrls, imageFilePaths, makeDeps());
 
-    const callArgs = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
+    const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.heroPath).toBe('/path/to/hero.jpg');
   });
 });

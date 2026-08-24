@@ -84,7 +84,7 @@ export interface SpecificityProfile {
 
   /**
    * 是否需要 specificity 守卫的装饰 token
-   * Swiss 单档位 shadow-float 的 --agentskin-shadow-accent 若被宿主原生
+   * 项目设计语言单档位 shadow-float 的 --agentskin-shadow-accent 若被宿主原生
    * box-shadow 覆盖，需启用守卫
    */
   decorationGuard: boolean;
@@ -280,11 +280,11 @@ export function detectConflicts(
 
 ---
 
-## 5. Swiss 单档位 shadow-float 兼容性
+## 5. 项目设计语言单档位 shadow-float 兼容性
 
 ### 5.1 问题分析
 
-Swiss 设计系统仅保留单一 `shadow-float` 档位。装饰层的 `--agentskin-shadow-accent` 作为 6 装饰 token 之一，在 Emit 时同样面临 specificity 竞争：
+项目设计语言仅保留单一 `shadow-float` 档位。装饰层的 `--agentskin-shadow-accent` 作为 6 装饰 token 之一，在 Emit 时同样面临 specificity 竞争：
 
 - **doubao**: 原生 `--s-shadow-lv*-brand` 系列（5 档位 brand shadow）已被显式设为 `none`（doubaoCss.mjs:651-661），但若有遗漏的 `box-shadow` 内联样式，`--agentskin-shadow-accent` 的 `box-shadow` 声明可能被覆盖。
 - **workbuddy**: VS Code 架构的 `--vscode-widget-shadow` 直接作用于编辑器 widget，若 AgentSkin 用 `--agentskin-shadow-accent` 装饰 specificity 不足则失效。
@@ -366,7 +366,7 @@ Swiss 设计系统仅保留单一 `shadow-float` 档位。装饰层的 `--agents
 - [x] C1 不变量: agentId 四源一致（profile 以 agentId 为 key）
 - [x] C2 不变量: 14-token 契约不变（specificity 护栏不修改 token 内容）
 - [x] C4 分层: specificity.ts → emit.ts → compiler 包，无逆向依赖
-- [x] C6 设计 token: decorationGuard 对齐 Swiss 单档位 shadow-float
+- [x] C6 设计 token: decorationGuard 对齐项目设计语言单档位 shadow-float
 - [ ] λ 方案批准后同步落地
 - [ ] 6 适配器 hostMaxSpecificity 基线需 CDP 实测校准
 

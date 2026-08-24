@@ -157,52 +157,162 @@ describe('parseSceneJson', () => {
       expect(general.bloom).toBe(false);
     });
 
-    it('parses all general fields from a full scene', () => {
+    describe('rendering', () => {
       const { general } = parseSceneJson(FULL_GENERAL_SCENE);
-      // Rendering
-      expect(general.hdr).toBe(false);
-      // Camera
-      expect(general.fov).toBe(50);
-      expect(general.nearZ).toBeCloseTo(0.01);
-      expect(general.farZ).toBe(10000);
-      expect(general.zoom).toBe(1);
-      expect(general.perspectiveOverrideFov).toBe(95);
-      expect(general.cameraFade).toBe(true);
-      expect(general.cameraParallax).toBe(false);
-      expect(general.cameraParallaxAmount).toBeCloseTo(0.08);
-      expect(general.cameraParallaxDelay).toBeCloseTo(0.1);
-      expect(general.cameraParallaxMouseInfluence).toBe(-1);
-      expect(general.cameraPreview).toBe(true);
-      expect(general.cameraShake).toBe(false);
-      expect(general.cameraShakeAmplitude).toBe(0.5);
-      expect(general.cameraShakeRoughness).toBe(1);
-      expect(general.cameraShakeSpeed).toBe(3);
-      // Lighting
-      expect(general.ambientColor).toEqual({ r: 0.3, g: 0.3, b: 0.3 });
-      expect(general.skylightColor).toEqual({ r: 0.3, g: 0.3, b: 0.3 });
-      // Bloom
-      expect(general.bloom).toBe(true);
+
+      it('should parse hdr', () => {
+        expect(general.hdr).toBe(false);
+      });
+    });
+
+    describe('camera', () => {
+      const { general } = parseSceneJson(FULL_GENERAL_SCENE);
+
+      it('should parse fov', () => {
+        expect(general.fov).toBe(50);
+      });
+
+      it('should parse nearZ', () => {
+        expect(general.nearZ).toBeCloseTo(0.01);
+      });
+
+      it('should parse farZ', () => {
+        expect(general.farZ).toBe(10000);
+      });
+
+      it('should parse zoom', () => {
+        expect(general.zoom).toBe(1);
+      });
+
+      it('should parse perspectiveOverrideFov', () => {
+        expect(general.perspectiveOverrideFov).toBe(95);
+      });
+
+      it('should parse cameraFade', () => {
+        expect(general.cameraFade).toBe(true);
+      });
+
+      it('should parse cameraParallax', () => {
+        expect(general.cameraParallax).toBe(false);
+      });
+
+      it('should parse cameraParallaxAmount', () => {
+        expect(general.cameraParallaxAmount).toBeCloseTo(0.08);
+      });
+
+      it('should parse cameraParallaxDelay', () => {
+        expect(general.cameraParallaxDelay).toBeCloseTo(0.1);
+      });
+
+      it('should parse cameraParallaxMouseInfluence', () => {
+        expect(general.cameraParallaxMouseInfluence).toBe(-1);
+      });
+
+      it('should parse cameraPreview', () => {
+        expect(general.cameraPreview).toBe(true);
+      });
+
+      it('should parse cameraShake', () => {
+        expect(general.cameraShake).toBe(false);
+      });
+
+      it('should parse cameraShakeAmplitude', () => {
+        expect(general.cameraShakeAmplitude).toBe(0.5);
+      });
+
+      it('should parse cameraShakeRoughness', () => {
+        expect(general.cameraShakeRoughness).toBe(1);
+      });
+
+      it('should parse cameraShakeSpeed', () => {
+        expect(general.cameraShakeSpeed).toBe(3);
+      });
+    });
+
+    describe('lighting', () => {
+      const { general } = parseSceneJson(FULL_GENERAL_SCENE);
+
+      it('should parse ambientColor', () => {
+        expect(general.ambientColor).toEqual({ r: 0.3, g: 0.3, b: 0.3 });
+      });
+
+      it('should parse skylightColor', () => {
+        expect(general.skylightColor).toEqual({ r: 0.3, g: 0.3, b: 0.3 });
+      });
+    });
+
+    describe('bloom', () => {
+      const { general } = parseSceneJson(FULL_GENERAL_SCENE);
+
+      it('should parse bloom', () => {
+        expect(general.bloom).toBe(true);
+      });
+
       // Animated property: bloomstrength has { script, value } → unwrap to value
-      expect(general.bloomStrength).toBe(1);
-      expect(general.bloomThreshold).toBeCloseTo(0.7);
-      expect(general.bloomTint).toEqual({ r: 1, g: 1, b: 1 });
-      expect(general.bloomHdrStrength).toBe(2);
-      expect(general.bloomHdrThreshold).toBe(1);
-      expect(general.bloomHdrScatter).toBeCloseTo(1.619);
-      expect(general.bloomHdrFeather).toBeCloseTo(0.1);
-      expect(general.bloomHdrIterations).toBe(8);
-      // Wind
-      expect(general.windEnabled).toBe(false);
-      expect(general.windStrength).toBe(1);
+      it('should parse bloomStrength (unwraps animated property to scalar)', () => {
+        expect(general.bloomStrength).toBe(1);
+      });
+
+      it('should parse bloomThreshold', () => {
+        expect(general.bloomThreshold).toBeCloseTo(0.7);
+      });
+
+      it('should parse bloomTint', () => {
+        expect(general.bloomTint).toEqual({ r: 1, g: 1, b: 1 });
+      });
+
+      it('should parse bloomHdrStrength', () => {
+        expect(general.bloomHdrStrength).toBe(2);
+      });
+
+      it('should parse bloomHdrThreshold', () => {
+        expect(general.bloomHdrThreshold).toBe(1);
+      });
+
+      it('should parse bloomHdrScatter', () => {
+        expect(general.bloomHdrScatter).toBeCloseTo(1.619);
+      });
+
+      it('should parse bloomHdrFeather', () => {
+        expect(general.bloomHdrFeather).toBeCloseTo(0.1);
+      });
+
+      it('should parse bloomHdrIterations', () => {
+        expect(general.bloomHdrIterations).toBe(8);
+      });
+    });
+
+    describe('wind', () => {
+      const { general } = parseSceneJson(FULL_GENERAL_SCENE);
+
+      it('should parse windEnabled', () => {
+        expect(general.windEnabled).toBe(false);
+      });
+
+      it('should parse windStrength', () => {
+        expect(general.windStrength).toBe(1);
+      });
+
       // The fixture stores the direction as a 3-decimal approximation of the
       // 45° unit vector (0.707, not Math.SQRT1_2 exactly), so compare with
       // tolerance — matching how the other float fields in this scene are
       // asserted (cameraParallaxAmount, bloomHdrScatter, …).
-      expect(general.windDirection.x).toBeCloseTo(Math.SQRT1_2);
-      expect(general.windDirection.y).toBeCloseTo(Math.SQRT1_2);
-      // Gravity
-      expect(general.gravityStrength).toBe(1);
-      expect(general.gravityDirection).toEqual({ x: 0, y: -1, z: 0 });
+      it('should parse windDirection', () => {
+        expect(general.windDirection.x).toBeCloseTo(Math.SQRT1_2);
+        expect(general.windDirection.y).toBeCloseTo(Math.SQRT1_2);
+      });
+    });
+
+    describe('gravity', () => {
+      const { general } = parseSceneJson(FULL_GENERAL_SCENE);
+
+      it('should parse gravityStrength', () => {
+        expect(general.gravityStrength).toBe(1);
+      });
+
+      it('should parse gravityDirection', () => {
+        expect(general.gravityDirection).toEqual({ x: 0, y: -1, z: 0 });
+      });
     });
 
     it('handles missing general gracefully', () => {

@@ -90,10 +90,10 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
     <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header row: title + selector + status */}
       <div className="flex items-center gap-2">
-        <h3 className="font-mono text-[11px] font-normal text-[var(--fg-0)]">{t.studioTabRaw}</h3>
+        <h3 className="text-[11px] font-normal text-[var(--fg-0)]">{t.studioTabRaw}</h3>
 
         <select
-          className="ml-auto h-6 max-w-[240px] rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] px-2 font-mono text-[10px] text-[var(--fg-1)]"
+          className="ml-auto h-6 max-w-[240px] rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] px-2 text-[10px] text-[var(--fg-1)]"
           value={rawSheetIndex ?? ''}
           onChange={handleSheetChange}
           disabled={!hasSheets || rawLoading}
@@ -111,14 +111,14 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
         </select>
 
         {rawDirty && (
-          <span className="rounded-[var(--dl-radius,2px)] bg-[var(--cr-warn-subtle)] px-2 py-px font-mono text-[10px] text-[var(--cr-warn-fg)]">
+          <span className="rounded-[var(--dl-radius,2px)] bg-[var(--cr-warn-subtle)] px-2 py-px text-[10px] text-[var(--cr-warn-fg)]">
             {t.studioRawDirty}
           </span>
         )}
       </div>
 
       {/* Description */}
-      <p className="mt-2 font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">
+      <p className="mt-2 text-[10px] leading-relaxed text-[var(--fg-2)]">
         {t.studioTabRawDesc}
       </p>
 
@@ -126,15 +126,15 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
       <div className="mt-4 flex min-h-0 flex-1 flex-col">
         {!hasAgent ? (
           <div className="flex flex-1 items-center justify-center rounded-[var(--dl-radius,2px)] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-2)] p-8">
-            <p className="font-mono text-[10px] text-[var(--fg-3)]">{t.studioRawNoAgent}</p>
+            <p className="text-[10px] text-[var(--fg-3)]">{t.studioRawNoAgent}</p>
           </div>
         ) : rawLoading ? (
           <div className="flex flex-1 items-center justify-center rounded-[var(--dl-radius,2px)] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-2)] p-8">
-            <p className="font-mono text-[10px] text-[var(--fg-3)]">{t.studioRawLoading}</p>
+            <p className="text-[10px] text-[var(--fg-3)]">{t.studioRawLoading}</p>
           </div>
         ) : !hasSheets ? (
           <div className="flex flex-1 items-center justify-center rounded-[var(--dl-radius,2px)] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-2)] p-8">
-            <p className="font-mono text-[10px] text-[var(--fg-3)]">{t.studioRawNoSheets}</p>
+            <p className="text-[10px] text-[var(--fg-3)]">{t.studioRawNoSheets}</p>
           </div>
         ) : (
           <textarea
@@ -154,7 +154,7 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
           type="button"
           onClick={handleApply}
           disabled={!rawDirty || rawLoading || !hasSheets}
-          className="h-7 rounded-[var(--dl-radius,2px)] bg-[var(--fg-0)] px-4 font-mono text-[10px] text-[var(--bg-1)] disabled:opacity-40"
+          className="h-7 rounded-[var(--dl-radius,2px)] bg-[var(--fg-0)] px-4 text-[10px] text-[var(--bg-1)] disabled:opacity-40"
         >
           {t.studioRawApply}
         </button>
@@ -162,13 +162,13 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
           type="button"
           onClick={handleReset}
           disabled={!rawDirty || rawLoading || !hasSheets}
-          className="h-7 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] px-4 font-mono text-[10px] text-[var(--fg-1)] disabled:opacity-40"
+          className="h-7 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] px-4 text-[10px] text-[var(--fg-1)] disabled:opacity-40"
         >
           {t.studioRawReset}
         </button>
 
         {rawError && (
-          <span className="ml-auto rounded-[var(--dl-radius,2px)] bg-[var(--destructive-subtle)] px-2 py-px font-mono text-[10px] text-[var(--destructive-fg)]">
+          <span className="ml-auto rounded-[var(--dl-radius,2px)] bg-[var(--destructive-subtle)] px-2 py-px text-[10px] text-[var(--destructive-fg)]">
             {rawError}
           </span>
         )}

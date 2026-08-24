@@ -2,6 +2,7 @@
 
 export * from './agent';
 export * from './agent-security';
+export * from './community';
 export * from './concurrency';
 export * from './drift-status';
 export * from './environment';

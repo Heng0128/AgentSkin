@@ -59,18 +59,18 @@ describe('Design Language Block', () => {
     expect(block).toContain('--agentskin-space-6: 60px');
   });
 
-  it('generates correct radius variables for swiss-default and soft-rounded', () => {
-    const swiss = designLanguageBlock({
+  it('generates correct radius variables for default and soft-rounded', () => {
+    const defaultDl = designLanguageBlock({
       spacing: { density: 'comfortable' },
       radius: { scale: '2' },
       shadow: { elevation: 'float' },
       motion: { speed: 'smooth' },
     });
 
-    // swiss-default: radius-md = 2px
-    expect(swiss).toContain('--agentskin-radius-md: 2px');
-    expect(swiss).toContain('--agentskin-radius-sm: 1px');
-    expect(swiss).toContain('--agentskin-radius-lg: 6px');
+    // default: radius-md = 2px
+    expect(defaultDl).toContain('--agentskin-radius-md: 2px');
+    expect(defaultDl).toContain('--agentskin-radius-sm: 1px');
+    expect(defaultDl).toContain('--agentskin-radius-lg: 6px');
 
     const soft = designLanguageBlock({
       spacing: { density: 'comfortable' },
@@ -244,13 +244,13 @@ describe('resolveDesignLanguage', () => {
     expect(result.motion.speed).toBe(DL_DEFAULTS.motion.speed);
   });
 
-  it('DESIGN_LANGUAGES contains swiss-default, soft-rounded, and compact-flat presets', () => {
-    expect(DESIGN_LANGUAGES['swiss-default']).toBeDefined();
+  it('DESIGN_LANGUAGES contains default, soft-rounded, and compact-flat presets', () => {
+    expect(DESIGN_LANGUAGES['default']).toBeDefined();
     expect(DESIGN_LANGUAGES['soft-rounded']).toBeDefined();
     expect(DESIGN_LANGUAGES['compact-flat']).toBeDefined();
 
     // Verify key preset properties
-    expect(DESIGN_LANGUAGES['swiss-default'].spacing.density).toBe('comfortable');
+    expect(DESIGN_LANGUAGES['default'].spacing.density).toBe('comfortable');
     expect(DESIGN_LANGUAGES['soft-rounded'].radius.scale).toBe('8');
     expect(DESIGN_LANGUAGES['compact-flat'].shadow.elevation).toBe('flat');
   });
