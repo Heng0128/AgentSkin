@@ -438,6 +438,10 @@ useStudioStore.getState = (): CombinedStudioStore => {
       _analysisProgressSubscribed = true;
       api.onVisualAnalysisProgress((payload) => {
         _analysisProgress = payload;
+        // Trigger facade re-render: the module-level _analysisProgress is read
+        // by getCombinedState(), but only sub-store setState() calls notify
+        // React subscribers. Capture-store is the semantic owner of analysis.
+        useCaptureStore.setState({});
       });
     },
     initHealthReportSubscription: () => {
