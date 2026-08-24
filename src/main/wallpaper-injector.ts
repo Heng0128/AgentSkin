@@ -202,6 +202,15 @@ const deferredSelfHealTimers = new Set<AgentId>();
 /** Safety bound: stop polling after this many ms and execute anyway. */
 const DEFERRED_MAX_WAIT_MS = 10_000;
 
+// ---------------------------------------------------------------------------
+// RC6-S6-A: Named constants for CDP connection timeouts
+// ---------------------------------------------------------------------------
+
+/** Timeout (ms) for establishing a CDP WebSocket connection during wallpaper injection. */
+const WALLPAPER_CDP_CONNECT_TIMEOUT_MS = 4_000;
+/** Timeout (ms) for the overall CDP session lifecycle during wallpaper injection. */
+const WALLPAPER_CDP_SESSION_TIMEOUT_MS = 30_000;
+
 /**
  * Enqueue a self-heal thunk that should execute only when no apply/restore
  * is in-flight for the given agent. If the current op releases before this
@@ -697,7 +706,11 @@ export async function injectAgentWallpaper(
     let session: CdpSession;
     let audioSubscribed = false;
     try {
-      session = await connectCdp(pageWsUrl, 4000, 30000);
+      session = await connectCdp(
+        pageWsUrl,
+        WALLPAPER_CDP_CONNECT_TIMEOUT_MS,
+        WALLPAPER_CDP_SESSION_TIMEOUT_MS,
+      );
     } catch (error) {
       return { ok: false, verdict: `cdp-connect-failed:${toMessage(error)}` };
     }

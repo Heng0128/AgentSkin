@@ -149,6 +149,13 @@ function platform(): Platform {
 const APPLY_VERIFY_DELAY_OVERRIDES: Partial<Record<AgentId, number>> = Object.freeze({});
 
 // ---------------------------------------------------------------------------
+// RC6-S6-A: Named constants for hardening/verify loop timing
+// ---------------------------------------------------------------------------
+
+/** Default interval (ms) between consecutive CDP evaluate calls during the hardening verify pass. */
+const DEFAULT_VERIFY_INTERVAL_MS = 50;
+
+// ---------------------------------------------------------------------------
 // Facade class
 // ---------------------------------------------------------------------------
 
@@ -531,7 +538,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
           // to shave latency off the hardening pass; the map is a no-op until
           // an agent is added here.
           verifyDelayMs: APPLY_VERIFY_DELAY_OVERRIDES[appId] ?? 500,
-          verifyIntervalMs: 50,
+          verifyIntervalMs: DEFAULT_VERIFY_INTERVAL_MS,
         }),
       log: (line) => this.log(line),
       // Reuse target sessions across the fan-out sub-tasks within one epoch.
