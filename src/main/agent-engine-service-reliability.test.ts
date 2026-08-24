@@ -480,7 +480,7 @@ describe('AgentEngineService Reliability Verification', () => {
         response: APPLY_RESPONSE,
         background: Promise.resolve(),
       });
-      await expect(svc.apply({ ...APPLY_REQUEST, themeId: 't3' })).resolves.toBeDefined();
+      await expect(svc.apply({ ...APPLY_REQUEST, themeId: 't3' })).resolves.toMatchObject({ status: 'applied' });
     });
 
     it('handles restore when no theme was previously applied', async () => {
@@ -502,7 +502,7 @@ describe('AgentEngineService Reliability Verification', () => {
       svc.dispose();
 
       // Should not throw - dispose clears maps but doesn't break in-flight
-      await expect(applyPromise).resolves.toBeDefined();
+      await expect(applyPromise).resolves.toMatchObject({ status: 'applied' });
     });
   });
 
@@ -672,7 +672,7 @@ describe('AgentEngineService Reliability Verification', () => {
         response: APPLY_RESPONSE,
         background: Promise.resolve(),
       });
-      await expect(svc.apply(APPLY_REQUEST)).resolves.toBeDefined();
+      await expect(svc.apply(APPLY_REQUEST)).resolves.toMatchObject({ status: 'applied' });
     });
 
     it('stopConcurrencyMetricsTimer is safe to call without prior start', () => {
@@ -874,7 +874,7 @@ describe('AgentEngineService Reliability Verification', () => {
         await vi.advanceTimersByTimeAsync(0);
 
         // apply() itself had already resolved with the response before dispose.
-        await expect(applyPromise).resolves.toBeDefined();
+        await expect(applyPromise).resolves.toMatchObject({ status: 'applied' });
 
         // Drain remaining timers -- any unhandledRejection surfaces here.
         await vi.advanceTimersByTimeAsync(100);
