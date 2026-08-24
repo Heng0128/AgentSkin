@@ -244,10 +244,18 @@ export class CdpSessionPool {
     // path) instead of growing the pool without bound. The normal
     // steady-state (targets are naturally < 20) is unaffected.
     if (!existing && byTarget.size >= MAX_SESSIONS_PER_AGENT) {
-      logger.warn(
-        `[session-pool] per-agent session cap (${MAX_SESSIONS_PER_AGENT}) reached for ${appId}; ` +
-          `not pooling target ${targetKey}, falling back to one-shot connect`,
+      mainWarn(
+        'SessionPool',
+        `per-agent session cap (${MAX_SESSIONS_PER_AGENT}) reached for ${appId}; ` +
+          `not pooling target ${targetKey}, closing the freshly-opened session to avoid leak`,
       );
+      // Close the session we just opened — we're refusing to pool it, so the
+      // caller gets a one-shot connect (null handle) and we must not leak the socket.
+      try {
+        session.close();
+      } catch {
+        /* already closed */
+      }
       return null;
     }
     const entry: PooledEntry = {
