@@ -11,7 +11,7 @@
  * 修复：start() 遇忙返回 no-op 影子 trace，观测层永不打断核心行为。
  */
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ApplyTraceBuilder, PerformanceRecorder } from './performance-recorder';
 
 describe('PerformanceRecorder.start 并发语义（回归：不得抛错）', () => {
@@ -56,6 +56,15 @@ describe('PerformanceRecorder.start 并发语义（回归：不得抛错）', ()
 });
 
 describe('ApplyTraceBuilder.step — 成功/失败计时', () => {
+  beforeEach(() => {
+    PerformanceRecorder.reset();
+  });
+
+  afterEach(() => {
+    // Defensive: ensure singleton is released even if a test throws before finish().
+    PerformanceRecorder.release();
+  });
+
   it('成功 step 记录 success=true 且 duration >= 0', async () => {
     const builder = PerformanceRecorder.start('traework');
     await builder.step('phase1', async () => 'result');
@@ -88,6 +97,14 @@ describe('ApplyTraceBuilder.step — 成功/失败计时', () => {
 });
 
 describe('ApplyTraceBuilder.finish — 终结化守卫', () => {
+  beforeEach(() => {
+    PerformanceRecorder.reset();
+  });
+
+  afterEach(() => {
+    PerformanceRecorder.release();
+  });
+
   it('finish 返回合法 ThemeApplyTrace 并释放 singleton', () => {
     const builder = PerformanceRecorder.start('traework', 'sakura-noir');
     builder.appendStep('connectCdp', 120);
@@ -107,6 +124,14 @@ describe('ApplyTraceBuilder.finish — 终结化守卫', () => {
 });
 
 describe('ApplyTraceBuilder.addSubStep / appendStep', () => {
+  beforeEach(() => {
+    PerformanceRecorder.reset();
+  });
+
+  afterEach(() => {
+    PerformanceRecorder.release();
+  });
+
   it('appendStep 添加顶层 step 并在 finish 后保留', () => {
     const builder = PerformanceRecorder.start('traework');
     builder.appendStep('connectCdp', 150);
