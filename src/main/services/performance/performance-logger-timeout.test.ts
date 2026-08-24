@@ -15,10 +15,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 /** Fixed value returned by the mocked Date.now(). */
 const FIXED_NOW = 1_700_000_000_000;
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.useFakeTimers();
   vi.setSystemTime(FIXED_NOW);
   vi.resetModules();
+  // Proactively clear the fresh singleton to guarantee a clean slate, even if
+  // a previous test threw before completing its dynamic import (mirrors the
+  // sibling performance-logger.test.ts pattern).
+  const mod = await import('./performance-logger');
+  mod.performanceLogger.clear();
 });
 
 afterEach(() => {
