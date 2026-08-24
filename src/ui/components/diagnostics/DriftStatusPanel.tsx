@@ -177,7 +177,7 @@ function DriftAgentCard({
       {/* Signals */}
       {status.signals.length > 0 && (
         <div className="border-t border-border/30  px-3 py-2">
-          <p className="mb-1 font-mono text-[10px]  text-muted-foreground/50">
+          <p className="mb-1 text-[10px]  text-muted-foreground/50">
             {t.settingsDriftStatusSignals} ({status.signals.length})
           </p>
           <div className="flex flex-col gap-0">
@@ -209,7 +209,7 @@ function DriftAgentCard({
       {status.lastRegenResult && (
         <div className="border-t border-border/30  px-3 py-2">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px]  text-muted-foreground/50">
+            <span className="text-[10px]  text-muted-foreground/50">
               {t.settingsDriftStatusLastRegen}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
