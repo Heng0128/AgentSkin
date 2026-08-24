@@ -432,10 +432,13 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
     });
 
     /**
-     * Verifies that when appendLogLine rejects (e.g. disk full),
-     * the log() method's catch handler increments persistFailures.
+     * Verifies that appendLogLine failure does NOT increment persistFailures.
+     * persistFailures tracks state persistence (writeState) failures only.
+     * Log-line persistence failures are handled separately in log()'s catch
+     * handler and do not affect the counter — this avoids double-counting
+     * when writeState's error path also calls log().
      */
-    it('persistFailures increments on appendLogLine failure', async () => {
+    it('appendLogLine failure does not increment persistFailures', async () => {
       vi.mocked(appendLogLine).mockRejectedValue(new Error('disk full'));
       const svc = makeService(stateFile);
 
@@ -447,7 +450,8 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       const m = svc.collectConcurrencyMetrics();
-      expect(m.persistFailures).toBe(1);
+      // log() failure should NOT increment persistFailures (only writeState does).
+      expect(m.persistFailures).toBe(0);
     });
 
     /**
@@ -516,6 +520,8 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
     /**
      * Verifies that appendLogLine failure does not break subsequent logging.
      * After a rejection, the next log() call should still fire logListener.
+     * persistFailures is NOT incremented by log() failures (only writeState
+     * failures increment it) — this avoids double-counting in error paths.
      */
     it('log appendLogLine failure does not break logging', async () => {
       // First call rejects, second call succeeds.
@@ -537,8 +543,8 @@ describe('AgentEngineService — Concurrency Metrics Subsystem', () => {
       // Both lines should reach the listener regardless of appendLogLine failure.
       expect(receivedLines).toContain('first line');
       expect(receivedLines).toContain('second line');
-      // Counter incremented only once (for the first failure).
-      expect(svc.collectConcurrencyMetrics().persistFailures).toBe(1);
+      // persistFailures should be 0 — log() failures don't increment it.
+      expect(svc.collectConcurrencyMetrics().persistFailures).toBe(0);
     });
   });
 

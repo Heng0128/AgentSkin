@@ -936,23 +936,27 @@ export class AgentEngineService implements AgentEngineServiceApi {
   }
 
   async restoreAll(): Promise<void> {
-    // RC5-S5-A: Partition agents into two disjoint sets to avoid double-processing.
-    // Set 1: agents with an active theme → full restore (clears theme + wallpaper).
-    // Set 2: agents with wallpaper-only (no theme) → wallpaper removal only.
-    // The two sets are mutually exclusive, preventing redundant epoch bumps.
-    const withTheme: AgentId[] = [];
+    // Collect agents that have either an active theme or a wallpaper preference.
+    // restore() handles theme teardown + wallpaper-preference clearing, but for
+    // wallpaper-only agents (no active theme) it does NOT call removeWallpaperFromAgent
+    // — that requires a separate explicit call to remove the live wallpaper from
+    // the running agent's DOM.
+    const toRestore: AgentId[] = [];
     const wallpaperOnly: AgentId[] = [];
     for (const appId of AGENT_IDS) {
       if (this.registry.getActiveThemeId(appId)) {
-        withTheme.push(appId);
+        toRestore.push(appId);
       } else if (this.settings.agentWallpaper(appId)?.enabled) {
+        toRestore.push(appId);
         wallpaperOnly.push(appId);
       }
     }
-    // Phase 1: Full restore for themed agents (theme + wallpaper cleanup).
-    await Promise.all(withTheme.map((appId) => this.restore(appId).catch(() => undefined)));
-    // Phase 2: Wallpaper-only cleanup for agents without a theme.
-    // These were skipped by restore() because activeThemeId is null.
+    // Phase 1: restore() for all agents with theme or wallpaper preference.
+    await Promise.all(toRestore.map((appId) => this.restore(appId).catch(() => undefined)));
+    // Phase 2: Explicit wallpaper removal for wallpaper-only agents.
+    // restoreThemeFlow clears the preference (setAgentWallpaper) and removes
+    // video wallpaper from DOM (removeAgentVideoWallpaper), but for image
+    // wallpaper on wallpaper-only agents we need removeWallpaperFromAgent.
     await Promise.all(
       wallpaperOnly.map((appId) => this.removeWallpaperFromAgent(appId).catch(() => undefined)),
     );
