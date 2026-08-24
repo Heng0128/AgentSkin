@@ -43,7 +43,7 @@ export function AppMark({
         role="img"
         aria-label={label}
         className={cn(
-          'flex shrink-0 items-center justify-center rounded-md bg-muted font-semibold text-muted-foreground',
+          'flex shrink-0 items-center justify-center rounded-md bg-muted font-normal text-muted-foreground',
           className,
         )}
         style={{ width: size, height: size, fontSize: Math.max(8, Math.round(size * 0.55)) }}

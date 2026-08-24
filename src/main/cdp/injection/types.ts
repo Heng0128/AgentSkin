@@ -16,8 +16,18 @@ export interface ThemeVerification {
   accent: string;
   /** --agentskin-art value (truncated) */
   agentskinArt: string;
-  /** Whether #root or body has a blob: background */
+  /**
+   * Whether #root or body has a blob: background
+   */
   heroBlobActive: boolean;
+  /**
+   * 2026-08-23: whether `--agentskin-art` resolves to an actual `url(blob:)`
+   * value. Unlike `heroBlobActive` (which only reads root/body backgroundImage
+   * and is always false when the theme paints hero on a z-index:-1 pseudo
+   * element), this directly inspects the art CSS variable. Lets the watchdog
+   * decide whether hero image re-injection is needed.
+   */
+  artResolved?: boolean;
   /** Number of adoptedStyleSheets with __agentskin flag */
   adoptedSheetCount: number;
   /**

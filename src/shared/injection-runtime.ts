@@ -51,19 +51,30 @@ import { AGENT_IDS } from './types';
  *
  * Consumers: waitForTheme (shared.ts), watchdog skip decision (cdp-fanout.ts).
  */
-export function isThemeFullyApplied(v: {
-  accent: string;
-  adoptedSheetCount: number;
-  layers?: Record<string, number>;
-}): boolean {
+export function isThemeFullyApplied(
+  v: {
+    accent: string;
+    adoptedSheetCount: number;
+    layers?: Record<string, number>;
+    artResolved?: boolean;
+  },
+  opts?: {
+    /** When true, require the hero art variable to actually resolve. */ requireHero?: boolean;
+  },
+): boolean {
   if (!v || v.adoptedSheetCount <= 0) return false;
   if (!v.accent) return false;
-  // If layers data is unavailable (old client), fall back to count-only check
-  if (!v.layers) return true;
+  // If layers data is unavailable (old client), fall back to count-only check;
+  // when the theme requires a hero, still gate on art actually resolving so a
+  // lost hero blob (CSS present, background empty) is not treated as complete.
+  if (!v.layers) return opts?.requireHero ? v.artResolved === true : true;
   const required = ['palette', 'tokens', 'cosmetic'];
   for (const layer of required) {
     if (!v.layers[layer] || v.layers[layer] <= 0) return false;
   }
+  // 2026-08-23 hero 修复:当主题带 hero 背景时，若 --agentskin-art 未解析为
+  // url(blob:)，则不视为"已完全应用"，watchdog 才不会被跳过、从而补注入 hero。
+  if (opts?.requireHero && !v.artResolved) return false;
   return true;
 }
 
@@ -140,6 +151,11 @@ export const CLEAR_ADAPTERS_BODY = [
   '    delete window[m];',
   '  }',
   '}',
+  // 治本：卸载 adoptedStyleSheets setter hook，恢复原始 descriptor
+  'if (window.__agentskin_originalAdoptedSheetsDesc) {',
+  '  try { Object.defineProperty(Document.prototype, "adoptedStyleSheets", window.__agentskin_originalAdoptedSheetsDesc); } catch (e) {}',
+  '}',
+  'delete window.__agentskin_originalAdoptedSheetsDesc;',
 ].join('\n');
 
 /**

@@ -39,7 +39,7 @@ ${tokenBlock(t, host)}
 
 /* ===== Native token overrides (wins over :root[data-theme]) ===== */
 ${host}:root {
-  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+  /* color-scheme 已在 tokenBlock() 中声明 (:root 级)，此处删除以避免重复 */
 
   /* Primary / brand */
   --color-primary: ${c.accent} !important;
@@ -217,6 +217,16 @@ ${host} .agents-sidebar {
   background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 20%, transparent) !important;
   border-right: 1px solid ${alpha(c.accent, 0.1)} !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+
+/* PROBE-VERIFIED 2026-08-23: the sidebar's inner content wrapper is
+   div.group/sidebar[data-sidebar-content="true"] which carries the OPAQUE
+   --color-bg token (rgb(9,11,24) on dark themes) and blocks the frosted
+   glass. Punch it through so only .agents-sidebar's own glass shows. */
+${host} .agents-sidebar [data-sidebar-content="true"],
+${host} .agents-sidebar div[class~="group/sidebar"] {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 
 /* PROBE-VERIFIED 2026-08-23: qoderwork nav items are

@@ -31,10 +31,10 @@ export function ThemeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'group flex h-full flex-col overflow-hidden rounded-md  bg-card text-left transition-all duration-fast ease-out',
+        'group flex h-full flex-col overflow-hidden rounded-[var(--radius-md)] border bg-card text-left shadow-xs transition-all duration-fast ease-out',
         selected
-          ? 'border-primary/60 border-l-[3px] border-primary'
-          : '',
+          ? 'border-primary ring-1 ring-primary'
+          : 'border-transparent hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',
       )}
     >
       {/* Preview — 16:9 aspect ratio */}
@@ -51,11 +51,11 @@ export function ThemeCard({
         ) : null}
         <div
           className={cn(
-            'absolute inset-0 flex items-center justify-center bg-card2 text-muted-foreground',
+            'absolute inset-0 flex items-center justify-center bg-surface text-muted-foreground',
             theme.preview && !imgError ? 'hidden' : 'flex',
           )}
         >
-          <span className="text-sm font-medium opacity-20">{theme.name.slice(0, 2)}</span>
+          <span className="text-[13px] font-normal opacity-20">{theme.name.slice(0, 2)}</span>
         </div>
 
         {/* Active agent indicators — top-right, sharp pills */}
@@ -63,7 +63,7 @@ export function ThemeCard({
           <div
             role="img"
             aria-label={t.themeStatsActive(activeAgentIds.length)}
-            className="absolute right-1 top-1 flex items-center gap-0 rounded-md bg-cr-success/90 px-1 py-0"
+            className="absolute right-1 top-1 flex items-center gap-0 rounded-sm bg-cr-success px-1 py-0"
           >
             {activeAgentIds.map((agentId) => (
               <span
@@ -81,10 +81,10 @@ export function ThemeCard({
         {theme.mode && theme.mode !== 'auto' && (
           <span
             className={cn(
-              'absolute top-1 rounded-md px-1 py-0 text-[11px] font-medium  ',
+              'absolute top-1 rounded-sm px-1 py-0 text-[11px] font-normal',
               isActive ? 'left-1' : 'right-1',
               theme.mode === 'dark'
-                ? 'bg-gray-900/80 text-gray-300'
+                ? 'bg-surface text-secondary'
                 : 'bg-muted text-foreground',
             )}
           >
@@ -106,11 +106,8 @@ export function ThemeCard({
 
         {/* Dynamic wallpaper indicator — bottom-right */}
         {theme.hasWallpaper && (
-          <span className="absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-md bg-card2 px-1 py-0 font-mono text-[10px] font-medium text-muted-foreground">
-            <span className="relative flex size-1">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-white/60" />
-              <span className="relative inline-flex size-1 rounded-full bg-white" />
-            </span>
+          <span className="absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-sm bg-surface px-1 py-0 font-mono text-micro font-normal text-muted-foreground">
+            <span className="inline-flex size-1 rounded-full bg-white" />
             {t.themeDynamicBadge}
           </span>
         )}
@@ -118,18 +115,18 @@ export function ThemeCard({
 
       {/* Info section — tight typography */}
       <div className="flex min-h-0 flex-1 flex-col gap-1 p-2.5">
-        {/* Name — font-medium, clean */}
+        {/* Name — 13px medium, clean hierarchy */}
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="min-w-0 truncate text-[13px] font-medium tracking-[-0.01em]">{theme.name}</h3>
+          <h3 className="min-w-0 truncate text-[13px] font-medium leading-snug">{theme.name}</h3>
           {theme.version && (
-            <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground/50">
+            <span className="shrink-0 font-mono text-micro tabular-nums text-muted-foreground">
               v{theme.version}
             </span>
           )}
         </div>
 
         {/* Author — font-mono 10px text-dim */}
-        <div className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground/60">
+        <div className="flex items-center gap-1 font-mono text-micro text-muted-foreground/60">
           <span className="truncate">{theme.author}</span>
           {theme.category && (
             <>
@@ -140,7 +137,7 @@ export function ThemeCard({
         </div>
 
         {/* Supported agents + tags — badges */}
-        <div className="flex items-center gap-1 pt-0.5">
+        <div className="flex items-center gap-1 pt-1">
           <span aria-hidden="true" className="flex items-center gap-1">
             {theme.supportedAgents.map((agentId) => {
             const agentActive = activeAgentIds.includes(agentId);
@@ -148,21 +145,21 @@ export function ThemeCard({
               <span
                 key={agentId}
                 className={cn(
-                  'flex size-[16px] items-center justify-center rounded-md transition-all',
+                  'flex size-4 items-center justify-center rounded-full transition-all',
                   agentActive
                     ? 'bg-cr-success/15'
-                    : 'ring-1 ring-border',
+                    : 'bg-muted/60',
                 )}
               >
-                <AppMark appId={agentId} size={13} />
+                <AppMark appId={agentId} size={12} />
               </span>
             );
           })}
           </span>
           {theme.tags.length > 0 && (
-            <div className="ml-auto flex gap-0">
+            <div className="ml-auto flex gap-1">
               {theme.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="outline" className="rounded-md px-1 py-0 text-[11px] font-medium  ">{tag}</Badge>
+                <Badge key={tag} variant="ghost" className="rounded-md px-1.5 py-px text-[10px] font-normal text-muted-foreground">{tag}</Badge>
               ))}
             </div>
           )}

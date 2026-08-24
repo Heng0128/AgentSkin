@@ -2,17 +2,18 @@
 //
 // # normalize-hero-images.mjs
 //
-// Keeps the shipped hero artwork lean so the seeded .codedrobe-theme bundles
-// (which embed the art as base64) stay small:
+// Hero artwork is shipped LOSSLESS — the exact file the theme author provided
+// (Wallpaper-style). With external-file asset mode (theme-installer reads the
+// hero as a `{ file }` reference, never inlining base64), there is no reason
+// to downscale or re-encode: 4K/8K wallpaper art stays pixel-perfect and the
+// theme bundle stays tiny.
 //
-//   - any image wider than 1920px is downscaled to 1920px (cover art for a
-//     desktop window never needs more)
-//   - PNG/JPEG artwork above the size budget is re-encoded as WebP (q82),
-//     which the engine, the catalog cover <img> and Chromium all support
+// What this script still does (safety only — never changes pixels):
+//   - validates each hero decodes as a supported image (sharp metadata)
+//   - rejects / warns on undeclared formats and unsupported containers
+//   - reports resolution so authors can spot accidental upscales
 //
-// Idempotent: already-small WebP files pass through untouched. Run it after
-// fetching new artwork, before update-theme-manifests.mjs (the manifest hero
-// field must point at the final filename).
+// It does NOT downscale, re-encode, or alter the original file in any way.
 //
 // Usage:  node scripts/normalize-hero-images.mjs
 
@@ -25,55 +26,57 @@ const require = createRequire(import.meta.url);
 const sharp = require('sharp');
 
 const THEMES_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'themes');
-const MAX_WIDTH = 1920;
-const SIZE_BUDGET = 420 * 1024; // re-encode anything above ~420KB
+const SUPPORTED = new Set(['png', 'jpeg', 'jpg', 'webp', 'gif', 'avif']);
+
+let total = 0;
+let warnings = 0;
 
 for (const id of fs.readdirSync(THEMES_DIR).sort()) {
   const assetsDir = path.join(THEMES_DIR, id, 'assets');
   if (!fs.existsSync(assetsDir)) continue;
-  const heroFile = fs.readdirSync(assetsDir).find((f) => /^hero\.(png|jpe?g|webp)$/i.test(f));
+  const heroFile = fs.readdirSync(assetsDir).find((f) => /^hero\.(png|jpe?g|webp|gif|avif)$/i.test(f));
   if (!heroFile) {
     console.warn(`[normalize-hero-images] ${id}: no hero image found`);
+    warnings++;
     continue;
   }
 
   const heroPath = path.join(assetsDir, heroFile);
   const before = fs.statSync(heroPath).size;
-  // Read fully into memory first: on Windows libvips would otherwise hold an
-  // open fd on the source, and unlinking it afterwards fails with EBUSY.
+  const ext = path.extname(heroFile).toLowerCase().replace('.', '');
+
+  if (!SUPPORTED.has(ext)) {
+    console.warn(`[normalize-hero-images] ${id}: unsupported hero format '.${ext}' — engine will reject the package`);
+    warnings++;
+    continue;
+  }
+
+  // Read fully into memory once (also releases the fd on Windows).
   const sourceBuffer = fs.readFileSync(heroPath);
-  const meta = await sharp(sourceBuffer).metadata();
-
-  let pipeline = sharp(sourceBuffer);
-  if ((meta.width ?? 0) > MAX_WIDTH) {
-    pipeline = pipeline.resize({ width: MAX_WIDTH, withoutEnlargement: true });
+  let meta;
+  try {
+    meta = await sharp(sourceBuffer).metadata();
+  } catch (error) {
+    console.warn(`[normalize-hero-images] ${id}: hero is not a decodable image — ${String(error).slice(0, 120)}`);
+    warnings++;
+    continue;
   }
 
-  const ext = path.extname(heroFile).toLowerCase();
-  let outPath = heroPath;
-  let action = 'kept';
-
-  if (before > SIZE_BUDGET || (meta.width ?? 0) > MAX_WIDTH) {
-    if (ext === '.webp') {
-      pipeline = pipeline.webp({ quality: 82 });
-      action = 're-encoded webp';
-    } else {
-      // PNG/JPEG photographic art compresses far better as WebP.
-      outPath = path.join(assetsDir, 'hero.webp');
-      pipeline = pipeline.webp({ quality: 82 });
-      action = `converted ${ext.slice(1)}→webp`;
-    }
-    // sharp refuses to read and write the same file, so stage via a temp
-    // file and rename it into place (rename overwrites the target).
-    const tempPath = path.join(assetsDir, `.hero-tmp-${Date.now()}.webp`);
-    await pipeline.toFile(tempPath);
-    fs.renameSync(tempPath, outPath);
-    if (outPath !== heroPath) fs.rmSync(heroPath, { force: true });
+  if (!meta.width || !meta.height) {
+    console.warn(`[normalize-hero-images] ${id}: hero has no dimensions (${meta.format})`);
+    warnings++;
+    continue;
   }
 
-  const after = fs.statSync(outPath).size;
+  total++;
+  // Informational only — no pixel changes.
   console.log(
-    `[normalize-hero-images] ${id}: ${path.basename(outPath)} ` +
-      `${(before / 1024).toFixed(0)}KB → ${(after / 1024).toFixed(0)}KB (${action})`,
+    `[normalize-hero-images] ${id}: ${heroFile} ${meta.width}x${meta.height} ` +
+      `${(before / 1024).toFixed(0)}KB ${meta.format} — kept LOSSLESS (no re-encode)`,
   );
 }
+
+console.log(
+  `[normalize-hero-images] done: ${total} heroes verified lossless, ${warnings} warnings. ` +
+    `Heroes are NEVER re-encoded or downscaled.`,
+);

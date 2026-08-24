@@ -37,8 +37,8 @@ import type { ThemeCenterCardModel } from '@/types/theme-center';
 import type { AgentId } from '@shared/types';
 import { ThemeCard } from './ThemeCard';
 
-const GAP = 10; // tighter grid gap
-const INFO_BUDGET = 80; // px reserved for the card info section (fixed, tighter card)
+const GAP = 12; // comfortable grid gap between cards
+const INFO_BUDGET = 88; // px reserved for the card info section (fixed, tight card)
 const OVERSCAN = 2; // extra rows rendered above/below the viewport
 
 export interface VirtualThemeGridProps {
@@ -116,7 +116,7 @@ export function VirtualThemeGrid({
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="min-h-0 flex-1 animate-page-enter overflow-y-auto p-4"
+      className="min-h-0 flex-1 overflow-y-auto p-3"
     >
       {/* Full-height spacer keeps the native scrollbar proportional to the
           entire (virtual) grid; only the visible lanes are actually in the DOM.

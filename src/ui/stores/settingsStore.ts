@@ -83,6 +83,10 @@ interface SettingsState {
   density: Density;
   /** User-selected motion intensity (UI-shell CSS variable). */
   motion: Motion;
+  /** MCP HTTP server running state. */
+  mcpRunning: boolean;
+  /** MCP HTTP server URL (e.g. "http://127.0.0.1:3333/mcp") or null when stopped. */
+  mcpUrl: string | null;
 
   setSettingsOpen: (open: boolean) => void;
   setSettingsSection: (section: SettingsSection) => void;
@@ -100,6 +104,10 @@ interface SettingsState {
   clearAppPath: (appId: AgentId) => Promise<void>;
   saveAppPort: (appId: AgentId, port: number | null) => Promise<boolean>;
   saveLiveDomRefreshInterval: (interval: number) => Promise<void>;
+  /** Refresh MCP server status from main process. */
+  refreshMcpStatus: () => Promise<void>;
+  /** Toggle MCP HTTP server on/off. */
+  toggleMcp: () => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -109,6 +117,8 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   radiusScale: loadRadiusScale(),
   density: loadDensity(),
   motion: loadMotion(),
+  mcpRunning: false,
+  mcpUrl: null,
 
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setSettingsSection: (settingsSection) => set({ settingsSection }),
@@ -204,6 +214,33 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       useNotificationStore.getState().showToast(currentT().settingsSaved);
     } catch (error) {
       useNotificationStore.getState().fail(error);
+    }
+  },
+
+  refreshMcpStatus: async () => {
+    try {
+      const status = await api.getMcpStatus();
+      set({ mcpRunning: status.running, mcpUrl: status.url });
+    } catch {
+      // Silently ignore — MCP status is non-critical.
+    }
+  },
+
+  toggleMcp: async () => {
+    const { mcpRunning } = useSettingsStore.getState();
+    try {
+      if (mcpRunning) {
+        await api.stopMcp();
+        set({ mcpRunning: false, mcpUrl: null });
+      } else {
+        const result = await api.startMcp();
+        if (result.ok && result.url) {
+          set({ mcpRunning: true, mcpUrl: result.url });
+        }
+      }
+    } catch {
+      // The main process handler always returns { ok, error }, so exceptions
+      // here are unexpected. State remains unchanged.
     }
   },
 }));

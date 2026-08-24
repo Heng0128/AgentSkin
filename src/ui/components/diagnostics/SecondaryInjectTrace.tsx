@@ -21,8 +21,11 @@ import {
   useSecondaryInjectStore,
 } from '@/stores/secondaryInjectStore';
 
+import { EmptyState } from '@/components/ui/empty-state';
+
 import type { UiMessages } from '@shared/i18n';
 import { AGENT_META } from '@shared/types';
+import { ArrowRight } from 'lucide-react';
 
 export function SecondaryInjectTrace({ t }: { t: UiMessages }) {
   const byAgent = useSecondaryInjectStore((s) => s.byAgent);
@@ -31,11 +34,8 @@ export function SecondaryInjectTrace({ t }: { t: UiMessages }) {
 
   if (agentEntries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-        <div className="flex size-9 items-center justify-center rounded-md bg-muted/60">
-          <span className="font-mono text-[10px] text-muted-foreground/50">⟶</span>
-        </div>
-        <p className="text-[11px] text-muted-foreground/70">{t.settingsSecondaryInjectEmpty}</p>
+      <div className="flex items-center justify-center py-8">
+        <EmptyState icon={<ArrowRight />} title={t.settingsSecondaryInjectEmpty} iconSize="md" />
       </div>
     );
   }
@@ -67,7 +67,7 @@ function AgentTraceCard({
       <div className="flex items-center justify-between  bg-card2 px-3 py-2">
         <div className="flex items-center gap-2">
           <AppMark appId={agentId as never} size={10} />
-          <span className="font-mono text-[11px] font-semibold  text-foreground">
+          <span className="font-mono text-[11px] font-normal  text-foreground">
             {agentMeta?.displayName ?? agentId}
           </span>
           <span className="text-[11px] text-muted-foreground/50">{steps.length} targets</span>

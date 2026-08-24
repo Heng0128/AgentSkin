@@ -24,7 +24,7 @@ describe('ContrastBadge', () => {
     const { container } = render(<ContrastBadge fgHex="#000000" bgHex="#ffffff" mode="compact" />);
     // Black on white has a ratio of 21:1 — passes AA.
     const dot = container.querySelector('span[aria-hidden="true"]');
-    expect(dot?.className).toContain('bg-green-500');
+    expect(dot?.className).toContain('bg-cr-success');
     expect(container.textContent).toContain('✓');
   });
 
@@ -32,7 +32,7 @@ describe('ContrastBadge', () => {
     const { container } = render(<ContrastBadge fgHex="#ffffff" bgHex="#ffffff" mode="compact" />);
     // White on white has a ratio of 1:1 — fails AA.
     const dot = container.querySelector('span[aria-hidden="true"]');
-    expect(dot?.className).toContain('bg-red-500');
+    expect(dot?.className).toContain('bg-destructive');
     expect(container.textContent).toContain('✗');
   });
 
@@ -52,7 +52,7 @@ describe('ContrastBadge', () => {
     const { container } = render(<ContrastBadge fgHex="#ffffff" bgHex="#ffffff" mode="full" />);
     // White on white → 1:1 → fails AA → red text.
     const outerSpan = container.firstChild as HTMLElement;
-    expect(outerSpan.className).toContain('text-red-500');
+    expect(outerSpan.className).toContain('text-destructive');
   });
 
   it('applies custom className', () => {

@@ -26,7 +26,7 @@
  * 3. Border-radius — `rounded-none/sm/md/lg/full` plus arbitrary radii
  *    <= 8px and `inherit` are allowed (6px `rounded-md` is the baseline).
  *
- * 4. Box-shadow — only `shadow-none` and `shadow-float` are allowed.
+ * 4. Box-shadow — `shadow-none`, `shadow-sm/md/lg/xl` (Quiet Workbench multi-level).
  *
  * 9. Hardcoded colors — `rgba()`/`hsla()` with raw numeric channels are
  *    flagged. Whitelisted: `rgba(var(--x), alpha)`, `var(--token, rgba(...))`
@@ -119,8 +119,15 @@ const ALLOWED_ROUNDED = new Set([
   'rounded-full',
 ]);
 
-/** Allowed shadow class names. */
-const ALLOWED_SHADOW = new Set(['shadow-none', 'shadow-float']);
+/** Allowed shadow class names — Quiet Workbench multi-level system. */
+const ALLOWED_SHADOW = new Set([
+  'shadow-none',
+  'shadow-sm',
+  'shadow-md',
+  'shadow-lg',
+  'shadow-xl',
+  'shadow-float', // deprecated but allowed for backward compat
+]);
 
 // ---------------------------------------------------------------------------
 // Rule 9: rgba/hsla hardcoded color detection

@@ -259,12 +259,6 @@ export const IpcChannel = {
   CSS_GET_TEXT: 'css:get-text',
   /** Renderer→main: inject edited raw CSS through the workspace-tweak layer. */
   CSS_APPLY_EDIT: 'css:apply-edit',
-  // SEND_ONLY — main → renderer event. Pushed for each CDP CSS.domain event
-  // (styleSheetChanged / styleSheetAdded / styleSheetRemoved). Subscribed via
-  // ipcRenderer.on in preload. Registering ipcMain.handle here would cause
-  // invoke() to hang forever.
-  CSS_EVENTS: 'css:events',
-
   // --- Selector probe (selector-validator.ts) ---
   /** Renderer→main: probe a single CSS selector against a running agent. */
   SELECTOR_PROBE: 'selector:probe',
@@ -293,6 +287,14 @@ export const IpcChannel = {
   // SEND_ONLY — main → renderer event. Pushed once after all secondary targets
   // have been attempted. Payload: { appId, injected, failed, total, duration }.
   THEME_SECONDARY_INJECT_SUMMARY: 'theme:secondary-inject-summary',
+
+  // --- MCP (Model Context Protocol) ---
+  /** INVOKE — renderer → main. Get current MCP server status (running, port). */
+  MCP_GET_STATUS: 'mcp:get-status',
+  /** INVOKE — renderer → main. Start the MCP HTTP server. */
+  MCP_START: 'mcp:start',
+  /** INVOKE — renderer → main. Stop the MCP HTTP server. */
+  MCP_STOP: 'mcp:stop',
 } as const;
 
 /** Union of all IPC channel names (for type-level validation in callers). */

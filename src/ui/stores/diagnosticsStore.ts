@@ -37,6 +37,8 @@ interface DiagnosticsState {
   updateConcurrencyMetrics: (metrics: Partial<ConcurrencyMetrics>) => void;
   setHealthReport: (report: HealthCheckReport) => void;
   setDriftReport: (report: DriftStatus) => void;
+  /** Increment persistFailures by the failure count carried in the warning. */
+  incrementPersistFailures: (count: number) => void;
 }
 
 const initialConcurrencyMetrics: ConcurrencyMetrics = {
@@ -104,6 +106,15 @@ export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({
       driftStatusByAgent: {
         ...s.driftStatusByAgent,
         [report.agentId]: report,
+      },
+    }));
+  },
+
+  incrementPersistFailures: (count) => {
+    set((state) => ({
+      concurrencyMetrics: {
+        ...state.concurrencyMetrics,
+        persistFailures: state.concurrencyMetrics.persistFailures + count,
       },
     }));
   },

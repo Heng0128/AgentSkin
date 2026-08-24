@@ -31,7 +31,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 // λ safety guardrails (P0-2 sanitize + P0-1 specificity)
-import { sanitizeKeyframes } from '../src/compiler/sanitize.js';
+import { sanitizeKeyframes, sanitizeDeclarationBlock } from '../src/compiler/sanitize.js';
 import { AGENT_SPECIFICITY_PROFILES, validateSpecificity } from '../src/compiler/specificity.js';
 import { getAdapter } from '../src/engine/src/adapters/index.mjs';
 // 2a multi-asset: reuse the B-line engine gates (SAFE_IMAGE_TYPES /
@@ -73,11 +73,14 @@ const DEFAULT_TOKENS = {
 const HOST_SELECTOR = {
   // Aligned with THEME_SPEC.md L262-269 — no wildcards, precise scope.
   // CSS custom properties inherit naturally; no need for `body *`.
+  // NOTE: These selectors match the runtime adapter injection points.
+  // For the CI generator pipeline, see theme-utils.mjs HOSTS.
   traework: 'html.agentskin-host-traework body',
   qoderwork: 'html.agentskin-host-qoderwork:root',
   workbuddy: 'html.agentskin-host-workbuddy body',
   doubao: 'html.agentskin-host-doubao:root',
   codex: 'html.agentskin-host-codex',
+  zcode: 'html.agentskin-host-zcode body',
 };
 
 // Representative semantic tokens per agent namespace. These are redirected onto
@@ -539,7 +542,7 @@ function buildAgentCssInternal(agentId, palette, signature, bridge, rawKeyframes
       });
       if (bridgeSanitized.isBlocked) {
         console.warn(
-          `⚠ theme ${themeId}/${agentId}: variable bridge value for "${k}" blocked: ${bridgeSanitized.violations.join('; ')}`,
+          `[build-theme-package] ⚠ bridge value for "${k}" blocked (agent=${agentId}): ${bridgeSanitized.violations.join('; ')}`,
         );
         continue;
       }

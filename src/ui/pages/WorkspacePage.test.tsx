@@ -166,6 +166,15 @@ vi.mock('@/components/ui/button', () => ({
   },
 }));
 
+vi.mock('@/components/ui/page-header', () => ({
+  PageHeader: ({ title, children }: { title: string; children?: React.ReactNode }) =>
+    `<div data-title="${title}">${children ?? ''}</div>`,
+}));
+
+vi.mock('@/components/ui/page-toolbar', () => ({
+  PageToolbar: ({ actions }: { actions?: React.ReactNode }) => (actions ? `${actions}` : ''),
+}));
+
 vi.mock('@/components/ui/spinner', () => ({
   Spinner: () => null,
 }));
@@ -191,8 +200,10 @@ vi.mock('lucide-react', () => {
     AlertTriangle: stub,
     CheckCircle: stub,
     Download: stub,
+    Redo2: stub,
     RefreshCw: stub,
     Search: stub,
+    Undo2: stub,
     Upload: stub,
     XCircle: stub,
   };

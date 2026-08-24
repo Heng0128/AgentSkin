@@ -204,6 +204,45 @@ describe('wallpaperStore — Toast notification behavior', () => {
     expect(mockShowToast).not.toHaveBeenCalled();
   });
 
+  it('importWallpaper extracts items from { ok: true, items } response', async () => {
+    const imported = [{ id: 'wp-new', title: 'new', type: 'image' }] as ReturnType<
+      typeof mockListWallpapers
+    >;
+    mockImportWallpaper.mockResolvedValueOnce({ ok: true, items: imported });
+
+    await useWallpaperStore.getState().importWallpaper();
+
+    // wallpapers 必须是数组，不能是 { ok, items } 对象
+    expect(Array.isArray(useWallpaperStore.getState().wallpapers)).toBe(true);
+    expect(useWallpaperStore.getState().wallpapers).toHaveLength(1);
+    expect(useWallpaperStore.getState().wallpapers[0].id).toBe('wp-new');
+    expect(mockFail).not.toHaveBeenCalled();
+  });
+
+  it('importWallpaper handles bare-array response (dialog cancelled)', async () => {
+    const current = [{ id: 'wp-existing', title: 'existing', type: 'video' }] as ReturnType<
+      typeof mockListWallpapers
+    >;
+    mockImportWallpaper.mockResolvedValueOnce(current);
+
+    await useWallpaperStore.getState().importWallpaper();
+
+    expect(Array.isArray(useWallpaperStore.getState().wallpapers)).toBe(true);
+    expect(useWallpaperStore.getState().wallpapers).toHaveLength(1);
+    expect(useWallpaperStore.getState().wallpapers[0].id).toBe('wp-existing');
+    expect(mockFail).not.toHaveBeenCalled();
+  });
+
+  it('importWallpaper does not mutate list on { ok: false } response', async () => {
+    mockImportWallpaper.mockResolvedValueOnce({ ok: false, error: 'import failed' });
+
+    await useWallpaperStore.getState().importWallpaper();
+
+    // 失败时保持初始空列表
+    expect(useWallpaperStore.getState().wallpapers).toEqual([]);
+    expect(mockFail).not.toHaveBeenCalled();
+  });
+
   // -----------------------------------------------------------------------
   // 3. deleteWallpaper — error path triggers fail()
   // -----------------------------------------------------------------------

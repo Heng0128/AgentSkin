@@ -1,6 +1,6 @@
 # AgentSkin Desktop — 架构总览（活文档）
 
-最后更新：2026-08-07。以代码为准；发现与代码不符时请更新本文件。
+最后更新：2026-08-20。以代码为准；发现与代码不符时请更新本文件。
 
 ## 分层总览
 
@@ -71,6 +71,33 @@ mutation handler 成功后调用 `notifyStatusChanged()` → 推送 `STATUS_CHAN
 - `src/engine/`：vendored 引擎包 `@agentskin/engine`（CDP session、主题包读写、选择器解析等）。
 - `src/engine/src/semantic-quant/`：语义量化层（RFC 2026-08-17-semantic-quant-layer，Phase 1 薄切片）。标准枚举字典（uiArea/componentKind/componentLayer/riskLevel）+ `COMPONENT_INDEX`（componentId 稳定主键 + bindings N:M）+ 双版本字段快照（engineVersion 备注 / taxonomySchemaVersion 解析）。**`selectivity-registry.mjs` 不感知本层**；注入执行层禁止 import 本层（`scripts/check-semantic-contract.mjs` 强制），仅 `runtime/verify-style.mjs`（区域聚合双通道报告）与工具/未来 Studio 可消费。
 - `engines/<agent>/`：每目标应用三件套——`adapter.mjs`（L4 结构适配 + MutationObserver）、`tokens.css`（L1 原生 token 映射）、`cosmetic.css`（L2 打磨）。
+- `engines/shared/`：共享运行时模块，由主进程拼接在 `adapter.mjs` 之前注入。包括：`deep-core.mjs`（DeepCore — Shadow DOM 穿透 / Fragment 路由 / 上下文感知 / AdaptiveMutationObserver）、`hybrid-injector.mjs`（HybridInjector — 增量/全量/批量混合注入）、`adopted-sheets-manager.mjs`（adoptedStyleSheets setter 统一管理，解决多 adapter 共存时的 setter 覆盖冲突）、`token-discovery.mjs`（增量 CSS 变量发现引擎，替代 adapter 中的全量 stylesheet O(n*m*k) 扫描）。详见 `engines/INDEX.md`。
+
+### 实例化改造（RFC 2026-08-20）
+
+DeepCore 与 HybridInjector 已完成从模块级全局状态到实例属性的改造：
+
+- **DeepCore**：`SafeAttachShadowPatcher` 与 `FragmentRegistry` 从 static 类属性改为实例字段。每个 `new DeepCore()` 拥有独立的 `_fragmentRegistry` 与 `_shadowPatcher`，`dispose()` 仅清理当前实例状态，不影响其他 DeepCore 实例。`SafeAttachShadowPatcher` 通过模块级 `_currentPatcher` 协调单一 `attachShadow` patch 所有权，新 `install()` 接管 wrapper 引用，`uninstall()` 仅在最后一个 patcher 释放时还原原始方法。
+
+- **HybridInjector**：模块级全局变量（`_sheets`、`tokenCache`、raf 队列）改为实例属性。每个 `new HybridInjector(target, options)` 拥有独立的样式表注册表与 token 缓存，支持多窗口/多 target 并发注入无交叉干扰。
+
+- **adopted-sheets-manager.mjs**：集中管理 `Document.prototype.adoptedStyleSheets` 的 setter 拦截（IIFE + 幂等守卫），解决 6 个 adapter 各自独立安装 setter 导致的 last-writer-wins、owned 数组互相覆盖、同一 sheet 在多 adapter 重复注册的问题（P1-7）。
+
+- **token-discovery.mjs**：工厂函数 `createTokenDiscoveryAgent(config)` 返回实例级 agent，共享 `MutationObserver` 单例监控新 `<style>/<link>`，配合 `_scannedSheets` WeakSet 与 `_cache` Map 实现增量扫描，避免每次 heal tick 全量遍历所有 stylesheet。
+
+#### 多实例安全
+
+改造后引擎层具备以下多 adapter 共存安全保障：
+
+| 机制 | 保障 |
+|------|------|
+| DeepCore 实例字段 | `dispose()` 仅释放当前实例的 fragment / shadowPatcher / observer |
+| `_currentPatcher` 协调 | 单一 `attachShadow` patch，新实例接管、旧实例释放时才还原 |
+| HybridInjector 实例隔离 | 每 target 的 stylesheet 注册表与 tokenCache 独立 |
+| adopted-sheets-manager | setter 只安装一次，owned sheets 统一注册/释放 |
+| token-discovery 共享 Observer | 所有 agent 共用一个 MutationObserver，按 sheet 身份分发变更 |
+
+主进程通过 `Page.addScriptToEvaluateOnNewDocument` 持久化注入顺序：`adopted-sheets-manager` → `token-discovery` → `deep-core` → `hybrid-injector` → `adapter.mjs`，保证每个 CDP evaluate 上下文先建立共享基础设施，再执行 adapter 逻辑。
 
 ## 注入分层（L0-L4）
 

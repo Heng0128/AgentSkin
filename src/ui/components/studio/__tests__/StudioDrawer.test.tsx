@@ -84,6 +84,7 @@ vi.mock('lucide-react', () => {
     LayoutGrid: stub,
     Lock: stub,
     Package: stub,
+    Palette: stub,
     Shield: stub,
     ShieldCheck: stub,
   };

@@ -1,10 +1,11 @@
 # AgentSkin 设计系统 Token 文档
 
-> 版本：v2.1
-> 日期：2026-08-22
-> 来源：`src/ui/globals.css`（唯一事实源）、`scripts/design-language.mjs`、`scripts/extended-colors.mjs`
-> 说明：本文件完整记录 AgentSkin 的 Swiss / International Typographic Style 设计 token。所有值均从 globals.css 提取（以 HSL 为唯一色彩格式），dark 与 light 主题差异已标注。本文档同时记录主题层 Design Language 变量和 Extended Colors 系统。
-> 变更：v2.1 以 `globals.css` 实际 HSL 值为准，全面消除文档与代码之间的 14 处不一致。
+> 版本：v2.2
+> 日期：2026-08-23
+> 来源：`src/ui/globals.css`（唯一事实源，以 hex 值为唯一色彩格式）、`scripts/design-language.mjs`、`scripts/extended-colors.mjs`
+> 说明：本文件完整记录 AgentSkin 的 Swiss / International Typographic Style 设计 token。所有色彩值均从 globals.css 提取（以 hex/rgba 为唯一色彩格式），dark 与 light 主题差异已标注。本文档同时记录主题层 Design Language 变量和 Extended Colors 系统。
+> 变更：v2.2 以 `globals.css` 实际 hex 值为准，将全部 HSL 值替换为 hex/rgba 值，消除文档与代码之间的格式不一致。
+> ⚠️ 以 `src/ui/globals.css` 的 hex 值为唯一事实源。
 
 ---
 
@@ -32,9 +33,9 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 - **锐利几何**：6px 基础圆角（Swiss 变体），仅品牌/App icon 用更大圆角
 - **克制用色**：中性灰阶主导，品牌红仅用于强调
-- **字体层级**：Space Grotesk（品牌/展示）· IBM Plex Mono（标签/数据）· 系统字体（正文/CJK）
+- **字体层级**：Inter（UI 全文）· JetBrains Mono（标签/数据）· 系统字体（CJK）
 - **网格对齐**：12 列布局网格，数据密集区用紧凑 mono
-- **硬阴影**：工具用 `shadow-lg/xl` 硬阴影表达层级
+- **极简阴影**：工具用 `shadow-elev1/2/3` 极简 box-shadow 表达层级（无模糊扩散）
 
 ---
 
@@ -44,15 +45,15 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 | Token | Dark | Light | 用途 |
 |-------|------|-------|------|
-| `--brand-red` | `hsl(4 76% 60%)` | `hsl(4 74% 48%)` | 品牌主红 |
-| `--brand-red-hover` | `hsl(4 70% 66%)` | `hsl(4 70% 54%)` | 主红 hover |
-| `--primary` | `hsl(4 85% 62%)` | `hsl(4 78% 52%)` | 主强调色（按钮/激活/进度） |
-| `--primary-foreground` | `hsl(0 0% 100%)` | `hsl(0 0% 100%)` | 主色上的前景 |
-| `--ring` | `hsla(4 85% 62% 50%)` | `hsla(4 78% 52% 45%)` | 焦点环 |
-| `--accent` | `hsla(4 85% 62% 13%)` | `hsla(4 78% 52% 10%)` | 强调底色（激活态背景） |
-| `--accent-foreground` | `hsl(4 75% 66%)` | `hsl(4 72% 46%)` | 强调前景 |
+| `--brand-red` | `#ef4444` | `#dc2626` | 品牌主红 |
+| `--brand-red-hover` | — | — | ⚠️ 仅文档记录，未在 globals.css 中使用 |
+| `--primary` | `#dc2626` | `#dc2626` | 主强调色（按钮/激活/进度） |
+| `--primary-foreground` | `#ffffff` | `#ffffff` | 主色上的前景 |
+| `--ring` | `rgba(220, 38, 38, 0.4)` | `rgba(220, 38, 38, 0.35)` | 焦点环 |
+| `--accent` | `rgba(220, 38, 38, 0.08)` | `rgba(220, 38, 38, 0.1)` | 强调底色（激活态背景） |
+| `--accent-foreground` | `#b91c1c` | `#dc2626` | 强调前景 |
 
-> ✅ `--brand-red` 在 dark 和 light 下均有定义，值分别为 `hsl(4 76% 60%)` 和 `hsl(4 74% 48%)`。
+> ✅ `--brand-red` 在 dark 和 light 下均有定义，值分别为 `#ef4444` 和 `#dc2626`。
 
 ### 2.2 中性灰阶（Gray scale，定义于 `:root`）
 
@@ -72,41 +73,41 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 | Token | Dark 值 | 语义 |
 |-------|---------|------|
-| `--background` | `hsl(220 14% 7%)` | 页面背景 |
-| `--foreground` | `hsl(215 15% 95%)` | 前景文字 |
-| `--card` | `hsl(220 14% 10%)` | 卡片 |
-| `--card-foreground` | `hsl(215 15% 95%)` | 卡片文字 |
-| `--card2` | `hsl(220 14% 13%)` | 卡片次级/背景块 |
-| `--popover` | `hsl(220 14% 13%)` | 浮层 |
-| `--secondary` | `hsl(220 14% 10%)` | 次级表面 |
-| `--muted` | `hsl(220 14% 8%)` | 弱化表面 |
-| `--muted-foreground` | `hsl(215 8% 50%)` | 弱化文字 |
-| `--surface` | `hsl(220 14% 9%)` | 框架表面（Sidebar/TitleBar/StatusBar） |
-| `--border` | `hsla(220 13% 17% 55%)` | 边框 |
-| `--border-strong` | `hsla(220 13% 26% 60%)` | 强边框 |
-| `--input` | `hsla(220 13% 18% 80%)` | 输入框边框 |
-| `--destructive` | `hsl(4 76% 60%)` | 危险/删除 |
+| `--background` | `#0f0f10` | 页面背景 |
+| `--foreground` | `#fafafa` | 前景文字 |
+| `--card` | `#1e1e22` | 卡片 |
+| `--card-foreground` | `#fafafa` | 卡片文字 |
+| `--card2` | `#1e1e22` | 卡片次级/背景块 |
+| `--popover` | `#1e1e22` | 浮层 |
+| `--secondary` | `#161618` | 次级表面 |
+| `--muted` | `rgba(255, 255, 255, 0.04)` | 弱化表面 |
+| `--muted-foreground` | `#a1a1aa` | 弱化文字 |
+| `--surface` | `#161618` | 框架表面（Sidebar/TitleBar/StatusBar） |
+| `--border` | `rgba(255, 255, 255, 0.1)` | 边框 |
+| `--border-strong` | `rgba(255, 255, 255, 0.16)` | 强边框 |
+| `--input` | `rgba(255, 255, 255, 0.1)` | 输入框边框 |
+| `--destructive` | `#b91c1c` | 危险/删除 |
 
 ### 2.4 语义表面色（Light）
 
 | Token | Light 值 |
 |-------|---------|
-| `--background` | `hsl(40 12% 96%)` |
-| `--foreground` | `hsl(220 12% 14%)` |
-| `--card` | `hsl(0 0% 100%)` |
-| `--card2` | `hsl(40 8% 94%)` |
-| `--popover` | `hsl(0 0% 100%)` |
-| `--secondary` | `hsl(40 8% 94%)` |
-| `--muted` | `hsl(40 10% 97%)` |
-| `--muted-foreground` | `hsl(220 6% 48%)` |
-| `--surface` | `hsl(40 12% 93%)` |
-| `--border` | `hsla(220 10% 20% 7%)` |
-| `--border-strong` | `hsla(220 10% 20% 13%)` |
-| `--destructive` | `hsl(4 74% 48%)` |
+| `--background` | `#ffffff` |
+| `--foreground` | `#1a1a1a` |
+| `--card` | `#ffffff` |
+| `--card2` | `#ffffff` |
+| `--popover` | `#ffffff` |
+| `--secondary` | `#f6f6f7` |
+| `--muted` | `rgba(0, 0, 0, 0.04)` |
+| `--muted-foreground` | `#6b7280` |
+| `--surface` | `#f6f6f7` |
+| `--border` | `rgba(0, 0, 0, 0.1)` |
+| `--border-strong` | `rgba(0, 0, 0, 0.16)` |
+| `--destructive` | `#b91c1c` |
 
 ### 2.5 内置色引用
 
-依赖 Radix Colors 调色板文件（`@radix-ui/colors/slate.css` 等），但当前 `:root` 与 `.light` 下的语义色均使用 HSL 直接值。Radix 调色板作为基础色板导入，主题层未直接暴露 `--green-11` 等 Radix 变量至组件。`--cr-success` / `--cr-warning` / `--cr-info` 的实际值已硬编码为 HSL。
+依赖 Radix Colors 调色板文件（`@radix-ui/colors/slate.css` 等），但当前 `:root` 与 `.light` 下的语义色均使用 hex/rgba 直接值。Radix 调色板作为基础色板导入，主题层未直接暴露 `--green-11` 等 Radix 变量至组件。`--cr-success` / `--cr-warning` / `--cr-info` 的实际值已硬编码为 hex。
 
 ---
 
@@ -116,9 +117,9 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 | Token | 字体栈 | 用途 |
 |-------|--------|------|
-| `--font-display` | `"Space Grotesk Variable", "Space Grotesk", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif` | 品牌/展示/大数字 |
+| `--font-display` | `var(--font-ui)`（同 UI 字体） | 品牌/展示/大数字 |
 | `--font-ui` | `"Inter Variable", "Inter", "Microsoft YaHei UI", "PingFang SC", -apple-system, "Segoe UI", system-ui, sans-serif` | 正文/界面 |
-| `--font-mono` | `"IBM Plex Mono", "SFMono-Regular", Consolas, "Courier New", monospace` | 标签/数据/代码 |
+| `--font-mono` | `"JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, ui-monospace, monospace` | 标签/数据/代码 |
 
 > CJK 用高质量系统字体（Windows YaHei / macOS PingFang），不加载 web 字体。
 
@@ -126,7 +127,7 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 | 类名 | 映射 |
 |------|------|
-| `font-display` | `var(--font-display)` |
+| `font-display` | `var(--font-ui)` |
 | `font-sans` / `font-heading` | `var(--font-ui)` |
 | `font-mono` | `var(--font-mono)` |
 
@@ -134,21 +135,21 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 | Token / 用途 | 字号 | 来源 |
 |--------------|------|------|
-| `--font-size-hero` / `.as-big-num` | 48px / 700 | `@theme inline` / utilities |
-| `--font-size-display` | 28px | `@theme inline` |
-| `--font-size-title` | 20px | `@theme inline` |
-| `--font-size-body-lg` | 15px | `@theme inline` |
-| `--font-size-body` | 13px | `@theme inline` |
-| `--font-size-label` | 11.5px | `@theme inline` |
-| `--font-size-micro` | 10px | `@theme inline` |
-| `.as-label` | 11px | utilities |
-| `.as-micro` | 10px | utilities |
-| `.as-mono` | 11px | utilities |
-| `.as-kv` | 13px | utilities |
-| `.as-kv-key` | 12px | utilities |
+| `--font-size-display` | 20px | `@theme inline` |
+| `--font-size-title` | 16px | `@theme inline` |
+| `--font-size-body-lg` | 13px | `@theme inline` |
+| `--font-size-body` | 11px | `@theme inline` |
+| `--font-size-caption` | 11px | `@theme inline` |
+| `--font-size-label` | 10px | `@theme inline` |
+| `--font-size-micro` | 9px | `@theme inline` |
+| `.as-label` | 10px | utilities（`var(--font-size-label)`） |
+| `.as-micro` | 9px | utilities（`var(--font-size-micro)`） |
+| `.as-mono` | 10px | utilities（`var(--font-size-label)`） |
+| `.as-kv` | 11px | utilities（`var(--font-size-body)`） |
+| `.as-kv-key` | 10px | utilities（`var(--font-size-label)`） |
 
-> 行高：`--leading-hero: 1.05` / `--leading-title: 1.2` / `--leading-body: 1.55` / `--leading-micro: 1.4`
-> 字距：`--tracking-tight: -0.02em` / `--tracking-mid: 0.05em` / `--tracking-wide: 0.14em`
+> 行高：`--leading-title: 1.25` / `--leading-body: 1.5`
+> 字距：`--tracking-tight: -0.02em`
 > CRITICAL 数据正文不应低于 10px。
 
 ---
@@ -161,15 +162,16 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 |-------|-----|
 | `--radius-base` | `6px` | AgentSkin Swiss 6px 变体 |
 
-### 4.2 衍生（`@theme inline`，基于 `--radius` 缩放）
+### 4.2 衍生（`@theme inline`，基于 `--radius-base` 缩放）
 
 | Token | 计算 | 值 |
 |-------|------|-----|
-| `--radius-sm` | `calc(var(--radius-base) * 0.6)` | `3.6px` |
+| `--radius-sm` | `var(--radius-base)` | `6px` |
 | `--radius-md` | `var(--radius-base)` | `6px` |
-| `--radius-lg` | `calc(var(--radius-base) * 1.5)` | `9px` |
-| `--radius-xl` | `calc(var(--radius-base) * 2.5)` | `15px` |
-| `--radius-2xl` | `calc(var(--radius-base) * 4)` | `24px` |
+| `--radius-lg` | `calc(var(--radius-base) * 1.25)` | `7.5px` |
+| `--radius-xl` | `calc(var(--radius-base) * 1.75)` | `10.5px` |
+| `--radius-2xl` | `calc(var(--radius-base) * 2.5)` | `15px` |
+| `--radius-pill` | `9999px` | `9999px` |
 
 > 全局 6px 基础圆角（AgentSkin Swiss 变体），仅品牌/App icon 用更大圆角（如 Logo `rx=11.5`、AppMark `rounded-[22%]`）。
 
@@ -189,19 +191,20 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 | `--shadow-xl` | `var(--shadow-float)` | 向后兼容别名 |
 
 实际 elevation 定义：
-- `--shadow-elev1`: `0 1px 3px rgba(0,0,0,.35), 0 1px 2px rgba(0,0,0,.3)`
-- `--shadow-elev2`: `0 4px 12px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.3)`
-- `--shadow-elev3`: `0 10px 28px rgba(0,0,0,.4), 0 4px 8px rgba(0,0,0,.3)`
-- `--shadow-float`: `0 16px 48px rgba(0,0,0,.5), 0 6px 16px rgba(0,0,0,.4)`
+- `--shadow-elev1`: `0 0 0 1px rgba(255, 255, 255, 0.06)`
+- `--shadow-elev2`: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.3)`
+- `--shadow-elev3`: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4)`
+- `--shadow-float`: `0 0 0 1px rgba(255, 255, 255, 0.1), 0 16px 48px rgba(0, 0, 0, 0.5)`
 
-### 5.2 Light 阴影（`--shadow-sm/md/lg/xl` 单独定义）
+### 5.2 Light 阴影
 
 | Token | 别名 | Light 实际值 |
 |-------|------|-------------|
-| `--shadow-sm` | `var(--shadow-elev1)` | `0 1px 2px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.06)` |
-| `--shadow-md` | `var(--shadow-elev2)` | `0 2px 6px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.06)` |
-| `--shadow-lg` | `var(--shadow-elev3)` | `0 6px 16px rgba(0,0,0,.07), 0 2px 6px rgba(0,0,0,.05)` |
-| `--shadow-xl` | `var(--shadow-float)` | `0 12px 36px rgba(0,0,0,.1), 0 4px 12px rgba(0,0,0,.07)` |
+| `--shadow-xs` | `var(--shadow-elev1)` | `0 0 0 1px rgba(0, 0, 0, 0.06)` |
+| `--shadow-sm` | `var(--shadow-elev1)` | `0 0 0 1px rgba(0, 0, 0, 0.06)` |
+| `--shadow-md` | `var(--shadow-elev2)` | `0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06)` |
+| `--shadow-lg` | `var(--shadow-elev3)` | `0 0 0 1px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.08)` |
+| `--shadow-xl` | `var(--shadow-float)` | `0 0 0 1px rgba(0, 0, 0, 0.1), 0 16px 48px rgba(0, 0, 0, 0.1)` |
 
 > ✅ light 的 `--shadow-xs` 已单独定义（与 `--shadow-sm` 同为 `var(--shadow-elev1)`）。
 
@@ -214,10 +217,12 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 | Token | 值 |
 |-------|-----|
 | `--duration-instant` | `0ms` |
-| `--duration-fast` | `120ms` |
-| `--duration-base` | `180ms` |
-| `--duration-slow` | `260ms` |
-| `--duration-slower` | `400ms` |
+| `--duration-fast` | `calc(100ms * var(--duration-multiplier, 1))` |
+| `--duration-base` | `calc(150ms * var(--duration-multiplier, 1))` |
+| `--duration-slow` | `calc(200ms * var(--duration-multiplier, 1))` |
+| `--duration-slower` | `calc(280ms * var(--duration-multiplier, 1))` |
+
+> 默认 multiplier 为 1，故实际值为 0/100/150/200/280ms。
 
 ### 6.2 动画（`@theme`）
 
@@ -277,31 +282,35 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 | Token | Dark | Light | 语义 |
 |-------|------|-------|------|
-| `--cr-success` / `--success` | `hsl(155 60% 48%)` | `hsl(155 50% 38%)` | 成功/运行 |
-| `--cr-warning` / `--warning` | `hsl(38 85% 55%)` | `hsl(38 80% 46%)` | 警告/待机 |
-| `--cr-info` / `--info` | `hsl(210 75% 60%)` | `hsl(210 65% 44%)` | 信息 |
-| `--destructive` | `hsl(4 76% 60%)` | `hsl(4 74% 48%)` | 危险/删除 |
+| `--cr-success` / `--success` | `#22c55e` | `#16a34a` | 成功/运行 |
+| `--cr-warning` / `--warning` | `#eab308` | `#ca8a04` | 警告/待机 |
+| `--cr-info` / `--info` | `#3b82f6` | `#2563eb` | 信息 |
+| `--destructive` | `#b91c1c` | `#b91c1c` | 危险/删除 |
 
 ### 8.2 品牌简写（状态组件用）
 
 | Token | Dark | Light |
 |-------|------|-------|
-| `--dim` | `hsl(215 8% 50%)` | `hsl(220 6% 48%)` |
-| `--red` / `--red2` / `--redbg` | `hsl(4 76% 60%)` / `hsl(4 70% 66%)` / `hsla(4 76% 60% 12%)` | `hsl(4 74% 48%)` / `hsl(4 70% 44%)` / `hsla(4 74% 48% 9%)` |
-| `--grn` / `--amb` / `--blu` | `hsl(155 60% 48%)` / `hsl(38 85% 55%)` / `hsl(210 75% 60%)` | `hsl(155 50% 38%)` / `hsl(38 80% 46%)` / `hsl(210 65% 44%)` |
-| `--bg2` | `hsl(220 14% 10%)` | `hsl(40 8% 94%)` |
-| `--border2` | `hsla(220 13% 30% 70%)` | `hsla(220 10% 20% 20%)` |
-| `--card2` | `hsl(220 14% 13%)` | `hsl(40 8% 94%)` |
+| `--dim` | `#a1a1aa` | `#6b7280` |
+| `--red` | `#ef4444` | `#dc2626` |
+| `--red2` | `#dc2626` | `#b91c1c` |
+| `--redbg` | `rgba(239, 68, 68, 0.12)` | `rgba(220, 38, 38, 0.08)` |
+| `--grn` | `#22c55e` | `#16a34a` |
+| `--amb` | `#eab308` | `#ca8a04` |
+| `--blu` | `#3b82f6` | `#2563eb` |
+| `--bg2` | `#161618` | `#f6f6f7` |
+| `--border2` | `rgba(255, 255, 255, 0.2)` | `rgba(0, 0, 0, 0.2)` |
+| `--card2` | `#1e1e22` | `#ffffff` |
 
 ### 8.3 图表色（`--chart-1..5`）
 
 | Token | Dark | Light |
 |-------|------|-------|
-| `--chart-1` | `hsl(4 85% 62%)` | `hsl(4 78% 52%)` |
-| `--chart-2` | `hsl(155 60% 48%)` | `hsl(155 50% 38%)` |
-| `--chart-3` | `hsl(38 85% 55%)` | `hsl(38 80% 46%)` |
-| `--chart-4` | `hsl(210 75% 60%)` | `hsl(210 65% 44%)` |
-| `--chart-5` | `hsl(270 60% 65%)` | `hsl(270 50% 52%)` |
+| `--chart-1` | `#dc2626` | `#dc2626` |
+| `--chart-2` | `#22c55e` | `#16a34a` |
+| `--chart-3` | `#eab308` | `#ca8a04` |
+| `--chart-4` | `#3b82f6` | `#2563eb` |
+| `--chart-5` | `#a855f7` | `#9333ea` |
 
 ---
 
@@ -311,14 +320,14 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 | Token | Dark | Light |
 |-------|------|-------|
-| `--sidebar` | `hsl(220 14% 9%)` | `hsl(40 10% 97%)` |
-| `--sidebar-foreground` | `hsl(215 15% 90%)` | `hsl(220 12% 18%)` |
-| `--sidebar-primary` | `hsl(4 85% 62%)` | `hsl(4 78% 52%)` |
-| `--sidebar-primary-foreground` | `hsl(0 0% 100%)` | `hsl(0 0% 100%)` |
-| `--sidebar-accent` | `hsla(4 85% 62% 13%)` | `hsla(4 78% 52% 10%)` |
-| `--sidebar-accent-foreground` | `hsl(4 75% 66%)` | `hsl(4 72% 46%)` |
-| `--sidebar-border` | `hsla(220 13% 20% 80%)` | `hsla(220 10% 20% 11%)` |
-| `--sidebar-ring` | `hsla(4 85% 62% 50%)` | `hsla(4 78% 52% 45%)` |
+| `--sidebar` | `#161618` | `#f6f6f7` |
+| `--sidebar-foreground` | `#fafafa` | `#1a1a1a` |
+| `--sidebar-primary` | `#dc2626` | `#dc2626` |
+| `--sidebar-primary-foreground` | `#ffffff` | `#ffffff` |
+| `--sidebar-accent` | `rgba(220, 38, 38, 0.08)` | `rgba(220, 38, 38, 0.1)` |
+| `--sidebar-accent-foreground` | `#b91c1c` | `#dc2626` |
+| `--sidebar-border` | `rgba(255, 255, 255, 0.1)` | `rgba(0, 0, 0, 0.1)` |
+| `--sidebar-ring` | `rgba(220, 38, 38, 0.4)` | `rgba(220, 38, 38, 0.35)` |
 
 ### 9.2 品牌变体（`--cr-brand-*`）— ⚠️ DEPRECATED
 
@@ -491,20 +500,20 @@ manifest.json 声明：
 | # | 原问题 | 状态 |
 |---|--------|------|
 | 1 | `--cr-brand-violet` 命名与值不符 | ✅ 已标记 DEPRECATED（§9.2） |
-| 2 | `--brand-red` 只在 dark 定义 | ✅ 已补全 light 值 `hsl(4 74% 48%)` |
+| 2 | `--brand-red` 只在 dark 定义 | ✅ 已补全 light 值 `#dc2626` |
 | 3 | `--shadow-xs` 在 light 未定义 | ✅ 已补全（与 `--shadow-sm` 同为 `var(--shadow-elev1)`） |
 | 4 | `--cr-brand-amber` 命名问题 | ✅ 已标记 DEPRECATED（§9.2） |
 | 5 | `--radius` 文档值 `2px` 与代码 `6px` 不符 | ✅ 已更新文档为 `6px` |
 | 6 | `--shadow` 文档值与代码 `var()` 引用不符 | ✅ 已更新文档使用 `var(--shadow-elev1)` |
-| 7 | Duration 阶梯 150/200/300/500ms 与代码 120/180/260/400ms 不符 | ✅ 已更新文档 |
+| 7 | Duration 阶梯 150/200/300/500ms 与代码 100/150/200/280ms 不符 | ✅ 已更新文档 |
 | 8 | `.g12` gap 14px 与代码 16px 不符 | ✅ 已更新文档 |
 | 9 | `--font-ui` 缺少 Inter 字体 | ✅ 已补充 |
-| 10 | 色系文档值（hex/Radix）与代码 HSL 不符 | ✅ 已全面更新 |
-| 11 | `--font-mono` 含 `Microsoft YaHei UI` | ✅ 已修正为 `"Courier New"` |
+| 10 | 色系文档值（HSL）与代码 hex 不符 | ✅ 已全面更新为 hex |
+| 11 | `--font-mono` 含 `Microsoft YaHei UI` | ✅ 已修正为 `"JetBrains Mono", "IBM Plex Mono", ...` |
 
 ### 13.2 建议
 
-1. **颜色 token 分立**：✅ 已解决。品牌红在 dark/light 已显式分立（`hsl(4 76% 60%)` / `hsl(4 74% 48%)`），所有语义色均提供双主题值。
+1. **颜色 token 分立**：✅ 已解决。品牌红在 dark/light 已显式分立（`#ef4444` / `#dc2626`），所有语义色均提供双主题值。
 2. **间距 token 化**：✅ 已解决（v2.6 Design Language 系统）。当前间距已通过 `--agentskin-space-1..6` token化，支持密度倍率缩放。
 3. **命名纠正**：`--cr-brand-violet` / `--cr-brand-amber` ✅ 已标记 DEPRECATED（§9.2），不再使用。
 4. **shadow-xs 补全**：✅ 已解决。light 下 `--shadow-xs` 已定义为 `var(--shadow-elev1)`。
@@ -515,4 +524,4 @@ manifest.json 声明：
 
 ---
 
-*本文档基于 `src/ui/globals.css` 当前内容生成，日期 2026-08-22（v2.1 消除 14 处不一致）。*
+*本文档基于 `src/ui/globals.css` 当前内容生成，日期 2026-08-23（v2.2 全面同步为 hex 值）。*

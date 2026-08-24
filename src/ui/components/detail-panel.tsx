@@ -8,10 +8,11 @@ import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import type { AppController, Selection } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 
 import { AGENT_IDS, type AgentId } from '@shared/types';
-import { Package, PaintBucket, Share2, Trash2 } from 'lucide-react';
+import { MousePointerClick, Package, PaintBucket, Share2, Trash2 } from 'lucide-react';
 
 /** Per-app apply rows: the drawer chooses the target app, not a global picker. */
 function AppActionList({
@@ -85,7 +86,7 @@ function AppActionList({
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs font-medium">{t.appPickerTitle}</p>
+          <p className="text-[11px] font-normal">{t.appPickerTitle}</p>
           <p className="text-[11px] text-muted-foreground">{t.appPickerHint}</p>
         </div>
       </div>
@@ -106,7 +107,7 @@ function AppActionList({
         {pendingAll && <Spinner data-icon="inline-start" />}
         {detecting ? t.statusDetecting : t.applyToAllAgents}
         {!detecting && eligibleApps.length > 0 && (
-          <span className="ml-1 text-xs opacity-70">
+          <span className="ml-1 text-[11px] opacity-70">
             {pendingAll ? `${pendingApps.size}/${eligibleApps.length}` : `(${eligibleApps.length})`}
           </span>
         )}
@@ -147,7 +148,7 @@ function AppActionList({
             >
               <AppMark appId={appId} size={22} />
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1 text-xs font-medium">
+                <p className="flex items-center gap-1 text-[11px] font-normal">
                   {displayName}
                   {isActive && <Badge className="px-1 py-0 text-[10px]">{t.activeBadge}</Badge>}
                 </p>
@@ -193,8 +194,8 @@ function AppActionList({
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0">
-      <span className="text-xs text-muted-foreground/70">{label}</span>
-      <span className="text-xs font-medium">{value}</span>
+      <span className="text-[11px] text-muted-foreground/70">{label}</span>
+      <span className="text-[11px] font-normal">{value}</span>
     </div>
   );
 }
@@ -214,7 +215,7 @@ function ColorSchemePicker({
 }) {
   return (
     <div className="mb-3">
-      <p className="mb-1 text-xs text-muted-foreground/70">{t.colorSchemesLabel}</p>
+      <p className="mb-1 text-[11px] text-muted-foreground/70">{t.colorSchemesLabel}</p>
       <div className="flex flex-wrap gap-1">
         {schemes.map((scheme) => {
           const selected = (activeSchemeId ?? 'default') === scheme.id;
@@ -281,12 +282,11 @@ export function DetailPanel({
 
   if (!selection) {
     return (
-      <div className="flex min-h-48 items-center justify-center p-6 text-center">
-        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <PaintBucket className="size-8 opacity-40" />
-          <p className="text-sm">{t.selectThemeHint}</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={<MousePointerClick />}
+        title={t.selectThemeHint}
+        className="min-h-48 p-6 justify-center"
+      />
     );
   }
 
@@ -329,7 +329,7 @@ export function DetailPanel({
         {/* Title block */}
         <div className="mb-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold tracking-[-0.015em]">{theme.name}</h2>
+            <h2 className="text-base font-normal tracking-[-0.015em]">{theme.name}</h2>
             {isDynamic && (
               <Badge className="bg-muted text-muted-foreground px-1 py-0 text-[10px]">
                 {t.themeDynamicBadge}
@@ -359,7 +359,7 @@ export function DetailPanel({
 
         {/* Description */}
         {theme.description && (
-          <p className="mb-3 text-xs leading-relaxed text-muted-foreground">{theme.description}</p>
+          <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">{theme.description}</p>
         )}
 
         {/* Tags */}

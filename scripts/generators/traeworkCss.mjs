@@ -22,7 +22,7 @@ ${tokenBlock(t, host)}
 
 /* ---- design token override (global restyle via app's own variable system) ---- */
 ${host} body {
-  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+  /* color-scheme 已在 tokenBlock() 中声明 (:root 级)，此处删除以避免重复 */
 
   /* Ink / text */
   --vscode-foreground: ${c.foreground} !important;
@@ -186,10 +186,12 @@ ${host} .monaco-workbench {
 /* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
 ${artLayerCss(host, t)}
 
-/* ---- route surfaces + inner containers transparent for art punch-through ---- */
+/* ---- route surfaces + inner containers transparent for art punch-through ----
+   PROBE 2026-08-23 (live TRAE): .panel-container (1139x856) is the main
+   column; .solo-lite-layout / .solo-lite-chat-panel-container were 0-hit
+   (dead selectors, removed). [class*="conversation"]/workspace kept only as
+   conservative transparency fallbacks (host-scoped, harmless). */
 ${host} .panel-container,
-${host} .solo-lite-layout,
-${host} .solo-lite-chat-panel-container,
 ${host} [class*="chat-panel"],
 ${host} [class*="message-list"],
 ${host} [class*="conversation"],
@@ -226,6 +228,21 @@ ${host} .task-list-panel .task-list-new-task-item.active,
 ${host} .task-list-panel [class*="task-list-skills-item"].active {
   background: ${hoverBg2} !important;
   box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px ${alpha(c.accent, 0.32)} !important;
+}
+
+/* ---- welcome/home-page opaque shells ----
+   PROBE 2026-08-23 (live TRAE welcome view): .messageInputContainer
+   (800x171) wraps the input and carries an opaque rgb(38,38,38) base that
+   blocks the art; .cardImage-<hash> showcase cards are the same grey. Punch
+   both through — the inner .chat-input-v2-container still gets its own
+   frosted glass below. */
+${host} [class*="messageInputContainer"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+${host} [class*="cardImage"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
+  border: 1px solid ${alpha(c.accent, 0.1)} !important;
 }
 
 /* ---- composer ---- */
@@ -291,9 +308,10 @@ ${host} article {
 /* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
 ${nativeDefectFixCss('traework', host)}
 
-/* ---- contrast fix: avatar badges with hardcoded light bg ---- */
-${host} [class*="agent-avatar"],
-${host} [class*="avatar"] {
+/* ---- contrast fix: avatar badges with hardcoded light bg ----
+   PROBE-NOTE: keep only the semantic "agent-avatar" prefix. The bare
+   [class*="avatar"] substring matched unrelated elements (audit A-class). */
+${host} [class*="agent-avatar"] {
   background: var(--agentskin-surface) !important;
   color: var(--agentskin-text) !important;
   border-color: var(--agentskin-border) !important;
@@ -359,15 +377,15 @@ ${host} [class*="chatFile"]:hover {
   background-color: transparent !important;
 }
 
-/* ---- contrast fix: markdown file links must use theme accent ---- */
+/* ---- contrast fix: markdown file links must use theme accent ----
+   PROBE-NOTE: removed a[class*="link"] — it matched ANY anchor whose class
+   contains "link" (audit A-class, high-risk). Keep the semantic prefixes. */
 ${host} .markdown-file-link,
-${host} [class*="file-link"],
-${host} a[class*="link"] {
+${host} [class*="file-link"] {
   color: var(--agentskin-accent) !important;
 }
 ${host} .markdown-file-link:hover,
-${host} [class*="file-link"]:hover,
-${host} a[class*="link"]:hover {
+${host} [class*="file-link"]:hover {
   color: var(--agentskin-secondary) !important;
 }
 

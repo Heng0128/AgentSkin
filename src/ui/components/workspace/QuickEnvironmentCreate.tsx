@@ -150,7 +150,7 @@ export function QuickEnvironmentCreate({
         <button
           type="button"
           className={cn(
-            'h-6 flex-1  px-2 text-[11px] font-medium',
+            'h-6 flex-1  px-2 text-[11px] font-normal',
             canSubmit
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-muted-foreground/50 cursor-not-allowed',

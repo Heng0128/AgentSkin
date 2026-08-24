@@ -56,21 +56,19 @@ export function StudioTitleBar() {
     <header
       className={cn(
         'relative flex h-8 shrink-0 items-center justify-between gap-2 px-3',
-        ' bg-[var(--surface)]',
+        ' bg-surface',
         // The entire bar is a drag region; interactive controls opt out below.
         '[-webkit-app-region:drag]',
       )}
     >
       {/* Left: brand + active project */}
       <div className="pointer-events-none flex items-center gap-2">
-        <span className="font-display text-sm font-bold text-[var(--primary)]">✦</span>
-        <span className="font-mono text-[11px] font-semibold   text-foreground">
-          {t.studioBrand}
-        </span>
+        <span className="text-[13px] font-normal text-primary">✦</span>
+        <span className="font-mono text-[11px] font-normal   text-foreground">{t.studioBrand}</span>
         {projectName && (
           <>
-            <span className="text-[var(--muted-foreground)]">/</span>
-            <span className="max-w-[200px] truncate font-mono text-[10px] text-[var(--muted-foreground)]">
+            <span className="text-muted-foreground">/</span>
+            <span className="max-w-[200px] truncate font-mono text-micro text-muted-foreground">
               {projectName}
             </span>
           </>

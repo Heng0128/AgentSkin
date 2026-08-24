@@ -27,6 +27,7 @@ import type { UiMessages } from '@shared/i18n';
 import { AGENT_META, type AgentId } from '@shared/types';
 import type { DriftStatus } from '@shared/types/drift-status';
 import { format } from 'date-fns';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Activity, RefreshCw } from 'lucide-react';
 
 export function DriftStatusPanel({ t }: { t: UiMessages }) {
@@ -36,11 +37,8 @@ export function DriftStatusPanel({ t }: { t: UiMessages }) {
 
   if (agentEntries.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-        <div className="flex size-9 items-center justify-center rounded-md bg-muted/60">
-          <Activity className="size-4 text-muted-foreground/50" />
-        </div>
-        <p className="text-[11px] text-muted-foreground/70">{t.settingsDriftStatusEmpty}</p>
+      <div className="flex items-center justify-center py-8">
+        <EmptyState icon={<Activity />} title={t.settingsDriftStatusEmpty} iconSize="md" />
       </div>
     );
   }
@@ -116,7 +114,7 @@ function DriftAgentCard({
       <div className="flex items-center justify-between  bg-card2 px-3 py-2">
         <div className="flex items-center gap-2">
           <AppMark appId={agentId as AgentId} size={16} />
-          <span className="font-mono text-[11px] font-semibold  text-foreground">
+          <span className="font-mono text-[11px] font-normal  text-foreground">
             {agentMeta?.displayName ?? agentId}
           </span>
           <span className="text-[11px] text-muted-foreground/50">{status.themeId}</span>
@@ -148,7 +146,7 @@ function DriftAgentCard({
           </span>
           <span
             className={cn(
-              'font-display text-[13px] font-bold tabular-nums',
+              'font-display text-[13px] font-normal tabular-nums',
               scoreColor.split(' ')[1],
             )}
           >

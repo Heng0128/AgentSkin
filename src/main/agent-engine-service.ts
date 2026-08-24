@@ -278,6 +278,12 @@ export class AgentEngineService implements AgentEngineServiceApi {
     // Detection report lives next to the persisted state, under userData/logs.
     this.detectionLogFile = path.join(path.dirname(stateFile), 'logs', 'agent-detection.log');
     this.engineLogFile = path.join(path.dirname(stateFile), 'logs', 'agent-engine.log');
+    // R7: Surface persist failures via structured log + diagnostic counter.
+    this.persist.onError = (error) => {
+      this.persistFailures++;
+      const message = error instanceof Error ? error.message : String(error);
+      this.log(`[persist] write failed: ${message}`);
+    };
   }
 
   setLogListener(listener: (line: string) => void): void {
@@ -513,8 +519,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
     return {
       adapter: (appId) => this.adapter(appId),
       isEpochCurrent: (appId, captured) => this.epochs.isEpochCurrent(appId, captured),
-      tryEngineInjection: (session, appId, bundle, targetTheme, imageDataUrls) =>
-        tryEngineInjection(session, appId, bundle, targetTheme, imageDataUrls, {
+      tryEngineInjection: (session, appId, bundle, targetTheme, imageDataUrls, imageFilePaths) =>
+        tryEngineInjection(session, appId, bundle, targetTheme, imageDataUrls, imageFilePaths, {
           resolveEngineDir: resolveEngineDirDefault,
           log: (line) => this.log(line),
           customThemeCss: () => this.settings.customThemeCss(),

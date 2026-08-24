@@ -33,6 +33,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/ui/page-header';
+import { PageToolbar } from '@/components/ui/page-toolbar';
 import { Spinner } from '@/components/ui/spinner';
 import { AgentLivePreview } from '@/components/workspace/AgentLivePreview';
 import { TweakPanel } from '@/components/workspace/TweakPanel';
@@ -44,15 +46,7 @@ import type { ToolOverride } from '@/types/override';
 
 import { uiMessages } from '@shared/i18n';
 import type { AppStatus } from '@shared/types';
-import {
-  AlertTriangle,
-  CheckCircle,
-  Download,
-  RefreshCw,
-  Search,
-  Upload,
-  XCircle,
-} from 'lucide-react';
+import { Download, Redo2, RefreshCw, Search, Undo2, Upload } from 'lucide-react';
 
 /**
  * i18n fallbacks for error banners. These are narrowly-scoped fallbacks used
@@ -85,7 +79,7 @@ function ErrorBanner({
       role="alert"
       className="flex items-center justify-between gap-3 rounded-md bg-destructive/10 px-4 py-3"
     >
-      <p className="min-w-0 flex-1 truncate text-[12px] text-destructive">
+      <p className="min-w-0 flex-1 truncate text-[11px] text-destructive">
         {label}
         {message}
       </p>
@@ -189,6 +183,11 @@ export function WorkspacePage() {
     void navigator.clipboard.writeText(json);
   }, [exportTweakConfig]);
 
+  /** Refresh the status of all running agents. */
+  const handleRefreshStatus = useCallback(() => {
+    void refreshStatus();
+  }, [refreshStatus]);
+
   // M9: import from file.
   const handleImport = useCallback(async () => {
     setImportError(null);
@@ -212,96 +211,61 @@ export function WorkspacePage() {
       {/* ---------------------------------------------------------------- */}
       {/* Top bar — title + refresh                                         */}
       {/* ---------------------------------------------------------------- */}
-      <header className="flex shrink-0 items-center justify-between  px-4 py-3">
-        <h1 className="font-display text-sm font-bold tracking-tight">{t.navWorkspace}</h1>
-        <Button
-          type="button"
-          variant="ghost"
-          size="xs"
-          onClick={() => void refreshStatus()}
-          disabled={isRefreshing}
-          className="gap-1"
-        >
-          {isRefreshing ? <Spinner className="size-3" /> : <RefreshCw className="size-3" />}
-          <span className="text-[11px]">{t.workspaceRefreshStatus}</span>
-        </Button>
-      </header>
+      <div className="shrink-0 px-2 py-2">
+        <PageHeader title={t.navWorkspace}>
+          <PageToolbar
+            actions={
+              <Button variant="ghost" size="xs" onClick={handleRefreshStatus} disabled={isRefreshing}>
+                {isRefreshing ? <Spinner className="animate-spin" /> : <RefreshCw className="size-3" />}
+                {t.refreshStatus}
+              </Button>
+            }
+          />
+        </PageHeader>
+      </div>
 
       {/* ---------------------------------------------------------------- */}
       {/* Health status bar — theme injection diagnostics                  */}
       {/* ---------------------------------------------------------------- */}
       {healthReport ? (
-        <div className="flex items-center gap-4  px-4 py-2 bg-[var(--bg-2)] border border-[var(--border-subtle)] rounded-[var(--dl-radius,2px)] mx-4 mb-3">
-          {/* Score with color indicator */}
-          <span className="flex items-center gap-2">
-            {healthReport.score >= 80 ? (
-              <CheckCircle className="size-3.5 text-green-500" />
-            ) : healthReport.score >= 50 ? (
-              <AlertTriangle className="size-3.5 text-yellow-500" />
-            ) : (
-              <XCircle className="size-3.5 text-red-500" />
-            )}
-            <span className="font-mono text-[11px] tabular-nums">
-              {t.workspaceHealthScore}: {healthReport.score}
-            </span>
+        <div className="mx-3 mb-2 flex items-center gap-2 rounded-sm border-b border-border px-2 py-1 text-[10px] text-secondary">
+          <span
+            className={`size-2 rounded-full ${
+              healthReport.score >= 80
+                ? 'bg-cr-success'
+                : healthReport.score >= 50
+                  ? 'bg-cr-warning'
+                  : 'bg-destructive'
+            }`}
+            aria-hidden
+          />
+          <span className="font-mono tabular-nums">{healthReport.score}</span>
+          <span className="text-muted-foreground">|</span>
+          <span className={healthReport.blockingCount > 0 ? 'text-danger' : ''}>
+            {healthReport.blockingCount} {t.workspaceHealthBlocking}
           </span>
-
-          {/* Blocking count — red warning when > 0 */}
-          <span className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">{t.workspaceHealthBlocking}:</span>
-            <span
-              className={`font-mono text-[11px] tabular-nums ${
-                healthReport.blockingCount > 0
-                  ? 'text-red-500 font-medium'
-                  : 'text-muted-foreground'
-              }`}
-            >
-              {healthReport.blockingCount}
-            </span>
-          </span>
-
-          {/* Theme sheet indicator */}
-          <span className="flex items-center gap-2">
-            <span
-              className={`size-2 rounded-full ${healthReport.themeSheetPresent ? 'bg-green-500' : 'bg-muted-foreground/40'}`}
-              aria-hidden
-            />
-            <span className="text-[11px] text-muted-foreground">
-              {t.workspaceHealthSheetPresent}
-            </span>
-          </span>
-
-          {/* Hero art indicator */}
-          <span className="flex items-center gap-2">
-            <span
-              className={`size-2 rounded-full ${healthReport.heroArtActive ? 'bg-green-500' : 'bg-muted-foreground/40'}`}
-              aria-hidden
-            />
-            <span className="text-[11px] text-muted-foreground">{t.workspaceHealthArtActive}</span>
-          </span>
-
-          {/* Agent + timestamp */}
-          <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+          <span className="text-muted-foreground">|</span>
+          <span className="ml-auto font-mono text-micro text-muted-foreground">
             {healthReport.agentId} @ {new Date(healthReport.timestamp).toLocaleTimeString()}
           </span>
         </div>
       ) : (
-        <div className="flex items-center  px-4 py-2 bg-[var(--bg-2)] border border-[var(--border-subtle)] rounded-[var(--dl-radius,2px)] mx-4 mb-3">
-          <span className="text-[11px] text-muted-foreground">{t.workspaceHealthSelectAgent}</span>
+        <div className="mx-3 mb-2 flex items-center rounded-sm border-b border-border px-2 py-1">
+          <span className="text-[10px] text-muted-foreground">{t.workspaceHealthSelectAgent}</span>
         </div>
       )}
 
       {/* ---------------------------------------------------------------- */}
       {/* Body — two-column grid: agent rail / preview+tweak               */}
       {/* ---------------------------------------------------------------- */}
-      <div className="grid min-h-0 flex-1 grid-cols-[200px_1fr]">
+      <div className="grid min-h-0 flex-1 grid-cols-[160px_1fr]">
         {/* Agent rail */}
-        <aside className="flex flex-col gap-2 overflow-y-auto  px-3 py-3">
-          <span className="px-1 text-[11px] tracking-tight text-muted-foreground ">
+        <aside className="flex flex-col gap-2 overflow-y-auto px-2 py-2">
+          <span className="px-1 text-[10px] tracking-tight text-muted-foreground">
             {t.workspaceRunningApps}
           </span>
           {runningAgents.length === 0 ? (
-            <p className="px-1 py-4 text-[11px] text-muted-foreground">
+            <p className="px-1 py-4 text-[10px] text-muted-foreground">
               {t.workspaceNoRunningAgents}
             </p>
           ) : (
@@ -312,18 +276,18 @@ export function WorkspacePage() {
                   key={app.appId}
                   type="button"
                   onClick={() => selectAgent(app.appId, app.port ?? 0)}
-                  className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left transition-colors ${
+                  className={`flex w-full items-center gap-2 rounded-sm border px-2 py-2 text-left transition-colors ${
                     active ? 'border-primary/40 bg-primary/5' : 'border-transparent hover:bg-card'
                   }`}
                 >
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-accent">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-accent">
                     <AppMark appId={app.appId} size={16} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[11px] font-medium leading-tight">
+                    <span className="block truncate text-[10px] font-normal leading-tight">
                       {app.displayName}
                     </span>
-                    <span className="block font-mono text-[10px] tabular-nums text-muted-foreground">
+                    <span className="block font-mono text-micro tabular-nums text-muted-foreground">
                       :{app.port}
                     </span>
                   </span>
@@ -338,24 +302,24 @@ export function WorkspacePage() {
         </aside>
 
         {/* Preview + tweak column */}
-        <main className="flex min-w-0 flex-col gap-4 overflow-y-auto px-4 py-3">
+        <main className="flex min-w-0 flex-col gap-2 overflow-y-auto px-2 py-2">
           {currentAgentId === null ? (
             <div className="flex flex-1 items-center justify-center">
-              <p className="text-[11px] text-muted-foreground">{t.workspaceSelectAgentHint}</p>
+              <p className="text-[10px] text-muted-foreground">{t.workspaceSelectAgentHint}</p>
             </div>
           ) : (
             <>
               {/* Preview pane */}
               <section className="flex min-h-0 flex-col">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="text-[11px] tracking-tight text-muted-foreground ">
+                  <span className="text-[10px] tracking-tight text-muted-foreground">
                     {t.workspacePreview}
                   </span>
                   {/* M8: inspect mode toggle */}
                   <button
                     type="button"
                     onClick={() => toggleInspectMode()}
-                    className={`flex items-center gap-1 rounded-[var(--dl-radius,2px)] px-2 py-0.5 font-mono text-[10px] transition-colors ${
+                    className={`flex items-center gap-1 rounded-sm px-2 py-0.5 font-mono text-micro transition-colors ${
                       inspectMode
                         ? 'bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:bg-[var(--bg-3)]'
@@ -377,8 +341,8 @@ export function WorkspacePage() {
               </section>
 
               {/* Tweak controls */}
-              <section className="flex flex-col gap-3  pt-3">
-                <span className="text-[11px] tracking-tight text-muted-foreground ">
+              <section className="flex flex-col gap-2  pt-3">
+                <span className="text-[10px] tracking-tight text-muted-foreground">
                   {t.workspaceTweakControls}
                 </span>
                 {pushError && (
@@ -436,7 +400,7 @@ export function WorkspacePage() {
                     onClick={() => void undo()}
                     title="Ctrl+Z"
                   >
-                    ↶
+                    <Undo2 className="size-3" />
                   </Button>
                   <Button
                     type="button"
@@ -446,7 +410,7 @@ export function WorkspacePage() {
                     onClick={() => void redo()}
                     title="Ctrl+Shift+Z"
                   >
-                    ↷
+                    <Redo2 className="size-3" />
                   </Button>
                   {/* M9: export / import */}
                   <div className="ml-auto flex items-center gap-2">
@@ -458,7 +422,7 @@ export function WorkspacePage() {
                       title="导出配置到剪贴板"
                     >
                       <Download className="size-3" />
-                      <span className="text-[11px]">导出</span>
+                      <span className="text-[10px]">导出</span>
                     </Button>
                     <Button
                       type="button"
@@ -468,7 +432,7 @@ export function WorkspacePage() {
                       title="从 JSON 文件导入配置"
                     >
                       <Upload className="size-3" />
-                      <span className="text-[11px]">导入</span>
+                      <span className="text-[10px]">导入</span>
                     </Button>
                   </div>
                 </div>

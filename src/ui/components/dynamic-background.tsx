@@ -242,7 +242,7 @@ export function DynamicBackground({
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-background"
+      className="pointer-events-none fixed inset-0 z-[var(--z-bg)] overflow-hidden bg-background"
     >
       <div
         ref={parallaxRef}
@@ -341,7 +341,7 @@ export function DynamicBackground({
           no audible effect here. Surface that to the user via a tooltip. */}
       {showMutedHint && (
         <div
-          className="pointer-events-auto absolute bottom-3 right-3 z-10"
+          className="pointer-events-auto absolute bottom-3 right-3 z-[var(--z-content)]"
           title={t.wallpaperAudioMuted}
         >
           <VolumeX className="size-4 text-foreground/60" />

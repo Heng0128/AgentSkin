@@ -184,6 +184,25 @@ export class ThemeLibrary implements ThemeLibraryApi {
       }),
     );
     const valid = results.filter((r): r is ThemeEntry => r !== null);
+    // Memory: strip base64 payloads from the cached entries. The display
+    // metadata (theme.*, colors, targets) never needs the image bytes, and
+    // keeping N×hero base64 resident (multi-MB each) was the dominant memory
+    // cost once 15+ photo themes are installed. `find()` re-reads the package
+    // from disk (with full base64) when a theme is actually applied, so this
+    // cache stays apply-ready without holding image bytes.
+    for (const entry of valid) {
+      const assets = entry.bundle.assets as
+        | { images?: Record<string, { base64?: string }>; art?: { base64?: string } }
+        | undefined;
+      if (assets) {
+        if (assets.images) {
+          for (const image of Object.values(assets.images)) {
+            if (image && 'base64' in image) image.base64 = '';
+          }
+        }
+        if (assets.art && 'base64' in assets.art) assets.art.base64 = '';
+      }
+    }
     this.entriesCache = valid.sort((a, b) =>
       a.bundle.theme.displayName.localeCompare(b.bundle.theme.displayName, sortLocale),
     );

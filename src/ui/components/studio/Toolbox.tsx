@@ -9,7 +9,7 @@ import type { ToolOverride } from '@/types/override';
 
 import type { UiMessages } from '@shared/i18n';
 import type { ThemeVisualSnapshot } from '@shared/types';
-import { SlidersHorizontal } from 'lucide-react';
+import { RotateCcw, SlidersHorizontal } from 'lucide-react';
 
 function computeSignature(snap: ThemeVisualSnapshot) {
   const landmarks = snap.landmarks.filter((lm) => lm.visible);
@@ -243,12 +243,12 @@ function SliderRow({
     <div className="space-y-1 py-1">
       <div className="flex items-baseline justify-between">
         <span
-          className="font-mono text-[10px] font-medium "
+          className="font-mono text-[10px] font-normal "
           style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
         >
           {label}
         </span>
-        <span className="font-mono text-[10px] font-medium" style={{ color: 'var(--foreground)' }}>
+        <span className="font-mono text-[10px] font-normal" style={{ color: 'var(--foreground)' }}>
           {typeof value === 'number' ? `${value}${unit}` : value || `—${unit}`}
         </span>
       </div>
@@ -308,7 +308,7 @@ function SelectRow({
   return (
     <div className="space-y-1 py-1">
       <span
-        className="font-mono text-[10px] font-medium "
+        className="font-mono text-[10px] font-normal "
         style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
       >
         {label}
@@ -344,7 +344,7 @@ function TextRow({
   return (
     <div className="space-y-1 py-1">
       <span
-        className="font-mono text-[10px] font-medium "
+        className="font-mono text-[10px] font-normal "
         style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
       >
         {label}
@@ -376,7 +376,7 @@ function ColorRow({
   return (
     <div className="space-y-1 py-1">
       <span
-        className="font-mono text-[10px] font-medium "
+        className="font-mono text-[10px] font-normal "
         style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
       >
         {label}
@@ -416,7 +416,7 @@ function ToggleRow({
   return (
     <label className="flex cursor-pointer items-center justify-between py-1" title={hint}>
       <span
-        className="font-mono text-[10px] font-medium "
+        className="font-mono text-[10px] font-normal "
         style={{ letterSpacing: '0.1em', color: 'var(--muted-foreground)' }}
       >
         {label}
@@ -455,7 +455,7 @@ function ToggleRow({
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="flex items-center gap-2  pb-1 pt-2 font-mono text-[10px] font-semibold "
+      className="flex items-center gap-2  pb-1 pt-2 font-mono text-[10px] font-normal "
       style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)' }}
     >
       <span
@@ -553,14 +553,14 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
         <div className="flex items-center gap-2">
           <SlidersHorizontal className="size-3 text-primary" />
           <span
-            className="font-mono text-[10px] font-semibold "
+            className="font-mono text-[10px] font-normal "
             style={{ letterSpacing: '0.12em', color: 'var(--foreground)' }}
           >
             {t.studioToolboxTitle}
           </span>
           {activeCount > 0 && (
             <span
-              className="rounded px-1 py-0 font-mono text-[10px] font-bold"
+              className="rounded px-1 py-0 font-mono text-[10px] font-normal"
               style={{
                 background: 'var(--primary)',
                 color: 'var(--primary-foreground)',
@@ -578,7 +578,10 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
           className="font-mono text-[10px]   disabled:opacity-30"
           style={{ color: 'var(--muted-foreground)' }}
         >
-          ↺ {t.studioToolboxReset}
+          <span className="flex items-center gap-1 font-mono text-[10px]   disabled:opacity-30">
+            <RotateCcw className="size-3" />
+            {t.studioToolboxReset}
+          </span>
         </button>
       </div>
 
@@ -858,7 +861,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
       {/* Summary of effective values */}
       <div className="mt-2  p-2 bg-muted">
         <p
-          className="mb-1 font-mono text-[10px] font-semibold "
+          className="mb-1 font-mono text-[10px] font-normal "
           style={{ letterSpacing: '0.12em', color: 'var(--muted-foreground)' }}
         >
           {t.studioToolboxCurrentProps}

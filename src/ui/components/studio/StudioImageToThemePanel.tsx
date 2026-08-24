@@ -273,7 +273,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
     return (
       <div className="space-y-2">
         <div className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-          <p className="font-mono text-xs text-[var(--fg-1)]">{imageToThemeError}</p>
+          <p className="font-mono text-[11px] text-[var(--fg-1)]">{imageToThemeError}</p>
           <div className="mt-4 flex gap-2">
             <button
               type="button"
@@ -293,7 +293,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
     return (
       <div className="space-y-4">
         {/* Generated palette title */}
-        <h3 className="font-mono text-sm font-bold text-[var(--fg-0)]">
+        <h3 className="font-mono text-[13px] font-normal text-[var(--fg-0)]">
           {t.studioImageToThemeGeneratedPalette}
         </h3>
 
@@ -379,7 +379,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
           <button
             type="button"
             onClick={handleApply}
-            className="rounded-[var(--dl-radius,2px)] bg-[var(--primary)] px-4 py-1 font-mono text-xs text-[var(--primary-foreground)]"
+            className="rounded-[var(--dl-radius,2px)] bg-[var(--primary)] px-4 py-1 font-mono text-[11px] text-[var(--primary-foreground)]"
           >
             {t.studioImageToThemeApplyToProject}
           </button>
@@ -408,7 +408,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
             />
           )}
           <div className="flex-1 truncate">
-            <p className="truncate font-mono text-xs text-[var(--fg-0)]">{file.name}</p>
+            <p className="truncate font-mono text-[11px] text-[var(--fg-0)]">{file.name}</p>
             <p className="font-mono text-[10px] text-[var(--fg-2)]">
               {(file.size / 1024).toFixed(1)} KB
             </p>
@@ -417,7 +417,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         <button
           type="button"
           disabled
-          className="w-full rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-4 py-2 font-mono text-xs text-[var(--fg-2)] opacity-60"
+          className="w-full rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-4 py-2 font-mono text-[11px] text-[var(--fg-2)] opacity-60"
         >
           {t.studioImageToThemeExtracting}
         </button>
@@ -443,7 +443,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
             className="size-12 rounded-[var(--dl-radius,2px)] object-cover"
           />
           <div className="flex-1 truncate">
-            <p className="truncate font-mono text-xs text-[var(--fg-0)]">{file.name}</p>
+            <p className="truncate font-mono text-[11px] text-[var(--fg-0)]">{file.name}</p>
             <p className="font-mono text-[10px] text-[var(--fg-2)]">
               {(file.size / 1024).toFixed(1)} KB
             </p>
@@ -452,7 +452,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         <button
           type="button"
           onClick={handleExtract}
-          className="w-full rounded-[var(--dl-radius,2px)] bg-[var(--primary)] px-4 py-2 font-mono text-xs text-[var(--primary-foreground)]"
+          className="w-full rounded-[var(--dl-radius,2px)] bg-[var(--primary)] px-4 py-2 font-mono text-[11px] text-[var(--primary-foreground)]"
         >
           {t.studioImageToThemeExtractButton}
         </button>
@@ -489,7 +489,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         data-drag-over={dragOver ? 'true' : undefined}
       >
         <UploadCloud className="size-8 text-[var(--fg-2)]" />
-        <span className="font-mono text-xs text-[var(--fg-0)]">
+        <span className="font-mono text-[11px] text-[var(--fg-0)]">
           {t.studioImageToThemeDragOrClick}
         </span>
         <span className="font-mono text-[10px] text-[var(--fg-3)]">

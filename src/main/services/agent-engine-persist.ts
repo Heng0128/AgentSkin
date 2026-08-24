@@ -125,15 +125,19 @@ export function isPersistedState(x: unknown): x is PersistedState {
 export class PersistChain {
   private chain: Promise<void> = Promise.resolve();
   private pending = 0;
+  /** Optional error callback — invoked (not thrown) when a write fails. */
+  onError?: (error: unknown) => void;
 
   /**
    * Serialise a write onto the chain.
    *
+   * @param update - The write operation to serialise.
+   * @param label - Optional human-readable label for diagnostics/logging.
    * @returns A promise that settles when THIS write completes (not just
    * when it is queued). The returned promise rejects if the update throws,
    * but the chain itself always continues (see `chain` field).
    */
-  safe(update: () => Promise<void> | void): Promise<void> {
+  safe(update: () => Promise<void> | void, label?: string): Promise<void> {
     this.pending++;
     const result = this.chain.then(() => update());
     // Swallow rejection so a single failed write does not poison the chain,
@@ -141,8 +145,11 @@ export class PersistChain {
     // failure). Chaining `finally` onto the swallowing branch — rather than
     // discarding `result.finally(...)` with `void` — prevents an unhandled
     // rejection from leaking into the process when a write fails.
+    // R7: onError callback surfaces the failure for logging / diagnostics.
     this.chain = result
-      .catch(() => {})
+      .catch((error) => {
+        this.onError?.(error);
+      })
       .finally(() => {
         this.pending = Math.max(0, this.pending - 1);
       });

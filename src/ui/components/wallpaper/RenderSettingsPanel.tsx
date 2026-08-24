@@ -66,16 +66,16 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
         onChange={(e) => set({ [key]: Number(e.target.value) } as Partial<WallpaperRenderOptions>)}
         className="we-range h-[4px] flex-1 cursor-pointer appearance-none rounded-md bg-border-strong [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-md [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:ring-2 [&::-webkit-slider-thumb]:ring-card"
       />
-      <span className="w-[42px] text-right font-mono text-[10px] font-bold tabular-nums text-foreground">
+      <span className="w-[42px] text-right font-mono text-[10px] font-normal tabular-nums text-foreground">
         {display ?? (typeof r[key] === 'number' ? String(r[key]) : '默认')}
       </span>
     </div>
   );
 
   return (
-    <div className="mt-[8px] grid grid-cols-2 gap-x-[9px] gap-y-[6px] rounded-md  bg-card2/80 p-[10px_14px_4px]">
+    <div className="mt-[8px] grid grid-cols-2 gap-x-2 gap-y-1 rounded-md  bg-card2/80 p-[12px_16px_4px]">
       <div className="col-span-2 flex items-center gap-2">
-        <span className="text-[11px] font-semibold text-muted-foreground ">RENDER_SETTINGS</span>
+        <span className="text-[11px] font-normal text-muted-foreground ">RENDER_SETTINGS</span>
         <span className="h-px flex-1 bg-border" />
         <button
           type="button"
@@ -97,7 +97,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
           onChange={(e) => set({ tint: e.target.value })}
           className="h-6 w-[30px] cursor-pointer rounded-md  bg-card2 p-0"
         />
-        <span className="w-[42px] text-right font-mono text-[10px] font-bold text-foreground">
+        <span className="w-[42px] text-right font-mono text-[10px] font-normal text-foreground">
           {r.tint ? r.tint.toUpperCase() : '默认'}
         </span>
       </div>
@@ -171,12 +171,12 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       {/* Flip */}
       <div className="we-prow flex items-center gap-2">
         <span className="w-[76px] shrink-0 font-mono text-[10px]  text-muted-foreground">FLIP</span>
-        <span className="flex flex-1 items-center gap-[6px]">
+        <span className="flex flex-1 items-center gap-1">
           <button
             type="button"
             onClick={() => set({ flipH: !r.flipH })}
             className={cn(
-              'h-6 flex-1 rounded-md  bg-card2 font-mono text-[10px] font-semibold  transition-colors',
+              'h-6 flex-1 rounded-md  bg-card2 font-mono text-[10px] font-normal  transition-colors',
               r.flipH ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground',
             )}
           >
@@ -186,7 +186,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
             type="button"
             onClick={() => set({ flipV: !r.flipV })}
             className={cn(
-              'h-6 flex-1 rounded-md  bg-card2 font-mono text-[10px] font-semibold  transition-colors',
+              'h-6 flex-1 rounded-md  bg-card2 font-mono text-[10px] font-normal  transition-colors',
               r.flipV ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground',
             )}
           >
@@ -198,7 +198,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       {/* Image filters */}
       <div className="col-span-2 mt-[6px] grid grid-cols-2 gap-x-[9px] gap-y-[9px]">
         <span className="col-span-2 flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-muted-foreground ">IMAGE_FILTERS</span>
+          <span className="text-[11px] font-normal text-muted-foreground ">IMAGE_FILTERS</span>
           <span className="h-px flex-1 bg-border" />
         </span>
         {slider(

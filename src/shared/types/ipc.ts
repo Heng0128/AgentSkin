@@ -12,7 +12,6 @@ import type {
   ScanProgressEvent,
 } from './agent';
 import type { ConcurrencyMetrics } from './concurrency';
-import type { CssStyleSheetEvent } from './css-event';
 import type { DriftStatus, RegenResult } from './drift-status';
 import type { EnvironmentPreset } from './environment';
 import type { HealthCheckReport } from './health-check';
@@ -455,7 +454,6 @@ export interface AgentSkinApi {
    *  / styleSheetRemoved) pushed from the main process for a running agent.
    *  Returns an unsubscribe function. No ipcMain.handle is registered —
    *  this is a main→renderer push event sent via webContents.send. */
-  onCssEvents(listener: (event: CssStyleSheetEvent) => void): () => void;
   /** Resolve a wallpaper's media as a streamable loopback HTTP URL (served by
    *  the wallpaper media server) so video wallpapers can play without buffering
    *  the whole file. Returns null when the id is unknown. */
@@ -581,6 +579,12 @@ export interface AgentSkinApi {
    *  Returns an unsubscribe function. No ipcMain.handle is registered —
    *  this is a main->renderer push event sent via webContents.send. */
   onDiagnosticsConcurrencyMetrics(listener: (metrics: ConcurrencyMetrics) => void): () => void;
+  /** Subscribe to persist-failure warnings pushed from the main process when
+   *  persistFailures reaches threshold. The payload carries the current
+   *  failureCount so the UI can surface a destructive toast. Returns an
+   *  unsubscribe function. No ipcMain.handle is registered — this is a
+   *  main->renderer push event sent via webContents.send. */
+  onPersistFailureWarning(listener: (warning: { failureCount: number }) => void): () => void;
   /** Push renderer-side concurrency primitive sizes to the main process so
    * it can include them in the unified metrics broadcast. Fire-and-forget
    * (no ack). Called by the renderer's periodic self-report timer. */
@@ -706,4 +710,11 @@ export interface AgentSkinApi {
     agentId: string,
     selectors: string[],
   ): Promise<SelectorValidationReport>;
+  // --- MCP (Model Context Protocol) ---
+  /** Get current MCP HTTP server status (running, url). */
+  getMcpStatus(): Promise<{ running: boolean; url: string | null }>;
+  /** Start the MCP HTTP server. Returns the server URL on success. */
+  startMcp(): Promise<{ ok: boolean; url?: string; error?: string; alreadyRunning?: boolean }>;
+  /** Stop the MCP HTTP server. */
+  stopMcp(): Promise<{ ok: boolean; error?: string; alreadyStopped?: boolean }>;
 }

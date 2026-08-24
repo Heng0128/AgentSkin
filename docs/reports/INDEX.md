@@ -24,6 +24,8 @@
 | `audit-lambda-stress-test.md` | — | λ 压力测试审计 |
 | `baseline-restore-audit-2026-08-16.md` | 2026-08-16 | 基线恢复审计 |
 | `cdp-asar-refined-audit-2026-08-19.md` | 2026-08-19 | CDP-asar 细化审计 |
+| `injection-engine-optimization-report-2026-08-23.md` | 2026-08-23 | 注入引擎优化汇总报告（P0/P1/P2 + 竞品落地点） |
+| `architecture-visual-dual-audit-2026-08-24.md` | 2026-08-24 | 架构冗余 + 视觉统一双轨只读审计（8 子代理并行 + 2 轮验证） |
 
 ## 实施与设计系统报告
 
@@ -35,6 +37,11 @@
 | `design-system-execution-report-2026-08-22.md` | 2026-08-22 | 设计系统执行报告 |
 | `design-system-execution-report-2026-08-22-batch4.md` | 2026-08-22 | 设计系统执行报告（批次 4） |
 | `design-system-interrogation-review.md` | 2026-08-21 | 设计系统反向质询评审 |
+| `phase-A-dead-code-cleanup-2026-08-24.md` | 2026-08-24 | Phase A 死代码清理（8 文件，~2,100 行） |
+| `phase-B-C-D-E-summary-2026-08-24.md` | 2026-08-24 | Phase B-C 执行 + Phase D-E RFC 总结 |
+| `emptystate-promotion-2026-08-24.md` | 2026-08-24 | EmptyState 组件推广（15 处 → 共享组件） |
+| `toolbar-unification-2026-08-24.md` | 2026-08-24 | Toolbar 统一（5 种策略 → PageToolbar 组件） |
+| `emergency-fix-2026-08-24.md` | 2026-08-24 | 紧急故障修复 — 主题目录误删 + 调试残留清理 |
 | `semantic-quant-review-2026-08-17.md` | 2026-08-17 | 语义量化评审 |
 | `semantic-quant-final-review-2026-08-17.md` | 2026-08-17 | 语义量化最终评审 |
 | `theme-system-v2-selection-report.md` | — | 主题系统 v2 选型报告 |

@@ -39,7 +39,7 @@ export function RenameDialog({
   return (
     // biome-ignore lint/a11y/useSemanticElements: modal overlay — a <button> element would interfere with focus management and form semantics inside the dialog.
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 animate-in fade-in duration-fast"
+      className="fixed inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-black/40 animate-in fade-in duration-fast"
       onClick={onCancel}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onCancel();
@@ -54,10 +54,10 @@ export function RenameDialog({
         className="w-80 rounded-md  bg-card p-4 shadow-float animate-page-enter duration-fast"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-sm font-semibold">{title}</h3>
+        <h3 className="text-[13px] font-normal">{title}</h3>
         <input
           ref={inputRef}
-          className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm outline-none transition-colors focus:ring-2 focus:ring-primary/30"
+          className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-[13px] outline-none transition-colors focus:ring-2 focus:ring-primary/30"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
@@ -69,14 +69,14 @@ export function RenameDialog({
         <div className="mt-3 flex justify-end gap-2">
           <button
             type="button"
-            className="rounded-md px-3 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary"
+            className="rounded-md px-3 py-1 text-[11px] font-normal text-muted-foreground transition-colors hover:bg-secondary"
             onClick={onCancel}
           >
             {cancelLabel}
           </button>
           <button
             type="button"
-            className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+            className="rounded-md bg-primary px-3 py-1 text-[11px] font-normal text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             disabled={!value.trim()}
             onClick={onConfirm}
           >

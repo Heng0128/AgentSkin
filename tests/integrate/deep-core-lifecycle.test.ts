@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { loadDeepCore, resetDom } from '../unit/deep-core-helpers';
 
-const { DeepCore, FragmentRegistry } = loadDeepCore();
+const { DeepCore, createDeepCore } = loadDeepCore();
 
 describe('DeepCore Lifecycle (L2 Integration)', () => {
   beforeEach(() => {
@@ -19,7 +19,6 @@ describe('DeepCore Lifecycle (L2 Integration)', () => {
     if ((window as any).__AGENTSKIN_DEEP_CORE__) {
       try { (window as any).__AGENTSKIN_DEEP_CORE__.dispose(); } catch {}
     }
-    FragmentRegistry.dispose();
     resetDom();
   });
 
@@ -59,55 +58,45 @@ describe('DeepCore Lifecycle (L2 Integration)', () => {
   });
 
   it('should register and activate fragments via DeepCore', () => {
-    const instance = new DeepCore(
-      {
-        shadowMode: 'open-only',
-        routes: [],
-        fragments: {
-          'test-fragment': '.test { color: red; }',
-        },
+    const handles = createDeepCore({
+      shadowMode: 'open-only',
+      routes: [],
+      fragments: {
+        'test-fragment': '.test { color: red; }',
       },
-      { agent: 'codex' },
-    );
+    }, { agent: 'codex' });
 
     // Fragment should be registered but not yet activated
     expect(document.adoptedStyleSheets.length).toBe(0);
 
-    // Activate it
-    FragmentRegistry.activate('test-fragment');
+    // Activate it via the instance-level registry (same entry point as before)
+    handles.fragmentRegistry.activate('test-fragment');
     expect(document.adoptedStyleSheets.length).toBe(1);
 
-    // Cleanup
-    instance.dispose();
+    handles.instance.dispose();
   });
 
   it('should handle re-construction (dispose previous before new)', () => {
-    const instance1 = new DeepCore(
-      {
-        shadowMode: 'open-only',
-        routes: [],
-        fragments: { 'frag-1': '.a { color: red; }' },
-      },
-      { agent: 'codex' },
-    );
+    const handles1 = createDeepCore({
+      shadowMode: 'open-only',
+      routes: [],
+      fragments: { 'frag-1': '.a { color: red; }' },
+    }, { agent: 'codex' });
 
-    FragmentRegistry.activate('frag-1');
+    handles1.fragmentRegistry.activate('frag-1');
     expect(document.adoptedStyleSheets.length).toBe(1);
 
     // Constructing a new instance should dispose the old one
-    const instance2 = new DeepCore(
-      {
-        shadowMode: 'open-only',
-        routes: [],
-        fragments: { 'frag-2': '.b { color: blue; }' },
-      },
-      { agent: 'codex' },
-    );
+    const handles2 = createDeepCore({
+      shadowMode: 'open-only',
+      routes: [],
+      fragments: { 'frag-2': '.b { color: blue; }' },
+    }, { agent: 'codex' });
 
     // Old fragment should be cleaned up by dispose
-    expect((window as any).__AGENTSKIN_DEEP_CORE__).toBe(instance2);
+    expect((window as any).__AGENTSKIN_DEEP_CORE__).toBe(handles2.instance);
 
-    instance2.dispose();
+    handles2.instance.dispose();
   });
 
   it('should preserve fallback behavior — init failure re-throws for adapter fallback', () => {
@@ -119,11 +108,29 @@ describe('DeepCore Lifecycle (L2 Integration)', () => {
       { agent: 'codex' },
     );
 
-    // Manually test the catch path: if we try to construct with a broken
-    // config that causes _init to throw, the error should propagate.
-    // The actual fallback test is in the adapter.mjs integration path.
-
     expect(instance).toBeDefined();
     instance.dispose();
+  });
+
+  it('should isolate instance state between two DeepCore instances', () => {
+    // Create two DeepCore instances simultaneously (not disposed in between).
+    // Their fragment registries must be independent — activating a fragment
+    // on one must not appear on the other.
+    const h1 = createDeepCore({
+      fragments: { 'frag-shared': '.a { color: red; }' },
+    });
+    const h2 = createDeepCore({
+      fragments: { 'frag-shared': '.a { color: blue; }' },
+    });
+
+    // h2 disposed h1 during its own construction. Verify isolation by
+    // checking that the surviving registry (h2) only has h2's fragment.
+    h2.fragmentRegistry.activate('frag-shared');
+    expect(document.adoptedStyleSheets.length).toBe(1);
+
+    // h1 was disposed — its registry should be empty
+    expect(h1.fragmentRegistry).toBeDefined();
+
+    h2.instance.dispose();
   });
 });

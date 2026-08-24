@@ -28,7 +28,6 @@ import type {
   WallpaperAgentSetting,
   WallpaperSettings,
 } from './shared/types';
-import type { CssStyleSheetEvent } from './shared/types/css-event';
 import type { EnvironmentPreset } from './shared/types/environment';
 import type { LaunchRequest } from './shared/types/launch';
 import type { ToolOverride, TweakSession } from './shared/types/override';
@@ -131,7 +130,6 @@ const api: AgentSkinApi = {
       ok: boolean;
       error?: string;
     }>,
-  onCssEvents: (listener) => subscribe<CssStyleSheetEvent>(IpcChannel.CSS_EVENTS, listener),
   wallpaperVideoUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_VIDEO_URL, id),
   wallpaperWebUrl: (id: string) => ipcRenderer.invoke(IpcChannel.WALLPAPER_WEB_URL, id),
   showInFolder: (itemPath: string) => ipcRenderer.invoke(IpcChannel.SHELL_SHOW_ITEM, itemPath),
@@ -309,6 +307,8 @@ const api: AgentSkinApi = {
     >,
   onDiagnosticsConcurrencyMetrics: (listener) =>
     subscribe<ConcurrencyMetrics>(IpcChannel.DIAGNOSTICS_CONCURRENCY_METRICS, listener),
+  onPersistFailureWarning: (listener) =>
+    subscribe<{ failureCount: number }>(IpcChannel.PERSIST_FAILURE_WARNING, listener),
   // --- Secondary target injection trace ---
   // Per-target progress: { agent, targetId, targetType, title, success, error, elapsed }.
   onSecondaryInjectProgress: (listener) =>
@@ -377,6 +377,22 @@ const api: AgentSkinApi = {
       agentId,
       selectors,
     ) as Promise<SelectorValidationReport>,
+  // --- MCP (Model Context Protocol) ---
+  getMcpStatus: () =>
+    ipcRenderer.invoke(IpcChannel.MCP_GET_STATUS) as Promise<{ running: boolean; url: string | null }>,
+  startMcp: () =>
+    ipcRenderer.invoke(IpcChannel.MCP_START) as Promise<{
+      ok: boolean;
+      url?: string;
+      error?: string;
+      alreadyRunning?: boolean;
+    }>,
+  stopMcp: () =>
+    ipcRenderer.invoke(IpcChannel.MCP_STOP) as Promise<{
+      ok: boolean;
+      error?: string;
+      alreadyStopped?: boolean;
+    }>,
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);

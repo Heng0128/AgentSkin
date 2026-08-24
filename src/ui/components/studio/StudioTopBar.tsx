@@ -57,11 +57,11 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
         <span className="ws-topbar__brand-icon">✦</span>
         <span className="ws-topbar__brand-name">{t.studioBrand}</span>
         <span
-          className="badge-beta inline-flex items-center h-4 px-1 rounded-[var(--r-micro)] font-mono text-[10px] font-bold"
+          className="badge-beta inline-flex items-center h-4 px-1 rounded-sm font-mono text-micro font-normal"
           style={{
-            background: 'var(--accent-ghost)',
-            color: 'var(--accent)',
-            border: '1px solid color-mix(in srgb, var(--primary) 30%, transparent)',
+            background: 'var(--accent)',
+            color: 'rgb(165 180 252)',
+            border: '1px solid rgba(var(--brand-rgb), 0.3)',
           }}
         >
           {t.studioHeaderBeta}
@@ -69,7 +69,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
         {activeProject && (
           <button
             type="button"
-            className="ws-topbar__project-name hover:text-[var(--fg-0)] transition-colors"
+            className="ws-topbar__project-name hover:text-foreground transition-colors"
             title={t.studioSwitchProject}
             onClick={() => useWorkspaceStore.getState().toggleDrawer()}
           >
@@ -82,8 +82,8 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
       <div className="ws-topbar__center">
         {/* Undo / Redo */}
         <div
-          className="flex items-center gap-[var(--space-1)] rounded-[var(--r-md)] p-0"
-          style={{ background: 'var(--bg-3)' }}
+          className="flex items-center gap-1 rounded-sm p-0"
+          style={{ background: 'var(--muted)' }}
         >
           <button
             type="button"
@@ -107,8 +107,8 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
 
         {/* Center view switcher: 4 tabs (theme / wallpaper / bundle / raw) */}
         <div
-          className="flex items-center gap-0 ml-[var(--space-2)] rounded-[var(--r-md)] p-0"
-          style={{ background: 'var(--bg-3)' }}
+          className="flex items-center gap-0 ml-2 rounded-sm p-0"
+          style={{ background: 'var(--muted)' }}
         >
           {TOPBAR_TABS.map((tab) => (
             <button
@@ -126,8 +126,8 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
 
         {/* Panel toggles */}
         <div
-          className="flex items-center gap-[var(--space-1)] ml-[var(--space-2)] rounded-[var(--r-md)] p-0"
-          style={{ background: 'var(--bg-3)' }}
+          className="flex items-center gap-1 ml-2 rounded-sm p-0"
+          style={{ background: 'var(--muted)' }}
         >
           <button
             type="button"

@@ -6,15 +6,18 @@ import { loadDeepCore, resetDom } from '../unit/deep-core-helpers';
 const { FragmentRegistry } = loadDeepCore();
 
 describe('Fragment Priority (L2 Integration)', () => {
+  let registry: InstanceType<typeof FragmentRegistry>;
+
   beforeEach(() => {
     resetDom();
     if (!document.adoptedStyleSheets) {
       (document as any).adoptedStyleSheets = [];
     }
+    registry = new FragmentRegistry();
   });
 
   afterEach(() => {
-    FragmentRegistry.dispose();
+    registry.dispose();
     resetDom();
   });
 
@@ -29,8 +32,8 @@ describe('Fragment Priority (L2 Integration)', () => {
     document.adoptedStyleSheets = [paletteSheet, customSheet];
 
     // Register and activate a fragment
-    FragmentRegistry.register('my-frag', '.my-class { color: green; }');
-    FragmentRegistry.activate('my-frag');
+    registry.register('my-frag', '.my-class { color: green; }');
+    registry.activate('my-frag');
 
     // Expected order: palette, my-frag, custom
     expect(document.adoptedStyleSheets.length).toBe(3);
@@ -44,10 +47,10 @@ describe('Fragment Priority (L2 Integration)', () => {
     customSheet.__agentskin_layer = 'custom';
     document.adoptedStyleSheets = [customSheet];
 
-    FragmentRegistry.register('frag-a', '.a { color: red; }');
-    FragmentRegistry.register('frag-b', '.b { color: blue; }');
-    FragmentRegistry.activate('frag-a');
-    FragmentRegistry.activate('frag-b');
+    registry.register('frag-a', '.a { color: red; }');
+    registry.register('frag-b', '.b { color: blue; }');
+    registry.activate('frag-a');
+    registry.activate('frag-b');
 
     // Expected: frag-a, frag-b, custom
     expect(document.adoptedStyleSheets.length).toBe(3);
@@ -57,8 +60,8 @@ describe('Fragment Priority (L2 Integration)', () => {
   });
 
   it('fragment without custom layer appends at end', () => {
-    FragmentRegistry.register('my-frag', '.test { color: yellow; }');
-    FragmentRegistry.activate('my-frag');
+    registry.register('my-frag', '.test { color: yellow; }');
+    registry.activate('my-frag');
 
     expect(document.adoptedStyleSheets.length).toBe(1);
     expect(document.adoptedStyleSheets[0].__agentskin_fragment).toBe('my-frag');
@@ -69,12 +72,12 @@ describe('Fragment Priority (L2 Integration)', () => {
     customSheet.__agentskin_layer = 'custom';
     document.adoptedStyleSheets = [customSheet];
 
-    FragmentRegistry.register('my-frag', '.test { color: red; }');
-    FragmentRegistry.activate('my-frag');
+    registry.register('my-frag', '.test { color: red; }');
+    registry.activate('my-frag');
 
     const originalSheet = document.adoptedStyleSheets[0];
 
-    FragmentRegistry.hotReplace('my-frag', '.test { color: blue; }');
+    registry.hotReplace('my-frag', '.test { color: blue; }');
 
     // Same position, same sheet instance
     expect(document.adoptedStyleSheets.length).toBe(2);

@@ -107,6 +107,9 @@ export async function seedBuiltInThemes(
     'ids=',
     toInstall.map((p) => p.manifest.id),
   );
+  // External-file hero (lossless wallpaper mode) resolves against EACH
+  // theme's OWN package dir (installer defaults to pkg.packagePath), so the
+  // built-in `themesDir` is intentionally NOT passed here.
   const result = await installer.installAll(toInstall);
   console.log(
     '[DEBUG-seeder] installed count=',
@@ -257,6 +260,59 @@ export const REMOVED_BUILTIN_THEME_IDS = [
   'rose-quartz',
   'sakura-noir',
   'sakura-pastel',
+  // v2.5 wallpaper-theme reset: the previous 23 built-in themes (imported
+  // bridge/CSS themes) were removed from themes/ in favor of 15 new photo-art
+  // themes (art-*). Registering their ids here prunes copies lingering in
+  // per-user ThemeLibrary on upgrade so users see only the new set.
+  'arina-hashimoto-codex-37d9',
+  'ba-xian',
+  'co2-blue-sky-baby',
+  'crow-brother-workbuddy-2856',
+  'doraemon-future-sky',
+  'enfp-inspiration-codex-b62e',
+  'frostline-tactical-glass',
+  'gazi-dog-heist',
+  'ink-blossom',
+  'kuromi',
+  'luffy-sky-liberation',
+  'miku-codex-acfc',
+  'miku-shuimo',
+  'misty-morning',
+  'shaolin-football',
+  'shenron-starwish',
+  'street-steel',
+  'sweet-strawberry-code',
+  'theme-1785551161595',
+  'theme-1786878605183',
+  'three-body-sophon',
+  'yuan-sky-stage',
+  'zhi-yin-ni-tai-mei',
+  // v2.6 rename (2026-08-24): the 15 art-* built-in theme directories
+  // were renamed to semantic ids based on each theme's actual hero image.
+  // Their ids change accordingly, so any copies of the old art-* ids
+  // lingering in per-user ThemeLibrary are pruned on upgrade — otherwise
+  // the catalog would show both the old and new names side-by-side.
+  // Final 15 ids:
+  //   luffy-grand-departure, fuji-rooftop-winter, fuji-balcony-overcast,
+  //   shibuya-rooftop-mask, galactic-garden, void-donut-boy,
+  //   midnight-dessert-feast, winged-mecha-ascendant, sunset-cellphone-girl,
+  //   yule-fireplace-glow, crimson-horned-mecha, stage-bassist-blue,
+  //   academy-corridor-winter, industrial-sage-toad, exploding-tag-storm
+  'art-174043',
+  'art-174154',
+  'art-174217',
+  'art-174524',
+  'art-174601',
+  'art-174635',
+  'art-174714',
+  'art-174751',
+  'art-174835',
+  'art-175022',
+  'art-175045',
+  'art-175108',
+  'art-175236',
+  'art-175324',
+  'art-175402',
 ];
 
 /**

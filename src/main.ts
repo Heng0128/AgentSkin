@@ -16,7 +16,8 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { app, BrowserWindow, dialog } from 'electron';
+import { pathToFileURL } from 'node:url';
+import { app, BrowserWindow, dialog, net, protocol } from 'electron';
 import { runBootSequence } from './main/boot-sequence';
 import { extractThemeFilesFromArgv } from './main/file-open';
 import { flushLocalePreference } from './main/locale-preferences';
@@ -26,10 +27,28 @@ import { createMainWindow } from './main/window-manager';
 import { toMessage } from './shared/errors';
 import { getMainMessages } from './shared/i18n';
 import { IpcChannel } from './shared/ipc-channels';
+import { THEME_SCHEME } from './main/theme/scheme';
+import { themeCoverPathForScheme, themeHeroPathForScheme } from './main/theme/utils';
 import type { AgentId } from './shared/types';
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 if (!hasSingleInstanceLock) app.quit();
+
+// The agentskin-theme:// scheme streams extracted cover/icon images (and
+// external-file hero backdrops) to the renderer without embedding base64 in
+// the UI heap. Must be registered as privileged BEFORE app is ready.
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: THEME_SCHEME,
+    privileges: {
+      standard: false,
+      secure: true,
+      supportFetchAPI: true,
+      stream: true,
+      bypassCSP: true,
+    },
+  },
+]);
 
 app.on('second-instance', (_event, argv) => {
   // P2-2: Guard against a destroyed mainWindow (GPU/renderer crash leaves
@@ -191,6 +210,28 @@ async function handleSplashTransition(warnings: string[]): Promise<void> {
 app
   .whenReady()
   .then(async () => {
+    // Serve agentskin-theme://cover/<id> / hero/<id> / icon/<id> from disk.
+    // - cover/icon: extracted preview/icon cache
+    // - hero: the ORIGINAL external-file backdrop (lossless 4K/8K wallpaper
+    //   mode). Streaming the file over this protocol replaces the old CDP
+    //   base64 chunk transfer, which timed out for multi-MB originals.
+    try {
+      protocol.handle(THEME_SCHEME, (request) => {
+        const url = new URL(request.url);
+        const host = url.host; // 'cover' | 'hero' | 'icon'
+        const id = decodeURIComponent(url.pathname.replace(/^\//, ''));
+        let filePath: string | null = null;
+        if (host === 'cover') filePath = themeCoverPathForScheme(id);
+        else if (host === 'hero') filePath = themeHeroPathForScheme(id);
+        if (filePath) {
+          return net.fetch(pathToFileURL(filePath).toString());
+        }
+        return new Response('not found', { status: 404 });
+      });
+    } catch (error) {
+      console.warn('[main] failed to register theme protocol:', error);
+    }
+
     // Show splash immediately — user sees the app is alive.
     ctx.splashWindow = createSplashWindow();
 

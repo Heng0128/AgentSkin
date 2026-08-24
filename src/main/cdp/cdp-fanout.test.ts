@@ -415,10 +415,14 @@ describe('hardeningPass', () => {
   it('watchdog skips a page target when engine sheets are already present (P3)', async () => {
     // The page session's evaluate answers a verification that reports the
     // engine's owned adoptedStyleSheets as present → watchdog skips injection.
+    // (The bundled theme carries a hero, so the verification must also report
+    // artResolved=true — otherwise the watchdog now re-injects per the 2026-08-23
+    // hero fix that prevents "CSS present but hero blob lost" being treated as fully applied.)
     const presentEval = vi.fn().mockResolvedValue(
       JSON.stringify({
         accent: '#f00',
-        agentskinArt: '',
+        agentskinArt: 'url("blob:agentskin-hero")',
+        artResolved: true,
         heroBlobActive: false,
         adoptedSheetCount: 3,
       }),

@@ -160,7 +160,21 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
 
   importWallpaper: async () => {
     try {
-      set({ wallpapers: await api.importWallpaper() });
+      const result = await api.importWallpaper();
+      // IPC handler 三种返回形态（类型声明为 WallpaperInfo[] 但实际更宽）：
+      //   1. 取消/未选文件 → WallpaperInfo[] (deps.wallpapers.list())
+      //   2. 成功          → { ok: true, items: WallpaperInfo[] }
+      //   3. 失败          → { ok: false, error: string }
+      const shaped = result as
+        | WallpaperInfo[]
+        | { ok: true; items: WallpaperInfo[] }
+        | { ok: false; error: string };
+      if (Array.isArray(shaped)) {
+        set({ wallpapers: shaped });
+      } else if (shaped.ok && Array.isArray(shaped.items)) {
+        set({ wallpapers: shaped.items });
+      }
+      // ok=false 时不更新列表，由 notification 报告失败
     } catch (error) {
       useNotificationStore.getState().fail(error);
     }

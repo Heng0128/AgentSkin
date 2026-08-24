@@ -12,6 +12,8 @@
 
 import { useCallback } from 'react';
 
+import { RotateCcw } from 'lucide-react';
+
 // ---------------------------------------------------------------------------
 // SliderCard — horizontal track + fill + thumb indicator
 // ---------------------------------------------------------------------------
@@ -78,7 +80,7 @@ export function SliderCard({
           disabled={!overridden}
           className="ws-dock-card__reset disabled:opacity-30"
         >
-          ↺
+          <RotateCcw className="size-3" />
         </button>
       </div>
     </div>
@@ -132,7 +134,7 @@ export function ColorCard({
           disabled={!overridden}
           className="ws-dock-card__reset disabled:opacity-30"
         >
-          ↺
+          <RotateCcw className="size-3" />
         </button>
       </div>
     </div>
@@ -184,7 +186,7 @@ export function SelectCard({
           disabled={!overridden}
           className="ws-dock-card__reset disabled:opacity-30"
         >
-          ↺
+          <RotateCcw className="size-3" />
         </button>
       </div>
     </div>
@@ -228,7 +230,7 @@ export function ToggleCard({
           disabled={!overridden}
           className="ws-dock-card__reset disabled:opacity-30"
         >
-          ↺
+          <RotateCcw className="size-3" />
         </button>
       </div>
     </div>

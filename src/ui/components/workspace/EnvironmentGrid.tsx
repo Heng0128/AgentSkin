@@ -202,7 +202,7 @@ export function EnvironmentGrid({
             <Button
               size="sm"
               variant="outline"
-              className="mt-3 gap-1 text-xs"
+              className="mt-3 gap-1 text-[11px]"
               onClick={onBrowseThemes}
             >
               {t.browseThemes}
@@ -218,7 +218,7 @@ export function EnvironmentGrid({
       {/* section header with mono label */}
       <div className="mb-3 flex items-center gap-2 px-1">
         <span className="as-label">{title}</span>
-        <span className="inline-flex size-[18px] items-center justify-center rounded-md bg-card2 font-mono text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
+        <span className="inline-flex size-[18px] items-center justify-center rounded-md bg-card2 font-mono text-[10px] font-normal text-muted-foreground ring-1 ring-border">
           {environments.length}
         </span>
         {/* Live refresh indicator — isolated ticker so the grid doesn't re-render every second. */}

@@ -1,0 +1,287 @@
+/* Art 174835 — OpenAI Codex (--color-token-* design tokens) */
+:root.agentskin-host-codex {
+  color-scheme: dark !important;
+  --agentskin-accent: #ff9a30;
+  --agentskin-secondary: #ffae59;
+  --agentskin-bg: #060409;
+  --agentskin-surface: #1b191e;
+  --agentskin-surface-elevated: #2a282c;
+  --agentskin-text: #f4f0eb;
+  --agentskin-muted: #cbc9c6;
+  --agentskin-border: #201e23;
+  --agentskin-code-bg: #050408;
+  --agentskin-code-fg: #f4f0eb;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #1b191e 82%, #ff9a30 18%) 45%, transparent);
+  --agentskin-button-bg: #ff9a30;
+  --agentskin-focus-ring: color-mix(in srgb, #ff9a30 40%, transparent);
+  --agentskin-selection: color-mix(in srgb, #ff9a30 32%, transparent);
+  --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  text-shadow: var(--agentskin-text-shadow);
+}
+
+/* ===== Native token overrides (Codex --color-token-* system) ===== */
+:root.agentskin-host-codex {
+  color-scheme: dark !important;
+
+  /* Accent / brand */
+  --color-token-primary: #ff9a30 !important;
+  --color-token-text-link-foreground: #ff9a30 !important;
+  --color-token-focus-border: rgba(255, 154, 48, 0.76) !important;
+
+  /* App + surface backgrounds */
+  --color-token-bg-primary: #060409 !important;
+  --color-token-side-bar-background: #060409 !important;
+  --color-token-bg-secondary: color-mix(in srgb, #060409 92%, transparent) !important;
+  --color-token-bg-tertiary: color-mix(in srgb, #060409 85%, transparent) !important;
+  --color-token-main-surface-primary: #1b191e !important;
+  --color-token-diff-surface: color-mix(in srgb, #1b191e 94%, #f4f0eb) !important;
+  --color-token-dropdown-background: #2a282c !important;
+  --color-token-dropdown-foreground: #f4f0eb !important;
+
+  /* Foreground / text */
+  --color-token-foreground: #f4f0eb !important;
+  --color-token-text-primary: #f4f0eb !important;
+  --color-token-text-secondary: color-mix(in srgb, #f4f0eb 65%, transparent) !important;
+  --color-token-text-tertiary: rgba(244, 240, 235, 0.498) !important;
+  --color-token-description-foreground: rgba(244, 240, 235, 0.498) !important;
+
+  /* Borders */
+  --color-token-border: rgba(255, 154, 48, 0.09) !important;
+  --color-token-border-default: rgba(255, 154, 48, 0.09) !important;
+  --color-token-border-light: rgba(255, 154, 48, 0.045) !important;
+  --color-token-border-heavy: rgba(255, 154, 48, 0.156) !important;
+  --color-token-input-border: rgba(255, 154, 48, 0.156) !important;
+
+  /* Interaction surfaces */
+  --color-token-list-hover-background: rgba(255, 154, 48, 0.078) !important;
+  --color-token-scrollbar-slider-hover-background: rgba(255, 154, 48, 0.156) !important;
+
+  /* Helper vars consumed by shellStructureCss */
+  --accent: #ff9a30 !important;
+  --bg-hover: rgba(255, 154, 48, 0.1) !important;
+  --bg-active: rgba(255, 154, 48, 0.16) !important;
+  --bg-selected: rgba(255, 154, 48, 0.14) !important;
+}
+/* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
+:root.agentskin-host-codex #root {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+:root.agentskin-host-codex #root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--agentskin-surface) 26%, transparent) 0 16%,
+      color-mix(in srgb, var(--agentskin-surface) 8%, transparent) 44%,
+      transparent 70%),
+    linear-gradient(180deg, transparent 0 50%,
+      color-mix(in srgb, var(--agentskin-surface) 20%, transparent) 86% 100%),
+    radial-gradient(120% 80% at 84% 14%,
+      color-mix(in srgb, var(--agentskin-secondary) 36%, transparent), transparent 60%),
+    var(--agentskin-art, none) right center / cover no-repeat !important;
+}
+
+/* Root + main surfaces transparent so #root art shows through */
+:root.agentskin-host-codex #root,
+:root.agentskin-host-codex main,
+:root.agentskin-host-codex [role="main"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
+}
+
+/* Sidebar: frosted glass over art (PROBE-VERIFIED exact root) */
+:root.agentskin-host-codex .app-shell-left-panel {
+  background: color-mix(in srgb, color-mix(in srgb, #1b191e 82%, #ff9a30 18%) 22%, transparent) !important;
+  border-right: 1px solid rgba(255, 154, 48, 0.1) !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
+}
+:root.agentskin-host-codex button.sidebar-item:hover,
+:root.agentskin-host-codex [data-app-action-sidebar-project-id]:hover {
+  background: rgba(255, 154, 48, 0.1) !important;
+}
+:root.agentskin-host-codex [data-app-action-sidebar-thread-selected="true"],
+:root.agentskin-host-codex [data-app-action-sidebar-thread-active="true"] {
+  background: rgba(255, 154, 48, 0.16) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
+}
+
+/* Composer / input: frosted glass */
+:root.agentskin-host-codex .composer-surface-chrome,
+:root.agentskin-host-codex [class*="_multilineSurface_"] {
+  background: color-mix(in srgb, color-mix(in srgb, #1b191e 82%, #ff9a30 18%) 45%, transparent) !important;
+  backdrop-filter: blur(14px) saturate(1.1) !important;
+  color: var(--agentskin-text) !important;
+  caret-color: var(--agentskin-accent) !important;
+  border: 1px solid rgba(255, 154, 48, 0.25) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+}
+
+:root.agentskin-host-codex .composer-surface-chrome,
+:root.agentskin-host-codex [class*="_multilineSurface_"]:focus,
+:root.agentskin-host-codex [contenteditable="true"]:focus,
+:root.agentskin-host-codex [contenteditable="true"]:focus-within {
+  border-color: rgba(255, 154, 48, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(255, 154, 48, 0.1), 0 4px 18px rgba(255, 174, 89, 0.12) !important;
+}
+
+/* Message text (role-scoped — no [class*="message"] sub-string spray) */
+:root.agentskin-host-codex [role="log"],
+:root.agentskin-host-codex article {
+  color: var(--agentskin-text);
+}
+
+/* Popovers / modals: frosted glass (role-scoped + exact classes only) */
+:root.agentskin-host-codex [role="dialog"],
+:root.agentskin-host-codex [role="menu"],
+:root.agentskin-host-codex [role="tooltip"],
+:root.agentskin-host-codex [role="listbox"] {
+  background: color-mix(in srgb, #2a282c 94%, transparent) !important;
+  border: none !important;
+  backdrop-filter: blur(18px) saturate(1.08) !important;
+}
+
+/* Text readability on frosted glass */
+:root.agentskin-host-codex body {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+:root.agentskin-host-codex input,
+:root.agentskin-host-codex textarea,
+:root.agentskin-host-codex [contenteditable="true"] {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+/* Links */
+:root.agentskin-host-codex a {
+  color: var(--agentskin-accent) !important;
+}
+
+/* Selection */
+:root.agentskin-host-codex ::selection {
+  background: var(--agentskin-selection) !important;
+}
+
+/* Generic inputs */
+:root.agentskin-host-codex input,
+:root.agentskin-host-codex textarea,
+:root.agentskin-host-codex select {
+  background: var(--agentskin-input-bg) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
+}
+
+:root.agentskin-host-codex input:focus,
+:root.agentskin-host-codex textarea:focus,
+:root.agentskin-host-codex select:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px var(--agentskin-focus-ring) !important;
+}
+
+/* Inline code & code blocks */
+:root.agentskin-host-codex code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(32, 30, 35, 0.6) !important;
+  border-radius: 6px !important;
+}
+
+:root.agentskin-host-codex pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(32, 30, 35, 0.6) !important;
+  border-left: 3px solid rgba(255, 154, 48, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+:root.agentskin-host-codex pre code {
+  border: none !important;
+}
+
+/* Scrollbars */
+:root.agentskin-host-codex ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+:root.agentskin-host-codex ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+:root.agentskin-host-codex ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(255, 154, 48, 0.3) 0%, rgba(255, 174, 89, 0.3) 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+:root.agentskin-host-codex ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(255, 154, 48, 0.5) 0%, rgba(255, 174, 89, 0.5) 100%) !important;
+  background-clip: padding-box !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root.agentskin-host-codex *,
+  :root.agentskin-host-codex *::before,
+  :root.agentskin-host-codex *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Codex component-level interaction layering =====
+   Codex sidebar rows are <button class="sidebar-item">; the active thread is
+   flagged with data-app-action-sidebar-thread-selected="true" (Tailwind data-*
+   variant), NOT [aria-current] / [class*=active]. PROBE-VERIFIED 2026-08-23:
+   - sidebar items: button.sidebar-item (exact class; do NOT use [class*="item"])
+   - active thread: [data-app-action-sidebar-thread-selected="true"]
+   - active thread row: [data-app-action-sidebar-thread-active="true"]
+   - project rows: [data-app-action-sidebar-project-id] (exact, not [class*=active])
+   Give hover + selected an accent-tinted lift so the sidebar reads before/after
+   instead of blending into the frosted base. Scoped to .sidebar-item and the
+   verified data-app-action-* state attributes ONLY — no broad descendants. */
+:root.agentskin-host-codex button.sidebar-item {
+  transition: background-color 120ms ease !important;
+}
+:root.agentskin-host-codex button.sidebar-item:hover,
+:root.agentskin-host-codex [data-app-action-sidebar-project-id]:hover {
+  background: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+}
+:root.agentskin-host-codex button.sidebar-item[data-app-action-sidebar-thread-selected="true"],
+:root.agentskin-host-codex [data-app-action-sidebar-thread-selected="true"],
+:root.agentskin-host-codex [data-app-action-sidebar-thread-active="true"],
+:root.agentskin-host-codex button.sidebar-item[data-app-action-sidebar-project-collapsed="false"] {
+  background: color-mix(in srgb, var(--agentskin-accent) 16%, transparent) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent) !important;
+}
+
+/* Composer focus: keep frosted but leaner so focus reads without a solid fill */
+:root.agentskin-host-codex [contenteditable="true"]:focus,
+:root.agentskin-host-codex [contenteditable="true"]:focus-within {
+  background: color-mix(in srgb, var(--agentskin-input-bg) 82%, var(--agentskin-accent) 18%) !important;
+}
+
+/* ===== Top toolbar (header) — frosted glass over art =====
+   PROBE-VERIFIED 2026-08-23 (live codex): the fixed top toolbar is
+   header.pointer-events-none.fixed.z-30 (46px tall, spans the main column).
+   It inherits an opaque --color-token-bg-primary fill that blocks the
+   #root::before art layer. Give it the frosted-glass treatment instead —
+   scoped to the exact header role classes, not a broad header selector. */
+:root.agentskin-host-codex header.pointer-events-none.fixed {
+  background: color-mix(in srgb, var(--agentskin-surface) 45%, transparent) !important;
+  backdrop-filter: blur(20px) saturate(1.12) !important;
+  border-bottom: 1px solid color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
+}
+
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ----
+   Codex 没有独立的清除类缺陷规则（原生缺陷已由 token 覆盖 + 组件着色块消解）；
+   注册表为空。今后若发现新缺陷，加入共享模块后即自动带上。 */
+

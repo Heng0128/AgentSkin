@@ -93,21 +93,68 @@ async function injectBlobCssVar(
   }
 
   // Large images: chunk the base64 to keep each CDP message small.
+  // Hardened 2026-08-23 (theme hero 变色块): the previous loop used bare
+  // `session.evaluate` with no retry — a single transport glitch (timeout /
+  // socket backpressure during the ~16 chunk round-trips a 5 MB+ hero
+  // requires) aborted the whole transfer, leaving `--agentskin-art` as
+  // `none` and the background as a flat colour block. Each chunk now retries
+  // with backoff and the transfer verifies chunk count before assembling.
   try {
     // Step 1: initialize the chunk accumulator.
     await session.evaluate(`window.${HERO_CHUNKS_GLOBAL} = []; 'init';`);
 
-    // Step 2: push base64 in ~2MB chunks.
+    // Step 2: push base64 in ~512KB chunks, retrying transport-level
+    // failures so one transient timeout doesn't kill a 5MB+ hero transfer.
     const totalChunks = Math.ceil(base64.length / WALLPAPER_CHUNK_SIZE);
+    const CHUNK_MAX_RETRIES = 2;
+    const CHUNK_RETRY_DELAY_MS = 800;
     for (let i = 0; i < totalChunks; i++) {
       const chunk = base64.slice(i * WALLPAPER_CHUNK_SIZE, (i + 1) * WALLPAPER_CHUNK_SIZE);
-      await session.evaluate(`window.${HERO_CHUNKS_GLOBAL}.push(${JSON.stringify(chunk)});`);
+      const expr = `window.${HERO_CHUNKS_GLOBAL}.push(${JSON.stringify(chunk)});`;
+      let lastError: unknown;
+      let pushed = false;
+      let retried = false;
+      for (let attempt = 0; attempt <= CHUNK_MAX_RETRIES; attempt++) {
+        try {
+          await session.evaluate(expr);
+          pushed = true;
+          break;
+        } catch (error) {
+          lastError = error;
+          const msg = error instanceof Error ? error.message : String(error);
+          if (attempt < CHUNK_MAX_RETRIES) {
+            retried = true;
+            await new Promise((r) => setTimeout(r, CHUNK_RETRY_DELAY_MS));
+          }
+          void msg; // transport retry only; renderer errors re-throw naturally below
+        }
+      }
+      if (!pushed) {
+        mainWarn(
+          'Inject.Hero',
+          `chunk ${i}/${totalChunks} failed after retries: ${toMessage(lastError)}`,
+        );
+        throw lastError ?? new Error(`chunk ${i}/${totalChunks} failed`);
+      }
+      if (retried) mainWarn('Inject.Hero', `chunk ${i}/${totalChunks} required retry`);
+    }
+    if (totalChunks > 0) {
+      mainWarn(
+        'Inject.Hero',
+        `chunked transfer ok: ${totalChunks} chunks for ${(base64.length / 1024 / 1024).toFixed(2)}MB base64`,
+      );
     }
 
-    // Step 3: assemble the Blob URL in-page and set the CSS variables.
+    // Step 3: safe-assemble — verify every chunk landed before joining; if
+    // any is missing, treat as failure instead of mounting a corrupted image.
     const result = await session.evaluate(`(async () => {
       try {
-        const b64 = window.${HERO_CHUNKS_GLOBAL}.join('');
+        const chunks = window.${HERO_CHUNKS_GLOBAL} || [];
+        if (chunks.length !== ${totalChunks}) {
+          delete window.${HERO_CHUNKS_GLOBAL};
+          return 'err:chunk-mismatch(' + chunks.length + '/' + ${totalChunks} + ')';
+        }
+        const b64 = chunks.join('');
         delete window.${HERO_CHUNKS_GLOBAL};
         const binary = atob(b64);
         const bytes = new Uint8Array(binary.length);
@@ -223,6 +270,36 @@ export async function injectHeroBlob(session: CdpSession, heroPath: string): Pro
     return await transferHeroBase64(session, base64, mime);
   } catch (error) {
     mainWarn('Inject.Hero', `read local hero failed (${heroPath}): ${toMessage(error)}`);
+    return false;
+  }
+}
+
+/**
+ * Inject the hero by pointing the CSS variables at an agentskin-theme:// URL.
+ * The renderer streams the ORIGINAL wallpaper file straight from disk (zero
+ * compression, zero base64 over CDP) — the only approach that does not time
+ * out for multi-MB 4K/8K backdrops (chunked base64 transfer routinely hit
+ * the CDP Runtime.evaluate timeout).
+ *
+ * Returns true when the evaluate succeeded (variables set).
+ */
+export async function injectHeroFromProtocolUrl(
+  session: CdpSession,
+  protocolUrl: string,
+): Promise<boolean> {
+  const expr = `(function(){
+    document.documentElement.dataset.agentskinArtBlobUrl = ${JSON.stringify(protocolUrl)};
+    document.documentElement.style.setProperty('--agentskin-art', 'url("${protocolUrl}")');
+    document.documentElement.style.setProperty('--agentskin-asset-hero', 'url("${protocolUrl}")');
+    return true;
+  })()`;
+  try {
+    const result = await session.evaluate(expr);
+    // evaluate() always returns a string — the IIFE returns `true`, which
+    // String(result) normalizes to 'true'.
+    return result === 'true';
+  } catch (error) {
+    mainWarn('Inject.Hero', `protocol hero inject failed (${protocolUrl}): ${toMessage(error)}`);
     return false;
   }
 }

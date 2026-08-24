@@ -51,13 +51,25 @@ export interface ThemeIdentity {
 }
 
 /**
- * A base64-encoded image asset embedded in a theme package.
+ * An image asset in a theme package.
  * Mirrors `@agentskin/engine`'s `ThemeImage`.
+ *
+ * Two shapes:
+ *  - Embedded `{ filename, mimeType, base64 }`: bytes inlined in the package
+ *    (small assets: icon / preview / creative overlays).
+ *  - External-file `{ filename, mimeType, file }`: the image stays a real
+ *    file on disk, referenced by a safe relative package path. Used for the
+ *    hero backdrop so 4K/8K wallpaper art is preserved losslessly and never
+ *    inflated into base64 (Wallpaper-style). Mutually exclusive with `base64`.
  */
 export interface ThemeImage {
   filename: string;
   mimeType: string;
-  base64: string;
+  /** Inline base64 payload (embedded mode). Mutually exclusive with `file`. */
+  base64?: string;
+  /** Safe relative path within the package (external-file mode). Mutually
+   *  exclusive with `base64`. */
+  file?: string;
 }
 
 /**
@@ -152,4 +164,13 @@ export interface ResolvedThemeTarget {
   imageDataUrls: Record<string, string>;
   /** Backward-compatible alias for `imageDataUrls.hero`. */
   artDataUrl: string | null;
+  /**
+   * External-file assets (lossless 4K/8K wallpaper mode): image id → relative
+   * package path. Mutually exclusive with `imageDataUrls` per asset. Callers
+   * resolve these against the package root to get absolute paths for
+   * `heroPath` file injection.
+   */
+  imageFilePaths?: Record<string, string>;
+  /** External-file hero (relative package path), if any. */
+  artFilePath?: string | null;
 }

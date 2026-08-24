@@ -12,10 +12,12 @@
  */
 
 import { AppMark } from '@/components/app-mark';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useStudioStore } from '@/stores/studioStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { AGENT_META, isAnyAgentId } from '@shared/types';
+import { Search } from 'lucide-react';
 
 /** Ordered analysis steps for the timeline display. */
 const ANALYSIS_STEPS: { id: string; labelKey: keyof UiMessages }[] = [
@@ -31,14 +33,12 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
 
   if (!analysisProgress) {
     return (
-      <div className="flex flex-col items-center justify-center py-6 px-2 text-center">
-        <div
-          className="border border-dashed border-[var(--border-subtle)] p-3"
-          style={{ borderRadius: 'var(--r-xs)' }}
-        >
-          <p className="font-mono text-[10px] text-[var(--fg-2)]">{t.studioNoAnalysisRunning}</p>
-        </div>
-      </div>
+      <EmptyState
+        icon={<Search />}
+        title={t.studioNoAnalysisRunning}
+        iconSize="sm"
+        className="py-6 px-2"
+      />
     );
   }
 
@@ -47,18 +47,15 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
   const currentStepIndex = ANALYSIS_STEPS.findIndex((s) => s.id === step);
 
   return (
-    <div className="space-y-[var(--space-2)]">
+    <div className="space-y-2">
       {/* Header: agent + step badge */}
-      <div
-        className="border border-[var(--border-subtle)] bg-[var(--bg-3)] p-2"
-        style={{ borderRadius: 'var(--r-xs)' }}
-      >
-        <div className="flex items-center gap-[var(--space-1)]">
+      <div className="border border-border bg-muted p-2 rounded-sm">
+        <div className="flex items-center gap-1">
           <AppMark appId={agent as never} size={10} />
-          <span className="font-mono text-[10px] font-semibold   text-[var(--fg-2)]">
+          <span className="font-mono text-micro font-normal   text-muted-foreground">
             {agentMeta?.displayName ?? agent}
           </span>
-          <span className="ml-auto rounded-[var(--r-micro)] bg-[var(--accent)] px-1 py-0 font-mono text-[10px] font-bold text-white">
+          <span className="ml-auto rounded-sm bg-primary px-1 py-0 font-mono text-micro font-normal text-white">
             {step}
           </span>
         </div>
@@ -67,13 +64,13 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
       {/* Progress bar */}
       <div>
         <div className="mb-1 flex items-baseline justify-between">
-          <span className="font-mono text-[10px]   text-[var(--fg-2)]">{t.studioProgress}</span>
-          <span className="font-mono text-[10px] font-bold tabular-nums text-[var(--fg-1)]">
+          <span className="font-mono text-micro   text-muted-foreground">{t.studioProgress}</span>
+          <span className="font-mono text-micro font-normal tabular-nums text-secondary">
             {progress}%
           </span>
         </div>
         <div
-          className="h-[2px] w-full bg-[var(--bg-4)]"
+          className="h-[2px] w-full bg-muted"
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={100}
@@ -81,7 +78,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
           aria-label={t.studioProgress}
         >
           <div
-            className="h-full bg-[var(--accent)] transition-[width] duration-slow"
+            className="h-full bg-primary transition-[width] duration-slow"
             style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
           />
         </div>
@@ -94,25 +91,24 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
           const isCurrent = i === currentStepIndex;
           const isPending = i > currentStepIndex;
           return (
-            <div key={s.id} className="flex items-center gap-[var(--space-1)] py-[3px]">
+            <div key={s.id} className="flex items-center gap-1 py-[3px]">
               {/* Status dot — shape differs by state so it is not colour-only */}
               <span
                 className={[
                   'size-[3px]',
-                  isComplete && 'rounded-[1px] bg-[var(--accent)]',
-                  isCurrent && 'rounded-[var(--dl-radius,2px)] bg-[var(--accent)] animate-pulse',
-                  isPending &&
-                    'rounded-[var(--dl-radius,2px)] bg-[var(--bg-4)] border border-[var(--border-subtle)]',
+                  isComplete && 'rounded-[1px] bg-primary',
+                  isCurrent && 'rounded-[2px] bg-primary',
+                  isPending && 'rounded-[2px] bg-muted border border-border',
                 ]
                   .filter(Boolean)
                   .join(' ')}
               />
               <span
                 className={[
-                  'font-mono text-[10px]',
-                  isCurrent && 'font-semibold text-[var(--fg-1)]',
-                  isComplete && 'text-[var(--fg-2)]',
-                  isPending && 'text-[var(--fg-3)]',
+                  'font-mono text-micro',
+                  isCurrent && 'font-normal text-foreground',
+                  isComplete && 'text-muted-foreground',
+                  isPending && 'text-muted-foreground',
                 ]
                   .filter(Boolean)
                   .join(' ')}
@@ -120,15 +116,12 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
                 {t[s.labelKey] as string}
               </span>
               {isComplete && (
-                <span
-                  className="ml-auto font-mono text-[10px] text-[var(--accent)]"
-                  aria-hidden="true"
-                >
+                <span className="ml-auto font-mono text-micro text-primary" aria-hidden="true">
                   ✓
                 </span>
               )}
               {isCurrent && (
-                <span className="ml-auto font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+                <span className="ml-auto font-mono text-micro tabular-nums text-muted-foreground">
                   {t.studioActiveStatus}
                 </span>
               )}

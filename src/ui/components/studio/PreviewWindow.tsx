@@ -25,6 +25,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppMark } from '@/components/app-mark';
+import { useElementPicker } from '@/hooks/use-element-picker';
+import { usePseudoForce } from '@/hooks/use-pseudo-force';
 import { useLiveDom } from '@/hooks/useLiveDom';
 import { buildSrcDoc, overridesToCss } from '@/lib/dom-export';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -35,6 +37,7 @@ import type { UiMessages } from '@shared/i18n';
 import { sanitizeCSS } from '@shared/safe-css';
 import { AGENT_META } from '@shared/types';
 import { Maximize, X } from 'lucide-react';
+import { DomHighlight } from './dom-highlight';
 
 interface PreviewWindowProps {
   win: PreviewWindowState;
@@ -43,6 +46,14 @@ interface PreviewWindowProps {
   onScaleChange: (scale: number) => void;
   onClose?: () => void;
   t: UiMessages;
+  /** Callback when the iframe ref is ready (onLoad). */
+  onIframeReady?: (iframe: HTMLIFrameElement) => void;
+  /** Whether element picking is active (driven by parent inspector). */
+  pickEnabled?: boolean;
+  /** Callback when an element is picked. */
+  onPick?: (selectorPath: string) => void;
+  /** External picked path to highlight (from inspector). */
+  externalPickedPath?: string | null;
 }
 
 const SCALE_PRESETS = [0.25, 0.38, 0.45, 0.55, 0.75, 1.0];
@@ -51,11 +62,11 @@ const PREVIEW_DEFAULT_SIZE = '800×600';
 const STATUS_BAR_HEIGHT = 'h-[2px]';
 
 const STATUS_COLORS: Record<string, string> = {
-  success: 'bg-green-500',
-  degraded: 'bg-yellow-500',
-  error: 'bg-red-500',
-  loading: 'bg-blue-500',
-  idle: 'bg-gray-500',
+  success: 'bg-cr-success',
+  degraded: 'bg-cr-warning',
+  error: 'bg-destructive',
+  loading: 'bg-info',
+  idle: 'bg-muted-foreground',
 };
 
 export function PreviewWindow({
@@ -65,6 +76,10 @@ export function PreviewWindow({
   onScaleChange,
   onClose,
   t,
+  onIframeReady,
+  pickEnabled = false,
+  onPick,
+  externalPickedPath,
 }: PreviewWindowProps) {
   const toolOverrides = useStudioStore((s) => s.toolOverrides);
   const meta = AGENT_META[win.agentId];
@@ -78,6 +93,26 @@ export function PreviewWindow({
     cacheTTL: 30_000,
     refreshInterval: liveDomRefreshInterval,
   });
+
+  // Element picker hook — drives hover/pick over the iframe.
+  const picker = useElementPicker({
+    scale: win.scale,
+    enabled: pickEnabled,
+    iframeRef,
+    onPick: (path) => onPick?.(path),
+  });
+
+  // Pseudo-force hook — simulates :hover inside the iframe on picked elements.
+  const pseudo = usePseudoForce({ iframeRef });
+
+  // Sync hovered element to pseudo-force :hover inside the iframe.
+  useEffect(() => {
+    if (picker.hoveredPath) {
+      pseudo.forceHover(picker.hoveredPath);
+    } else {
+      pseudo.clear();
+    }
+  }, [picker.hoveredPath, pseudo]);
 
   // local zoom select (does not persist — per-window session state)
   const [zoomOpen, setZoomOpen] = useState(false);
@@ -162,41 +197,66 @@ export function PreviewWindow({
       {/* Body — iframe real DOM, loading, or error state */}
       <div className="pw__body">
         {srcDoc ? (
-          <iframe
-            key={win.id + (domTree ? ':dom' : ':vars')}
-            ref={iframeRef}
-            srcDoc={srcDoc}
-            sandbox="allow-scripts allow-same-origin"
-            onLoad={pushOverrides}
-            className="pw__iframe"
-            style={{ transform: `scale(${win.scale})`, transformOrigin: 'top left' }}
-            title={`${meta.displayName} · ${t.studioPreviewStatus}`}
-            tabIndex={-1}
-          />
+          <div className="relative" style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+            <iframe
+              key={win.id + (domTree ? ':dom' : ':vars')}
+              ref={iframeRef}
+              srcDoc={srcDoc}
+              sandbox="allow-scripts allow-same-origin"
+              onLoad={() => {
+                pushOverrides();
+                onIframeReady?.(iframeRef.current!);
+              }}
+              className="pw__iframe"
+              style={{ transform: `scale(${win.scale})`, transformOrigin: 'top left' }}
+              title={`${meta.displayName} · ${t.studioPreviewStatus}`}
+              tabIndex={-1}
+            />
+            {/* Transparent overlay for element picking */}
+            {pickEnabled && (
+              <button
+                type="button"
+                className="absolute inset-0 cursor-crosshair"
+                style={{ zIndex: 10, background: 'transparent', border: 'none', padding: 0 }}
+                onMouseMove={(e) => {
+                  picker.handleMouseMove(e.clientX, e.clientY);
+                }}
+                onClick={(e) => {
+                  picker.handleClick(e.clientX, e.clientY);
+                }}
+                onMouseLeave={picker.handleMouseLeave}
+              />
+            )}
+            {/* Highlight overlays for hovered / picked elements */}
+            <DomHighlight
+              iframeRef={iframeRef}
+              hoveredPath={picker.hoveredPath}
+              pickedPath={picker.pickedPath ?? externalPickedPath ?? null}
+              scale={win.scale}
+            />
+          </div>
         ) : status === 'loading' || status === 'idle' ? (
-          <div className="flex h-full w-full items-center justify-center bg-[var(--bg-0)]">
-            <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+          <div className="flex h-full w-full items-center justify-center bg-background">
+            <span className="font-mono text-micro text-muted-foreground">
               {t.studioPreviewLoading}
             </span>
           </div>
         ) : status === 'error' ? (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[var(--bg-0)]">
-            <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-background">
+            <span className="font-mono text-micro text-muted-foreground">
               {error ?? t.studioPreviewError}
             </span>
             <button
               type="button"
               onClick={refresh}
-              className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] px-[var(--space-2)] py-0 font-mono text-[length:10px] text-[var(--fg-2)] hover:bg-[var(--bg-3)]"
+              className="rounded-sm border border-border px-2 py-0 font-mono text-micro text-muted-foreground hover:bg-muted"
             >
               {t.studioPreviewRetry}
             </button>
           </div>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-[var(--bg-0)]">
-            <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
-              {t.studioNoSnapshot}
-            </span>
+          <div className="flex h-full w-full items-center justify-center bg-background">
+            <span className="font-mono text-micro text-muted-foreground">{t.studioNoSnapshot}</span>
           </div>
         )}
       </div>
@@ -210,13 +270,13 @@ export function PreviewWindow({
         <div className="relative">
           <button
             type="button"
-            className="font-mono text-[length:10px] text-[var(--fg-2)] hover:text-[var(--fg-0)]"
+            className="font-mono text-micro text-muted-foreground hover:text-foreground"
             onClick={() => setZoomOpen((v) => !v)}
           >
             {t.studioZoomTrigger} ▾
           </button>
           {zoomOpen && (
-            <div className="absolute bottom-full right-0 z-10 mb-1 flex flex-col gap-0 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">
+            <div className="absolute bottom-full right-0 z-[var(--z-content)] mb-1 flex flex-col gap-0 rounded-sm border border-border bg-surface p-0 shadow-md">
               {SCALE_PRESETS.map((s) => (
                 <button
                   key={s}
@@ -225,10 +285,10 @@ export function PreviewWindow({
                     onScaleChange(s);
                     setZoomOpen(false);
                   }}
-                  className="whitespace-nowrap rounded-[var(--r-micro)] px-[var(--space-2)] py-0 text-left font-mono text-[length:10px] hover:bg-[var(--bg-3)]"
+                  className="whitespace-nowrap rounded-sm px-2 py-0 text-left font-mono text-micro hover:bg-muted"
                   style={{
-                    background: win.scale === s ? 'var(--accent-ghost)' : 'transparent',
-                    color: win.scale === s ? 'var(--accent)' : 'var(--fg-0)',
+                    background: win.scale === s ? 'var(--accent)' : 'transparent',
+                    color: win.scale === s ? 'var(--accent-foreground)' : 'var(--foreground)',
                   }}
                 >
                   {s}×

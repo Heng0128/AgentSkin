@@ -12,109 +12,81 @@
 @custom-variant dark (&:is(.dark *));
 
 /* =================================================================== */
-/* AgentSkin Design Tokens                                              */
+/* AgentSkin Design Tokens — Quiet Workbench Theme                      */
 /*                                                                      */
 /* Product Identity: AI Agent Visual Customization Engine               */
-/* Design Language: Precision · Depth · Clarity                         */
-/*    — 精密 · 纵深 · 清晰                                              */
+/* Design Language: Calm · Simple · Restrained · Clear                 */
 /*                                                                      */
-/* Principles (derived from the product itself, not copied):            */
-/*   1. Signal over decoration — every pixel communicates state         */
-/*   2. Layered depth — surfaces distinguish by elevation, not just     */
-/*      color; shadows and borders work together to build hierarchy     */
-/*   3. Monochrome foundation with single accent — neutral grayscale    */
-/*      carries structure; brand red highlights action & critical state */
-/*   4. Compact data density — users manage agent configurations;      */
-/*      tight spacing and tabular fonts keep information legible        */
-/*   5. Deterministic motion — transitions are functional, never       */
-/*      gratuitous; fade for state change, slide for spatial change     */
+/* Principles:                                                          */
+/*   1. Calm interfaces — low cognitive load, no visual noise           */
+/*   2. Simple — every pixel serves a purpose, no decoration            */
+/*   3. Restrained — brand color <8% area, no gradients/blur          */
+/*   4. Clear — hierarchy via gray scale + type size, not color        */
 /* =================================================================== */
 
 :root {
-  /* ------------------------------------------------------------------
-   * Dynamic radius — drives the `rounded-[var(--dl-radius,2px)]` utility.
-   * Default 2px preserves existing visual sharpness; Settings can override.
-   * ------------------------------------------------------------------ */
-  --dl-radius: 2px;
+  /* Dynamic radius — drives the `rounded-[var(--dl-radius,2px)]` utility. */
+  --dl-radius: 6px;
 
-  /* ------------------------------------------------------------------
-   * Typography — Precision Stack
-   * Latin display/UI: Space Grotesk (bundled locally via @fontsource)
-   * CJK: high-quality system fonts only (no web font payload)
-   * Data/code: IBM Plex Mono (bundled locally)
-   * ------------------------------------------------------------------ */
-  --font-display:
-    "Space Grotesk Variable", "Space Grotesk", "Microsoft YaHei UI", "PingFang SC", system-ui,
-    sans-serif;
+  /* Typography — Inter for all UI (no Space Grotesk) */
   --font-ui:
     "Inter Variable", "Inter", "Microsoft YaHei UI", "PingFang SC", -apple-system, "Segoe UI",
     system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Courier New", monospace;
+  --font-mono:
+    "JetBrains Mono", "IBM Plex Mono", "SFMono-Regular", Consolas, ui-monospace, monospace;
 
-  /* ------------------------------------------------------------------
-   * Radius — single-source baseline; every elevation level derives from it.
-   * 6px base gives softly-rounded surfaces (gentle, not sharp-cornered),
-   * so cards/panels read as smooth planes rather than hard-edged tiles.
-   * The Tailwind utility bindings (--radius-sm/md/lg/xl/2xl) are declared
-   * once in the @theme inline block below, all derived from this variable.
-   * ------------------------------------------------------------------ */
+  /* Radius baseline — 6px for all platforms */
   --radius-base: 6px;
 }
 
 /* =================================================================== */
-/* Dark theme — default runtime                                       */
+/* Dark theme                                                            */
 /* =================================================================== */
 :root,
 .dark {
-  /* ---- Background layers (deep cool black → elevated surface) ---- */
-  --background: hsl(220 14% 7%); /* page root / stage floor */
-  --foreground: hsl(215 15% 95%); /* primary text on background */
+  /* ---- Background layers ---- */
+  --background: #0f0f10;
+  --foreground: #fafafa;
 
-  --card: hsl(220 14% 10%); /* standard card surface */
-  --card-foreground: hsl(215 15% 95%);
+  --card: #1e1e22;
+  --card-foreground: #fafafa;
 
-  --card2: hsl(220 14% 13%); /* raised card / sub-panel */
-  --popover: hsl(220 14% 13%);
-  --popover-foreground: hsl(215 15% 95%);
+  --popover: #1e1e22;
+  --popover-foreground: #fafafa;
 
-  --secondary: hsl(220 14% 10%);
-  --secondary-foreground: hsl(215 10% 70%);
+  --secondary: #161618;
+  --secondary-foreground: #a1a1aa;
 
-  --muted: hsl(220 14% 8%);
-  --muted-foreground: hsl(215 8% 50%);
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: #a1a1aa;
 
-  /* ---- Brand Accent — warm coral-red, distinctive identity -------- */
-  --primary: hsl(4 85% 62%); /* main action / focus / progress */
-  --primary-foreground: hsl(0 0% 100%);
+  /* ---- Brand — Warm Red (AgentSkin identity) ---- */
+  --primary: #dc2626;
+  --primary-foreground: #ffffff;
 
-  --accent: hsla(4 85% 62% 13%); /* activated item bg tint */
-  --accent-foreground: hsl(4 75% 66%);
+  --accent: rgba(220, 38, 38, 0.08);
+  --accent-foreground: #b91c1c;
 
-  --destructive: hsl(4 76% 60%);
-  --destructive-foreground: hsl(0 0% 100%);
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
 
-  /* ---- Borders — quiet signal lines; kept low-contrast so surfaces
-         separate by elevation, not by hard divider lines ----------- */
-  --border: hsla(220 13% 17% 55%);
-  --border-strong: hsla(220 13% 26% 60%);
-  --input: hsla(220 13% 18% 80%);
+  /* ---- Borders ---- */
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --input: rgba(255, 255, 255, 0.1);
 
-  /* ---- Focus ring — accent glow ----------------------------------- */
-  --ring: hsla(4 85% 62% 50%);
+  /* ---- Focus ring ---- */
+  --ring: rgba(220, 38, 38, 0.4);
 
-  /* ---- Surface alias (titlebar / sidebar / status bar base) ------- */
-  --surface: hsl(220 14% 9%);
+  /* ---- Surface ---- */
+  --surface: #161618;
 
-  /* ---- Dot pattern (empty canvas background) ---------------------- */
-  --dot: rgba(255, 255, 255, 0.03);
+  /* ---- Shadows (minimal) ---- */
+  --shadow-elev1: 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-elev2: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-elev3: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-float: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 16px 48px rgba(0, 0, 0, 0.5);
 
-  /* ---- Shadow elevation model (3 tiers + float) ------------------- */
-  --shadow-elev1: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-elev2: 0 4px 12px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.3);
-  --shadow-elev3: 0 10px 28px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.3);
-  --shadow-float: 0 16px 48px rgba(0, 0, 0, 0.5), 0 6px 16px rgba(0, 0, 0, 0.4);
-
-  /* Alias for backward compatibility with shadcn components */
   --shadow: var(--shadow-elev1);
   --shadow-xs: var(--shadow-elev1);
   --shadow-sm: var(--shadow-elev1);
@@ -122,94 +94,108 @@
   --shadow-lg: var(--shadow-elev3);
   --shadow-xl: var(--shadow-float);
 
-  /* ---- Chart palette — distinct hues, calibrated for dark ground --- */
-  --chart-1: hsl(4 85% 62%); /* brand accent red  */
-  --chart-2: hsl(155 60% 48%); /* teal-green        */
-  --chart-3: hsl(38 85% 55%); /* amber             */
-  --chart-4: hsl(210 75% 60%); /* blue              */
-  --chart-5: hsl(270 60% 65%); /* violet            */
+  /* ---- Chart ---- */
+  --chart-1: #dc2626;
+  --chart-2: #22c55e;
+  --chart-3: #eab308;
+  --chart-4: #3b82f6;
+  --chart-5: #a855f7;
 
-  /* ---- Sidebar tokens (aligned with primary accent) --------------- */
-  --sidebar: hsl(220 14% 9%);
-  --sidebar-foreground: hsl(215 15% 90%);
-  --sidebar-primary: hsl(4 85% 62%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsla(4 85% 62% 13%);
-  --sidebar-accent-foreground: hsl(4 75% 66%);
-  --sidebar-border: hsla(220 13% 20% 80%);
-  --sidebar-ring: hsla(4 85% 62% 50%);
+  /* ---- Sidebar ---- */
+  --sidebar: #161618;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #dc2626;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(220, 38, 38, 0.08);
+  --sidebar-accent-foreground: #b91c1c;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: rgba(220, 38, 38, 0.4);
 
-  /* ---- Semantic status colors ------------------------------------ */
-  --cr-success: hsl(155 60% 48%); /* teal-green */
-  --cr-warning: hsl(38 85% 55%); /* amber      */
-  --cr-info: hsl(210 75% 60%); /* blue       */
+  /* ---- Semantic status ---- */
+  --cr-success: #22c55e;
+  --cr-warning: #eab308;
+  --cr-info: #3b82f6;
 
-  /* ---- Shorthand aliases (used in component JSX) ----------------- */
-  --brand-red: hsl(4 76% 60%);
-  --brand-red-hover: hsl(4 70% 66%);
-  --dim: hsl(215 8% 50%);
-  --red: hsl(4 76% 60%);
-  --red2: hsl(4 70% 66%);
-  --redbg: hsla(4 76% 60% 12%);
-  --grn: hsl(155 60% 48%);
-  --amb: hsl(38 85% 55%);
-  --blu: hsl(210 75% 60%);
-  --bg2: hsl(220 14% 10%);
-  --border2: hsla(220 13% 30% 70%);
-  --card2: hsl(220 14% 13%);
+  /* ---- RGB channels for alpha compositing ---- */
+  --brand-rgb: 220 38 38;
+
+  /* ---- z-index scale ---- */
+  --z-bg: 0;
+  --z-content: 10;
+  --z-overlay: 50;
+  --z-dock: 90;
+  --z-toast: 100;
+  --z-install: 110;
+  --z-studio-stage: 1;
+  --z-studio-toolbar: 50;
+  --z-studio-dock: 100;
+  --z-studio-topbar: 110;
+  --z-studio-status: 120;
+  --z-studio-dialog: 200;
+
+  /* ---- Deprecated aliases (backward compat) ---- */
+  --brand-red: #ef4444;
+  --red: #ef4444;
+  --red2: #dc2626;
+  --redbg: rgba(239, 68, 68, 0.12);
+  --grn: #22c55e;
+  --amb: #eab308;
+  --blu: #3b82f6;
+  --bg2: #161618;
+  --border2: rgba(255, 255, 255, 0.2);
+  --card2: #1e1e22;
+  --dim: #a1a1aa;
 }
 
 /* =================================================================== */
-/* Light theme — class-based switching                                  */
+/* Light theme                                                           */
 /* =================================================================== */
 :root:not(.dark),
 .light {
-  --dl-radius: 2px;
+  --dl-radius: 6px;
   --dl-density-scale: 1;
 
-  /* ---- Background layers (warm white → subtle depth) ------------- */
-  --background: hsl(40 12% 96%);
-  --foreground: hsl(220 12% 14%);
+  /* ---- Background layers ---- */
+  --background: #ffffff;
+  --foreground: #1a1a1a;
 
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(220 12% 14%);
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
 
-  --card2: hsl(40 8% 94%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(220 12% 14%);
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
 
-  --secondary: hsl(40 8% 94%);
-  --secondary-foreground: hsl(220 10% 28%);
+  --secondary: #f6f6f7;
+  --secondary-foreground: #6b7280;
 
-  --muted: hsl(40 10% 97%);
-  --muted-foreground: hsl(220 6% 42%);
+  --muted: rgba(0, 0, 0, 0.04);
+  --muted-foreground: #6b7280;
 
-  /* ---- Brand Accent — deeper red for light ground contrast -------- */
-  --primary: hsl(4 78% 52%);
-  --primary-foreground: hsl(0 0% 100%);
+  /* ---- Brand — same Warm Red ---- */
+  --primary: #dc2626;
+  --primary-foreground: #ffffff;
 
-  --accent: hsla(4 78% 52% 10%);
-  --accent-foreground: hsl(4 72% 46%);
+  --accent: rgba(220, 38, 38, 0.1);
+  --accent-foreground: #dc2626;
 
-  --destructive: hsl(4 74% 48%);
-  --destructive-foreground: hsl(0 0% 100%);
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
 
-  /* ---- Borders — barely-there warm gray lines -------------------- */
-  --border: hsla(220 10% 20% 7%);
-  --border-strong: hsla(220 10% 20% 13%);
-  --input: hsla(220 10% 20% 12%);
+  /* ---- Borders ---- */
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --input: rgba(0, 0, 0, 0.1);
 
-  /* ---- Focus ring ----------------------------------------------- */
-  --ring: hsla(4 78% 52% 45%);
+  /* ---- Focus ring ---- */
+  --ring: rgba(220, 38, 38, 0.35);
 
-  --surface: hsl(40 12% 93%);
-  --dot: hsla(220 10% 20% 5%);
+  --surface: #f6f6f7;
 
-  /* ---- Shadows — lighter diffusion for bright backgrounds -------- */
-  --shadow-elev1: 0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-elev2: 0 2px 6px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.06);
-  --shadow-elev3: 0 6px 16px rgba(0, 0, 0, 0.07), 0 2px 6px rgba(0, 0, 0, 0.05);
-  --shadow-float: 0 12px 36px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.07);
+  /* ---- Shadows (lighter for bright bg) ---- */
+  --shadow-elev1: 0 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-elev2: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-elev3: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-float: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 16px 48px rgba(0, 0, 0, 0.1);
 
   --shadow: var(--shadow-elev1);
   --shadow-xs: var(--shadow-elev1);
@@ -218,188 +204,142 @@
   --shadow-lg: var(--shadow-elev3);
   --shadow-xl: var(--shadow-float);
 
-  /* ---- Chart palette (darker for light ground) ------------------- */
-  --chart-1: hsl(4 78% 52%);
-  --chart-2: hsl(155 50% 38%);
-  --chart-3: hsl(38 80% 46%);
-  --chart-4: hsl(210 65% 44%);
-  --chart-5: hsl(270 50% 52%);
+  /* ---- Chart ---- */
+  --chart-1: #dc2626;
+  --chart-2: #16a34a;
+  --chart-3: #ca8a04;
+  --chart-4: #2563eb;
+  --chart-5: #9333ea;
 
-  /* ---- Sidebar --------------------------------------------------- */
-  --sidebar: hsl(40 10% 97%);
-  --sidebar-foreground: hsl(220 12% 18%);
-  --sidebar-primary: hsl(4 78% 52%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsla(4 78% 52% 10%);
-  --sidebar-accent-foreground: hsl(4 72% 46%);
-  --sidebar-border: hsla(220 10% 20% 11%);
-  --sidebar-ring: hsla(4 78% 52% 45%);
+  /* ---- Sidebar ---- */
+  --sidebar: #f6f6f7;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #dc2626;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(220, 38, 38, 0.1);
+  --sidebar-accent-foreground: #dc2626;
+  --sidebar-border: rgba(0, 0, 0, 0.1);
+  --sidebar-ring: rgba(220, 38, 38, 0.35);
 
-  /* ---- Semantic status colors ------------------------------------ */
-  --cr-success: hsl(155 50% 38%);
-  --cr-warning: hsl(38 80% 46%);
-  --cr-info: hsl(210 65% 44%);
+  /* ---- Semantic status ---- */
+  --cr-success: #16a34a;
+  --cr-warning: #ca8a04;
+  --cr-info: #2563eb;
 
-  --brand-red: hsl(4 74% 48%);
-  --brand-red-hover: hsl(4 70% 54%);
-  --dim: hsl(220 6% 42%);
-  --red: hsl(4 74% 48%);
-  --red2: hsl(4 70% 44%);
-  --redbg: hsla(4 74% 48% 9%);
-  --grn: hsl(155 50% 38%);
-  --amb: hsl(38 80% 46%);
-  --blu: hsl(210 65% 44%);
-  --bg2: hsl(40 8% 94%);
-  --border2: hsla(220 10% 20% 20%);
-  --card2: hsl(40 8% 94%);
+  /* ---- RGB channels for alpha compositing ---- */
+  --brand-rgb: 220 38 38;
+
+  /* ---- z-index scale ---- */
+  --z-bg: 0;
+  --z-content: 10;
+  --z-overlay: 50;
+  --z-dock: 90;
+  --z-toast: 100;
+  --z-install: 110;
+  --z-studio-stage: 1;
+  --z-studio-toolbar: 50;
+  --z-studio-dock: 100;
+  --z-studio-topbar: 110;
+  --z-studio-status: 120;
+  --z-studio-dialog: 200;
+
+  /* ---- Deprecated aliases ---- */
+  --brand-red: #dc2626;
+  --red: #dc2626;
+  --red2: #b91c1c;
+  --redbg: rgba(220, 38, 38, 0.08);
+  --grn: #16a34a;
+  --amb: #ca8a04;
+  --blu: #2563eb;
+  --bg2: #f6f6f7;
+  --border2: rgba(0, 0, 0, 0.2);
+  --card2: #ffffff;
+  --dim: #6b7280;
 }
 
 /* =================================================================== */
-/* Animation keyframes                                                 */
+/* Tailwind @theme inline — maps CSS vars to Tailwind utilities        */
 /* =================================================================== */
-/* AgentSkin motion rules:                                            */
-/*   · Fade for non-spatial transitions (open/close, appear/disappear)*/
-/*   · Slide for spatial movement (panel expand/collapse, drawer)     */
-/*   · No bounce, no overshoot beyond cubic-bezier(0.16, 1, 0.3, 1)  */
-/*   · Max duration 300ms unless complex layout shift                 */
-/* =================================================================== */
-
-@keyframes agentskin-page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes agentskin-card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(-2px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes shadow-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
-@keyframes indeterminate {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(400%);
-  }
-}
-
-@theme {
-  --animate-page-enter: agentskin-page-enter 280ms cubic-bezier(0.16, 1, 0.3, 1);
-  --animate-card-enter: agentskin-card-enter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-shadow-float: shadow-float 4s ease-in-out infinite;
-  --animate-indeterminate: indeterminate 1.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-
-  --radius-micro: calc(var(--radius-base) * 0.6);
-  --radius-soft: calc(var(--radius-base) * 1.3);
-  --radius-pill: 9999px;
-}
-
 @theme inline {
-  /* ---- Font family mappings ---- */
-  --font-heading: var(--font-ui);
   --font-sans: var(--font-ui);
-  --font-display: var(--font-display);
+  --font-heading: var(--font-ui);
+  --font-display: var(--font-ui);
   --font-mono: var(--font-mono);
 
-  /* ---- Color remapping ---- */
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-card2: var(--card2);
-  --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-surface: var(--surface);
+  --color-card2: var(--card2);
+  --color-border-strong: var(--border-strong);
   --color-cr-success: var(--cr-success);
   --color-cr-warning: var(--cr-warning);
   --color-cr-info: var(--cr-info);
   --color-success: var(--cr-success);
   --color-warning: var(--cr-warning);
   --color-info: var(--cr-info);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
 
-  /* ---- Typography scale ---- */
-  --font-size-micro: 10px;
-  --font-size-label: 11.5px;
-  --font-size-body: 13px;
-  --font-size-body-lg: 15px;
-  --font-size-title: 20px;
-  --font-size-display: 28px;
-  --font-size-hero: 48px;
-  --leading-hero: 1.05;
-  --leading-title: 1.2;
-  --leading-body: 1.55;
-  --leading-micro: 1.4;
+  /* Typography scale */
+  --font-size-micro: 9px;
+  --font-size-label: 10px;
+  --font-size-caption: 11px;
+  --font-size-body: 11px;
+  --font-size-body-lg: 13px;
+  --font-size-title: 16px;
+  --font-size-display: 20px;
+  --leading-title: 1.25;
+  --leading-body: 1.5;
   --tracking-tight: -0.02em;
-  --tracking-mid: 0.05em;
-  --tracking-wide: 0.14em;
 
-  /* ---- Duration scale (multiplied by user motion preference) ---- */
+  /* Duration scale */
   --duration-multiplier: 1;
   --duration-instant: 0ms;
-  --duration-fast: calc(120ms * var(--duration-multiplier, 1));
-  --duration-base: calc(180ms * var(--duration-multiplier, 1));
-  --duration-slow: calc(260ms * var(--duration-multiplier, 1));
-  --duration-slower: calc(400ms * var(--duration-multiplier, 1));
+  --duration-fast: calc(100ms * var(--duration-multiplier, 1));
+  --duration-base: calc(150ms * var(--duration-multiplier, 1));
+  --duration-slow: calc(200ms * var(--duration-multiplier, 1));
+  --duration-slower: calc(280ms * var(--duration-multiplier, 1));
 
-  /* ---- Density scale (multiplied by user density preference) ---- */
+  /* Radius derived scale — all utilities derive from the dynamic --dl-radius
+     so rounded-sm/md/lg/xl FOLLOW the user's radius preference (set in App.tsx
+     from the settings store) and stay consistent with card/panel tokens. */
+  --radius-sm: calc(var(--dl-radius) * 0.75);
+  --radius-md: var(--dl-radius);
+  --radius-lg: calc(var(--dl-radius) * 1.25);
+  --radius-xl: calc(var(--dl-radius) * 1.5);
+  --radius-2xl: calc(var(--dl-radius) * 1.75);
+  --radius-pill: 9999px;
+
+  /* Density */
   --dl-density-scale: 1;
-
-  /* ---- Radius derived scale (from --radius-base: 3px) ---- */
-  --radius-sm: calc(var(--radius-base) * 0.6);
-  --radius-md: var(--radius-base);
-  --radius-lg: calc(var(--radius-base) * 1.5);
-  --radius-xl: calc(var(--radius-base) * 2.5);
-  --radius-2xl: calc(var(--radius-base) * 4);
-
-  /* ---- Shadow utility ---- */
-  --shadow-float: var(--shadow-float);
 }
 
 /* =================================================================== */
@@ -407,7 +347,7 @@
 /* =================================================================== */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
 
   /* Accessibility — reduced motion */
@@ -425,8 +365,8 @@
   body.no-anim *,
   body.no-anim *::before,
   body.no-anim *::after {
-    transition: none;
-    animation: none;
+    transition: none !important;
+    animation: none !important;
   }
 
   html {
@@ -439,9 +379,9 @@
   html.theming *::before,
   html.theming *::after {
     transition:
-      background-color 0.3s ease,
-      color 0.3s ease,
-      border-color 0.3s ease;
+      background-color var(--duration-slow) ease,
+      color var(--duration-slow) ease,
+      border-color var(--duration-slow) ease;
   }
   body {
     @apply overflow-hidden bg-background text-foreground;
@@ -452,8 +392,7 @@
 }
 
 /* =================================================================== */
-/* Global Scrollbar — AgentSkin refined                                 */
-/* Thin track, rounded thumb, transparent until hover                  */
+/* Global Scrollbar                                                     */
 /* =================================================================== */
 * {
   scrollbar-width: thin;
@@ -463,8 +402,8 @@
   scrollbar-color: var(--border-strong) transparent;
 }
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -472,7 +411,7 @@
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: var(--radius-pill);
-  transition: background-color 0.15s;
+  transition: background-color var(--duration-fast);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
@@ -486,15 +425,14 @@
 /* =================================================================== */
 @layer utilities {
   .as-label {
-    font-weight: 500;
-    font-size: 11px;
-    letter-spacing: 0.02em;
+    font-weight: 400;
+    font-size: var(--font-size-label);
+    letter-spacing: 0.03em;
     color: var(--muted-foreground);
   }
 
   .as-micro {
-    font: 400 10px var(--font-ui);
-    letter-spacing: 0.01em;
+    font: 400 var(--font-size-micro) var(--font-ui);
     line-height: 1.5;
     color: var(--muted-foreground);
   }
@@ -502,7 +440,7 @@
   .as-mono {
     font-family: var(--font-mono);
     font-weight: 400;
-    font-size: 11px;
+    font-size: var(--font-size-label);
     color: var(--muted-foreground);
   }
 
@@ -514,26 +452,34 @@
     padding-top: 8px;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border);
-    font-size: 13px;
+    font-size: var(--font-size-body);
   }
   .as-kv-key {
-    font-size: 12px;
+    font-size: var(--font-size-label);
     color: var(--muted-foreground);
   }
   .as-kv-val {
-    font-weight: 500;
+    font-weight: 400;
     color: var(--foreground);
   }
 
-  /* Hero number display */
-  .as-big-num {
-    font-family: var(--font-display);
-    font-size: 48px;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1;
-    color: var(--foreground);
-    font-variant-numeric: tabular-nums;
+  /* Status dot */
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .status-dot.good {
+    background: var(--cr-success);
+  }
+  .status-dot.warn {
+    background: var(--cr-warning);
+  }
+  .status-dot.bad {
+    background: var(--destructive);
+  }
+  .status-dot.idle {
+    color: var(--muted-foreground);
   }
 }
 
@@ -549,7 +495,7 @@ body {
   height: 100%;
 }
 
-/* Input focus — clean border highlight, no glow halo */
+/* Input focus */
 input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):focus,
 textarea:focus,
 select:focus {
@@ -576,16 +522,6 @@ input[type="range"]::-webkit-slider-thumb {
   background: var(--foreground);
   border: 2px solid var(--card);
   cursor: pointer;
-  box-shadow: var(--shadow-xs);
-  transition: transform 0.12s;
-}
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-}
-input[type="range"]::-moz-range-track {
-  height: 4px;
-  border-radius: var(--radius-pill);
-  background: var(--border-strong);
 }
 input[type="range"]::-moz-range-thumb {
   width: 14px;
@@ -615,7 +551,7 @@ input[type="range"]::-moz-range-thumb {
   background: var(--border-strong);
   position: relative;
   cursor: pointer;
-  transition: background-color 0.18s ease;
+  transition: background-color var(--duration-base) ease;
   flex: none;
   border: none;
 }
@@ -628,8 +564,8 @@ input[type="range"]::-moz-range-thumb {
   background: var(--card);
   top: 2px;
   left: 2px;
-  transition: left 0.18s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: left var(--duration-base) ease;
+  box-shadow: var(--shadow-xs);
 }
 .sw.on {
   background: var(--primary);
@@ -645,33 +581,12 @@ input[type="range"]::-moz-range-thumb {
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font: 500 11px var(--font-ui);
-  letter-spacing: 0.01em;
-  padding: 2px 8px;
+  gap: 3px;
+  font: 400 var(--font-size-label) var(--font-ui);
+  padding: 1px 6px;
   border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--accent-foreground);
   white-space: nowrap;
   border: 1px solid var(--border);
-}
-
-/* =================================================================== */
-/* Status Ring                                                          */
-/* =================================================================== */
-.ring-box {
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-lg);
-  display: grid;
-  place-items: center;
-  font: 700 14px var(--font-display);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-  flex: none;
-  background: var(--card);
-}
-.ring-box.st-active {
-  border-color: var(--primary);
-  color: var(--primary);
 }

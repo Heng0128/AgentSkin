@@ -13,7 +13,7 @@ function workbuddyCss(t) {
 ${tokenBlock(t, host)}
 
 body[data-application-name="workbuddy"] {
-  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+  /* color-scheme 已在 tokenBlock() 中声明 (:root 级)，此处删除以避免重复 */
   --wb-accent: ${c.accent};
   --wb-secondary: ${c.secondary};
   --wb-surface: ${c.background};
@@ -210,61 +210,71 @@ body[data-application-name="workbuddy"] {
 }
 
 /* Hero art layer: palette-driven wash, hero visible right side */
-${artLayerCss('', t).replace(/^ #root/m, '#root')}
+${artLayerCss(host, t)}
+
+/* PROBE 2026-08-23: the body picks up --cb-bg-primary/--vscode-editor-background
+   (mapped to the opaque --wb-surface) and paints rgb(9,11,24) OVER the
+   #root::before art layer. Force the body box itself transparent so the art
+   shows; inner panels keep their token-derived surfaces. */
+${host} body,
+body[data-application-name="workbuddy"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
 
 /* teams-container is #root's direct child and ships an opaque grey base */
-.teams-container,
-.teams-container.is-mac {
+${host} .teams-container,
+${host} .teams-container.is-mac {
   background: transparent !important;
 }
 
 /* Grid item containers go transparent so the art shows through */
-[data-view-id] {
+${host} [data-view-id] {
   background: transparent !important;
 }
 
 /* Inner content layers transparent (otherwise they cover the art) */
-.conversation-list,
-.chat-container,
-.wb-cb-chat,
-.chat-main,
-.message-list,
-.main-content,
-.main-content--welcome,
-.sidebar-next,
-.teams-content-wrapper,
-.teams-main-content {
+${host} .conversation-list,
+${host} .chat-container,
+${host} .wb-cb-chat,
+${host} .chat-main,
+${host} .message-list,
+${host} .main-content,
+${host} .main-content--welcome,
+${host} .sidebar-next,
+${host} .teams-content-wrapper,
+${host} .teams-main-content {
   background: transparent !important;
 }
 
 /* Topbar: menubar + window controls (both outside #root, need explicit styling) */
-#workbuddy-menubar-container,
-.codebuddy-menubar,
-#workbuddy-window-controls-container,
-.workbuddy-window-controls {
+${host} #workbuddy-menubar-container,
+${host} .codebuddy-menubar,
+${host} #workbuddy-window-controls-container,
+${host} .workbuddy-window-controls {
   background: color-mix(in srgb, var(--agentskin-surface) 8%, transparent) !important;
   backdrop-filter: blur(24px) saturate(1.15) !important;
   border-bottom: none !important;
 }
 
-.workbuddy-window-control-button {
+${host} .workbuddy-window-control-button {
   background: transparent !important;
   color: var(--agentskin-text) !important;
   transition: background 140ms ease, color 140ms ease !important;
 }
 
-.workbuddy-window-control-button:hover {
+${host} .workbuddy-window-control-button:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 14%, transparent) !important;
   color: var(--agentskin-text) !important;
 }
 
-.workbuddy-window-control-button.close:hover {
+${host} .workbuddy-window-control-button.close:hover {
   background: #e53935 !important;
   color: #ffffff !important;
 }
 
 /* Composer main area: semi-transparent instead of opaque rgb(31,31,31) */
-[class*="_mainArea_"] {
+${host} [class*="_mainArea_"] {
   background: color-mix(in srgb, var(--agentskin-surface) 50%, transparent) !important;
   backdrop-filter: blur(14px) !important;
   border: 1px solid ${alpha(c.accent, 0.25)} !important;
@@ -272,26 +282,26 @@ ${artLayerCss('', t).replace(/^ #root/m, '#root')}
 }
 
 /* Sidebar section labels & collapsible headers: transparent (incl. CSS module variants) */
-.conversation-section-label,
-.collapsible-section-header[class*="_header_"][class*="_headerSticky_"],
-[class*="_headerTopPadding_"][class*="collapsible"] {
+${host} .conversation-section-label,
+${host} .collapsible-section-header[class*="_header_"][class*="_headerSticky_"],
+${host} [class*="_headerTopPadding_"][class*="collapsible"] {
   background: transparent !important;
   background-color: transparent !important;
 }
 
 /* Anonymous layout panels directly under .teams-container (504x502 opaque blocks) */
-.teams-container > div {
+${host} .teams-container > div {
   background: transparent !important;
 }
 
 /* Grid view internal containers */
-[class*="_gridViewItem_"] > div,
-[class*="_gridView_"] > div > div {
+${host} [class*="_gridViewItem_"] > div,
+${host} [class*="_gridView_"] > div > div {
   background: transparent !important;
 }
 
 /* Sidebar search box */
-.my-files-search {
+${host} .my-files-search {
   background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
   border: 1px solid ${alpha(c.accent, 0.15)} !important;
   border-radius: 8px !important;
@@ -299,31 +309,31 @@ ${artLayerCss('', t).replace(/^ #root/m, '#root')}
 }
 
 /* Tencent docs auth guide strip */
-.tencent-docs-auth-guide__permissions {
+${host} .tencent-docs-auth-guide__permissions {
   background: transparent !important;
 }
 
 /* Sidebar: frosted glass */
-[data-view-id="sidebar"] {
+${host} [data-view-id="sidebar"] {
   background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
   border-right: none !important;
   backdrop-filter: blur(24px) saturate(1.15);
 }
 
 /* Main content: open top, light bottom for readability */
-[data-view-id="main-content"] {
+${host} [data-view-id="main-content"] {
   background: linear-gradient(180deg, transparent 0 55%, color-mix(in srgb, var(--agentskin-bg) 42%, transparent) 100%) !important;
 }
 
 /* Detail panel: frosted glass */
-[data-view-id="detail-panel"] {
+${host} [data-view-id="detail-panel"] {
   background: color-mix(in srgb, var(--agentskin-surface) 72%, transparent) !important;
   backdrop-filter: blur(18px) saturate(1.08);
 }
 
 /* Composer focus ring */
-[role="textbox"][contenteditable="true"]:focus,
-.wb-home-composer [contenteditable="true"]:focus {
+${host} [role="textbox"][contenteditable="true"]:focus,
+${host} .wb-home-composer [contenteditable="true"]:focus {
   outline: none !important;
   box-shadow: 0 0 0 2px ${alpha(c.accent, 0.4)}, 0 4px 18px ${alpha(c.secondary, 0.2)} !important;
 }
@@ -361,24 +371,24 @@ body[data-application-name="workbuddy"] ::-webkit-scrollbar-thumb:hover {
    wb-button--ghost / --medium / --icon-only for toolbar icons; there is no
    [class*="primary"] / [class*="send"] class in the DOM (those selectors
    matched nothing and are removed). */
-.wb-button {
+${host} .wb-button {
   transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
-.wb-button--primary:hover,
-.wb-button--filled:hover {
+${host} .wb-button--primary:hover,
+${host} .wb-button--filled:hover {
   filter: brightness(1.07);
   transform: translateY(-1px);
 }
 
-code {
+${host} code {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
   border: 1px solid ${alpha(c.accent, 0.14)} !important;
   border-radius: 6px !important;
 }
 
-pre {
+${host} pre {
   background: var(--agentskin-code-bg) !important;
   color: var(--agentskin-code-fg) !important;
   border: 1px solid ${alpha(c.accent, 0.14)} !important;
@@ -386,16 +396,16 @@ pre {
   border-radius: 10px !important;
 }
 
-pre code {
+${host} pre code {
   border: none !important;
 }
 
-a {
+${host} a {
   color: var(--wb-accent) !important;
   transition: opacity 120ms ease;
 }
 
-a:hover {
+${host} a:hover {
   opacity: 0.82;
 }
 
@@ -404,24 +414,24 @@ a:hover {
    .conversation-list; rows are conversation-item-* (exact BEM). Use the
    precise .conversation-list scope only — [class*="item"] matched 31
    unrelated elements and over-animated them. */
-.conversation-sidebar .conversation-list button,
-.conversation-sidebar [class*="conversation-item"] {
+${host} .conversation-sidebar .conversation-list button,
+${host} .conversation-sidebar [class*="conversation-item"] {
   transition: background 140ms ease;
 }
 
-.menubar-menu-title,
-[class*="menubar"] [class*="title"],
-[class*="menu-bar"] [class*="label"] {
+${host} .menubar-menu-title,
+${host} [class*="menubar"] [class*="title"],
+${host} [class*="menu-bar"] [class*="label"] {
   color: var(--cb-text-secondary) !important;
 }
-.menubar-menu-title:hover,
-[class*="menubar"] [class*="title"]:hover,
-[class*="menu-bar"] [class*="label"]:hover {
+${host} .menubar-menu-title:hover,
+${host} [class*="menubar"] [class*="title"]:hover,
+${host} [class*="menu-bar"] [class*="label"]:hover {
   color: var(--cb-text-primary) !important;
 }
 
 /* Input slot: frosted glass instead of opaque rgb(41,41,41) */
-.wb-home-composer__input-slot {
+${host} .wb-home-composer__input-slot {
   background: color-mix(in srgb, var(--agentskin-surface) 40%, transparent) !important;
   backdrop-filter: blur(12px) saturate(1.1) !important;
   border: 1px solid ${alpha(c.accent, 0.22)} !important;
@@ -429,13 +439,13 @@ a:hover {
   transition: border-color 180ms ease, box-shadow 180ms ease !important;
 }
 
-.wb-home-composer__input-slot:focus-within {
+${host} .wb-home-composer__input-slot:focus-within {
   border-color: ${alpha(c.accent, 0.5)} !important;
   box-shadow: 0 0 0 2px ${alpha(c.accent, 0.12)}, 0 4px 20px ${alpha(c.accent, 0.08)} !important;
 }
 
 /* Quick action pills: semi-transparent accent tint instead of opaque rgb(31,31,31) */
-.quick-actions__item {
+${host} .quick-actions__item {
   background: color-mix(in srgb, var(--agentskin-surface) 35%, transparent) !important;
   border: 1px solid ${alpha(c.accent, 0.18)} !important;
   color: var(--cb-text-secondary) !important;
@@ -445,36 +455,49 @@ a:hover {
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease !important;
 }
 
-.quick-actions__item:hover {
+${host} .quick-actions__item:hover {
   background: color-mix(in srgb, var(--wb-accent) 18%, transparent) !important;
   border-color: ${alpha(c.accent, 0.4)} !important;
   color: var(--cb-text-primary) !important;
 }
 
 /* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
-${nativeDefectFixCss('workbuddy', '')}
+${nativeDefectFixCss('workbuddy', host)}
 
-/* Message bubbles: subtle frosted surfaces */
-[class*="message-bubble"],
-[class*="messageBubble"],
-[class*="msg-content"] {
+/* Message bubbles: subtle frosted surfaces
+   Host-scoped (WorkBuddy is a single-app window, but the bare selectors
+   leaked into any agent's document the style is injected into). */
+${host} [class*="message-bubble"],
+${host} [class*="messageBubble"],
+${host} [class*="msg-content"] {
   background: color-mix(in srgb, var(--agentskin-surface) 38%, transparent) !important;
   backdrop-filter: blur(10px) !important;
   border: 1px solid ${alpha(c.accent, 0.12)} !important;
   border-radius: 14px !important;
 }
 
-[class*="message-bubble"][class*="assistant"],
-[class*="messageBubble"][class*="assistant"],
-[class*="msg-content"][class*="bot"] {
+${host} [class*="message-bubble"][class*="assistant"],
+${host} [class*="messageBubble"][class*="assistant"],
+${host} [class*="msg-content"][class*="bot"] {
   background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
   border-color: ${alpha(c.secondary, 0.15)} !important;
 }
 
 /* Composer container focus glow */
-.wb-home-composer:focus-within [class*="_mainArea_"] {
+${host} .wb-home-composer:focus-within [class*="_mainArea_"] {
   border-color: ${alpha(c.accent, 0.4)} !important;
   box-shadow: 0 2px 24px ${alpha(c.accent, 0.1)} !important;
+}
+
+/* PROBE-VERIFIED 2026-08-23: WorkBuddy's native layout lets the sidebar
+   conversation group section overflow the viewport by ~30px, producing a
+   document-level scrollbar. The app is a fixed-viewport shell (all inner
+   panes scroll themselves), so lock the document box to the viewport.
+   This only clips the shell — internal scroll containers keep working. */
+html.agentskin-host-workbuddy,
+body[data-application-name="workbuddy"] {
+  height: 100vh !important;
+  overflow: hidden !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

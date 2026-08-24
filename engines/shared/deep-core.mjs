@@ -30,6 +30,20 @@
  * boundaries needed for unit testing. In the evaluate context, the entire
  * script runs in the same scope, so _ prefix is sufficient convention.
  *
+ * ## Instance Fields (not static)
+ *
+ * SafeAttachShadowPatcher and FragmentRegistry were rewritten from static
+ * classes to instance classes. Each new DeepCore() creates its own independent
+ * instances, ensuring dispose() does not destroy state belonging to other
+ * DeepCore instances.
+ *
+ * SafeAttachShadowPatcher still maintains a module-level singleton on
+ * Element.prototype.attachShadow (only one patched method can exist on the
+ * global prototype). Coordination is handled via _currentPatcher so that a
+ * later DeepCore install() takes over the patched wrapper (repointing it to
+ * its own inject callback) and uninstall() only restores the original when
+ * the last patcher releases.
+ *
  * @see RFC docs/rfc/2026-08-20-cdp-deep-adaptation-architecture.md
  * @agentskin-engine-keep-alive
  */
@@ -50,72 +64,119 @@
   window.__AGENTSKIN_DEEP_CORE_LOADED__ = true;
 
   // ---------------------------------------------------------------------------
-  // SafeAttachShadowPatcher — attachShadow patch with singleton guard + restore
+  // SafeAttachShadowPatcher — attachShadow patch with instance restore
+  //
+  // Wraps Element.prototype.attachShadow so that every newly created shadow root
+  // (from any host) is passed through a single inject callback.
+  //
+  // State is per-instance. Only ONE patched method exists on the global
+  // prototype at a time; a module-level coordinator (_currentPatcher) keeps
+  // track of which instance is currently installed so that a newer install
+  // can repoint the wrapper before an older instance is disposed.
   // ---------------------------------------------------------------------------
 
+  // Module-level: singleton semantics for the patched prototype method.
+  // Only one of these exists per IIFE regardless of how many DeepCore instances
+  // are created — because Element.prototype.attachShadow cannot be patched
+  // multiple times without nesting.
+  let _origAttachShadow = null;
+  let _currentPatcher = null; // SafeAttachShadowPatcher instance currently owning the patch
+
   class SafeAttachShadowPatcher {
-    static _orig = null;          // Original attachShadow reference
-    static _patched = false;      // Singleton guard
-    static _owned = new WeakMap(); // host element → Set<ShadowRoot>
-    static _inject = null;        // Current inject function
-
-    /**
-     * Install the patch. If already installed, only updates the inject function.
-     * @param {(root: ShadowRoot, host: Element) => void} injectFn
-     */
-    static install(injectFn) {
-      if (this._patched) {
-        this._inject = injectFn;
-        return;
-      }
-      this._orig = Element.prototype.attachShadow;
-      this._inject = injectFn;
-      const self = this;
-      const orig = this._orig;
-
-      Element.prototype.attachShadow = function (...args) {
-        const root = orig.apply(this, args);
-        if (!self._owned.has(self._hostKey(this))) {
-          self._owned.set(self._hostKey(this), new Set());
-        }
-        self._owned.get(self._hostKey(this)).add(root);
-        try { self._inject && self._inject(root, this); } catch (e) { /* 静默 */ }
-        return root;
-      };
-
-      this._patched = true;
-      // Save original reference for remote cleanup by removeEngineInjection
-      window.__agentskin_shadow_orig__ = orig;
+    constructor() {
+      this._inject = null;        // Current inject function (root, host) => void
+      this._owned = new WeakMap(); // host element → Set<ShadowRoot>
+      this._patching = false;     // Whether THIS instance currently owns the patch
     }
 
-    static uninstall() {
-      if (!this._patched) return;
-      Element.prototype.attachShadow = this._orig;
-      this._orig = null;
-      this._patched = false;
+    /**
+     * Install or update the patch.
+     * - If no patch exists yet: captures the original, installs the wrapper.
+     * - If another patcher owns the patch: transfers ownership to this instance.
+     * - If this instance already owns the patch: just updates the inject fn.
+     * @param {(root: ShadowRoot, host: Element) => void} injectFn
+     */
+    install(injectFn) {
+      this._inject = injectFn;
+
+      // This instance already owns the patch → just update the callback.
+      if (this._patching) return;
+
+      // First install ever → capture original and install the wrapper.
+      if (!_currentPatcher) {
+        _origAttachShadow = Element.prototype.attachShadow;
+
+        const orig = _origAttachShadow;
+
+        // The wrapper reads _currentPatcher dynamically at call time so a
+        // newer patcher can take over simply by setting _currentPatcher.
+        const wrapper = function (...args) {
+          const root = orig.apply(this, args);
+          const p = _currentPatcher;
+          if (p) {
+            const key = this;
+            if (!p._owned.has(key)) {
+              p._owned.set(key, new Set());
+            }
+            p._owned.get(key).add(root);
+            try { p._inject && p._inject(root, this); } catch (e) { /* 静默 */ }
+          }
+          return root;
+        };
+
+        Element.prototype.attachShadow = wrapper;
+
+        // Expose the original for the main-process cleanup expression.
+        window.__agentskin_shadow_orig__ = orig;
+      }
+      // Another patcher owns the patch → transfer ownership. Keep the same
+      // wrapper; just swap _currentPatcher. The wrapper reads the current
+      // patcher at call time, so the new patcher's callback takes effect
+      // immediately. The old patcher keeps its _owned bookkeeping for its
+      // own eventual dispose() but no longer receives inject calls.
+      else {
+        _currentPatcher._patching = false;
+      }
+
+      _currentPatcher = this;
+      this._patching = true;
+    }
+
+    /**
+     * Restore the original attachShadow and clean up.
+     * Safe to call multiple times; only acts if this instance owns the patch.
+     */
+    uninstall() {
+      if (!this._patching) return;
+      Element.prototype.attachShadow = _origAttachShadow;
+      this._patching = false;
       this._inject = null;
+      _origAttachShadow = null;
+      _currentPatcher = null;
       delete window.__agentskin_shadow_orig__;
     }
 
-    static get isPatched() { return this._patched; }
-
-    // Use the element itself as the WeakMap key
-    static _hostKey(el) { return el; }
+    get isPatched() { return this._patching; }
   }
 
   // ---------------------------------------------------------------------------
   // FragmentRegistry — Modular CSS fragment lifecycle management
+  //
+  // Each instance holds its own _fragments Map so that two DeepCore instances
+  // can coexist without one's dispose() destroying the other's fragments.
   // ---------------------------------------------------------------------------
 
   class FragmentRegistry {
-    static _fragments = new Map(); // id -> { css, sheet?, active }
+    constructor() {
+      this._fragments = new Map(); // id -> { css, sheet?, active }
+    }
 
     /**
      * Register a CSS fragment. Does not yet inject it.
      * @param {string} id Fragment identifier
      * @param {string} css CSS source text
      */
-    static register(id, css) {
+    register(id, css) {
       this._fragments.set(id, { css, sheet: null, active: false });
     }
 
@@ -124,7 +185,7 @@
      * Inserted BEFORE the 'custom' layer so custom CSS always wins.
      * @param {string} id Fragment identifier
      */
-    static activate(id) {
+    activate(id) {
       const frag = this._fragments.get(id);
       if (!frag || frag.active) return;
 
@@ -154,7 +215,7 @@
      * Deactivate a fragment and remove its CSS from adoptedStyleSheets.
      * @param {string} id Fragment identifier
      */
-    static deactivate(id) {
+    deactivate(id) {
       const frag = this._fragments.get(id);
       if (!frag || !frag.active) return;
       document.adoptedStyleSheets = (document.adoptedStyleSheets || []).filter(
@@ -169,7 +230,7 @@
      * @param {string} id Fragment identifier
      * @param {string} newCss New CSS source
      */
-    static hotReplace(id, newCss) {
+    hotReplace(id, newCss) {
       const frag = this._fragments.get(id);
       if (!frag) {
         this.register(id, newCss);
@@ -193,7 +254,7 @@
     /**
      * Dispose all fragments and clear registry.
      */
-    static dispose() {
+    dispose() {
       for (const id of [...this._fragments.keys()]) {
         this.deactivate(id);
       }
@@ -342,7 +403,14 @@
   }
 
   // ---------------------------------------------------------------------------
-  // DeepCore — Main entry point (encapsulates all modules above)
+  // DeepCore — Main entry point
+  //
+  // Each instance owns independent:
+  //   this._fragmentRegistry  (was FragmentRegistry._fragments static)
+  //   this._shadowPatcher     (was SafeAttachShadowPatcher._orig/_patched/_owned/_inject static)
+  //
+  // dispose() only cleans up THIS instance's state — other DeepCore instances
+  // are unaffected.
   // ---------------------------------------------------------------------------
 
   class DeepCore {
@@ -358,6 +426,10 @@
       this._disposers = [];
       this._marker = '__agentskin_' + (this._ctx.agent || 'unknown') + '_adapter__';
 
+      // Per-instance state (was static fields on helper classes)
+      this._fragmentRegistry = new FragmentRegistry();
+      this._shadowPatcher = new SafeAttachShadowPatcher();
+
       try {
         this._init();
         window.__AGENTSKIN_DEEP_CORE__ = this;
@@ -370,10 +442,10 @@
     }
 
     _init() {
-      // 1. Register all fragments
+      // 1. Register all fragments (instance-level registry)
       const fragments = this._config.fragments || {};
       for (const id in fragments) {
-        FragmentRegistry.register(id, fragments[id]);
+        this._fragmentRegistry.register(id, fragments[id]);
       }
 
       // 2. ShadowPiercer (layered degradation)
@@ -382,12 +454,12 @@
       // 3. RouteDetector (with history restore)
       const self = this;
       const routeHandle = initRouteDetector(this._config.routes || [], function (from, to) {
-        if (to && to.enterFragment) FragmentRegistry.activate(to.enterFragment);
+        if (to && to.enterFragment) self._fragmentRegistry.activate(to.enterFragment);
         if (from) {
           const routes = self._config.routes || [];
           for (let i = 0; i < routes.length; i++) {
             if (routes[i].id === from && routes[i].exitFragment) {
-              FragmentRegistry.deactivate(routes[i].exitFragment);
+              self._fragmentRegistry.deactivate(routes[i].exitFragment);
               break;
             }
           }
@@ -449,7 +521,7 @@
 
       // Layer 3: attachShadow patch (only when mode='all')
       if (config.shadowMode === 'all') {
-        SafeAttachShadowPatcher.install(function (root) { injectIntoRoot(root); });
+        this._shadowPatcher.install(function (root) { injectIntoRoot(root); });
       }
     }
 
@@ -459,8 +531,12 @@
       // wrapping from the existing adapter.mjs code.
     }
 
+    // ── Public API (preserved contract) ─────────────────────────────────────
+
     /**
-     * Full cleanup — dispose fragments, restore prototypes, disconnect observers.
+     * Full cleanup — dispose ONLY this instance's state.
+     * Does not affect other DeepCore instances (there should be at most one
+     * live at a time anyway, but static safety is guaranteed).
      */
     dispose() {
       for (let i = 0; i < this._observers.length; i++) {
@@ -469,13 +545,115 @@
       for (let i = 0; i < this._disposers.length; i++) {
         try { this._disposers[i].disconnect && this._disposers[i].disconnect(); } catch (e) { /* ignore */ }
       }
-      FragmentRegistry.dispose();
-      SafeAttachShadowPatcher.uninstall();
+      this._fragmentRegistry.dispose();
+      this._shadowPatcher.uninstall();
       this._observers = [];
       this._disposers = [];
       delete window.__AGENTSKIN_DEEP_CORE__;
       delete window.__AGENTSKIN_DEEP_CORE_LOADED__;
       // Note: window[this._marker] is cleaned by main process CLEAR_ADAPTERS_BODY
+    }
+
+    /**
+     * Activate a registered fragment by id.
+     * @param {string} id Fragment identifier
+     */
+    activateFragment(id) {
+      this._fragmentRegistry.activate(id);
+    }
+
+    /**
+     * Deactivate a fragment by id.
+     * @param {string} id Fragment identifier
+     */
+    deactivateFragment(id) {
+      this._fragmentRegistry.deactivate(id);
+    }
+
+    /**
+     * Hot-replace fragment CSS without flicker.
+     * @param {string} id Fragment identifier
+     * @param {string} newCss New CSS source
+     */
+    hotReplace(id, newCss) {
+      this._fragmentRegistry.hotReplace(id, newCss);
+    }
+
+    /**
+     * Read all context state values as a key→value map.
+     * Returns the current snapshot computed via initContextEngine's readAll probe.
+     */
+    readContextState() {
+      const specs = this._config.exposedState || [];
+      const result = {};
+      for (const s of specs) {
+        result[s.key] = _readState(s);
+      }
+      return result;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // AdaptiveMutationObserver — three-layer throttle MutationObserver wrapper
+  // Exported on window so every adapter reuses the SAME class instance across
+  // repeated Runtime.evaluate calls. V8 persists global lexical bindings
+  // across evaluate calls, so a top-level `class X {}` in an adapter re-throw
+  // "Identifier 'X' has already been declared" on re-injection and abort the
+  // whole adapter (breaking self-heal → hero image flashes then vanishes).
+  // Defining it ONCE here (inside the idempotency-guarded IIFE) and letting
+  // adapters fall back to window.AdaptiveMutationObserver eliminates that.
+  // ---------------------------------------------------------------------------
+
+  class AdaptiveMutationObserver {
+    constructor(callback, opts = {}) {
+      this.callback = callback;
+      this.throttleWindow = opts.throttleWindow ?? 10000;
+      this.throttleMaxAttempts = opts.throttleMaxAttempts ?? 50;
+      this.retryTimeout = opts.retryTimeout ?? 2000;
+      this.loopThreshold = opts.loopThreshold ?? 1000;
+      this.loopMaxCycles = opts.loopMaxCycles ?? 10;
+      this.attemptCount = 0;
+      this.windowStart = Date.now();
+      this.isThrottled = false;
+      this.elementChanges = new WeakMap();
+      this._throttleTimer = null;
+      this.observer = new MutationObserver((records) => {
+        this._handleMutations(records);
+      });
+    }
+    observe(target, options) { this.observer.observe(target, options); }
+    disconnect() {
+      this.observer.disconnect();
+      if (this._throttleTimer) { clearTimeout(this._throttleTimer); this._throttleTimer = null; }
+    }
+    takeRecords() { return this.observer.takeRecords(); }
+    _handleMutations(records) {
+      const filtered = records.filter((r) => !this._isLooping(r.target));
+      if (filtered.length === 0) return;
+      if (this.isThrottled) return;
+      const now = Date.now();
+      if (now - this.windowStart > this.throttleWindow) { this.windowStart = now; this.attemptCount = 0; }
+      this.attemptCount++;
+      if (this.attemptCount > this.throttleMaxAttempts) { this._enterCooldown(); return; }
+      this.callback(filtered);
+    }
+    _isLooping(node) {
+      const last = this.elementChanges.get(node);
+      const now = Date.now();
+      if (!last || now - last.time > this.loopThreshold) {
+        this.elementChanges.set(node, { count: 1, time: now });
+        return false;
+      }
+      last.count++; last.time = now;
+      return last.count > this.loopMaxCycles;
+    }
+    _enterCooldown() {
+      this.isThrottled = true;
+      console.warn(`[AgentSkin] MutationObserver throttled for ${this.retryTimeout}ms`);
+      this._throttleTimer = setTimeout(() => {
+        this.isThrottled = false; this.attemptCount = 0;
+        this.windowStart = Date.now(); this._throttleTimer = null;
+      }, this.retryTimeout);
     }
   }
 
@@ -488,5 +666,6 @@
   window.DeepCore = DeepCore;
   window.SafeAttachShadowPatcher = SafeAttachShadowPatcher;
   window.FragmentRegistry = FragmentRegistry;
+  window.AdaptiveMutationObserver = AdaptiveMutationObserver;
 
 })();

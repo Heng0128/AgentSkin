@@ -12,13 +12,13 @@ import type { SystemStatus } from '@shared/types';
 /**
  * # StatusBar
  *
- * Fixed 28px strip pinned to the bottom of the window.
+ * Minimal inline status element for the Sidebar bottom area.
  *
- *   Left   → LED + CDP status (running / standby / offline)
- *   Center → platform count · injected count
- *   Right  → inject dock · local · clock · version
+ * Shows: status LED (6px dot) + status label + clock.
  *
- * No controller dependency — reads directly from shellStore + statusStore.
+ * No fixed height — content-driven. No drag region — lives inside Sidebar.
+ *
+ * Reads directly from shellStore + statusStore.
  */
 
 /** Derive CDP/aggregate status from live system snapshot. */
@@ -30,9 +30,11 @@ function deriveCdpState(status: SystemStatus | null): 'running' | 'standby' | 'o
   return anyRunning ? 'standby' : 'offline';
 }
 
-interface LedState {
-  variant: 'running' | 'standby' | 'offline';
-  label: string;
+/** Map status variant to LED dot class. */
+function ledClass(variant: 'running' | 'standby' | 'offline'): string {
+  if (variant === 'running') return 'bg-cr-success';
+  if (variant === 'standby') return 'bg-cr-warning';
+  return 'bg-muted-foreground/30';
 }
 
 /** Local HH:mm:ss tick — re-renders only once a second. */
@@ -52,33 +54,16 @@ function useTick(): string {
  */
 function Clock() {
   return (
-    <span className="font-mono tabular-nums text-[11px] font-medium text-muted-foreground/70">
+    <span className="ml-auto font-mono text-micro tabular-nums text-muted-foreground">
       {useTick()}
     </span>
   );
 }
 
-const LED_STYLE: Record<LedState['variant'], { dot: string }> = {
-  running: {
-    dot: 'bg-cr-success',
-  },
-  standby: {
-    dot: 'bg-cr-warning',
-  },
-  offline: {
-    dot: 'bg-muted-foreground/30',
-  },
-};
-
 export function StatusBar() {
   const locale = useShellStore((s) => s.locale);
-  const appVersion = useShellStore((s) => s.appVersion);
-  const injectDockOpen = useShellStore((s) => s.injectDockOpen);
-  const setInjectDockOpen = useShellStore((s) => s.setInjectDockOpen);
   const status = useStatusStore((s) => s.status);
-  const statusError = useStatusStore((s) => s.error);
-  const statusRefreshing = useStatusStore((s) => s.isRefreshing);
-  const refreshStatus = useStatusStore((s) => s.refreshStatus);
+  const appVersion = useShellStore((s) => s.appVersion);
   const t: UiMessages = uiMessages[locale];
 
   const variant = deriveCdpState(status);
@@ -89,82 +74,22 @@ export function StatusBar() {
         ? t.statusLedStandby
         : t.statusLedOffline;
 
-  const led = LED_STYLE[variant];
-
-  // Aggregate counts from the live status snapshot.
-  const totalPlatforms = status?.apps.length ?? 0;
-  const onlineCount = status?.apps.filter((app) => app.running).length ?? 0;
-  const injectedCount = status?.apps.filter((app) => app.activeThemeId !== null).length ?? 0;
-
   return (
-    <footer className="flex h-[28px] shrink-0 items-center justify-between gap-4  bg-[var(--surface)] px-3 [-webkit-app-region:drag] transition-[background] duration-slower">
-      {/* Left cluster: LED + CDP status. */}
-      <div className="flex items-center gap-1 [-webkit-app-region:no-drag]">
-        <span className={cn('size-2 shrink-0 rounded-full', led.dot)} aria-hidden />
-        <span className="as-label">{cdpLabel}</span>
-      </div>
+    <div className="flex shrink-0 items-center gap-3 border-t border-border bg-[var(--surface)] px-3 py-1">
+      {/* Status — LED + label */}
+      <span className="flex items-center gap-1.5">
+        <span className={cn('status-dot shrink-0', ledClass(variant))} aria-hidden />
+        <span className="text-[11px] text-secondary-foreground">{cdpLabel}</span>
+      </span>
 
-      {/* Center cluster: platform count · injected · status error with retry. */}
-      <div className="hidden items-center gap-1 text-[11px] font-medium lg:flex [-webkit-app-region:no-drag]">
-        <span className="text-muted-foreground">
-          {t.statusPlatformOnline(onlineCount, totalPlatforms)}
-        </span>
-        <span className="text-muted-foreground/40">·</span>
-        <span className="text-muted-foreground">{t.statusInjected(injectedCount)}</span>
-        {statusError ? (
-          <>
-            <span className="text-muted-foreground/40">·</span>
-            <button
-              type="button"
-              disabled={statusRefreshing}
-              onClick={() => void refreshStatus()}
-              title={statusError}
-              className={cn(
-                'inline-flex items-center gap-0 rounded-md border border-destructive/30 bg-card2 px-1 py-0',
-                'text-[11px] leading-tight text-destructive transition-colors duration-fast',
-                statusRefreshing
-                  ? 'cursor-not-allowed opacity-50'
-                  : 'hover:bg-destructive/10 active:translate-y-[1px]',
-              )}
-            >
-              {statusRefreshing ? '···' : '↻'}
-            </button>
-          </>
-        ) : null}
-      </div>
+      <span className="h-3.5 w-px bg-border" aria-hidden />
 
-      {/* Right cluster: inject dock · local · no upload · clock · version. */}
-      <div className="flex items-center gap-2 [-webkit-app-region:no-drag]">
-        {/* Inject dock — icon button (⏏ symbol, 27x27px rounded-md). */}
-        <button
-          type="button"
-          title={t.injectDockTitle}
-          aria-label={t.injectDockTitle}
-          aria-pressed={injectDockOpen}
-          onClick={() => setInjectDockOpen((open) => !open)}
-          className={cn(
-            'inline-grid place-items-center size-7 rounded-md border bg-transparent text-[11px] transition-[background,border-color] duration-slower active:translate-y-[1px]',
-            injectDockOpen
-              ? 'border-primary bg-card2 text-primary'
-              : 'text-muted-foreground hover:bg-card2 hover:text-foreground',
-          )}
-        >
-          ⏏
-        </button>
-        <span className="text-[11px] font-medium text-muted-foreground/60">
-          {t.statusLocalOnly}
-        </span>
-        <Clock />
-        <button
-          type="button"
-          title={t.statusVersionTip}
-          aria-label={t.statusVersionTip}
-          onClick={() => void navigator.clipboard?.writeText(appVersion)}
-          className="text-[11px] font-medium text-muted-foreground/50 transition-colors duration-fast hover:text-foreground"
-        >
-          v{appVersion}
-        </button>
-      </div>
-    </footer>
+      {/* Version */}
+      <span className="text-[11px] tabular-nums text-muted-foreground">
+        {appVersion ? `v${appVersion}` : 'v—'}
+      </span>
+
+      <Clock />
+    </div>
   );
 }

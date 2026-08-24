@@ -12,6 +12,9 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
+import { PageHeader } from '@/components/ui/page-header';
+import { SectionLabel } from '@/components/ui/section-label';
 import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
 import {
   Select,
@@ -53,15 +56,10 @@ function SettingRow({
   children?: ReactNode;
 }) {
   return (
-    <div
-      className="setrow flex items-center justify-between gap-4 p-4 py-2 rounded-md  transition-colors duration-fast hover:bg-card2"
-      style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
-    >
-      <div className="min-w-0">
-        <p className="text-[11px] text-muted-foreground">{title}</p>
-        {description && (
-          <p className="mt-0.5 text-[10px] text-muted-foreground/70">{description}</p>
-        )}
+    <div className="flex items-center justify-between gap-2 py-1.5 px-2 border-b border-border last:border-0">
+      <div>
+        <p className="text-[10px] text-foreground">{title}</p>
+        {description && <p className="text-[10px] text-secondary mt-0.5">{description}</p>}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
     </div>
@@ -105,13 +103,10 @@ function CustomCssEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      <div
-        className="flex items-center justify-between gap-4 rounded-md  px-4 py-2"
-        style={{ background: 'color-mix(in srgb, var(--card) 60%, transparent)' }}
-      >
-        <div className="min-w-0">
-          <p className="text-[13px] font-semibold text-foreground">{t.settingsCustomCssTitle}</p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground/70">{t.settingsCustomCssDesc}</p>
+      <div className="flex items-center justify-between gap-2 py-1.5 px-2 border-b border-border last:border-0">
+        <div>
+          <p className="text-[10px] text-foreground">{t.settingsCustomCssTitle}</p>
+          <p className="text-[10px] text-secondary mt-0.5">{t.settingsCustomCssDesc}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button variant="outline" size="sm" onClick={clear}>
@@ -128,7 +123,7 @@ function CustomCssEditor({
         placeholder={t.settingsCustomCssPlaceholder}
         disabled={loading}
         spellCheck={false}
-        className="min-h-32 w-full resize-y rounded-md bg-card font-mono text-[11px] leading-5"
+        className="min-h-32 w-full resize-y rounded-sm bg-card font-mono text-[13px] leading-5"
       />
     </div>
   );
@@ -158,18 +153,108 @@ function LiveDomRefreshIntervalEditor({ t }: { t: AppController['t'] }) {
         value={String(current)}
         onValueChange={(v) => void saveLiveDomRefreshInterval(Number(v))}
       >
-        <SelectTrigger className="h-7 w-[140px] rounded-md border-border bg-muted text-[11px]">
+        <SelectTrigger className="h-6 w-[160px] rounded-sm border-border bg-muted text-[10px]">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="rounded-md border-border bg-card">
+        <SelectContent className="rounded-sm border-border bg-card">
           {options.map((opt) => (
-            <SelectItem key={opt.value} value={String(opt.value)} className="text-[11px]">
+            <SelectItem key={opt.value} value={String(opt.value)} className="text-[10px]">
               {opt.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
     </SettingRow>
+  );
+}
+
+/** MCP Service settings panel — Blender MCP style: Start/Stop buttons + status + copy URL. */
+function McpSettingsPanel({ t }: { t: AppController['t'] }) {
+  const mcpRunning = useSettingsStore((s) => s.mcpRunning);
+  const mcpUrl = useSettingsStore((s) => s.mcpUrl);
+  const refreshMcpStatus = useSettingsStore((s) => s.refreshMcpStatus);
+  const toggleMcp = useSettingsStore((s) => s.toggleMcp);
+  const [copied, setCopied] = useState(false);
+
+  // Load MCP status on mount.
+  useEffect(() => {
+    void refreshMcpStatus();
+  }, [refreshMcpStatus]);
+
+  const handleCopy = async () => {
+    if (!mcpUrl) return;
+    try {
+      await navigator.clipboard.writeText(mcpUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // ignore clipboard errors
+    }
+  };
+
+  return (
+    <div className="rounded-sm border border-border bg-card p-2">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[10px] text-foreground">{t.settingsMcpTitle}</p>
+          <p className="text-[10px] text-secondary mt-0.5">{t.settingsMcpDesc}</p>
+        </div>
+        <div className="flex items-center gap-1">
+          {mcpRunning ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-6 gap-1 px-2 text-[10px]"
+              onClick={() => void toggleMcp()}
+            >
+              {t.settingsMcpStop}
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              className="h-6 gap-1 px-2 text-[10px]"
+              onClick={() => void toggleMcp()}
+            >
+              {t.settingsMcpStart}
+            </Button>
+          )}
+        </div>
+      </div>
+      <div className="mt-2 space-y-1">
+        <div className="flex items-center gap-2 text-[10px]">
+          <span
+            className={cn(
+              'inline-block size-1.5 rounded-full',
+              mcpRunning ? 'bg-cr-success' : 'bg-muted-foreground/40',
+            )}
+          />
+          <span className={mcpRunning ? 'text-cr-success' : 'text-muted-foreground'}>
+            {mcpRunning ? t.settingsMcpRunning : t.settingsMcpStopped}
+          </span>
+        </div>
+        {mcpRunning && mcpUrl && (
+          <div className="flex items-center gap-1 text-[10px]">
+            <span className="text-muted-foreground">{t.settingsMcpEndpoint}:</span>
+            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[9px] text-secondary">
+              {mcpUrl}
+            </code>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 w-5 p-0"
+              onClick={() => void handleCopy()}
+              title={copied ? t.settingsMcpCopied : t.settingsMcpCopy}
+            >
+              {copied ? (
+                <CheckCircle2 className="size-3 text-cr-success" />
+              ) : (
+                <Copy className="size-3 text-muted-foreground" />
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -281,22 +366,25 @@ export function SettingsPage({ controller }: { controller: AppController }) {
 
   return (
     <div className="setp flex h-full min-h-0 flex-col min-w-0">
-      <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[180px_minmax(0,1fr)]">
+      {/* Global back-to-workspace bar — settings is a full-screen route with
+          the sidebar hidden, so this is the only way back to the app. */}
+      <div className="flex shrink-0 items-center gap-1 border-b border-border px-2 py-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => controller.setRoute('workspace')}
+          className="h-6 gap-1 px-2 text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="size-3.5" />
+          {t.navWorkspace}
+        </Button>
+      </div>
+      <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[160px_minmax(0,1fr)]">
         {/* Section rail — desktop only (md+) */}
-        <aside className="set-rail hidden min-h-0 flex-col gap-[3px] overflow-y-auto  bg-card2 p-2 md:flex">
-          {/* Back control — integrated into the rail header */}
-          <button
-            type="button"
-            onClick={() => controller.setRoute('workspace')}
-            className="flex items-center gap-1 rounded-md px-3 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
-          >
-            <ArrowLeft className="size-3" />
-            {t.settingsBack}
-          </button>
-          <div className="mt-1 h-px bg-border" aria-hidden />
-          <p className="px-3 pt-2 pb-1 text-[11px] font-semibold text-muted-foreground/60">
-            {t.settingsTitle}
-          </p>
+        <aside className="set-rail hidden min-h-0 flex-col gap-1 overflow-y-auto bg-card2 p-2 md:flex">
+          <div className="px-2 pt-2 pb-1">
+            <SectionLabel label={t.settingsTitle} />
+          </div>
           {sections.map((item) => (
             <Button
               key={item.id}
@@ -304,12 +392,17 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               size="sm"
               aria-current={section === item.id ? 'page' : undefined}
               className={cn(
-                'justify-start rounded-md h-8 px-3 text-muted-foreground',
-                section === item.id && 'bg-card text-foreground border-l-[3px] border-primary',
+                'justify-start rounded-sm h-6 px-2 text-muted-foreground',
+                section === item.id && 'bg-accent text-accent-foreground',
               )}
               onClick={() => setSection(item.id)}
             >
-              <item.icon size={14} className="text-muted-foreground/70" />
+              <item.icon
+                size={14}
+                className={cn(
+                  section === item.id ? 'text-accent-foreground/70' : 'text-muted-foreground/70',
+                )}
+              />
               {item.label}
             </Button>
           ))}
@@ -318,22 +411,15 @@ export function SettingsPage({ controller }: { controller: AppController }) {
         {/* Content */}
         <div className="flex min-h-0 flex-col">
           {/* Mobile header: breadcrumb + section selector */}
-          <div className="flex items-center justify-between  px-4 py-2 md:hidden">
-            <button
-              type="button"
-              onClick={() => controller.setRoute('workspace')}
-              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="size-3" />
-              {t.settingsBack}
-            </button>
+          <div className="flex items-center justify-between px-2 py-1.5 md:hidden">
+            <span className="text-[10px] text-secondary">{activeSection.label}</span>
             <Select value={section} onValueChange={(v) => setSection(v as SettingsSection)}>
-              <SelectTrigger className="h-7 w-auto min-w-[120px] rounded-md border-border bg-muted text-[11px]">
+              <SelectTrigger className="h-6 w-auto min-w-[120px] rounded-sm border-border bg-muted text-[10px]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="rounded-md border-border bg-card">
+              <SelectContent className="rounded-sm border-border bg-card">
                 {sectionOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
+                  <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -341,37 +427,36 @@ export function SettingsPage({ controller }: { controller: AppController }) {
             </Select>
           </div>
 
-          {/* Desktop header: breadcrumb + copy logs */}
-          <div className="hidden items-center justify-between  px-4 py-2 md:flex">
-            <h2 className="font-display text-[13px] font-bold tracking-tight">
-              {activeSection.label}
-            </h2>
-            {section === 'system' && logs.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => void handleCopy()}
-                className="h-7 shrink-0 gap-1 px-2 text-[11px]"
-              >
-                {copied ? (
-                  <CheckCircle2 className={cn('size-4', 'text-cr-success')} />
-                ) : (
-                  <Copy className="size-4" />
-                )}
-                {copied ? t.copyLogsDone : t.copyLogs}
-              </Button>
-            )}
+          {/* Desktop header: title + copy logs */}
+          <div className="hidden px-2 py-1.5 md:block">
+            <PageHeader title={activeSection.label}>
+              {section === 'system' && logs.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void handleCopy()}
+                  className="h-6 shrink-0 gap-1 px-2 text-[10px]"
+                >
+                  {copied ? (
+                    <CheckCircle2 className={cn('size-4', 'text-cr-success')} />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
+                  {copied ? t.copyLogsDone : t.copyLogs}
+                </Button>
+              )}
+            </PageHeader>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 py-2">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 py-1.5">
             {section === 'general' && (
               <SettingRow title={t.themeModeLabel}>
                 <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
-                  <SelectTrigger className="h-7 w-[140px] rounded-md border-border bg-muted text-[11px]">
+                  <SelectTrigger className="h-6 w-[160px] rounded-sm border-border bg-muted text-[10px]">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="rounded-md border-border bg-card">
+                  <SelectContent className="rounded-sm border-border bg-card">
                     {themeOptions.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
+                      <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
                         {opt.label}
                       </SelectItem>
                     ))}
@@ -412,15 +497,15 @@ export function SettingsPage({ controller }: { controller: AppController }) {
             )}
             {section === 'system' &&
               (logs.length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-                  <div className="flex size-10 items-center justify-center rounded-md bg-muted/60">
-                    <FileText className="size-4 text-muted-foreground/50" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">{t.noLogs}</p>
-                </div>
+                <EmptyState
+                  icon={<FileText />}
+                  iconSize="lg"
+                  title={t.noLogs}
+                  className="w-full"
+                />
               ) : (
-                <div className="space-y-px rounded-md  bg-card p-2 font-mono text-[11px] leading-5">
-                  <div className="mb-1 px-1 text-[10px] text-muted-foreground/50">
+                <div className="space-y-px rounded-sm bg-card p-2 font-mono text-[10px] leading-5">
+                  <div className="mb-1 px-1 text-micro text-muted-foreground/50">
                     {logs.length} {t.showLogs}
                   </div>
                   <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
@@ -440,18 +525,19 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               ))}
             {section === 'about' && (
               <SettingRow title={t.settingsAbout} description={t.settingsAboutDesc}>
-                <span className="text-[11px] text-muted-foreground/70">v{appVersion}</span>
+                <span className="text-[10px] text-secondary">v{appVersion}</span>
               </SettingRow>
             )}
             {section === 'advanced' && (
               <>
-                <p className="font-mono text-[11px]  text-muted-foreground/70">
+                <p className="font-mono text-[10px] text-muted-foreground/70">
                   {t.settingsAdvancedDesc}
                 </p>
+                <McpSettingsPanel t={t} />
                 <LiveDomRefreshIntervalEditor t={t} />
                 <Accordion type="single" collapsible>
                   <AccordionItem value="diagnostics" className="border-b-0">
-                    <AccordionTrigger className="py-2 text-[13px] font-semibold text-foreground">
+                    <AccordionTrigger className="py-1.5 text-[10px] text-foreground">
                       {t.settingsDiagnosticsTitle}
                     </AccordionTrigger>
                     <AccordionContent>
@@ -461,7 +547,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 </Accordion>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="secondary-inject" className="border-b-0">
-                    <AccordionTrigger className="py-2 text-[13px] font-semibold text-foreground">
+                    <AccordionTrigger className="py-1.5 text-[10px] text-foreground">
                       {t.settingsSecondaryInjectTitle}
                     </AccordionTrigger>
                     <AccordionContent>
@@ -471,7 +557,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 </Accordion>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="custom-css" className="border-b-0">
-                    <AccordionTrigger className="py-2 text-[13px] font-semibold text-foreground">
+                    <AccordionTrigger className="py-1.5 text-[10px] text-foreground">
                       {t.settingsCustomCssTitle}
                     </AccordionTrigger>
                     <AccordionContent>
@@ -481,7 +567,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 </Accordion>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="drift-status" className="border-b-0">
-                    <AccordionTrigger className="py-2 text-[13px] font-semibold text-foreground">
+                    <AccordionTrigger className="py-1.5 text-[10px] text-foreground">
                       {t.settingsDriftStatusTitle}
                     </AccordionTrigger>
                     <AccordionContent>

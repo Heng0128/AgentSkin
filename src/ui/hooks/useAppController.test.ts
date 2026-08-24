@@ -44,25 +44,18 @@ const {
 } = vi.hoisted(() => {
   const noop = vi.fn();
 
-  // shellStore — 10 state fields + 11 actions
+  // shellStore — 5 state fields + 7 actions
   const shellMock = {
     locale: 'en',
     appVersion: '0.0.0-test',
-    booting: true,
     route: 'dashboard' as const,
     activeAgentId: null as string | null,
-    sidebarCollapsed: false,
     logs: [] as string[],
-    logsOpen: false,
     injectDockOpen: false,
-    setActiveAgentId: noop,
     setAppVersion: noop,
-    setBooting: noop,
     setLocale: noop,
     setLogs: noop,
-    setLogsOpen: noop,
     setInjectDockOpen: noop,
-    setSidebarCollapsed: noop,
     toggleSidebar: noop,
     toggleInjectDock: noop,
     setRoute: noop,
@@ -123,7 +116,6 @@ const {
   // installFlowStore
   const installFlowMock = {
     steps: [],
-    flowState: 'idle' as const,
     currentTheme: null as unknown,
     lastError: null as string | null,
     retryInstall: noop,
@@ -140,16 +132,10 @@ const {
 
   // settingsStore
   const settingsMock = {
-    settingsOpen: false,
     settingsSection: 'general' as const,
     settings: {},
-    setSettingsOpen: noop,
     setSettingsSection: noop,
     openSettings: noop,
-    loadSettings: noop,
-    chooseAppPath: noop,
-    clearAppPath: noop,
-    saveAppPort: noop,
   };
 
   // wallpaperStore
@@ -342,22 +328,20 @@ describe('useAppController — smoke tests', () => {
       expect(typeof captured).toBe('object');
     });
 
-    it('exposes shell-level fields (locale, route, appVersion, booting, activeAgentId)', () => {
+    it('exposes shell-level fields (locale, route, appVersion, activeAgentId)', () => {
       renderToString(createElement(Capture));
       const c = captured!;
       expect(c).toHaveProperty('locale');
       expect(c).toHaveProperty('route');
       expect(c).toHaveProperty('appVersion');
-      expect(c).toHaveProperty('booting');
       expect(c).toHaveProperty('activeAgentId');
     });
 
-    it('exposes navigation + layout fields (setRoute, toggleSidebar, sidebarCollapsed, statusStale)', () => {
+    it('exposes navigation + layout fields (setRoute, toggleSidebar, statusStale)', () => {
       renderToString(createElement(Capture));
       const c = captured!;
       expect(c).toHaveProperty('setRoute');
       expect(c).toHaveProperty('toggleSidebar');
-      expect(c).toHaveProperty('sidebarCollapsed');
       expect(c).toHaveProperty('statusStale');
     });
 
@@ -378,12 +362,10 @@ describe('useAppController — smoke tests', () => {
       expect(c).toHaveProperty('busy');
     });
 
-    it('exposes log fields (logs, logsOpen, setLogsOpen, injectDockOpen, setInjectDockOpen)', () => {
+    it('exposes log fields (logs, injectDockOpen, setInjectDockOpen)', () => {
       renderToString(createElement(Capture));
       const c = captured!;
       expect(c).toHaveProperty('logs');
-      expect(c).toHaveProperty('logsOpen');
-      expect(c).toHaveProperty('setLogsOpen');
       expect(c).toHaveProperty('injectDockOpen');
       expect(c).toHaveProperty('setInjectDockOpen');
     });
@@ -413,11 +395,10 @@ describe('useAppController — smoke tests', () => {
       expect(c).toHaveProperty('refreshThemes');
     });
 
-    it('exposes import/install flow fields (importTheme, flowState, retryInstall, cancelInstall)', () => {
+    it('exposes import/install flow fields (importTheme, retryInstall, cancelInstall)', () => {
       renderToString(createElement(Capture));
       const c = captured!;
       expect(c).toHaveProperty('importTheme');
-      expect(c).toHaveProperty('flowState');
       expect(c).toHaveProperty('retryInstall');
       expect(c).toHaveProperty('cancelInstall');
     });
@@ -431,11 +412,9 @@ describe('useAppController — smoke tests', () => {
       expect(c).toHaveProperty('setDeletePrompt');
     });
 
-    it('exposes settings fields (settingsOpen, setSettingsOpen, settings, openSettings)', () => {
+    it('exposes settings fields (settings, openSettings)', () => {
       renderToString(createElement(Capture));
       const c = captured!;
-      expect(c).toHaveProperty('settingsOpen');
-      expect(c).toHaveProperty('setSettingsOpen');
       expect(c).toHaveProperty('settings');
       expect(c).toHaveProperty('openSettings');
     });
@@ -470,9 +449,6 @@ describe('useAppController — smoke tests', () => {
       const c = captured!;
       expect(typeof c.setRoute).toBe('function');
       expect(typeof c.toggleSidebar).toBe('function');
-      expect(typeof c.setSidebarCollapsed).toBe('function');
-      expect(typeof c.setActiveAgentId).toBe('function');
-      expect(typeof c.setLogsOpen).toBe('function');
       expect(typeof c.setInjectDockOpen).toBe('function');
     });
 
@@ -513,9 +489,7 @@ describe('useAppController — smoke tests', () => {
     it('settings actions are functions', () => {
       renderToString(createElement(Capture));
       const c = captured!;
-      expect(typeof c.setSettingsOpen).toBe('function');
       expect(typeof c.openSettings).toBe('function');
-      expect(typeof c.loadSettings).toBe('function');
     });
 
     it('wallpaper actions are functions', () => {

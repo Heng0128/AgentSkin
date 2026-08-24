@@ -65,8 +65,8 @@ export class ErrorBoundary extends Component<Props, State> {
                 <AlertCircle className="size-5 text-destructive" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <h2 className="text-[16px] font-medium tracking-tight">{title}</h2>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
                   {this.state.error?.message ?? desc}
                 </p>
               </div>
@@ -90,8 +90,8 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertCircle className="size-6 text-destructive" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <h1 className="text-lg font-medium tracking-tight">{title}</h1>
+              <p className="mt-1 text-[13px] text-muted-foreground">
                 {this.state.error?.message ?? desc}
               </p>
             </div>

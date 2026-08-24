@@ -30,6 +30,7 @@
 
 import type { AgentId, InstalledTheme } from '../../shared/types';
 import type { ThemeCatalogItem } from './types';
+import { themeCoverUrl } from '../theme/scheme';
 
 /**
  * Minimal data provider the catalog consumes. `ThemeLibrary` satisfies this
@@ -142,12 +143,14 @@ export class ThemeCatalog {
       version: theme.version,
       author: theme.author ?? '',
       description: theme.tagline ?? '',
-      // Preview/icon are served as inline base64 data URLs (the library
-      // already extracts them in toInstalledTheme). We deliberately do NOT use
-      // a custom scheme here — `agentskin-theme://` was never registered as a
-      // privileged scheme and is absent from the renderer CSP, so <img> tags
-      // pointing at it are silently blocked. Base64 renders reliably.
-      preview: theme.coverDataUrl,
+      // Preview: embedded heroes are served as base64 data URLs; external-file
+      // heroes (lossless 4K/8K wallpaper mode) have no base64, so serve the
+      // extracted original via the registered agentskin-theme://cover protocol
+      // (privileged + bypassCSP, see main.ts). The protocol streams the file
+      // directly — pixel-perfect and keeps base64 out of the renderer heap.
+      preview:
+        theme.coverDataUrl ??
+        (theme.coverPath ? themeCoverUrl(theme.id) : null),
       icon: theme.icon ?? null,
       supportedAgents: theme.supportedAgents,
       legacyTargets: theme.legacyTargets ?? [],

@@ -157,10 +157,10 @@ export function AgentStatusBar({
   return (
     <div className="mt-4">
       <div className="mb-2 flex items-center gap-1">
-        <h2 className="text-xs font-semibold tracking-tight text-muted-foreground">
+        <h2 className="text-[11px] font-normal tracking-tight text-muted-foreground">
           {t.workspaceAgentStrip}
         </h2>
-        <span className="inline-flex size-4 items-center justify-center rounded-md bg-secondary text-[11px] font-semibold text-muted-foreground">
+        <span className="inline-flex size-4 items-center justify-center rounded-md bg-secondary text-[11px] font-normal text-muted-foreground">
           {environments.length}
         </span>
         {/* Live refresh indicator — owned by StatusRefreshLabel so its 1s
@@ -244,16 +244,16 @@ export function AgentStatusBar({
 
               {/* Name + live status */}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-semibold leading-tight">
+                <p className="truncate text-[11px] font-normal leading-tight">
                   {env.agent.displayName}
                 </p>
                 <p
                   className={cn(
                     'mt-0.5 truncate text-[10px] leading-tight',
                     hasLivePhase
-                      ? 'font-medium text-cr-warning'
+                      ? 'font-normal text-cr-warning'
                       : isFailed
-                        ? 'font-medium text-destructive'
+                        ? 'font-normal text-destructive'
                         : env.theme
                           ? 'text-muted-foreground'
                           : 'text-muted-foreground/50',

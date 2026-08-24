@@ -27,6 +27,7 @@ import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { format } from 'date-fns';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Activity, Hourglass, PieChart, Trash2 } from 'lucide-react';
 
 // --- Types (mirror AgentSkinApi.getPerformanceHistory response) ---------
@@ -157,7 +158,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
         <div className="flex items-center justify-between  bg-card2 px-3 py-2">
           <div className="flex items-center gap-2">
             <Hourglass className="size-4 text-muted-foreground" />
-            <span className="font-mono text-[11px] font-semibold  text-foreground">
+            <span className="font-mono text-[11px] font-normal  text-foreground">
               {t.settingsPerfRecentHistory}
             </span>
           </div>
@@ -169,11 +170,8 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
         {error ? (
           <div className="px-3 py-4 text-[11px] text-destructive font-mono">{error}</div>
         ) : traces.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <div className="flex size-9 items-center justify-center rounded-md bg-muted/60">
-              <Activity className="size-4 text-muted-foreground/50" />
-            </div>
-            <p className="text-[11px] text-muted-foreground/70">{t.settingsPerfEmpty}</p>
+          <div className="flex items-center justify-center py-12">
+            <EmptyState icon={<Activity />} title={t.settingsPerfEmpty} iconSize="md" />
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -211,7 +209,7 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
         <div className="flex items-center justify-between  bg-card2 px-3 py-2">
           <div className="flex items-center gap-2">
             <Trash2 className="size-4 text-muted-foreground" />
-            <span className="font-mono text-[11px] font-semibold  text-foreground">
+            <span className="font-mono text-[11px] font-normal  text-foreground">
               {t.settingsPerfTimeoutTitle}
             </span>
           </div>
@@ -227,11 +225,8 @@ export function PerformancePanel({ t }: { t: UiMessages }) {
         </div>
 
         {timeoutEvents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-            <div className="flex size-9 items-center justify-center rounded-md bg-muted/60">
-              <Trash2 className="size-4 text-muted-foreground/50" />
-            </div>
-            <p className="text-[11px] text-muted-foreground/70">{t.settingsPerfTimeoutEmpty}</p>
+          <div className="flex items-center justify-center py-12">
+            <EmptyState icon={<Trash2 />} title={t.settingsPerfTimeoutEmpty} iconSize="md" />
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -280,7 +275,7 @@ function StatCard({
         <span className="text-[11px]   text-muted-foreground/60">{label}</span>
       </div>
       <div className="flex items-baseline gap-1">
-        <span className="font-display text-[20px] font-bold tabular-nums text-foreground">
+        <span className="font-display text-[20px] font-normal tabular-nums text-foreground">
           {value}
         </span>
         {suffix && <span className="font-mono text-[10px] text-muted-foreground/50">{suffix}</span>}
@@ -311,7 +306,7 @@ function PerAgentCard({
         <span className="text-[11px]   text-muted-foreground/60">{label}</span>
       </div>
       {entries.length === 0 ? (
-        <span className="font-display text-[20px] font-bold text-muted-foreground/40">—</span>
+        <span className="font-display text-[20px] font-normal text-muted-foreground/40">—</span>
       ) : (
         <div className="flex flex-col gap-0">
           {entries.map(([agentId, avgMs]) => (
@@ -319,7 +314,7 @@ function PerAgentCard({
               <span className="truncate font-mono text-[10px] text-muted-foreground/70">
                 {APP_META[agentId as keyof typeof APP_META]?.name ?? agentId}
               </span>
-              <span className="shrink-0 font-display text-[11px] font-semibold tabular-nums text-foreground">
+              <span className="shrink-0 font-display text-[11px] font-normal tabular-nums text-foreground">
                 {avgMs}ms
               </span>
             </div>
@@ -411,7 +406,7 @@ function TimeoutRow({
         </span>
       </TD>
       <TD className="text-right">
-        <span className="font-mono text-[11px] font-semibold tabular-nums text-cr-warning">
+        <span className="font-mono text-[11px] font-normal tabular-nums text-cr-warning">
           {event.ms}ms
         </span>
       </TD>
@@ -445,7 +440,7 @@ function DurationBadge({ ms, success }: { ms: number; success: boolean }) {
         : 'text-cr-warning';
 
   return (
-    <span className={cn('font-display text-[11px] font-semibold tabular-nums', tone)}>{ms}ms</span>
+    <span className={cn('font-display text-[11px] font-normal tabular-nums', tone)}>{ms}ms</span>
   );
 }
 

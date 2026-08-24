@@ -359,6 +359,7 @@ export function buildSrcDoc(
     '<style>html,body{margin:0}*{box-sizing:border-box}' +
     'img{max-width:100%}a{color:inherit;text-decoration:none}</style>' +
     '<style id="ov"></style>' +
+    '<style id="studio-pseudo-fallback"></style>' +
     `</head><body>${body}</body></html>`
   );
 }

@@ -54,7 +54,7 @@ export function AppDetailsDrawer() {
     <div
       aria-hidden={!drawerAppId}
       className={cn(
-        'absolute bottom-0 left-0 right-0 z-20 h-[300px] border-t border-border-strong bg-card shadow-float',
+        'absolute bottom-0 left-0 right-0 z-[var(--z-overlay)] h-[300px] border-t border-border bg-card',
         'transition-transform duration-slow ease-[cubic-bezier(.16,1,.3,1)]',
         drawerAppId ? 'translate-y-0' : 'translate-y-full pointer-events-none',
       )}
@@ -64,7 +64,7 @@ export function AppDetailsDrawer() {
         type="button"
         onClick={handleClose}
         aria-label={t.appDetailsClose}
-        className="absolute right-3 top-3 z-10 flex size-6 items-center justify-center rounded-[var(--dl-radius,2px)] bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="absolute right-3 top-3 z-[var(--z-content)] flex size-6 items-center justify-center rounded-sm bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <X size={14} />
       </button>
@@ -81,11 +81,11 @@ export function AppDetailsDrawer() {
             {app.adapterMatch ? (
               <AppMark appId={app.adapterMatch} size={48} />
             ) : (
-              <span className="flex size-12 items-center justify-center font-display text-[22px] font-bold tracking-tight text-muted-foreground">
+              <span className="flex size-12 items-center justify-center text-xl font-normal text-muted-foreground">
                 {app.productName.slice(0, 1).toUpperCase()}
               </span>
             )}
-            <span className="max-w-[80px] truncate font-display text-[12px] font-bold tracking-[-.01em] text-foreground">
+            <span className="max-w-[80px] truncate text-[11px] font-medium text-foreground">
               {app.productName}
             </span>
           </div>
@@ -105,7 +105,7 @@ export function AppDetailsDrawer() {
                     </span>
                   ) : (
                     <span className="flex items-center gap-1.5">
-                      <span className="inline-block size-2 rounded-full bg-[var(--muted-foreground)] opacity-25" />
+                      <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
                       {t.appDetailsNotStarted}
                     </span>
                   )
@@ -166,12 +166,10 @@ function DetailRow({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
-      <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+      <span className="font-mono text-micro uppercase tracking-wider text-muted-foreground">
         {label}
       </span>
-      <span
-        className={cn('truncate text-[11px] text-foreground', mono && 'font-mono tabular-nums')}
-      >
+      <span className={cn('truncate text-[11px] text-foreground', mono && 'font-mono tabular-nums')}>
         {value}
       </span>
     </div>

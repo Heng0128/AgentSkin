@@ -182,7 +182,7 @@ export function ExtendedColorsEditor({
     <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header */}
       <div>
-        <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">
+        <h3 className="font-mono text-[11px] font-normal text-[var(--fg-0)]">
           {t.studioExtColors ?? 'Extended Colors'}
         </h3>
         <p className="mt-2 font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">
@@ -193,7 +193,7 @@ export function ExtendedColorsEditor({
 
       {/* ── Add new color ─────────────────────────────────────────────── */}
       <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+        <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
           {t.studioExtAddColor ?? 'Add Color'}
         </h4>
 
@@ -263,7 +263,7 @@ export function ExtendedColorsEditor({
 
       {/* ── Existing colors list ──────────────────────────────────────── */}
       <div className="mt-4 flex-1 overflow-y-auto rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+        <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
           {t.studioExtCurrent ?? 'Current Colors'} ({entries.length})
         </h4>
 
@@ -292,7 +292,7 @@ export function ExtendedColorsEditor({
                   <button
                     type="button"
                     onClick={() => handleColorRowClick(name)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] font-mono text-[10px] font-bold"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] font-mono text-[10px] font-normal"
                     style={{ backgroundColor: hex, color: onColor }}
                     title={`${name} — ${hex}`}
                   >
@@ -301,7 +301,7 @@ export function ExtendedColorsEditor({
 
                   {/* Name + hex */}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-[10px] font-bold text-[var(--fg-0)]">
+                    <div className="truncate font-mono text-[10px] font-normal text-[var(--fg-0)]">
                       {name}
                     </div>
                     <div className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -316,7 +316,7 @@ export function ExtendedColorsEditor({
                   <button
                     type="button"
                     onClick={() => handleDelete(name)}
-                    className="flex size-5 shrink-0 items-center justify-center rounded-[var(--dl-radius,2px)] text-[var(--fg-3)] transition-colors hover:bg-red-500/10 hover:text-red-500"
+                    className="flex size-5 shrink-0 items-center justify-center rounded-[var(--dl-radius,2px)] text-[var(--fg-3)] transition-colors hover:bg-destructive/10 hover:text-destructive"
                     title={`${t.studioExtDelete ?? 'Delete'} ${name}`}
                     aria-label={`${t.studioExtDelete ?? 'Delete'} ${name}`}
                   >
@@ -333,7 +333,7 @@ export function ExtendedColorsEditor({
       {selectedName && selectedHex && (
         <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+            <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioExtOklch ?? 'OKLCH Adjust'} — {selectedName}
             </h4>
             <button
@@ -348,7 +348,7 @@ export function ExtendedColorsEditor({
 
           {/* Live preview swatch */}
           <div
-            className="mt-2 flex h-10 items-center justify-center rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] font-mono text-xs font-bold"
+            className="mt-2 flex h-10 items-center justify-center rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] font-mono text-[11px] font-normal"
             style={{
               backgroundColor: colors[selectedName],
               color: autoOnColor(colors[selectedName]),

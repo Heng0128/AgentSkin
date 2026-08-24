@@ -20,6 +20,7 @@ import { useEffect } from 'react';
 import { useStudioStore } from '@/stores/studioStore';
 
 import type { UiMessages } from '@shared/i18n';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Package, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -59,7 +60,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Package className="h-3.5 w-3.5 text-[var(--fg-2)]" />
-          <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">
+          <h3 className="font-mono text-[11px] font-normal text-[var(--fg-0)]">
             {t.studioBundleListTitle.toUpperCase()}
           </h3>
         </div>
@@ -97,12 +98,8 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
             <p className="font-mono text-[10px] text-[var(--fg-3)]">{t.studioBundleLoading}</p>
           </div>
         ) : bundles.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-[var(--dl-radius,2px)] border border-dashed border-[var(--border-subtle)] bg-[var(--bg-2)] py-12">
-            <Package className="h-6 w-6 text-[var(--fg-3)]" />
-            <p className="mt-2 font-mono text-[10px] text-[var(--fg-3)]">{t.studioBundleEmpty}</p>
-            <p className="mt-1 font-mono text-[10px] text-[var(--fg-3)]">
-              {t.studioBundleImportBtn}
-            </p>
+          <div className="flex items-center justify-center py-12">
+            <EmptyState icon={<Package />} title={t.studioBundleEmpty} hint={t.studioBundleImportBtn} iconSize="md" />
           </div>
         ) : (
           <div className="space-y-2">
@@ -112,7 +109,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
                 className="flex items-center justify-between rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-3"
               >
                 <div className="flex flex-col gap-1">
-                  <span className="font-mono text-xs font-bold text-[var(--fg-0)]">
+                  <span className="font-mono text-[11px] font-normal text-[var(--fg-0)]">
                     {bundle.name}
                   </span>
                   <div className="flex items-center gap-2">
@@ -134,7 +131,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
                 <button
                   type="button"
                   onClick={() => handleDelete(bundle.id)}
-                  className="flex items-center gap-1 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] px-2 py-1 font-mono text-[10px] text-[var(--fg-2)] transition-colors hover:border-red-500 hover:text-red-500"
+                  className="flex items-center gap-1 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] px-2 py-1 font-mono text-[10px] text-[var(--fg-2)] transition-colors hover:border-destructive hover:text-destructive"
                 >
                   <Trash2 className="h-3 w-3" />
                   {t.studioBundleDeleteBtn}

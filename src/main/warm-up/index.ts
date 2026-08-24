@@ -197,36 +197,32 @@ async function buildThumbnailIndex(
   ctx: Pick<MainContext, 'library'>,
   onProgress: BatchProgress,
 ): Promise<number> {
-  const entries = await ctx.library.entries();
-  let count = 0;
+  // Extract covers/icons from the DISK (full base64) rather than the boot
+  // entries cache. The cache intentionally strips base64 payloads to keep
+  // resident memory flat (see ThemeLibrary.entries()); covers need the real
+  // image bytes, so each theme is re-read once here via find().
+  const ids = (await ctx.library.summaries())
+    .slice(0, 30)
+    .map((t) => t.id);
+  const total = Math.max(1, ids.length);
 
-  // Limit to first N themes
-  const BATCH_LIMIT = 30;
-  const batch = entries.slice(0, BATCH_LIMIT);
-  const total = Math.max(1, batch.length);
-
-  // Track per-theme progress independently of `count` (which sums cover+icon
-  // writes and can exceed the theme count) so the splash bar advances
-  // monotonically across the batch.
   let processed = 0;
-  for (const entry of batch) {
+  for (const themeId of ids) {
     try {
-      const { bundle } = entry;
-      const themeId = bundle.theme.id;
+      const { bundle } = await ctx.library.find(themeId);
       // Actually write the extracted cover/icon to the cache dir (the old
       // implementation only touched the assets field — it never populated
       // the cache, so the "index" task was a no-op).
       const cover = extractCover(themeId, bundle);
       const icon = extractIcon(themeId, bundle);
-      count += (cover ? 1 : 0) + (icon ? 1 : 0);
+      processed += (cover ? 1 : 0) + (icon ? 1 : 0);
     } catch {
       // Individual theme failure is non-fatal
     }
-    processed++;
     onProgress(processed, total);
   }
 
-  return count;
+  return processed;
 }
 
 // ── Task 3: Preload adapter modules ──────────────────────────────────

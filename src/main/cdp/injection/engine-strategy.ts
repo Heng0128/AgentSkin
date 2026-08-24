@@ -38,7 +38,12 @@ import {
 import { mainWarnFromCatch } from '../../logger';
 import type { CdpSession } from '../cdp-client';
 import { injectCssLayer } from './css-inject';
-import { injectHeroBlob, injectHeroFromDataUrl, transferImageSet } from './hero-inject';
+import {
+  injectHeroBlob,
+  injectHeroFromDataUrl,
+  injectHeroFromProtocolUrl,
+  transferImageSet,
+} from './hero-inject';
 import { waitForTheme } from './shared';
 import type { ThemeVerification } from './types';
 
@@ -78,6 +83,13 @@ export interface InjectEngineOptions {
   heroDataUrl?: string | null;
   /** Absolute path to hero.webp (alternative to heroDataUrl). */
   heroPath?: string | null;
+  /**
+   * agentskin-theme://hero/<id> protocol URL for external-file hero originals.
+   * Preferred over heroDataUrl/heroPath: streams the ORIGINAL wallpaper file
+   * from disk (zero compression, zero base64 over CDP) so multi-MB 4K/8K
+   * backdrops never time out.
+   */
+  heroProtocolUrl?: string | null;
   /** Agent identifier for logging (e.g. "doubao"). */
   agent?: string;
   /** Theme identifier for logging (e.g. "midnight-aurora"). */
@@ -137,6 +149,7 @@ export async function injectThemeViaEngine(
     imageDataUrls,
     heroDataUrl,
     heroPath,
+    heroProtocolUrl,
     agent,
     themeId,
     verifyDelayMs = DEFAULT_VERIFY_DELAY_MS,
@@ -188,7 +201,10 @@ export async function injectThemeViaEngine(
     // Best-effort — target may not have sessionStorage yet.
   }
 
-  // --- Step 2: Image blob URLs (multi-asset, else single hero) ---
+  // --- Step 2: Image blob URLs (multi-asset + hero are independent) ---
+  // Same decoupling as cdp-strategy: creative images may be embedded data
+  // URLs while the hero is an external file (lossless 4K/8K wallpaper mode),
+  // or vice versa — inject both when both are present.
   const imageSet = imageDataUrls && Object.keys(imageDataUrls).length > 0 ? imageDataUrls : null;
   let heroInjected = false;
   let imagesInjected = 0;
@@ -197,12 +213,16 @@ export async function injectThemeViaEngine(
     const result = await transferImageSet(session, imageSet);
     imagesInjected = result.injectedIds.length;
     heroInjected = result.heroInjected;
-  } else if (heroDataUrl) {
+  }
+  if (!heroInjected && heroProtocolUrl) {
+    heroInjected = await injectHeroFromProtocolUrl(session, heroProtocolUrl);
+    imagesInjected += heroInjected ? 1 : 0;
+  } else if (!heroInjected && heroDataUrl) {
     heroInjected = await injectHeroFromDataUrl(session, heroDataUrl);
-    imagesInjected = heroInjected ? 1 : 0;
-  } else if (heroPath) {
+    imagesInjected += heroInjected ? 1 : 0;
+  } else if (!heroInjected && heroPath) {
     heroInjected = await injectHeroBlob(session, heroPath);
-    imagesInjected = heroInjected ? 1 : 0;
+    imagesInjected += heroInjected ? 1 : 0;
   }
   if (heroInjected) {
     heroBlobUrl =
@@ -274,7 +294,7 @@ export async function injectThemeViaEngine(
     layersInjected >= 2 &&
     adapterApplied &&
     verification !== null &&
-    isThemeFullyApplied(verification);
+    isThemeFullyApplied(verification, { requireHero: heroInjected });
 
   return { layersInjected, adapterApplied, heroInjected, imagesInjected, verification, success };
 }

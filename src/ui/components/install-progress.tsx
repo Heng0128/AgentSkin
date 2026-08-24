@@ -41,7 +41,7 @@ function StepRow({ step }: { step: InstallStep }) {
   })();
 
   return (
-    <li className="flex items-start gap-2 text-xs">
+    <li className="flex items-start gap-2 text-[11px]">
       <span className="mt-0.5 shrink-0">{statusIcon}</span>
       <div className="min-w-0 flex-1">
         <span
@@ -178,12 +178,12 @@ export function InstallWizard({
     .slice(-50); // last 50 entries
 
   return (
-    <div className="animate-page-enter fixed bottom-4 left-1/2 z-[110] w-[480px] -translate-x-1/2 rounded-md border bg-popover shadow-float">
+    <div className="animate-page-enter fixed bottom-4 left-1/2 z-[var(--z-install)] w-[480px] -translate-x-1/2 rounded-md border bg-popover shadow-float">
       {/* Header */}
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <img src={appIcon} alt="" className="size-6 rounded" draggable={false} />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold truncate">{title}</p>
+          <p className="truncate text-[16px] font-medium">{title}</p>
           {currentTheme && (
             <p className="text-[11px] text-muted-foreground truncate">{currentTheme}</p>
           )}
@@ -245,10 +245,10 @@ export function InstallWizard({
           </Button>
         )}
         {isComplete && (
-          <span className="text-xs text-cr-success">✓ {t?.installCompleted ?? '完成'}</span>
+          <span className="text-[11px] text-cr-success">✓ {t?.installCompleted ?? '完成'}</span>
         )}
         {isFailed && lastError && (
-          <span className="text-xs text-destructive truncate">{lastError}</span>
+          <span className="text-[11px] text-destructive truncate">{lastError}</span>
         )}
         <div className="ml-auto" />
         {onClose && (isComplete || isFailed || isCancelled) && (

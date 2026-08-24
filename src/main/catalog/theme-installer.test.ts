@@ -201,11 +201,15 @@ describe('ThemeInstaller — 2a multi-asset bundle embedding', () => {
     } as InstalledThemePackage);
 
     const bundle = library.capturedBundles[0] as {
-      assets: { images: Record<string, { base64: string }> };
+      assets: { images: Record<string, { base64?: string; file?: string; filename: string; mimeType: string }> };
     };
     // hero resolved from the image set (not the preview fallback) and no
     // duplicate hero key — the creative loop skips the reserved hero id.
-    expect(bundle.assets.images.hero.base64).toBe(PLACEHOLDER_PNG);
+    // The hero is an EXTERNAL file reference (lossless wallpaper mode) while
+    // creative images stay embedded base64.
+    expect(bundle.assets.images.hero.file).toBe('assets/images/hero.png');
+    expect(bundle.assets.images.hero.base64).toBeUndefined();
     expect(bundle.assets.images.sidebar.base64).toBe(PLACEHOLDER_PNG);
+    expect(bundle.assets.images.mascot.base64).toBe(PLACEHOLDER_PNG);
   });
 });

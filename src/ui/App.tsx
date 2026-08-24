@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { lazy, Suspense, useEffect, useRef } from 'react';
-import CommandPalette from '@/components/CommandPalette';
 import { DetailPanel } from '@/components/detail-panel';
 import { DialogsHost } from '@/components/dialogs-host';
 import { DynamicBackground } from '@/components/dynamic-background';
@@ -14,7 +13,6 @@ import { TitleBar } from '@/components/title-bar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { type Selection, useAppController } from '@/hooks/useAppController';
-import { useCommandPalette } from '@/hooks/useCommandPalette';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settingsStore';
 
@@ -39,14 +37,13 @@ const AppsPage = lazy(() => import('@/pages/AppsPage').then((m) => ({ default: m
 
 export default function App() {
   const controller = useAppController();
-  const palette = useCommandPalette();
   const lastSelection = useRef<Selection>(null);
   const radiusScale = useSettingsStore((s) => s.radiusScale);
   const density = useSettingsStore((s) => s.density);
   const motion = useSettingsStore((s) => s.motion);
 
   // Sync the user-selected corner-radius scale to the CSS variable on
-  // :root so every component using rounded-[var(--dl-radius,2px)] reacts.
+  // :root so every component using radius-aware tokens reacts.
   useEffect(() => {
     document.documentElement.style.setProperty('--dl-radius', `${radiusScale}px`);
   }, [radiusScale]);
@@ -66,12 +63,7 @@ export default function App() {
     document.documentElement.style.setProperty('--duration-multiplier', multiplier);
     document.documentElement.dataset.motion = motion;
   }, [motion]);
-  // P2-6: Previously this assignment ran inside the render function body,
-  // violating React's purity requirement (writing to a ref during render is a
-  // side-effect visible outside the render). In Strict Mode renders can run
-  // twice, so the ref's value would unpredictably clobber the "last" value.
-  // Moving it into a useEffect guarantees it only runs once per actual
-  // committed selection change.
+
   useEffect(() => {
     if (controller.selection) lastSelection.current = controller.selection;
   }, [controller.selection]);
@@ -81,16 +73,13 @@ export default function App() {
   return (
     <ErrorBoundary locale={controller.locale}>
       <DynamicBackground wallpaper={activeWallpaper} render={controller.wallpaper.render} />
-      <main
+      <section
+        role="region"
         className={cn(
-          'relative z-10 grid h-full overflow-hidden font-sans text-foreground',
-          // minmax(0,1fr) — plain `1fr` has an implicit min of auto (content
-          // height): content taller than the viewport blows the row past the
-          // window edge (clipped by overflow-hidden → black bands / lost
-          // content), and shorter content leaves the row at content height
-          // (inconsistent panel sizes across pages). minmax(0,1fr) locks the
-          // middle row to the available space so every page fills identically.
-          'grid-rows-[38px_minmax(0,1fr)_28px]',
+          'relative z-[var(--z-content)] grid h-full overflow-hidden font-sans text-foreground',
+          controller.route === 'settings'
+            ? 'grid-rows-[minmax(0,1fr)]'
+            : 'grid-rows-[minmax(0,1fr)_auto]',
           activeWallpaper ? 'bg-transparent' : 'bg-background',
         )}
         lang={controller.locale === 'zh-CN' ? 'zh-CN' : 'en'}
@@ -100,61 +89,49 @@ export default function App() {
           controller.dropThemeFiles(Array.from(event.dataTransfer.files));
         }}
       >
-        <TitleBar hasWallpaper={!!activeWallpaper} />
-
         <div
           className={cn(
-            'grid min-h-0 transition-[grid-template-columns] duration-slow ease-out',
-            controller.route === 'settings'
-              ? 'grid-cols-[1fr]'
-              : controller.sidebarCollapsed
-                ? 'grid-cols-[62px_minmax(0,1fr)]'
-                : 'grid-cols-[224px_minmax(0,1fr)]',
+            'grid min-h-0 overflow-hidden',
+            controller.route === 'settings' ? 'grid-cols-[1fr]' : 'grid-cols-[52px_1fr]',
           )}
         >
-          {controller.route !== 'settings' && <Sidebar />}
+          {/* Left column: narrow icon sidebar */}
+          {controller.route !== 'settings' && (
+            <div className="flex h-full min-h-0 flex-col">
+              <Sidebar />
+            </div>
+          )}
 
-          <section className="relative flex min-h-0 min-w-0 flex-col">
+          {/* Main column: title bar + scrollable content */}
+          <main className="flex min-h-0 flex-col overflow-hidden">
+            {controller.route !== 'settings' && <TitleBar hasWallpaper={!!activeWallpaper} />}
+
             <div className="min-h-0 flex-1 overflow-y-auto">
-              {/* h-full (not min-h-full): the chain below relies on the parent
-                  having a definite height — `height:100%` (h-full) in the pages
-                  resolves against it. With min-height the resolved height stays
-                  auto, so every page's h-full container collapsed to content
-                  height and the inner scroll regions never engaged.
-                  Padding kept minimal (8 top / 16 sides / 16 bottom) so pages
-                  use nearly the full viewport — the sidebar/title/status bars
-                  already frame the edges, and the inject dock floats above. */}
-              <div
-                className={cn(
-                  'mx-auto h-full w-full p-[8px_16px_16px]',
-                  controller.route !== 'settings' && 'max-w-[1240px]',
-                )}
-              >
-                <div className="h-full animate-page-enter">
-                  <Suspense
-                    fallback={
-                      <div className="flex h-full items-center justify-center">
-                        <Spinner className="size-6" />
-                      </div>
-                    }
-                  >
-                    <ErrorBoundary inline>
-                      {controller.route === 'workspace' && <WorkspacePage />}
-                      {controller.route === 'apps' && <AppsPage />}
-                      {controller.route === 'themes' && <ThemesPage controller={controller} />}
-                      {controller.route === 'wallpaper' && (
-                        <WallpaperEnginePage controller={controller} />
-                      )}
-                      {controller.route === 'settings' && <SettingsPage controller={controller} />}
-                    </ErrorBoundary>
-                  </Suspense>
-                </div>
+              <div className={cn('h-full', controller.route !== 'settings' && 'p-3')}>
+                <Suspense
+                  fallback={
+                    <div className="flex h-full items-center justify-center">
+                      <Spinner className="size-6" />
+                    </div>
+                  }
+                >
+                  <ErrorBoundary inline>
+                    {controller.route === 'workspace' && <WorkspacePage />}
+                    {controller.route === 'apps' && <AppsPage />}
+                    {controller.route === 'themes' && <ThemesPage controller={controller} />}
+                    {controller.route === 'wallpaper' && (
+                      <WallpaperEnginePage controller={controller} />
+                    )}
+                    {controller.route === 'settings' && <SettingsPage controller={controller} />}
+                  </ErrorBoundary>
+                </Suspense>
               </div>
             </div>
-          </section>
+          </main>
         </div>
 
-        <StatusBar />
+        {/* Full-width status bar — spans the whole window below the nav */}
+        {controller.route !== 'settings' && <StatusBar />}
 
         <Dialog
           open={controller.selection !== null}
@@ -200,7 +177,7 @@ export default function App() {
           <div
             key={toast.id}
             className={cn(
-              'fixed bottom-4 left-1/2 z-[100] -translate-x-1/2 rounded-md border px-4 py-2 text-sm shadow-float',
+              'fixed bottom-14 left-1/2 z-[var(--z-toast)] -translate-x-1/2 rounded-md border px-4 py-2 text-[13px] shadow-md',
               toast.tone === 'destructive'
                 ? 'border-destructive/30 bg-destructive/10 text-destructive'
                 : 'border-border bg-popover text-popover-foreground',
@@ -209,7 +186,7 @@ export default function App() {
             {toast.message}
           </div>
         ))}
-      </main>
+      </section>
       {/* Sonner Toaster disabled — custom toast divs rendered above.
           Deliberately kept: the hand-written <div> stack (fixed, bottom-center,
           no max-count off-by-default) matches the historical UX and the
@@ -217,8 +194,6 @@ export default function App() {
           bringing sonner's portal/stacking/animation into the app shell.
           <Toaster position="top-right" richColors /> is available in
           ui/components/ui/sonner.tsx if a future migration is warranted. */}
-
-      <CommandPalette open={palette.open} onOpenChange={palette.setOpen} controller={controller} />
     </ErrorBoundary>
   );
 }

@@ -116,24 +116,24 @@ export function EnvironmentCard({
   const statusLabel = (() => {
     switch (env.status) {
       case 'active':
-        return <b className="text-[10px] font-semibold text-cr-success">{t.envStatusActive}</b>;
+        return <b className="text-[10px] font-normal text-cr-success">{t.envStatusActive}</b>;
       case 'available':
         return (
-          <b className="text-[10px] font-semibold text-muted-foreground">{t.envStatusAvailable}</b>
+          <b className="text-[10px] font-normal text-muted-foreground">{t.envStatusAvailable}</b>
         );
       case 'offline':
         return (
-          <b className="text-[10px] font-semibold text-muted-foreground">{t.envStatusOffline}</b>
+          <b className="text-[10px] font-normal text-muted-foreground">{t.envStatusOffline}</b>
         );
       case 'detecting':
-        return <b className="text-[10px] font-semibold text-cr-warning">{t.statusDetecting}</b>;
+        return <b className="text-[10px] font-normal text-cr-warning">{t.statusDetecting}</b>;
     }
   })();
 
   return (
     <article
       className={cn(
-        'group/card relative flex flex-col overflow-hidden rounded-md  bg-card text-card-foreground',
+        'group/card relative flex flex-col overflow-hidden rounded-[var(--radius-md)]  bg-card text-card-foreground',
         'transition-[background-color,border-color,box-shadow] duration-base ease-out',
         '',
         isActive ? 'border-2 border-primary' : '',
@@ -167,7 +167,7 @@ export function EnvironmentCard({
       />
 
       {/* === Card content === */}
-      <div className="relative z-10 flex flex-1 flex-col p-4">
+      <div className="relative z-[var(--z-content)] flex flex-1 flex-col p-4">
         {/* Top row: icon + title + menu */}
         <div className="flex items-start gap-2">
           {/* Agent icon — shadcn Avatar (image + fallback) */}
@@ -183,7 +183,7 @@ export function EnvironmentCard({
               alt={env.agent.displayName}
               className="object-contain"
             />
-            <AvatarFallback className="bg-card2 rounded-md text-[13px] font-semibold text-muted-foreground">
+            <AvatarFallback className="bg-card2 rounded-md text-[13px] font-normal text-muted-foreground">
               {(env.agent.displayName || env.agent.id).charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -191,9 +191,9 @@ export function EnvironmentCard({
           {/* Name + info */}
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1">
-              <p className="truncate font-display text-sm font-bold">{env.name}</p>
+              <p className="truncate font-display text-[16px] font-medium">{env.name}</p>
               {isActive && (
-                <span className="shrink-0 rounded-md bg-cr-success/15 px-1 py-0 text-[10px] font-semibold text-cr-success">
+                <span className="shrink-0 rounded-md bg-cr-success/15 px-1 py-0 text-[10px] font-normal text-cr-success">
                   {t.activeBadge}
                 </span>
               )}
@@ -256,7 +256,7 @@ export function EnvironmentCard({
               <i className="mb-0.5 block text-[10px] font-mono opacity-70 not-italic">
                 {t.detailVersion}
               </i>
-              <b className="block text-[11.5px] font-semibold tabular-nums text-foreground/80">
+              <b className="block text-[11.5px] font-normal tabular-nums text-foreground/80">
                 {env.detectedVersion || '—'}
               </b>
             </div>
@@ -303,7 +303,7 @@ export function EnvironmentCard({
                     : envToDotVariant(env)
             }
           />
-          <span className="text-[11px] font-medium   text-muted-foreground">
+          <span className="text-[11px] font-normal   text-muted-foreground">
             {progress ? phaseLabel(progress.phase, t) : statusLabel}
           </span>
           {progress && isPhaseActive(progress.phase) ? (
@@ -315,7 +315,7 @@ export function EnvironmentCard({
               {t.statusDetecting}
             </span>
           ) : env.agentInstalled ? (
-            <span className="ml-auto truncate text-[11px] font-medium text-cr-success">
+            <span className="ml-auto truncate text-[11px] font-normal text-cr-success">
               {t.statusInstalled}
               {env.detectedVersion ? ` ${t.versionLabel(env.detectedVersion)}` : ''}
             </span>

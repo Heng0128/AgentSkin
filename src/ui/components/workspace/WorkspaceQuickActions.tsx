@@ -54,7 +54,7 @@ export function WorkspaceQuickActions({ items }: { items: WorkspaceQuickActionIt
             <div className="min-w-0">
               <p
                 className={cn(
-                  'text-sm font-semibold tracking-tight',
+                  'text-[13px] font-normal tracking-tight',
                   item.primary ? 'text-primary' : 'text-foreground',
                 )}
               >

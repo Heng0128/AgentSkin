@@ -2,18 +2,9 @@
 
 import type { AdapterResult, GeneratorInput } from '../ir/types';
 import { toGeneratorInput } from './toGeneratorInput';
+import { AGENT_IDS, type AgentId } from '@shared/types/agent';
 
-/** 6 个 agent 标识（与 C1 check-injection-contract 一致） */
-export const AGENT_IDS = [
-  'traework',
-  'qoderwork',
-  'workbuddy',
-  'doubao',
-  'codex',
-  'zcode',
-] as const;
-
-export type AgentId = (typeof AGENT_IDS)[number];
+export type { AgentId };
 
 /**
  * 为单个 agent 生成 CSS。

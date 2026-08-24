@@ -5,7 +5,7 @@
  * Cross-process file lock for CatPaw automations.
  * Uses O_EXCL flag for atomic creation to avoid race conditions.
  *
- * Lock file: .codebuddy/automations/.lock
+ * Lock file: .agentskin/automations/.lock
  * Format: { "automation": "...", "pid": ..., "acquiredAt": "ISO" }
  */
 
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const LOCK_DIR = path.join(ROOT, '.codebuddy', 'automations');
+const LOCK_DIR = path.join(ROOT, '.agentskin', 'automations');
 const LOCK_FILE = path.join(LOCK_DIR, '.lock');
 const STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 

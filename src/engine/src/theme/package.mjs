@@ -37,7 +37,7 @@ function isValidBase64(value) {
   }
   return true;
 }
-const REMOTE_CSS = /@import\s|url\(\s*["']?(?!data:)/i;
+const REMOTE_CSS = /@import\s|url\(\s*(?!["']?data:)/i;
 const MAX_VERIFICATION_REQUIREMENTS = 32;
 const MAX_VERIFICATION_CONTEXTS = 16;
 const MAX_SELECTORS_PER_REQUIREMENT = 16;
@@ -77,14 +77,29 @@ function validateImageAsset(image, label) {
   }
   assertString(image.filename, `${label}.filename`);
   assertString(image.mimeType, `${label}.mimeType`);
-  assertString(image.base64, `${label}.base64`);
   if (path.basename(image.filename) !== image.filename) {
     throw new Error(`${label}.filename must be a safe basename.`);
   }
   if (!SAFE_IMAGE_TYPES.has(image.mimeType)) {
     throw new Error(`${label}.mimeType '${image.mimeType}' is not supported.`);
   }
-  if (!isValidBase64(image.base64)) throw new Error(`${label}.base64 must contain valid Base64 data.`);
+  // External-file mode (lossless — the image stays a real file on disk and is
+  // streamed at apply time, so 4K/8K wallpaper art is never re-encoded or
+  // inflated into base64). `file` is a safe relative path within the theme
+  // package; base64 mode remains for legacy / small embedded assets.
+  const hasFile = typeof image.file === "string" && image.file.length > 0;
+  const hasBase64 = typeof image.base64 === "string" && image.base64.length > 0;
+  if (hasFile === hasBase64) {
+    throw new Error(`${label} must declare exactly one of 'file' (external path) or 'base64'.`);
+  }
+  if (hasFile) {
+    const safeFile = image.file.replace(/\\/g, "/");
+    if (path.isAbsolute(safeFile) || safeFile.includes("..") || safeFile.startsWith("/")) {
+      throw new Error(`${label}.file must be a safe relative path.`);
+    }
+  } else if (!isValidBase64(image.base64)) {
+    throw new Error(`${label}.base64 must contain valid Base64 data.`);
+  }
 }
 
 function resolvedImageAssets(bundle) {
@@ -444,7 +459,9 @@ export function validateThemePackage(bundle) {
     for (const [name, image] of images) {
       if (!SAFE_ID.test(name)) throw new Error(`assets.images contains invalid image id '${name}'.`);
       validateImageAsset(image, `assets.images.${name}`);
-      imageTotalBase64 += image.base64.length;
+      // External-file assets carry no base64 — only embedded ones count toward
+      // the volume gate, so lossless 4K/8K wallpaper files are never rejected.
+      if (typeof image.base64 === "string") imageTotalBase64 += image.base64.length;
     }
     if (imageTotalBase64 > MAX_THEME_IMAGE_BASE64) {
       throw new Error(`assets.images cumulative base64 exceeds ${MAX_THEME_IMAGE_BASE64} bytes.`);
@@ -455,7 +472,7 @@ export function validateThemePackage(bundle) {
     if (bundle.assets.images?.hero) {
       throw new Error("assets.art cannot be combined with assets.images.hero.");
     }
-    if (bundle.assets.art.base64.length > MAX_THEME_IMAGE_BASE64) {
+    if (typeof bundle.assets.art.base64 === "string" && bundle.assets.art.base64.length > MAX_THEME_IMAGE_BASE64) {
       throw new Error(`assets.art base64 exceeds ${MAX_THEME_IMAGE_BASE64} bytes.`);
     }
   }
@@ -481,17 +498,28 @@ export function resolveThemeTarget(bundle, appId) {
     throw new Error(`Theme '${bundle.theme.id}' does not support app '${appId}'.`);
   }
   const imageAssets = resolvedImageAssets(bundle);
-  const imageDataUrls = Object.fromEntries(Object.entries(imageAssets).map(([name, image]) => [
-    name,
-    `data:${image.mimeType};base64,${image.base64}`,
-  ]));
+  // External-file assets resolve to their relative package path; embedded
+  // assets resolve to data URLs. Callers (theme-installer / store) are
+  // responsible for turning the relative `file` path into an absolute path
+  // against the package root at apply time.
+  const imageDataUrls = {};
+  const imageFilePaths = {};
+  for (const [name, image] of Object.entries(imageAssets)) {
+    if (typeof image.file === "string") {
+      imageFilePaths[name] = image.file;
+    } else {
+      imageDataUrls[name] = `data:${image.mimeType};base64,${image.base64}`;
+    }
+  }
   return {
     theme: bundle.theme,
     css: target.css,
     options: target.options ?? {},
     verification: target.verification ?? null,
     imageDataUrls,
+    imageFilePaths,
     artDataUrl: imageDataUrls.hero ?? null,
+    artFilePath: imageFilePaths.hero ?? null,
     decorations: bundle.decorations ?? null,
   };
 }

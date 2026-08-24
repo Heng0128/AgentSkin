@@ -3,69 +3,85 @@
  * TraeWork CN (VS Code / solo-lite shell).
  * Art layer on #root::before, punch-through on chat panels.
  */
-/*
- * AdaptiveMutationObserver — three-layer throttle wrapper
- * Embedded from src/engine/src/runtime/adaptive-observer.mjs
- * Prevents observer storms from third-party agent re-renders.
- */
-class AdaptiveMutationObserver {
-  constructor(callback, opts = {}) {
-    this.callback = callback;
-    this.throttleWindow = opts.throttleWindow ?? 10000;
-    this.throttleMaxAttempts = opts.throttleMaxAttempts ?? 50;
-    this.retryTimeout = opts.retryTimeout ?? 2000;
-    this.loopThreshold = opts.loopThreshold ?? 1000;
-    this.loopMaxCycles = opts.loopMaxCycles ?? 10;
-    this.attemptCount = 0;
-    this.windowStart = Date.now();
-    this.isThrottled = false;
-    this.elementChanges = new WeakMap();
-    this._throttleTimer = null;
-    this.observer = new MutationObserver((records) => {
-      this._handleMutations(records);
-    });
-  }
-  observe(target, options) { this.observer.observe(target, options); }
-  disconnect() {
-    this.observer.disconnect();
-    if (this._throttleTimer) { clearTimeout(this._throttleTimer); this._throttleTimer = null; }
-  }
-  takeRecords() { return this.observer.takeRecords(); }
-  _handleMutations(records) {
-    const filtered = records.filter(r => !this._isLooping(r.target));
-    if (filtered.length === 0) return;
-    if (this.isThrottled) return;
-    const now = Date.now();
-    if (now - this.windowStart > this.throttleWindow) { this.windowStart = now; this.attemptCount = 0; }
-    this.attemptCount++;
-    if (this.attemptCount > this.throttleMaxAttempts) { this._enterCooldown(); return; }
-    this.callback(filtered);
-  }
-  _isLooping(node) {
-    const last = this.elementChanges.get(node);
-    const now = Date.now();
-    if (!last || now - last.time > this.loopThreshold) {
-      this.elementChanges.set(node, { count: 1, time: now });
-      return false;
-    }
-    last.count++; last.time = now;
-    return last.count > this.loopMaxCycles;
-  }
-  _enterCooldown() {
-    this.isThrottled = true;
-    console.warn(`[AgentSkin] MutationObserver throttled for ${this.retryTimeout}ms`);
-    this._throttleTimer = setTimeout(() => {
-      this.isThrottled = false; this.attemptCount = 0;
-      this.windowStart = Date.now(); this._throttleTimer = null;
-    }, this.retryTimeout);
-  }
-}
-
 (() => {
   'use strict';
   const HOST_CLASS = 'agentskin-host-traework';
   const MARKER = '__agentskin_traework_adapter__';
+
+  // 幂等兜底：AdaptiveMutationObserver 由 deep-core.mjs 统一导出到
+  // window（同份类，跨多次 Runtime.evaluate 复用）。此处仅在 window 上
+  // 缺失时（deep-core 尚未加载）本地定义一份，避免重注入出现
+  // "Identifier 'AdaptiveMutationObserver' has already been declared" 而中断
+  // 整个 adapter（自愈失效 → hero 图片闪一下即消失）。
+  if (!window.AdaptiveMutationObserver) {
+    window.AdaptiveMutationObserver = class AdaptiveMutationObserver {
+      constructor(callback, opts = {}) {
+        this.callback = callback;
+        this.throttleWindow = opts.throttleWindow ?? 10000;
+        this.throttleMaxAttempts = opts.throttleMaxAttempts ?? 50;
+        this.retryTimeout = opts.retryTimeout ?? 2000;
+        this.loopThreshold = opts.loopThreshold ?? 1000;
+        this.loopMaxCycles = opts.loopMaxCycles ?? 10;
+        this.attemptCount = 0;
+        this.windowStart = Date.now();
+        this.isThrottled = false;
+        this.elementChanges = new WeakMap();
+        this._throttleTimer = null;
+        this.observer = new MutationObserver((records) => {
+          this._handleMutations(records);
+        });
+      }
+      observe(target, options) { this.observer.observe(target, options); }
+      disconnect() {
+        this.observer.disconnect();
+        if (this._throttleTimer) { clearTimeout(this._throttleTimer); this._throttleTimer = null; }
+      }
+      takeRecords() { return this.observer.takeRecords(); }
+      _handleMutations(records) {
+        const filtered = records.filter((r) => !this._isLooping(r.target));
+        if (filtered.length === 0) return;
+        if (this.isThrottled) return;
+        const now = Date.now();
+        if (now - this.windowStart > this.throttleWindow) { this.windowStart = now; this.attemptCount = 0; }
+        this.attemptCount++;
+        if (this.attemptCount > this.throttleMaxAttempts) { this._enterCooldown(); return; }
+        this.callback(filtered);
+      }
+      _isLooping(node) {
+        const last = this.elementChanges.get(node);
+        const now = Date.now();
+        if (!last || now - last.time > this.loopThreshold) {
+          this.elementChanges.set(node, { count: 1, time: now });
+          return false;
+        }
+        last.count++; last.time = now;
+        return last.count > this.loopMaxCycles;
+      }
+      _enterCooldown() {
+        this.isThrottled = true;
+        console.warn(`[AgentSkin] MutationObserver throttled for ${this.retryTimeout}ms`);
+        this._throttleTimer = setTimeout(() => {
+          this.isThrottled = false; this.attemptCount = 0;
+          this.windowStart = Date.now(); this._throttleTimer = null;
+        }, this.retryTimeout);
+      }
+    };
+  }
+
   if (window[MARKER]) return 'already-applied';
+
+  // ═══════════════════════════════════════════════════════════
+  // 治本：adoptedStyleSheets setter 拦截（防止宿主替换数组时丢失图层）
+  // ═══════════════════════════════════════════════════════════
+  // 在赋值源头阻止丢失，而非等丢失后再轮询恢复（治标）。
+  // 使用共享 Sheet 管理器（engines/shared/adopted-sheets-manager.mjs）拦截
+  // adoptedStyleSheets setter（P1-7 fix）。管理器保证多 adapter 共存时
+  // setter 只安装一次，owned sheets 统一管理。
+  try {
+    window.__agentskin_sheet_manager__?.install?.();
+  } catch (e) {
+    // 静默降级 — 后续 polling 作为安全网
+  }
 
   const config = window.__AGENTSKIN_CONFIG__ || {};
   const heroUrl = config.heroBlobUrl || '';
@@ -313,20 +329,11 @@ html.${HOST_CLASS} button[role="tab"][aria-selected="true"] {
   sheet.replaceSync(STRUCTURAL_CSS);
   sheet.__agentskin = true;
   sheet.__agentskin_layer = 'adapter';
+  try { window.__agentskin_sheet_manager__?.adopt?.(sheet); } catch {}
   document.adoptedStyleSheets = [
     ...document.adoptedStyleSheets.filter(s => s.__agentskin_layer !== 'adapter'),
     sheet,
   ];
-
-  // DEEP-CORE INTEGRATION (RFC 2026-08-20)
-  if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
-    try {
-      const deepCoreInstance = new DeepCore(DEEP_CONFIG, { agent: "traework", themeId: config.themeId || "unknown", heroUrl: heroUrl, HOST_CLASS: HOST_CLASS });
-      return "applied";
-    } catch (err) {
-      console.warn("[traework-adapter] DeepCore init failed, fallback:", err);
-    }
-  }
 
   // ═══════════════════════════════════════════════════════════
   // ELEMENT-LEVEL HEURISTIC GUARDS
@@ -385,7 +392,7 @@ html.${HOST_CLASS} button[role="tab"][aria-selected="true"] {
   // ═══════════════════════════════════════════════════════════
 
   let healTimer = null;
-  const observer = new AdaptiveMutationObserver((mutations) => {
+  const observer = new window.AdaptiveMutationObserver((mutations) => {
     // Guard: handle style/class attribute changes on existing elements
     for (const m of mutations) {
       if (m.type === 'attributes' && (m.attributeName === 'style' || m.attributeName === 'class')) {
@@ -401,6 +408,8 @@ html.${HOST_CLASS} button[role="tab"][aria-selected="true"] {
     }, 300);
   });
   observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+  // 治本：同时观察 documentElement（host class / hero URL 所在），立即捕获清除
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
 
   // ═══════════════════════════════════════════════════════════
   // ANTI-RERENDER: scheduleReinject (debounced reinject)
@@ -412,6 +421,10 @@ html.${HOST_CLASS} button[role="tab"][aria-selected="true"] {
     if (reinjectTimeout) clearTimeout(reinjectTimeout);
     reinjectTimeout = setTimeout(() => {
       try { sheet.replaceSync(STRUCTURAL_CSS); } catch {}
+      // 治本：重新追加 sheet 到数组（如果被宿主移除）
+      if (document.adoptedStyleSheets.indexOf(sheet) === -1) {
+        document.adoptedStyleSheets = document.adoptedStyleSheets.concat(sheet);
+      }
       // Ensure host class survives React re-renders
       if (!document.documentElement.classList.contains(HOST_CLASS)) {
         document.documentElement.classList.add(HOST_CLASS);
@@ -427,6 +440,10 @@ html.${HOST_CLASS} button[role="tab"][aria-selected="true"] {
   // ANTI-RERENDER: 2s periodic re-check (enhanced from 5s)
   // Checks host class, hero URL, and adoptedStyleSheets presence.
   // Triggers debounced reinject if any layer is missing.
+  // NOTE: This interval MUST be established BEFORE DeepCore init so that
+  // even if DeepCore succeeds and returns early, the self-heal mechanism
+  // is already running. (RC1 fix: was previously placed AFTER DeepCore,
+  // causing the interval to never start when DeepCore init succeeded.)
   // ═══════════════════════════════════════════════════════════
   const interval = setInterval(() => {
     let needsReinject = false;
@@ -435,8 +452,12 @@ html.${HOST_CLASS} button[role="tab"][aria-selected="true"] {
       document.documentElement.classList.add(HOST_CLASS);
       needsReinject = true;
     }
-    // Check hero URL
-    if (heroUrl && !getComputedStyle(document.documentElement).getPropertyValue('--agentskin-art').includes('blob:')) {
+    // Check hero URL — always re-set the CSS variable unconditionally so
+    // that if the host's React re-render clears the inline style, the next
+    // interval tick restores it. (RC3 fix: previously only re-set when the
+    // value did not include 'blob:', which prevented recovery after the
+    // variable was cleared entirely.)
+    if (heroUrl) {
       document.documentElement.style.setProperty('--agentskin-art', `url("${heroUrl}")`);
       needsReinject = true;
     }
@@ -452,6 +473,7 @@ html.${HOST_CLASS} button[role="tab"][aria-selected="true"] {
   // ANTI-RERENDER: adoptedStyleSheets watchdog (1.5s)
   // Ensures adapter sheet survives host overrides. Reinjects the
   // full sheet if it was removed from the adoptedStyleSheets array.
+  // NOTE: Same as above — established BEFORE DeepCore for RC1 fix.
   // ═══════════════════════════════════════════════════════════
   const sheetGuardInterval = setInterval(() => {
     const sheets = document.adoptedStyleSheets.filter(s => s.__agentskin_layer === 'adapter');
@@ -459,6 +481,18 @@ html.${HOST_CLASS} button[role="tab"][aria-selected="true"] {
       document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
     }
   }, 1500);
+
+  // DEEP-CORE INTEGRATION (RFC 2026-08-20)
+  // NOTE: DeepCore init is now AFTER self-heal intervals are established.
+  // If DeepCore succeeds, it enhances the adapter but the self-heal
+  // intervals continue running as a safety net.
+  if (DEEP_CONFIG.enabled && typeof DeepCore !== "undefined") {
+    try {
+      const deepCoreInstance = new DeepCore(DEEP_CONFIG, { agent: "traework", themeId: config.themeId || "unknown", heroUrl: heroUrl, HOST_CLASS: HOST_CLASS });
+    } catch (err) {
+      console.warn("[traework-adapter] DeepCore init failed, fallback:", err);
+    }
+  }
 
   window[MARKER] = { observer, interval, sheetGuardInterval, sheet };
   return "applied";

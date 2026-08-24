@@ -50,6 +50,7 @@ export interface ReloadWatchdogDeps {
     bundle: ThemeBundle,
     targetTheme: ResolvedThemeTarget,
     imageDataUrls: Record<string, string> | null,
+    imageFilePaths?: Record<string, string> | null,
   ) => Promise<InjectEngineResult | null>;
   log: (line: string) => void;
 }
@@ -62,6 +63,8 @@ export interface AttachReloadWatchdogOptions {
   targetTheme: ResolvedThemeTarget;
   /** 2a multi-asset: full image set to re-inject on reload (or null). */
   imageDataUrls: Record<string, string> | null;
+  /** External file paths for lossless 4K/8K wallpaper mode (or null). */
+  imageFilePaths?: Record<string, string> | null;
   epoch: number;
   deps: ReloadWatchdogDeps;
 }
@@ -161,6 +164,7 @@ async function reverifyAfterNavigation(state: ReloadWatchdogState): Promise<void
       state.options.bundle,
       state.options.targetTheme,
       state.options.imageDataUrls,
+      state.options.imageFilePaths,
     );
     if (result) {
       deps.log(

@@ -77,8 +77,8 @@ export class AppRunStateCoordinator {
   constructor(options: AppRunStateCoordinatorOptions = {}) {
     this.idleTTL = options.idleTTL ?? DEFAULT_IDLE_TTL;
     this.log = options.log ?? (() => {});
-    // 允许无限订阅者（多个 store 同时订阅）
-    this.emitter.setMaxListeners(0);
+    // R7: 设置合理上限（16），保留足够余量给多 store 订阅，同时不屏蔽泄漏警告
+    this.emitter.setMaxListeners(16);
   }
 
   // -------------------------------------------------------------------------
@@ -160,6 +160,7 @@ export class AppRunStateCoordinator {
 
   /**
    * 清理所有状态（应用退出时调用）。
+   * R7: 置空单例引用，防止 dispose 后外部持有旧实例。
    */
   dispose(): void {
     for (const timer of this.timers.values()) {
@@ -168,6 +169,8 @@ export class AppRunStateCoordinator {
     this.timers.clear();
     this.stateMap.clear();
     this.emitter.removeAllListeners();
+    // R7: 置空单例，确保下次 getAppRunStateCoordinator() 创建新实例
+    _instance = null;
     this.log('[AppRunStateCoordinator] disposed');
   }
 

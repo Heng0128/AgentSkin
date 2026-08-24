@@ -52,6 +52,16 @@ const IDLE_TTL_MS = 30_000;
 const IDLE_SCAN_INTERVAL_MS = 10_000;
 /** Grace period (ms) for retired sessions before force close. */
 const RETIRE_GRACE_MS = 5000;
+/**
+ * Upper bound on pooled sessions per agent. Targets are naturally bounded
+ * (WorkBuddy exposes ~13 webview/iframe targets), so the normal steady-state
+ * is far below this. The cap is a pure safety net: if an abnormal target
+ * explosion would otherwise grow the pool without limit, we refuse to pool
+ * the extra target and let the caller fall back to a one-shot connect
+ * (existing behavior for non-pooled paths), instead of retaining sockets
+ * indefinitely.
+ */
+const MAX_SESSIONS_PER_AGENT = 64;
 
 interface PooledEntry {
   session: CdpSession;
@@ -229,6 +239,17 @@ export class CdpSessionPool {
     }
     const session = await open();
     if (!session) return null;
+    // Capacity guard: refuse to pool a brand-new target type once the
+    // per-agent cap is reached, falling back to a one-shot connect (caller
+    // path) instead of growing the pool without bound. The normal
+    // steady-state (targets are naturally < 20) is unaffected.
+    if (!existing && byTarget.size >= MAX_SESSIONS_PER_AGENT) {
+      logger.warn(
+        `[session-pool] per-agent session cap (${MAX_SESSIONS_PER_AGENT}) reached for ${appId}; ` +
+          `not pooling target ${targetKey}, falling back to one-shot connect`,
+      );
+      return null;
+    }
     const entry: PooledEntry = {
       session,
       lastUsedAt: Date.now(),

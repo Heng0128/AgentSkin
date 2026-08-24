@@ -31,74 +31,95 @@
   window.__AGENTSKIN_HYBRID_INJECTOR_LOADED__ = true;
 
   // ---------------------------------------------------------------------------
-  // rAF batching queue — coalesces rapid token changes into a single frame.
-  // Dark Reader pattern: slider drags fire 60+ events/sec; we collapse them
-  // into one setProperty pass per frame.
-  // ---------------------------------------------------------------------------
-  let _rafQueue = null;
-  let _rafId = 0;
-  let _rafCallbacks = [];
-
-  function _rafFlush() {
-    const items = _rafQueue;
-    const cbs = _rafCallbacks;
-    _rafQueue = null;
-    _rafId = 0;
-    _rafCallbacks = [];
-    if (items) {
-      const root = document.documentElement;
-      for (const [k, v] of items) root.style.setProperty(k, v);
-    }
-    for (const cb of cbs) { try { cb(); } catch {} }
-  }
-
-  function _rafSchedule() {
-    if (_rafId) return;
-    _rafId = (typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame : (f => setTimeout(f, 16)))(_rafFlush);
-  }
-
-  // ---------------------------------------------------------------------------
-  // StyleSheet Registry — Stylus apply.js pattern.
-  // Manages stylesheet lifecycle: add/remove/dedup/scope-isolation.
-  // ---------------------------------------------------------------------------
-  const _sheets = new Map(); // id -> { sheet, meta }
-
-  function _ensureSheet(id) {
-    const existing = _sheets.get(id);
-    if (existing) return existing;
-    const sheet = new CSSStyleSheet();
-    sheet.__agentskin = true;
-    sheet.__agentskin_layer = id;
-    const entry = { sheet, meta: { id, active: false } };
-    _sheets.set(id, entry);
-    return entry;
-  }
-
-  function _adoptSheet(id) {
-    const entry = _sheets.get(id);
-    if (!entry || entry.meta.active) return;
-    const sheets = document.adoptedStyleSheets || [];
-    const filtered = sheets.filter(s => !(s.__agentskin === true && s.__agentskin_layer === id));
-    filtered.push(entry.sheet);
-    document.adoptedStyleSheets = filtered;
-    entry.meta.active = true;
-  }
-
-  function _removeSheet(id) {
-    const entry = _sheets.get(id);
-    if (!entry || !entry.meta.active) return;
-    document.adoptedStyleSheets = (document.adoptedStyleSheets || []).filter(
-      s => !(s.__agentskin === true && s.__agentskin_layer === id)
-    );
-    entry.meta.active = false;
-  }
-
-  // ---------------------------------------------------------------------------
   // HybridInjector — main entry point.
+  // All state is instance-scoped to support concurrent multi-window/target
+  // injection without cross-instance interference.
   // ---------------------------------------------------------------------------
   class HybridInjector {
-    constructor() {
+    constructor(target, options) {
+      this.target = target;
+      this.options = options;
       this.tokenCache = new Map(); // last-known token values for dedup
+
+      // rAF batching queue — coalesces rapid token changes into a single frame.
+      // Dark Reader pattern: slider drags fire 60+ events/sec; we collapse them
+      // into one setProperty pass per frame.
+      this._rafQueue = null;
+      this._rafId = 0;
+      this._rafCallbacks = [];
+
+      // StyleSheet Registry — Stylus apply.js pattern.
+      // Manages stylesheet lifecycle: add/remove/dedup/scope-isolation.
+      this._sheets = new Map(); // id -> { sheet, meta }
+    }
+
+    /**
+     * rAF flush — applies queued token changes to documentElement.
+     * Bound to instance via closure in _rafSchedule.
+     */
+    _rafFlush() {
+      const items = this._rafQueue;
+      const cbs = this._rafCallbacks;
+      this._rafQueue = null;
+      this._rafId = 0;
+      this._rafCallbacks = [];
+      if (items) {
+        const root = document.documentElement;
+        for (const [k, v] of items) root.style.setProperty(k, v);
+      }
+      for (const cb of cbs) { try { cb(); } catch {} }
+    }
+
+    /**
+     * Schedule a rAF flush if not already pending.
+     */
+    _rafSchedule() {
+      if (this._rafId) return;
+      const flush = this._rafFlush.bind(this);
+      this._rafId = (typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame : (f => setTimeout(f, 16)))(flush);
+    }
+
+    /**
+     * Ensure a CSSStyleSheet entry exists for the given layer id.
+     * @param {string} id
+     * @returns {{sheet: CSSStyleSheet, meta: object}}
+     */
+    _ensureSheet(id) {
+      const existing = this._sheets.get(id);
+      if (existing) return existing;
+      const sheet = new CSSStyleSheet();
+      sheet.__agentskin = true;
+      sheet.__agentskin_layer = id;
+      const entry = { sheet, meta: { id, active: false } };
+      this._sheets.set(id, entry);
+      return entry;
+    }
+
+    /**
+     * Adopt a stylesheet into document.adoptedStyleSheets.
+     * @param {string} id
+     */
+    _adoptSheet(id) {
+      const entry = this._sheets.get(id);
+      if (!entry || entry.meta.active) return;
+      const sheets = document.adoptedStyleSheets || [];
+      const filtered = sheets.filter(s => !(s.__agentskin === true && s.__agentskin_layer === id));
+      filtered.push(entry.sheet);
+      document.adoptedStyleSheets = filtered;
+      entry.meta.active = true;
+    }
+
+    /**
+     * Remove a stylesheet from document.adoptedStyleSheets.
+     * @param {string} id
+     */
+    _removeSheet(id) {
+      const entry = this._sheets.get(id);
+      if (!entry || !entry.meta.active) return;
+      document.adoptedStyleSheets = (document.adoptedStyleSheets || []).filter(
+        s => !(s.__agentskin === true && s.__agentskin_layer === id)
+      );
+      entry.meta.active = false;
     }
 
     /**
@@ -128,16 +149,16 @@
       }
 
       // rAF batching
-      if (!_rafQueue) _rafQueue = [];
+      if (!this._rafQueue) this._rafQueue = [];
       let count = 0;
       for (const k of keys) {
         const v = tokens[k];
         if (this.tokenCache.get(k) === v) continue;
-        _rafQueue.push([k, v]);
+        this._rafQueue.push([k, v]);
         this.tokenCache.set(k, v);
         count++;
       }
-      if (count > 0) _rafSchedule();
+      if (count > 0) this._rafSchedule();
       return count;
     }
 
@@ -150,19 +171,19 @@
      * @param {string} css — full CSS source
      */
     applyFullTheme(layerId, css) {
-      const entry = _ensureSheet(layerId);
+      const entry = this._ensureSheet(layerId);
       try {
         entry.sheet.replaceSync(css);
       } catch {
         // Fallback: remove + re-add on parse failure
-        _removeSheet(layerId);
+        this._removeSheet(layerId);
         entry.sheet = new CSSStyleSheet();
         entry.sheet.__agentskin = true;
         entry.sheet.__agentskin_layer = layerId;
         entry.sheet.replaceSync(css);
-        _sheets.set(layerId, entry);
+        this._sheets.set(layerId, entry);
       }
-      _adoptSheet(layerId);
+      this._adoptSheet(layerId);
       return entry.sheet.cssRules.length;
     }
 
@@ -188,7 +209,7 @@
      * @param {string} newCss
      */
     hotReplace(layerId, newCss) {
-      const entry = _sheets.get(layerId);
+      const entry = this._sheets.get(layerId);
       if (!entry) return this.applyFullTheme(layerId, newCss);
       try {
         entry.sheet.replaceSync(newCss);
@@ -203,22 +224,22 @@
      * @param {string} layerId
      */
     removeLayer(layerId) {
-      _removeSheet(layerId);
+      this._removeSheet(layerId);
     }
 
     /**
-     * Dispose all layers and reset state.
+     * Dispose all layers and reset state for this instance only.
      */
     dispose() {
-      for (const id of [..._sheets.keys()]) _removeSheet(id);
-      _sheets.clear();
+      for (const id of [...this._sheets.keys()]) this._removeSheet(id);
+      this._sheets.clear();
       this.tokenCache.clear();
-      if (_rafId) {
-        if (typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(_rafId);
-        _rafId = 0;
+      if (this._rafId) {
+        if (typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(this._rafId);
+        this._rafId = 0;
       }
-      _rafQueue = null;
-      _rafCallbacks = [];
+      this._rafQueue = null;
+      this._rafCallbacks = [];
     }
   }
 

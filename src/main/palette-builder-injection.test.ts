@@ -123,6 +123,7 @@ describe('tryEngineInjection', () => {
       makeBundle(),
       makeTarget(),
       { hero: 'data:hero' },
+      null,
       deps,
     );
 
@@ -150,6 +151,7 @@ describe('tryEngineInjection', () => {
       {} as unknown as ThemeBundle,
       makeTarget(),
       null,
+      null,
       deps,
     );
     const payload = vi.mocked(injectThemeViaEngine).mock.calls[0][1];
@@ -165,6 +167,7 @@ describe('tryEngineInjection', () => {
       makeBundle(),
       makeTarget(),
       null,
+      null,
       deps,
     );
     expect(result).toBeNull();
@@ -177,6 +180,7 @@ describe('tryEngineInjection', () => {
       'workbuddy',
       makeBundle(),
       makeTarget('--agentskin-accent: #ff0000;'), // too few tokens
+      null,
       null,
       deps,
     );
@@ -191,6 +195,7 @@ describe('tryEngineInjection', () => {
       'workbuddy',
       makeBundle(),
       makeTarget(),
+      null,
       null,
       deps,
     );
@@ -207,6 +212,7 @@ describe('tryEngineInjection', () => {
       'workbuddy',
       makeBundle(),
       makeTarget(),
+      null,
       null,
       deps,
     );

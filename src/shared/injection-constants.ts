@@ -189,8 +189,16 @@ export const RENDERER_SELF_HEAL_INTERVAL_MS = 5000;
 /** Max video size for chunked blob injection (500 MB). */
 export const MAX_VIDEO_BLOB_BYTES = 500 * 1024 * 1024;
 
-/** Chunk size for base64 transfer (~2 MB raw per evaluate call). */
-export const WALLPAPER_CHUNK_SIZE = 2 * 1024 * 1024;
+/**
+ * Chunk size for base64 transfer. 2 MB-per-evaluate proved too large for
+ * 4K/8K hero originals on slower CDP targets: a 5 MB JPEG → ~7 MB base64 →
+ * 4×2 MB evaluates could individually exceed the 8 s CDP command timeout on
+ * busy renderers (doubao/codex), failing hero injection while fast targets
+ * (workbuddy) succeeded. 512 KB keeps each WebSocket message small enough to
+ * complete well inside the timeout; a 5 MB hero now costs ~14 quick chunks
+ * instead of 4 slow ones.
+ */
+export const WALLPAPER_CHUNK_SIZE = 512 * 1024;
 
 /** Default verify delay after injection (ms). */
 export const DEFAULT_VERIFY_DELAY_MS = 500;

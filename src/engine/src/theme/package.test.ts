@@ -191,6 +191,53 @@ describe('assets.art vs assets.images.hero mutual exclusion', () => {
   });
 });
 
+describe('REMOTE_CSS guard on target css (P-regression: data URIs)', () => {
+  it('accepts a quoted inline data: URI in target css', () => {
+    expect(() =>
+      validateThemePackage({
+        ...minimalBundle({}),
+        targets: { codex: { css: '--logo: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==");' } },
+      }),
+    ).not.toThrow();
+  });
+
+  it('accepts an unquoted inline data: URI in target css', () => {
+    expect(() =>
+      validateThemePackage({
+        ...minimalBundle({}),
+        targets: { codex: { css: '--logo: url(data:image/png;base64,abc123);' } },
+      }),
+    ).not.toThrow();
+  });
+
+  it('rejects a relative path url() in target css', () => {
+    expect(() =>
+      validateThemePackage({
+        ...minimalBundle({}),
+        targets: { codex: { css: '--art: url("./assets/artwork.jpg");' } },
+      }),
+    ).toThrow("Target 'codex' contains an external CSS resource.");
+  });
+
+  it('rejects an http(s) url() in target css', () => {
+    expect(() =>
+      validateThemePackage({
+        ...minimalBundle({}),
+        targets: { codex: { css: 'background: url(https://example.com/bg.png);' } },
+      }),
+    ).toThrow("Target 'codex' contains an external CSS resource.");
+  });
+
+  it('rejects @import in target css', () => {
+    expect(() =>
+      validateThemePackage({
+        ...minimalBundle({}),
+        targets: { codex: { css: '@import url("theme.css");' } },
+      }),
+    ).toThrow("Target 'codex' contains an external CSS resource.");
+  });
+});
+
 describe('resolveThemeTarget exposes every image as a data URL', () => {
   it('maps hero + creative ids onto --agentskin-asset-<id> consumers', () => {
     const bundle = validateThemePackage(

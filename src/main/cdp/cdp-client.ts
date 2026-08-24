@@ -131,6 +131,10 @@ function openCdpSocket(
     }
   >();
   const listeners = new Map<string, Set<(params: unknown) => void>>();
+  // Track CDP domains enabled via `*.enable` so close() can send paired
+  // `*.disable` calls — prevents pooled sessions from continuously generating
+  // CDP Runtime/CSS/DOM/Page event traffic after the operation completes.
+  const enabledDomains = new Set<string>();
   // Guard flag: once the session is closing/closed, ignore further onerror /
   // onclose events. Without this, ws.onerror → session.close() → ws.close()
   // → ws.onclose can re-enter and cause a RangeError: Maximum call stack
@@ -215,6 +219,14 @@ function openCdpSocket(
         return reject(new Error('CDP session is closed'));
       }
 
+      // Track domain enable calls for paired disable on close so pooled
+      // sessions don't keep generating CDP Runtime/CSS/DOM/Page event
+      // traffic after the operation completes.
+      const enableMatch = /^([A-Za-z]+)\.enable$/.exec(method);
+      if (enableMatch) {
+        enabledDomains.add(enableMatch[1]);
+      }
+
       const timer = setTimeout(() => {
         if (pending.has(id)) {
           pending.delete(id);
@@ -245,6 +257,20 @@ function openCdpSocket(
   const close = (): void => {
     if (closed) return; // Already closed — prevent re-entrant stack overflow
     closed = true;
+    // Send paired disable for every domain that was enabled via send()
+    // during this session. Fire-and-forget: the socket may already be
+    // closing, and the disable responses are unnecessary — the goal is to
+    // stop CDP event traffic from the target. Without this, pooled sessions
+    // that called Runtime.enable (or any *.enable) keep generating events
+    // until the socket is finally closed.
+    for (const domain of enabledDomains) {
+      try {
+        ws.send(JSON.stringify({ id: ++seq, method: `${domain}.disable`, params: {} }));
+      } catch {
+        // Socket may already be closing — best-effort.
+      }
+    }
+    enabledDomains.clear();
     // Reject all pending commands so callers' await throws instead of hanging,
     // and clear every command-timeout timer to avoid dangling handles (RC1).
     rejectAllPending(new Error('CDP session closed.'));

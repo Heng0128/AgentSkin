@@ -16,6 +16,7 @@ import type { ThemeColors } from '../catalog/theme-manifest';
 import { mainWarn } from '../logger';
 import { ctx } from '../main-context';
 import { captureDetectDispatch } from '../theme-asset/deferred-regen';
+import { probeAgent } from '../theme-asset/verify/probe';
 import type { FidelityVerdict } from './baseline-validator';
 import { type CdpSession, connectCdp } from './cdp-client';
 import { findDomTargets } from './cdp-targets';
@@ -84,7 +85,6 @@ async function buildSyntheticFidelity(
   appId: AgentId,
 ): Promise<FidelityVerdict> {
   try {
-    const { probeAgent } = await import('../theme-asset/verify/probe');
     const result = await probeAgent(session, appId);
     // Use hitRate as proxy for matchRatio
     const matchRatio = result.hitRate;

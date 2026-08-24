@@ -14,7 +14,7 @@ export const LEGACY_THEME_EXTENSION = ".codex-theme";
 export const LEGACY_THEME_SCHEMA_VERSION = 1;
 
 const SAFE_ID = /^[a-z0-9][a-z0-9_-]*$/i;
-const REMOTE_CSS = /@import\s|url\(\s*["']?(?!data:)/i;
+const REMOTE_CSS = /@import\s|url\(\s*(?!["']?data:)/i;
 const SAFE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
 
 function assertString(value, label) {

@@ -1,0 +1,571 @@
+// SPDX-License-Identifier: MPL-2.0
+
+/**
+ * # useStudioStore (facade)
+ *
+ * Compatibility layer that re-exports the four decomposed sub-stores as a
+ * single unified `useStudioStore` hook. All existing consumers (components,
+ * hooks, pages) that call `useStudioStore(selector)` continue to work
+ * without modification.
+ *
+ * The facade merges state from all sub-stores into a single object for
+ * selector-based reads, and exposes `getState()` / `setState()` for
+ * imperative access (matching the original zustand store API).
+ */
+
+import { api } from '@/api/agentSkinClient';
+import type { StudioBundle } from '@/studio/bundle-store';
+import { useBundleStore } from '@/studio/bundle-store';
+import type { ExportState } from '@/studio/capture-store';
+import { useCaptureStore } from '@/studio/capture-store';
+import { useImageWallpaperStore } from '@/studio/image-wallpaper-store';
+import { useProjectStore } from '@/studio/project-store';
+import type { ToolOverride } from '@/types/override';
+import type { PreviewView } from '@/types/workspace';
+
+import type {
+  AgentId,
+  InspectedNode,
+  StudioProject,
+  ThemeCatalogItem,
+  ThemeColorsFromImage,
+  ThemeVisualSnapshot,
+} from '@shared/types';
+import type { HealthCheckReport } from '@shared/types/health-check';
+
+/**
+ * Combined state data shape — mirrors the original monolithic StudioStoreState
+ * data fields so that existing selectors continue to work.
+ */
+export interface CombinedStudioStateData {
+  // --- project-store ---
+  projects: StudioProject[];
+  activeProjectId: string | null;
+  creatingProject: boolean;
+  newName: string;
+  newAuthor: string;
+  newAgent: AgentId;
+  importing: boolean;
+  editingId: string | null;
+  editName: string;
+  editAuthor: string;
+
+  // --- bundle-store ---
+  bundles: StudioBundle[];
+  bundlesLoading: boolean;
+
+  // --- capture-store ---
+  previewView: PreviewView;
+  inspectingIdx: number | null;
+  searchQuery: string;
+  hoveredIdx: number | null;
+  toolOverrides: ToolOverride | null;
+  undoStack: (ToolOverride | null)[];
+  redoStack: (ToolOverride | null)[];
+  inspectMode: boolean;
+  liveNode: InspectedNode | null;
+  liveError: string | null;
+  pinnedSelectors: string[];
+  pseudoStates: string[];
+  captureSchemes: boolean;
+  customSelectorInput: string;
+  pseudoView: string | null;
+  schemeView: 'light' | 'dark' | null;
+  baselines: Partial<Record<AgentId, ThemeVisualSnapshot>>;
+  baselineLoadingMap: Partial<Record<AgentId, boolean>>;
+  baselineErrorMap: Partial<Record<AgentId, string>>;
+  exportName: string;
+  exportAuthor: string;
+  exportState: ExportState;
+  domTreeVersion: number;
+
+  // --- image-wallpaper-store ---
+  imageToThemeStatus: 'idle' | 'extracting' | 'ready' | 'error';
+  imageToThemeError: string | null;
+  imageToThemeMode: 'light' | 'dark' | null;
+  imageToThemePalette: ThemeColorsFromImage | null;
+  imageToThemeAccent: string | null;
+  wallpaperPreviewPalette: ThemeColorsFromImage | null;
+  wallpaperPreviewLoading: boolean;
+  wallpaperPreviewError: string | null;
+  wallpaperApplyLoading: boolean;
+  wallpaperApplyError: string | null;
+  installedThemes: ThemeCatalogItem[];
+  themeLibraryOpen: boolean;
+
+  // --- IPC-subscribed progress / health (kept in facade; domain-agnostic) ---
+  analysisProgress: { agent: string; step: string; progress: number } | null;
+  healthReportByAgent: Record<string, HealthCheckReport>;
+}
+
+/**
+ * Module-scoped state for IPC-subscribed progress / health reports.
+ * These are domain-agnostic (pushed from main process regardless of which
+ * sub-store is active) so they live at the facade level.
+ */
+let _analysisProgress: { agent: string; step: string; progress: number } | null = null;
+let _healthReportByAgent: Record<string, HealthCheckReport> = {};
+let _analysisProgressSubscribed = false;
+let _healthReportSubscribed = false;
+
+/** Build the combined state snapshot from all sub-stores. */
+function getCombinedState(): CombinedStudioStateData {
+  const project = useProjectStore.getState();
+  const bundle = useBundleStore.getState();
+  const capture = useCaptureStore.getState();
+  const iw = useImageWallpaperStore.getState();
+
+  return {
+    // project-store
+    projects: project.projects,
+    activeProjectId: project.activeProjectId,
+    creatingProject: project.creatingProject,
+    newName: project.projectForm.name,
+    newAuthor: project.projectForm.author,
+    newAgent: project.projectForm.agentId,
+    importing: project.importing,
+    editingId: project.editing?.id ?? null,
+    editName: project.editing?.name ?? '',
+    editAuthor: project.editing?.author ?? '',
+
+    // bundle-store
+    bundles: bundle.bundles,
+    bundlesLoading: bundle.bundlesLoading,
+
+    // capture-store
+    previewView: capture.previewView,
+    inspectingIdx: capture.inspectingIdx,
+    searchQuery: capture.searchQuery,
+    hoveredIdx: capture.hoveredIdx,
+    toolOverrides: capture.toolOverrides,
+    undoStack: capture.undoStack,
+    redoStack: capture.redoStack,
+    inspectMode: capture.inspectMode,
+    liveNode: capture.liveNode,
+    liveError: capture.liveError,
+    pinnedSelectors: capture.pinnedSelectors,
+    pseudoStates: capture.pseudoStates,
+    captureSchemes: capture.captureSchemes,
+    customSelectorInput: capture.customSelectorInput,
+    pseudoView: capture.pseudoView,
+    schemeView: capture.schemeView,
+    baselines: capture.baselines,
+    baselineLoadingMap: capture.baselineLoadingMap,
+    baselineErrorMap: capture.baselineErrorMap,
+    exportName: capture.exportName,
+    exportAuthor: capture.exportAuthor,
+    exportState: capture.exportState,
+    domTreeVersion: capture.domTreeVersion,
+
+    // image-wallpaper-store
+    imageToThemeStatus: iw.imageToTheme.status,
+    imageToThemeError: iw.imageToTheme.error,
+    imageToThemeMode: iw.imageToTheme.mode,
+    imageToThemePalette: iw.imageToTheme.palette,
+    imageToThemeAccent: iw.imageToTheme.accent,
+    wallpaperPreviewPalette: iw.wallpaperPreview.palette,
+    wallpaperPreviewLoading: iw.wallpaperPreview.loading,
+    wallpaperPreviewError: iw.wallpaperPreview.error,
+    wallpaperApplyLoading: iw.wallpaperApply.loading,
+    wallpaperApplyError: iw.wallpaperApply.error,
+    installedThemes: iw.installedThemes,
+    themeLibraryOpen: iw.themeLibraryOpen,
+
+    // IPC-subscribed (module-scoped)
+    analysisProgress: _analysisProgress,
+    healthReportByAgent: _healthReportByAgent,
+  };
+}
+
+/**
+ * Facade hook: subscribes to all sub-stores and returns either the full
+ * combined state or a selected slice.
+ *
+ * @example
+ *   // Full state (no selector)
+ *   const state = useStudioStore();
+ *
+ *   // Selector mode (only re-renders when the selected value changes)
+ *   const activeProject = useStudioStore((s) => s.getActiveProject());
+ */
+export function useStudioStore(): CombinedStudioStore;
+export function useStudioStore<T>(selector: (state: CombinedStudioStore) => T): T;
+export function useStudioStore<T>(
+  selector?: (state: CombinedStudioStore) => T,
+): T | CombinedStudioStore {
+  // Subscribe to all sub-stores so the facade re-renders on any change.
+  useProjectStore();
+  useBundleStore();
+  useCaptureStore();
+  useImageWallpaperStore();
+
+  const combined = getCombinedState();
+  const store = useStudioStore.getState();
+  // Note: result is a new object each render. Selector consumers should use
+  // `useShallow` from 'zustand/react/shallow' for stable references.
+  const result = { ...store, ...combined };
+  return selector ? selector(result) : result;
+}
+
+/**
+ * Extended combined state that includes derived helpers and actions.
+ * This is what selectors actually receive.
+ */
+export interface CombinedStudioState extends CombinedStudioStore {}
+
+export interface CombinedStudioStore {
+  // State (same as CombinedStudioState)
+  projects: StudioProject[];
+  activeProjectId: string | null;
+  creatingProject: boolean;
+  newName: string;
+  newAuthor: string;
+  newAgent: AgentId;
+  importing: boolean;
+  editingId: string | null;
+  editName: string;
+  editAuthor: string;
+  bundles: StudioBundle[];
+  bundlesLoading: boolean;
+  previewView: PreviewView;
+  inspectingIdx: number | null;
+  searchQuery: string;
+  hoveredIdx: number | null;
+  toolOverrides: ToolOverride | null;
+  undoStack: (ToolOverride | null)[];
+  redoStack: (ToolOverride | null)[];
+  inspectMode: boolean;
+  liveNode: InspectedNode | null;
+  liveError: string | null;
+  pinnedSelectors: string[];
+  pseudoStates: string[];
+  captureSchemes: boolean;
+  customSelectorInput: string;
+  pseudoView: string | null;
+  schemeView: 'light' | 'dark' | null;
+  baselines: Partial<Record<AgentId, ThemeVisualSnapshot>>;
+  baselineLoadingMap: Partial<Record<AgentId, boolean>>;
+  baselineErrorMap: Partial<Record<AgentId, string>>;
+  exportName: string;
+  exportAuthor: string;
+  exportState: ExportState;
+  domTreeVersion: number;
+  imageToThemeStatus: 'idle' | 'extracting' | 'ready' | 'error';
+  imageToThemeError: string | null;
+  imageToThemeMode: 'light' | 'dark' | null;
+  imageToThemePalette: ThemeColorsFromImage | null;
+  imageToThemeAccent: string | null;
+  wallpaperPreviewPalette: ThemeColorsFromImage | null;
+  wallpaperPreviewLoading: boolean;
+  wallpaperPreviewError: string | null;
+  wallpaperApplyLoading: boolean;
+  wallpaperApplyError: string | null;
+  installedThemes: ThemeCatalogItem[];
+  themeLibraryOpen: boolean;
+
+  // --- IPC-subscribed progress / health ---
+  analysisProgress: { agent: string; step: string; progress: number } | null;
+  healthReportByAgent: Record<string, HealthCheckReport>;
+  initAnalysisProgressSubscription(): void;
+  initHealthReportSubscription(): void;
+
+  // Derived helpers
+  getActiveProject(): StudioProject | null;
+
+  // Project actions
+  refreshProjects(): Promise<void>;
+  createProject(): Promise<void>;
+  importProject(): Promise<void>;
+  deleteProject(id: string): Promise<void>;
+  renameProject(p: StudioProject, name: string, author: string): Promise<void>;
+  saveActiveProject(patch: Partial<StudioProject>): Promise<void>;
+  selectProject(id: string | null): void;
+  changeAgent(agentId: AgentId): Promise<void>;
+  refreshThemeLibrary(): Promise<void>;
+  loadThemeIntoProject(themeId: string): Promise<void>;
+  refreshBundles(): Promise<void>;
+  importAndInstallBundle(): Promise<string | null>;
+  installBundle(id: string): Promise<void>;
+  deleteBundle(id: string): Promise<void>;
+
+  // Capture actions
+  baselineSnapshot(): Promise<void>;
+  restoreAgent(): Promise<void>;
+  exportTheme(): Promise<void>;
+  toggleInspect(): Promise<void>;
+  setOverride(key: keyof ToolOverride, value: string | number | boolean | undefined): void;
+  resetOverrides(): void;
+  undo(): void;
+  redo(): void;
+  addPinnedSelector(): void;
+  removePinnedSelector(sel: string): void;
+  togglePseudo(state: string): void;
+  applyPalette(palette: Record<string, string | undefined>, action: 'preview' | 'apply'): void;
+  setOverrideColors(palette: Record<string, string>): void;
+  setPaletteLoaded(palette: Record<string, string>): void;
+  pinSelector(sel: string): void;
+  extractImageFromImage(base64Data: string): Promise<void>;
+  applyWallpaperExtractedPalette(wallpaperId: string): Promise<void>;
+  applyImageToTheme(): void;
+  clearImageToTheme(): void;
+  setImageAccent(hex: string): void;
+  previewWallpaperTheme(wallpaperId: string): void;
+  applyWallpaperTheme(wallpaperId: string): Promise<boolean>;
+  clearWallpaperPreview(): void;
+
+  // Simple setters
+  setCreatingProject(v: boolean): void;
+  setNewName(v: string): void;
+  setNewAuthor(v: string): void;
+  setNewAgent(v: AgentId): void;
+  setEditingId(v: string | null): void;
+  setEditName(v: string): void;
+  setEditAuthor(v: string): void;
+  setThemeLibraryOpen(v: boolean): void;
+  setCustomSelectorInput(v: string): void;
+  setPreviewView(v: PreviewView): void;
+  setSearchQuery(v: string): void;
+  setHoveredIdx(v: number | null): void;
+  setInspectingIdx(v: number | null): void;
+  setPseudoView(v: string | null): void;
+  setSchemeView(v: 'light' | 'dark' | null): void;
+  setCaptureSchemes(v: boolean): void;
+  setExportName(v: string): void;
+  setExportAuthor(v: string): void;
+  setInspectResult(node: InspectedNode | { error: string }): void;
+}
+
+// ------------------------------------------------------------------
+// getState / setState (imperative API for non-React consumers & tests)
+// ------------------------------------------------------------------
+
+/**
+ * Imperative state access — mirrors zustand's `useStore.getState()`.
+ * Returns the full combined state with all actions bound.
+ */
+useStudioStore.getState = (): CombinedStudioStore => {
+  const state = getCombinedState();
+  return {
+    ...state,
+    // Derived helpers
+    getActiveProject: () => useProjectStore.getState().getActiveProject(),
+
+    // Project actions
+    refreshProjects: () => useProjectStore.getState().refreshProjects(),
+    createProject: () => useProjectStore.getState().createProject(),
+    importProject: () => useProjectStore.getState().importProject(),
+    deleteProject: (id) => useProjectStore.getState().deleteProject(id),
+    renameProject: (p, name, author) => useProjectStore.getState().renameProject(p, name, author),
+    saveActiveProject: (patch) => useProjectStore.getState().saveActiveProject(patch),
+    selectProject: (id) => useProjectStore.getState().selectProject(id),
+    changeAgent: async (agentId) => {
+      // Delegate to project store's saveActiveProject + capture store reset
+      const project = useProjectStore.getState().getActiveProject();
+      if (project) {
+        void useProjectStore.getState().saveActiveProject({ agentId });
+      }
+      useCaptureStore.getState().resetOverrides();
+      useCaptureStore.setState({
+        inspectingIdx: null,
+        undoStack: [],
+        redoStack: [],
+      });
+    },
+    refreshThemeLibrary: () => useImageWallpaperStore.getState().refreshThemeLibrary(),
+    loadThemeIntoProject: (themeId) =>
+      useImageWallpaperStore.getState().loadThemeIntoProject(themeId),
+    refreshBundles: () => useBundleStore.getState().refreshBundles(),
+    importAndInstallBundle: () => useBundleStore.getState().importAndInstallBundle(),
+    installBundle: (id) => useBundleStore.getState().installBundle(id),
+    deleteBundle: (id) => useBundleStore.getState().deleteBundle(id),
+
+    // Capture actions
+    baselineSnapshot: () => useCaptureStore.getState().baselineSnapshot(),
+    restoreAgent: () => useCaptureStore.getState().restoreAgent(),
+    exportTheme: () => useCaptureStore.getState().exportTheme(),
+    toggleInspect: () => useCaptureStore.getState().toggleInspect(),
+    setOverride: (key, value) => useCaptureStore.getState().setOverride(key, value),
+    resetOverrides: () => useCaptureStore.getState().resetOverrides(),
+    undo: () => useCaptureStore.getState().undo(),
+    redo: () => useCaptureStore.getState().redo(),
+    addPinnedSelector: () => useCaptureStore.getState().addPinnedSelector(),
+    removePinnedSelector: (sel) => useCaptureStore.getState().removePinnedSelector(sel),
+    togglePseudo: (state) => useCaptureStore.getState().togglePseudo(state),
+    applyPalette: (palette, action) => useCaptureStore.getState().applyPalette(palette, action),
+    setOverrideColors: (palette) => useCaptureStore.getState().setOverrideColors(palette),
+    setPaletteLoaded: (palette) => useCaptureStore.getState().setPaletteLoaded(palette),
+    pinSelector: (sel) => useCaptureStore.getState().pinSelector(sel),
+    extractImageFromImage: (base64Data) =>
+      useImageWallpaperStore.getState().extractImageFromImage(base64Data),
+    applyWallpaperExtractedPalette: (wallpaperId) =>
+      useImageWallpaperStore.getState().applyWallpaperExtractedPalette(wallpaperId),
+    applyImageToTheme: () => useImageWallpaperStore.getState().applyImageToTheme(),
+    clearImageToTheme: () => useImageWallpaperStore.getState().clearImageToTheme(),
+    setImageAccent: (hex) => useImageWallpaperStore.getState().setImageAccent(hex),
+    previewWallpaperTheme: (wallpaperId) =>
+      useImageWallpaperStore.getState().previewWallpaperTheme(wallpaperId),
+    applyWallpaperTheme: (wallpaperId) =>
+      useImageWallpaperStore.getState().applyWallpaperTheme(wallpaperId),
+    clearWallpaperPreview: () => useImageWallpaperStore.getState().clearWallpaperPreview(),
+
+    // Simple setters
+    setCreatingProject: (v) => useProjectStore.getState().setCreatingProject(v),
+    setNewName: (v) => useProjectStore.getState().setProjectName(v),
+    setNewAuthor: (v) => useProjectStore.getState().setProjectAuthor(v),
+    setNewAgent: (v) => useProjectStore.getState().setProjectAgent(v),
+    setEditingId: (v) => {
+      if (v) useProjectStore.getState().startEditing(v);
+      else useProjectStore.getState().cancelEditing();
+    },
+    setEditName: (v) => useProjectStore.getState().updateEditingField('name', v),
+    setEditAuthor: (v) => useProjectStore.getState().updateEditingField('author', v),
+    setThemeLibraryOpen: (v) => useImageWallpaperStore.getState().setThemeLibraryOpen(v),
+    setCustomSelectorInput: (v) => useCaptureStore.getState().setCustomSelectorInput(v),
+    setPreviewView: (v) => useCaptureStore.getState().setPreviewView(v),
+    setSearchQuery: (v) => useCaptureStore.getState().setSearchQuery(v),
+    setHoveredIdx: (v) => useCaptureStore.getState().setHoveredIdx(v),
+    setInspectingIdx: (v) => useCaptureStore.getState().setInspectingIdx(v),
+    setPseudoView: (v) => useCaptureStore.getState().setPseudoView(v),
+    setSchemeView: (v) => useCaptureStore.getState().setSchemeView(v),
+    setCaptureSchemes: (v) => useCaptureStore.getState().setCaptureSchemes(v),
+    setExportName: (v) => useCaptureStore.getState().setExportName(v),
+    setExportAuthor: (v) => useCaptureStore.getState().setExportAuthor(v),
+    setInspectResult: (node) => useCaptureStore.getState().setInspectResult(node),
+
+    // --- IPC-subscribed progress / health ---
+    initAnalysisProgressSubscription: () => {
+      if (_analysisProgressSubscribed) return;
+      _analysisProgressSubscribed = true;
+      api.onVisualAnalysisProgress((payload) => {
+        _analysisProgress = payload;
+      });
+    },
+    initHealthReportSubscription: () => {
+      if (_healthReportSubscribed) return;
+      _healthReportSubscribed = true;
+      api.onThemeHealthReport((report) => {
+        _healthReportByAgent = { ..._healthReportByAgent, [report.agentId]: report };
+      });
+    },
+  };
+};
+
+/**
+ * Imperative state mutation — mirrors zustand's `useStore.setState()`.
+ * Merges the partial state into the appropriate sub-store.
+ *
+ * Handles both flat keys (backward compat) and maps them to the nested
+ * sub-store state structures.
+ */
+useStudioStore.setState = (partial: Partial<CombinedStudioStore>): void => {
+  const p = partial as Record<string, unknown>;
+
+  // --- Project-store fields ---
+  const projectPatch: Record<string, unknown> = {};
+  if ('projects' in p) projectPatch.projects = p.projects;
+  if ('activeProjectId' in p) projectPatch.activeProjectId = p.activeProjectId;
+  if ('creatingProject' in p) projectPatch.creatingProject = p.creatingProject;
+  if ('importing' in p) projectPatch.importing = p.importing;
+  if (Object.keys(projectPatch).length > 0) useProjectStore.setState(projectPatch);
+
+  // --- Bundle-store fields ---
+  const bundlePatch: Record<string, unknown> = {};
+  if ('bundles' in p) bundlePatch.bundles = p.bundles;
+  if ('bundlesLoading' in p) bundlePatch.bundlesLoading = p.bundlesLoading;
+  if (Object.keys(bundlePatch).length > 0) useBundleStore.setState(bundlePatch);
+
+  // --- Capture-store fields ---
+  const capturePatch: Record<string, unknown> = {};
+  const captureKeys = [
+    'previewView',
+    'inspectingIdx',
+    'searchQuery',
+    'hoveredIdx',
+    'toolOverrides',
+    'undoStack',
+    'redoStack',
+    'inspectMode',
+    'liveNode',
+    'liveError',
+    'pinnedSelectors',
+    'pseudoStates',
+    'captureSchemes',
+    'customSelectorInput',
+    'pseudoView',
+    'schemeView',
+    'baselines',
+    'baselineLoadingMap',
+    'baselineErrorMap',
+    'exportName',
+    'exportAuthor',
+    'exportState',
+    'domTreeVersion',
+  ];
+  for (const key of captureKeys) {
+    if (key in p) capturePatch[key] = p[key];
+  }
+  if (Object.keys(capturePatch).length > 0) useCaptureStore.setState(capturePatch);
+
+  // --- Image-wallpaper-store fields ---
+  // Map flat keys (imageToThemeStatus, imageToThemePalette, etc.) to nested imageToTheme
+  const iw = useImageWallpaperStore.getState();
+  const iwPatch: Record<string, unknown> = {};
+  const imageToThemePatch: Record<string, unknown> = {};
+  if ('imageToThemeStatus' in p) imageToThemePatch.status = p.imageToThemeStatus;
+  if ('imageToThemeError' in p) imageToThemePatch.error = p.imageToThemeError;
+  if ('imageToThemeMode' in p) imageToThemePatch.mode = p.imageToThemeMode;
+  if ('imageToThemePalette' in p) imageToThemePatch.palette = p.imageToThemePalette;
+  if ('imageToThemeAccent' in p) imageToThemePatch.accent = p.imageToThemeAccent;
+  if (Object.keys(imageToThemePatch).length > 0) {
+    iwPatch.imageToTheme = { ...iw.imageToTheme, ...imageToThemePatch };
+  }
+
+  // Map flat wallpaperPreview keys
+  const wpPatch: Record<string, unknown> = {};
+  if ('wallpaperPreviewPalette' in p) wpPatch.palette = p.wallpaperPreviewPalette;
+  if ('wallpaperPreviewLoading' in p) wpPatch.loading = p.wallpaperPreviewLoading;
+  if ('wallpaperPreviewError' in p) wpPatch.error = p.wallpaperPreviewError;
+  if (Object.keys(wpPatch).length > 0) {
+    iwPatch.wallpaperPreview = { ...iw.wallpaperPreview, ...wpPatch };
+  }
+
+  // Map flat wallpaperApply keys
+  const waPatch: Record<string, unknown> = {};
+  if ('wallpaperApplyLoading' in p) waPatch.loading = p.wallpaperApplyLoading;
+  if ('wallpaperApplyError' in p) waPatch.error = p.wallpaperApplyError;
+  if (Object.keys(waPatch).length > 0) {
+    iwPatch.wallpaperApply = { ...iw.wallpaperApply, ...waPatch };
+  }
+
+  if ('installedThemes' in p) iwPatch.installedThemes = p.installedThemes;
+  if ('themeLibraryOpen' in p) iwPatch.themeLibraryOpen = p.themeLibraryOpen;
+  if (Object.keys(iwPatch).length > 0) useImageWallpaperStore.setState(iwPatch);
+};
+
+// Subscribe passthrough (zustand compatibility)
+useStudioStore.subscribe = (
+  listener: (state: CombinedStudioStore, prevState: CombinedStudioStore) => void,
+): (() => void) => {
+  // R7: 缓存上一次 combined state，确保 prevState !== currentState。
+  let prevCombined = useStudioStore.getState();
+  const notify = () => {
+    const current = useStudioStore.getState();
+    listener(current, prevCombined);
+    prevCombined = current;
+  };
+  // Subscribe to all sub-stores and re-emit combined state.
+  const unsubs = [
+    useProjectStore.subscribe(notify),
+    useBundleStore.subscribe(notify),
+    useCaptureStore.subscribe(notify),
+    useImageWallpaperStore.subscribe(notify),
+  ];
+  return () => {
+    for (const fn of unsubs) fn();
+  };
+};
+
+// Re-export the original useActiveProject convenience selector
+export function useActiveProject(): StudioProject | null {
+  return useProjectStore((s) => s.getActiveProject());
+}

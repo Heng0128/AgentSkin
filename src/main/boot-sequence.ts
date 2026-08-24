@@ -52,6 +52,14 @@ import { extractThemeFilesFromArgv } from './file-open';
 import { registerIpc } from './ipc';
 import { disposeCoordinatorIpc } from './ipc/coordinator-ipc';
 import { loadLocalePreference } from './locale-preferences';
+import {
+  createMcpContext,
+  createMcpServer,
+  registerAllTools,
+  startMcpServer,
+  stopMcpServer,
+} from './mcp';
+import { startMcpHttpServer, stopMcpHttpServer } from './mcp/http-server';
 import { brandingRoot, ctx, registerDisposable, sendLog } from './main-context';
 import { terminateSceneWorkerPool } from './scene-renderer-async';
 import { performanceLogger } from './services/performance';
@@ -397,6 +405,41 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
   if (!windowResult.ok) {
     warnings.push(windowResult.warning);
     throw new Error(windowResult.warning);
+  }
+
+  // --- Step 8.5: MCP Server (DEGRADABLE) ---
+  // Start the MCP server for external tool integration. This is intentionally
+  // non-critical: failure to start MCP must never block the app from booting.
+  // Tools must be registered before the server starts; the server reads from
+  // the global tool registry at creation time.
+  // Enabled by default; set AGENTSKIN_DISABLE_MCP=1 to skip.
+  if (process.env.AGENTSKIN_DISABLE_MCP !== '1') {
+    try {
+      registerAllTools();
+      const mcpCtx = createMcpContext(ctx);
+
+      // Start stdio MCP server (for CLI/debug use)
+      createMcpServer(mcpCtx);
+      await startMcpServer(mcpCtx);
+      registerDisposable(() => {
+        void stopMcpServer();
+      });
+
+      // Start HTTP MCP server (for Cursor/Windsurf/CatPaw connection)
+      const httpPort = await startMcpHttpServer(mcpCtx);
+      registerDisposable(() => {
+        void stopMcpHttpServer();
+      });
+      console.error(`[boot] MCP server started (stdio + http://127.0.0.1:${httpPort}/mcp)`);
+      sendLog(`[boot] MCP server started (stdio + http://127.0.0.1:${httpPort}/mcp)`);
+    } catch (error) {
+      const mcpWarning = `MCP server start failed (non-critical): ${toMessage(error)}`;
+      warnings.push(mcpWarning);
+      console.error(`[boot] ${mcpWarning}`);
+      sendLog(`[boot] ${mcpWarning}`);
+    }
+  } else {
+    sendLog('[boot] MCP server disabled via AGENTSKIN_DISABLE_MCP=1');
   }
 
   // --- Finalize ---

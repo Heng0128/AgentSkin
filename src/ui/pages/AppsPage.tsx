@@ -42,25 +42,35 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { AppCard } from '@/components/apps/AppCard';
 import { AppDetailsDrawer } from '@/components/apps/AppDetailsDrawer';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/empty-state';
+import { FilterChips } from '@/components/ui/filter-chips';
+import { PageHeader } from '@/components/ui/page-header';
+import { PageToolbar } from '@/components/ui/page-toolbar';
+import { Spinner } from '@/components/ui/spinner';
 import { useAppsStore } from '@/stores/appsStore';
+import { useShellStore } from '@/stores/shellStore';
 
 import { identityKey } from '@shared/app-identity';
+import { uiMessages } from '@shared/i18n';
 import type { ScannedApp } from '@shared/types';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Monitor, Plus, RefreshCw } from 'lucide-react';
 
 /** Static skeleton item IDs — avoids array-index keys in the loading placeholder. */
 const SKELETON_ITEMS = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8'];
 
 /** Category filter tabs. */
 const CATEGORY_TABS = [
-  { key: 'all' as const, label: '全部' },
-  { key: 'adapted' as const, label: '已适配' },
-  { key: 'other' as const, label: '其它' },
-  { key: 'hidden' as const, label: '隐藏' },
+  { key: 'all' as const, label: 'appsFilterAll' },
+  { key: 'adapted' as const, label: 'appsFilterAdapted' },
+  { key: 'other' as const, label: 'appsFilterOther' },
+  { key: 'hidden' as const, label: 'appsFilterHidden' },
 ];
 
 export function AppsPage() {
+  // i18n
+  const locale = useShellStore((s) => s.locale);
+  const t = uiMessages[locale];
+
   const scanResult = useAppsStore((s) => s.scanResult);
   const scanning = useAppsStore((s) => s.scanning);
   const scanError = useAppsStore((s) => s.scanError);
@@ -120,6 +130,19 @@ export function AppsPage() {
     }
   }, [categoryFilter, adapted, other, hiddenApps]);
 
+  /** Build filter chips options with counts appended to labels. */
+  const filterOptions = useMemo(() => {
+    return CATEGORY_TABS.map((tab) => ({
+      value: tab.key,
+      label: `${t[tab.label as keyof typeof t]} (${counts[tab.key]})`,
+    }));
+  }, [t, counts]);
+
+  /** Trigger a forced rescan of installed Electron applications. */
+  const handleScan = () => {
+    void scan(true);
+  };
+
   /** Open the native-style file picker via a hidden input[type=file]. */
   const handleManualAdd = () => {
     fileInputRef.current?.click();
@@ -162,62 +185,37 @@ export function AppsPage() {
     <div className="relative flex h-full flex-col overflow-hidden">
       {/* Scrollable content */}
       <div className="min-h-0 flex-1 snap-y snap-proximity overflow-y-auto scroll-smooth">
-        <div className="mx-auto max-w-[1240px] px-8 py-6" style={{ paddingBottom: '320px' }}>
+        <div className="px-3 py-3 pb-[var(--pb-drawer,320px)]">
           {/* Page header */}
-          <header className="mb-5 flex items-center justify-between">
-            <div>
-              <h1 className="font-display text-sm font-bold tracking-tight text-foreground">
-                应用
-              </h1>
-              <p className="mt-1 as-micro">
-                单击查看详情 · 双击启动应用 · 已适配应用自动注入 CDP 端口
-              </p>
-            </div>
-            <Button variant="outline" size="sm" disabled={scanning} onClick={() => void scan(true)}>
-              <RefreshCw
-                size={14}
-                className={cn('text-muted-foreground', scanning && 'animate-spin')}
-              />
-              {scanning ? '扫描中...' : '扫描'}
-            </Button>
-          </header>
+          <PageHeader title={t.navApps} count={visibleApps.length}>
+            <PageToolbar
+              actions={
+                <Button variant="outline" size="sm" onClick={handleScan} disabled={scanning}>
+                  {scanning ? <Spinner className="animate-spin" /> : <RefreshCw className="size-3.5" />}
+                  {t.scan}
+                </Button>
+              }
+            />
+          </PageHeader>
 
-          {/* Horizontal category tabs */}
-          <div className="mb-5 flex gap-2 border-b border-border pb-2">
-            {CATEGORY_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setCategoryFilter(tab.key)}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-[var(--dl-radius,2px)] px-3 py-1.5 text-[12px] font-medium transition-colors duration-fast',
-                  categoryFilter === tab.key
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                )}
-              >
-                {tab.label}
-                <span
-                  className={cn(
-                    'font-mono text-[10px] tabular-nums',
-                    categoryFilter === tab.key ? 'text-foreground/70' : 'text-muted-foreground/50',
-                  )}
-                >
-                  {counts[tab.key]}
-                </span>
-              </button>
-            ))}
+          {/* Category filter chips */}
+          <div className="mb-5">
+            <FilterChips
+              options={filterOptions}
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+            />
           </div>
 
           {/* Scan progress bar */}
           {scanning && (
             <div
-              className="mb-5 h-1 overflow-hidden rounded-[var(--dl-radius,2px)] bg-muted"
+              className="mb-5 h-1 overflow-hidden rounded-sm bg-muted"
               role="progressbar"
               aria-valuenow={scanProgress}
             >
               <div
-                className="h-full bg-cr-primary transition-all duration-slow"
+                className="h-full bg-primary transition-all duration-slow"
                 style={{ width: `${scanProgress}%` }}
               />
             </div>
@@ -227,13 +225,14 @@ export function AppsPage() {
           {scanError && (
             <div
               role="alert"
-              className="mb-5 flex items-center justify-between gap-3 rounded-md bg-destructive/10 px-4 py-3"
+              className="mb-5 flex items-center justify-between gap-2 rounded-md bg-destructive/10 px-2 py-2.5"
             >
-              <p className="min-w-0 flex-1 truncate text-[12px] text-destructive">
-                扫描失败：{scanError}
+              <p className="min-w-0 flex-1 truncate text-[11px] text-destructive">
+                {t.appsScanFailed}
+                {scanError}
               </p>
               <Button variant="ghost" size="sm" onClick={() => void scan(true)}>
-                重试
+                {t.appsActionRetry}
               </Button>
             </div>
           )}
@@ -242,15 +241,15 @@ export function AppsPage() {
           <div className="mb-5 flex items-center gap-4 as-micro">
             <span className="flex items-center gap-2">
               <span className="inline-block size-2 rounded-full bg-cr-success" />
-              运行中
+              {t.appsStatusRunning}
             </span>
             <span className="flex items-center gap-2">
-              <span className="inline-block size-2 rounded-full bg-[var(--muted-foreground)] opacity-25" />
-              未启动
+              <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
+              {t.appsStatusStopped}
             </span>
             <span className="flex items-center gap-2">
               <span className="inline-block size-2 rounded-full bg-cr-warning" />
-              无端口
+              {t.appsStatusNoPort}
             </span>
           </div>
 
@@ -276,25 +275,31 @@ export function AppsPage() {
 
           {/* Empty state — scanned but no apps found for current filter */}
           {scanResult && !scanning && visibleApps.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <p className="font-mono text-[11px]">
-                {categoryFilter === 'hidden' ? '没有隐藏的应用' : '未发现任何 Electron 应用'}
-              </p>
-            </div>
+            <EmptyState
+              icon={<Monitor className="size-8" />}
+              title={categoryFilter === 'hidden' ? t.appsEmptyHidden : t.appsEmptyNoApps}
+            />
           )}
 
           {/* Empty state — pre-scan guidance */}
           {!scanResult && !scanning && !scanError && (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-              <p className="text-[13px]">点击扫描按钮发现应用</p>
-            </div>
+            <EmptyState
+              icon={<Monitor className="size-8" />}
+              title={t.appsScanToFind}
+              action={
+                <Button variant="outline" size="sm" onClick={() => void scan(true)}>
+                  <RefreshCw size={14} />
+                  {t.appsActionScan}
+                </Button>
+              }
+            />
           )}
 
           {/* Manual add button */}
           <div className="mt-4">
             <Button variant="ghost" size="sm" onClick={handleManualAdd}>
-              <Plus size={14} className="text-muted-foreground/50" />
-              手动添加
+              <Plus size={14} className="text-muted-foreground" />
+              {t.appsActionAddManual}
             </Button>
             <input
               ref={fileInputRef}

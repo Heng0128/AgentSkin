@@ -257,9 +257,18 @@ export async function tryEngineInjection(
   bundle: ThemeBundle,
   targetTheme: ResolvedThemeTarget,
   imageDataUrls: Record<string, string> | null,
+  imageFilePaths: Record<string, string> | null | undefined,
   deps: EngineInjectionDeps,
 ): Promise<InjectEngineResult | null> {
-  return tryEngineInjectionImpl(session, appId, bundle, targetTheme, imageDataUrls, deps);
+  return tryEngineInjectionImpl(
+    session,
+    appId,
+    bundle,
+    targetTheme,
+    imageDataUrls,
+    imageFilePaths,
+    deps,
+  );
 }
 
 // ---------------------------------------------------------------------------

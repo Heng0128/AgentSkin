@@ -31,15 +31,19 @@
 | `deep-core.mjs` | DeepCore 运行时 — Shadow DOM 穿透、Fragment 路由、上下文感知（RFC 2026-08-20） |
 | `hybrid-injector.mjs` | HybridInjector — 混合注入核心（GitHub Top 5 可移植模式合并）。提供 `applyIncremental`（rAF 批量 setProperty）、`applyFullTheme`（CDP 原子全量替换）、`applyBatch`（多规则原子更新）、`hotReplace`（无闪烁热替换） |
 | `hybrid-injector.test.mjs` | HybridInjector 独立验证测试（18 项，`node engines/shared/hybrid-injector.test.mjs`） |
+| `adopted-sheets-manager.mjs` | 统一管理 Document.prototype.adoptedStyleSheets 的 setter 拦截，消除多 adapter 共存时的 setter 覆盖冲突 |
+| `token-discovery.mjs` | 增量 CSS 变量发现引擎，替代 adapter 中的全量 stylesheet 扫描 |
 
 ### 目录总览
 
 ```
 engines/
 ├── shared/
-│   ├── deep-core.mjs            # DeepCore 运行时（Shadow DOM / Fragment / 上下文）
-│   ├── hybrid-injector.mjs      # 混合注入核心（增量 + 全量 + 批量）
-│   └── hybrid-injector.test.mjs # 独立验证测试
+│   ├── deep-core.mjs               # DeepCore 运行时（Shadow DOM / Fragment / 上下文）
+│   ├── hybrid-injector.mjs         # 混合注入核心（增量 + 全量 + 批量）
+│   ├── hybrid-injector.test.mjs    # 独立验证测试
+│   ├── adopted-sheets-manager.mjs  # adoptedStyleSheets setter 统一管理
+│   └── token-discovery.mjs         # 增量 CSS 变量发现引擎
 ├── traework/
 │   ├── adapter.mjs      # traework CDP 注入器
 │   ├── tokens.css        # 14-token 变量定义

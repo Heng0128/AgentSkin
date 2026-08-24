@@ -94,13 +94,16 @@ vi.mock('@/lib/utils', () => ({
 
 // --- Mock lucide icons (SSR-safe) -------------------------------------
 
-vi.mock('lucide-react', () => {
-  const stub = () => null;
+vi.mock('lucide-react', async (importOriginal) => {
+  const actual = await importOriginal<
+    Record<string, () => null>
+  >();
   return {
-    Package: stub,
-    Search: stub,
-    UploadCloud: stub,
-    ChevronDownIcon: stub,
+    ...actual,
+    // all icons render as null in SSR mock
+    Package: () => null,
+    Search: () => null,
+    UploadCloud: () => null,
   };
 });
 

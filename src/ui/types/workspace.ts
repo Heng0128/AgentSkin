@@ -79,10 +79,11 @@ export const DOCK_HEIGHT_COLLAPSED = 32;
 // Inspector
 // ---------------------------------------------------------------------------
 
-export type InspectorTabId = 'profile';
+export type InspectorTabId = 'profile' | 'element';
 
 export const INSPECTOR_TABS: { id: InspectorTabId; label: string }[] = [
   { id: 'profile', label: 'Profile' },
+  { id: 'element', label: 'Element' },
 ];
 
 export interface InspectorState {

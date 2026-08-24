@@ -159,11 +159,25 @@ export function compareSemver(a: string, b: string): number {
   return pa.prerelease.length - pb.prerelease.length;
 }
 
-/** An image asset ready to be embedded into a theme bundle. */
+/**
+ * An image asset ready to be embedded into a theme bundle.
+ *
+ * Two shapes:
+ *  - Embedded mode `{ filename, mimeType, base64 }`: the bytes are inlined
+ *    into the package (small assets: icon / preview / creative overlays).
+ *  - External-file mode `{ filename, mimeType, file }`: the image stays a real
+ *    file on disk, referenced by a safe relative path. The engine streams it
+ *    at apply time — lossless for 4K/8K wallpaper art (never re-encoded, never
+ *    inflated into base64). This is the canonical mode for the hero backdrop.
+ */
 interface EmbeddedImage {
   filename: string;
   mimeType: string;
-  base64: string;
+  /** Inline base64 payload (embedded mode). Mutually exclusive with `file`. */
+  base64?: string;
+  /** Safe relative path within the package (external-file mode). Mutually
+   *  exclusive with `base64`. */
+  file?: string;
 }
 
 /**
@@ -437,8 +451,27 @@ function mimeTypeFor(filename: string): string {
   }
 }
 
-/** Read an image file from a package directory into an embeddable asset. */
-async function readImageAsset(packagePath: string, relativePath: string): Promise<EmbeddedImage> {
+/**
+ * Read an image file from a package directory into an embeddable asset.
+ *
+ * `mode: 'external'` keeps the image as a file reference (`{ file: relative }`)
+ * instead of inlining base64 — used for the hero backdrop so 4K/8K wallpaper
+ * art is preserved losslessly. Embedded mode is for small assets (icon /
+ * preview / creative overlays) that the catalog reads as data URLs.
+ */
+async function readImageAsset(
+  packagePath: string,
+  relativePath: string,
+  mode: 'embedded' | 'external' = 'embedded',
+): Promise<EmbeddedImage> {
+  const file = path.normalize(relativePath).replace(/\\/g, '/');
+  if (mode === 'external') {
+    return {
+      filename: path.basename(relativePath),
+      mimeType: mimeTypeFor(relativePath),
+      file,
+    };
+  }
   const buffer = await fs.readFile(path.join(packagePath, relativePath));
   return {
     filename: path.basename(relativePath),
@@ -479,11 +512,15 @@ export class ThemeInstaller {
     // is the canonical backdrop; `assets.images.hero` is the 2a special-case
     // alias (RFC themes-asset-injection-2a §2.1) when only the image set is
     // declared.
+    //
+    // The hero is read in EXTERNAL-file mode: it stays a real file on disk
+    // (referenced by safe relative path) so 4K/8K wallpaper art is preserved
+    // losslessly and never inflated into base64 in the package.
     let hero: EmbeddedImage;
     if (manifest.hero) {
-      hero = await readImageAsset(packagePath, manifest.hero);
+      hero = await readImageAsset(packagePath, manifest.hero, 'external');
     } else if (manifest.assets?.images?.hero) {
-      hero = await readImageAsset(packagePath, manifest.assets.images.hero);
+      hero = await readImageAsset(packagePath, manifest.assets.images.hero, 'external');
     } else {
       hero = preview;
     }
@@ -724,12 +761,25 @@ export class ThemeInstaller {
 
   /**
    * Install all packages from a scan. Returns all installed themes.
+   *
+   * `packageRoot` (optional) is the directory root the packages live in —
+   * used to resolve external-file hero assets (lossless wallpaper mode) to
+   * absolute paths at apply time. The seeder passes the built-in themes dir;
+   * user-imported bundles pass their own package dir.
    */
-  async installAll(packages: InstalledThemePackage[]): Promise<InstalledTheme[]> {
+  async installAll(
+    packages: InstalledThemePackage[],
+    packageRoot?: string,
+  ): Promise<InstalledTheme[]> {
     const results: InstalledTheme[] = [];
     for (const pkg of packages) {
       try {
-        const installed = await this.install(pkg);
+        // External-file hero assets (lossless wallpaper mode) resolve relative
+        // to EACH THEME'S OWN directory, not the parent themes dir. When no
+        // explicit packageRoot is given, default to the package's own dir so
+        // `hero.jpg` resolves to `<themeDir>/hero.jpg`, not `<themesDir>/hero.jpg`.
+        const resolvedRoot = packageRoot ?? pkg.packagePath;
+        const installed = await this.install(pkg, resolvedRoot);
         results.push(installed);
       } catch (error) {
         mainErrorFromCatch('ThemeInstaller', error, `failed to install "${pkg.manifest.id}"`);

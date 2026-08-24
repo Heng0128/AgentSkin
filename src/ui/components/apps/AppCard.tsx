@@ -61,7 +61,7 @@ function StatusDot({ state }: { state: AppRunningState }) {
         'inline-block size-2 rounded-full',
         state === 'running' && 'bg-cr-success',
         state === 'running-no-port' && 'bg-cr-warning',
-        state === 'idle' && 'bg-[var(--muted-foreground)] opacity-25',
+        state === 'idle' && 'bg-muted-foreground/25',
       )}
     />
   );
@@ -96,11 +96,11 @@ export function AppCard({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'group flex h-auto w-full flex-col items-center gap-2 rounded-md p-2',
-        'transition-colors duration-base ease-out hover:bg-muted/40',
-        'hover:bg-accent/50',
+        'group flex h-auto w-full flex-col items-center gap-2 rounded-[var(--radius-md)] p-2',
+        'transition-colors duration-fast ease-out hover:bg-muted',
+        'hover:bg-accent',
         'active:bg-accent/70',
-        isRunning && 'ring-2 ring-cr-success/50',
+        isRunning && 'ring-1 ring-success',
       )}
     >
       {/* Icon — rendered directly (desktop-shortcut style), no container block */}
@@ -115,7 +115,7 @@ export function AppCard({
             onError={() => setImgError(true)}
           />
         ) : (
-          <span className="flex size-12 items-center justify-center font-display text-[22px] font-bold tracking-tight text-muted-foreground">
+          <span className="flex size-12 items-center justify-center text-xl font-normal text-muted-foreground">
             {placeholder}
           </span>
         )}
@@ -130,11 +130,9 @@ export function AppCard({
 
       {/* Name + port */}
       <div className="flex w-full flex-col items-center gap-0">
-        <span className="max-w-full truncate font-display text-[13px] font-bold tracking-[-.01em]">
-          {app.productName}
-        </span>
+        <span className="max-w-full truncate text-body font-medium">{app.productName}</span>
         {showRunningStatus && port !== null && (
-          <span className="font-mono text-[10px] tabular-nums text-muted-foreground/60">
+          <span className="font-mono text-micro tabular-nums text-muted-foreground/60">
             :{port}
           </span>
         )}

@@ -17,7 +17,7 @@ ${tokenBlock(t, host)}
 
 /* ===== Native token overrides ===== */
 ${host}:root {
-  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+  /* color-scheme 已在 tokenBlock() 中声明 (:root 级)，此处删除以避免重复 */
 
   /* Backgrounds */
   --dbx-bg-body-web: ${c.background} !important;
@@ -693,6 +693,7 @@ ${host} body::before {
    anchors — use them exclusively (no sub-string class matching). */
 ${host} [data-testid="chat_route_layout_leftside_nav"],
 ${host} [data-testid="flow_chat_sidebar"],
+${host} [data-testid="chat-route-layout"],
 ${host} [data-testid="chat_route_layout"],
 ${host} [data-testid="chat_content"],
 ${host} [role="main"] {
@@ -862,7 +863,16 @@ ${host} [data-testid="flow_chat_sidebar"] a:hover {
   background: color-mix(in srgb, var(--agentskin-accent) 8%, transparent) !important;
 }
 
-/* ===== Extra punch-through: Doubao opaque containers ===== */
+/* ===== Extra punch-through: Doubao opaque containers =====
+   PROBE-VERIFIED 2026-08-23 (live doubao-chat): the current layout is
+     [chat-route-layout] > div.main-with-nav-<hash> (full-viewport wrapper)
+     ├─ nav[chat_route_layout_leftside_nav] → [flow_chat_sidebar]
+     └─ main.center-bg-<hash> (main content)
+   Both wrappers carry opaque --dbx-bg-base-web backgrounds that block the
+   body::before art layer. Exact-ish anchors: class^= prefix (hash suffix),
+   main tag for the center column. */
+${host} [class*="main-with-nav"],
+${host} main[class*="center-bg"],
 ${host} [class*="content-area"],
 ${host} [class*="chat-content"],
 ${host} [class*="main-content"],
@@ -927,9 +937,14 @@ ${host} [data-testid="send_btn"]:active {
   filter: brightness(0.95) !important;
 }
 
-/* Outlined / secondary buttons: transparent bg + accent border + accent text */
+/* Outlined / secondary buttons: transparent bg + accent border + accent text
+   PROBE-VERIFIED 2026-08-23: the old "button[class*=secondary]" matched the
+   home "最近/工作" tab buttons whose class is text-dbx-text-secondary (a text
+   colour utility) and threw a 1px square border on them. Exclude the
+   text-dbx-text-* token classes; real secondary buttons are driven by
+   doubao's own --s-color-* tokens, and the toggle pills are restored below. */
 ${host} button[class*="outlined"],
-${host} button[class*="secondary"],
+${host} button[class*="secondary"]:not([class*="text-dbx-text"]),
 ${host} [class*="btn-outlined"],
 ${host} [class*="btn-secondary"],
 ${host} [class*="outline-btn"] {
@@ -940,7 +955,7 @@ ${host} [class*="outline-btn"] {
 }
 
 ${host} button[class*="outlined"]:hover,
-${host} button[class*="secondary"]:hover,
+${host} button[class*="secondary"]:not([class*="text-dbx-text"]):hover,
 ${host} [class*="btn-outlined"]:hover,
 ${host} [class*="btn-secondary"]:hover,
 ${host} [class*="outline-btn"]:hover {

@@ -41,6 +41,7 @@
  *   AgentEngineService.restore → hardeningRemove (page engine + non-page CSS)
  */
 
+import { isAbsolute, relative, resolve } from 'node:path';
 import type { BrowserWindow } from 'electron';
 import type { ApplicationAdapter } from '../../adapters/base';
 import {
@@ -144,6 +145,7 @@ export interface CdpFanoutDeps {
     bundle: ThemeBundle,
     targetTheme: ResolvedThemeTarget,
     imageDataUrls: Record<string, string> | null,
+    imageFilePaths?: Record<string, string> | null,
   ) => Promise<InjectEngineResult | null>;
   /** Logger sink (usually `AgentEngineService.log`). */
   log: (line: string) => void;
@@ -311,6 +313,23 @@ async function injectSingleSecondaryTarget(
  *
  * Aborts mid-loop if the epoch flips (newer apply/restore superseded).
  */
+/** Resolve the package root recorded at install time (theme.copy.packageRoot),
+ *  falling back to null when absent. */
+function resolveThemePackageRoot(bundle: ThemeBundle): string | null {
+  const copy = bundle.theme?.copy as Record<string, unknown> | undefined;
+  const root = copy?.packageRoot;
+  return typeof root === 'string' && root.length > 0 ? root : null;
+}
+
+/** Resolve a relative path inside a root, null when it escapes the root. */
+function resolveInsideRoot(root: string, rel: string): string | null {
+  const absRoot = resolve(root);
+  const absTarget = resolve(absRoot, rel);
+  const relToRoot = relative(absRoot, absTarget);
+  if (relToRoot.startsWith('..') || isAbsolute(relToRoot)) return null;
+  return absTarget;
+}
+
 export async function hardeningPass(
   appId: AgentId,
   port: number,
@@ -380,6 +399,34 @@ export async function hardeningPass(
   };
   const resolvedImages = Object.keys(imageDataUrls).length > 0 ? imageDataUrls : null;
 
+  // External-file assets (lossless 4K/8K wallpaper mode): `targetTheme`
+  // carries relative package paths (`imageFilePaths` / `artFilePath`). Resolve
+  // them to absolute paths against the package root so the injection layer can
+  // stream the real file (injectHeroBlob) instead of base64. The package root
+  // is recorded at install time (theme.copy.packageRoot = built-in themes dir
+  // for the seeder, or the bundle's own dir for user imports).
+  const imageFilePaths: Record<string, string> = {};
+  const packageRoot = resolveThemePackageRoot(bundle);
+  // Fallback root: bundles recorded by older builds stored the PARENT themes
+  // dir (e.g. .../themes) instead of the theme's own dir. Try packageRoot,
+  // then packageRoot/<themeId> so hero.jpg resolves to themes/art-xxx/hero.jpg.
+  const themeId = bundle.theme?.id ?? '';
+  const candidateRoots = [
+    packageRoot,
+    packageRoot && themeId ? `${packageRoot}/${themeId}` : null,
+  ].filter((r): r is string => !!r);
+  for (const root of candidateRoots) {
+    for (const [name, rel] of Object.entries(targetTheme.imageFilePaths ?? {})) {
+      const abs = resolveInsideRoot(root, rel);
+      if (abs) imageFilePaths[name] = abs;
+    }
+    if (targetTheme.artFilePath && !imageFilePaths.hero) {
+      const abs = resolveInsideRoot(root, targetTheme.artFilePath);
+      if (abs) imageFilePaths.hero = abs;
+    }
+  }
+  const resolvedFilePaths = Object.keys(imageFilePaths).length > 0 ? imageFilePaths : null;
+
   // Split page and non-page targets. Page targets are processed serially
   // (they compete for firstSession); non-page targets (webview/iframe) are
   // injected concurrently with controlled concurrency to avoid CDP channel
@@ -447,7 +494,12 @@ export async function hardeningPass(
       // and re-inject. Page targets are covered by core applyTheme + this
       // engine layer, so the watchdog only skips when those are verified.
       const watchdogVerification = await verifyTheme(session);
-      if (watchdogVerification && isThemeFullyApplied(watchdogVerification)) {
+      // 2026-08-23 hero 修复：主题带 hero 背景时（有文件路径或 data-url hero），
+      // watchdog 只有在 --agentskin-art 确实解析为 url(blob:) 时才跳过硬化，
+      // 否则仍强制注入，避免 CSS 层在、hero 大图 Blob 丢失的场景误判为"已应用"
+      // 而补不上 hero（背景剩纯色块）。
+      const requireHero = !!(imageDataUrls?.hero || resolvedFilePaths?.hero);
+      if (watchdogVerification && isThemeFullyApplied(watchdogVerification, { requireHero })) {
         watchdogSkipped++;
         if (!firstSession) {
           firstSession = session;
@@ -473,6 +525,7 @@ export async function hardeningPass(
           bundle,
           targetTheme,
           resolvedImages,
+          resolvedFilePaths,
         );
 
         if (engineResult) {
@@ -491,6 +544,8 @@ export async function hardeningPass(
           const result = await injectThemeViaCdp(session, {
             css: targetTheme.css,
             imageDataUrls: resolvedImages,
+            // External-file hero (lossless 4K/8K mode): stream the real file.
+            heroPath: resolvedFilePaths?.hero ?? null,
             hostClass: hostClassFor(appId),
             retries: 1,
             verifyDelayMs: DEFAULT_VERIFY_DELAY_MS,
@@ -642,6 +697,7 @@ export async function hardeningPass(
         bundle,
         targetTheme,
         imageDataUrls: resolvedImages,
+        imageFilePaths: resolvedFilePaths,
         epoch,
         deps: watchdogDeps,
       });

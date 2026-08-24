@@ -1,0 +1,26 @@
+/* palette.css — art-174043 (Art 174043) */
+/* Auto-generated from manifest.json — do not edit. */
+:root {
+  --agentskin-bg: #26251f;
+  --agentskin-surface: #3e3d36;
+  --agentskin-surface-elevated: #4a4a43;
+  --agentskin-text: #f4f0eb;
+  --agentskin-muted: #cbc9c6;
+  --agentskin-accent: #cac2af;
+  --agentskin-secondary: #d4cebf;
+  --agentskin-border: #42413a;
+  --agentskin-code-bg: #23221c;
+  --agentskin-code-fg: #f4f0eb;
+  --agentskin-focus-ring: color-mix(in srgb, #cac2af 40%, transparent);
+  --agentskin-selection: color-mix(in srgb, #cac2af 32%, transparent);
+
+  /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */
+  --agentskin-accent-raw: 202, 194, 175;
+  --agentskin-secondary-raw: 212, 206, 191;
+  --agentskin-text-raw: 244, 240, 235;
+  --agentskin-muted-raw: 203, 201, 198;
+  --agentskin-surface-raw: 62, 61, 54;
+  --agentskin-surface-elevated-raw: 74, 74, 67;
+  --agentskin-bg-raw: 38, 37, 31;
+  --agentskin-border-raw: 66, 65, 58;
+}

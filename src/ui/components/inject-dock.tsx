@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import type { AppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
 
+import { RotateCcw, Upload, X } from 'lucide-react';
+
 /**
  * # InjectDock
  *
@@ -58,7 +60,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
   return (
     <div
       className={cn(
-        'fixed bottom-11 left-1/2 z-[90] -translate-x-1/2',
+        'fixed bottom-12 left-1/2 z-[var(--z-dock)] -translate-x-1/2',
         'flex items-center gap-2 rounded-md  bg-popover px-4 py-2 shadow-float backdrop-blur-none',
         'transition-[opacity,filter] duration-slow',
         dimmed && 'opacity-40 saturate-[0.6]',
@@ -66,8 +68,9 @@ export function InjectDock({ controller }: { controller: AppController }) {
       role="dialog"
       aria-label={t.injectDockTitle}
     >
-      <span className="font-mono text-[11px] font-semibold  text-foreground">
-        ⏏ {t.injectDockTitle}
+      <span className="flex items-center gap-1 font-mono text-[11px] text-foreground">
+        <Upload className="size-3.5" />
+        {t.injectDockTitle}
       </span>
       <span className="text-[11px] text-muted-foreground">{label}</span>
       <button
@@ -76,9 +79,10 @@ export function InjectDock({ controller }: { controller: AppController }) {
           void restoreAll();
           setInjectDockOpen(false);
         }}
-        className="rounded-md  bg-card2 px-2 py-1 font-mono text-[10px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+        className="flex items-center gap-1 rounded-md bg-card2 px-2 py-1 font-mono text-[10px] text-foreground transition-colors hover:border-primary hover:text-primary"
       >
-        ↺ {t.restoreAllAction}
+        <RotateCcw className="size-3" />
+        {t.restoreAllAction}
       </button>
       <button
         type="button"
@@ -86,7 +90,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
         aria-label={t.close}
         className="flex size-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
-        ✕
+        <X className="size-3.5" />
       </button>
     </div>
   );

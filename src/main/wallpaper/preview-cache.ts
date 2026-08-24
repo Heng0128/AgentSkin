@@ -155,6 +155,19 @@ export class PreviewCache {
     }
 
     // 3. Generate preview.
+    // Skip formats that Electron nativeImage cannot decode (GIF, WebP, SVG).
+    // The caller falls back to the media-server loopback URL where the
+    // browser's <img> renders these formats natively.
+    const ext = path.extname(sourcePath).toLowerCase();
+    const NATIVE_IMAGE_DECODABLE = new Set(['.png', '.jpg', '.jpeg', '.bmp', '.ico']);
+    if (!NATIVE_IMAGE_DECODABLE.has(ext)) {
+      mainWarnFromCatch(
+        SCOPE,
+        `Skipping L1 generation for unsupported format (${ext}): ${sourcePath}`,
+      );
+      return null;
+    }
+
     try {
       const source = nativeImage.createFromPath(sourcePath);
       if (source.isEmpty()) {

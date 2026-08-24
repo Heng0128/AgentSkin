@@ -202,11 +202,43 @@ export function extractWallpaper(raw: unknown): InstalledTheme['wallpaper'] {
 let coverDir = '';
 const coverCache = new Map<string, string>();
 const iconCache = new Map<string, string>();
+/**
+ * External-file hero path cache (theme id → absolute hero path). Populated by
+ * `extractCover` when the bundle's hero is an external file reference. The
+ * agentskin-theme://hero/<id> scheme serves this path so multi-MB wallpaper
+ * originals stream straight from disk instead of being base64-transferred over
+ * CDP (which timed out for 4K/8K files).
+ */
+const heroFileCache = new Map<string, string>();
 
 /** Set the cover cache directory and create it. Called by ThemeLibrary.initialize(). */
 export function setCoverDir(dir: string): void {
   coverDir = dir;
   fsSync.mkdirSync(dir, { recursive: true });
+}
+
+/**
+ * Resolve the on-disk cover path for the agentskin-theme://cover/<id> scheme.
+ * Returns null when the theme has no cover (or it was never extracted).
+ * The scheme handler in main.ts serves this path to the renderer so previews
+ * work for BOTH embedded (base64-extracted) and external-file hero themes.
+ */
+export function themeCoverPathForScheme(id: string): string | null {
+  const cached = getCachedCoverPath(id);
+  if (cached && fsSync.existsSync(cached)) return cached;
+  return null;
+}
+
+/**
+ * Resolve the external-file hero path for the agentskin-theme://hero/<id>
+ * scheme. Serves the ORIGINAL wallpaper file (zero compression) to the agent
+ * renderer so multi-MB 4K/8K backdrops stream from disk instead of being
+ * base64-transferred over CDP (which times out for large files).
+ */
+export function themeHeroPathForScheme(id: string): string | null {
+  const cached = heroFileCache.get(id);
+  if (cached && fsSync.existsSync(cached)) return cached;
+  return null;
 }
 
 /**
@@ -218,7 +250,35 @@ export function setCoverDir(dir: string): void {
  */
 export function extractCover(id: string, bundle: ThemeBundle): string | null {
   const image = bundle.assets?.images?.hero ?? bundle.assets?.art ?? null;
-  if (!image?.base64) return null;
+  if (!image) return null;
+  // External-file hero (lossless 4K/8K wallpaper mode): the image is already a
+  // real file on disk (referenced by `file`, relative to the recorded package
+  // root). Return that path directly — it doubles as the catalog cover with
+  // zero copying and pixel-perfect fidelity. Resolve strictly inside the root
+  // so a malformed bundle cannot read arbitrary files.
+  if (typeof image.file === 'string' && image.file.length > 0) {
+    const copy = bundle.theme?.copy as Record<string, unknown> | undefined;
+    const root = typeof copy?.packageRoot === 'string' ? copy.packageRoot : '';
+    if (root) {
+      // packageRoot points at the theme's OWN dir in new bundles
+      // (themes/art-xxx). Older bundles recorded the parent themes dir
+      // (themes/), so also try root/<themeId> to stay forward-compatible.
+      const candidates = [
+        path.resolve(root, image.file),
+        path.resolve(root, id, image.file),
+      ];
+      for (const absTarget of candidates) {
+        const absRoot = path.resolve(root);
+        if (absTarget.startsWith(absRoot) && fsSync.existsSync(absTarget)) {
+          coverCache.set(id, absTarget);
+          heroFileCache.set(id, absTarget);
+          return absTarget;
+        }
+      }
+    }
+    return null;
+  }
+  if (!image.base64) return null;
   const cached = coverCache.get(id);
   if (cached && fsSync.existsSync(cached)) return cached;
   const target = path.join(coverDir, `${id}.${extForMime(image.mimeType)}`);

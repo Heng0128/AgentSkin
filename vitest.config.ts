@@ -44,11 +44,18 @@ export default defineConfig({
           // which may exceed 15s on slower machines.
           testTimeout: 30000,
           pool: 'threads',
+          setupFiles: ['vitest.setup.main.ts'],
         },
         resolve: {
           alias: {
             '@agentskin/engine': corePkg,
             '@shared': path.resolve(root, 'src/shared'),
+            // material-color-utilities@0.4.0 internal import bug: color_spec_2025.js
+            // imports './dynamic_color' without .js extension (other imports in the
+            // same file correctly use .js). This alias resolves the extensionless
+            // import to the actual file on disk so vitest can load the package.
+            '@material/material-color-utilities/dynamiccolor/dynamic_color':
+              path.resolve(root, 'node_modules/@material/material-color-utilities/dynamiccolor/dynamic_color.js'),
           },
         },
       },

@@ -66,21 +66,15 @@ export function useAppController() {
   // -----------------------------------------------------------------------
   const locale = useShellStore((s) => s.locale);
   const appVersion = useShellStore((s) => s.appVersion);
-  const booting = useShellStore((s) => s.booting);
   const route = useShellStore((s) => s.route);
   const activeAgentId = useShellStore((s) => s.activeAgentId);
-  const sidebarCollapsed = useShellStore((s) => s.sidebarCollapsed);
   const logs = useShellStore((s) => s.logs);
-  const logsOpen = useShellStore((s) => s.logsOpen);
   const injectDockOpen = useShellStore((s) => s.injectDockOpen);
-  const setActiveAgentId = useShellStore((s) => s.setActiveAgentId);
   const setAppVersion = useShellStore((s) => s.setAppVersion);
   const setBooting = useShellStore((s) => s.setBooting);
   const setLocaleState = useShellStore((s) => s.setLocale);
   const setLogs = useShellStore((s) => s.setLogs);
-  const setLogsOpen = useShellStore((s) => s.setLogsOpen);
   const setInjectDockOpen = useShellStore((s) => s.setInjectDockOpen);
-  const setSidebarCollapsed = useShellStore((s) => s.setSidebarCollapsed);
   const toggleSidebar = useShellStore((s) => s.toggleSidebar);
   const toggleInjectDock = useShellStore((s) => s.toggleInjectDock);
 
@@ -267,6 +261,18 @@ export function useAppController() {
   }, []);
 
   // -----------------------------------------------------------------------
+  // Persist failure warnings — subscribe once at boot.
+  // Increment persistFailures in the store whenever the main process fires
+  // PERSIST_FAILURE_WARNING (threshold reached).
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const off = api.onPersistFailureWarning(({ failureCount }) => {
+      useDiagnosticsStore.getState().incrementPersistFailures(failureCount);
+    });
+    return off;
+  }, []);
+
+  // -----------------------------------------------------------------------
   // Theme slice
   // -----------------------------------------------------------------------
   const installed = useThemeStore((s) => s.installed);
@@ -288,7 +294,6 @@ export function useAppController() {
   // Install flow slice
   // -----------------------------------------------------------------------
   const installSteps = useInstallFlowStore((s) => s.steps);
-  const flowState = useInstallFlowStore((s) => s.flowState);
   const currentTheme = useInstallFlowStore((s) => s.currentTheme);
   const lastError = useInstallFlowStore((s) => s.lastError);
   const retryInstall = useInstallFlowStore((s) => s.retryInstall);
@@ -300,16 +305,10 @@ export function useAppController() {
   // -----------------------------------------------------------------------
   // Settings slice
   // -----------------------------------------------------------------------
-  const settingsOpen = useSettingsStore((s) => s.settingsOpen);
   const settingsSection = useSettingsStore((s) => s.settingsSection);
   const settings = useSettingsStore((s) => s.settings);
-  const setSettingsOpen = useSettingsStore((s) => s.setSettingsOpen);
   const setSettingsSection = useSettingsStore((s) => s.setSettingsSection);
   const openSettings = useSettingsStore((s) => s.openSettings);
-  const loadSettings = useSettingsStore((s) => s.loadSettings);
-  const chooseAppPath = useSettingsStore((s) => s.chooseAppPath);
-  const clearAppPath = useSettingsStore((s) => s.clearAppPath);
-  const saveAppPort = useSettingsStore((s) => s.saveAppPort);
 
   // -----------------------------------------------------------------------
   // Wallpaper slice
@@ -337,10 +336,7 @@ export function useAppController() {
   const setWallpaper = useWallpaperStore((s) => s.setWallpaper);
   const importWallpaper = useWallpaperStore((s) => s.importWallpaper);
   const deleteWallpaper = useWallpaperStore((s) => s.deleteWallpaper);
-  const setAgentWallpaper = useWallpaperStore((s) => s.setAgentWallpaper);
-  const applyAgentWallpaper = useWallpaperStore((s) => s.applyAgentWallpaper);
   const setAndApplyAgentWallpaper = useWallpaperStore((s) => s.setAndApplyAgentWallpaper);
-  const activateThemeWallpaper = useWallpaperStore((s) => s.activateThemeWallpaper);
   const wpInitialize = useWallpaperStore((s) => s.initialize);
 
   return {
@@ -349,11 +345,9 @@ export function useAppController() {
     locale,
     setLocale,
     appVersion,
-    booting,
     route,
     setRoute,
     activeAgentId,
-    setActiveAgentId,
     status,
     statusStale: status === null,
     lastStatusAt,
@@ -362,12 +356,8 @@ export function useAppController() {
     toasts: controllerToasts,
     showToast,
     logs,
-    logsOpen,
-    setLogsOpen,
     injectDockOpen,
     setInjectDockOpen,
-    sidebarCollapsed,
-    setSidebarCollapsed,
     toggleSidebar,
     refreshStatus,
     bootProgress,
@@ -396,7 +386,6 @@ export function useAppController() {
     importTheme,
     installSteps,
     setSteps: setInstallSteps,
-    flowState,
     setFlowState: setFlowStateAction,
     currentTheme,
     lastError,
@@ -422,16 +411,10 @@ export function useAppController() {
     setFileImportPrompt,
 
     // ── Settings ─────────────────────────────────────────────────────
-    settingsOpen,
-    setSettingsOpen,
     settingsSection,
     setSettingsSection,
     settings,
     openSettings,
-    loadSettings,
-    chooseAppPath,
-    clearAppPath,
-    saveAppPort,
 
     // ── Dynamic wallpapers ───────────────────────────────────────────
     wallpaper: {
@@ -447,10 +430,7 @@ export function useAppController() {
       setWallpaper,
       importWallpaper,
       deleteWallpaper,
-      setAgentWallpaper,
-      applyAgentWallpaper,
       setAndApplyAgentWallpaper,
-      activateThemeWallpaper,
     },
   };
 }

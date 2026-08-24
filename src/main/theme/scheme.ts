@@ -23,3 +23,13 @@ export function themeCoverUrl(id: string): string {
 export function themeIconUrl(id: string): string {
   return `${THEME_SCHEME}://icon/${encodeURIComponent(id)}`;
 }
+
+/**
+ * Streamable hero URL served by the agentskin-theme:// protocol. Points at the
+ * ORIGINAL external-file backdrop (lossless 4K/8K wallpaper mode). The
+ * renderer streams it straight from disk — zero compression, zero base64 over
+ * CDP, so multi-MB originals never time out.
+ */
+export function themeHeroUrl(id: string): string {
+  return `${THEME_SCHEME}://hero/${encodeURIComponent(id)}`;
+}

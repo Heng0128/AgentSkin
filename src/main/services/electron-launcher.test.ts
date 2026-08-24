@@ -160,6 +160,9 @@ describe('electron-launcher', () => {
       const adapter = createMockAdapter({ runningPids: [], debugPorts: [9222] });
       mockRequireAdapter.mockReturnValue(asAdapter(adapter));
       mockSpawnSuccess(1234);
+      // Mock net.connect to succeed so discoverRandomPort resolves immediately
+      // instead of burning the full 8000ms discovery timeout.
+      mockNetConnectSuccess();
 
       const result = await launchApp({
         appId: 'app-trae',
@@ -540,6 +543,9 @@ describe('electron-launcher', () => {
         asAdapter(createMockAdapter({ runningPids: [], debugPorts: [0] })),
       );
       mockSpawnSuccess(4242);
+      // Mock net.connect to succeed so discoverRandomPort resolves immediately
+      // instead of burning the full 8000ms discovery timeout.
+      mockNetConnectSuccess();
 
       const result = await launchApp({
         appId: 'app-case-insensitive',

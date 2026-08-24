@@ -6,42 +6,45 @@ import { loadDeepCore, resetDom } from './deep-core-helpers';
 const { FragmentRegistry } = loadDeepCore();
 
 describe('FragmentRegistry', () => {
+  let registry: InstanceType<typeof FragmentRegistry>;
+
   beforeEach(() => {
     resetDom();
+    registry = new FragmentRegistry();
   });
 
   afterEach(() => {
-    FragmentRegistry.dispose();
+    registry.dispose();
     resetDom();
   });
 
   it('should register a fragment without activating it', () => {
-    FragmentRegistry.register('test-frag', '.test { color: red; }');
+    registry.register('test-frag', '.test { color: red; }');
     // No sheets should be adopted yet
     expect(document.adoptedStyleSheets.length).toBe(0);
   });
 
   it('should activate a fragment by adopting its CSS into adoptedStyleSheets', () => {
-    FragmentRegistry.register('test-frag', '.test { color: red; }');
-    FragmentRegistry.activate('test-frag');
+    registry.register('test-frag', '.test { color: red; }');
+    registry.activate('test-frag');
 
     expect(document.adoptedStyleSheets.length).toBe(1);
     expect(document.adoptedStyleSheets[0].__agentskin_fragment).toBe('test-frag');
   });
 
   it('should deactivate a fragment and remove its sheet', () => {
-    FragmentRegistry.register('test-frag', '.test { color: red; }');
-    FragmentRegistry.activate('test-frag');
+    registry.register('test-frag', '.test { color: red; }');
+    registry.activate('test-frag');
     expect(document.adoptedStyleSheets.length).toBe(1);
 
-    FragmentRegistry.deactivate('test-frag');
+    registry.deactivate('test-frag');
     expect(document.adoptedStyleSheets.length).toBe(0);
   });
 
   it('should be idempotent when activating an already-active fragment', () => {
-    FragmentRegistry.register('test-frag', '.test { color: red; }');
-    FragmentRegistry.activate('test-frag');
-    FragmentRegistry.activate('test-frag'); // Second call should be no-op
+    registry.register('test-frag', '.test { color: red; }');
+    registry.activate('test-frag');
+    registry.activate('test-frag'); // Second call should be no-op
 
     expect(document.adoptedStyleSheets.length).toBe(1);
   });
@@ -52,8 +55,8 @@ describe('FragmentRegistry', () => {
     customSheet.__agentskin_layer = 'custom';
     document.adoptedStyleSheets = [customSheet];
 
-    FragmentRegistry.register('test-frag', '.test { color: blue; }');
-    FragmentRegistry.activate('test-frag');
+    registry.register('test-frag', '.test { color: blue; }');
+    registry.activate('test-frag');
 
     // Fragment should be at index 0, custom at index 1
     expect(document.adoptedStyleSheets.length).toBe(2);
@@ -62,20 +65,20 @@ describe('FragmentRegistry', () => {
   });
 
   it('should append fragment at end when no custom layer exists', () => {
-    FragmentRegistry.register('test-frag', '.test { color: green; }');
-    FragmentRegistry.activate('test-frag');
+    registry.register('test-frag', '.test { color: green; }');
+    registry.activate('test-frag');
 
     expect(document.adoptedStyleSheets.length).toBe(1);
     expect(document.adoptedStyleSheets[0].__agentskin_fragment).toBe('test-frag');
   });
 
   it('hotReplace should atomically replace CSS without flicker', () => {
-    FragmentRegistry.register('test-frag', '.test { color: red; }');
-    FragmentRegistry.activate('test-frag');
+    registry.register('test-frag', '.test { color: red; }');
+    registry.activate('test-frag');
 
     const originalSheet = document.adoptedStyleSheets[0];
 
-    FragmentRegistry.hotReplace('test-frag', '.test { color: blue; }');
+    registry.hotReplace('test-frag', '.test { color: blue; }');
 
     // Same sheet instance (atomic replace, no deactivate+activate cycle)
     expect(document.adoptedStyleSheets.length).toBe(1);
@@ -83,26 +86,26 @@ describe('FragmentRegistry', () => {
   });
 
   it('hotReplace on unknown id should register and activate', () => {
-    FragmentRegistry.hotReplace('new-frag', '.new { color: yellow; }');
+    registry.hotReplace('new-frag', '.new { color: yellow; }');
 
     expect(document.adoptedStyleSheets.length).toBe(1);
     expect(document.adoptedStyleSheets[0].__agentskin_fragment).toBe('new-frag');
   });
 
   it('dispose should deactivate all fragments', () => {
-    FragmentRegistry.register('frag-1', '.a { color: red; }');
-    FragmentRegistry.register('frag-2', '.b { color: blue; }');
-    FragmentRegistry.activate('frag-1');
-    FragmentRegistry.activate('frag-2');
+    registry.register('frag-1', '.a { color: red; }');
+    registry.register('frag-2', '.b { color: blue; }');
+    registry.activate('frag-1');
+    registry.activate('frag-2');
     expect(document.adoptedStyleSheets.length).toBe(2);
 
-    FragmentRegistry.dispose();
+    registry.dispose();
     expect(document.adoptedStyleSheets.length).toBe(0);
   });
 
   it('should handle invalid CSS gracefully (no throw)', () => {
-    FragmentRegistry.register('bad-frag', '<<< invalid css >>>');
+    registry.register('bad-frag', '<<< invalid css >>>');
     // Should not throw, just skip activation
-    expect(() => FragmentRegistry.activate('bad-frag')).not.toThrow();
+    expect(() => registry.activate('bad-frag')).not.toThrow();
   });
 });

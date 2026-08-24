@@ -91,7 +91,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
     <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header */}
       <div>
-        <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">
+        <h3 className="font-mono text-[11px] font-normal text-[var(--fg-0)]">
           {t.studioTabDesignLanguage ?? 'Design Language'}
         </h3>
         <p className="mt-2 font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">
@@ -105,7 +105,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Spacing Density */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLSpacing ?? 'Spacing Density'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -133,7 +133,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Radius Scale */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLRadius ?? 'Radius Scale'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -178,7 +178,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Shadow Elevation */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLShadow ?? 'Shadow Elevation'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -211,7 +211,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Motion Speed */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLMotion ?? 'Motion Speed'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -239,7 +239,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
 
       {/* Live CSS variable preview */}
       <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+        <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
           {t.studioDLCssPreview ?? 'CSS Variables'}
         </h4>
         <div className="mt-2 space-y-1 font-mono text-[10px] text-[var(--fg-2)]">

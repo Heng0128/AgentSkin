@@ -350,7 +350,7 @@ export function shellTokenOverrides(host, t) {
   const sidebarMix = `color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 22%, transparent)`;
   const panelBg = `color-mix(in srgb, ${c.surface} 14%, transparent)`;
   return `${host} {
-  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+  /* color-scheme 已在 tokenBlock() 中声明，此处删除以避免重复 */
 
   /* Text hierarchy */
   --text-primary: ${c.foreground} !important;
@@ -452,7 +452,7 @@ export function codexColorTokenOverrides(host, t) {
   const hoverBg = alpha(c.accent, 0.078);
   const focusB = alpha(c.accent, 0.76);
   return `${host} {
-  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+  /* color-scheme 已在 tokenBlock() 中声明，此处删除以避免重复 */
 
   /* Accent / brand */
   --color-token-primary: ${c.accent} !important;
@@ -522,7 +522,7 @@ export function codexColorTokenOverrides(host, t) {
 export function zcodeColorTokenOverrides(host, t) {
   const c = t.colors;
   return `${host} {
-  color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
+  /* color-scheme 已在 tokenBlock() 中声明，此处删除以避免重复 */
 
   /* --- Backgrounds: transparent for art punch-through --- */
   --color-background: transparent !important;

@@ -38,17 +38,17 @@ export function ContrastBadge({
     return (
       <span className={`inline-flex items-center gap-1 font-mono text-[10px] ${className}`}>
         <span
-          className={`inline-block h-2 w-2 rounded-full ${pass ? 'bg-green-500' : 'bg-red-500'}`}
+          className={`inline-block h-2 w-2 rounded-full ${pass ? 'bg-cr-success' : 'bg-destructive'}`}
           aria-hidden="true"
         />
-        <span className={pass ? 'text-green-500' : 'text-red-500'}>{pass ? '✓' : '✗'}</span>
+        <span className={pass ? 'text-cr-success' : 'text-destructive'}>{pass ? '✓' : '✗'}</span>
       </span>
     );
   }
 
   // full mode
   const ratioText = `${ratio.toFixed(1)}:1`;
-  const colorClass = passesAA ? 'text-green-500' : 'text-red-500';
+  const colorClass = passesAA ? 'text-cr-success' : 'text-destructive';
 
   return (
     <span
@@ -56,7 +56,7 @@ export function ContrastBadge({
     >
       <span>{ratioText}</span>
       {passesAAA && (
-        <span className="rounded-sm bg-green-500/15 px-1 text-[9px] font-medium leading-none">
+        <span className="rounded-sm bg-cr-success/15 px-1 text-[9px] font-normal leading-none">
           AAA
         </span>
       )}

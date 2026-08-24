@@ -25,6 +25,7 @@ import type { ResolvedThemeTarget, ThemeBundle } from '../../legacy/agentskin-co
 import { toMessage } from '../../shared/errors';
 import type { CdpSession } from '../cdp/cdp-client';
 import { type InjectEngineResult, injectThemeViaEngine } from '../cdp/cdp-inject';
+import { themeHeroUrl } from '../theme/scheme';
 import { buildPaletteCss } from './generator';
 
 // ---------------------------------------------------------------------------
@@ -59,15 +60,45 @@ export interface EngineInjectionDeps {
  * falls back to `<projectRoot>/engines/<agent>/` (dev mode).
  */
 export async function resolveEngineDirDefault(appId: string): Promise<string> {
+  // Packaged: engines ship under process.resourcesPath/engines/<appId>.
   const packagedDir = path.join(process.resourcesPath, 'engines', appId);
-  const devDir = path.join(__dirname, '..', '..', '..', 'engines', appId);
   const probeFile = path.join(packagedDir, 'adapter.mjs');
   try {
     await fs.access(probeFile);
     return packagedDir;
   } catch {
-    return devDir;
+    // not packaged — fall through to dev/preview paths
   }
+
+  // Dev / preview: engine sources live in the project root `engines/<appId>`.
+  // `__dirname` resolves to `out/main` after electron-vite build, so relative
+  // traversal is fragile; `app.getAppPath()` returns the project root in both
+  // `electron-vite dev` and `electron-vite preview` (unpackaged) runs. Probe
+  // several likely roots and return the first that contains adapter.mjs.
+  const candidates = (
+    await import('electron').catch(() => ({ app: undefined }))
+  ).app?.getAppPath?.();
+  const roots = [
+    candidates,
+    path.resolve(process.cwd()),
+    path.join(__dirname, '..', '..'), // out/main -> project root
+    path.join(__dirname, '..', '..', '..'),
+  ].filter((r): r is string => !!r && typeof r === 'string');
+  for (const root of roots) {
+    const candidate = path.join(root, 'engines', appId);
+    try {
+      await fs.access(path.join(candidate, 'adapter.mjs'));
+      return candidate;
+    } catch {
+      // try next root
+    }
+  }
+  return devDirFallback(appId);
+}
+
+/** Last-resort dev dir (kept for legacy callers/tests). */
+function devDirFallback(appId: string): string {
+  return path.join(__dirname, '..', '..', '..', 'engines', appId);
 }
 
 // ---------------------------------------------------------------------------
@@ -89,6 +120,7 @@ export async function tryEngineInjection(
   bundle: ThemeBundle,
   targetTheme: ResolvedThemeTarget,
   imageDataUrls: Record<string, string> | null,
+  imageFilePaths: Record<string, string> | null | undefined,
   deps: EngineInjectionDeps,
 ): Promise<InjectEngineResult | null> {
   try {
@@ -124,18 +156,31 @@ export async function tryEngineInjection(
     const paletteCss = buildPaletteCss(targetTheme.css);
     if (!paletteCss) return null;
 
-    // Load engine files (+ deep-core shared runtime if present)
-    const deepCorePath = path.join(__dirname, '../../../../engines/shared/deep-core.mjs');
-    const [tokensCss, adapterJs, cosmeticCss, deepCoreSource] = await Promise.all([
+    // Load engine files (+ shared runtime modules if present).
+    // Injection order matters: adopted-sheets-manager → token-discovery → deep-core → adapter.
+    const sharedDir = path.join(__dirname, '../../../../engines/shared');
+    const adoptedSheetsManagerPath = path.join(sharedDir, 'adopted-sheets-manager.mjs');
+    const tokenDiscoveryPath = path.join(sharedDir, 'token-discovery.mjs');
+    const deepCorePath = path.join(sharedDir, 'deep-core.mjs');
+
+    const [tokensCss, adapterJs, cosmeticCss, adoptedSheetsSource, tokenDiscoverySource, deepCoreSource] = await Promise.all([
       fs.readFile(tokensPath, 'utf8'),
       fs.readFile(adapterPath, 'utf8'),
       fs.readFile(cosmeticPath, 'utf8'),
+      fs.readFile(adoptedSheetsManagerPath, 'utf8').catch(() => ''),
+      fs.readFile(tokenDiscoveryPath, 'utf8').catch(() => ''),
       fs.readFile(deepCorePath, 'utf8').catch(() => ''),
     ]);
 
-    // P0-1 fix: Source concatenation — prepend deep-core classes into the
-    // evaluate context so adapter.mjs can reference DeepCore without import.
-    const finalAdapterJs = deepCoreSource ? `${deepCoreSource}\n;${adapterJs}` : adapterJs;
+    // Source concatenation — prepend shared modules into the evaluate context
+    // so adapter.mjs can reference them without import.
+    // Order: adopted-sheets-manager (setter guard) → token-discovery (token scan) → deep-core → adapter.
+    const parts = [];
+    if (adoptedSheetsSource) parts.push(adoptedSheetsSource);
+    if (tokenDiscoverySource) parts.push(tokenDiscoverySource);
+    if (deepCoreSource) parts.push(deepCoreSource);
+    parts.push(adapterJs);
+    const finalAdapterJs = parts.join('\n;');
 
     const themeId = bundle.theme?.id ?? 'unknown';
     return await injectThemeViaEngine(session, {
@@ -151,6 +196,15 @@ export async function tryEngineInjection(
       // it beats every theme layer at equal specificity.
       customCss: deps.customThemeCss?.() || undefined,
       imageDataUrls: imageDataUrls ?? undefined,
+      // External-file hero (lossless 4K/8K wallpaper mode): stream the real
+      // file via the chunked CDP transfer (injectHeroBlob → transferHeroBase64,
+      // WALLPAPER_CHUNK_SIZE=512KB keeps every evaluate inside the CDP timeout).
+      // NOTE: agentskin-theme:// protocol URLs are NOT used for target apps —
+      // their pages run under their own CSP which blocks the custom scheme
+      // (verified: blockedReason=csp). Only used when no embedded hero data URL
+      // is present (imageDataUrls.hero wins — legacy embedded bundles keep
+      // their existing behavior).
+      heroPath: !imageDataUrls?.hero && imageFilePaths?.hero ? imageFilePaths.hero : undefined,
       agent: appId,
       themeId,
       verifyDelayMs: deps.verifyDelayMs ?? 500,

@@ -16,6 +16,7 @@
 import { useState } from 'react';
 import { AppMark } from '@/components/app-mark';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { appStatusFor } from '@/stores/agentStore';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWallpaperStore } from '@/stores/wallpaperStore';
@@ -23,7 +24,7 @@ import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { AGENT_IDS, AGENT_META, AGENT_SECURITY_PROFILES, type AgentId } from '@shared/types';
-import { Image, Layers, LayoutGrid, Lock, Package, Shield, ShieldCheck } from 'lucide-react';
+import { Image, Layers, LayoutGrid, Lock, Package, Palette, Shield, ShieldCheck } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // Static agent profile data — avoids adding IPC channels. Token counts and
@@ -123,7 +124,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
             className="ws-drawer__section-header"
             onClick={() => setProjectsOpen((v) => !v)}
           >
-            <span className="flex items-center gap-[var(--space-1)]">
+            <span className="flex items-center gap-1">
               <span className="dot" />
               {t.studioProjectTitle}
             </span>
@@ -131,32 +132,32 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
           </button>
 
           {projectsOpen && (
-            <div className="flex flex-col gap-[var(--space-1)] mt-[var(--space-1)]">
+            <div className="flex flex-col gap-1 mt-1">
               <button
                 type="button"
                 className="ws-btn ws-btn--sm w-full"
                 onClick={() => setCreatingProject(true)}
               >
-                <span className="text-[var(--fg-1)]">+</span> {t.studioProjectNew}
+                <span className="text-secondary">+</span> {t.studioProjectNew}
               </button>
 
               {creatingProject && (
-                <div className="flex flex-col gap-[var(--space-1)] p-[var(--space-2)] rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-1)]">
+                <div className="flex flex-col gap-1 p-2 rounded-sm border border-border bg-surface">
                   <input
                     type="text"
                     placeholder={t.studioProjectPlaceholder}
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="ws-input h-[var(--h-btn-sm)] text-[length:11px]"
+                    className="ws-input h-[var(--h-btn-sm)] text-[11px]"
                   />
                   <input
                     type="text"
                     placeholder={t.studioProjectAuthorPlaceholder}
                     value={newAuthor}
                     onChange={(e) => setNewAuthor(e.target.value)}
-                    className="ws-input h-[var(--h-btn-sm)] text-[length:11px]"
+                    className="ws-input h-[var(--h-btn-sm)] text-[11px]"
                   />
-                  <div className="flex flex-wrap gap-[var(--space-1)]">
+                  <div className="flex flex-wrap gap-1">
                     {AGENT_IDS.map((id) => {
                       const meta = AGENT_META[id as AgentId];
                       const installed = Boolean(appStatusFor(id)?.installed);
@@ -183,47 +184,47 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                     if (!tokens || !brand) return null;
                     const strategyKey = getStrategyKey(tokens.dark);
                     return (
-                      <div className="flex flex-col gap-[var(--space-1)] p-[var(--space-2)] rounded-[var(--dl-radius,2px)] border border-[var(--bg-3)]">
+                      <div className="flex flex-col gap-1 p-2 rounded-sm border border-muted">
                         <div className="flex items-center justify-between">
-                          <span className="font-mono text-[length:10px] text-[var(--fg-2)] uppercase tracking-wider">
+                          <span className="font-mono text-micro text-muted-foreground uppercase tracking-wider">
                             {t.studioProfileSummary}
                           </span>
-                          <span className="font-mono text-[length:10px] text-[var(--fg-3)] tabular-nums">
+                          <span className="font-mono text-micro text-muted-foreground tabular-nums">
                             {AGENT_META[newAgent]?.displayName ?? newAgent}
                           </span>
                         </div>
-                        <div className="flex items-center gap-[var(--space-2)]">
+                        <div className="flex items-center gap-2">
                           {/* Brand color swatches */}
-                          <div className="flex items-center gap-[var(--space-1)]">
+                          <div className="flex items-center gap-1">
                             <span
-                              className="size-4 rounded-[var(--r-micro)] border border-[var(--border-subtle)]"
+                              className="size-4 rounded-sm border border-border"
                               style={{ background: brand.dark }}
                               title={`${t.studioProfileAccent} (dark)`}
                             />
                             <span
-                              className="size-4 rounded-[var(--r-micro)] border border-[var(--border-subtle)]"
+                              className="size-4 rounded-sm border border-border"
                               style={{ background: brand.light }}
                               title={`${t.studioProfileAccent} (light)`}
                             />
                           </div>
-                          <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+                          <span className="font-mono text-micro text-muted-foreground">
                             {t.studioProfileTokens}:
                           </span>
-                          <span className="font-mono text-[length:10px] text-[var(--fg-0)] tabular-nums">
+                          <span className="font-mono text-micro text-foreground tabular-nums">
                             {tokens.dark}
                           </span>
-                          <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+                          <span className="font-mono text-micro text-muted-foreground">
                             {t.studioProfileCategories}:
                           </span>
-                          <span className="font-mono text-[length:10px] text-[var(--fg-0)] tabular-nums">
+                          <span className="font-mono text-micro text-foreground tabular-nums">
                             {tokens.categories}
                           </span>
                         </div>
-                        <div className="flex items-center gap-[var(--space-1)]">
-                          <span className="font-mono text-[length:10px] text-[var(--fg-3)]">
+                        <div className="flex items-center gap-1">
+                          <span className="font-mono text-micro text-muted-foreground">
                             {t.studioProfileStrategy}:
                           </span>
-                          <span className="font-mono text-[length:10px] text-[var(--fg-1)]">
+                          <span className="font-mono text-micro text-secondary">
                             {t[strategyKey]}
                           </span>
                         </div>
@@ -231,7 +232,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                     );
                   })()}
 
-                  <div className="flex gap-[var(--space-1)]">
+                  <div className="flex gap-1">
                     <button
                       type="button"
                       className="ws-btn ws-btn--sm flex-1 ws-btn--primary"
@@ -255,15 +256,15 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                   key={p.id}
                   type="button"
                   onClick={() => selectProject(p.id)}
-                  className="flex items-center gap-[var(--space-1)] w-full p-[var(--space-1)] rounded-[var(--r-micro)] hover:bg-[var(--bg-3)]"
+                  className="flex items-center gap-1 w-full p-1 rounded-sm hover:bg-muted"
                   style={{
-                    borderColor: activeProjectId === p.id ? 'var(--accent)' : 'transparent',
-                    background: activeProjectId === p.id ? 'var(--accent-ghost)' : 'transparent',
+                    borderColor: activeProjectId === p.id ? 'var(--primary)' : 'transparent',
+                    background: activeProjectId === p.id ? 'var(--accent)' : 'transparent',
                     border: '1px solid',
                   }}
                 >
                   <AppMark appId={p.agentId} size={12} />
-                  <span className="font-mono text-[length:10px] text-[var(--fg-0)] truncate flex-1 text-left">
+                  <span className="font-mono text-micro text-foreground truncate flex-1 text-left">
                     {p.name}
                   </span>
                   {p.hasSnapshot && <span className="ws-badge ws-badge--success">snap</span>}
@@ -280,7 +281,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
             className="ws-drawer__section-header"
             onClick={() => setResourcesOpen((v) => !v)}
           >
-            <span className="flex items-center gap-[var(--space-1)]">
+            <span className="flex items-center gap-1">
               <span className="dot" />
               {t.studioResourcesTitle}
             </span>
@@ -288,31 +289,34 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
           </button>
 
           {resourcesOpen && (
-            <div className="flex flex-col gap-[var(--space-2)] mt-[var(--space-1)]">
+            <div className="flex flex-col gap-2 mt-1">
               {/* Theme library */}
               <div>
-                <div className="flex items-center gap-[var(--space-1)] mb-[var(--space-1)]">
-                  <Layers className="size-3" style={{ color: 'var(--fg-2)' }} />
-                  <span className="font-mono text-[length:10px] text-[var(--fg-2)]">
+                <div className="flex items-center gap-1 mb-1">
+                  <Layers className="size-3 text-muted-foreground" />
+                  <span className="font-mono text-micro text-muted-foreground">
                     {t.themeLibrary}
                   </span>
                 </div>
                 {installedThemes.length === 0 ? (
-                  <p className="font-mono text-[length:10px] text-[var(--fg-3)] pl-[var(--space-4)]">
-                    {t.studioLibraryEmpty}
-                  </p>
+                  <EmptyState
+                    icon={<Palette />}
+                    title={t.studioLibraryEmpty}
+                    iconSize="sm"
+                    className="pl-4"
+                  />
                 ) : (
                   <div className="flex flex-col gap-0">
                     {installedThemes.map((theme) => (
                       <div
                         key={theme.id}
-                        className="flex items-center gap-[var(--space-1)] p-0 rounded-[var(--r-micro)] hover:bg-[var(--bg-3)]"
+                        className="flex items-center gap-1 p-0 rounded-sm hover:bg-muted"
                       >
                         <span
-                          className="size-[10px] rounded-[var(--r-micro)] border border-[var(--border-subtle)]"
-                          style={{ background: theme.colors?.accent || 'var(--bg-4)' }}
+                          className="size-[10px] rounded-sm border border-border"
+                          style={{ background: theme.colors?.accent || 'var(--muted)' }}
                         />
-                        <span className="font-mono text-[length:10px] text-[var(--fg-0)] truncate flex-1">
+                        <span className="font-mono text-micro text-foreground truncate flex-1">
                           {theme.name}
                         </span>
                       </div>
@@ -323,25 +327,28 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
 
               {/* Wallpapers (P1 — IPC-backed list) */}
               <div>
-                <div className="flex items-center gap-[var(--space-1)] mb-[var(--space-1)]">
-                  <Image className="size-3" style={{ color: 'var(--fg-2)' }} />
-                  <span className="font-mono text-[length:10px] text-[var(--fg-2)]">
+                <div className="flex items-center gap-1 mb-1">
+                  <Image className="size-3 text-muted-foreground" />
+                  <span className="font-mono text-micro text-muted-foreground">
                     {t.studioWallpaperAllTitle}
                   </span>
                 </div>
                 {wallpapers.length === 0 ? (
-                  <p className="font-mono text-[length:10px] text-[var(--fg-3)] pl-[var(--space-4)]">
-                    {t.studioWallpaperEmpty}
-                  </p>
+                  <EmptyState
+                    icon={<Image />}
+                    title={t.studioWallpaperEmpty}
+                    iconSize="sm"
+                    className="pl-4"
+                  />
                 ) : (
                   <div className="flex flex-col gap-0">
                     {wallpapers.map((wp) => (
                       <div
                         key={wp.id}
-                        className="flex items-center gap-[var(--space-1)] p-0 rounded-[var(--r-micro)] hover:bg-[var(--bg-3)]"
+                        className="flex items-center gap-1 p-0 rounded-sm hover:bg-muted"
                       >
-                        <Image className="size-2.5" style={{ color: 'var(--fg-3)' }} />
-                        <span className="font-mono text-[length:10px] text-[var(--fg-0)] truncate flex-1">
+                        <Image className="size-2.5 text-muted-foreground" />
+                        <span className="font-mono text-micro text-foreground truncate flex-1">
                           {wp.title ?? wp.id}
                         </span>
                       </div>
@@ -352,16 +359,16 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
 
               {/* Bundles */}
               <div>
-                <div className="flex items-center gap-[var(--space-1)] mb-[var(--space-1)]">
-                  <Package className="size-3" style={{ color: 'var(--fg-2)' }} />
-                  <span className="font-mono text-[length:10px] text-[var(--fg-2)]">
+                <div className="flex items-center gap-1 mb-1">
+                  <Package className="size-3 text-muted-foreground" />
+                  <span className="font-mono text-micro text-muted-foreground">
                     {t.studioTabBundle}
                   </span>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full h-[var(--h-btn-sm)] text-[length:10px]"
+                  className="w-full h-[var(--h-btn-sm)] text-micro"
                 >
                   {t.studioBundleImport}
                 </Button>
@@ -377,7 +384,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
             className="ws-drawer__section-header"
             onClick={() => setAgentsOpen((v) => !v)}
           >
-            <span className="flex items-center gap-[var(--space-1)]">
+            <span className="flex items-center gap-1">
               <span className="dot" />
               {t.agentsTitle}
             </span>
@@ -385,9 +392,9 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
           </button>
 
           {agentsOpen && (
-            <div className="flex flex-col gap-[var(--space-1)] mt-[var(--space-1)]">
+            <div className="flex flex-col gap-1 mt-1">
               {/* Security posture sub-header */}
-              <span className="font-mono text-[length:10px] text-[var(--fg-3)] px-[var(--space-1)]">
+              <span className="font-mono text-micro text-muted-foreground px-1">
                 {t.studioSecurityLabel}
               </span>
 
@@ -417,45 +424,52 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                 }
 
                 return (
-                  <div
-                    key={id}
-                    className="flex items-center gap-[var(--space-1)] p-[var(--space-1)] rounded-[var(--r-micro)]"
-                  >
+                  <div key={id} className="flex items-center gap-1 p-1 rounded-sm">
                     <AppMark appId={id} size={14} />
-                    <span className="font-mono text-[length:10px] text-[var(--fg-0)] truncate flex-1">
+                    <span className="font-mono text-micro text-foreground truncate flex-1">
                       {meta.displayName}
                     </span>
 
                     {/* Security posture icons */}
                     {sec && (
                       <span
-                        className="flex items-center gap-[2px]"
+                        className="flex items-center gap-0.5"
                         title={tooltipParts.join(' / ')}
                       >
                         <Lock
                           className="size-[10px]"
                           style={{
-                            color: sec.contextIsolation ? 'var(--cr-ok)' : 'var(--fg-3)',
+                            color: sec.contextIsolation
+                              ? 'var(--cr-success)'
+                              : 'var(--muted-foreground)',
                           }}
                         />
                         <Shield
                           className="size-[10px]"
                           style={{
-                            color: sec.sandbox ? 'var(--cr-ok)' : 'var(--fg-3)',
+                            color: sec.sandbox ? 'var(--cr-success)' : 'var(--muted-foreground)',
                           }}
                         />
                         {sec.webSecurity === 'strict' ? (
-                          <ShieldCheck className="size-[10px]" style={{ color: 'var(--cr-ok)' }} />
+                          <ShieldCheck
+                            className="size-[10px]"
+                            style={{ color: 'var(--cr-success)' }}
+                          />
                         ) : (
-                          <ShieldCheck className="size-[10px]" style={{ color: 'var(--fg-3)' }} />
+                          <ShieldCheck
+                            className="size-[10px]"
+                            style={{ color: 'var(--muted-foreground)' }}
+                          />
                         )}
                       </span>
                     )}
 
                     <span
-                      className="size-[5px] rounded-[var(--dl-radius,2px)]"
+                      className="size-[5px] rounded-sm"
                       style={{
-                        background: status?.installed ? 'var(--cr-ok)' : 'var(--fg-3)',
+                        background: status?.installed
+                          ? 'var(--cr-success)'
+                          : 'var(--muted-foreground)',
                       }}
                     />
                   </div>
@@ -469,11 +483,11 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
       {/* Collapse handle */}
       <button
         type="button"
-        className="flex items-center justify-center h-6 w-full border-t border-[var(--border-subtle)] cursor-pointer shrink-0 bg-transparent"
+        className="flex items-center justify-center h-6 w-full border-t border-border cursor-pointer shrink-0 bg-transparent"
         onClick={() => setDrawerCollapsed(true)}
         title={t.collapseSidebar}
       >
-        <span className="font-mono text-[length:10px] text-[var(--fg-2)]">◀</span>
+        <span className="font-mono text-micro text-muted-foreground">◀</span>
       </button>
     </aside>
   );

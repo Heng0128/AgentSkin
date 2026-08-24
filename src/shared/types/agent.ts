@@ -225,15 +225,6 @@ export interface LaunchResult {
   message: string;
 }
 
-export interface Agent {
-  id: AgentId;
-  name: string;
-  category: 'domestic' | 'global' | 'experimental';
-  icon: string;
-  installed: boolean;
-  status: InstallState;
-}
-
 export type InstallState =
   | 'IDLE'
   | 'DETECTING'

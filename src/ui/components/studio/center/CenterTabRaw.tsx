@@ -90,7 +90,7 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
     <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header row: title + selector + status */}
       <div className="flex items-center gap-2">
-        <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">{t.studioTabRaw}</h3>
+        <h3 className="font-mono text-[11px] font-normal text-[var(--fg-0)]">{t.studioTabRaw}</h3>
 
         <select
           className="ml-auto h-6 max-w-[240px] rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] px-2 font-mono text-[10px] text-[var(--fg-1)]"

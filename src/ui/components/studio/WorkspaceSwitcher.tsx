@@ -15,6 +15,7 @@ import { WORKSPACE_PRESETS } from '@/stores/workspace-presets';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 import type { UiMessages } from '@shared/i18n';
+import { X } from 'lucide-react';
 
 interface WorkspaceSwitcherProps {
   open: boolean;
@@ -70,7 +71,7 @@ export function WorkspaceSwitcher({ open, onClose, t }: WorkspaceSwitcherProps) 
         aria-label={t.studioWorkspacePresets}
       >
         <div className="px-[var(--space-4)] h-12 flex items-center justify-between border-b border-[var(--border-subtle)]">
-          <span className="font-mono text-[13px] font-semibold text-[var(--fg-0)]">
+          <span className="font-mono text-[13px] font-normal text-[var(--fg-0)]">
             {t.studioWorkspacesLabel}
           </span>
           <button
@@ -79,7 +80,7 @@ export function WorkspaceSwitcher({ open, onClose, t }: WorkspaceSwitcherProps) 
             onClick={handleClose}
             aria-label={t.studioCloseSwitcher}
           >
-            ✕
+            <X className="size-3.5" />
           </button>
         </div>
 
@@ -100,7 +101,7 @@ export function WorkspaceSwitcher({ open, onClose, t }: WorkspaceSwitcherProps) 
                 {preset.viewMode === 'single' && '×1'}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-mono text-[length:11px] font-medium text-[var(--fg-0)]">
+                <div className="font-mono text-[length:11px] font-normal text-[var(--fg-0)]">
                   {preset.label}
                 </div>
                 <div className="font-mono text-[length:10px] text-[var(--fg-3)] mt-0">

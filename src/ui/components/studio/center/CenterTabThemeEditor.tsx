@@ -185,14 +185,14 @@ function WCAGContrastPill({ fgHex, bgHex }: { fgHex: string; bgHex: string }) {
 
   return (
     <span className="inline-flex items-center gap-1 font-mono text-[10px]">
-      <span className={passesAA ? 'text-green-500' : 'text-red-500'}>{ratioText}</span>
+      <span className={passesAA ? 'text-cr-success' : 'text-destructive'}>{ratioText}</span>
       {passesAAA && (
-        <span className="rounded-sm bg-green-500/15 px-1 text-[9px] font-medium leading-none text-green-500">
+        <span className="rounded-sm bg-cr-success/15 px-1 text-[9px] font-normal leading-none text-cr-success">
           AAA
         </span>
       )}
       {!passesAA && (
-        <span className="rounded-sm bg-red-500/15 px-1 text-[9px] font-medium leading-none text-red-500">
+        <span className="rounded-sm bg-destructive/15 px-1 text-[9px] font-normal leading-none text-destructive">
           AA
         </span>
       )}
@@ -272,7 +272,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
     <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
       {/* Header */}
       <div>
-        <h3 className="font-mono text-xs font-bold text-[var(--fg-0)]">
+        <h3 className="font-mono text-[11px] font-normal text-[var(--fg-0)]">
           {t.studioTabTheme ?? 'Theme Editor'}
         </h3>
         <p className="mt-2 font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">
@@ -283,7 +283,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
 
       {/* Live CSS preview bar */}
       <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+        <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
           {t.studioDLCssPreview ?? 'CSS Variables'}
         </h4>
         <pre className="mt-2 overflow-x-auto whitespace-pre font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">
@@ -296,7 +296,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Spacing Density */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLSpacing ?? 'Spacing Density'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -324,7 +324,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Radius Scale */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLRadius ?? 'Radius Scale'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -369,7 +369,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Shadow Elevation */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLShadow ?? 'Shadow Elevation'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -402,7 +402,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Motion Speed */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+            <span className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
               {t.studioDLMotion ?? 'Motion Speed'}
             </span>
             <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
@@ -430,7 +430,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
 
       {/* Color Token display */}
       <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="font-mono text-[10px] font-bold text-[var(--fg-0)]">
+        <h4 className="font-mono text-[10px] font-normal text-[var(--fg-0)]">
           {t.studioThemeColors ?? 'Color Tokens (14)'}
         </h4>
         <p className="mt-1 font-mono text-[10px] text-[var(--fg-3)]">
@@ -466,7 +466,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
                   />
                   {/* Token info */}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-[10px] font-bold text-[var(--fg-0)]">
+                    <div className="truncate font-mono text-[10px] font-normal text-[var(--fg-0)]">
                       {key}
                     </div>
                     <div className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">

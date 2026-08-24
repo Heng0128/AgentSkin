@@ -19,7 +19,12 @@
 import { DEFAULT_VERIFY_DELAY_MS } from '../../../shared/injection-constants';
 import type { CdpSession } from '../cdp-client';
 import { injectCssAdopted } from './css-inject';
-import { injectHeroBlob, injectHeroFromDataUrl, transferImageSet } from './hero-inject';
+import {
+  injectHeroBlob,
+  injectHeroFromDataUrl,
+  injectHeroFromProtocolUrl,
+  transferImageSet,
+} from './hero-inject';
 import { backoffDelay, verifyTheme, waitForTheme } from './shared';
 import type { ThemeVerification } from './types';
 
@@ -38,6 +43,13 @@ export interface InjectThemeOptions {
   imageDataUrls?: Record<string, string> | null;
   /** Absolute path to hero.webp (or null to skip file-based art injection). */
   heroPath?: string | null;
+  /**
+   * agentskin-theme://hero/<id> protocol URL for external-file hero originals.
+   * When set, the renderer streams the ORIGINAL wallpaper file directly from
+   * disk (zero compression, no base64 over CDP) — the correct path for
+   * multi-MB 4K/8K backdrops where CDP chunk transfer times out.
+   */
+  heroProtocolUrl?: string | null;
   /** Hero image as data URL (alternative to heroPath; used by engine). */
   heroDataUrl?: string | null;
   /** Host class to add to <html> (e.g. "agentskin-host-doubao"). */
@@ -80,6 +92,7 @@ export async function injectThemeViaCdp(
     css,
     imageDataUrls,
     heroPath,
+    heroProtocolUrl,
     heroDataUrl,
     hostClass,
     retries = 1,
@@ -111,19 +124,32 @@ export async function injectThemeViaCdp(
     }
   }
 
-  // --- Step 2: Image blob URLs (multi-asset, else single hero) ---
+  // --- Step 2: Image blob URLs (multi-asset + hero are independent) ---
+  // The creative asset set and the hero backdrop are decoupled: a theme may
+  // embed creative images as data URLs while its hero is an external file
+  // (lossless 4K/8K wallpaper mode, heroPath/heroProtocolUrl) — or vice versa.
+  // Inject both when both are present instead of treating them as mutually
+  // exclusive.
+  //
+  // Hero priority: heroProtocolUrl (agentskin-theme://hero/<id>, streams the
+  // ORIGINAL file from disk — zero CDP base64, never times out on 4K/8K) →
+  // heroDataUrl (embedded base64) → heroPath (file read + chunked transfer).
   let heroInjected = false;
   let imagesInjected = 0;
   if (imageSet) {
     const result = await transferImageSet(session, imageSet);
     imagesInjected = result.injectedIds.length;
     heroInjected = result.heroInjected;
-  } else if (heroDataUrl) {
+  }
+  if (!heroInjected && heroProtocolUrl) {
+    heroInjected = await injectHeroFromProtocolUrl(session, heroProtocolUrl);
+    imagesInjected += heroInjected ? 1 : 0;
+  } else if (!heroInjected && heroDataUrl) {
     heroInjected = await injectHeroFromDataUrl(session, heroDataUrl);
-    imagesInjected = heroInjected ? 1 : 0;
-  } else if (heroPath) {
+    imagesInjected += heroInjected ? 1 : 0;
+  } else if (!heroInjected && heroPath) {
     heroInjected = await injectHeroBlob(session, heroPath);
-    imagesInjected = heroInjected ? 1 : 0;
+    imagesInjected += heroInjected ? 1 : 0;
   }
 
   // --- Step 3: CSS via adoptedStyleSheets ---

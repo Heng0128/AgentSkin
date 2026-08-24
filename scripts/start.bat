@@ -3,23 +3,15 @@ chcp 65001 >nul 2>&1
 cd /d C:\Users\snowb\Desktop\work\desktop-main
 
 echo ============================================
-echo   AgentSkin - Build ^& Start
+echo   AgentSkin - Dev Start
 echo ============================================
 echo.
 
-echo [1/2] Running npm run build ...
-call npm run build
-if errorlevel 1 (
-    echo.
-    echo [ERROR] Build failed. See above for details.
-    pause
-    exit /b 1
-)
-echo.
-echo [OK] Build succeeded.
-echo.
+start "AgentSkin" cmd /k "npx electron-vite dev"
 
-echo [2/2] Running npm start ...
-echo          (Press Ctrl+C to stop)
+echo AgentSkin is starting in a new window...
 echo.
-call npm start
+echo Configure CatPaw MCP:
+echo   Type: StreamableHTTP
+echo   URL:  http://127.0.0.1:3333/mcp
+echo.

@@ -35,6 +35,7 @@ import { registerVisualAnalyzerIpc } from './visual-analyzer-ipc';
 import { registerWallpaperIpc } from './wallpaper-ipc';
 import { registerWindowIpc } from './window-ipc';
 import { withMonitoredTimeout } from './with-monitored-timeout';
+import { registerMcpIpc } from './mcp-ipc';
 
 export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void>): void {
   registerCoreIpc(ctx, updateTrayMenu);
@@ -117,4 +118,7 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
 
   // Studio Workspace — image→theme extraction, wallpaper picker, bundle management.
   registerStudioWorkspaceIpc(ctx);
+
+  // MCP (Model Context Protocol) — runtime start/stop from Settings UI.
+  registerMcpIpc(ctx);
 }

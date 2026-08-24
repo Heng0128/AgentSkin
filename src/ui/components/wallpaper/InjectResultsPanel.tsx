@@ -20,7 +20,7 @@ import { formatSize } from '@/lib/wallpaperUtils';
 import type { UiMessages } from '@shared/i18n';
 import type { AgentId, AppStatus, WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
-import { CheckCircle2, Image, Video } from 'lucide-react';
+import { CheckCircle2, Image, Video, X } from 'lucide-react';
 import { RenderSettingsPanel } from './RenderSettingsPanel';
 import { WallpaperPreview } from './WallpaperCard';
 
@@ -89,7 +89,7 @@ export function InjectResultsPanel({
                 ? t.weFilterWeb
                 : t.weFilterScene}
         </span>
-        <span className="min-w-0 flex-1 truncate font-display text-[13px] font-bold tracking-tight">
+        <span className="min-w-0 flex-1 truncate font-display text-[13px] font-normal tracking-tight">
           {selected.title}
         </span>
         <button
@@ -98,7 +98,7 @@ export function InjectResultsPanel({
           aria-label={t.close}
           className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
-          ✕
+          <X className="size-3.5" />
         </button>
       </div>
 
@@ -146,7 +146,7 @@ export function InjectResultsPanel({
 
         {/* Meta row */}
         <div className="flex items-center gap-2 font-mono text-[10px]  text-muted-foreground">
-          <span className="font-semibold text-foreground/80">{formatSize(selected.sizeBytes)}</span>
+          <span className="font-normal text-foreground/80">{formatSize(selected.sizeBytes)}</span>
           <span className="text-muted-foreground/40">·</span>
           <span>{selected.source === 'workshop' ? 'WORKSHOP' : t.weFilterLocal.toUpperCase()}</span>
           {selected.tags.length > 0 && (
@@ -170,7 +170,7 @@ export function InjectResultsPanel({
             type="button"
             onClick={onSetUiBackground}
             className={cn(
-              'rounded-md px-2 py-1 text-[10px] font-semibold  transition-colors',
+              'rounded-md px-2 py-1 text-[10px] font-normal  transition-colors',
               isUiBackground
                 ? 'bg-primary text-primary-foreground'
                 : 'bg-muted text-muted-foreground hover:bg-accent hover:text-foreground',
@@ -296,7 +296,7 @@ export function InjectResultsPanel({
                   : t.weNoRunningAgents
             }
             className={cn(
-              'flex items-center gap-1 rounded-md  px-2 py-1 text-[10px] font-semibold  transition-colors',
+              'flex items-center gap-1 rounded-md  px-2 py-1 text-[10px] font-normal  transition-colors',
               batchProgress || applyingTo || selected.previewOnly
                 ? 'cursor-not-allowed border-muted bg-muted text-muted-foreground opacity-60'
                 : runningAgentCount > 0
@@ -325,7 +325,7 @@ export function InjectResultsPanel({
         {/* Render settings */}
         <Accordion type="single" collapsible defaultValue="render">
           <AccordionItem value="render" className="border-b-0">
-            <AccordionTrigger className="py-2 text-[10px] font-semibold text-muted-foreground hover:text-foreground">
+            <AccordionTrigger className="py-2 text-[10px] font-normal text-muted-foreground hover:text-foreground">
               RENDER_SETTINGS
             </AccordionTrigger>
             <AccordionContent>
