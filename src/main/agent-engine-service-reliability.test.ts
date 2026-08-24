@@ -32,7 +32,7 @@ import { restoreThemeFlow } from './theme-restore-flow';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import type { WallpaperInjectorDeps } from './wallpaper/injector-types';
 // RC4-S4-A: Import shared mock factory for type-safe stubs
-import { makeSettingsStub, makeThemeLibraryStub } from './test-helpers/mock-services';
+import { makeSettingsStub, makeThemeLibraryStub, makeWallpaperResolverStub } from './test-helpers/mock-services';
 
 // ---------------------------------------------------------------------------
 // Mock modules (consistent with main test suite)
@@ -486,7 +486,7 @@ describe('AgentEngineService Reliability Verification', () => {
   describe('Structured logging integration', () => {
     it('provides logger API with log and logStructured methods', () => {
       const settings = makeSettings();
-      const svc = new AgentEngineService({} as unknown as ThemeLibraryApi, stateFile, settings);
+      const svc = new AgentEngineService(makeThemeLibraryStub(), stateFile, settings);
 
       const logger = svc.asLogger();
       expect(typeof logger.log).toBe('function');
@@ -517,7 +517,7 @@ describe('AgentEngineService Reliability Verification', () => {
 
     it('includes timestamp structure in logger events', () => {
       const settings = makeSettings();
-      const svc = new AgentEngineService({} as unknown as ThemeLibraryApi, stateFile, settings);
+      const svc = new AgentEngineService(makeThemeLibraryStub(), stateFile, settings);
 
       const logger = svc.asLogger();
 
@@ -539,17 +539,11 @@ describe('AgentEngineService Reliability Verification', () => {
 
   describe('Wallpaper service integration', () => {
     it('accepts wallpaper service resolver before initialize', () => {
-      const mockResolver = {
-        videoPathFor: vi.fn(async () => null),
-        mediaInfoFor: vi.fn(async () => null),
-        webUrlFor: vi.fn(async () => null),
-      };
-
       const svc = makeService();
 
-      // Should not throw
+      // Should not throw with type-safe stub
       expect(() =>
-        svc.setWallpaperService(mockResolver as unknown as WallpaperResolver),
+        svc.setWallpaperService(makeWallpaperResolverStub()),
       ).not.toThrow();
     });
 

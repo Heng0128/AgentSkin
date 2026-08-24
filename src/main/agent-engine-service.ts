@@ -747,15 +747,17 @@ export class AgentEngineService implements AgentEngineServiceApi {
         probeAppStatus(appId, this.discoveryDeps(), (id) => this.portFor(id)),
       ),
     );
-    const apps: (AppStatus | null)[] = settledResults.map((result, index) => {
-      if (result.status === 'fulfilled') {
-        return result.value ?? null;
+    const apps: AppStatus[] = [];
+    for (const [index, result] of settledResults.entries()) {
+      if (result.status === 'fulfilled' && result.value) {
+        apps.push(result.value);
+      } else if (result.status === 'rejected') {
+        // Log the individual agent's failure for debugging but continue.
+        const appId = AGENT_IDS[index];
+        this.log(`[status] ${appId}: probe failed — ${result.reason}`);
       }
-      // Log the individual agent's failure for debugging but continue.
-      const appId = AGENT_IDS[index];
-      this.log(`[status] ${appId}: probe failed — ${result.reason}`);
-      return null;
-    });
+      // fulfilled but undefined → skip (probeAppStatus contract says non-null, but be defensive)
+    }
     const result = { platform: platform(), apps };
     this.statusCache = result;
     this.statusCacheAt = now;

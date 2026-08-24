@@ -91,11 +91,13 @@ export function makeSettingsStub(options: MakeSettingsOptions = {}): SettingsSer
 
 /**
  * Create a type-safe WallpaperResolver stub.
+ * Matches the WallpaperResolver interface in services/contracts.ts.
  */
 export function makeWallpaperResolverStub(): WallpaperResolver {
   return {
-    resolve: vi.fn(async () => null),
-    resolveMediaPath: vi.fn(async () => null),
+    videoPathFor: vi.fn(async () => null),
+    mediaInfoFor: vi.fn(async () => null),
+    webUrlFor: vi.fn(async () => null),
   } as unknown as WallpaperResolver;
 }
 

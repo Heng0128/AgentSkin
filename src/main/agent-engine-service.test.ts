@@ -131,9 +131,10 @@ function makeSettings(opts: SettingsOverrides = {}) {
   return {
     initialize: vi.fn(async () => {}),
     overridesFor: vi.fn(() => ({ appPath: null, port: opts.port ?? null })),
-    wallpaper: vi.fn(() => ({ enabled: false, id: null, render: undefined, agents: {} })),
+    // agents must satisfy Record<AgentId, WallpaperAgentSetting> — use type assertion for test stub
+    wallpaper: vi.fn(() => ({ enabled: false, id: null, render: undefined, agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting> })),
     agentWallpaper: vi.fn((appId: AgentId) => ({ enabled: wallpaperAgents.includes(appId), id: null })),
-    toDto: vi.fn(() => ({ apps: {}, defaultPorts: {}, wallpaper: { enabled: false, id: null, agents: {} } })),
+    toDto: vi.fn(() => ({ apps: {} as Record<AgentId, import('../shared/types').AppOverride>, defaultPorts: {} as Record<AgentId, number>, wallpaper: { enabled: false, id: null, agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting> } })),
     setAppPath: vi.fn(async () => {}),
     setAppPort: vi.fn(async () => {}),
     setWallpaper: vi.fn(async () => {}),
