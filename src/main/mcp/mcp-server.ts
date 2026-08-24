@@ -20,9 +20,26 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { McpContext } from './types';
+import type { ZodRawShape } from 'zod';
 import { getAllRegisteredToolDefinitions } from './capability-orchestrator';
 import { executeTool } from './capability-orchestrator';
 import { getMcpConfig } from './config';
+
+// ---------------------------------------------------------------------------
+// RC2-S2-B: Type-safe schema shape extraction
+// ---------------------------------------------------------------------------
+
+/**
+ * Safely extract the raw shape from a ZodObject for MCP SDK registration.
+ * Validates the shape is a non-null object before casting, providing a
+ * runtime guard against malformed tool definitions.
+ */
+function extractSchemaShape(shape: unknown): ZodRawShape {
+  if (!shape || typeof shape !== 'object' || Array.isArray(shape)) {
+    throw new Error('Invalid tool inputSchema: expected ZodObject.shape to be a non-null object');
+  }
+  return shape as ZodRawShape;
+}
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -68,16 +85,18 @@ export function createMcpServer(ctx: McpContext): McpServer {
 
   for (const definition of toolDefs) {
     try {
-      // Extract the shape from the ZodObject for the SDK's inputSchema
-      const schemaShape = definition.inputSchema.shape;
+      // RC2-S2-B: Use type-safe schema shape extraction with runtime guard
+      const schemaShape = extractSchemaShape(definition.inputSchema.shape);
       server.registerTool(
         definition.name,
         {
           description: definition.description,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK inputSchema type is opaque
           inputSchema: schemaShape as any,
         },
         async (args: Record<string, unknown>) => {
-          const result = await executeTool(definition.name, args as any, ctx);
+          // args is already Record<string, unknown> per SDK signature — no cast needed
+          const result = await executeTool(definition.name, args, ctx);
           return {
             content: result.content,
             isError: result.isError,

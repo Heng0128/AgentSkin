@@ -25,11 +25,39 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import type { ZodRawShape } from 'zod';
 import { getMcpConfig } from './config';
 import { getTool, listTools } from './tool-registry';
 import { executeTool } from './capability-orchestrator';
 import { generateApiKey, validateApiKey } from './auth';
 import type { McpContext } from './types';
+
+// ---------------------------------------------------------------------------
+// RC2-S2-B: Type-safe helpers for JSON-RPC and schema handling
+// ---------------------------------------------------------------------------
+
+/**
+ * Safely extract the raw shape from a ZodObject for MCP SDK registration.
+ * Validates the shape is a non-null object before casting.
+ */
+function extractSchemaShape(shape: unknown): ZodRawShape {
+  if (!shape || typeof shape !== 'object' || Array.isArray(shape)) {
+    throw new Error('Invalid tool inputSchema: expected ZodObject.shape to be a non-null object');
+  }
+  return shape as ZodRawShape;
+}
+
+/**
+ * Narrow an unknown parsed JSON body to a JSON-RPC-like record.
+ * Returns null if the value is not a non-null object, allowing callers
+ * to handle malformed input gracefully.
+ */
+function asJsonRpcBody(body: unknown): Record<string, unknown> | null {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return null;
+  }
+  return body as Record<string, unknown>;
+}
 
 // ---------------------------------------------------------------------------
 // Debug logging — writes to a file since stderr may be swallowed by electron-vite
@@ -185,7 +213,9 @@ export async function startMcpHttpServer(ctx: McpContext): Promise<number> {
         return;
       }
 
-      debugLog(`POST received: method=${(parsedBody as any)?.method}, id=${(parsedBody as any)?.id}`);
+      // RC2-S2-B: Use type-safe narrowing instead of (parsedBody as any)
+      const rpcBody = asJsonRpcBody(parsedBody);
+      debugLog(`POST received: method=${rpcBody?.method}, id=${rpcBody?.id}`);
 
       // Stateless: create a new server + transport per request
       try {
@@ -210,15 +240,17 @@ export async function startMcpHttpServer(ctx: McpContext): Promise<number> {
           const toolDef = getTool(toolName);
           if (!toolDef) continue;
           try {
-            const schemaShape = toolDef.inputSchema.shape;
+            // RC2-S2-B: Use type-safe schema shape extraction
+            const schemaShape = extractSchemaShape(toolDef.inputSchema.shape);
             server.registerTool(
               toolDef.name,
               {
                 description: toolDef.description,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK inputSchema type is opaque
                 inputSchema: schemaShape as any,
               },
               async (args: Record<string, unknown>) => {
-                const result = await executeTool(toolDef.name, args as any, ctx);
+                const result = await executeTool(toolDef.name, args, ctx);
                 return {
                   content: result.content,
                   isError: result.isError,
@@ -232,7 +264,7 @@ export async function startMcpHttpServer(ctx: McpContext): Promise<number> {
 
         debugLog('server connecting...');
         await server.connect(transport);
-        debugLog(`handling request: ${(parsedBody as any)?.method}`);
+        debugLog(`handling request: ${rpcBody?.method}`);
         await transport.handleRequest(req as any, res, parsedBody);
         debugLog('handleRequest completed');
 
