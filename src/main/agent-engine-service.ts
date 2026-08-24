@@ -33,6 +33,7 @@ import {
   AGENT_IDS,
   AGENT_META,
   type AgentId,
+  type AppStatus,
   type ApplyRequest,
   type ApplyResponse,
   type ConcurrencyMetrics,
@@ -719,11 +720,23 @@ export class AgentEngineService implements AgentEngineServiceApi {
     if (this.statusCache && now - this.statusCacheAt < AgentEngineService.STATUS_CACHE_TTL) {
       return this.statusCache;
     }
-    const apps = await Promise.all(
+    // RC5-S5-A: Use Promise.allSettled for per-agent error isolation.
+    // A single agent's probeAppStatus failure should not prevent status()
+    // from returning partial results for the other 5 agents.
+    const settledResults = await Promise.allSettled(
       AGENT_IDS.map((appId) =>
         probeAppStatus(appId, this.discoveryDeps(), (id) => this.portFor(id)),
       ),
     );
+    const apps: (AppStatus | null)[] = settledResults.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        return result.value ?? null;
+      }
+      // Log the individual agent's failure for debugging but continue.
+      const appId = AGENT_IDS[index];
+      this.log(`[status] ${appId}: probe failed — ${result.reason}`);
+      return null;
+    });
     const result = { platform: platform(), apps };
     this.statusCache = result;
     this.statusCacheAt = now;
@@ -902,22 +915,25 @@ export class AgentEngineService implements AgentEngineServiceApi {
   }
 
   async restoreAll(): Promise<void> {
-    // 并行恢复所有已应用主题的 agent —— 各 agent 的 restore 相互独立。
-    // Also includes agents that have no theme but DO have a wallpaper
-    // preference, so "restore all" truly clears every visual modification.
-    const targets = AGENT_IDS.filter(
-      (appId) =>
-        this.registry.getActiveThemeId(appId) || this.settings.agentWallpaper(appId)?.enabled,
-    );
-    await Promise.all(targets.map((appId) => this.restore(appId).catch(() => undefined)));
-    // For agents that had a wallpaper but no theme, restore() will not touch
-    // them (it skips when activeThemeId is null). Clear their wallpaper
-    // preference explicitly so nothing visual survives the "restore all".
+    // RC5-S5-A: Partition agents into two disjoint sets to avoid double-processing.
+    // Set 1: agents with an active theme → full restore (clears theme + wallpaper).
+    // Set 2: agents with wallpaper-only (no theme) → wallpaper removal only.
+    // The two sets are mutually exclusive, preventing redundant epoch bumps.
+    const withTheme: AgentId[] = [];
+    const wallpaperOnly: AgentId[] = [];
+    for (const appId of AGENT_IDS) {
+      if (this.registry.getActiveThemeId(appId)) {
+        withTheme.push(appId);
+      } else if (this.settings.agentWallpaper(appId)?.enabled) {
+        wallpaperOnly.push(appId);
+      }
+    }
+    // Phase 1: Full restore for themed agents (theme + wallpaper cleanup).
+    await Promise.all(withTheme.map((appId) => this.restore(appId).catch(() => undefined)));
+    // Phase 2: Wallpaper-only cleanup for agents without a theme.
+    // These were skipped by restore() because activeThemeId is null.
     await Promise.all(
-      AGENT_IDS.filter(
-        (appId) =>
-          !this.registry.getActiveThemeId(appId) && this.settings.agentWallpaper(appId)?.enabled,
-      ).map((appId) => this.removeWallpaperFromAgent(appId).catch(() => undefined)),
+      wallpaperOnly.map((appId) => this.removeWallpaperFromAgent(appId).catch(() => undefined)),
     );
   }
 
@@ -940,8 +956,12 @@ export class AgentEngineService implements AgentEngineServiceApi {
         dirty = true;
         return;
       }
+      // RC5-S5-A: Guard against null activeThemeId generating 'null--schemeId' composite key.
+      // When activeThemeId is null (cleared above or never set), there's no theme to look up
+      // schemes for. Skip scheme reconciliation entirely in this case.
       if (
         appState?.activeSchemeId &&
+        appState?.activeThemeId &&
         !availableIds.has(`${appState.activeThemeId}--${appState.activeSchemeId}`)
       ) {
         this.log(
