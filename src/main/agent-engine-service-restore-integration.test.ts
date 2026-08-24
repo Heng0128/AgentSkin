@@ -54,7 +54,7 @@ import {
 } from './cdp/injection/engine-strategy';
 import { restoreThemeFlow } from './theme-restore-flow';
 import { applyThemeFlow } from './theme-apply-flow';
-import { probeAppStatus } from './app-discovery';
+import { probeAppStatus, resolveLivePort } from './app-discovery';
 import type { RestoreFlowDeps } from './theme-restore-flow';
 import type { AgentEngineServiceApi } from './services/contracts';
 
@@ -297,8 +297,17 @@ describe('AgentEngineService — Restore 流程集成测试', () => {
   // ════════════════════════════════════════════════════════════════════════
 
   describe('restore 成功路径（有端口完整清理）', () => {
+    beforeEach(() => {
+      // 让 restoreThemeFlow 内部的 port == null 判断走"有端口"分支
+      vi.mocked(resolveLivePort).mockResolvedValue(9222);
+    });
+
+    afterEach(() => {
+      // 恢复默认行为，避免影响其他 describe 块
+      vi.mocked(resolveLivePort).mockResolvedValue(null);
+    });
+
     it('有端口时 restore 返回正确 status 并调用全部三层 cleanup', async () => {
-      // 预设 resolveLivePort 返回有效端口
       const { service } = await makeServiceWithTheme(TEST_APP, 't1', 9222);
 
       const result = await service.restore(TEST_APP);
