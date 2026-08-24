@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { setupElectronMock } from '../../fixtures/mocks/electron';
+import { createElectronMock } from '../../fixtures/mocks/electron';
 
 // ---------------------------------------------------------------------------
 // Module-level handler registries so we can assert exactly which events
@@ -11,7 +11,7 @@ import { setupElectronMock } from '../../fixtures/mocks/electron';
 const mockAppHandlers: Record<string, unknown> = {};
 const mockPmHandlers: Record<string, unknown> = {};
 
-setupElectronMock({
+vi.mock('electron', () => createElectronMock(new Map(), {
   app: {
     on: vi.fn((event: string, fn: unknown) => {
       mockAppHandlers[event] = fn;
@@ -29,7 +29,7 @@ setupElectronMock({
     }),
   },
   BrowserWindow: class {},
-});
+}));
 
 // Mock wallpaper-injector so we do not pull the heavy CDP dependency chain.
 // registerWallpaperLifecycle only calls getActiveWallpaperAgents() inside

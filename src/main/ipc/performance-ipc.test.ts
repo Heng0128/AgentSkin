@@ -10,7 +10,7 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { electronMockFactory } from '../../../fixtures/mocks/electron';
+import { createElectronMock } from '../../../fixtures/mocks/electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 
 // ---------------------------------------------------------------------------
@@ -18,7 +18,7 @@ import { IpcChannel } from '../../shared/ipc-channels';
 // ---------------------------------------------------------------------------
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>();
-vi.mock('electron', electronMockFactory(handlers));
+vi.mock('electron', () => createElectronMock(handlers));
 
 // Mock function references declared outside the factory so tests can assert
 // on call arguments after invocation.
