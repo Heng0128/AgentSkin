@@ -80,6 +80,8 @@ export interface WithPageSessionDeps {
   adapter: (appId: AgentId) => ApplicationAdapter;
   /** Re-resolve the live CDP port for an app (used between retry rounds). */
   resolveLivePort: (appId: AgentId, knownDeadPort?: number | null) => Promise<number | null>;
+  /** Check if the parent service has been disposed (RC1-S1-B). */
+  isDisposed?: () => boolean;
 }
 
 /**
@@ -108,6 +110,11 @@ export async function withPageSession(
   // targets (app may have restarted and bound a new port).
   let cachedPort: number | null = null;
   for (let attempt = 0; attempt < retries; attempt++) {
+    // RC1-S1-B: Bail out early if the parent service has been disposed
+    // instead of continuing to burn IO on stale CDP ports.
+    if (deps.isDisposed?.()) {
+      throw new Error('AgentEngineService disposed — aborting withPageSession retry');
+    }
     // First attempt or previous port yielded no targets → re-resolve.
     if (cachedPort == null) {
       cachedPort = await deps.resolveLivePort(appId);

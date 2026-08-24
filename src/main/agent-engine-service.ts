@@ -472,6 +472,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
       adapter: (appId) => this.adapter(appId),
       resolveLivePort: (appId, knownDeadPort) =>
         resolveLivePort(appId, this.discoveryDeps(), knownDeadPort ?? null),
+      isDisposed: () => this.disposed,
     };
     return {
       withPageSession: (appId, port, fn, retries) =>
@@ -794,6 +795,13 @@ export class AgentEngineService implements AgentEngineServiceApi {
           `[apply] ${appId}: queued restore failed — proceeding anyway: ${toMessage(error)}`,
         );
       }
+      // RC1-S1-B: Guard against disposed service before recursive call.
+      // If dispose() fired during the await above, recursing would operate
+      // on already-released resources (cdpSessionPool, livePortCache).
+      if (this.disposed) {
+        this.log(`[apply] ${appId}: service disposed during restore cleanup — aborting`);
+        throw new Error('AgentEngineService disposed');
+      }
       return this.apply(request);
     }
     let cleanupResolve!: () => void;
@@ -846,6 +854,11 @@ export class AgentEngineService implements AgentEngineServiceApi {
         this.log(
           `[restore] ${appId}: queued apply failed — proceeding anyway: ${toMessage(error)}`,
         );
+      }
+      // RC1-S1-B: Guard against disposed service before recursive call.
+      if (this.disposed) {
+        this.log(`[restore] ${appId}: service disposed during apply cleanup — aborting`);
+        throw new Error('AgentEngineService disposed');
       }
       return this.restore(appId);
     }
