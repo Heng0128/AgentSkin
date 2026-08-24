@@ -8,9 +8,9 @@
  *
  * Enforces the project design-system invariant (C6). **Calibrated
  * 2026-08-20** to the project's actual visual spec (docs/design-tokens.md
- * §3.3/§4/§7.2 + the 2026-08-14 "6px 圆润" visual reform) — the earlier
- * Swiss-only ladders (2px radius, 4/8/16/24/32/48-only spacing, 10px font
- * floor) never matched production usage. Detected violations:
+ * §3.3/§4/§7.2 + the 2026-08-14 "6px 圆润" visual reform) —
+ * the Quiet Workbench 设计系统（6px 圆润基准，4px 网格间距）。
+ * Detected violations:
  *
  * 1. Spacing — Tailwind `p-*`, `m-*`, `gap-*`, `space-*`, `top-*`,
  *    `bottom-*`, `left-*`, `right-*`, `px-*`, `py-*`, `mx-*`, `my-*` and
@@ -54,9 +54,9 @@ const violations = [];
 // ---------------------------------------------------------------------------
 // Design-token constants (calibrated 2026-08-20 to the project's actual
 // visual spec — see docs/design-tokens.md §3.3/§4/§7.2 and the 2026-08-14
-// "6px 圆润" visual reform. The earlier Swiss-only ladders (2px radius,
-// 4/8/16/24/32/48-only spacing) never matched production usage; the calibra
-// matches what the product actually ships while still flagging off-ladder
+// "6px 圆润" visual reform. The calibration reflects the Quiet Workbench design
+// system (6px radius baseline, 4px-grid spacing) — matches what the product
+// actually ships while still flagging off-ladder
 // values that should move to tokens.)
 // ---------------------------------------------------------------------------
 
@@ -94,7 +94,7 @@ const _ALLOWED_TEXT_NAMES = new Set([
 
 /**
  * px values allowed for arbitrary `text-[Npx]` — the project's actual font
- * ladder (design-tokens.md §3.3): 8.5–9px auxiliary mono, 9.5px swiss label,
+ * ladder (design-tokens.md §3.3): 8.5–9px auxiliary mono, 9.5px 辅助标签,
  * 10–10.5px data, 11–11.5px secondary (text-xs), 12–12.5px body (text-sm),
  * 13px card titles, 22px page titles, plus named-size equivalents.
  * Values BELOW 8.5px remain flagged (CRITICAL data must stay >= 10px).

@@ -3,7 +3,7 @@
 > 版本：v2.2
 > 日期：2026-08-23
 > 来源：`src/ui/globals.css`（唯一事实源，以 hex 值为唯一色彩格式）、`scripts/design-language.mjs`、`scripts/extended-colors.mjs`
-> 说明：本文件完整记录 AgentSkin 的 Swiss / International Typographic Style 设计 token。所有色彩值均从 globals.css 提取（以 hex/rgba 为唯一色彩格式），dark 与 light 主题差异已标注。本文档同时记录主题层 Design Language 变量和 Extended Colors 系统。
+> 说明：本文件完整记录 AgentSkin 的 Quiet Workbench 设计系统 token。所有色彩值均从 globals.css 提取（以 hex/rgba 为唯一色彩格式），dark 与 light 主题差异已标注。本文档同时记录主题层 Design Language 变量和 Extended Colors 系统。
 > 变更：v2.2 以 `globals.css` 实际 hex 值为准，将全部 HSL 值替换为 hex/rgba 值，消除文档与代码之间的格式不一致。
 > ⚠️ 以 `src/ui/globals.css` 的 hex 值为唯一事实源。
 
@@ -29,9 +29,9 @@
 
 ## 1. 设计原则
 
-AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义平面设计）**：
+AgentSkin 采用 **Quiet Workbench** 设计语言（Calm · Simple · Restrained · Clear）：
 
-- **锐利几何**：6px 基础圆角（Swiss 变体），仅品牌/App icon 用更大圆角
+- **柔和几何**：6px 基础圆角，仅品牌/App icon 用更大圆角
 - **克制用色**：中性灰阶主导，品牌红仅用于强调
 - **字体层级**：Inter（UI 全文）· JetBrains Mono（标签/数据）· 系统字体（CJK）
 - **网格对齐**：12 列布局网格，数据密集区用紧凑 mono
@@ -160,7 +160,7 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 | Token | 值 |
 |-------|-----|
-| `--radius-base` | `6px` | AgentSkin Swiss 6px 变体 |
+| `--radius-base` | `6px` | AgentSkin 6px 基准 |
 
 ### 4.2 衍生（`@theme inline`，基于 `--radius-base` 缩放）
 
@@ -173,7 +173,7 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 | `--radius-2xl` | `calc(var(--radius-base) * 2.5)` | `15px` |
 | `--radius-pill` | `9999px` | `9999px` |
 
-> 全局 6px 基础圆角（AgentSkin Swiss 变体），仅品牌/App icon 用更大圆角（如 Logo `rx=11.5`、AppMark `rounded-[22%]`）。
+> 全局 6px 基础圆角，仅品牌/App icon 用更大圆角（如 Logo `rx=11.5`、AppMark `rounded-[22%]`）。
 
 ---
 
@@ -401,7 +401,7 @@ AgentSkin 采用 **Swiss / International Typographic Style（瑞士国际主义�
 
 | id | 名称 | spacing | radius | shadow | motion |
 |----|------|---------|--------|--------|--------|
-| swiss-default | Swiss Default | comfortable | 2 | float | fast |
+| default | Default | comfortable | 2 | float | fast |
 | soft-rounded | Soft Rounded | cozy | 8 | subtle | smooth |
 | compact-flat | Compact Flat | compact | 0 | flat | instant |
 
