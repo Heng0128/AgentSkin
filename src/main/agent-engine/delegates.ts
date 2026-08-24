@@ -44,6 +44,7 @@ import {
   resolveLivePort as resolveLivePortImpl,
 } from '../app-discovery';
 import { type CdpSession, connectCdp } from '../cdp/cdp-client';
+import { backoffDelay } from '../cdp/injection/shared';
 import {
   type CdpFanoutDeps,
   hardeningPass as hardeningPassImpl,
@@ -116,7 +117,7 @@ export async function withPageSession(
       // and retry. Reset cachedPort so the next iteration re-resolves.
       lastError = new Error('no live CDP port');
       cachedPort = null;
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await backoffDelay(attempt);
       continue;
     }
     let targets: Awaited<ReturnType<typeof adapter.findTargets>> = [];
@@ -141,7 +142,7 @@ export async function withPageSession(
     // Renderer not ready yet (fresh launch / restart) — wait and retry.
     // Keep cachedPort: the app is still launching, the port is likely the
     // same, just the renderer has not registered targets yet.
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await backoffDelay(attempt);
   }
   throw lastError ?? new Error('no reachable page target');
 }
