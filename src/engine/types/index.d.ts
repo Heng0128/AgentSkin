@@ -388,7 +388,7 @@ export interface LaunchOptions {
   timeoutMs?: number;
 }
 
-export interface LaunchResult {
+export interface EngineLaunchResult {
   appId: string;
   port: number;
   alreadyReady?: boolean;
@@ -430,7 +430,7 @@ export interface ApplySkinResult {
   appId: string;
   port: number;
   theme: ThemeIdentity;
-  launch: LaunchResult | null;
+  launch: EngineLaunchResult | null;
   host: HostSettingsResult;
   targets: Array<TargetResult<CompatibilityResult>>;
 }
@@ -495,7 +495,7 @@ export function discoverApp(adapter: AppAdapter, platform?: string, appPath?: st
 export function findRunningPids(adapter: AppAdapter, platform?: string, executablePath?: string | null): Promise<number[]>;
 export function resolveDebugPort(adapter: AppAdapter, platform?: string): Promise<number | null>;
 export function resolveDebugPorts(adapter: AppAdapter, platform?: string): Promise<number[]>;
-export function launchApp(options: LaunchOptions): Promise<LaunchResult>;
+export function launchApp(options: LaunchOptions): Promise<EngineLaunchResult>;
 export function findTargets(adapter: AppAdapter, port: number, timeoutMs?: number): Promise<CdpTarget[]>;
 export function waitForTargets(adapter: AppAdapter, port: number, timeoutMs?: number): Promise<CdpTarget[]>;
 export function probeApp(options: ThemeRuntimeOptions): Promise<Array<TargetResult<CompatibilityResult>>>;
