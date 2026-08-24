@@ -11,11 +11,11 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { FileImportConfirmRequest, RestartReason, ThemeCatalogItem } from '@shared/types';
+import type { FileImportConfirmRequest, InstalledTheme, RestartReason, ThemeCatalogItem } from '@shared/types';
 import { useDialogStore } from '../dialogStore';
 
-/** Minimal valid ThemeCatalogItem for testing (only required fields). */
-function makeTheme(id: string, name: string): ThemeCatalogItem {
+/** Minimal valid ThemeCatalogItem for testing deletePrompt. */
+function makeCatalogTheme(id: string, name: string): ThemeCatalogItem {
   return {
     id,
     name,
@@ -29,6 +29,18 @@ function makeTheme(id: string, name: string): ThemeCatalogItem {
     tags: [],
     source: 'local',
     installed: true,
+  };
+}
+
+/** Minimal valid InstalledTheme for testing fileImportPrompt. */
+function makeInstalledTheme(id: string, name: string): InstalledTheme {
+  return {
+    id,
+    displayName: name,
+    version: '1.0.0',
+    supportedAgents: ['traework'],
+    coverDataUrl: null,
+    tagline: null,
   };
 }
 
@@ -96,7 +108,7 @@ describe('dialogStore', () => {
 
   describe('deletePrompt', () => {
     it('should set and clear delete prompt', () => {
-      const prompt = makeTheme('theme-1', 'Sakura');
+      const prompt = makeCatalogTheme('theme-1', 'Sakura');
 
       useDialogStore.getState().setDeletePrompt(prompt);
       expect(useDialogStore.getState().deletePrompt).toEqual(prompt);
@@ -110,8 +122,8 @@ describe('dialogStore', () => {
     it('should set and clear file import prompt', () => {
       const prompt: FileImportConfirmRequest = {
         path: '/tmp/test.theme',
-        incoming: makeTheme('theme-1', 'Incoming'),
-        existing: makeTheme('theme-1', 'Existing'),
+        incoming: makeInstalledTheme('theme-1', 'Incoming'),
+        existing: makeInstalledTheme('theme-1', 'Existing'),
       };
 
       useDialogStore.getState().setFileImportPrompt(prompt);
@@ -129,7 +141,7 @@ describe('dialogStore', () => {
         themeName: 'Sakura',
         appId: 'traework' as const,
       });
-      useDialogStore.getState().setDeletePrompt(makeTheme('theme-2', 'Ocean'));
+      useDialogStore.getState().setDeletePrompt(makeCatalogTheme('theme-2', 'Ocean'));
 
       // Both prompts should coexist
       expect(useDialogStore.getState().restartPrompt).not.toBeNull();
