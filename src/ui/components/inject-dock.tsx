@@ -68,7 +68,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
       role="dialog"
       aria-label={t.injectDockTitle}
     >
-      <span className="flex items-center gap-1 font-mono text-[11px] text-foreground">
+      <span className="flex items-center gap-1 text-[11px] text-foreground">
         <Upload className="size-3.5" />
         {t.injectDockTitle}
       </span>
@@ -79,7 +79,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
           void restoreAll();
           setInjectDockOpen(false);
         }}
-        className="flex items-center gap-1 rounded-md bg-card2 px-2 py-1 font-mono text-[10px] text-foreground transition-colors hover:border-primary hover:text-primary"
+        className="flex items-center gap-1 rounded-md bg-card2 px-2 py-1 text-[10px] text-foreground transition-colors hover:border-primary hover:text-primary"
       >
         <RotateCcw className="size-3" />
         {t.restoreAllAction}
