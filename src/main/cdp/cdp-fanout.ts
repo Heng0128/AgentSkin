@@ -189,12 +189,18 @@ export async function connectWithRetry(
   attempts = 3,
   delays: number[] = [500, 1500],
 ): Promise<CdpSession | null> {
+  // Normalize delays: if the caller passes fewer delays than attempts, pad
+  // with the last value (or 500ms fallback) so every retry has a defined wait.
+  const normalizedDelays = [...delays];
+  while (normalizedDelays.length < attempts - 1) {
+    normalizedDelays.push(normalizedDelays.at(-1) ?? 500);
+  }
   for (let attempt = 0; attempt < attempts; attempt++) {
     try {
       return await connectCdp(url, openMs);
     } catch {
       if (attempt >= attempts - 1) return null;
-      const wait = delays[attempt] ?? 500;
+      const wait = normalizedDelays[attempt] ?? 500;
       await new Promise((resolve) => setTimeout(resolve, wait));
     }
   }
