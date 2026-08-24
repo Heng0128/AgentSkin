@@ -48,10 +48,10 @@ export function DockTabExport({ t }: { t: UiMessages }) {
         </Kicker>
 
         {!toolOverrides ? (
-          <p className="font-mono text-[10px] text-[var(--fg-2)]">{t.studioInspectorEmpty}</p>
+          <p className="text-[10px] text-[var(--fg-2)]">{t.studioInspectorEmpty}</p>
         ) : (
           <>
-            <p className="font-mono text-[10px] text-[var(--fg-2)] leading-relaxed">
+            <p className="text-[10px] text-[var(--fg-2)] leading-relaxed">
               {t.studioExportDesc('.agentskin-theme')}
             </p>
             <div className="space-y-[var(--space-1)]">
@@ -87,8 +87,8 @@ export function DockTabExport({ t }: { t: UiMessages }) {
                 className="border border-[var(--border-subtle)] bg-[var(--bg-3)] p-2"
                 style={{ borderRadius: 'var(--r-xs)' }}
               >
-                <p className="font-mono text-[10px] text-[var(--fg-2)]">{t.studioExportedTo}</p>
-                <p className="break-all font-mono text-[10px] text-[var(--fg-0)]">
+                <p className="text-[10px] text-[var(--fg-2)]">{t.studioExportedTo}</p>
+                <p className="break-all text-[10px] text-[var(--fg-0)]">
                   {exportState.dir}
                 </p>
                 <Button
@@ -103,7 +103,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
             )}
 
             {exportState.error && (
-              <p className="font-mono text-[10px] text-[var(--accent)]">
+              <p className="text-[10px] text-[var(--accent)]">
                 {t.studioExportError(exportState.error)}
               </p>
             )}

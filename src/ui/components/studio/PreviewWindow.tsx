@@ -237,26 +237,26 @@ export function PreviewWindow({
           </div>
         ) : status === 'loading' || status === 'idle' ? (
           <div className="flex h-full w-full items-center justify-center bg-background">
-            <span className="font-mono text-micro text-muted-foreground">
+            <span className="text-micro text-muted-foreground">
               {t.studioPreviewLoading}
             </span>
           </div>
         ) : status === 'error' ? (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-background">
-            <span className="font-mono text-micro text-muted-foreground">
+            <span className="text-micro text-muted-foreground">
               {error ?? t.studioPreviewError}
             </span>
             <button
               type="button"
               onClick={refresh}
-              className="rounded-sm border border-border px-2 py-0 font-mono text-micro text-muted-foreground hover:bg-muted"
+              className="rounded-sm border border-border px-2 py-0 text-micro text-muted-foreground hover:bg-muted"
             >
               {t.studioPreviewRetry}
             </button>
           </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-background">
-            <span className="font-mono text-micro text-muted-foreground">{t.studioNoSnapshot}</span>
+            <span className="text-micro text-muted-foreground">{t.studioNoSnapshot}</span>
           </div>
         )}
       </div>
@@ -270,7 +270,7 @@ export function PreviewWindow({
         <div className="relative">
           <button
             type="button"
-            className="font-mono text-micro text-muted-foreground hover:text-foreground"
+            className="text-micro text-muted-foreground hover:text-foreground"
             onClick={() => setZoomOpen((v) => !v)}
           >
             {t.studioZoomTrigger} ▾
@@ -285,7 +285,7 @@ export function PreviewWindow({
                     onScaleChange(s);
                     setZoomOpen(false);
                   }}
-                  className="whitespace-nowrap rounded-sm px-2 py-0 text-left font-mono text-micro hover:bg-muted"
+                  className="whitespace-nowrap rounded-sm px-2 py-0 text-left text-micro hover:bg-muted"
                   style={{
                     background: win.scale === s ? 'var(--accent)' : 'transparent',
                     color: win.scale === s ? 'var(--accent-foreground)' : 'var(--foreground)',

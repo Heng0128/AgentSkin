@@ -114,14 +114,14 @@ function StatusErrorBanner({
     >
       {/* Left accent bar */}
       <span className="h-5 w-[3px] shrink-0 rounded-sm bg-destructive" aria-hidden />
-      <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-muted-foreground">
+      <span className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground">
         {error}
       </span>
       <button
         type="button"
         onClick={onRetry}
         disabled={isRefreshing}
-        className="inline-flex shrink-0 items-center gap-1 rounded-md border border-destructive/30 bg-card2 px-2 py-1 font-mono text-[10px] text-destructive transition-colors duration-fast hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-45"
+        className="inline-flex shrink-0 items-center gap-1 rounded-md border border-destructive/30 bg-card2 px-2 py-1 text-[10px] text-destructive transition-colors duration-fast hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-45"
       >
         {isRefreshing ? <Spinner className="size-3" /> : <RefreshCw className="size-3" />}
         {t.statusRetry}
@@ -218,7 +218,7 @@ export function EnvironmentGrid({
       {/* section header with mono label */}
       <div className="mb-3 flex items-center gap-2 px-1">
         <span className="as-label">{title}</span>
-        <span className="inline-flex size-[18px] items-center justify-center rounded-md bg-card2 font-mono text-[10px] font-normal text-muted-foreground ring-1 ring-border">
+        <span className="inline-flex size-[18px] items-center justify-center rounded-md bg-card2 text-[10px] font-normal text-muted-foreground ring-1 ring-border">
           {environments.length}
         </span>
         {/* Live refresh indicator — isolated ticker so the grid doesn't re-render every second. */}

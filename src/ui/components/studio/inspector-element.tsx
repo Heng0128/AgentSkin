@@ -160,20 +160,20 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
         <div className="flex items-center gap-2">
           {details ? (
             <>
-              <span className="font-mono text-micro font-semibold text-accent">
+              <span className="text-micro font-semibold text-accent">
                 &lt;{details.tag}&gt;
               </span>
               {details.id && (
-                <span className="font-mono text-[10px] text-muted-foreground">#{details.id}</span>
+                <span className="text-[10px] text-muted-foreground">#{details.id}</span>
               )}
               {details.classes.length > 0 && (
-                <span className="font-mono text-[10px] text-muted-foreground">
+                <span className="text-[10px] text-muted-foreground">
                   .{details.classes.join('.')}
                 </span>
               )}
             </>
           ) : (
-            <span className="font-mono text-[10px] text-muted-foreground">Loading…</span>
+            <span className="text-[10px] text-muted-foreground">Loading…</span>
           )}
         </div>
         <button
@@ -190,7 +190,7 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
         <>
           {/* Box model visualization */}
           <div
-            className="border border-border p-2 font-mono text-[10px] text-muted-foreground"
+            className="border border-border p-2 text-[10px] text-muted-foreground"
             style={{ background: 'var(--card)' }}
           >
             <div className="mb-1">Box Model</div>
@@ -221,11 +221,11 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
 
           {/* Computed styles */}
           <div>
-            <div className="mb-1 font-mono text-[10px] font-semibold text-muted-foreground">
+            <div className="mb-1 text-[10px] font-semibold text-muted-foreground">
               Computed Styles
             </div>
             <div
-              className="flex flex-col gap-1 rounded-sm border border-border p-2 font-mono text-[10px]"
+              className="flex flex-col gap-1 rounded-sm border border-border p-2 text-[10px]"
               style={{ background: 'var(--card)' }}
             >
               {Object.entries(details.computedStyles)
@@ -242,11 +242,11 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
           {/* CSS Variables */}
           {details.cssVariables.length > 0 && (
             <div>
-              <div className="mb-1 font-mono text-[10px] font-semibold text-muted-foreground">
+              <div className="mb-1 text-[10px] font-semibold text-muted-foreground">
                 CSS Variables
               </div>
               <div
-                className="flex flex-col gap-1 rounded-sm border border-border p-2 font-mono text-[10px]"
+                className="flex flex-col gap-1 rounded-sm border border-border p-2 text-[10px]"
                 style={{ background: 'var(--card)' }}
               >
                 {details.cssVariables.map((v: string) => (
@@ -260,11 +260,11 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
 
           {/* Breadcrumb */}
           <div>
-            <div className="mb-1 font-mono text-[10px] font-semibold text-muted-foreground">
+            <div className="mb-1 text-[10px] font-semibold text-muted-foreground">
               DOM Path
             </div>
             <div
-              className="rounded-sm border border-border p-2 font-mono text-[10px] text-foreground"
+              className="rounded-sm border border-border p-2 text-[10px] text-foreground"
               style={{ background: 'var(--card)', wordBreak: 'break-all' }}
             >
               {details.breadcrumb}

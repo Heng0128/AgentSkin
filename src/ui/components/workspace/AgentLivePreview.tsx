@@ -179,14 +179,14 @@ export function AgentLivePreview({
         <div className="grid grid-cols-2 gap-px bg-[var(--border-subtle)]">
           {/* Left: current overrides */}
           <div className="bg-[var(--surface)]">
-            <div className="px-2 py-1 text-center font-mono text-[10px] tracking-wider text-muted-foreground">
+            <div className="px-2 py-1 text-center text-[10px] tracking-wider text-muted-foreground">
               {t.workspacePreviewDualA}
             </div>
             <RealDomPreview domTree={domTree} overrides={overrides} t={t} />
           </div>
           {/* Right: baseline (no overrides) */}
           <div className="bg-[var(--surface)]">
-            <div className="px-2 py-1 text-center font-mono text-[10px] tracking-wider text-muted-foreground">
+            <div className="px-2 py-1 text-center text-[10px] tracking-wider text-muted-foreground">
               {t.workspacePreviewDualB}
             </div>
             <RealDomPreview domTree={domTree} overrides={null} t={t} />

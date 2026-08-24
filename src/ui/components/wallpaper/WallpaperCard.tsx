@@ -168,7 +168,7 @@ export const WallpaperCard = memo(function WallpaperCard({
             aria-hidden
           >
             <div className="absolute inset-0 bg-black/40" />
-            <span className="relative flex w-full items-center justify-between px-2 pb-2 font-mono text-micro text-popover-foreground/90">
+            <span className="relative flex w-full items-center justify-between px-2 pb-2 text-micro text-popover-foreground/90">
               {wallpaper.type === 'video'
                 ? t.weTypeVideo
                 : wallpaper.type === 'image'
@@ -182,7 +182,7 @@ export const WallpaperCard = memo(function WallpaperCard({
           {/* Type badge (mono) */}
           <span
             className={cn(
-              'absolute bottom-1 right-1 flex items-center gap-0 rounded-sm px-1 py-0 font-mono text-micro',
+              'absolute bottom-1 right-1 flex items-center gap-0 rounded-sm px-1 py-0 text-micro',
               wallpaper.type === 'video'
                 ? 'bg-primary text-primary-foreground'
                 : wallpaper.type === 'image'
@@ -207,19 +207,19 @@ export const WallpaperCard = memo(function WallpaperCard({
           </span>
           {/* UI background indicator  */}
           {isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-sm bg-primary px-1 py-0 font-mono text-micro text-primary-foreground">
+            <span className="absolute left-1 top-1 rounded-sm bg-primary px-1 py-0 text-micro text-primary-foreground">
               UI
             </span>
           )}
           {/* Preview-only badge (warning) */}
           {previewOnly && !isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-sm bg-cr-warning px-1 py-0 font-mono text-micro text-yellow-950">
+            <span className="absolute left-1 top-1 rounded-sm bg-cr-warning px-1 py-0 text-micro text-yellow-950">
               PREVIEW
             </span>
           )}
           {/* Source badge for local imports  */}
           {wallpaper.source === 'local' && (
-            <span className="absolute right-1 top-1 rounded-sm bg-muted px-1 py-0 font-mono text-micro text-muted-foreground">
+            <span className="absolute right-1 top-1 rounded-sm bg-muted px-1 py-0 text-micro text-muted-foreground">
               LOCAL
             </span>
           )}
@@ -244,7 +244,7 @@ export const WallpaperCard = memo(function WallpaperCard({
                   setConfirming(false);
                 }}
                 disabled={isDeleting}
-                className="rounded-sm px-1 py-0 font-mono text-micro font-normal text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                className="rounded-sm px-1 py-0 text-micro font-normal text-destructive hover:bg-destructive/10 disabled:opacity-50"
               >
                 {isDeleting ? '…' : confirmLabel}
               </button>
@@ -254,7 +254,7 @@ export const WallpaperCard = memo(function WallpaperCard({
                   e.stopPropagation();
                   setConfirming(false);
                 }}
-                className="rounded-sm px-1 py-0 font-mono text-micro text-muted-foreground hover:bg-muted"
+                className="rounded-sm px-1 py-0 text-micro text-muted-foreground hover:bg-muted"
               >
                 <X className="size-2.5" />
               </button>
@@ -266,7 +266,7 @@ export const WallpaperCard = memo(function WallpaperCard({
                 e.stopPropagation();
                 setConfirming(true);
               }}
-              className="rounded-sm bg-surface px-1 py-0 font-mono text-micro text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-sm bg-surface px-1 py-0 text-micro text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
             >
               {deleteLabel}
             </button>

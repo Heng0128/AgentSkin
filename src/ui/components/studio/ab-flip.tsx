@@ -224,21 +224,21 @@ export function AbFlip({
           <button
             type="button"
             onClick={() => setView('baseline')}
-            className={`px-2 py-0 font-mono text-micro transition-colors ${view === 'baseline' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+            className={`px-2 py-0 text-micro transition-colors ${view === 'baseline' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted'}`}
           >
             Baseline
           </button>
           <button
             type="button"
             onClick={() => setView('current')}
-            className={`px-2 py-0 font-mono text-micro transition-colors ${view === 'current' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+            className={`px-2 py-0 text-micro transition-colors ${view === 'current' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted'}`}
           >
             Current
           </button>
           <button
             type="button"
             onClick={() => setView('split')}
-            className={`px-2 py-0 font-mono text-micro transition-colors ${view === 'split' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted'}`}
+            className={`px-2 py-0 text-micro transition-colors ${view === 'split' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground hover:bg-muted'}`}
           >
             Split
           </button>
@@ -249,14 +249,14 @@ export function AbFlip({
         <button
           type="button"
           onClick={() => setShowDiff((v) => !v)}
-          className={`rounded-sm border px-2 py-0 font-mono text-micro transition-colors ${showDiff ? 'border-cr-warning bg-cr-warning/10 text-cr-warning' : 'border-border text-muted-foreground hover:bg-muted'}`}
+          className={`rounded-sm border px-2 py-0 text-micro transition-colors ${showDiff ? 'border-cr-warning bg-cr-warning/10 text-cr-warning' : 'border-border text-muted-foreground hover:bg-muted'}`}
         >
           {showDiff ? 'Diff ●' : 'Diff ○'}
         </button>
 
         <span className="flex-1" />
 
-        <span className="font-mono text-micro text-muted-foreground">
+        <span className="text-micro text-muted-foreground">
           {view === 'baseline' && 'Un-themed'}
           {view === 'current' && 'Themed'}
           {view === 'split' && 'A|B Compare'}
@@ -319,7 +319,7 @@ export function AbFlip({
         {/* Empty state */}
         {!baselineSrcDoc && !currentSrcDoc && (
           <div className="flex h-full w-full items-center justify-center">
-            <span className="font-mono text-micro text-muted-foreground">{t.studioNoSnapshot}</span>
+            <span className="text-micro text-muted-foreground">{t.studioNoSnapshot}</span>
           </div>
         )}
       </div>

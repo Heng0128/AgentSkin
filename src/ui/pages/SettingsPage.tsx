@@ -123,7 +123,7 @@ function CustomCssEditor({
         placeholder={t.settingsCustomCssPlaceholder}
         disabled={loading}
         spellCheck={false}
-        className="min-h-32 w-full resize-y rounded-sm bg-card font-mono text-[13px] leading-5"
+        className="min-h-32 w-full resize-y rounded-sm bg-card text-[13px] leading-5"
       />
     </div>
   );
@@ -235,7 +235,7 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
         {mcpRunning && mcpUrl && (
           <div className="flex items-center gap-1 text-[10px]">
             <span className="text-muted-foreground">{t.settingsMcpEndpoint}:</span>
-            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[9px] text-secondary">
+            <code className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-secondary">
               {mcpUrl}
             </code>
             <Button
@@ -504,7 +504,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                   className="w-full"
                 />
               ) : (
-                <div className="space-y-px rounded-sm bg-card p-2 font-mono text-[10px] leading-5">
+                <div className="space-y-px rounded-sm bg-card p-2 text-[10px] leading-5">
                   <div className="mb-1 px-1 text-micro text-muted-foreground/50">
                     {logs.length} {t.showLogs}
                   </div>
@@ -530,7 +530,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
             )}
             {section === 'advanced' && (
               <>
-                <p className="font-mono text-[10px] text-muted-foreground/70">
+                <p className="text-[10px] text-muted-foreground/70">
                   {t.settingsAdvancedDesc}
                 </p>
                 <McpSettingsPanel t={t} />

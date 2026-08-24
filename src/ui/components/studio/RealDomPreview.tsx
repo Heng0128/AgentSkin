@@ -76,14 +76,14 @@ function RealDomPreview({
           <span className="size-[7px] rounded-[var(--dl-radius,2px)] bg-[var(--cr-success)]" />
         </div>
         <span
-          className="ml-2 truncate font-mono text-[10px]"
+          className="ml-2 truncate text-[10px]"
           style={{ letterSpacing: '0.08em', color: 'var(--muted-foreground)' }}
         >
           {t.studioPreviewStatus}
         </span>
         {domTree && (
           <span
-            className="ml-auto font-mono text-[10px]"
+            className="ml-auto text-[10px]"
             style={{ color: 'var(--muted-foreground)' }}
           >
             {t.studioLiveIndicator}

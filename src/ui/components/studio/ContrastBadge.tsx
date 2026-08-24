@@ -36,7 +36,7 @@ export function ContrastBadge({
   if (mode === 'compact') {
     const pass = passesAA;
     return (
-      <span className={`inline-flex items-center gap-1 font-mono text-[10px] ${className}`}>
+      <span className={`inline-flex items-center gap-1 text-[10px] ${className}`}>
         <span
           className={`inline-block h-2 w-2 rounded-full ${pass ? 'bg-cr-success' : 'bg-destructive'}`}
           aria-hidden="true"
@@ -52,7 +52,7 @@ export function ContrastBadge({
 
   return (
     <span
-      className={`inline-flex items-center gap-1 font-mono text-[10px] ${colorClass} ${className}`}
+      className={`inline-flex items-center gap-1 text-[10px] ${colorClass} ${className}`}
     >
       <span>{ratioText}</span>
       {passesAAA && (

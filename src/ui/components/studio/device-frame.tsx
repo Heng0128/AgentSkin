@@ -101,7 +101,7 @@ export function DeviceFrame({
           />
         </div>
         {/* Resolution label */}
-        <span className="mt-2 font-mono text-[10px] text-muted-foreground">{label}</span>
+        <span className="mt-2 text-[10px] text-muted-foreground">{label}</span>
       </div>
     );
   }
@@ -128,7 +128,7 @@ export function DeviceFrame({
         </div>
       </div>
       {/* Resolution label */}
-      <span className="mt-1 block font-mono text-[10px] text-muted-foreground">{label}</span>
+      <span className="mt-1 block text-[10px] text-muted-foreground">{label}</span>
     </div>
   );
 }

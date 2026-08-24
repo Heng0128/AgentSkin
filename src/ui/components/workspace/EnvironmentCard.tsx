@@ -253,7 +253,7 @@ export function EnvironmentCard({
         <div className="mt-2 font-mono">
           <div className="grid grid-cols-3 gap-1 rounded-md bg-secondary px-2 py-2">
             <div>
-              <i className="mb-0.5 block text-[10px] font-mono opacity-70 not-italic">
+              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">
                 {t.detailVersion}
               </i>
               <b className="block text-[11.5px] font-normal tabular-nums text-foreground/80">
@@ -261,13 +261,13 @@ export function EnvironmentCard({
               </b>
             </div>
             <div>
-              <i className="mb-0.5 block text-[10px] font-mono opacity-70 not-italic">
+              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">
                 {t.agentDetailStatus}
               </i>
               {statusLabel}
             </div>
             <div>
-              <i className="mb-0.5 block text-[10px] font-mono opacity-70 not-italic">
+              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">
                 {t.capTheme}
               </i>
               <b className="block truncate text-[11.5px] tabular-nums text-foreground/80">
@@ -279,7 +279,7 @@ export function EnvironmentCard({
 
         {/* Wallpaper binding indicator (P0-3: environment = theme + wallpaper) */}
         {env.wallpaperId && (
-          <div className="mt-1.5 flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
+          <div className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
             <Image className="size-3" />
             <span>{t.envWallpaperBound}</span>
           </div>

@@ -239,13 +239,13 @@ export function WorkspacePage() {
             }`}
             aria-hidden
           />
-          <span className="font-mono tabular-nums">{healthReport.score}</span>
+          <span className="tabular-nums">{healthReport.score}</span>
           <span className="text-muted-foreground">|</span>
           <span className={healthReport.blockingCount > 0 ? 'text-danger' : ''}>
             {healthReport.blockingCount} {t.workspaceHealthBlocking}
           </span>
           <span className="text-muted-foreground">|</span>
-          <span className="ml-auto font-mono text-micro text-muted-foreground">
+          <span className="ml-auto text-micro text-muted-foreground">
             {healthReport.agentId} @ {new Date(healthReport.timestamp).toLocaleTimeString()}
           </span>
         </div>
@@ -287,7 +287,7 @@ export function WorkspacePage() {
                     <span className="block truncate text-[10px] font-normal leading-tight">
                       {app.displayName}
                     </span>
-                    <span className="block font-mono text-micro tabular-nums text-muted-foreground">
+                    <span className="block text-micro tabular-nums text-muted-foreground">
                       :{app.port}
                     </span>
                   </span>
@@ -319,7 +319,7 @@ export function WorkspacePage() {
                   <button
                     type="button"
                     onClick={() => toggleInspectMode()}
-                    className={`flex items-center gap-1 rounded-sm px-2 py-0.5 font-mono text-micro transition-colors ${
+                    className={`flex items-center gap-1 rounded-sm px-2 py-0.5 text-micro transition-colors ${
                       inspectMode
                         ? 'bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:bg-[var(--bg-3)]'

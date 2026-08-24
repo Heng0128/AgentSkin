@@ -52,10 +52,10 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
       <div className="border border-border bg-muted p-2 rounded-sm">
         <div className="flex items-center gap-1">
           <AppMark appId={agent as never} size={10} />
-          <span className="font-mono text-micro font-normal   text-muted-foreground">
+          <span className="text-micro font-normal   text-muted-foreground">
             {agentMeta?.displayName ?? agent}
           </span>
-          <span className="ml-auto rounded-sm bg-primary px-1 py-0 font-mono text-micro font-normal text-white">
+          <span className="ml-auto rounded-sm bg-primary px-1 py-0 text-micro font-normal text-white">
             {step}
           </span>
         </div>
@@ -64,8 +64,8 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
       {/* Progress bar */}
       <div>
         <div className="mb-1 flex items-baseline justify-between">
-          <span className="font-mono text-micro   text-muted-foreground">{t.studioProgress}</span>
-          <span className="font-mono text-micro font-normal tabular-nums text-secondary">
+          <span className="text-micro   text-muted-foreground">{t.studioProgress}</span>
+          <span className="text-micro font-normal tabular-nums text-secondary">
             {progress}%
           </span>
         </div>
@@ -105,7 +105,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
               />
               <span
                 className={[
-                  'font-mono text-micro',
+                  'text-micro',
                   isCurrent && 'font-normal text-foreground',
                   isComplete && 'text-muted-foreground',
                   isPending && 'text-muted-foreground',
@@ -116,12 +116,12 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
                 {t[s.labelKey] as string}
               </span>
               {isComplete && (
-                <span className="ml-auto font-mono text-micro text-primary" aria-hidden="true">
+                <span className="ml-auto text-micro text-primary" aria-hidden="true">
                   ✓
                 </span>
               )}
               {isCurrent && (
-                <span className="ml-auto font-mono text-micro tabular-nums text-muted-foreground">
+                <span className="ml-auto text-micro tabular-nums text-muted-foreground">
                   {t.studioActiveStatus}
                 </span>
               )}

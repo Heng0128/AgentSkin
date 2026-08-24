@@ -134,7 +134,7 @@ function AgentTraceCard({
 function TH({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <th
-      className={['px-3 py-2 text-left text-[10px] font-mono text-muted-foreground', className]
+      className={['px-3 py-2 text-left text-[10px] text-muted-foreground', className]
         .filter(Boolean)
         .join(' ')}
     >

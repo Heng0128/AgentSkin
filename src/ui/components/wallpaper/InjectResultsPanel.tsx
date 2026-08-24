@@ -80,7 +80,7 @@ export function InjectResultsPanel({
     <aside className="flex w-[280px] shrink-0 flex-col  bg-card2">
       {/* Header — type badge + title + close */}
       <div className="flex items-center gap-2  px-3 py-2">
-        <span className="shrink-0 rounded-md bg-muted px-1 py-0 font-mono text-[10px]  text-muted-foreground">
+        <span className="shrink-0 rounded-md bg-muted px-1 py-0 text-[10px]  text-muted-foreground">
           {selected.type === 'video'
             ? t.weFilterVideo
             : selected.type === 'image'
@@ -112,7 +112,7 @@ export function InjectResultsPanel({
                 style={{ width: `${(batchProgress.done / batchProgress.total) * 100}%` }}
               />
             </div>
-            <span className="font-mono text-[10px]  text-muted-foreground">
+            <span className="text-[10px]  text-muted-foreground">
               {t.weApplyingAll(batchProgress.done, batchProgress.total)}
             </span>
           </div>
@@ -145,7 +145,7 @@ export function InjectResultsPanel({
         </div>
 
         {/* Meta row */}
-        <div className="flex items-center gap-2 font-mono text-[10px]  text-muted-foreground">
+        <div className="flex items-center gap-2 text-[10px]  text-muted-foreground">
           <span className="font-normal text-foreground/80">{formatSize(selected.sizeBytes)}</span>
           <span className="text-muted-foreground/40">·</span>
           <span>{selected.source === 'workshop' ? 'WORKSHOP' : t.weFilterLocal.toUpperCase()}</span>
@@ -159,7 +159,7 @@ export function InjectResultsPanel({
 
         {/* Preview-only warning */}
         {selected.previewOnly && (
-          <p className="rounded-md bg-cr-warning/10 px-2 py-1 font-mono text-[10px] leading-tight text-cr-warning">
+          <p className="rounded-md bg-cr-warning/10 px-2 py-1 text-[10px] leading-tight text-cr-warning">
             {t.wePreviewOnlyHint}
           </p>
         )}
@@ -263,7 +263,7 @@ export function InjectResultsPanel({
                 </button>
                 <span
                   className={cn(
-                    'max-w-[3.5rem] truncate text-center font-mono text-[10px]  leading-tight transition-colors duration-slower',
+                    'max-w-[3.5rem] truncate text-center text-[10px]  leading-tight transition-colors duration-slower',
                     isApplied
                       ? 'text-cr-success'
                       : isFail
@@ -311,7 +311,7 @@ export function InjectResultsPanel({
         </div>
 
         {/* Running agents hint */}
-        <p className="flex items-center gap-1 font-mono text-[10px]  text-muted-foreground">
+        <p className="flex items-center gap-1 text-[10px]  text-muted-foreground">
           <AgentStatusDot
             size="xs"
             variant={isRefreshing ? 'refreshing' : runningAgentCount > 0 ? 'active' : 'offline'}

@@ -106,7 +106,7 @@ export function ThemeCard({
 
         {/* Dynamic wallpaper indicator — bottom-right */}
         {theme.hasWallpaper && (
-          <span className="absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-sm bg-surface px-1 py-0 font-mono text-micro font-normal text-muted-foreground">
+          <span className="absolute bottom-1 right-1 inline-flex items-center gap-1 rounded-sm bg-surface px-1 py-0 text-micro font-normal text-muted-foreground">
             <span className="inline-flex size-1 rounded-full bg-white" />
             {t.themeDynamicBadge}
           </span>
@@ -119,14 +119,14 @@ export function ThemeCard({
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="min-w-0 truncate text-[13px] font-medium leading-snug">{theme.name}</h3>
           {theme.version && (
-            <span className="shrink-0 font-mono text-micro tabular-nums text-muted-foreground">
+            <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
               v{theme.version}
             </span>
           )}
         </div>
 
-        {/* Author — font-mono 10px text-dim */}
-        <div className="flex items-center gap-1 font-mono text-micro text-muted-foreground/60">
+        {/* Author — 10px text-dim */}
+        <div className="flex items-center gap-1 text-micro text-muted-foreground/60">
           <span className="truncate">{theme.author}</span>
           {theme.category && (
             <>

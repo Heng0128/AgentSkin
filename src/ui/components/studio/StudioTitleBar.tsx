@@ -64,11 +64,11 @@ export function StudioTitleBar() {
       {/* Left: brand + active project */}
       <div className="pointer-events-none flex items-center gap-2">
         <span className="text-[13px] font-normal text-primary">✦</span>
-        <span className="font-mono text-[11px] font-normal   text-foreground">{t.studioBrand}</span>
+        <span className="text-[11px] font-normal   text-foreground">{t.studioBrand}</span>
         {projectName && (
           <>
             <span className="text-muted-foreground">/</span>
-            <span className="max-w-[200px] truncate font-mono text-micro text-muted-foreground">
+            <span className="max-w-[200px] truncate text-micro text-muted-foreground">
               {projectName}
             </span>
           </>

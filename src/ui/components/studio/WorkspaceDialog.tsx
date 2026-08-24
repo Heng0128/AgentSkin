@@ -45,14 +45,14 @@ function WorkspaceDialog({
       <DialogContent style={{ width, maxWidth: '90vw' }} className="gap-[var(--space-3)]">
         <div>
           <DialogTitle
-            className="font-mono text-[13px] font-normal "
+            className="text-[13px] font-normal "
             style={{ letterSpacing: '0.1em', color: 'var(--fg-0)' }}
           >
             {title}
           </DialogTitle>
           {description && (
             <DialogDescription
-              className="mt-0 font-mono text-[length:10px]"
+              className="mt-0 text-[length:10px]"
               style={{ color: 'var(--fg-2)' }}
             >
               {description}

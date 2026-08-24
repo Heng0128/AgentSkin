@@ -71,7 +71,7 @@ export function WorkspaceSwitcher({ open, onClose, t }: WorkspaceSwitcherProps) 
         aria-label={t.studioWorkspacePresets}
       >
         <div className="px-[var(--space-4)] h-12 flex items-center justify-between border-b border-[var(--border-subtle)]">
-          <span className="font-mono text-[13px] font-normal text-[var(--fg-0)]">
+          <span className="text-[13px] font-normal text-[var(--fg-0)]">
             {t.studioWorkspacesLabel}
           </span>
           <button
@@ -97,14 +97,14 @@ export function WorkspaceSwitcher({ open, onClose, t }: WorkspaceSwitcherProps) 
                 border: '1px solid',
               }}
             >
-              <div className="size-8 rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-1)] flex items-center justify-center font-mono text-[10px] text-[var(--fg-2)]">
+              <div className="size-8 rounded-[var(--r-xs)] border border-[var(--border-subtle)] bg-[var(--bg-1)] flex items-center justify-center text-[10px] text-[var(--fg-2)]">
                 {preset.viewMode === 'single' && '×1'}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-mono text-[length:11px] font-normal text-[var(--fg-0)]">
+                <div className="text-[length:11px] font-normal text-[var(--fg-0)]">
                   {preset.label}
                 </div>
-                <div className="font-mono text-[length:10px] text-[var(--fg-3)] mt-0">
+                <div className="text-[length:10px] text-[var(--fg-3)] mt-0">
                   {preset.viewMode}
                   {preset.dock?.open && ` · ${t.studioPresetDock}`}
                   {!preset.drawer?.collapsed && ` · ${t.studioPresetDrawer}`}

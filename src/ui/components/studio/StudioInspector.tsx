@@ -69,7 +69,7 @@ export function StudioInspector({
       >
         <span className="flex flex-col items-center justify-center h-full" style={{ width: 4 }}>
           <span
-            className="font-mono text-micro   text-muted-foreground"
+            className="text-micro   text-muted-foreground"
             style={{ writingMode: 'vertical-rl' }}
           >
             Ins
@@ -98,7 +98,7 @@ export function StudioInspector({
               key={key}
               type="button"
               onClick={() => onResolutionChange?.(key)}
-              className="ws-inspector__res-btn rounded-sm px-1 py-0 font-mono text-micro"
+              className="ws-inspector__res-btn rounded-sm px-1 py-0 text-micro"
               data-active={resolution === key ? 'true' : undefined}
               title={RESOLUTION_PRESETS[key].label}
             >

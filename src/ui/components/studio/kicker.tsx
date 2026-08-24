@@ -13,7 +13,7 @@ export function Kicker({
   dotColor?: string;
 }) {
   return (
-    <div className="flex items-center gap-1 font-mono text-[10px] font-normal ">
+    <div className="flex items-center gap-1 text-[10px] font-normal ">
       <span
         className="size-[3px] rounded-[var(--dl-radius,2px)]"
         style={{ background: dotColor }}
@@ -22,7 +22,7 @@ export function Kicker({
         {children}
       </span>
       {count !== undefined && count > 0 && (
-        <Badge className="ml-1 h-[12px] rounded-[var(--dl-radius,2px)] border border-white/[0.08] bg-transparent px-1 font-mono text-[10px] font-normal text-white/30">
+        <Badge className="ml-1 h-[12px] rounded-[var(--dl-radius,2px)] border border-white/[0.08] bg-transparent px-1 text-[10px] font-normal text-white/30">
           {count}
         </Badge>
       )}
