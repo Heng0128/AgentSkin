@@ -11,7 +11,11 @@ import os from 'node:os';
 // ---------------------------------------------------------------------------
 
 // We mock yauzl at the module level so tests don't touch the filesystem.
-const yauzlOpenMock = vi.fn();
+// Use vi.hoisted() so the mock variable is available inside the vi.mock factory
+// (vi.mock is hoisted to the top of the file by the bundler).
+const { yauzlOpenMock } = vi.hoisted(() => ({
+  yauzlOpenMock: vi.fn(),
+}));
 
 vi.mock('yauzl', () => ({
   default: {
@@ -286,12 +290,8 @@ describe('extractThemeZip — happy path', () => {
   });
 
   it('extracts a valid ZIP with theme.json at root', async () => {
-    // We need to actually test the full extraction. Use a real temp dir
-    // and mock yauzl to emit a single file entry with known content.
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-extract-'));
-
-    vi.spyOn(fsp, 'mkdtemp').mockResolvedValue(tempDir);
-
+    // Mock yauzl to emit a single file entry with known content.
+    // Let extractThemeZip create its own temp dir (don't mock fsp.mkdtemp).
     const zipfile = {
       entryCount: 1,
       readEntry: vi.fn(),
@@ -302,6 +302,7 @@ describe('extractThemeZip — happy path', () => {
 
     const entryHandlers: Array<(entry: any) => void> = [];
     const endHandlers: Array<() => void> = [];
+    let capturedTempDir: string | null = null;
 
     zipfile.on.mockImplementation((event: string, handler: any) => {
       if (event === 'entry') entryHandlers.push(handler);
@@ -309,25 +310,21 @@ describe('extractThemeZip — happy path', () => {
     });
 
     zipfile.readEntry.mockImplementation(() => {
-      // After reading the single entry, emit 'end'
       process.nextTick(() => {
         for (const h of endHandlers) h();
       });
     });
 
-    zipfile.openReadStream.mockImplementation((_e: any, cb: any) => {
+    zipfile.openReadStream.mockImplementation((e: any, cb: any) => {
       const content = Buffer.from('{"name": "test-theme"}');
       const readStream = {
         on: vi.fn().mockImplementation((evt: string, h: any) => {
-          if (evt === 'end') {
-            // Simulate async stream end
-            process.nextTick(() => h());
-          }
+          if (evt === 'end') process.nextTick(() => h());
         }),
         pipe: vi.fn().mockImplementation((dest: any) => {
-          // dest is a WriteStream — simulate data events
-          process.nextTick(() => {
-            dest.emit('finish');
+          // dest is a WriteStream — write content and signal finish
+          dest.write(content, () => {
+            dest.end();
           });
         }),
       };
@@ -337,7 +334,6 @@ describe('extractThemeZip — happy path', () => {
     yauzlOpenMock.mockImplementation(
       (_p: string, _o: any, cb: (err: Error | null, zf: any) => void) => {
         cb(null, zipfile);
-        // Emit the single entry
         process.nextTick(() => {
           for (const h of entryHandlers) h({ fileName: 'theme.json' });
         });
@@ -346,12 +342,14 @@ describe('extractThemeZip — happy path', () => {
 
     const result = await extractThemeZip('/fake/path.zip');
 
-    expect(result.extractDir).toBe(tempDir);
-    expect(result.themeRoot).toBe(tempDir);
-    expect(fs.existsSync(path.join(tempDir, 'theme.json'))).toBe(true);
+    // Verify the result points to a valid extraction
+    expect(result.extractDir).toBeTruthy();
+    expect(result.themeRoot).toBeTruthy();
+    expect(result.extractDir).toBe(result.themeRoot);
+    expect(fs.existsSync(path.join(result.themeRoot, 'theme.json'))).toBe(true);
 
     // Cleanup
-    cleanupExtractDir(tempDir);
+    cleanupExtractDir(result.extractDir);
   });
 
   it('finds theme.json in a subdirectory (wrapper folder)', async () => {

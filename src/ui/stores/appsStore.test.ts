@@ -215,7 +215,7 @@ describe('appsStore', () => {
     });
 
     it('passes a callback to onCoordinatorStatus at module load', () => {
-      expect(onCoordinatorStatusCallbackAtImport).toBeDefined();
+      expect(onCoordinatorStatusCallbackAtImport).toBeInstanceOf(Function);
     });
 
     it('initial state has null scanResult, false scanning, null scanError', () => {
@@ -604,7 +604,7 @@ describe('appsStore', () => {
     it('updates runningApps when coordinator pushes a running state', () => {
       // Use the captured subscription callback from module load
       const statusCallback = onCoordinatorStatusCallbackAtImport;
-      expect(statusCallback).toBeDefined();
+      expect(statusCallback).toBeInstanceOf(Function);
 
       // Simulate coordinator push
       statusCallback!({ appId: 'running-app', state: MOCK_RUN_STATE });
@@ -619,7 +619,7 @@ describe('appsStore', () => {
       });
 
       const statusCallback = onCoordinatorStatusCallbackAtImport;
-      expect(statusCallback).toBeDefined();
+      expect(statusCallback).toBeInstanceOf(Function);
 
       // Simulate coordinator push: app stopped
       statusCallback!({

@@ -183,7 +183,7 @@ describe('fetchThemes', () => {
       ok: false,
       status: 500,
     });
-    mockFetch.mockResolvedValueOnce(mockResponse);
+    mockFetch.mockResolvedValue(mockResponse);
 
     await expect(fetchThemes()).rejects.toThrow(DreamSkinApiError);
     await expect(fetchThemes()).rejects.toThrow('HTTP 500');

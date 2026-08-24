@@ -947,7 +947,8 @@ describe('connectWithRetry', () => {
       // First attempt rejects → 100ms backoff → second attempt resolves.
       await vi.advanceTimersByTimeAsync(100);
       const session = await promise;
-      expect(session).toBeTruthy();
+      expect(session).toBeDefined();
+      expect(session).toHaveProperty('send');
       expect(connectCdp).toHaveBeenCalledTimes(2);
     } finally {
       vi.useRealTimers();
