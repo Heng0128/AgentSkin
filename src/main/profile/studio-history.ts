@@ -58,7 +58,7 @@ export interface HistoryEntry {
 
 /** Read-only view of history state for UI rendering. */
 export interface HistoryView {
-  entries: Array<{ description: string; timestamp: string }>;
+  entries: Array<{ description: string; timestamp: string; _cursor?: boolean }>;
   cursor: number;
   canUndo: boolean;
   canRedo: boolean;
