@@ -18,6 +18,7 @@
  */
 
 import type { Treatment } from './treatment-classifier';
+import { cssEscape } from '@shared/css-escape';
 
 export type LedgerAction = Treatment; // remove | transparentize | frost | keep
 
@@ -201,6 +202,3 @@ export class TransformLedger {
   }
 }
 
-function cssEscape(value: string): string {
-  return value.replace(/([^a-zA-Z0-9_-])/g, '\\$1');
-}
