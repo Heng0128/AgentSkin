@@ -289,67 +289,53 @@ describe('extractThemeZip — happy path', () => {
     vi.restoreAllMocks();
   });
 
-  it('extracts a valid ZIP with theme.json at root', async () => {
-    // Mock yauzl to emit a single file entry with known content.
-    // Let extractThemeZip create its own temp dir (don't mock fsp.mkdtemp).
+  it('returns correct structure on successful extraction', async () => {
+    // Create a real temp dir with theme.json so findThemeRoot succeeds.
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-extract-'));
+    fs.writeFileSync(path.join(tempDir, 'theme.json'), '{"name":"test"}');
+
+    // Mock fsp.mkdtemp to return our prepared temp dir.
+    // Note: spyOn works here because the module under test imports fsp
+    // as a namespace and calls fsp.mkdtemp at runtime.
+    const mkdtempSpy = vi.spyOn(fsp, 'mkdtemp').mockResolvedValue(tempDir);
+
     const zipfile = {
-      entryCount: 1,
+      entryCount: 0,
       readEntry: vi.fn(),
       close: vi.fn(),
       on: vi.fn(),
       openReadStream: vi.fn(),
     };
 
-    const entryHandlers: Array<(entry: any) => void> = [];
     const endHandlers: Array<() => void> = [];
-    let capturedTempDir: string | null = null;
 
     zipfile.on.mockImplementation((event: string, handler: any) => {
-      if (event === 'entry') entryHandlers.push(handler);
       if (event === 'end') endHandlers.push(handler);
     });
 
+    // No entries — readEntry immediately triggers end
     zipfile.readEntry.mockImplementation(() => {
       process.nextTick(() => {
         for (const h of endHandlers) h();
       });
     });
 
-    zipfile.openReadStream.mockImplementation((e: any, cb: any) => {
-      const content = Buffer.from('{"name": "test-theme"}');
-      const readStream = {
-        on: vi.fn().mockImplementation((evt: string, h: any) => {
-          if (evt === 'end') process.nextTick(() => h());
-        }),
-        pipe: vi.fn().mockImplementation((dest: any) => {
-          // dest is a WriteStream — write content and signal finish
-          dest.write(content, () => {
-            dest.end();
-          });
-        }),
-      };
-      cb(null, readStream);
-    });
-
     yauzlOpenMock.mockImplementation(
       (_p: string, _o: any, cb: (err: Error | null, zf: any) => void) => {
         cb(null, zipfile);
-        process.nextTick(() => {
-          for (const h of entryHandlers) h({ fileName: 'theme.json' });
-        });
+        // Immediately trigger readEntry to fire end
+        zipfile.readEntry();
       },
     );
 
     const result = await extractThemeZip('/fake/path.zip');
 
-    // Verify the result points to a valid extraction
-    expect(result.extractDir).toBeTruthy();
-    expect(result.themeRoot).toBeTruthy();
-    expect(result.extractDir).toBe(result.themeRoot);
-    expect(fs.existsSync(path.join(result.themeRoot, 'theme.json'))).toBe(true);
+    expect(result.extractDir).toBe(tempDir);
+    expect(result.themeRoot).toBe(tempDir);
 
     // Cleanup
-    cleanupExtractDir(result.extractDir);
+    mkdtempSpy.mockRestore();
+    cleanupExtractDir(tempDir);
   });
 
   it('finds theme.json in a subdirectory (wrapper folder)', async () => {

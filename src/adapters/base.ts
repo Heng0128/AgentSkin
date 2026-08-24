@@ -50,6 +50,16 @@ import {
   restoreTheme as runtimeRestoreTheme,
 } from '../legacy/agentskin-core-runtime';
 
+/**
+ * 主 renderer 语义锚点（与 src/main/cdp/renderer-rank.ts 的 RendererHints 结构对齐）。
+ * 当应用暴露多个兼容的 page target 时，用于稳定判定"哪个是可见主窗口"。
+ */
+export interface RendererHints {
+  preferredUrlPatterns?: string[];
+  score?: (target: CdpTarget) => number;
+  secondaryPatterns?: string[];
+}
+
 export type ApplicationType = 'agent' | 'ide' | 'desktop';
 export type AdapterTier = 'active' | 'experimental';
 
@@ -130,7 +140,7 @@ export interface ApplicationAdapter {
    * 的 `rendererHints`，用于在多兼容 page target 间稳定判定主 renderer。
    * 缺省返回 undefined（无适配级声明，调用方退化为现状）。
    */
-  rendererHints(): unknown;
+  rendererHints(): RendererHints | undefined;
 }
 
 /**
@@ -230,7 +240,7 @@ export abstract class BaseApplicationAdapter implements ApplicationAdapter {
   }
 
   /** 透传 core 适配器的 rendererHints（RFC A2 P1）。无 core 支持时返回 undefined。 */
-  rendererHints(): unknown {
+  rendererHints(): RendererHints | undefined {
     try {
       return getCoreAdapter(this.requireCore()).rendererHints;
     } catch {

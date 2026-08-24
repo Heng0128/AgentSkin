@@ -504,7 +504,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
       findAgentTargets: (appId, port) => this.adapter(appId).findTargets(port, 1200),
       setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
       rendererHints: (appId): RendererHints | undefined =>
-        this.adapter(appId).rendererHints() as RendererHints | undefined,
+        this.adapter(appId).rendererHints(),
       isApplyingTheme: (appId) => this.applyingTheme.has(appId),
       isDisposed: () => this.disposed,
       log: (line) => this.log(line),

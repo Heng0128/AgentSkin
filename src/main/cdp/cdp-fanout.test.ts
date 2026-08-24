@@ -135,6 +135,7 @@ function makeMockAdapter(coreId = 'doubao'): ApplicationAdapter {
     resolveDebugPorts: vi.fn(),
     defaultPort: vi.fn().mockReturnValue(0),
     displayName: vi.fn().mockReturnValue('Doubao'),
+    rendererHints: vi.fn().mockReturnValue(undefined),
   } as unknown as ApplicationAdapter;
 }
 
@@ -635,11 +636,7 @@ describe('hardeningPass', () => {
   // RFC A2 P2 — primary renderer unification on rendererHints
   // ---------------------------------------------------------------------------
 
-  /**
-   * Helper: build a mock adapter that declares `rendererHints`. Without this
-   * the factory's `as unknown as ApplicationAdapter` leaves the accessor
-   * undefined → hardeningPass falls back to list order.
-   */
+  /** Helper: build a mock adapter that declares `rendererHints`. */
   function makeHintedAdapter(hints: RendererHints): ApplicationAdapter {
     const adapter = makeMockAdapter();
     (adapter as unknown as { rendererHints: () => RendererHints }).rendererHints = () => hints;

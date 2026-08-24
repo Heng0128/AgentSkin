@@ -369,11 +369,11 @@ export async function hardeningPass(
   // Resolve the primary page target via the adapter's rendererHints (RFC A2 P2).
   // Only page-type targets are candidates; hints are optional — when absent,
   // fall back to the first page target (historic behavior). We read the raw
-  // unknown-typed accessor and normalize to RendererHints.
+  // Read rendererHints (typed as RendererHints | undefined) and normalize.
   let primaryPage: CdpTarget | undefined = domTargets.find(
     (t) => t.type === 'page' && t.webSocketDebuggerUrl,
   );
-  const rawHints = adapter.rendererHints?.() as RendererHints | undefined;
+  const rawHints = adapter.rendererHints?.();
   if (rawHints) {
     const ranked = pickPrimaryRenderer(
       rawHints,
