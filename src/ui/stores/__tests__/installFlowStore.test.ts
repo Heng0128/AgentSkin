@@ -12,7 +12,7 @@
  * - getProgress calculation
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Hoisted mocks
@@ -80,6 +80,22 @@ vi.mock('@shared/i18n', () => ({
 vi.mock('./import-guard', () => ({
   withImportLock: vi.fn((_path: string, fn: () => Promise<void>) => fn()),
 }));
+
+// ---------------------------------------------------------------------------
+// Mock window.setTimeout/clearTimeout (UI tests run in node env, no window)
+// ---------------------------------------------------------------------------
+
+const mockSetTimeout = vi.fn().mockReturnValue(1 as unknown as ReturnType<typeof setTimeout>);
+const mockClearTimeout = vi.fn();
+
+Object.defineProperty(globalThis, 'window', {
+  value: {
+    setTimeout: mockSetTimeout,
+    clearTimeout: mockClearTimeout,
+  },
+  writable: true,
+  configurable: true,
+});
 
 // ---------------------------------------------------------------------------
 // Imports (after mocks)
