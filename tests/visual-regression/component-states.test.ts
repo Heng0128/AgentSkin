@@ -266,9 +266,10 @@ describe('Badge', () => {
   });
 
   describe('base classes (shared across all variants)', () => {
-    it('includes font-mono and tracking-wider', () => {
+    it('includes text-[9px] font-normal and tracking-wider', () => {
       const classes = badgeVariants({});
-      expect(classes).toContain('font-mono');
+      expect(classes).toContain('text-[9px]');
+      expect(classes).toContain('font-normal');
       expect(classes).toContain('tracking-wider');
     });
 
