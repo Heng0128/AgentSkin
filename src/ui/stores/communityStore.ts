@@ -31,6 +31,12 @@ import type {
 import { create } from 'zustand';
 
 // ---------------------------------------------------------------------------
+// Module-level request token (race-condition guard)
+// ---------------------------------------------------------------------------
+
+let loadToken = 0;
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -101,6 +107,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
 
   // --- Load theme list ---
   loadThemes: async (params) => {
+    const token = ++loadToken;
     set({ loading: true, error: null });
 
     try {
@@ -112,6 +119,9 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
         query: state.query || undefined,
         ...params,
       });
+
+      // Discard stale response if a newer request has been issued
+      if (token !== loadToken) return;
 
       if (result?.success) {
         const data = result.data as CommunityThemeListResult;
@@ -127,6 +137,9 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
         });
       }
     } catch (error) {
+      // Discard stale response
+      if (token !== loadToken) return;
+
       set({
         error: error instanceof Error ? error.message : 'Unknown error while loading themes',
         loading: false,
@@ -136,6 +149,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
 
   // --- Load more (infinite scroll) ---
   loadMore: async () => {
+    const token = ++loadToken;
     const { page, pageSize, themes, total, sortBy, query, loadingMore } = get();
     if (themes.length >= total || loadingMore) return;
 
@@ -149,6 +163,9 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
         query: query || undefined,
       });
 
+      // Discard stale response if a newer request has been issued
+      if (token !== loadToken) return;
+
       if (result?.success) {
         const data = result.data as CommunityThemeListResult;
         set({
@@ -158,10 +175,19 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           loadingMore: false,
         });
       } else {
-        set({ loadingMore: false });
+        set({
+          error: result?.error || 'Failed to load more themes',
+          loadingMore: false,
+        });
       }
-    } catch {
-      set({ loadingMore: false });
+    } catch (error) {
+      // Discard stale response
+      if (token !== loadToken) return;
+
+      set({
+        error: error instanceof Error ? error.message : 'Unknown error while loading more themes',
+        loadingMore: false,
+      });
     }
   },
 

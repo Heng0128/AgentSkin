@@ -101,7 +101,6 @@ export function registerCommunityThemeIpc(deps: MainContext): void {
         performDownload(themeId, abortController, mainWindow, deps),
       );
 
-      notifyStatusChanged();
       return { success: true as const, data: result };
     } catch (error: unknown) {
       const result: InstallResult = {
@@ -110,6 +109,7 @@ export function registerCommunityThemeIpc(deps: MainContext): void {
       };
       return { success: false as const, data: result };
     } finally {
+      notifyStatusChanged();
       activeDownloads.delete(themeId);
     }
   });
@@ -194,8 +194,10 @@ function pushProgress(
   bytesDownloaded: number,
   totalBytes: number,
 ): void {
-  const payload: DownloadProgress = { themeId, phase, progress, bytesDownloaded, totalBytes };
-  mainWindow?.webContents.send(IpcChannel.COMMUNITY_DOWNLOAD_PROGRESS, payload);
+  if (mainWindow?.isDestroyed?.() === false) {
+    const payload: DownloadProgress = { themeId, phase, progress, bytesDownloaded, totalBytes };
+    mainWindow.webContents.send(IpcChannel.COMMUNITY_DOWNLOAD_PROGRESS, payload);
+  }
 }
 
 function getFallbackError(operation: string): string {

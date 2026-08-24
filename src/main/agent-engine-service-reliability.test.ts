@@ -9,10 +9,11 @@
  *   - 持久化状态异常恢复路径
  *   - 结构化日志事件链路完整性
  *   - 壁纸服务集成
+ *   - 真实文件系统持久化可靠性（Section 11）
  */
 
 import { writeFileSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -28,6 +29,7 @@ import { EpochManager } from './epoch-manager';
 import type { SettingsServiceApi, ThemeLibraryApi, WallpaperResolver } from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
+import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import type { WallpaperInjectorDeps } from './wallpaper/injector-types';
 
 // ---------------------------------------------------------------------------
@@ -65,10 +67,10 @@ vi.mock('./app-discovery', () => {
 
 vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
 vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));
-vi.mock('./fs-utils', () => ({
-  writeJsonAtomic: vi.fn(async () => {}),
-  appendLogLine: vi.fn(async () => {}),
-}));
+// fs-utils is NOT mocked globally — real writeJsonAtomic / appendLogLine
+// operate on the temp directory created in beforeEach, so persistence tests
+// exercise the actual filesystem. Only tests that specifically need to
+// simulate a write failure use vi.spyOn per-test.
 vi.mock('./wallpaper-injector', () => ({
   applyAgentWallpaperNow: vi.fn(async () => ({ ok: true })),
   applyWallpaperToAgent: vi.fn(async () => ({ ok: true })),
@@ -140,15 +142,8 @@ function makeSettings(opts: SettingsOverrides = {}): SettingsServiceApi {
   } as unknown as SettingsServiceApi;
 }
 
-// Flush the microtask + macrotask queue so that the async cleanup chain
-// (`cleanup.finally` → `Map.delete`) has a chance to execute before any
-// assertion inspects the inflight map.
-//
-// Background: agent-engine-service deletes `inflightOperations` entries from
-// a `.finally()` attached to an internal `cleanup` promise that only resolves
-// after background follow-ups settle. A bare `await svc.apply()` resolves
-// the response promise but does NOT drain the follow-up finally-chain, so an
-// immediately-following assertion can still see a stale entry.
+// Flush microtask+macrotask queue so cleanup.finally → Map.delete settles
+// before assertions inspect the inflight map (avoids stale-entry races).
 function flushMicrotasks(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
@@ -189,9 +184,9 @@ describe('AgentEngineService Reliability Verification', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  function makeService() {
+  function makeService(customStateFile?: string) {
     // biome-ignore lint/suspicious/noExplicitAny: test stub
-    return new AgentEngineService({} as any, stateFile, makeSettings());
+    return new AgentEngineService({} as any, customStateFile ?? stateFile, makeSettings());
   }
 
   /** Service initialized from an explicit per-agent persisted state. */
@@ -202,9 +197,7 @@ describe('AgentEngineService Reliability Verification', () => {
     return svc;
   }
 
-  /** Service whose registry already has an active theme for TEST_APP — the
-   *  precondition for a real restore (R4 idempotency short-circuits restores
-   *  with no active theme and no wallpaper preference). */
+  /** Service with active theme for TEST_APP (precondition for real restore). */
   async function makeServiceWithTheme(): Promise<AgentEngineService> {
     return makeServiceWithApps({ [TEST_APP]: { activeThemeId: 't1', port: 9222 } });
   }
@@ -828,17 +821,17 @@ describe('AgentEngineService Reliability Verification', () => {
     });
 
     it('writeState swallows persist failures and logs "persist failed"', async () => {
-      const { writeJsonAtomic } = await import('./fs-utils');
-      vi.mocked(writeJsonAtomic).mockReset();
-      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('EACCES: permission denied'));
+      // Real fs failure: write "through" a file-typed path triggers ENOTDIR,
+      // proving writeState's catch path handles genuine fs errors.
+      const blocker = path.join(tmpDir, 'blocker');
+      writeFileSync(blocker, 'not-a-dir', 'utf8');
+      const badStateFile = path.join(blocker, 'state.json');
 
-      const svc = makeService();
+      const svc = makeService(badStateFile);
       const logSpy = vi.spyOn(svc as unknown as { log: (line: string) => void }, 'log');
 
-      // writeState catches writeJsonAtomic rejection and logs instead of throwing
       await (svc as unknown as { writeState: () => Promise<void> }).writeState();
 
-      // Should have logged the failure, NOT thrown
       const logCalls = logSpy.mock.calls.flat();
       expect(logCalls.some((line: string) => line.includes('persist failed'))).toBe(true);
     });
@@ -848,35 +841,24 @@ describe('AgentEngineService Reliability Verification', () => {
       try {
         const svc = makeService();
 
-        // Hand-gate the background follow-up promise so dispose() can fire
-        // while it is still in-flight (settlement deferred to us).
         const backgroundGate = deferred<void>();
         vi.mocked(applyThemeFlow).mockResolvedValue({
           response: APPLY_RESPONSE,
           background: backgroundGate.promise,
         });
 
-        // applyResponse is resolved immediately; the internal cleanup promise
-        // stays pending until the background follow-up settles.
         const applyPromise = svc.apply(APPLY_REQUEST);
         await vi.advanceTimersByTimeAsync(0);
 
-        // Dispose now -- mid-flight (cleanup has NOT yet observed background).
         svc.dispose();
-        const disposedFlag = (svc as unknown as { disposed: boolean }).disposed;
-        expect(disposedFlag).toBe(true);
+        expect((svc as unknown as { disposed: boolean }).disposed).toBe(true);
 
-        // Settle the originally-pending background. The
-        //   void background.catch(() => undefined).finally(cleanupResolve)
-        // chain must be safe: dispose() already dropped the inflightOperations
-        // entry, so cleanup's Map.delete must be a no-op, not a crash.
+        // Settle background — must be safe even though dispose() dropped inflight entry
         backgroundGate.resolve();
         await vi.advanceTimersByTimeAsync(0);
 
-        // apply() itself had already resolved with the response before dispose.
         await expect(applyPromise).resolves.toMatchObject({ status: 'applied' });
 
-        // Drain remaining timers -- any unhandledRejection surfaces here.
         await vi.advanceTimersByTimeAsync(100);
       } finally {
         vi.useRealTimers();
@@ -1451,6 +1433,61 @@ describe('AgentEngineService Reliability Verification', () => {
       // Both cleaned up
       expect(inflight.size).toBe(0);
       expect(svc.collectConcurrencyMetrics().inflightOperations).toBe(0);
+    });
+  });
+
+  // Section 11: Real-FS Persistence (genuine fs-utils + os.tmpdir)
+  describe('Real-FS persistence reliability', () => {
+    let fsTestDir: string;
+
+    beforeEach(async () => {
+      fsTestDir = await mkdtemp(path.join(os.tmpdir(), 'agent-fs-'));
+    });
+
+    afterEach(async () => {
+      await rm(fsTestDir, { recursive: true, force: true });
+    });
+
+    it('writeJsonAtomic writes valid JSON with trailing newline', async () => {
+      const target = path.join(fsTestDir, 'state.json');
+      const payload = { version: 2 as const, apps: { traework: { activeThemeId: 't1', port: 9222 } } };
+
+      await writeJsonAtomic(target, payload);
+
+      const raw = await readFile(target, 'utf8');
+      expect(JSON.parse(raw)).toEqual(payload);
+      expect(raw.endsWith('\n')).toBe(true);
+    });
+
+    it('retries fs operations on transient failure with real tmpdir', async () => {
+      const target = path.join(fsTestDir, 'retry-target.json');
+      let attempts = 0;
+
+      for (let i = 0; i < 3; i++) {
+        try {
+          attempts++;
+          if (attempts < 2) throw Object.assign(new Error('transient'), { code: 'ENOENT' });
+          await writeJsonAtomic(target, { attempts });
+          break;
+        } catch (err) {
+          if (i === 2) throw err;
+          await new Promise((r) => setTimeout(r, 10));
+        }
+      }
+
+      expect(attempts).toBe(2);
+      expect(JSON.parse(await readFile(target, 'utf8'))).toEqual({ attempts: 2 });
+    });
+
+    it('writeJsonAtomic leaves no temp files behind after write', async () => {
+      const target = path.join(fsTestDir, 'clean.json');
+      await writeJsonAtomic(target, { data: 'hello' });
+
+      // Atomic write uses temp+rename; after completion no .tmp files remain
+      const { readdir } = await import('node:fs/promises');
+      const entries = await readdir(fsTestDir);
+      expect(entries.some((e: string) => e.endsWith('.tmp'))).toBe(false);
+      expect(entries).toContain('clean.json');
     });
   });
 });

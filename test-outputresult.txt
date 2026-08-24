@@ -1,0 +1,56 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.11 [39m[90mC:/Users/snowb/Desktop/work/desktop-main[39m
+
+ [31m❯[39m [30m[45m main [49m[39m src/main/ipc/community-theme-ipc.test.ts [2m([22m[2m16 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 27[2mms[22m[39m
+       [32m✓[39m calls fetchThemes and returns {success, data}[32m 5[2mms[22m[39m
+       [32m✓[39m passes empty params when none provided[32m 1[2mms[22m[39m
+       [32m✓[39m returns {success: false, error} when API fails[32m 1[2mms[22m[39m
+       [32m✓[39m preserves DreamSkinApiError message in error response[32m 1[2mms[22m[39m
+       [32m✓[39m calls getThemeDetail and returns {success, data}[32m 1[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+       [32m✓[39m returns {success: false, error} when themeId is not a string[32m 0[2mms[22m[39m
+[41m[1m FAIL [22m[49m [30m[45m main [49m[39m src/main/ipc/community-theme-ipc.test.ts[2m > [22mcommunity-theme-ipc handlers[2m > [22mCOMMUNITY_THEME_DOWNLOAD[2m > [22mfull flow: download with progress, verify, and install
+       [32m✓[39m returns {success: false, error} when themeId is empty string[32m 0[2mms[22m[39m
+       [32m✓[39m returns {success: false, error} when API fails[32m 0[2mms[22m[39m
+       [32m✓[39m preserves DreamSkinApiError message for get handler[32m 0[2mms[22m[39m
+[31m[1mAssertionError[22m: expected { success: false, data: { …(2) } } to deeply equal { success: true, data: { …(2) } }[39m
+[31m       [31m×[31m full flow: download with progress, verify, and install[39m[32m 10[2mms[22m[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "data": {[22m
+[32m-     "success": true,[39m
+[32m-     "themeId": "community-dreamskin-001",[39m
+[31m+     "error": "SHA-256 integrity check failed — the package may be corrupted",[39m
+[31m+     "success": false,[39m
+[2m    },[22m
+[32m-   "success": true,[39m
+[31m+   "success": false,[39m
+[2m  }[22m
+
+       [32m✓[39m rejects non-string themeId[32m 1[2mms[22m[39m
+       [32m✓[39m returns error when API fails during download[32m 1[2mms[22m[39m
+       [32m✓[39m prevents duplicate downloads for the same theme[32m 2[2mms[22m[39m
+       [32m✓[39m cancels an in-progress download[32m 1[2mms[22m[39m
+[36m [2m❯[22m src/main/ipc/community-theme-ipc.test.ts:[2m273:22[22m[39m
+       [32m✓[39m returns success even when no download is active[32m 0[2mms[22m[39m
+    [90m271|[39m
+    [90m272|[39m       [90m// Result should indicate success with installed theme id.[39m
+    [90m273|[39m       [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m({
+    [90m   |[39m                      [31m^[39m
+    [90m274|[39m         success[33m:[39m [35mtrue[39m[33m,[39m
+    [90m275|[39m         data[33m:[39m { success[33m:[39m [35mtrue[39m[33m,[39m themeId[33m:[39m [32m'community-dreamskin-001'[39m }[33m,[39m
+       [32m✓[39m rejects non-string themeId[32m 0[2mms[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m15 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 04:44:48
+[2m   Duration [22m 576ms[2m (transform 264ms, setup 88ms, import 249ms, tests 27ms, environment 0ms)[22m
+

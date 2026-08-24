@@ -103,7 +103,11 @@ export default defineConfig({
         test: {
           name: 'deep-core',
           environment: 'happy-dom',
-          include: ['tests/unit/**/*.test.ts', 'tests/integrate/**/*.test.ts'],
+          include: [
+            'tests/unit/**/*.test.ts',
+            'tests/integrate/**/*.test.ts',
+            'tests/contract/**/*.test.ts',
+          ],
           testTimeout: 10000,
           pool: 'threads',
         },
