@@ -392,8 +392,8 @@ export function connectEventCdp(
   const t0 = performance.now();
   return openCdpSocket(webSocketDebuggerUrl, openTimeoutMs, commandTimeoutMs)
     .then((core) => {
-      // RFC §4.9: standalone 'connectCdp' timing step for the active apply trace.
-      PerformanceRecorder.recordNamedStep('connectCdp', performance.now() - t0);
+      // RFC §4.9: standalone 'connectEventCdp' timing step for the active apply trace.
+      PerformanceRecorder.recordNamedStep('connectEventCdp', performance.now() - t0);
       return {
         send: core.send,
         evaluate: makeEvaluate(core.send),

@@ -143,8 +143,11 @@ export async function waitForTheme(
     await delay(minDelayMs);
   }
 
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
+  // Use a single monotonic clock source (performance.now()) for both the
+  // timeout check and the trace step. Mixing with Date.now() would risk
+  // clock-skew divergence (NTP sync, DTP adjustments).
+  const start = performance.now();
+  while (performance.now() - start < timeoutMs) {
     const verification = await verifyTheme(session);
     if (verification && isThemeFullyApplied(verification)) {
       PerformanceRecorder.recordNamedStep('waitForTheme', performance.now() - t0);
