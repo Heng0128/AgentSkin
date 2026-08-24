@@ -287,6 +287,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
     this.detectionLogFile = path.join(path.dirname(stateFile), 'logs', 'agent-detection.log');
     this.engineLogFile = path.join(path.dirname(stateFile), 'logs', 'agent-engine.log');
     // R7: Surface persist failures via structured log + diagnostic counter.
+    // RC3-S3-B: Single increment point. Do NOT increment in log()'s catch block
+    // to avoid double-counting when appendLogLine itself fails.
     this.persist.onError = (error) => {
       this.persistFailures++;
       const message = error instanceof Error ? error.message : String(error);
@@ -312,9 +314,12 @@ export class AgentEngineService implements AgentEngineServiceApi {
     this.logListener?.(line);
     // Also append to the engine log file so failures are diagnosable even
     // when the UI is not open or the user closed the log panel.
+    // RC3-S3-B: Swallow append errors without incrementing persistFailures.
+    // Rationale: persistFailures tracks registry persistence health, not log
+    // file write health. The onError callback already handles persist failures.
     const ts = new Date().toISOString();
     void appendLogLine(this.engineLogFile, `[${ts}] ${line}\n`).catch(() => {
-      this.persistFailures++;
+      // intentionally swallowed — log file write is best-effort
     });
   }
 
@@ -359,23 +364,30 @@ export class AgentEngineService implements AgentEngineServiceApi {
   }> {
     // When actively applying a theme (entry provided), the theme is the SOLE
     // authority on wallpaper.
+    // RC3-S3-B: Wrap in try-catch to prevent malformed entry from throwing
+    // through the entire apply chain. The non-entry branch already has this guard.
     if (entry) {
-      const installed = toInstalledTheme(entry);
-      const wp = installed.wallpaper;
-      if (wp) {
-        const themeId = installed.id;
-        if (wp.workshopId)
-          return {
-            id: wp.workshopId,
-            render: themeRenderOptions(wp),
-          };
-        if (wp.video)
-          return {
-            id: `theme:${themeId}`,
-            render: themeRenderOptions(wp),
-          };
+      try {
+        const installed = toInstalledTheme(entry);
+        const wp = installed.wallpaper;
+        if (wp) {
+          const themeId = installed.id;
+          if (wp.workshopId)
+            return {
+              id: wp.workshopId,
+              render: themeRenderOptions(wp),
+            };
+          if (wp.video)
+            return {
+              id: `theme:${themeId}`,
+              render: themeRenderOptions(wp),
+            };
+        }
+        return { id: null };
+      } catch (error) {
+        this.log(`[wallpaper] ${appId}: failed to resolve entry wallpaper — ${toMessage(error)}`);
+        return { id: null };
       }
-      return { id: null };
     }
 
     // Not applying a theme (restart/reconnect) — resolve with the full
@@ -1046,5 +1058,9 @@ export class AgentEngineService implements AgentEngineServiceApi {
     this.cdpSessionPool.dispose();
     this.livePortCache.clearAll();
     this.statusCache = null;
+    // RC3-S3-B: Reset persist failure counter so a future service instance
+    // (if the lifecycle ever supports re-initialization) starts clean.
+    this.persistFailures = 0;
+    this.lastPersistErrorMessage = null;
   }
 }
