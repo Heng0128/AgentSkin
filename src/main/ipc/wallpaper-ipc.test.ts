@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
-import { setupElectronMock } from '../../fixtures/mocks/electron';
+import { setupElectronMock } from '../../../fixtures/mocks/electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { isIpcTimeoutError } from '../../shared/withTimeout';

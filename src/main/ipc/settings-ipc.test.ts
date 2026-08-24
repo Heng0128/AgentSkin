@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { setupElectronMock } from '../../../fixtures/mocks/electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
@@ -10,18 +11,10 @@ import { notifyStatusChanged } from '../main-context';
 // Mocks
 // ---------------------------------------------------------------------------
 
-const handlers = new Map<string, (...args: unknown[]) => unknown>();
+// Must declare before setupElectronMock() because vi.mock is hoisted.
+let handlers: Map<string, (...args: unknown[]) => unknown>;
 
-vi.mock('electron', () => ({
-  ipcMain: {
-    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
-      handlers.set(channel, handler);
-    }),
-  },
-  dialog: {
-    showOpenDialog: vi.fn().mockResolvedValue({ canceled: true, filePaths: [] }),
-  },
-}));
+({ handlers } = setupElectronMock());
 
 vi.mock('../main-context', () => ({
   settingsDto: vi.fn(() => ({

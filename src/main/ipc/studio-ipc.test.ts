@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setupElectronMock } from '../../../fixtures/mocks/electron';
 import type { ThemeVisualSnapshot } from '../../shared/types';
 import { isIpcTimeoutError } from '../../shared/withTimeout';
 
@@ -16,17 +17,12 @@ const TEST_APP_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'agentskin-studio-ap
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>();
 
-vi.mock('electron', () => ({
+setupElectronMock(handlers, {
   app: {
     getPath: vi.fn((name: string) => (name === 'userData' ? TEST_USER_DATA : os.tmpdir())),
     getAppPath: vi.fn(() => TEST_APP_ROOT),
   },
-  ipcMain: {
-    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
-      handlers.set(channel, handler);
-    }),
-  },
-}));
+});
 
 const snapshotThemeVisuals = vi.fn();
 const startInspect = vi.fn();

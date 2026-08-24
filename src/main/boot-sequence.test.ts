@@ -12,7 +12,7 @@ import { setupElectronMock } from '../../fixtures/mocks/electron';
 // boot-sequence.ts call app.getPath() at module scope, which crashes in a
 // bare node environment. We stub it out so we can unit-test runStep in
 // isolation.
-setupElectronMock({
+setupElectronMock(new Map(), {
   app: {
     getPath: () => '/tmp/agentskin-test',
   },

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { setupElectronMock } from '../../fixtures/mocks/electron';
+import { setupElectronMock } from '../../../fixtures/mocks/electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { ElectronScanResult, LaunchResult } from '../../shared/types/agent';
 import type { MainContext } from '../main-context';
@@ -10,14 +10,13 @@ import type { MainContext } from '../main-context';
 // Mocks — must precede the dynamic import that pulls in the module under test
 // ---------------------------------------------------------------------------
 
-// Must declare before setupElectronMock() because vi.mock is hoisted.
-let handlers: Map<string, (...args: unknown[]) => unknown>;
+const handlers = new Map<string, (...args: unknown[]) => unknown>();
 
-({ handlers } = setupElectronMock({
+setupElectronMock(handlers, {
   app: {
     getPath: vi.fn((name: string) => `\\mock\\userData\\${name}`),
   },
-}));
+});
 
 vi.mock('../services/electron-scanner', () => ({
   scanElectronApps: vi.fn(),

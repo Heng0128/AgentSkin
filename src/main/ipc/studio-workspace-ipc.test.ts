@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setupElectronMock } from '../../../fixtures/mocks/electron';
 import { isIpcTimeoutError } from '../../shared/withTimeout';
 import type { MainContext } from '../main-context';
 
@@ -18,15 +19,10 @@ const handlers = new Map<string, (...args: unknown[]) => unknown>();
 const showOpenDialog = vi.fn();
 const createFromBuffer = vi.fn();
 
-vi.mock('electron', () => ({
+setupElectronMock(handlers, {
   dialog: { showOpenDialog: (...args: unknown[]) => showOpenDialog(...args) },
-  ipcMain: {
-    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
-      handlers.set(channel, handler);
-    }),
-  },
   nativeImage: { createFromBuffer: (...args: unknown[]) => createFromBuffer(...args) },
-}));
+});
 
 const deriveThemeFromImage = vi.fn();
 const sampleFromBitmap = vi.fn();

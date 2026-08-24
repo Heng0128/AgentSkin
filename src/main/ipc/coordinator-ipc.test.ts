@@ -1,25 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { setupElectronMock } from '../../../fixtures/mocks/electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 
 // ---------------------------------------------------------------------------
 // Mocks — must precede the dynamic import that pulls in the module under test
 // ---------------------------------------------------------------------------
 
-type HandlerFn = (event: unknown, ...args: unknown[]) => unknown;
-const handlers = new Map<string, HandlerFn>();
+const handlers = new Map<string, (...args: unknown[]) => unknown>();
 
-vi.mock('electron', () => ({
-  ipcMain: {
-    handle: vi.fn((channel: string, handler: HandlerFn) => {
-      handlers.set(channel, handler);
-    }),
-    removeHandler: vi.fn((channel: string) => {
-      handlers.delete(channel);
-    }),
-  },
-}));
+setupElectronMock(handlers);
 
 /**
  * The coordinator's `onStatusChange` stores the listener so tests can fire

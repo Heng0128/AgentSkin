@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { setupElectronMock } from '../../../fixtures/mocks/electron';
 import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
@@ -11,19 +12,7 @@ import type { MainContext } from '../main-context';
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>();
 
-vi.mock('electron', () => ({
-  app: {
-    getVersion: vi.fn().mockReturnValue('5.0.0'),
-  },
-  ipcMain: {
-    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
-      handlers.set(channel, handler);
-    }),
-  },
-  shell: {
-    showItemInFolder: vi.fn(),
-  },
-}));
+setupElectronMock(handlers);
 
 vi.mock('../main-context', () => ({
   wrapCatalog: vi.fn((items: unknown[]) => ({

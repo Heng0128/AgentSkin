@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { setupElectronMock } from '../../../fixtures/mocks/electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { isSafeThemeId } from '../../shared/theme-id';
 import type { StudioProject } from '../../shared/types';
@@ -18,19 +19,11 @@ const TEST_USER_DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'agentskin-studio-t
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>();
 
-vi.mock('electron', () => ({
+setupElectronMock(handlers, {
   app: {
     getPath: vi.fn((name: string) => (name === 'userData' ? TEST_USER_DATA : os.tmpdir())),
   },
-  ipcMain: {
-    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
-      handlers.set(channel, handler);
-    }),
-  },
-  dialog: {
-    showOpenDialog: vi.fn().mockResolvedValue({ canceled: true, filePaths: [] }),
-  },
-}));
+});
 
 // Import AFTER mocks so PROJECTS_DIR resolves to the temp dir.
 const { registerStudioProjectIpc } = await import('./studio-project-ipc');
