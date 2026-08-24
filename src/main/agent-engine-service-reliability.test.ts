@@ -26,11 +26,13 @@ import type {
 } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
 import { EpochManager } from './epoch-manager';
-import type { SettingsServiceApi, ThemeLibraryApi, WallpaperResolver } from './services/contracts';
+import type { SettingsServiceApi } from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import type { WallpaperInjectorDeps } from './wallpaper/injector-types';
+// RC4-S4-A: Import shared mock factory for type-safe stubs
+import { makeSettingsStub, makeThemeLibraryStub } from './test-helpers/mock-services';
 
 // ---------------------------------------------------------------------------
 // Mock modules (consistent with main test suite)
@@ -118,28 +120,7 @@ interface SettingsOverrides {
 }
 
 function makeSettings(opts: SettingsOverrides = {}): SettingsServiceApi {
-  const wallpaperAgents = opts.wallpaperAgents ?? [];
-  return {
-    initialize: vi.fn(async () => {}),
-    overridesFor: vi.fn(() => ({ appPath: null, port: opts.port ?? null })),
-    wallpaper: vi.fn(() => ({
-      enabled: false,
-      id: null,
-      render: { alignment: 'fill', speed: 1, loop: true, brightness: 100 },
-      agents: {} as Record<AgentId, WallpaperAgentSetting>,
-    })),
-    agentWallpaper: vi.fn((appId: AgentId) => ({
-      enabled: wallpaperAgents.includes(appId),
-      id: null,
-    })),
-    toDto: vi.fn(() => ({})),
-    setAppPath: vi.fn(async () => {}),
-    setAppPort: vi.fn(async () => {}),
-    setWallpaper: vi.fn(async () => {}),
-    setAgentWallpaper: vi.fn(async () => {}),
-    customThemeCss: vi.fn(() => ''),
-    setCustomThemeCss: vi.fn(async () => {}),
-  } as unknown as SettingsServiceApi;
+  return makeSettingsStub({ port: opts.port, appPath: null, wallpaperAgents: opts.wallpaperAgents });
 }
 
 // Flush microtask+macrotask queue so cleanup.finally → Map.delete settles
@@ -185,8 +166,7 @@ describe('AgentEngineService Reliability Verification', () => {
   });
 
   function makeService(customStateFile?: string) {
-    // biome-ignore lint/suspicious/noExplicitAny: test stub
-    return new AgentEngineService({} as any, customStateFile ?? stateFile, makeSettings());
+    return new AgentEngineService(makeThemeLibraryStub(), customStateFile ?? stateFile, makeSettings());
   }
 
   /** Service initialized from an explicit per-agent persisted state. */

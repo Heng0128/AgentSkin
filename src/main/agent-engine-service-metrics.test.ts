@@ -23,6 +23,8 @@ import { notifyPersistFailure } from './main-context';
 import type { SettingsServiceApi, StructuredLogEvent } from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
+// RC4-S4-A: Import shared mock factory for type-safe stubs
+import { makeSettingsStub, makeThemeLibraryStub } from './test-helpers/mock-services';
 
 /** Type helper for accessing private members in tests (TS private is not runtime-enforced). */
 type AgentEngineServicePrivate = {
@@ -114,24 +116,13 @@ vi.mock('./main-context', async (importOriginal) => {
 function makeSettings(): SettingsServiceApi & {
   logStructured?: (event: StructuredLogEvent) => void;
 } {
-  return {
-    initialize: vi.fn(async () => {}),
-    overridesFor: vi.fn(() => ({ appPath: null, port: null })),
-    wallpaper: vi.fn(() => ({ enabled: false, id: null, render: null })),
-    agentWallpaper: vi.fn(() => ({ enabled: false })),
-    toDto: vi.fn(() => ({})),
-    setAppPath: vi.fn(async () => {}),
-    setAppPort: vi.fn(async () => {}),
-    setWallpaper: vi.fn(async () => {}),
-    setAgentWallpaper: vi.fn(async () => {}),
-    customThemeCss: vi.fn(() => ''),
-    setCustomThemeCss: vi.fn(async () => {}),
-  } as unknown as SettingsServiceApi & { logStructured?: (event: StructuredLogEvent) => void };
+  return makeSettingsStub() as SettingsServiceApi & {
+    logStructured?: (event: StructuredLogEvent) => void;
+  };
 }
 
 function makeService(stateFile: string): AgentEngineService {
-  // biome-ignore lint/suspicious/noExplicitAny: test stub — production always provides a real ThemeLibraryApi
-  return new AgentEngineService({} as any, stateFile, makeSettings());
+  return new AgentEngineService(makeThemeLibraryStub(), stateFile, makeSettings());
 }
 
 // ---------------------------------------------------------------------------

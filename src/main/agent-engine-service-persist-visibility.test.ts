@@ -26,6 +26,8 @@ import { AgentEngineService } from './agent-engine-service';
 import { probeAppStatus } from './app-discovery';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import type { StructuredLogEvent } from './services/contracts';
+// RC4-S4-A: Import shared mock factory for type-safe stubs
+import { makeSettingsStub, makeThemeLibraryStub } from './test-helpers/mock-services';
 
 // ---------------------------------------------------------------------------
 // Module mocks — only discovery + fs-utils are relevant here.
@@ -95,20 +97,7 @@ interface SettingsOverrides {
   port?: number | null;
 }
 function makeSettings(opts: SettingsOverrides = {}) {
-  return {
-    initialize: vi.fn(async () => {}),
-    overridesFor: vi.fn(() => ({ appPath: null, port: opts.port ?? null })),
-    wallpaper: vi.fn(() => ({ enabled: false, id: null, render: null })),
-    agentWallpaper: vi.fn(() => ({ enabled: false })),
-    toDto: vi.fn(() => ({})),
-    setAppPath: vi.fn(async () => {}),
-    setAppPort: vi.fn(async () => {}),
-    setWallpaper: vi.fn(async () => {}),
-    setAgentWallpaper: vi.fn(async () => {}),
-    customThemeCss: vi.fn(() => ''),
-    setCustomThemeCss: vi.fn(async () => {}),
-    // biome-ignore lint/suspicious/noExplicitAny: test stub satisfies the contract structurally
-  } as any;
+  return makeSettingsStub({ port: opts.port });
 }
 
 // ---------------------------------------------------------------------------
@@ -142,8 +131,7 @@ describe('AgentEngineService persistence-failure observability', () => {
   });
 
   function makeService() {
-    // biome-ignore lint/suspicious/noExplicitAny: library is never exercised here
-    return new AgentEngineService({} as any, stateFile, makeSettings());
+    return new AgentEngineService(makeThemeLibraryStub(), stateFile, makeSettings());
   }
 
   /** Write persisted state and initialize the service from it. */
