@@ -101,10 +101,10 @@ export function WorkspaceSwitcher({ open, onClose, t }: WorkspaceSwitcherProps) 
                 {preset.viewMode === 'single' && '×1'}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[length:11px] font-normal text-[var(--fg-0)]">
+                <div className="text-[11px] font-normal text-[var(--fg-0)]">
                   {preset.label}
                 </div>
-                <div className="text-[length:10px] text-[var(--fg-3)] mt-0">
+                <div className="text-[10px] text-[var(--fg-3)] mt-0">
                   {preset.viewMode}
                   {preset.dock?.open && ` · ${t.studioPresetDock}`}
                   {!preset.drawer?.collapsed && ` · ${t.studioPresetDrawer}`}

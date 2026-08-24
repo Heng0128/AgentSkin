@@ -25,6 +25,7 @@ import type {
   AppStatus,
   SystemStatus,
 } from '../shared/types';
+import type { SettingsServiceApi } from './services/contracts';
 import { AgentEngineService } from './agent-engine-service';
 import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
 import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
@@ -139,8 +140,9 @@ function makeSettings(opts: SettingsOverrides = {}) {
     setAgentWallpaper: vi.fn(async () => {}),
     customThemeCss: vi.fn(() => ''),
     setCustomThemeCss: vi.fn(async () => {}),
-    // biome-ignore lint/suspicious/noExplicitAny: test stub satisfies the contract structurally
-  } as any;
+    liveDomRefreshInterval: vi.fn(() => 0),
+    setLiveDomRefreshInterval: vi.fn(async () => {}),
+  } satisfies SettingsServiceApi;
 }
 
 /** Deferred helper for controlling in-flight operation timing. */

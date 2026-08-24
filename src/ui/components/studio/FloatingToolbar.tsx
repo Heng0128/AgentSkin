@@ -49,7 +49,7 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
       <select
         value={activeAgentId ?? ''}
         onChange={(e) => handleAgentChange(e.target.value as AgentId)}
-        className="h-5 rounded-[var(--r-micro)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-1 text-[length:10px] text-[var(--fg-0)] outline-none"
+        className="h-5 rounded-[var(--r-micro)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-1 text-[10px] text-[var(--fg-0)] outline-none"
         title={t.studioActiveWindowAgent}
       >
         {(['codex', 'traework', 'qoderwork', 'workbuddy', 'doubao', 'zcode'] as AgentId[]).map(
@@ -93,7 +93,7 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
                 key={s}
                 type="button"
                 onClick={() => handleZoom(s)}
-                className="whitespace-nowrap rounded-[var(--r-micro)] px-[var(--space-2)] py-0 text-left text-[length:10px] hover:bg-[var(--bg-3)]"
+                className="whitespace-nowrap rounded-[var(--r-micro)] px-[var(--space-2)] py-0 text-left text-[10px] hover:bg-[var(--bg-3)]"
                 style={{
                   background: window?.scale === s ? 'var(--accent-ghost)' : 'transparent',
                   color: window?.scale === s ? 'var(--accent)' : 'var(--fg-0)',

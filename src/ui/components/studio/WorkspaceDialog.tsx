@@ -52,7 +52,7 @@ function WorkspaceDialog({
           </DialogTitle>
           {description && (
             <DialogDescription
-              className="mt-0 text-[length:10px]"
+              className="mt-0 text-[10px]"
               style={{ color: 'var(--fg-2)' }}
             >
               {description}

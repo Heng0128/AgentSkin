@@ -59,13 +59,13 @@ export function DockTabExport({ t }: { t: UiMessages }) {
                 value={exportName}
                 onChange={(e) => setExportName(e.target.value)}
                 placeholder={t.studioExportNamePlaceholder}
-                className="ws-input h-7 text-[length:11px]"
+                className="ws-input h-7 text-[11px]"
               />
               <input
                 value={exportAuthor}
                 onChange={(e) => setExportAuthor(e.target.value)}
                 placeholder={t.studioExportAuthorPlaceholder}
-                className="ws-input h-7 text-[length:11px]"
+                className="ws-input h-7 text-[11px]"
               />
             </div>
             <Button

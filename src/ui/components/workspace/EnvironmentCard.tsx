@@ -256,7 +256,7 @@ export function EnvironmentCard({
               <i className="mb-0.5 block text-[10px] opacity-70 not-italic">
                 {t.detailVersion}
               </i>
-              <b className="block text-[11.5px] font-normal tabular-nums text-foreground/80">
+              <b className="block text-[11px] font-normal tabular-nums text-foreground/80">
                 {env.detectedVersion || '—'}
               </b>
             </div>
@@ -270,7 +270,7 @@ export function EnvironmentCard({
               <i className="mb-0.5 block text-[10px] opacity-70 not-italic">
                 {t.capTheme}
               </i>
-              <b className="block truncate text-[11.5px] tabular-nums text-foreground/80">
+              <b className="block truncate text-[11px] tabular-nums text-foreground/80">
                 {env.theme?.name || '—'}
               </b>
             </div>
