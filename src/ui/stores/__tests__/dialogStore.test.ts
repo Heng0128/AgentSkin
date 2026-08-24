@@ -11,8 +11,26 @@
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { FileImportConfirmRequest, RestartReason } from '@shared/types';
+import type { FileImportConfirmRequest, RestartReason, ThemeCatalogItem } from '@shared/types';
 import { useDialogStore } from '../dialogStore';
+
+/** Minimal valid ThemeCatalogItem for testing (only required fields). */
+function makeTheme(id: string, name: string): ThemeCatalogItem {
+  return {
+    id,
+    name,
+    version: '1.0.0',
+    author: 'Test',
+    description: 'Test theme',
+    preview: null,
+    supportedAgents: ['traework'],
+    legacyTargets: [],
+    category: 'test',
+    tags: [],
+    source: 'local',
+    installed: true,
+  };
+}
 
 describe('dialogStore', () => {
   beforeEach(() => {
@@ -78,10 +96,7 @@ describe('dialogStore', () => {
 
   describe('deletePrompt', () => {
     it('should set and clear delete prompt', () => {
-      const prompt = {
-        id: 'theme-1',
-        name: 'Sakura',
-      } as const;
+      const prompt = makeTheme('theme-1', 'Sakura');
 
       useDialogStore.getState().setDeletePrompt(prompt);
       expect(useDialogStore.getState().deletePrompt).toEqual(prompt);
@@ -95,7 +110,8 @@ describe('dialogStore', () => {
     it('should set and clear file import prompt', () => {
       const prompt: FileImportConfirmRequest = {
         path: '/tmp/test.theme',
-        name: 'test.theme',
+        incoming: makeTheme('theme-1', 'Incoming'),
+        existing: makeTheme('theme-1', 'Existing'),
       };
 
       useDialogStore.getState().setFileImportPrompt(prompt);
@@ -113,10 +129,7 @@ describe('dialogStore', () => {
         themeName: 'Sakura',
         appId: 'traework' as const,
       });
-      useDialogStore.getState().setDeletePrompt({
-        id: 'theme-2',
-        name: 'Ocean',
-      } as const);
+      useDialogStore.getState().setDeletePrompt(makeTheme('theme-2', 'Ocean'));
 
       // Both prompts should coexist
       expect(useDialogStore.getState().restartPrompt).not.toBeNull();
