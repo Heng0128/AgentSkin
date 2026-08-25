@@ -74,11 +74,9 @@ interface AppsApiExtension {
  */
 const appsApi: AppsApiExtension = api;
 
-/** Concurrency guard — prevents double-launching the same app. */
-const launchingGuard = new Set<string>();
-
-/** Module-level Set tracking custom exe paths added via manual-add. */
-const customExePaths = new Set<string>();
+// ---------------------------------------------------------------------------
+// Module-level state migrated to Zustand store (see AppsState.launchingGuard / customExePaths)
+// ---------------------------------------------------------------------------
 
 /** Shallow-compare the fields that affect tile rendering — used to skip
  *  no-op updates when the final result replays what was already streamed. */
@@ -146,6 +144,10 @@ interface AppsState {
   hiddenApps: Set<string>;
   /** Currently selected app for detail drawer (null = closed). */
   drawerAppId: string | null;
+  /** Concurrency guard — prevents double-launching the same app. */
+  launchingGuard: Set<string>;
+  /** Set tracking custom exe paths added via manual-add. */
+  customExePaths: Set<string>;
 
   // --- Actions ---
   /** Scan locally installed Electron applications. `force=true` bypasses the
@@ -203,6 +205,8 @@ export const useAppsStore = create<AppsState>((set, get) => {
     runningApps: new Map(),
     hiddenApps: new Set(),
     drawerAppId: null,
+    launchingGuard: new Set(),
+    customExePaths: new Set(),
 
     scan: async (force = false) => {
       // Guard against concurrent scans: the button is disabled while scanning,
@@ -257,14 +261,16 @@ export const useAppsStore = create<AppsState>((set, get) => {
     },
 
     launch: async (app: ScannedApp, options?: { forceRestart?: boolean }) => {
-      const { launchingApps } = get();
+      const { launchingApps, launchingGuard } = get();
 
       // Guard: don't double-launch.
       if (launchingGuard.has(app.id)) return;
-      launchingGuard.add(app.id);
 
       // Optimistic: add to launching set for immediate UI feedback.
-      set({ launchingApps: new Set(launchingApps).add(app.id) });
+      set({
+        launchingApps: new Set(launchingApps).add(app.id),
+        launchingGuard: new Set(launchingGuard).add(app.id),
+      });
 
       try {
         // P0-6 (RFC 2026-08-19 R5): surface the user's per-agent debug-port
@@ -304,10 +310,11 @@ export const useAppsStore = create<AppsState>((set, get) => {
         const message = error instanceof Error ? error.message : String(error);
         useNotificationStore.getState().fail(new Error(`Launch failed: ${message}`));
       } finally {
-        launchingGuard.delete(app.id);
         const nextLaunching = new Set(get().launchingApps);
         nextLaunching.delete(app.id);
-        set({ launchingApps: nextLaunching });
+        const nextGuard = new Set(get().launchingGuard);
+        nextGuard.delete(app.id);
+        set({ launchingApps: nextLaunching, launchingGuard: nextGuard });
       }
     },
 
@@ -341,12 +348,13 @@ export const useAppsStore = create<AppsState>((set, get) => {
     },
 
     addCustomApp: async (exePath: string, _preferredPort?: number | null) => {
+      const { customExePaths } = get();
       // Dedupe: skip if already added by path.
       if (customExePaths.has(exePath)) {
         const existing = get().scanResult?.other.find((a) => a.exePath === exePath);
         return existing ?? null;
       }
-      customExePaths.add(exePath);
+      set({ customExePaths: new Set(customExePaths).add(exePath) });
 
       const id = await sha256Hex16(exePath);
       const basename = exePath.split(/[\\/]/).pop() ?? exePath;
