@@ -1078,6 +1078,9 @@ export const uiMessages = {
     studioCreateProjectFailed: (r: string) => `创建工程失败：${r}`,
     studioImportProjectSuccess: (n: string) => `已导入工程「${n}」`,
     studioImportProjectFailed: (r: string) => `导入失败：${r}`,
+    studioImportProjectDialogTitle: '导入工程',
+    studioImportProjectDialogMessage: '选择一个 .agentskin-theme 目录或已导出的 Studio 工程目录',
+    studioUnrecognizedProjectDir: '无法识别的工程目录（缺少 project.json 或 manifest.json）',
     studioDeleteProjectFailed: (r: string) => `删除工程失败：${r}`,
     studioProjectInfoSaved: '已保存工程信息',
     studioRenameFailed: (r: string) => `重命名失败：${r}`,
@@ -2346,6 +2349,11 @@ export const uiMessages = {
     studioCreateProjectFailed: (r: string) => `Failed to create project: ${r}`,
     studioImportProjectSuccess: (n: string) => `Imported project "${n}"`,
     studioImportProjectFailed: (r: string) => `Import failed: ${r}`,
+    studioImportProjectDialogTitle: 'Import Project',
+    studioImportProjectDialogMessage:
+      'Select an .agentskin-theme directory or exported Studio project directory',
+    studioUnrecognizedProjectDir:
+      'Unrecognized project directory (missing project.json or manifest.json)',
     studioDeleteProjectFailed: (r: string) => `Failed to delete project: ${r}`,
     studioProjectInfoSaved: 'Project info saved',
     studioRenameFailed: (r: string) => `Rename failed: ${r}`,

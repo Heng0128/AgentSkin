@@ -30,6 +30,7 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { app, dialog, ipcMain } from 'electron';
+import { getMainMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { isSafeThemeId } from '../../shared/theme-id';
 import { semanticColorsToPalette } from '../../shared/theme-mapping';
@@ -251,15 +252,15 @@ export function registerStudioProjectIpc(): void {
 
   ipcMain.handle(IpcChannel.STUDIO_PROJECT_IMPORT, async (): Promise<StudioProject | null> => {
     const result = await dialog.showOpenDialog({
-      title: '导入工程',
-      message: '选择一个 .agentskin-theme 目录或已导出的 Studio 工程目录',
+      title: getMainMessages().studioImportProjectDialogTitle,
+      message: getMainMessages().studioImportProjectDialogMessage,
       properties: ['openDirectory'],
     });
     if (result.canceled || result.filePaths.length === 0) return null;
     const dir = result.filePaths[0];
     const asProject = readProjectFile(path.join(dir, 'project.json'));
     const project = asProject ?? projectFromManifest(readManifest(dir));
-    if (!project) throw new Error('无法识别的工程目录（缺少 project.json 或 manifest.json）');
+    if (!project) throw new Error(getMainMessages().studioUnrecognizedProjectDir);
     // Persist a copy under a fresh id so imported projects live alongside others.
     const persisted: StudioProject = {
       ...project,
