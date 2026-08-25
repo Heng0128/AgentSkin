@@ -486,7 +486,7 @@ export async function parseSce(dir: string): Promise<SceneData | null> {
     return null;
   }
 
-  if (!json || typeof json !== 'object') return null;
+  if (!json || typeof json !== 'object' || Array.isArray(json)) return null;
   const proj = json as SceProjectJson;
 
   // --- dimensions ---
