@@ -13,8 +13,20 @@
 
 import { api } from '@/api/agentSkinClient';
 
-import type { AgentId } from '@shared/types';
+import type { AgentId } from '@shared/types/agent';
 import { create } from 'zustand';
+
+// ---------------------------------------------------------------------------
+// Runtime type guard — validate IPC event agent field
+// ---------------------------------------------------------------------------
+
+/**
+ * Validate that a string is a valid AgentId.
+ * Prevents invalid agent identifiers from corrupting store state.
+ */
+function isValidAgentId(value: string): value is AgentId {
+  return ['workbuddy', 'qoderwork', 'traework', 'doubao', 'codex', 'zcode'].includes(value);
+}
 
 export interface SecondaryInjectStep {
   targetId: string;
@@ -79,8 +91,13 @@ export const useSecondaryInjectStore = create<SecondaryInjectState>((set, get) =
   },
 
   _handleProgress: (event) => {
+    // Validate agent field before state mutation
+    if (!isValidAgentId(event.agent)) {
+      console.warn('[secondaryInjectStore] invalid agent id in progress event', event.agent);
+      return;
+    }
     set((state) => {
-      const agent = event.agent as AgentId;
+      const agent = event.agent;
       const prev = state.byAgent[agent] ?? initAgentState();
       return {
         byAgent: {
@@ -106,8 +123,13 @@ export const useSecondaryInjectStore = create<SecondaryInjectState>((set, get) =
   },
 
   _handleSummary: (event) => {
+    // Validate agent field before state mutation
+    if (!isValidAgentId(event.agent)) {
+      console.warn('[secondaryInjectStore] invalid agent id in summary event', event.agent);
+      return;
+    }
     set((state) => {
-      const agent = event.agent as AgentId;
+      const agent = event.agent;
       const prev = state.byAgent[agent] ?? initAgentState();
       return {
         byAgent: {
