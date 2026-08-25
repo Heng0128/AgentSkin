@@ -26,6 +26,7 @@ import { StudioPage } from '@/pages/StudioPage';
 import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';
 import { useStudioStore } from '@/stores/studioStore';
+import { initStudioCrossSync } from '@/studio/sync-hooks';
 
 export default function StudioApp() {
   const locale = useShellStore((s) => s.locale);
@@ -66,6 +67,14 @@ export default function StudioApp() {
   // Visual analysis progress — wire IPC subscription once at Studio boot.
   useEffect(() => {
     useStudioStore.getState().initAnalysisProgressSubscription();
+  }, []);
+
+  // Cross-store sync — reset capture transient state when active project changes.
+  useEffect(() => {
+    const unsub = initStudioCrossSync();
+    return () => {
+      unsub();
+    };
   }, []);
 
   // Undo/Redo shortcuts

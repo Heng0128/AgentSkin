@@ -24,12 +24,12 @@ import { useProjectStore } from '@/studio/project-store';
  * In the old monolithic store this was inlined within `selectProject` and
  * `changeAgent`. Here we use a subscription to keep the stores decoupled.
  */
-let _prevActiveProjectId: string | null = useProjectStore.getState().activeProjectId;
-
 export function initStudioCrossSync(): () => void {
+  let prevActiveProjectId: string | null = useProjectStore.getState().activeProjectId;
+
   const unsubProject = useProjectStore.subscribe((s) => {
-    if (s.activeProjectId !== _prevActiveProjectId) {
-      _prevActiveProjectId = s.activeProjectId;
+    if (s.activeProjectId !== prevActiveProjectId) {
+      prevActiveProjectId = s.activeProjectId;
       const capture = useCaptureStore.getState();
       capture.resetOverrides();
       useCaptureStore.setState({
