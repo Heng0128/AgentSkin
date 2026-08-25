@@ -31,7 +31,7 @@ function AppActionList({
   const run = async (appId: AgentId) => {
     setPendingApps((prev) => new Set(prev).add(appId));
     try {
-      await onApply(appId).catch(() => undefined);
+      await onApply(appId).catch((e) => console.warn('[DetailPanel] apply failed:', e));
     } finally {
       setPendingApps((prev) => {
         const next = new Set(prev);
@@ -61,7 +61,7 @@ function AppActionList({
         for (;;) {
           const appId = queue.shift();
           if (!appId) break;
-          await run(appId).catch(() => undefined);
+          await run(appId).catch((e) => console.warn('[DetailPanel] apply failed:', e));
         }
       });
       await Promise.all(workers);

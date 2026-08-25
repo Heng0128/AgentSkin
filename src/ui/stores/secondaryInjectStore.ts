@@ -79,6 +79,10 @@ const initAgentState = (): SecondaryInjectAgentState => ({
   startedAt: Date.now(),
 });
 
+// Store unsubscribe functions for cleanup — prevents HMR subscription leaks.
+let unsubSecondaryInjectProgress: (() => void) | null = null;
+let unsubSecondaryInjectSummary: (() => void) | null = null;
+
 export const useSecondaryInjectStore = create<SecondaryInjectState>((set, get) => ({
   byAgent: {} as Record<AgentId, SecondaryInjectAgentState>,
   _initialized: false,
@@ -86,8 +90,8 @@ export const useSecondaryInjectStore = create<SecondaryInjectState>((set, get) =
   init: () => {
     if (get()._initialized) return;
     set({ _initialized: true });
-    api.onSecondaryInjectProgress(get()._handleProgress);
-    api.onSecondaryInjectSummary(get()._handleSummary);
+    unsubSecondaryInjectProgress = api.onSecondaryInjectProgress(get()._handleProgress);
+    unsubSecondaryInjectSummary = api.onSecondaryInjectSummary(get()._handleSummary);
   },
 
   _handleProgress: (event) => {
@@ -148,3 +152,18 @@ export const useSecondaryInjectStore = create<SecondaryInjectState>((set, get) =
     });
   },
 }));
+
+/**
+ * Cleanup module-level IPC subscriptions.
+ * Call on app exit or HMR dispose to prevent subscription leaks.
+ */
+export function disposeSecondaryInjectSubscriptions(): void {
+  if (unsubSecondaryInjectProgress) {
+    unsubSecondaryInjectProgress();
+    unsubSecondaryInjectProgress = null;
+  }
+  if (unsubSecondaryInjectSummary) {
+    unsubSecondaryInjectSummary();
+    unsubSecondaryInjectSummary = null;
+  }
+}

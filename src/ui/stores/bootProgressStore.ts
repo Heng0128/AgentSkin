@@ -107,6 +107,8 @@ function phaseFor(event: StructuredEvent): BootPhase | null {
     case 'boot_agent_done':
       return 'done';
     default:
+      // Log unknown event types to aid debugging when main process adds new events.
+      console.warn('[bootProgressStore] unknown event type:', (event as { type?: string }).type);
       return null;
   }
 }

@@ -562,8 +562,11 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
 // automatically see progress updates without per-mount subscriptions.
 // This pattern mirrors themeStore's onStatusChanged/onFileImported wiring.
 
+// Store unsubscribe function for cleanup — prevents HMR subscription leaks.
+let unsubCommunityDownloadProgress: (() => void) | null = null;
+
 if (typeof window !== 'undefined' && api?.onCommunityDownloadProgress) {
-  api.onCommunityDownloadProgress((progress) => {
+  unsubCommunityDownloadProgress = api.onCommunityDownloadProgress((progress) => {
     try {
       useCommunityStore.getState().updateDownloadProgress(progress);
     } catch {
@@ -571,4 +574,15 @@ if (typeof window !== 'undefined' && api?.onCommunityDownloadProgress) {
       console.error('[communityStore] failed to process download progress', progress);
     }
   });
+}
+
+/**
+ * Cleanup module-level IPC subscriptions.
+ * Call on app exit or HMR dispose to prevent subscription leaks.
+ */
+export function disposeCommunitySubscriptions(): void {
+  if (unsubCommunityDownloadProgress) {
+    unsubCommunityDownloadProgress();
+    unsubCommunityDownloadProgress = null;
+  }
 }
