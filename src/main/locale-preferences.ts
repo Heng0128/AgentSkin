@@ -27,8 +27,13 @@ export async function loadLocalePreference(
       await fsAsync.readFile(preferencesPath(userDataRoot), 'utf8'),
     ) as Preferences;
     if (isAppLocale(preferences.locale)) return preferences.locale;
-  } catch {
-    // First launch or an unreadable preference file: initialize from the system locale.
+  } catch (error) {
+    // First launch (ENOENT) is expected — fall through to system locale detection.
+    // Other errors (permission denied, corrupt JSON) are real problems: rethrow
+    // so the caller can surface them instead of silently proceeding.
+    if ((error as NodeJS.ErrnoException)?.code !== 'ENOENT') {
+      throw error;
+    }
   }
 
   const locale = localeFromSystem(systemLocale);
