@@ -18,10 +18,64 @@
  */
 
 import path from 'node:path';
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, screen } from 'electron';
 import { IpcChannel } from '../shared/ipc-channels';
 import { setTrustedSenderId } from './ipc/trusted-sender';
+import { readThemeModePreferenceSync } from './locale-preferences';
 import { brandingRoot, ctx } from './main-context';
+
+// ============================================================================
+// K-01 / K-02 helpers
+// ============================================================================
+
+/**
+ * Resolve the window backgroundColor from the persisted theme mode.
+ * Light mode uses a soft white (#fafafa); dark mode keeps the original #09090b.
+ */
+function resolveBackgroundColor(): string {
+  const userDataRoot = ctx.userDataRoot;
+  if (!userDataRoot) return '#09090b';
+  return readThemeModePreferenceSync(userDataRoot) === 'light' ? '#fafafa' : '#09090b';
+}
+
+/**
+ * K-02: DPI-aware window sizing.
+ *
+ * Base design size targets 1x displays. On hi-dpi (scaleFactor > 1) we scale
+ * the dimensions up so the window occupies the same physical size. The result
+ * is capped at 90% of the primary display's workArea so it never overflows.
+ */
+function resolveWindowSize(base: {
+  width: number;
+  height: number;
+  minWidth: number;
+  minHeight: number;
+}) {
+  const scaleFactor = screen.getPrimaryDisplay().scaleFactor || 1;
+  const { width: workW, height: workH } = screen.getPrimaryDisplay().workArea;
+
+  const scaled =
+    scaleFactor > 1
+      ? {
+          width: Math.round(base.width * scaleFactor),
+          height: Math.round(base.height * scaleFactor),
+          minWidth: Math.round(base.minWidth * scaleFactor),
+          minHeight: Math.round(base.minHeight * scaleFactor),
+        }
+      : base;
+
+  const maxW = Math.round(workW * 0.9);
+  const maxH = Math.round(workH * 0.9);
+
+  return {
+    width: Math.min(scaled.width, maxW),
+    height: Math.min(scaled.height, maxH),
+    minWidth: Math.min(scaled.minWidth, maxW),
+    minHeight: Math.min(scaled.minHeight, maxH),
+  };
+}
+
+// ============================================================================
 
 /**
  * Create (or focus, if already open) the dedicated Theme Studio window.
@@ -43,16 +97,17 @@ export async function createStudioWindow(options: WindowCreateOptions = {}): Pro
     return;
   }
 
+  const size = resolveWindowSize({ width: 1340, height: 860, minWidth: 980, minHeight: 680 });
   const win = new BrowserWindow({
-    width: 1340,
-    height: 860,
-    minWidth: 980,
-    minHeight: 680,
+    width: size.width,
+    height: size.height,
+    minWidth: size.minWidth,
+    minHeight: size.minHeight,
     show: false,
     title: 'AgentSkin Studio',
     icon: path.join(brandingRoot(), 'icon.png'),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
-    backgroundColor: '#09090b',
+    backgroundColor: resolveBackgroundColor(),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -113,11 +168,15 @@ export interface WindowCreateOptions {
  * manager can reach it.
  */
 export async function createMainWindow(options: WindowCreateOptions = {}): Promise<void> {
+  // Main window uses a slightly smaller base size than studio; apply the
+  // same DPI-aware scaling for consistency.
+  const size = resolveWindowSize({ width: 1220, height: 800, minWidth: 980, minHeight: 680 });
+
   ctx.mainWindow = new BrowserWindow({
-    width: 1220,
-    height: 800,
-    minWidth: 980,
-    minHeight: 680,
+    width: size.width,
+    height: size.height,
+    minWidth: size.minWidth,
+    minHeight: size.minHeight,
     show: false,
     title: 'AgentSkin',
     icon: path.join(brandingRoot(), 'icon.png'),
@@ -127,7 +186,7 @@ export async function createMainWindow(options: WindowCreateOptions = {}): Promi
     // hiddenInset; Windows hides the frame entirely and we draw our own
     // minimize / maximize / close buttons.
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'hidden',
-    backgroundColor: '#09090b',
+    backgroundColor: resolveBackgroundColor(),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,

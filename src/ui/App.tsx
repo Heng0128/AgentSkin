@@ -34,6 +34,21 @@ const WorkspacePage = lazy(() =>
 );
 const AppsPage = lazy(() => import('@/pages/AppsPage').then((m) => ({ default: m.AppsPage })));
 
+// Density scale map: maps user density preference to a CSS variable so
+// spacing-aware components can scale proportionally (--dl-density-scale).
+const DENSITY_SCALE: Record<string, string> = {
+  compact: '0.85',
+  comfortable: '1',
+  cozy: '1.15',
+};
+
+// Motion multiplier map: maps user motion preference to a duration multiplier.
+const MOTION_MULTIPLIER: Record<string, string> = {
+  reduced: '0.5',
+  normal: '1',
+  none: '0',
+};
+
 export default function App() {
   const controller = useAppController();
   const lastSelection = useRef<Selection>(null);
@@ -50,7 +65,7 @@ export default function App() {
   // Sync the user-selected density to a CSS variable so spacing-aware
   // components can scale proportionally (--dl-density-scale).
   useEffect(() => {
-    const scale = density === 'compact' ? '0.85' : density === 'cozy' ? '1.15' : '1';
+    const scale = DENSITY_SCALE[density] ?? '1';
     document.documentElement.style.setProperty('--dl-density-scale', scale);
   }, [density]);
 
@@ -58,7 +73,7 @@ export default function App() {
   // Also toggles data-motion on <html> for targeted selectors and honors
   // prefers-reduced-motion automatically via the 'none' branch.
   useEffect(() => {
-    const multiplier = motion === 'reduced' ? '0.5' : motion === 'none' ? '0' : '1';
+    const multiplier = MOTION_MULTIPLIER[motion] ?? '1';
     document.documentElement.style.setProperty('--duration-multiplier', multiplier);
     document.documentElement.dataset.motion = motion;
   }, [motion]);
