@@ -101,12 +101,10 @@ export interface CombinedStudioStateData {
 }
 
 /**
- * Module-scoped state for IPC-subscribed progress / health reports.
- * These are domain-agnostic (pushed from main process regardless of which
- * sub-store is active) so they live at the facade level.
+ * IPC subscription deduplication flags.
+ * These are module-level booleans (not reactive state) used solely to prevent
+ * duplicate subscriptions across HMR. The actual data lives in capture-store.
  */
-let _analysisProgress: { agent: string; step: string; progress: number } | null = null;
-let _healthReportByAgent: Record<string, HealthCheckReport> = {};
 let _analysisProgressSubscribed = false;
 let _healthReportSubscribed = false;
 
@@ -151,6 +149,8 @@ interface CaptureStatePick {
   exportAuthor: string;
   exportState: ExportState;
   domTreeVersion: number;
+  analysisProgress: { agent: string; step: string; progress: number } | null;
+  healthReportByAgent: Record<string, import('@shared/types').HealthCheckReport>;
 }
 
 /** Minimal shape needed from image-wallpaper-store for combined state. */
@@ -235,9 +235,9 @@ function buildCombinedState(
     installedThemes: iw.installedThemes,
     themeLibraryOpen: iw.themeLibraryOpen,
 
-    // IPC-subscribed (module-scoped)
-    analysisProgress: _analysisProgress,
-    healthReportByAgent: _healthReportByAgent,
+    // IPC-subscribed (stored in capture-store)
+    analysisProgress: capture.analysisProgress,
+    healthReportByAgent: capture.healthReportByAgent,
   };
 }
 
@@ -565,18 +565,16 @@ useStudioStore.getState = (): CombinedStudioStore => {
       if (_analysisProgressSubscribed) return;
       _analysisProgressSubscribed = true;
       api.onVisualAnalysisProgress((payload) => {
-        _analysisProgress = payload;
-        // Trigger facade re-render: the module-level _analysisProgress is read
-        // by getCombinedState(), but only sub-store setState() calls notify
-        // React subscribers. Capture-store is the semantic owner of analysis.
-        useCaptureStore.setState({});
+        // Store in capture-store (semantic owner) to trigger React re-render
+        useCaptureStore.getState().setAnalysisProgress(payload);
       });
     },
     initHealthReportSubscription: () => {
       if (_healthReportSubscribed) return;
       _healthReportSubscribed = true;
       api.onThemeHealthReport((report) => {
-        _healthReportByAgent = { ..._healthReportByAgent, [report.agentId]: report };
+        // Store in capture-store (semantic owner) to trigger React re-render
+        useCaptureStore.getState().setHealthReport(report);
       });
     },
   };

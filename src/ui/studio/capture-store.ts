@@ -21,7 +21,7 @@ import type { PreviewView } from '@/types/workspace';
 
 import { toMessage } from '@shared/errors';
 import { type UiMessages, uiMessages } from '@shared/i18n';
-import type { AgentId, InspectedNode, ThemeVisualSnapshot } from '@shared/types';
+import type { AgentId, HealthCheckReport, InspectedNode, ThemeVisualSnapshot } from '@shared/types';
 import { AGENT_META } from '@shared/types';
 import { create } from 'zustand';
 
@@ -124,6 +124,12 @@ export interface CaptureState {
   // --- DOM tree version (bumped on each captureDomTree completion) ---
   domTreeVersion: number;
 
+  // --- IPC-subscribed analysis progress / health reports ---
+  analysisProgress: { agent: string; step: string; progress: number } | null;
+  healthReportByAgent: Record<string, HealthCheckReport>;
+  setAnalysisProgress: (payload: { agent: string; step: string; progress: number }) => void;
+  setHealthReport: (report: HealthCheckReport) => void;
+
   // --- Capture actions ---
   baselineSnapshot(): Promise<void>;
   restoreAgent(): Promise<void>;
@@ -187,6 +193,15 @@ export const useCaptureStore = create<CaptureState>()((set, get) => ({
   exportState: { loading: false, dir: null, error: null },
 
   domTreeVersion: 0,
+
+  // --- IPC-subscribed analysis progress / health reports ---
+  analysisProgress: null,
+  healthReportByAgent: {},
+  setAnalysisProgress: (payload) => set({ analysisProgress: payload }),
+  setHealthReport: (report) =>
+    set((s) => ({
+      healthReportByAgent: { ...s.healthReportByAgent, [report.agentId]: report },
+    })),
 
   // ------------------------------------------------------------------
   // Capture actions
