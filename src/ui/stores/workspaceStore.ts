@@ -569,7 +569,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   updateOverride: async (key, value) => {
     const s = get();
     const next: ToolOverride = { ...s.currentOverrides, [key]: value };
-    const agentId = s.currentAgentId ?? ('codex' as AgentId);
+    const agentId = requireAgentId();
+    if (!agentId) return;
 
     // Optimistic update: UI reflects intent immediately.
     const overridesByAgent = { ...s.overridesByAgent, [agentId]: next };
@@ -617,9 +618,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       clearTimeout(debounceTimer);
       debounceTimer = null;
     }
-    const { currentAgentId, currentPort, currentOverrides } = get();
+    const { currentPort, currentOverrides } = get();
+    const agentId = requireAgentId();
+    if (!agentId) return false;
     const session: TweakSession = {
-      agentId: currentAgentId ?? ('codex' as AgentId),
+      agentId,
       port: currentPort ?? 0,
       overrides: currentOverrides,
       dirty: true,
@@ -643,19 +646,19 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       clearTimeout(debounceTimer);
       debounceTimer = null;
     }
-    const { currentAgentId, currentPort } = get();
+    const { currentPort } = get();
+    const agentId = requireAgentId();
+    if (!agentId) return false;
     const session: TweakSession = {
-      agentId: currentAgentId ?? ('codex' as AgentId),
+      agentId,
       port: currentPort ?? 0,
       overrides: {},
       dirty: false,
     };
     const ok = await api.resetTweak(session);
     if (ok) {
-      const { currentAgentId } = get();
-      const agentKey = currentAgentId ?? ('codex' as AgentId);
       const overridesByAgent = { ...get().overridesByAgent };
-      delete overridesByAgent[agentKey];
+      delete overridesByAgent[agentId];
       persistOverridesByAgent(overridesByAgent);
       set({ currentOverrides: {}, dirty: false, overridesByAgent });
     }
@@ -678,12 +681,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   undo: async () => {
     const { historyIndex, history } = get();
     if (historyIndex <= 0) return false;
+    const agentId = requireAgentId();
+    if (!agentId) return false;
     const nextIndex = historyIndex - 1;
     const entry = history[nextIndex];
     // Apply the overrides from the previous history entry (without pushing to history).
     const overridesByAgent = {
       ...get().overridesByAgent,
-      [get().currentAgentId ?? 'codex']: entry.overrides as ToolOverride,
+      [agentId]: entry.overrides as ToolOverride,
     };
     persistOverridesByAgent(overridesByAgent);
     set({
@@ -696,7 +701,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     // Push the undone state to the agent (debounced in production).
     await pushToAgent(
       {
-        agentId: get().currentAgentId ?? ('codex' as AgentId),
+        agentId,
         port: get().currentPort ?? 0,
         overrides: entry.overrides as ToolOverride,
         dirty: true,
@@ -709,11 +714,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   redo: async () => {
     const { historyIndex, history } = get();
     if (historyIndex >= history.length - 1) return false;
+    const agentId = requireAgentId();
+    if (!agentId) return false;
     const nextIndex = historyIndex + 1;
     const entry = history[nextIndex];
     const overridesByAgent = {
       ...get().overridesByAgent,
-      [get().currentAgentId ?? 'codex']: entry.overrides as ToolOverride,
+      [agentId]: entry.overrides as ToolOverride,
     };
     persistOverridesByAgent(overridesByAgent);
     set({
@@ -725,7 +732,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     });
     await pushToAgent(
       {
-        agentId: get().currentAgentId ?? ('codex' as AgentId),
+        agentId,
         port: get().currentPort ?? 0,
         overrides: entry.overrides as ToolOverride,
         dirty: true,
@@ -762,10 +769,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   loadTweakPreset: async (id: string) => {
     const preset = get().tweakPresets.find((p) => p.id === id);
     if (!preset) return false;
+    const agentId = requireAgentId();
+    if (!agentId) return false;
     const overrides = preset.overrides as ToolOverride;
     const overridesByAgent = {
       ...get().overridesByAgent,
-      [get().currentAgentId ?? ('codex' as AgentId)]: overrides,
+      [agentId]: overrides,
     };
     persistOverridesByAgent(overridesByAgent);
     // Load into current state and push a history entry.
@@ -779,7 +788,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     // Push to agent.
     await pushToAgent(
       {
-        agentId: get().currentAgentId ?? ('codex' as AgentId),
+        agentId,
         port: get().currentPort ?? 0,
         overrides,
         dirty: true,
@@ -846,7 +855,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }
     const overrides = obj.overrides as ToolOverride;
     // Apply overrides and push to history (same code path as updateOverride).
-    const agentId = get().currentAgentId ?? ('codex' as AgentId);
+    const agentId = requireAgentId();
+    if (!agentId) return { ok: false, error: 'no_agent_selected' };
     const overridesByAgent = { ...get().overridesByAgent, [agentId]: overrides };
     persistOverridesByAgent(overridesByAgent);
     const historyEntry: HistoryEntry = { overrides: { ...overrides }, timestamp: Date.now() };
