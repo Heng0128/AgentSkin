@@ -101,7 +101,6 @@
 | `detect-dead-code.mjs` | 死代码检测 |
 | `dev-workspace.bat` | 开发工作区启动脚本 |
 | `fix-sakura-muted.mjs` | 修复 Sakura 主题 muted 色彩 |
-| `madge-dep-graph.json` | Madge 生成的依赖图数据（JSON 格式） |
 | `normalize-hero-images.mjs` | 标准化 Hero 区域图片资源 |
 | `rebuild-all-themes.mjs` | 全量重建所有主题包 |
 | `regen-studio-packages.mjs` | 重新生成 Studio 主题包 |

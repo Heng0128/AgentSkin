@@ -166,4 +166,10 @@ CUsers*.txt
 madge-err.txt
 madge-out.txt
 tsc-errors.txt
-test-outputimage-analyzer-run.txt
+test-output/image-analyzer-run.txt
+
+# --- Cleanup round 4: additional patterns (2026-08-26) ---
+# Test/placeholder image files
+*.bmp
+# Temp icon assets (icon_temp*.png pattern)
+icon_temp*.png
