@@ -78,9 +78,7 @@ export function QuickEnvironmentCreate({
         onCreated?.();
       } else {
         // Surface failure to user — environment creation failed for some reason
-        useNotificationStore
-          .getState()
-          .fail(new Error(result.message || 'Failed to create environment'));
+        useNotificationStore.getState().fail(new Error('Failed to create environment'));
       }
     } finally {
       setSubmitting(false);

@@ -71,16 +71,15 @@ const DEFAULT_TOKENS = {
 // ---------------------------------------------------------------------------
 
 const HOST_SELECTOR = {
-  // Aligned with THEME_SPEC.md L262-269 — no wildcards, precise scope.
-  // CSS custom properties inherit naturally; no need for `body *`.
-  // NOTE: These selectors match the runtime adapter injection points.
-  // For the CI generator pipeline, see theme-utils.mjs HOSTS.
-  traework: 'html.agentskin-host-traework body',
-  qoderwork: 'html.agentskin-host-qoderwork:root',
-  workbuddy: 'html.agentskin-host-workbuddy body',
-  doubao: 'html.agentskin-host-doubao:root',
-  codex: 'html.agentskin-host-codex',
-  zcode: 'html.agentskin-host-zcode body',
+  // Aligned with theme-utils.mjs HOSTS (single source of truth).
+  // These selectors match both the runtime adapter injection points and the
+  // CI generator pipeline. See theme-utils.mjs L780-787 for the canonical list.
+  traework: 'html.agentskin-host-traework',
+  qoderwork: 'html.agentskin-host-qoderwork',
+  workbuddy: 'body[data-application-name="workbuddy"]',
+  doubao: 'html.agentskin-host-doubao',
+  codex: ':root.agentskin-host-codex',
+  zcode: 'html.agentskin-host-zcode',
 };
 
 // Representative semantic tokens per agent namespace. These are redirected onto
