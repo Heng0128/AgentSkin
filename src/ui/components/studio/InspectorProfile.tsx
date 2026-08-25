@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # InspectorProfile
@@ -11,7 +11,7 @@
  * mono font, tabular-nums, 10px sizing, single accent color.
  */
 
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useStudioStore } from '@/stores/studioStore';
 

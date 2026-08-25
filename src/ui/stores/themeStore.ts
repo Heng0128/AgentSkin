@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # themeStore
@@ -19,7 +19,7 @@
  */
 
 import { api } from '@/api/agentSkinClient';
-import { APP_META } from '@/components/app-mark';
+import { APP_META } from '@/components/AppMark';
 import { useDialogStore } from '@/stores/dialogStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';

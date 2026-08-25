@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * InjectResultsPanel — 右侧详情侧栏：预览 + 元数据 + agent 注入按钮 + 渲染设置。
  * 所有状态与回调通过 props 注入，无业务逻辑。
  */
 
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import {
   Accordion,
   AccordionContent,

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # StudioInspector
@@ -12,7 +12,7 @@
  *   · studioStore: activeProject (for window indicator chip)
  */
 
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { InspectorProfile } from '@/components/studio/InspectorProfile';
 import { InspectorElement } from '@/components/studio/inspector-element';
 import { useStudioStore } from '@/stores/studioStore';

@@ -35,6 +35,7 @@ export function CommunityThemeCard({
   onUninstall,
   onCancel,
 }: Props) {
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
   const hasPreview = Boolean(theme.thumbUrl) && !imgError;
 
@@ -43,14 +44,24 @@ export function CommunityThemeCard({
       {/* Preview area — 16:9 aspect */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
         {hasPreview ? (
-          <img
-            src={theme.thumbUrl}
-            alt={theme.name}
-            className="size-full object-cover transition-transform duration-fast group-hover:scale-105"
-            loading="lazy"
-            decoding="async"
-            onError={() => setImgError(true)}
-          />
+          <>
+            {/* Pulse placeholder while image loads */}
+            {!imgLoaded && (
+              <div className="absolute inset-0 animate-pulse bg-muted" />
+            )}
+            <img
+              src={theme.thumbUrl}
+              alt={theme.name}
+              className={cn(
+                'size-full object-cover transition-all duration-fast group-hover:scale-105',
+                imgLoaded ? 'opacity-100' : 'opacity-0',
+              )}
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+            />
+          </>
         ) : (
           <div className="flex size-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
             <ImageIcon className="size-8 text-muted-foreground/30" strokeWidth={1.5} />
@@ -106,6 +117,25 @@ export function CommunityThemeCard({
               >
                 {tag}
               </span>
+            ))}
+          </div>
+        )}
+
+        {/* Color preview bar */}
+        {theme.displayMeta?.colors && (
+          <div className="mt-1.5 flex h-1.5 w-full gap-0.5 overflow-hidden rounded-full">
+            {[
+              theme.displayMeta.colors.accent,
+              theme.displayMeta.colors.background,
+              theme.displayMeta.colors.text,
+              theme.displayMeta.colors.panel,
+              theme.displayMeta.colors.secondary,
+            ].filter(Boolean).slice(0, 5).map((color, i) => (
+              <div
+                key={i}
+                className="flex-1 transition-all duration-200 hover:flex-[2]"
+                style={{ backgroundColor: color }}
+              />
             ))}
           </div>
         )}

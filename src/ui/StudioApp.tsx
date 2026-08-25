@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # StudioApp
@@ -21,7 +21,7 @@
 
 import { useEffect, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { ErrorBoundary } from '@/components/error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { StudioPage } from '@/pages/StudioPage';
 import { useShellStore } from '@/stores/shellStore';
 import { useStatusStore } from '@/stores/statusStore';

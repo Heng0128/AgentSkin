@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # PreviewWindow
@@ -24,7 +24,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { useElementPicker } from '@/hooks/use-element-picker';
 import { usePseudoForce } from '@/hooks/use-pseudo-force';
 import { useLiveDom } from '@/hooks/useLiveDom';

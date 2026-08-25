@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # StudioTitleBar
@@ -105,7 +105,7 @@ export function StudioTitleBar() {
           onClick={() => api.windowClose()}
           className={cn(
             studioBtn,
-            'hover:bg-[var(--brand-red)] hover:text-white hover:border-[var(--brand-red)]',
+            'hover:bg-primary hover:text-white hover:border-primary',
           )}
         >
           <X className="size-3" />

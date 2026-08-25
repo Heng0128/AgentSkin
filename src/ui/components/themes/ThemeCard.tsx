@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 import { useState } from 'react';
 import type { UiMessages } from '@shared/i18n';
 import type { ThemeCenterCardModel } from '@/types/theme-center';
 import type { AgentId } from '@shared/types';
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 

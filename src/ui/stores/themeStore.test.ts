@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # themeStore tests
@@ -145,7 +145,7 @@ vi.mock('@/stores/wallpaperStore', () => ({
   },
 }));
 
-vi.mock('@/components/app-mark', () => ({
+vi.mock('@/components/AppMark', () => ({
   APP_META: {
     workbuddy: { name: 'WorkBuddy', icon: '' },
     qoderwork: { name: 'QoderWork', icon: '' },

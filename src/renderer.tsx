@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 import { StrictMode } from 'react';
-import { ErrorBoundary } from '@/components/error-boundary';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 import { createRoot } from 'react-dom/client';
 import App from './ui/App';

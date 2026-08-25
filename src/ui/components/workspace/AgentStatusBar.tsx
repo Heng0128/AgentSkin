@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useState } from 'react';
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import type { AgentProgress, BootPhase } from '@/hooks/useBootProgress';
 import { cn } from '@/lib/utils';
 

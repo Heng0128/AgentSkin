@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { cn } from '@/lib/utils';
 import { useEnvironmentStore } from '@/stores/environmentStore';
 import { useShellStore } from '@/stores/shellStore';

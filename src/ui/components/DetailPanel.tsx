@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useRef, useState } from 'react';
-import { APP_META, AppMark } from '@/components/app-mark';
+import { APP_META, AppMark } from '@/components/AppMark';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';

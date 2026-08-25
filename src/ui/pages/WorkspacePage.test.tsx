@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # WorkspacePage — interaction tests for M5/M8/M9 features
@@ -144,7 +144,7 @@ vi.mock('@/stores/diagnosticsStore', () => ({
   },
 }));
 
-vi.mock('@/components/app-mark', () => ({
+vi.mock('@/components/AppMark', () => ({
   AppMark: () => null,
 }));
 

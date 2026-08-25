@@ -83,36 +83,13 @@ interface RawApiTheme {
   [key: string]: unknown;
 }
 
-/**
- * Generate a gradient SVG data URI from theme colors.
- * Used as fallback when API does not provide a thumbnail URL.
- */
-function generateGradientThumb(colors: {
-  accent?: string;
-  background?: string;
-  text?: string;
-}): string {
-  const accent = colors.accent || '#6fa8dc';
-  const background = colors.background || '#0d0e0f';
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
-    <defs>
-      <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="${background}"/>
-        <stop offset="100%" stop-color="${accent}" stop-opacity="0.6"/>
-      </linearGradient>
-    </defs>
-    <rect width="320" height="180" fill="url(#g)"/>
-    <circle cx="160" cy="90" r="40" fill="${accent}" opacity="0.3"/>
-  </svg>`;
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-}
-
 /** Map a raw API theme object to our frontend CommunityThemeSummary. */
 function mapApiToThemeSummary(raw: RawApiTheme): CommunityThemeSummary {
-  // API does not expose thumbnail URLs in list endpoint — generate gradient from colors
-  const thumbUrl = raw.displayMeta?.colors
-    ? generateGradientThumb(raw.displayMeta.colors)
-    : generateGradientThumb({});
+  // DreamSkin serves preview images from a dedicated endpoint:
+  //   GET /v1/themes/{id}/preview → { background: { url: ".../preview/background" } }
+  // We construct the URL directly to avoid extra API calls per theme in the list.
+  // Size params let the CDN return a properly-sized thumbnail, saving bandwidth.
+  const thumbUrl = `${API_BASE}/themes/${raw.id}/preview/background?width=320&height=180&fit=cover`;
 
   return {
     themeId: raw.themeId || raw.slug || raw.id,
@@ -130,6 +107,10 @@ function mapApiToThemeSummary(raw: RawApiTheme): CommunityThemeSummary {
     packageSize: raw.packageBytes,
     packageSha256: raw.packageSha256,
     thumbUrl,
+    // Preserve theme colors for preview bar display
+    displayMeta: raw.displayMeta?.colors ? {
+      colors: raw.displayMeta.colors,
+    } : undefined,
   };
 }
 

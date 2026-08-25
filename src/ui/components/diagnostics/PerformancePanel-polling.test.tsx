@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # PerformancePanel — polling behavior tests
@@ -80,7 +80,7 @@ vi.mock('@/lib/utils', () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
 }));
 
-vi.mock('@/components/app-mark', () => ({
+vi.mock('@/components/AppMark', () => ({
   APP_META: {
     workbuddy: { name: 'WorkBuddy', icon: '' },
     qoderwork: { name: 'QoderWork', icon: '' },

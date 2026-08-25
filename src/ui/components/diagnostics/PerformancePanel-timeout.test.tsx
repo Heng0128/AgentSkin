@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # PerformancePanel — IPC timeout section tests
@@ -69,7 +69,7 @@ vi.mock('@/lib/utils', () => ({
 
 // --- Mock APP_META (used inside TraceRow — irrelevant here but must load) ----
 
-vi.mock('@/components/app-mark', () => ({
+vi.mock('@/components/AppMark', () => ({
   APP_META: {
     workbuddy: { name: 'WorkBuddy', icon: '' },
     qoderwork: { name: 'QoderWork', icon: '' },

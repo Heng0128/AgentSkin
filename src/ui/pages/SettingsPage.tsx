@@ -59,7 +59,7 @@ function SettingRow({
     <div className="flex items-center justify-between gap-2 py-1.5 px-2 border-b border-border last:border-0">
       <div>
         <p className="text-[10px] text-foreground">{title}</p>
-        {description && <p className="text-[10px] text-secondary mt-0.5">{description}</p>}
+        {description && <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
     </div>

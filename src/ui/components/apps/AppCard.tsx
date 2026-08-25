@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # AppCard
@@ -16,7 +16,7 @@
  */
 
 import { useState } from 'react';
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 

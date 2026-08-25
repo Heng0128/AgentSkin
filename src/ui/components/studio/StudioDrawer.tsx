@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # StudioDrawer
@@ -14,7 +14,7 @@
  */
 
 import { useState } from 'react';
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';

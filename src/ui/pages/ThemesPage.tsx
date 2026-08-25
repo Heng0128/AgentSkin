@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { PageToolbar } from '@/components/ui/page-toolbar';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { AppController } from '@/hooks/useAppController';
 import { useThemeCenter, type ThemeSortKey } from '@/hooks/useThemeCenter';
 import { cn } from '@/lib/utils';
@@ -79,46 +80,31 @@ export function ThemesPage({ controller }: { controller: AppController }) {
   };
 
   return (
-    <section
+    <Tabs
+      value={activeTab}
+      onValueChange={(v) => setActiveTab(v as ThemesTab)}
       aria-label={t.navThemes}
       className="relative flex h-full min-h-0 flex-col"
     >
       {/* Tab navigation */}
-      <div className="flex items-center gap-4 border-b border-border px-6 py-3">
-        <button
-          type="button"
-          onClick={() => setActiveTab('installed')}
-          className={cn(
-            'flex items-center gap-1.5 text-[13px] font-medium transition-colors',
-            activeTab === 'installed'
-              ? 'text-foreground'
-              : 'text-muted-foreground hover:text-foreground',
-          )}
-        >
+      <TabsList variant="line" className="border-b border-border px-6 py-3">
+        <TabsTrigger value="installed" className="text-[13px]">
           <Palette className="size-3.5" />
           {t.installedTitle}
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('community')}
-          className={cn(
-            'flex items-center gap-1.5 text-[13px] font-medium transition-colors',
-            activeTab === 'community'
-              ? 'text-foreground'
-              : 'text-muted-foreground hover:text-foreground',
-          )}
-        >
+        </TabsTrigger>
+        <TabsTrigger value="community" className="text-[13px]">
           <Users className="size-3.5" />
           {t.sourceCommunity}
-        </button>
-      </div>
+        </TabsTrigger>
+      </TabsList>
 
-      {/* Content area */}
-      {activeTab === 'community' ? (
-        <div className="flex-1 overflow-auto p-6">
-          <CommunityTabPanel />
-        </div>
-      ) : (
+      {/* Community tab */}
+      <TabsContent value="community" className="flex-1 overflow-auto p-6">
+        <CommunityTabPanel />
+      </TabsContent>
+
+      {/* Installed tab */}
+      <TabsContent value="installed" className="flex min-h-0 flex-1 flex-col">
       <div
         className="flex min-h-0 flex-1 flex-col"
         onDragEnter={handleDragEnter}
@@ -279,7 +265,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         </div>
       )}
       </div>
-      )}
-    </section>
+      </TabsContent>
+    </Tabs>
   );
 }

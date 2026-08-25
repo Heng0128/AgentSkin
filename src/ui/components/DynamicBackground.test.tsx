@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # DynamicBackground — render-option contract tests
@@ -46,7 +46,7 @@ vi.mock('lucide-react', () => ({
 
 import { uiMessages } from '@shared/i18n';
 import type { WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
-import { DynamicBackground } from './dynamic-background';
+import { DynamicBackground } from './DynamicBackground';
 
 // --- Helpers -------------------------------------------------------------
 

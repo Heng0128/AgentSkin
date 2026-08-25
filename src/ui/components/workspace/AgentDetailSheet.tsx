@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,

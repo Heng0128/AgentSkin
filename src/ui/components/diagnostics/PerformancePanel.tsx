@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # PerformancePanel
@@ -21,7 +21,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { APP_META } from '@/components/app-mark';
+import { APP_META } from '@/components/AppMark';
 import { cn } from '@/lib/utils';
 import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 

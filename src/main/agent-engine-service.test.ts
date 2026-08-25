@@ -18,20 +18,21 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type {
-  AgentId,
-  ApplyRequest,
-  ApplyResponse,
-  AppStatus,
-  SystemStatus,
-} from '../shared/types';
+import type { AgentId, ApplyRequest, ApplyResponse, SystemStatus } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
-import { installStandardMocks } from './agent-engine-service-test-harness';
+import {
+  APPLY_RESPONSE,
+  deferred,
+  makeAppStatus,
+  makeSettings,
+  makeThemeLibraryStub,
+  STATUS,
+  TEST_APP,
+} from './agent-engine-service-test-harness';
 import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
 import { stopAudioLevelPolling } from './audio-level';
 import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
 import { writeJsonAtomic } from './fs-utils';
-import type { SettingsServiceApi } from './services/contracts';
 import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { disposeThemeAssetCache } from './theme/utils';
 import { applyThemeFlow } from './theme-apply-flow';
@@ -46,13 +47,50 @@ import { disposeSelfHealState } from './wallpaper-self-heal';
 // inline mocks because the harness intentionally uses real implementations.
 // ---------------------------------------------------------------------------
 
-vi.mock('./app-discovery', () => installStandardMocks().appDiscovery);
-vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: installStandardMocks().applyThemeFlow }));
-vi.mock('./theme-restore-flow', () => ({
-  restoreThemeFlow: installStandardMocks().restoreThemeFlow,
+vi.mock('./app-discovery', () => {
+  // Minimal stand-in for the real LivePortCache — the service only calls
+  // get/set/clear on it; resolution behavior is covered by the dedicated
+  // app-discovery-cache.test.ts.
+  class LivePortCache {
+    private m = new Map<string, number>();
+    get(a: string) {
+      return this.m.get(a) ?? null;
+    }
+    set(a: string, p: number) {
+      this.m.set(a, p);
+    }
+    clear(a: string) {
+      this.m.delete(a);
+    }
+    clearAll() {
+      this.m.clear();
+    }
+    size() {
+      return this.m.size;
+    }
+  }
+  return {
+    LivePortCache,
+    reconcileZombiePorts: vi.fn(async () => {}),
+    probeAppStatus: vi.fn(),
+    resolveLivePort: vi.fn(async () => null),
+    ensureCdpReady: vi.fn(async () => ({ ok: true, port: 9222, reason: null })),
+    inferRestartReason: vi.fn(async () => ({ kind: 'not-installed' })),
+  };
+});
+vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
+vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));
+vi.mock('./fs-utils', () => ({
+  writeJsonAtomic: vi.fn(async () => {}),
+  appendLogLine: vi.fn(async () => {}),
 }));
-vi.mock('./fs-utils', () => installStandardMocks().fsUtils);
-vi.mock('./wallpaper-injector', () => installStandardMocks().wallpaperInjector);
+vi.mock('./wallpaper-injector', () => ({
+  applyAgentWallpaperNow: vi.fn(async () => ({ ok: true })),
+  applyWallpaperToAgent: vi.fn(async () => ({ ok: true })),
+  injectAgentWallpaperFromApply: vi.fn(async () => {}),
+  removeAgentVideoWallpaper: vi.fn(async () => {}),
+  removeWallpaperFromAgent: vi.fn(async () => ({ ok: true })),
+}));
 vi.mock('./cdp/injection/engine-strategy', () => ({
   cleanupEngineInjectionForAgent: vi.fn(),
   disposeEngineInjectionState: vi.fn(),
@@ -65,9 +103,7 @@ vi.mock('./wallpaper-self-heal', () => ({
   cleanupSelfHealForAgent: vi.fn(),
   disposeSelfHealState: vi.fn(),
 }));
-vi.mock('./theme/utils', () => ({
-  disposeThemeAssetCache: installStandardMocks().disposeThemeAssetCache,
-}));
+vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
 vi.mock('./audio-level', () => ({ stopAudioLevelPolling: vi.fn() }));
 vi.mock('./services/performance/performance-recorder', () => ({
   PerformanceRecorder: {
@@ -83,75 +119,7 @@ vi.mock('./services/performance/performance-recorder', () => ({
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const TEST_APP: AgentId = 'traework';
-const STATUS: SystemStatus = { platform: 'win32', apps: [] };
-const APPLY_RESPONSE: ApplyResponse = { status: 'applied', message: 'ok', system: STATUS };
 const APPLY_REQUEST: ApplyRequest = { appId: TEST_APP, themeId: 't1' };
-
-function makeAppStatus(appId: AgentId): AppStatus {
-  return {
-    appId,
-    displayName: appId,
-    installed: true,
-    running: false,
-    debugReady: false,
-    port: null,
-    activeThemeId: null,
-  } as AppStatus;
-}
-
-interface SettingsOverrides {
-  port?: number | null;
-  wallpaperAgents?: AgentId[];
-}
-
-/** Minimal SettingsServiceApi stub — only overridesFor/agentWallpaper matter here. */
-function makeSettings(opts: SettingsOverrides = {}) {
-  const wallpaperAgents = opts.wallpaperAgents ?? [];
-  return {
-    initialize: vi.fn(async () => {}),
-    overridesFor: vi.fn(() => ({ appPath: null, port: opts.port ?? null })),
-    // agents must satisfy Record<AgentId, WallpaperAgentSetting> — use type assertion for test stub
-    wallpaper: vi.fn(() => ({
-      enabled: false,
-      id: null,
-      render: undefined,
-      agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting>,
-    })),
-    agentWallpaper: vi.fn((appId: AgentId) => ({
-      enabled: wallpaperAgents.includes(appId),
-      id: null,
-    })),
-    toDto: vi.fn(() => ({
-      apps: {} as Record<AgentId, import('../shared/types').AppOverride>,
-      defaultPorts: {} as Record<AgentId, number>,
-      wallpaper: {
-        enabled: false,
-        id: null,
-        agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting>,
-      },
-    })),
-    setAppPath: vi.fn(async () => {}),
-    setAppPort: vi.fn(async () => {}),
-    setWallpaper: vi.fn(async () => {}),
-    setAgentWallpaper: vi.fn(async () => {}),
-    customThemeCss: vi.fn(() => ''),
-    setCustomThemeCss: vi.fn(async () => {}),
-    liveDomRefreshInterval: vi.fn(() => 0),
-    setLiveDomRefreshInterval: vi.fn(async () => {}),
-  } satisfies SettingsServiceApi;
-}
-
-/** Deferred helper for controlling in-flight operation timing. */
-function deferred<T>() {
-  let resolve!: (v: T) => void;
-  let reject!: (e: unknown) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
-}
 
 // ---------------------------------------------------------------------------
 // Suite
@@ -182,9 +150,7 @@ describe('AgentEngineService (orchestration)', () => {
   });
 
   function makeService() {
-    // library 只经由被 mock 的 flow deps 消费，空桩即可
-    // biome-ignore lint/suspicious/noExplicitAny: test stub — library is never exercised here
-    return new AgentEngineService({} as any, stateFile, makeSettings());
+    return new AgentEngineService(makeThemeLibraryStub(), stateFile, makeSettings());
   }
 
   /** Write persisted state and initialize the service from it. */
@@ -236,6 +202,42 @@ describe('AgentEngineService (orchestration)', () => {
       writeFileSync(
         stateFile,
         JSON.stringify({ version: 2, apps: { 'not-an-agent': { activeThemeId: 't1', port: 1 } } }),
+        'utf8',
+      );
+      const svc = makeService();
+      await svc.initialize();
+      expect(svc.activeThemeId(TEST_APP)).toBeNull();
+    });
+
+    it('rejects state where port is a string instead of number (R6-24 field-type guard)', async () => {
+      writeFileSync(
+        stateFile,
+        JSON.stringify({ version: 2, apps: { [TEST_APP]: { activeThemeId: 't1', port: '9222' } } }),
+        'utf8',
+      );
+      const svc = makeService();
+      await svc.initialize();
+      expect(svc.activeThemeId(TEST_APP)).toBeNull();
+    });
+
+    it('rejects state where activeThemeId is a number instead of string', async () => {
+      writeFileSync(
+        stateFile,
+        JSON.stringify({ version: 2, apps: { [TEST_APP]: { activeThemeId: 123, port: 9222 } } }),
+        'utf8',
+      );
+      const svc = makeService();
+      await svc.initialize();
+      expect(svc.activeThemeId(TEST_APP)).toBeNull();
+    });
+
+    it('rejects state where activeSchemeId is a number instead of string', async () => {
+      writeFileSync(
+        stateFile,
+        JSON.stringify({
+          version: 2,
+          apps: { [TEST_APP]: { activeThemeId: 't1', activeSchemeId: 456, port: 9222 } },
+        }),
         'utf8',
       );
       const svc = makeService();

@@ -8,7 +8,7 @@
  * all state and actions.
  *
  * Handles three visual states:
- *   - Loading (initial fetch) → centered spinner
+ *   - Loading (initial fetch) → skeleton card grid (6 placeholders)
  *   - Empty → empty-state message
  *   - Error → error message with retry button
  */
@@ -16,7 +16,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { CommunityThemeCard } from './CommunityThemeCard';
 import { useCommunityStore } from '@/stores/communityStore';
-import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { uiMessages } from '@shared/i18n';
 import { useShellStore } from '@/stores/shellStore';
@@ -91,8 +90,29 @@ export function CommunityTabPanel() {
   // --- Loading state (initial) ---
   if (loading && themes.length === 0) {
     return (
-      <div className="flex min-h-40 items-center justify-center">
-        <Spinner className="size-6 text-primary" />
+      <div className="grid grid-cols-1 gap-3 animate-pulse sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex flex-col overflow-hidden rounded-md border border-border bg-card"
+          >
+            {/* Skeleton preview area — 16:9 aspect */}
+            <div className="aspect-[16/9] w-full bg-muted" />
+            {/* Skeleton info section */}
+            <div className="flex flex-col gap-2 p-2.5">
+              <div className="h-3.5 w-3/4 rounded bg-muted" />
+              <div className="h-3 w-1/2 rounded bg-muted" />
+              <div className="flex gap-3">
+                <div className="h-3 w-12 rounded bg-muted" />
+                <div className="h-3 w-12 rounded bg-muted" />
+              </div>
+            </div>
+            {/* Skeleton action button */}
+            <div className="border-t border-border p-2">
+              <div className="h-7 w-full rounded-md bg-muted" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

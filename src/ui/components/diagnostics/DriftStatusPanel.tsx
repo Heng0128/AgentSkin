@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # DriftStatusPanel
@@ -19,7 +19,7 @@
 
 import { useState } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { cn } from '@/lib/utils';
 import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 

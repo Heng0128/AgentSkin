@@ -31,6 +31,17 @@ export interface CommunityThemeSummary {
   /** SHA-256 checksum of the .agentskin-theme package for verification. */
   packageSha256?: string;
   version: string;
+  /** Display metadata (colors) for preview. */
+  displayMeta?: {
+    colors?: {
+      accent?: string;
+      background?: string;
+      text?: string;
+      panel?: string;
+      secondary?: string;
+      [key: string]: string | undefined;
+    };
+  };
 }
 
 export interface CommunityThemeDetail extends CommunityThemeSummary {

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # ThemesPage — regression tests for the 4 confirmed inspection fixes.
@@ -74,7 +74,7 @@ vi.mock('@/api/agentSkinClient', () => ({
 
 // --- Mock APP_META + AppMark (used by ThemeCard) -----------------------
 
-vi.mock('@/components/app-mark', () => ({
+vi.mock('@/components/AppMark', () => ({
   APP_META: {
     workbuddy: { name: 'WorkBuddy', icon: '' },
     qoderwork: { name: 'QoderWork', icon: '' },

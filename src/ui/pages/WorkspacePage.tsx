@@ -31,7 +31,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageToolbar } from '@/components/ui/page-toolbar';

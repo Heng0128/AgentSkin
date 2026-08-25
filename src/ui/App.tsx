@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { lazy, Suspense, useEffect, useRef } from 'react';
-import { DetailPanel } from '@/components/detail-panel';
-import { DialogsHost } from '@/components/dialogs-host';
-import { DynamicBackground } from '@/components/dynamic-background';
-import { ErrorBoundary } from '@/components/error-boundary';
-import { InjectDock } from '@/components/inject-dock';
-import { InstallWizard } from '@/components/install-progress';
-import { Sidebar } from '@/components/sidebar';
-import { StatusBar } from '@/components/status-bar';
-import { TitleBar } from '@/components/title-bar';
+import { DetailPanel } from '@/components/DetailPanel';
+import { DialogsHost } from '@/components/DialogsHost';
+import { DynamicBackground } from '@/components/DynamicBackground';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { InjectDock } from '@/components/InjectDock';
+import { InstallWizard } from '@/components/InstallProgress';
+import { Sidebar } from '@/components/Sidebar';
+import { StatusBar } from '@/components/StatusBar';
+import { TitleBar } from '@/components/TitleBar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { type Selection, useAppController } from '@/hooks/useAppController';

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # SecondaryInjectTrace
@@ -15,7 +15,7 @@
  * single accent color, no scale/slide animations.
  */
 
-import { AppMark } from '@/components/app-mark';
+import { AppMark } from '@/components/AppMark';
 import {
   type SecondaryInjectAgentState,
   useSecondaryInjectStore,

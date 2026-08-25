@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { Logo } from '@/components/logo';
+import { Logo } from '@/components/Logo';
 import { cn } from '@/lib/utils';
 import { useShellStore } from '@/stores/shellStore';
 import type { Route } from '@/types/navigation';
