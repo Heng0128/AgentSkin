@@ -409,6 +409,72 @@ describe('communityStore', () => {
       expect(state.themes[0]?.author).toEqual({ id: 'unknown', displayName: 'Unknown' });
     });
 
+    it('fills in default rating when API returns undefined rating', async () => {
+      const themeWithoutRating = {
+        themeId: 't3',
+        name: 'Theme Missing Rating',
+        author: { id: 'a1', displayName: 'Author' },
+        description: 'desc',
+        tags: [],
+        downloads: 10,
+        // rating field omitted
+        updatedAt: '2026-01-01',
+        version: '1.0.0',
+      } as unknown as ReturnType<typeof makeTheme>;
+      mockListCommunityThemes.mockResolvedValue(
+        makeListResult([themeWithoutRating], 1),
+      );
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.themes[0]?.rating).toBe(0);
+    });
+
+    it('fills in default tags when API returns undefined tags', async () => {
+      const themeWithoutTags = {
+        themeId: 't5',
+        name: 'Theme Missing Tags',
+        author: { id: 'a1', displayName: 'Author' },
+        description: 'desc',
+        // tags field omitted
+        downloads: 10,
+        rating: 4.5,
+        updatedAt: '2026-01-01',
+        version: '1.0.0',
+      } as unknown as ReturnType<typeof makeTheme>;
+      mockListCommunityThemes.mockResolvedValue(
+        makeListResult([themeWithoutTags], 1),
+      );
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.themes[0]?.tags).toEqual([]);
+    });
+
+    it('fills in default downloads when API returns undefined downloads', async () => {
+      const themeWithoutDownloads = {
+        themeId: 't4',
+        name: 'Theme Missing Downloads',
+        author: { id: 'a1', displayName: 'Author' },
+        description: 'desc',
+        tags: [],
+        // downloads field omitted
+        rating: 4.5,
+        updatedAt: '2026-01-01',
+        version: '1.0.0',
+      } as unknown as ReturnType<typeof makeTheme>;
+      mockListCommunityThemes.mockResolvedValue(
+        makeListResult([themeWithoutDownloads], 1),
+      );
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.themes[0]?.downloads).toBe(0);
+    });
+
     it('sanitizes theme detail in loadThemeDetail', async () => {
       const detailWithoutAuthor = {
         themeId: 't4',

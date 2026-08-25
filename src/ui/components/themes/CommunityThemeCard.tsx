@@ -95,7 +95,7 @@ export function CommunityThemeCard({
         </div>
 
         {/* Tags — max 3 */}
-        {theme.tags.length > 0 && (
+        {theme.tags?.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {theme.tags.slice(0, 3).map((tag) => (
               <span

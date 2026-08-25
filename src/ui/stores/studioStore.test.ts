@@ -77,13 +77,14 @@ import type { AgentId, StudioProject } from '@shared/types';
 
 function makeProject(id: string, name: string): StudioProject {
   return {
+    schema: 'agentskin-studio-project/v1',
     id,
     name,
     author: 'Test Author',
     agentId: 'traework' as AgentId,
     createdAt: '2025-01-01T00:00:00Z',
     updatedAt: '2025-01-02T00:00:00Z',
-    installedThemeId: null,
+    hasSnapshot: false,
     palette: undefined,
     overrides: undefined,
   };
