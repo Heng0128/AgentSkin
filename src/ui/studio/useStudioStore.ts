@@ -13,6 +13,7 @@
  * imperative access (matching the original zustand store API).
  */
 
+import { useMemo } from 'react';
 import { api } from '@/api/agentSkinClient';
 import type { StudioBundle } from '@/studio/bundle-store';
 import { useBundleStore } from '@/studio/bundle-store';
@@ -32,6 +33,7 @@ import type {
   ThemeVisualSnapshot,
 } from '@shared/types';
 import type { HealthCheckReport } from '@shared/types/health-check';
+import { useShallow } from 'zustand/react/shallow';
 
 /**
  * Combined state data shape — mirrors the original monolithic StudioStoreState
@@ -108,13 +110,13 @@ let _healthReportByAgent: Record<string, HealthCheckReport> = {};
 let _analysisProgressSubscribed = false;
 let _healthReportSubscribed = false;
 
-/** Build the combined state snapshot from all sub-stores. */
-function getCombinedState(): CombinedStudioStateData {
-  const project = useProjectStore.getState();
-  const bundle = useBundleStore.getState();
-  const capture = useCaptureStore.getState();
-  const iw = useImageWallpaperStore.getState();
-
+/** Build the combined state snapshot from explicit sub-store states (for use inside the hook). */
+function buildCombinedState(
+  project: ReturnType<typeof useProjectStore.getState>,
+  bundle: ReturnType<typeof useBundleStore.getState>,
+  capture: ReturnType<typeof useCaptureStore.getState>,
+  iw: ReturnType<typeof useImageWallpaperStore.getState>,
+): CombinedStudioStateData {
   return {
     // project-store
     projects: project.projects,
@@ -177,6 +179,16 @@ function getCombinedState(): CombinedStudioStateData {
   };
 }
 
+/** Build the combined state snapshot from all sub-stores (for imperative access). */
+function getCombinedState(): CombinedStudioStateData {
+  return buildCombinedState(
+    useProjectStore.getState(),
+    useBundleStore.getState(),
+    useCaptureStore.getState(),
+    useImageWallpaperStore.getState(),
+  );
+}
+
 /**
  * Facade hook: subscribes to all sub-stores and returns either the full
  * combined state or a selected slice.
@@ -193,17 +205,71 @@ export function useStudioStore<T>(selector: (state: CombinedStudioStore) => T): 
 export function useStudioStore<T>(
   selector?: (state: CombinedStudioStore) => T,
 ): T | CombinedStudioStore {
-  // Subscribe to all sub-stores so the facade re-renders on any change.
-  useProjectStore();
-  useBundleStore();
-  useCaptureStore();
-  useImageWallpaperStore();
+  // Subscribe to sub-stores with useShallow to avoid re-renders when unrelated
+  // fields change. Each subscription selects only the fields consumed by
+  // getCombinedState(), preventing full re-renders on every sub-store update.
+  const projectState = useProjectStore(
+    useShallow((s) => ({
+      projects: s.projects,
+      activeProjectId: s.activeProjectId,
+      creatingProject: s.creatingProject,
+      projectForm: s.projectForm,
+      importing: s.importing,
+      editing: s.editing,
+    })),
+  );
+  const bundleState = useBundleStore(
+    useShallow((s) => ({
+      bundles: s.bundles,
+      bundlesLoading: s.bundlesLoading,
+    })),
+  );
+  const captureState = useCaptureStore(
+    useShallow((s) => ({
+      previewView: s.previewView,
+      inspectingIdx: s.inspectingIdx,
+      searchQuery: s.searchQuery,
+      hoveredIdx: s.hoveredIdx,
+      toolOverrides: s.toolOverrides,
+      undoStack: s.undoStack,
+      redoStack: s.redoStack,
+      inspectMode: s.inspectMode,
+      liveNode: s.liveNode,
+      liveError: s.liveError,
+      pinnedSelectors: s.pinnedSelectors,
+      pseudoStates: s.pseudoStates,
+      captureSchemes: s.captureSchemes,
+      customSelectorInput: s.customSelectorInput,
+      pseudoView: s.pseudoView,
+      schemeView: s.schemeView,
+      baselines: s.baselines,
+      baselineLoadingMap: s.baselineLoadingMap,
+      baselineErrorMap: s.baselineErrorMap,
+      exportName: s.exportName,
+      exportAuthor: s.exportAuthor,
+      exportState: s.exportState,
+      domTreeVersion: s.domTreeVersion,
+    })),
+  );
+  const iwState = useImageWallpaperStore(
+    useShallow((s) => ({
+      imageToTheme: s.imageToTheme,
+      wallpaperPreview: s.wallpaperPreview,
+      wallpaperApply: s.wallpaperApply,
+      installedThemes: s.installedThemes,
+      themeLibraryOpen: s.themeLibraryOpen,
+    })),
+  );
 
-  const combined = getCombinedState();
+  // Memoize the combined state to maintain a stable reference across renders.
+  // Without memoization, every render creates a new object, causing consumers
+  // using React.memo or shallow comparison to re-render unnecessarily.
+  const combined = useMemo(
+    () => buildCombinedState(projectState, bundleState, captureState, iwState),
+    [projectState, bundleState, captureState, iwState],
+  );
   const store = useStudioStore.getState();
-  // Note: result is a new object each render. Selector consumers should use
-  // `useShallow` from 'zustand/react/shallow' for stable references.
-  const result = { ...store, ...combined };
+  const result = useMemo(() => ({ ...store, ...combined }), [store, combined]);
   return selector ? selector(result) : result;
 }
 
