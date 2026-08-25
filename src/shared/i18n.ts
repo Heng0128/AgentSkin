@@ -285,6 +285,7 @@ export const uiMessages = {
     installFailed: '安装失败',
     installCancelled: '安装已取消',
     installAwaitingFile: '等待选择文件…',
+    importRetryNoPath: '无法重试：原始文件路径未知，请重新选择文件导入。',
     seedingBuiltin: '内置主题',
     builtinSeeded: '已添加内置主题',
     deleteTheme: '删除',
@@ -1549,6 +1550,8 @@ export const uiMessages = {
     installFailed: 'Installation failed',
     installCancelled: 'Installation cancelled',
     installAwaitingFile: 'Waiting for file…',
+    importRetryNoPath:
+      'Cannot retry: original file path unknown. Please select the file again to import.',
     seedingBuiltin: 'Built-in themes',
     builtinSeeded: 'Built-in themes added',
     deleteTheme: 'Delete',
