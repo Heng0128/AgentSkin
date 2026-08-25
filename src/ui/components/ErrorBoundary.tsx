@@ -3,9 +3,9 @@
 import { Component, type ErrorInfo, Fragment, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { rError } from '@/utils/renderer-log';
-import { uiMessages } from '@shared/i18n';
-import type { AppLocale } from '@shared/i18n';
 
+import type { AppLocale } from '@shared/i18n';
+import { DEFAULT_LOCALE, uiMessages } from '@shared/i18n';
 import { AlertCircle } from 'lucide-react';
 
 interface Props {
@@ -54,7 +54,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
 
-      const _t = uiMessages[this.props.locale ?? 'zh-CN'];
+      const _t = uiMessages[this.props.locale ?? DEFAULT_LOCALE] ?? uiMessages[DEFAULT_LOCALE];
       const title = _t.errorTitle;
       const desc = _t.errorDescription;
       const tryAgain = _t.errorTryAgain;

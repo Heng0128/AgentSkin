@@ -14,7 +14,7 @@
 import { useShellStore } from '@/stores/shellStore';
 
 import { toMessage } from '@shared/errors';
-import { type AppLocale, uiMessages } from '@shared/i18n';
+import { type AppLocale, DEFAULT_LOCALE, uiMessages } from '@shared/i18n';
 import { isIpcTimeoutError, type SerializedIpcTimeoutError } from '@shared/withTimeout';
 import { create } from 'zustand';
 
@@ -42,7 +42,7 @@ let toastId = 0;
  * cleans up thrown-error boilerplate prefixes.
  */
 function friendlyMessage(raw: string, locale: AppLocale): string {
-  const t = uiMessages[locale] ?? uiMessages['zh-CN'];
+  const t = uiMessages[locale] ?? uiMessages[DEFAULT_LOCALE];
   const cleaned = raw
     .replace(/^Error invoking remote method\s*:\s*/i, '')
     .replace(/^Error:\s*/i, '')
@@ -94,7 +94,7 @@ export const useNotificationStore = create<NotificationState>((set) => {
       if (isIpcTimeoutError(error)) {
         const detail = error as SerializedIpcTimeoutError;
         const locale = useShellStore.getState().locale;
-        const t = uiMessages[locale] ?? uiMessages['zh-CN'];
+        const t = uiMessages[locale] ?? uiMessages[DEFAULT_LOCALE];
         const msg = t.studioTimeoutDesc(
           detail.channel ?? 'IPC',
           String(Math.round((detail.ms ?? 0) / 1000)),
