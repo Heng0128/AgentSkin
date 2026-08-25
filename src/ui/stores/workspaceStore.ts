@@ -755,12 +755,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   saveTweakPreset: async (name: string) => {
     if (!name.trim()) return false;
-    const { currentOverrides, currentAgentId, tweakPresets } = get();
+    const { currentOverrides, tweakPresets } = get();
+    const agentId = requireAgentId(get, set);
+    if (!agentId) return false;
     const now = new Date().toISOString();
     const preset: TweakPreset = {
       id: `preset_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       name: name.trim(),
-      agentId: currentAgentId ?? ('codex' as AgentId),
+      agentId,
       overrides: { ...currentOverrides },
       createdAt: now,
       updatedAt: now,
