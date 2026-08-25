@@ -67,7 +67,7 @@ const violations = [];
  * 12px/14px are documented card/grid spacing (design-tokens.md §7.2).
  */
 const ALLOWED_SPACING_UNITS = new Set([
-  0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 5.5, 6, 7, 7.5, 8, 9, 10, 12, 14, 16, 20, 24,
+  0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 5.5, 6, 7, 7.5, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32, 48,
 ]);
 
 /** Tailwind arbitrary spacing values (px) within the project's ladder. */
@@ -147,6 +147,8 @@ function isWhitelistedHardColor(line, match, matchIndex, relPath) {
   }
   // Whitelist 3: engines/ 目录 — CDP 注入输出
   if (relPath.startsWith('engines/')) return true;
+  // Whitelist 3b: themes/ 目录 — CDP 注入主题 CSS（硬编码颜色覆盖目标应用原生 token）
+  if (relPath.startsWith('themes/')) return true;
   // Whitelist 4: RealDomPreview shadow levels — 预览引擎
   if (relPath.includes('RealDomPreview') && /shadow|case/.test(line)) return true;
   // Whitelist 5: brand constants (logo.tsx BRAND_*) — brand asset colors
@@ -454,6 +456,12 @@ function checkLine(line, _fileName, lineNum, relPath) {
       );
     }
     if (unit === 'rem') {
+      // Standard Tailwind rem sizes: 0.75(12px), 0.875(14px), 1(16px), 1.125(18px), 1.25(20px), 1.5(24px), etc.
+      const ALLOWED_REM = new Set([0.75, 0.875, 1, 1.125, 1.25, 1.5, 1.75, 2, 2.5, 3]);
+      if (ALLOWED_REM.has(val)) {
+        m = next;
+        continue;
+      }
       const pxApprox = val * 16;
       if (pxApprox < 10) {
         addViolation(
@@ -462,9 +470,14 @@ function checkLine(line, _fileName, lineNum, relPath) {
           `字号 ${className} (约 ${pxApprox}px) 低于项目最小字号 10px`,
           '改为 text-[10px] 或 text-xs (12px)',
         );
+      } else {
+        addViolation(
+          relPath,
+          lineNum,
+          `字号 ${className} (非标准 rem 值) 不在项目字号阶梯`,
+          '改为标准 Tailwind rem 字号 (0.75/0.875/1/1.125/1.25/1.5rem)',
+        );
       }
-      // Named Tailwind rem sizes: text-xs=0.75rem, text-sm=0.875rem, text-base=1rem, etc.
-      // These are captured by the named-size check, not here.
     }
     m = next;
   }

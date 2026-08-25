@@ -148,11 +148,21 @@ export function wcagCheck(fgHex, bgHex) {
  * //   --agentskin-ext-on-success: #ffffff;
  * // }`
  */
+/** Reserved keys that cannot be used as extended color names (CI-blocking). */
+const RESERVED_EXT_KEYS = new Set(['on', 'ext', 'raw', 'wcag']);
+
 export function extendedColorsBlock(ext, host = ':root') {
   const entries = Object.entries(ext ?? {})
     .filter(([, v]) => parseHex(v) !== null)
     .map(([name, color]) => {
       const key = String(name).toLowerCase().trim();
+      // Validate reserved keys to prevent CSS namespace collision
+      if (RESERVED_EXT_KEYS.has(key)) {
+        throw new Error(
+          `Extended color key "${key}" is reserved (reserved keys: ${[...RESERVED_EXT_KEYS].join(', ')}). ` +
+          `This would generate --agentskin-ext-${key} which conflicts with internal naming.`,
+        );
+      }
       const onColor = autoOnColor(color);
       return [
         `  --agentskin-ext-${key}: ${color};`,
