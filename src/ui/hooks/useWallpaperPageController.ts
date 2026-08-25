@@ -19,7 +19,7 @@ import { useRelativeTime } from '@/hooks/useRelativeTime';
 import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 import { describeWallpaperFailure } from '@/pages/wallpaper/describeWallpaperFailure';
 import { useNotificationStore } from '@/stores/notificationStore';
-import { isCompanionBusy } from '@/stores/wallpaperStore';
+import { isCompanionBusy, useWallpaperStore } from '@/stores/wallpaperStore';
 
 import type { AgentId, WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
@@ -74,11 +74,11 @@ export interface WallpaperPageController {
 export function useWallpaperPageController(controller: AppController): WallpaperPageController {
   const { t, wallpaper, appStatusFor, setWallpaperRestartPrompt } = controller;
   const showToast = useNotificationStore((s) => s.showToast);
+  const setAgentWallpaper = useWallpaperStore((s) => s.setAgentWallpaper);
   const {
     importWallpaper: _importWallpaper,
     deleteWallpaper,
     setAndApplyAgentWallpaper,
-    setAgentWallpaper,
   } = wallpaper;
 
   // suppress unused import — available for future extension

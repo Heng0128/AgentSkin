@@ -367,4 +367,10 @@ export interface AgentEngineServiceApi {
    * the synchronous {@link dispose}.
    */
   disposeAsync(): Promise<void>;
+
+  /**
+   * Returns the most recent persist failure message, or null if the last
+   * persist succeeded. Useful for surfacing silent storage errors to the UI.
+   */
+  lastPersistError(): string | null;
 }
