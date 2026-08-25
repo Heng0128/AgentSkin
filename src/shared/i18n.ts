@@ -298,6 +298,8 @@ export const uiMessages = {
     restoreAllPartial: (ok: number, fail: number) => `${ok} 个成功，${fail} 个失败`,
     restoreAllFailed: '全部恢复失败',
     restoreAllNothing: '没有需要恢复的应用',
+    restoreAllConfirm: (count: number) =>
+      `确定要还原 ${count} 个应用的注入主题吗？此操作不可撤销。`,
     injectDockTitle: '注入坞',
     injectDockActive: '个活跃注入',
     injectDockIdle: '· 无活跃注入',
@@ -1559,6 +1561,8 @@ export const uiMessages = {
     restoreAllPartial: (ok: number, fail: number) => `${ok} succeeded, ${fail} failed`,
     restoreAllFailed: 'All restores failed',
     restoreAllNothing: 'No apps need restoring',
+    restoreAllConfirm: (count: number) =>
+      `Are you sure you want to restore injected themes for ${count} apps? This action cannot be undone.`,
     injectDockTitle: 'Inject Dock',
     injectDockActive: 'active injections',
     injectDockIdle: '· no active injection',

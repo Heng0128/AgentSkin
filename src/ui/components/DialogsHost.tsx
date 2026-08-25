@@ -312,8 +312,8 @@ export function DialogsHost({ controller }: { controller: AppController }) {
             <DialogTitle>{t.restoreAllAction}</DialogTitle>
             <DialogDescription>
               {restoreAllPrompt !== null && restoreAllPrompt > 0
-                ? `确定要还原 ${restoreAllPrompt} 个应用的注入主题吗？此操作不可撤销。`
-                : '没有需要恢复的应用。'}
+                ? t.restoreAllConfirm(restoreAllPrompt)
+                : t.restoreAllNothing}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
