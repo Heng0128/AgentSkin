@@ -34,7 +34,7 @@ import { useSecondaryInjectStore } from './secondaryInjectStore';
 
 function resetStore() {
   useSecondaryInjectStore.setState({
-    byAgent: {},
+    byAgent: {} as Record<import('@shared/types').AgentId, import('./secondaryInjectStore').SecondaryInjectAgentState>,
     _initialized: false,
   });
 }
@@ -154,7 +154,7 @@ describe('secondaryInjectStore', () => {
 
     it('does not mutate other agents when adding progress', () => {
       useSecondaryInjectStore.getState()._handleProgress({
-        agent: 'agent-a',
+        agent: 'traework',
         targetId: 't1',
         targetType: 'webview',
         success: true,
@@ -162,7 +162,7 @@ describe('secondaryInjectStore', () => {
       });
 
       useSecondaryInjectStore.getState()._handleProgress({
-        agent: 'agent-b',
+        agent: 'qoderwork',
         targetId: 't2',
         targetType: 'iframe',
         success: true,
@@ -171,8 +171,8 @@ describe('secondaryInjectStore', () => {
 
       const state = useSecondaryInjectStore.getState();
       expect(Object.keys(state.byAgent)).toHaveLength(2);
-      expect(state.byAgent['agent-a'].steps).toHaveLength(1);
-      expect(state.byAgent['agent-b'].steps).toHaveLength(1);
+      expect(state.byAgent['traework']?.steps).toHaveLength(1);
+      expect(state.byAgent['qoderwork']?.steps).toHaveLength(1);
     });
   });
 

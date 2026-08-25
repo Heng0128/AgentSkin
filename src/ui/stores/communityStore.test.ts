@@ -72,7 +72,7 @@ function resetStore() {
 
 function makeTheme(id: string, name = `Theme ${id}`) {
   return {
-    id,
+    themeId: id,
     name,
     slug: id,
     author: { id: 'a1', name: 'Author' },
@@ -81,6 +81,9 @@ function makeTheme(id: string, name = `Theme ${id}`) {
     likes: 10,
     tags: [],
     updatedAt: '2026-01-01',
+    description: `Description for ${id}`,
+    rating: 4.5,
+    version: '1.0.0',
   };
 }
 
@@ -254,7 +257,7 @@ describe('communityStore', () => {
     it('clears installing and progress state regardless of IPC result', async () => {
       useCommunityStore.setState({
         installingIds: new Set(['t1', 't2']),
-        downloadProgress: new Map([['t1', { themeId: 't1', phase: 'downloading', progress: 50, bytesDownloaded: 100, totalBytes: 200 }]]),
+        downloadProgress: new Map([['t1', { themeId: 't1', phase: 'downloading' as const, progress: 50, bytesDownloaded: 100, totalBytes: 200 }]]),
       });
 
       mockCancelCommunityDownload.mockResolvedValue(undefined);
@@ -299,8 +302,8 @@ describe('communityStore', () => {
     });
 
     it('overwrites previous progress for the same theme', () => {
-      const p1 = { themeId: 't1', phase: 'downloading', progress: 25, bytesDownloaded: 50, totalBytes: 200 };
-      const p2 = { themeId: 't1', phase: 'downloading', progress: 90, bytesDownloaded: 180, totalBytes: 200 };
+      const p1 = { themeId: 't1', phase: 'downloading' as const, progress: 25, bytesDownloaded: 50, totalBytes: 200 };
+      const p2 = { themeId: 't1', phase: 'downloading' as const, progress: 90, bytesDownloaded: 180, totalBytes: 200 };
 
       useCommunityStore.getState().updateDownloadProgress(p1);
       useCommunityStore.getState().updateDownloadProgress(p2);
