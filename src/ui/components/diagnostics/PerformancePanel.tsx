@@ -25,9 +25,11 @@ import { APP_META } from '@/components/AppMark';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
+import { useShellStore } from '@/stores/shellStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { format } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { Activity, Hourglass, PieChart, Trash2 } from 'lucide-react';
 
 // --- Types (mirror AgentSkinApi.getPerformanceHistory response) ---------
@@ -326,9 +328,13 @@ function PerAgentCard({
 }
 
 function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
+  const locale = useShellStore((s) => s.locale);
+  const dateLocale = locale === 'en' ? enUS : zhCN;
   const date = parseDate(trace.finishedAt);
-  const timeLabel = date ? format(date, 'HH:mm:ss') : '—';
-  const fullDate = date ? format(date, 'yyyy-MM-dd HH:mm:ss') : trace.finishedAt;
+  const timeLabel = date ? format(date, 'HH:mm:ss', { locale: dateLocale }) : '—';
+  const fullDate = date
+    ? format(date, 'yyyy-MM-dd HH:mm:ss', { locale: dateLocale })
+    : trace.finishedAt;
   const agentName = APP_META[trace.agentId as keyof typeof APP_META]?.name ?? trace.agentId;
 
   return (

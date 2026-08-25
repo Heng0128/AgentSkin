@@ -23,11 +23,13 @@ import { AppMark } from '@/components/AppMark';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
+import { useShellStore } from '@/stores/shellStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { AGENT_META, type AgentId } from '@shared/types';
 import type { DriftStatus } from '@shared/types/drift-status';
 import { format } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { Activity, RefreshCw } from 'lucide-react';
 
 export function DriftStatusPanel({ t }: { t: UiMessages }) {
@@ -67,6 +69,8 @@ function DriftAgentCard({
     message: string;
   } | null>(null);
 
+  const locale = useShellStore((s) => s.locale);
+  const dateLocale = locale === 'en' ? enUS : zhCN;
   const agentMeta = AGENT_META[agentId as AgentId];
   const score = status.driftScore;
   const scoreColor =
@@ -102,11 +106,13 @@ function DriftAgentCard({
   const lastCaptureDate = new Date(status.lastCaptureAt);
   const lastCaptureLabel = Number.isNaN(lastCaptureDate.getTime())
     ? '—'
-    : format(lastCaptureDate, 'HH:mm:ss');
+    : format(lastCaptureDate, 'HH:mm:ss', { locale: dateLocale });
 
   const regenDate = status.lastRegenResult ? new Date(status.lastRegenResult.timestamp) : null;
   const regenTimeLabel =
-    regenDate && !Number.isNaN(regenDate.getTime()) ? format(regenDate, 'HH:mm:ss') : '—';
+    regenDate && !Number.isNaN(regenDate.getTime())
+      ? format(regenDate, 'HH:mm:ss', { locale: dateLocale })
+      : '—';
 
   return (
     <div className="rounded-md  overflow-hidden">

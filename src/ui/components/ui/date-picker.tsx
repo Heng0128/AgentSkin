@@ -5,8 +5,10 @@ import type * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { useShellStore } from '@/stores/shellStore';
 
 import { format } from 'date-fns';
+import { enUS, zhCN } from 'date-fns/locale';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 
@@ -75,6 +77,9 @@ function DatePicker({
   placeholder?: string;
   className?: string;
 }) {
+  const locale = useShellStore((s) => s.locale);
+  const dateLocale = locale === 'en' ? enUS : zhCN;
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -87,7 +92,7 @@ function DatePicker({
           )}
         >
           <CalendarIcon className="mr-2 size-4" />
-          {date ? format(date, 'PPP') : <span>{placeholder}</span>}
+          {date ? format(date, 'PPP', { locale: dateLocale }) : <span>{placeholder}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
