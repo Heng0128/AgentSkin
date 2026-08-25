@@ -578,7 +578,9 @@ if (typeof window !== 'undefined' && api?.onCommunityDownloadProgress) {
 
 /**
  * Cleanup module-level IPC subscriptions.
- * Call on app exit or HMR dispose to prevent subscription leaks.
+ * @todo wire into lifecycle — call on app exit or HMR dispose to prevent
+ * subscription leaks. Currently exported for future integration; no HMR
+ * dispose hook exists yet in the codebase.
  */
 export function disposeCommunitySubscriptions(): void {
   if (unsubCommunityDownloadProgress) {
