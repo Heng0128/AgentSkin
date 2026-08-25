@@ -91,7 +91,7 @@ export function CommunityThemeCard({
         {/* Stats */}
         <div className="mt-0.5 flex items-center gap-3 font-mono text-micro text-muted-foreground">
           <span>↓ {theme.downloads}</span>
-          <span>★ {theme.rating.toFixed(1)}</span>
+          <span>★ {theme.rating?.toFixed(1) ?? '0.0'}</span>
         </div>
 
         {/* Tags — max 3 */}

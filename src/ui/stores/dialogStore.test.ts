@@ -56,7 +56,7 @@ function makeDeletePrompt() {
     legacyTargets: [],
     category: 'dark',
     tags: [],
-    source: 'file' as const,
+    source: 'local' as const,
     installed: true,
   };
 }
@@ -64,8 +64,8 @@ function makeDeletePrompt() {
 function makeFileImportPrompt() {
   return {
     path: '/some/path/theme.json',
-    incoming: { id: 'incoming', name: 'Incoming', version: '1.0.0', author: 'A', description: '', preview: null, supportedAgents: ['traework' as const], legacyTargets: [], category: 'dark', tags: [], source: 'file' as const, installed: true },
-    existing: { id: 'existing', name: 'Existing', version: '1.0.0', author: 'B', description: '', preview: null, supportedAgents: ['traework' as const], legacyTargets: [], category: 'dark', tags: [], source: 'file' as const, installed: true },
+    incoming: { id: 'incoming', displayName: 'Incoming', version: '1.0.0', author: 'A', supportedAgents: ['traework' as const], coverDataUrl: null, tagline: '' },
+    existing: { id: 'existing', displayName: 'Existing', version: '1.0.0', author: 'B', supportedAgents: ['traework' as const], coverDataUrl: null, tagline: '' },
   };
 }
 

@@ -272,7 +272,11 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                   <span className="text-micro text-foreground truncate flex-1 text-left">
                     {p.name}
                   </span>
-                  {p.hasSnapshot && <Badge variant="success">snap</Badge>}
+                  {p.hasSnapshot && (
+                    <Badge variant="outline" className="text-[var(--cr-success)] border-[var(--cr-success)]/40">
+                      snap
+                    </Badge>
+                  )}
                 </button>
               ))}
             </div>

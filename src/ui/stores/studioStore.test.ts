@@ -84,8 +84,8 @@ function makeProject(id: string, name: string): StudioProject {
     createdAt: '2025-01-01T00:00:00Z',
     updatedAt: '2025-01-02T00:00:00Z',
     installedThemeId: null,
-    palette: null,
-    overrides: null,
+    palette: undefined,
+    overrides: undefined,
   };
 }
 
@@ -629,10 +629,10 @@ describe('studioStore facade', () => {
   it('setState propagates capture fields to capture-store', () => {
     useStudioStore.setState({
       searchQuery: 'hello',
-      previewView: 'overlay',
+      previewView: 'theme',
     });
     expect(useCaptureStore.getState().searchQuery).toBe('hello');
-    expect(useCaptureStore.getState().previewView).toBe('overlay');
+    expect(useCaptureStore.getState().previewView).toBe('theme');
   });
 
   it('setState propagates bundle fields to bundle-store', () => {

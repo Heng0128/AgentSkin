@@ -45,13 +45,15 @@ let loadToken = 0;
  * API may return themes with missing/null author (deleted accounts, edge data).
  */
 function sanitizeTheme<T extends CommunityThemeSummary>(theme: T): T {
-  if (theme.author) return theme;
+  if (theme.author && theme.rating !== undefined && theme.downloads !== undefined) return theme;
   return {
     ...theme,
-    author: {
+    author: theme.author ?? {
       id: 'unknown',
       displayName: 'Unknown',
     },
+    rating: theme.rating ?? 0,
+    downloads: theme.downloads ?? 0,
   };
 }
 

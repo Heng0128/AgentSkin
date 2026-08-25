@@ -11,8 +11,9 @@
 
 import { useEffect } from 'react';
 import { api } from '@/api/agentSkinClient';
-import { Kicker } from '@/components/studio/kicker';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { SectionLabel } from '@/components/ui/section-label';
 import { Spinner } from '@/components/ui/spinner';
 import { useStudioStore } from '@/stores/studioStore';
 
@@ -43,9 +44,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
   return (
     <div className="ws-dock__content">
       <div className="flex-shrink-0 w-[320px] space-y-[var(--space-2)]">
-        <Kicker>
-          {t.studioLandmark} · {t.studioExport}
-        </Kicker>
+        <SectionLabel label={`${t.studioLandmark} · ${t.studioExport}`} />
 
         {!toolOverrides ? (
           <p className="text-[10px] text-[var(--fg-2)]">{t.studioInspectorEmpty}</p>
@@ -54,25 +53,25 @@ export function DockTabExport({ t }: { t: UiMessages }) {
             <p className="text-[10px] text-[var(--fg-2)] leading-relaxed">
               {t.studioExportDesc('.agentskin-theme')}
             </p>
-            <div className="space-y-[var(--space-1)]">
-              <input
+            <div className="space-y-1">
+              <Input
                 value={exportName}
                 onChange={(e) => setExportName(e.target.value)}
                 placeholder={t.studioExportNamePlaceholder}
-                className="ws-input h-7 text-[11px]"
+                className="h-7 text-[11px]"
               />
-              <input
+              <Input
                 value={exportAuthor}
                 onChange={(e) => setExportAuthor(e.target.value)}
                 placeholder={t.studioExportAuthorPlaceholder}
-                className="ws-input h-7 text-[11px]"
+                className="h-7 text-[11px]"
               />
             </div>
             <Button
               size="sm"
+              variant="primary"
               disabled={exportState.loading || !activeAgentId}
               onClick={() => void exportTheme()}
-              className="ws-btn--primary"
             >
               {exportState.loading ? (
                 <Spinner data-icon="inline-start" className="size-3" />

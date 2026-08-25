@@ -169,7 +169,7 @@ describe('electron-ipc', () => {
 
       const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const caught: any = await handler({}).catch((e: unknown) => e);
+      const caught: any = await (handler({}) as Promise<unknown>).catch((e: unknown) => e);
 
       expect(caught).toHaveProperty('name', 'IpcTimeoutError');
       expect(caught).toHaveProperty('channel', IpcChannel.ELECTRON_SCAN);
@@ -203,7 +203,8 @@ describe('electron-ipc', () => {
       vi.mocked(launchApp).mockReturnValue(new Promise(() => {}));
 
       const handler = handlers.get(IpcChannel.ELECTRON_LAUNCH)!;
-      const caught = await handler(trustedEvent, sampleLaunchRequest).catch((e: unknown) => e);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const caught: any = await (handler(trustedEvent, sampleLaunchRequest) as Promise<unknown>).catch((e: unknown) => e);
 
       expect(caught).toHaveProperty('name', 'IpcTimeoutError');
       expect(caught).toHaveProperty('channel', IpcChannel.ELECTRON_LAUNCH);

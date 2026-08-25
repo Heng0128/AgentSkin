@@ -224,14 +224,14 @@ export function ExtendedColorsEditor({
           <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">{newHex}</span>
 
           {/* Add button */}
-          <button
-            type="button"
+          <Button
+            size="sm"
+            variant="primary"
             onClick={handleAdd}
             disabled={!newName.trim() || !!colors[newName.trim().toLowerCase()]}
-            className="ws-btn ws-btn--sm ws-btn--primary"
           >
             {t.studioExtAdd ?? 'Add'}
-          </button>
+          </Button>
         </div>
 
         {/* Preset buttons */}
