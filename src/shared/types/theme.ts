@@ -3,6 +3,29 @@
 import type { AgentId } from './agent';
 import type { ThemeWallpaper } from './wallpaper';
 
+/**
+ * 14-token color palette fields (manifest-level).
+ * Extends Record<string, string> for forward-compatibility with custom fields,
+ * but provides type safety for the 14 known token keys.
+ */
+export interface ThemeManifestColors extends Record<string, string> {
+  accent?: string;
+  secondary?: string;
+  background?: string;
+  foreground?: string;
+  muted?: string;
+  surface?: string;
+  surfaceElevated?: string;
+  border?: string;
+  codeBackground?: string;
+  codeForeground?: string;
+  inputBackground?: string;
+  buttonBackground?: string;
+  buttonForeground?: string;
+  focusRing?: string;
+  selection?: string;
+}
+
 export interface ThemeManifest {
   id: string;
   name: string;
@@ -13,7 +36,7 @@ export interface ThemeManifest {
   preview: string | null;
   icon?: string | null;
   /** 14-token color palette (key → hex/string color value). */
-  colors?: Record<string, string>;
+  colors?: ThemeManifestColors;
   /** Preferred color mode. */
   mode?: 'dark' | 'light' | 'auto';
   /** Design Language configuration (radius / spacing / shadow / motion). */
