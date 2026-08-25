@@ -186,6 +186,22 @@ export const useAppsStore = create<AppsState>((set, get) => {
   // lives for the lifetime of the store.
   appsApi.onCoordinatorStatus(({ appId, state }) => {
     set((s) => {
+      // RC3-A fix: Shallow-compare the existing entry with the incoming state.
+      // Only create a new Map when something actually changed, preserving
+      // reference equality for downstream consumers using shallow compare.
+      const existing = s.runningApps.get(appId);
+      if (state.running && existing) {
+        if (
+          existing.running === state.running &&
+          existing.port === state.port &&
+          existing.debugReady === state.debugReady
+        ) {
+          return s; // No change — preserve current reference
+        }
+      } else if (!state.running && !existing) {
+        return s; // Already absent — no change
+      }
+
       const next = new Map(s.runningApps);
       if (state.running) {
         next.set(appId, state);

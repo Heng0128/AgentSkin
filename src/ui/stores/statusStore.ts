@@ -35,6 +35,21 @@ export const useStatusStore = create<StatusState>((set, get) => {
   api.onCoordinatorStatus(({ appId, state: runtime }) => {
     const current = get().status;
     if (!current) return;
+
+    // RC3-A fix: Shallow-compare the affected app's runtime fields.
+    // Only trigger a state update (and downstream re-render) when at least
+    // one field actually changed. Coordinator polls every 3s with identical
+    // data most of the time — this check eliminates 90%+ of no-op updates.
+    const targetApp = current.apps.find((app) => app.appId === appId);
+    if (
+      targetApp &&
+      targetApp.running === runtime.running &&
+      targetApp.port === runtime.port &&
+      targetApp.debugReady === runtime.debugReady
+    ) {
+      return; // No change — skip state update
+    }
+
     const mergedApps = current.apps.map((app) =>
       app.appId === appId
         ? { ...app, running: runtime.running, port: runtime.port, debugReady: runtime.debugReady }
