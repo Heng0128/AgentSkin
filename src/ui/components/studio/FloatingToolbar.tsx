@@ -95,7 +95,7 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
                 onClick={() => handleZoom(s)}
                 className="whitespace-nowrap rounded-sm px-2 py-0 text-left text-[10px] hover:bg-card2"
                 style={{
-                  background: window?.scale === s ? 'var(--accent)' : 'transparent',
+                  background: window?.scale === s ? 'var(--primary)' : 'transparent',
                   color: window?.scale === s ? 'var(--primary-foreground)' : 'var(--foreground)',
                 }}
               >

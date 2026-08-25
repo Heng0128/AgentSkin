@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # ExtendedColorsEditor
@@ -83,7 +83,7 @@ function OklchSlider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1 flex-1 cursor-pointer appearance-none rounded-md bg-card accent-[var(--accent)]"
+        className="h-1 flex-1 cursor-pointer appearance-none rounded-md bg-card accent-primary"
         aria-label={label}
       />
       <span className="w-12 shrink-0 text-right font-mono text-[10px] tabular-nums text-muted-foreground/40">
@@ -221,7 +221,9 @@ export function ExtendedColorsEditor({
           />
 
           {/* Hex readout */}
-          <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">{newHex}</span>
+          <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
+            {newHex}
+          </span>
 
           {/* Add button */}
           <Button

@@ -13,7 +13,7 @@
  * - Reflects current design language values from the themeStore.
  * - Calls setDesignLanguage when any segmented control option is clicked.
  * - Shows the CSS variable preview section.
- * - Applies `border-[var(--accent)]` to the currently selected option.
+ * - Applies `border-primary` to the currently selected option.
  */
 
 import type { ThemeState } from '@/stores/themeStore';
@@ -137,11 +137,11 @@ describe('CenterTabDesignLanguage', () => {
     expect(container.textContent).toContain('CSS Variables');
   });
 
-  it('selected option has the selected CSS class (border-[var(--accent)])', () => {
+  it('selected option has the selected CSS class (border-primary)', () => {
     render(<CenterTabDesignLanguage t={mockT} />);
     // density: 'comfortable' → 'comfortable (1x)' is the selected option
     const buttons = screen.getAllByText('comfortable (1x)');
-    const selectedBtn = buttons.find((btn) => btn.className.includes('border-[var(--accent)]'));
+    const selectedBtn = buttons.find((btn) => btn.className.includes('border-primary'));
     expect(selectedBtn).toBeTruthy();
   });
 });

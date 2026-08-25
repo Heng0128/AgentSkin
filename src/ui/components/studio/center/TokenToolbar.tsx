@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # TokenToolbar
@@ -76,7 +76,7 @@ export function TokenToolbar({
             <button
               type="button"
               className={`w-12 h-12 rounded-md transition-shadow ${
-                tk.locked ? 'ring-2 ring-[var(--accent)]' : 'ring-1 ring-transparent'
+                tk.locked ? 'ring-2 ring-primary' : 'ring-1 ring-transparent'
               }`}
               style={{ backgroundColor: tk.hex }}
               title={`${tk.name} — ${tk.hex}`}

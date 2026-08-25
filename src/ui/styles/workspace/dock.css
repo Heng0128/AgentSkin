@@ -1,4 +1,4 @@
-/* =================================================================
+﻿/* =================================================================
  * AgentSkin Workspace — Bottom Dock
  *
  * Fixed overlay dock with draggable height, tabs, and toolbox
@@ -16,8 +16,8 @@
   bottom: var(--h-status);
   display: flex;
   flex-direction: column;
-  background: var(--bg-2);
-  border-top: 1px solid var(--border-default);
+  background: var(--card);
+  border-top: 1px solid var(--border);
   z-index: var(--z-dock);
   height: 0;
   transition: height var(--dur-mid) var(--ease-out);
@@ -49,7 +49,7 @@
 }
 
 .ws-dock__drag-handle:hover::after {
-  background: var(--fg-3);
+  background: var(--muted-foreground);
 }
 
 .ws-dock__tabs {
@@ -57,26 +57,26 @@
   align-items: center;
   gap: 2px;
   height: 32px;
-  padding: 0 var(--space-3);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .ws-dock__tab {
   height: 28px;
-  padding: 0 var(--space-3);
+  padding: 0 16px;
   border: none;
   background: transparent;
   font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 500;
-  color: var(--fg-2);
+  color: var(--muted-foreground);
   cursor: pointer;
   position: relative;
 }
 
 .ws-dock__tab[data-active="true"] {
-  color: var(--fg-0);
+  color: var(--foreground);
 }
 
 .ws-dock__tab[data-active="true"]::after {
@@ -86,16 +86,16 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: var(--accent);
+  background: var(--primary);
 }
 
 .ws-dock__content {
   flex: 1;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: var(--space-3);
+  padding: 16px;
   display: flex;
-  gap: var(--space-2);
+  gap: 8px;
   align-items: flex-start;
 }
 
@@ -105,13 +105,13 @@
   flex-shrink: 0;
   width: 160px;
   min-height: 64px;
-  padding: var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-sm);
-  background: var(--bg-2);
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 4px;
 }
 
 .ws-dock-card__label {
@@ -124,10 +124,10 @@
 }
 
 .ws-dock-card__label .name {
-  color: var(--fg-1);
+  color: var(--muted-foreground);
 }
 .ws-dock-card__label .val {
-  color: var(--fg-0);
+  color: var(--foreground);
 }
 
 .ws-dock-card__slider {
@@ -142,7 +142,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--border-default);
+  background: var(--border);
   border-radius: var(--radius-base);
 }
 
@@ -150,7 +150,7 @@
   position: absolute;
   left: 0;
   height: 3px;
-  background: var(--accent);
+  background: var(--primary);
   border-radius: var(--radius-sm);
 }
 
@@ -159,8 +159,8 @@
   width: 11px;
   height: 11px;
   border-radius: var(--radius-base);
-  border: 2px solid var(--accent);
-  background: var(--bg-2);
+  border: 2px solid var(--primary);
+  background: var(--card);
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -173,17 +173,17 @@
 .ws-dock-card__reset {
   font-family: var(--font-ui);
   font-size: 10px;
-  color: var(--fg-2);
+  color: var(--muted-foreground);
   background: none;
   border: none;
   cursor: pointer;
   padding: 2px 4px;
-  border-radius: var(--r-micro);
+  border-radius: var(--radius-sm);
 }
 
 .ws-dock-card__reset:hover {
-  background: var(--bg-3);
-  color: var(--fg-0);
+  background: var(--card2);
+  color: var(--foreground);
 }
 
 /* Dock color row */
@@ -191,32 +191,32 @@
 .ws-dock-card__color-row {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 4px;
 }
 
 .ws-dock-card__color-swatch {
   width: 22px;
   height: 22px;
-  border-radius: var(--r-micro);
-  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
   cursor: pointer;
 }
 
 .ws-dock-card__color-input {
   flex: 1;
   height: 22px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-micro);
-  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card2);
   padding: 0 6px;
   font-family: var(--font-ui);
   font-size: 10px;
-  color: var(--fg-0);
+  color: var(--foreground);
   outline: none;
 }
 
 .ws-dock-card__color-input:focus {
-  border-color: var(--accent);
+  border-color: var(--primary);
 }
 
 /* Dock select row */
@@ -224,13 +224,13 @@
 .ws-dock-card__select {
   width: 100%;
   height: 22px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-micro);
-  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card2);
   padding: 0 6px;
   font-family: var(--font-ui);
   font-size: 10px;
-  color: var(--fg-0);
+  color: var(--foreground);
   outline: none;
   cursor: pointer;
 }
@@ -248,7 +248,7 @@
   font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 500;
-  color: var(--fg-1);
+  color: var(--muted-foreground);
 }
 
 .ws-dock-toggle {
@@ -256,7 +256,7 @@
   width: 28px;
   height: 16px;
   border-radius: var(--radius-base);
-  background: var(--border-default);
+  background: var(--border);
   border: none;
   cursor: pointer;
   flex-shrink: 0;
@@ -264,7 +264,7 @@
 }
 
 .ws-dock-toggle[data-on="true"] {
-  background: var(--accent);
+  background: var(--primary);
 }
 
 .ws-dock-toggle::after {
@@ -274,7 +274,7 @@
   width: 12px;
   height: 12px;
   border-radius: var(--radius-sm);
-  background: var(--bg-2);
+  background: var(--card);
   transition: left var(--dur-fast);
 }
 
