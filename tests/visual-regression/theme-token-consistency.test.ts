@@ -42,6 +42,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import type { ThemeManifest } from '../../../src/shared/types/theme';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -269,15 +270,9 @@ function blendOver(fg: Rgba, bg: Rgba): Rgba {
 // Domain helpers
 // ---------------------------------------------------------------------------
 
-/** Theme manifest (parsed JSON). */
-interface ThemeManifest {
-  id: string;
-  mode: 'dark' | 'light';
-  colors: Record<string, string>;
-  targets: Record<string, { css: string }>;
-  colorSchemes?: string[];
-  supportedAgents?: string[];
-}
+// ThemeManifest is imported from src/shared/types/theme.ts (authoritative type).
+// The inline interface was removed in 2026-08-25 to eliminate type drift.
+// See INSPECTION_REPORT_2026-08-25-1400.md for details.
 
 /**
  * Extract all `--agentskin-*` token values from a CSS string.
