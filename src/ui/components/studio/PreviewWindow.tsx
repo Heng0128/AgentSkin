@@ -287,7 +287,7 @@ export function PreviewWindow({
                   }}
                   className="whitespace-nowrap rounded-sm px-2 py-0 text-left text-micro hover:bg-muted"
                   style={{
-                    background: win.scale === s ? 'var(--accent)' : 'transparent',
+                    background: win.scale === s ? 'var(--primary)' : 'transparent',
                     color: win.scale === s ? 'var(--accent-foreground)' : 'var(--foreground)',
                   }}
                 >
