@@ -230,11 +230,11 @@ describe('settingsStore', () => {
       expect(motion).toBe('none');
 
       // Verify the store's setters correctly persist to localStorage
-      useSettingsStore.getState().setRadiusScale(4);
+      useSettingsStore.getState().setRadiusScale('4');
       useSettingsStore.getState().setDensity('cozy');
       useSettingsStore.getState().setMotion('none');
 
-      expect(useSettingsStore.getState().radiusScale).toBe(4);
+      expect(useSettingsStore.getState().radiusScale).toBe('4');
       expect(useSettingsStore.getState().density).toBe('cozy');
       expect(useSettingsStore.getState().motion).toBe('none');
     });
