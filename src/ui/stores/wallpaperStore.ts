@@ -173,8 +173,11 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
         set({ wallpapers: shaped });
       } else if (shaped.ok && Array.isArray(shaped.items)) {
         set({ wallpapers: shaped.items });
+      } else if (!shaped.ok && shaped.error) {
+        // ok=false 路径：报告具体错误给用户
+        useNotificationStore.getState().fail(new Error(shaped.error));
       }
-      // ok=false 时不更新列表，由 notification 报告失败
+      // ok=false 且无 error 信息时静默降级（避免无意义报错）
     } catch (error) {
       useNotificationStore.getState().fail(error);
     }

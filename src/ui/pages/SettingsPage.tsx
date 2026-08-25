@@ -381,7 +381,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
       </div>
       <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[160px_minmax(0,1fr)]">
         {/* Section rail — desktop only (md+) */}
-        <aside className="set-rail hidden min-h-0 flex-col gap-1 overflow-y-auto bg-card2 p-2 md:flex">
+        <aside className="set-rail hidden min-h-0 flex-col gap-1 overflow-y-auto border-r border-border bg-surface p-2 md:flex">
           <div className="px-2 pt-2 pb-1">
             <SectionLabel label={t.settingsTitle} />
           </div>
