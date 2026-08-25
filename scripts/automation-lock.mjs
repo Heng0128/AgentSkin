@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: MPL-2.0
 /**
- * Automation Lock Helper v1
+ * Automation Lock Helper v2
  *
  * Cross-process file lock for CatPaw automations.
  * Uses O_EXCL flag for atomic creation to avoid race conditions.
  *
  * Lock file: .agentskin/automations/.lock
- * Format: { "automation": "...", "pid": ..., "acquiredAt": "ISO" }
+ * Format v2: { "schemaVersion": 2, "automation": "...", "pid": ...,
+ *             "startedAt": "ISO", "operations": [...] }
+ * Format v1 (legacy): { "automation": "...", "pid": ...,
+ *                       "acquiredAt": "ISO", "operations": [...] }
+ *
+ * v2 additions over v1:
+ *   - schemaVersion: 2 discriminator
+ *   - startedAt replaces acquiredAt (v1 still readable for backward compat)
+ *   - process liveness check via process.kill(pid, 0) — a lock whose PID
+ *     is dead is treated as stale even within the time threshold
+ *   - isOwnLock() distinguishes self-held vs. foreign-held locks
  */
 
 import fs from 'node:fs';
@@ -25,6 +35,10 @@ function ensureDir() {
   fs.mkdirSync(LOCK_DIR, { recursive: true });
 }
 
+/**
+ * Read and parse the lock file.
+ * @returns {Record<string, unknown> | null} The parsed lock data, or null if missing/invalid.
+ */
 function readLock() {
   try {
     const raw = fs.readFileSync(LOCK_FILE, 'utf8');
@@ -34,17 +48,96 @@ function readLock() {
   }
 }
 
+/**
+ * Check whether a PID is currently alive.
+ * Uses process.kill(pid, 0) which throws ESRCH if the process does not exist,
+ * EPERM if we lack permission (process exists but we can't signal it), or
+ * succeeds if the process exists. Returns false for non-positive or
+ * non-numeric PIDs.
+ * @param {number} pid
+ * @returns {boolean}
+ */
+function isPidAlive(pid) {
+  if (typeof pid !== 'number' || !Number.isInteger(pid) || pid <= 0) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (err) {
+    // ESRCH — process does not exist. Any other error (EPERM) means it exists.
+    return /** @type {NodeJS.ErrnoException} */ (err).code === 'EPERM';
+  }
+}
+
+/**
+ * Resolve the timestamp from either a v2 (startedAt) or v1 (acquiredAt) lock.
+ * Returns a Date, or null if neither field is present/invalid.
+ * @param {Record<string, unknown> | null} lock
+ * @returns {Date | null}
+ */
+function lockTimestamp(lock) {
+  const raw = /** @type {string | undefined} */ (lock?.startedAt ?? lock?.acquiredAt);
+  if (!raw) return null;
+  const ms = new Date(raw).getTime();
+  return Number.isNaN(ms) ? null : new Date(ms);
+}
+
+/**
+ * Determine whether a lock is stale.
+ *
+ * A lock is stale when ANY of the following hold:
+ *   - No lock data, or no recognizable timestamp
+ *   - The timestamp is older than STALE_THRESHOLD_MS
+ *   - (v2 only) The PID recorded in the lock is no longer alive
+ *
+ * v1 locks (no schemaVersion) skip the liveness check to preserve backward
+ * compatibility with the original time-only staleness semantics.
+ * @param {Record<string, unknown> | null} lock
+ * @returns {boolean}
+ */
 function isStale(lock) {
-  if (!lock?.acquiredAt) return true;
-  const acquired = new Date(lock.acquiredAt).getTime();
-  if (Number.isNaN(acquired)) return true;
-  return Date.now() - acquired > STALE_THRESHOLD_MS;
+  if (!lock) return true;
+
+  const ts = lockTimestamp(lock);
+  if (!ts) return true;
+
+  if (Date.now() - ts.getTime() > STALE_THRESHOLD_MS) return true;
+
+  // v2 liveness check — a dead PID means the lock is abandoned.
+  if (lock.schemaVersion === 2) {
+    if (!isPidAlive(/** @type {number} */ (lock.pid))) return true;
+  }
+
+  return false;
+}
+
+/**
+ * Check whether the current process is the lock holder.
+ *
+ * Returns true only when:
+ *   - A lock file exists
+ *   - The PID matches the current process
+ *   - The lock is not stale (alive + within threshold)
+ *
+ * This is stricter than `isLockHeld()` — it requires the lock to belong to
+ * THIS process, not just any live process.
+ * @returns {boolean}
+ */
+export function isOwnLock() {
+  const lock = readLock();
+  if (!lock) return false;
+  if (lock.pid !== process.pid) return false;
+  return !isStale(lock);
 }
 
 // --- Public API ---
 
 /**
  * Acquire the lock for an automation.
+ *
+ * If a non-stale lock already exists (held by a live process within the
+ * time threshold), the call returns false. Otherwise the old lock is
+ * overwritten with a fresh v2 lock.
+ *
  * @param {string} automationName
  * @returns {boolean} true if lock acquired, false otherwise
  */
@@ -56,11 +149,24 @@ export function acquireLock(automationName) {
     return false; // Lock still held
   }
 
-  // Stale or missing — try atomic create
+  // Stale lock — remove the old file so O_EXCL create below can succeed.
+  // A race between unlink and open is harmless: if another process writes
+  // a fresh lock in between, our open(wx) will correctly fail and we return
+  // false (the other process wins the race).
+  if (existing) {
+    try {
+      fs.unlinkSync(LOCK_FILE);
+    } catch {
+      // File already gone — proceed normally.
+    }
+  }
+
+  // Try atomic create with v2 format.
   const lockData = {
+    schemaVersion: 2,
     automation: automationName,
     pid: process.pid,
-    acquiredAt: new Date().toISOString(),
+    startedAt: new Date().toISOString(),
     operations: ['git-add', 'git-commit', 'git-push'],
   };
 
@@ -76,11 +182,13 @@ export function acquireLock(automationName) {
 
 /**
  * Release the lock if held by this process.
+ *
+ * Uses isOwnLock() so a stale lock belonging to a dead process that happens
+ * to share our PID (extremely unlikely PID reuse) is not accidentally removed.
  */
 export function releaseLock() {
   try {
-    const lock = readLock();
-    if (lock && lock.pid === process.pid) {
+    if (isOwnLock()) {
       fs.unlinkSync(LOCK_FILE);
     }
   } catch {
@@ -95,8 +203,7 @@ export function releaseLock() {
 export function isLockHeld() {
   const lock = readLock();
   if (!lock) return false;
-  if (isStale(lock)) return false;
-  return true;
+  return !isStale(lock);
 }
 
 /**
@@ -112,13 +219,13 @@ export function forceReleaseLock() {
 
 /**
  * Get current lock status (for CLI / status display).
- * @returns {{ held: boolean, stale: boolean, lock: object | null }}
+ * @returns {{ held: boolean, stale: boolean, own: boolean, lock: Record<string, unknown> | null }}
  */
 export function getLockStatus() {
   const lock = readLock();
-  if (!lock) return { held: false, stale: false, lock: null };
+  if (!lock) return { held: false, stale: false, own: false, lock: null };
   const stale = isStale(lock);
-  return { held: !stale, stale, lock };
+  return { held: !stale, stale, own: isOwnLock(), lock };
 }
 
 // --- CLI ---
@@ -135,8 +242,7 @@ Commands:
   release             Release the lock (only if held by this PID)
   status              Show current lock status
   force-release       Remove the lock regardless of owner
-  check-exists        exit(0) if lock FREE, exit(1) if HELD (for shell ` &&
-      `)
+  check-exists        exit(0) if lock FREE, exit(1) if HELD (for shell \`&&\`)
 
 Options:
   --help, -h          Show this help message
@@ -145,7 +251,7 @@ Options:
 }
 
 function printStatus() {
-  const { held, stale, lock } = getLockStatus();
+  const { held, stale, own, lock } = getLockStatus();
   if (!lock) {
     console.log('Lock: FREE');
     return;
@@ -153,8 +259,9 @@ function printStatus() {
   console.log(`Lock: ${held ? 'HELD' : stale ? 'STALE' : 'FREE'}`);
   console.log(`  automation: ${lock.automation}`);
   console.log(`  pid:        ${lock.pid}`);
-  console.log(`  acquiredAt: ${lock.acquiredAt}`);
+  console.log(`  startedAt:  ${lock.startedAt ?? lock.acquiredAt ?? '?'}`);
   console.log(`  stale:      ${stale}`);
+  console.log(`  own:        ${own}`);
 }
 
 function runCli() {
@@ -181,7 +288,7 @@ function runCli() {
       } else {
         const { lock } = getLockStatus();
         console.error(
-          `Lock held by "${lock?.automation ?? 'unknown'}" since ${lock?.acquiredAt ?? '?'}`,
+          `Lock held by "${lock?.automation ?? 'unknown'}" since ${lock?.startedAt ?? lock?.acquiredAt ?? '?'}`,
         );
         process.exit(1);
       }

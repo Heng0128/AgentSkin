@@ -35,7 +35,7 @@ Electron 主进程入口，承载所有后端服务：CDP 注入、应用发现�
 | `tray-manager.ts` | 系统托盘管理，创建托盘图标与上下文菜单 |
 | `steam-path-resolver.ts` | Steam 路径解析，定位 Steam 安装目录用于游戏壁纸 |
 | `logger.ts` | 统一日志服务，支持文件日志与 IPC 日志上报 |
-| `fs-utils.ts` | 文件系统工具，封装读写/解压/校验等通用操作 |
+| `fs-utils.ts` | 原子写入工具：tmp 文件 → fsync → rename → dir-fsync 四步协议，保证崩溃/断电不产生半写文件；含 `atomicWriteFile` / `atomicWriteJson` / `writeJsonAtomic` / `appendLogLine` |
 | `lz4-decoder.ts` | LZ4 解压器，用于解包场景资源与压缩主题 |
 | `palette-builder.ts` | 调色板构建器，从图像提取主色并生成 14-token 调色板 |
 | `scheme-sync.ts` | Scheme 同步，保持主进程与渲染进程的 Scheme 状态一致 |

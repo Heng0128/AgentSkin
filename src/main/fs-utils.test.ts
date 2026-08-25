@@ -68,11 +68,13 @@ describe('writeJsonAtomic', () => {
     expect(leftoverTmp).toHaveLength(0);
   });
 
-  it('throws DiskFullError with Chinese message when writeFile hits ENOSPC', async () => {
+  it('throws DiskFullError with Chinese message when the write path hits ENOSPC', async () => {
     const enospcError = new Error('No space left on device') as NodeJS.ErrnoException;
     enospcError.code = 'ENOSPC';
-    // Spy on writeFile (not rename) so only the write path is mocked.
-    const writeFileSpy = vi.spyOn(fs, 'writeFile').mockRejectedValueOnce(enospcError);
+    // Spy on fs.open (not rename) so only the write path is mocked. The atomic
+    // write implementation now uses fs.open → FileHandle.write → sync → close
+    // instead of writeFile, so we mock open to simulate a write failure.
+    const openSpy = vi.spyOn(fs, 'open').mockRejectedValueOnce(enospcError);
 
     const file = path.join(tmpDir, 'state.json');
     await expect(writeJsonAtomic(file, { v: 1 })).rejects.toThrow(DiskFullError);
@@ -85,7 +87,7 @@ describe('writeJsonAtomic', () => {
       expect((e as DiskFullError).message).toContain('磁盘空间不足');
       expect((e as DiskFullError).filePath).toBe(file);
     }
-    writeFileSpy.mockRestore();
+    openSpy.mockRestore();
   });
 
   it('throws DiskFullError when rename hits ENOSPC', async () => {

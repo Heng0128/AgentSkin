@@ -29,6 +29,7 @@ import {
 import { getMainLocale, getMainMessages } from '../../shared/i18n';
 import { isSafeThemeId } from '../../shared/theme-id';
 import type { InstalledTheme } from '../../shared/types';
+import { atomicWriteFile } from '../fs-utils';
 import { mainInfo, mainWarnFromCatch } from '../logger';
 import type { PackageInspection, ThemeEntry, ThemeLibraryApi } from '../services/contracts';
 import {
@@ -278,20 +279,10 @@ export class ThemeLibrary implements ThemeLibraryApi {
     const bundle = validateTheme(parsed);
     if (!isSafeThemeId(bundle.theme.id)) throw new Error(getMainMessages().manifestInvalidId);
     const destination = this.packagePath(bundle.theme.id);
-    const temporary = `${destination}.installing-${Date.now()}`;
-    // P2-9/N3: Same pattern as installFile — always clean the temporary file
-    // on any failure path (writeFile/rename throw, or process death covered
-    // by initialize() sweep on restart).
-    let renameSucceeded = false;
-    try {
-      await fs.writeFile(temporary, bytes);
-      await fs.rename(temporary, destination);
-      renameSucceeded = true;
-    } finally {
-      if (!renameSucceeded) {
-        await fs.unlink(temporary).catch(() => undefined);
-      }
-    }
+    // R7: 使用 atomicWriteFile 替代 writeFile + rename — 增加 fsync 保证
+    // 写入字节在 rename 前已落盘，且 rename 后 fsync 父目录保证目录项持久化。
+    // 崩溃时 atomicWriteFile 内部已清理临时文件，无需额外的 renameSucceeded 守卫。
+    await atomicWriteFile(destination, Buffer.from(bytes));
     this.invalidateEntriesCache();
     return toInstalledTheme({ bundle, filePath: destination });
   }

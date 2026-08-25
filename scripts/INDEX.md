@@ -88,6 +88,7 @@
 | `color-theory.mjs` (`.d.ts`) | 色彩理论工具，色相/饱和度/亮度计算与对比度验证 |
 | `create-builtin-themes.mjs` | 创建内置主题包 |
 | `deploy-theme-assets.mjs` | 部署主题资源到构建目录 |
+| `derive-missing-tokens.mjs` | 自动推导缺失的主题 token，保持 14-token 契约，仅填充缺失键，保留显式值 |
 | `detect-dead-code.mjs` | 死代码检测 |
 | `dev-workspace.bat` | 开发工作区启动脚本 |
 | `fix-sakura-muted.mjs` | 修复 Sakura 主题 muted 色彩 |

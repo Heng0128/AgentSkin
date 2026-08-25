@@ -40,7 +40,7 @@ export async function withLock(automationName, fn) {
   if (!acquired) {
     const { lock } = getLockStatus();
     throw new Error(
-      `另一个 automation 正在运行：${lock?.automation ?? 'unknown'}（since ${lock?.acquiredAt ?? '?'}）` +
+      `另一个 automation 正在运行：${lock?.automation ?? 'unknown'}（since ${lock?.startedAt ?? lock?.acquiredAt ?? '?'}）` +
         `，请等待或手动 force-release: ${FORCE_RELEASE_HINT}`,
     );
   }
@@ -142,7 +142,7 @@ async function runCli() {
   if (!acquired) {
     const { lock } = getLockStatus();
     console.error(
-      `另一个 automation 正在运行：${lock?.automation ?? 'unknown'}（since ${lock?.acquiredAt ?? '?'}）`,
+      `另一个 automation 正在运行：${lock?.automation ?? 'unknown'}（since ${lock?.startedAt ?? lock?.acquiredAt ?? '?'}）`,
     );
     console.error(`请等待完成后重试，或手动释放: ${FORCE_RELEASE_HINT}`);
     process.exit(1);

@@ -26,6 +26,7 @@
 | `cdp-asar-refined-audit-2026-08-19.md` | 2026-08-19 | CDP-asar 细化审计 |
 | `injection-engine-optimization-report-2026-08-23.md` | 2026-08-23 | 注入引擎优化汇总报告（P0/P1/P2 + 竞品落地点） |
 | `architecture-visual-dual-audit-2026-08-24.md` | 2026-08-24 | 架构冗余 + 视觉统一双轨只读审计（8 子代理并行 + 2 轮验证） |
+| `COMPETITIVE_TECH_DEEP_RESEARCH_2026-08-26.md` | 2026-08-26 | 竞品技术方案深度调研（4 并行子智能体 + 串行汇总，12 项目 4 方向） |
 
 ## 实施与设计系统报告
 

@@ -2,7 +2,6 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { app } from 'electron';
 import { atomicWriteJsonSync } from '../fs-utils';
 
 /** Default settings */
@@ -30,8 +29,12 @@ function loadSettings(): typeof DEFAULT_SETTINGS {
   // Try to load from user data directory (App.getPath('userData'))
   // Since we're in main process, we can use Electron's app module
   try {
-    // Use Electron's cross-platform userData path (supports --user-data-dir portable mode)
-    const userDataPath = app.getPath('userData');
+    // For now, use a simple path approach - in a real app, use Electron app.getPath('userData')
+    const userDataPath = process.env.APPDATA
+      ? path.join(process.env.APPDATA, 'AgentSkin')
+      : process.env.HOME
+        ? path.join(path.join(process.env.HOME), '.agentskin')
+        : path.join(process.cwd(), 'user-data');
 
     const settingsFile = path.join(userDataPath, 'wallpaper-settings.json');
 
@@ -111,7 +114,11 @@ export function updateSetting(key: SettingsKey, value: number): void {
   // 导致进程内看到新值但磁盘仍是旧值，重启后回退且用户无感知。
   const next = { ...settingsObj, [key]: value };
 
-  const userDataPath = app.getPath('userData');
+  const userDataPath = process.env.APPDATA
+    ? path.join(process.env.APPDATA, 'AgentSkin')
+    : process.env.HOME
+      ? path.join(path.join(process.env.HOME), '.agentskin')
+      : path.join(process.cwd(), 'user-data');
   const settingsFile = path.join(userDataPath, 'wallpaper-settings.json');
 
   try {
