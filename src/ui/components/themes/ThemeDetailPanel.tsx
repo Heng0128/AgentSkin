@@ -178,12 +178,12 @@ export function ThemeDetailPanel({
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
-            <MetaItem icon={Download} label={locale === 'zh-CN' ? '下载' : 'Downloads'} value={String(theme.downloads ?? 0)} />
-            <MetaItem icon={Star} label={locale === 'zh-CN' ? '评分' : 'Rating'} value={theme.rating?.toFixed(1) ?? '0.0'} />
-            <MetaItem icon={FileArchive} label={locale === 'zh-CN' ? '大小' : 'Size'} value={formatSize(theme.packageSize)} />
+            <MetaItem icon={Download} label={t.downloads} value={String(theme.downloads ?? 0)} />
+            <MetaItem icon={Star} label={t.rating} value={theme.rating?.toFixed(1) ?? '0.0'} />
+            <MetaItem icon={FileArchive} label={t.size} value={formatSize(theme.packageSize)} />
             <MetaItem
               icon={Calendar}
-              label={locale === 'zh-CN' ? '更新' : 'Updated'}
+              label={t.updated}
               value={theme.updatedAt ? new Date(theme.updatedAt).toLocaleDateString() : '—'}
             />
           </div>
@@ -193,7 +193,7 @@ export function ThemeDetailPanel({
             <div>
               <p className="mb-1.5 flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/70">
                 <Palette size={12} />
-                {locale === 'zh-CN' ? '配色' : 'Colors'}
+                {t.colors}
               </p>
               <ColorSwatches colors={colors} />
             </div>
@@ -222,7 +222,7 @@ export function ThemeDetailPanel({
           {theme.screenshots?.length > 1 && (
             <p className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
               <ImageIcon size={11} />
-              {theme.screenshots.length} {locale === 'zh-CN' ? '张截图' : 'screenshots'}
+              {theme.screenshots.length} {t.screenshots}
             </p>
           )}
         </div>
