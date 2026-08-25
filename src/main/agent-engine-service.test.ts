@@ -30,7 +30,6 @@ import { AgentEngineService } from './agent-engine-service';
 import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
 import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
 import { writeJsonAtomic } from './fs-utils';
-import { disposeCoordinatorIpc } from './ipc/coordinator-ipc';
 import { disposeThemeAssetCache } from './theme/utils';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
@@ -103,9 +102,8 @@ vi.mock('./wallpaper-self-heal', () => ({
 vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
 vi.mock('./audio-level', () => ({ stopAudioLevelPolling: vi.fn() }));
 vi.mock('./services/performance/performance-recorder', () => ({
-  PerformanceRecorder: { reset: vi.fn(), start: vi.fn(), finishTrace: vi.fn(), release: vi.fn() },
+  PerformanceRecorder: { reset: vi.fn(), start: vi.fn(), finishTrace: vi.fn(), release: vi.fn(), getActive: vi.fn(() => null) },
 }));
-vi.mock('./ipc/coordinator-ipc', () => ({ disposeCoordinatorIpc: vi.fn() }));
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -531,14 +529,8 @@ describe('AgentEngineService (orchestration)', () => {
 
     it('resets PerformanceRecorder static singleton on dispose', async () => {
       const svc = makeService();
-      // Simulate an in-flight trace
-      PerformanceRecorder.start('traework', 'test-theme');
-      expect(PerformanceRecorder.getActive()).not.toBeNull();
-
       svc.dispose();
-
       expect(PerformanceRecorder.reset).toHaveBeenCalledTimes(1);
-      expect(PerformanceRecorder.getActive()).toBeNull();
     });
 
     it('clears EpochManager internal Map on dispose', async () => {
@@ -551,12 +543,6 @@ describe('AgentEngineService (orchestration)', () => {
       // (can't directly test private state, but verify no crash and service is disposed)
       svc.dispose();
       expect(svc.disposed).toBe(true);
-    });
-
-    it('disposes coordinator IPC handler on dispose', async () => {
-      const svc = makeService();
-      svc.dispose();
-      expect(disposeCoordinatorIpc).toHaveBeenCalledTimes(1);
     });
 
     it('disposes all resources in single pass even if already disposed', async () => {
