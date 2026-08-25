@@ -45,6 +45,7 @@ import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { ToolOverride } from '@/types/override';
 
 import { uiMessages } from '@shared/i18n';
+import { formatTime } from '@shared/intl';
 import type { AppStatus } from '@shared/types';
 import { Download, Redo2, RefreshCw, Search, Undo2, Upload } from 'lucide-react';
 
@@ -247,7 +248,7 @@ export function WorkspacePage() {
           </span>
           <span className="text-muted-foreground">|</span>
           <span className="ml-auto text-micro text-muted-foreground">
-            {healthReport.agentId} @ {new Date(healthReport.timestamp).toLocaleTimeString()}
+            {healthReport.agentId} @ {formatTime(new Date(healthReport.timestamp), locale)}
           </span>
         </div>
       ) : (
