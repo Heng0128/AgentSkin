@@ -819,29 +819,40 @@ export class AgentEngineService implements AgentEngineServiceApi {
   // Apply / Restore orchestration
   // -----------------------------------------------------------------------
 
+  /** Maximum number of times apply() will wait for in-flight operations before aborting. */
+  private static readonly APPLY_MAX_RETRY = 5;
+
   async apply(request: ApplyRequest): Promise<ApplyResponse> {
     const appId = request.appId;
-    const existing = this.inflightOperations.get(appId);
-    if (existing && existing.kind === 'apply') {
-      return existing.promise as Promise<ApplyResponse>;
-    }
-    if (existing && existing.kind === 'restore') {
-      this.log(`[apply] ${appId}: restore in progress — queued behind in-flight restore`);
-      try {
-        await existing.cleanup;
-      } catch (error) {
-        this.log(
-          `[apply] ${appId}: queued restore failed — proceeding anyway: ${toMessage(error)}`,
-        );
+    let retries = 0;
+    // RC2-FIX: Convert recursion to iteration with bounded retries to prevent
+    // unbounded stack growth if inflightOperations keeps getting new entries.
+    while (true) {
+      const existing = this.inflightOperations.get(appId);
+      if (existing && existing.kind === 'apply') {
+        return existing.promise as Promise<ApplyResponse>;
       }
-      // RC1-S1-B: Guard against disposed service before recursive call.
-      // If dispose() fired during the await above, recursing would operate
-      // on already-released resources (cdpSessionPool, livePortCache).
-      if (this.disposed) {
-        this.log(`[apply] ${appId}: service disposed during restore cleanup — aborting`);
-        throw new Error('AgentEngineService disposed');
+      if (existing && existing.kind === 'restore') {
+        if (retries >= AgentEngineService.APPLY_MAX_RETRY) {
+          this.log(`[apply] ${appId}: max retries (${AgentEngineService.APPLY_MAX_RETRY}) exceeded — aborting`);
+          throw new Error(`AgentEngineService apply aborted: max retries exceeded for ${appId}`);
+        }
+        retries++;
+        this.log(`[apply] ${appId}: restore in progress — queued behind in-flight retry ${retries}`);
+        try {
+          await existing.cleanup;
+        } catch (error) {
+          this.log(
+            `[apply] ${appId}: queued restore failed — proceeding anyway: ${toMessage(error)}`,
+          );
+        }
+        if (this.disposed) {
+          this.log(`[apply] ${appId}: service disposed during restore cleanup — aborting`);
+          throw new Error('AgentEngineService disposed');
+        }
+        continue;
       }
-      return this.apply(request);
+      break;
     }
     let cleanupResolve!: () => void;
     const cleanup = new Promise<void>((resolve) => {
