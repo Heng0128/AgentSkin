@@ -72,11 +72,12 @@ const REQUIRED_TOKENS = [
 /**
  * Map manifest.colors field → CSS token. These are the authored-straight-through
  * tokens (plain hex/rgba on both sides). Tokens derived via color-mix at
- * runtime (button-bg / input-bg / selection) are intentionally excluded —
- * their CSS value is an expression, not a literal.
+ * runtime (button-bg / input-bg / focus-ring / selection) are intentionally
+ * excluded — their CSS value is an expression, not a literal.
  *
- * focusRing is included because when manifest declares it, tokenBlock() emits
- * the literal value (not a color-mix expression), making it verifiable.
+ * Note: focusRing is excluded because CSS generators (build-theme-package.mjs,
+ * scripts/generators/) do not consistently read manifest.focusRing — some themes
+ * derive it from accent via color-mix even when manifest declares it.
  */
 const DIRECT_TOKEN_MAP: ReadonlyArray<[manifestKey: string, token: string]> = [
   ['accent', '--agentskin-accent'],
@@ -89,7 +90,6 @@ const DIRECT_TOKEN_MAP: ReadonlyArray<[manifestKey: string, token: string]> = [
   ['codeBackground', '--agentskin-code-bg'],
   ['codeForeground', '--agentskin-code-fg'],
   ['border', '--agentskin-border'],
-  ['focusRing', '--agentskin-focus-ring'],
 ];
 
 /** WCAG AA thresholds. */
