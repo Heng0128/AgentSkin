@@ -347,10 +347,16 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
 
   // --- Cancel an in-progress download ---
   cancelInstall: async (themeId: string) => {
-    // IPC cancel
-    await api.cancelCommunityDownload(themeId);
+    // IPC cancel — wrapped in try-catch so a failed cancel IPC
+    // (e.g. main process restart) does not crash the UI.
+    try {
+      await api.cancelCommunityDownload(themeId);
+    } catch (error) {
+      useNotificationStore.getState().fail(error);
+    }
 
-    // Remove from installing
+    // Remove from installing regardless of IPC result so the UI
+    // always reflects the cancelled state.
     const { installingIds, downloadProgress } = get();
     const newInstalling = new Set(installingIds);
     newInstalling.delete(themeId);
