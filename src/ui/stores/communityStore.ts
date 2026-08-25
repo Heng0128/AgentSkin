@@ -20,7 +20,6 @@
 import { api } from '@/api/agentSkinClient';
 import { useNotificationStore } from '@/stores/notificationStore';
 
-import type { AgentId } from '@shared/types/agent';
 import type {
   CommunityThemeDetail,
   CommunityThemeListParams,
@@ -50,7 +49,6 @@ function isCommunityThemeListResult(value: unknown): value is CommunityThemeList
   const v = value as Record<string, unknown>;
   return Array.isArray(v.themes) && typeof v.total === 'number';
 }
-
 
 // ---------------------------------------------------------------------------
 // Data sanitization — defend against incomplete API responses
@@ -179,9 +177,10 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           loading: false,
         });
       } else {
-        const errorMsg = result?.success === false && result.error
-          ? result.error
-          : 'Failed to load community themes';
+        const errorMsg =
+          result?.success === false && result.error
+            ? result.error
+            : 'Failed to load community themes';
         set({
           error: errorMsg,
           loading: false,
@@ -226,9 +225,8 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           loadingMore: false,
         });
       } else {
-        const errorMsg = result?.success === false && result.error
-          ? result.error
-          : 'Failed to load more themes';
+        const errorMsg =
+          result?.success === false && result.error ? result.error : 'Failed to load more themes';
         set({
           error: errorMsg,
           loadingMore: false,
