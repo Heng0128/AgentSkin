@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # TweakPanel
@@ -347,14 +347,14 @@ function FieldRow({
 }) {
   return (
     <div
-      className={`flex flex-col gap-2 rounded-[var(--dl-radius,2px)] px-1 py-0.5 transition-colors ${
-        highlighted ? 'bg-[var(--accent-ghost)] ring-1 ring-[var(--accent)]' : ''
+      className={`flex flex-col gap-2 rounded-md px-1 py-0.5 transition-colors ${
+        highlighted ? 'bg-accent ring-1 ring-[var(--accent)]' : ''
       }`}
     >
       <div className="flex items-center gap-2">
         {/* Override indicator dot */}
         <span
-          className={`size-[5px] rounded-full ${overridden ? 'bg-[var(--accent)]' : 'bg-transparent'}`}
+          className={`size-[5px] rounded-full ${overridden ? 'bg-primary' : 'bg-transparent'}`}
           title={overridden ? '已覆盖' : '默认值'}
         />
         <span className="text-[11px] tracking-tight text-muted-foreground flex-1">{label}</span>

@@ -264,7 +264,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                   className="flex items-center gap-1 w-full p-1 rounded-sm hover:bg-muted"
                   style={{
                     borderColor: activeProjectId === p.id ? 'var(--primary)' : 'transparent',
-                    background: activeProjectId === p.id ? 'var(--accent)' : 'transparent',
+                    background: activeProjectId === p.id ? 'var(--primary)' : 'transparent',
                     border: '1px solid',
                   }}
                 >

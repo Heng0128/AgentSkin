@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 import { cn } from '@/lib/utils';
 
@@ -41,7 +41,7 @@ export function WorkspaceQuickActions({ items }: { items: WorkspaceQuickActionIt
             {/* Icon container */}
             <div
               className={cn(
-                'flex size-9 shrink-0 items-center justify-center rounded-[var(--dl-radius,2px)] transition-colors duration-base group-hover/action:bg-accent',
+                'flex size-9 shrink-0 items-center justify-center rounded-md transition-colors duration-base group-hover/action:bg-accent',
                 item.primary
                   ? 'bg-accent text-primary'
                   : 'bg-accent text-muted-foreground group-hover/action:text-foreground',

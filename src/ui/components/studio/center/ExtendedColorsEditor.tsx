@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # ExtendedColorsEditor
@@ -75,7 +75,7 @@ function OklchSlider({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="w-16 shrink-0 text-[10px] text-[var(--fg-2)]">{label}</span>
+      <span className="w-16 shrink-0 text-[10px] text-muted-foreground">{label}</span>
       <input
         type="range"
         min={min}
@@ -83,10 +83,10 @@ function OklchSlider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-1 flex-1 cursor-pointer appearance-none rounded-[var(--dl-radius,2px)] bg-[var(--bg-2)] accent-[var(--accent)]"
+        className="h-1 flex-1 cursor-pointer appearance-none rounded-md bg-card accent-[var(--accent)]"
         aria-label={label}
       />
-      <span className="w-12 shrink-0 text-right font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+      <span className="w-12 shrink-0 text-right font-mono text-[10px] tabular-nums text-muted-foreground/40">
         {value}
         {unit}
       </span>
@@ -180,21 +180,21 @@ export function ExtendedColorsEditor({
   // --- Render -------------------------------------------------------------
 
   return (
-    <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
+    <div className="flex h-full flex-col rounded-md border border-border bg-surface p-4">
       {/* Header */}
       <div>
-        <h3 className="text-[11px] font-normal text-[var(--fg-0)]">
+        <h3 className="text-[11px] font-normal text-foreground">
           {t.studioExtColors ?? 'Extended Colors'}
         </h3>
-        <p className="mt-2 text-[10px] leading-relaxed text-[var(--fg-2)]">
+        <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
           {t.studioExtColorsDesc ??
             'Semantic color tokens (error, success, warning, info, glow…) with WCAG contrast and OKLCH adjustment.'}
         </p>
       </div>
 
       {/* ── Add new color ─────────────────────────────────────────────── */}
-      <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
+      <div className="mt-4 rounded-md border border-border bg-card p-4">
+        <h4 className="text-[10px] font-normal text-foreground">
           {t.studioExtAddColor ?? 'Add Color'}
         </h4>
 
@@ -205,7 +205,7 @@ export function ExtendedColorsEditor({
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t.studioExtNamePlaceholder ?? 'color name'}
-            className="h-7 w-32 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] px-2 font-mono text-[10px] text-[var(--fg-0)] placeholder:text-[var(--fg-3)] focus:border-[var(--accent)] focus:outline-none"
+            className="h-7 w-32 rounded-md border border-border bg-surface px-2 font-mono text-[10px] text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleAdd();
             }}
@@ -216,12 +216,12 @@ export function ExtendedColorsEditor({
             type="color"
             value={newHex}
             onChange={(e) => setNewHex(e.target.value)}
-            className="h-7 w-7 cursor-pointer rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-transparent"
+            className="h-7 w-7 cursor-pointer rounded-md border border-border bg-transparent"
             aria-label={t.studioExtPickColor ?? 'Pick color'}
           />
 
           {/* Hex readout */}
-          <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">{newHex}</span>
+          <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">{newHex}</span>
 
           {/* Add button */}
           <Button
@@ -236,7 +236,7 @@ export function ExtendedColorsEditor({
 
         {/* Preset buttons */}
         <div className="mt-2 flex items-center gap-2">
-          <span className="text-[10px] text-[var(--fg-3)]">
+          <span className="text-[10px] text-muted-foreground/40">
             {t.studioExtPresets ?? 'Presets:'}
           </span>
           {PRESETS.map((p) => {
@@ -247,11 +247,11 @@ export function ExtendedColorsEditor({
                 type="button"
                 onClick={() => handlePreset(p.name, p.hex)}
                 disabled={disabled}
-                className="flex items-center gap-1 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] px-2 py-1 text-[10px] text-[var(--fg-2)] transition-colors hover:border-[var(--fg-3)] disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:border-muted-foreground/40 disabled:cursor-not-allowed disabled:opacity-40"
                 title={`${p.name} — ${p.hex}`}
               >
                 <span
-                  className="inline-block h-3 w-3 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)]"
+                  className="inline-block h-3 w-3 rounded-md border border-border"
                   style={{ backgroundColor: p.hex }}
                   aria-hidden="true"
                 />
@@ -263,14 +263,14 @@ export function ExtendedColorsEditor({
       </div>
 
       {/* ── Existing colors list ──────────────────────────────────────── */}
-      <div className="mt-4 flex-1 overflow-y-auto rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
+      <div className="mt-4 flex-1 overflow-y-auto rounded-md border border-border bg-card p-4">
+        <h4 className="text-[10px] font-normal text-foreground">
           {t.studioExtCurrent ?? 'Current Colors'} ({entries.length})
         </h4>
 
         {entries.length === 0 ? (
-          <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-dashed border-[var(--border-subtle)] p-6 text-center">
-            <p className="text-[10px] text-[var(--fg-3)]">
+          <div className="mt-4 rounded-md border border-dashed border-border p-6 text-center">
+            <p className="text-[10px] text-muted-foreground/40">
               {t.studioExtEmpty ?? 'No extended colors yet. Add one above.'}
             </p>
           </div>
@@ -283,17 +283,17 @@ export function ExtendedColorsEditor({
               return (
                 <div
                   key={name}
-                  className={`flex items-center gap-2 rounded-[var(--dl-radius,2px)] border p-2 transition-colors ${
+                  className={`flex items-center gap-2 rounded-md border p-2 transition-colors ${
                     isSelected
-                      ? 'border-[var(--accent)] bg-[var(--bg-1)]'
-                      : 'border-[var(--border-subtle)] bg-[var(--bg-1)] hover:border-[var(--fg-3)]'
+                      ? 'border-primary bg-surface'
+                      : 'border-border bg-surface hover:border-muted-foreground/40'
                   }`}
                 >
                   {/* Color swatch with on-color preview */}
                   <button
                     type="button"
                     onClick={() => handleColorRowClick(name)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] font-mono text-[10px] font-normal"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border font-mono text-[10px] font-normal"
                     style={{ backgroundColor: hex, color: onColor }}
                     title={`${name} — ${hex}`}
                   >
@@ -302,10 +302,10 @@ export function ExtendedColorsEditor({
 
                   {/* Name + hex */}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-[10px] font-normal text-[var(--fg-0)]">
+                    <div className="truncate font-mono text-[10px] font-normal text-foreground">
                       {name}
                     </div>
-                    <div className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+                    <div className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
                       {hex}
                     </div>
                   </div>
@@ -317,7 +317,7 @@ export function ExtendedColorsEditor({
                   <button
                     type="button"
                     onClick={() => handleDelete(name)}
-                    className="flex size-5 shrink-0 items-center justify-center rounded-[var(--dl-radius,2px)] text-[var(--fg-3)] transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    className="flex size-5 shrink-0 items-center justify-center rounded-md text-muted-foreground/40 transition-colors hover:bg-destructive/10 hover:text-destructive"
                     title={`${t.studioExtDelete ?? 'Delete'} ${name}`}
                     aria-label={`${t.studioExtDelete ?? 'Delete'} ${name}`}
                   >
@@ -332,15 +332,15 @@ export function ExtendedColorsEditor({
 
       {/* ── OKLCH adjustment panel ────────────────────────────────────── */}
       {selectedName && selectedHex && (
-        <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
+        <div className="mt-4 rounded-md border border-border bg-card p-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
+            <h4 className="text-[10px] font-normal text-foreground">
               {t.studioExtOklch ?? 'OKLCH Adjust'} — {selectedName}
             </h4>
             <button
               type="button"
               onClick={() => setSelectedName(null)}
-              className="text-[var(--fg-3)] transition-colors hover:text-[var(--fg-0)]"
+              className="text-muted-foreground/40 transition-colors hover:text-foreground"
               aria-label={t.studioExtCloseOklch ?? 'Close OKLCH panel'}
             >
               <X className="size-3" />
@@ -349,7 +349,7 @@ export function ExtendedColorsEditor({
 
           {/* Live preview swatch */}
           <div
-            className="mt-2 flex h-10 items-center justify-center rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] font-mono text-[11px] font-normal"
+            className="mt-2 flex h-10 items-center justify-center rounded-md border border-border font-mono text-[11px] font-normal"
             style={{
               backgroundColor: colors[selectedName],
               color: autoOnColor(colors[selectedName]),
@@ -394,14 +394,14 @@ export function ExtendedColorsEditor({
           </div>
 
           {/* WCAG summary for the selected color */}
-          <div className="mt-3 flex items-center gap-3 font-mono text-[10px] text-[var(--fg-2)]">
+          <div className="mt-3 flex items-center gap-3 font-mono text-[10px] text-muted-foreground">
             <span>{t.studioExtContrast ?? 'Contrast:'}</span>
             <ContrastBadge
               fgHex={autoOnColor(colors[selectedName])}
               bgHex={colors[selectedName]}
               mode="full"
             />
-            <span className="text-[var(--fg-3)]">
+            <span className="text-muted-foreground/40">
               ({t.studioExtOnColor ?? 'on-color'}: {autoOnColor(colors[selectedName])})
             </span>
           </div>

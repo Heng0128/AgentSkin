@@ -14,9 +14,9 @@ interface NavIcon {
 
 const NAV_ICONS: NavIcon[] = [
   { route: 'themes', icon: PaintBucket },
+  { route: 'wallpaper', icon: Image },
   { route: 'workspace', icon: Home },
   { route: 'apps', icon: LayoutGrid },
-  { route: 'wallpaper', icon: Image },
   { route: 'settings', icon: Settings },
 ];
 

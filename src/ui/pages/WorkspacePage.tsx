@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # WorkspacePage — Live Tweak
@@ -323,7 +323,7 @@ export function WorkspacePage() {
                     className={`flex items-center gap-1 rounded-sm px-2 py-0.5 text-micro transition-colors ${
                       inspectMode
                         ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-[var(--bg-3)]'
+                        : 'text-muted-foreground hover:bg-card2'
                     }`}
                     title={inspectMode ? t.workspaceInspectStop : t.workspaceInspectStart}
                   >

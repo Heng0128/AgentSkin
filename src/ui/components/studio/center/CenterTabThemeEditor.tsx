@@ -161,10 +161,10 @@ function SegmentedControl<T extends string>({
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`rounded-[var(--dl-radius,2px)] border px-2 py-1 text-[10px] transition-colors ${
+            className={`rounded-md border px-2 py-1 text-[10px] transition-colors ${
               isSelected
-                ? 'border-[var(--accent)] bg-[var(--bg-surface-elevated)] text-[var(--fg-0)]'
-                : 'border-[var(--border-subtle)] bg-[var(--bg-2)] text-[var(--fg-2)] hover:border-[var(--fg-3)]'
+                ? 'border-primary bg-card2 text-foreground'
+                : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40'
             }`}
           >
             {labels?.[opt.value] ?? opt.label}
@@ -269,24 +269,24 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
   }
 
   return (
-    <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
+    <div className="flex h-full flex-col rounded-md border border-border bg-surface p-4">
       {/* Header */}
       <div>
-        <h3 className="text-[11px] font-normal text-[var(--fg-0)]">
+        <h3 className="text-[11px] font-normal text-foreground">
           {t.studioTabTheme ?? 'Theme Editor'}
         </h3>
-        <p className="mt-2 text-[10px] leading-relaxed text-[var(--fg-2)]">
+        <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
           {t.studioTabThemeDesc ??
             'Visual theme editor — adjust design language parameters and inspect color token contrast.'}
         </p>
       </div>
 
       {/* Live CSS preview bar */}
-      <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
+      <div className="mt-4 rounded-md border border-border bg-card p-4">
+        <h4 className="text-[10px] font-normal text-foreground">
           {t.studioDLCssPreview ?? 'CSS Variables'}
         </h4>
-        <pre className="mt-2 overflow-x-auto whitespace-pre font-mono text-[10px] leading-relaxed text-[var(--fg-2)]">
+        <pre className="mt-2 overflow-x-auto whitespace-pre font-mono text-[10px] leading-relaxed text-muted-foreground">
           {cssPreview}
         </pre>
       </div>
@@ -296,10 +296,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Spacing Density */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-foreground">
               {t.studioDLSpacing ?? 'Spacing Density'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
               --agentskin-space-3: {spacingPx(density)}
             </span>
           </div>
@@ -324,10 +324,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Radius Scale */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-foreground">
               {t.studioDLRadius ?? 'Radius Scale'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
               --agentskin-radius-md: {radiusPx(scale)}
             </span>
           </div>
@@ -355,8 +355,8 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
                   key={r}
                   className={`h-4 w-4 border ${
                     r === scale
-                      ? 'border-[var(--accent)] bg-[var(--bg-surface-elevated)]'
-                      : 'border-[var(--border-subtle)] bg-[var(--bg-2)]'
+                      ? 'border-primary bg-card2'
+                      : 'border-border bg-card'
                   }`}
                   style={{ borderRadius: `${r}px` }}
                   title={`${r}px`}
@@ -369,10 +369,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Shadow Elevation */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-foreground">
               {t.studioDLShadow ?? 'Shadow Elevation'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
               --agentskin-shadow-float: {shadowValue(elevation).slice(0, 24)}...
             </span>
           </div>
@@ -393,7 +393,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
             />
             {/* Shadow preview swatch */}
             <div
-              className="h-6 w-6 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)]"
+              className="h-6 w-6 rounded-md border border-border bg-card"
               style={{ boxShadow: 'var(--shadow-float)' }}
             />
           </div>
@@ -402,10 +402,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Motion Speed */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-foreground">
               {t.studioDLMotion ?? 'Motion Speed'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
               --agentskin-duration-fast: {motionMs(speed)}
             </span>
           </div>
@@ -429,17 +429,17 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
       </div>
 
       {/* Color Token display */}
-      <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
+      <div className="mt-4 rounded-md border border-border bg-card p-4">
+        <h4 className="text-[10px] font-normal text-foreground">
           {t.studioThemeColors ?? 'Color Tokens (14)'}
         </h4>
-        <p className="mt-1 text-[10px] text-[var(--fg-3)]">
+        <p className="mt-1 text-[10px] text-muted-foreground/40">
           {t.studioThemeColorsHint ?? 'Click a swatch to rotate hue +30°'}
         </p>
 
         {colorTokens.length === 0 ? (
-          <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-dashed border-[var(--border-subtle)] p-6 text-center">
-            <p className="text-[10px] text-[var(--fg-3)]">
+          <div className="mt-4 rounded-md border border-dashed border-border p-6 text-center">
+            <p className="text-[10px] text-muted-foreground/40">
               {t.studioThemeNoSelection ?? 'Select a theme to inspect its color tokens.'}
             </p>
           </div>
@@ -456,20 +456,20 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
                   key={key}
                   type="button"
                   onClick={() => handleTokenClick(key)}
-                  className="flex items-center gap-2 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-2 text-left transition-colors hover:border-[var(--fg-3)]"
+                  className="flex items-center gap-2 rounded-md border border-border bg-surface p-2 text-left transition-colors hover:border-muted-foreground/40"
                   title={`Click to rotate hue +30°`}
                 >
                   {/* Color swatch */}
                   <div
-                    className="h-6 w-6 shrink-0 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)]"
+                    className="h-6 w-6 shrink-0 rounded-md border border-border"
                     style={{ backgroundColor: displayHex }}
                   />
                   {/* Token info */}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-[10px] font-normal text-[var(--fg-0)]">
+                    <div className="truncate font-mono text-[10px] font-normal text-foreground">
                       {key}
                     </div>
-                    <div className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+                    <div className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
                       {displayHex}
                     </div>
                     {/* WCAG contrast pill */}

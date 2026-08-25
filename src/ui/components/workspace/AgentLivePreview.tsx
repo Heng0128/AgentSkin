@@ -176,7 +176,7 @@ export function AgentLivePreview({
     return (
       <div className="relative overflow-hidden rounded-md">
         {statusBar}
-        <div className="grid grid-cols-2 gap-px bg-[var(--border-subtle)]">
+        <div className="grid grid-cols-2 gap-px bg-border">
           {/* Left: current overrides */}
           <div className="bg-[var(--surface)]">
             <div className="px-2 py-1 text-center text-[10px] tracking-wider text-muted-foreground">

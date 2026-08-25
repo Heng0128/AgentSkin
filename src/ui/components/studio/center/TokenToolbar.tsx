@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # TokenToolbar
@@ -67,7 +67,7 @@ export function TokenToolbar({
   }, [handleKeyDown]);
 
   return (
-    <div className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-2">
+    <div className="rounded-md border border-border bg-surface p-2">
       {/* ── Colour swatch row ─────────────────────────────────────────── */}
       <div className="flex gap-2">
         {tokens.map((tk) => (
@@ -75,7 +75,7 @@ export function TokenToolbar({
             {/* Swatch (acts as colour picker trigger) */}
             <button
               type="button"
-              className={`w-12 h-12 rounded-[var(--dl-radius,2px)] transition-shadow ${
+              className={`w-12 h-12 rounded-md transition-shadow ${
                 tk.locked ? 'ring-2 ring-[var(--accent)]' : 'ring-1 ring-transparent'
               }`}
               style={{ backgroundColor: tk.hex }}
@@ -96,7 +96,7 @@ export function TokenToolbar({
             <button
               type="button"
               onClick={() => onToggleLock(tk.name)}
-              className="absolute top-1 left-1 flex size-4 items-center justify-center rounded-[var(--dl-radius,2px)] bg-[var(--bg-1)]/70 text-[var(--fg-1)] opacity-0 transition-opacity group-hover:opacity-100"
+              className="absolute top-1 left-1 flex size-4 items-center justify-center rounded-md bg-surface/70 text-foreground/60 opacity-0 transition-opacity group-hover:opacity-100"
               style={{ backdropFilter: 'blur(2px)' }}
               title={tk.locked ? t.tokenLocked : t.tokenUnlocked}
               aria-label={tk.locked ? t.tokenLocked : t.tokenUnlocked}
@@ -114,7 +114,7 @@ export function TokenToolbar({
           {t.shuffle}
         </Button>
 
-        <span className="text-[10px] text-[var(--fg-2)]">
+        <span className="text-[10px] text-muted-foreground">
           {t.tokenLockedCount(lockedCount, totalCount)}
         </span>
       </div>

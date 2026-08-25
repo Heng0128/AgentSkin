@@ -45,7 +45,14 @@ let loadToken = 0;
  * API may return themes with missing/null author (deleted accounts, edge data).
  */
 function sanitizeTheme<T extends CommunityThemeSummary>(theme: T): T {
-  if (theme.author && theme.rating !== undefined && theme.downloads !== undefined && theme.tags) return theme;
+  if (
+    theme.author &&
+    theme.rating !== undefined &&
+    theme.downloads !== undefined &&
+    theme.tags &&
+    theme.name &&
+    theme.description
+  ) return theme;
   return {
     ...theme,
     author: theme.author ?? {
@@ -55,6 +62,8 @@ function sanitizeTheme<T extends CommunityThemeSummary>(theme: T): T {
     rating: theme.rating ?? 0,
     downloads: theme.downloads ?? 0,
     tags: theme.tags ?? [],
+    name: theme.name ?? 'Untitled Theme',
+    description: theme.description ?? '',
   };
 }
 

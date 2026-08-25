@@ -14,6 +14,7 @@
 import { useState } from 'react';
 import type { CommunityThemeSummary } from '@shared/types/community';
 import { cn } from '@/lib/utils';
+import { ImageIcon } from 'lucide-react';
 
 interface Props {
   theme: CommunityThemeSummary;
@@ -51,8 +52,9 @@ export function CommunityThemeCard({
             onError={() => setImgError(true)}
           />
         ) : (
-          <div className="flex size-full items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-            <span className="text-4xl font-bold text-muted-foreground/40">
+          <div className="flex size-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
+            <ImageIcon className="size-8 text-muted-foreground/30" strokeWidth={1.5} />
+            <span className="text-lg font-semibold text-muted-foreground/50">
               {theme.name.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -90,7 +92,7 @@ export function CommunityThemeCard({
 
         {/* Stats */}
         <div className="mt-0.5 flex items-center gap-3 font-mono text-micro text-muted-foreground">
-          <span>↓ {theme.downloads}</span>
+          <span>↓ {theme.downloads ?? 0}</span>
           <span>★ {theme.rating?.toFixed(1) ?? '0.0'}</span>
         </div>
 

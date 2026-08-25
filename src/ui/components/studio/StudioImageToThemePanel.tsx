@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0
+﻿// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # StudioImageToThemePanel
@@ -13,7 +13,7 @@
  *   error → user can retry or clear
  *
  * Visual style follows Quiet Workbench design tokens:
- *   · rounded-[var(--dl-radius,2px)] corners, no radius inflation
+ *   · rounded-md corners, no radius inflation
  *   · spacing from the 4/8/16/24/32/48 Tailwind scale only
  *   · typography: text-[10px] mono for token names, tabular-nums
  *   · all colors via CSS custom properties (no bare hex/rgba)
@@ -272,13 +272,13 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
   if (imageToThemeStatus === 'error') {
     return (
       <div className="space-y-2">
-        <div className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-          <p className="text-[11px] text-[var(--fg-1)]">{imageToThemeError}</p>
+        <div className="rounded-md border border-border bg-card p-4">
+          <p className="text-[11px] text-foreground/60">{imageToThemeError}</p>
           <div className="mt-4 flex gap-2">
             <button
               type="button"
               onClick={handleClear}
-              className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-4 py-1 text-[10px] text-[var(--fg-1)]"
+              className="rounded-md border border-border bg-card2 px-4 py-1 text-[10px] text-foreground/60"
             >
               {t.studioImageToThemeClear}
             </button>
@@ -293,14 +293,14 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
     return (
       <div className="space-y-4">
         {/* Generated palette title */}
-        <h3 className="text-[13px] font-normal text-[var(--fg-0)]">
+        <h3 className="text-[13px] font-normal text-foreground">
           {t.studioImageToThemeGeneratedPalette}
         </h3>
 
         {/* Palette groups */}
         {TOKEN_GROUPS.map((group) => (
           <div key={group.labelKey} className="space-y-1">
-            <span className="text-[10px] text-[var(--fg-3)]">{t[group.labelKey]}</span>
+            <span className="text-[10px] text-muted-foreground/40">{t[group.labelKey]}</span>
             <div className="flex flex-wrap gap-1">
               {group.tokens.map((token) => {
                 // ThemeColorsFromImage has no index signature; tokens are a
@@ -314,21 +314,21 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
                     type="button"
                     title={t.studioImageToThemeSwatchExpand}
                     onClick={() => setExpandedToken(isExpanded ? null : token)}
-                    className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] p-1 text-left"
+                    className="rounded-md border border-border p-1 text-left"
                   >
                     <div
-                      className="size-6 rounded-[var(--dl-radius,2px)]"
+                      className="size-6 rounded-md"
                       style={{ backgroundColor: value }}
                     />
-                    <span className="mt-1 block font-mono text-[10px] text-[var(--fg-2)]">
+                    <span className="mt-1 block font-mono text-[10px] text-muted-foreground">
                       {token}
                     </span>
                     {isExpanded && (
                       <div className="mt-1 space-y-1">
-                        <span className="block font-mono text-[10px] tabular-nums text-[var(--fg-1)]">
+                        <span className="block font-mono text-[10px] tabular-nums text-foreground/60">
                           {value}
                         </span>
-                        <span className="block font-mono text-[10px] tabular-nums text-[var(--fg-2)]">
+                        <span className="block font-mono text-[10px] tabular-nums text-muted-foreground">
                           {hexToRgbDisplay(value)}
                         </span>
                         <button
@@ -337,7 +337,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
                             e.stopPropagation();
                             handleCopy(value, token);
                           }}
-                          className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-2 py-0.5 text-[10px] text-[var(--fg-1)]"
+                          className="rounded-md border border-border bg-card2 px-2 py-0.5 text-[10px] text-foreground/60"
                         >
                           {t.studioImageToThemeCopyFormat(token)}
                         </button>
@@ -353,10 +353,10 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         {/* Tonal derivative */}
         {activeAccent && tonals.length > 0 && (
           <div className="space-y-1">
-            <span className="text-[10px] text-[var(--fg-3)]">
+            <span className="text-[10px] text-muted-foreground/40">
               {t.studioImageToThemeTonalDerivative}
             </span>
-            <p className="text-[10px] text-[var(--fg-2)]">
+            <p className="text-[10px] text-muted-foreground">
               {t.studioImageToThemeTonalHint}
             </p>
             <div className="flex gap-1">
@@ -365,7 +365,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
                   key={tone}
                   type="button"
                   onClick={() => setImageAccent(tone)}
-                  className="size-8 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)]"
+                  className="size-8 rounded-md border border-border"
                   style={{ backgroundColor: tone }}
                   title={tone}
                 />
@@ -379,14 +379,14 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
           <button
             type="button"
             onClick={handleApply}
-            className="rounded-[var(--dl-radius,2px)] bg-[var(--primary)] px-4 py-1 text-[11px] text-[var(--primary-foreground)]"
+            className="rounded-md bg-[var(--primary)] px-4 py-1 text-[11px] text-[var(--primary-foreground)]"
           >
             {t.studioImageToThemeApplyToProject}
           </button>
           <button
             type="button"
             onClick={handleClear}
-            className="rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-4 py-1 text-[10px] text-[var(--fg-1)]"
+            className="rounded-md border border-border bg-card2 px-4 py-1 text-[10px] text-foreground/60"
           >
             {t.studioImageToThemeClear}
           </button>
@@ -399,17 +399,17 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
   if (imageToThemeStatus === 'extracting' && file) {
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-2 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-2">
+        <div className="flex items-center gap-2 rounded-md border border-border bg-card p-2">
           {previewUrl && (
             <img
               src={previewUrl}
               alt={file.name}
-              className="size-12 rounded-[var(--dl-radius,2px)] object-cover"
+              className="size-12 rounded-md object-cover"
             />
           )}
           <div className="flex-1 truncate">
-            <p className="truncate font-mono text-[11px] text-[var(--fg-0)]">{file.name}</p>
-            <p className="font-mono text-[10px] text-[var(--fg-2)]">
+            <p className="truncate font-mono text-[11px] text-foreground">{file.name}</p>
+            <p className="font-mono text-[10px] text-muted-foreground">
               {(file.size / 1024).toFixed(1)} KB
             </p>
           </div>
@@ -417,14 +417,14 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         <button
           type="button"
           disabled
-          className="w-full rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-4 py-2 text-[11px] text-[var(--fg-2)] opacity-60"
+          className="w-full rounded-md border border-border bg-card2 px-4 py-2 text-[11px] text-muted-foreground opacity-60"
         >
           {t.studioImageToThemeExtracting}
         </button>
         <button
           type="button"
           onClick={handleClear}
-          className="w-full rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-transparent px-4 py-1 text-[10px] text-[var(--fg-2)]"
+          className="w-full rounded-md border border-border bg-transparent px-4 py-1 text-[10px] text-muted-foreground"
         >
           {t.studioImageToThemeClear}
         </button>
@@ -436,15 +436,15 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
   if (file && previewUrl) {
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-2 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-2">
+        <div className="flex items-center gap-2 rounded-md border border-border bg-card p-2">
           <img
             src={previewUrl}
             alt={file.name}
-            className="size-12 rounded-[var(--dl-radius,2px)] object-cover"
+            className="size-12 rounded-md object-cover"
           />
           <div className="flex-1 truncate">
-            <p className="truncate font-mono text-[11px] text-[var(--fg-0)]">{file.name}</p>
-            <p className="font-mono text-[10px] text-[var(--fg-2)]">
+            <p className="truncate font-mono text-[11px] text-foreground">{file.name}</p>
+            <p className="font-mono text-[10px] text-muted-foreground">
               {(file.size / 1024).toFixed(1)} KB
             </p>
           </div>
@@ -452,14 +452,14 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         <button
           type="button"
           onClick={handleExtract}
-          className="w-full rounded-[var(--dl-radius,2px)] bg-[var(--primary)] px-4 py-2 text-[11px] text-[var(--primary-foreground)]"
+          className="w-full rounded-md bg-[var(--primary)] px-4 py-2 text-[11px] text-[var(--primary-foreground)]"
         >
           {t.studioImageToThemeExtractButton}
         </button>
         <button
           type="button"
           onClick={handleClear}
-          className="w-full rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-transparent px-4 py-1 text-[10px] text-[var(--fg-2)]"
+          className="w-full rounded-md border border-border bg-transparent px-4 py-1 text-[10px] text-muted-foreground"
         >
           {t.studioImageToThemeClear}
         </button>
@@ -485,18 +485,18 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         aria-label={t.studioImageToThemeDragOrClick}
       />
       <span
-        className="flex w-full flex-col items-center gap-2 rounded-[var(--dl-radius,2px)] border-2 border-dashed border-[var(--border-subtle)] bg-[var(--bg-1)] p-8 text-center transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent-ghost)]"
+        className="flex w-full flex-col items-center gap-2 rounded-md border-2 border-dashed border-border bg-surface p-8 text-center transition-colors hover:border-primary hover:bg-accent"
         data-drag-over={dragOver ? 'true' : undefined}
       >
-        <UploadCloud className="size-8 text-[var(--fg-2)]" />
-        <span className="text-[11px] text-[var(--fg-0)]">
+        <UploadCloud className="size-8 text-muted-foreground" />
+        <span className="text-[11px] text-foreground">
           {t.studioImageToThemeDragOrClick}
         </span>
-        <span className="text-[10px] text-[var(--fg-3)]">
+        <span className="text-[10px] text-muted-foreground/40">
           {t.studioImageToThemeSupportedFormats}
         </span>
       </span>
-      <p className="text-[10px] leading-relaxed text-[var(--fg-3)]">
+      <p className="text-[10px] leading-relaxed text-muted-foreground/40">
         {t.studioImageToThemeHintText}
       </p>
     </label>

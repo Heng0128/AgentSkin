@@ -43,14 +43,14 @@ export function DockTabExport({ t }: { t: UiMessages }) {
 
   return (
     <div className="ws-dock__content">
-      <div className="flex-shrink-0 w-[320px] space-y-[var(--space-2)]">
+      <div className="flex-shrink-0 w-[320px] space-y-2">
         <SectionLabel label={`${t.studioLandmark} · ${t.studioExport}`} />
 
         {!toolOverrides ? (
-          <p className="text-[10px] text-[var(--fg-2)]">{t.studioInspectorEmpty}</p>
+          <p className="text-[10px] text-muted-foreground">{t.studioInspectorEmpty}</p>
         ) : (
           <>
-            <p className="text-[10px] text-[var(--fg-2)] leading-relaxed">
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
               {t.studioExportDesc('.agentskin-theme')}
             </p>
             <div className="space-y-1">
@@ -82,12 +82,9 @@ export function DockTabExport({ t }: { t: UiMessages }) {
             </Button>
 
             {exportState.dir && (
-              <div
-                className="border border-[var(--border-subtle)] bg-[var(--bg-3)] p-2"
-                style={{ borderRadius: 'var(--r-xs)' }}
-              >
-                <p className="text-[10px] text-[var(--fg-2)]">{t.studioExportedTo}</p>
-                <p className="break-all text-[10px] text-[var(--fg-0)]">
+              <div className="rounded-sm border border-border bg-card2 p-2">
+                <p className="text-[10px] text-muted-foreground">{t.studioExportedTo}</p>
+                <p className="break-all text-[10px] text-foreground">
                   {exportState.dir}
                 </p>
                 <Button
@@ -102,7 +99,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
             )}
 
             {exportState.error && (
-              <p className="text-[10px] text-[var(--accent)]">
+              <p className="text-[10px] text-primary">
                 {t.studioExportError(exportState.error)}
               </p>
             )}

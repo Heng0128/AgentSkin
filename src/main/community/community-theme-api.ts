@@ -43,6 +43,66 @@ const DEFAULT_TIMEOUT = 30_000;
 const DOWNLOAD_TIMEOUT = 120_000;
 const MAX_DOWNLOAD_BYTES = 50 * 1024 * 1024; // 50 MB
 
+// ---------------------------------------------------------------------------
+// API response → frontend model mapping
+// ---------------------------------------------------------------------------
+
+/** Raw theme object returned by DreamSkin API. */
+interface RawApiTheme {
+  id: string;
+  themeId: string;
+  name?: string;
+  slug?: string;
+  version?: string;
+  license?: string;
+  authorDisplayName?: string | null;
+  authorUserId?: string | null;
+  downloadCount?: number;
+  favoriteCount?: number;
+  submittedAt?: string;
+  reviewedAt?: string;
+  applyCompatible?: boolean;
+  packageBytes?: number;
+  packageSha256?: string;
+  description?: string | null;
+  displayMeta?: {
+    appearance?: 'light' | 'dark' | 'auto';
+    colors?: {
+      accent?: string;
+      background?: string;
+      text?: string;
+      [key: string]: string | undefined;
+    };
+    art?: {
+      focusX?: number;
+      focusY?: number;
+      safeArea?: string;
+      taskMode?: string;
+    };
+  } | null;
+  [key: string]: unknown;
+}
+
+/** Map a raw API theme object to our frontend CommunityThemeSummary. */
+function mapApiToThemeSummary(raw: RawApiTheme): CommunityThemeSummary {
+  return {
+    themeId: raw.themeId || raw.slug || raw.id,
+    name: raw.name || raw.slug || 'Untitled Theme',
+    author: {
+      id: raw.authorUserId || 'unknown',
+      displayName: raw.authorDisplayName || 'Unknown',
+    },
+    description: raw.description || '',
+    tags: [], // DreamSkin API does not expose tags in list endpoint
+    downloads: raw.downloadCount ?? 0,
+    rating: 0, // DreamSkin API does not expose rating
+    updatedAt: raw.reviewedAt || raw.submittedAt || new Date().toISOString(),
+    version: raw.version || '1.0.0',
+    packageSize: raw.packageBytes,
+    packageSha256: raw.packageSha256,
+  };
+}
+
 /**
  * Error raised by DreamSkin API client functions.
  *
@@ -107,14 +167,14 @@ export async function fetchThemes(
   }
 
   const body = (await response.json()) as {
-    items: CommunityThemeSummary[];
+    items: RawApiTheme[];
     total: number;
     limit: number;
     offset: number;
   };
 
   return {
-    themes: body.items,
+    themes: body.items.map(mapApiToThemeSummary),
     total: body.total,
     page,
     pageSize,
@@ -146,8 +206,16 @@ export async function getThemeDetail(id: string): Promise<CommunityThemeDetail> 
     );
   }
 
-  const body = (await response.json()) as CommunityThemeDetail;
-  return body;
+  const raw = (await response.json()) as RawApiTheme;
+  const summary = mapApiToThemeSummary(raw);
+  // Detail extends Summary — preserve screenshots/targetAgents if API provides them
+  const detail: CommunityThemeDetail = {
+    ...summary,
+    screenshots: (raw as { screenshots?: string[] }).screenshots ?? [],
+    targetAgents: (raw as { targetAgents?: string[] }).targetAgents ?? [],
+    changelog: (raw as { changelog?: string }).changelog,
+  };
+  return detail;
 }
 
 /**

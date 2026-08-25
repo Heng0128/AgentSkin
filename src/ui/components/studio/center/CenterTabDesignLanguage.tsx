@@ -11,7 +11,7 @@
  * Data source: themeStore (designLanguage, setDesignLanguage).
  *
  * Visual style follows Quiet Workbench design tokens:
- *   · rounded-[var(--dl-radius,2px)] corners
+ *   · rounded-md corners
  *   · spacing from the 4/8/16 Tailwind scale only
  *   · typography: text-[10px] mono for body, text-xs for headings
  *   · all colors via CSS custom properties (no bare hex/rgba)
@@ -60,10 +60,10 @@ function SegmentedControl<T extends string>({
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`rounded-[var(--dl-radius,2px)] border px-2 py-1 text-[10px] transition-colors ${
+            className={`rounded-md border px-2 py-1 text-[10px] transition-colors ${
               isSelected
-                ? 'border-[var(--accent)] bg-[var(--bg-surface-elevated)] text-[var(--fg-0)]'
-                : 'border-[var(--border-subtle)] bg-[var(--bg-2)] text-[var(--fg-2)] hover:border-[var(--fg-3)]'
+                ? 'border-primary bg-card2 text-foreground'
+                : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40'
             }`}
           >
             {labels?.[opt.value] ?? opt.label}
@@ -88,13 +88,13 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
   const speed = designLanguage.motion?.speed;
 
   return (
-    <div className="flex h-full flex-col rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-1)] p-4">
+    <div className="flex h-full flex-col rounded-md border border-border bg-surface p-4">
       {/* Header */}
       <div>
-        <h3 className="text-[11px] font-normal text-[var(--fg-0)]">
+        <h3 className="text-[11px] font-normal text-foreground">
           {t.studioTabDesignLanguage ?? 'Design Language'}
         </h3>
-        <p className="mt-2 text-[10px] leading-relaxed text-[var(--fg-2)]">
+        <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
           {t.studioTabDesignLanguageDesc ??
             'Adjust spacing, radius, shadow, and motion parameters for the active theme.'}
         </p>
@@ -105,10 +105,10 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Spacing Density */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-foreground">
               {t.studioDLSpacing ?? 'Spacing Density'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
               --agentskin-space-3: {spacingPx(density)}
             </span>
           </div>
@@ -133,10 +133,10 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Radius Scale */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-foreground">
               {t.studioDLRadius ?? 'Radius Scale'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
               --agentskin-radius-md: {radiusPx(scale)}
             </span>
           </div>
@@ -164,8 +164,8 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
                   key={r}
                   className={`h-4 w-4 border ${
                     r === scale
-                      ? 'border-[var(--accent)] bg-[var(--bg-surface-elevated)]'
-                      : 'border-[var(--border-subtle)] bg-[var(--bg-2)]'
+                      ? 'border-primary bg-card2'
+                      : 'border-border bg-card'
                   }`}
                   style={{ borderRadius: `${r}px` }}
                   title={`${r}px`}
@@ -178,10 +178,10 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Shadow Elevation */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-foreground">
               {t.studioDLShadow ?? 'Shadow Elevation'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
               --agentskin-shadow-float: {shadowValue(elevation).slice(0, 24)}...
             </span>
           </div>
@@ -202,7 +202,7 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
             />
             {/* Shadow preview swatch */}
             <div
-              className="h-6 w-6 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)]"
+              className="h-6 w-6 rounded-md border border-border bg-card"
               style={{ boxShadow: 'var(--shadow-float)' }}
             />
           </div>
@@ -211,10 +211,10 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
         {/* Motion Speed */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-[var(--fg-0)]">
+            <span className="text-[10px] font-normal text-foreground">
               {t.studioDLMotion ?? 'Motion Speed'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-[var(--fg-3)]">
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
               --agentskin-duration-fast: {motionMs(speed)}
             </span>
           </div>
@@ -238,29 +238,29 @@ export function CenterTabDesignLanguage({ t }: { t: UiMessages }) {
       </div>
 
       {/* Live CSS variable preview */}
-      <div className="mt-4 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-4">
-        <h4 className="text-[10px] font-normal text-[var(--fg-0)]">
+      <div className="mt-4 rounded-md border border-border bg-card p-4">
+        <h4 className="text-[10px] font-normal text-foreground">
           {t.studioDLCssPreview ?? 'CSS Variables'}
         </h4>
-        <div className="mt-2 space-y-1 font-mono text-[10px] text-[var(--fg-2)]">
+        <div className="mt-2 space-y-1 font-mono text-[10px] text-muted-foreground">
           <div>
-            <span className="text-[var(--fg-3)]">--agentskin-space-3:</span>{' '}
-            <span className="text-[var(--fg-0)]">{spacingPx(density)}</span>
+            <span className="text-muted-foreground/40">--agentskin-space-3:</span>{' '}
+            <span className="text-foreground">{spacingPx(density)}</span>
             {';'}
           </div>
           <div>
-            <span className="text-[var(--fg-3)]">--agentskin-radius-md:</span>{' '}
-            <span className="text-[var(--fg-0)]">{radiusPx(scale)}</span>
+            <span className="text-muted-foreground/40">--agentskin-radius-md:</span>{' '}
+            <span className="text-foreground">{radiusPx(scale)}</span>
             {';'}
           </div>
           <div>
-            <span className="text-[var(--fg-3)]">--agentskin-shadow-float:</span>{' '}
-            <span className="text-[var(--fg-0)]">{shadowValue(elevation)}</span>
+            <span className="text-muted-foreground/40">--agentskin-shadow-float:</span>{' '}
+            <span className="text-foreground">{shadowValue(elevation)}</span>
             {';'}
           </div>
           <div>
-            <span className="text-[var(--fg-3)]">--agentskin-duration-fast:</span>{' '}
-            <span className="text-[var(--fg-0)]">{motionMs(speed)}</span>
+            <span className="text-muted-foreground/40">--agentskin-duration-fast:</span>{' '}
+            <span className="text-foreground">{motionMs(speed)}</span>
             {';'}
           </div>
         </div>

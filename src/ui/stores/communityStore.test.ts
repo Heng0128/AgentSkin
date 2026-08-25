@@ -431,6 +431,50 @@ describe('communityStore', () => {
       expect(state.themes[0]?.rating).toBe(0);
     });
 
+    it('fills in default name when API returns undefined name', async () => {
+      const themeWithoutName = {
+        themeId: 't6',
+        // name field omitted
+        author: { id: 'a1', displayName: 'Author' },
+        description: 'desc',
+        tags: [],
+        downloads: 10,
+        rating: 4.5,
+        updatedAt: '2026-01-01',
+        version: '1.0.0',
+      } as unknown as ReturnType<typeof makeTheme>;
+      mockListCommunityThemes.mockResolvedValue(
+        makeListResult([themeWithoutName], 1),
+      );
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.themes[0]?.name).toBe('Untitled Theme');
+    });
+
+    it('fills in default description when API returns undefined description', async () => {
+      const themeWithoutDescription = {
+        themeId: 't7',
+        name: 'Theme Without Description',
+        author: { id: 'a1', displayName: 'Author' },
+        // description field omitted
+        tags: [],
+        downloads: 10,
+        rating: 4.5,
+        updatedAt: '2026-01-01',
+        version: '1.0.0',
+      } as unknown as ReturnType<typeof makeTheme>;
+      mockListCommunityThemes.mockResolvedValue(
+        makeListResult([themeWithoutDescription], 1),
+      );
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.themes[0]?.description).toBe('');
+    });
+
     it('fills in default tags when API returns undefined tags', async () => {
       const themeWithoutTags = {
         themeId: 't5',
