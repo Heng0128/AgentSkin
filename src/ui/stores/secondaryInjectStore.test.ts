@@ -12,8 +12,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Mocks
 // ---------------------------------------------------------------------------
 
-const mockOnSecondaryInjectProgress = vi.fn();
-const mockOnSecondaryInjectSummary = vi.fn();
+const { mockOnSecondaryInjectProgress, mockOnSecondaryInjectSummary } = vi.hoisted(() => ({
+  mockOnSecondaryInjectProgress: vi.fn(),
+  mockOnSecondaryInjectSummary: vi.fn(),
+}));
 
 vi.mock('@/api/agentSkinClient', () => ({
   api: {

@@ -75,7 +75,7 @@ function makeTheme(id: string, name = `Theme ${id}`) {
     themeId: id,
     name,
     slug: id,
-    author: { id: 'a1', name: 'Author' },
+    author: { id: 'a1', displayName: 'Author' },
     thumbnail: null,
     downloads: 100,
     likes: 10,
@@ -294,7 +294,7 @@ describe('communityStore', () => {
 
   describe('updateDownloadProgress', () => {
     it('updates progress immutably', () => {
-      const progress = { themeId: 't1', phase: 'downloading', progress: 75, bytesDownloaded: 150, totalBytes: 200 };
+      const progress = { themeId: 't1', phase: 'downloading' as const, progress: 75, bytesDownloaded: 150, totalBytes: 200 };
       useCommunityStore.getState().updateDownloadProgress(progress);
 
       const state = useCommunityStore.getState();
@@ -303,7 +303,7 @@ describe('communityStore', () => {
 
     it('overwrites previous progress for the same theme', () => {
       const p1 = { themeId: 't1', phase: 'downloading' as const, progress: 25, bytesDownloaded: 50, totalBytes: 200 };
-      const p2 = { themeId: 't1', phase: 'downloading' as const, progress: 90, bytesDownloaded: 180, totalBytes: 200 };
+      const p2 = { themeId: 't1', phase: 'installing' as const, progress: 90, bytesDownloaded: 180, totalBytes: 200 };
 
       useCommunityStore.getState().updateDownloadProgress(p1);
       useCommunityStore.getState().updateDownloadProgress(p2);
