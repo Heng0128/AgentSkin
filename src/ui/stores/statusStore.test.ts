@@ -39,7 +39,7 @@ vi.mock('@/api/agentSkinClient', () => ({
 
 // Import AFTER all mocks are in place
 import { useStatusStore } from './statusStore';
-import { resetStatusStore } from './test-helpers/store-test-utils';
+import { resetStatusStore } from './test-helpers/reset-status-store';
 
 const SAMPLE_STATUS = {
   platform: 'win32' as const,

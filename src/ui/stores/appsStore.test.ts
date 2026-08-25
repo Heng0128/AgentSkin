@@ -97,7 +97,7 @@ vi.mock('@/stores/settingsStore', () => ({
 // Import AFTER all mocks are in place
 import type { AppRunState, ScannedApp } from '@shared/types';
 import { useAppsStore } from './appsStore';
-import { resetAppsStore } from './test-helpers/store-test-utils';
+import { resetAppsStore } from './test-helpers/reset-apps-store';
 
 // ---------------------------------------------------------------------------
 // Capture module-load state BEFORE any beforeEach clears mock call history

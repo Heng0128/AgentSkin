@@ -20,7 +20,8 @@ const window = new Window({ url: 'http://localhost' });
 
 // Set up globals that @testing-library/react needs
 globalThis.document = window.document as unknown as Document;
-globalThis.window = window as unknown as Window & typeof globalThis;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+globalThis.window = window as any;
 globalThis.requestAnimationFrame = (window.requestAnimationFrame.bind(window) as unknown) as typeof requestAnimationFrame;
 globalThis.cancelAnimationFrame = (window.cancelAnimationFrame.bind(window) as unknown) as typeof cancelAnimationFrame;
 

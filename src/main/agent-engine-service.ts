@@ -421,7 +421,10 @@ export class AgentEngineService implements AgentEngineServiceApi {
           id: `theme:${themeId}`,
           render: mergeRenderOptions(globalWp.render, themeRenderOptions(wp)),
         };
-    } catch {
+    } catch (error) {
+      // RC3-FIX: Log the error instead of silently swallowing — a transient
+      // FS error here would otherwise trigger wallpaper removal (false positive).
+      this.log(`[wallpaper] ${appId}: failed to resolve theme wallpaper — ${toMessage(error)}`);
       return { id: null };
     }
     return { id: null };
