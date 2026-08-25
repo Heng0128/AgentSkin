@@ -233,14 +233,16 @@ describe('wallpaperStore — Toast notification behavior', () => {
     expect(mockFail).not.toHaveBeenCalled();
   });
 
-  it('importWallpaper does not mutate list on { ok: false } response', async () => {
+  it('importWallpaper does not mutate list on { ok: false } response and reports error', async () => {
     mockImportWallpaper.mockResolvedValueOnce({ ok: false, error: 'import failed' });
 
     await useWallpaperStore.getState().importWallpaper();
 
     // 失败时保持初始空列表
     expect(useWallpaperStore.getState().wallpapers).toEqual([]);
-    expect(mockFail).not.toHaveBeenCalled();
+    // ok=false 带 error 信息时应通知用户
+    expect(mockFail).toHaveBeenCalledTimes(1);
+    expect(mockFail).toHaveBeenCalledWith(expect.objectContaining({ message: 'import failed' }));
   });
 
   // -----------------------------------------------------------------------
