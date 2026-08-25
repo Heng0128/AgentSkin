@@ -127,7 +127,9 @@ describe('communityStore', () => {
 
       // First call delays, second resolves quickly
       mockListCommunityThemes
-        .mockReturnValueOnce(new Promise((resolve) => setTimeout(() => resolve(makeListResult(staleThemes, 1)), 50)))
+        .mockReturnValueOnce(
+          new Promise((resolve) => setTimeout(() => resolve(makeListResult(staleThemes, 1)), 50)),
+        )
         .mockResolvedValueOnce(makeListResult(freshThemes, 1));
 
       const p1 = useCommunityStore.getState().loadThemes();
@@ -244,7 +246,18 @@ describe('communityStore', () => {
     it('clears installing and progress state regardless of IPC result', async () => {
       useCommunityStore.setState({
         installingIds: new Set(['t1', 't2']),
-        downloadProgress: new Map([['t1', { themeId: 't1', phase: 'downloading' as const, progress: 50, bytesDownloaded: 100, totalBytes: 200 }]]),
+        downloadProgress: new Map([
+          [
+            't1',
+            {
+              themeId: 't1',
+              phase: 'downloading' as const,
+              progress: 50,
+              bytesDownloaded: 100,
+              totalBytes: 200,
+            },
+          ],
+        ]),
       });
 
       mockCancelCommunityDownload.mockResolvedValue(undefined);
@@ -265,9 +278,7 @@ describe('communityStore', () => {
 
       mockCancelCommunityDownload.mockRejectedValue(new Error('IPC crash'));
 
-      await expect(
-        useCommunityStore.getState().cancelInstall('t1'),
-      ).resolves.toBeUndefined();
+      await expect(useCommunityStore.getState().cancelInstall('t1')).resolves.toBeUndefined();
 
       // State is still updated even though IPC failed
       expect(useCommunityStore.getState().installingIds.has('t1')).toBe(false);
@@ -281,7 +292,13 @@ describe('communityStore', () => {
 
   describe('updateDownloadProgress', () => {
     it('updates progress immutably', () => {
-      const progress = { themeId: 't1', phase: 'downloading' as const, progress: 75, bytesDownloaded: 150, totalBytes: 200 };
+      const progress = {
+        themeId: 't1',
+        phase: 'downloading' as const,
+        progress: 75,
+        bytesDownloaded: 150,
+        totalBytes: 200,
+      };
       useCommunityStore.getState().updateDownloadProgress(progress);
 
       const state = useCommunityStore.getState();
@@ -289,8 +306,20 @@ describe('communityStore', () => {
     });
 
     it('overwrites previous progress for the same theme', () => {
-      const p1 = { themeId: 't1', phase: 'downloading' as const, progress: 25, bytesDownloaded: 50, totalBytes: 200 };
-      const p2 = { themeId: 't1', phase: 'installing' as const, progress: 90, bytesDownloaded: 180, totalBytes: 200 };
+      const p1 = {
+        themeId: 't1',
+        phase: 'downloading' as const,
+        progress: 25,
+        bytesDownloaded: 50,
+        totalBytes: 200,
+      };
+      const p2 = {
+        themeId: 't1',
+        phase: 'installing' as const,
+        progress: 90,
+        bytesDownloaded: 180,
+        totalBytes: 200,
+      };
 
       useCommunityStore.getState().updateDownloadProgress(p1);
       useCommunityStore.getState().updateDownloadProgress(p2);
@@ -377,9 +406,7 @@ describe('communityStore', () => {
         updatedAt: '2026-01-01',
         version: '1.0.0',
       };
-      mockListCommunityThemes.mockResolvedValue(
-        makeListResult([themeWithoutAuthor], 1),
-      );
+      mockListCommunityThemes.mockResolvedValue(makeListResult([themeWithoutAuthor], 1));
 
       await useCommunityStore.getState().loadThemes();
 
@@ -399,9 +426,7 @@ describe('communityStore', () => {
         updatedAt: '2026-01-01',
         version: '1.0.0',
       } as unknown as ReturnType<typeof makeTheme>;
-      mockListCommunityThemes.mockResolvedValue(
-        makeListResult([themeWithoutAuthor], 1),
-      );
+      mockListCommunityThemes.mockResolvedValue(makeListResult([themeWithoutAuthor], 1));
 
       await useCommunityStore.getState().loadThemes();
 
@@ -421,9 +446,7 @@ describe('communityStore', () => {
         updatedAt: '2026-01-01',
         version: '1.0.0',
       } as unknown as ReturnType<typeof makeTheme>;
-      mockListCommunityThemes.mockResolvedValue(
-        makeListResult([themeWithoutRating], 1),
-      );
+      mockListCommunityThemes.mockResolvedValue(makeListResult([themeWithoutRating], 1));
 
       await useCommunityStore.getState().loadThemes();
 
@@ -443,9 +466,7 @@ describe('communityStore', () => {
         updatedAt: '2026-01-01',
         version: '1.0.0',
       } as unknown as ReturnType<typeof makeTheme>;
-      mockListCommunityThemes.mockResolvedValue(
-        makeListResult([themeWithoutName], 1),
-      );
+      mockListCommunityThemes.mockResolvedValue(makeListResult([themeWithoutName], 1));
 
       await useCommunityStore.getState().loadThemes();
 
@@ -465,9 +486,7 @@ describe('communityStore', () => {
         updatedAt: '2026-01-01',
         version: '1.0.0',
       } as unknown as ReturnType<typeof makeTheme>;
-      mockListCommunityThemes.mockResolvedValue(
-        makeListResult([themeWithoutDescription], 1),
-      );
+      mockListCommunityThemes.mockResolvedValue(makeListResult([themeWithoutDescription], 1));
 
       await useCommunityStore.getState().loadThemes();
 
@@ -487,9 +506,7 @@ describe('communityStore', () => {
         updatedAt: '2026-01-01',
         version: '1.0.0',
       } as unknown as ReturnType<typeof makeTheme>;
-      mockListCommunityThemes.mockResolvedValue(
-        makeListResult([themeWithoutTags], 1),
-      );
+      mockListCommunityThemes.mockResolvedValue(makeListResult([themeWithoutTags], 1));
 
       await useCommunityStore.getState().loadThemes();
 
@@ -509,9 +526,7 @@ describe('communityStore', () => {
         updatedAt: '2026-01-01',
         version: '1.0.0',
       } as unknown as ReturnType<typeof makeTheme>;
-      mockListCommunityThemes.mockResolvedValue(
-        makeListResult([themeWithoutDownloads], 1),
-      );
+      mockListCommunityThemes.mockResolvedValue(makeListResult([themeWithoutDownloads], 1));
 
       await useCommunityStore.getState().loadThemes();
 
@@ -568,14 +583,101 @@ describe('communityStore', () => {
         updatedAt: '2026-01-01',
         version: '1.0.0',
       };
-      mockListCommunityThemes.mockResolvedValue(
-        makeListResult([themeWithoutAuthor], 5),
-      );
+      mockListCommunityThemes.mockResolvedValue(makeListResult([themeWithoutAuthor], 5));
 
       await useCommunityStore.getState().loadMore();
 
       const state = useCommunityStore.getState();
       expect(state.themes[0]?.author).toEqual({ id: 'unknown', displayName: 'Unknown' });
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Runtime type guard — malformed API response handling
+  // -----------------------------------------------------------------------
+
+  describe('isCommunityThemeListResult (type guard)', () => {
+    it('rejects malformed data with missing themes array', async () => {
+      // API returns success but data.themes is undefined
+      mockListCommunityThemes.mockResolvedValue({
+        success: true,
+        data: { total: 5 }, // missing themes array
+      });
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      // Should set error instead of crashing
+      expect(state.error).toBeTruthy();
+      expect(state.themes).toEqual([]);
+    });
+
+    it('rejects malformed data with non-numeric total', async () => {
+      mockListCommunityThemes.mockResolvedValue({
+        success: true,
+        data: { themes: [], total: 'five' }, // wrong type
+      });
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.error).toBeTruthy();
+    });
+
+    it('accepts valid data structure', async () => {
+      const items = [makeTheme('t1')];
+      mockListCommunityThemes.mockResolvedValue(makeListResult(items, 1));
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.error).toBeNull();
+      expect(state.themes).toHaveLength(1);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // installTheme — stale closure fix verification
+  // -----------------------------------------------------------------------
+
+  describe('installTheme stale closure fix', () => {
+    it('reads current installingIds (not captured) on success', async () => {
+      mockDownloadCommunityTheme.mockResolvedValue({
+        success: true,
+        data: { success: true, themeId: 't1' },
+      });
+
+      await useCommunityStore.getState().installTheme('t1');
+
+      const state = useCommunityStore.getState();
+      // After successful install, themeId should be in installed, not installing
+      expect(state.installedIds.has('t1')).toBe(true);
+      expect(state.installingIds.has('t1')).toBe(false);
+    });
+
+    it('reads current installingIds (not captured) on failure', async () => {
+      mockDownloadCommunityTheme.mockResolvedValue({
+        success: true,
+        data: { success: false, error: 'Download failed' },
+      });
+
+      await useCommunityStore.getState().installTheme('t1');
+
+      const state = useCommunityStore.getState();
+      // After failed install, themeId should be neither in installing nor installed
+      expect(state.installingIds.has('t1')).toBe(false);
+      expect(state.installedIds.has('t1')).toBe(false);
+    });
+
+    it('reads current installingIds (not captured) on exception', async () => {
+      mockDownloadCommunityTheme.mockRejectedValue(new Error('Network error'));
+
+      await useCommunityStore.getState().installTheme('t1');
+
+      const state = useCommunityStore.getState();
+      // After exception, themeId should be neither in installing nor installed
+      expect(state.installingIds.has('t1')).toBe(false);
+      expect(state.installedIds.has('t1')).toBe(false);
     });
   });
 });
