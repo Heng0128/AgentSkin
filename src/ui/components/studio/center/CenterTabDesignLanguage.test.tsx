@@ -85,17 +85,21 @@ describe('CenterTabDesignLanguage', () => {
     const { container } = render(<CenterTabDesignLanguage t={mockT} />);
     // density: 'comfortable' → SPACING_BASE[2]=16 × 1 = 16px
     // Must match designLanguageBlock() output exactly (P0-1 fix).
-    const matches = container.querySelectorAll('span');
-    const found = Array.from(matches).some((el) => el.textContent === '--agentskin-space-3: 16px');
-    expect(found).toBe(true);
+    expect(
+      Array.from(container.querySelectorAll('span')).some(
+        (el) => el.textContent === '--agentskin-space-3: 16px',
+      ),
+    ).toBe(true);
   });
 
   it('displays current radius value from store', () => {
     const { container } = render(<CenterTabDesignLanguage t={mockT} />);
     // scale: '2' → radiusPx('2') = '2px'
-    const matches = container.querySelectorAll('span');
-    const found = Array.from(matches).some((el) => el.textContent === '--agentskin-radius-md: 2px');
-    expect(found).toBe(true);
+    expect(
+      Array.from(container.querySelectorAll('span')).some(
+        (el) => el.textContent === '--agentskin-radius-md: 2px',
+      ),
+    ).toBe(true);
   });
 
   it('clicking a spacing option calls setDesignLanguage', () => {
@@ -142,6 +146,7 @@ describe('CenterTabDesignLanguage', () => {
     // density: 'comfortable' → 'comfortable (1x)' is the selected option
     const buttons = screen.getAllByText('comfortable (1x)');
     const selectedBtn = buttons.find((btn) => btn.className.includes('border-primary'));
-    expect(selectedBtn).toBeTruthy();
+    expect(selectedBtn).toBeDefined();
+    expect(selectedBtn?.className).toContain('border-primary');
   });
 });

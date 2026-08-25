@@ -95,9 +95,11 @@ describe('CenterTabThemeEditor', () => {
   it('displays current density value from store', () => {
     const { container } = render(<CenterTabThemeEditor t={mockT} />);
     // density: 'comfortable' → SPACING_BASE[2]=16 × 1 = 16px
-    const matches = container.querySelectorAll('span');
-    const found = Array.from(matches).some((el) => el.textContent === '--agentskin-space-3: 16px');
-    expect(found).toBe(true);
+    expect(
+      Array.from(container.querySelectorAll('span')).some(
+        (el) => el.textContent === '--agentskin-space-3: 16px',
+      ),
+    ).toBe(true);
   });
 
   it('clicking a spacing option calls setDesignLanguage', () => {
