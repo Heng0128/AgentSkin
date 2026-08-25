@@ -167,7 +167,7 @@ export function QuickEnvironmentCreate({
           style={{ borderRadius: 'var(--radius)' }}
           onClick={onCancel}
         >
-          {t.cancel
+          {t.cancel}
         </button>
       </div>
     </div>

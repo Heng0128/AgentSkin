@@ -18,7 +18,10 @@ export function localeFromSystem(value: string | undefined): AppLocale {
   const exact = APP_LOCALES.find((l) => l.toLowerCase() === normalized.toLowerCase());
   if (exact) return exact;
   const prefix = normalized.toLowerCase().split('-')[0];
-  const byPrefix = APP_LOCALES.find((l) => l.toLowerCase().startsWith(`${prefix}-`));
+  const byPrefix = APP_LOCALES.find((l) => {
+    const lower = l.toLowerCase();
+    return lower === prefix || lower.startsWith(`${prefix}-`);
+  });
   if (byPrefix) return byPrefix;
   return DEFAULT_LOCALE;
 }

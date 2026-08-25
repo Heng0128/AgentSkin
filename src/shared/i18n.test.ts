@@ -51,8 +51,8 @@ describe('i18n', () => {
   });
 
   it('has matching function signatures between locales', () => {
-    const zhKeys = Object.keys(uiMessages['zh-CN']);
-    const enKeys = Object.keys(uiMessages.en);
+    type UiMsgKey = keyof typeof uiMessages['zh-CN'];
+    const zhKeys = Object.keys(uiMessages['zh-CN']) as UiMsgKey[];
     for (const key of zhKeys) {
       const zhVal = uiMessages['zh-CN'][key];
       const enVal = uiMessages.en[key];

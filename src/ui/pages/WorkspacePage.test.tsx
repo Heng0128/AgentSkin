@@ -63,6 +63,14 @@ const { mockOnThemeHealthReport, mockUiMessages } = vi.hoisted(() => {
     workspaceHealthSheetPresent: 'Theme Sheet',
     workspaceHealthArtActive: 'Hero Art',
     workspacePushFailed: 'Push failed: ',
+    workspaceExport: 'Export',
+    workspaceExportTooltip: 'Export config to clipboard',
+    workspaceImport: 'Import',
+    workspaceImportTooltip: 'Import config from JSON file',
+    workspaceInspectStart: 'Pick element to locate parameter',
+    workspaceInspectStop: 'Exit element picking',
+    workspaceInspectStartBtn: 'Pick element',
+    workspaceInspectStopBtn: 'Exit picking',
     commonDismiss: 'Dismiss',
   } as unknown as UiMessages;
 
@@ -306,12 +314,12 @@ describe('WorkspacePage — M9 export/import', () => {
 
   it('renders export button', () => {
     const html = renderPage();
-    expect(html).toContain('导出');
+    expect(html).toContain('Export');
   });
 
   it('renders import button', () => {
     const html = renderPage();
-    expect(html).toContain('导入');
+    expect(html).toContain('Import');
   });
 });
 
