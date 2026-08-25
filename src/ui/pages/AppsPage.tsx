@@ -225,7 +225,7 @@ export function AppsPage() {
           {scanError && (
             <div
               role="alert"
-              className="mb-5 flex items-center justify-between gap-2 rounded-md bg-destructive/10 px-2 py-2.5"
+              className="mb-5 flex items-center justify-between gap-2 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5"
             >
               <p className="min-w-0 flex-1 truncate text-label text-destructive">
                 {t.appsScanFailed}
@@ -238,7 +238,7 @@ export function AppsPage() {
           )}
 
           {/* Status legend */}
-          <div className="mb-5 flex items-center gap-4 as-micro">
+          <div className="mb-5 flex items-center gap-4 rounded-md border border-border bg-card/50 px-3 py-2 as-micro">
             <span className="flex items-center gap-2">
               <span className="inline-block size-2 rounded-full bg-cr-success" />
               {t.appsStatusRunning}
@@ -299,8 +299,8 @@ export function AppsPage() {
 
           {/* Manual add button */}
           <div className="mt-4">
-            <Button variant="ghost" size="sm" onClick={handleManualAdd}>
-              <Plus size={14} className="text-muted-foreground" />
+            <Button variant="outline" size="sm" onClick={handleManualAdd}>
+              <Plus size={14} />
               {t.appsActionAddManual}
             </Button>
             <input

@@ -5,7 +5,6 @@ import { api } from '@/api/agentSkinClient';
 import { CommunityTabPanel } from '@/components/themes/CommunityTabPanel';
 import { ThemeGridSkeleton } from '@/components/themes/ThemeGridSkeleton';
 import { VirtualThemeGrid } from '@/components/themes/VirtualThemeGrid';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FilterChips } from '@/components/ui/filter-chips';
@@ -18,7 +17,7 @@ import { type ThemeSortKey, useThemeCenter } from '@/hooks/useThemeCenter';
 import { cn } from '@/lib/utils';
 
 import type { AgentId } from '@shared/types';
-import { Package, PaintBucket, Palette, UploadCloud, Users } from 'lucide-react';
+import { CheckCircle2, Layers, Package, PaintBucket, Palette, UploadCloud, Users } from 'lucide-react';
 
 type ThemesTab = 'installed' | 'community';
 
@@ -168,6 +167,30 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             />
           </PageHeader>
 
+          {/* Stats overview bar */}
+          <div className="my-3 flex items-center gap-4 rounded-md border border-border bg-card/50 px-3 py-2">
+            <div className="flex items-center gap-1.5">
+              <Layers className="size-3.5 text-muted-foreground" />
+              <span className="text-label font-medium tabular-nums text-foreground">{tc.allCount}</span>
+            </div>
+            <span className="h-3 w-px bg-border" />
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-cr-success" />
+              <span className="text-label font-medium tabular-nums text-foreground">{activeThemeCount}</span>
+              <span className="text-micro text-muted-foreground">{t.themeActive}</span>
+            </div>
+            {dynamicCount > 0 && (
+              <>
+                <span className="h-3 w-px bg-border" />
+                <div className="flex items-center gap-1.5">
+                  <UploadCloud className="size-3.5 text-primary" />
+                  <span className="text-label font-medium tabular-nums text-foreground">{dynamicCount}</span>
+                  <span className="text-micro text-muted-foreground">{t.themeDynamic}</span>
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Filter row — chip pills */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Category filter */}
@@ -217,20 +240,6 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                 {t.themeDynamicFilter}
               </button>
             )}
-
-            {/* Stats badges — right side — Badge */}
-            <div className="ml-auto flex items-center gap-2">
-              {dynamicCount > 0 && (
-                <Badge variant="red" data-icon="inline-start" className="gap-1">
-                  {dynamicCount} {t.themeDynamic}
-                </Badge>
-              )}
-              {activeThemeCount > 0 && (
-                <Badge variant="default" data-icon="inline-start" className="gap-1">
-                  {activeThemeCount} {t.themeActive}
-                </Badge>
-              )}
-            </div>
           </div>
 
           {/* Stats rendered once (above, in toolbar badges). This row removed to eliminate duplicate counts. */}

@@ -75,10 +75,12 @@ describe('ThemeDetailPanel', () => {
     expect(screen.getByText('secondary')).toBeTruthy();
 
     // The accent swatch should have the correct background color
-    // happy-dom normalizes hex to rgb, so query by element and check style directly
+    // happy-dom may or may not parse inline style.backgroundColor, so check
+    // the raw style attribute which preserves the original hex value
     const swatches = document.querySelectorAll('[style*="background-color"]');
-    const found = Array.from(swatches).find(
-      (el) => (el as HTMLElement).style.backgroundColor === 'rgb(255, 152, 0)',
+    expect(swatches.length).toBeGreaterThan(0);
+    const found = Array.from(swatches).find((el) =>
+      (el.getAttribute('style') ?? '').includes('#ff9800'),
     );
     expect(found).not.toBeUndefined();
   });

@@ -212,7 +212,7 @@ export function WorkspacePage() {
       {/* ---------------------------------------------------------------- */}
       {/* Top bar — title + refresh                                         */}
       {/* ---------------------------------------------------------------- */}
-      <div className="shrink-0 px-2 py-2">
+      <div className="shrink-0 px-3 py-3">
         <PageHeader title={t.navWorkspace}>
           <PageToolbar
             actions={
@@ -229,7 +229,7 @@ export function WorkspacePage() {
       {/* Health status bar — theme injection diagnostics                  */}
       {/* ---------------------------------------------------------------- */}
       {healthReport ? (
-        <div className="mx-3 mb-2 flex items-center gap-2 rounded-md border-b border-border px-2 py-1 text-micro text-muted-foreground">
+        <div className="mx-3 mb-2 flex items-center gap-2 rounded-md border border-border bg-card/50 px-3 py-1.5 text-micro text-muted-foreground">
           <span
             className={`size-2 rounded-full ${
               healthReport.score >= 80
@@ -251,7 +251,7 @@ export function WorkspacePage() {
           </span>
         </div>
       ) : (
-        <div className="mx-3 mb-2 flex items-center rounded-md border-b border-border px-2 py-1">
+        <div className="mx-3 mb-2 flex items-center rounded-md border border-border bg-card/50 px-3 py-1.5">
           <span className="text-micro text-muted-foreground">{t.workspaceHealthSelectAgent}</span>
         </div>
       )}
