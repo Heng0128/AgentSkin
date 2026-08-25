@@ -4,16 +4,17 @@
  * check-i18n.mjs — i18n completeness validation
  *
  * Validates:
- * 1. All i18n keys in uiMessages have matching translations in both locales
+ * 1. All i18n keys in uiMessages / mainMessages have matching translations in both locales
  * 2. No empty string translations
  * 3. Function-type keys have matching signatures between locales
  * 4. All i18n keys are referenced somewhere in the UI codebase (no orphans)
  */
 
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import pkg from 'glob';
+
 const { glob } = pkg;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -35,106 +36,226 @@ function success(msg) {
   console.log(`  ✓ ${msg}`);
 }
 
-// Read the i18n file and extract key names
+// Read the i18n file
 const i18nContent = readFileSync(i18nFile, 'utf-8');
 
-// Extract all key definitions from both locales
-const zhBlock = i18nContent.match(/'zh-CN': \{([\s\S]*?)\n  \},\n  en: \{/);
-const enBlock = i18nContent.match(/en: \{([\s\S]*?)\n  \},\n\};/);
-
-if (!zhBlock || !enBlock) {
-  console.error('✗ Failed to parse i18n.ts — could not locate locale blocks');
-  process.exit(1);
+// Extract a top-level object block by marker, using brace-depth counting.
+// Returns the inner content (between the outer { and }).
+function extractBlock(content, startMarker, endMarker) {
+  const startIdx = content.indexOf(startMarker);
+  if (startIdx === -1) return null;
+  // Find the opening brace after the marker
+  const braceIdx = content.indexOf('{', startIdx + startMarker.length);
+  if (braceIdx === -1) return null;
+  let depth = 0;
+  let endIdx = braceIdx;
+  for (let i = braceIdx; i < content.length; i++) {
+    const ch = content[i];
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) {
+        endIdx = i;
+        break;
+      }
+    }
+  }
+  const inner = content.slice(braceIdx + 1, endIdx);
+  return inner;
 }
 
+// Extract top-level keys from a locale block (depth === 1).
+// When the depth is exactly 1, a line starting with `keyName:` or `keyName(`
+// is a top-level key. Nested objects (e.g. function bodies) are skipped.
 function extractKeys(block) {
   const keys = new Set();
+  let depth = 0;
   const lines = block.split('\n');
   for (const line of lines) {
-    const match = line.match(/^\s+(\w+):/);
-    if (match) {
-      keys.add(match[1]);
+    // Count braces on this line to track depth changes
+    for (const ch of line) {
+      if (ch === '{') depth++;
+      else if (ch === '}') depth--;
+    }
+    // Only extract keys at depth 0 inside the block (i.e. top-level key)
+    if (depth === 0) {
+      const match = line.match(/^\s+(\w+):/);
+      if (match) {
+        keys.add(match[1]);
+      }
     }
   }
   return keys;
 }
 
-const zhKeys = extractKeys(zhBlock[1]);
-const enKeys = extractKeys(enBlock[1]);
+// Extract both locale blocks for a given message category.
+function extractLocaleBlocks(content, varName) {
+  const fullBlock = extractBlock(content, `export const ${varName}`, '\n};');
+  if (!fullBlock) return null;
+  // Extract zh-CN block
+  const zhBlock = extractBlock(fullBlock, "'zh-CN':", 'en: {');
+  // Extract en block — it runs to the end of fullBlock
+  // Find "en: {" in fullBlock
+  const enMarkerIdx = fullBlock.indexOf('en: {');
+  let enBlock = null;
+  if (enMarkerIdx !== -1) {
+    const enBraceIdx = fullBlock.indexOf('{', enMarkerIdx);
+    if (enBraceIdx !== -1) {
+      let depth = 0;
+      let endIdx = enBraceIdx;
+      for (let i = enBraceIdx; i < fullBlock.length; i++) {
+        const ch = fullBlock[i];
+        if (ch === '{') depth++;
+        else if (ch === '}') {
+          depth--;
+          if (depth === 0) {
+            endIdx = i;
+            break;
+          }
+        }
+      }
+      enBlock = fullBlock.slice(enBraceIdx + 1, endIdx);
+    }
+  }
+  return { zhBlock, enBlock };
+}
+
+function checkCategory(varName) {
+  const blocks = extractLocaleBlocks(i18nContent, varName);
+  if (!blocks || !blocks.zhBlock || !blocks.enBlock) {
+    console.error(`✗ Failed to parse ${varName} — could not locate locale blocks`);
+    process.exit(1);
+  }
+  return {
+    zhKeys: extractKeys(blocks.zhBlock),
+    enKeys: extractKeys(blocks.enBlock),
+    zhBlock: blocks.zhBlock,
+    enBlock: blocks.enBlock,
+  };
+}
+
+const ui = checkCategory('uiMessages');
+const main = checkCategory('mainMessages');
 
 console.log('\n=== i18n Completeness Check ===\n');
 
 // 1. Check structural alignment
 console.log('[1/4] Structural alignment');
-const zhOnly = [...zhKeys].filter((k) => !enKeys.has(k));
-const enOnly = [...enKeys].filter((k) => !zhKeys.has(k));
-if (zhOnly.length === 0 && enOnly.length === 0) {
-  success(`All ${zhKeys.size} keys aligned between zh-CN and en`);
-} else {
-  if (zhOnly.length > 0) error(`Keys only in zh-CN: ${zhOnly.join(', ')}`);
-  if (enOnly.length > 0) error(`Keys only in en: ${enOnly.join(', ')}`);
+
+function checkAlignment(zhKeys, enKeys, label) {
+  const zhOnly = [...zhKeys].filter((k) => !enKeys.has(k));
+  const enOnly = [...enKeys].filter((k) => !zhKeys.has(k));
+  if (zhOnly.length === 0 && enOnly.length === 0) {
+    success(`${label}: All ${zhKeys.size} keys aligned between zh-CN and en`);
+  } else {
+    if (zhOnly.length > 0) error(`${label} keys only in zh-CN: ${zhOnly.join(', ')}`);
+    if (enOnly.length > 0) error(`${label} keys only in en: ${enOnly.join(', ')}`);
+  }
 }
+
+checkAlignment(ui.zhKeys, ui.enKeys, 'uiMessages');
+checkAlignment(main.zhKeys, main.enKeys, 'mainMessages');
 
 // 2. Check for empty translations
 console.log('\n[2/4] Empty translation check');
-const emptyZh = [];
-const emptyEn = [];
-const zhLines = zhBlock[1].split('\n');
-const enLines = enBlock[1].split('\n');
-for (const line of zhLines) {
-  if (line.match(/^\s+(\w+): ['"]['"],?$/)) {
-    const key = line.match(/^\s+(\w+):/)[1];
-    emptyZh.push(key);
+
+function checkEmpty(block, label) {
+  const empty = [];
+  const lines = block.split('\n');
+  let depth = 0;
+  for (const line of lines) {
+    for (const ch of line) {
+      if (ch === '{') depth++;
+      else if (ch === '}') depth--;
+    }
+    if (depth === 0 && line.match(/^\s+(\w+): ['"]['"],?$/)) {
+      const key = line.match(/^\s+(\w+):/)[1];
+      empty.push(key);
+    }
   }
+  return empty;
 }
-for (const line of enLines) {
-  if (line.match(/^\s+(\w+): ['"]['"],?$/)) {
-    const key = line.match(/^\s+(\w+):/)[1];
-    emptyEn.push(key);
-  }
-}
-if (emptyZh.length === 0 && emptyEn.length === 0) {
+
+const emptyUiZh = checkEmpty(ui.zhBlock, "uiMessages 'zh-CN'");
+const emptyUiEn = checkEmpty(ui.enBlock, 'uiMessages en');
+const emptyMainZh = checkEmpty(main.zhBlock, "mainMessages 'zh-CN'");
+const emptyMainEn = checkEmpty(main.enBlock, 'mainMessages en');
+
+if (
+  emptyUiZh.length === 0 &&
+  emptyUiEn.length === 0 &&
+  emptyMainZh.length === 0 &&
+  emptyMainEn.length === 0
+) {
   success('No empty string translations found');
 } else {
-  if (emptyZh.length > 0) error(`Empty zh-CN: ${emptyZh.join(', ')}`);
-  if (emptyEn.length > 0) error(`Empty en: ${emptyEn.join(', ')}`);
+  if (emptyUiZh.length > 0) error(`Empty uiMessages['zh-CN']: ${emptyUiZh.join(', ')}`);
+  if (emptyUiEn.length > 0) error(`Empty uiMessages.en: ${emptyUiEn.join(', ')}`);
+  if (emptyMainZh.length > 0) error(`Empty mainMessages['zh-CN']: ${emptyMainZh.join(', ')}`);
+  if (emptyMainEn.length > 0) error(`Empty mainMessages.en: ${emptyMainEn.join(', ')}`);
 }
 
 // 3. Check for unused keys (orphans)
 console.log('\n[3/4] Orphan key detection');
 const uiFiles = glob.sync(join(rootDir, 'src', 'ui', '**', '*.{ts,tsx}'));
-const allUiContent = uiFiles.map((f) => readFileSync(f, 'utf-8')).join('\n');
-const usedKeys = new Set();
-for (const key of zhKeys) {
-  // Check if key is referenced in UI code (as t.keyName or t['keyName'])
-  const patterns = [
-    new RegExp(`t\\.${key}\\b`),
-    new RegExp(`t\\['${key}'\\]`),
-    new RegExp(`t\\["${key}"\\]`),
-  ];
-  if (patterns.some((p) => p.test(allUiContent))) {
-    usedKeys.add(key);
+const mainFiles = glob.sync(join(rootDir, 'src', 'main', '**', '*.{ts,tsx}'));
+const uiContent = uiFiles.map((f) => readFileSync(f, 'utf-8')).join('\n');
+const mainContent = mainFiles.map((f) => readFileSync(f, 'utf-8')).join('\n');
+
+function findOrphans(zhKeys, content, label) {
+  const usedKeys = new Set();
+  for (const key of zhKeys) {
+    const patterns = [
+      new RegExp(`t\\.${key}\\b`),
+      new RegExp(`t\\['${key}'\\]`),
+      new RegExp(`t\\["${key}"\\]`),
+    ];
+    if (patterns.some((p) => p.test(content))) {
+      usedKeys.add(key);
+    }
   }
+  return { usedKeys, orphanKeys: [...zhKeys].filter((k) => !usedKeys.has(k)) };
 }
-const orphanKeys = [...zhKeys].filter((k) => !usedKeys.has(k));
-if (orphanKeys.length === 0) {
-  success(`All ${zhKeys.size} keys are referenced in UI code`);
+
+const uiOrphans = findOrphans(ui.zhKeys, uiContent, 'uiMessages');
+const mainOrphans = findOrphans(main.zhKeys, mainContent, 'mainMessages');
+
+if (uiOrphans.orphanKeys.length === 0) {
+  success(`All ${ui.zhKeys.size} uiMessages keys are referenced in UI code`);
 } else {
-  log(`  ⚠ ${orphanKeys.length} potentially unused keys (may be used dynamically):`);
-  for (const key of orphanKeys.slice(0, 10)) {
+  log(
+    `  ⚠ ${uiOrphans.orphanKeys.length} potentially unused uiMessages keys (may be used dynamically):`,
+  );
+  for (const key of uiOrphans.orphanKeys.slice(0, 10)) {
     log(`    - ${key}`);
   }
-  if (orphanKeys.length > 10) {
-    log(`    ... and ${orphanKeys.length - 10} more`);
+  if (uiOrphans.orphanKeys.length > 10) {
+    log(`    ... and ${uiOrphans.orphanKeys.length - 10} more`);
   }
-  // Orphans are warnings, not errors
+}
+
+if (mainOrphans.orphanKeys.length === 0) {
+  success(`All ${main.zhKeys.size} mainMessages keys are referenced in main code`);
+} else {
+  log(
+    `  ⚠ ${mainOrphans.orphanKeys.length} potentially unused mainMessages keys (may be used dynamically):`,
+  );
+  for (const key of mainOrphans.orphanKeys.slice(0, 10)) {
+    log(`    - ${key}`);
+  }
+  if (mainOrphans.orphanKeys.length > 10) {
+    log(`    ... and ${mainOrphans.orphanKeys.length - 10} more`);
+  }
 }
 
 // 4. Summary
 console.log('\n[4/4] Summary');
-console.log(`  Total i18n keys: ${zhKeys.size}`);
-console.log(`  Used in UI: ${usedKeys.size}`);
-console.log(`  Potentially unused: ${orphanKeys.length}`);
+console.log(
+  `  uiMessages keys: ${ui.zhKeys.size} (used: ${uiOrphans.usedKeys.size}, orphans: ${uiOrphans.orphanKeys.length})`,
+);
+console.log(
+  `  mainMessages keys: ${main.zhKeys.size} (used: ${mainOrphans.usedKeys.size}, orphans: ${mainOrphans.orphanKeys.length})`,
+);
 
 if (exitCode === 0) {
   console.log('\n✓ i18n check passed\n');
