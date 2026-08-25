@@ -55,30 +55,7 @@ vi.mock('@/stores/notificationStore', () => ({
 // ---------------------------------------------------------------------------
 
 import { useCommunityStore } from './communityStore';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function resetStore() {
-  useCommunityStore.setState({
-    themes: [],
-    total: 0,
-    page: 1,
-    pageSize: 20,
-    sortBy: 'popular',
-    query: '',
-    loading: false,
-    loadingMore: false,
-    error: null,
-    selectedThemeId: null,
-    selectedThemeDetail: null,
-    detailLoading: false,
-    downloadProgress: new Map(),
-    installingIds: new Set(),
-    installedIds: new Set(),
-  });
-}
+import { resetCommunityStore } from './test-helpers/store-test-utils';
 
 function makeTheme(id: string, name = `Theme ${id}`) {
   return {
@@ -111,7 +88,7 @@ function makeListResult(themes: ReturnType<typeof makeTheme>[], total: number) {
 describe('communityStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    resetStore();
+    resetCommunityStore();
     // Reset module-level loadToken by reloading the module is not feasible;
     // instead we ensure tests don't interfere by keeping them independent.
   });

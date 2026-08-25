@@ -61,23 +61,7 @@ vi.mock('@/stores/statusStore', () => ({
 // ---------------------------------------------------------------------------
 
 import { useSettingsStore } from './settingsStore';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function resetStore() {
-  useSettingsStore.setState({
-    settingsOpen: false,
-    settingsSection: 'general',
-    settings: null,
-    radiusScale: '2',
-    density: 'comfortable',
-    motion: 'full',
-    mcpRunning: false,
-    mcpUrl: null,
-  });
-}
+import { resetSettingsStore } from './test-helpers/store-test-utils';
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -87,7 +71,7 @@ describe('settingsStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetStore();
+    resetSettingsStore();
   });
 
   // -----------------------------------------------------------------------

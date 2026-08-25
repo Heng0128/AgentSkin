@@ -40,28 +40,11 @@ vi.mock('@/api/agentSkinClient', () => ({
 import type { ToolOverride } from '@shared/types/override';
 // Import AFTER all mocks are in place
 import { useWorkspaceStore } from './workspaceStore';
+import { resetWorkspaceStore } from './test-helpers/store-test-utils';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function resetLiveTweakState() {
-  useWorkspaceStore.setState({
-    currentAgentId: null,
-    currentPort: null,
-    currentOverrides: {},
-    dirty: false,
-    overridesByAgent: {},
-    pushError: null,
-    // Reset history and presets for clean test isolation.
-    history: [],
-    historyIndex: -1,
-    tweakPresets: [],
-    tweakPresetActiveId: null,
-  });
-  // Reset module-level pushToken to ensure monotonic token isolation between tests.
-  useWorkspaceStore.getState().testResetPushToken();
-}
 
 /**
  * Flush all pending microtasks so that previously dispatched async operations
@@ -81,7 +64,7 @@ describe('workspaceStore — per-agent overrides persistence', () => {
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('初始化时 overridesByAgent 为空对象', () => {
@@ -109,7 +92,7 @@ describe('workspaceStore — localStorage quota handling', () => {
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   // Restore any spies (e.g. setItem mockImplementation) after each test so
@@ -176,7 +159,7 @@ describe('workspaceStore — selectAgent restores overrides', () => {
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('首次 selectAgent 恢复空 overrides', () => {
@@ -218,7 +201,7 @@ describe('workspaceStore — updateOverride push receipt and error handling', ()
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('pushTweak 成功时无 pushError', async () => {
@@ -267,7 +250,7 @@ describe('workspaceStore — push token serialization', () => {
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('快速连续调用只应用最后一次回执', async () => {
@@ -335,7 +318,7 @@ describe('workspaceStore — saveChanges persists to overridesByAgent', () => {
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('saveChanges 成功后 overridesByAgent 同步更新', async () => {
@@ -384,7 +367,7 @@ describe('workspaceStore — discardChanges cleans up overridesByAgent', () => {
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('discardChanges 成功后从 overridesByAgent 删除条目', async () => {
@@ -421,7 +404,7 @@ describe('workspaceStore — clearPushError', () => {
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('clearPushError 将 pushError 置为 null', async () => {
@@ -445,7 +428,7 @@ describe('workspaceStore — undo/redo history', () => {
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('每次 updateOverride 压入历史条目', async () => {
@@ -544,7 +527,7 @@ describe('workspaceStore — named tweak presets', () => {
     await flushPromises();
     vi.clearAllMocks();
     window.localStorage.clear();
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('saveTweakPreset 保存当前 overrides 到 preset', async () => {
@@ -628,7 +611,7 @@ describe('workspaceStore — named tweak presets', () => {
 
 describe('workspaceStore — performance baseline (push duration)', () => {
   beforeEach(() => {
-    resetLiveTweakState();
+    resetWorkspaceStore();
   });
 
   it('records lastPushDurationMs after a successful push', async () => {

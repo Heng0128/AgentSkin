@@ -43,18 +43,7 @@ vi.mock('@/stores/statusStore', () => ({
 
 import { FALLBACK_AGENTS, useAgentStore } from './agentStore';
 import { AGENT_IDS, AGENT_META } from '@shared/types';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function resetStore() {
-  // Reset to initial state (with fallback agents)
-  useAgentStore.setState({
-    agents: FALLBACK_AGENTS,
-    loaded: false,
-  });
-}
+import { resetAgentStore } from './test-helpers/store-test-utils';
 
 function makeAgentItem(id: string) {
   return {
@@ -81,7 +70,7 @@ function makeAgentItem(id: string) {
 describe('agentStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    resetStore();
+    resetAgentStore();
   });
 
   // -----------------------------------------------------------------------
@@ -145,7 +134,7 @@ describe('agentStore', () => {
   describe('initial state', () => {
     it('has loaded=false before loadAgents is called', () => {
       // After reset, verify the initial loaded state is false
-      resetStore();
+      resetAgentStore();
       expect(useAgentStore.getState().loaded).toBe(false);
     });
 
@@ -153,9 +142,10 @@ describe('agentStore', () => {
       console.log('typeof FALLBACK_AGENTS:', typeof FALLBACK_AGENTS);
       console.log('FALLBACK_AGENTS value:', FALLBACK_AGENTS);
       console.log('typeof useAgentStore:', typeof useAgentStore);
-      resetStore();
+      console.log('useAgentStore.getState().agents:', useAgentStore.getState().agents);
+      resetAgentStore();
       const state = useAgentStore.getState();
-      console.log('state.agents:', state.agents);
+      console.log('after resetAgentStore state.agents:', state.agents);
       expect(state.agents).toEqual(FALLBACK_AGENTS);
     });
   });

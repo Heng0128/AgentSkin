@@ -97,6 +97,7 @@ vi.mock('@/stores/settingsStore', () => ({
 // Import AFTER all mocks are in place
 import type { AppRunState, ScannedApp } from '@shared/types';
 import { useAppsStore } from './appsStore';
+import { resetAppsStore } from './test-helpers/store-test-utils';
 
 // ---------------------------------------------------------------------------
 // Capture module-load state BEFORE any beforeEach clears mock call history
@@ -142,21 +143,6 @@ const MOCK_RUN_STATE: AppRunState = {
   debugReady: true,
   updatedAt: Date.now(),
 };
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function resetStore() {
-  useAppsStore.setState({
-    scanResult: null,
-    scanning: false,
-    scanError: null,
-    launchingApps: new Set(),
-    runningApps: new Map(),
-    hiddenApps: new Set(),
-  });
-}
 
 // ---------------------------------------------------------------------------
 // Tests
