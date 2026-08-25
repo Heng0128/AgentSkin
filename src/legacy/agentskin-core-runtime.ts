@@ -864,3 +864,77 @@ async function discoverLiveCdpPortViaPid(adapter: unknown): Promise<number | nul
 // ---------------------------------------------------------------------------
 
 void patchWindowsAdapters();
+
+// ---------------------------------------------------------------------------
+// Multi-window target filter (overlay / pet / modal isolation)
+//
+// The doubao/codex adapters' global patch injects wallpaper + theme CSS into
+// every reachable CDP target on a port, which can bleed styles into overlay
+// windows (e.g. Doubao's desktop pet "avatar-overlay"). This filter runs
+// BEFORE injection so only real page targets whose URL is not blocklisted
+// (or is explicitly allowlisted) receive the theme.
+// ---------------------------------------------------------------------------
+
+/** Default URL patterns whose targets are never injected (case-insensitive). */
+export const DEFAULT_INJECTION_BLOCKLIST = [
+  /avatar-overlay/i,
+  /pet/i,
+  /settings/i,
+  /modal/i,
+];
+
+export interface FilterTargetsOptions {
+  /**
+   * Case-insensitive regex patterns. A target whose URL matches ANY of these
+   * patterns is skipped — unless it also matches a pattern in `allowlist`.
+   * Defaults to {@link DEFAULT_INJECTION_BLOCKLIST}.
+   */
+  blocklist?: RegExp[];
+  /**
+   * Case-insensitive regex patterns that override `blocklist`. A target whose
+   * URL matches ANY allowlist pattern is always kept (whitelist wins).
+   * Defaults to `[]` (no override).
+   */
+  allowlist?: RegExp[];
+}
+
+/**
+ * Filter CDP targets before injection.
+ *
+ * Filtering rules (applied in order):
+ *   1. `target.type !== 'page'` AND not a page-like undefined-type target
+ *      (url starts with http://, https://, or file://) → skip. This excludes
+ *      workers, background_page, service_worker, etc.
+ *   2. `target.url` matches an `allowlist` pattern → keep (whitelist wins).
+ *   3. `target.url` matches a `blocklist` pattern → skip.
+ *
+ * The function never throws: an empty input yields an empty array, and a
+ * target with a missing URL is treated as a non-page (step 1 rejects it).
+ *
+ * @param targets  Raw CDP /json/list targets.
+ * @param options  Optional blocklist / allowlist overrides.
+ */
+export function filterTargets(targets: readonly CdpTarget[], options: FilterTargetsOptions = {}): CdpTarget[] {
+  const blocklist = options.blocklist ?? DEFAULT_INJECTION_BLOCKLIST;
+  const allowlist = options.allowlist ?? [];
+
+  const matchesAny = (url: string, patterns: RegExp[]): boolean =>
+    patterns.some((p) => p.test(url));
+
+  const isPageLike = (t: CdpTarget): boolean => {
+    if (t.type === 'page') return true;
+    // Mirror pickPageTarget: accept undefined/null type when URL looks like a page.
+    if (t.type === undefined || t.type === null) {
+      const url = t.url ?? '';
+      return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('file://');
+    }
+    return false;
+  };
+
+  return targets.filter((t) => {
+    if (!isPageLike(t)) return false;
+    const url = t.url ?? '';
+    if (allowlist.length > 0 && matchesAny(url, allowlist)) return true;
+    return !matchesAny(url, blocklist);
+  });
+}
