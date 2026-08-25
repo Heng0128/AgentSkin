@@ -633,6 +633,36 @@ describe('luminance hierarchy', () => {
   }
 });
 
+describe('luminance hierarchy — surfaceElevated', () => {
+  for (const t of themes) {
+    it(`${t.id} — surfaceElevated distinguishable from surface`, () => {
+      const sVal = t.colors.surface;
+      const seVal = t.colors.surfaceElevated;
+      if (!sVal || !seVal) return; // skip if either missing
+
+      const cS = parseColor(sVal);
+      const cSe = parseColor(seVal);
+      if (!cS || !cSe) return;
+
+      const sLum = relativeLuminance(cS);
+      const seLum = relativeLuminance(cSe);
+
+      // surfaceElevated must be visually distinct from surface (ratio ≠ 1).
+      // Direction is NOT enforced: some themes use shadow-based elevation
+      // (darker elevated), others use lighter elevated. We only check
+      // that the two layers are distinguishable (ratio ≥ 1.02 or ≤ 0.98).
+      const ratio = seLum / sLum;
+      const isDistinct = ratio >= 1.02 || ratio <= 0.98;
+      expect(
+        isDistinct,
+        `${t.id}: surfaceElevated/surface luminance ratio ${ratio.toFixed(3)} ` +
+          `(surface L=${sLum.toFixed(3)}, elevated L=${seLum.toFixed(3)}) — ` +
+          `expected distinct layers (ratio ≥ 1.02 or ≤ 0.98)`,
+      ).toBe(true);
+    });
+  }
+});
+
 describe('WCAG AA contrast compliance', () => {
   for (const t of themes) {
     for (const agent of themeAgents(t)) {
