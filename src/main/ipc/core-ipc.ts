@@ -65,7 +65,9 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
     deps.locale = nextLocale;
     setMainLocale(deps.locale);
     await saveLocalePreference(deps.userDataRoot, deps.locale);
-    void updateTrayMenu();
+    void updateTrayMenu().catch((error) => {
+      mainWarn('TrayMenu.Update', toMessage(error));
+    });
   });
 
   ipcMain.handle(IpcChannel.SYSTEM_STATUS, async () => {
