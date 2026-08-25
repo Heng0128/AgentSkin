@@ -14,11 +14,8 @@
 import { vi } from 'vitest';
 import type {
   AgentId,
-  ApplyRequest,
-  ApplyResponse,
   DesktopSettings,
   InstalledTheme,
-  SystemStatus,
   WallpaperAgentSetting,
   WallpaperSettings,
 } from '../../shared/types';
@@ -138,8 +135,6 @@ export function makeLoggerStub(): LoggerApi {
 // ---------------------------------------------------------------------------
 // ThemeEntry minimal mock (for test fixtures)
 // ---------------------------------------------------------------------------
-
-type ThemeEntry = import('../theme-library').ThemeEntry;
 
 /**
  * Create a minimal ThemeEntry for testing wallpaper resolution.
