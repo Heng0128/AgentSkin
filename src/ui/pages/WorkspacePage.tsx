@@ -3,38 +3,22 @@
 /**
  * # WorkspacePage — Live Tweak
  *
- * Real-time micro-adjustment panel. The user picks a running agent from the
- * left rail, then tunes radius / spacing / shadow / color / font size with
- * instant feedback in the preview pane — no full theme re-apply required.
+ * Real-time micro-adjustment panel. Three-column layout:
+ *   ┌────┬──────────────────────────┬──────────┐
+ *   │rail│  Preview (dominant)      │ Tweak    │
+ *   │56px│                          │ 300px    │
+ *   │    │                          │          │
+ *   └────┴──────────────────────────┴──────────┘
  *
- * Layout (CSS grid on .wt-root):
- *   ┌────────────┬────────────────────────────────────────────┐
- *   │ topbar     │  title                          [刷新状态] │
- *   ├────────────┼────────────────────────────────────────────┤
- *   │ agent rail │  AgentLivePreview                        │
- *   │ (running)  │  TweakPanel                              │
- *   │            │                          [保存] [丢弃]  │
- *   └────────────┴────────────────────────────────────────────┘
- *
- * Data flow:
- *   statusStore.status.apps  ──(filter running+port)──▶  agent rail
- *   workspaceStore.currentAgentId / currentPort       ◀── click agent
- *   workspaceStore.currentOverrides                   ◀── TweakPanel onChange
- *   └─▶ api.pushTweak (real-time) + AgentDomPreview (local replay)
- *
- * Features:
- *   - M3 undo/redo: Ctrl+Z / Ctrl+Shift+Z
- *   - M5 A/B compare: dual preview when compare preset is active
- *   - M8 element picking: click preview to highlight corresponding field
- *   - M9 export/import: share tweak configs as JSON
+ * - Left rail: icon-only running-agent selector
+ * - Center: large DOM preview iframe (no window chrome)
+ * - Right: tweak controls + action buttons
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/AppMark';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/ui/page-header';
-import { PageToolbar } from '@/components/ui/page-toolbar';
 import { Spinner } from '@/components/ui/spinner';
 import { AgentLivePreview } from '@/components/workspace/AgentLivePreview';
 import { TweakPanel } from '@/components/workspace/TweakPanel';
@@ -45,25 +29,12 @@ import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { ToolOverride } from '@/types/override';
 
 import { uiMessages } from '@shared/i18n';
-import { formatTime } from '@shared/intl';
 import type { AppStatus } from '@shared/types';
-import { Download, Redo2, RefreshCw, Search, Undo2, Upload } from 'lucide-react';
+import { Download, Redo2, Search, Undo2, Upload } from 'lucide-react';
 
-/**
- * i18n fallbacks for error banners. These are narrowly-scoped fallbacks used
- * only when a locale omits the corresponding key; the canonical copy lives in
- * the i18n message tables (see direction E — i18n completeness). Kept as
- * module constants so the hardcoded Chinese strings are not duplicated inline.
- */
 const PUSH_FAILED_FALLBACK = '实时推送失败：';
 const IMPORT_FAILED_FALLBACK = '导入失败：';
 
-/**
- * Shared error-banner shell. Replaces the previously inline, CSS-variable
- * driven alert with semantic design-system classes (destructive tint), so the
- * styling stays consistent with the rest of the app instead of reaching for
- * the internal `--redbg` alias directly.
- */
 function ErrorBanner({
   message,
   label,
@@ -78,7 +49,7 @@ function ErrorBanner({
   return (
     <div
       role="alert"
-      className="flex items-center justify-between gap-3 rounded-md bg-destructive/10 px-4 py-3"
+      className="flex items-center justify-between gap-3 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2"
     >
       <p className="min-w-0 flex-1 truncate text-[11px] text-destructive">
         {label}
@@ -92,8 +63,6 @@ function ErrorBanner({
 }
 
 export function WorkspacePage() {
-  // Subscribe to locale so the page re-renders on language change and stays
-  // outside the useSyncExternalStore tearing window (INDEX.md invariant §render).
   const locale = useShellStore((s) => s.locale);
   const t = uiMessages[locale];
 
@@ -110,17 +79,13 @@ export function WorkspacePage() {
   const discardChanges = useWorkspaceStore((s) => s.discardChanges);
   const pushError = useWorkspaceStore((s) => s.pushError);
   const clearPushError = useWorkspaceStore((s) => s.clearPushError);
-  // M3 undo/redo
   const undo = useWorkspaceStore((s) => s.undo);
   const redo = useWorkspaceStore((s) => s.redo);
   const canUndo = useWorkspaceStore((s) => s.canUndo);
   const canRedo = useWorkspaceStore((s) => s.canRedo);
-  // M5 A/B compare
   const dualPreviewActive = useWorkspaceStore((s) => s.dualPreviewActive);
-  // M8 inspect mode
   const inspectMode = useWorkspaceStore((s) => s.window.inspectMode);
   const toggleInspectMode = useWorkspaceStore((s) => s.toggleInspectMode);
-  // M9 export/import
   const exportTweakConfig = useWorkspaceStore((s) => s.exportTweakConfig);
   const importTweakConfig = useWorkspaceStore((s) => s.importTweakConfig);
 
@@ -128,18 +93,14 @@ export function WorkspacePage() {
   const healthReport = currentAgentId ? (healthReportByAgent[currentAgentId] ?? null) : null;
   const setHealthReport = useDiagnosticsStore((s) => s.setHealthReport);
 
-  // M8: track the currently highlighted field from element picking.
   const [highlightedField, setHighlightedField] = useState<string | undefined>(undefined);
-  // M9: import error message.
   const [importError, setImportError] = useState<string | null>(null);
 
-  /** Subscribe to theme health reports pushed from the main process. */
   useEffect(() => {
     const unsubscribe = api.onThemeHealthReport(setHealthReport);
     return unsubscribe;
   }, [setHealthReport]);
 
-  /** M3: keyboard shortcuts — Ctrl+Z undo, Ctrl+Shift+Z redo. */
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
@@ -155,16 +116,12 @@ export function WorkspacePage() {
     return () => window.removeEventListener('keydown', handler);
   }, [undo, redo]);
 
-  /** Running agents that expose a CDP port — eligible for live tweaking. */
   const runningAgents = useMemo(
     () => (status?.apps ?? []).filter((a) => a.running && a.port !== null) as AppStatus[],
     [status],
   );
 
-  // M8: map a picked element ref to a ToolOverride field key.
   const handleElementPicked = useCallback((ref: string) => {
-    // The ref is either a data-as-ref value or a tagName. Map common tagNames
-    // to likely override fields; otherwise just store the raw ref.
     const tagToField: Record<string, string> = {
       button: 'radius',
       input: 'radius',
@@ -174,22 +131,18 @@ export function WorkspacePage() {
       img: 'radius',
     };
     setHighlightedField(tagToField[ref.toLowerCase()] ?? ref);
-    // Clear highlight after 3 seconds.
     setTimeout(() => setHighlightedField(undefined), 3000);
   }, []);
 
-  // M9: export to clipboard.
   const handleExport = useCallback(() => {
     const json = exportTweakConfig();
     void navigator.clipboard.writeText(json);
   }, [exportTweakConfig]);
 
-  /** Refresh the status of all running agents. */
   const handleRefreshStatus = useCallback(() => {
     void refreshStatus();
   }, [refreshStatus]);
 
-  // M9: import from file.
   const handleImport = useCallback(async () => {
     setImportError(null);
     const input = document.createElement('input');
@@ -207,251 +160,231 @@ export function WorkspacePage() {
     input.click();
   }, [importTweakConfig]);
 
+  const currentApp = runningAgents.find((a) => a.appId === currentAgentId);
+
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      {/* ---------------------------------------------------------------- */}
-      {/* Top bar — title + refresh                                         */}
-      {/* ---------------------------------------------------------------- */}
-      <div className="shrink-0 px-3 py-3">
-        <PageHeader title={t.navWorkspace}>
-          <PageToolbar
-            actions={
-              <Button variant="ghost" size="xs" onClick={handleRefreshStatus} disabled={isRefreshing}>
-                {isRefreshing ? <Spinner className="animate-spin" /> : <RefreshCw className="size-3" />}
-                {t.refreshStatus}
-              </Button>
-            }
-          />
-        </PageHeader>
-      </div>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Health status bar — theme injection diagnostics                  */}
-      {/* ---------------------------------------------------------------- */}
-      {healthReport ? (
-        <div className="mx-3 mb-2 flex items-center gap-2 rounded-md border border-border bg-card/50 px-3 py-1.5 text-micro text-muted-foreground">
-          <span
-            className={`size-2 rounded-full ${
-              healthReport.score >= 80
-                ? 'bg-cr-success'
-                : healthReport.score >= 50
-                  ? 'bg-cr-warning'
-                  : 'bg-destructive'
-            }`}
-            aria-hidden
-          />
-          <span className="tabular-nums">{healthReport.score}</span>
-          <span className="text-muted-foreground">|</span>
-          <span className={healthReport.blockingCount > 0 ? 'text-danger' : ''}>
-            {healthReport.blockingCount} {t.workspaceHealthBlocking}
-          </span>
-          <span className="text-muted-foreground">|</span>
-          <span className="ml-auto text-micro text-muted-foreground">
-            {healthReport.agentId} @ {formatTime(new Date(healthReport.timestamp), locale)}
-          </span>
-        </div>
-      ) : (
-        <div className="mx-3 mb-2 flex items-center rounded-md border border-border bg-card/50 px-3 py-1.5">
-          <span className="text-micro text-muted-foreground">{t.workspaceHealthSelectAgent}</span>
-        </div>
-      )}
-
-      {/* ---------------------------------------------------------------- */}
-      {/* Body — two-column grid: agent rail / preview+tweak               */}
-      {/* ---------------------------------------------------------------- */}
-      <div className="grid min-h-0 flex-1 grid-cols-[160px_1fr]">
-        {/* Agent rail */}
-        <aside className="flex flex-col gap-2 overflow-y-auto px-2 py-2">
-          <span className="px-1 text-micro tracking-tight text-muted-foreground">
-            {t.workspaceRunningApps}
-          </span>
-          {runningAgents.length === 0 ? (
-            <p className="px-1 py-4 text-micro text-muted-foreground">
-              {t.workspaceNoRunningAgents}
-            </p>
+    <div className="flex h-full min-h-0 gap-3">
+      {/* ── Left: running-agent rail (icon-only) ── */}
+      <aside className="flex w-14 shrink-0 flex-col items-center gap-1 rounded-lg border border-border bg-card py-2">
+        <button
+          type="button"
+          onClick={handleRefreshStatus}
+          title={t.refreshStatus}
+          className="mb-1 flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          {isRefreshing ? (
+            <Spinner className="size-3.5 animate-spin" />
           ) : (
-            runningAgents.map((app) => {
-              const active = app.appId === currentAgentId;
-              return (
-                <button
-                  key={app.appId}
-                  type="button"
-                  onClick={() => selectAgent(app.appId, app.port ?? 0)}
-                  className={`flex w-full items-center gap-2 rounded-sm border px-2 py-2 text-left transition-colors ${
-                    active ? 'border-primary/40 bg-primary/5' : 'border-transparent hover:bg-card'
-                  }`}
-                >
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-accent">
-                    <AppMark appId={app.appId} size={16} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[10px] font-normal leading-tight">
-                      {app.displayName}
-                    </span>
-                    <span className="block text-micro tabular-nums text-muted-foreground">
-                      :{app.port}
-                    </span>
-                  </span>
-                  <span
-                    className={`size-1.5 shrink-0 rounded-full ${active ? 'bg-primary' : 'bg-muted-foreground/40'}`}
-                    aria-hidden
-                  />
-                </button>
-              );
-            })
+            <span className="text-[10px] font-medium">↻</span>
           )}
-        </aside>
+        </button>
+        <div className="h-px w-6 bg-border" />
+        {runningAgents.length === 0 ? (
+          <p className="mt-4 px-1 text-center text-[9px] leading-tight text-muted-foreground/50">
+            {t.workspaceNoRunningAgents.slice(0, 4)}
+          </p>
+        ) : (
+          runningAgents.map((app) => {
+            const active = app.appId === currentAgentId;
+            return (
+              <button
+                key={app.appId}
+                type="button"
+                onClick={() => selectAgent(app.appId, app.port ?? 0)}
+                title={`${app.displayName} :${app.port}`}
+                className={`relative flex size-9 items-center justify-center rounded-lg transition-all duration-fast ${
+                  active
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}
+              >
+                <AppMark appId={app.appId} size={18} />
+                {active && (
+                  <span className="absolute -left-2 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+                )}
+              </button>
+            );
+          })
+        )}
+      </aside>
 
-        {/* Preview + tweak column */}
-        <main className="flex min-w-0 flex-col gap-2 overflow-y-auto px-2 py-2">
+      {/* ── Center: preview (dominant) ── */}
+      <main className="flex min-w-0 flex-1 flex-col gap-2">
+        {/* Preview toolbar */}
+        <div className="flex h-8 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3">
+          {currentApp ? (
+            <>
+              <AppMark appId={currentApp.appId} size={14} />
+              <span className="text-[12px] font-medium">{currentApp.displayName}</span>
+              <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                :{currentApp.port}
+              </span>
+              {healthReport && (
+                <>
+                  <span className="h-3.5 w-px bg-border" />
+                  <span
+                    className={`size-1.5 rounded-full ${
+                      healthReport.score >= 80
+                        ? 'bg-cr-success'
+                        : healthReport.score >= 50
+                          ? 'bg-cr-warning'
+                          : 'bg-destructive'
+                    }`}
+                  />
+                  <span className="text-[11px] font-medium tabular-nums">{healthReport.score}</span>
+                </>
+              )}
+            </>
+          ) : (
+            <span className="text-[11px] text-muted-foreground">{t.workspaceSelectAgentHint}</span>
+          )}
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => toggleInspectMode()}
+              title={inspectMode ? t.workspaceInspectStop : t.workspaceInspectStart}
+              className={`flex size-7 items-center justify-center rounded-md transition-colors ${
+                inspectMode
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              <Search className="size-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Preview surface */}
+        <div className="min-h-0 flex-1">
           {currentAgentId === null ? (
-            <div className="flex flex-1 items-center justify-center">
-              <p className="text-[10px] text-muted-foreground">{t.workspaceSelectAgentHint}</p>
+            <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border">
+              <p className="text-[12px] text-muted-foreground">{t.workspaceSelectAgentHint}</p>
             </div>
           ) : (
-            <>
-              {/* Preview pane */}
-              <section className="flex min-h-0 flex-col">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-[10px] tracking-tight text-muted-foreground">
-                    {t.workspacePreview}
-                  </span>
-                  {/* M8: inspect mode toggle */}
-                  <button
-                    type="button"
-                    onClick={() => toggleInspectMode()}
-                    className={`flex items-center gap-1 rounded-sm px-2 py-0.5 text-micro transition-colors ${
-                      inspectMode
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-muted-foreground hover:bg-card2'
-                    }`}
-                    title={inspectMode ? t.workspaceInspectStop : t.workspaceInspectStart}
-                  >
-                    <Search className="size-3" />
-                    {inspectMode ? t.workspaceInspectStopBtn : t.workspaceInspectStartBtn}
-                  </button>
-                </div>
-                <AgentLivePreview
-                  agentId={currentAgentId}
-                  overrides={currentOverrides}
-                  t={t}
-                  dualPreview={dualPreviewActive}
-                  inspectMode={inspectMode}
-                  onElementPicked={handleElementPicked}
-                />
-              </section>
-
-              {/* Tweak controls */}
-              <section className="flex flex-col gap-2  pt-3">
-                <span className="text-[10px] tracking-tight text-muted-foreground">
-                  {t.workspaceTweakControls}
-                </span>
-                {pushError && (
-                  <div className="mb-5">
-                    <ErrorBanner
-                      message={pushError}
-                      label={t.workspacePushFailed ?? PUSH_FAILED_FALLBACK}
-                      onDismiss={clearPushError}
-                      dismissLabel={t.commonDismiss ?? '关闭'}
-                    />
-                  </div>
-                )}
-
-                <TweakPanel
-                  overrides={currentOverrides}
-                  onChange={(next) => {
-                    // TweakPanel 每次只改一个 key，找到变化项直接透传。
-                    for (const [k, v] of Object.entries(next)) {
-                      if (currentOverrides[k as keyof ToolOverride] !== v) {
-                        void updateOverride(k as keyof ToolOverride, v);
-                        return;
-                      }
-                    }
-                  }}
-                  t={t}
-                  highlightedField={highlightedField}
-                />
-
-                {/* Action buttons */}
-                <div className="mt-3 flex items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="primary"
-                    disabled={!dirty}
-                    onClick={() => void saveChanges()}
-                  >
-                    {t.workspaceSavePreset}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    disabled={!dirty}
-                    onClick={() => void discardChanges()}
-                  >
-                    {t.workspaceDiscardChanges}
-                  </Button>
-                  {/* M3: undo / redo buttons */}
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    disabled={!canUndo()}
-                    onClick={() => void undo()}
-                    title="Ctrl+Z"
-                  >
-                    <Undo2 className="size-3" />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    disabled={!canRedo()}
-                    onClick={() => void redo()}
-                    title="Ctrl+Shift+Z"
-                  >
-                    <Redo2 className="size-3" />
-                  </Button>
-                  {/* M9: export / import */}
-                  <div className="ml-auto flex items-center gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={handleExport}
-                      title={t.workspaceExportTooltip}
-                    >
-                      <Download className="size-3" />
-                      <span className="text-[10px]">{t.workspaceExport}</span>
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => void handleImport()}
-                      title={t.workspaceImportTooltip}
-                    >
-                      <Upload className="size-3" />
-                      <span className="text-[10px]">{t.workspaceImport}</span>
-                    </Button>
-                  </div>
-                </div>
-
-                {/* M9: import error display */}
-                {importError && (
-                  <ErrorBanner
-                    message={importError}
-                    label={IMPORT_FAILED_FALLBACK}
-                    onDismiss={() => setImportError(null)}
-                    dismissLabel={t.commonDismiss ?? '关闭'}
-                  />
-                )}
-              </section>
-            </>
+            <AgentLivePreview
+              agentId={currentAgentId}
+              overrides={currentOverrides}
+              t={t}
+              dualPreview={dualPreviewActive}
+              inspectMode={inspectMode}
+              onElementPicked={handleElementPicked}
+            />
           )}
-        </main>
-      </div>
+        </div>
+      </main>
+
+      {/* ── Right: tweak panel ── */}
+      <aside className="flex w-[300px] shrink-0 flex-col gap-2 overflow-y-auto rounded-lg border border-border bg-card p-3">
+        <div className="flex items-center justify-between">
+          <span className="as-section-title">{t.workspaceTweakControls}</span>
+          <div className="flex items-center gap-0.5">
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              disabled={!canUndo()}
+              onClick={() => void undo()}
+              title="Ctrl+Z"
+            >
+              <Undo2 className="size-3.5" />
+            </Button>
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              disabled={!canRedo()}
+              onClick={() => void redo()}
+              title="Ctrl+Shift+Z"
+            >
+              <Redo2 className="size-3.5" />
+            </Button>
+          </div>
+        </div>
+
+        {pushError && (
+          <ErrorBanner
+            message={pushError}
+            label={t.workspacePushFailed ?? PUSH_FAILED_FALLBACK}
+            onDismiss={clearPushError}
+            dismissLabel={t.commonDismiss ?? '关闭'}
+          />
+        )}
+
+        {currentAgentId !== null && (
+          <TweakPanel
+            overrides={currentOverrides}
+            onChange={(next) => {
+              for (const [k, v] of Object.entries(next)) {
+                if (currentOverrides[k as keyof ToolOverride] !== v) {
+                  void updateOverride(k as keyof ToolOverride, v);
+                  return;
+                }
+              }
+            }}
+            t={t}
+            highlightedField={highlightedField}
+          />
+        )}
+
+        {/* Actions */}
+        {currentAgentId !== null && (
+          <div className="mt-auto flex flex-col gap-2 border-t border-border pt-3">
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="primary"
+                className="flex-1"
+                disabled={!dirty}
+                onClick={() => void saveChanges()}
+              >
+                {t.workspaceSavePreset}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                disabled={!dirty}
+                onClick={() => void discardChanges()}
+              >
+                {t.workspaceDiscardChanges}
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={handleExport}
+                title={t.workspaceExportTooltip}
+              >
+                <Download className="size-3.5" />
+                <span className="text-[11px]">{t.workspaceExport}</span>
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => void handleImport()}
+                title={t.workspaceImportTooltip}
+              >
+                <Upload className="size-3.5" />
+                <span className="text-[11px]">{t.workspaceImport}</span>
+              </Button>
+            </div>
+            {importError && (
+              <ErrorBanner
+                message={importError}
+                label={IMPORT_FAILED_FALLBACK}
+                onDismiss={() => setImportError(null)}
+                dismissLabel={t.commonDismiss ?? '关闭'}
+              />
+            )}
+          </div>
+        )}
+      </aside>
     </div>
   );
 }
