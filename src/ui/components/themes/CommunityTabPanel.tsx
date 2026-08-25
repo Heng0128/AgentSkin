@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
+import { Search } from 'lucide-react';
 import { CommunityThemeCard } from './CommunityThemeCard';
 import { useCommunityStore } from '@/stores/communityStore';
 import { cn } from '@/lib/utils';
@@ -131,27 +132,59 @@ export function CommunityTabPanel() {
   // --- Theme grid ---
   return (
     <div className="flex flex-col gap-4">
-      {/* Toolbar — search + sort */}
-      <div className="flex items-center gap-3">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder={t.communitySearchPlaceholder}
-          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-[13px] outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
-        />
+      {/* Search and filter bar */}
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+        {/* Search input */}
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder={t.communitySearchPlaceholder}
+            className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+          />
+        </div>
 
-        <select
-          value={sortBy}
-          onChange={(e) =>
-            handleSortChange(e.target.value as 'popular' | 'recent' | 'rating')
-          }
-          className="rounded-md border border-input bg-background px-3 py-2 text-[13px] outline-none transition-colors focus:border-primary"
-        >
-          <option value="popular">{t.communitySortPopular}</option>
-          <option value="recent">{t.communitySortRecent}</option>
-          <option value="rating">{t.communitySortRating}</option>
-        </select>
+        {/* Sort toggle */}
+        <div className="flex gap-1 rounded-lg border border-border p-1">
+          <button
+            type="button"
+            onClick={() => handleSortChange('popular')}
+            className={cn(
+              'rounded px-3 py-1 text-xs font-medium transition-colors',
+              sortBy === 'popular'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {t.communitySortPopular}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSortChange('recent')}
+            className={cn(
+              'rounded px-3 py-1 text-xs font-medium transition-colors',
+              sortBy === 'recent'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {t.communitySortRecent}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSortChange('rating')}
+            className={cn(
+              'rounded px-3 py-1 text-xs font-medium transition-colors',
+              sortBy === 'rating'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            {t.communitySortRating}
+          </button>
+        </div>
       </div>
 
       {/* Card grid — responsive columns */}
