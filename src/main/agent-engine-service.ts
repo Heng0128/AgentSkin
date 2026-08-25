@@ -1068,8 +1068,27 @@ export class AgentEngineService implements AgentEngineServiceApi {
   // -----------------------------------------------------------------------
 
   dispose(): void {
+    // RC4-FIX: Fire-and-forget async disposal. The synchronous dispose() API
+    // is preserved for backward compatibility; new code should use disposeAsync().
+    void this.disposeAsync();
+  }
+
+  /**
+   * Async disposal that waits for in-flight operations before releasing resources.
+   *
+   * RC4-FIX: Prevents background tasks from operating on already-released
+   * resources (cdpSessionPool, livePortCache) by awaiting all in-flight
+   * operation cleanup promises before disposing.
+   */
+  async disposeAsync(): Promise<void> {
     this.stopConcurrencyMetricsTimer();
     this.disposed = true;
+    // RC4-FIX: Wait for all in-flight operations to complete before releasing
+    // resources. This prevents background tasks from accessing disposed
+    // cdpSessionPool / livePortCache.
+    const pendingCleanups = Array.from(this.inflightOperations.values()).map((op) => op.cleanup);
+    this.inflightOperations.clear();
+    await Promise.allSettled(pendingCleanups);
     // RC-C1: Stop audio level sampler (kills PowerShell proc + clears watchdog
     // timer) so it does not outlive the service on shutdown.
     stopAudioLevelPolling();
@@ -1084,7 +1103,6 @@ export class AgentEngineService implements AgentEngineServiceApi {
     // RC-C1: Clear EpochManager Map to release internal state.
     this.epochs.clear();
     this.applyingTheme.clear();
-    this.inflightOperations.clear();
     this.cdpSessionPool.dispose();
     this.livePortCache.clearAll();
     this.statusCache = null;
