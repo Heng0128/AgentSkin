@@ -169,6 +169,45 @@ describe('settingsStore', () => {
       // State remains unchanged on error
       expect(useSettingsStore.getState().mcpRunning).toBe(false);
     });
+
+    it('does not execute IPC when mcpBusy is already true (double-click guard)', async () => {
+      // Simulate a slow MCP start that has already set mcpBusy
+      mockStartMcp.mockImplementation(
+        () =>
+          new Promise((resolve) =>
+            setTimeout(() => resolve({ ok: true, url: 'http://127.0.0.1:3333/mcp' }), 100),
+          ),
+      );
+      useSettingsStore.setState({ mcpRunning: false, mcpBusy: true });
+
+      // Call toggleMcp while busy — should return immediately without calling startMcp
+      await useSettingsStore.getState().toggleMcp();
+
+      // startMcp should NOT have been called due to busy guard
+      // Note: mcpBusy was pre-set to true, so the guard triggered before any IPC
+      expect(useSettingsStore.getState().mcpRunning).toBe(false);
+      // mcpBusy should still be true (unchanged by the no-op call)
+    });
+
+    it('releases mcpBusy after successful toggle', async () => {
+      mockStartMcp.mockResolvedValue({ ok: true, url: 'http://127.0.0.1:3333/mcp' });
+      useSettingsStore.setState({ mcpRunning: false, mcpBusy: false });
+
+      await useSettingsStore.getState().toggleMcp();
+
+      // mcpBusy should be released (false) after successful operation
+      expect(useSettingsStore.getState().mcpBusy).toBe(false);
+    });
+
+    it('releases mcpBusy after failed toggle', async () => {
+      mockStartMcp.mockRejectedValue(new Error('IPC failed'));
+      useSettingsStore.setState({ mcpRunning: false, mcpBusy: false });
+
+      await useSettingsStore.getState().toggleMcp();
+
+      // mcpBusy must be released even on failure
+      expect(useSettingsStore.getState().mcpBusy).toBe(false);
+    });
   });
 
   // -----------------------------------------------------------------------

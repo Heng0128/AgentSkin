@@ -96,9 +96,7 @@ vi.mock('@/lib/utils', () => ({
 // --- Mock lucide icons (SSR-safe) -------------------------------------
 
 vi.mock('lucide-react', async (importOriginal) => {
-  const actual = await importOriginal<
-    Record<string, () => null>
-  >();
+  const actual = await importOriginal<Record<string, () => null>>();
   return {
     ...actual,
     // all icons render as null in SSR mock
@@ -275,13 +273,16 @@ describe('ThemesPage inspection fixes', () => {
     // And exactly one dynamic badge (not duplicated in a deleted metadata row).
     // DEBUG: Log HTML to understand structure
     if (!html.includes('1 Dynamic')) {
-      const snippet = html.slice(html.indexOf('dynamicCount') - 50, html.indexOf('dynamicCount') + 200);
-      console.log('=== HTML around dynamicCount ===');
-      console.log(snippet || 'dynamicCount not found in HTML');
-      // Look for any element containing "Dynamic"
-      const dynamicEls = html.match(/[^>]*Dynamic[^<]*/g) ?? [];
-      console.log('=== Elements containing Dynamic ===');
-      dynamicEls.forEach((el) => console.log(el));
+      const dynamicEls = html.match(/[^<]{0,30}Dynamic[^>]{0,30}/g) ?? [];
+      console.log('=== Context around Dynamic ===');
+      dynamicEls.forEach((el) => {
+        console.log(JSON.stringify(el));
+      });
+      const oneDynamic = html.match(/1[\s\S]{0,100}Dynamic/g) ?? [];
+      console.log('=== 1...Dynamic matches ===');
+      oneDynamic.forEach((el) => {
+        console.log(JSON.stringify(el));
+      });
     }
     const dynamicMatches = (html.match(/1 Dynamic/g) ?? []).length;
     expect(dynamicMatches).toBe(1);
