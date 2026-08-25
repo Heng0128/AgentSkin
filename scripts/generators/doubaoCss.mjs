@@ -661,20 +661,27 @@ ${host}:root body {
   --s-shadow-level5-brand: none !important;
 }
 
-/* ===== Art layer: body::before fixed pseudo-element =====
-   Using a fixed pseudo-element instead of background-attachment:fixed on body
-   because Doubao's DOM has transformed children that create new containing
-   blocks, causing background-attachment:fixed to duplicate the hero image. */
+/* ===== Art layer: independent div.agentskin-background-layer =====
+   The art is painted on a real DOM element (not a pseudo-element) so the
+   runtime adapter can re-create it via MutationObserver self-heal when
+   Doubao's data-theme switch removes it.
+
+   div styling (fixed by contract):
+     position: fixed; inset: 0; z-index: -1; pointer-events: none;
+     background-size: cover;
+   The hero image resolves from --agentskin-art (set during injection);
+   when the variable is absent the browser falls back to 'none' and the
+   surface body background shows through. */
 ${host} body {
   color: ${c.foreground} !important;
-  background: transparent !important;
+  background: ${c.surface} !important;
 }
-${host} body::before {
-  content: '' !important;
+${host} div.agentskin-background-layer {
   position: fixed !important;
   inset: 0 !important;
   z-index: -1 !important;
   pointer-events: none !important;
+  background-size: cover !important;
   background:
     linear-gradient(90deg,
       color-mix(in srgb, var(--agentskin-surface) ${p.washLeft}%, transparent) 0 16%,

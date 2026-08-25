@@ -792,8 +792,12 @@ export const HOSTS = Object.freeze({
 
 export function auroraGlassSignature(t, host) {
   const c = t.colors;
-  // Doubao mounts on <body> (no #root); every other agent has #root.
-  const artTarget = host === HOSTS.doubao ? `${host} body::before` : `${host} #root::before`;
+  // Doubao mounts on a div.agentskin-background-layer instead of body::before
+  // (the pseudo-element was replaced by a real DOM element so the runtime
+  // adapter can self-heal it via MutationObserver). Every other agent uses
+  // #root::before.
+  const artTarget =
+    host === HOSTS.doubao ? `${host} div.agentskin-background-layer` : `${host} #root::before`;
 
   return `
 /* ===== Aurora Glass signature (manifest.signature = "aurora-glass") ===== */

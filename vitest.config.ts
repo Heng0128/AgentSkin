@@ -112,6 +112,7 @@ export default defineConfig({
             'tests/integrate/**/*.test.tsx',
             'tests/contract/**/*.test.ts',
             'tests/contract/**/*.test.tsx',
+            'tests/main/**/*.test.ts',
           ],
           testTimeout: 10000,
           pool: 'threads',

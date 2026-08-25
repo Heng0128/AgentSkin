@@ -869,6 +869,61 @@ html.${HOST_CLASS} [class*="topic"]:hover {
     }
   }
 
-  window[MARKER] = { observer, interval, sheetPoll, sheet: finalSheet };
+  // ═══════════════════════════════════════════════════════════
+  // BACKGROUND SELF-HEAL — independent art layer + observer
+  // Mirror of engines/doubao/background-self-heal.mjs (search that file
+  // for the canonical implementation; this inline copy is required because
+  // the adapter is evaluated as a bare string via CDP and cannot import).
+  //
+  // Strategy: the theme CSS paints the hero on a real
+  //   div.agentskin-background-layer { position:fixed; inset:0; z-index:-1 }
+  // element rather than body::before. When Doubao's data-theme switch mutates
+  // body's style attribute, this observer restores the div if it was removed.
+  // z-index:-1 keeps the art behind all content; pointer-events:none keeps
+  // interaction穿透; aria-hidden=true removes it from the a11y tree.
+  // ═══════════════════════════════════════════════════════════
+  const BG_LAYER_CLASS = 'agentskin-background-layer';
+  const BG_LAYER_ID_PREFIX = 'agentskin-bg-';
+
+  function removeBackgroundLayer() {
+    const existing = document.querySelector(`div.${BG_LAYER_CLASS}`);
+    if (existing) existing.remove();
+  }
+
+  function createBackgroundLayer() {
+    const artValue = getComputedStyle(document.documentElement)
+      .getPropertyValue('--agentskin-art')
+      .trim();
+    if (!artValue || artValue === 'none' || artValue === '') return null;
+    const div = document.createElement('div');
+    div.id = `${BG_LAYER_ID_PREFIX}${Date.now()}`;
+    div.className = BG_LAYER_CLASS;
+    div.setAttribute('aria-hidden', 'true');
+    document.body.prepend(div);
+    return div;
+  }
+
+  // Create the layer only when --agentskin-art is actually set.
+  createBackgroundLayer();
+
+  // Self-heal observer: watch body's style attribute for Doubao's reset.
+  const bgObserver = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.type !== 'attributes' || m.attributeName !== 'style' || m.target !== document.body) continue;
+      const body = document.body;
+      const bgImg = body.style.backgroundImage;
+      const bgColor = body.style.backgroundColor;
+      if (bgImg === '' || bgImg === 'none' || bgColor === '' || bgColor === 'transparent') {
+        const existing = document.querySelector(`div.${BG_LAYER_CLASS}`);
+        if (!existing) {
+          removeBackgroundLayer();
+          createBackgroundLayer();
+        }
+      }
+    }
+  });
+  bgObserver.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+
+  window[MARKER] = { observer, interval, sheetPoll, sheet: finalSheet, bgObserver };
   return "applied";
 })()

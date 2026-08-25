@@ -138,6 +138,10 @@ const CLEAR_OWNED_SHEETS_BODY =
  * C-3 fix (2026-08-23): adapters also stash `sheetGuardInterval` (and doubao
  * `sheetPoll`) inside the marker — clear those too, otherwise the interval
  * survives restore and keeps re-injecting sheets on later targets.
+ *
+ * Background self-heal (2026-08-25): the doubao adapter stashes a `bgObserver`
+ * (MutationObserver on body[style]) inside the marker. Disconnect it here so
+ * restore doesn't leave a zombie observer watching a dead document.
  */
 export const CLEAR_ADAPTERS_BODY = [
   `var markers = ${JSON.stringify(ADAPTER_MARKERS)};`,
@@ -145,6 +149,7 @@ export const CLEAR_ADAPTERS_BODY = [
   '  var m = markers[i];',
   '  if (window[m]) {',
   '    if (window[m].observer) window[m].observer.disconnect();',
+  '    if (window[m].bgObserver) window[m].bgObserver.disconnect();',
   '    if (window[m].interval) clearInterval(window[m].interval);',
   '    if (window[m].sheetGuardInterval) clearInterval(window[m].sheetGuardInterval);',
   '    if (window[m].sheetPoll) clearInterval(window[m].sheetPoll);',
@@ -161,7 +166,8 @@ export const CLEAR_ADAPTERS_BODY = [
 /**
  * JS body: remove all known host classes from <html>, clear the hero art CSS
  * variable, and clear the renderer config global. Also removes the legacy
- * `agentskin-theme` class. No scope variables required.
+ * `agentskin-theme` class and any `div.agentskin-background-layer` elements
+ * created by the doubao background self-heal. No scope variables required.
  *
  * Internal — only consumed by {@link buildClearEngineInjectionExpression}.
  */
@@ -171,6 +177,9 @@ const CLEAR_HOST_BODY = [
   `  root.classList.remove(${JSON.stringify(AGENT_IDS.map((id) => hostClassFor(id)))}, 'agentskin-theme');`,
   "  root.style.removeProperty('--agentskin-art');",
   '}',
+  // Remove doubao background self-heal div(s) so restore leaves no orphan.
+  'var bgLayers = document.querySelectorAll("div.agentskin-background-layer");',
+  'for (var bi = 0; bi < bgLayers.length; bi++) { bgLayers[bi].remove(); }',
   `delete window.${RENDERER_CONFIG_GLOBAL};`,
 ].join('\n');
 
