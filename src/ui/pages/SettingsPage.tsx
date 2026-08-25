@@ -93,6 +93,8 @@ function CustomCssEditor({
     try {
       await api.setCustomThemeCss(value);
       showToast(t.settingsCustomCssSaved);
+    } catch {
+      showToast(t.settingsCustomCssFailed, 'destructive');
     } finally {
       setSaving(false);
     }

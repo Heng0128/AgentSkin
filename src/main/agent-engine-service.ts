@@ -580,6 +580,9 @@ export class AgentEngineService implements AgentEngineServiceApi {
           win.webContents.send(channel, event);
         }
       },
+      // Theme Health Report 推送目标窗口 — hardeningPass 通过此字段将健康
+      // 报告推送到渲染进程（WorkspacePage / useStudioStore 订阅消费）。
+      mainWindow: ctx.mainWindow,
     };
   }
 

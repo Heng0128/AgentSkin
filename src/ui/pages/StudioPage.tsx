@@ -24,6 +24,7 @@
  */
 
 import { useRef, useState } from 'react';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { DesktopResolution } from '@/components/studio/device-frame';
 import { StudioDock } from '@/components/studio/StudioDock';
 import { StudioDrawer } from '@/components/studio/StudioDrawer';
@@ -49,33 +50,35 @@ export function StudioPage() {
   const [pickEnabled, _setPickEnabled] = useState(false);
 
   return (
-    <div className="flex h-svh flex-col overflow-hidden bg-background font-sans text-foreground">
-      <StudioTitleBar />
+    <ErrorBoundary>
+      <div className="flex h-svh flex-col overflow-hidden bg-background font-sans text-foreground">
+        <StudioTitleBar />
 
-      <div className="ws-root min-h-0 flex-1" style={{ width: '100%', height: '100%' }}>
-        <StudioTopBar t={t} />
-        <StudioDrawer t={t} />
-        <StudioStage
-          t={t}
-          pickEnabled={pickEnabled}
-          onIframeReady={(iframe) => {
-            stageIframeRef.current = iframe;
-          }}
-          onPickChange={(path) => setPickedPath(path)}
-        />
-        <StudioInspector
-          t={t}
-          iframeRef={stageIframeRef}
-          pickedPath={pickedPath}
-          onClearPicked={() => setPickedPath(null)}
-          resolution={resolution}
-          onResolutionChange={setResolution}
-          showDeviceFrame={showDeviceFrame}
-          onToggleDeviceFrame={() => setShowDeviceFrame((v) => !v)}
-        />
-        <StudioStatusBar t={t} />
-        <StudioDock t={t} />
+        <div className="ws-root min-h-0 flex-1" style={{ width: '100%', height: '100%' }}>
+          <StudioTopBar t={t} />
+          <StudioDrawer t={t} />
+          <StudioStage
+            t={t}
+            pickEnabled={pickEnabled}
+            onIframeReady={(iframe) => {
+              stageIframeRef.current = iframe;
+            }}
+            onPickChange={(path) => setPickedPath(path)}
+          />
+          <StudioInspector
+            t={t}
+            iframeRef={stageIframeRef}
+            pickedPath={pickedPath}
+            onClearPicked={() => setPickedPath(null)}
+            resolution={resolution}
+            onResolutionChange={setResolution}
+            showDeviceFrame={showDeviceFrame}
+            onToggleDeviceFrame={() => setShowDeviceFrame((v) => !v)}
+          />
+          <StudioStatusBar t={t} />
+          <StudioDock t={t} />
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }

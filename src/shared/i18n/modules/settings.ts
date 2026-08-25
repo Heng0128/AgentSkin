@@ -46,6 +46,7 @@ export const settingsMessages = {
       '/* 例如：覆盖主题强调色 */\n--agentskin-accent: #00ff88 !important;',
     settingsCustomCssSave: '保存',
     settingsCustomCssSaved: '自定义 CSS 已保存',
+    settingsCustomCssFailed: '自定义 CSS 保存失败，请重试',
     settingsCustomCssClear: '清空',
     settingsLiveDomRefreshInterval: '实时预览刷新间隔',
     settingsLiveDomRefreshIntervalDesc: '设置预览面板自动刷新 DOM 的时间间隔。0 表示不自动刷新。',
@@ -167,6 +168,7 @@ export const settingsMessages = {
       '/* e.g. override the theme accent */\n--agentskin-accent: #00ff88 !important;',
     settingsCustomCssSave: 'Save',
     settingsCustomCssSaved: 'Custom CSS saved',
+    settingsCustomCssFailed: 'Failed to save Custom CSS, please try again',
     settingsCustomCssClear: 'Clear',
     settingsLiveDomRefreshInterval: 'Live Preview Refresh Interval',
     settingsLiveDomRefreshIntervalDesc:
