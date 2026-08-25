@@ -270,7 +270,9 @@ export async function startMcpHttpServer(ctx: McpContext): Promise<number> {
         debugLog('server connecting...');
         await server.connect(transport);
         debugLog(`handling request: ${rpcBody?.method}`);
-        await transport.handleRequest(req as any, res, parsedBody);
+        // RC4-S2: req is http.IncomingMessage — SDK handleRequest accepts any.
+        // Cast removed: req already satisfies the SDK's expected type.
+        await transport.handleRequest(req, res, parsedBody);
         debugLog('handleRequest completed');
 
         // Clean up when response closes

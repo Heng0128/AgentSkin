@@ -3,10 +3,11 @@
 /**
  * Unit tests for install-detection.ts
  *
- * Covers: matchesIdentity logic (pure function), detectInstallation platform
- * guard, and verifyInstallPath behavior with mocked filesystem/PowerShell.
+ * Covers: detectInstallation platform guard, path detection, MSIX detection,
+ * and verifyInstallPath behavior with mocked filesystem/PowerShell.
  */
 
+import type { Stats } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the exec-async module BEFORE importing install-detection
@@ -83,13 +84,13 @@ describe('install-detection', () => {
       mockStat.mockResolvedValue({
         isDirectory: () => true,
         isFile: () => false,
-      } as fs.Stats);
-      mockReaddir.mockResolvedValue(['Trae.exe']);
+      } as Stats);
+      mockReaddir.mockResolvedValue(['Trae.exe'] as unknown as string[]);
       mockExecFileAsync.mockResolvedValue({
         stdout: '1.0.0|1.0.0|Trae|Trae IDE\n',
         stderr: '',
-        errorMessage: undefined,
-      } satisfies ExecFileResult);
+        errorMessage: '',
+      } as ExecFileResult);
 
       const result = await detectInstallation({
         platform: 'win32',
@@ -107,13 +108,13 @@ describe('install-detection', () => {
       mockStat.mockResolvedValue({
         isDirectory: () => false,
         isFile: () => true,
-      } as fs.Stats);
-      mockReaddir.mockResolvedValue(['Trae.exe']);
+      } as Stats);
+      mockReaddir.mockResolvedValue(['Trae.exe'] as unknown as string[]);
       mockExecFileAsync.mockResolvedValue({
         stdout: '2.0.1|2.0.1|Trae|Trae IDE\n',
         stderr: '',
-        errorMessage: undefined,
-      } satisfies ExecFileResult);
+        errorMessage: '',
+      } as ExecFileResult);
 
       const result = await detectInstallation({
         platform: 'win32',
@@ -135,9 +136,8 @@ describe('install-detection', () => {
       mockStat.mockResolvedValue({
         isDirectory: () => true,
         isFile: () => false,
-      } as fs.Stats);
-      mockReaddir.mockResolvedValue([]);
-      // No exe found in any directory — mockReaddir returns empty array
+      } as Stats);
+      mockReaddir.mockResolvedValue([] as unknown as string[]);
 
       const result = await detectInstallation({
         platform: 'win32',
@@ -153,15 +153,15 @@ describe('install-detection', () => {
       mockExecFileAsync.mockResolvedValueOnce({
         stdout: '',
         stderr: '',
-        errorMessage: undefined,
-      } satisfies ExecFileResult);
+        errorMessage: '',
+      } as ExecFileResult);
 
       // MSIX scan finds a package
       mockExecFileAsync.mockResolvedValueOnce({
         stdout: 'C:\\Program Files\\WindowsApps\\ChatGPT\\app|1.2.3|ChatGPT\n',
         stderr: '',
-        errorMessage: undefined,
-      } satisfies ExecFileResult);
+        errorMessage: '',
+      } as ExecFileResult);
 
       const msixHints: InstallHints = {
         ...testHints,
@@ -204,13 +204,13 @@ describe('install-detection', () => {
       mockStat.mockResolvedValue({
         isDirectory: () => true,
         isFile: () => false,
-      } as fs.Stats);
-      mockReaddir.mockResolvedValue(['Trae.exe']);
+      } as Stats);
+      mockReaddir.mockResolvedValue(['Trae.exe'] as unknown as string[]);
       mockExecFileAsync.mockResolvedValue({
         stdout: '3.0.0|3.0.0|Trae|Trae IDE\n',
         stderr: '',
-        errorMessage: undefined,
-      } satisfies ExecFileResult);
+        errorMessage: '',
+      } as ExecFileResult);
 
       const result = await verifyInstallPath('C:\\Program Files\\Trae', testHints);
 
@@ -223,14 +223,14 @@ describe('install-detection', () => {
       mockStat.mockResolvedValue({
         isDirectory: () => true,
         isFile: () => false,
-      } as fs.Stats);
-      mockReaddir.mockResolvedValue(['unrelated.exe', 'readme.txt']);
+      } as Stats);
+      mockReaddir.mockResolvedValue(['unrelated.exe', 'readme.txt'] as unknown as string[]);
       // The unrelated.exe doesn't match identity, so readExeInfo is called
       mockExecFileAsync.mockResolvedValue({
         stdout: '1.0.0|1.0.0|Unrelated App|Some other app\n',
         stderr: '',
-        errorMessage: undefined,
-      } satisfies ExecFileResult);
+        errorMessage: '',
+      } as ExecFileResult);
 
       const result = await verifyInstallPath('C:\\Program Files\\OtherApp', testHints);
 

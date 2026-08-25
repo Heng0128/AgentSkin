@@ -12,11 +12,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Mock console.warn to suppress self-heal trigger logs during tests
 const mockConsoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-// All module state mutations need cleanup between tests
-async function importSelfHeal() {
-  return import('./wallpaper-self-heal');
-}
-
 describe('wallpaper-self-heal', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -30,7 +25,7 @@ describe('wallpaper-self-heal', () => {
 
   describe('recordInjectionSuccess', () => {
     it('resets consecutive failure counter to zero', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
 
       // Build up some failures
       await mod.recordInjectionFailure('traework');
@@ -47,7 +42,7 @@ describe('wallpaper-self-heal', () => {
     });
 
     it('clears cooldown timestamp so next failure streak can trigger immediately', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       const mockCb = vi.fn().mockResolvedValue(() => Promise.resolve());
       mod.setSelfHealCallback(mockCb);
 
@@ -72,7 +67,7 @@ describe('wallpaper-self-heal', () => {
 
   describe('recordInjectionFailure threshold logic', () => {
     it('does NOT trigger self-heal before reaching FAILURE_THRESHOLD (3)', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       const mockCb = vi.fn().mockResolvedValue(() => Promise.resolve());
       mod.setSelfHealCallback(mockCb);
 
@@ -86,7 +81,7 @@ describe('wallpaper-self-heal', () => {
     });
 
     it('triggers self-heal on exactly the 3rd consecutive failure', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       const mockCb = vi.fn().mockResolvedValue(() => Promise.resolve());
       mod.setSelfHealCallback(mockCb);
 
@@ -100,7 +95,7 @@ describe('wallpaper-self-heal', () => {
     });
 
     it('does NOT trigger self-heal when callback is not set', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       // No setSelfHealCallback call
 
       await mod.recordInjectionFailure('traework');
@@ -111,7 +106,7 @@ describe('wallpaper-self-heal', () => {
     });
 
     it('resets counter after trigger so subsequent failures must build fresh streak', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       let callCount = 0;
       mod.setSelfHealCallback(() => {
         callCount++;
@@ -142,7 +137,7 @@ describe('wallpaper-self-heal', () => {
 
   describe('cooldown window enforcement', () => {
     it('suppresses re-trigger within the 5-minute cooldown window', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       const originalDateNow = Date.now;
       let mockTime = 1_000_000_000_000;
       vi.spyOn(Date, 'now').mockImplementation(() => mockTime);
@@ -184,14 +179,15 @@ describe('wallpaper-self-heal', () => {
 
   describe('concurrent self-heal guard', () => {
     it('prevents concurrent self-heal for the same agent', async () => {
-      const mod = await importSelfHeal();
-      let resolveFirst: (() => void) | null = null;
+      const mod = await import('./wallpaper-self-heal');
+      // Use a mutable container to capture the resolver across async boundaries
+      const resolver: { fn: (() => void) | null } = { fn: null };
       const mockCb = vi.fn().mockImplementation(
         () =>
           new Promise<() => Promise<void>>((resolve) => {
             const thunk = async () => {
               return new Promise<void>((r) => {
-                resolveFirst = r;
+                resolver.fn = r;
               });
             };
             resolve(() => thunk());
@@ -213,7 +209,7 @@ describe('wallpaper-self-heal', () => {
       expect(mockCb).toHaveBeenCalledTimes(1);
 
       // Resolve the pending self-heal
-      resolveFirst?.();
+      resolver.fn?.();
       await thunk1?.();
       await new Promise((r) => setTimeout(r, 0)); // Let async cleanup run
 
@@ -227,17 +223,18 @@ describe('wallpaper-self-heal', () => {
     });
 
     it('tracks self-healing agents via getSelfHealingAgentsSize', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       expect(mod.getSelfHealingAgentsSize()).toBe(0);
 
-      let resolveThunk: (() => void) | null = null;
+      // Use a mutable container to capture the resolver
+      const resolver: { fn: (() => void) | null } = { fn: null };
       mod.setSelfHealCallback(
         () =>
           new Promise((resolve) => {
             resolve(
               () =>
                 new Promise<void>((r) => {
-                  resolveThunk = r;
+                  resolver.fn = r;
                 }),
             );
           }),
@@ -254,7 +251,7 @@ describe('wallpaper-self-heal', () => {
       expect(mod.getSelfHealingAgentsSize()).toBe(1);
 
       // Resolve
-      resolveThunk?.();
+      resolver.fn?.();
       await invokePromise;
       await new Promise((r) => setTimeout(r, 0));
 
@@ -264,7 +261,7 @@ describe('wallpaper-self-heal', () => {
 
   describe('callback error handling', () => {
     it('returns null when callback throws, and releases guard', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       mod.setSelfHealCallback(() => {
         throw new Error('callback error');
       });
@@ -278,7 +275,7 @@ describe('wallpaper-self-heal', () => {
     });
 
     it('returns null when callback resolves to null (declines to act)', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       mod.setSelfHealCallback(() => Promise.resolve(null));
 
       await mod.recordInjectionFailure('zcode');
@@ -292,7 +289,8 @@ describe('wallpaper-self-heal', () => {
 
   describe('lifecycle cleanup', () => {
     it('cleanupSelfHealForAgent removes state for one agent only', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
+      mod.setSelfHealCallback(() => Promise.resolve(() => Promise.resolve()));
 
       await mod.recordInjectionFailure('traework');
       await mod.recordInjectionFailure('traework');
@@ -302,16 +300,13 @@ describe('wallpaper-self-heal', () => {
       mod.cleanupSelfHealForAgent('traework');
 
       // traework state cleared — 3 new failures needed to trigger
-      // qoderwork still has 2 failures recorded
-      mod.setSelfHealCallback(() => Promise.resolve(() => Promise.resolve()));
-
-      // traework: needs 3 failures
+      // qoderwork still has 2 failures recorded (need 1 more)
       const t1 = await mod.recordInjectionFailure('traework');
-      expect(t1).toBeNull(); // state was cleared
+      expect(t1).toBeNull(); // state was cleared, needs 3
     });
 
     it('disposeSelfHealState clears all module state', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       mod.setSelfHealCallback(() => Promise.resolve(() => Promise.resolve()));
 
       await mod.recordInjectionFailure('traework');
@@ -329,7 +324,7 @@ describe('wallpaper-self-heal', () => {
 
   describe('multi-agent isolation', () => {
     it('tracks failures independently per agent', async () => {
-      const mod = await importSelfHeal();
+      const mod = await import('./wallpaper-self-heal');
       mod.setSelfHealCallback(() => Promise.resolve(() => Promise.resolve()));
 
       // traework: 2 failures (not enough)
