@@ -216,6 +216,9 @@ export function tokenBlock(t, host = ':root', bridge = null) {
   const bridgeEntries = bridge && typeof bridge === 'object' ? Object.entries(bridge) : [];
   const bridgeLines = bridgeEntries.map(([k, v]) => `  ${k}: ${v};`).join('\n');
   const bridgeBlock = bridgeLines ? `\n${bridgeLines}` : '';
+  // button-fg: use manifest-derived value, or derive from accent luminance
+  // (white on dark accents, black on light accents) for WCAG AA contrast.
+  const buttonFg = c.buttonForeground || (t.isLight ? '#000000' : '#ffffff');
   return `${host} {
   color-scheme: ${t.isLight ? 'light' : 'dark'} !important;
   --agentskin-accent: ${c.accent};
@@ -230,6 +233,7 @@ export function tokenBlock(t, host = ':root', bridge = null) {
   --agentskin-code-fg: ${c.codeForeground};
   --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, ${c.surface} 82%, ${c.accent} 18%) 45%, transparent);
   --agentskin-button-bg: ${c.accent};
+  --agentskin-button-fg: ${buttonFg};
   --agentskin-focus-ring: ${c.focusRing || `color-mix(in srgb, ${c.accent} 40%, transparent)`};
   --agentskin-selection: color-mix(in srgb, ${c.accent} 32%, transparent);
   --agentskin-text-shadow: ${t.isLight ? '0 1px 2px rgba(255,255,255,0.6)' : '0 1px 3px rgba(0,0,0,0.5)'};
