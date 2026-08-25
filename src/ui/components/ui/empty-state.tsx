@@ -28,10 +28,10 @@ interface EmptyStateProps {
   iconSize?: 'sm' | 'md' | 'lg';
 }
 
-const iconSizeMap: Record<'sm' | 'md' | 'lg', string> = {
-  sm: 'size-4',
-  md: 'size-8',
-  lg: 'size-12',
+const iconSizeMap: Record<'sm' | 'md' | 'lg', { container: string; icon: string }> = {
+  sm: { container: 'size-8', icon: 'size-4' },
+  md: { container: 'size-12', icon: 'size-6' },
+  lg: { container: 'size-16', icon: 'size-8' },
 };
 
 export function EmptyState({
@@ -42,27 +42,30 @@ export function EmptyState({
   className,
   iconSize = 'md',
 }: EmptyStateProps) {
+  const sizes = iconSizeMap[iconSize];
   return (
     <div
       className={cn(
-        'flex flex-col items-center gap-2 text-center',
+        'flex flex-col items-center gap-3 text-center',
         className,
       )}
     >
       {icon && (
-        <span
+        <div
           className={cn(
-            'text-muted-foreground',
-            iconSizeMap[iconSize],
+            'flex items-center justify-center rounded-full bg-muted/40 text-muted-foreground ring-1 ring-border/50',
+            sizes.container,
           )}
         >
-          {icon}
-        </span>
+          <span className={sizes.icon}>{icon}</span>
+        </div>
       )}
-      <p className="text-[13px] font-medium text-foreground">{title}</p>
-      {hint && (
-        <p className="text-[11px] text-muted-foreground">{hint}</p>
-      )}
+      <div className="flex flex-col gap-1">
+        <p className="text-[13px] font-medium text-foreground">{title}</p>
+        {hint && (
+          <p className="text-[11px] text-muted-foreground">{hint}</p>
+        )}
+      </div>
       {action}
     </div>
   );

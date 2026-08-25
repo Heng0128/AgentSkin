@@ -21,11 +21,11 @@ const NAV_ICONS: NavIcon[] = [
 ];
 
 /**
- * Sidebar — fixed 52px icon-only navigation for Quiet Workbench.
+ * Sidebar — fixed 52px icon-only navigation for Refined Workbench.
  *
  * Structure:
  *   Logo (top, 32px strip)
- *   Navigation — 36x36px icon buttons, active item gets accent bg
+ *   Navigation — 28x28px icon buttons, active item gets accent bg + left indicator
  *
  * Global status (LED + version + clock) lives in the full-width StatusBar,
  * which spans below this rail — keeping the narrow column clean.
@@ -53,10 +53,13 @@ export function Sidebar() {
               onClick={() => setRoute(item.route)}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'flex size-7 items-center justify-center rounded-sm text-muted-foreground transition-colors duration-fast hover:bg-card2 hover:text-foreground',
+                'relative flex size-7 items-center justify-center rounded-md text-muted-foreground transition-all duration-fast ease-out hover:bg-card2 hover:text-foreground active:scale-90',
                 active && 'bg-accent text-accent-foreground',
               )}
             >
+              {active && (
+                <span className="absolute -left-[9px] top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-full bg-primary" />
+              )}
               <Icon className="size-[15px]" />
             </button>
           );

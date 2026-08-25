@@ -7,11 +7,11 @@ import { DynamicBackground } from '@/components/DynamicBackground';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { InjectDock } from '@/components/InjectDock';
 import { InstallWizard } from '@/components/InstallProgress';
+import { PageSkeleton } from '@/components/PageSkeleton';
 import { Sidebar } from '@/components/Sidebar';
 import { StatusBar } from '@/components/StatusBar';
 import { TitleBar } from '@/components/TitleBar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
 import { type Selection, useAppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -107,14 +107,11 @@ export default function App() {
             {controller.route !== 'settings' && <TitleBar hasWallpaper={!!activeWallpaper} />}
 
             <div className="min-h-0 flex-1 overflow-y-auto">
-              <div className={cn('h-full', controller.route !== 'settings' && 'p-3')}>
-                <Suspense
-                  fallback={
-                    <div className="flex h-full items-center justify-center">
-                      <Spinner className="size-6" />
-                    </div>
-                  }
-                >
+              <div
+                key={controller.route}
+                className={cn('page-enter h-full', controller.route !== 'settings' && 'p-3')}
+              >
+                <Suspense fallback={<PageSkeleton />}>
                   <ErrorBoundary inline>
                     {controller.route === 'workspace' && <WorkspacePage />}
                     {controller.route === 'apps' && <AppsPage />}

@@ -289,12 +289,12 @@
 
   /* Typography scale */
   --font-size-micro: 10px;
-  --font-size-label: 10px;
-  --font-size-caption: 11px;
-  --font-size-body: 11px;
-  --font-size-body-lg: 13px;
-  --font-size-title: 16px;
-  --font-size-display: 20px;
+  --font-size-label: 11px;
+  --font-size-caption: 12px;
+  --font-size-body: 12px;
+  --font-size-body-lg: 14px;
+  --font-size-title: 17px;
+  --font-size-display: 22px;
   --leading-title: 1.25;
   --leading-body: 1.5;
   --tracking-tight: -0.02em;
@@ -397,6 +397,25 @@
 }
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* =================================================================== */
+/* Page Transition                                                      */
+/* =================================================================== */
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-fade-in var(--duration-base) ease-out;
+  will-change: opacity, transform;
 }
 
 /* =================================================================== */
