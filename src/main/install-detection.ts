@@ -338,6 +338,45 @@ export async function detectInstallation(
   const empty: InstallDetection = { installed: false, path: null, version: null, source: null };
 
   if (platform !== 'win32' || !hints) {
+    // macOS platform detection — scan /Applications and ~/Applications
+    // for an .app bundle matching the adapter's appName hint.
+    if (platform === 'darwin' && hints?.appName) {
+      const home = process.env.HOME ?? '';
+      const macPaths = [
+        `/Applications/${hints.appName}.app`,
+        home ? `${home}/Applications/${hints.appName}.app` : '',
+      ].filter(Boolean);
+      for (const macPath of macPaths) {
+        try {
+          const stat = await fs.stat(macPath);
+          if (stat.isDirectory()) {
+            const result: InstallDetection = {
+              installed: true,
+              path: macPath,
+              version: null,
+              source: 'path',
+            };
+            if (logFile) {
+              await appendLog(
+                logFile,
+                formatLogEntry(stamp, displayName, [macPath], 'n/a (macOS)', 'FOUND', result),
+              );
+            }
+            return result;
+          }
+        } catch {
+          // Path not present — continue to next candidate.
+        }
+      }
+      if (logFile) {
+        await appendLog(
+          logFile,
+          formatLogEntry(stamp, displayName, macPaths, 'n/a (macOS)', 'NOT FOUND', empty),
+        );
+      }
+      return empty;
+    }
+
     if (logFile) {
       await appendLog(
         logFile,

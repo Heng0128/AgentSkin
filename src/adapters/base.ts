@@ -72,6 +72,12 @@ export interface InstallHints {
    * dedicated probe (e.g. ChatGPT's Windows build ships as `OpenAI.Codex`).
    */
   msixPackageNames?: string[];
+  /**
+   * Application bundle name used for macOS detection. When set on a macOS
+   * platform, the detector scans `/Applications/<appName>.app` and
+   * `~/Applications/<appName>.app` for the app bundle.
+   */
+  appName?: string;
 }
 
 export interface ApplyThemeOptions {
