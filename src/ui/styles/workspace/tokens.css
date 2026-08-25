@@ -115,7 +115,7 @@
    * Shadows → globals elevation
    * ---------------------------------------------------------- */
   --shadow-card: var(--shadow-elev1);
-  --shadow-float: var(--shadow-elev2);
+  --ws-shadow-float: var(--shadow-elev2);
   --shadow-dialog: var(--shadow-float);
 
   /* ----------------------------------------------------------

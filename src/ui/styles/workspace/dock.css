@@ -21,7 +21,7 @@
   z-index: var(--z-dock);
   height: 0;
   transition: height var(--dur-mid) var(--ease-out);
-  box-shadow: var(--shadow-float);
+  box-shadow: var(--ws-shadow-float);
 }
 
 .ws-dock[data-open="true"] {

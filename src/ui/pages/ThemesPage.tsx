@@ -266,7 +266,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
         <div className="pointer-events-none absolute inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-background/80">
           <div
             className="flex flex-col items-center gap-2 rounded-sm border-2 border-dashed border-border bg-card px-12 py-9 text-center"
-            style={{ boxShadow: 'var(--shadow, 0 10px 28px rgba(0,0,0,0.4))' }}
+            style={{ boxShadow: 'var(--shadow-float)' }}
           >
             <div className="flex size-14 items-center justify-center rounded-sm bg-accent">
               <UploadCloud className="size-7 text-primary" />

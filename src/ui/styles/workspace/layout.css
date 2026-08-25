@@ -294,7 +294,7 @@
 
 .pw[data-active="true"] {
   border-color: var(--accent);
-  box-shadow: var(--shadow-float);
+  box-shadow: var(--ws-shadow-float);
 }
 
 .pw__header {
