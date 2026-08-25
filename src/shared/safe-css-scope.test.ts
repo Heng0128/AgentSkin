@@ -1,13 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { describe, expect, it } from 'vitest';
-import {
-  PART_BY_ID,
-  REGISTERED_PARTS,
-  type SkinPart,
-  scopeCss,
-  validateScope,
-} from './safe-css-scope';
+import { PART_BY_ID, REGISTERED_PARTS, scopeCss, validateScope } from './safe-css-scope';
 
 // ---------------------------------------------------------------------------
 // Registry integrity
