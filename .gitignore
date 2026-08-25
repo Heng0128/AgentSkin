@@ -161,3 +161,9 @@ CUsers*.txt
 
 # Quality tool workspace (auto-generated benchmarks / reports / logs)
 .quality/
+
+# --- Cleanup round 3: tracked pollution files (2026-08-26) ---
+madge-err.txt
+madge-out.txt
+tsc-errors.txt
+test-outputimage-analyzer-run.txt

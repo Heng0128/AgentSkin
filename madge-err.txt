@@ -1,2 +1,0 @@
-- Finding files
-√ No circular dependency found!
