@@ -673,7 +673,9 @@ export class AgentEngineService implements AgentEngineServiceApi {
       await writeJsonAtomic(this.stateFile, this.registry.snapshot() as PersistedState);
       this.lastPersistErrorMessage = null;
     } catch (error) {
-      this.persistFailures++;
+      // RC1-FIX: Do NOT increment persistFailures here. The PersistChain.safe()
+      // wrapper already invokes onError (which increments) in its .catch().
+      // Incrementing here would double-count every failure (see L292-293 comment).
       const message = toMessage(error);
       this.lastPersistErrorMessage = message;
       this.log(`[state] persist failed: ${message}`);
@@ -686,7 +688,8 @@ export class AgentEngineService implements AgentEngineServiceApi {
         timestamp: new Date().toISOString(),
         reason: message,
       });
-      // Threshold-based notification: alert user after 3 consecutive failures
+      // Threshold-based notification: alert user after 3 consecutive failures.
+      // Note: persistFailures is incremented by onError callback (single source).
       if (this.persistFailures >= 3) {
         notifyPersistFailure(this.persistFailures);
       }
