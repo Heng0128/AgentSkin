@@ -7,18 +7,9 @@
  * **selector scope**: user-authored custom CSS may only target registered
  * `data-agentskin-part` components.
  *
- * ## Three exports
- *
- *   1. `REGISTERED_PARTS` — the 14-part registry.
- *   2. `validateScope(css)` — returns `{ valid, violations, scopedRules }`.
- *   3. `scopeCss(css, partId)` — wraps declarations in a part attribute selector.
- *
+ * Exports: `REGISTERED_PARTS`, `validateScope(css)`, `scopeCss(css, partId)`.
  * Inspired by Codex Dream Skin's `SELECTOR_CONTRACT`.
  */
-
-// ---------------------------------------------------------------------------
-// Part registry (14 parts)
-// ---------------------------------------------------------------------------
 
 export type PartScope = 'global' | 'agent';
 
@@ -29,60 +20,27 @@ export interface SkinPart {
   required: boolean;
 }
 
+// ---------------------------------------------------------------------------
+// Part registry (14 parts)
+// ---------------------------------------------------------------------------
+
+const sel = (id: string): string => `[data-agentskin-part="${id}"]`;
+
 export const REGISTERED_PARTS: readonly SkinPart[] = Object.freeze([
-  // Global shell
-  {
-    id: 'shell-main',
-    selector: '[data-agentskin-part="shell-main"]',
-    scope: 'global',
-    required: true,
-  },
-  { id: 'sidebar', selector: '[data-agentskin-part="sidebar"]', scope: 'global', required: true },
-  { id: 'header', selector: '[data-agentskin-part="header"]', scope: 'global', required: false },
-  // Conversation surface
-  { id: 'composer', selector: '[data-agentskin-part="composer"]', scope: 'agent', required: true },
-  {
-    id: 'conversation',
-    selector: '[data-agentskin-part="conversation"]',
-    scope: 'agent',
-    required: true,
-  },
-  { id: 'message', selector: '[data-agentskin-part="message"]', scope: 'agent', required: false },
-  { id: 'toolbar', selector: '[data-agentskin-part="toolbar"]', scope: 'agent', required: false },
-  // Input & attachments
-  {
-    id: 'input-area',
-    selector: '[data-agentskin-part="input-area"]',
-    scope: 'agent',
-    required: false,
-  },
-  {
-    id: 'attachment-panel',
-    selector: '[data-agentskin-part="attachment-panel"]',
-    scope: 'agent',
-    required: false,
-  },
-  { id: 'footer', selector: '[data-agentskin-part="footer"]', scope: 'global', required: false },
-  // Navigation & panels
-  {
-    id: 'navigation',
-    selector: '[data-agentskin-part="navigation"]',
-    scope: 'global',
-    required: false,
-  },
-  {
-    id: 'home-suggestions',
-    selector: '[data-agentskin-part="home-suggestions"]',
-    scope: 'agent',
-    required: false,
-  },
-  {
-    id: 'settings-panel',
-    selector: '[data-agentskin-part="settings-panel"]',
-    scope: 'agent',
-    required: false,
-  },
-  { id: 'preview', selector: '[data-agentskin-part="preview"]', scope: 'agent', required: false },
+  { id: 'shell-main', selector: sel('shell-main'), scope: 'global', required: true },
+  { id: 'sidebar', selector: sel('sidebar'), scope: 'global', required: true },
+  { id: 'header', selector: sel('header'), scope: 'global', required: false },
+  { id: 'composer', selector: sel('composer'), scope: 'agent', required: true },
+  { id: 'conversation', selector: sel('conversation'), scope: 'agent', required: true },
+  { id: 'message', selector: sel('message'), scope: 'agent', required: false },
+  { id: 'toolbar', selector: sel('toolbar'), scope: 'agent', required: false },
+  { id: 'input-area', selector: sel('input-area'), scope: 'agent', required: false },
+  { id: 'attachment-panel', selector: sel('attachment-panel'), scope: 'agent', required: false },
+  { id: 'footer', selector: sel('footer'), scope: 'global', required: false },
+  { id: 'navigation', selector: sel('navigation'), scope: 'global', required: false },
+  { id: 'home-suggestions', selector: sel('home-suggestions'), scope: 'agent', required: false },
+  { id: 'settings-panel', selector: sel('settings-panel'), scope: 'agent', required: false },
+  { id: 'preview', selector: sel('preview'), scope: 'agent', required: false },
 ]);
 
 export const PART_BY_ID: Readonly<Record<string, SkinPart>> = Object.freeze(
@@ -113,6 +71,19 @@ const ALLOWED_COSMETIC = new Set([
   'text-decoration',
   'text-transform',
   'text-shadow',
+  'border',
+  'border-top',
+  'border-right',
+  'border-bottom',
+  'border-left',
+  'border-radius',
+  'border-color',
+  'border-style',
+  'border-width',
+  'outline',
+  'outline-color',
+  'outline-style',
+  'outline-width',
   'padding',
   'padding-top',
   'padding-right',
@@ -123,23 +94,6 @@ const ALLOWED_COSMETIC = new Set([
   'margin-right',
   'margin-bottom',
   'margin-left',
-  'border',
-  'border-top',
-  'border-right',
-  'border-bottom',
-  'border-left',
-  'border-radius',
-  'border-top-left-radius',
-  'border-top-right-radius',
-  'border-bottom-left-radius',
-  'border-bottom-right-radius',
-  'border-color',
-  'border-style',
-  'border-width',
-  'outline',
-  'outline-color',
-  'outline-style',
-  'outline-width',
   'gap',
   'row-gap',
   'column-gap',
@@ -164,7 +118,7 @@ const ALLOWED_COSMETIC = new Set([
   'overflow-y',
 ]);
 
-const BLOCKED_PROPERTIES = new Set([
+const BLOCKED = new Set([
   'position',
   'display',
   'z-index',
@@ -183,19 +137,14 @@ const BLOCKED_PROPERTIES = new Set([
   'clip-path',
 ]);
 
-function isAllowedProperty(prop: string): boolean {
-  const lower = prop.toLowerCase().trim();
-  return lower.startsWith('--agentskin-') || ALLOWED_COSMETIC.has(lower);
-}
+const isAllowed = (prop: string): boolean => {
+  const l = prop.toLowerCase().trim();
+  return l.startsWith('--agentskin-') || ALLOWED_COSMETIC.has(l);
+};
 
-const isBlockedProperty = (prop: string): boolean =>
-  BLOCKED_PROPERTIES.has(prop.toLowerCase().trim());
+const isBlocked = (prop: string): boolean => BLOCKED.has(prop.toLowerCase().trim());
 
-// ---------------------------------------------------------------------------
-// Global selector blocklist
-// ---------------------------------------------------------------------------
-
-const GLOBAL_SELECTOR_RE = /^\s*(html|body|:root|\*)\s*$/i;
+const GLOBAL_RE = /^\s*(html|body|:root|\*)\s*$/i;
 
 // ---------------------------------------------------------------------------
 // Scope validation
@@ -210,16 +159,14 @@ export interface ScopeValidationResult {
 export function validateScope(input: string): ScopeValidationResult {
   const violations: string[] = [];
   const scopedRules: string[] = [];
-
   if (!input?.trim()) return { valid: true, violations, scopedRules };
 
   const css = input.replace(/\/\*[\s\S]*?\*\//g, '').trim();
   if (!css) return { valid: true, violations, scopedRules };
 
-  for (const block of splitRuleBlocks(css)) {
+  for (const block of splitBlocks(css)) {
     if (!block.selector.trim()) continue;
 
-    // Recurse into @media / @supports
     if (block.selector.startsWith('@media') || block.selector.startsWith('@supports')) {
       const inner = validateScope(block.body);
       violations.push(...inner.violations);
@@ -229,84 +176,73 @@ export function validateScope(input: string): ScopeValidationResult {
       continue;
     }
 
-    const selectors = extractSelectors(block.selector);
     let selectorValid = true;
-
-    for (const sel of selectors) {
-      if (GLOBAL_SELECTOR_RE.test(sel)) {
+    for (const sel of extractSelectors(block.selector)) {
+      if (GLOBAL_RE.test(sel)) {
         violations.push(`Global selector "${sel}" is not allowed — scope to a registered part`);
         selectorValid = false;
-      } else if (!targetsRegisteredPart(sel)) {
+      } else if (!targetsPart(sel)) {
         violations.push(`Selector "${sel}" does not target a registered part`);
         selectorValid = false;
       }
     }
-
     if (!selectorValid) continue;
 
-    const propViolations = validateProperties(block.body);
+    const propViolations = validateProps(block.body);
     violations.push(...propViolations);
-    if (propViolations.length === 0) {
-      scopedRules.push(`${block.selector} {\n${block.body}\n}`);
-    }
+    if (propViolations.length === 0) scopedRules.push(`${block.selector} {\n${block.body}\n}`);
   }
 
   return { valid: violations.length === 0, violations: dedupe(violations), scopedRules };
 }
 
-// ---------------------------------------------------------------------------
-// Internal helpers
-// ---------------------------------------------------------------------------
-
-function validateProperties(body: string): string[] {
+function validateProps(body: string): string[] {
   const violations: string[] = [];
-  for (const rawDecl of body.split(';')) {
-    const decl = rawDecl.trim();
+  for (const raw of body.split(';')) {
+    const decl = raw.trim();
     if (!decl) continue;
-    const colonIdx = decl.indexOf(':');
-    if (colonIdx === -1) continue;
-    const prop = decl.slice(0, colonIdx).trim().toLowerCase();
-    if (isBlockedProperty(prop)) {
-      violations.push(`Property "${prop}" is not allowed in scoped CSS`);
-    } else if (!isAllowedProperty(prop)) {
+    const idx = decl.indexOf(':');
+    if (idx === -1) continue;
+    const prop = decl.slice(0, idx).trim().toLowerCase();
+    if (isBlocked(prop)) violations.push(`Property "${prop}" is not allowed in scoped CSS`);
+    else if (!isAllowed(prop))
       violations.push(`Property "${prop}" is not in the allowed property list`);
-    }
   }
   return violations;
 }
 
-function targetsRegisteredPart(selector: string): boolean {
-  for (const partSel of VALID_SELECTORS) {
-    if (selector.includes(partSel)) return true;
+function targetsPart(selector: string): boolean {
+  for (const s of VALID_SELECTORS) {
+    if (selector.includes(s)) return true;
   }
   return false;
 }
 
 function extractSelectors(rule: string): string[] {
-  const selectors: string[] = [];
+  const out: string[] = [];
   let depth = 0;
   let buf = '';
   for (const ch of rule) {
     if (ch === '[') depth++;
     else if (ch === ']') depth--;
     else if (ch === ',' && depth === 0) {
-      if (buf.trim()) selectors.push(buf.trim());
+      if (buf.trim()) out.push(buf.trim());
       buf = '';
       continue;
     }
     buf += ch;
   }
-  if (buf.trim()) selectors.push(buf.trim());
-  return selectors;
+  if (buf.trim()) out.push(buf.trim());
+  return out;
 }
 
-interface RuleBlock {
+interface Block {
   selector: string;
   body: string;
 }
 
-function splitRuleBlocks(css: string): RuleBlock[] {
-  const blocks: RuleBlock[] = [];
+function splitBlocks(css: string): Block[] {
+  const blocks: Block[] = [];
   let i = 0;
   while (i < css.length) {
     while (i < css.length && /\s/.test(css[i])) i++;
@@ -339,13 +275,11 @@ function dedupe<T>(arr: T[]): T[] {
 
 export function scopeCss(declarations: string, partId: string): string {
   const part = PART_BY_ID[partId];
-  if (!part) {
+  if (!part)
     throw new Error(
       `Unknown part "${partId}". Valid parts: ${REGISTERED_PARTS.map((p) => p.id).join(', ')}`,
     );
-  }
   const body = declarations.trim();
   if (!body) return '';
-  const normalized = body.endsWith(';') ? body : `${body};`;
-  return `${part.selector} {\n${normalized}\n}`;
+  return `${part.selector} {\n${body.endsWith(';') ? body : `${body};`}\n}`;
 }
