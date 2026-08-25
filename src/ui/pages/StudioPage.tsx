@@ -23,7 +23,7 @@
  * frameless window title bar.
  */
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { DesktopResolution } from '@/components/studio/device-frame';
 import { StudioDock } from '@/components/studio/StudioDock';
