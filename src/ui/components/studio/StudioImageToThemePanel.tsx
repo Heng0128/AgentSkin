@@ -261,7 +261,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
   // --- Swatch copy ---
   const handleCopy = useCallback((value: string, label: string) => {
     void navigator.clipboard.writeText(value).catch(() => {});
-    useNotificationStore.getState().showToast(`已复制 ${label}`, 'default');
+    useNotificationStore.getState().showToast(t.studioImageToThemeCopyFormat(label), 'default');
   }, []);
 
   // ---------------------------------------------------------------------------

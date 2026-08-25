@@ -143,7 +143,7 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
             value={rawCss}
             onChange={handleTextareaChange}
             spellCheck={false}
-            placeholder="/* CSS will appear here after selecting a stylesheet */"
+            placeholder={t.studioRawCssPlaceholder}
           />
         )}
       </div>

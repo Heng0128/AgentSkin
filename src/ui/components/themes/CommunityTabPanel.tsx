@@ -18,6 +18,8 @@ import { CommunityThemeCard } from './CommunityThemeCard';
 import { useCommunityStore } from '@/stores/communityStore';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
+import { uiMessages } from '@shared/i18n';
+import { useShellStore } from '@/stores/shellStore';
 
 /** Debounce delay for search input (ms). */
 const SEARCH_DEBOUNCE = 300;
@@ -41,6 +43,8 @@ export function CommunityTabPanel() {
   } = useCommunityStore();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const locale = useShellStore((s) => s.locale);
+  const t = uiMessages[locale];
 
   // Initial load
   useEffect(() => {
@@ -78,7 +82,7 @@ export function CommunityTabPanel() {
           onClick={() => loadThemes()}
           className="mt-4 text-[13px] text-primary hover:underline"
         >
-          重试
+          {t.communityRetry}
         </button>
       </div>
     );
@@ -98,7 +102,7 @@ export function CommunityTabPanel() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <p className="text-[13px] text-muted-foreground">
-          {query ? '未找到匹配的主题' : '暂无社区主题'}
+          {query ? t.communityEmptyNoResult : t.communityEmptyNoThemes}
         </p>
       </div>
     );
@@ -113,7 +117,7 @@ export function CommunityTabPanel() {
           type="text"
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder="搜索社区主题…"
+          placeholder={t.communitySearchPlaceholder}
           className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-[13px] outline-none transition-colors placeholder:text-muted-foreground focus:border-primary"
         />
 
@@ -124,9 +128,9 @@ export function CommunityTabPanel() {
           }
           className="rounded-md border border-input bg-background px-3 py-2 text-[13px] outline-none transition-colors focus:border-primary"
         >
-          <option value="popular">热门</option>
-          <option value="recent">最新</option>
-          <option value="rating">评分</option>
+          <option value="popular">{t.communitySortPopular}</option>
+          <option value="recent">{t.communitySortRecent}</option>
+          <option value="rating">{t.communitySortRating}</option>
         </select>
       </div>
 
@@ -173,7 +177,7 @@ export function CommunityTabPanel() {
                 : 'hover:bg-muted',
             )}
           >
-            {loadingMore ? '加载中…' : '加载更多'}
+            {loadingMore ? t.communityLoading : t.communityLoadMore}
           </button>
         </div>
       )}

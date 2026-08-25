@@ -53,6 +53,7 @@ import { Download, Redo2, RefreshCw, Search, Undo2, Upload } from 'lucide-react'
  * only when a locale omits the corresponding key; the canonical copy lives in
  * the i18n message tables (see direction E — i18n completeness). Kept as
  * module constants so the hardcoded Chinese strings are not duplicated inline.
+ * @deprecated Use t.workspacePushFailed / t.workspaceImportFailed instead.
  */
 const PUSH_FAILED_FALLBACK = '实时推送失败：';
 const IMPORT_FAILED_FALLBACK = '导入失败：';
@@ -324,10 +325,10 @@ export function WorkspacePage() {
                         ? 'bg-primary/10 text-primary'
                         : 'text-muted-foreground hover:bg-[var(--bg-3)]'
                     }`}
-                    title={inspectMode ? '退出元素选取' : '选取元素以定位参数'}
+                    title={inspectMode ? t.workspaceInspectStop : t.workspaceInspectStart}
                   >
                     <Search className="size-3" />
-                    {inspectMode ? '退出选取' : '选取元素'}
+                    {inspectMode ? t.workspaceInspectStopBtn : t.workspaceInspectStartBtn}
                   </button>
                 </div>
                 <AgentLivePreview
@@ -419,20 +420,20 @@ export function WorkspacePage() {
                       size="sm"
                       variant="ghost"
                       onClick={handleExport}
-                      title="导出配置到剪贴板"
+                      title={t.workspaceExportTooltip}
                     >
                       <Download className="size-3" />
-                      <span className="text-[10px]">导出</span>
+                      <span className="text-[10px]">{t.workspaceExport}</span>
                     </Button>
                     <Button
                       type="button"
                       size="sm"
                       variant="ghost"
                       onClick={() => void handleImport()}
-                      title="从 JSON 文件导入配置"
+                      title={t.workspaceImportTooltip}
                     >
                       <Upload className="size-3" />
-                      <span className="text-[10px]">导入</span>
+                      <span className="text-[10px]">{t.workspaceImport}</span>
                     </Button>
                   </div>
                 </div>
