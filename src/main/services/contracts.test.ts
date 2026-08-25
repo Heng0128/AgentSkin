@@ -228,9 +228,10 @@ describe('Service Contract Conformity', () => {
 // ---------------------------------------------------------------------------
 
 describe('AgentEngineServiceApi Structural Contract', () => {
-  it('AgentEngineServiceApi interface has all required methods defined', () => {
+  it('AgentEngineServiceApi interface has all 19 required methods defined', () => {
     // This test verifies the interface shape at the type level.
     // If any method is missing from the interface, TypeScript will fail to compile.
+    // The runtime count check guards against accidental key removal.
     const _interfaceCheck: Record<keyof AgentEngineServiceApi, true> = {
       setWallpaperService: true,
       setLogListener: true,
@@ -253,6 +254,7 @@ describe('AgentEngineServiceApi Structural Contract', () => {
       lastPersistError: true,
     };
 
-    expect(Object.keys(_interfaceCheck).length).toBeGreaterThan(0);
+    // RC2-S3: Exact count check — fails if a key is accidentally removed
+    expect(Object.keys(_interfaceCheck).length).toBe(19);
   });
 });
