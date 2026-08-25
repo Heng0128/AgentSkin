@@ -57,9 +57,35 @@ export function AgentLivePreview({
   // Track the iframe element for click-listener injection (element picking).
   const inspectCleanupRef = useRef<(() => void) | null>(null);
 
+  // RC1-A fix: useRef-backed cache to break the useEffect→setState→useEffect loop.
+  // The effect now depends only on `agentId`. Cache reads go through ref.current
+  // (no re-render trigger), and a `fetchingAgentId` ref prevents duplicate requests.
+  const snapshotCacheRef = useRef<Record<string, DomTreeNode | undefined>>({});
+  const fetchingAgentIdRef = useRef<string | null>(null);
+
   useEffect(() => {
+    // Prevent duplicate concurrent fetches for the same agentId
+    if (fetchingAgentIdRef.current === agentId) return;
+    fetchingAgentIdRef.current = agentId;
+
     let cancelled = false;
-    const cached = snapshots[agentId];
+    const cached = snapshotCacheRef.current[agentId];
+
+    const handleSuccess = (snap: ThemeVisualSnapshot) => {
+      if (cancelled) return;
+      snapshotCacheRef.current = { ...snapshotCacheRef.current, [agentId]: snap.domTree };
+      setSnapshots((prev) =>
+        prev[agentId] === snap.domTree ? prev : { ...prev, [agentId]: snap.domTree },
+      );
+      setRefreshFailed(false);
+    };
+
+    const handleFinally = () => {
+      if (cancelled) return;
+      fetchingAgentIdRef.current = null;
+      setRefreshing(false);
+      setLoading(false);
+    };
 
     if (cached) {
       // Cache hit: display immediately, refresh in background
@@ -67,20 +93,15 @@ export function AgentLivePreview({
       setRefreshFailed(false);
       api
         .snapshotBaseline(agentId as never)
-        .then((snap: ThemeVisualSnapshot) => {
-          if (cancelled) return;
-          setSnapshots((prev) => ({ ...prev, [agentId]: snap.domTree }));
-          setRefreshFailed(false);
-        })
+        .then(handleSuccess)
         .catch(() => {
           // Refresh failed: keep cache, mark failure (bar turns red)
           if (!cancelled) setRefreshFailed(true);
         })
-        .finally(() => {
-          if (!cancelled) setRefreshing(false);
-        });
+        .finally(handleFinally);
       return () => {
         cancelled = true;
+        fetchingAgentIdRef.current = null;
       };
     }
 
@@ -88,20 +109,24 @@ export function AgentLivePreview({
     setLoading(true);
     api
       .snapshotBaseline(agentId as never)
-      .then((snap: ThemeVisualSnapshot) => {
-        if (cancelled) return;
-        setSnapshots((prev) => ({ ...prev, [agentId]: snap.domTree }));
-      })
+      .then(handleSuccess)
       .catch(() => {
         /* leave domTree undefined → RealDomPreview shows fallback */
       })
-      .finally(() => {
-        if (cancelled) setLoading(false);
-      });
+      .finally(handleFinally);
     return () => {
       cancelled = true;
+      fetchingAgentIdRef.current = null;
     };
-  }, [agentId, snapshots]);
+  }, [agentId]);
+
+  // Sync snapshots state from cache ref on mount and when agentId changes
+  useEffect(() => {
+    const cached = snapshotCacheRef.current[agentId];
+    if (cached) {
+      setSnapshots((prev) => (prev[agentId] === cached ? prev : { ...prev, [agentId]: cached }));
+    }
+  }, [agentId]);
 
   // --- Element picking: inject click listener into the iframe ---
   // Clean up previous listener on unmount.
