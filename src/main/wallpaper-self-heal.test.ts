@@ -9,12 +9,10 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-// Mock console.warn to suppress self-heal trigger logs during tests
-const mockConsoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
 describe('wallpaper-self-heal', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     // Reset module state by re-importing with cache bust
     vi.resetModules();
   });

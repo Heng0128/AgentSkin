@@ -138,7 +138,7 @@ export async function startMcpHttpServer(ctx: McpContext): Promise<number> {
 
     // Auth check (when enabled)
     if (cfg.authRequired && sessionApiKey) {
-      const authHeader = req.headers['authorization'];
+      const authHeader = req.headers.authorization;
       const providedKey = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
       if (!validateApiKey(providedKey)) {
         res.writeHead(401, { 'Content-Type': 'application/json' });

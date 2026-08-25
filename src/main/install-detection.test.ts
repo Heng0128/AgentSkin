@@ -42,6 +42,16 @@ const testHints: InstallHints = {
   registryNames: ['Trae', 'Trae CN'],
 };
 
+/**
+ * Helper to mock readdir with string array (avoids Dirent type mismatch).
+ * Node's fs.readdir without encoding option returns string[], but the mocked
+ * type defaults to Dirent[]. This helper safely bridges the gap.
+ */
+function mockReaddirWithStrings(items: string[]): void {
+  // biome-ignore lint: test mock bridging Dirent/string type mismatch
+  mockReaddir.mockResolvedValue(items as any);
+}
+
 describe('install-detection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -85,7 +95,7 @@ describe('install-detection', () => {
         isDirectory: () => true,
         isFile: () => false,
       } as Stats);
-      mockReaddir.mockResolvedValue(['Trae.exe'] as any);
+      mockReaddirWithStrings(['Trae.exe']);
       mockExecFileAsync.mockResolvedValue({
         stdout: '1.0.0|1.0.0|Trae|Trae IDE\n',
         stderr: '',
@@ -109,7 +119,7 @@ describe('install-detection', () => {
         isDirectory: () => false,
         isFile: () => true,
       } as Stats);
-      mockReaddir.mockResolvedValue(['Trae.exe'] as any);
+      mockReaddirWithStrings(['Trae.exe']);
       mockExecFileAsync.mockResolvedValue({
         stdout: '2.0.1|2.0.1|Trae|Trae IDE\n',
         stderr: '',
@@ -137,7 +147,7 @@ describe('install-detection', () => {
         isDirectory: () => true,
         isFile: () => false,
       } as Stats);
-      mockReaddir.mockResolvedValue([] as any);
+      mockReaddirWithStrings([]);
 
       const result = await detectInstallation({
         platform: 'win32',
@@ -205,7 +215,7 @@ describe('install-detection', () => {
         isDirectory: () => true,
         isFile: () => false,
       } as Stats);
-      mockReaddir.mockResolvedValue(['Trae.exe'] as any);
+      mockReaddirWithStrings(['Trae.exe']);
       mockExecFileAsync.mockResolvedValue({
         stdout: '3.0.0|3.0.0|Trae|Trae IDE\n',
         stderr: '',
@@ -224,7 +234,7 @@ describe('install-detection', () => {
         isDirectory: () => true,
         isFile: () => false,
       } as Stats);
-      mockReaddir.mockResolvedValue(['unrelated.exe', 'readme.txt'] as any);
+      mockReaddirWithStrings(['unrelated.exe', 'readme.txt']);
       // The unrelated.exe doesn't match identity, so readExeInfo is called
       mockExecFileAsync.mockResolvedValue({
         stdout: '1.0.0|1.0.0|Unrelated App|Some other app\n',
