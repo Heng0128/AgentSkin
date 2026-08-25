@@ -18,16 +18,33 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
-// Hoisted mocks
+// Type for coordinator status callback
+// ---------------------------------------------------------------------------
+type CoordinatorCallback = (payload: {
+  appId: string;
+  state: { running: boolean; port: number; debugReady: boolean };
+}) => void;
+
+// ---------------------------------------------------------------------------
+// Hoisted mocks + callback ref (same hoisted scope — no TDZ issue)
 // ---------------------------------------------------------------------------
 
-const { mockRefreshStatus, mockOnCoordinatorStatus, mockGetCoordinatorSnapshot } = vi.hoisted(
-  () => ({
+const {
+  mockRefreshStatus,
+  mockOnCoordinatorStatus,
+  mockGetCoordinatorSnapshot,
+  coordinatorCallbackRef,
+} = vi.hoisted(() => {
+  const ref = { current: undefined as CoordinatorCallback | undefined };
+  return {
     mockRefreshStatus: vi.fn(),
-    mockOnCoordinatorStatus: vi.fn(),
+    mockOnCoordinatorStatus: vi.fn(((cb: CoordinatorCallback) => {
+      ref.current = cb;
+    }) as (cb: CoordinatorCallback) => void),
     mockGetCoordinatorSnapshot: vi.fn(),
-  }),
-);
+    coordinatorCallbackRef: ref,
+  };
+});
 
 vi.mock('@/api/agentSkinClient', () => ({
   api: {
@@ -197,22 +214,21 @@ describe('statusStore — error state & clearError', () => {
 
 describe('statusStore — onCoordinatorStatus subscription', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Note: NOT calling vi.clearAllMocks() here — it would clear the captured
+    // coordinator callback registered at store creation time.
+    mockRefreshStatus.mockReset();
+    mockGetCoordinatorSnapshot.mockReset();
     resetStatusStore();
   });
 
-  /** Extract the registered coordinator status callback from the mock. */
-  const getCoordinatorCallback = (): ((payload: {
-    appId: string;
-    state: { running: boolean; port: number; debugReady: boolean };
-  }) => void) => {
-    const call = mockOnCoordinatorStatus.mock.calls[0]?.[0];
+  /** Get the coordinator status callback captured at store creation. */
+  const getCoordinatorCallback = (): CoordinatorCallback => {
+    const call = coordinatorCallbackRef.current;
     expect(call).toBeDefined();
-    return call as typeof call;
+    return call as CoordinatorCallback;
   };
 
-  it('registers a coordinator status callback on store initialization', () => {
-    expect(mockOnCoordinatorStatus).toHaveBeenCalledTimes(1);
+  it('captured a coordinator status callback at store creation', () => {
     const callback = getCoordinatorCallback();
     expect(typeof callback).toBe('function');
   });
