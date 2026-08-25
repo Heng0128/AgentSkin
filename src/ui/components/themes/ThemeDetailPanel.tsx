@@ -46,7 +46,7 @@ function formatSize(bytes?: number): string {
 
 /** Color swatch grid — one pill per color in displayMeta.colors. */
 function ColorSwatches({ colors }: { colors: Record<string, string | undefined> }) {
-  const entries = Object.entries.colors).filter(([, v]) => Boolean(v));
+  const entries = Object.entries(colors).filter(([, v]) => Boolean(v));
   if (entries.length === 0) return null;
 
   return (

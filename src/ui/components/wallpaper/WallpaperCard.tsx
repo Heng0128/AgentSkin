@@ -131,8 +131,8 @@ export const WallpaperCard = memo(function WallpaperCard({
     <div
       ref={cardRef}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-md bg-surface text-left transition-colors duration-fast',
-        'hover:border-border hover:bg-surface',
+        'group relative flex flex-col overflow-hidden rounded-md border border-transparent bg-surface text-left transition-all duration-fast ease-out',
+        'hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',
         selected && 'ring-1 ring-primary',
       )}
     >

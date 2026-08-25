@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 import { APP_META } from '@/components/AppMark';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -133,10 +133,9 @@ export function EnvironmentCard({
   return (
     <article
       className={cn(
-        'group/card relative flex flex-col overflow-hidden rounded-md  bg-card text-card-foreground',
-        'transition-[background-color,border-color,box-shadow] duration-base ease-out',
-        '',
-        isActive ? 'border-2 border-primary' : '',
+        'group/card relative flex flex-col overflow-hidden rounded-md border bg-card text-card-foreground',
+        'transition-all duration-base ease-out',
+        isActive ? 'border-2 border-primary' : 'border-transparent hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',
         onClick && 'cursor-pointer',
       )}
       onClick={onClick}

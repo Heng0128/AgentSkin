@@ -614,6 +614,54 @@ describe('AgentEngineService (orchestration)', () => {
       expect(applyThemeFlow).toHaveBeenCalledTimes(1);
     });
 
+    it('agent B apply is not blocked by agent A background', async () => {
+      vi.useRealTimers();
+
+      // Deferred gate: keeps agent A (traework) background unsettled
+      const agentABackgroundGate = deferred<void>();
+
+      // Branch mock on appId: traework 的 background 被 gate 阻塞，
+      // qoderwork 则正常立即 settle —— 模拟两个 agent 的 background 相互独立。
+      vi.mocked(applyThemeFlow).mockImplementation(async (request) => {
+        if (request.appId === 'traework') {
+          return {
+            response: APPLY_RESPONSE,
+            background: agentABackgroundGate.promise,
+          };
+        }
+        return {
+          response: APPLY_RESPONSE,
+          background: Promise.resolve(),
+        };
+      });
+
+      const svc = makeService();
+
+      // 1. 启动 agent A 的 apply —— response 立即返回，但 background 被 gate 阻塞
+      const agentAResult = await svc.apply({ appId: 'traework', themeId: 't1' });
+      expect(agentAResult).toBe(APPLY_RESPONSE);
+
+      // 2. agent A 的 background 尚未 settle → inflightOperations 中 traework 条目仍存在。
+      //    此时启动 agent B (qoderwork) 的 apply —— 必须能立即执行，不被 agent A 阻塞。
+      const agentBResult = await svc.apply({ appId: 'qoderwork', themeId: 't1' });
+      expect(agentBResult).toBe(APPLY_RESPONSE);
+
+      // 3. applyThemeFlow 必须被调用两次（每个 agent 各一次），
+      //    证明 agent B 没有命中 agent A 的去重路径，而是独立执行。
+      expect(applyThemeFlow).toHaveBeenCalledTimes(2);
+
+      // 4. 释放 gate，让 agent A 的 background settle
+      agentABackgroundGate.resolve(undefined);
+      await agentABackgroundGate.promise;
+      // flush cleanup.finally() 微任务
+      await new Promise<void>(queueMicrotask);
+
+      // 5. cleanup 完成后，agent A 的 inflight 条目已清除，再次 apply 触发全新执行
+      vi.mocked(applyThemeFlow).mockClear();
+      await svc.apply({ appId: 'traework', themeId: 't2' });
+      expect(applyThemeFlow).toHaveBeenCalledTimes(1);
+    });
+
     it('same-kind 去重仍共享 promise 而非 cleanup', async () => {
       vi.useRealTimers();
 

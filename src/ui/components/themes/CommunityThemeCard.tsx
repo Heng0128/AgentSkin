@@ -40,7 +40,7 @@ export function CommunityThemeCard({
   const hasPreview = Boolean(theme.thumbUrl) && !imgError;
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-md border border-border bg-card shadow-xs transition-all duration-fast hover:-translate-y-0.5 hover:shadow-md">
+    <div className="group relative flex flex-col overflow-hidden rounded-md border border-border bg-card shadow-xs transition-all duration-fast hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md">
       {/* Preview area — 16:9 aspect */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
         {hasPreview ? (
