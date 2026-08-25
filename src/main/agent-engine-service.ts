@@ -673,7 +673,10 @@ export class AgentEngineService implements AgentEngineServiceApi {
       await writeJsonAtomic(this.stateFile, this.registry.snapshot() as PersistedState);
       this.lastPersistErrorMessage = null;
     } catch (error) {
-      this.persistFailures++;
+      // NOTE: Do NOT increment persistFailures here — the persist.onError
+      // callback (set in the constructor) already handles incrementing,
+      // and writeJsonAtomic internally calls persist.safe which triggers
+      // onError on failure. Incrementing here would double-count failures.
       const message = toMessage(error);
       this.lastPersistErrorMessage = message;
       this.log(`[state] persist failed: ${message}`);
