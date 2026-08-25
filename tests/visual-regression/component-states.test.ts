@@ -531,10 +531,11 @@ describe('SegmentedControl', () => {
       expect(SEGMENTED_ACTIVE_CLASSES).toContain('data-[state=active]:bg-background');
     });
 
-    it('disabled track uses aria-disabled via data-[disabled]', () => {
-      // The disabled state is communicated via data-[disabled] attribute
-      // which corresponds to aria-disabled in the component.
-      expect(SEGMENTED_DISABLED_CLASSES).toContain('data-[disabled]');
+    it('disabled track uses pointer-events-none and opacity-50', () => {
+      // The disabled state is communicated via CSS classes that prevent
+      // interaction (pointer-events-none) and visually dim the component (opacity-50).
+      expect(SEGMENTED_DISABLED_CLASSES).toContain('pointer-events-none');
+      expect(SEGMENTED_DISABLED_CLASSES).toContain('opacity-50');
     });
   });
 });
