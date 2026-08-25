@@ -145,8 +145,9 @@ describe('notificationStore fail', () => {
     useNotificationStore.getState().fail(null);
     useNotificationStore.getState().fail(undefined);
 
-    // Should not throw and should add toasts
+    // Should not throw and should add toasts (null/undefined → actionFailed toast each)
     const state = useNotificationStore.getState();
-    expect(state.toasts.length).toBeGreaterThanOrEqual(0);
+    expect(state.toasts.length).toBe(2);
+    expect(state.toasts.every((toast) => toast.tone === 'destructive')).toBe(true);
   });
 });

@@ -188,3 +188,100 @@ describe('statusStore — error state & clearError', () => {
     expect(useStatusStore.getState().isRefreshing).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// RC5-A fix: onCoordinatorStatus subscription tests
+// These verify the coordinator push subscription callback behavior, including
+// the shallow-compare short-circuit that prevents no-op state updates.
+// ---------------------------------------------------------------------------
+
+describe('statusStore — onCoordinatorStatus subscription', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    resetStatusStore();
+  });
+
+  /** Extract the registered coordinator status callback from the mock. */
+  const getCoordinatorCallback = (): ((payload: {
+    appId: string;
+    state: { running: boolean; port: number; debugReady: boolean };
+  }) => void) => {
+    const call = mockOnCoordinatorStatus.mock.calls[0]?.[0];
+    expect(call).toBeDefined();
+    return call as typeof call;
+  };
+
+  it('registers a coordinator status callback on store initialization', () => {
+    expect(mockOnCoordinatorStatus).toHaveBeenCalledTimes(1);
+    const callback = getCoordinatorCallback();
+    expect(typeof callback).toBe('function');
+  });
+
+  it('updates status when coordinator pushes a runtime change', () => {
+    // Seed current status
+    useStatusStore.setState({
+      status: {
+        platform: 'win32' as const,
+        apps: [
+          {
+            appId: 'traework' as const,
+            displayName: 'Trae',
+            installed: true,
+            running: false,
+            debugReady: false,
+            port: 0,
+            activeThemeId: null,
+          },
+        ],
+      },
+    });
+
+    const callback = getCoordinatorCallback();
+    callback({ appId: 'traework', state: { running: true, port: 9222, debugReady: true } });
+
+    const status = useStatusStore.getState().status;
+    expect(status?.apps[0].running).toBe(true);
+    expect(status?.apps[0].port).toBe(9222);
+    expect(status?.apps[0].debugReady).toBe(true);
+    expect(useStatusStore.getState().lastStatusAt).not.toBeNull();
+  });
+
+  it('skips state update when coordinator pushes identical data (shallow-compare guard)', () => {
+    // Seed current status with already-running state
+    useStatusStore.setState({
+      status: {
+        platform: 'win32' as const,
+        apps: [
+          {
+            appId: 'traework' as const,
+            displayName: 'Trae',
+            installed: true,
+            running: true,
+            debugReady: true,
+            port: 9222,
+            activeThemeId: null,
+          },
+        ],
+      },
+      lastStatusAt: 1000,
+    });
+
+    const callback = getCoordinatorCallback();
+    // Push identical state — should be a no-op
+    callback({ appId: 'traework', state: { running: true, port: 9222, debugReady: true } });
+
+    // lastStatusAt should remain unchanged, confirming the short-circuit worked
+    expect(useStatusStore.getState().lastStatusAt).toBe(1000);
+  });
+
+  it('ignores coordinator pushes when no status is loaded yet', () => {
+    // status is null initially
+    expect(useStatusStore.getState().status).toBeNull();
+
+    const callback = getCoordinatorCallback();
+    // Should not throw and should not modify state
+    callback({ appId: 'traework', state: { running: true, port: 9222, debugReady: true } });
+
+    expect(useStatusStore.getState().status).toBeNull();
+  });
+});
