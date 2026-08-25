@@ -5,10 +5,12 @@ import type { ThemeWallpaper } from './wallpaper';
 
 /**
  * 14-token color palette fields (manifest-level).
- * Extends Record<string, string> for forward-compatibility with custom fields,
- * but provides type safety for the 14 known token keys.
+ * Intersection with Record<string, string> for forward-compatibility with custom fields,
+ * while providing type safety for the 14 known token keys.
+ * Uses a type alias (not interface extends) so optional named properties
+ * can coexist with the string index signature.
  */
-export interface ThemeManifestColors extends Record<string, string> {
+export type ThemeManifestColors = {
   accent?: string;
   secondary?: string;
   background?: string;
@@ -24,7 +26,7 @@ export interface ThemeManifestColors extends Record<string, string> {
   buttonForeground?: string;
   focusRing?: string;
   selection?: string;
-}
+} & Record<string, string>;
 
 export interface ThemeManifest {
   id: string;
