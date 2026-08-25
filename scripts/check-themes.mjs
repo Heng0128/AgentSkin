@@ -25,6 +25,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { PALETTE_TOKENS, REQUIRED_TOKENS } from './theme-tokens.mjs';
 import { checkExtendedContrast, checkThemeContrast } from './wcag-apca-check.mjs';
 
 const THEMES_DIR = path.resolve(process.cwd(), 'themes');
