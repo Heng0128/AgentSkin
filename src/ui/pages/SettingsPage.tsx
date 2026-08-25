@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { ThemeMode } from '@/design/theme-mode';
 import type { AppController, SettingsSection } from '@/hooks/useAppController';
@@ -174,6 +175,7 @@ function LiveDomRefreshIntervalEditor({ t }: { t: AppController['t'] }) {
 /** MCP Service settings panel — Blender MCP style: Start/Stop buttons + status + copy URL. */
 function McpSettingsPanel({ t }: { t: AppController['t'] }) {
   const mcpRunning = useSettingsStore((s) => s.mcpRunning);
+  const mcpBusy = useSettingsStore((s) => s.mcpBusy);
   const mcpUrl = useSettingsStore((s) => s.mcpUrl);
   const refreshMcpStatus = useSettingsStore((s) => s.refreshMcpStatus);
   const toggleMcp = useSettingsStore((s) => s.toggleMcp);
@@ -208,16 +210,20 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
               size="sm"
               variant="outline"
               className="h-7 gap-1.5 px-2.5 text-[11px]"
+              disabled={mcpBusy}
               onClick={() => void toggleMcp()}
             >
+              {mcpBusy ? <Spinner data-icon="inline-start" /> : null}
               {t.settingsMcpStop}
             </Button>
           ) : (
             <Button
               size="sm"
               className="h-7 gap-1.5 px-2.5 text-[11px]"
+              disabled={mcpBusy}
               onClick={() => void toggleMcp()}
             >
+              {mcpBusy ? <Spinner data-icon="inline-start" /> : null}
               {t.settingsMcpStart}
             </Button>
           )}

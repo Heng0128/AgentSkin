@@ -5,6 +5,7 @@ import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/AppMark';
 import { cn } from '@/lib/utils';
 import { useEnvironmentStore } from '@/stores/environmentStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 import { useShellStore } from '@/stores/shellStore';
 
 import type { UiMessages } from '@shared/i18n';
@@ -75,6 +76,11 @@ export function QuickEnvironmentCreate({
       );
       if (result.success) {
         onCreated?.();
+      } else {
+        // Surface failure to user — environment creation failed for some reason
+        useNotificationStore
+          .getState()
+          .fail(new Error(result.message || 'Failed to create environment'));
       }
     } finally {
       setSubmitting(false);
