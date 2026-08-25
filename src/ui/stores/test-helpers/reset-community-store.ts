@@ -28,5 +28,6 @@ export function resetCommunityStore(): void {
     downloadProgress: new Map(),
     installingIds: new Set(),
     installedIds: new Set(),
+    retryCount: new Map(),
   });
 }

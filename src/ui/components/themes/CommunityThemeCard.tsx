@@ -22,6 +22,10 @@ interface Props {
   isInstalled: boolean;
   isInstalling: boolean;
   downloadProgress?: DownloadProgressData;
+  /** Install error message — shown when installation fails */
+  installError?: string | null;
+  /** Number of failed install attempts */
+  retryCount?: number;
   onInstall: () => void;
   onUninstall: () => void;
   onCancel: () => void;
@@ -32,6 +36,8 @@ export function CommunityThemeCard({
   isInstalled,
   isInstalling,
   downloadProgress,
+  installError = null,
+  retryCount = 0,
   onInstall,
   onUninstall,
   onCancel,
@@ -142,7 +148,7 @@ export function CommunityThemeCard({
         )}
       </div>
 
-      {/* Action button / Download progress */}
+      {/* Action button / Download progress / Error + Retry */}
       <div className="border-t border-border p-2">
         {isInstalled ? (
           <button
@@ -168,6 +174,27 @@ export function CommunityThemeCard({
             >
               取消
             </button>
+          </div>
+        ) : installError ? (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between rounded-md bg-destructive/10 px-2 py-1">
+              <span className="truncate text-[10px] text-destructive" title={installError}>
+                {installError}
+              </span>
+            </div>
+            {retryCount >= 3 ? (
+              <div className="w-full rounded-md bg-muted px-3 py-1.5 text-center text-[10px] text-muted-foreground">
+                安装失败，请稍后重试
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onInstall}
+                className="w-full rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                重试
+              </button>
+            )}
           </div>
         ) : (
           <button

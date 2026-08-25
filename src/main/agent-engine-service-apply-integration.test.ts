@@ -17,19 +17,18 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AgentId, ApplyRequest, ApplyResponse } from '../shared/types';
 import {
+  APPLY_RESPONSE,
   cleanupHarness,
   deferred,
   flushMicrotasks,
   makeServiceStub,
-  setupAllMocks,
-  TEST_APP,
   STATUS,
-  APPLY_RESPONSE,
+  TEST_APP,
 } from './agent-engine-service-test-harness';
-import { applyThemeFlow } from './theme-apply-flow';
-import { restoreThemeFlow } from './theme-restore-flow';
 import { writeJsonAtomic } from './fs-utils';
 import { disposeThemeAssetCache } from './theme/utils';
+import { applyThemeFlow } from './theme-apply-flow';
+import { restoreThemeFlow } from './theme-restore-flow';
 import {
   cleanupSelfHealForAgent,
   disposeSelfHealState,
@@ -45,20 +44,56 @@ import {
 // （它们尚未初始化）。因此所有 mock 工厂内联定义，与现有 5 个测试文件
 // 保持一致的 mock 契约。
 //
-// 简单 mock（app-discovery / theme-apply-flow / theme-restore-flow / fs-utils /
-// wallpaper-injector）使用共享 harness 的 setupAllMocks() 提供，消除重复代码。
-//
 // wallpaper-self-heal 和 theme/utils (disposeThemeAssetCache) 使用真实实现
 // + spy（vi.fn(actual.xxx)），让测试覆盖更多业务逻辑。
 // ---------------------------------------------------------------------------
 
-const mocks = setupAllMocks();
+vi.mock('./app-discovery', () => {
+  class LivePortCache {
+    private m = new Map<string, number>();
+    get(a: string): number | null {
+      return this.m.get(a) ?? null;
+    }
+    set(a: string, p: number): void {
+      this.m.set(a, p);
+    }
+    clear(a: string): void {
+      this.m.delete(a);
+    }
+    clearAll(): void {
+      this.m.clear();
+    }
+    size(): number {
+      return this.m.size;
+    }
+  }
+  return {
+    LivePortCache,
+    reconcileZombiePorts: vi.fn(async () => {}),
+    probeAppStatus: vi.fn(async () => undefined),
+    resolveLivePort: vi.fn(async () => null),
+    ensureCdpReady: vi.fn(async () => ({ ok: true, port: 9222, reason: null })),
+    inferRestartReason: vi.fn(async () => ({ kind: 'not-installed' as const })),
+  };
+});
 
-vi.mock('./app-discovery', () => mocks.appDiscovery);
-vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: mocks.applyThemeFlow }));
-vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: mocks.restoreThemeFlow }));
-vi.mock('./fs-utils', () => mocks.fsUtils);
-vi.mock('./wallpaper-injector', () => mocks.wallpaperInjector);
+vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
+vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));
+
+vi.mock('./fs-utils', () => ({
+  writeJsonAtomic: vi.fn(async () => {}),
+  appendLogLine: vi.fn(async () => {}),
+}));
+
+vi.mock('./wallpaper-injector', () => ({
+  applyAgentWallpaperNow: vi.fn(async () => ({ ok: true as const })),
+  applyWallpaperToAgent: vi.fn(async () => ({ ok: true as const })),
+  injectAgentWallpaperFromApply: vi.fn(async () => {}),
+  removeAgentVideoWallpaper: vi.fn(async () => {}),
+  removeWallpaperFromAgent: vi.fn(async () => ({ ok: true as const })),
+  getCapturedTokensSize: vi.fn(() => 0),
+  getDeferredSelfHealsSize: vi.fn(() => 0),
+}));
 
 vi.mock('./theme/utils', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./theme/utils')>();

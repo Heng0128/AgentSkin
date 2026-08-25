@@ -155,10 +155,12 @@ export function useAppController() {
   const launchRestartPrompt = useDialogStore((s) => s.launchRestartPrompt);
   const deletePrompt = useDialogStore((s) => s.deletePrompt);
   const fileImportPrompt = useDialogStore((s) => s.fileImportPrompt);
+  const restoreAllPrompt = useDialogStore((s) => s.restoreAllPrompt);
   const setDeletePrompt = useDialogStore((s) => s.setDeletePrompt);
   const setFileImportPrompt = useDialogStore((s) => s.setFileImportPrompt);
   const setRestartPrompt = useDialogStore((s) => s.setRestartPrompt);
   const setLaunchRestartPrompt = useDialogStore((s) => s.setLaunchRestartPrompt);
+  const setRestoreAllPrompt = useDialogStore((s) => s.setRestoreAllPrompt);
 
   // -----------------------------------------------------------------------
   // Agent slice
@@ -415,6 +417,8 @@ export function useAppController() {
       setDeletePrompt,
       fileImportPrompt,
       setFileImportPrompt,
+      restoreAllPrompt,
+      setRestoreAllPrompt,
 
       // ── Settings ─────────────────────────────────────────────────────
       settingsSection,
@@ -499,6 +503,8 @@ export function useAppController() {
       setDeletePrompt,
       fileImportPrompt,
       setFileImportPrompt,
+      restoreAllPrompt,
+      setRestoreAllPrompt,
       // Settings
       settingsSection,
       setSettingsSection,

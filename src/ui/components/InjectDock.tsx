@@ -18,7 +18,7 @@ import { RotateCcw, Upload, X } from 'lucide-react';
  * `injectDockOpen` state.
  */
 export function InjectDock({ controller }: { controller: AppController }) {
-  const { t, status, injectDockOpen, setInjectDockOpen, restoreAll } = controller;
+  const { t, status, injectDockOpen, setInjectDockOpen, setRestoreAllPrompt } = controller;
   const [dimmed, setDimmed] = useState(false);
 
   // Auto-dim when the pointer leaves the dock for a while — the dock stays
@@ -76,8 +76,8 @@ export function InjectDock({ controller }: { controller: AppController }) {
       <button
         type="button"
         onClick={() => {
-          void restoreAll();
-          setInjectDockOpen(false);
+          // Show confirmation dialog with active injection count
+          controller.setRestoreAllPrompt(activeApps.length);
         }}
         className="flex items-center gap-1 rounded-md bg-card2 px-2 py-1 text-[10px] text-foreground transition-colors hover:border-primary hover:text-primary"
       >

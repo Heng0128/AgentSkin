@@ -55,6 +55,8 @@ interface DialogState {
   launchRestartPrompt: LaunchRestartPrompt | null;
   deletePrompt: ThemeCatalogItem | null;
   fileImportPrompt: FileImportConfirmRequest | null;
+  /** Restore-all confirmation prompt — set to the active injection count to confirm. */
+  restoreAllPrompt: number | null;
 
   // --- setters ---
   setRestartPrompt: (prompt: RestartPrompt | null) => void;
@@ -62,6 +64,8 @@ interface DialogState {
   setLaunchRestartPrompt: (prompt: LaunchRestartPrompt | null) => void;
   setDeletePrompt: (prompt: ThemeCatalogItem | null) => void;
   setFileImportPrompt: (prompt: FileImportConfirmRequest | null) => void;
+  /** Set to active injection count to show confirmation; null to dismiss. */
+  setRestoreAllPrompt: (count: number | null) => void;
 }
 
 export const useDialogStore = create<DialogState>((set) => ({
@@ -70,10 +74,12 @@ export const useDialogStore = create<DialogState>((set) => ({
   launchRestartPrompt: null,
   deletePrompt: null,
   fileImportPrompt: null,
+  restoreAllPrompt: null,
 
   setRestartPrompt: (restartPrompt) => set({ restartPrompt }),
   setWallpaperRestartPrompt: (wallpaperRestartPrompt) => set({ wallpaperRestartPrompt }),
   setLaunchRestartPrompt: (launchRestartPrompt) => set({ launchRestartPrompt }),
   setDeletePrompt: (deletePrompt) => set({ deletePrompt }),
   setFileImportPrompt: (fileImportPrompt) => set({ fileImportPrompt }),
+  setRestoreAllPrompt: (restoreAllPrompt) => set({ restoreAllPrompt }),
 }));

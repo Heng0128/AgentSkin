@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, afterEach } from 'vitest';
+import { render, screen, cleanup } from '@testing-library/react';
 import { DownloadProgress } from '../../src/ui/components/themes/DownloadProgress';
+
+// happy-dom does not auto-cleanup between tests; ensure each test starts fresh
+afterEach(() => {
+  cleanup();
+});
 
 // ---------------------------------------------------------------------------
 // Test suite
@@ -13,11 +18,7 @@ describe('DownloadProgress', () => {
 
   it('renders a progress bar', () => {
     render(
-      <DownloadProgress
-        progress={42}
-        bytesDownloaded={0}
-        totalBytes={1024}
-      />,
+      <DownloadProgress progress={42} bytesDownloaded={0} totalBytes={1024} />,
     );
     expect(screen.getByRole('progressbar')).toBeTruthy();
   });
@@ -26,11 +27,7 @@ describe('DownloadProgress', () => {
 
   it('displays the correct percentage text', () => {
     render(
-      <DownloadProgress
-        progress={42}
-        bytesDownloaded={0}
-        totalBytes={1024}
-      />,
+      <DownloadProgress progress={42} bytesDownloaded={0} totalBytes={1024} />,
     );
     expect(screen.getByText('42%')).toBeTruthy();
   });
@@ -46,11 +43,7 @@ describe('DownloadProgress', () => {
     expect(screen.getByText('100%')).toBeTruthy();
 
     rerender(
-      <DownloadProgress
-        progress={-10}
-        bytesDownloaded={0}
-        totalBytes={1024}
-      />,
+      <DownloadProgress progress={-10} bytesDownloaded={0} totalBytes={1024} />,
     );
     expect(screen.getByText('0%')).toBeTruthy();
   });
@@ -65,20 +58,24 @@ describe('DownloadProgress', () => {
         totalBytes={1024}
         showDetails
       />,
-   );
-    expect(screen.getByText(/512 B/)).toBeTruthy();
-    expect(screen.getByText(/1024 B/)).toBeTruthy();
+    );
+    // The detail row is a single div containing "512 B / 1.0 KB"
+    expect(
+      screen.getByText((content, element) =>
+        content.includes('512 B') && content.includes('1.0 KB'),
+      ),
+    ).toBeTruthy();
   });
 
   it('hides detail row when showDetails is false', () => {
     render(
-      <DownloadProgress
-        progress={50}
-        bytesDownloaded={512}
-        totalBytes={1024}
-      />,
+      <DownloadProgress progress={50} bytesDownloaded={512} totalBytes={1024} />,
     );
-    expect(screen.queryByText(/512 B/)).toBeNull();
+    expect(
+      screen.queryByText((content, element) =>
+        content.includes('512 B') && content.includes('1.0 KB'),
+      ),
+    ).toBeNull();
   });
 
   // --- 4. Byte formatting ---
@@ -92,8 +89,11 @@ describe('DownloadProgress', () => {
         showDetails
       />,
     );
-    expect(screen.getByText('500 B')).toBeTruthy();
-    expect(screen.getByText('1.0 KB')).toBeTruthy();
+    expect(
+      screen.getByText((content) =>
+        content.includes('500 B') && content.includes('1.0 KB'),
+      ),
+    ).toBeTruthy();
 
     rerender(
       <DownloadProgress
@@ -103,8 +103,11 @@ describe('DownloadProgress', () => {
         showDetails
       />,
     );
-    expect(screen.getByText('1.0 MB')).toBeTruthy();
-    expect(screen.getByText('2.0 MB')).toBeTruthy();
+    expect(
+      screen.getByText((content) =>
+        content.includes('1.0 MB') && content.includes('2.0 MB'),
+      ),
+    ).toBeTruthy();
   });
 
   // --- 5. Phase icons ---
@@ -134,7 +137,7 @@ describe('DownloadProgress', () => {
     const icon = document.querySelector('svg');
     expect(icon).not.toBeNull();
     // Loader2 carries animate-spin
-    expect(icon?.className.baseVal).toContain('animate-spin');
+    expect(icon?.getAttribute('class')).toContain('animate-spin');
     expect(screen.getByText('验证中…')).toBeTruthy();
   });
 
@@ -156,11 +159,7 @@ describe('DownloadProgress', () => {
 
   it('sets the fill width to match the progress value', () => {
     render(
-      <DownloadProgress
-        progress={75}
-        bytesDownloaded={0}
-        totalBytes={1024}
-      />,
+      <DownloadProgress progress={75} bytesDownloaded={0} totalBytes={1024} />,
     );
     const fill = document.querySelector('[style*="width: 75%"]');
     expect(fill).not.toBeNull();

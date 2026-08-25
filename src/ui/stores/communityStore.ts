@@ -37,6 +37,15 @@ import { create } from 'zustand';
 let loadToken = 0;
 
 // ---------------------------------------------------------------------------
+// Retry configuration
+// ---------------------------------------------------------------------------
+
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+// ---------------------------------------------------------------------------
 // Runtime type guards — validate external data before use
 // ---------------------------------------------------------------------------
 
@@ -109,6 +118,7 @@ interface CommunityState {
   downloadProgress: Map<string, DownloadProgress>;
   installingIds: Set<string>;
   installedIds: Set<string>;
+  retryCount: Map<string, number>;
 
   // --- Actions ---
   loadThemes: (params?: Partial<CommunityThemeListParams>) => Promise<void>;
@@ -125,6 +135,7 @@ interface CommunityState {
   markInstalled: (themeId: string) => void;
   updateDownloadProgress: (progress: DownloadProgress) => void;
   clearError: () => void;
+  resetRetryCount: (themeId: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -150,6 +161,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   downloadProgress: new Map(),
   installingIds: new Set(),
   installedIds: new Set(),
+  retryCount: new Map(),
 
   // --- Load theme list ---
   loadThemes: async (params) => {
@@ -331,61 +343,129 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       }),
     });
 
-    try {
-      const result = await api.downloadCommunityTheme(themeId);
+    let lastError = '';
 
-      // Multi-layer null defense: guard against malformed API responses
-      // where result or result.data may be null/undefined
-      if (!result || typeof result !== 'object') {
-        // Null/Invalid result — clean up and return structured error
-        const errorMsg = 'Installation failed: Invalid response from server';
-        const stillInstalling = new Set(get().installingIds);
-        stillInstalling.delete(themeId);
-        const progress = new Map(get().downloadProgress);
-        progress.delete(themeId);
-        set({ installingIds: stillInstalling, downloadProgress: progress });
-
-        // Only show error if not a deliberate cancellation
-        if (get().installingIds.has(themeId)) {
-          useNotificationStore.getState().fail(errorMsg);
-        }
-        return { success: false, error: errorMsg };
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      // Check if cancelled before each attempt
+      if (!get().installingIds.has(themeId)) {
+        // User cancelled — do not show error, do not retry
+        return { success: false, error: 'Installation cancelled' };
       }
 
-      if (result.success && result.data?.success) {
-        // Mark as installed on success
-        const newInstalledIds = new Set(get().installedIds);
-        newInstalledIds.add(themeId);
+      try {
+        const result = await api.downloadCommunityTheme(themeId);
 
-        // Remove from installing — read current state to avoid stale closure
-        const stillInstalling = new Set(get().installingIds);
-        stillInstalling.delete(themeId);
+        // Multi-layer null defense: guard against malformed API responses
+        // where result or result.data may be null/undefined
+        if (!result || typeof result !== 'object') {
+          lastError = 'Installation failed: Invalid response from server';
 
-        // Clear progress
-        const progress = new Map(get().downloadProgress);
-        progress.delete(themeId);
+          // Retry if attempts remain
+          if (attempt < MAX_RETRIES) {
+            const newRetryCount = new Map(get().retryCount);
+            newRetryCount.set(themeId, attempt + 1);
+            set({ retryCount: newRetryCount });
+            await delay(RETRY_DELAY_MS);
+            continue;
+          }
 
-        set({
-          installedIds: newInstalledIds,
-          installingIds: stillInstalling,
-          downloadProgress: progress,
-        });
+          // Max retries reached — clean up
+          const stillInstalling = new Set(get().installingIds);
+          stillInstalling.delete(themeId);
+          const progress = new Map(get().downloadProgress);
+          progress.delete(themeId);
+          set({ installingIds: stillInstalling, downloadProgress: progress });
 
-        // Notify other parts of the app
-        useNotificationStore
-          .getState()
-          .showToast(
-            result.data.themeId
-              ? `Theme "${themeId}" installed successfully`
-              : 'Theme installed successfully',
-          );
+          // Only show error if not a deliberate cancellation
+          if (get().installingIds.has(themeId)) {
+            useNotificationStore.getState().fail(lastError);
+          }
+          return { success: false, error: lastError };
+        }
 
-        return result.data;
-      } else {
-        // Install failed — clean up installing state
+        if (result.success && result.data?.success) {
+          // Mark as installed on success
+          const newInstalledIds = new Set(get().installedIds);
+          newInstalledIds.add(themeId);
+
+          // Remove from installing — read current state to avoid stale closure
+          const stillInstalling = new Set(get().installingIds);
+          stillInstalling.delete(themeId);
+
+          // Clear progress and retry count
+          const progress = new Map(get().downloadProgress);
+          progress.delete(themeId);
+          const newRetryCount = new Map(get().retryCount);
+          newRetryCount.delete(themeId);
+
+          set({
+            installedIds: newInstalledIds,
+            installingIds: stillInstalling,
+            downloadProgress: progress,
+            retryCount: newRetryCount,
+          });
+
+          // Notify other parts of the app
+          useNotificationStore
+            .getState()
+            .showToast(
+              result.data.themeId
+                ? `Theme "${themeId}" installed successfully`
+                : 'Theme installed successfully',
+            );
+
+          return result.data;
+        } else {
+          // API returned failure — extract error and decide whether to retry
+          lastError = result.data?.error || 'Installation failed';
+
+          if (attempt < MAX_RETRIES) {
+            const newRetryCount = new Map(get().retryCount);
+            newRetryCount.set(themeId, attempt + 1);
+            set({ retryCount: newRetryCount });
+            await delay(RETRY_DELAY_MS);
+            continue;
+          }
+
+          // Max retries reached — clean up
+          const wasCancelled = !get().installingIds.has(themeId);
+          const stillInstalling = new Set(get().installingIds);
+          stillInstalling.delete(themeId);
+          const progress = new Map(get().downloadProgress);
+          progress.delete(themeId);
+
+          set({
+            installingIds: stillInstalling,
+            downloadProgress: progress,
+          });
+
+          // When cancelInstall() is called, it removes the theme from
+          // installingIds before this promise resolves. A missing entry
+          // means the user intentionally cancelled — do not show an
+          // error toast for a deliberate cancellation.
+          if (!wasCancelled) {
+            useNotificationStore.getState().fail(lastError);
+          }
+
+          return {
+            success: false,
+            error: lastError,
+          };
+        }
+      } catch (error) {
+        // Exception — decide whether to retry
+        lastError = error instanceof Error ? error.message : 'Unknown error during installation';
+
+        if (attempt < MAX_RETRIES) {
+          const newRetryCount = new Map(get().retryCount);
+          newRetryCount.set(themeId, attempt + 1);
+          set({ retryCount: newRetryCount });
+          await delay(RETRY_DELAY_MS);
+          continue;
+        }
+
+        // Max retries reached — clean up
         const wasCancelled = !get().installingIds.has(themeId);
-
-        // Read current state to avoid stale closure
         const stillInstalling = new Set(get().installingIds);
         stillInstalling.delete(themeId);
         const progress = new Map(get().downloadProgress);
@@ -396,49 +476,20 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           downloadProgress: progress,
         });
 
-                // Safe error extraction with nullish coalescing
-        const errorMsg = result.data?.error || 'Installation failed';
-
-        // When cancelInstall() is called, it removes the theme from
-        // installingIds before this promise resolves. A missing entry
-        // means the user intentionally cancelled — do not show an
-        // error toast for a deliberate cancellation.
+        // Same cancellation guard: if the theme was already removed from
+        // installingIds by cancelInstall(), the exception is a downstream
+        // consequence of the cancellation and should not surface as an
+        // error toast.
         if (!wasCancelled) {
-          useNotificationStore.getState().fail(errorMsg);
+          useNotificationStore.getState().fail(lastError);
         }
 
-        return {
-          success: false,
-          error: errorMsg,
-        };
+        return { success: false, error: lastError };
       }
-    } catch (error) {
-      // Exception — clean up
-      const wasCancelled = !get().installingIds.has(themeId);
-
-      // Read current state to avoid stale closure
-      const stillInstalling = new Set(get().installingIds);
-      stillInstalling.delete(themeId);
-      const progress = new Map(get().downloadProgress);
-      progress.delete(themeId);
-
-      set({
-        installingIds: stillInstalling,
-        downloadProgress: progress,
-      });
-
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error during installation';
-
-      // Same cancellation guard as the else branch above: if the theme
-      // was already removed from installingIds by cancelInstall(), the
-      // exception is a downstream consequence of the cancellation and
-      // should not surface as an error toast.
-      if (!wasCancelled) {
-        useNotificationStore.getState().fail(errorMsg);
-      }
-
-      return { success: false, error: errorMsg };
     }
+
+    // Fallback (should not reach here)
+    return { success: false, error: 'Installation failed after retries' };
   },
 
   // --- Uninstall a community theme ---
@@ -493,6 +544,13 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   // --- Clear errors ---
   clearError: () => {
     set({ error: null });
+  },
+
+  // --- Reset retry count for a theme (e.g. on manual retry) ---
+  resetRetryCount: (themeId: string) => {
+    const retryCount = new Map(get().retryCount);
+    retryCount.delete(themeId);
+    set({ retryCount });
   },
 }));
 

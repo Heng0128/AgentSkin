@@ -13,7 +13,7 @@
  *   - Error → error message with retry button
  */
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertCircle, Search, Users } from 'lucide-react';
 import { CommunityThemeCard } from './CommunityThemeCard';
 import { ThemeDetailPanel } from './ThemeDetailPanel';
@@ -49,9 +49,42 @@ export function CommunityTabPanel() {
     loadThemeDetail,
   } = useCommunityStore();
 
+  // Track per-theme install errors and retry counts
+  const [installErrors, setInstallErrors] = useState<Map<string, { error: string; retryCount: number }>>(new Map());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locale = useShellStore((s) => s.locale);
   const t = uiMessages[locale];
+
+  // Clear error for a theme when install starts/retry is attempted
+  const handleInstall = useCallback(async (themeId: string) => {
+    setInstallErrors((prev) => {
+      const next = new Map(prev);
+      next.delete(themeId);
+      return next;
+    });
+    await useCommunityStore.getState().installTheme(themeId);
+  }, []);
+
+  // Handle installTheme result and capture errors
+  const handleInstallWithTracking = useCallback(async (themeId: string) => {
+    const retryCount = installErrors.get(themeId)?.retryCount ?? 0;
+    const result = await useCommunityStore.getState().installTheme(themeId);
+
+    if (!result.success && result.error) {
+      setInstallErrors((prev) => {
+        const next = new Map(prev);
+        next.set(themeId, { error: result.error, retryCount: retryCount + 1 });
+        return next;
+      });
+    } else if (result.success) {
+      // Clear error on success
+      setInstallErrors((prev) => {
+        const next = new Map(prev);
+        next.delete(themeId);
+        return next;
+      });
+    }
+  }, [installErrors]);
 
   // Initial load
   useEffect(() => {
@@ -202,6 +235,7 @@ export function CommunityTabPanel() {
           const isInstalled = installedIds.has(theme.themeId);
           const isInstalling = installingIds.has(theme.themeId);
           const progress = downloadProgress.get(theme.themeId);
+          const installError = installErrors.get(theme.themeId);
 
           return (
             <div
@@ -217,8 +251,10 @@ export function CommunityTabPanel() {
                 isInstalled={isInstalled}
                 isInstalling={isInstalling}
                 downloadProgress={progress}
+                installError={installError?.error ?? null}
+                retryCount={installError?.retryCount ?? 0}
                 onInstall={() => {
-                  useCommunityStore.getState().installTheme(theme.themeId);
+                  void handleInstallWithTracking(theme.themeId);
                 }}
                 onUninstall={() => {
                   useCommunityStore.getState().uninstallTheme(theme.themeId);

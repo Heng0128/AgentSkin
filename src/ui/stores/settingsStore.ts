@@ -87,6 +87,8 @@ interface SettingsState {
   mcpRunning: boolean;
   /** MCP HTTP server URL (e.g. "http://127.0.0.1:3333/mcp") or null when stopped. */
   mcpUrl: string | null;
+  /** MCP operation in-progress guard — prevents double-click race condition. */
+  mcpBusy: boolean;
 
   setSettingsOpen: (open: boolean) => void;
   setSettingsSection: (section: SettingsSection) => void;
@@ -119,6 +121,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   motion: loadMotion(),
   mcpRunning: false,
   mcpUrl: null,
+  mcpBusy: false,
 
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setSettingsSection: (settingsSection) => set({ settingsSection }),
@@ -227,7 +230,15 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   },
 
   toggleMcp: async () => {
-    const { mcpRunning } = useSettingsStore.getState();
+    const { mcpRunning, mcpBusy } = useSettingsStore.getState();
+
+    // Guard: prevent concurrent toggle operations (double-click race condition)
+    if (mcpBusy) {
+      return;
+    }
+
+    set({ mcpBusy: true });
+
     try {
       if (mcpRunning) {
         await api.stopMcp();
@@ -246,6 +257,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       // Exception fallback — ensure user is always notified of failures
       // (e.g., port conflicts, network issues, main process restart)
       useNotificationStore.getState().fail(error);
+    } finally {
+      // Always release the busy guard, even on failure
+      set({ mcpBusy: false });
     }
   },
 }));

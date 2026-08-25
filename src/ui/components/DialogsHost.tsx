@@ -43,6 +43,9 @@ export function DialogsHost({ controller }: { controller: AppController }) {
     launchRestartPrompt,
     deletePrompt,
     fileImportPrompt,
+    restoreAllPrompt,
+    setRestoreAllPrompt,
+    restoreAll,
   } = controller;
   const appName = (appId: string) =>
     AGENT_IDS.includes(appId as AgentId) ? APP_META[appId as AgentId].name : appId;
@@ -293,6 +296,42 @@ export function DialogsHost({ controller }: { controller: AppController }) {
               {controller.busy === 'import' ? <Spinner data-icon="inline-start" /> : null}
               {t.fileImportReplace}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restore all confirmation dialog */}
+      <Dialog
+        open={restoreAllPrompt !== null}
+        onOpenChange={(open) => {
+          if (!open) setRestoreAllPrompt(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t.restoreAllAction}</DialogTitle>
+            <DialogDescription>
+              {restoreAllPrompt !== null && restoreAllPrompt > 0
+                ? `确定要还原 ${restoreAllPrompt} 个应用的注入主题吗？此操作不可撤销。`
+                : '没有需要恢复的应用。'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRestoreAllPrompt(null)}>
+              {t.cancel}
+            </Button>
+            {restoreAllPrompt !== null && restoreAllPrompt > 0 && (
+              <Button
+                variant="destructive"
+                disabled={controller.busy !== null}
+                onClick={() => {
+                  setRestoreAllPrompt(null);
+                  void restoreAll();
+                }}
+              >
+                {t.confirmDelete}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
