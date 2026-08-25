@@ -13,7 +13,7 @@
  * imperative access (matching the original zustand store API).
  */
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
 import type { StudioBundle } from '@/studio/bundle-store';
 import { useBundleStore } from '@/studio/bundle-store';
@@ -332,8 +332,12 @@ export function useStudioStore<T>(
     () => buildCombinedState(projectState, bundleState, captureState, iwState),
     [projectState, bundleState, captureState, iwState],
   );
-  const store = useStudioStore.getState();
-  const result = useMemo(() => ({ ...store, ...combined }), [store, combined]);
+  // RC2-A fix: Cache actions in a ref to keep a stable reference across renders.
+  // Actions are static functions that never change identity — caching them in a ref
+  // prevents useMemo from re-creating the result object on every render.
+  const actionsRef = useRef(useStudioStore.getState());
+  actionsRef.current = useStudioStore.getState();
+  const result = useMemo(() => ({ ...actionsRef.current, ...combined }), [combined]);
   return selector ? selector(result) : result;
 }
 

@@ -23,6 +23,7 @@ import type { PreviewView } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 import { ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 
 /** Ordered list of center tabs for the TopBar view switcher. */
 const TOPBAR_TABS: {
@@ -40,7 +41,14 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
     useWorkspaceStore();
 
   const activeProject = useStudioStore((s) => s.getActiveProject());
-  const { undoStack, redoStack, previewView } = useStudioStore();
+  // RC2-A fix: Replace full-store subscription with precise selector + useShallow
+  const { undoStack, redoStack, previewView } = useStudioStore(
+    useShallow((s) => ({
+      undoStack: s.undoStack,
+      redoStack: s.redoStack,
+      previewView: s.previewView,
+    })),
+  );
 
   const undoDisabled = undoStack.length === 0;
   const redoDisabled = redoStack.length === 0;

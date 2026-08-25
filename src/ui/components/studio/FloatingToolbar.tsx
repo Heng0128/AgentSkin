@@ -18,6 +18,7 @@ import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { UiMessages } from '@shared/i18n';
 import type { AgentId } from '@shared/types';
 import { Search } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 
 const ZOOM_PRESETS = [0.25, 0.38, 0.45, 0.55, 0.75, 1.0];
 
@@ -25,7 +26,14 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
   const window = useWorkspaceStore((s) => s.window);
   const setWindowScale = useWorkspaceStore((s) => s.setWindowScale);
 
-  const { inspectMode, toggleInspect } = useStudioStore();
+  // RC2-A fix: Replace full-store subscription with precise selector + useShallow
+  // to avoid re-renders when unrelated sub-store fields change.
+  const { inspectMode, toggleInspect } = useStudioStore(
+    useShallow((s) => ({
+      inspectMode: s.inspectMode,
+      toggleInspect: s.toggleInspect,
+    })),
+  );
 
   const [zoomOpen, setZoomOpen] = useState(false);
 

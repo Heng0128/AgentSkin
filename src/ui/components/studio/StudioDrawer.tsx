@@ -36,6 +36,7 @@ import {
   Shield,
   ShieldCheck,
 } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 
 // ---------------------------------------------------------------------------
 // Static agent profile data — avoids adding IPC channels. Token counts and
@@ -85,6 +86,8 @@ function getStrategyKey(tokens: number): StrategyKey {
 export function StudioDrawer({ t }: { t: UiMessages }) {
   const { drawer, setDrawerCollapsed } = useWorkspaceStore();
 
+  // RC2-A fix: Replace full-store subscription with precise selector + useShallow.
+  // Extracted actions (createProject, selectProject, etc.) are covered by useShallow.
   const {
     projects,
     activeProjectId,
@@ -99,7 +102,23 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
     setNewAuthor,
     newAgent,
     setNewAgent,
-  } = useStudioStore();
+  } = useStudioStore(
+    useShallow((s) => ({
+      projects: s.projects,
+      activeProjectId: s.activeProjectId,
+      installedThemes: s.installedThemes,
+      creatingProject: s.creatingProject,
+      createProject: s.createProject,
+      selectProject: s.selectProject,
+      setCreatingProject: s.setCreatingProject,
+      newName: s.newName,
+      setNewName: s.setNewName,
+      newAuthor: s.newAuthor,
+      setNewAuthor: s.setNewAuthor,
+      newAgent: s.newAgent,
+      setNewAgent: s.setNewAgent,
+    })),
+  );
 
   const [resourcesOpen, setResourcesOpen] = useState(true);
   const [projectsOpen, setProjectsOpen] = useState(true);
