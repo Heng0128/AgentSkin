@@ -2575,6 +2575,7 @@ export const mainMessages = {
     unsupportedPlatform: '当前只支持 macOS 和 Windows。',
     invalidCdpPort: 'CDP 端口必须是 1024 至 65535 的整数。',
     invalidPort: '端口必须是 1024 至 65535 的整数。',
+    portAllOccupied: '端口全部被占用',
     invalidCustomCss: '自定义 CSS 无效（非文本或超过 256KB 上限）。',
     invalidLiveDomRefreshInterval: '实时预览刷新间隔必须是非负整数（毫秒）。',
     invalidAgentId: '无效的应用标识符。',
@@ -2633,6 +2634,7 @@ export const mainMessages = {
     unsupportedPlatform: 'Only macOS and Windows are currently supported.',
     invalidCdpPort: 'The CDP port must be an integer from 1024 to 65535.',
     invalidPort: 'The port must be an integer from 1024 to 65535.',
+    portAllOccupied: 'All ports are occupied',
     invalidCustomCss: 'Invalid custom CSS (not text or exceeds the 256KB limit).',
     invalidLiveDomRefreshInterval:
       'Live preview refresh interval must be a non-negative integer (ms).',

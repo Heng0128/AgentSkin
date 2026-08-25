@@ -47,6 +47,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { requireAdapter } from '../../adapters/registry';
 import { toMessage } from '../../shared/errors';
+import { getMainMessages } from '../../shared/i18n';
 import type { LaunchResult } from '../../shared/types';
 import type { LaunchRequest } from '../../shared/types/launch';
 import { getAppRunStateCoordinator } from './app-run-state-coordinator';
@@ -440,7 +441,7 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
         ok: false,
         port: null,
         state: 'failed',
-        message: '端口全部被占用',
+        message: getMainMessages().portAllOccupied,
       };
     }
 
