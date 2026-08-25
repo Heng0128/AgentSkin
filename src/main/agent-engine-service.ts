@@ -75,7 +75,6 @@ import type { RendererHints } from './cdp/renderer-rank';
 import { CdpSessionPool } from './cdp/session-pool';
 import { EpochManager } from './epoch-manager';
 import { stopAudioLevelPolling } from './audio-level';
-import { disposeCoordinatorIpc } from './ipc/coordinator-ipc';
 import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import { ctx, notifyPersistFailure } from './main-context';
@@ -1070,8 +1069,6 @@ export class AgentEngineService implements AgentEngineServiceApi {
     PerformanceRecorder.reset();
     // RC-C1: Clear EpochManager Map to release internal state.
     this.epochs.clear();
-    // RC-C1: Dispose coordinator IPC handler to remove subscription.
-    disposeCoordinatorIpc();
     this.applyingTheme.clear();
     this.inflightOperations.clear();
     this.cdpSessionPool.dispose();
