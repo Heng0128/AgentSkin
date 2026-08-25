@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
-import type * as React from 'react';
+import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 import { Input as InputPrimitive } from '@base-ui/react/input';
 
-function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(function Input(
+  { className, type, ...props },
+  ref,
+) {
   return (
     <InputPrimitive
+      ref={ref}
       type={type}
       data-slot="input"
       className={cn(
@@ -16,6 +20,6 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
       {...props}
     />
   );
-}
+});
 
 export { Input };
