@@ -250,6 +250,7 @@ describe('AgentEngineServiceApi Structural Contract', () => {
       stopConcurrencyMetricsTimer: true,
       dispose: true,
       disposeAsync: true,
+      lastPersistError: true,
     };
 
     expect(Object.keys(_interfaceCheck).length).toBeGreaterThan(0);

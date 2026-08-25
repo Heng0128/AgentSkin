@@ -314,10 +314,10 @@ describe('AgentEngineService (core reliability)', () => {
       });
 
       // Mock applyInternal to return a background task gated by cleanupGate
-      const originalApplyInternal = (svc as unknown as {
-        applyInternal: (...args: unknown[]) => Promise<unknown>;
-      }).applyInternal;
-      vi.spyOn(svc as never, 'applyInternal').mockImplementation(async () => {
+      const svcWithPrivate = svc as unknown as {
+        applyInternal: (request: unknown) => Promise<{ response: { success: boolean; status: unknown }; background: Promise<void> }>;
+      };
+      vi.spyOn(svcWithPrivate, 'applyInternal').mockImplementation(async () => {
         const background = cleanupGate.catch(() => undefined);
         return { response: { success: true, status: {} }, background };
       });

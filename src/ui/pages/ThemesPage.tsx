@@ -12,7 +12,7 @@ import { PageToolbar } from '@/components/ui/page-toolbar';
 import { Spinner } from '@/components/ui/spinner';
 import { EmptyState } from '@/components/ui/empty-state';
 import type { AppController } from '@/hooks/useAppController';
-import { useThemeCenter } from '@/hooks/useThemeCenter';
+import { useThemeCenter, type ThemeSortKey } from '@/hooks/useThemeCenter';
 import { cn } from '@/lib/utils';
 
 import type { AgentId } from '@shared/types';
@@ -150,7 +150,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
               { value: 'category', label: t.sortCategory },
               { value: 'version', label: t.sortVersion },
             ],
-            onChange: tc.setSortBy,
+            onChange: (value) => tc.setSortBy(value as ThemeSortKey),
           }}
           sortOrder={{
             order: tc.sortOrder === 'asc' ? 'asc' : 'desc',

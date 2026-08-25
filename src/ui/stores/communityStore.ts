@@ -251,8 +251,9 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           detailLoading: false,
         });
       } else {
+        const errorMsg = result?.success === false && result.error ? result.error : 'Failed to load theme detail';
         set({
-          error: result?.error || 'Failed to load theme detail',
+          error: errorMsg,
           detailLoading: false,
         });
       }
@@ -328,7 +329,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           downloadProgress: progress,
         });
 
-        const errorMsg = result?.error || result?.data?.error || 'Installation failed';
+        const errorMsg = result?.data?.error || 'Installation failed';
         useNotificationStore.getState().fail(errorMsg);
 
         return {

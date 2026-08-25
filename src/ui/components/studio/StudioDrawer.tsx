@@ -15,8 +15,10 @@
 
 import { useState } from 'react';
 import { AppMark } from '@/components/app-mark';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
 import { appStatusFor } from '@/stores/agentStore';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWallpaperStore } from '@/stores/wallpaperStore';
@@ -133,29 +135,30 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
 
           {projectsOpen && (
             <div className="flex flex-col gap-1 mt-1">
-              <button
-                type="button"
-                className="ws-btn ws-btn--sm w-full"
+              <Button
+                size="sm"
+                variant="default"
+                className="w-full"
                 onClick={() => setCreatingProject(true)}
               >
                 <span className="text-secondary">+</span> {t.studioProjectNew}
-              </button>
+              </Button>
 
               {creatingProject && (
                 <div className="flex flex-col gap-1 p-2 rounded-sm border border-border bg-surface">
-                  <input
+                  <Input
                     type="text"
                     placeholder={t.studioProjectPlaceholder}
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    className="ws-input h-[var(--h-btn-sm)] text-[11px]"
+                    className="h-6 text-[11px]"
                   />
-                  <input
+                  <Input
                     type="text"
                     placeholder={t.studioProjectAuthorPlaceholder}
                     value={newAuthor}
                     onChange={(e) => setNewAuthor(e.target.value)}
-                    className="ws-input h-[var(--h-btn-sm)] text-[11px]"
+                    className="h-6 text-[11px]"
                   />
                   <div className="flex flex-wrap gap-1">
                     {AGENT_IDS.map((id) => {
@@ -163,16 +166,16 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                       const installed = Boolean(appStatusFor(id)?.installed);
                       if (!installed) return null;
                       return (
-                        <button
+                        <Button
                           key={id}
-                          type="button"
-                          data-selected={newAgent === id}
+                          size="xs"
+                          variant={newAgent === id ? 'primary' : 'default'}
                           onClick={() => setNewAgent(id)}
-                          className="ws-agent-chip"
+                          className="gap-1"
                         >
                           <AppMark appId={id} size={10} />
                           {meta.displayName}
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
@@ -233,20 +236,22 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                   })()}
 
                   <div className="flex gap-1">
-                    <button
-                      type="button"
-                      className="ws-btn ws-btn--sm flex-1 ws-btn--primary"
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      className="flex-1"
                       onClick={() => void createProject()}
                     >
                       {t.studioProjectCreate}
-                    </button>
-                    <button
-                      type="button"
-                      className="ws-btn ws-btn--sm flex-1"
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="flex-1"
                       onClick={() => setCreatingProject(false)}
                     >
                       {t.cancel}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -267,7 +272,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                   <span className="text-micro text-foreground truncate flex-1 text-left">
                     {p.name}
                   </span>
-                  {p.hasSnapshot && <span className="ws-badge ws-badge--success">snap</span>}
+                  {p.hasSnapshot && <Badge variant="success">snap</Badge>}
                 </button>
               ))}
             </div>

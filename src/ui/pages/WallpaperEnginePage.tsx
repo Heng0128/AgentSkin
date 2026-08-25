@@ -179,7 +179,7 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
             { value: 'title', label: t.weSortTitle },
             { value: 'size', label: t.weSortSize },
           ],
-          onChange: setSortBy,
+          onChange: (value) => setSortBy(value as 'title' | 'size'),
         }}
         left={
           <FilterChips

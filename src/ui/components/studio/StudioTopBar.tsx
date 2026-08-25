@@ -17,6 +17,8 @@
 
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { PreviewView } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
@@ -56,16 +58,9 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
       <div className="ws-topbar__left">
         <span className="ws-topbar__brand-icon">✦</span>
         <span className="ws-topbar__brand-name">{t.studioBrand}</span>
-        <span
-          className="badge-beta inline-flex items-center h-4 px-1 rounded-sm text-micro font-normal"
-          style={{
-            background: 'var(--accent)',
-            color: 'rgb(165 180 252)',
-            border: '1px solid rgba(var(--brand-rgb), 0.3)',
-          }}
-        >
+        <Badge variant="default" className="h-4 px-1 text-[10px] font-normal">
           {t.studioHeaderBeta}
-        </span>
+        </Badge>
         {activeProject && (
           <button
             type="button"
@@ -81,81 +76,68 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
       {/* Center: undo/redo + panel toggles */}
       <div className="ws-topbar__center">
         {/* Undo / Redo */}
-        <div
-          className="flex items-center gap-1 rounded-sm p-0"
-          style={{ background: 'var(--muted)' }}
-        >
-          <button
-            type="button"
+        <div className="flex items-center gap-0.5 rounded-sm bg-muted p-0.5">
+          <Button
+            size="icon-xs"
+            variant="ghost"
             disabled={undoDisabled}
             onClick={handleUndo}
-            className="ws-btn ws-btn--sm"
             title={t.studioUndo}
           >
             <ChevronsLeft className="size-3" />
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            size="icon-xs"
+            variant="ghost"
             disabled={redoDisabled}
             onClick={handleRedo}
-            className="ws-btn ws-btn--sm"
             title={t.studioRedo}
           >
             <ChevronsRight className="size-3" />
-          </button>
+          </Button>
         </div>
 
         {/* Center view switcher: 4 tabs (theme / wallpaper / bundle / raw) */}
-        <div
-          className="flex items-center gap-0 ml-2 rounded-sm p-0"
-          style={{ background: 'var(--muted)' }}
-        >
+        <div className="ml-2 flex items-center gap-0.5 rounded-sm bg-muted p-0.5">
           {TOPBAR_TABS.map((tab) => (
-            <button
+            <Button
               key={tab.view}
-              type="button"
-              data-active={previewView === tab.view}
+              size="xs"
+              variant={previewView === tab.view ? 'primary' : 'ghost'}
               onClick={() => useStudioStore.getState().setPreviewView(tab.view)}
-              className="ws-btn ws-btn--sm"
               title={t[tab.labelKey]}
             >
               {t[tab.labelKey]}
-            </button>
+            </Button>
           ))}
         </div>
 
         {/* Panel toggles */}
-        <div
-          className="flex items-center gap-1 ml-2 rounded-sm p-0"
-          style={{ background: 'var(--muted)' }}
-        >
-          <button
-            type="button"
-            data-active={dock.open}
+        <div className="ml-2 flex items-center gap-0.5 rounded-sm bg-muted p-0.5">
+          <Button
+            size="xs"
+            variant={dock.open ? 'primary' : 'ghost'}
             onClick={toggleDock}
-            className="ws-btn ws-btn--sm"
             title={t.studioDockToggle}
           >
             {t.studioDockTabFx}
-          </button>
-          <button
-            type="button"
-            data-active={drawer.open}
+          </Button>
+          <Button
+            size="xs"
+            variant={drawer.open ? 'primary' : 'ghost'}
             onClick={toggleDrawer}
-            className="ws-btn ws-btn--sm"
             title={t.studioDrawerToggle}
           >
             {t.studioDrawerToggle}
-          </button>
-          <button
-            type="button"
-            data-active={inspector.open}
+          </Button>
+          <Button
+            size="xs"
+            variant={inspector.open ? 'primary' : 'ghost'}
             onClick={toggleInspector}
-            className="ws-btn ws-btn--sm"
             title={t.studioInspectorToggle}
           >
             {t.studioInspectorToggle}
-          </button>
+          </Button>
         </div>
       </div>
     </header>
