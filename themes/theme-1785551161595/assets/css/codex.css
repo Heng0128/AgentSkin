@@ -506,7 +506,7 @@ main.main-surface[data-codexthemes-page="home"]:not(:has([data-app-shell-main-co
   color: var(--ct-accent);
   border: 1px solid var(--ct-border);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1;
   letter-spacing: 0;
   white-space: nowrap;

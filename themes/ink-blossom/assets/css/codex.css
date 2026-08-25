@@ -519,7 +519,7 @@ header::after {
   top: 50%;
   color: var(--ct-accent-strong);
   font-family: var(--ct-font-body);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0;
   opacity: 0.68;
@@ -776,7 +776,7 @@ main.main-surface[data-codexthemes-page="home"]::after {
 
   header::after {
     right: 56px;
-    font-size: 8px;
+    font-size: 10px;
   }
 
   main.main-surface[data-codexthemes-page="home"] h1::before {
@@ -784,7 +784,7 @@ main.main-surface[data-codexthemes-page="home"]::after {
     right: -6px;
     width: 30px;
     height: 30px;
-    font-size: 9px;
+    font-size: 10px;
   }
 }
 

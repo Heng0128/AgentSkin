@@ -309,7 +309,7 @@
   --color-chart-1: var(--chart-1);
 
   /* Typography scale */
-  --font-size-micro: 9px;
+  --font-size-micro: 10px;
   --font-size-label: 10px;
   --font-size-caption: 11px;
   --font-size-body: 11px;
@@ -319,6 +319,9 @@
   --leading-title: 1.25;
   --leading-body: 1.5;
   --tracking-tight: -0.02em;
+
+  /* Shadow — map CSS vars to Tailwind shadow utilities */
+  --shadow-float: var(--shadow-float);
 
   /* Duration scale */
   --duration-multiplier: 1;
