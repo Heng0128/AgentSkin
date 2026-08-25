@@ -52,8 +52,6 @@ export interface ThemeManifest {
   colorSchemes?: Record<string, { name?: string; mode?: string; colors: Record<string, string> }>;
   /** Extended color overrides. */
   extended?: Record<string, string>;
-  /** Variable bridge for Codex-style themes. */
-  variableBridge?: Record<string, string>;
   /** Per-agent CSS targets (present in manifest.json but not in runtime ThemePackage). */
   targets?: Record<string, { css: string; verification?: unknown }>;
 }

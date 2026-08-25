@@ -260,33 +260,6 @@ export const REMOVED_BUILTIN_THEME_IDS = [
   'rose-quartz',
   'sakura-noir',
   'sakura-pastel',
-  // v2.5 wallpaper-theme reset: the previous 23 built-in themes (imported
-  // bridge/CSS themes) were removed from themes/ in favor of 15 new photo-art
-  // themes (art-*). Registering their ids here prunes copies lingering in
-  // per-user ThemeLibrary on upgrade so users see only the new set.
-  'arina-hashimoto-codex-37d9',
-  'ba-xian',
-  'co2-blue-sky-baby',
-  'crow-brother-workbuddy-2856',
-  'doraemon-future-sky',
-  'enfp-inspiration-codex-b62e',
-  'frostline-tactical-glass',
-  'gazi-dog-heist',
-  'ink-blossom',
-  'kuromi',
-  'luffy-sky-liberation',
-  'miku-codex-acfc',
-  'miku-shuimo',
-  'misty-morning',
-  'shaolin-football',
-  'shenron-starwish',
-  'street-steel',
-  'sweet-strawberry-code',
-  'theme-1785551161595',
-  'theme-1786878605183',
-  'three-body-sophon',
-  'yuan-sky-stage',
-  'zhi-yin-ni-tai-mei',
   // v2.6 rename (2026-08-24): the 15 art-* built-in theme directories
   // were renamed to semantic ids based on each theme's actual hero image.
   // Their ids change accordingly, so any copies of the old art-* ids

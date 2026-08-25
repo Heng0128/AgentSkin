@@ -55,8 +55,6 @@ export interface GeneratorInput {
   isLight: boolean;
   colors: ThemeColors;
   signature?: Record<string, unknown> | null;
-  /** Optional double-layer variable bridge: client-native CSS var → agentskin token / literal */
-  variableBridge?: Record<string, string> | null;
 }
 
 /** 管线上下文：在 stage 间传递 */
