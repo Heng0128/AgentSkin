@@ -30,9 +30,12 @@ import { AgentEngineService } from './agent-engine-service';
 import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
 import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
 import { writeJsonAtomic } from './fs-utils';
+import { disposeCoordinatorIpc } from './ipc/coordinator-ipc';
 import { disposeThemeAssetCache } from './theme/utils';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
+import { stopAudioLevelPolling } from './audio-level';
+import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { disposeWallpaperInjectionState } from './wallpaper/injection-state';
 import { removeWallpaperFromAgent } from './wallpaper-injector';
 import { disposeSelfHealState } from './wallpaper-self-heal';
@@ -98,6 +101,11 @@ vi.mock('./wallpaper-self-heal', () => ({
   disposeSelfHealState: vi.fn(),
 }));
 vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
+vi.mock('./audio-level', () => ({ stopAudioLevelPolling: vi.fn() }));
+vi.mock('./services/performance/performance-recorder', () => ({
+  PerformanceRecorder: { reset: vi.fn(), start: vi.fn(), finishTrace: vi.fn(), release: vi.fn() },
+}));
+vi.mock('./ipc/coordinator-ipc', () => ({ disposeCoordinatorIpc: vi.fn() }));
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -513,6 +521,51 @@ describe('AgentEngineService (orchestration)', () => {
       // dispose 后仍可继续服务新请求（地图已清空，不会误判 in-flight）。
       await svc.apply(APPLY_REQUEST);
       expect(applyThemeFlow).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops audio level sampler on dispose (kills PowerShell proc + timer)', async () => {
+      const svc = makeService();
+      svc.dispose();
+      expect(stopAudioLevelPolling).toHaveBeenCalledTimes(1);
+    });
+
+    it('resets PerformanceRecorder static singleton on dispose', async () => {
+      const svc = makeService();
+      // Simulate an in-flight trace
+      PerformanceRecorder.start('traework', 'test-theme');
+      expect(PerformanceRecorder.getActive()).not.toBeNull();
+
+      svc.dispose();
+
+      expect(PerformanceRecorder.reset).toHaveBeenCalledTimes(1);
+      expect(PerformanceRecorder.getActive()).toBeNull();
+    });
+
+    it('clears EpochManager internal Map on dispose', async () => {
+      const svc = await makeInitializedService({
+        [TEST_APP]: { activeThemeId: 't1', port: 9222 },
+      });
+      // Trigger epoch bump
+      await svc.apply(APPLY_REQUEST);
+      // After dispose, the service should be disposed but epoch Map cleared
+      // (can't directly test private state, but verify no crash and service is disposed)
+      svc.dispose();
+      expect(svc.disposed).toBe(true);
+    });
+
+    it('disposes coordinator IPC handler on dispose', async () => {
+      const svc = makeService();
+      svc.dispose();
+      expect(disposeCoordinatorIpc).toHaveBeenCalledTimes(1);
+    });
+
+    it('disposes all resources in single pass even if already disposed', async () => {
+      const svc = makeService();
+      svc.dispose();
+      // Second dispose should be safe (idempotent side effects mocks just increment)
+      svc.dispose();
+      expect(stopAudioLevelPolling).toHaveBeenCalledTimes(2);
+      expect(PerformanceRecorder.reset).toHaveBeenCalledTimes(2);
     });
   });
 

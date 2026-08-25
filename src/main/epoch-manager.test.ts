@@ -95,3 +95,27 @@ describe('EpochManager.isEpochCurrent', () => {
     expect(mgr.isEpochCurrent(APP_A, captured)).toBe(false);
   });
 });
+
+describe('EpochManager.clear', () => {
+  it('removes all epoch entries for every agent', () => {
+    mgr.bumpEpoch(APP_A);
+    mgr.bumpEpoch(APP_A);
+    mgr.bumpEpoch(APP_B);
+
+    mgr.clear();
+
+    // After clear, all agents revert to implicit epoch 0
+    expect(mgr.isEpochCurrent(APP_A, 0)).toBe(true);
+    expect(mgr.isEpochCurrent(APP_B, 0)).toBe(true);
+  });
+
+  it('allows epoch counting to restart from 1 after clear', () => {
+    mgr.bumpEpoch(APP_A);
+    mgr.bumpEpoch(APP_A);
+    mgr.clear();
+
+    // Next bump should start from 1 again
+    expect(mgr.bumpEpoch(APP_A)).toBe(1);
+    expect(mgr.isEpochCurrent(APP_A, 1)).toBe(true);
+  });
+});

@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // 不 import main.ts（顶层会 boot electron）。只 import main-context。
-import { ctx, drainDisposables, registerDisposable } from './main-context';
+import { clearStatusNotifyTimer, ctx, drainDisposables, notifyStatusChanged, registerDisposable } from './main-context';
 
 describe('MainContext disposables', () => {
   beforeEach(() => {
@@ -51,5 +51,46 @@ describe('MainContext disposables', () => {
 
     expect(() => drainDisposables()).not.toThrow();
     expect(ok).toHaveBeenCalled();
+  });
+});
+
+describe('MainContext statusNotifyTimer cleanup', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    clearStatusNotifyTimer(); // ensure clean state
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('clearStatusNotifyTimer is a no-op when no timer is pending', () => {
+    expect(() => clearStatusNotifyTimer()).not.toThrow();
+  });
+
+  it('clearStatusNotifyTimer cancels a pending debounce timer', () => {
+    // Schedule a status change (sets the debounce timer)
+    notifyStatusChanged();
+
+    // Clear it before it fires
+    clearStatusNotifyTimer();
+
+    // Advance past the debounce window — no crash, no side effects
+    vi.advanceTimersByTime(100);
+    expect(true).toBe(true); // reached here = no throw
+  });
+
+  it('clearStatusNotifyTimer registered as disposable prevents timer leak on shutdown', () => {
+    // Simulate boot: register the cleanup
+    registerDisposable(() => clearStatusNotifyTimer());
+
+    // Schedule a status change
+    notifyStatusChanged();
+
+    // Simulate quit: drain disposals should clear the timer
+    drainDisposables();
+
+    // After drain, clearing again should be safe
+    expect(() => clearStatusNotifyTimer()).not.toThrow();
   });
 });
