@@ -81,8 +81,8 @@ export function QuickEnvironmentCreate({
     <div className="mt-1 space-y-1  bg-card p-2" style={{ borderRadius: 'var(--radius)' }}>
       {/* 工程名 */}
       <input
-        placeholder="工程名"
-        aria-label="工程名"
+        placeholder={t.studioProjectPlaceholder}
+        aria-label={t.studioProjectPlaceholder}
         className="h-6 w-full border border-input bg-muted px-2 text-[11px] outline-none focus:border-primary/60"
         style={{ borderRadius: 'var(--radius)' }}
         value={projectName}
@@ -94,8 +94,8 @@ export function QuickEnvironmentCreate({
 
       {/* 作者 */}
       <input
-        placeholder="作者（可选）"
-        aria-label="作者"
+        placeholder={t.studioProjectAuthorPlaceholder}
+        aria-label={t.studioProjectAuthorPlaceholder}
         className="h-6 w-full border border-input bg-muted px-2 text-[11px] outline-none focus:border-primary/60"
         style={{ borderRadius: 'var(--radius)' }}
         value={author}
@@ -159,7 +159,7 @@ export function QuickEnvironmentCreate({
           disabled={!canSubmit}
           onClick={() => void handleCreate()}
         >
-          {submitting ? '...' : '创建'}
+          {submitting ? '...' : t.studioProjectCreate}
         </button>
         <button
           type="button"
@@ -167,7 +167,7 @@ export function QuickEnvironmentCreate({
           style={{ borderRadius: 'var(--radius)' }}
           onClick={onCancel}
         >
-          取消
+          {t.cancel
         </button>
       </div>
     </div>

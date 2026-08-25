@@ -3,13 +3,15 @@
 import { Component, type ErrorInfo, Fragment, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { rError } from '@/utils/renderer-log';
+import { uiMessages } from '@shared/i18n';
+import type { AppLocale } from '@shared/i18n';
 
 import { AlertCircle } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  locale?: 'zh-CN' | 'en';
+  locale?: AppLocale;
   /** Compact inline layout — used to wrap a single route so the app
    *  chrome (sidebar/titlebar/statusbar) stays usable when only the
    *  page content crashes. */
@@ -52,10 +54,11 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
 
-      const title = '出现错误';
-      const desc = '发生了一个意外错误。';
-      const tryAgain = '重试';
-      const reload = '刷新应用';
+      const _t = uiMessages[this.props.locale ?? 'zh-CN'];
+      const title = _t.errorTitle;
+      const desc = _t.errorDescription;
+      const tryAgain = _t.errorTryAgain;
+      const reload = _t.errorReload;
 
       if (this.props.inline) {
         return (
