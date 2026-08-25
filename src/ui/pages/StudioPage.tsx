@@ -23,7 +23,7 @@
  * frameless window title bar.
  */
 
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import type { DesktopResolution } from '@/components/studio/device-frame';
 import { StudioDock } from '@/components/studio/StudioDock';
@@ -47,7 +47,6 @@ export function StudioPage() {
   const [pickedPath, setPickedPath] = useState<string | null>(null);
   const [resolution, setResolution] = useState<DesktopResolution>('1920x1080');
   const [showDeviceFrame, setShowDeviceFrame] = useState(false);
-  const [pickEnabled, _setPickEnabled] = useState(false);
 
   return (
     <ErrorBoundary>
@@ -59,7 +58,6 @@ export function StudioPage() {
           <StudioDrawer t={t} />
           <StudioStage
             t={t}
-            pickEnabled={pickEnabled}
             onIframeReady={(iframe) => {
               stageIframeRef.current = iframe;
             }}
