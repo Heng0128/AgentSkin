@@ -159,8 +159,9 @@ describe('bridge-theme-consistency', () => {
 
       it('should have valid CSS var names as keys when variableBridge is present', () => {
         if (!vb) {
-          // Not all bridge themes declare variableBridge in manifest — skip
-          expect(vb).toBeUndefined();
+          // Not all bridge themes declare variableBridge in manifest — skip.
+          // Using return (not a tautological assertion) so the test is
+          // clearly conditional, not falsely passing.
           return;
         }
         for (const key of Object.keys(vb)) {
@@ -170,8 +171,7 @@ describe('bridge-theme-consistency', () => {
 
       it('should reference valid --agentskin-* tokens in variableBridge values when present', () => {
         if (!vb) {
-          expect(vb).toBeUndefined();
-          return;
+          return; // conditional skip — no variableBridge in this theme
         }
         for (const [key, value] of Object.entries(vb)) {
           expect(
@@ -227,7 +227,7 @@ describe('bridge-theme-consistency', () => {
             css.includes('Bridge: Codex-native --color-token-* overrides');
           if (!hasBridgeMarker) {
             // Metadata-only export (no source CSS) — bridge section cannot exist.
-            expect(hasBridgeMarker).toBe(false);
+            // Conditional skip (not a tautological assertion).
             return;
           }
           expect(countColorBridgeOverrides(css)).toBeGreaterThan(0);

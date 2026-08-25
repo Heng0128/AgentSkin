@@ -49,7 +49,7 @@ import { describe, expect, it } from 'vitest';
 
 const THEMES_DIR = join(process.cwd(), 'themes');
 
-/** 14 required tokens (THEME_SPEC.md contract). */
+/** 14 required tokens (THEME_SPEC.md contract) + text-shadow (emitted by tokenBlock). */
 const REQUIRED_TOKENS = [
   '--agentskin-accent',
   '--agentskin-secondary',
@@ -65,6 +65,7 @@ const REQUIRED_TOKENS = [
   '--agentskin-selection',
   '--agentskin-button-bg',
   '--agentskin-input-bg',
+  '--agentskin-text-shadow',
 ] as const;
 
 /**
@@ -302,19 +303,28 @@ function extractTokensFromCss(css: string): Map<string, string> {
  * Handles:
  *   - #rrggbb on both sides → exact hex after normalisation.
  *   - rgba(...) vs #rrggbb → compare as opaque colors.
- *   - rgba with alpha <1 → blend over white, compare blended result.
+ *   - rgba with alpha <1 → blend over the theme's actual background color
+ *     (not always white), then compare blended result.
+ *
+ * The `bgColor` parameter should be the theme's `--agentskin-bg` value. This
+ * ensures transparent tokens in dark themes are blended over a dark surface
+ * (matching real rendering), not white which would produce a lighter result
+ * than what the user actually sees.
  *
  * Returns true when the colors are visually indistinguishable (within ±1
  * per-channel tolerance to absorb rounding differences between build output
  * and manifest declaration).
  */
-function colorsEquivalent(a: string, b: string): boolean {
+function colorsEquivalent(a: string, b: string, bgColor?: string): boolean {
   const ca = parseColor(a);
   const cb = parseColor(b);
   if (!ca || !cb) return false;
-  // Blend over white when alpha <1.
-  const aBlend = ca.a >= 1 ? ca : blendOver(ca, { r: 255, g: 255, b: 255, a: 1 });
-  const bBlend = cb.a >= 1 ? cb : blendOver(cb, { r: 255, g: 255, b: 255, a: 1 });
+  // Determine blend background: use theme bg if available, else white (light themes).
+  const bg: Rgba = bgColor
+    ? parseColor(bgColor) ?? { r: 255, g: 255, b: 255, a: 1 }
+    : { r: 255, g: 255, b: 255, a: 1 };
+  const aBlend = ca.a >= 1 ? ca : blendOver(ca, bg);
+  const bBlend = cb.a >= 1 ? cb : blendOver(cb, bg);
   return (
     Math.abs(aBlend.r - bBlend.r) <= 1 &&
     Math.abs(aBlend.g - bBlend.g) <= 1 &&
@@ -322,13 +332,17 @@ function colorsEquivalent(a: string, b: string): boolean {
   );
 }
 
-/** Compute WCAG contrast ratio between two CSS color strings (returns 1–21). */
-function computeContrastRatio(color1: string, color2: string): number {
+/** Compute WCAG contrast ratio between two CSS color strings (returns 1–21).
+ *  Transparent colors are blended over bgColor (or white if not provided). */
+function computeContrastRatio(color1: string, color2: string, bgColor?: string): number {
   const c1 = parseColor(color1);
   const c2 = parseColor(color2);
   if (!c1 || !c2) return 1;
-  const b1 = c1.a >= 1 ? c1 : blendOver(c1, { r: 255, g: 255, b: 255, a: 1 });
-  const b2 = c2.a >= 1 ? c2 : blendOver(c2, { r: 255, g: 255, b: 255, a: 1 });
+  const bg: Rgba = bgColor
+    ? parseColor(bgColor) ?? { r: 255, g: 255, b: 255, a: 1 }
+    : { r: 255, g: 255, b: 255, a: 1 };
+  const b1 = c1.a >= 1 ? c1 : blendOver(c1, bg);
+  const b2 = c2.a >= 1 ? c2 : blendOver(c2, bg);
   return wcagContrast(b1, b2);
 }
 
@@ -336,35 +350,48 @@ function computeContrastRatio(color1: string, color2: string): number {
  * Check WCAG AA compliance for the key text-on-surface pairs.
  * Returns array of violation strings (empty = all pass).
  */
-function checkWcagCompliance(tokens: Map<string, string>, mode: 'dark' | 'light'): string[] {
+function checkWcagCompliance(tokens: Map<string, string>, mode: 'dark' | 'light', bgColor?: string): string[] {
   const violations: string[] = [];
   const text = tokens.get('--agentskin-text');
   const muted = tokens.get('--agentskin-muted');
   const bg = tokens.get('--agentskin-bg');
   const surface = tokens.get('--agentskin-surface');
+  const surfaceElevated = tokens.get('--agentskin-surface-elevated');
   const accent = tokens.get('--agentskin-accent');
 
   if (text && bg) {
-    const ratio = computeContrastRatio(text, bg);
+    const ratio = computeContrastRatio(text, bg, bgColor);
     if (ratio < WCAG_NORMAL) {
       violations.push(`text/bg contrast ${ratio.toFixed(2)} < ${WCAG_NORMAL}`);
     }
   }
   if (muted && bg) {
-    const ratio = computeContrastRatio(muted, bg);
+    const ratio = computeContrastRatio(muted, bg, bgColor);
     if (ratio < WCAG_SECONDARY) {
       violations.push(`muted/bg contrast ${ratio.toFixed(2)} < ${WCAG_SECONDARY}`);
     }
   }
   if (text && surface) {
-    const ratio = computeContrastRatio(text, surface);
+    const ratio = computeContrastRatio(text, surface, bgColor);
     if (ratio < WCAG_NORMAL) {
       violations.push(`text/surface contrast ${ratio.toFixed(2)} < ${WCAG_NORMAL}`);
     }
   }
+  if (text && surfaceElevated) {
+    const ratio = computeContrastRatio(text, surfaceElevated, bgColor);
+    if (ratio < WCAG_NORMAL) {
+      violations.push(`text/surfaceElevated contrast ${ratio.toFixed(2)} < ${WCAG_NORMAL}`);
+    }
+  }
+  if (muted && surface) {
+    const ratio = computeContrastRatio(muted, surface, bgColor);
+    if (ratio < WCAG_SECONDARY) {
+      violations.push(`muted/surface contrast ${ratio.toFixed(2)} < ${WCAG_SECONDARY}`);
+    }
+  }
   if (accent && bg) {
     // Accent is used for links/buttons — UI components (≥3.0 AA).
-    const ratio = computeContrastRatio(accent, bg);
+    const ratio = computeContrastRatio(accent, bg, bgColor);
     if (ratio < WCAG_SECONDARY) {
       violations.push(`accent/bg contrast ${ratio.toFixed(2)} < ${WCAG_SECONDARY}`);
     }
@@ -512,7 +539,7 @@ describe('manifest-color ↔ CSS-token consistency', () => {
             `${t.id}/${agent}: token ${token} not found (manifest declares ${mKey}=${manifestVal})`,
           ).toBeTruthy();
           expect(
-            colorsEquivalent(manifestVal, cssVal!),
+            colorsEquivalent(manifestVal, cssVal!, t.colors.background),
             `${t.id}/${agent}: token ${token}="${cssVal}" does not match manifest.${mKey}="${manifestVal}"`,
           ).toBe(true);
         }
@@ -597,7 +624,7 @@ describe('WCAG AA contrast compliance', () => {
       it(`${t.id}/${agent} — passes WCAG AA`, () => {
         const css = readFileSync(cssPath, 'utf8');
         const tokens = extractTokensFromCss(css);
-        const violations = checkWcagCompliance(tokens, t.mode);
+        const violations = checkWcagCompliance(tokens, t.mode, t.colors.background);
         expect(
           violations,
           `${t.id}/${agent} WCAG violations:\n  - ${violations.join('\n  - ')}`,
