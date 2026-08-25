@@ -11,12 +11,7 @@
 import { cn } from '@/lib/utils';
 import { Loader2, Package } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-
-// ---------------------------------------------------------------------------
-// Phase type
-// ---------------------------------------------------------------------------
-
-export type DownloadPhase = 'downloading' | 'verifying' | 'installing';
+import type { DownloadPhase } from '@shared/types/community';
 
 // ---------------------------------------------------------------------------
 // Props

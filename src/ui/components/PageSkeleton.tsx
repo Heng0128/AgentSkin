@@ -24,7 +24,7 @@ export function PageSkeleton() {
       {/* Card grid — 8 placeholders */}
       <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="flex flex-col gap-2 rounded-md border border-border bg-card p-2">
+          <div key={`skeleton-card-${i}`} className="flex flex-col gap-2 rounded-md border border-border bg-card p-2">
             <Skeleton className="aspect-[16/9] w-full rounded-sm" />
             <Skeleton className="h-3 w-3/4" />
             <Skeleton className="h-2 w-1/2" />
