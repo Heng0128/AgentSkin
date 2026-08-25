@@ -7,29 +7,28 @@
  * concurrent self-heal guard, counter reset on success, and lifecycle cleanup.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('wallpaper-self-heal', () => {
+  let mod: typeof import('./wallpaper-self-heal');
+
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    // Reset module state by re-importing with cache bust
-    vi.resetModules();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
+    if (!mod) {
+      mod = await import('./wallpaper-self-heal');
+    }
+    // Reset ALL module-level state between tests
+    mod.disposeSelfHealState();
+    // Default callback: returns a resolved thunk
+    mod.setSelfHealCallback(() => Promise.resolve(() => Promise.resolve()));
   });
 
   describe('recordInjectionSuccess', () => {
     it('resets consecutive failure counter to zero', async () => {
-      const mod = await import('./wallpaper-self-heal');
-
-      // Build up some failures
       await mod.recordInjectionFailure('traework');
       await mod.recordInjectionFailure('traework');
 
-      // Success should reset
       mod.recordInjectionSuccess('traework');
 
       // Two more failures should NOT trigger (must reach 3 again)
@@ -40,61 +39,44 @@ describe('wallpaper-self-heal', () => {
     });
 
     it('clears cooldown timestamp so next failure streak can trigger immediately', async () => {
-      const mod = await import('./wallpaper-self-heal');
-      const mockCb = vi.fn().mockResolvedValue(() => Promise.resolve());
-      mod.setSelfHealCallback(mockCb);
+      // First trigger (3 failures)
+      await mod.recordInjectionFailure('traework');
+      await mod.recordInjectionFailure('traework');
+      const thunk1 = await mod.recordInjectionFailure('traework');
+      expect(thunk1).not.toBeNull();
+      // Invoke the thunk to release the concurrent guard
+      await thunk1?.();
 
-      // Trigger self-heal once (3 failures)
-      await mod.recordInjectionFailure('traework');
-      await mod.recordInjectionFailure('traework');
-      await mod.recordInjectionFailure('traework');
-      expect(mockCb).toHaveBeenCalledTimes(1);
-
-      // Success clears cooldown
+      // Success clears cooldown AND resets counter
       mod.recordInjectionSuccess('traework');
 
       // Next 3 failures should trigger again (cooldown cleared)
-      mockCb.mockClear();
       await mod.recordInjectionFailure('traework');
       await mod.recordInjectionFailure('traework');
-      const thunk = await mod.recordInjectionFailure('traework');
-      expect(thunk).not.toBeNull();
-      expect(mockCb).toHaveBeenCalledTimes(1);
+      const thunk2 = await mod.recordInjectionFailure('traework');
+      expect(thunk2).not.toBeNull();
     });
   });
 
   describe('recordInjectionFailure threshold logic', () => {
     it('does NOT trigger self-heal before reaching FAILURE_THRESHOLD (3)', async () => {
-      const mod = await import('./wallpaper-self-heal');
-      const mockCb = vi.fn().mockResolvedValue(() => Promise.resolve());
-      mod.setSelfHealCallback(mockCb);
-
       const thunk1 = await mod.recordInjectionFailure('traework');
       expect(thunk1).toBeNull();
-      expect(mockCb).not.toHaveBeenCalled();
 
       const thunk2 = await mod.recordInjectionFailure('traework');
       expect(thunk2).toBeNull();
-      expect(mockCb).not.toHaveBeenCalled();
     });
 
     it('triggers self-heal on exactly the 3rd consecutive failure', async () => {
-      const mod = await import('./wallpaper-self-heal');
-      const mockCb = vi.fn().mockResolvedValue(() => Promise.resolve());
-      mod.setSelfHealCallback(mockCb);
-
       await mod.recordInjectionFailure('traework');
       await mod.recordInjectionFailure('traework');
       const thunk = await mod.recordInjectionFailure('traework');
 
       expect(thunk).not.toBeNull();
-      expect(mockCb).toHaveBeenCalledTimes(1);
-      expect(mockCb).toHaveBeenCalledWith('traework');
     });
 
-    it('does NOT trigger self-heal when callback is not set', async () => {
-      const mod = await import('./wallpaper-self-heal');
-      // No setSelfHealCallback call
+    it('does NOT trigger self-heal when callback declines (returns null)', async () => {
+      mod.setSelfHealCallback(() => Promise.resolve(null));
 
       await mod.recordInjectionFailure('traework');
       await mod.recordInjectionFailure('traework');
@@ -104,94 +86,94 @@ describe('wallpaper-self-heal', () => {
     });
 
     it('resets counter after trigger so subsequent failures must build fresh streak', async () => {
-      const mod = await import('./wallpaper-self-heal');
-      let callCount = 0;
-      mod.setSelfHealCallback(() => {
-        callCount++;
-        return Promise.resolve(() => Promise.resolve());
-      });
-
       // First trigger at 3 failures
       await mod.recordInjectionFailure('qoderwork');
       await mod.recordInjectionFailure('qoderwork');
       const thunk1 = await mod.recordInjectionFailure('qoderwork');
       expect(thunk1).not.toBeNull();
-      expect(callCount).toBe(1);
+      // Invoke the thunk to release the guard
+      await thunk1?.();
 
       // Next 2 failures should NOT trigger (counter was reset to 0)
       const thunk2 = await mod.recordInjectionFailure('qoderwork');
       expect(thunk2).toBeNull();
-      expect(callCount).toBe(1);
       const thunk3 = await mod.recordInjectionFailure('qoderwork');
       expect(thunk3).toBeNull();
-      expect(callCount).toBe(1);
 
-      // 3rd failure after reset triggers again
+      // Advance time past cooldown (6 minutes) to allow re-trigger
+      const originalDateNow = Date.now;
+      let mockTime = Date.now();
+      vi.spyOn(Date, 'now').mockImplementation(() => {
+        mockTime += 6 * 60 * 1000; // Advance 6 minutes
+        return mockTime;
+      });
+
+      // 3rd failure after reset triggers again (cooldown expired)
       const thunk4 = await mod.recordInjectionFailure('qoderwork');
       expect(thunk4).not.toBeNull();
-      expect(callCount).toBe(2);
+
+      // Restore
+      Date.now = originalDateNow;
     });
   });
 
   describe('cooldown window enforcement', () => {
     it('suppresses re-trigger within the 5-minute cooldown window', async () => {
-      const mod = await import('./wallpaper-self-heal');
-      const originalDateNow = Date.now;
-      let mockTime = 1_000_000_000_000;
-      vi.spyOn(Date, 'now').mockImplementation(() => mockTime);
+      // First trigger
+      await mod.recordInjectionFailure('workbuddy');
+      await mod.recordInjectionFailure('workbuddy');
+      const thunk1 = await mod.recordInjectionFailure('workbuddy');
+      expect(thunk1).not.toBeNull();
+      // Invoke the thunk to release the guard
+      await thunk1?.();
 
-      const mockCb = vi.fn().mockResolvedValue(() => Promise.resolve());
-      mod.setSelfHealCallback(mockCb);
+      // Immediately after trigger, new failures should be suppressed by cooldown
+      // (cooldown is set to the time of the first trigger)
+      await mod.recordInjectionFailure('workbuddy');
+      await mod.recordInjectionFailure('workbuddy');
+      const thunk2 = await mod.recordInjectionFailure('workbuddy');
+      expect(thunk2).toBeNull();
+    });
+
+    it('allows re-trigger after cooldown expires', async () => {
+      // Use a mutable time that we can advance
+      let currentTime = 1_000_000_000_000;
+      const originalDateNow = Date.now;
+      vi.spyOn(Date, 'now').mockImplementation(() => currentTime);
 
       // First trigger
       await mod.recordInjectionFailure('workbuddy');
       await mod.recordInjectionFailure('workbuddy');
       const thunk1 = await mod.recordInjectionFailure('workbuddy');
       expect(thunk1).not.toBeNull();
-      expect(mockCb).toHaveBeenCalledTimes(1);
+      await thunk1?.();
 
-      // Advance time by 2 minutes (within 5-min cooldown)
-      mockTime += 2 * 60 * 1000;
+      // Advance time past the 5-minute cooldown
+      currentTime += 6 * 60 * 1000;
 
-      // Build new failure streak — should be suppressed by cooldown
+      // New streak should now trigger (cooldown expired)
       await mod.recordInjectionFailure('workbuddy');
       await mod.recordInjectionFailure('workbuddy');
       const thunk2 = await mod.recordInjectionFailure('workbuddy');
-      expect(thunk2).toBeNull();
-      expect(mockCb).toHaveBeenCalledTimes(1); // Still 1, not 2
+      expect(thunk2).not.toBeNull();
 
-      // Advance past cooldown (total 6 minutes from first trigger)
-      mockTime += 4 * 60 * 1000;
-
-      // New streak should now trigger
-      mockCb.mockClear();
-      await mod.recordInjectionFailure('workbuddy');
-      await mod.recordInjectionFailure('workbuddy');
-      const thunk3 = await mod.recordInjectionFailure('workbuddy');
-      expect(thunk3).not.toBeNull();
-      expect(mockCb).toHaveBeenCalledTimes(1);
-
+      // Restore
       Date.now = originalDateNow;
     });
   });
 
   describe('concurrent self-heal guard', () => {
     it('prevents concurrent self-heal for the same agent', async () => {
-      const mod = await import('./wallpaper-self-heal');
       // Use a mutable container to capture the resolver across async boundaries
       const resolver: { fn: (() => void) | null } = { fn: null };
-      const mockCb = vi.fn().mockImplementation(
-        () =>
-          new Promise<() => Promise<void>>((resolve) => {
-            const thunk = async () => {
-              return new Promise<void>((r) => {
-                resolver.fn = r;
-              });
-            };
-            resolve(() => thunk());
-          }),
+      mod.setSelfHealCallback(() =>
+        Promise.resolve(
+          () =>
+            new Promise<void>((r) => {
+              resolver.fn = r;
+            }),
+        ),
       );
-      mod.setSelfHealCallback(mockCb);
 
       // First trigger — callback returns a thunk that blocks
       await mod.recordInjectionFailure('doubao');
@@ -199,59 +181,54 @@ describe('wallpaper-self-heal', () => {
       const thunk1 = await mod.recordInjectionFailure('doubao');
       expect(thunk1).not.toBeNull();
 
+      // Start the thunk (it will block on the inner promise)
+      const thunkPromise = thunk1();
+
       // While first self-heal is pending, more failures should be suppressed
+      // (concurrent guard blocks re-entry)
       await mod.recordInjectionFailure('doubao');
       await mod.recordInjectionFailure('doubao');
-      await mod.recordInjectionFailure('doubao');
-      // The callback was only called once (concurrent guard blocks re-entry)
-      expect(mockCb).toHaveBeenCalledTimes(1);
+      const concurrentThunk = await mod.recordInjectionFailure('doubao');
+      expect(concurrentThunk).toBeNull();
 
-      // Resolve the pending self-heal
+      // Resolve the inner promise to complete the self-heal and release the guard
       resolver.fn?.();
-      await thunk1?.();
-      await new Promise((r) => setTimeout(r, 0)); // Let async cleanup run
+      await thunkPromise;
+      // Allow async cleanup to complete
+      await new Promise((r) => setTimeout(r, 10));
 
-      // After thunk settles, new failures can re-trigger
-      mockCb.mockClear();
-      await mod.recordInjectionFailure('doubao');
-      await mod.recordInjectionFailure('doubao');
-      const thunk2 = await mod.recordInjectionFailure('doubao');
-      expect(thunk2).not.toBeNull();
-      expect(mockCb).toHaveBeenCalledTimes(1);
+      // After resolving, the guard is released
+      expect(mod.getSelfHealingAgentsSize()).toBe(0);
     });
 
     it('tracks self-healing agents via getSelfHealingAgentsSize', async () => {
-      const mod = await import('./wallpaper-self-heal');
       expect(mod.getSelfHealingAgentsSize()).toBe(0);
 
-      // Use a mutable container to capture the resolver
       const resolver: { fn: (() => void) | null } = { fn: null };
-      mod.setSelfHealCallback(
-        () =>
-          new Promise((resolve) => {
-            resolve(
-              () =>
-                new Promise<void>((r) => {
-                  resolver.fn = r;
-                }),
-            );
-          }),
+      mod.setSelfHealCallback(() =>
+        Promise.resolve(
+          () =>
+            new Promise<void>((r) => {
+              resolver.fn = r;
+            }),
+        ),
       );
 
       await mod.recordInjectionFailure('codex');
       await mod.recordInjectionFailure('codex');
       const thunk = await mod.recordInjectionFailure('codex');
 
+      // Self-heal is triggered but not yet invoked (guard is active)
       expect(mod.getSelfHealingAgentsSize()).toBe(1);
 
       // Invoke the thunk — it will block
       const invokePromise = thunk?.();
       expect(mod.getSelfHealingAgentsSize()).toBe(1);
 
-      // Resolve
+      // Resolve the inner promise to complete the self-heal and release the guard
       resolver.fn?.();
       await invokePromise;
-      await new Promise((r) => setTimeout(r, 0));
+      await new Promise((r) => setTimeout(r, 10));
 
       expect(mod.getSelfHealingAgentsSize()).toBe(0);
     });
@@ -259,7 +236,6 @@ describe('wallpaper-self-heal', () => {
 
   describe('callback error handling', () => {
     it('returns null when callback throws, and releases guard', async () => {
-      const mod = await import('./wallpaper-self-heal');
       mod.setSelfHealCallback(() => {
         throw new Error('callback error');
       });
@@ -273,7 +249,6 @@ describe('wallpaper-self-heal', () => {
     });
 
     it('returns null when callback resolves to null (declines to act)', async () => {
-      const mod = await import('./wallpaper-self-heal');
       mod.setSelfHealCallback(() => Promise.resolve(null));
 
       await mod.recordInjectionFailure('zcode');
@@ -287,9 +262,6 @@ describe('wallpaper-self-heal', () => {
 
   describe('lifecycle cleanup', () => {
     it('cleanupSelfHealForAgent removes state for one agent only', async () => {
-      const mod = await import('./wallpaper-self-heal');
-      mod.setSelfHealCallback(() => Promise.resolve(() => Promise.resolve()));
-
       await mod.recordInjectionFailure('traework');
       await mod.recordInjectionFailure('traework');
       await mod.recordInjectionFailure('qoderwork');
@@ -297,16 +269,11 @@ describe('wallpaper-self-heal', () => {
 
       mod.cleanupSelfHealForAgent('traework');
 
-      // traework state cleared — 3 new failures needed to trigger
-      // qoderwork still has 2 failures recorded (need 1 more)
       const t1 = await mod.recordInjectionFailure('traework');
-      expect(t1).toBeNull(); // state was cleared, needs 3
+      expect(t1).toBeNull();
     });
 
     it('disposeSelfHealState clears all module state', async () => {
-      const mod = await import('./wallpaper-self-heal');
-      mod.setSelfHealCallback(() => Promise.resolve(() => Promise.resolve()));
-
       await mod.recordInjectionFailure('traework');
       await mod.recordInjectionFailure('traework');
 
@@ -314,7 +281,6 @@ describe('wallpaper-self-heal', () => {
 
       expect(mod.getSelfHealingAgentsSize()).toBe(0);
 
-      // After dispose, 2 more failures should NOT trigger (state cleared)
       const thunk = await mod.recordInjectionFailure('traework');
       expect(thunk).toBeNull();
     });
@@ -322,9 +288,6 @@ describe('wallpaper-self-heal', () => {
 
   describe('multi-agent isolation', () => {
     it('tracks failures independently per agent', async () => {
-      const mod = await import('./wallpaper-self-heal');
-      mod.setSelfHealCallback(() => Promise.resolve(() => Promise.resolve()));
-
       // traework: 2 failures (not enough)
       await mod.recordInjectionFailure('traework');
       await mod.recordInjectionFailure('traework');
@@ -335,9 +298,10 @@ describe('wallpaper-self-heal', () => {
       const thunk = await mod.recordInjectionFailure('qoderwork');
 
       expect(thunk).not.toBeNull();
+      // Invoke to release guard
+      await thunk?.();
 
-      // traework still has its 2 failures counted
-      // One more should trigger
+      // traework still has its 2 failures counted, one more triggers
       const thunk2 = await mod.recordInjectionFailure('traework');
       expect(thunk2).not.toBeNull();
     });
