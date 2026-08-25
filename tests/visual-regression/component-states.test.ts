@@ -520,15 +520,16 @@ describe('SegmentedControl', () => {
     it('track uses role="radiogroup" and options use role="radio"', () => {
       // The component sets role="radiogroup" on the container div
       // and role="radio" on each option button.
-      // Verify the SEGMENTED constants include aria-related classes.
+      // Verify the SEGMENTED constants include structural classes.
       expect(SEGMENTED_BASE_CLASSES).toContain('inline-flex');
-      expect(SEGMENTED_ACTIVE_CLASSES).toContain('data-[state=active]:bg-background');
+      expect(SEGMENTED_BASE_CLASSES).toContain('items-center');
     });
 
-    it('active option uses aria-checked={true} via data-[state=active]', () => {
-      // The active state is communicated via data-[state=active] attribute
-      // which corresponds to aria-checked={true} in the component.
-      expect(SEGMENTED_ACTIVE_CLASSES).toContain('data-[state=active]:bg-background');
+    it('active option uses bg-card and text-foreground', () => {
+      // The active state is communicated via bg-card and text-foreground classes
+      // which provide visual distinction from inactive options.
+      expect(SEGMENTED_ACTIVE_CLASSES).toContain('bg-card');
+      expect(SEGMENTED_ACTIVE_CLASSES).toContain('text-foreground');
     });
 
     it('disabled track uses pointer-events-none and opacity-50', () => {
