@@ -429,6 +429,34 @@ describe('communityStore', () => {
       expect(state.themes[0]?.author).toEqual({ id: 'unknown', displayName: 'Unknown' });
     });
 
+    it('sanitizes theme detail in loadThemeDetail', async () => {
+      const detailWithoutAuthor = {
+        themeId: 't4',
+        name: 'Detail Missing Author',
+        author: null as unknown as { id: string; displayName: string },
+        description: 'desc',
+        tags: [],
+        downloads: 0,
+        rating: 0,
+        updatedAt: '2026-01-01',
+        version: '1.0.0',
+        screenshots: [],
+        targetAgents: ['traework'],
+      };
+      mockGetCommunityTheme.mockResolvedValue({
+        success: true,
+        data: detailWithoutAuthor,
+      });
+
+      await useCommunityStore.getState().loadThemeDetail('t4');
+
+      const state = useCommunityStore.getState();
+      expect(state.selectedThemeDetail?.author).toEqual({
+        id: 'unknown',
+        displayName: 'Unknown',
+      });
+    });
+
     it('sanitizes themes in loadMore as well', async () => {
       useCommunityStore.setState({
         themes: [],

@@ -44,7 +44,7 @@ let loadToken = 0;
  * Ensure a theme summary always has a valid `author` object.
  * API may return themes with missing/null author (deleted accounts, edge data).
  */
-function sanitizeTheme(theme: CommunityThemeSummary): CommunityThemeSummary {
+function sanitizeTheme<T extends CommunityThemeSummary>(theme: T): T {
   if (theme.author) return theme;
   return {
     ...theme,
@@ -247,7 +247,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       const result = await api.getCommunityTheme(themeId);
       if (result?.success && result.data) {
         set({
-          selectedThemeDetail: result.data,
+          selectedThemeDetail: sanitizeTheme(result.data),
           detailLoading: false,
         });
       } else {

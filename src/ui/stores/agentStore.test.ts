@@ -13,7 +13,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Mocks
 // ---------------------------------------------------------------------------
 
-const mockCatalogAgentsList = vi.fn();
+const { mockCatalogAgentsList } = vi.hoisted(() => ({
+  mockCatalogAgentsList: vi.fn(),
+}));
 
 vi.mock('@/api/agentSkinClient', () => ({
   api: {
@@ -39,7 +41,8 @@ vi.mock('@/stores/statusStore', () => ({
 // Import after mocks
 // ---------------------------------------------------------------------------
 
-import { useAgentStore } from './agentStore';
+import { FALLBACK_AGENTS, useAgentStore } from './agentStore';
+import { AGENT_IDS, AGENT_META } from '@shared/types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -48,7 +51,7 @@ import { useAgentStore } from './agentStore';
 function resetStore() {
   // Reset to initial state (with fallback agents)
   useAgentStore.setState({
-    agents: [],
+    agents: FALLBACK_AGENTS,
     loaded: false,
   });
 }
@@ -144,7 +147,16 @@ describe('agentStore', () => {
       // After reset, verify the initial loaded state is false
       resetStore();
       expect(useAgentStore.getState().loaded).toBe(false);
-      expect(useAgentStore.getState().agents).toEqual([]);
+    });
+
+    it('starts with FALLBACK_AGENTS as initial catalog', () => {
+      console.log('typeof FALLBACK_AGENTS:', typeof FALLBACK_AGENTS);
+      console.log('FALLBACK_AGENTS value:', FALLBACK_AGENTS);
+      console.log('typeof useAgentStore:', typeof useAgentStore);
+      resetStore();
+      const state = useAgentStore.getState();
+      console.log('state.agents:', state.agents);
+      expect(state.agents).toEqual(FALLBACK_AGENTS);
     });
   });
 });

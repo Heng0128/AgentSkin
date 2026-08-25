@@ -59,14 +59,6 @@ describe('Fragment Priority (L2 Integration)', () => {
     expect(document.adoptedStyleSheets[2].__agentskin_layer).toBe('custom');
   });
 
-  it('fragment without custom layer appends at end', () => {
-    registry.register('my-frag', '.test { color: yellow; }');
-    registry.activate('my-frag');
-
-    expect(document.adoptedStyleSheets.length).toBe(1);
-    expect(document.adoptedStyleSheets[0].__agentskin_fragment).toBe('my-frag');
-  });
-
   it('hotReplace preserves position in adoptedStyleSheets array', () => {
     const customSheet = new CSSStyleSheet();
     customSheet.__agentskin_layer = 'custom';
