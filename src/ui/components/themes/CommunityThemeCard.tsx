@@ -85,7 +85,7 @@ export function CommunityThemeCard({
           {theme.name}
         </h3>
         <p className="truncate font-mono text-micro text-muted-foreground/60">
-          by {theme.author.displayName}
+          by {theme.author?.displayName ?? 'Unknown'}
         </p>
 
         {/* Stats */}

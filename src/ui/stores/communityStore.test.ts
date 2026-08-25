@@ -13,13 +13,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Mocks — must be hoisted before imports
 // ---------------------------------------------------------------------------
 
-const mockListCommunityThemes = vi.fn();
-const mockGetCommunityTheme = vi.fn();
-const mockDownloadCommunityTheme = vi.fn();
-const mockCancelCommunityDownload = vi.fn();
-const mockOnCommunityDownloadProgress = vi.fn();
-const mockFail = vi.fn();
-const mockShowToast = vi.fn();
+const {
+  mockListCommunityThemes,
+  mockGetCommunityTheme,
+  mockDownloadCommunityTheme,
+  mockCancelCommunityDownload,
+  mockOnCommunityDownloadProgress,
+  mockFail,
+  mockShowToast,
+} = vi.hoisted(() => ({
+  mockListCommunityThemes: vi.fn(),
+  mockGetCommunityTheme: vi.fn(),
+  mockDownloadCommunityTheme: vi.fn(),
+  mockCancelCommunityDownload: vi.fn(),
+  mockOnCommunityDownloadProgress: vi.fn(),
+  mockFail: vi.fn(),
+  mockShowToast: vi.fn(),
+}));
 
 vi.mock('@/api/agentSkinClient', () => ({
   api: {
@@ -357,6 +367,94 @@ describe('communityStore', () => {
       useCommunityStore.getState().clearError();
 
       expect(useCommunityStore.getState().error).toBeNull();
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // sanitizeTheme — defensive data normalization
+  // -----------------------------------------------------------------------
+
+  describe('sanitizeTheme (via loadThemes)', () => {
+    it('preserves author when present', async () => {
+      const items = [makeTheme('t1')];
+      mockListCommunityThemes.mockResolvedValue(makeListResult(items, 1));
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.themes[0]?.author).toEqual({ id: 'a1', displayName: 'Author' });
+    });
+
+    it('fills in default author when API returns null author', async () => {
+      const themeWithoutAuthor = {
+        themeId: 't1',
+        name: 'Theme Without Author',
+        author: null as unknown as { id: string; displayName: string },
+        description: 'desc',
+        tags: [],
+        downloads: 0,
+        rating: 0,
+        updatedAt: '2026-01-01',
+        version: '1.0.0',
+      };
+      mockListCommunityThemes.mockResolvedValue(
+        makeListResult([themeWithoutAuthor], 1),
+      );
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.themes[0]?.author).toEqual({ id: 'unknown', displayName: 'Unknown' });
+    });
+
+    it('fills in default author when API returns undefined author', async () => {
+      const themeWithoutAuthor = {
+        themeId: 't2',
+        name: 'Theme Missing Author',
+        // author field omitted entirely
+        description: 'desc',
+        tags: [],
+        downloads: 0,
+        rating: 0,
+        updatedAt: '2026-01-01',
+        version: '1.0.0',
+      } as unknown as ReturnType<typeof makeTheme>;
+      mockListCommunityThemes.mockResolvedValue(
+        makeListResult([themeWithoutAuthor], 1),
+      );
+
+      await useCommunityStore.getState().loadThemes();
+
+      const state = useCommunityStore.getState();
+      expect(state.themes[0]?.author).toEqual({ id: 'unknown', displayName: 'Unknown' });
+    });
+
+    it('sanitizes themes in loadMore as well', async () => {
+      useCommunityStore.setState({
+        themes: [],
+        total: 5,
+        page: 1,
+      });
+
+      const themeWithoutAuthor = {
+        themeId: 't3',
+        name: 'LoadMore Missing Author',
+        author: null as unknown as { id: string; displayName: string },
+        description: 'desc',
+        tags: [],
+        downloads: 0,
+        rating: 0,
+        updatedAt: '2026-01-01',
+        version: '1.0.0',
+      };
+      mockListCommunityThemes.mockResolvedValue(
+        makeListResult([themeWithoutAuthor], 5),
+      );
+
+      await useCommunityStore.getState().loadMore();
+
+      const state = useCommunityStore.getState();
+      expect(state.themes[0]?.author).toEqual({ id: 'unknown', displayName: 'Unknown' });
     });
   });
 });

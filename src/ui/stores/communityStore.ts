@@ -37,6 +37,25 @@ import { create } from 'zustand';
 let loadToken = 0;
 
 // ---------------------------------------------------------------------------
+// Data sanitization — defend against incomplete API responses
+// ---------------------------------------------------------------------------
+
+/**
+ * Ensure a theme summary always has a valid `author` object.
+ * API may return themes with missing/null author (deleted accounts, edge data).
+ */
+function sanitizeTheme(theme: CommunityThemeSummary): CommunityThemeSummary {
+  if (theme.author) return theme;
+  return {
+    ...theme,
+    author: {
+      id: 'unknown',
+      displayName: 'Unknown',
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
@@ -126,7 +145,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       if (result?.success) {
         const data = result.data as CommunityThemeListResult;
         set({
-          themes: data.themes,
+          themes: data.themes.map(sanitizeTheme),
           total: data.total,
           loading: false,
         });
@@ -169,7 +188,7 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       if (result?.success) {
         const data = result.data as CommunityThemeListResult;
         set({
-          themes: [...themes, ...data.themes],
+          themes: [...themes, ...data.themes.map(sanitizeTheme)],
           total: data.total,
           page: page + 1,
           loadingMore: false,
