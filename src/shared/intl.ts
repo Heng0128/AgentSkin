@@ -10,7 +10,15 @@
 
 import type { AppLocale } from './i18n';
 
-/** BCP-47 to Intl locale mapping (for locales that differ from BCP-47) */
+/**
+ * BCP-47 to Intl locale mapping for locales whose BCP-47 tag does not match
+ * the Intl API's expected locale string.
+ *
+ * `en` maps to `en-US` because the Intl API requires a region subtag for
+ * proper number/date formatting (e.g. `Intl.NumberFormat('en')` uses US-style
+ * grouping by default on some platforms, but `en-US` is explicit and portable).
+ * `zh-CN` maps to itself since the BCP-47 tag is already a valid Intl locale.
+ */
 const LOCALE_MAP: Record<AppLocale, string> = {
   'zh-CN': 'zh-CN',
   en: 'en-US',
