@@ -14,11 +14,20 @@
 import { vi } from 'vitest';
 import type {
   AgentId,
+  ApplyRequest,
+  ApplyResponse,
+  DesktopSettings,
+  InstalledTheme,
+  SystemStatus,
   WallpaperAgentSetting,
+  WallpaperSettings,
 } from '../../shared/types';
+import type { ThemeBundle } from '../services/theme-bundle';
 import type {
   LoggerApi,
+  PackageInspection,
   SettingsServiceApi,
+  ThemeEntry,
   ThemeLibraryApi,
   WallpaperResolver,
 } from '../services/contracts';
@@ -30,16 +39,23 @@ import type {
 /**
  * Create a type-safe ThemeLibraryApi stub.
  * All methods return safe defaults; override with vi.mocked(...).mockReturnValue(...).
+ * Uses satisfies operator for compile-time type checking without `as any`.
  */
 export function makeThemeLibraryStub(): ThemeLibraryApi {
   return {
-    find: vi.fn(async () => null),
-    findMany: vi.fn(async () => []),
-    all: vi.fn(async () => []),
-    install: vi.fn(async () => ({} as ThemeEntry)),
-    uninstall: vi.fn(async () => undefined),
-    toThemeEntry: vi.fn(() => null),
-  } as unknown as ThemeLibraryApi;
+    initialize: vi.fn(async () => {}),
+    entries: vi.fn(async () => []),
+    summaries: vi.fn(async () => []),
+    coverPathFor: vi.fn((_id: string) => null),
+    iconPathFor: vi.fn((_id: string) => null),
+    find: vi.fn(async () => ({ bundle: {} as ThemeBundle, filePath: '/tmp/test' })),
+    installFile: vi.fn(async () => ({}) as InstalledTheme),
+    installBytes: vi.fn(async () => ({}) as InstalledTheme),
+    importPackage: vi.fn(async () => ({}) as InstalledTheme),
+    inspectPackage: vi.fn(async () => ({ incoming: {} as InstalledTheme, existing: null }) as PackageInspection),
+    exportPackage: vi.fn(async () => {}),
+    delete: vi.fn(async () => {}),
+  } satisfies ThemeLibraryApi;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,12 +70,12 @@ export interface MakeSettingsOptions {
 
 /**
  * Create a type-safe SettingsServiceApi stub.
- * RC4-S4-A: Uses `satisfies` to validate all interface methods at compile time,
+ * Uses `satisfies` to validate all interface methods at compile time,
  * eliminating `as unknown as SettingsServiceApi` double-cast pattern.
  */
 export function makeSettingsStub(options: MakeSettingsOptions = {}): SettingsServiceApi {
   const wallpaperAgents = options.wallpaperAgents ?? [];
-  return {
+  const stub: SettingsServiceApi = {
     initialize: vi.fn(async () => {}),
     overridesFor: vi.fn(() => ({
       appPath: options.appPath ?? null,
@@ -70,19 +86,22 @@ export function makeSettingsStub(options: MakeSettingsOptions = {}): SettingsSer
       id: null,
       render: { alignment: 'fill', speed: 1, loop: true, brightness: 100 },
       agents: {} as Record<AgentId, WallpaperAgentSetting>,
-    })),
+    }) as WallpaperSettings),
     agentWallpaper: vi.fn((appId: AgentId) => ({
       enabled: wallpaperAgents.includes(appId),
       id: null,
-    })),
-    toDto: vi.fn(() => ({})),
+    }) as WallpaperAgentSetting),
+    toDto: vi.fn(() => ({}) as DesktopSettings),
     setAppPath: vi.fn(async () => {}),
     setAppPort: vi.fn(async () => {}),
     setWallpaper: vi.fn(async () => {}),
     setAgentWallpaper: vi.fn(async () => {}),
     customThemeCss: vi.fn(() => ''),
     setCustomThemeCss: vi.fn(async () => {}),
-  } as unknown as SettingsServiceApi;
+    liveDomRefreshInterval: vi.fn(() => 0),
+    setLiveDomRefreshInterval: vi.fn(async () => {}),
+  };
+  return stub;
 }
 
 // ---------------------------------------------------------------------------
@@ -92,13 +111,14 @@ export function makeSettingsStub(options: MakeSettingsOptions = {}): SettingsSer
 /**
  * Create a type-safe WallpaperResolver stub.
  * Matches the WallpaperResolver interface in services/contracts.ts.
+ * Uses satisfies operator for compile-time type checking.
  */
 export function makeWallpaperResolverStub(): WallpaperResolver {
   return {
     videoPathFor: vi.fn(async () => null),
     mediaInfoFor: vi.fn(async () => null),
     webUrlFor: vi.fn(async () => null),
-  } as unknown as WallpaperResolver;
+  } satisfies WallpaperResolver;
 }
 
 // ---------------------------------------------------------------------------
