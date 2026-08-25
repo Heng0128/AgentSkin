@@ -7,6 +7,7 @@ import { useStatusStore } from '@/stores/statusStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
+import { formatTime } from '@shared/intl';
 import type { SystemStatus } from '@shared/types';
 
 /**
@@ -37,14 +38,15 @@ function ledClass(variant: 'running' | 'standby' | 'offline'): string {
   return 'bg-muted-foreground/30';
 }
 
-/** Local HH:mm:ss tick — re-renders only once a second. */
+/** Local HH:mm:ss tick — re-renders only once a second, uses app locale. */
 function useTick(): string {
   const [now, setNow] = useState(() => new Date());
+  const locale = useShellStore((s) => s.locale);
   useEffect(() => {
     const id = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(id);
   }, []);
-  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return formatTime(now, locale);
 }
 
 /**
