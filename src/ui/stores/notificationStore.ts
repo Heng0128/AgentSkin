@@ -14,7 +14,7 @@
 import { useShellStore } from '@/stores/shellStore';
 
 import { toMessage } from '@shared/errors';
-import { uiMessages, type AppLocale } from '@shared/i18n';
+import { type AppLocale, uiMessages } from '@shared/i18n';
 import { isIpcTimeoutError, type SerializedIpcTimeoutError } from '@shared/withTimeout';
 import { create } from 'zustand';
 
@@ -89,15 +89,16 @@ export const useNotificationStore = create<NotificationState>((set) => {
     },
 
     fail: (error) => {
-      // Timeout-specific friendly message — uses i18n keys with interpolation
-      // so channel name and seconds are shown in the user's locale.
+      // Timeout-specific friendly message — uses i18n function key so channel
+      // name and seconds are safely interpolated in the user's locale.
       if (isIpcTimeoutError(error)) {
         const detail = error as SerializedIpcTimeoutError;
         const locale = useShellStore.getState().locale;
         const t = uiMessages[locale] ?? uiMessages['zh-CN'];
-        const msg = t.studioTimeoutDesc
-          .replace('{channel}', detail.channel ?? 'IPC')
-          .replace('{ms/1000}', String(Math.round((detail.ms ?? 0) / 1000)));
+        const msg = t.studioTimeoutDesc(
+          detail.channel ?? 'IPC',
+          String(Math.round((detail.ms ?? 0) / 1000)),
+        );
         useNotificationStore.getState().showToast(msg, 'destructive');
         return;
       }
