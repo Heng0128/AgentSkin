@@ -910,7 +910,7 @@ export function buildContext(id, manifest, scheme = null) {
     delete colors.focusRing; // not a COLOR_KEY, already absent — belt-and-braces
   }
 
-  const mode = (scheme?.mode ?? manifest.mode) === 'light' ? 'light' : 'dark'; // auto → dark (dark canvas)
+  const mode = (scheme?.mode ?? manifest.mode) === 'dark' ? 'dark' : 'light'; // auto → light (match community-color-bridge normalizeAppearance)
   return {
     id,
     name: manifest.displayName || manifest.name,

@@ -106,8 +106,8 @@ describe('resolveSchemeMode', () => {
     expect(resolveSchemeMode('dark')).toBe('dark');
   });
 
-  it("should map auto to dark to match the generator's dark canvas", () => {
-    expect(resolveSchemeMode('auto')).toBe('dark');
+  it("should map auto to light to match the unified auto fallback (community-color-bridge + buildContext)", () => {
+    expect(resolveSchemeMode('auto')).toBe('light');
   });
 
   it('should return null for missing/unknown modes', () => {

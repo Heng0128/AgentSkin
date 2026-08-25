@@ -204,16 +204,16 @@ describe('bridgeColors', () => {
     expect(bridgeColors(lightTheme).buttonBackground).toBe('#4f8cff');
   });
 
-  it('derives buttonForeground as contrast color of accent', () => {
-    // #60a5fa is a light blue → luminance > 0.5 → buttonForeground = #000000
-    expect(bridgeColors(darkTheme).buttonForeground).toBe('#000000');
-    // #4f8cff is a medium blue → luminance > 0.5 → buttonForeground = #000000
-    expect(bridgeColors(lightTheme).buttonForeground).toBe('#000000');
+  it('derives buttonForeground as contrast color of accent (WCAG luminance)', () => {
+    // #60a5fa WCAG luminance ~0.36 (< 0.5) → buttonForeground = #ffffff
+    expect(bridgeColors(darkTheme).buttonForeground).toBe('#ffffff');
+    // #4f8cff WCAG luminance ~0.28 (< 0.5) → buttonForeground = #ffffff
+    expect(bridgeColors(lightTheme).buttonForeground).toBe('#ffffff');
   });
 
-  it('sets focusRing as accent + 80 (50% opacity)', () => {
-    expect(bridgeColors(darkTheme).focusRing).toBe('#60a5fa80');
-    expect(bridgeColors(lightTheme).focusRing).toBe('#4f8cff80');
+  it('sets focusRing using color-mix(in srgb, accent 40%, transparent)', () => {
+    expect(bridgeColors(darkTheme).focusRing).toBe('color-mix(in srgb, #60a5fa 40%, transparent)');
+    expect(bridgeColors(lightTheme).focusRing).toBe('color-mix(in srgb, #4f8cff 40%, transparent)');
   });
 
   it('treats auto appearance as light', () => {
@@ -343,10 +343,11 @@ describe('adjustBrightness', () => {
 // ---------------------------------------------------------------------------
 
 describe('getContrastColor', () => {
-  it('returns #000000 for light backgrounds', () => {
+  it('returns #000000 for light backgrounds (WCAG luminance > 0.5)', () => {
     expect(getContrastColor('#ffffff')).toBe('#000000');
     expect(getContrastColor('#f8fafc')).toBe('#000000');
-    expect(getContrastColor('#60a5fa')).toBe('#000000'); // light blue
+    // #d4d4d4 WCAG luminance ~0.58 (> 0.5) → #000000
+    expect(getContrastColor('#d4d4d4')).toBe('#000000');
   });
 
   it('returns #ffffff for dark backgrounds', () => {
@@ -359,11 +360,11 @@ describe('getContrastColor', () => {
     expect(getContrastColor('invalid')).toBe('#ffffff');
   });
 
-  it('handles mid-gray correctly (luminance ~0.5)', () => {
-    // #808080 luminance = 0.502 → > 0.5 → #000000
-    expect(getContrastColor('#808080')).toBe('#000000');
-    // #7f7f7f luminance = 0.498 → <= 0.5 → #ffffff
-    expect(getContrastColor('#7f7f7f')).toBe('#ffffff');
+  it('handles mid-gray correctly (WCAG luminance)', () => {
+    // #808080 WCAG luminance ~0.216 (< 0.5) → #ffffff
+    expect(getContrastColor('#808080')).toBe('#ffffff');
+    // #bcbcbc WCAG luminance ~0.503 (> 0.5) → #000000
+    expect(getContrastColor('#bcbcbc')).toBe('#000000');
   });
 });
 

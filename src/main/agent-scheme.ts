@@ -438,14 +438,15 @@ export async function restoreScheme(
 
 /**
  * Resolve a theme's declared `mode` ('light' | 'dark' | 'auto') to a concrete
- * scheme. 'auto' maps to 'dark' to match the CSS generator, which renders
- * auto themes with a dark canvas — the agent's native chrome must follow the
- * injected CSS, not the OS preference. Returns null when the theme declares
- * no usable mode (scheme sync is then skipped).
+ * scheme. 'auto' maps to 'light' to match community-color-bridge's
+ * normalizeAppearance and the CSS generator's unified auto fallback — the
+ * agent's native chrome follows the same default palette as the injected CSS.
+ * Returns null when the theme declares no usable mode (scheme sync is then
+ * skipped).
  */
 export function resolveSchemeMode(rawMode: unknown): SchemeMode | null {
   if (rawMode === 'light') return 'light';
   if (rawMode === 'dark') return 'dark';
-  if (rawMode === 'auto') return 'dark';
+  if (rawMode === 'auto') return 'light';
   return null;
 }

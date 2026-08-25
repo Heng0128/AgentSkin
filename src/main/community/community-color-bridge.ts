@@ -30,7 +30,7 @@
  * | —                 | inputBackground        | surface (passthrough)               |
  * | —                 | buttonBackground       | accent (passthrough)                |
  * | —                 | buttonForeground       | contrast color of accent            |
- * | —                 | focusRing              | accent @ 50% opacity                |
+ * | —                 | focusRing              | color-mix(accent 40%, transparent)  |
  */
 
 import type { CommunityTheme } from '../../shared/types/community';
@@ -64,8 +64,8 @@ export type AgentSkinTokens = Record<AgentSkinTokenKey, string>;
 /** Brightness adjustment (±RGB units) for derived code background. */
 const CODE_BG_BRIGHTNESS_SHIFT = 2;
 
-/** Opacity suffix for focusRing (0x80 = 50%). */
-const FOCUS_RING_OPACITY = '80';
+/** Focus ring opacity for color-mix (40% accent, 60% transparent). */
+const FOCUS_RING_MIX_PERCENT = 40;
 
 // --- Public API ---------------------------------------------------------------------------
 
@@ -113,8 +113,9 @@ export function bridgeColors(theme: CommunityTheme): AgentSkinTokens {
     buttonBackground: base.accent,
     // buttonForeground: black or white depending on accent luminance.
     buttonForeground: getContrastColor(base.accent),
-    // focusRing: accent at 50% opacity.
-    focusRing: base.accent + FOCUS_RING_OPACITY,
+    // focusRing: color-mix(in srgb, accent 40%, transparent) — matches
+    // theme-utils.mjs tokenBlock() and built-in theme derivation.
+    focusRing: `color-mix(in srgb, ${base.accent} ${FOCUS_RING_MIX_PERCENT}%, transparent)`,
   };
 }
 
@@ -217,15 +218,32 @@ export function adjustBrightness(hex: string, amount: number): string {
 
 /**
  * Determine whether black (`#000000`) or white (`#ffffff`) text will have
- * better contrast against the given background color. Uses Rec. 601
- * luminance weights (sufficient for text-on-solid decisions).
+ * better contrast against the given background color.
+ *
+ * Uses WCAG 2.1 relative luminance (sRGB linearization + 0.2126/0.7152/0.0722
+ * weights), matching `scripts/utils/color-utils.mjs` luminance(). This ensures
+ * community themes and built-in themes produce identical contrast decisions.
  */
 export function getContrastColor(hex: string): string {
   const rgb = hexToRgb(hex);
   if (!rgb) return '#ffffff';
 
-  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  const luminance = wcagLuminance(rgb.r, rgb.g, rgb.b);
   return luminance > 0.5 ? '#000000' : '#ffffff';
+}
+
+/**
+ * Compute WCAG 2.1 relative luminance for RGB channels (0–255).
+ *
+ * Each sRGB channel is linearized (gamma-expanded) then combined with the
+ * luminance weights (0.2126 R + 0.7152 G + 0.0722 B). Matches the canonical
+ * implementation in `scripts/utils/color-utils.mjs`.
+ */
+function wcagLuminance(r: number, g: number, b: number): number {
+  const [lr, lg, lb] = [r / 255, g / 255, b / 255].map((s) =>
+    s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4,
+  );
+  return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
 }
 
 /** Convert a `#rrggbb` string to an `{ r, g, b }` object. */
