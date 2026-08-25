@@ -74,6 +74,9 @@ import { disposeReloadWatchdogs } from './cdp/reload-watchdog';
 import type { RendererHints } from './cdp/renderer-rank';
 import { CdpSessionPool } from './cdp/session-pool';
 import { EpochManager } from './epoch-manager';
+import { stopAudioLevelPolling } from './audio-level';
+import { disposeCoordinatorIpc } from './ipc/coordinator-ipc';
+import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import { ctx, notifyPersistFailure } from './main-context';
 import { resolveEngineDirDefault } from './palette-builder';
@@ -1054,11 +1057,21 @@ export class AgentEngineService implements AgentEngineServiceApi {
   dispose(): void {
     this.stopConcurrencyMetricsTimer();
     this.disposed = true;
+    // RC-C1: Stop audio level sampler (kills PowerShell proc + clears watchdog
+    // timer) so it does not outlive the service on shutdown.
+    stopAudioLevelPolling();
     disposeWallpaperInjectionState();
     disposeEngineInjectionState();
     disposeSelfHealState();
     disposeReloadWatchdogs();
     disposeThemeAssetCache();
+    // RC-C1: Reset PerformanceRecorder static singleton to release any
+    // in-flight trace and reset sequence counter for clean re-initialization.
+    PerformanceRecorder.reset();
+    // RC-C1: Clear EpochManager Map to release internal state.
+    this.epochs.clear();
+    // RC-C1: Dispose coordinator IPC handler to remove subscription.
+    disposeCoordinatorIpc();
     this.applyingTheme.clear();
     this.inflightOperations.clear();
     this.cdpSessionPool.dispose();
