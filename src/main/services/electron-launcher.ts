@@ -180,21 +180,27 @@ function execFileAsync(cmd: string, args: string[]): Promise<string> {
 /**
  * Check whether a TCP port currently has a listener on 127.0.0.1.
  *
- * Uses PowerShell `Get-NetTCPConnection` so it only matches *listening*
- * sockets (not TIME_WAIT / CLOSE_WAIT), avoiding false positives from
- * recently-closed connections.
+ * On Windows, uses PowerShell `Get-NetTCPConnection` so it only matches
+ * *listening* sockets (not TIME_WAIT / CLOSE_WAIT), avoiding false positives
+ * from recently-closed connections. On macOS/Linux, uses `lsof` which is
+ * the POSIX-equivalent for listing internet files by port.
  */
 async function isPortOccupied(port: number): Promise<boolean> {
   try {
-    const output = await execFileAsync('powershell', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      `Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1`,
-    ]);
+    if (process.platform === 'win32') {
+      const output = await execFileAsync('powershell', [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        `Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1`,
+      ]);
+      return output.trim().length > 0;
+    }
+    // macOS / Linux — lsof returns output only when a listener exists.
+    const output = await execFileAsync('lsof', ['-i', `:${port}`, '-sTCP:LISTEN', '-n', '-P']);
     return output.trim().length > 0;
   } catch {
-    // PowerShell missing or other failure — assume free and let spawn fail
+    // Command missing or other failure — assume free and let spawn fail
     // if it's actually occupied.
     return false;
   }
@@ -259,18 +265,25 @@ function trackExit(child: ReturnType<typeof spawn>, appId: string, _pid: number)
   });
 }
 
-/** Kill a list of PIDs via `taskkill /F /T`. Best-effort — swallows errors. */
+/**
+ * Kill a list of PIDs. On Windows uses `taskkill /F /T`; on macOS/Linux
+ * uses `kill -9`. Best-effort — swallows errors.
+ */
 function killPids(pids: number[]): Promise<void> {
   return Promise.all(
     pids.map(
       (pid) =>
         new Promise<void>((resolve) => {
-          execFile(
-            'taskkill',
-            ['/F', '/T', '/PID', String(pid)],
-            { windowsHide: true, timeout: 5000 },
-            () => resolve(),
-          );
+          if (process.platform === 'win32') {
+            execFile(
+              'taskkill',
+              ['/F', '/T', '/PID', String(pid)],
+              { windowsHide: true, timeout: 5000 },
+              () => resolve(),
+            );
+          } else {
+            execFile('kill', ['-9', String(pid)], { timeout: 5000 }, () => resolve());
+          }
         }),
     ),
   ).then(() => undefined);
@@ -479,28 +492,40 @@ async function launchAppInner(request: LaunchRequest): Promise<LaunchResult> {
 
   // ── Non-adapted flow ──────────────────────────────────────────────────
   // Check if the exe name appears in the running process list.
+  // Windows uses `tasklist`; macOS/Linux uses `pgrep -f`.
   let isRunning = false;
+  const exeName = path.basename(exePath);
   try {
-    const exeName = path.basename(exePath);
-    const output = await execFileAsync('tasklist', [
-      '/FI',
-      `IMAGENAME eq ${exeName}`,
-      '/FO',
-      'CSV',
-      '/NH',
-    ]);
-    const nameWithoutExt = exeName.replace(/\.exe$/i, '');
-    isRunning = output
-      .toLowerCase()
-      .split('\n')
-      .some((line) => line.startsWith(`"${nameWithoutExt}`));
+    if (process.platform === 'win32') {
+      const output = await execFileAsync('tasklist', [
+        '/FI',
+        `IMAGENAME eq ${exeName}`,
+        '/FO',
+        'CSV',
+        '/NH',
+      ]);
+      const nameWithoutExt = exeName.replace(/\.exe$/i, '');
+      isRunning = output
+        .toLowerCase()
+        .split('\n')
+        .some((line) => line.startsWith(`"${nameWithoutExt}`));
+    } else {
+      const nameWithoutExt = exeName.replace(/\.[^.]+$/, '');
+      const output = await execFileAsync('pgrep', ['-f', nameWithoutExt]);
+      isRunning = output.trim().length > 0;
+    }
   } catch {
     isRunning = false;
   }
 
   if (forceRestart && isRunning) {
     try {
-      await execFileAsync('taskkill', ['/F', '/IM', path.basename(exePath)]);
+      if (process.platform === 'win32') {
+        await execFileAsync('taskkill', ['/F', '/IM', exeName]);
+      } else {
+        const nameWithoutExt = exeName.replace(/\.[^.]+$/, '');
+        await execFileAsync('pkill', ['-9', '-f', nameWithoutExt]);
+      }
     } catch {
       // kill may fail if the process already exited — proceed to spawn.
     }
