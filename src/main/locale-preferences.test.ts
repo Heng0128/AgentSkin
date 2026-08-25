@@ -4,7 +4,11 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { loadLocalePreference, saveLocalePreference } from './locale-preferences';
+import {
+  flushLocalePreference,
+  loadLocalePreference,
+  saveLocalePreference,
+} from './locale-preferences';
 
 let root = '';
 
@@ -35,5 +39,18 @@ describe('locale preferences', () => {
   it('keeps the saved user choice instead of following later system changes', async () => {
     await saveLocalePreference(root, 'zh-CN');
     await expect(loadLocalePreference(root, 'en-US')).resolves.toBe('zh-CN');
+  });
+
+  it('flushLocalePreference writes preferences synchronously', () => {
+    flushLocalePreference(root, 'en');
+    const content = fs.readFileSync(path.join(root, 'preferences.json'), 'utf8');
+    expect(content).toContain('"locale": "en"');
+  });
+
+  it('flushLocalePreference overwrites previous locale', async () => {
+    await saveLocalePreference(root, 'en');
+    flushLocalePreference(root, 'zh-CN');
+    const content = fs.readFileSync(path.join(root, 'preferences.json'), 'utf8');
+    expect(content).toContain('"locale": "zh-CN"');
   });
 });

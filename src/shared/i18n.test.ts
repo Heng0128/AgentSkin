@@ -51,13 +51,28 @@ describe('i18n', () => {
   });
 
   it('has matching function signatures between locales', () => {
-    type UiMsgKey = keyof typeof uiMessages['zh-CN'];
+    type UiMsgKey = keyof (typeof uiMessages)['zh-CN'];
     const zhKeys = Object.keys(uiMessages['zh-CN']) as UiMsgKey[];
     for (const key of zhKeys) {
       const zhVal = uiMessages['zh-CN'][key];
       const enVal = uiMessages.en[key];
-      expect(typeof zhVal, `uiMessages['zh-CN'].${key} type mismatch with en`).toBe(
-        typeof enVal,
+      expect(typeof zhVal, `uiMessages['zh-CN'].${key} type mismatch with en`).toBe(typeof enVal);
+      // Arity check: if both are functions, parameter counts must match
+      if (typeof zhVal === 'function' && typeof enVal === 'function') {
+        expect(zhVal.length, `uiMessages['zh-CN'].${key} arity mismatch with en`).toBe(
+          enVal.length,
+        );
+      }
+    }
+  });
+
+  it('has no duplicate keys within a locale (case-insensitive collision check)', () => {
+    for (const locale of ['zh-CN', 'en'] as const) {
+      const keys = Object.keys(uiMessages[locale]);
+      const lowerKeys = keys.map((k) => k.toLowerCase());
+      const uniqueKeys = new Set(lowerKeys);
+      expect(uniqueKeys.size, `uiMessages.${locale} has case-insensitive duplicate keys`).toBe(
+        lowerKeys.length,
       );
     }
   });
