@@ -23,96 +23,57 @@
  */
 
 import { writeFileSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AgentId, ApplyResponse, SystemStatus } from '../shared/types';
-import type { SettingsServiceApi, ThemeLibraryApi } from './services/contracts';
+import type { AgentEngineService } from './agent-engine-service';
 import {
+  cleanupHarness,
   deferred,
   flushMicrotasks,
+  makeAppStatus,
   makeServiceStub,
   makeSettings,
   makeThemeLibraryStub,
-  makeAppStatus,
   STATUS,
+  setupAllMocks,
   TEST_APP,
 } from './agent-engine-service-test-harness';
-import { AgentEngineService } from './agent-engine-service';
-import {
-  cleanupSelfHealForAgent,
-  disposeSelfHealState,
-} from './wallpaper-self-heal';
-import {
-  cleanupWallpaperStateForAgent,
-  disposeWallpaperInjectionState,
-} from './wallpaper/injection-state';
+import { probeAppStatus, resolveLivePort } from './app-discovery';
 import {
   cleanupEngineInjectionForAgent,
   disposeEngineInjectionState,
 } from './cdp/injection/engine-strategy';
-import { restoreThemeFlow } from './theme-restore-flow';
+import type {
+  AgentEngineServiceApi,
+  SettingsServiceApi,
+  ThemeLibraryApi,
+} from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
-import { probeAppStatus, resolveLivePort } from './app-discovery';
 import type { RestoreFlowDeps } from './theme-restore-flow';
-import type { AgentEngineServiceApi } from './services/contracts';
+import { restoreThemeFlow } from './theme-restore-flow';
+import {
+  cleanupWallpaperStateForAgent,
+  disposeWallpaperInjectionState,
+} from './wallpaper/injection-state';
+import { cleanupSelfHealForAgent, disposeSelfHealState } from './wallpaper-self-heal';
 
 // ---------------------------------------------------------------------------
-// Module mocks — 与现有 5 个测试文件保持一致的 mock 契约
+// Module mocks — 使用共享 harness 的标准化 mock 工厂
 //
 // wallpaper-self-heal / wallpaper/injection-state / engine-strategy
-// 使用 vi.importActual 保留真实实现 + spy，其余模块使用标准 mock。
+// 使用 vi.importActual 保留真实实现 + spy，其余模块使用 harness 标准 mock。
 // ---------------------------------------------------------------------------
 
-vi.mock('./app-discovery', () => {
-  class LivePortCache {
-    private m = new Map<string, number>();
-    get(a: string) {
-      return this.m.get(a) ?? null;
-    }
-    set(a: string, p: number) {
-      this.m.set(a, p);
-    }
-    clear(a: string) {
-      this.m.delete(a);
-    }
-    clearAll() {
-      this.m.clear();
-    }
-    size() {
-      return this.m.size;
-    }
-  }
-  return {
-    LivePortCache,
-    reconcileZombiePorts: vi.fn(async () => {}),
-    probeAppStatus: vi.fn(),
-    resolveLivePort: vi.fn(async () => null),
-    ensureCdpReady: vi.fn(async () => ({ ok: true, port: 9222, reason: null })),
-    inferRestartReason: vi.fn(async () => ({ kind: 'not-installed' as const })),
-  };
-});
+const mocks = vi.hoisted(() => setupAllMocks());
 
-vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
-
-// restoreThemeFlow mock 在 setupAllMocks 之后会被真实模拟替换 —— 见 beforeEach。
-vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));
-
-vi.mock('./fs-utils', () => ({
-  writeJsonAtomic: vi.fn(async () => {}),
-  appendLogLine: vi.fn(async () => {}),
-}));
-
-vi.mock('./wallpaper-injector', () => ({
-  applyAgentWallpaperNow: vi.fn(async () => ({ ok: true as const })),
-  applyWallpaperToAgent: vi.fn(async () => ({ ok: true as const })),
-  injectAgentWallpaperFromApply: vi.fn(async () => {}),
-  removeAgentVideoWallpaper: vi.fn(async () => {}),
-  removeWallpaperFromAgent: vi.fn(async () => ({ ok: true as const })),
-  getCapturedTokensSize: vi.fn(() => 0),
-  getDeferredSelfHealsSize: vi.fn(() => 0),
-}));
+vi.mock('./app-discovery', () => mocks.appDiscovery);
+vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: mocks.applyThemeFlow }));
+vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: mocks.restoreThemeFlow }));
+vi.mock('./fs-utils', () => mocks.fsUtils);
+vi.mock('./wallpaper-injector', () => mocks.wallpaperInjector);
 
 // ── 真实实现 + spy ────────────────────────────────────────────────────────
 vi.mock('./cdp/injection/engine-strategy', async (importOriginal) => {
@@ -142,7 +103,7 @@ vi.mock('./wallpaper-self-heal', async (importOriginal) => {
   };
 });
 
-vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
+vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: mocks.disposeThemeAssetCache }));
 
 // ── 恢复流程的真实模拟 ─────────────────────────────────────────────────────
 // 使用真实 restoreThemeFlow 逻辑，但替换掉需要真实 CDP/适配器的子调用。
@@ -222,16 +183,13 @@ async function mockedRestoreThemeFlow(
 
 describe('AgentEngineService — Restore 流程集成测试', () => {
   let tmpDir: string;
-  let stateFile: string;
 
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
 
     // 标准 mock 探针：probeAppStatus 返回结构化 stub
-    vi.mocked(probeAppStatus).mockImplementation(async (appId: AgentId) =>
-      makeAppStatus(appId),
-    );
+    vi.mocked(probeAppStatus).mockImplementation(async (appId: AgentId) => makeAppStatus(appId));
 
     // 默认 resolveLivePort 返回 null（无端口），各测试按需覆盖
     vi.mocked(restoreThemeFlow).mockImplementation(mockedRestoreThemeFlow);
@@ -243,13 +201,12 @@ describe('AgentEngineService — Restore 流程集成测试', () => {
     });
 
     tmpDir = await mkdtemp(path.join(os.tmpdir(), 'agent-restore-itest-'));
-    stateFile = path.join(tmpDir, 'agent-state.json');
   });
 
   afterEach(async () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
-    await rm(tmpDir, { recursive: true, force: true });
+    await cleanupHarness(tmpDir);
   });
 
   // -------------------------------------------------------------------------
@@ -621,7 +578,7 @@ describe('AgentEngineService — Restore 流程集成测试', () => {
       await service.disposeAsync();
 
       // dispose 后 apply 仍可正常执行（不会误判为同 kind 去重）
-      const result = await service.apply({ appId: TEST_APP, themeId: 't2' });
+      await service.apply({ appId: TEST_APP, themeId: 't2' });
       expect(applyThemeFlow).toHaveBeenCalledTimes(1);
     });
   });

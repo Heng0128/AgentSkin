@@ -12,15 +12,20 @@
  */
 
 import { writeFileSync } from 'node:fs';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AgentId, WallpaperRenderOptions, WallpaperSettings } from '../shared/types';
 import type { WallpaperAgentSetting } from '../shared/types/wallpaper';
-// Real toInstalledTheme requires deep ThemeBundle; we mock it below.
 import { AgentEngineService } from './agent-engine-service';
-import type { PackageInspection, SettingsServiceApi, ThemeLibraryApi } from './services/contracts';
+import {
+  cleanupHarness,
+  makeSettings,
+  makeThemeLibraryStub,
+  TEST_APP,
+} from './agent-engine-service-test-harness';
+import type { SettingsServiceApi, ThemeLibraryApi } from './services/contracts';
 
 // ---------------------------------------------------------------------------
 // Mocks (与 reliability test 保持一致)
@@ -102,8 +107,6 @@ vi.mock('./services/agent-engine-options', () => ({
 // Constants & Helpers
 // ---------------------------------------------------------------------------
 
-const TEST_APP: AgentId = 'traework';
-
 const DEFAULT_RENDER: WallpaperRenderOptions = {
   alignment: 'fill',
   speed: 1,
@@ -137,25 +140,6 @@ function wallpaperSettings(opts: {
   };
 }
 
-function makeSettings(wp?: ReturnType<typeof wallpaperSettings>): SettingsServiceApi {
-  const wpApi = wp ?? wallpaperSettings({});
-  return {
-    initialize: vi.fn(async () => {}),
-    overridesFor: vi.fn(() => ({ appPath: null, port: null })),
-    wallpaper: wpApi.wallpaper,
-    agentWallpaper: wpApi.agentWallpaper,
-    toDto: vi.fn(() => ({}) as ReturnType<SettingsServiceApi['toDto']>),
-    setAppPath: vi.fn(async () => {}),
-    setAppPort: vi.fn(async () => {}),
-    setWallpaper: vi.fn(async () => {}),
-    setAgentWallpaper: vi.fn(async () => {}),
-    customThemeCss: vi.fn(() => ''),
-    setCustomThemeCss: vi.fn(async () => {}),
-    liveDomRefreshInterval: vi.fn(() => 0),
-    setLiveDomRefreshInterval: vi.fn(async () => {}),
-  } as SettingsServiceApi;
-}
-
 interface TestThemeBundle {
   id: string;
   name: { en: string; zh: string };
@@ -172,25 +156,6 @@ function themeEntry(themeId: string, bundle: Partial<TestThemeBundle> = {}): Tes
     bundle: { id: themeId, name: { en: 'Test', zh: '测试' }, ...bundle },
     filePath: `/tmp/${themeId}`,
   };
-}
-
-function makeThemeLibrary(impl: (id: string) => Promise<unknown>): ThemeLibraryApi {
-  return {
-    initialize: vi.fn(async () => {}),
-    entries: vi.fn(async () => []),
-    summaries: vi.fn(async () => []),
-    coverPathFor: vi.fn(() => null),
-    iconPathFor: vi.fn(() => null),
-    find: vi.fn(impl),
-    installFile: vi.fn(async () => ({}) as never),
-    installBytes: vi.fn(async () => ({}) as never),
-    importPackage: vi.fn(async () => ({}) as never),
-    inspectPackage: vi.fn(
-      async () => ({ incoming: null, existing: null }) as unknown as PackageInspection,
-    ),
-    exportPackage: vi.fn(async () => {}),
-    delete: vi.fn(async () => {}),
-  } as ThemeLibraryApi;
 }
 
 // ---------------------------------------------------------------------------
@@ -210,12 +175,12 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
 
   afterEach(async () => {
     vi.restoreAllMocks();
-    await rm(tmpDir, { recursive: true, force: true });
+    await cleanupHarness(tmpDir);
   });
 
   function makeSvc(library?: ThemeLibraryApi, settings?: SettingsServiceApi) {
     return new AgentEngineService(
-      library ?? makeThemeLibrary(async () => null),
+      library ?? makeThemeLibraryStub({ find: vi.fn(async () => null) }),
       stateFile,
       settings ?? makeSettings(),
     );
@@ -272,9 +237,8 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
 
   describe('when no entry provided (per-agent → global hierarchy)', () => {
     it('returns per-agent wallpaper id when agentWallpaper.enabled', async () => {
-      const settings = makeSettings(
-        wallpaperSettings({ perAgent: true, perAgentId: 'wp-agent-x' }),
-      );
+      const wp = wallpaperSettings({ perAgent: true, perAgentId: 'wp-agent-x' });
+      const settings = makeSettings({ wallpaper: wp.wallpaper, agentWallpaper: wp.agentWallpaper });
       const svc = makeSvc(undefined, settings);
 
       const result = await callResolve(svc, TEST_APP);
@@ -285,9 +249,8 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
     it('returns null when agentWallpaper disabled and no active theme (no global fallback for id)', async () => {
       // Production code reads globalWp only for render mergeOptions;
       // globalWp.id is NOT used as a fallback wallpaper id.
-      const settings = makeSettings(
-        wallpaperSettings({ enabled: true, globalId: 'wp-global-default' }),
-      );
+      const wp = wallpaperSettings({ enabled: true, globalId: 'wp-global-default' });
+      const settings = makeSettings({ wallpaper: wp.wallpaper, agentWallpaper: wp.agentWallpaper });
       const svc = makeSvc(undefined, settings);
 
       // getActiveThemeId returns null → returns { id: null }
@@ -315,10 +278,12 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
         'utf8',
       );
 
-      const settings = makeSettings(wallpaperSettings({}));
-      const library = makeThemeLibrary(async () =>
-        themeEntry('persisted-t', { wallpaper: { workshopId: 'wp-from-theme' } }),
-      );
+      const settings = makeSettings();
+      const library = makeThemeLibraryStub({
+        find: vi.fn(async () =>
+          themeEntry('persisted-t', { wallpaper: { workshopId: 'wp-from-theme' } }),
+        ),
+      });
       const svc = makeSvc(library, settings);
       await svc.initialize();
 
@@ -328,8 +293,8 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
     });
 
     it('returns null when no wallpaper configured anywhere (no active theme)', async () => {
-      const settings = makeSettings(wallpaperSettings({}));
-      const library = makeThemeLibrary(async () => null);
+      const settings = makeSettings();
+      const library = makeThemeLibraryStub({ find: vi.fn(async () => null) });
       const svc = makeSvc(library, settings);
 
       (svc as unknown as { registry: { getActiveThemeId: () => null } }).registry.getActiveThemeId =
@@ -341,9 +306,11 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
     });
 
     it('returns null when library.find throws (disk/parse error)', async () => {
-      const settings = makeSettings(wallpaperSettings({}));
-      const library = makeThemeLibrary(async () => {
-        throw new Error('EACCES: disk broken');
+      const settings = makeSettings();
+      const library = makeThemeLibraryStub({
+        find: vi.fn(async () => {
+          throw new Error('EACCES: disk broken');
+        }),
       });
       const svc = makeSvc(library, settings);
 
@@ -374,10 +341,10 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
         'utf8',
       );
 
-      const settings = makeSettings(wallpaperSettings({}));
-      const library = makeThemeLibrary(async () =>
-        themeEntry('video-t', { wallpaper: { video: 'sunset.mp4' } }),
-      );
+      const settings = makeSettings();
+      const library = makeThemeLibraryStub({
+        find: vi.fn(async () => themeEntry('video-t', { wallpaper: { video: 'sunset.mp4' } })),
+      });
       const svc = makeSvc(library, settings);
       await svc.initialize();
 

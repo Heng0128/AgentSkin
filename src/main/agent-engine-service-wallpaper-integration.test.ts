@@ -15,30 +15,30 @@
  *   5. wallpaper 并发保护 (epoch 机制串行化)
  */
 
-import { mkdtemp, rm } from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AgentId, ApplyResponse, SystemStatus } from '../shared/types';
-import { AgentEngineService } from './agent-engine-service';
-import { applyThemeFlow } from './theme-apply-flow';
-import { restoreThemeFlow } from './theme-restore-flow';
-import { applyWallpaperToAgent } from './wallpaper-injector';
-import { removeWallpaperFromAgent } from './wallpaper-injector';
-import { cleanupSelfHealForAgent } from './wallpaper-self-heal';
-import { disposeSelfHealState } from './wallpaper-self-heal';
-import { recordInjectionFailure } from './wallpaper-self-heal';
-import { getSelfHealingAgentsSize } from './wallpaper-self-heal';
-import { setSelfHealCallback } from './wallpaper-self-heal';
-import { cleanupWallpaperStateForAgent } from './wallpaper/injection-state';
+import type { AgentId } from '../shared/types';
 import {
+  APPLY_RESPONSE,
+  cleanupHarness,
+  type Deferred,
   deferred,
   flushMicrotasks,
-  type Deferred,
+  makeServiceStub,
   makeSettings,
-  makeThemeLibraryStub,
+  STATUS,
   TEST_APP,
 } from './agent-engine-service-test-harness';
+import { applyThemeFlow } from './theme-apply-flow';
+import { restoreThemeFlow } from './theme-restore-flow';
+import { cleanupWallpaperStateForAgent } from './wallpaper/injection-state';
+import { applyWallpaperToAgent, removeWallpaperFromAgent } from './wallpaper-injector';
+import {
+  cleanupSelfHealForAgent,
+  disposeSelfHealState,
+  getSelfHealingAgentsSize,
+  recordInjectionFailure,
+  setSelfHealCallback,
+} from './wallpaper-self-heal';
 
 // ---------------------------------------------------------------------------
 // Module mocks — 与 reliability test 保持一致的 mock 契约
@@ -111,20 +111,14 @@ vi.mock('./wallpaper-self-heal', async (importOriginal) => {
 vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
 
 // ---------------------------------------------------------------------------
-// Test fixtures
-// ---------------------------------------------------------------------------
-
-const STATUS: SystemStatus = { platform: 'win32', apps: [] as never[] };
-const APPLY_RESPONSE: ApplyResponse = { status: 'applied', message: 'ok', system: STATUS };
-
-// ---------------------------------------------------------------------------
 // Test Suite
 // ---------------------------------------------------------------------------
 
-describe('AgentEngineService —壁纸流程集成', () => {
-  let tmpDir: string;
+describe('AgentEngineService — wallpaper 流程集成', () => {
+  let tmpDirs: string[];
 
   beforeEach(async () => {
+    tmpDirs = [];
     vi.clearAllMocks();
     vi.spyOn(process, 'platform', 'get').mockReturnValue('win32');
     vi.mocked(applyThemeFlow).mockResolvedValue({
@@ -132,13 +126,14 @@ describe('AgentEngineService —壁纸流程集成', () => {
       background: Promise.resolve(),
     });
     vi.mocked(restoreThemeFlow).mockResolvedValue(STATUS);
-    tmpDir = await mkdtemp(path.join(os.tmpdir(), 'agent-wallpaper-itest-'));
   });
 
   afterEach(async () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
-    await rm(tmpDir, { recursive: true, force: true });
+    for (const dir of tmpDirs) {
+      await cleanupHarness(dir);
+    }
   });
 
   // ===================================================================
@@ -147,10 +142,11 @@ describe('AgentEngineService —壁纸流程集成', () => {
 
   describe('applyWallpaperToAgent 成功路径', () => {
     it('返回 { ok: true } 并委托 wallpaper-injector', async () => {
-      const stateFile = path.join(tmpDir, 'state.json');
-      const settings = makeSettings({ wallpaperAgents: [TEST_APP] });
-      const library = makeThemeLibraryStub();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub({
+        settings: makeSettings({ wallpaperAgents: [TEST_APP] }),
+      });
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       const result = await svc.applyWallpaperToAgent('wp-test-001', TEST_APP);
 
@@ -164,10 +160,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
       // 重置 self-heal 状态确保干净
       disposeSelfHealState();
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const library = makeThemeLibraryStub();
-      const settings = makeSettings();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       // 设置一个 self-heal 回调，验证成功路径不会触发它
       let callbackInvoked = false;
@@ -188,10 +183,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
     it('注入成功后连续失败计数器被重置', async () => {
       disposeSelfHealState();
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const library = makeThemeLibraryStub();
-      const settings = makeSettings();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       // 模拟一次失败: 手动调用 recordInjectionFailure 一次
       await recordInjectionFailure(TEST_APP);
@@ -213,10 +207,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
     it('连续 3 次失败后 self-heal 回调被触发', async () => {
       disposeSelfHealState();
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const library = makeThemeLibraryStub();
-      const settings = makeSettings();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       let healCallbackCount = 0;
       let capturedAppId: AgentId | null = null;
@@ -253,10 +246,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
     it('self-heal 回调返回的函数能正确执行', async () => {
       disposeSelfHealState();
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const library = makeThemeLibraryStub();
-      const settings = makeSettings();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       let thunkExecuted = false;
       setSelfHealCallback(async (_appId: AgentId) => {
@@ -281,10 +273,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
     it('冷却期内不重复触发 self-heal', async () => {
       disposeSelfHealState();
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const library = makeThemeLibraryStub();
-      const settings = makeSettings();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       let healCallbackCount = 0;
       setSelfHealCallback(async (_appId: AgentId) => {
@@ -326,10 +317,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
         background: bgDeferred.promise,
       });
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const library = makeThemeLibraryStub();
-      const settings = makeSettings();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       const result = await svc.apply({ appId: TEST_APP, themeId: 'test-theme' });
 
@@ -346,15 +336,20 @@ describe('AgentEngineService —壁纸流程集成', () => {
     });
 
     it('后台任务失败不影响主 apply 返回', async () => {
+      // 预创建 rejected promise 并提前附加 catch 句柄，避免 Node.js 报告
+      // unhandled rejection warning（服务内部已通过 cleanup chain .catch 异步处理）
+      const bgRejected = Promise.reject(new Error('background task failed'));
+      bgRejected.catch(() => {
+        /* suppress unhandled rejection warning */
+      });
       vi.mocked(applyThemeFlow).mockResolvedValue({
         response: APPLY_RESPONSE,
-        background: Promise.reject(new Error('background task failed')),
+        background: bgRejected,
       });
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const library = makeThemeLibraryStub();
-      const settings = makeSettings();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       // apply 应成功返回，即使后台任务失败
       const result = await svc.apply({ appId: TEST_APP, themeId: 'test-theme' });
@@ -379,10 +374,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
         background: bgPromise,
       });
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const library = makeThemeLibraryStub();
-      const settings = makeSettings();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       await svc.apply({ appId: TEST_APP, themeId: 'test-theme' });
 
@@ -399,10 +393,11 @@ describe('AgentEngineService —壁纸流程集成', () => {
 
   describe('removeWallpaperFromAgent', () => {
     it('移除成功并委托 wallpaper-injector', async () => {
-      const stateFile = path.join(tmpDir, 'state.json');
-      const settings = makeSettings({ wallpaperAgents: [TEST_APP] });
-      const library = makeThemeLibraryStub();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub({
+        settings: makeSettings({ wallpaperAgents: [TEST_APP] }),
+      });
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       const result = await svc.removeWallpaperFromAgent(TEST_APP);
 
@@ -413,10 +408,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
     });
 
     it('真实 cleanupWallpaperStateForAgent 通过 restore 流程被调用', async () => {
-      const stateFile = path.join(tmpDir, 'state.json');
-      const settings = makeSettings();
-      const library = makeThemeLibraryStub();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       // registry 中无 active theme 且无 wallpaper → restore 走 no-op 短路
       // 无法触发 cleanupModuleStateForAgent. 使用 mock 模拟 restoreThemeFlow
@@ -428,10 +422,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
     it('自修复状态 dispose 清理', async () => {
       disposeSelfHealState();
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const settings = makeSettings();
-      const library = makeThemeLibraryStub();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       // 先记录失败
       await recordInjectionFailure(TEST_APP);
@@ -449,10 +442,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
 
   describe('wallpaper 并发保护', () => {
     it('同一 agent 的多个 wallpaper 操作通过 epoch 机制串行化', async () => {
-      const stateFile = path.join(tmpDir, 'state.json');
-      const settings = makeSettings();
-      const library = makeThemeLibraryStub();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       // 调用 applyAgentWallpaperNow — 内部会 bumpEpoch
       const promise1 = svc.applyAgentWallpaperNow(TEST_APP);
@@ -466,14 +458,18 @@ describe('AgentEngineService —壁纸流程集成', () => {
     });
 
     it('旧 epoch 的操作被中止', async () => {
-      const stateFile = path.join(tmpDir, 'state.json');
-      const settings = makeSettings();
-      const library = makeThemeLibraryStub();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       // 获取内部 epoch 管理器引用以验证 epoch bump
       const epochManager = (
-        svc as unknown as { epochs: { bumpEpoch(appId: AgentId): number; isEpochCurrent(appId: AgentId, epoch: number): boolean } }
+        svc as unknown as {
+          epochs: {
+            bumpEpoch(appId: AgentId): number;
+            isEpochCurrent(appId: AgentId, epoch: number): boolean;
+          };
+        }
       ).epochs;
 
       // bump epoch 一次 (模拟新 apply 开始)
@@ -497,10 +493,9 @@ describe('AgentEngineService —壁纸流程集成', () => {
         return { response: APPLY_RESPONSE, background: bgDeferred.promise };
       });
 
-      const stateFile = path.join(tmpDir, 'state.json');
-      const settings = makeSettings();
-      const library = makeThemeLibraryStub();
-      const svc = new AgentEngineService(library, stateFile, settings);
+      const stub = await makeServiceStub();
+      const svc = stub.service;
+      tmpDirs.push(stub.tmpDir);
 
       const request = { appId: TEST_APP, themeId: 'test-theme' };
 

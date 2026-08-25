@@ -45,8 +45,8 @@ import type {
   WallpaperAgentSetting,
   WallpaperSettings,
 } from '../shared/types';
-import type { SettingsServiceApi, ThemeLibraryApi } from './services/contracts';
 import { AgentEngineService } from './agent-engine-service';
+import type { SettingsServiceApi, ThemeLibraryApi } from './services/contracts';
 
 // ---------------------------------------------------------------------------
 // 类型补充
@@ -132,6 +132,8 @@ export interface MakeSettingsOptions {
   wallpaperAgents?: AgentId[];
   /** 自定义 wallpaper() 返回值 */
   wallpaper?: () => WallpaperSettings;
+  /** 自定义 agentWallpaper() 返回值 */
+  agentWallpaper?: (appId: AgentId) => WallpaperAgentSetting;
   /** 自定义 overridesFor() 返回值 */
   overridesFor?: (appId: AgentId) => { appPath: string | null; port: number | null };
 }
@@ -155,18 +157,32 @@ export function makeSettings(opts: MakeSettingsOptions = {}): SettingsServiceApi
   return {
     initialize: vi.fn(async () => {}),
     overridesFor:
-      opts.overridesFor ??
-      vi.fn((_appId: AgentId) => ({ appPath: null, port: opts.port ?? null })),
+      opts.overridesFor ?? vi.fn((_appId: AgentId) => ({ appPath: null, port: opts.port ?? null })),
     wallpaper:
       opts.wallpaper ??
-      vi.fn(() => ({ enabled: false, id: null, render: undefined, agents: {} as Record<AgentId, WallpaperAgentSetting> })),
-    agentWallpaper: vi.fn((appId: AgentId) => ({
-      enabled: wallpaperAgents.includes(appId),
-      id: null,
-    })),
+      vi.fn(() => ({
+        enabled: false,
+        id: null,
+        render: undefined,
+        agents: {} as Record<AgentId, WallpaperAgentSetting>,
+      })),
+    agentWallpaper:
+      opts.agentWallpaper ??
+      vi.fn((appId: AgentId) => ({
+        enabled: wallpaperAgents.includes(appId),
+        id: null,
+      })),
     toDto: vi.fn(
       () =>
-        ({ apps: {}, defaultPorts: {}, wallpaper: { enabled: false, id: null, agents: {} as Record<AgentId, WallpaperAgentSetting> } }) as ReturnType<SettingsServiceApi['toDto']>,
+        ({
+          apps: {},
+          defaultPorts: {},
+          wallpaper: {
+            enabled: false,
+            id: null,
+            agents: {} as Record<AgentId, WallpaperAgentSetting>,
+          },
+        }) as ReturnType<SettingsServiceApi['toDto']>,
     ),
     setAppPath: vi.fn(async () => {}),
     setAppPort: vi.fn(async () => {}),

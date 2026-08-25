@@ -31,7 +31,7 @@ export function CommunityThemeCard({
   theme,
   isInstalled,
   isInstalling,
-  downloadProgress = 0,
+  downloadProgress,
   onInstall,
   onUninstall,
   onCancel,
