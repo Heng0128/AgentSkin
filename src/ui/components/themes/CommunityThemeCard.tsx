@@ -12,15 +12,16 @@
  */
 
 import { useState } from 'react';
-import type { CommunityThemeSummary } from '@shared/types/community';
+import type { CommunityThemeSummary, DownloadProgress } from '@shared/types/community';
 import { cn } from '@/lib/utils';
 import { ImageIcon } from 'lucide-react';
+import { DownloadProgress } from './DownloadProgress';
 
 interface Props {
   theme: CommunityThemeSummary;
   isInstalled: boolean;
   isInstalling: boolean;
-  downloadProgress?: number;
+  downloadProgress?: DownloadProgress;
   onInstall: () => void;
   onUninstall: () => void;
   onCancel: () => void;
@@ -141,7 +142,7 @@ export function CommunityThemeCard({
         )}
       </div>
 
-      {/* Action button */}
+      {/* Action button / Download progress */}
       <div className="border-t border-border p-2">
         {isInstalled ? (
           <button
@@ -152,13 +153,22 @@ export function CommunityThemeCard({
             已安装
           </button>
         ) : isInstalling ? (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full rounded-md bg-muted px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted/80"
-          >
-            取消
-          </button>
+          <div className="flex flex-col gap-1">
+            <DownloadProgress
+              progress={downloadProgress?.progress ?? 0}
+              bytesDownloaded={downloadProgress?.bytesDownloaded ?? 0}
+              totalBytes={downloadProgress?.totalBytes ?? 0}
+              showDetails={false}
+              phase={downloadProgress?.phase ?? 'downloading'}
+            />
+            <button
+              type="button"
+              onClick={onCancel}
+              className="w-full rounded-md bg-muted px-3 py-1 text-[10px] font-medium text-foreground transition-colors hover:bg-muted/80"
+            >
+              取消
+            </button>
+          </div>
         ) : (
           <button
             type="button"

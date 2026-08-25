@@ -288,8 +288,14 @@ function persistTweakPresets(presets: TweakPreset[]): void {
  * Get the current agent ID or set an error and return null.
  * Replaces the unsafe `'codex' as AgentId` fallback pattern that silently
  * masked "no agent selected" conditions.
+ *
+ * Accepts `get`/`set` from the zustand create callback — this helper is
+ * defined at module scope so it cannot close over the store's own set/get.
  */
-function requireAgentId(): AgentId | null {
+function requireAgentId(
+  get: () => WorkspaceState,
+  set: (partial: Partial<WorkspaceState>) => void,
+): AgentId | null {
   const id = get().currentAgentId;
   if (!id) {
     set({ pushError: 'no_agent_selected' });
@@ -569,7 +575,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   updateOverride: async (key, value) => {
     const s = get();
     const next: ToolOverride = { ...s.currentOverrides, [key]: value };
-    const agentId = requireAgentId();
+    const agentId = requireAgentId(get, set);
     if (!agentId) return;
 
     // Optimistic update: UI reflects intent immediately.
@@ -619,7 +625,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       debounceTimer = null;
     }
     const { currentPort, currentOverrides } = get();
-    const agentId = requireAgentId();
+    const agentId = requireAgentId(get, set);
     if (!agentId) return false;
     const session: TweakSession = {
       agentId,
@@ -647,7 +653,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       debounceTimer = null;
     }
     const { currentPort } = get();
-    const agentId = requireAgentId();
+    const agentId = requireAgentId(get, set);
     if (!agentId) return false;
     const session: TweakSession = {
       agentId,
@@ -681,7 +687,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   undo: async () => {
     const { historyIndex, history } = get();
     if (historyIndex <= 0) return false;
-    const agentId = requireAgentId();
+    const agentId = requireAgentId(get, set);
     if (!agentId) return false;
     const nextIndex = historyIndex - 1;
     const entry = history[nextIndex];
@@ -714,7 +720,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   redo: async () => {
     const { historyIndex, history } = get();
     if (historyIndex >= history.length - 1) return false;
-    const agentId = requireAgentId();
+    const agentId = requireAgentId(get, set);
     if (!agentId) return false;
     const nextIndex = historyIndex + 1;
     const entry = history[nextIndex];
@@ -769,7 +775,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   loadTweakPreset: async (id: string) => {
     const preset = get().tweakPresets.find((p) => p.id === id);
     if (!preset) return false;
-    const agentId = requireAgentId();
+    const agentId = requireAgentId(get, set);
     if (!agentId) return false;
     const overrides = preset.overrides as ToolOverride;
     const overridesByAgent = {
@@ -855,7 +861,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }
     const overrides = obj.overrides as ToolOverride;
     // Apply overrides and push to history (same code path as updateOverride).
-    const agentId = requireAgentId();
+    const agentId = requireAgentId(get, set);
     if (!agentId) return { ok: false, error: 'no_agent_selected' };
     const overridesByAgent = { ...get().overridesByAgent, [agentId]: overrides };
     persistOverridesByAgent(overridesByAgent);

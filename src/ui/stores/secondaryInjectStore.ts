@@ -97,7 +97,7 @@ export const useSecondaryInjectStore = create<SecondaryInjectState>((set, get) =
       return;
     }
     set((state) => {
-      const agent = event.agent;
+      const agent = event.agent as AgentId;
       const prev = state.byAgent[agent] ?? initAgentState();
       return {
         byAgent: {
@@ -129,7 +129,7 @@ export const useSecondaryInjectStore = create<SecondaryInjectState>((set, get) =
       return;
     }
     set((state) => {
-      const agent = event.agent;
+      const agent = event.agent as AgentId;
       const prev = state.byAgent[agent] ?? initAgentState();
       return {
         byAgent: {
