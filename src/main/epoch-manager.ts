@@ -57,4 +57,13 @@ export class EpochManager {
   isEpochCurrent(appId: AgentId, captured: number): boolean {
     return (this.epochs.get(appId) ?? 0) === captured;
   }
+
+  /**
+   * Clear all epoch entries. Called during service disposal to release
+   * the internal Map and allow GC of the EpochManager instance itself
+   * when the service is torn down.
+   */
+  clear(): void {
+    this.epochs.clear();
+  }
 }
