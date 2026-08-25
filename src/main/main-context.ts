@@ -177,6 +177,18 @@ export function notifyStatusChanged(): void {
   }, STATUS_NOTIFY_DEBOUNCE_MS);
 }
 
+/**
+ * Clear the pending STATUS_CHANGED debounce timer without firing it.
+ * Called during shutdown to prevent the timer from keeping the event loop
+ * alive after all windows are destroyed.
+ */
+export function clearStatusNotifyTimer(): void {
+  if (statusNotifyTimer !== null) {
+    clearTimeout(statusNotifyTimer);
+    statusNotifyTimer = null;
+  }
+}
+
 /** Immediate STATUS_CHANGED push, flushing any pending debounce. */
 export function notifyStatusChangedNow(): void {
   if (statusNotifyTimer !== null) {

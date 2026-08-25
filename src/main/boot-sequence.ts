@@ -60,7 +60,7 @@ import {
   stopMcpServer,
 } from './mcp';
 import { startMcpHttpServer, stopMcpHttpServer } from './mcp/http-server';
-import { brandingRoot, ctx, registerDisposable, sendLog } from './main-context';
+import { brandingRoot, clearStatusNotifyTimer, ctx, registerDisposable, sendLog } from './main-context';
 import { terminateSceneWorkerPool } from './scene-renderer-async';
 import { performanceLogger } from './services/performance';
 import { SettingsService } from './settings-service';
@@ -353,6 +353,7 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
       });
       registerIpc(ctx, mgr.updateTrayMenu);
       registerDisposable(() => disposeCoordinatorIpc());
+      registerDisposable(() => clearStatusNotifyTimer());
       const cleanupWallpaperLifecycle = registerWallpaperLifecycle();
       registerDisposable(cleanupWallpaperLifecycle);
       registerDisposable(() => {
