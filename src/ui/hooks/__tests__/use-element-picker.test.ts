@@ -21,8 +21,8 @@ const window = new Window({ url: 'http://localhost' });
 // Set up globals that @testing-library/react needs
 globalThis.document = window.document as unknown as Document;
 globalThis.window = window as unknown as Window & typeof globalThis;
-globalThis.requestAnimationFrame = window.requestAnimationFrame.bind(window);
-globalThis.cancelAnimationFrame = window.cancelAnimationFrame.bind(window);
+globalThis.requestAnimationFrame = (window.requestAnimationFrame.bind(window) as unknown) as typeof requestAnimationFrame;
+globalThis.cancelAnimationFrame = (window.cancelAnimationFrame.bind(window) as unknown) as typeof cancelAnimationFrame;
 
 // ---------------------------------------------------------------------------
 // Fake DOM builder — creates a chainable fake DOM tree for iframe.contentDocument

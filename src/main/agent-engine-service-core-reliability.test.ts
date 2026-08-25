@@ -307,9 +307,19 @@ describe('AgentEngineService (core reliability)', () => {
       const svc = makeService();
       const cleanupOrder: string[] = [];
 
-      // Mock writeJsonAtomic to track when it's called
-      vi.mocked(writeJsonAtomic).mockImplementation(async () => {
-        cleanupOrder.push('writeState');
+      // Gate: control when the in-flight cleanup resolves
+      let releaseCleanup!: () => void;
+      const cleanupGate = new Promise<void>((resolve) => {
+        releaseCleanup = resolve;
+      });
+
+      // Mock applyInternal to return a background task gated by cleanupGate
+      const originalApplyInternal = (svc as unknown as {
+        applyInternal: (...args: unknown[]) => Promise<unknown>;
+      }).applyInternal;
+      vi.spyOn(svc as never, 'applyInternal').mockImplementation(async () => {
+        const background = cleanupGate.catch(() => undefined);
+        return { response: { success: true, status: {} }, background };
       });
 
       // Start an apply operation
@@ -323,16 +333,23 @@ describe('AgentEngineService (core reliability)', () => {
 
       const inflightCleanup = privateSvc.inflightOperations.get(TEST_APP)?.cleanup;
 
-      // Start disposeAsync in background
+      // Start disposeAsync in background — it should block waiting for cleanup
       const disposePromise = privateSvc.disposeAsync().then(() => {
         cleanupOrder.push('disposed');
       });
 
-      // The cleanup promise should resolve first (after apply completes)
-      // Then dispose should complete
-      await disposePromise;
+      // Verify disposeAsync has NOT completed yet (cleanup is still pending)
+      await new Promise((r) => setTimeout(r, 10));
+      expect(cleanupOrder).not.toContain('disposed');
 
-      // Verify that dispose awaited the cleanup
+      // Now release the cleanup gate
+      releaseCleanup();
+
+      // Wait for both to complete
+      await disposePromise;
+      await applyPromise.catch(() => undefined);
+
+      // Verify that dispose awaited the cleanup (cleanup resolved before dispose)
       expect(cleanupOrder).toContain('disposed');
     });
 

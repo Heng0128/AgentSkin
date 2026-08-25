@@ -61,7 +61,7 @@ vi.mock('@/stores/statusStore', () => ({
 // ---------------------------------------------------------------------------
 
 import { useSettingsStore } from './settingsStore';
-import { resetSettingsStore } from './test-helpers/store-test-utils';
+import { resetSettingsStore } from './test-helpers/reset-settings-store';
 
 // ---------------------------------------------------------------------------
 // Tests

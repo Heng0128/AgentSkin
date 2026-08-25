@@ -55,7 +55,31 @@ vi.mock('@/stores/notificationStore', () => ({
 // ---------------------------------------------------------------------------
 
 import { useCommunityStore } from './communityStore';
-import { resetCommunityStore } from './test-helpers/store-test-utils';
+
+// ---------------------------------------------------------------------------
+// Local reset helper (avoids importing test-helpers/index.ts which pulls in
+// agentStore → statusStore → api.onCoordinatorStatus at module level)
+// ---------------------------------------------------------------------------
+
+function resetCommunityStore() {
+  useCommunityStore.setState({
+    themes: [],
+    total: 0,
+    page: 1,
+    pageSize: 20,
+    sortBy: 'popular',
+    query: '',
+    loading: false,
+    loadingMore: false,
+    error: null,
+    selectedThemeId: null,
+    selectedThemeDetail: null,
+    detailLoading: false,
+    downloadProgress: new Map(),
+    installingIds: new Set(),
+    installedIds: new Set(),
+  });
+}
 
 function makeTheme(id: string, name = `Theme ${id}`) {
   return {
