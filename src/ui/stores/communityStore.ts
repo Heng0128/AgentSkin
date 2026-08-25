@@ -51,13 +51,6 @@ function isCommunityThemeListResult(value: unknown): value is CommunityThemeList
   return Array.isArray(v.themes) && typeof v.total === 'number';
 }
 
-/**
- * Runtime validation for AgentId union type.
- * Used to validate IPC event agent fields before state mutation.
- */
-function isValidAgentId(value: string): value is AgentId {
-  return ['workbuddy', 'qoderwork', 'traework', 'doubao', 'codex', 'zcode'].includes(value);
-}
 
 // ---------------------------------------------------------------------------
 // Data sanitization — defend against incomplete API responses

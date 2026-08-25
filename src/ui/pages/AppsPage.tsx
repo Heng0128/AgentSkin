@@ -210,7 +210,7 @@ export function AppsPage() {
           {/* Scan progress bar */}
           {scanning && (
             <div
-              className="mb-5 h-1 overflow-hidden rounded-sm bg-muted"
+              className="mb-5 h-1 overflow-hidden rounded-full bg-muted"
               role="progressbar"
               aria-valuenow={scanProgress}
             >
@@ -227,7 +227,7 @@ export function AppsPage() {
               role="alert"
               className="mb-5 flex items-center justify-between gap-2 rounded-md bg-destructive/10 px-2 py-2.5"
             >
-              <p className="min-w-0 flex-1 truncate text-[11px] text-destructive">
+              <p className="min-w-0 flex-1 truncate text-label text-destructive">
                 {t.appsScanFailed}
                 {scanError}
               </p>
@@ -258,7 +258,7 @@ export function AppsPage() {
             <section className="mb-6 snap-start">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
                 {SKELETON_ITEMS.map((id) => (
-                  <div key={id} className="h-24 animate-pulse rounded-lg bg-muted" />
+                  <div key={id} className="h-24 animate-pulse rounded-md bg-muted" />
                 ))}
               </div>
             </section>
@@ -276,7 +276,8 @@ export function AppsPage() {
           {/* Empty state — scanned but no apps found for current filter */}
           {scanResult && !scanning && visibleApps.length === 0 && (
             <EmptyState
-              icon={<Monitor className="size-8" />}
+              icon={<Monitor />}
+              iconSize="lg"
               title={categoryFilter === 'hidden' ? t.appsEmptyHidden : t.appsEmptyNoApps}
             />
           )}
@@ -284,7 +285,8 @@ export function AppsPage() {
           {/* Empty state — pre-scan guidance */}
           {!scanResult && !scanning && !scanError && (
             <EmptyState
-              icon={<Monitor className="size-8" />}
+              icon={<Monitor />}
+              iconSize="lg"
               title={t.appsScanToFind}
               action={
                 <Button variant="outline" size="sm" onClick={() => void scan(true)}>

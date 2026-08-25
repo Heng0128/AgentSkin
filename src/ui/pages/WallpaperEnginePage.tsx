@@ -7,11 +7,13 @@
  * 状态/副作用/handler 全部委托给 useWallpaperPageController hook。
  */
 
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { FilterChips } from '@/components/ui/filter-chips';
 import { PageHeader } from '@/components/ui/page-header';
 import { PageToolbar } from '@/components/ui/page-toolbar';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { InjectResultsPanel } from '@/components/wallpaper/InjectResultsPanel';
 import { WallpaperGrid } from '@/components/wallpaper/WallpaperGrid';
@@ -89,8 +91,8 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
     return (
       <div className="flex h-full items-center justify-center">
         <div className="flex flex-col items-center gap-2 text-muted-foreground">
-          <div className="size-8 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
-          <p className="text-[11px]">{t.weDetecting}</p>
+          <Spinner className="size-6" />
+          <p className="text-label">{t.weDetecting}</p>
         </div>
       </div>
     );
@@ -99,48 +101,36 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
   // --- Error state: WE installed but initial list failed (IPC timeout, permission, etc.) ---
   if (error && wallpapers.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex size-14 items-center justify-center rounded-md bg-destructive/10">
-            <Image className="size-6 text-destructive" />
-          </div>
-          <div>
-            <p className="text-[11px] font-normal text-danger">{t.weLoadFailed}</p>
-            <p className="mt-1 max-w-[260px] text-[10px] text-muted-foreground">{error}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => void initialize()}
-            className="rounded-sm border border-destructive/30 bg-surface px-2 py-1 text-[10px] font-normal text-destructive transition-colors hover:bg-destructive/10"
-          >
+      <EmptyState
+        icon={<Image />}
+        iconSize="lg"
+        title={t.weLoadFailed}
+        hint={error}
+        action={
+          <Button variant="destructive" size="sm" onClick={() => void initialize()}>
             {t.weRetry}
-          </button>
-        </div>
-      </div>
+          </Button>
+        }
+        className="h-full w-full"
+      />
     );
   }
 
   // --- Not installed hint ---
   if (installed === false && wallpapers.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="flex size-14 items-center justify-center rounded-md bg-card2">
-            <Image className="size-6 text-muted-foreground" />
-          </div>
-          <div>
-            <p className="text-[11px] font-normal">{t.weNotInstalled}</p>
-            <p className="mt-1 text-[10px] text-muted-foreground">{t.weNotInstalledHint}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => void importWallpaper()}
-            className="rounded-sm bg-primary px-2 py-1 text-[10px] font-normal text-primary-foreground transition-colors hover:bg-primary/90"
-          >
+      <EmptyState
+        icon={<Image />}
+        iconSize="lg"
+        title={t.weNotInstalled}
+        hint={t.weNotInstalledHint}
+        action={
+          <Button variant="primary" size="sm" onClick={() => void importWallpaper()}>
             {t.wallpaperImport}
-          </button>
-        </div>
-      </div>
+          </Button>
+        }
+        className="h-full w-full"
+      />
     );
   }
 
@@ -149,14 +139,10 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
     <div className="we-app flex h-full min-h-0 flex-col min-w-0">
       {/* Page header */}
       <PageHeader title={t.wallpaperSection} description={t.wePageDesc} count={wallpapers.length}>
-        <button
-          type="button"
-          onClick={() => void importWallpaper()}
-          className="flex items-center gap-1 rounded-sm bg-surface px-2 py-1 text-[10px] font-normal transition-colors hover:border-primary hover:text-primary"
-        >
+        <Button variant="outline" size="sm" onClick={() => void importWallpaper()}>
           <Download className="size-3" />
           {t.wallpaperImport}
-        </button>
+        </Button>
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-muted-foreground">{t.wallpaperEnable}</span>
           <Switch

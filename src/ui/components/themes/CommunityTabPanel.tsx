@@ -201,8 +201,7 @@ export function CommunityTabPanel() {
         {themes.map((theme) => {
           const isInstalled = installedIds.has(theme.themeId);
           const isInstalling = installingIds.has(theme.themeId);
-          const progress =
-            downloadProgress.get(theme.themeId)?.progress ?? 0;
+          const progress = downloadProgress.get(theme.themeId);
 
           return (
             <div
