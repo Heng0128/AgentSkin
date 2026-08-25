@@ -333,6 +333,75 @@ describe('extractThemeZip — happy path', () => {
     expect(result.extractDir).toBe(tempDir);
     expect(result.themeRoot).toBe(tempDir);
 
+    // Verify the extraction completed successfully by checking the theme.json exists
+    const themeJsonPath = path.join(tempDir, 'theme.json');
+    expect(fs.existsSync(themeJsonPath)).toBe(true);
+    const themeContent = fs.readFileSync(themeJsonPath, 'utf-8');
+    expect(themeContent).toBe('{"name":"test"}');
+
+    // Cleanup
+    mkdtempSpy.mockRestore();
+    cleanupExtractDir(tempDir);
+  });
+
+  it('extracts files from zip entries to disk', async () => {
+    // Create a temp dir for extraction
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-extract-files-'));
+    const mkdtempSpy = vi.spyOn(fsp, 'mkdtemp').mockResolvedValue(tempDir);
+
+    // Track written files
+    const writtenFiles: string[] = [];
+
+    const zipfile = {
+      entryCount: 1,
+      readEntry: vi.fn(),
+      close: vi.fn(),
+      on: vi.fn(),
+      openReadStream: vi.fn(),
+    };
+
+    const endHandlers: Array<() => void> = [];
+    zipfile.on.mockImplementation((event: string, handler: any) => {
+      if (event === 'end') endHandlers.push(handler);
+    });
+
+    // Mock openReadStream to simulate file extraction
+    zipfile.openReadStream.mockImplementation((entry: any, cb: (err: Error | null, stream: any) => void) => {
+      // Track that a file was extracted
+      writtenFiles.push(entry.fileName);
+      // Return a mock stream that immediately ends
+      const mockStream = {
+        on: (e: string, h: () => void) => { if (e === 'end') process.nextTick(h); },
+        pipe: vi.fn(),
+        resume: vi.fn(),
+      };
+      cb(null, mockStream);
+    });
+
+    let entryReadCount = 0;
+    zipfile.readEntry.mockImplementation(() => {
+      entryReadCount++;
+      if (entryReadCount >= 2) {
+        // Trigger end after reading all entries
+        process.nextTick(() => {
+          for (const h of endHandlers) h();
+        });
+      }
+    });
+
+    yauzlOpenMock.mockImplementation(
+      (_p: string, _o: any, cb: (err: Error | null, zf: any) => void) => {
+        cb(null, zipfile);
+        zipfile.readEntry();
+      },
+    );
+
+    const result = await extractThemeZip('/fake/path.zip');
+
+    // Verify extraction completed
+    expect(result.extractDir).toBe(tempDir);
+    expect(result).toHaveProperty('themeRoot');
+
     // Cleanup
     mkdtempSpy.mockRestore();
     cleanupExtractDir(tempDir);
