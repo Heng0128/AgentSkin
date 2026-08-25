@@ -24,6 +24,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { hexToHsl, hslToHex } from '@/components/studio/harmony';
 import { useThemeStore } from '@/stores/themeStore';
 
 import type { UiMessages } from '@shared/i18n';
@@ -66,75 +67,14 @@ const COLOR_TOKENS = [
 ] as const;
 
 // ---------------------------------------------------------------------------
-// HSL hue-rotation helper
+// HSL hue-rotation helper (delegates to shared color utilities)
 // ---------------------------------------------------------------------------
-
-/** Parse a 6-digit hex string into [r, g, b] (0-255). Returns null on invalid. */
-function parseHex(hex: string): [number, number, number] | null {
-  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return null;
-  return [
-    parseInt(m[1].slice(0, 2), 16),
-    parseInt(m[1].slice(2, 4), 16),
-    parseInt(m[1].slice(4, 6), 16),
-  ];
-}
-
-/** Convert [r,g,b] (0-255) → [h (0-360), s (0-100), l (0-100)]. */
-function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
-  const rn = r / 255;
-  const gn = g / 255;
-  const bn = b / 255;
-  const max = Math.max(rn, gn, bn);
-  const min = Math.min(rn, gn, bn);
-  const l = (max + min) / 2;
-
-  if (max === min) return [0, 0, l * 100];
-
-  const d = max - min;
-  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-  let h = 0;
-  if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) / 6;
-  else if (max === gn) h = ((bn - rn) / d + 2) / 6;
-  else h = ((rn - gn) / d + 4) / 6;
-
-  return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
-}
-
-/** Convert [h, s, l] → [r, g, b] (0-255). */
-function hslToRgb(h: number, s: number, l: number): [number, number, number] {
-  const sn = s / 100;
-  const ln = l / 100;
-  const c = (1 - Math.abs(2 * ln - 1)) * sn;
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-  const m = ln - c / 2;
-
-  let r = 0;
-  let g = 0;
-  let b = 0;
-  if (h < 60) [r, g, b] = [c, x, 0];
-  else if (h < 120) [r, g, b] = [x, c, 0];
-  else if (h < 180) [r, g, b] = [0, c, x];
-  else if (h < 240) [r, g, b] = [0, x, c];
-  else if (h < 300) [r, g, b] = [x, 0, c];
-  else [r, g, b] = [c, 0, x];
-
-  return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
-}
-
-/** Convert [r,g,b] (0-255) → "#rrggbb". */
-function rgbToHex(r: number, g: number, b: number): string {
-  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
-}
 
 /** Rotate a hex color's hue by `deg` degrees (default 30). Returns new hex. */
 function rotateHue(hex: string, deg = 30): string {
-  const rgb = parseHex(hex);
-  if (!rgb) return hex;
-  const [h, s, l] = rgbToHsl(...rgb);
-  const newH = (h + deg + 360) % 360;
-  const [nr, ng, nb] = hslToRgb(newH, s, l);
-  return rgbToHex(nr, ng, nb);
+  const hsl = hexToHsl(hex);
+  const newH = (hsl.h + deg + 360) % 360;
+  return hslToHex({ ...hsl, h: newH });
 }
 
 // ---------------------------------------------------------------------------
