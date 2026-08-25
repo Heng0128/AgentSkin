@@ -216,7 +216,7 @@ export function useWallpaperPageController(controller: AppController): Wallpaper
         await setAgentWallpaper(agentId, false, null);
         await api.removeWallpaperFromAgent(agentId);
         showToast(t.weRemoved(name));
-      } catch (error) {
+      } catch {
         // Report removal failure to user — silent failure leaves wallpaper injected
         showToast(t.weApplyFailed, 'destructive');
       } finally {

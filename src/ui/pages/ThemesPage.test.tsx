@@ -34,6 +34,7 @@ let mockThemes: Array<{
   source?: string;
   preview?: string | null;
   icon?: string | null;
+  wallpaper?: { workshopId?: string; video?: string };
 }> = [];
 let mockAllCount = 0;
 let mockQuery = '';
@@ -260,6 +261,7 @@ describe('ThemesPage inspection fixes', () => {
         source: 'local' as const,
         preview: null,
         icon: null,
+        wallpaper: { workshopId: 'wp-1' },
       },
     ];
     mockAllCount = 1;
@@ -271,6 +273,16 @@ describe('ThemesPage inspection fixes', () => {
     expect(countMatches).toBe(1);
 
     // And exactly one dynamic badge (not duplicated in a deleted metadata row).
+    // DEBUG: Log HTML to understand structure
+    if (!html.includes('1 Dynamic')) {
+      const snippet = html.slice(html.indexOf('dynamicCount') - 50, html.indexOf('dynamicCount') + 200);
+      console.log('=== HTML around dynamicCount ===');
+      console.log(snippet || 'dynamicCount not found in HTML');
+      // Look for any element containing "Dynamic"
+      const dynamicEls = html.match(/[^>]*Dynamic[^<]*/g) ?? [];
+      console.log('=== Elements containing Dynamic ===');
+      dynamicEls.forEach((el) => console.log(el));
+    }
     const dynamicMatches = (html.match(/1 Dynamic/g) ?? []).length;
     expect(dynamicMatches).toBe(1);
   });

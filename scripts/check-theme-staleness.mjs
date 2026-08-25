@@ -33,29 +33,9 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { REQUIRED_TOKENS, AGENT_ONLY_TOKENS } from './theme-tokens.mjs';
 
 const THEMES_DIR = path.resolve(process.cwd(), 'themes');
-
-/** The 14 required design tokens every agent CSS must declare. */
-const REQUIRED_TOKENS = [
-  '--agentskin-bg',
-  '--agentskin-surface',
-  '--agentskin-surface-elevated',
-  '--agentskin-text',
-  '--agentskin-muted',
-  '--agentskin-accent',
-  '--agentskin-secondary',
-  '--agentskin-border',
-  '--agentskin-code-bg',
-  '--agentskin-code-fg',
-  '--agentskin-focus-ring',
-  '--agentskin-selection',
-  '--agentskin-button-bg',
-  '--agentskin-input-bg',
-];
-
-/** Tokens that exist ONLY in the agent-CSS layer (per-agent derived). */
-const AGENT_ONLY_TOKENS = new Set(['--agentskin-button-bg', '--agentskin-input-bg']);
 
 /** Match a `--agentskin-*` declaration: name → value. */
 const TOKEN_RE = /(?<![\w-])(--agentskin-[\w-]+)\s*:\s*([^;]+);/g;

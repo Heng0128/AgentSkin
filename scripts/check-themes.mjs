@@ -30,39 +30,11 @@ import { checkExtendedContrast, checkThemeContrast } from './wcag-apca-check.mjs
 const THEMES_DIR = path.resolve(process.cwd(), 'themes');
 const ENGINES_DIR = path.resolve(process.cwd(), 'engines');
 
-/** The 14 required design tokens every agent CSS must declare (no hero art —
- *  `--agentskin-art` is injected at runtime, not authored in the theme).
- *
- * `--agentskin-text-shadow` is included because `tokenBlock()` emits it as a
- *  global default; omitting it from this list would let a theme generator
- * silently skip it without CI flagging the gap. */
-const REQUIRED_TOKENS = [
-  '--agentskin-bg',
-  '--agentskin-surface',
-  '--agentskin-surface-elevated',
-  '--agentskin-text',
-  '--agentskin-muted',
-  '--agentskin-accent',
-  '--agentskin-secondary',
-  '--agentskin-border',
-  '--agentskin-code-bg',
-  '--agentskin-code-fg',
-  '--agentskin-focus-ring',
-  '--agentskin-selection',
-  '--agentskin-button-bg',
-  '--agentskin-input-bg',
-  '--agentskin-text-shadow',
-];
-
 /**
- * Tokens the generated `palette.css` must carry. It is the seed file
- * (written by `scripts/generate-theme-css.mjs`) and only holds the 12 core
- * tokens + `-raw` RGB derivations — `button-bg`/`input-bg` are derived from
- * accent/surface in the per-agent CSS layer, so they are NOT required here.
+ * `--agentskin-text-shadow` is emitted by `tokenBlock()` as a global default;
+ * it is checked separately in addition to the canonical 14 tokens.
  */
-const PALETTE_TOKENS = REQUIRED_TOKENS.filter(
-  (t) => t !== '--agentskin-button-bg' && t !== '--agentskin-input-bg',
-);
+const EXTRA_TOKENS = ['--agentskin-text-shadow'];
 
 /**
  * RGB-raw companion tokens — derived in `build-palette.mjs` from their parent

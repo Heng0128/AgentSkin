@@ -113,10 +113,10 @@ export function QuickEnvironmentCreate({
         value={wallpaperId ?? ''}
         onChange={(e) => setWallpaperId(e.target.value || null)}
         aria-label={t.bindWallpaper}
-        title={wallpaperListLoadError ? '壁纸加载失败' : t.bindWallpaper}
+        title={wallpaperListLoadError ? t.weLoadFailed : t.bindWallpaper}
         disabled={wallpaperListLoadError}
       >
-        <option value="">{wallpaperListLoadError ? '壁纸加载失败' : t.noWallpaper}</option>
+        <option value="">{wallpaperListLoadError ? t.weLoadFailed : t.noWallpaper}</option>
         {wallpapers.map((w) => (
           <option key={w.id} value={w.id}>
             {w.title}
