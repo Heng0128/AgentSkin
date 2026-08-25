@@ -35,7 +35,7 @@
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
     "design-tokens": "node scripts/check-design-tokens.mjs",
-    "check": "biome check src/ && tsc --noEmit && node scripts/check-design-tokens.mjs",
+    "check": "biome check src/ && tsc --noEmit && node scripts/check-design-tokens.mjs && node scripts/check-i18n.mjs",
     "package": "electron-builder --win --x64 --publish never",
     "package:dir": "electron-builder --win --x64 --dir"
   },

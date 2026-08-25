@@ -24,6 +24,7 @@
 | `check-specificity-budget.mjs` | 验证 CSS 特异性预算（λ P0-1）：模拟生成 6 适配器 CSS 并对照 `src/compiler/specificity.ts` 中的 profile |
 | `check-themes.mjs` | 验证 14-token 主题契约（C2）：每个主题包必须包含完整的 14 个设计 token |
 | `check-variable-bridge.mjs` | 验证变量桥接契约（C10）：bridge 无循环依赖、目标变量在 CSS 中被引用、agentskin token 可解析 |
+| `check-i18n.mjs` | 验证 i18n 完整性：中英 key 对齐、空翻译检测、孤儿 key 检测 |
 
 ### 构建脚本（build-*）
 
