@@ -143,13 +143,12 @@ describe('bridge-theme-consistency', () => {
     existsSync(join(THEMES_DIR, id, 'manifest.json')),
   );
 
-  it('should confirm target bridge themes exist on disk', () => {
-    // Bridge themes (github-noir, obsidian-poise, sweet-strawberry-code) are a
-    // planned feature — they do not exist on disk yet. The per-theme loop below
-    // iterates `availableThemes`, so when none exist the suite is effectively
-    // a no-op. Assert >= 0 (not >= 1) so the suite passes cleanly until the
-    // bridge themes are actually created.
-    expect(availableThemes.length).toBeGreaterThanOrEqual(0);
+  it('should confirm themes directory exists and is accessible', () => {
+    // Verifies the themes directory exists — a meaningful precondition even
+    // when bridge themes (github-noir, obsidian-poise, sweet-strawberry-code)
+    // are not yet created. The per-theme loop below iterates `availableThemes`,
+    // so when none exist the per-theme tests are gracefully skipped.
+    expect(existsSync(THEMES_DIR)).toBe(true);
   });
 
   // ── 1. variableBridge format (flattened — one describe per theme) ────

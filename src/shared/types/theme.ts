@@ -12,6 +12,23 @@ export interface ThemeManifest {
   supportedAgents: AgentId[];
   preview: string | null;
   icon?: string | null;
+  /** 14-token color palette (key → hex/string color value). */
+  colors?: Record<string, string>;
+  /** Preferred color mode. */
+  mode?: 'dark' | 'light' | 'auto';
+  /** Design Language configuration (radius / spacing / shadow / motion). */
+  designLanguageConfig?: {
+    radius?: { scale?: string };
+    spacing?: { density?: string };
+    shadow?: { elevation?: string };
+    motion?: { speed?: string };
+  };
+  /** Alternative color-scheme variants (v2.2+). */
+  colorSchemes?: Record<string, { name?: string; mode?: string; colors: Record<string, string> }>;
+  /** Extended color overrides. */
+  extended?: Record<string, string>;
+  /** Variable bridge for Codex-style themes. */
+  variableBridge?: Record<string, string>;
 }
 
 /**
