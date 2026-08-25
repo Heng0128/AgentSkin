@@ -52,6 +52,7 @@ import { extractThemeFilesFromArgv } from './file-open';
 import { registerIpc } from './ipc';
 import { disposeCoordinatorIpc } from './ipc/coordinator-ipc';
 import { loadLocalePreference } from './locale-preferences';
+import { setLoggerLocale } from './logger';
 import {
   brandingRoot,
   clearStatusNotifyTimer,
@@ -226,6 +227,7 @@ export async function runBootSequence(deps: BootDeps): Promise<BootResult> {
       ctx.userDataRoot = app.getPath('userData');
       ctx.locale = await loadLocalePreference(ctx.userDataRoot, app.getLocale());
       setMainLocale(ctx.locale);
+      setLoggerLocale(ctx.locale);
       // Load the per-step duration baseline now that userDataRoot is known, so
       // subsequent steps can size their progress slices by real loading time.
       baselineCache = loadBootBaseline(ctx.userDataRoot);

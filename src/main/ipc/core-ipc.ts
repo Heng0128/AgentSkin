@@ -25,7 +25,7 @@ import { getStyleSheetText, listStyleSheets } from '../cdp/css-service';
 import { injectCssLayer } from '../cdp/injection/shared';
 import { probeSelector, validateSelectors } from '../cdp/selector-validator';
 import { saveLocalePreference, saveThemeModePreference } from '../locale-preferences';
-import { mainWarn } from '../logger';
+import { mainWarn, setLoggerLocale } from '../logger';
 import { handleThemeFileOpen, type MainContext, wrapCatalog } from '../main-context';
 import {
   pushTweak,
@@ -64,6 +64,7 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
     if (!isAppLocale(nextLocale)) throw new Error(getMainMessages().invalidLocale);
     deps.locale = nextLocale;
     setMainLocale(deps.locale);
+    setLoggerLocale(deps.locale);
     await saveLocalePreference(deps.userDataRoot, deps.locale);
     void updateTrayMenu().catch((error) => {
       mainWarn('TrayMenu.Update', toMessage(error));

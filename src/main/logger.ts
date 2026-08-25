@@ -19,10 +19,24 @@
  */
 
 import { toMessage } from '../shared/errors';
+import type { AppLocale } from '../shared/i18n';
 
 type LogListener = (line: string) => void;
 
 let listener: LogListener | null = null;
+// K-10: tracks the application locale so timestamps match the UI language.
+// Defaults to 'zh-CN' until setLoggerLocale is called during boot.
+let currentLocale: AppLocale = 'zh-CN';
+
+/** Set the locale used for log-line timestamps. Called on boot + locale change. */
+export function setLoggerLocale(locale: AppLocale): void {
+  currentLocale = locale;
+}
+
+/** Build a locale-aware HH:mm:ss timestamp for log lines. */
+function timestamp(): string {
+  return new Date().toLocaleTimeString(currentLocale, { hour12: false });
+}
 // P3-11: Raised the buffered-early-log ceiling from 200 → 1000 entries.
 // Cold boot now performs more work up-front (legacy migration for every
 // theme dir, WallpaperEngine scan of ~hundreds of workshop folders, Steam
@@ -39,7 +53,7 @@ const buffer: string[] = [];
 const MAX_DROPPED_INFO = 50;
 
 function emit(level: 'WARN' | 'ERROR' | 'INFO', scope: string, message: string): void {
-  const ts = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  const ts = timestamp();
   const line = `[${ts}] [Main] [${level}] [${scope}] ${message}`;
   // Always mirror to the dev console so `electron --inspect` still works.
   if (level === 'ERROR') console.error(line);
@@ -115,7 +129,7 @@ export function mainInfo(scope: string, message: string): void {
  */
 export function mainDebug(scope: string, message: string): void {
   if (process.env.DEBUG_CDP) {
-    const ts = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+    const ts = timestamp();
     console.debug(`[${ts}] [Main] [DEBUG] [${scope}] ${message}`);
   }
 }
