@@ -271,21 +271,10 @@ describe('ThemesPage inspection fixes', () => {
     expect(countMatches).toBe(1);
 
     // And exactly one dynamic badge (not duplicated in a deleted metadata row).
-    // DEBUG: Log HTML to understand structure
-    if (!html.includes('1 Dynamic')) {
-      const dynamicEls = html.match(/[^<]{0,30}Dynamic[^>]{0,30}/g) ?? [];
-      console.log('=== Context around Dynamic ===');
-      dynamicEls.forEach((el) => {
-        console.log(JSON.stringify(el));
-      });
-      const oneDynamic = html.match(/1[\s\S]{0,100}Dynamic/g) ?? [];
-      console.log('=== 1...Dynamic matches ===');
-      oneDynamic.forEach((el) => {
-        console.log(JSON.stringify(el));
-      });
-    }
-    const dynamicMatches = (html.match(/1 Dynamic/g) ?? []).length;
-    expect(dynamicMatches).toBe(1);
+    // The badge renders as separate spans: <span>{count}</span><span>{label}</span>
+    // Use a regex that matches across HTML tags.
+    const dynamicBadgeMatches = (html.match(/1<\/span>[^<]*<span[^>]*>Dynamic/g) ?? []).length;
+    expect(dynamicBadgeMatches).toBe(1);
   });
 
   // --- I-1: categoryLabel('all') resolves in both locales ------------------

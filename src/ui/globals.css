@@ -499,9 +499,10 @@
 /* =================================================================== */
 @layer utilities {
   .as-label {
-    font-weight: 400;
+    font-weight: 500;
     font-size: var(--font-size-label);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--muted-foreground);
   }
 
@@ -533,7 +534,7 @@
     color: var(--muted-foreground);
   }
   .as-kv-val {
-    font-weight: 400;
+    font-weight: 500;
     color: var(--foreground);
   }
 
@@ -554,6 +555,58 @@
   }
   .status-dot.idle {
     color: var(--muted-foreground);
+  }
+
+  /* ---- Panel: consistent card/panel surface ---- */
+  .as-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  /* ---- Section title ---- */
+  .as-section-title {
+    font-size: var(--font-size-label);
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  /* ---- Hairline divider ---- */
+  .as-hairline {
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ---- Vertical hairline ---- */
+  .as-hairline-v {
+    width: 1px;
+    background: var(--border);
+  }
+
+  /* ---- Stats bar: horizontal inline stat strip ---- */
+  .as-stat-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  /* ---- Subtle brand tint for active/selected rows ---- */
+  .as-active-tint {
+    background: rgba(var(--brand-rgb), 0.06);
+    border-color: rgba(var(--brand-rgb), 0.2);
+  }
+
+  /* ---- Glass surface for wallpaper mode ---- */
+  .as-glass {
+    background: color-mix(in srgb, var(--surface) 72%, transparent);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
   }
 }
 
@@ -595,7 +648,12 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: var(--radius-pill);
   background: var(--foreground);
   border: 2px solid var(--card);
+  box-shadow: var(--shadow-xs);
   cursor: pointer;
+  transition: transform var(--duration-fast) ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
 }
 input[type="range"]::-moz-range-thumb {
   width: 14px;
@@ -603,6 +661,7 @@ input[type="range"]::-moz-range-thumb {
   border-radius: var(--radius-pill);
   background: var(--foreground);
   border: 2px solid var(--card);
+  box-shadow: var(--shadow-xs);
   cursor: pointer;
 }
 
@@ -619,8 +678,8 @@ input[type="range"]::-moz-range-thumb {
 /* Toggle Switch                                                        */
 /* =================================================================== */
 .sw {
-  width: 36px;
-  height: 20px;
+  width: 34px;
+  height: 18px;
   border-radius: var(--radius-pill);
   background: var(--border-strong);
   position: relative;
@@ -632,14 +691,19 @@ input[type="range"]::-moz-range-thumb {
 .sw::after {
   content: "";
   position: absolute;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: var(--card);
   top: 2px;
   left: 2px;
-  transition: left var(--duration-base) ease;
-  box-shadow: var(--shadow-xs);
+  transition:
+    left var(--duration-base) cubic-bezier(0.16, 1, 0.3, 1),
+    background var(--duration-base) ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.sw:hover::after {
+  transform: scale(1.08);
 }
 .sw.on {
   background: var(--primary);
@@ -655,12 +719,12 @@ input[type="range"]::-moz-range-thumb {
 .tag {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  font: 400 var(--font-size-label) var(--font-ui);
-  padding: 1px 6px;
+  gap: 4px;
+  font: 500 var(--font-size-label) var(--font-ui);
+  padding: 2px 8px;
   border-radius: var(--radius-pill);
   background: var(--accent);
   color: var(--accent-foreground);
   white-space: nowrap;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(var(--brand-rgb), 0.15);
 }
