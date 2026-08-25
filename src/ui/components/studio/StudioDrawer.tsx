@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # StudioDrawer
@@ -141,7 +141,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                 className="w-full"
                 onClick={() => setCreatingProject(true)}
               >
-                <span className="text-secondary">+</span> {t.studioProjectNew}
+                <span className="text-muted-foreground">+</span> {t.studioProjectNew}
               </Button>
 
               {creatingProject && (
@@ -227,7 +227,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                           <span className="text-micro text-muted-foreground">
                             {t.studioProfileStrategy}:
                           </span>
-                          <span className="text-micro text-secondary font-mono">
+                          <span className="text-micro text-muted-foreground font-mono">
                             {t[strategyKey]}
                           </span>
                         </div>

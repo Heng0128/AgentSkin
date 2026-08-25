@@ -105,8 +105,11 @@ export default defineConfig({
           environment: 'happy-dom',
           include: [
             'tests/unit/**/*.test.ts',
+            'tests/unit/**/*.test.tsx',
             'tests/integrate/**/*.test.ts',
+            'tests/integrate/**/*.test.tsx',
             'tests/contract/**/*.test.ts',
+            'tests/contract/**/*.test.tsx',
           ],
           testTimeout: 10000,
           pool: 'threads',

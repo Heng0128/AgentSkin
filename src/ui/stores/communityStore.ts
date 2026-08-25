@@ -396,8 +396,8 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           downloadProgress: progress,
         });
 
-        // Safe error extraction with nullish coalescing
-        const errorMsg = result.data?.error || result.error || 'Installation failed';
+                // Safe error extraction with nullish coalescing
+        const errorMsg = result.data?.error || 'Installation failed';
 
         // When cancelInstall() is called, it removes the theme from
         // installingIds before this promise resolves. A missing entry

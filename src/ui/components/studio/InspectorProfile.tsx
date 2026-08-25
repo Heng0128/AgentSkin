@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # InspectorProfile
@@ -65,7 +65,7 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
       <div>
         <div className="mb-1 flex items-baseline justify-between">
           <span className="text-micro   text-muted-foreground">{t.studioProgress}</span>
-          <span className="text-micro font-normal tabular-nums text-secondary">
+          <span className="text-micro font-normal tabular-nums text-muted-foreground">
             {progress}%
           </span>
         </div>

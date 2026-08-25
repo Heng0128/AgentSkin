@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 import { useState } from 'react';
 import type { UiMessages } from '@shared/i18n';
@@ -85,7 +85,7 @@ export function ThemeCard({
               'absolute top-1 rounded-sm px-1 py-0 text-[11px] font-normal',
               isActive ? 'left-1' : 'right-1',
               theme.mode === 'dark'
-                ? 'bg-surface text-secondary'
+                ? 'bg-surface text-secondary-foreground'
                 : 'bg-muted text-foreground',
             )}
           >
