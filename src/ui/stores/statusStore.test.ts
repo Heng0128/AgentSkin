@@ -39,19 +39,7 @@ vi.mock('@/api/agentSkinClient', () => ({
 
 // Import AFTER all mocks are in place
 import { useStatusStore } from './statusStore';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function resetStore() {
-  useStatusStore.setState({
-    status: null,
-    lastStatusAt: null,
-    isRefreshing: false,
-    error: null,
-  });
-}
+import { resetStatusStore } from './test-helpers/store-test-utils';
 
 const SAMPLE_STATUS = {
   platform: 'win32' as const,
@@ -75,7 +63,7 @@ const SAMPLE_STATUS = {
 describe('statusStore — error state & clearError', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    resetStore();
+    resetStatusStore();
   });
 
   // -- initial state -------------------------------------------------------

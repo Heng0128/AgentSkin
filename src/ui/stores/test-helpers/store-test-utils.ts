@@ -9,18 +9,17 @@
  * These helpers are the single source of truth for store reset logic —
  * individual test files should import from here rather than defining local
  * `resetStore` functions.
+ *
+ * NOTE: Store imports are performed lazily inside each function (rather than at
+ * module top-level) to avoid triggering module-level side effects — some stores
+ * invoke IPC methods at creation time. Tests must therefore ensure the relevant
+ * mocks are already in place before calling these helpers.
  */
-
-import { useAgentStore } from '../agentStore';
-import { FALLBACK_AGENTS } from '../agentStore';
-import { useAppsStore } from '../appsStore';
-import { useCommunityStore } from '../communityStore';
-import { useSettingsStore } from '../settingsStore';
-import { useStatusStore } from '../statusStore';
-import { useWorkspaceStore } from '../workspaceStore';
 
 /** Reset `useAgentStore` to its initial state (with fallback agents). */
 export function resetAgentStore(): void {
+  const { useAgentStore } = require('../agentStore');
+  const { FALLBACK_AGENTS } = require('../agentStore');
   useAgentStore.setState({
     agents: FALLBACK_AGENTS,
     loaded: false,
@@ -29,6 +28,7 @@ export function resetAgentStore(): void {
 
 /** Reset `useAppsStore` state that tests commonly mutate. */
 export function resetAppsStore(): void {
+  const { useAppsStore } = require('../appsStore');
   useAppsStore.setState({
     scanResult: null,
     scanning: false,
@@ -41,6 +41,7 @@ export function resetAppsStore(): void {
 
 /** Reset `useCommunityStore` to a pristine catalog-browsing state. */
 export function resetCommunityStore(): void {
+  const { useCommunityStore } = require('../communityStore');
   useCommunityStore.setState({
     themes: [],
     total: 0,
@@ -62,6 +63,7 @@ export function resetCommunityStore(): void {
 
 /** Reset `useSettingsStore` UI and MCP state to defaults. */
 export function resetSettingsStore(): void {
+  const { useSettingsStore } = require('../settingsStore');
   useSettingsStore.setState({
     settingsOpen: false,
     settingsSection: 'general',
@@ -76,6 +78,7 @@ export function resetSettingsStore(): void {
 
 /** Reset `useStatusStore` to a clean, non-refreshing state. */
 export function resetStatusStore(): void {
+  const { useStatusStore } = require('../statusStore');
   useStatusStore.setState({
     status: null,
     lastStatusAt: null,
@@ -89,6 +92,7 @@ export function resetStatusStore(): void {
  * token used for serialising async push receipts.
  */
 export function resetWorkspaceStore(): void {
+  const { useWorkspaceStore } = require('../workspaceStore');
   useWorkspaceStore.setState({
     currentAgentId: null,
     currentPort: null,

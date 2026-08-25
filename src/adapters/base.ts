@@ -233,7 +233,7 @@ export abstract class BaseApplicationAdapter implements ApplicationAdapter {
   /** 透传 core 适配器的 rendererHints（RFC A2 P1）。无 core 支持时返回 undefined。 */
   rendererHints(): RendererHints | undefined {
     try {
-      return getCoreAdapter(this.requireCore()).rendererHints;
+      return getCoreAdapter(this.requireCore()).rendererHints as RendererHints | undefined;
     } catch {
       return undefined;
     }

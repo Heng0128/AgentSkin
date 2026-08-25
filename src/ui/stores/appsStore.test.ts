@@ -153,7 +153,7 @@ describe('appsStore', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    resetStore();
+    resetAppsStore();
 
     // Default mock implementations
     mockGetCoordinatorSnapshot.mockResolvedValue(new Map());
