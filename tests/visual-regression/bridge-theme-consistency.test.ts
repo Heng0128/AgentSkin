@@ -44,10 +44,14 @@ function readManifest(themeId: string): Record<string, unknown> {
   return JSON.parse(readFileSync(path, 'utf-8')) as Record<string, unknown>;
 }
 
-/** Read a theme's CSS file for a given agent. */
-function readThemeCss(themeId: string, agent: string): string {
+/**
+ * Read a theme's CSS file for a given agent.
+ * Returns null if the file does not exist (instead of throwing) so that
+ * describe-block collection does not crash on missing CSS.
+ */
+function readThemeCss(themeId: string, agent: string): string | null {
   const path = join(THEMES_DIR, themeId, 'assets', 'css', `${agent}.css`);
-  if (!existsSync(path)) throw new Error(`${agent}.css missing for ${themeId}`);
+  if (!existsSync(path)) return null;
   return readFileSync(path, 'utf-8');
 }
 
@@ -191,7 +195,12 @@ describe('bridge-theme-consistency', () => {
       describe(`theme: ${themeId} — agent CSS: ${agent}`, () => {
         const css = readThemeCss(themeId, agent);
 
+        it('should have CSS file present for this agent', () => {
+          expect(css, `${themeId}: ${agent}.css should exist`).not.toBeNull();
+        });
+
         it('should declare --agentskin-* tokens inside :root.agentskin-host-codex', () => {
+          if (!css) return; // guarded by previous test
           const varsInHost = extractAgentskinVarsInHostSelector(css);
           expect(varsInHost.length).toBeGreaterThan(0);
           // Core tokens must be present
@@ -201,6 +210,7 @@ describe('bridge-theme-consistency', () => {
         });
 
         it('should NOT have bare :root declarations (THEME_SPEC violation)', () => {
+          if (!css) return; // guarded by previous test
           expect(hasBareRootDeclaration(css)).toBe(false);
         });
 
@@ -212,6 +222,7 @@ describe('bridge-theme-consistency', () => {
         // NOT "zero --ct-* occurrences" (which would mean we dropped the
         // source design system).
         it('should have every --ct-* reference paired with a matching declaration (no dangling refs)', () => {
+          if (!css) return; // guarded by CSS presence test
           const ctRefs = findCtVariableReferences(css);
           const ctDecls = new Set(findCtVariableDeclarations(css));
           const dangling = ctRefs.filter((r) => !ctDecls.has(r));
@@ -224,6 +235,7 @@ describe('bridge-theme-consistency', () => {
         // Bridge contract: if the source theme CSS was bridged (bridge marker
         // present), --color-* override count must be > 0.
         it('should have --color-* bridge overrides > 0 when bridge section is present', () => {
+          if (!css) return; // guarded by CSS presence test
           const hasBridgeMarker =
             css.includes('Bridge: FULL source Codex theme CSS') ||
             css.includes('Bridge: Codex-native --color-token-* overrides');
