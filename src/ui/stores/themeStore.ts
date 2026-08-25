@@ -432,8 +432,15 @@ export const useThemeStore = create<ThemeState>((set, get) => {
       // Response-as-Truth (R3): the last-settled restore's snapshot is the
       // final system state — every restore has resolved by this point, so no
       // extra refreshStatus() round-trip is needed.
-      for (const entry of settled) {
-        if (entry.status) useStatusStore.getState().setStatus(entry.status);
+      // RC4-A fix: Instead of calling setStatus N times in a loop (each call
+      // creates a separate synchronous state update, risking React 19 tearing
+      // and N unnecessary render frames), aggregate into a single setStatus
+      // with the last successful snapshot. This collapses N updates into one.
+      if (okCount > 0) {
+        const lastOkEntry = [...settled].reverse().find((r) => r.ok);
+        if (lastOkEntry?.status) {
+          useStatusStore.getState().setStatus(lastOkEntry.status);
+        }
       }
       if (failCount === 0) {
         useNotificationStore.getState().showToast(t.restoreAllDone(okCount));
