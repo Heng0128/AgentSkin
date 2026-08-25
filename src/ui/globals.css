@@ -320,9 +320,6 @@
   --leading-body: 1.5;
   --tracking-tight: -0.02em;
 
-  /* Shadow — map CSS vars to Tailwind shadow utilities */
-  --shadow-float: var(--shadow-float);
-
   /* Duration scale */
   --duration-multiplier: 1;
   --duration-instant: 0ms;

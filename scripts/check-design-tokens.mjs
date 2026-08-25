@@ -94,13 +94,13 @@ const _ALLOWED_TEXT_NAMES = new Set([
 
 /**
  * px values allowed for arbitrary `text-[Npx]` — the project's actual font
- * ladder (design-tokens.md §3.3): 8.5–9px auxiliary mono, 9.5px 辅助标签,
- * 10–10.5px data, 11–11.5px secondary (text-xs), 12–12.5px body (text-sm),
+ * ladder (design-tokens.md §3.3): 10px minimum (CRITICAL data must stay >= 10px),
+ * 10–10.5px micro/label, 11–11.5px secondary (text-xs), 12–12.5px body (text-sm),
  * 13px card titles, 22px page titles, plus named-size equivalents.
- * Values BELOW 8.5px remain flagged (CRITICAL data must stay >= 10px).
+ * Values BELOW 10px remain flagged (design-tokens.md §3.3 "10px 字号底线").
  */
 const ALLOWED_TEXT_ARBITRARY_PX = new Set([
-  8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 16, 18, 20, 22, 24, 30, 36, 44, 48, 60, 72, 96,
+  10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 16, 18, 20, 22, 24, 30, 36, 44, 48, 60, 72, 96,
   128,
 ]);
 

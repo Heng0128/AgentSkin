@@ -141,9 +141,9 @@ AgentSkin 采用 **Quiet Workbench** 设计语言（Calm · Simple · Restrained
 | `--font-size-body` | 11px | `@theme inline` |
 | `--font-size-caption` | 11px | `@theme inline` |
 | `--font-size-label` | 10px | `@theme inline` |
-| `--font-size-micro` | 9px | `@theme inline` |
+| `--font-size-micro` | 10px | `@theme inline` |
 | `.as-label` | 10px | utilities（`var(--font-size-label)`） |
-| `.as-micro` | 9px | utilities（`var(--font-size-micro)`） |
+| `.as-micro` | 10px | utilities（`var(--font-size-micro)`） |
 | `.as-mono` | 10px | utilities（`var(--font-size-label)`） |
 | `.as-kv` | 11px | utilities（`var(--font-size-body)`） |
 | `.as-kv-key` | 10px | utilities（`var(--font-size-label)`） |
