@@ -226,3 +226,36 @@ describe('Coverage gaps', () => {
     expect(css).toContain('--agentskin-ext-on-light: #000000');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Reserved key validation (design-tokens.md §11.3 — CI-blocking)
+// ---------------------------------------------------------------------------
+
+describe('Reserved key validation', () => {
+  it('throws when using reserved key "on"', () => {
+    expect(() => extendedColorsBlock({ on: '#ff0000' })).toThrow(/reserved/);
+  });
+
+  it('throws when using reserved key "ext"', () => {
+    expect(() => extendedColorsBlock({ ext: '#ff0000' })).toThrow(/reserved/);
+  });
+
+  it('throws when using reserved key "raw"', () => {
+    expect(() => extendedColorsBlock({ raw: '#ff0000' })).toThrow(/reserved/);
+  });
+
+  it('throws when using reserved key "wcag"', () => {
+    expect(() => extendedColorsBlock({ wcag: '#ff0000' })).toThrow(/reserved/);
+  });
+
+  it('throws with descriptive message listing all reserved keys', () => {
+    expect(() => extendedColorsBlock({ on: '#ff0000' })).toThrow(/on, ext, raw, wcag/);
+  });
+
+  it('does NOT throw for non-reserved keys that contain reserved substrings', () => {
+    // "one", "onboarding", "rawdata" are NOT reserved — only exact matches
+    expect(() => extendedColorsBlock({ one: '#ff0000' })).not.toThrow();
+    expect(() => extendedColorsBlock({ onboarding: '#ff0000' })).not.toThrow();
+    expect(() => extendedColorsBlock({ rawdata: '#ff0000' })).not.toThrow();
+  });
+});
