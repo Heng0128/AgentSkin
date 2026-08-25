@@ -75,9 +75,10 @@ describe('MainContext statusNotifyTimer cleanup', () => {
     // Clear it before it fires
     clearStatusNotifyTimer();
 
-    // Advance past the debounce window — no crash, no side effects
-    vi.advanceTimersByTime(100);
-    expect(true).toBe(true); // reached here = no throw
+    // After clearing the debounce timer, advancing time must not trigger
+    // the original callback. If the timer wasn't cleared, advancing time
+    // would fire sendStatusChanged which sends IPC to non-existent windows.
+    expect(() => vi.advanceTimersByTime(100)).not.toThrow();
   });
 
   it('clearStatusNotifyTimer registered as disposable prevents timer leak on shutdown', () => {
