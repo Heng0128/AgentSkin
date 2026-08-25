@@ -58,8 +58,8 @@ function SettingRow({
   return (
     <div className="flex items-center justify-between gap-2 py-1.5 px-2 border-b border-border last:border-0">
       <div>
-        <p className="text-[10px] text-foreground">{title}</p>
-        {description && <p className="text-[10px] text-muted-foreground mt-0.5">{description}</p>}
+        <p className="text-micro text-foreground">{title}</p>
+        {description && <p className="text-micro text-muted-foreground mt-0.5">{description}</p>}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
     </div>
@@ -105,8 +105,8 @@ function CustomCssEditor({
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2 py-1.5 px-2 border-b border-border last:border-0">
         <div>
-          <p className="text-[10px] text-foreground">{t.settingsCustomCssTitle}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{t.settingsCustomCssDesc}</p>
+          <p className="text-micro text-foreground">{t.settingsCustomCssTitle}</p>
+          <p className="text-micro text-muted-foreground mt-0.5">{t.settingsCustomCssDesc}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button variant="outline" size="sm" onClick={clear}>
@@ -153,12 +153,12 @@ function LiveDomRefreshIntervalEditor({ t }: { t: AppController['t'] }) {
         value={String(current)}
         onValueChange={(v) => void saveLiveDomRefreshInterval(Number(v))}
       >
-        <SelectTrigger className="h-6 w-[160px] rounded-md border-border bg-muted text-[10px]">
+        <SelectTrigger className="h-6 w-[160px] rounded-md border-border bg-muted text-micro">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="rounded-md border-border bg-card">
           {options.map((opt) => (
-            <SelectItem key={opt.value} value={String(opt.value)} className="text-[10px]">
+            <SelectItem key={opt.value} value={String(opt.value)} className="text-micro">
               {opt.label}
             </SelectItem>
           ))}
@@ -196,15 +196,15 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
     <div className="rounded-md border border-border bg-card p-2">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-[10px] text-foreground">{t.settingsMcpTitle}</p>
-          <p className="text-[10px] text-muted-foreground mt-0.5">{t.settingsMcpDesc}</p>
+          <p className="text-micro text-foreground">{t.settingsMcpTitle}</p>
+          <p className="text-micro text-muted-foreground mt-0.5">{t.settingsMcpDesc}</p>
         </div>
         <div className="flex items-center gap-1">
           {mcpRunning ? (
             <Button
               size="sm"
               variant="outline"
-              className="h-6 gap-1 px-2 text-[10px]"
+              className="h-6 gap-1 px-2 text-micro"
               onClick={() => void toggleMcp()}
             >
               {t.settingsMcpStop}
@@ -212,7 +212,7 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
           ) : (
             <Button
               size="sm"
-              className="h-6 gap-1 px-2 text-[10px]"
+              className="h-6 gap-1 px-2 text-micro"
               onClick={() => void toggleMcp()}
             >
               {t.settingsMcpStart}
@@ -221,7 +221,7 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
         </div>
       </div>
       <div className="mt-2 space-y-1">
-        <div className="flex items-center gap-2 text-[10px]">
+        <div className="flex items-center gap-2 text-micro">
           <span
             className={cn(
               'inline-block size-1.5 rounded-full',
@@ -233,7 +233,7 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
           </span>
         </div>
         {mcpRunning && mcpUrl && (
-          <div className="flex items-center gap-1 text-[10px]">
+          <div className="flex items-center gap-1 text-micro">
             <span className="text-muted-foreground">{t.settingsMcpEndpoint}:</span>
             <code className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground">
               {mcpUrl}
@@ -412,14 +412,14 @@ export function SettingsPage({ controller }: { controller: AppController }) {
         <div className="flex min-h-0 flex-col">
           {/* Mobile header: breadcrumb + section selector */}
           <div className="flex items-center justify-between px-2 py-1.5 md:hidden">
-            <span className="text-[10px] text-muted-foreground">{activeSection.label}</span>
+            <span className="text-micro text-muted-foreground">{activeSection.label}</span>
             <Select value={section} onValueChange={(v) => setSection(v as SettingsSection)}>
-              <SelectTrigger className="h-6 w-auto min-w-[120px] rounded-md border-border bg-muted text-[10px]">
+              <SelectTrigger className="h-6 w-auto min-w-[120px] rounded-md border-border bg-muted text-micro">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="rounded-md border-border bg-card">
                 {sectionOptions.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
+                  <SelectItem key={opt.value} value={opt.value} className="text-micro">
                     {opt.label}
                   </SelectItem>
                 ))}
@@ -428,14 +428,14 @@ export function SettingsPage({ controller }: { controller: AppController }) {
           </div>
 
           {/* Desktop header: title + copy logs */}
-          <div className="hidden px-2 py-1.5 md:block">
+          <div className="hidden px-3 py-1.5 md:block">
             <PageHeader title={activeSection.label}>
               {section === 'system' && logs.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => void handleCopy()}
-                  className="h-6 shrink-0 gap-1 px-2 text-[10px]"
+                  className="h-6 shrink-0 gap-1 px-2 text-micro"
                 >
                   {copied ? (
                     <CheckCircle2 className={cn('size-4', 'text-cr-success')} />
@@ -452,12 +452,12 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               <>
                 <SettingRow title={t.themeModeLabel}>
                   <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
-                    <SelectTrigger className="h-6 w-[160px] rounded-md border-border bg-muted text-[10px]">
+                    <SelectTrigger className="h-6 w-[160px] rounded-md border-border bg-muted text-micro">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-md border-border bg-card">
                       {themeOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
+                        <SelectItem key={opt.value} value={opt.value} className="text-micro">
                           {opt.label}
                         </SelectItem>
                       ))}
@@ -469,14 +469,14 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                     value={controller.locale}
                     onValueChange={(v) => void controller.setLocale(v as 'zh-CN' | 'en')}
                   >
-                    <SelectTrigger className="h-6 w-[160px] rounded-md border-border bg-muted text-[10px]">
+                    <SelectTrigger className="h-6 w-[160px] rounded-md border-border bg-muted text-micro">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-md border-border bg-card">
-                      <SelectItem value="zh-CN" className="text-[10px]">
+                      <SelectItem value="zh-CN" className="text-micro">
                         {t.chinese}
                       </SelectItem>
-                      <SelectItem value="en" className="text-[10px]">
+                      <SelectItem value="en" className="text-micro">
                         {t.english}
                       </SelectItem>
                     </SelectContent>
@@ -524,7 +524,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                   className="w-full"
                 />
               ) : (
-                <div className="space-y-px rounded-md bg-card p-2 text-[10px] leading-5">
+                <div className="space-y-px rounded-md bg-card p-2 text-micro leading-5">
                   <div className="mb-1 px-1 text-micro text-muted-foreground/50">
                     {logs.length} {t.showLogs}
                   </div>
@@ -545,19 +545,19 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               ))}
             {section === 'about' && (
               <SettingRow title={t.settingsAbout} description={t.settingsAboutDesc}>
-                <span className="text-[10px] text-muted-foreground">v{appVersion}</span>
+                <span className="text-micro text-muted-foreground">v{appVersion}</span>
               </SettingRow>
             )}
             {section === 'advanced' && (
               <>
-                <p className="text-[10px] text-muted-foreground/70">
+                <p className="text-micro text-muted-foreground/70">
                   {t.settingsAdvancedDesc}
                 </p>
                 <McpSettingsPanel t={t} />
                 <LiveDomRefreshIntervalEditor t={t} />
                 <Accordion type="single" collapsible>
                   <AccordionItem value="diagnostics" className="border-b-0">
-                    <AccordionTrigger className="py-1.5 text-[10px] text-foreground">
+                    <AccordionTrigger className="py-1.5 text-micro text-foreground">
                       {t.settingsDiagnosticsTitle}
                     </AccordionTrigger>
                     <AccordionContent>
@@ -567,7 +567,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 </Accordion>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="secondary-inject" className="border-b-0">
-                    <AccordionTrigger className="py-1.5 text-[10px] text-foreground">
+                    <AccordionTrigger className="py-1.5 text-micro text-foreground">
                       {t.settingsSecondaryInjectTitle}
                     </AccordionTrigger>
                     <AccordionContent>
@@ -577,7 +577,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 </Accordion>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="custom-css" className="border-b-0">
-                    <AccordionTrigger className="py-1.5 text-[10px] text-foreground">
+                    <AccordionTrigger className="py-1.5 text-micro text-foreground">
                       {t.settingsCustomCssTitle}
                     </AccordionTrigger>
                     <AccordionContent>
@@ -587,7 +587,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                 </Accordion>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="drift-status" className="border-b-0">
-                    <AccordionTrigger className="py-1.5 text-[10px] text-foreground">
+                    <AccordionTrigger className="py-1.5 text-micro text-foreground">
                       {t.settingsDriftStatusTitle}
                     </AccordionTrigger>
                     <AccordionContent>

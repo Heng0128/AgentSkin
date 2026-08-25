@@ -37,6 +37,7 @@ export function QuickEnvironmentCreate({
   const [selectedAgent, setSelectedAgent] = useState<string | null>('traework');
   const [wallpaperId, setWallpaperId] = useState<string | null>(null);
   const [wallpapers, setWallpapers] = useState<WallpaperInfo[]>([]);
+  const [wallpaperListLoadError, setWallpaperListLoadError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const createEnvironment = useEnvironmentStore((s) => s.createEnvironment);
@@ -50,7 +51,10 @@ export function QuickEnvironmentCreate({
       .then((list) => {
         if (alive) setWallpapers(list);
       })
-      .catch(() => {});
+      .catch(() => {
+        // Mark wallpaper list as failed — disables wallpaper picker with hint
+        if (alive) setWallpaperListLoadError(true);
+      });
     return () => {
       alive = false;
     };
@@ -104,14 +108,15 @@ export function QuickEnvironmentCreate({
 
       {/* 壁纸绑定（可选） */}
       <select
-        className="h-6 w-full border border-input bg-muted px-1 text-[11px] outline-none focus:border-primary/60"
+        className="h-6 w-full border border-input bg-muted px-1 text-[11px] outline-none focus:border-primary/60 disabled:opacity-50"
         style={{ borderRadius: 'var(--radius)' }}
         value={wallpaperId ?? ''}
         onChange={(e) => setWallpaperId(e.target.value || null)}
         aria-label={t.bindWallpaper}
-        title={t.bindWallpaper}
+        title={wallpaperListLoadError ? '壁纸加载失败' : t.bindWallpaper}
+        disabled={wallpaperListLoadError}
       >
-        <option value="">{t.noWallpaper}</option>
+        <option value="">{wallpaperListLoadError ? '壁纸加载失败' : t.noWallpaper}</option>
         {wallpapers.map((w) => (
           <option key={w.id} value={w.id}>
             {w.title}
