@@ -110,12 +110,74 @@ let _healthReportByAgent: Record<string, HealthCheckReport> = {};
 let _analysisProgressSubscribed = false;
 let _healthReportSubscribed = false;
 
+/** Minimal shape needed from project-store for combined state. */
+interface ProjectStatePick {
+  projects: StudioProject[];
+  activeProjectId: string | null;
+  creatingProject: boolean;
+  projectForm: { name: string; author: string; agentId: AgentId };
+  importing: boolean;
+  editing: { id: string; name: string; author: string } | null;
+}
+
+/** Minimal shape needed from bundle-store for combined state. */
+interface BundleStatePick {
+  bundles: StudioBundle[];
+  bundlesLoading: boolean;
+}
+
+/** Minimal shape needed from capture-store for combined state. */
+interface CaptureStatePick {
+  previewView: PreviewView;
+  inspectingIdx: number | null;
+  searchQuery: string;
+  hoveredIdx: number | null;
+  toolOverrides: ToolOverride | null;
+  undoStack: (ToolOverride | null)[];
+  redoStack: (ToolOverride | null)[];
+  inspectMode: boolean;
+  liveNode: InspectedNode | null;
+  liveError: string | null;
+  pinnedSelectors: string[];
+  pseudoStates: string[];
+  captureSchemes: boolean;
+  customSelectorInput: string;
+  pseudoView: string | null;
+  schemeView: 'light' | 'dark' | null;
+  baselines: Partial<Record<AgentId, ThemeVisualSnapshot>>;
+  baselineLoadingMap: Partial<Record<AgentId, boolean>>;
+  baselineErrorMap: Partial<Record<AgentId, string>>;
+  exportName: string;
+  exportAuthor: string;
+  exportState: ExportState;
+  domTreeVersion: number;
+}
+
+/** Minimal shape needed from image-wallpaper-store for combined state. */
+interface ImageWallpaperStatePick {
+  imageToTheme: {
+    status: 'idle' | 'extracting' | 'ready' | 'error';
+    error: string | null;
+    mode: 'light' | 'dark' | null;
+    palette: ThemeColorsFromImage | null;
+    accent: string | null;
+  };
+  wallpaperPreview: {
+    palette: ThemeColorsFromImage | null;
+    loading: boolean;
+    error: string | null;
+  };
+  wallpaperApply: { loading: boolean; error: string | null };
+  installedThemes: ThemeCatalogItem[];
+  themeLibraryOpen: boolean;
+}
+
 /** Build the combined state snapshot from explicit sub-store states (for use inside the hook). */
 function buildCombinedState(
-  project: ReturnType<typeof useProjectStore.getState>,
-  bundle: ReturnType<typeof useBundleStore.getState>,
-  capture: ReturnType<typeof useCaptureStore.getState>,
-  iw: ReturnType<typeof useImageWallpaperStore.getState>,
+  project: ProjectStatePick,
+  bundle: BundleStatePick,
+  capture: CaptureStatePick,
+  iw: ImageWallpaperStatePick,
 ): CombinedStudioStateData {
   return {
     // project-store

@@ -83,15 +83,36 @@ interface RawApiTheme {
   [key: string]: unknown;
 }
 
+/**
+ * Generate a gradient SVG data URI from theme colors.
+ * Used as fallback when API does not provide a thumbnail URL.
+ */
+function generateGradientThumb(colors: {
+  accent?: string;
+  background?: string;
+  text?: string;
+}): string {
+  const accent = colors.accent || '#6fa8dc';
+  const background = colors.background || '#0d0e0f';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
+    <defs>
+      <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${background}"/>
+        <stop offset="100%" stop-color="${accent}" stop-opacity="0.6"/>
+      </linearGradient>
+    </defs>
+    <rect width="320" height="180" fill="url(#g)"/>
+    <circle cx="160" cy="90" r="40" fill="${accent}" opacity="0.3"/>
+  </svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
 /** Map a raw API theme object to our frontend CommunityThemeSummary. */
 function mapApiToThemeSummary(raw: RawApiTheme): CommunityThemeSummary {
-  // Extract thumbnail URL from various possible API fields
-  const thumbUrl =
-    (raw as { thumbUrl?: string }).thumbUrl ||
-    (raw as { thumbnail?: string }).thumbnail ||
-    (raw as { previewUrl?: string }).previewUrl ||
-    (raw as { image?: string }).image ||
-    undefined;
+  // API does not expose thumbnail URLs in list endpoint — generate gradient from colors
+  const thumbUrl = raw.displayMeta?.colors
+    ? generateGradientThumb(raw.displayMeta.colors)
+    : generateGradientThumb({});
 
   return {
     themeId: raw.themeId || raw.slug || raw.id,
@@ -143,14 +164,7 @@ export class DreamSkinApiError extends Error {
 export async function fetchThemes(
   params: CommunityThemeListParams = {},
 ): Promise<CommunityThemeListResult> {
-  const {
-    page = 1,
-    pageSize = 20,
-    sort = 'recent',
-    agentId,
-    tag,
-    query,
-  } = params;
+  const { page = 1, pageSize = 20, sort = 'recent', agentId, tag, query } = params;
 
   const limit = pageSize;
   const offset = (page - 1) * pageSize;
@@ -169,10 +183,7 @@ export async function fetchThemes(
   });
 
   if (!response.ok) {
-    throw new DreamSkinApiError(
-      `Failed to fetch themes: HTTP ${response.status}`,
-      response.status,
-    );
+    throw new DreamSkinApiError(`Failed to fetch themes: HTTP ${response.status}`, response.status);
   }
 
   const body = (await response.json()) as {
@@ -255,10 +266,7 @@ export async function downloadTheme(
   // Combine the internal timeout with the external cancellation signal so
   // either one can abort the fetch.
   const timeoutSignal = AbortSignal.timeout(DOWNLOAD_TIMEOUT);
-  const signal =
-    externalSignal
-      ? AbortSignal.any([timeoutSignal, externalSignal])
-      : timeoutSignal;
+  const signal = externalSignal ? AbortSignal.any([timeoutSignal, externalSignal]) : timeoutSignal;
 
   const response = await net.fetch(url, {
     method: 'GET',
@@ -272,15 +280,10 @@ export async function downloadTheme(
     );
   }
 
-  const contentLength = Number.parseInt(
-    response.headers.get('Content-Length') || '0',
-    10,
-  );
+  const contentLength = Number.parseInt(response.headers.get('Content-Length') || '0', 10);
 
   if (contentLength > MAX_DOWNLOAD_BYTES) {
-    throw new DreamSkinApiError(
-      `Package exceeds 50MB limit (Content-Length: ${contentLength})`,
-    );
+    throw new DreamSkinApiError(`Package exceeds 50MB limit (Content-Length: ${contentLength})`);
   }
 
   const reader = response.body?.getReader();
