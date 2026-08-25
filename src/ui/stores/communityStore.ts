@@ -334,7 +334,25 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     try {
       const result = await api.downloadCommunityTheme(themeId);
 
-      if (result?.success && result.data?.success) {
+      // Multi-layer null defense: guard against malformed API responses
+      // where result or result.data may be null/undefined
+      if (!result || typeof result !== 'object') {
+        // Null/Invalid result — clean up and return structured error
+        const errorMsg = 'Installation failed: Invalid response from server';
+        const stillInstalling = new Set(get().installingIds);
+        stillInstalling.delete(themeId);
+        const progress = new Map(get().downloadProgress);
+        progress.delete(themeId);
+        set({ installingIds: stillInstalling, downloadProgress: progress });
+
+        // Only show error if not a deliberate cancellation
+        if (get().installingIds.has(themeId)) {
+          useNotificationStore.getState().fail(errorMsg);
+        }
+        return { success: false, error: errorMsg };
+      }
+
+      if (result.success && result.data?.success) {
         // Mark as installed on success
         const newInstalledIds = new Set(get().installedIds);
         newInstalledIds.add(themeId);
@@ -378,7 +396,8 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           downloadProgress: progress,
         });
 
-        const errorMsg = result?.data?.error || 'Installation failed';
+        // Safe error extraction with nullish coalescing
+        const errorMsg = result.data?.error || result.error || 'Installation failed';
 
         // When cancelInstall() is called, it removes the theme from
         // installingIds before this promise resolves. A missing entry

@@ -236,11 +236,16 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         const result = await api.startMcp();
         if (result.ok && result.url) {
           set({ mcpRunning: true, mcpUrl: result.url });
+        } else {
+          // MCP start failed — surface error to user via fail pipeline
+          const errorMsg = result.error || 'Failed to start MCP server';
+          useNotificationStore.getState().fail(new Error(errorMsg));
         }
       }
-    } catch {
-      // The main process handler always returns { ok, error }, so exceptions
-      // here are unexpected. State remains unchanged.
+    } catch (error) {
+      // Exception fallback — ensure user is always notified of failures
+      // (e.g., port conflicts, network issues, main process restart)
+      useNotificationStore.getState().fail(error);
     }
   },
 }));

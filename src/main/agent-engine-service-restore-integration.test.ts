@@ -38,7 +38,6 @@ import {
   makeSettings,
   makeThemeLibraryStub,
   STATUS,
-  setupAllMocks,
   TEST_APP,
 } from './agent-engine-service-test-harness';
 import { probeAppStatus, resolveLivePort } from './app-discovery';
@@ -61,19 +60,63 @@ import {
 import { cleanupSelfHealForAgent, disposeSelfHealState } from './wallpaper-self-heal';
 
 // ---------------------------------------------------------------------------
-// Module mocks — 使用共享 harness 的标准化 mock 工厂
+// Module mocks — 在 describe 顶层注册
+//
+// vi.mock 会被提升到文件最顶部，工厂函数内部不能引用文件作用域的变量
+// （它们尚未初始化）。因此所有 mock 工厂内联定义，与现有 5 个测试文件
+// 保持一致的 mock 契约。
 //
 // wallpaper-self-heal / wallpaper/injection-state / engine-strategy
-// 使用 vi.importActual 保留真实实现 + spy，其余模块使用 harness 标准 mock。
+// 使用 vi.importActual 保留真实实现 + spy，让测试覆盖更多业务逻辑。
 // ---------------------------------------------------------------------------
 
-const mocks = vi.hoisted(() => setupAllMocks());
+vi.mock('./app-discovery', () => {
+  class LivePortCache {
+    private m = new Map<string, number>();
+    get(a: string) {
+      return this.m.get(a) ?? null;
+    }
+    set(a: string, p: number) {
+      this.m.set(a, p);
+    }
+    clear(a: string) {
+      this.m.delete(a);
+    }
+    clearAll() {
+      this.m.clear();
+    }
+    size() {
+      return this.m.size;
+    }
+  }
+  return {
+    LivePortCache,
+    reconcileZombiePorts: vi.fn(async () => {}),
+    probeAppStatus: vi.fn(),
+    resolveLivePort: vi.fn(async () => null),
+    ensureCdpReady: vi.fn(async () => ({ ok: true, port: 9222, reason: null })),
+    inferRestartReason: vi.fn(async () => ({ kind: 'not-installed' as const })),
+  };
+});
 
-vi.mock('./app-discovery', () => mocks.appDiscovery);
-vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: mocks.applyThemeFlow }));
-vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: mocks.restoreThemeFlow }));
-vi.mock('./fs-utils', () => mocks.fsUtils);
-vi.mock('./wallpaper-injector', () => mocks.wallpaperInjector);
+vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
+
+vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));
+
+vi.mock('./fs-utils', () => ({
+  writeJsonAtomic: vi.fn(async () => {}),
+  appendLogLine: vi.fn(async () => {}),
+}));
+
+vi.mock('./wallpaper-injector', () => ({
+  applyAgentWallpaperNow: vi.fn(async () => ({ ok: true as const })),
+  applyWallpaperToAgent: vi.fn(async () => ({ ok: true as const })),
+  injectAgentWallpaperFromApply: vi.fn(async () => {}),
+  removeAgentVideoWallpaper: vi.fn(async () => {}),
+  removeWallpaperFromAgent: vi.fn(async () => ({ ok: true as const })),
+  getCapturedTokensSize: vi.fn(() => 0),
+  getDeferredSelfHealsSize: vi.fn(() => 0),
+}));
 
 // ── 真实实现 + spy ────────────────────────────────────────────────────────
 vi.mock('./cdp/injection/engine-strategy', async (importOriginal) => {
@@ -103,7 +146,7 @@ vi.mock('./wallpaper-self-heal', async (importOriginal) => {
   };
 });
 
-vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: mocks.disposeThemeAssetCache }));
+vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
 
 // ── 恢复流程的真实模拟 ─────────────────────────────────────────────────────
 // 使用真实 restoreThemeFlow 逻辑，但替换掉需要真实 CDP/适配器的子调用。

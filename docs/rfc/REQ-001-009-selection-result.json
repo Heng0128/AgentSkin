@@ -1,0 +1,206 @@
+{
+  "meta": {
+    "title": "REQ-001~009 Selector 方案选优结果",
+    "generatedAt": "2026-08-20",
+    "selector": "AgentSkin Selector Sub-Agent",
+    "scoringMethodology": "五维加权评分（功能完整性25% + 代码质量20% + 性能表现15% + 扩展性20% + 依赖可控性20%，满分100）",
+    "hardConstraints": [
+      "覆盖所有验收标准",
+      "不引入不可控第三方依赖",
+      "可分阶段实施",
+      "可自动化验证",
+      "可安全回滚"
+    ]
+  },
+  "selectionSummary": {
+    "totalRequirements": 9,
+    "criticalRequirements": [],
+    "autoImplementable": [
+      "REQ-001", "REQ-002", "REQ-003", "REQ-004",
+      "REQ-005", "REQ-006", "REQ-007", "REQ-008", "REQ-009"
+    ],
+    "note": "全部 9 条需求均满足硬约束，无需要人工确认的 CRITICAL 变更（无公共 API 破坏性变更、无架构重构）。所有需求均可分阶段实施、自动化 git revert 回滚。"
+  },
+  "selectedSolutions": [
+    {
+      "requirementId": "REQ-001",
+      "title": "修复 communityStore.installTheme 在 API 返回 result?.data 为 null 时抛出 TypeError",
+      "selectedSolution": "A",
+      "solutionName": "多层防御式 null 安全 + 结构化错误",
+      "dimensionScores": {
+        "functionalCompleteness": 95,
+        "codeQuality": 90,
+        "performance": 95,
+        "extensibility": 82,
+        "dependencyControllability": 100
+      },
+      "finalScore": 92,
+      "reason": "改动范围最小（仅 communityStore.ts 单文件），可选链是 TypeScript 原生语法零依赖，与现有 else/catch 分支共享清理逻辑。方案 B 跨层过度防御，方案 C 启用 strictNullChecks 成本高且对当前需求过度工程。",
+      "riskMitigation": "编写单元测试覆盖所有 mock 返回场景（result 为 null、data 为 null、success 为 false、catch 异常），确保每个 return 路径都有确定性状态回滚。"
+    },
+    {
+      "requirementId": "REQ-002",
+      "title": "修复 communityStore.uninstallTheme 仅从 Set 移除而未调用 IPC 卸载接口",
+      "selectedSolution": "A",
+      "solutionName": "对接现有 THEME_DELETE IPC + Set 状态同步",
+      "dimensionScores": {
+        "functionalCompleteness": 95,
+        "codeQuality": 92,
+        "performance": 85,
+        "extensibility": 88,
+        "dependencyControllability": 100
+      },
+      "finalScore": 93,
+      "reason": "最大化复用已有 THEME_DELETE IPC 通道（含恢复活跃注入逻辑），无需新增 IPC channel。遵循项目现有 'IPC mutation → 更新本地 Set' 模式。方案 B 违反 DRY（5 文件改动），方案 C 乐观策略在 IPC 部分成功时可能导致状态不一致。",
+      "riskMitigation": "THEME_DELETE 执行时间较长时通过 loading 状态反馈；THEME_DELETE 返回结构适配解包需编写回归测试覆盖。"
+    },
+    {
+      "requirementId": "REQ-003",
+      "title": "为 InjectDock 恢复全部操作添加二次确认对话框",
+      "selectedSolution": "A",
+      "solutionName": "复用 dialogStore 模式 + DialogsHost 渲染",
+      "dimensionScores": {
+        "functionalCompleteness": 95,
+        "codeQuality": 95,
+        "performance": 95,
+        "extensibility": 90,
+        "dependencyControllability": 100
+      },
+      "finalScore": 95,
+      "reason": "完全复用现有 dialogStore + DialogsHost 集中渲染模式（与 deletePrompt/fileImportPrompt 一致），活跃注入数量直接从 controller.status 计算无需额外状态。方案 B/C 模式与项目主流不一致，虽改动更小但牺牲架构统一性。",
+      "riskMitigation": "验证 DialogsHost 中第 6 个 Dialog 的 z-index 和交互不与前 5 个冲突；确认 Dialog 组件的嵌套管理能力。"
+    },
+    {
+      "requirementId": "REQ-004",
+      "title": "修复 THEME_MANUAL_REGEN IPC 缺少颜色来源",
+      "selectedSolution": "A",
+      "solutionName": "IPC handler 内部查主题库获取颜色",
+      "dimensionScores": {
+        "functionalCompleteness": 95,
+        "codeQuality": 90,
+        "performance": 85,
+        "extensibility": 88,
+        "dependencyControllability": 100
+      },
+      "finalScore": 92,
+      "reason": "符合项目模式（IPC handler 内部组合 deps 调用，参考 THEME_DELETE），单文件改动影响范围最小，调用方无需关心颜色来源。方案 B 逻辑分散两层增加理解成本，方案 C 双缓存系统对单用户低频操作过度优化。",
+      "riskMitigation": "确认 library.find 返回的 bundle.theme.copy.colors 格式与 ThemeColors 类型匹配，必要时做适配转换；缺失颜色时返回结构化错误而非抛异常。"
+    },
+    {
+      "requirementId": "REQ-005",
+      "title": "接入真实 GENERATOR 函数替换 placeholder",
+      "selectedSolution": "A",
+      "solutionName": "接入 partialRerun + adaptAll 真实生成器",
+      "dimensionScores": {
+        "functionalCompleteness": 95,
+        "codeQuality": 92,
+        "performance": 90,
+        "extensibility": 85,
+        "dependencyControllability": 100
+      },
+      "finalScore": 93,
+      "reason": "接入已有 partialRerun（已在 fingerprint.ts 中验证满足 14-token 契约），adaptAll 已为 6 agent 各自生成差异化 CSS，复用 contractCheck 做验证。方案 B 接口设计过度工程（只有一个算法），方案 C 策略爆炸与 adaptAll 本身 per-agent 差异化重复。",
+      "riskMitigation": "确认 GENERATOR 占位的具体文件位置和调用方式；若上游缺少颜色数据需联动 REQ-004 修复；接入后用 contractCheck 验证 14-token 契约合规。"
+    },
+    {
+      "requirementId": "REQ-006",
+      "title": "实现 VISUAL_ANALYSIS_CDP_EXTRACT 实时 CDP 提取",
+      "selectedSolution": "B",
+      "solutionName": "新建 VisualAnalysisService 服务层 + IPC 委托",
+      "dimensionScores": {
+        "functionalCompleteness": 88,
+        "codeQuality": 90,
+        "performance": 85,
+        "extensibility": 92,
+        "dependencyControllability": 100
+      },
+      "finalScore": 91,
+      "reason": "服务层模式与项目 contracts/services 模块架构一致，服务层可复用（如 Theme Studio 实时预览场景），IPC handler 保持轻薄单独可测试。方案 A 虽改动最小但 IPC handler 职责过重；方案 C 缓存一致性维护复杂。选择 B 而非 A 是因为该需求涉及新建服务层属于正当扩展。",
+      "riskMitigation": "明确服务层与 IPC handler 职责边界（服务层做纯 CDP 提取和颜色构建，handler 做参数校验和 unavailable 降级）；使用独立 CDP 连接避免与 apply 操作冲突。"
+    },
+    {
+      "requirementId": "REQ-007",
+      "title": "CommunityThemeCard 安装失败显示错误+重试",
+      "selectedSolution": "A",
+      "solutionName": "组件内局部状态管理（error + retryCount）",
+      "dimensionScores": {
+        "functionalCompleteness": 95,
+        "codeQuality": 92,
+        "performance": 95,
+        "extensibility": 75,
+        "dependencyControllability": 100
+      },
+      "finalScore": 91,
+      "reason": "逻辑自包含在组件内（单文件改动），与现有 isInstalling/installed 局部状态管理模式一致。社区主题列表不频繁重挂载，状态持久化需求不强烈。方案 B 增加 store 复杂度和清理逻辑（Map 内存增长风险），方案 C 增加 prop drilling。",
+      "riskMitigation": "安装失败时包装 onInstall 回调 try-catch 确保异常也进入 error 状态而非抛出；retryCount 组件卸载重置符合预期行为。"
+    },
+    {
+      "requirementId": "REQ-008",
+      "title": "statusStore.refreshStatus 15 秒超时",
+      "selectedSolution": "A",
+      "solutionName": "Promise.race 超时竞争 + isRefreshing 守护",
+      "dimensionScores": {
+        "functionalCompleteness": 95,
+        "codeQuality": 92,
+        "performance": 95,
+        "extensibility": 88,
+        "dependencyControllability": 100
+      },
+      "finalScore": 94,
+      "reason": "标准 JS 模式（Promise.race）无需额外依赖，finally 块保证 isRefreshing 无论成功/失败/超时都被重置，与项目 shared/withTimeout.ts 超时理念一致。方案 B 需修改 apiClient 签名且 Electron IPC 不原生支持 AbortSignal，方案 C withTimeout 与 finally 语义交互有不确定性。",
+      "riskMitigation": "使用 atomic flag 或 Promise.race 后忽略非胜出 Promise 结果，确保竞态条件下 finally 语义正确；超时后飞行中 IPC 结果自然丢弃。"
+    },
+    {
+      "requirementId": "REQ-009",
+      "title": "settingsStore.toggleMcp 失败错误反馈",
+      "selectedSolution": "A",
+      "solutionName": "catch 分支接入 notificationStore.fail",
+      "dimensionScores": {
+        "functionalCompleteness": 95,
+        "codeQuality": 95,
+        "performance": 95,
+        "extensibility": 90,
+        "dependencyControllability": 100
+      },
+      "finalScore": 95,
+      "reason": "完全复用现有 notificationStore.fail 管线（含 i18n 和超时友好消息），与 saveAppPort 等 store action 的错误处理模式完全一致。单文件、单方法、零依赖。方案 B 偏离项目统一 toast 模式且需 timer 清理，方案 C 当前 MCP IPC 未返回结构化错误码无法可靠分类。",
+      "riskMitigation": "确保 result.ok===false 分支和 catch 分支互斥（不会同时触发），避免错误堆叠显示。"
+    }
+  ],
+  "deferredRequirements": [],
+  "scoreDistribution": {
+    "highestScoring": [
+      { "requirementId": "REQ-003", "score": 95, "solution": "A" },
+      { "requirementId": "REQ-009", "score": 95, "solution": "A" }
+    ],
+    "lowestScoring": [
+      { "requirementId": "REQ-007", "score": 91, "solution": "A" },
+      { "requirementId": "REQ-006", "score": 91, "solution": "B" }
+    ],
+    "averageScore": 93.0
+  },
+  "implementationRecommendation": {
+    "suggestedPhaseOrder": [
+      {
+        "phase": 1,
+        "requirements": ["REQ-001", "REQ-008", "REQ-009"],
+        "rationale": "低风险、高确定性、最小改动的 bug 修复（均为 0.5-2h 单文件修复），可快速合入验证"
+      },
+      {
+        "phase": 2,
+        "requirements": ["REQ-003", "REQ-007"],
+        "rationale": "UI 交互增强（确认对话框、错误展示），与前序修复无依赖关系"
+      },
+      {
+        "phase": 3,
+        "requirements": ["REQ-002", "REQ-004"],
+        "rationale": "IPC 相关修复，涉及主进程交互需在 UI 稳定后集成测试"
+      },
+      {
+        "phase": 4,
+        "requirements": ["REQ-005", "REQ-006"],
+        "rationale": "功能接入（GENERATOR + CDP 提取），涉及跨模块联动和新增服务层，需充分回归测试"
+      }
+    ]
+  }
+}

@@ -1,0 +1,658 @@
+{
+  "meta": {
+    "title": "REQ-001~009 候选实现方案集",
+    "generatedAt": "2026-08-20",
+    "architect": "AgentSkin Architect Sub-Agent",
+    "methodology": "每条需求 3-4 个候选方案，按优劣排序（A 为推荐方案）"
+  },
+
+  "requirements": [
+    {
+      "requirementId": "REQ-001",
+      "title": "修复 communityStore.installTheme 在 API 返回 result?.data 为 null 时抛出 TypeError 导致进程崩溃",
+      "candidateSolutions": [
+        {
+          "id": "A",
+          "name": "多层防御式 null 安全 + 结构化错误",
+          "approach": "在 installTheme 内部对 result.data 做多层 null 守卫：(1) 入口校验 result 是否为对象；(2) 用可选链 + nullish coalescing 安全访问 result.data.success 和 result.data.error；(3) 当 result?.data 为 null/undefined 时提前进入错误分支，设置 installingIds/downloadProgress 清理，并返回 { success: false, error: '返回数据为空' }。同时强化 catch 分支，使用 toMessage() 统一错误格式，确保不抛出未捕获异常。",
+          "impactScope": ["src/ui/stores/communityStore.ts"],
+          "acceptanceCoverage": "100% — null 安全通过可选链+NPE 守卫；结构化错误通过统一错误对象返回；状态清理在 finally 语义的代码路径中保证",
+          "pros": [
+            "改动范围最小，仅修改 communityStore.ts 一个文件",
+            "与现有错误处理分支（else/catch）共享清理逻辑，复用 wasCancelled 守卫",
+            "可选链是 TypeScript 原生语法，无额外依赖",
+            "所有代码路径都有确定性的状态回滚"
+          ],
+          "cons": [
+            "需要在多个 return 路径手动保证状态清理"
+          ],
+          "risks": [
+            "遗漏某个 return 路径未清理 installingIds — 可通过单元测试覆盖所有 mock 返回场景规避"
+          ],
+          "effortHours": 2,
+          "maintainability": "高 — 逻辑集中在一个 store 方法内，易于理解和测试",
+          "rollbackStrategy": "git revert 单文件修改；无持久化状态变更"
+        },
+        {
+          "id": "B",
+          "name": "IPC 层统一 null 防护 + 渲染层兜底",
+          "approach": "在 community-theme-ipc.ts 的 COMMUNITY_THEME_DOWNLOAD handler 内部，确保 performDownload 返回的永远是结构化 InstallResult 对象（never null）。在 result 成功路径中增加 data 非空断言，如果 data 为空则构造 { success: false, error: 'Main process returned empty result' }。渲染层保持现有逻辑不变。",
+          "impactScope": ["src/main/ipc/community-theme-ipc.ts", "src/ui/stores/communityStore.ts（轻量调整）"],
+          "acceptanceCoverage": "100% — IPC 层保证永不返回 null data，渲染层即使收到 null 也有可选链兜底",
+          "pros": [
+            "防御纵深，两层都有保护",
+            "IPC 层修复受益方不限于 installTheme，所有调用方都能获得非空保证",
+            "符合项目中 withMonitoredTimeout + 结构化错误的 IPC 模式"
+          ],
+          "cons": [
+            "需要修改两个文件，跨层改动",
+            "IPC 层的 null 场景实际上不太可能发生（performDownload 内部分支都有返回值），修缮可能属于过度防御"
+          ],
+          "risks": [
+            "修改 IPC 层 handler 可能引入新的时序问题 — 需回归测试其他调用方"
+          ],
+          "effortHours": 3,
+          "maintainability": "中高 — 两层防护增加了理解成本，但每层职责清晰",
+          "rollbackStrategy": "git revert；IPC 层改动向后兼容"
+        },
+        {
+          "id": "C",
+          "name": "TypeScript 严格模式 + 运行时类型守卫",
+          "approach": "安装运行时类型守卫函数 assertValidInstallResult(data: unknown): asserts data is InstallResult，在 installTheme 入口调用。结合 tsconfig 的 strictNullChecks（若已开启），让编译期捕获 null 传参。同时在 API 客户端层（agentSkinClient.ts 的 downloadCommunityTheme 方法）做响应拦截，null 时抛出可识别错误。",
+          "impactScope": ["src/ui/stores/communityStore.ts", "src/ui/api/agentSkinClient.ts", "src/shared/types/community.ts"],
+          "acceptanceCoverage": "100% — 编译期 + 运行时双层防护；类型守卫提供运行时安全；API 拦截提供最后一道防线",
+          "pros": [
+            "类型安全级别最高",
+            "assert 函数可被其他 action 复用",
+            "编译期就能防止同类 bug 重现"
+          ],
+          "cons": [
+            "改动分散在三个文件",
+            "strictNullChecks 若未开启则需要修改 tsconfig 并修复全仓库级联错误（高成本）",
+            "对当前 REQ 来说过度工程"
+          ],
+          "risks": [
+            "启用 strictNullChecks 可能导致大量既有代码类型错误 — 不建议在本 REQ 中触发"
+          ],
+          "effortHours": 6,
+          "maintainability": "高 — 类型系统本身成为文档和守卫",
+          "rollbackStrategy": "git revert；若修改了 tsconfig 则需评估级联影响后回退"
+        }
+      ]
+    },
+
+    {
+      "requirementId": "REQ-002",
+      "title": "修复 communityStore.uninstallTheme 仅从 installedIds Set 移除而未调用 IPC 卸载接口",
+      "candidateSolutions": [
+        {
+          "id": "A",
+          "name": "对接现有 THEME_DELETE IPC + Set 状态同步",
+          "approach": "复用 theme-ipc.ts 中已实现的 THEME_DELETE handler（deps.library.delete），在 communityStore.uninstallTheme 中：(1) 先调用 api.deleteTheme(themeId) 触发主进程删除文件和恢复活跃注入；(2) IPC 成功后从 installedIds Set 移除；(3) IPC 失败时保留 Set 状态并通过 notificationStore.fail() 反馈错误。同时处理 community- 前缀的 id 映射。",
+          "impactScope": ["src/ui/stores/communityStore.ts"],
+          "acceptanceCoverage": "100% — IPC 文件删除通过现有 THEME_DELETE；成功后移除 Set；失败保留状态+反馈",
+          "pros": [
+            "复用已有 THEME_DELETE IPC，无需新增 IPC channel",
+            "THEME_DELETE 内部已处理恢复活跃注入（遍历 core.restore）",
+            "遵循项目现有 'IPC mutation → 更新本地 Set' 模式",
+            "支持 safely 处理 community- 前缀的 id"
+          ],
+          "cons": [
+            "THEME_DELETE 返回的结构与 community 预期有差异（返回 { themes, status }），需适配解包"
+          ],
+          "risks": [
+            "THEME_DELETE 执行时间较长（含 status 二次查询），可能导致 UI 短暂等待 — 但 community 主题通常单文件，影响可控"
+          ],
+          "effortHours": 3,
+          "maintainability": "高 — 复用已有 IPC，逻辑一致性最强",
+          "rollbackStrategy": "git revert 单文件修改；THEME_DELETE 本身不受影响"
+        },
+        {
+          "id": "B",
+          "name": "新增专用 COMMUNITY_THEME_UNINSTALL IPC",
+          "approach": "在 community-theme-ipc.ts 中新增 COMMUNITY_THEME_UNINSTALL handler，专用于社区主题卸载：解析 community- 前缀 id → 查找实际安装 id → 调用 library.delete → 返回结构化结果。Renderer 端 uninstallTheme 调用该专用 IPC。",
+          "impactScope": ["src/main/ipc/community-theme-ipc.ts", "src/ui/stores/communityStore.ts", "src/shared/ipc-channels.ts", "src/preload.ts", "src/ui/api/agentSkinClient.ts"],
+          "acceptanceCoverage": "100% — 专用 IPC 可以精确处理社区主题的 id 映射和卸载逻辑",
+          "pros": [
+            "语义隔离，社区主题卸载与内置主题卸载走不同 handler",
+            "便于社区主题特殊处理（如同时删除 community 元数据缓存）"
+          ],
+          "cons": [
+            "需新增 IPC channel + preload 暴露 + apiClient 方法，涉及 5 个文件",
+            "与 THEME_DELETE 有部分功能重叠（library.delete 调用），违反 DRY",
+            "需更新 IPC channel 文档和类型"
+          ],
+          "risks": [
+            "id 映射不一致导致删错主题 — 需要维护 communityId→installedId 的映射关系"
+          ],
+          "effortHours": 5,
+          "maintainability": "中 — 两套卸载路径长期需同步维护",
+          "rollbackStrategy": "移除新增的 IPC channel 和 handler；renderer 端回退到纯 Set 移除"
+        },
+        {
+          "id": "C",
+          "name": "混合方案：IPC 删除 + 防重入 + 乐观-回滚",
+          "approach": "在方案 A 基础上增加：(1) uninstallingIds Set 防重入；(2) 乐观删除（先移除 Set 后调 IPC，失败时回滚添加）；(3) 卸载中显示 loading 状态。这种方式 UX 更流畅。",
+          "impactScope": ["src/ui/stores/communityStore.ts"],
+          "acceptanceCoverage": "100% — 超出基础验收标准，增加防重入和乐观 UX",
+          "pros": [
+            "UX 更即时响应",
+            "防重入避免重复删除"
+          ],
+          "cons": [
+            "乐观删除的回滚逻辑增加复杂度",
+            "THEME_DELETE 失败时恢复 Set 可能与实际库状态不一致（比如文件已删但 Set 恢复了）"
+          ],
+          "risks": [
+            "乐观策略在 IPC 部分成功（文件删了但 status 查询失败）时会导致状态不一致"
+          ],
+          "effortHours": 4,
+          "maintainability": "中 — 乐观/回滚双路径增加测试面",
+          "rollbackStrategy": "git revert"
+        }
+      ]
+    },
+
+    {
+      "requirementId": "REQ-003",
+      "title": "为 InjectDock 恢复全部操作添加二次确认对话框",
+      "candidateSolutions": [
+        {
+          "id": "A",
+          "name": "复用 dialogStore 模式 + DialogsHost 渲染",
+          "approach": "在 dialogStore 中新增 restoreAllPrompt: boolean 字段和 setter。InjectDock 中 restoreAll 按钮的 onClick 改为设置 restoreAllPrompt=true。在 DialogsHost 中使用现有 <Dialog> 组件渲染确认框，显示活跃注入数量（从 status.apps.filter 计算），确认后调用 controller.restoreAll() 并关闭对话框。",
+          "impactScope": ["src/ui/stores/dialogStore.ts", "src/ui/components/DialogsHost.tsx", "src/ui/components/InjectDock.tsx"],
+          "acceptanceCoverage": "100% — 显示活跃注入数量通过 status 计算；确认/取消操作对接 controller.restoreAll()",
+          "pros": [
+            "完全复用现有 dialogStore + DialogsHost 模式（与 deletePrompt/fileImportPrompt 一致）",
+            "DialogsHost 集中渲染，不散落 dialog 逻辑",
+            "活跃注入数量直接从 controller.status 读取，无需额外状态"
+          ],
+          "cons": [
+            "需要修改三个文件"
+          ],
+          "risks": [
+            "DialogsHost 中已有 5 个 Dialog，新增第 6 个需注意 z-index 和交互冲突 — 但 Dialog 组件通常支持嵌套管理"
+          ],
+          "effortHours": 2,
+          "maintainability": "高 — 与现有 dialog 体系完全一致",
+          "rollbackStrategy": "git revert 三个文件修改"
+        },
+        {
+          "id": "B",
+          "name": "InjectDock 内嵌确认状态（局部 Dialog）",
+          "approach": "在 InjectDock 组件内部管理一个 showConfirm 局部 state，点击恢复按钮时切换为确认模式（显示确认/取消两个按钮），确认后调用 restoreAll()。使用现有 <Dialog> 组件但在 InjectDock 内直接渲染。",
+          "impactScope": ["src/ui/components/InjectDock.tsx"],
+          "impactScopeDetail": "仅修改 InjectDock 单一文件，无需改动 store 和 DialogsHost",
+          "acceptanceCoverage": "100% — 显示活跃注入数量和确认/取消操作在单个组件内完成",
+          "pros": [
+            "改动范围最小（单文件）",
+            "局部状态不污染全局 store",
+            "确认 UI 与 dock 紧密耦合，符合 dock 的浮动胶囊定位"
+          ],
+          "cons": [
+            "与项目中其他确认操作的模式不一致（deletePrompt 走 dialogStore）",
+            "如果未来需要在其他位置触发 restoreAll 确认，需重复逻辑"
+          ],
+          "risks": [
+            "模式不一致可能导致后续维护者困惑 — 需添加注释说明为何不走 dialogStore"
+          ],
+          "effortHours": 1.5,
+          "maintainability": "中 — 模式与项目主流不一致，但局部状态易于理解",
+          "rollbackStrategy": "git revert 单文件"
+        },
+        {
+          "id": "C",
+          "name": "自定义确认 UI 替代 Dialog 组件",
+          "approach": "在 InjectDock 内部渲染一个小型确认条（类似 GitHub PR 的 "Delete" → "Confirm delete" 二次点击模式），不需要 Dialog 覆盖层。在按钮区域内直接切换为确认模式，显示 "确认恢复全部 N 个注入？" 文案和确认/取消按钮。",
+          "impactScope": ["src/ui/components/InjectDock.tsx"],
+          "acceptanceCoverage": "100% — 活跃注入数量显示 + 确认/取消操作全部在组件内实现",
+          "pros": [
+            "零 Dialog 遮挡，UX 更轻量",
+            "改动最小（单文件、单组件）",
+            "适合 dock 胶囊的小空间"
+          ],
+          "cons": [
+            "UI 空间有限，文案可能拥挤",
+            "与 delete/fileImport 等操作的确认模式视觉不一致"
+          ],
+          "risks": [
+            "文案在小空间溢出 — 需要精心调整字号和布局"
+          ],
+          "effortHours": 1,
+          "maintainability": "中 — 轻量但视觉风格可能不统一",
+          "rollbackStrategy": "git revert"
+        }
+      ]
+    },
+
+    {
+      "requirementId": "REQ-004",
+      "title": "修复 THEME_MANUAL_REGEN IPC 缺少颜色来源",
+      "candidateSolutions": [
+        {
+          "id": "A",
+          "name": "IPC handler 内部查主题库获取颜色",
+          "approach": "修改 theme-ipc.ts 的 THEME_MANUAL_REGEN handler：在 assertSafeThemeId(themeId) 后，通过 deps.themeCatalog.getTheme(themeId) 或 deps.library.find(themeId) 获取主题 bundle，从 bundle.theme.copy.colors 提取 ThemeColors。如果颜色不存在，直接返回 { status: 'failed', reason: '主题缺少颜色数据' } 结构化错误。然后将 colors 传入 regenerateTheme(agentId, themeId, colors)。",
+          "impactScope": ["src/main/ipc/theme-ipc.ts"],
+          "acceptanceCoverage": "100% — 从主题库获取颜色（deps.library.find 或 themeCatalog.getTheme）；无颜色返回明确错误；有颜色传入 regenerateTheme",
+          "pros": [
+            "改动范围最小（单文件）",
+            "符合项目模式：IPC handler 内部组合 deps 调用（参考 THEME_DELETE 中 deps.core.status + deps.library.delete）",
+            "不需要修改 IPC 接口签名（无需传 colors 从渲染层）"
+          ],
+          "cons": [
+            "library.find 读取完整包（含 base64），略有 I/O 开销 — 但 manual regen 是用户触发，频率极低"
+          ],
+          "risks": [
+            "主题 bundle 的颜色字段格式与 ThemeColors 类型不完全匹配 — 需要做适配/类型转换"
+          ],
+          "effortHours": 3,
+          "maintainability": "高 — 逻辑内聚在 IPC handler 中，调用方无需关心颜色来源",
+          "rollbackStrategy": "git revert 单文件；修复后向后兼容"
+        },
+        {
+          "id": "B",
+          "name": "渲染层传入颜色 + IPC handler 兜底查库",
+          "approach": "Diagnostics UI 在调用 THEME_MANUAL_REGEN 时先从主题库获取 colors 作为第三参数传入。IPC handler 优先使用传入的 colors，未传入时回退到 library.find 获取。提供最大灵活性。",
+          "impactScope": ["src/main/ipc/theme-ipc.ts", "src/ui/pages/DiagnosticsPage（或相关 UI）", "src/ui/api/agentSkinClient.ts"],
+          "acceptanceCoverage": "100% — 两种颜色来源路径，IPC 层和 UI 层互补",
+          "pros": [
+            "UI 层已有颜色时可跳过 I/O",
+            "兼容未来不同调用方有不同颜色来源的场景"
+          ],
+          "cons": [
+            "需修改 IPC 接口签名（增加可选参数），涉及 3 个文件",
+            "逻辑分散在两层，增加理解成本",
+            "IPC handler 的兜底查找逻辑与方案 A 相同，额外只增加了参数传递"
+          ],
+          "risks": [
+            "UI 层传入的 colors 与 library 中的不一致时行为不明确 — 需文档约定优先级"
+          ],
+          "effortHours": 4,
+          "maintainability": "中 — 两层都可能提供颜色，调试时需判断实际走的路径",
+          "rollbackStrategy": "git revert；接口签名变更需确认无其他调用方"
+        },
+        {
+          "id": "C",
+          "name": "主题目录预提取缓存 + handler 引用",
+          "approach": "在 ThemeLibrary 或 ThemeCatalog 中维护一个 Map<themeId, ThemeColors> 颜色索引，在 theme install/scan 时预提取。THEME_MANUAL_REGEN handler 直接从缓存读取 colors，无缓存时回退到 library.find。",
+
+          "impactScope": ["src/main/ipc/theme-ipc.ts", "src/main/theme/store.ts", "src/main/catalog/theme-catalog.ts"],
+          "acceptanceCoverage": "100% — 缓存命中时无 I/O；未命中时回退查库；仍无颜色时返回错误",
+          "pros": [
+            "多次 regen 同一主题时零 I/O 开销",
+            "与 ThemeLibrary.entriesCache 缓存策略一致"
+          ],
+          "cons": [
+            "增加了缓存一致性维护负担（install/delete/invalidate 需同步更新颜色索引）",
+            "对单用户触发低频操作来说是过度优化"
+          ],
+          "risks": [
+            "缓存失效不及时导致 regen 使用了旧颜色 — 需要仔细管理 invalidate 时机"
+          ],
+          "effortHours": 5,
+          "maintainability": "中 — 双缓存系统（entriesCache + colorsIndex）长期维护成本较高",
+          "rollbackStrategy": "git revert 多文件"
+        }
+      ]
+    },
+
+    {
+      "requirementId": "REQ-005",
+      "title": "接入真实 GENERATOR 函数替换 placeholder",
+      "candidateSolutions": [
+        {
+          "id": "A",
+          "name": "接入 partialRerun + adaptAll 真实生成器",
+          "approach": "经代码审查，GENERATOR 占位符应替换为 theme-asset/fingerprint.ts 中的 partialRerun(colors, themeId) 函数（内部已调用 adaptAll 生成 6 agent CSS）。在 token-generator.ts 或调用链中直接调用 partialRerun，输出 RegenResult.cssOutputs 即为 6 agent 各自的 CSS。必要时补充 contractCheck 验证 14-token 契约。",
+          "impactScope": ["src/main/theme/token-generator.ts（或该 GENERATOR 所在文件）", "src/main/theme-asset/fingerprint.ts（partialRerun 已存在）"],
+          "acceptanceCoverage": "100% — partialRerun 内部调用 adaptAll 生成 6 agent 各自 CSS；contractCheck 确保 14-token 契约",
+          "pros": [
+            "接入已有 partialRerun（已在 fingerprint.ts 中验证满足 14-token 契约）",
+            "adaptAll 已为 6 agent 各自生成差异化 CSS（各用各的）",
+            "不需要新增算法或适配器",
+            "复用 contractCheck 做验证"
+          ],
+          "cons": [
+            "需确认 GENERATOR 占位的具体位置和使用方式（可能在 studio 或 theme pipeline 中）"
+          ],
+          "risks": [
+            "partialRerun 的 colors 参数需要正确传入 — 如果上游缺少颜色数据则需联动 REQ-004 修复"
+          ],
+          "effortHours": 6,
+          "maintainability": "高 — 使用已有、已测试的生成逻辑",
+          "rollbackStrategy": "git revert"
+        },
+        {
+          "id": "B",
+          "name": "独立 GENERATOR 模块封装 + 策略模式",
+          "approach": "新建 generator 模块封装 partialRerun 调用，定义统一的 Generator 接口（generate(colors, themeId): GenResult），为未来替换算法留出扩展点。模块内部默认调用 partialRerun，后续可切换为 GENERATOR_V2。",
+          "impactScope": ["src/main/theme/新建 generator 模块", "调用 GENERATOR 占位的文件"],
+          "acceptanceCoverage": "100% — 接口保证输出格式；默认实现调用 partialRerun",
+          "pros": [
+            "扩展性好，未来可切换算法",
+            "模块边界清晰，易于 unit test"
+          ],
+          "cons": [
+            "对当前需求过度设计（只有一个算法）",
+            "增加间接层"
+          ],
+          "risks": [
+            "接口设计不合理导致后续修改成本高 — 需充分理解现有 partialRerun 的输入输出"
+          ],
+          "effortHours": 8,
+          "maintainability": "高（若接口设计合理）— 但简单需求下显得冗余",
+          "rollbackStrategy": "git revert 新文件和接入点"
+        },
+        {
+          "id": "C",
+          "name": "策略工厂 + per-agent 差异化生成",
+          "approach": "为 6 个 agent 各配置独立的 generator 策略（如 trae-generator、qoder-generator 等），通过 AgentId 选择对应策略。每个策略内部调用 adaptAll 的 per-agent 分支。",
+
+          "impactScope": ["src/main/theme/目录新增 per-agent generator 策略文件", "调用 GENERATOR 占位的文件"],
+          "acceptanceCoverage": "100% — per-agent 策略保证 6 agent 各用各的",
+          "pros": [
+            "最精细的 per-agent 控制",
+            "每个 agent 可有定制化逻辑"
+          ],
+          "cons": [
+            "工作量大（6 个策略文件）",
+            "adaptAll 本身已处理 per-agent 差异化，再次封装属于重复",
+            "与项目 '6 agent 各用各的' 理念重复"
+          ],
+          "risks": [
+            "策略之间逻辑不一致 — 需要充分的集成测试"
+          ],
+          "effortHours": 12,
+          "maintainability": "中低 — 策略爆炸长期维护成本高",
+          "rollbackStrategy": "git revert 所有新增策略文件"
+        }
+      ]
+    },
+
+    {
+      "requirementId": "REQ-006",
+      "title": "实现 VISUAL_ANALYSIS_CDP_EXTRACT 实时 CDP 提取",
+      "candidateSolutions": [
+        {
+          "id": "A",
+          "name": "对接 cdp/snapshot-theme.ts 提取管道 + detect 前置",
+          "approach": "替换 visual-analyzer-ipc.ts 中 VISUAL_ANALYSIS_CDP_EXTRACT 的占位 handler：(1) 先调用 deps.getStatus() 检查 agent 是否 running，未 running 返回 { status: 'unavailable', reason: 'agent not running' }；(2) running 时复用 snapshot-theme.ts 中的 captureNodeCascade / captureDomTree 或 baseline-css-capture 提取 CSS 变量和颜色；(3) 将提取的颜色数据转为结构化 profile 返回。",
+          "impactScope": ["src/main/ipc/visual-analyzer-ipc.ts"],
+          "acceptanceCoverage": "100% — 未 running 返回 unavailable；running 时接入 CDP 提取并返回颜色数据",
+          "pros": [
+            "最大化复用已有 CDP 基础设施（cdp-client、snapshot-theme、captureNodeCascade）",
+            "单文件改动，影响范围可控",
+            "与 VISUAL_ANALYSIS_DETECT 的 getStatus 模式一致"
+          ],
+          "cons": [
+            "CDP 连接可能超时，需要合理的超时控制和错误处理",
+            "snapshot-theme.ts 的提取返回的是 NodeCascade 格式，需转换为颜色 profile"
+          ],
+          "risks": [
+            "CDP session 冲突（与 apply 同时操作同一端口）— 需要使用 session-pool 或独立连接"
+          ],
+          "effortHours": 10,
+          "maintainability": "高 — 复用已有模块，逻辑集中在 IPC handler 中",
+          "rollbackStrategy": "git revert 单文件；占位 handler 恢复为 unavailable 返回"
+        },
+        {
+          "id": "B",
+          "name": "新建 VisualAnalysisService 服务层 + IPC 委托",
+          "approach": "新建 src/main/services/visual-analysis-service.ts 服务层，封装 CDP 提取逻辑：detectAgent → connectCdp → captureColors → buildProfile。IPC handler 仅做参数校验和委托。服务层可被其他模块复用（如 Theme Studio 的实时预览）。",
+          "impactScope": ["src/main/services/visual-analysis-service.ts（新建）", "src/main/ipc/visual-analyzer-ipc.ts", "src/main/main-context.ts（注册服务）"],
+          "acceptanceCoverage": "100% — 服务层实现完整的 CDP 提取流程；IPC handler 保证参数校验和 unavailable 降级",
+          "pros": [
+            "服务层可复用",
+            "IPC handler 保持轻薄",
+            "服务层单独可测试"
+          ],
+          "cons": [
+            "新建服务层增加初始工作量",
+            "需要接入 mainContext deps 体系"
+          ],
+          "risks": [
+            "服务层与 IPC handler 的职责划分不清 — 需明确边界"
+          ],
+          "effortHours": 14,
+          "maintainability": "高 — 服务层模式与项目其他 contracts/services 模块一致",
+          "rollbackStrategy": "git revert 新文件 + IPC handler 恢复占位"
+        },
+        {
+          "id": "C",
+          "name": "CDP 提取 + 缓存 + 增量更新",
+          "approach": "在方案 A/B 基础上增加：(1) 提取结果缓存（Map<agentId, {profile, timestamp}>），避免频繁 CDP 连接；(2) 基于 agent version/hash 的增量更新；(3) 超时控制（10s 内未返回降级到 bundled profile）。",
+          "impactScope": ["src/main/ipc/visual-analyzer-ipc.ts 或新建服务层", "src/main/cdp/ 缓存模块"],
+          "acceptanceCoverage：100% — 在基础方案上增加缓存和超时控制": "",
+          "pros": [
+            "减少 CDP 连接频率，避免对运行中 agent 的干扰",
+            "超时降级保证 UI 不会长时间 loading"
+          ],
+          "cons": [
+            "缓存一致性维护增加复杂度",
+            "增量更新逻辑难以准确判断"
+          ],
+          "risks": [
+            "缓存数据过时导致 UI 显示错误的提取结果 — 需要合理的 TTL 或手动刷新机制"
+          ],
+          "effortHours": 18,
+          "maintainability": "中 — 缓存层需要维护",
+          "rollbackStrategy": "git revert"
+        }
+      ]
+    },
+
+    {
+      "requirementId": "REQ-007",
+      "title": "CommunityThemeCard 安装失败显示错误+重试",
+      "candidateSolutions": [
+        {
+          "id": "A",
+          "name": "组件内局部状态管理（error + retryCount）",
+          "approach": "在 CommunityThemeCard 组件内新增两个局部 useState：error: string | null 和 retryCount: number。onInstall 执行前重置 error；installTheme 返回失败时设置 error 并累加 retryCount。根据 retryCount 值（<3 显示错误+重试按钮，>=3 显示 "安装失败，请稍后重试" 文案）。",
+          "impactScope": ["src/ui/components/themes/CommunityThemeCard.tsx"],
+          "acceptanceCoverage": "100% — 显示 error 原因（来自 installTheme 返回的 error 字段）；重试按钮在 retryCount<3 时可用；>=3 显示固定文案",
+          "pros": [
+            "改动范围最小（单文件）",
+            "局部状态不影响其他 card 实例",
+            "与现有 isInstalling/installed 状态管理模式一致"
+          ],
+          "cons": [
+            "错误状态在 card 重新挂载时丢失（但 community 主题列表通常不频繁重挂载）"
+          ],
+          "risks": [
+            "如果 installTheme 抛出异常而非返回 error，需要 onInstall 回调中 try-catch — 可通过包装 onInstall 回调处理"
+          ],
+          "effortHours": 2,
+          "maintainability": "高 — 逻辑自包含在组件内",
+          "rollbackStrategy": "git revert 单文件"
+        },
+        {
+          "id": "B",
+          "name": "communityStore 全局错误 Map + Card 订阅",
+          "approach": "在 communityStore 中新增 installErrors: Map<themeId, { error: string; retryCount: number }> 字段。installTheme 失败时更新该 Map。CommunityThemeCard 通过 useCommunityStore 订阅对应 themeId 的错误状态。retryCount 逻辑在 store action 中处理。",
+          "impactScope": ["src/ui/stores/communityStore.ts", "src/ui/components/themes/CommunityThemeCard.tsx"],
+          "acceptanceCoverage": "100% — store 统一管理错误状态；Card 显示和重试都从 store 读取",
+          "pros": [
+            "错误状态持久化（不因组件重挂载丢失）",
+            "多个组件可共享同一错误状态"
+          ],
+          "cons": [
+            "增加 store 复杂度",
+            "Map 状态更新需要遵循 immutable 模式（与 installedIds/downloadProgress 一致）"
+          ],
+          "risks": [
+            "Map 忘记清理导致内存增长 — 需在 uninstall/markInstalled 时清除对应条目"
+          ],
+          "effortHours": 3,
+          "maintainability": "中高 — store 统一管理但增加了字段和清理逻辑",
+          "rollbackStrategy": "git revert 两个文件"
+        },
+        {
+          "id": "C",
+          "name": "错误状态提升到 ThemesPage 页面层",
+          "approach": "在 ThemesPage（社区 Tab 父组件）层管理错误 Map，通过 props 传递给 CommunityThemeCard。错误处理逻辑保持在页面层，Card 仅做纯展示。",
+          "impactScope": ["src/ui/pages/ThemesPage.tsx", "src/ui/components/themes/CommunityThemeCard.tsx"],
+          "acceptanceCoverage": "100% — 页面层管理错误；Card 作为展示组件接收 error/retryCount props",
+          "pros": [
+            "Card 组件保持纯展示，复用性高",
+            "错误逻辑集中在页面层便于统一管理"
+          ],
+          "cons": [
+            "需要修改 ThemesPage 的回调签名和状态管理",
+            "增加 prop drilling"
+          ],
+          "risks": [
+            "ThemesPage 可能已有较多状态，新增错误管理增加复杂度"
+          ],
+          "effortHours": 3,
+          "maintainability": "中 — prop drilling 增加组件间耦合",
+          "rollbackStrategy": "git revert 两个文件"
+        }
+      ]
+    },
+
+    {
+      "requirementId": "REQ-008",
+      "title": "statusStore.refreshStatus 15 秒超时",
+      "candidateSolutions": [
+        {
+          "id": "A",
+          "name": "Promise.race 超时竞争 + isRefreshing 守护",
+          "approach": "在 refreshStatus 内部用 Promise.race 包装实际刷新逻辑：创建 15s 定时器 Promise（超时后抛出 TimeoutError），与现有 refreshStatus 的 Promise.all([baseStatus, coordinatorSnapshot]) 竞争。任意一个先完成即采用结果；超时则 catch 中重置 isRefreshing 并 set error。在 finally 中确保 isRefreshing 一定被设为 false。",
+          "impactScope": ["src/ui/stores/statusStore.ts"],
+          "acceptanceCoverage：100% — 超时自动重置 isRefreshing；错误通过 set error 反馈（UI 层通过 error 字段展示）": "",
+          "pros": [
+            "改动范围最小（单文件、单方法）",
+            "Promise.race 是标准 JS 模式，无需额外依赖",
+            "finally 块保证 isRefreshing 无论成功/失败/超时都被重置",
+            "与项目 shared/withTimeout.ts 的超时理念一致"
+          ],
+          "cons": [
+            "超时后 IPC 请求仍在飞行中（但 Electron IPC 有自身超时控制，且结果会被丢弃）"
+          ],
+          "risks": [
+            "Promise.race 后超时 Promise 和实际 Promise 可能同时完成（竞速条件）— 需确保 finally 只执行一次"
+          ],
+          "effortHours": 1,
+          "maintainability": "高 — 自包含在 refreshStatus 方法内",
+          "rollbackStrategy": "git revert 单文件"
+        },
+        {
+          "id": "B",
+          "name": "AbortController 中止请求 + 超时",
+          "approach": "在 refreshStatus 中创建 AbortController，signal 传入 api.refreshStatus() 和 api.getCoordinatorSnapshot()（需修改 apiClient 支持 signal）。15s 超时或组件卸载时调用 abort()。",
+
+          "impactScope": ["src/ui/stores/statusStore.ts", "src/ui/api/agentSkinClient.ts"],
+          "acceptanceCoverage：100% — 超时不仅重置状态还中止 IPC 请求，更彻底": "",
+          "pros": [
+            "超时后真正中止 IPC 请求，减少主进程无用计算",
+            "组件卸载时也可中止（cleanup）"
+          ],
+          "cons": [
+            "需要修改 apiClient 的函数签名以支持 signal 参数",
+            "Electron ipcRenderer.invoke 不原生支持 AbortSignal — 需要手动包装为 Promise + abort 监听"
+          ],
+          "risks": [
+            "apiClient 接口变更影响范围可能扩大 — 需评估调用方"
+          ],
+          "effortHours": 3,
+          "maintainability": "中 — 需要理解 AbortController 与 IPC 的配合方式",
+          "rollbackStrategy": "git revert"
+        },
+        {
+          "id": "C",
+          "name": "shared/withTimeout.ts 复用",
+          "approach": "复用项目已有的 shared/withTimeout.ts 工具函数，将 refreshStatus 的核心异步逻辑包装在 withTimeout(fn, 15000) 中。超时抛出已有的 IpcTimeoutError，catch 分支中识别超时错误并设置友好的 error 文案。",
+          "impactScope": ["src/ui/stores/statusStore.ts"],
+          "acceptanceCoverage：100% — 复用已有的工具函数保证一致性；超时后重置 isRefreshing 并反馈错误": "",
+          "pros": [
+            "与项目 IPC 层的 withMonitoredTimeout 保持同一超时理念",
+            "IpcTimeoutError 已被 notificationStore.fail() 特殊处理（显示友好超时文案）",
+            "改动量小"
+          ],
+          "cons": [
+            "shared/withTimeout.ts 设计用于可能与 IPC 场景不完全匹配 — 需确认其签名"
+          ],
+          "risks": [
+            "withTimeout 的具体行为（如超时后是否清理）可能与 refreshStatus 的 finally 语义交互不当"
+          ],
+          "effortHours": 1.5,
+          "maintainability": "高 — 使用项目标准工具",
+          "rollbackStrategy": "git revert 单文件"
+        }
+      ]
+    },
+    {
+      "requirementId": "REQ-009",
+      "title": "settingsStore.toggleMcp 失败错误反馈",
+      "candidateSolutions": [
+        {
+          "id": "A",
+          "name": "catch 分支接入 notificationStore.fail",
+          "approach": "修改 toggleMcp 的 catch 分支：从当前的空 catch 改为调用 useNotificationStore.getState().fail(error)，将主进程返回的错误通过现有 fail 管线反馈给用户。同时在 result.ok===false 的分支（当前只静默忽略）也调用 fail 显示 result.error 中的错误信息。",
+          "impactScope": ["src/ui/stores/settingsStore.ts"],
+          "acceptanceCoverage：100% — 失败时通过 fail 管线显示错误；端口异常等不会产生异常堆叠（因为 IPC handler 返回结构化错误而非抛异常）": "",
+          "pros": [
+            "改动范围最小（单文件、单方法）",
+            "完全复用现有 notificationStore.fail 管线（含 i18n 和超时友好消息）",
+            "对齐项目中其他 store action 的错误处理模式（如 saveAppPort 的 fail 调用）"
+          ],
+          "cons": [
+            "无"
+          ],
+          "risks": [
+            "fail 可能因重复调用（如 result.ok=false 和 catch 都触发）导致错误堆叠显示 — 需确保两个分支互斥"
+          ],
+          "effortHours": 0.5,
+          "maintainability": "高 — 与项目错误处理模式完全一致",
+          "rollbackStrategy": "git revert 单文件"
+        },
+        {
+          "id": "B",
+          "name": "错误状态本地化 + 自动清除",
+          "approach": "在 settingsStore 中新增 mcpError: string | null 字段，toggleMcp 失败时设置该错误，成功时清除。UI 层订阅 mcpError 并展示在 MCP 设置区域。3 秒后自动清除错误。",
+          "impactScope": ["src/ui/stores/settingsStore.ts", "src/ui/pages/SettingsPage.tsx"],
+          "acceptanceCoverage：100% — 失败时在 MCP 设置区域显示错误而非全局 toast；更精确的定位": "",
+          "pros": [
+            "错误反馈更靠近触发位置（MCP 开关附近）",
+            "不与全局 toast 队列竞争"
+          ],
+          "cons": [
+            "增加 store 字段和自动清除 timer 逻辑",
+            "需要修改 SettingsPage UI",
+            "与项目其他操作统一使用 toast 的模式不一致"
+          ],
+          "risks": [
+            "timer 清理与组件卸载的交互需小心处理"
+          ],
+          "effortHours": 2,
+          "maintainability": "中 — 新增状态字段和 timer 增加理解成本",
+          "rollbackStrategy": "git revert 两个文件"
+        },
+        {
+          "id": "C",
+          "name": "结构化错误类型 + 差异化反馈",
+          "approach": "定义 McpError 联合类型（PortConflictError | StartFailedError | StopFailedError），根据 IPC 返回的错误 code/message 分类。端口异常（端口被占用）显示专门的 '端口被占用，请检查' 提示并引导用户修改端口；其他错误走通用 fail 管线。",
+          "impactScope": ["src/ui/stores/settingsStore.ts", "src/main/ipc/mcp-ipc.ts（可能需要新增错误码）"],
+          "acceptanceCoverage：100% — 端口异常有专门提示；其他错误通过 fail 管线显示": "",
+          "pros": [
+            "用户体验最精细化",
+            "端口异常提供具体操作指导"
+          ],
+          "cons": [
+            "需要分类 IPC 错误码 — 当前 MCP IPC 可能未返回结构化错误码",
+            "改动范围大"
+          ],
+          "risks": [
+            "MCP IPC 当前可能只返回简单字符串错误，无法可靠分类 — 需先增强 IPC handler"
+          ],
+          "effortHours": 4,
+          "maintainability": "中 — 错误分类逻辑增加维护负担",
+          "rollbackStrategy": "git revert"
+        }
+      ]
+    }
+  ]
+}
