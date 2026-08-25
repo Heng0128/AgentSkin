@@ -12,7 +12,7 @@
  */
 
 import { useState } from 'react';
-import type { CommunityThemeSummary, DownloadProgress } from '@shared/types/community';
+import type { CommunityThemeSummary, DownloadProgress as DownloadProgressData } from '@shared/types/community';
 import { cn } from '@/lib/utils';
 import { ImageIcon } from 'lucide-react';
 import { DownloadProgress } from './DownloadProgress';
@@ -21,7 +21,7 @@ interface Props {
   theme: CommunityThemeSummary;
   isInstalled: boolean;
   isInstalling: boolean;
-  downloadProgress?: DownloadProgress;
+  downloadProgress?: DownloadProgressData;
   onInstall: () => void;
   onUninstall: () => void;
   onCancel: () => void;
@@ -76,14 +76,14 @@ export function CommunityThemeCard({
         {isInstalling && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white backdrop-blur-sm">
             <span className="mb-2 text-[13px] font-medium">
-              {downloadProgress < 100
-                ? `下载中 ${downloadProgress}%`
+              {(downloadProgress?.progress ?? 0) < 100
+                ? `下载中 ${downloadProgress?.progress ?? 0}%`
                 : '安装中…'}
             </span>
             <div className="h-1.5 w-3/4 overflow-hidden rounded-full bg-white/30">
               <div
                 className="h-full rounded-full bg-white transition-all duration-300"
-                style={{ width: `${downloadProgress}%` }}
+                style={{ width: `${downloadProgress?.progress ?? 0}%` }}
               />
             </div>
           </div>

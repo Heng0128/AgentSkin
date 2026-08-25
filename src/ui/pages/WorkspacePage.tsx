@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # WorkspacePage — Live Tweak
@@ -229,7 +229,7 @@ export function WorkspacePage() {
       {/* Health status bar — theme injection diagnostics                  */}
       {/* ---------------------------------------------------------------- */}
       {healthReport ? (
-        <div className="mx-3 mb-2 flex items-center gap-2 rounded-sm border-b border-border px-2 py-1 text-[10px] text-secondary">
+        <div className="mx-3 mb-2 flex items-center gap-2 rounded-md border-b border-border px-2 py-1 text-micro text-muted-foreground">
           <span
             className={`size-2 rounded-full ${
               healthReport.score >= 80
@@ -251,8 +251,8 @@ export function WorkspacePage() {
           </span>
         </div>
       ) : (
-        <div className="mx-3 mb-2 flex items-center rounded-sm border-b border-border px-2 py-1">
-          <span className="text-[10px] text-muted-foreground">{t.workspaceHealthSelectAgent}</span>
+        <div className="mx-3 mb-2 flex items-center rounded-md border-b border-border px-2 py-1">
+          <span className="text-micro text-muted-foreground">{t.workspaceHealthSelectAgent}</span>
         </div>
       )}
 
@@ -262,11 +262,11 @@ export function WorkspacePage() {
       <div className="grid min-h-0 flex-1 grid-cols-[160px_1fr]">
         {/* Agent rail */}
         <aside className="flex flex-col gap-2 overflow-y-auto px-2 py-2">
-          <span className="px-1 text-[10px] tracking-tight text-muted-foreground">
+          <span className="px-1 text-micro tracking-tight text-muted-foreground">
             {t.workspaceRunningApps}
           </span>
           {runningAgents.length === 0 ? (
-            <p className="px-1 py-4 text-[10px] text-muted-foreground">
+            <p className="px-1 py-4 text-micro text-muted-foreground">
               {t.workspaceNoRunningAgents}
             </p>
           ) : (

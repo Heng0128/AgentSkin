@@ -106,7 +106,7 @@ function CustomCssEditor({
       <div className="flex items-center justify-between gap-2 py-1.5 px-2 border-b border-border last:border-0">
         <div>
           <p className="text-[10px] text-foreground">{t.settingsCustomCssTitle}</p>
-          <p className="text-[10px] text-secondary mt-0.5">{t.settingsCustomCssDesc}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t.settingsCustomCssDesc}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Button variant="outline" size="sm" onClick={clear}>
@@ -123,7 +123,7 @@ function CustomCssEditor({
         placeholder={t.settingsCustomCssPlaceholder}
         disabled={loading}
         spellCheck={false}
-        className="min-h-32 w-full resize-y rounded-sm bg-card text-[13px] leading-5"
+        className="min-h-32 w-full resize-y rounded-md bg-card text-[13px] leading-5"
       />
     </div>
   );
@@ -153,10 +153,10 @@ function LiveDomRefreshIntervalEditor({ t }: { t: AppController['t'] }) {
         value={String(current)}
         onValueChange={(v) => void saveLiveDomRefreshInterval(Number(v))}
       >
-        <SelectTrigger className="h-6 w-[160px] rounded-sm border-border bg-muted text-[10px]">
+        <SelectTrigger className="h-6 w-[160px] rounded-md border-border bg-muted text-[10px]">
           <SelectValue />
         </SelectTrigger>
-        <SelectContent className="rounded-sm border-border bg-card">
+        <SelectContent className="rounded-md border-border bg-card">
           {options.map((opt) => (
             <SelectItem key={opt.value} value={String(opt.value)} className="text-[10px]">
               {opt.label}
@@ -193,11 +193,11 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
   };
 
   return (
-    <div className="rounded-sm border border-border bg-card p-2">
+    <div className="rounded-md border border-border bg-card p-2">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] text-foreground">{t.settingsMcpTitle}</p>
-          <p className="text-[10px] text-secondary mt-0.5">{t.settingsMcpDesc}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{t.settingsMcpDesc}</p>
         </div>
         <div className="flex items-center gap-1">
           {mcpRunning ? (
@@ -235,7 +235,7 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
         {mcpRunning && mcpUrl && (
           <div className="flex items-center gap-1 text-[10px]">
             <span className="text-muted-foreground">{t.settingsMcpEndpoint}:</span>
-            <code className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-secondary">
+            <code className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground">
               {mcpUrl}
             </code>
             <Button
@@ -392,7 +392,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               size="sm"
               aria-current={section === item.id ? 'page' : undefined}
               className={cn(
-                'justify-start rounded-sm h-6 px-2 text-muted-foreground',
+                'justify-start rounded-md h-6 px-2 text-muted-foreground',
                 section === item.id && 'bg-accent text-accent-foreground',
               )}
               onClick={() => setSection(item.id)}
@@ -412,12 +412,12 @@ export function SettingsPage({ controller }: { controller: AppController }) {
         <div className="flex min-h-0 flex-col">
           {/* Mobile header: breadcrumb + section selector */}
           <div className="flex items-center justify-between px-2 py-1.5 md:hidden">
-            <span className="text-[10px] text-secondary">{activeSection.label}</span>
+            <span className="text-[10px] text-muted-foreground">{activeSection.label}</span>
             <Select value={section} onValueChange={(v) => setSection(v as SettingsSection)}>
-              <SelectTrigger className="h-6 w-auto min-w-[120px] rounded-sm border-border bg-muted text-[10px]">
+              <SelectTrigger className="h-6 w-auto min-w-[120px] rounded-md border-border bg-muted text-[10px]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="rounded-sm border-border bg-card">
+              <SelectContent className="rounded-md border-border bg-card">
                 {sectionOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
                     {opt.label}
@@ -452,10 +452,10 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               <>
                 <SettingRow title={t.themeModeLabel}>
                   <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
-                    <SelectTrigger className="h-6 w-[160px] rounded-sm border-border bg-muted text-[10px]">
+                    <SelectTrigger className="h-6 w-[160px] rounded-md border-border bg-muted text-[10px]">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-sm border-border bg-card">
+                    <SelectContent className="rounded-md border-border bg-card">
                       {themeOptions.map((opt) => (
                         <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
                           {opt.label}
@@ -469,10 +469,10 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                     value={controller.locale}
                     onValueChange={(v) => void controller.setLocale(v as 'zh-CN' | 'en')}
                   >
-                    <SelectTrigger className="h-6 w-[160px] rounded-sm border-border bg-muted text-[10px]">
+                    <SelectTrigger className="h-6 w-[160px] rounded-md border-border bg-muted text-[10px]">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-sm border-border bg-card">
+                    <SelectContent className="rounded-md border-border bg-card">
                       <SelectItem value="zh-CN" className="text-[10px]">
                         {t.chinese}
                       </SelectItem>
@@ -524,7 +524,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                   className="w-full"
                 />
               ) : (
-                <div className="space-y-px rounded-sm bg-card p-2 text-[10px] leading-5">
+                <div className="space-y-px rounded-md bg-card p-2 text-[10px] leading-5">
                   <div className="mb-1 px-1 text-micro text-muted-foreground/50">
                     {logs.length} {t.showLogs}
                   </div>
@@ -545,7 +545,7 @@ export function SettingsPage({ controller }: { controller: AppController }) {
               ))}
             {section === 'about' && (
               <SettingRow title={t.settingsAbout} description={t.settingsAboutDesc}>
-                <span className="text-[10px] text-secondary">v{appVersion}</span>
+                <span className="text-[10px] text-muted-foreground">v{appVersion}</span>
               </SettingRow>
             )}
             {section === 'advanced' && (
