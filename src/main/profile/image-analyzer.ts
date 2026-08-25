@@ -164,12 +164,16 @@ export function detectFocus(p: PixelData): FocusPoint {
 // ---------------------------------------------------------------------------
 
 /**
- * 分析单侧信息量（平均饱和度 + 对比度）。
+ * 分析单侧信息量（饱和度 + 对比度 + 亮度能量）。
  * 信息量越高，越不适合放置内容（会干扰视觉）。
+ *
+ * 亮度能量：明亮区域对视觉的干扰更大（叠加内容后更难辨识），
+ * 因此高亮度 = 高信息量 = 不适合放置内容。
  */
 function analyzeSide(p: PixelData, xStart: number, xEnd: number): number {
   let totalSaturation = 0;
   let totalContrast = 0;
+  let totalLuminance = 0;
   let count = 0;
 
   for (let y = 0; y < p.height; y++) {
@@ -181,12 +185,15 @@ function analyzeSide(p: PixelData, xStart: number, xEnd: number): number {
       const saturation = max === 0 ? 0 : (max - min) / max;
       totalSaturation += saturation;
 
+      // 亮度（Rec. 709，0..1）
+      const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      totalLuminance += lum;
+
       // 局部对比度：与右侧邻居的亮度差
       if (x + 1 < xEnd) {
         const neighbor = rgbAt(p, x + 1, y);
-        const lum1 = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-        const lum2 = 0.2126 * neighbor.r + 0.7152 * neighbor.g + 0.0722 * neighbor.b;
-        totalContrast += Math.abs(lum1 - lum2);
+        const lum2 = (0.2126 * neighbor.r + 0.7152 * neighbor.g + 0.0722 * neighbor.b) / 255;
+        totalContrast += Math.abs(lum - lum2);
       }
       count++;
     }
@@ -195,8 +202,9 @@ function analyzeSide(p: PixelData, xStart: number, xEnd: number): number {
   if (count === 0) return 0;
   const avgSaturation = totalSaturation / count;
   const avgContrast = totalContrast / count;
-  // 信息量 = 饱和度权重 + 对比度权重（归一化到 0..1 范围）
-  return avgSaturation * 0.5 + (avgContrast / 255) * 0.5;
+  const avgLuminance = totalLuminance / count;
+  // 信息量 = 饱和度 + 对比度 + 亮度能量（权重分配）
+  return avgSaturation * 0.3 + avgContrast * 0.3 + avgLuminance * 0.4;
 }
 
 /**
