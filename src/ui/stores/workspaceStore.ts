@@ -284,6 +284,20 @@ function persistTweakPresets(presets: TweakPreset[]): void {
   }
 }
 
+/**
+ * Get the current agent ID or set an error and return null.
+ * Replaces the unsafe `'codex' as AgentId` fallback pattern that silently
+ * masked "no agent selected" conditions.
+ */
+function requireAgentId(): AgentId | null {
+  const id = get().currentAgentId;
+  if (!id) {
+    set({ pushError: 'no_agent_selected' });
+    return null;
+  }
+  return id;
+}
+
 /** Monotonic token — incremented on each updateOverride call to discard stale push receipts. */
 let pushToken = 0;
 

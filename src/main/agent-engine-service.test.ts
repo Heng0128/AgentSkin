@@ -244,6 +244,34 @@ describe('AgentEngineService (orchestration)', () => {
       await svc.initialize();
       expect(svc.activeThemeId(TEST_APP)).toBeNull();
     });
+
+    it('rejects state where schemeSnapshot is a string instead of object', async () => {
+      writeFileSync(
+        stateFile,
+        JSON.stringify({
+          version: 2,
+          apps: { [TEST_APP]: { activeThemeId: 't1', port: 9222, schemeSnapshot: 'invalid' } },
+        }),
+        'utf8',
+      );
+      const svc = makeService();
+      await svc.initialize();
+      expect(svc.activeThemeId(TEST_APP)).toBeNull();
+    });
+
+    it('rejects state where detectedPath is a number instead of string', async () => {
+      writeFileSync(
+        stateFile,
+        JSON.stringify({
+          version: 2,
+          apps: { [TEST_APP]: { activeThemeId: 't1', port: 9222, detectedPath: 12345 } },
+        }),
+        'utf8',
+      );
+      const svc = makeService();
+      await svc.initialize();
+      expect(svc.activeThemeId(TEST_APP)).toBeNull();
+    });
   });
 
   describe('portFor', () => {

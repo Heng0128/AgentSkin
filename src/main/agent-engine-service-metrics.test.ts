@@ -20,17 +20,34 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AgentEngineService } from './agent-engine-service';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import { notifyPersistFailure } from './main-context';
-import type { SettingsServiceApi, StructuredLogEvent } from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
-// RC4-S4-A: Import shared mock factory for type-safe stubs
-import { makeSettingsStub, makeThemeLibraryStub } from './test-helpers/mock-services';
+// RC4-S4-A: Import shared test harness for type-safe stubs and factory functions
+import {
+  makeSettings,
+  makeThemeLibraryStub,
+} from './agent-engine-service-test-harness';
 
 /** Type helper for accessing private members in tests (TS private is not runtime-enforced). */
 type AgentEngineServicePrivate = {
   persist: { safe: (fn: () => unknown) => Promise<void> };
   writeState: () => Promise<void>;
 };
+
+/**
+ * Create a service instance using the shared harness factory.
+ * Replaces the previous inline `new AgentEngineService(...)` with a
+ * type-safe harness-based factory that uses consistent stubs.
+ */
+function makeService(stateFile: string): AgentEngineService {
+  // Use makeServiceStub with a pre-existing stateFile path (the test's
+  // tmpDir/stateFile lifecycle is managed in beforeEach/afterEach).
+  // We create the service synchronously here — makeServiceStub is async,
+  // so we use the constructor directly with harness stubs.
+  const library = makeThemeLibraryStub();
+  const settings = makeSettings();
+  return new AgentEngineService(library, stateFile, settings);
+}
 
 // ---------------------------------------------------------------------------
 // Minimal mocks (consistent with reliability test suite)
@@ -108,22 +125,6 @@ vi.mock('./main-context', async (importOriginal) => {
     notifyPersistFailure: vi.fn(),
   };
 });
-
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
-
-function makeSettings(): SettingsServiceApi & {
-  logStructured?: (event: StructuredLogEvent) => void;
-} {
-  return makeSettingsStub() as SettingsServiceApi & {
-    logStructured?: (event: StructuredLogEvent) => void;
-  };
-}
-
-function makeService(stateFile: string): AgentEngineService {
-  return new AgentEngineService(makeThemeLibraryStub(), stateFile, makeSettings());
-}
 
 // ---------------------------------------------------------------------------
 // Tests (collect/update — no fake timers needed)

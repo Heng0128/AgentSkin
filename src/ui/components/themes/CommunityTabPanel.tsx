@@ -14,9 +14,12 @@
  */
 
 import { useCallback, useEffect, useRef } from 'react';
-import { Search } from 'lucide-react';
+import { AlertCircle, Search, Users } from 'lucide-react';
 import { CommunityThemeCard } from './CommunityThemeCard';
+import { ThemeDetailPanel } from './ThemeDetailPanel';
 import { useCommunityStore } from '@/stores/communityStore';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { uiMessages } from '@shared/i18n';
 import { useShellStore } from '@/stores/shellStore';
@@ -36,10 +39,14 @@ export function CommunityTabPanel() {
     installingIds,
     installedIds,
     downloadProgress,
+    selectedThemeId,
+    selectedThemeDetail,
     loadThemes,
     loadMore,
     setQuery,
     setSortBy,
+    selectTheme,
+    loadThemeDetail,
   } = useCommunityStore();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -75,16 +82,17 @@ export function CommunityTabPanel() {
   // --- Error state ---
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-[13px] text-destructive">{error}</p>
-        <button
-          type="button"
-          onClick={() => loadThemes()}
-          className="mt-4 text-[13px] text-primary hover:underline"
-        >
-          {t.communityRetry}
-        </button>
-      </div>
+      <EmptyState
+        icon={<AlertCircle />}
+        iconSize="lg"
+        title={error}
+        action={
+          <Button variant="outline" size="sm" onClick={() => loadThemes()}>
+            {t.communityRetry}
+          </Button>
+        }
+        className="min-h-[400px] w-full"
+      />
     );
   }
 
@@ -121,11 +129,12 @@ export function CommunityTabPanel() {
   // --- Empty state ---
   if (themes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-[13px] text-muted-foreground">
-          {query ? t.communityEmptyNoResult : t.communityEmptyNoThemes}
-        </p>
-      </div>
+      <EmptyState
+        icon={<Users />}
+        iconSize="lg"
+        title={query ? t.communityEmptyNoResult : t.communityEmptyNoThemes}
+        className="min-h-[400px] w-full"
+      />
     );
   }
 
@@ -142,17 +151,17 @@ export function CommunityTabPanel() {
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder={t.communitySearchPlaceholder}
-            className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+            className="w-full rounded-md border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
         {/* Sort toggle */}
-        <div className="flex gap-1 rounded-lg border border-border p-1">
+        <div className="flex gap-1 rounded-md border border-border p-1">
           <button
             type="button"
             onClick={() => handleSortChange('popular')}
             className={cn(
-              'rounded px-3 py-1 text-xs font-medium transition-colors',
+              'rounded-md px-3 py-1 text-xs font-medium transition-all duration-fast',
               sortBy === 'popular'
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground',
@@ -164,7 +173,7 @@ export function CommunityTabPanel() {
             type="button"
             onClick={() => handleSortChange('recent')}
             className={cn(
-              'rounded px-3 py-1 text-xs font-medium transition-colors',
+              'rounded-md px-3 py-1 text-xs font-medium transition-all duration-fast',
               sortBy === 'recent'
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground',
@@ -176,7 +185,7 @@ export function CommunityTabPanel() {
             type="button"
             onClick={() => handleSortChange('rating')}
             className={cn(
-              'rounded px-3 py-1 text-xs font-medium transition-colors',
+              'rounded-md px-3 py-1 text-xs font-medium transition-all duration-fast',
               sortBy === 'rating'
                 ? 'bg-primary text-primary-foreground'
                 : 'text-muted-foreground hover:text-foreground',
@@ -188,7 +197,7 @@ export function CommunityTabPanel() {
       </div>
 
       {/* Card grid — responsive columns */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {themes.map((theme) => {
           const isInstalled = installedIds.has(theme.themeId);
           const isInstalling = installingIds.has(theme.themeId);
@@ -196,22 +205,30 @@ export function CommunityTabPanel() {
             downloadProgress.get(theme.themeId)?.progress ?? 0;
 
           return (
-            <CommunityThemeCard
+            <div
               key={theme.themeId}
-              theme={theme}
-              isInstalled={isInstalled}
-              isInstalling={isInstalling}
-              downloadProgress={progress}
-              onInstall={() => {
-                useCommunityStore.getState().installTheme(theme.themeId);
+              onClick={() => {
+                selectTheme(theme.themeId);
+                loadThemeDetail(theme.themeId);
               }}
-              onUninstall={() => {
-                useCommunityStore.getState().uninstallTheme(theme.themeId);
-              }}
-              onCancel={() => {
-                useCommunityStore.getState().cancelInstall(theme.themeId);
-              }}
-            />
+              className="cursor-pointer"
+            >
+              <CommunityThemeCard
+                theme={theme}
+                isInstalled={isInstalled}
+                isInstalling={isInstalling}
+                downloadProgress={progress}
+                onInstall={() => {
+                  useCommunityStore.getState().installTheme(theme.themeId);
+                }}
+                onUninstall={() => {
+                  useCommunityStore.getState().uninstallTheme(theme.themeId);
+                }}
+                onCancel={() => {
+                  useCommunityStore.getState().cancelInstall(theme.themeId);
+                }}
+              />
+            </div>
           );
         })}
       </div>
@@ -219,20 +236,27 @@ export function CommunityTabPanel() {
       {/* Load more */}
       {themes.length < total && (
         <div className="flex justify-center py-4">
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="default"
             onClick={loadMore}
             disabled={loadingMore}
-            className={cn(
-              'rounded-md border border-input px-4 py-2 text-[13px] transition-colors',
-              loadingMore
-                ? 'cursor-not-allowed text-muted-foreground'
-                : 'hover:bg-muted',
-            )}
           >
             {loadingMore ? t.communityLoading : t.communityLoadMore}
-          </button>
+          </Button>
         </div>
+      )}
+
+      {/* Theme detail panel */}
+      {selectedThemeId && selectedThemeDetail && (
+        <ThemeDetailPanel
+          theme={selectedThemeDetail}
+          onClose={() => selectTheme(null)}
+          onInstall={() => {
+            useCommunityStore.getState().installTheme(selectedThemeId);
+          }}
+          isInstalling={installingIds.has(selectedThemeId)}
+        />
       )}
     </div>
   );

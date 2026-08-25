@@ -12,16 +12,16 @@ function PageHeader({ title, description, count, children }: PageHeaderProps) {
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h1 className="text-[16px] font-normal tracking-[-0.015em]">{title}</h1>
+          <h1 className="text-title font-medium tracking-[-0.015em]">{title}</h1>
           {count !== undefined && (
-            <span className="rounded-sm bg-muted px-1 py-0 text-[10px] text-muted-foreground">
+            <span className="rounded-md bg-muted px-1.5 py-0.5 text-micro text-muted-foreground">
               {count}
             </span>
           )}
         </div>
         {children && <div className="flex items-center gap-2">{children}</div>}
       </div>
-      {description && <p className="text-[10px] text-muted-foreground">{description}</p>}
+      {description && <p className="text-label text-muted-foreground">{description}</p>}
     </div>
   );
 }

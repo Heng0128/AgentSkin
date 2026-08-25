@@ -3,6 +3,7 @@
 import { type DragEvent, useMemo, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { CommunityTabPanel } from '@/components/themes/CommunityTabPanel';
+import { ThemeGridSkeleton } from '@/components/themes/ThemeGridSkeleton';
 import { VirtualThemeGrid } from '@/components/themes/VirtualThemeGrid';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -148,7 +149,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                 {controller.isInstalling ? <Spinner className="animate-spin" /> : <Package className="size-3.5" />}
                 {controller.isInstalling ? t.importing : t.importTheme}
               </Button>
-              <Button size="sm" onClick={() => void api.openStudioWindow()}>
+              <Button variant="primary" size="sm" onClick={() => void api.openStudioWindow()}>
                 <Palette className="size-3.5" />
                 {t.navStudio}
               </Button>
@@ -224,12 +225,10 @@ export function ThemesPage({ controller }: { controller: AppController }) {
 
       {/* Grid — virtualized for large libraries */}
       {controller.loading ? (
-        <div className="flex min-h-40 items-center justify-center">
-          <Spinner className="size-6 text-primary" />
-        </div>
+        <ThemeGridSkeleton />
       ) : tc.themes.length === 0 ? (
         <EmptyState
-          icon={<PaintBucket className="text-muted-foreground/40" />}
+          icon={<PaintBucket />}
           iconSize="lg"
           title={tc.query ? t.themeNoResults : t.themeLibraryEmpty}
           hint={tc.query || tc.selectedCategory ? t.noSearchResultsHint : t.emptyInstalledHint}
@@ -250,11 +249,8 @@ export function ThemesPage({ controller }: { controller: AppController }) {
       {/* Drag-and-drop import overlay */}
       {dragOver && (
         <div className="pointer-events-none absolute inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-background/80">
-          <div
-            className="flex flex-col items-center gap-2 rounded-sm border-2 border-dashed border-border bg-card px-12 py-9 text-center"
-            style={{ boxShadow: 'var(--shadow-float)' }}
-          >
-            <div className="flex size-14 items-center justify-center rounded-sm bg-accent">
+          <div className="flex flex-col items-center gap-3 rounded-md border-2 border-dashed border-border bg-card px-12 py-9 text-center shadow-lg">
+            <div className="flex size-14 items-center justify-center rounded-md bg-accent">
               <UploadCloud className="size-7 text-primary" />
             </div>
             <p className="text-[11px] font-normal text-foreground">{t.dropThemeHere}</p>

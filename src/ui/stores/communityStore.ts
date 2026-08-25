@@ -186,8 +186,11 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           loading: false,
         });
       } else {
+        const errorMsg = result?.success === false && result.error
+          ? result.error
+          : 'Failed to load community themes';
         set({
-          error: result?.error || 'Failed to load community themes',
+          error: errorMsg,
           loading: false,
         });
       }
@@ -230,8 +233,11 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           loadingMore: false,
         });
       } else {
+        const errorMsg = result?.success === false && result.error
+          ? result.error
+          : 'Failed to load more themes';
         set({
-          error: result?.error || 'Failed to load more themes',
+          error: errorMsg,
           loadingMore: false,
         });
       }

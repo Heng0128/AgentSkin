@@ -3,24 +3,18 @@
 /**
  * AgentEngineService 核心链路可靠性测试。
  *
- * 覆盖方向 A 发现的 3 个 CRITICAL 问题的修复验证：
- *   - RC1: writeState() persistFailures 双重递增修复
+ * 覆盖方向 A 发现的 CRITICAL 问题的修复验证：
  *   - RC2: apply() 递归调用 → 有界迭代修复
  *   - RC4: dispose() 等待 in-flight background tasks 修复
+ *
+ * 注: persistFailures 单递增测试已移至 metrics.test.ts（更完整的 metrics 子系统测试）。
  */
 
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type {
-  AgentId,
-  ApplyRequest,
-  ApplyResponse,
-  AppStatus,
-  SystemStatus,
-} from '../shared/types';
-import type { SettingsServiceApi } from './services/contracts';
+import type { AgentId, ApplyRequest } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
 import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
 import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
@@ -33,6 +27,15 @@ import { PerformanceRecorder } from './services/performance/performance-recorder
 import { disposeWallpaperInjectionState } from './wallpaper/injection-state';
 import { removeWallpaperFromAgent } from './wallpaper-injector';
 import { disposeSelfHealState } from './wallpaper-self-heal';
+import {
+  cleanupHarness,
+  deferred,
+  makeAppStatus,
+  makeSettings,
+  APPLY_RESPONSE,
+  STATUS,
+  TEST_APP,
+} from './agent-engine-service-test-harness';
 
 // ---------------------------------------------------------------------------
 // Module mocks
@@ -101,50 +104,8 @@ vi.mock('./services/performance/performance-recorder', () => ({
 // Fixtures
 // ---------------------------------------------------------------------------
 
-const TEST_APP: AgentId = 'traework';
-const STATUS: SystemStatus = { platform: 'win32', apps: [] };
-const APPLY_RESPONSE: ApplyResponse = { status: 'applied', message: 'ok', system: STATUS };
 const APPLY_REQUEST: ApplyRequest = { appId: TEST_APP, themeId: 't1' };
 
-function makeAppStatus(appId: AgentId): AppStatus {
-  return {
-    appId,
-    displayName: appId,
-    installed: true,
-    running: false,
-    debugReady: false,
-    port: null,
-    activeThemeId: null,
-  } as AppStatus;
-}
-
-function makeSettings() {
-  return {
-    initialize: vi.fn(async () => {}),
-    overridesFor: vi.fn(() => ({ appPath: null, port: null })),
-    wallpaper: vi.fn(() => ({ enabled: false, id: null, render: undefined, agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting> })),
-    agentWallpaper: vi.fn(() => ({ enabled: false, id: null })),
-    toDto: vi.fn(() => ({ apps: {} as Record<AgentId, import('../shared/types').AppOverride>, defaultPorts: {} as Record<AgentId, number>, wallpaper: { enabled: false, id: null, agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting> } })),
-    setAppPath: vi.fn(async () => {}),
-    setAppPort: vi.fn(async () => {}),
-    setWallpaper: vi.fn(async () => {}),
-    setAgentWallpaper: vi.fn(async () => {}),
-    customThemeCss: vi.fn(() => ''),
-    setCustomThemeCss: vi.fn(async () => {}),
-    liveDomRefreshInterval: vi.fn(() => 0),
-    setLiveDomRefreshInterval: vi.fn(async () => {}),
-  } satisfies SettingsServiceApi;
-}
-
-function deferred<T>() {
-  let resolve!: (v: T) => void;
-  let reject!: (e: unknown) => void;
-  const promise = new Promise<T>((res, rej) => {
-    resolve = res;
-    reject = rej;
-  });
-  return { promise, resolve, reject };
-}
 
 // ---------------------------------------------------------------------------
 // Suite
@@ -171,58 +132,13 @@ describe('AgentEngineService (core reliability)', () => {
   afterEach(async () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
-    await rm(tmpDir, { recursive: true, force: true });
+    await cleanupHarness(tmpDir);
   });
 
   function makeService() {
     // biome-ignore lint/suspicious/noExplicitAny: test stub — library is never exercised here
     return new AgentEngineService({} as any, stateFile, makeSettings());
   }
-
-  // -------------------------------------------------------------------------
-  // RC1: writeState() persistFailures single increment
-  // -------------------------------------------------------------------------
-
-  describe('persistFailures counter (RC1)', () => {
-    it('increments persistFailures exactly once per writeState failure', async () => {
-      // Make writeJsonAtomic fail
-      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
-
-      const svc = makeService();
-      const privateSvc = svc as unknown as {
-        persist: { safe: (fn: () => unknown) => Promise<void> };
-        persistFailures: number;
-        writeState: () => Promise<void>;
-      };
-
-      // Trigger writeState via persist.safe — same path apply/restore use.
-      // writeState catches the error internally and increments persistFailures.
-      await privateSvc.persist.safe(() => privateSvc.writeState());
-
-      // persistFailures should be exactly 1 (from writeState catch block).
-      // Note: onError is NOT called because writeState catches the error
-      // internally and does not re-throw to persist.safe()'s .catch().
-      expect(privateSvc.persistFailures).toBe(1);
-    });
-
-    it('persistFailures accumulates across multiple failures', async () => {
-      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
-
-      const svc = makeService();
-      const privateSvc = svc as unknown as {
-        persist: { safe: (fn: () => unknown) => Promise<void> };
-        persistFailures: number;
-        writeState: () => Promise<void>;
-      };
-
-      // Trigger three consecutive writeState failures
-      await privateSvc.persist.safe(() => privateSvc.writeState());
-      await privateSvc.persist.safe(() => privateSvc.writeState());
-      await privateSvc.persist.safe(() => privateSvc.writeState());
-
-      expect(privateSvc.persistFailures).toBe(3);
-    });
-  });
 
   // -------------------------------------------------------------------------
   // RC2: apply() bounded iteration (no infinite recursion)
