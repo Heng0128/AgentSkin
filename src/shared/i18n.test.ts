@@ -4,13 +4,20 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_LOCALE, isAppLocale, localeFromSystem, mainMessages, uiMessages } from './i18n';
 
 describe('i18n', () => {
-  it('always resolves to Chinese (app is Chinese-only)', () => {
+  it('resolves system locale via BCP-47 prefix matching', () => {
+    // Exact match
     expect(localeFromSystem('zh-CN')).toBe('zh-CN');
+    expect(localeFromSystem('en')).toBe('en');
+    // Prefix match (zh-Hant → zh-CN, en-US → en)
     expect(localeFromSystem('zh-Hant')).toBe('zh-CN');
-    expect(localeFromSystem('en-US')).toBe('zh-CN');
-    expect(localeFromSystem('en-GB')).toBe('zh-CN');
+    expect(localeFromSystem('en-US')).toBe('en');
+    expect(localeFromSystem('en-GB')).toBe('en');
+    // Unsupported locale falls back to DEFAULT_LOCALE
     expect(localeFromSystem('fr-FR')).toBe(DEFAULT_LOCALE);
     expect(localeFromSystem(undefined)).toBe(DEFAULT_LOCALE);
+    // Underscore separator normalized to hyphen
+    expect(localeFromSystem('en_US')).toBe('en');
+    expect(localeFromSystem('zh_CN')).toBe('zh-CN');
   });
 
   it('accepts only application locales', () => {
