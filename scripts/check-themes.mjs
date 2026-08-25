@@ -31,7 +31,11 @@ const THEMES_DIR = path.resolve(process.cwd(), 'themes');
 const ENGINES_DIR = path.resolve(process.cwd(), 'engines');
 
 /** The 14 required design tokens every agent CSS must declare (no hero art —
- *  `--agentskin-art` is injected at runtime, not authored in the theme). */
+ *  `--agentskin-art` is injected at runtime, not authored in the theme).
+ *
+ * `--agentskin-text-shadow` is included because `tokenBlock()` emits it as a
+ *  global default; omitting it from this list would let a theme generator
+ * silently skip it without CI flagging the gap. */
 const REQUIRED_TOKENS = [
   '--agentskin-bg',
   '--agentskin-surface',
@@ -47,6 +51,7 @@ const REQUIRED_TOKENS = [
   '--agentskin-selection',
   '--agentskin-button-bg',
   '--agentskin-input-bg',
+  '--agentskin-text-shadow',
 ];
 
 /**
