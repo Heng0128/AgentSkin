@@ -592,14 +592,16 @@ describe('luminance hierarchy', () => {
     it(`${t.id} — surface clearly distinct from bg`, () => {
       const bgVal = t.colors.background;
       const sVal = t.colors.surface;
-      if (!bgVal || !sVal) return; // skip if any missing
+      expect(bgVal, `${t.id}: background is required (14-token contract)`).toBeTruthy();
+      expect(sVal, `${t.id}: surface is required (14-token contract)`).toBeTruthy();
 
-      const cBg = parseColor(bgVal);
-      const cS = parseColor(sVal);
-      if (!cBg || !cS) return;
+      const cBg = parseColor(bgVal!);
+      const cS = parseColor(sVal!);
+      expect(cBg, `${t.id}: background "${bgVal}" is not a valid color`).toBeTruthy();
+      expect(cS, `${t.id}: surface "${sVal}" is not a valid color`).toBeTruthy();
 
-      const bgLum = relativeLuminance(cBg);
-      const sLum = relativeLuminance(cS);
+      const bgLum = relativeLuminance(cBg!);
+      const sLum = relativeLuminance(cS!);
 
       // The "surface" layer must be visually distinguishable from the
       // "background" layer — this is the fundamental contract that makes
@@ -641,14 +643,16 @@ describe('luminance hierarchy — surfaceElevated', () => {
     it(`${t.id} — surfaceElevated distinguishable from surface`, () => {
       const sVal = t.colors.surface;
       const seVal = t.colors.surfaceElevated;
-      if (!sVal || !seVal) return; // skip if either missing
+      expect(sVal, `${t.id}: surface is required (14-token contract)`).toBeTruthy();
+      expect(seVal, `${t.id}: surfaceElevated is required (14-token contract)`).toBeTruthy();
 
-      const cS = parseColor(sVal);
-      const cSe = parseColor(seVal);
-      if (!cS || !cSe) return;
+      const cS = parseColor(sVal!);
+      const cSe = parseColor(seVal!);
+      expect(cS, `${t.id}: surface "${sVal}" is not a valid color`).toBeTruthy();
+      expect(cSe, `${t.id}: surfaceElevated "${seVal}" is not a valid color`).toBeTruthy();
 
-      const sLum = relativeLuminance(cS);
-      const seLum = relativeLuminance(cSe);
+      const sLum = relativeLuminance(cS!);
+      const seLum = relativeLuminance(cSe!);
 
       // When surface and surfaceElevated have identical luminance (ratio = 1.0),
       // the theme uses shadow-based elevation rather than luminance-based
