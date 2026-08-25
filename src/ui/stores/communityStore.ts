@@ -401,6 +401,11 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
 
 if (typeof window !== 'undefined' && api?.onCommunityDownloadProgress) {
   api.onCommunityDownloadProgress((progress) => {
-    useCommunityStore.getState().updateDownloadProgress(progress);
+    try {
+      useCommunityStore.getState().updateDownloadProgress(progress);
+    } catch {
+      // Defensive: malformed progress payload should not crash the subscription.
+      console.error('[communityStore] failed to process download progress', progress);
+    }
   });
 }
