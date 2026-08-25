@@ -85,7 +85,7 @@ describe('install-detection', () => {
         isDirectory: () => true,
         isFile: () => false,
       } as Stats);
-      mockReaddir.mockResolvedValue(['Trae.exe'] as unknown as string[]);
+      mockReaddir.mockResolvedValue(['Trae.exe'] as any);
       mockExecFileAsync.mockResolvedValue({
         stdout: '1.0.0|1.0.0|Trae|Trae IDE\n',
         stderr: '',
@@ -109,7 +109,7 @@ describe('install-detection', () => {
         isDirectory: () => false,
         isFile: () => true,
       } as Stats);
-      mockReaddir.mockResolvedValue(['Trae.exe'] as unknown as string[]);
+      mockReaddir.mockResolvedValue(['Trae.exe'] as any);
       mockExecFileAsync.mockResolvedValue({
         stdout: '2.0.1|2.0.1|Trae|Trae IDE\n',
         stderr: '',
@@ -137,7 +137,7 @@ describe('install-detection', () => {
         isDirectory: () => true,
         isFile: () => false,
       } as Stats);
-      mockReaddir.mockResolvedValue([] as unknown as string[]);
+      mockReaddir.mockResolvedValue([] as any);
 
       const result = await detectInstallation({
         platform: 'win32',
@@ -205,7 +205,7 @@ describe('install-detection', () => {
         isDirectory: () => true,
         isFile: () => false,
       } as Stats);
-      mockReaddir.mockResolvedValue(['Trae.exe'] as unknown as string[]);
+      mockReaddir.mockResolvedValue(['Trae.exe'] as any);
       mockExecFileAsync.mockResolvedValue({
         stdout: '3.0.0|3.0.0|Trae|Trae IDE\n',
         stderr: '',
@@ -224,7 +224,7 @@ describe('install-detection', () => {
         isDirectory: () => true,
         isFile: () => false,
       } as Stats);
-      mockReaddir.mockResolvedValue(['unrelated.exe', 'readme.txt'] as unknown as string[]);
+      mockReaddir.mockResolvedValue(['unrelated.exe', 'readme.txt'] as any);
       // The unrelated.exe doesn't match identity, so readExeInfo is called
       mockExecFileAsync.mockResolvedValue({
         stdout: '1.0.0|1.0.0|Unrelated App|Some other app\n',
