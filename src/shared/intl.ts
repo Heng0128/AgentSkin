@@ -44,11 +44,11 @@ export function formatNumber(value: number, locale: AppLocale): string {
   return new Intl.NumberFormat(toIntlLocale(locale)).format(value);
 }
 
-/** Format a file size in bytes to a human-readable string (KB, MB, GB) */
+/** Format a file size in bytes to a human-readable string (B, KB, MB, GB) */
 export function formatFileSize(bytes: number, locale: AppLocale): string {
   if (bytes < 1024) return `${formatNumber(bytes, locale)} B`;
   if (bytes < 1024 * 1024) return `${formatNumber(Math.round(bytes / 1024), locale)} KB`;
   if (bytes < 1024 * 1024 * 1024)
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+    return `${formatNumber(Number((bytes / (1024 * 1024)).toFixed(1)), locale)} MB`;
+  return `${formatNumber(Number((bytes / (1024 * 1024 * 1024)).toFixed(1)), locale)} GB`;
 }

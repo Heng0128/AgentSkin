@@ -54,7 +54,6 @@ import { Download, Redo2, RefreshCw, Search, Undo2, Upload } from 'lucide-react'
  * only when a locale omits the corresponding key; the canonical copy lives in
  * the i18n message tables (see direction E — i18n completeness). Kept as
  * module constants so the hardcoded Chinese strings are not duplicated inline.
- * @deprecated Use t.workspacePushFailed / t.workspaceImportFailed instead.
  */
 const PUSH_FAILED_FALLBACK = '实时推送失败：';
 const IMPORT_FAILED_FALLBACK = '导入失败：';
