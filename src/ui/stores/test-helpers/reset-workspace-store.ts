@@ -30,4 +30,6 @@ export function resetWorkspaceStore(): void {
   });
   // Reset module-level pushToken to ensure monotonic token isolation between tests.
   useWorkspaceStore.getState().testResetPushToken();
+  // Reset module-level PUSH_DURATION_HISTORY to prevent cross-test leakage.
+  useWorkspaceStore.getState().testResetPushDurationHistory();
 }

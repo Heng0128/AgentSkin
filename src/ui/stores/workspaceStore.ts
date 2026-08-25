@@ -160,6 +160,8 @@ interface WorkspaceState {
   clearPushError: () => void;
   /** Test-only: reset the monotonic push token to 0 for deterministic test isolation. */
   testResetPushToken: () => void;
+  /** Test-only: clear the push duration rolling buffer for deterministic test isolation. */
+  testResetPushDurationHistory: () => void;
 
   // --- Undo / Redo actions ---
   /** Step back in history. Returns true if the undo was applied. */
@@ -335,6 +337,7 @@ const initialState: Omit<
   | 'discardChanges'
   | 'clearPushError'
   | 'testResetPushToken'
+  | 'testResetPushDurationHistory'
   | 'undo'
   | 'redo'
   | 'canUndo'
@@ -647,8 +650,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
   clearPushError: () => set({ pushError: null }),
 
+  // R4: 模块级 PUSH_DURATION_HISTORY 在 store reset 时不再泄漏
+  // — testResetPushDurationHistory 清理滚动缓冲，确保测试隔离。
   testResetPushToken: () => {
     pushToken = 0;
+  },
+  testResetPushDurationHistory: () => {
+    PUSH_DURATION_HISTORY.length = 0;
   },
 
   // --- undo / redo actions ---

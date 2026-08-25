@@ -25,68 +25,34 @@ import type {
   AppStatus,
   SystemStatus,
 } from '../shared/types';
-import type { SettingsServiceApi } from './services/contracts';
 import { AgentEngineService } from './agent-engine-service';
+import { installStandardMocks } from './agent-engine-service-test-harness';
 import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
+import { stopAudioLevelPolling } from './audio-level';
 import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
 import { writeJsonAtomic } from './fs-utils';
+import type { SettingsServiceApi } from './services/contracts';
+import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { disposeThemeAssetCache } from './theme/utils';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
-import { stopAudioLevelPolling } from './audio-level';
-import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { disposeWallpaperInjectionState } from './wallpaper/injection-state';
 import { removeWallpaperFromAgent } from './wallpaper-injector';
 import { disposeSelfHealState } from './wallpaper-self-heal';
 
 // ---------------------------------------------------------------------------
 // Module mocks — execution detail lives in dedicated module tests.
+// Standard mocks come from the shared harness; dispose-only modules keep
+// inline mocks because the harness intentionally uses real implementations.
 // ---------------------------------------------------------------------------
 
-vi.mock('./app-discovery', () => {
-  // Minimal stand-in for the real LivePortCache — the service only calls
-  // get/set/clear on it; resolution behavior is covered by the dedicated
-  // app-discovery-cache.test.ts.
-  class LivePortCache {
-    private m = new Map<string, number>();
-    get(a: string) {
-      return this.m.get(a) ?? null;
-    }
-    set(a: string, p: number) {
-      this.m.set(a, p);
-    }
-    clear(a: string) {
-      this.m.delete(a);
-    }
-    clearAll() {
-      this.m.clear();
-    }
-    size() {
-      return this.m.size;
-    }
-  }
-  return {
-    LivePortCache,
-    reconcileZombiePorts: vi.fn(async () => {}),
-    probeAppStatus: vi.fn(),
-    resolveLivePort: vi.fn(async () => null),
-    ensureCdpReady: vi.fn(async () => ({ ok: true, port: 9222, reason: null })),
-    inferRestartReason: vi.fn(async () => ({ kind: 'not-installed' })),
-  };
-});
-vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: vi.fn() }));
-vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: vi.fn() }));
-vi.mock('./fs-utils', () => ({
-  writeJsonAtomic: vi.fn(async () => {}),
-  appendLogLine: vi.fn(async () => {}),
-}));
-vi.mock('./wallpaper-injector', () => ({
-  applyAgentWallpaperNow: vi.fn(async () => ({ ok: true })),
-  applyWallpaperToAgent: vi.fn(async () => ({ ok: true })),
-  injectAgentWallpaperFromApply: vi.fn(async () => {}),
-  removeAgentVideoWallpaper: vi.fn(async () => {}),
-  removeWallpaperFromAgent: vi.fn(async () => ({ ok: true })),
-}));
+const mocks = installStandardMocks();
+
+vi.mock('./app-discovery', () => mocks.appDiscovery);
+vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: mocks.applyThemeFlow }));
+vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: mocks.restoreThemeFlow }));
+vi.mock('./fs-utils', () => mocks.fsUtils);
+vi.mock('./wallpaper-injector', () => mocks.wallpaperInjector);
 vi.mock('./cdp/injection/engine-strategy', () => ({
   cleanupEngineInjectionForAgent: vi.fn(),
   disposeEngineInjectionState: vi.fn(),
@@ -99,10 +65,16 @@ vi.mock('./wallpaper-self-heal', () => ({
   cleanupSelfHealForAgent: vi.fn(),
   disposeSelfHealState: vi.fn(),
 }));
-vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
+vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: mocks.disposeThemeAssetCache }));
 vi.mock('./audio-level', () => ({ stopAudioLevelPolling: vi.fn() }));
 vi.mock('./services/performance/performance-recorder', () => ({
-  PerformanceRecorder: { reset: vi.fn(), start: vi.fn(), finishTrace: vi.fn(), release: vi.fn(), getActive: vi.fn(() => null) },
+  PerformanceRecorder: {
+    reset: vi.fn(),
+    start: vi.fn(),
+    finishTrace: vi.fn(),
+    release: vi.fn(),
+    getActive: vi.fn(() => null),
+  },
 }));
 
 // ---------------------------------------------------------------------------
@@ -138,9 +110,25 @@ function makeSettings(opts: SettingsOverrides = {}) {
     initialize: vi.fn(async () => {}),
     overridesFor: vi.fn(() => ({ appPath: null, port: opts.port ?? null })),
     // agents must satisfy Record<AgentId, WallpaperAgentSetting> — use type assertion for test stub
-    wallpaper: vi.fn(() => ({ enabled: false, id: null, render: undefined, agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting> })),
-    agentWallpaper: vi.fn((appId: AgentId) => ({ enabled: wallpaperAgents.includes(appId), id: null })),
-    toDto: vi.fn(() => ({ apps: {} as Record<AgentId, import('../shared/types').AppOverride>, defaultPorts: {} as Record<AgentId, number>, wallpaper: { enabled: false, id: null, agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting> } })),
+    wallpaper: vi.fn(() => ({
+      enabled: false,
+      id: null,
+      render: undefined,
+      agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting>,
+    })),
+    agentWallpaper: vi.fn((appId: AgentId) => ({
+      enabled: wallpaperAgents.includes(appId),
+      id: null,
+    })),
+    toDto: vi.fn(() => ({
+      apps: {} as Record<AgentId, import('../shared/types').AppOverride>,
+      defaultPorts: {} as Record<AgentId, number>,
+      wallpaper: {
+        enabled: false,
+        id: null,
+        agents: {} as Record<AgentId, import('../shared/types').WallpaperAgentSetting>,
+      },
+    })),
     setAppPath: vi.fn(async () => {}),
     setAppPort: vi.fn(async () => {}),
     setWallpaper: vi.fn(async () => {}),
