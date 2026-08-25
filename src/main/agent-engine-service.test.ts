@@ -46,13 +46,13 @@ import { disposeSelfHealState } from './wallpaper-self-heal';
 // inline mocks because the harness intentionally uses real implementations.
 // ---------------------------------------------------------------------------
 
-const mocks = installStandardMocks();
-
-vi.mock('./app-discovery', () => mocks.appDiscovery);
-vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: mocks.applyThemeFlow }));
-vi.mock('./theme-restore-flow', () => ({ restoreThemeFlow: mocks.restoreThemeFlow }));
-vi.mock('./fs-utils', () => mocks.fsUtils);
-vi.mock('./wallpaper-injector', () => mocks.wallpaperInjector);
+vi.mock('./app-discovery', () => installStandardMocks().appDiscovery);
+vi.mock('./theme-apply-flow', () => ({ applyThemeFlow: installStandardMocks().applyThemeFlow }));
+vi.mock('./theme-restore-flow', () => ({
+  restoreThemeFlow: installStandardMocks().restoreThemeFlow,
+}));
+vi.mock('./fs-utils', () => installStandardMocks().fsUtils);
+vi.mock('./wallpaper-injector', () => installStandardMocks().wallpaperInjector);
 vi.mock('./cdp/injection/engine-strategy', () => ({
   cleanupEngineInjectionForAgent: vi.fn(),
   disposeEngineInjectionState: vi.fn(),
@@ -65,7 +65,9 @@ vi.mock('./wallpaper-self-heal', () => ({
   cleanupSelfHealForAgent: vi.fn(),
   disposeSelfHealState: vi.fn(),
 }));
-vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: mocks.disposeThemeAssetCache }));
+vi.mock('./theme/utils', () => ({
+  disposeThemeAssetCache: installStandardMocks().disposeThemeAssetCache,
+}));
 vi.mock('./audio-level', () => ({ stopAudioLevelPolling: vi.fn() }));
 vi.mock('./services/performance/performance-recorder', () => ({
   PerformanceRecorder: {

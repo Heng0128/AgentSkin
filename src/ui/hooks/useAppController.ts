@@ -23,7 +23,7 @@
  * `AppController` type. Fields are grouped by their owning store.
  */
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { appStatusFor, useAgentStore } from '@/stores/agentStore';
 import { useAppsStore } from '@/stores/appsStore';
@@ -129,14 +129,17 @@ export function useAppController() {
   const isRefreshing = useStatusStore((s) => s.isRefreshing);
   const refreshStatus = useStatusStore((s) => s.refreshStatus);
 
-  const setLocale = async (next: typeof locale) => {
-    setLocaleState(next);
-    try {
-      await api.setLocale(next);
-    } catch {
-      /* toast handled by caller */
-    }
-  };
+  const setLocale = useCallback(
+    async (next: typeof locale) => {
+      setLocaleState(next);
+      try {
+        await api.setLocale(next);
+      } catch {
+        /* toast handled by caller */
+      }
+    },
+    [setLocaleState],
+  );
 
   const setRoute = useShellStore((s) => s.setRoute);
 
@@ -339,100 +342,184 @@ export function useAppController() {
   const setAndApplyAgentWallpaper = useWallpaperStore((s) => s.setAndApplyAgentWallpaper);
   const wpInitialize = useWallpaperStore((s) => s.initialize);
 
-  return {
-    // ── Shared / shell ─────────────────────────────────────────────────
-    t,
-    locale,
-    setLocale,
-    appVersion,
-    route,
-    setRoute,
-    activeAgentId,
-    status,
-    statusStale: status === null,
-    lastStatusAt,
-    isRefreshing,
-    busy: aggregateBusyKey(themeBusy, themeGlobalBusy),
-    toasts: controllerToasts,
-    showToast,
-    logs,
-    injectDockOpen,
-    setInjectDockOpen,
-    toggleSidebar,
-    refreshStatus,
-    bootProgress,
+  // R5: 用 useMemo 包裹 controller 返回值，确保引用稳定性。
+  // 避免每次渲染创建新对象导致下游 React.memo 子组件失效。
+  return useMemo(
+    () => ({
+      // ── Shared / shell ─────────────────────────────────────────────────
+      t,
+      locale,
+      setLocale,
+      appVersion,
+      route,
+      setRoute,
+      activeAgentId,
+      status,
+      statusStale: status === null,
+      lastStatusAt,
+      isRefreshing,
+      busy: aggregateBusyKey(themeBusy, themeGlobalBusy),
+      toasts: controllerToasts,
+      showToast,
+      logs,
+      injectDockOpen,
+      setInjectDockOpen,
+      toggleSidebar,
+      refreshStatus,
+      bootProgress,
 
-    // ── Agents ────────────────────────────────────────────────────────
-    agents,
-    appStatusFor,
+      // ── Agents ────────────────────────────────────────────────────────
+      agents,
+      appStatusFor,
 
-    // ── Themes ───────────────────────────────────────────────────────
-    installed,
-    installedById,
-    selection,
-    setSelection,
-    applyToApp,
-    restoreApp,
-    restoreAll,
-    exportTheme,
-    createBundle,
-    confirmDelete,
-    confirmFileImport,
-    dropThemeFiles,
-    refreshThemes,
-    loading: themeLoading,
+      // ── Themes ───────────────────────────────────────────────────────
+      installed,
+      installedById,
+      selection,
+      setSelection,
+      applyToApp,
+      restoreApp,
+      restoreAll,
+      exportTheme,
+      createBundle,
+      confirmDelete,
+      confirmFileImport,
+      dropThemeFiles,
+      refreshThemes,
+      loading: themeLoading,
 
-    // ── Import / install flow ────────────────────────────────────────
-    importTheme,
-    installSteps,
-    setSteps: setInstallSteps,
-    setFlowState: setFlowStateAction,
-    currentTheme,
-    lastError,
-    isInstalling: installFlags.isInstalling,
-    isComplete: installFlags.isComplete,
-    isFailed: installFlags.isFailed,
-    isCancelled: installFlags.isCancelled,
-    progress: installFlags.progress,
-    retryInstall,
-    cancelInstall,
+      // ── Import / install flow ────────────────────────────────────────
+      importTheme,
+      installSteps,
+      setSteps: setInstallSteps,
+      setFlowState: setFlowStateAction,
+      currentTheme,
+      lastError,
+      isInstalling: installFlags.isInstalling,
+      isComplete: installFlags.isComplete,
+      isFailed: installFlags.isFailed,
+      isCancelled: installFlags.isCancelled,
+      progress: installFlags.progress,
+      retryInstall,
+      cancelInstall,
 
-    // ── Dialogs ──────────────────────────────────────────────────────
-    restartPrompt,
-    setRestartPrompt,
-    wallpaperRestartPrompt,
-    setWallpaperRestartPrompt,
-    launchRestartPrompt,
-    setLaunchRestartPrompt,
-    forceRestartLaunch: useAppsStore.getState().forceRestartLaunch,
-    deletePrompt,
-    setDeletePrompt,
-    fileImportPrompt,
-    setFileImportPrompt,
+      // ── Dialogs ──────────────────────────────────────────────────────
+      restartPrompt,
+      setRestartPrompt,
+      wallpaperRestartPrompt,
+      setWallpaperRestartPrompt,
+      launchRestartPrompt,
+      setLaunchRestartPrompt,
+      forceRestartLaunch: useAppsStore.getState().forceRestartLaunch,
+      deletePrompt,
+      setDeletePrompt,
+      fileImportPrompt,
+      setFileImportPrompt,
 
-    // ── Settings ─────────────────────────────────────────────────────
-    settingsSection,
-    setSettingsSection,
-    settings,
-    openSettings,
+      // ── Settings ─────────────────────────────────────────────────────
+      settingsSection,
+      setSettingsSection,
+      settings,
+      openSettings,
 
-    // ── Dynamic wallpapers ───────────────────────────────────────────
-    wallpaper: {
-      wallpapers: wpWallpapers,
-      loading: wpLoading,
-      enabled: wpEnabled,
-      selectedId: wpSelectedId,
-      agentWallpapers: wpAgentWallpapers,
-      active: wallpaperActive,
-      render: wpRender,
-      error: wpError,
-      initialize: wpInitialize,
+      // ── Dynamic wallpapers ───────────────────────────────────────────
+      wallpaper: {
+        wallpapers: wpWallpapers,
+        loading: wpLoading,
+        enabled: wpEnabled,
+        selectedId: wpSelectedId,
+        agentWallpapers: wpAgentWallpapers,
+        active: wallpaperActive,
+        render: wpRender,
+        error: wpError,
+        initialize: wpInitialize,
+        setWallpaper,
+        importWallpaper,
+        deleteWallpaper,
+        setAndApplyAgentWallpaper,
+      },
+    }),
+    [
+      // Shell / shared
+      t,
+      locale,
+      setLocale,
+      appVersion,
+      route,
+      setRoute,
+      activeAgentId,
+      status,
+      lastStatusAt,
+      isRefreshing,
+      themeBusy,
+      themeGlobalBusy,
+      controllerToasts,
+      showToast,
+      logs,
+      injectDockOpen,
+      setInjectDockOpen,
+      toggleSidebar,
+      refreshStatus,
+      bootProgress,
+      // Agents
+      agents,
+      // Themes
+      installed,
+      installedById,
+      selection,
+      setSelection,
+      applyToApp,
+      restoreApp,
+      restoreAll,
+      exportTheme,
+      createBundle,
+      confirmDelete,
+      confirmFileImport,
+      dropThemeFiles,
+      refreshThemes,
+      themeLoading,
+      // Install flow
+      importTheme,
+      installSteps,
+      setInstallSteps,
+      setFlowStateAction,
+      currentTheme,
+      lastError,
+      installFlags,
+      retryInstall,
+      cancelInstall,
+      // Dialogs
+      restartPrompt,
+      setRestartPrompt,
+      wallpaperRestartPrompt,
+      setWallpaperRestartPrompt,
+      launchRestartPrompt,
+      setLaunchRestartPrompt,
+      deletePrompt,
+      setDeletePrompt,
+      fileImportPrompt,
+      setFileImportPrompt,
+      // Settings
+      settingsSection,
+      setSettingsSection,
+      settings,
+      openSettings,
+      // Wallpapers
+      wpWallpapers,
+      wpLoading,
+      wpEnabled,
+      wpSelectedId,
+      wpAgentWallpapers,
+      wallpaperActive,
+      wpRender,
+      wpError,
+      wpInitialize,
       setWallpaper,
       importWallpaper,
       deleteWallpaper,
       setAndApplyAgentWallpaper,
-    },
-  };
+    ],
+  );
 }
 
 export type AppController = ReturnType<typeof useAppController>;

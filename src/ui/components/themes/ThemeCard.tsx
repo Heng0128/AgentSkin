@@ -26,6 +26,7 @@ export function ThemeCard({
   // Track image load failure via React state (not direct DOM manipulation
   // which can conflict with React's virtual DOM on re-render).
   const [imgError, setImgError] = useState(false);
+  const [iconError, setIconError] = useState(false);
   return (
     <button
       type="button"
@@ -93,12 +94,12 @@ export function ThemeCard({
         )}
 
         {/* Icon overlay — bottom-left */}
-        {theme.icon && (
+        {theme.icon && !iconError && (
           <div className="absolute bottom-1 left-1 opacity-80 transition-opacity group-hover:opacity-100">
             <img
               src={theme.icon}
               alt=""
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              onError={() => setIconError(true)}
               className="size-6 rounded-md border border-white/10 bg-background/70 p-0.5"
             />
           </div>
