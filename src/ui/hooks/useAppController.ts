@@ -131,11 +131,11 @@ export function useAppController() {
 
   const setLocale = useCallback(
     async (next: typeof locale) => {
-      setLocaleState(next);
       try {
         await api.setLocale(next);
+        setLocaleState(next);
       } catch {
-        /* toast handled by caller */
+        /* toast handled by caller — locale state stays unchanged on failure */
       }
     },
     [setLocaleState],
