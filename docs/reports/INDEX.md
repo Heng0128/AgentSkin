@@ -49,3 +49,10 @@
 | `theme-system-v3-FINAL-report.md` | — | 主题系统 v3 最终报告 |
 | `ui-design-report.md` | — | UI 设计报告 |
 | `DreamSkin-Community-Integration-Plan.md` | 2026-08-20 | DreamSkin 社区主题系统集成实施计划（P0/P1/P2 分阶段 + 5 天路线图） |
+
+## 自动巡检报告
+
+| 报告 | 日期时间 | 方向 | 状态 |
+|------|----------|------|------|
+| `INSPECTION_REPORT_2026-08-26-0700.md` | 2026-08-26 07:00 | H — Studio 工程瘦身 | COMPLETED |
+| `INSPECTION_REPORT_2026-08-26-0600.md` | 2026-08-26 06:00 | M — 工程卫生 | COMPLETED |
