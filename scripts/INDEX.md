@@ -25,6 +25,15 @@
 | `check-themes.mjs` | 验证 14-token 主题契约（C2）：每个主题包必须包含完整的 14 个设计 token |
 | `check-variable-bridge.mjs` | 验证变量桥接契约（C10）：bridge 无循环依赖、目标变量在 CSS 中被引用、agentskin token 可解析 |
 | `check-i18n.mjs` | 验证 i18n 完整性：中英 key 对齐、空翻译检测、孤儿 key 检测 |
+| `check-selector-fragility.mjs` | 选择器健壮性 lint（B3）：检测 theme/engine CSS 中的脆弱选择器（位置伪类、深层子链、生成类名、区域属性选择器、过长选择器），warn-only |
+| `runtime-check-all.mjs` | 运行时质量门禁（CDP 注入后采样计算样式）：对比度、水平溢出、关键选择器命中 |
+
+### 运行时校验脚本（runtime-*）
+
+| 脚本 | 用途 |
+|------|------|
+| `runtime-check-all.mjs` | CLI 入口：连接本地 CDP，读取 agentskin manifest 获取选择器配置，调用运行时验证器，输出结构化 JSON 报告 |
+| `lib/runtime-validator.mjs` | 核心验证逻辑：对比度采样（WCAG AA）、水平溢出检测、组件选择器命中验证 |
 
 ### 构建脚本（build-*）
 
