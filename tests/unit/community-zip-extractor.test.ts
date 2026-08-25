@@ -345,12 +345,10 @@ describe('extractThemeZip — happy path', () => {
   });
 
   it('extracts files from zip entries to disk', async () => {
-    // Create a temp dir for extraction
+    // Create a temp dir with theme.json for findThemeRoot to succeed
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'test-extract-files-'));
+    fs.writeFileSync(path.join(tempDir, 'theme.json'), '{"name":"test-theme"}');
     const mkdtempSpy = vi.spyOn(fsp, 'mkdtemp').mockResolvedValue(tempDir);
-
-    // Track written files
-    const writtenFiles: string[] = [];
 
     const zipfile = {
       entryCount: 1,
@@ -367,8 +365,6 @@ describe('extractThemeZip — happy path', () => {
 
     // Mock openReadStream to simulate file extraction
     zipfile.openReadStream.mockImplementation((entry: any, cb: (err: Error | null, stream: any) => void) => {
-      // Track that a file was extracted
-      writtenFiles.push(entry.fileName);
       // Return a mock stream that immediately ends
       const mockStream = {
         on: (e: string, h: () => void) => { if (e === 'end') process.nextTick(h); },
@@ -398,9 +394,14 @@ describe('extractThemeZip — happy path', () => {
 
     const result = await extractThemeZip('/fake/path.zip');
 
-    // Verify extraction completed
+    // Verify extraction completed with correct structure
     expect(result.extractDir).toBe(tempDir);
     expect(result).toHaveProperty('themeRoot');
+    expect(result.themeRoot).toBe(tempDir);
+
+    // Verify theme.json is accessible
+    const themeJsonPath = path.join(tempDir, 'theme.json');
+    expect(fs.existsSync(themeJsonPath)).toBe(true);
 
     // Cleanup
     mkdtempSpy.mockRestore();
