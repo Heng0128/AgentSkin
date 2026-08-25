@@ -521,6 +521,24 @@ describe('required token presence', () => {
   }
 });
 
+describe('text-shadow token contract', () => {
+  for (const t of themes) {
+    for (const agent of themeAgents(t)) {
+      const cssPath = agentCssPath(t, agent);
+      if (!cssPath || !existsSync(cssPath)) continue;
+
+      it(`${t.id}/${agent} — declares --agentskin-text-shadow`, () => {
+        const css = readFileSync(cssPath, 'utf8');
+        const tokens = extractTokensFromCss(css);
+        expect(
+          tokens.has('--agentskin-text-shadow'),
+          `${t.id}/${agent}: missing --agentskin-text-shadow token (contract gap — tokenBlock() emits it but CI did not enforce it)`,
+        ).toBe(true);
+      });
+    }
+  }
+});
+
 describe('manifest-color ↔ CSS-token consistency', () => {
   for (const t of themes) {
     for (const agent of themeAgents(t)) {
