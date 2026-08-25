@@ -311,6 +311,8 @@ export function useStudioStore<T>(
       exportAuthor: s.exportAuthor,
       exportState: s.exportState,
       domTreeVersion: s.domTreeVersion,
+      analysisProgress: s.analysisProgress,
+      healthReportByAgent: s.healthReportByAgent,
     })),
   );
   const iwState = useImageWallpaperStore(
