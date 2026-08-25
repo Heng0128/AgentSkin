@@ -258,7 +258,9 @@ describe('resolveThemeTarget exposes every image as a data URL', () => {
     const bundle = validateThemePackage(minimalBundle({ art: image('art') }));
     const target = resolveThemeTarget(bundle, 'codex');
     expect(target.artDataUrl).toBe(`data:image/png;base64,${ONE_PX_PNG}`);
-    expect(target.imageDataUrls.hero).toBe(`data:image/png;base64,${ONE_PX_PNG}`);
+    expect((target.imageDataUrls as Record<string, string>).hero).toBe(
+      `data:image/png;base64,${ONE_PX_PNG}`,
+    );
   });
 });
 

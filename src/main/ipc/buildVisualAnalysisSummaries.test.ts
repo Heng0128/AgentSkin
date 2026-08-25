@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createElectronMock } from '../../../fixtures/mocks/electron';
 import { IpcChannel } from '../../shared/ipc-channels';
+import type { VisualAnalysisSummary } from '../../shared/types/visual-analysis';
 
 // ---------------------------------------------------------------------------
 // Mocks (module-level, persistent across vi.resetModules)
@@ -48,10 +49,10 @@ function invoke(
   handlers: Map<string, (...args: unknown[]) => unknown>,
   channel: string,
   ...args: unknown[]
-) {
+): Promise<VisualAnalysisSummary[]> | VisualAnalysisSummary[] {
   const handler = handlers.get(channel);
   if (!handler) throw new Error(`no handler for ${channel}`);
-  return handler({}, ...args);
+  return handler({}, ...args) as Promise<VisualAnalysisSummary[]> | VisualAnalysisSummary[];
 }
 
 // ---------------------------------------------------------------------------

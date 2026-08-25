@@ -121,10 +121,10 @@ function createIframeWithElement(element: HTMLElement | null) {
 // ---------------------------------------------------------------------------
 
 describe('InspectorElement', () => {
-  let onCloseMock: ReturnType<typeof vi.fn>;
+  let onCloseMock: () => void;
 
   beforeEach(() => {
-    onCloseMock = vi.fn();
+    onCloseMock = vi.fn() as unknown as () => void;
     vi.useFakeTimers();
   });
 

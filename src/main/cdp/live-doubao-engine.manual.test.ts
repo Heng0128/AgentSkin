@@ -100,7 +100,7 @@ describe.skipIf(!MANUAL)('batch-8 doubao full-chain engine injection (manual)', 
       console.log(`[B0] doubao: disabled-before=${beforeDisabled}`);
 
       // B2: full engine injection (engine files + palette + injectThemeViaEngine).
-      const result = await tryEngineInjection(session, 'doubao', bundle, targetTheme, null, deps);
+      const result = await tryEngineInjection(session, 'doubao', bundle, targetTheme, null, null, deps);
       console.log(
         `[B2] doubao: layers=${result?.layersInjected ?? 'null'} ` +
           `adapter=${result?.adapterApplied ?? false} success=${result?.success ?? false}`,

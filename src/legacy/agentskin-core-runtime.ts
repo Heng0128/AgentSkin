@@ -284,7 +284,7 @@ export function resolveDebugPortsFor(coreId: string, platform?: string): Promise
 
 /** Pick the theme target for a specific app from a theme bundle. Wraps resolveThemeTarget. */
 export function resolveThemeTargetFor(bundle: ThemeBundle, coreId: string): ResolvedThemeTarget {
-  return resolveThemeTarget(bundle, coreId);
+  return resolveThemeTarget(bundle as unknown as ThemePackage, coreId);
 }
 
 /** Look up the core adapter descriptor (defaultPort, displayName, ...). */

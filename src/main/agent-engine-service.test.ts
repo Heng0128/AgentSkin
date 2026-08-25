@@ -542,7 +542,7 @@ describe('AgentEngineService (orchestration)', () => {
       // After dispose, the service should be disposed but epoch Map cleared
       // (can't directly test private state, but verify no crash and service is disposed)
       await svc.disposeAsync();
-      expect(svc.disposed).toBe(true);
+      expect((svc as unknown as { disposed: boolean }).disposed).toBe(true);
     });
 
     it('disposes all resources in single pass even if already disposed', async () => {

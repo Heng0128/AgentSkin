@@ -42,18 +42,7 @@ vi.mock('@/stores/statusStore', () => ({
 // ---------------------------------------------------------------------------
 
 import { FALLBACK_AGENTS, useAgentStore } from './agentStore';
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function resetStore() {
-  // Reset to initial state (with fallback agents)
-  useAgentStore.setState({
-    agents: [],
-    loaded: false,
-  });
-}
+import { resetAgentStore } from './test-helpers/reset-agent-store';
 
 function makeAgentItem(id: string) {
   return {
@@ -80,7 +69,7 @@ function makeAgentItem(id: string) {
 describe('agentStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    resetStore();
+    resetAgentStore();
   });
 
   // -----------------------------------------------------------------------
@@ -144,9 +133,14 @@ describe('agentStore', () => {
   describe('initial state', () => {
     it('has loaded=false before loadAgents is called', () => {
       // After reset, verify the initial loaded state is false
-      resetStore();
+      resetAgentStore();
       expect(useAgentStore.getState().loaded).toBe(false);
-      expect(useAgentStore.getState().agents).toEqual([]);
+    });
+
+    it('starts with FALLBACK_AGENTS as initial catalog', () => {
+      resetAgentStore();
+      const state = useAgentStore.getState();
+      expect(state.agents).toEqual(FALLBACK_AGENTS);
     });
   });
 });

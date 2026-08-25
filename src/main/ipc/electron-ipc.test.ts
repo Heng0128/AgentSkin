@@ -172,7 +172,7 @@ describe('electron-ipc', () => {
 
       expect(caught).toHaveProperty('name', 'IpcTimeoutError');
       expect(caught).toHaveProperty('channel', IpcChannel.ELECTRON_SCAN);
-      expect(caught).toHaveProperty('ms', 30000);
+      expect((caught as { ms: number }).ms).toBe(30000);
     }, 40_000); // scan timeout is 30s; 40s lets it fire before vitest kills
   });
 
@@ -206,7 +206,7 @@ describe('electron-ipc', () => {
 
       expect(caught).toHaveProperty('name', 'IpcTimeoutError');
       expect(caught).toHaveProperty('channel', IpcChannel.ELECTRON_LAUNCH);
-      expect(caught).toHaveProperty('ms', 30000);
+      expect((caught as { ms: number }).ms).toBe(30000);
     }, 40_000); // launch timeout is 30s; 40s lets it fire before vitest kills
 
     it('rejects calls from an untrusted sender (G5)', async () => {

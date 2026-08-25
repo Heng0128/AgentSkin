@@ -28,7 +28,7 @@ import { create } from 'zustand';
 const ACTIVE_CAPS: AgentCapabilities = { theme: true, hotReload: true, extension: false };
 
 /** Synchronous fallback catalog built from AGENT_META for instant boot render. */
-const FALLBACK_AGENTS: AgentCatalogItem[] = AGENT_IDS.map((id) => {
+export const FALLBACK_AGENTS: AgentCatalogItem[] = AGENT_IDS.map((id) => {
   const meta = AGENT_META[id];
   return {
     id,

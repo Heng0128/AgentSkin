@@ -111,7 +111,7 @@ export function StudioInspector({
           onClick={() => onToggleDeviceFrame?.()}
           className="ws-inspector__frame-toggle ml-auto text-micro"
           data-active={showDeviceFrame ? 'true' : undefined}
-          title={t.studioToggleDeviceFrame ?? 'Toggle Frame'}
+          title='Toggle Frame'
         >
           🖥
         </button>

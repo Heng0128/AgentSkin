@@ -177,9 +177,9 @@ export async function createMainWindow(options: WindowCreateOptions = {}): Promi
   wc.on('did-fail-load', (_e, code, desc, url) => {
     console.error('[debug] did-fail-load', code, desc, url);
   });
-  wc.on('console-message', (event) => {
+  wc.on('console-message', (_event, level, message, lineNumber, sourceId) => {
     console.error(
-      `[debug:renderer] ${event.level} ${event.sourceId}:${event.lineNumber} ${event.message}`,
+      `[debug:renderer] ${level} ${sourceId}:${lineNumber} ${message}`,
     );
   });
   wc.on('render-process-gone', (_e, details) => {
