@@ -14,8 +14,3 @@ export type { StudioBundle } from '@/studio/bundle-store';
 export type { ExportState } from '@/studio/capture-store';
 export type { CombinedStudioStore } from '@/studio/useStudioStore';
 export { useActiveProject, useStudioStore } from '@/studio/useStudioStore';
-
-// Backward-compatible re-export of the original interface name.
-// Consumers importing StudioStoreState will get the combined type.
-import type { CombinedStudioStore } from '@/studio/useStudioStore';
-export type StudioStoreState = CombinedStudioStore;
