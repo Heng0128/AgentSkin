@@ -9,6 +9,7 @@
  * for backward compatibility but other values are deprecated.
  */
 
+import type { UiMessages } from '@shared/i18n';
 import type { AgentId } from '@shared/types';
 
 // ---------------------------------------------------------------------------
@@ -216,17 +217,29 @@ export interface TweakGroupConfig {
 /**
  * Parameter groups for the TweakPanel. Order matters — groups render
  * in this order. `color` is expanded by default.
+ *
+ * Labels are resolved through i18n so they respect the user's locale.
  */
-export const OVERRIDE_GROUPS: TweakGroupConfig[] = [
-  { id: 'color', label: '颜色', fields: ['accent', 'background', 'foreground', 'surface'] },
-  {
-    id: 'shape',
-    label: '形状',
-    fields: ['radius', 'spacing', 'shadowLevel', 'blurPx', 'borderWidth'],
-  },
-  { id: 'typography', label: '排版', fields: ['fontSize', 'fontFam', 'lineHeight'] },
-  { id: 'motion', label: '动效', fields: ['duration', 'timing'] },
-];
+export function getOverrideGroups(t: UiMessages): TweakGroupConfig[] {
+  return [
+    {
+      id: 'color',
+      label: t.workspaceGroupColor,
+      fields: ['accent', 'background', 'foreground', 'surface'],
+    },
+    {
+      id: 'shape',
+      label: t.workspaceGroupShape,
+      fields: ['radius', 'spacing', 'shadowLevel', 'blurPx', 'borderWidth'],
+    },
+    {
+      id: 'typography',
+      label: t.workspaceGroupTypography,
+      fields: ['fontSize', 'fontFam', 'lineHeight'],
+    },
+    { id: 'motion', label: t.workspaceGroupMotion, fields: ['duration', 'timing'] },
+  ];
+}
 
 /** Default-expanded group id. */
 export const DEFAULT_EXPANDED_GROUP: TweakGroupId = 'color';

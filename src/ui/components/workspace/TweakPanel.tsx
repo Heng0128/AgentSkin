@@ -34,7 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { ToolOverride } from '@/types/override';
-import { DEFAULT_EXPANDED_GROUP, OVERRIDE_GROUPS, type TweakGroupId } from '@/types/workspace';
+import { DEFAULT_EXPANDED_GROUP, getOverrideGroups, type TweakGroupId } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 import { ChevronDown, ChevronRight, RotateCcw } from 'lucide-react';
@@ -124,7 +124,7 @@ export function TweakPanel({
   const [expandedGroups, setExpandedGroups] = useState<Set<TweakGroupId>>(() => {
     const initial = new Set([DEFAULT_EXPANDED_GROUP]);
     if (highlightedField) {
-      const group = OVERRIDE_GROUPS.find((g) => g.fields.includes(highlightedField));
+      const group = getOverrideGroups(t).find((g) => g.fields.includes(highlightedField));
       if (group) initial.add(group.id);
     }
     return initial;
@@ -147,7 +147,7 @@ export function TweakPanel({
   // only runs on mount, so this effect handles subsequent prop changes.
   useEffect(() => {
     if (highlightedField) {
-      const group = OVERRIDE_GROUPS.find((g) => g.fields.includes(highlightedField));
+      const group = getOverrideGroups(t).find((g) => g.fields.includes(highlightedField));
       if (group) {
         setExpandedGroups((prev) => {
           if (prev.has(group.id)) return prev;
@@ -157,7 +157,7 @@ export function TweakPanel({
         });
       }
     }
-  }, [highlightedField]);
+  }, [highlightedField, t]);
 
   const setField = (key: keyof ToolOverride, value: ToolOverride[keyof ToolOverride]) =>
     onChange({ ...overrides, [key]: value });
@@ -297,7 +297,7 @@ export function TweakPanel({
 
   return (
     <div className="flex flex-col gap-4">
-      {OVERRIDE_GROUPS.map((group) => {
+      {getOverrideGroups(t).map((group) => {
         const isExpanded = expandedGroups.has(group.id);
         return (
           <div key={group.id} className="flex flex-col gap-2">
