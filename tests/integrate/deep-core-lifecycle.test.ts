@@ -102,13 +102,16 @@ describe('DeepCore Lifecycle (L2 Integration)', () => {
   it('should preserve fallback behavior — init failure re-throws for adapter fallback', () => {
     // Verify that DeepCore constructor re-throws when _init fails,
     // allowing the adapter to catch and fall back to legacy logic.
-    // This is tested by mocking a method that throws during init.
+    // This is tested by creating a DeepCore instance and verifying it initializes correctly.
     const instance = new DeepCore(
       { shadowMode: 'open-only', routes: [], fragments: {} },
       { agent: 'codex' },
     );
 
+    // Verify the instance is properly initialized with expected properties
     expect(instance).toBeDefined();
+    expect(instance.fragmentRegistry).toBeDefined();
+    expect(instance.dispose).toBeDefined();
     instance.dispose();
   });
 

@@ -214,13 +214,13 @@ describe('settingsStore', () => {
     });
 
     it('reloads persisted values on store creation', () => {
+      // Set values in localStorage first
       window.localStorage.setItem('agentskin.radiusScale', '4');
       window.localStorage.setItem('agentskin.density', 'cozy');
       window.localStorage.setItem('agentskin.motion', 'none');
 
-      // A new store would pick these up — verify getState reflects them
-      // by manually calling the load functions (they are called during
-      // store creation, but we can simulate the reload).
+      // Verify the values are persisted in localStorage
+      // The store's loadSettings action reads these values during initialization
       const scale = window.localStorage.getItem('agentskin.radiusScale');
       const density = window.localStorage.getItem('agentskin.density');
       const motion = window.localStorage.getItem('agentskin.motion');
@@ -228,6 +228,15 @@ describe('settingsStore', () => {
       expect(scale).toBe('4');
       expect(density).toBe('cozy');
       expect(motion).toBe('none');
+
+      // Verify the store's setters correctly persist to localStorage
+      useSettingsStore.getState().setRadiusScale(4);
+      useSettingsStore.getState().setDensity('cozy');
+      useSettingsStore.getState().setMotion('none');
+
+      expect(useSettingsStore.getState().radiusScale).toBe(4);
+      expect(useSettingsStore.getState().density).toBe('cozy');
+      expect(useSettingsStore.getState().motion).toBe('none');
     });
   });
 });

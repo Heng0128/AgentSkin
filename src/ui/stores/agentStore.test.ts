@@ -141,9 +141,10 @@ describe('agentStore', () => {
 
   describe('initial state', () => {
     it('has loaded=false before loadAgents is called', () => {
-      // After reset, we test the pre-load state
-      // Note: mockCatalogAgentsList is not called yet
-      expect(mockCatalogAgentsList).not.toHaveBeenCalled();
+      // After reset, verify the initial loaded state is false
+      resetStore();
+      expect(useAgentStore.getState().loaded).toBe(false);
+      expect(useAgentStore.getState().agents).toEqual([]);
     });
   });
 });
