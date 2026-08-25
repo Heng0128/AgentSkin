@@ -67,7 +67,8 @@ const violations = [];
  * 12px/14px are documented card/grid spacing (design-tokens.md §7.2).
  */
 const ALLOWED_SPACING_UNITS = new Set([
-  0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 5.5, 6, 7, 7.5, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32, 48,
+  0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 5.5, 6, 7, 7.5, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 24, 32,
+  48,
 ]);
 
 /** Tailwind arbitrary spacing values (px) within the project's ladder. */
@@ -100,8 +101,7 @@ const _ALLOWED_TEXT_NAMES = new Set([
  * Values BELOW 10px remain flagged (design-tokens.md §3.3 "10px 字号底线").
  */
 const ALLOWED_TEXT_ARBITRARY_PX = new Set([
-  10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 16, 18, 20, 22, 24, 30, 36, 44, 48, 60, 72, 96,
-  128,
+  10, 10.5, 11, 11.5, 12, 12.5, 13, 14, 16, 18, 20, 22, 24, 30, 36, 44, 48, 60, 72, 96, 128,
 ]);
 
 /**
@@ -732,7 +732,7 @@ function findNearestFontSize(px) {
 
 let checkedFiles = 0;
 
-function fileExists(absPath) {
+function directoryExists(absPath) {
   try {
     return statSync(absPath).isDirectory();
   } catch {
@@ -740,7 +740,7 @@ function fileExists(absPath) {
   }
 }
 
-if (!fileExists(UI_DIR)) {
+if (!directoryExists(UI_DIR)) {
   console.log(`⊘ src/ui/ not found — skipping design token check`);
   process.exit(0);
 }

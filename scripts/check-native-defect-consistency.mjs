@@ -83,4 +83,9 @@ function main() {
   );
 }
 
-main();
+try {
+  main();
+} catch (err) {
+  console.error(`[check-native-defect-consistency] ERROR: ${err.message}`);
+  process.exit(1);
+}
