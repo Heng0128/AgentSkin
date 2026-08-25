@@ -16,7 +16,7 @@
 
 import type { Route } from '@/types/navigation';
 
-import { type AppLocale, DEFAULT_LOCALE } from '@shared/i18n';
+import { type AppLocale, DEFAULT_LOCALE, isAppLocale } from '@shared/i18n';
 import { create } from 'zustand';
 
 /** localStorage key for the sidebar collapse preference. */
@@ -74,7 +74,12 @@ export const useShellStore = create<ShellState>((set) => ({
   logs: [],
   logsOpen: false,
 
-  setLocale: (locale) => set({ locale }),
+  setLocale: (locale) => {
+    // Runtime guard: only accept valid AppLocale values
+    if (isAppLocale(locale)) {
+      set({ locale });
+    }
+  },
   setAppVersion: (appVersion) => set({ appVersion }),
   setBooting: (booting) => set({ booting }),
   setRoute: (route) => set({ route }),

@@ -449,20 +449,40 @@ export function SettingsPage({ controller }: { controller: AppController }) {
           </div>
           <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 py-1.5">
             {section === 'general' && (
-              <SettingRow title={t.themeModeLabel}>
-                <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
-                  <SelectTrigger className="h-6 w-[160px] rounded-sm border-border bg-muted text-[10px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-sm border-border bg-card">
-                    {themeOptions.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
-                        {opt.label}
+              <>
+                <SettingRow title={t.themeModeLabel}>
+                  <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
+                    <SelectTrigger className="h-6 w-[160px] rounded-sm border-border bg-muted text-[10px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-sm border-border bg-card">
+                      {themeOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </SettingRow>
+                <SettingRow title={t.languageLabel}>
+                  <Select
+                    value={controller.locale}
+                    onValueChange={(v) => void controller.setLocale(v as 'zh-CN' | 'en')}
+                  >
+                    <SelectTrigger className="h-6 w-[160px] rounded-sm border-border bg-muted text-[10px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-sm border-border bg-card">
+                      <SelectItem value="zh-CN" className="text-[10px]">
+                        {t.chinese}
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </SettingRow>
+                      <SelectItem value="en" className="text-[10px]">
+                        {t.english}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </SettingRow>
+              </>
             )}
             {section === 'appearance' && (
               <>

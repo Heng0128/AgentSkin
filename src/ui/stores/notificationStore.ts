@@ -14,7 +14,7 @@
 import { useShellStore } from '@/stores/shellStore';
 
 import { toMessage } from '@shared/errors';
-import { uiMessages } from '@shared/i18n';
+import { uiMessages, type AppLocale } from '@shared/i18n';
 import { isIpcTimeoutError, type SerializedIpcTimeoutError } from '@shared/withTimeout';
 import { create } from 'zustand';
 
@@ -41,8 +41,8 @@ let toastId = 0;
  * ApplyResponse.status in useThemes — they never reach fail(). This only
  * cleans up thrown-error boilerplate prefixes.
  */
-function friendlyMessage(raw: string, locale: string): string {
-  const t = uiMessages[locale as keyof typeof uiMessages] ?? uiMessages['zh-CN'];
+function friendlyMessage(raw: string, locale: AppLocale): string {
+  const t = uiMessages[locale] ?? uiMessages['zh-CN'];
   const cleaned = raw
     .replace(/^Error invoking remote method\s*:\s*/i, '')
     .replace(/^Error:\s*/i, '')
@@ -102,7 +102,7 @@ export const useNotificationStore = create<NotificationState>((set) => {
         return;
       }
       const locale = useShellStore.getState().locale;
-      const message = friendlyMessage(toMessage(error), String(locale));
+      const message = friendlyMessage(toMessage(error), locale);
       useNotificationStore.getState().showToast(message, 'destructive');
     },
   };
