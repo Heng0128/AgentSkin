@@ -39,6 +39,8 @@ export const IpcChannel = {
   // --- Core (core-ipc.ts) ---
   APP_BOOTSTRAP: 'app:bootstrap',
   LOCALE_SET: 'locale:set',
+  /** INVOKE — renderer → main. Persist the user's theme mode preference. */
+  THEME_MODE_SET: 'theme:mode:set',
   SYSTEM_STATUS: 'system:status',
   AGENT_LIST: 'agent:list',
   SHELL_SHOW_ITEM: 'shell:show-item',

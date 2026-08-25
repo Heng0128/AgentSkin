@@ -325,6 +325,7 @@ export interface ThemeVisualSnapshot {
 export interface AgentSkinApi {
   getBootstrap(): Promise<BootstrapData>;
   setLocale(locale: AppLocale): Promise<void>;
+  setThemeMode(mode: 'dark' | 'light' | 'system'): Promise<void>;
   refreshStatus(): Promise<SystemStatus>;
   applyTheme(request: ApplyRequest): Promise<ApplyResponse>;
   restoreApp(appId: AgentId): Promise<SystemStatus>;

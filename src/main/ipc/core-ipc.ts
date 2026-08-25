@@ -24,7 +24,7 @@ import type { ToolOverride } from '../../shared/types/override';
 import { getStyleSheetText, listStyleSheets } from '../cdp/css-service';
 import { injectCssLayer } from '../cdp/injection/shared';
 import { probeSelector, validateSelectors } from '../cdp/selector-validator';
-import { saveLocalePreference } from '../locale-preferences';
+import { saveLocalePreference, saveThemeModePreference } from '../locale-preferences';
 import { mainWarn } from '../logger';
 import { handleThemeFileOpen, type MainContext, wrapCatalog } from '../main-context';
 import {
@@ -68,6 +68,13 @@ export function registerCoreIpc(deps: MainContext, updateTrayMenu: () => Promise
     void updateTrayMenu().catch((error) => {
       mainWarn('TrayMenu.Update', toMessage(error));
     });
+  });
+
+  ipcMain.handle(IpcChannel.THEME_MODE_SET, async (_event, nextMode: unknown) => {
+    if (nextMode !== 'dark' && nextMode !== 'light' && nextMode !== 'system') {
+      throw new Error(`Invalid theme mode: ${String(nextMode)}`);
+    }
+    await saveThemeModePreference(deps.userDataRoot, nextMode);
   });
 
   ipcMain.handle(IpcChannel.SYSTEM_STATUS, async () => {

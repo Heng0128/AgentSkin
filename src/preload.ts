@@ -42,6 +42,8 @@ function subscribe<T>(channel: string, listener: (payload: T) => void): () => vo
 const api: AgentSkinApi = {
   getBootstrap: () => ipcRenderer.invoke(IpcChannel.APP_BOOTSTRAP),
   setLocale: (locale: AppLocale) => ipcRenderer.invoke(IpcChannel.LOCALE_SET, locale),
+  setThemeMode: (mode: 'dark' | 'light' | 'system') =>
+    ipcRenderer.invoke(IpcChannel.THEME_MODE_SET, mode),
   refreshStatus: () => ipcRenderer.invoke(IpcChannel.SYSTEM_STATUS),
   applyTheme: (request: ApplyRequest) => ipcRenderer.invoke(IpcChannel.THEME_APPLY, request),
   restoreApp: (appId: AgentId) => ipcRenderer.invoke(IpcChannel.THEME_RESTORE, appId),

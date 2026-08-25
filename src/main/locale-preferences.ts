@@ -9,6 +9,7 @@ import { writeJsonAtomic } from './fs-utils';
 
 interface Preferences {
   locale?: unknown;
+  themeMode?: unknown;
 }
 
 function preferencesPath(userDataRoot: string): string {
@@ -40,6 +41,49 @@ export async function loadLocalePreference(
   const locale = localeFromSystem(systemLocale);
   await saveLocalePreference(userDataRoot, locale);
   return locale;
+}
+
+let cachedThemeMode: 'dark' | 'light' | null = null;
+
+/**
+ * Read the persisted theme mode synchronously from preferences.json.
+ * Used by window-manager.ts at window-creation time (before any async
+ * renderer round-trip is possible). Returns 'dark' when no preference exists
+ * or the file is unreadable — matching the renderer's default.
+ */
+export function readThemeModePreferenceSync(userDataRoot: string): 'dark' | 'light' {
+  if (cachedThemeMode) return cachedThemeMode;
+  try {
+    const preferences = JSON.parse(
+      fs.readFileSync(preferencesPath(userDataRoot), 'utf8'),
+    ) as Preferences;
+    if (preferences.themeMode === 'light' || preferences.themeMode === 'dark') {
+      cachedThemeMode = preferences.themeMode;
+      return cachedThemeMode;
+    }
+  } catch {
+    // First launch (ENOENT) or corrupt JSON → fall through to default.
+  }
+  return 'dark';
+}
+
+/** Persist the theme mode to preferences.json (called on renderer change). */
+export async function saveThemeModePreference(
+  userDataRoot: string,
+  themeMode: 'dark' | 'light' | 'system',
+): Promise<void> {
+  const effective = themeMode === 'system' ? 'dark' : themeMode;
+  cachedThemeMode = effective;
+  try {
+    const preferences = JSON.parse(
+      await fsAsync.readFile(preferencesPath(userDataRoot), 'utf8'),
+    ) as Preferences;
+    preferences.themeMode = effective;
+    await writeJsonAtomic(preferencesPath(userDataRoot), preferences);
+  } catch {
+    // File doesn't exist yet — write a fresh one.
+    await writeJsonAtomic(preferencesPath(userDataRoot), { themeMode: effective });
+  }
 }
 
 // R6-21: 提供同步 flush 方法供 app before-quit 使用。
