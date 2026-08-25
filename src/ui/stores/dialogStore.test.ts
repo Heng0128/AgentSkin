@@ -10,8 +10,7 @@
  * - Boundary conditions
  */
 
-import { describe, expect, it, beforeEach } from 'vitest';
-
+import { beforeEach, describe, expect, it } from 'vitest';
 import { useDialogStore } from './dialogStore';
 
 // ---------------------------------------------------------------------------
@@ -64,8 +63,24 @@ function makeDeletePrompt() {
 function makeFileImportPrompt() {
   return {
     path: '/some/path/theme.json',
-    incoming: { id: 'incoming', displayName: 'Incoming', version: '1.0.0', author: 'A', supportedAgents: ['traework' as const], coverDataUrl: null, tagline: '' },
-    existing: { id: 'existing', displayName: 'Existing', version: '1.0.0', author: 'B', supportedAgents: ['traework' as const], coverDataUrl: null, tagline: '' },
+    incoming: {
+      id: 'incoming',
+      displayName: 'Incoming',
+      version: '1.0.0',
+      author: 'A',
+      supportedAgents: ['traework' as const],
+      coverDataUrl: null,
+      tagline: '',
+    },
+    existing: {
+      id: 'existing',
+      displayName: 'Existing',
+      version: '1.0.0',
+      author: 'B',
+      supportedAgents: ['traework' as const],
+      coverDataUrl: null,
+      tagline: '',
+    },
   };
 }
 
@@ -325,3 +340,4 @@ describe('dialogStore boundary conditions', () => {
     expect(state.fileImportPrompt).toBeNull();
   });
 });
+// test
