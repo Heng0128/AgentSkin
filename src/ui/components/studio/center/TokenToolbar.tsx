@@ -13,6 +13,7 @@
  */
 
 import { useCallback, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 import type { UiMessages } from '@shared/i18n';
 import { Lock, Shuffle, Unlock } from 'lucide-react';
@@ -108,10 +109,10 @@ export function TokenToolbar({
 
       {/* ── Bottom action bar ────────────────────────────────────────── */}
       <div className="mt-2 flex items-center justify-between">
-        <button type="button" className="ws-btn ws-btn--sm" onClick={onShuffle}>
+        <Button size="sm" variant="default" onClick={onShuffle}>
           <Shuffle className="size-3" />
           {t.shuffle}
-        </button>
+        </Button>
 
         <span className="text-[10px] text-[var(--fg-2)]">
           {t.tokenLockedCount(lockedCount, totalCount)}

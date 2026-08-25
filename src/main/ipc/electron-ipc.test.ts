@@ -168,11 +168,12 @@ describe('electron-ipc', () => {
       vi.mocked(scanElectronApps).mockReturnValue(new Promise(() => {}));
 
       const handler = handlers.get(IpcChannel.ELECTRON_SCAN)!;
-      const caught = await handler({}).catch((e: unknown) => e);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const caught: any = await handler({}).catch((e: unknown) => e);
 
       expect(caught).toHaveProperty('name', 'IpcTimeoutError');
       expect(caught).toHaveProperty('channel', IpcChannel.ELECTRON_SCAN);
-      expect((caught as { ms: number }).ms).toBe(30000);
+      expect((caught as unknown as { ms: number }).ms).toBe(30000);
     }, 40_000); // scan timeout is 30s; 40s lets it fire before vitest kills
   });
 
@@ -206,7 +207,7 @@ describe('electron-ipc', () => {
 
       expect(caught).toHaveProperty('name', 'IpcTimeoutError');
       expect(caught).toHaveProperty('channel', IpcChannel.ELECTRON_LAUNCH);
-      expect((caught as { ms: number }).ms).toBe(30000);
+      expect((caught as unknown as { ms: number }).ms).toBe(30000);
     }, 40_000); // launch timeout is 30s; 40s lets it fire before vitest kills
 
     it('rejects calls from an untrusted sender (G5)', async () => {

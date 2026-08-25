@@ -17,6 +17,7 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 import type { UiMessages } from '@shared/i18n';
 import { X } from 'lucide-react';

@@ -320,9 +320,17 @@ export class AgentEngineService implements AgentEngineServiceApi {
     // Rationale: persistFailures tracks registry persistence health, not log
     // file write health. The onError callback already handles persist failures.
     const ts = new Date().toISOString();
-    void appendLogLine(this.engineLogFile, `[${ts}] ${line}\n`).catch(() => {
-      // intentionally swallowed — log file write is best-effort
-    });
+    try {
+      const result = appendLogLine(this.engineLogFile, `[${ts}] ${line}\n`);
+      // Defensive: appendLogLine may return undefined in tests or when disabled.
+      if (result && typeof result.catch === 'function') {
+        void result.catch(() => {
+          // intentionally swallowed — log file write is best-effort
+        });
+      }
+    } catch {
+      // appendLogLine threw synchronously — best-effort, ignore.
+    }
   }
 
   /**

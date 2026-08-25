@@ -11,6 +11,7 @@
  */
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
@@ -49,7 +50,7 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
       <select
         value={activeAgentId ?? ''}
         onChange={(e) => handleAgentChange(e.target.value as AgentId)}
-        className="h-5 rounded-[var(--r-micro)] border border-[var(--border-subtle)] bg-[var(--bg-3)] px-1 text-[10px] text-[var(--fg-0)] outline-none"
+        className="h-6 rounded-sm border border-border bg-card2 px-1 text-[10px] text-foreground outline-none"
         title={t.studioActiveWindowAgent}
       >
         {(['codex', 'traework', 'qoderwork', 'workbuddy', 'doubao', 'zcode'] as AgentId[]).map(
@@ -61,42 +62,41 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
         )}
       </select>
 
-      <div className="h-5 w-px bg-[var(--border-default)]" />
+      <div className="h-5 w-px bg-border" />
 
       {/* Inspect toggle */}
-      <button
-        type="button"
+      <Button
+        size="icon-xs"
+        variant={inspectMode ? 'primary' : 'ghost'}
         onClick={() => void toggleInspect()}
-        data-active={inspectMode}
-        className="ws-btn ws-btn--sm"
         title={inspectMode ? t.studioInspectStop : t.studioInspectStart}
       >
         <Search className="size-3" />
-      </button>
+      </Button>
 
-      <div className="h-5 w-px bg-[var(--border-default)]" />
+      <div className="h-5 w-px bg-border" />
 
       {/* Zoom control */}
       <div className="relative">
-        <button
-          type="button"
-          className="ws-btn ws-btn--sm"
+        <Button
+          size="xs"
+          variant="ghost"
           onClick={() => setZoomOpen((v) => !v)}
           title={t.studioZoom}
         >
           {window ? `${window.scale}×` : t.studioZoomFallback} ▾
-        </button>
+        </Button>
         {zoomOpen && (
-          <div className="absolute bottom-full right-0 z-[var(--z-content)] mb-1 flex flex-col gap-0 rounded-[var(--dl-radius,2px)] border border-[var(--border-subtle)] bg-[var(--bg-2)] p-0 shadow-[var(--shadow-float)]">
+          <div className="absolute bottom-full right-0 z-[var(--z-content)] mb-1 flex flex-col gap-0 rounded-sm border border-border bg-card p-0 shadow-[var(--shadow-float)]">
             {ZOOM_PRESETS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => handleZoom(s)}
-                className="whitespace-nowrap rounded-[var(--r-micro)] px-[var(--space-2)] py-0 text-left text-[10px] hover:bg-[var(--bg-3)]"
+                className="whitespace-nowrap rounded-sm px-2 py-0 text-left text-[10px] hover:bg-card2"
                 style={{
-                  background: window?.scale === s ? 'var(--accent-ghost)' : 'transparent',
-                  color: window?.scale === s ? 'var(--accent)' : 'var(--fg-0)',
+                  background: window?.scale === s ? 'var(--accent)' : 'transparent',
+                  color: window?.scale === s ? 'var(--primary-foreground)' : 'var(--foreground)',
                 }}
               >
                 {s}×
