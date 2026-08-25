@@ -13,7 +13,7 @@
  */
 
 import { writeFileSync } from 'node:fs';
-import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -26,13 +26,17 @@ import type {
 } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
 import { EpochManager } from './epoch-manager';
+import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import type { SettingsServiceApi } from './services/contracts';
+// RC4-S4-A: Import shared mock factory for type-safe stubs
+import {
+  makeSettingsStub,
+  makeThemeLibraryStub,
+  makeWallpaperResolverStub,
+} from './test-helpers/mock-services';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
-import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import type { WallpaperInjectorDeps } from './wallpaper/injector-types';
-// RC4-S4-A: Import shared mock factory for type-safe stubs
-import { makeSettingsStub, makeThemeLibraryStub, makeWallpaperResolverStub } from './test-helpers/mock-services';
 
 // ---------------------------------------------------------------------------
 // Mock modules (consistent with main test suite)
@@ -120,7 +124,11 @@ interface SettingsOverrides {
 }
 
 function makeSettings(opts: SettingsOverrides = {}): SettingsServiceApi {
-  return makeSettingsStub({ port: opts.port, appPath: null, wallpaperAgents: opts.wallpaperAgents });
+  return makeSettingsStub({
+    port: opts.port,
+    appPath: null,
+    wallpaperAgents: opts.wallpaperAgents,
+  });
 }
 
 // Flush microtask+macrotask queue so cleanup.finally → Map.delete settles
@@ -166,7 +174,11 @@ describe('AgentEngineService Reliability Verification', () => {
   });
 
   function makeService(customStateFile?: string) {
-    return new AgentEngineService(makeThemeLibraryStub(), customStateFile ?? stateFile, makeSettings());
+    return new AgentEngineService(
+      makeThemeLibraryStub(),
+      customStateFile ?? stateFile,
+      makeSettings(),
+    );
   }
 
   /** Service initialized from an explicit per-agent persisted state. */
@@ -453,7 +465,9 @@ describe('AgentEngineService Reliability Verification', () => {
         response: APPLY_RESPONSE,
         background: Promise.resolve(),
       });
-      await expect(svc.apply({ ...APPLY_REQUEST, themeId: 't3' })).resolves.toMatchObject({ status: 'applied' });
+      await expect(svc.apply({ ...APPLY_REQUEST, themeId: 't3' })).resolves.toMatchObject({
+        status: 'applied',
+      });
     });
 
     it('handles restore when no theme was previously applied', async () => {
@@ -542,9 +556,7 @@ describe('AgentEngineService Reliability Verification', () => {
       const svc = makeService();
 
       // Should not throw with type-safe stub
-      expect(() =>
-        svc.setWallpaperService(makeWallpaperResolverStub()),
-      ).not.toThrow();
+      expect(() => svc.setWallpaperService(makeWallpaperResolverStub())).not.toThrow();
     });
 
     it('delegates applyAgentWallpaperNow to wallpaper injector', async () => {
@@ -1424,7 +1436,10 @@ describe('AgentEngineService Reliability Verification', () => {
 
     it('writeJsonAtomic writes valid JSON with trailing newline', async () => {
       const target = path.join(fsTestDir, 'state.json');
-      const payload = { version: 2 as const, apps: { traework: { activeThemeId: 't1', port: 9222 } } };
+      const payload = {
+        version: 2 as const,
+        apps: { traework: { activeThemeId: 't1', port: 9222 } },
+      };
 
       await writeJsonAtomic(target, payload);
 

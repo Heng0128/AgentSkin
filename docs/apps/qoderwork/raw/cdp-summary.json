@@ -52,124 +52,43 @@
       "default": {
         "count": 132,
         "namespaces": [
-          [
-            "color",
-            111
-          ],
-          [
-            "agents",
-            5
-          ],
-          [
-            "tw",
-            4
-          ],
-          [
-            "loading",
-            3
-          ],
-          [
-            "font",
-            3
-          ],
-          [
-            "chat",
-            3
-          ],
-          [
-            "resizable",
-            1
-          ],
-          [
-            "settings",
-            1
-          ],
-          [
-            "none",
-            1
-          ]
+          ["color", 111],
+          ["agents", 5],
+          ["tw", 4],
+          ["loading", 3],
+          ["font", 3],
+          ["chat", 3],
+          ["resizable", 1],
+          ["settings", 1],
+          ["none", 1]
         ]
       },
       "dark": {
         "count": 132,
         "namespaces": [
-          [
-            "color",
-            111
-          ],
-          [
-            "agents",
-            5
-          ],
-          [
-            "tw",
-            4
-          ],
-          [
-            "loading",
-            3
-          ],
-          [
-            "font",
-            3
-          ],
-          [
-            "chat",
-            3
-          ],
-          [
-            "resizable",
-            1
-          ],
-          [
-            "settings",
-            1
-          ],
-          [
-            "none",
-            1
-          ]
+          ["color", 111],
+          ["agents", 5],
+          ["tw", 4],
+          ["loading", 3],
+          ["font", 3],
+          ["chat", 3],
+          ["resizable", 1],
+          ["settings", 1],
+          ["none", 1]
         ]
       },
       "light": {
         "count": 132,
         "namespaces": [
-          [
-            "color",
-            111
-          ],
-          [
-            "agents",
-            5
-          ],
-          [
-            "tw",
-            4
-          ],
-          [
-            "loading",
-            3
-          ],
-          [
-            "font",
-            3
-          ],
-          [
-            "chat",
-            3
-          ],
-          [
-            "resizable",
-            1
-          ],
-          [
-            "settings",
-            1
-          ],
-          [
-            "none",
-            1
-          ]
+          ["color", 111],
+          ["agents", 5],
+          ["tw", 4],
+          ["loading", 3],
+          ["font", 3],
+          ["chat", 3],
+          ["resizable", 1],
+          ["settings", 1],
+          ["none", 1]
         ]
       }
     },

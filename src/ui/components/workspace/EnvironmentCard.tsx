@@ -135,7 +135,9 @@ export function EnvironmentCard({
       className={cn(
         'group/card relative flex flex-col overflow-hidden rounded-md border bg-card text-card-foreground',
         'transition-all duration-base ease-out',
-        isActive ? 'border-2 border-primary' : 'border-transparent hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',
+        isActive
+          ? 'border-2 border-primary'
+          : 'border-transparent hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',
         onClick && 'cursor-pointer',
       )}
       onClick={onClick}
@@ -252,9 +254,7 @@ export function EnvironmentCard({
         <div className="mt-2 font-mono">
           <div className="grid grid-cols-3 gap-1 rounded-md bg-secondary px-2 py-2">
             <div>
-              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">
-                {t.detailVersion}
-              </i>
+              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">{t.detailVersion}</i>
               <b className="block text-[11px] font-normal tabular-nums text-foreground/80">
                 {env.detectedVersion || '—'}
               </b>
@@ -266,9 +266,7 @@ export function EnvironmentCard({
               {statusLabel}
             </div>
             <div>
-              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">
-                {t.capTheme}
-              </i>
+              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">{t.capTheme}</i>
               <b className="block truncate text-[11px] tabular-nums text-foreground/80">
                 {env.theme?.name || '—'}
               </b>

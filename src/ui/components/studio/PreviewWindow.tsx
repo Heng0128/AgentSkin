@@ -237,9 +237,7 @@ export function PreviewWindow({
           </div>
         ) : status === 'loading' || status === 'idle' ? (
           <div className="flex h-full w-full items-center justify-center bg-background">
-            <span className="text-micro text-muted-foreground">
-              {t.studioPreviewLoading}
-            </span>
+            <span className="text-micro text-muted-foreground">{t.studioPreviewLoading}</span>
           </div>
         ) : status === 'error' ? (
           <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-background">

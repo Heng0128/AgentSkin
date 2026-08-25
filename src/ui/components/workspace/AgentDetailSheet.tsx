@@ -71,7 +71,9 @@ export function AgentDetailSheet({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <AgentStatusDot variant={envToDotVariant(env)} size="sm" />
-                  <span className="text-[13px] font-normal text-foreground">{statusLabel(env, t)}</span>
+                  <span className="text-[13px] font-normal text-foreground">
+                    {statusLabel(env, t)}
+                  </span>
                 </div>
                 {env.theme && <span className="as-mono">{env.theme.name}</span>}
               </div>

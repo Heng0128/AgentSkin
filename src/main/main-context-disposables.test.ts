@@ -2,7 +2,13 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // 不 import main.ts（顶层会 boot electron）。只 import main-context。
-import { clearStatusNotifyTimer, ctx, drainDisposables, notifyStatusChanged, registerDisposable } from './main-context';
+import {
+  clearStatusNotifyTimer,
+  ctx,
+  drainDisposables,
+  notifyStatusChanged,
+  registerDisposable,
+} from './main-context';
 
 describe('MainContext disposables', () => {
   beforeEach(() => {

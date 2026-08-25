@@ -2,11 +2,8 @@
 
 import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 import { createElectronMock } from '../../../fixtures/mocks/electron';
-import type {
-  CommunityThemeDetail,
-  CommunityThemeListResult,
-} from '../../shared/types/community';
 import { IpcChannel } from '../../shared/ipc-channels';
+import type { CommunityThemeDetail, CommunityThemeListResult } from '../../shared/types/community';
 import type { MainContext } from '../main-context';
 
 // ---------------------------------------------------------------------------
@@ -228,7 +225,9 @@ describe('community-theme-ipc handlers', () => {
     });
 
     it('preserves DreamSkinApiError message for get handler', async () => {
-      const { getThemeDetail, DreamSkinApiError } = await import('../community/community-theme-api');
+      const { getThemeDetail, DreamSkinApiError } = await import(
+        '../community/community-theme-api'
+      );
       const mockGet = getThemeDetail as Mock;
       mockGet.mockRejectedValue(new DreamSkinApiError('Theme not found', 404));
 

@@ -163,7 +163,14 @@ export async function tryEngineInjection(
     const tokenDiscoveryPath = path.join(sharedDir, 'token-discovery.mjs');
     const deepCorePath = path.join(sharedDir, 'deep-core.mjs');
 
-    const [tokensCss, adapterJs, cosmeticCss, adoptedSheetsSource, tokenDiscoverySource, deepCoreSource] = await Promise.all([
+    const [
+      tokensCss,
+      adapterJs,
+      cosmeticCss,
+      adoptedSheetsSource,
+      tokenDiscoverySource,
+      deepCoreSource,
+    ] = await Promise.all([
       fs.readFile(tokensPath, 'utf8'),
       fs.readFile(adapterPath, 'utf8'),
       fs.readFile(cosmeticPath, 'utf8'),

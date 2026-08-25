@@ -18,15 +18,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AgentEngineService } from './agent-engine-service';
+// RC4-S4-A: Import shared test harness for type-safe stubs and factory functions
+import { makeSettings, makeThemeLibraryStub } from './agent-engine-service-test-harness';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import { notifyPersistFailure } from './main-context';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
-// RC4-S4-A: Import shared test harness for type-safe stubs and factory functions
-import {
-  makeSettings,
-  makeThemeLibraryStub,
-} from './agent-engine-service-test-harness';
 
 /** Type helper for accessing private members in tests (TS private is not runtime-enforced). */
 type AgentEngineServicePrivate = {

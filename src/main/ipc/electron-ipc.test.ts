@@ -12,11 +12,13 @@ import type { MainContext } from '../main-context';
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>();
 
-vi.mock('electron', () => createElectronMock(handlers, {
-  app: {
-    getPath: vi.fn((name: string) => `\\mock\\userData\\${name}`),
-  },
-}));
+vi.mock('electron', () =>
+  createElectronMock(handlers, {
+    app: {
+      getPath: vi.fn((name: string) => `\\mock\\userData\\${name}`),
+    },
+  }),
+);
 
 vi.mock('../services/electron-scanner', () => ({
   scanElectronApps: vi.fn(),
@@ -204,7 +206,9 @@ describe('electron-ipc', () => {
 
       const handler = handlers.get(IpcChannel.ELECTRON_LAUNCH)!;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const caught: any = await (handler(trustedEvent, sampleLaunchRequest) as Promise<unknown>).catch((e: unknown) => e);
+      const caught: any = await (
+        handler(trustedEvent, sampleLaunchRequest) as Promise<unknown>
+      ).catch((e: unknown) => e);
 
       expect(caught).toHaveProperty('name', 'IpcTimeoutError');
       expect(caught).toHaveProperty('channel', IpcChannel.ELECTRON_LAUNCH);

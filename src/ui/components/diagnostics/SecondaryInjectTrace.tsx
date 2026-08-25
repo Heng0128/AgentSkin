@@ -16,12 +16,11 @@
  */
 
 import { AppMark } from '@/components/AppMark';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   type SecondaryInjectAgentState,
   useSecondaryInjectStore,
 } from '@/stores/secondaryInjectStore';
-
-import { EmptyState } from '@/components/ui/empty-state';
 
 import type { UiMessages } from '@shared/i18n';
 import { AGENT_META } from '@shared/types';

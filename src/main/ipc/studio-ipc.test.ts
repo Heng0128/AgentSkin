@@ -17,12 +17,14 @@ const TEST_APP_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'agentskin-studio-ap
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>();
 
-vi.mock('electron', () => createElectronMock(handlers, {
-  app: {
-    getPath: vi.fn((name: string) => (name === 'userData' ? TEST_USER_DATA : os.tmpdir())),
-    getAppPath: vi.fn(() => TEST_APP_ROOT),
-  },
-}));
+vi.mock('electron', () =>
+  createElectronMock(handlers, {
+    app: {
+      getPath: vi.fn((name: string) => (name === 'userData' ? TEST_USER_DATA : os.tmpdir())),
+      getAppPath: vi.fn(() => TEST_APP_ROOT),
+    },
+  }),
+);
 
 const snapshotThemeVisuals = vi.fn();
 const startInspect = vi.fn();

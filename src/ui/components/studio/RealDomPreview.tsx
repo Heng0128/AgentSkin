@@ -1,7 +1,8 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { buildSrcDoc, overridesToCss } from '@/lib/dom-export';
+import { cn } from '@/lib/utils';
 import type { StudioColorSets, ToolOverride } from '@/types/override';
 
 import type { UiMessages } from '@shared/i18n';
@@ -14,6 +15,7 @@ function RealDomPreview({
   colorSets,
   t,
   onIframeMount,
+  chrome = true,
 }: {
   domTree?: DomTreeNode;
   overrides: ToolOverride | null;
@@ -24,6 +26,8 @@ function RealDomPreview({
    * Used by AgentLivePreview for element-picking click-listener injection.
    */
   onIframeMount?: (iframe: HTMLIFrameElement) => void;
+  /** When false, hide the traffic-light chrome bar and max-width (for workspace). */
+  chrome?: boolean;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const grad = Boolean(overrides?.gradientAccent);
@@ -65,38 +69,37 @@ function RealDomPreview({
   // style: sharp corners, no shadow, mono label bar
   return (
     <div
-      className="mx-auto mt-2 min-h-0 w-full max-w-[840px] overflow-hidden "
+      className={cn('min-h-0 w-full overflow-hidden', chrome && 'mx-auto mt-2 max-w-[840px]')}
       style={{ background: 'var(--surface)' }}
     >
       {/* traffic-light status bar */}
-      <div className="flex h-7 items-center gap-2  px-3" style={{ background: 'var(--card)' }}>
-        <div className="flex gap-1">
-          <span className="size-[7px] rounded-md bg-[var(--destructive)]" />
-          <span className="size-[7px] rounded-md bg-[var(--cr-warning)]" />
-          <span className="size-[7px] rounded-md bg-[var(--cr-success)]" />
-        </div>
-        <span
-          className="ml-2 truncate text-[10px]"
-          style={{ letterSpacing: '0.08em', color: 'var(--muted-foreground)' }}
-        >
-          {t.studioPreviewStatus}
-        </span>
-        {domTree && (
+      {chrome && (
+        <div className="flex h-7 items-center gap-2  px-3" style={{ background: 'var(--card)' }}>
+          <div className="flex gap-1">
+            <span className="size-[7px] rounded-md bg-[var(--destructive)]" />
+            <span className="size-[7px] rounded-md bg-[var(--cr-warning)]" />
+            <span className="size-[7px] rounded-md bg-[var(--cr-success)]" />
+          </div>
           <span
-            className="ml-auto text-[10px]"
-            style={{ color: 'var(--muted-foreground)' }}
+            className="ml-2 truncate text-[10px]"
+            style={{ letterSpacing: '0.08em', color: 'var(--muted-foreground)' }}
           >
-            {t.studioLiveIndicator}
+            {t.studioPreviewStatus}
           </span>
-        )}
-      </div>
+          {domTree && (
+            <span className="ml-auto text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+              {t.studioLiveIndicator}
+            </span>
+          )}
+        </div>
+      )}
       <iframe
         ref={iframeRef}
         title={t.studioRealDomPreviewTitle}
         sandbox="allow-scripts allow-same-origin"
         srcDoc={srcDoc}
         onLoad={pushOverrides}
-        className="block h-[var(--preview-h)] w-full"
+        className={cn('block w-full', chrome ? 'h-[var(--preview-h)]' : 'h-full')}
       />
     </div>
   );

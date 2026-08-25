@@ -9,9 +9,13 @@
  * - Independence of prompt fields (setting one doesn't clear others)
  */
 
+import type {
+  FileImportConfirmRequest,
+  InstalledTheme,
+  RestartReason,
+  ThemeCatalogItem,
+} from '@shared/types';
 import { beforeEach, describe, expect, it } from 'vitest';
-
-import type { FileImportConfirmRequest, InstalledTheme, RestartReason, ThemeCatalogItem } from '@shared/types';
 import { useDialogStore } from '../dialogStore';
 
 /** Minimal valid ThemeCatalogItem for testing deletePrompt. */

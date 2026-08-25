@@ -199,9 +199,18 @@ const dialog = {
 // ---------------------------------------------------------------------------
 const nativeImage = {
   createEmpty: vi.fn(() => ({ isEmpty: () => true, getSize: () => ({ width: 0, height: 0 }) })),
-  createFromPath: vi.fn((_path: string) => ({ isEmpty: () => false, getSize: () => ({ width: 1, height: 1 }) })),
-  createFromBuffer: vi.fn(() => ({ isEmpty: () => true, getSize: () => ({ width: 0, height: 0 }) })),
-  createFromDataURL: vi.fn(() => ({ isEmpty: () => true, getSize: () => ({ width: 0, height: 0 }) })),
+  createFromPath: vi.fn((_path: string) => ({
+    isEmpty: () => false,
+    getSize: () => ({ width: 1, height: 1 }),
+  })),
+  createFromBuffer: vi.fn(() => ({
+    isEmpty: () => true,
+    getSize: () => ({ width: 0, height: 0 }),
+  })),
+  createFromDataURL: vi.fn(() => ({
+    isEmpty: () => true,
+    getSize: () => ({ width: 0, height: 0 }),
+  })),
 };
 
 // ---------------------------------------------------------------------------

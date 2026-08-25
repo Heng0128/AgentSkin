@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { describe, expect, it } from 'vitest';
-import { designLanguageBlock, resolveDesignLanguage, DESIGN_LANGUAGES, DL_DEFAULTS } from '../../scripts/design-language.mjs';
+import {
+  DESIGN_LANGUAGES,
+  DL_DEFAULTS,
+  designLanguageBlock,
+  resolveDesignLanguage,
+} from '../../scripts/design-language.mjs';
 
 describe('Design Language Block', () => {
   it('generates correct spacing variables for comfortable density (base values)', () => {
@@ -92,7 +97,7 @@ describe('Design Language Block', () => {
       shadow: { elevation: 'flat' },
       motion: { speed: 'fast' },
     });
-    expect(flat).toContain("--agentskin-shadow-float: none");
+    expect(flat).toContain('--agentskin-shadow-float: none');
 
     const float = designLanguageBlock({
       spacing: { density: 'compact' },

@@ -201,9 +201,7 @@ async function buildThumbnailIndex(
   // entries cache. The cache intentionally strips base64 payloads to keep
   // resident memory flat (see ThemeLibrary.entries()); covers need the real
   // image bytes, so each theme is re-read once here via find().
-  const ids = (await ctx.library.summaries())
-    .slice(0, 30)
-    .map((t) => t.id);
+  const ids = (await ctx.library.summaries()).slice(0, 30).map((t) => t.id);
   const total = Math.max(1, ids.length);
 
   let processed = 0;

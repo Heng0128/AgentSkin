@@ -11,9 +11,9 @@
  * because the per-agent CSS relies on every variable being declared.
  */
 
-import { describe, expect, it } from 'vitest';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 /**
  * The 14 required `--agentskin-*` design tokens.
@@ -75,7 +75,9 @@ describe('14-Token Theme Contract', () => {
       const manifestPath = join(themePath, 'manifest.json');
 
       it('has a parseable manifest.json with id matching directory name', () => {
-        expect(existsSync(manifestPath), `manifest.json should exist at ${manifestPath}`).toBe(true);
+        expect(existsSync(manifestPath), `manifest.json should exist at ${manifestPath}`).toBe(
+          true,
+        );
         const raw = readFileSync(manifestPath, 'utf-8');
         let manifest: { id?: string; colors?: Record<string, unknown> };
         expect(() => {
@@ -93,10 +95,19 @@ describe('14-Token Theme Contract', () => {
         // The 14th token (--agentskin-selection) is derived from accent via
         // color-mix at CSS generation time, so it is NOT declared in the manifest.
         const expectedKeys = [
-          'background', 'surface', 'surfaceElevated', 'foreground',
-          'muted', 'accent', 'secondary', 'border',
-          'codeBackground', 'codeForeground', 'focusRing',
-          'buttonBackground', 'inputBackground',
+          'background',
+          'surface',
+          'surfaceElevated',
+          'foreground',
+          'muted',
+          'accent',
+          'secondary',
+          'border',
+          'codeBackground',
+          'codeForeground',
+          'focusRing',
+          'buttonBackground',
+          'inputBackground',
         ];
         const missing = expectedKeys.filter((k) => typeof colors[k] !== 'string');
         expect(missing, `manifest.colors missing keys: ${missing.join(', ')}`).toEqual([]);

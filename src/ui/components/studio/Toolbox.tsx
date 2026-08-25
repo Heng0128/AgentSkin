@@ -458,10 +458,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
       className="flex items-center gap-2  pb-1 pt-2 text-[10px] font-normal "
       style={{ letterSpacing: '0.14em', color: 'var(--muted-foreground)' }}
     >
-      <span
-        className="size-[3px] rounded-md"
-        style={{ background: 'var(--primary)' }}
-      />
+      <span className="size-[3px] rounded-md" style={{ background: 'var(--primary)' }} />
       <span>{children}</span>
     </div>
   );
@@ -609,10 +606,7 @@ function ToolboxPanel({ t, originalSig, overrides, onOverride, onReset }: Toolbo
           </button>
         </div>
         {presets.length === 0 ? (
-          <p
-            className="text-[10px]"
-            style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}
-          >
+          <p className="text-[10px]" style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}>
             {t.studioToolboxNoPresets}
           </p>
         ) : (

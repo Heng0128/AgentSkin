@@ -19,11 +19,10 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import type { McpContext } from './types';
 import type { ZodRawShape } from 'zod';
-import { getAllRegisteredToolDefinitions } from './capability-orchestrator';
-import { executeTool } from './capability-orchestrator';
+import { executeTool, getAllRegisteredToolDefinitions } from './capability-orchestrator';
 import { getMcpConfig } from './config';
+import type { McpContext } from './types';
 
 // ---------------------------------------------------------------------------
 // RC2-S2-B: Type-safe schema shape extraction
@@ -75,7 +74,8 @@ export function createMcpServer(ctx: McpContext): McpServer {
       capabilities: {
         tools: { listChanged: true },
       },
-      instructions: 'AgentSkin MCP Server — theme management for AI coding agents. Use tools to create, apply, and manage themes.',
+      instructions:
+        'AgentSkin MCP Server — theme management for AI coding agents. Use tools to create, apply, and manage themes.',
     },
   );
 

@@ -60,7 +60,7 @@ export function SegmentedControl<T extends string>({
       aria-disabled={disabled}
       onKeyDown={onKeyDown}
       className={cn(
-        'inline-flex items-center gap-1 rounded-sm bg-muted p-1',
+        'inline-flex items-center gap-1 rounded-lg bg-muted p-1',
         bordered && 'border border-border',
         disabled && 'pointer-events-none opacity-50',
         className,
@@ -80,15 +80,17 @@ export function SegmentedControl<T extends string>({
             disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'inline-flex items-center justify-center rounded-sm font-normal transition-all duration-fast',
+              'inline-flex items-center justify-center rounded-md font-medium transition-all duration-fast',
               iconOnly
                 ? size === 'sm'
                   ? 'size-6'
                   : 'size-7'
                 : size === 'sm'
-                  ? 'h-6 gap-2 px-2 text-[10px]'
-                  : 'h-7 gap-2 px-4 text-[10px]',
-              active ? 'bg-card text-foreground' : 'text-muted-foreground hover:text-foreground',
+                  ? 'h-6 gap-1.5 px-2.5 text-[11px]'
+                  : 'h-7 gap-2 px-4 text-[11px]',
+              active
+                ? 'bg-card text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             {Icon && <Icon className="size-3 shrink-0" />}

@@ -20,6 +20,7 @@
 import { useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { AppMark } from '@/components/AppMark';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 
@@ -27,7 +28,6 @@ import type { UiMessages } from '@shared/i18n';
 import { AGENT_META, type AgentId } from '@shared/types';
 import type { DriftStatus } from '@shared/types/drift-status';
 import { format } from 'date-fns';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Activity, RefreshCw } from 'lucide-react';
 
 export function DriftStatusPanel({ t }: { t: UiMessages }) {

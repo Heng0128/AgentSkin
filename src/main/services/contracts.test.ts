@@ -11,6 +11,12 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import {
+  makeLoggerStub,
+  makeSettingsStub,
+  makeThemeLibraryStub,
+  makeWallpaperResolverStub,
+} from '../test-helpers/mock-services';
 import type {
   AgentEngineServiceApi,
   LoggerApi,
@@ -18,12 +24,6 @@ import type {
   ThemeLibraryApi,
   WallpaperResolver,
 } from './contracts';
-import {
-  makeLoggerStub,
-  makeSettingsStub,
-  makeThemeLibraryStub,
-  makeWallpaperResolverStub,
-} from '../test-helpers/mock-services';
 
 // ---------------------------------------------------------------------------
 // Type conformity helpers

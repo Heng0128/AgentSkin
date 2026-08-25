@@ -17,10 +17,10 @@
  */
 
 import { useEffect } from 'react';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useStudioStore } from '@/stores/studioStore';
 
 import type { UiMessages } from '@shared/i18n';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Package, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -99,7 +99,12 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
           </div>
         ) : bundles.length === 0 ? (
           <div className="flex items-center justify-center py-12">
-            <EmptyState icon={<Package />} title={t.studioBundleEmpty} hint={t.studioBundleImportBtn} iconSize="md" />
+            <EmptyState
+              icon={<Package />}
+              title={t.studioBundleEmpty}
+              hint={t.studioBundleImportBtn}
+              iconSize="md"
+            />
           </div>
         ) : (
           <div className="space-y-2">
@@ -109,9 +114,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
                 className="flex items-center justify-between rounded-md border border-border bg-card p-3"
               >
                 <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-normal text-foreground">
-                    {bundle.name}
-                  </span>
+                  <span className="text-[11px] font-normal text-foreground">{bundle.name}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-muted-foreground">
                       {t.studioBundleTagTheme}: {bundle.themeId ?? '—'}

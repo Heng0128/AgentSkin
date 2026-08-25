@@ -21,12 +21,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { z } from 'zod';
-import type { McpContext, McpToolResult } from '../types';
-import type { McpToolDefinition } from '../tool-registry';
-import { registerTool } from '../tool-registry';
 import type { AgentId } from '../../../shared/types';
 import type { AgentEngineServiceApi, ThemeLibraryApi } from '../../services/contracts';
 import { syncStatusToGui } from '../status-sync';
+import type { McpToolDefinition } from '../tool-registry';
+import { registerTool } from '../tool-registry';
+import type { McpContext, McpToolResult } from '../types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -242,8 +242,7 @@ export function registerThemeTools(): void {
 
   registerTool({
     name: 'import_theme',
-    description:
-      'Import a theme package from a file path (.agentskin-theme or .agentskin-bundle).',
+    description: 'Import a theme package from a file path (.agentskin-theme or .agentskin-bundle).',
     inputSchema: importThemeSchema,
     handler: importThemeHandler,
   } satisfies McpToolDefinition);

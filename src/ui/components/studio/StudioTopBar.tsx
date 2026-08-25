@@ -15,10 +15,10 @@
  *   · dock / drawer / inspector toggle    workspaceStore
  */
 
-import { useStudioStore } from '@/stores/studioStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useStudioStore } from '@/stores/studioStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { PreviewView } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';

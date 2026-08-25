@@ -16,13 +16,13 @@
  * All temporary files are cleaned up regardless of outcome (try/finally).
  */
 
-import * as path from 'node:path';
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
-import { createHash } from 'node:crypto';
+import * as path from 'node:path';
 import type { CommunityTheme } from '../../shared/types/community';
 import { bridgeColors } from './community-color-bridge';
-import { extractThemeZip, cleanupExtractDir } from './community-zip-extractor';
+import { cleanupExtractDir, extractThemeZip } from './community-zip-extractor';
 
 // ---------------------------------------------------------------------------
 // Public functions & types
@@ -45,23 +45,41 @@ export function normalizeTitle(rawTitle: string): string {
   if (typeof rawTitle !== 'string' || rawTitle.length === 0) {
     return 'community-theme';
   }
-  return rawTitle
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/-{2,}/g, '-')
-    .slice(0, 100) || 'community-theme';
+  return (
+    rawTitle
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-{2,}/g, '-')
+      .slice(0, 100) || 'community-theme'
+  );
+}
+
+/**
+ * MIME type for a given image extension (whitelist-aligned with the engine).
+ */
+function mimeTypeForExt(ext: string): string {
+  switch (ext) {
+    case '.jpg':
+    case '.jpeg':
+      return 'image/jpeg';
+    case '.webp':
+      return 'image/webp';
+    case '.gif':
+      return 'image/gif';
+    default:
+      return 'image/png';
+  }
 }
 
 export interface ConvertedTheme {
   /** AgentSkin theme id (prefixed with "community-"). */
   themeId: string;
-  /** ThemeManifest JSON string (ready for ThemeLibrary.install). */
+  /**
+   * v1 `.agentskin-theme` package JSON string — ready for
+   * `ThemeLibrary.installFile` after being written to disk.
+   */
   manifestJson: string;
-  /** Absolute path to the hero/preview image. */
-  heroPath: string;
-  /** Absolute path to the theme CSS file. */
-  cssPath: string;
   /** 14-token color palette from bridgeColors. */
   colors: Record<string, string>;
 }
@@ -104,7 +122,9 @@ function resolveSafeImagePath(themeRoot: string, imageName: string): string {
   // 4. Extension whitelist
   const ext = path.extname(imageName).toLowerCase();
   if (!ALLOWED_IMAGE_EXTS.has(ext)) {
-    throw new Error(`Unsupported image format "${ext}" (allowed: ${[...ALLOWED_IMAGE_EXTS].join(', ')})`);
+    throw new Error(
+      `Unsupported image format "${ext}" (allowed: ${[...ALLOWED_IMAGE_EXTS].join(', ')})`,
+    );
   }
 
   // 5. Spaces not accepted in agent-distributed filenames
@@ -142,6 +162,8 @@ export async function convertThemePackage(
 ): Promise<ConvertedTheme> {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dreamskin-convert-'));
   const zipPath = path.join(tempDir, 'theme.zip');
+  // Declared here so the finally block can clean it up even if extraction fails.
+  let extractDir = '';
 
   try {
     // 1. Write ZIP to temp file (yauzl requires a file path)
@@ -158,7 +180,8 @@ export async function convertThemePackage(
     }
 
     // 3. Extract ZIP using the secure extractor
-    const { themeRoot } = await extractThemeZip(zipPath);
+    const { themeRoot, extractDir: extractedDir } = await extractThemeZip(zipPath);
+    extractDir = extractedDir;
 
     // 4. Parse source theme.json from the extracted package
     const sourceThemePath = path.join(themeRoot, 'theme.json');
@@ -171,7 +194,9 @@ export async function convertThemePackage(
       const raw = fs.readFileSync(sourceThemePath, 'utf-8');
       sourceTheme = JSON.parse(raw) as Record<string, unknown>;
     } catch (err) {
-      throw new Error(`Failed to parse theme.json: ${err instanceof Error ? err.message : String(err)}`);
+      throw new Error(
+        `Failed to parse theme.json: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
 
     // 5. Resolve image path with full safety checks
@@ -204,60 +229,67 @@ export async function convertThemePackage(
     );
     const themeId = `community-${baseId}`;
 
-    // 9. Build AgentSkin manifest v2 with all 6 agent targets
+    // 9. Read CSS content and hero image as base64 (must happen BEFORE cleanup).
+    const cssContent = fs.readFileSync(cssPath, 'utf-8');
     const heroExt = path.extname(imageName).toLowerCase();
     const heroFileName = `hero${heroExt}`;
+    const heroMimeType = mimeTypeForExt(heroExt);
+    const heroBase64 = fs.readFileSync(imagePath).toString('base64');
 
-    const manifest = {
-      schemaVersion: 2 as const,
-      id: themeId,
-      name: String(sourceTheme.name || metadata.name || themeId).trim(),
-      author: metadata.author?.displayName || 'DreamSkin Community',
-      version: metadata.version || '1.0.0',
-      license: (metadata as unknown as Record<string, unknown>).license as string || 'MIT',
-      hero: heroFileName,
-      colors: {
-        accent: colors.accent,
-        secondary: colors.secondary,
-        background: colors.background,
-        foreground: colors.foreground,
-        muted: colors.muted,
-        surface: colors.surface,
-        surfaceElevated: colors.surfaceElevated,
-        border: colors.border,
-        codeBackground: colors.codeBackground,
-        codeForeground: colors.codeForeground,
-        inputBackground: colors.inputBackground,
-        buttonBackground: colors.buttonBackground,
-        buttonForeground: colors.buttonForeground,
-        focusRing: colors.focusRing,
+    // 10. Build v1 `.agentskin-theme` package compatible with validateThemePackage.
+    //     The v1 schema requires: format, schemaVersion, theme{ id, displayName,
+    //     version, catalog }, targets{ [agentId]: { css } }, assets.images.hero.
+    const themePackage = {
+      format: 'agentskin-theme',
+      schemaVersion: 1 as const,
+      theme: {
+        id: themeId,
+        displayName: String(sourceTheme.name || metadata.name || themeId).trim(),
+        version: metadata.version || '1.0.0',
+        author: metadata.author?.displayName || 'DreamSkin Community',
+        catalog: {
+          categories: ['community'],
+          name: {
+            en: String(sourceTheme.name || metadata.name || themeId).trim(),
+            zh: String(sourceTheme.name || metadata.name || themeId).trim(),
+          },
+        },
+        colors: {
+          accent: colors.accent,
+          secondary: colors.secondary,
+          background: colors.background,
+          foreground: colors.foreground,
+          muted: colors.muted,
+          surface: colors.surface,
+        },
       },
-      source: 'community' as const,
-      community: {
-        themeId: metadata.themeId,
-        downloads: metadata.downloads ?? 0,
-        rating: metadata.rating ?? 0,
-        updatedAt: metadata.updatedAt ?? null,
+      targets: {
+        traework: { css: cssContent },
+        qoderwork: { css: cssContent },
+        workbuddy: { css: cssContent },
+        doubao: { css: cssContent },
+        codex: { css: cssContent },
+        zcode: { css: cssContent },
       },
-      targets: [
-        { agentId: 'traework', css: 'assets/css/traework.css' },
-        { agentId: 'qoderwork', css: 'assets/css/qoderwork.css' },
-        { agentId: 'workbuddy', css: 'assets/css/workbuddy.css' },
-        { agentId: 'doubao', css: 'assets/css/doubao.css' },
-        { agentId: 'codex', css: 'assets/css/codex.css' },
-        { agentId: 'zcode', css: 'assets/css/zcode.css' },
-      ],
+      assets: {
+        images: {
+          hero: {
+            filename: heroFileName,
+            mimeType: heroMimeType,
+            base64: heroBase64,
+          },
+        },
+      },
     };
 
     return {
       themeId,
-      manifestJson: JSON.stringify(manifest, null, 2),
-      heroPath: imagePath,
-      cssPath,
-      colors: manifest.colors,
+      manifestJson: JSON.stringify(themePackage, null, 2),
+      colors,
     };
   } finally {
-    // Always clean up the temp directory
+    // Always clean up both temp directories (ZIP staging + extraction root)
     cleanupExtractDir(tempDir);
+    cleanupExtractDir(extractDir);
   }
 }

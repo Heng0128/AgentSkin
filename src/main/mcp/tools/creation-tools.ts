@@ -9,21 +9,21 @@
  *     and optionally auto-apply to target agents.
  */
 
-import path from 'node:path';
 import { promises as fs } from 'node:fs';
+import path from 'node:path';
 import { app } from 'electron';
 import { z } from 'zod';
-import type { McpContext, McpToolResult } from '../types';
-import type { McpToolDefinition } from '../tool-registry';
-import { registerTool } from '../tool-registry';
 import type { AgentId, InstalledTheme } from '../../../shared/types';
 import type { ImagePixelSample, ThemeColorsFromImage } from '../../../shared/types/theme';
-import type { AgentEngineServiceApi, ThemeLibraryApi } from '../../services/contracts';
 import { ThemeInstaller } from '../../catalog/theme-installer';
 import { ThemePackageLoader } from '../../catalog/theme-package-loader';
-import { buildWallpaperTheme, sampleFromImagePath } from '../../theme/wallpaper-theme';
+import type { AgentEngineServiceApi, ThemeLibraryApi } from '../../services/contracts';
 import { deriveThemeFromImage } from '../../theme/theme-from-image';
+import { buildWallpaperTheme, sampleFromImagePath } from '../../theme/wallpaper-theme';
 import { syncStatusToGui } from '../status-sync';
+import type { McpToolDefinition } from '../tool-registry';
+import { registerTool } from '../tool-registry';
+import type { McpContext, McpToolResult } from '../types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -73,8 +73,13 @@ const createThemeFromImageSchema = z.object({
 });
 
 async function createThemeFromImageHandler(args: unknown, ctx: McpContext): Promise<McpToolResult> {
-  const { image_path: imagePath, name, mode, target_agents, auto_apply } =
-    createThemeFromImageSchema.parse(args);
+  const {
+    image_path: imagePath,
+    name,
+    mode,
+    target_agents,
+    auto_apply,
+  } = createThemeFromImageSchema.parse(args);
 
   // --- 1. Validate image path ------------------------------------------------
   try {

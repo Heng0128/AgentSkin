@@ -2,12 +2,12 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-  luminance,
-  contrastRatio,
   apcaContrast,
   autoOnColor,
-  wcagCheck,
+  contrastRatio,
   extendedColorsBlock,
+  luminance,
+  wcagCheck,
 } from '../../scripts/extended-colors.mjs';
 
 // ---------------------------------------------------------------------------

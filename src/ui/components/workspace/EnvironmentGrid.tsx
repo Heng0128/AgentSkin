@@ -114,9 +114,7 @@ function StatusErrorBanner({
     >
       {/* Left accent bar */}
       <span className="h-5 w-[3px] shrink-0 rounded-sm bg-destructive" aria-hidden />
-      <span className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground">
-        {error}
-      </span>
+      <span className="min-w-0 flex-1 truncate text-[10px] text-muted-foreground">{error}</span>
       <button
         type="button"
         onClick={onRetry}

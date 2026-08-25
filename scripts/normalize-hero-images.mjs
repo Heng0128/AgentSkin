@@ -34,7 +34,9 @@ let warnings = 0;
 for (const id of fs.readdirSync(THEMES_DIR).sort()) {
   const assetsDir = path.join(THEMES_DIR, id, 'assets');
   if (!fs.existsSync(assetsDir)) continue;
-  const heroFile = fs.readdirSync(assetsDir).find((f) => /^hero\.(png|jpe?g|webp|gif|avif)$/i.test(f));
+  const heroFile = fs
+    .readdirSync(assetsDir)
+    .find((f) => /^hero\.(png|jpe?g|webp|gif|avif)$/i.test(f));
   if (!heroFile) {
     console.warn(`[normalize-hero-images] ${id}: no hero image found`);
     warnings++;
@@ -46,7 +48,9 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
   const ext = path.extname(heroFile).toLowerCase().replace('.', '');
 
   if (!SUPPORTED.has(ext)) {
-    console.warn(`[normalize-hero-images] ${id}: unsupported hero format '.${ext}' — engine will reject the package`);
+    console.warn(
+      `[normalize-hero-images] ${id}: unsupported hero format '.${ext}' — engine will reject the package`,
+    );
     warnings++;
     continue;
   }
@@ -57,7 +61,9 @@ for (const id of fs.readdirSync(THEMES_DIR).sort()) {
   try {
     meta = await sharp(sourceBuffer).metadata();
   } catch (error) {
-    console.warn(`[normalize-hero-images] ${id}: hero is not a decodable image — ${String(error).slice(0, 120)}`);
+    console.warn(
+      `[normalize-hero-images] ${id}: hero is not a decodable image — ${String(error).slice(0, 120)}`,
+    );
     warnings++;
     continue;
   }

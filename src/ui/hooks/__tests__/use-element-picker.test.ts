@@ -20,10 +20,13 @@ const window = new Window({ url: 'http://localhost' });
 
 // Set up globals that @testing-library/react needs
 globalThis.document = window.document as unknown as Document;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-globalThis.window = window as any;
-globalThis.requestAnimationFrame = (window.requestAnimationFrame.bind(window) as unknown) as typeof requestAnimationFrame;
-globalThis.cancelAnimationFrame = (window.cancelAnimationFrame.bind(window) as unknown) as typeof cancelAnimationFrame;
+globalThis.window = window as unknown as typeof globalThis.window;
+globalThis.requestAnimationFrame = window.requestAnimationFrame.bind(
+  window,
+) as unknown as typeof requestAnimationFrame;
+globalThis.cancelAnimationFrame = window.cancelAnimationFrame.bind(
+  window,
+) as unknown as typeof cancelAnimationFrame;
 
 // ---------------------------------------------------------------------------
 // Fake DOM builder — creates a chainable fake DOM tree for iframe.contentDocument
@@ -188,9 +191,7 @@ describe('useElementPicker', () => {
     it('returns null hoveredPath and null pickedPath, isPicking equals enabled', () => {
       const { body, div1 } = buildFakeDom();
       const iframeRef = { current: createFakeIframe(body, div1) };
-      const { result } = renderHook(() =>
-        useElementPicker({ scale: 1, enabled: true, iframeRef }),
-      );
+      const { result } = renderHook(() => useElementPicker({ scale: 1, enabled: true, iframeRef }));
 
       expect(result.current.hoveredPath).toBeNull();
       expect(result.current.pickedPath).toBeNull();
@@ -500,9 +501,7 @@ describe('useElementPicker', () => {
     it('all handle methods do not throw when iframeRef.current is null', () => {
       const iframeRef = { current: null };
 
-      const { result } = renderHook(() =>
-        useElementPicker({ scale: 1, enabled: true, iframeRef }),
-      );
+      const { result } = renderHook(() => useElementPicker({ scale: 1, enabled: true, iframeRef }));
 
       expect(() => {
         result.current.handleMouseMove(10, 10);

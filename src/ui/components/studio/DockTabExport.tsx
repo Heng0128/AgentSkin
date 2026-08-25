@@ -84,9 +84,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
             {exportState.dir && (
               <div className="rounded-sm border border-border bg-card2 p-2">
                 <p className="text-[10px] text-muted-foreground">{t.studioExportedTo}</p>
-                <p className="break-all text-[10px] text-foreground">
-                  {exportState.dir}
-                </p>
+                <p className="break-all text-[10px] text-foreground">{exportState.dir}</p>
                 <Button
                   size="sm"
                   onClick={() => api.showInFolder(exportState.dir!)}
@@ -99,9 +97,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
             )}
 
             {exportState.error && (
-              <p className="text-[10px] text-primary">
-                {t.studioExportError(exportState.error)}
-              </p>
+              <p className="text-[10px] text-primary">{t.studioExportError(exportState.error)}</p>
             )}
           </>
         )}

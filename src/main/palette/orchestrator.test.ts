@@ -70,12 +70,14 @@ const MOCK_TARGET: ResolvedThemeTarget = {
 } as unknown as ResolvedThemeTarget;
 
 /** Deps that resolve to a virtual engine dir */
-function makeDeps(opts: {
-  engineDir?: string;
-  customCss?: string;
-  verifyDelayMs?: number;
-  verifyIntervalMs?: number;
-} = {}): EngineInjectionDeps {
+function makeDeps(
+  opts: {
+    engineDir?: string;
+    customCss?: string;
+    verifyDelayMs?: number;
+    verifyIntervalMs?: number;
+  } = {},
+): EngineInjectionDeps {
   return {
     resolveEngineDir: vi.fn(async () => opts.engineDir ?? '/engines/traework'),
     log: vi.fn(),
@@ -87,20 +89,31 @@ function makeDeps(opts: {
 }
 
 /** Configure all engine files to exist with given content */
-function setupEngineFiles(opts: {
-  tokensCss?: string;
-  adapterJs?: string;
-  cosmeticCss?: string;
-  sharedFilesExist?: boolean;
-} = {}) {
+function setupEngineFiles(
+  opts: {
+    tokensCss?: string;
+    adapterJs?: string;
+    cosmeticCss?: string;
+    sharedFilesExist?: boolean;
+  } = {},
+) {
   mockAccess.mockResolvedValue(undefined);
   mockReadFile.mockImplementation(async (filePath: string) => {
     if (filePath.includes('tokens.css')) return opts.tokensCss ?? '/* tokens */';
     if (filePath.includes('adapter.mjs')) return opts.adapterJs ?? '/* adapter */';
     if (filePath.includes('cosmetic.css')) return opts.cosmeticCss ?? '/* cosmetic */';
-    if (filePath.includes('adopted-sheets-manager.mjs')) return opts.sharedFilesExist === false ? Promise.reject(new Error('ENOENT')) : '/* adopted-sheets */';
-    if (filePath.includes('token-discovery.mjs')) return opts.sharedFilesExist === false ? Promise.reject(new Error('ENOENT')) : '/* token-discovery */';
-    if (filePath.includes('deep-core.mjs')) return opts.sharedFilesExist === false ? Promise.reject(new Error('ENOENT')) : '/* deep-core */';
+    if (filePath.includes('adopted-sheets-manager.mjs'))
+      return opts.sharedFilesExist === false
+        ? Promise.reject(new Error('ENOENT'))
+        : '/* adopted-sheets */';
+    if (filePath.includes('token-discovery.mjs'))
+      return opts.sharedFilesExist === false
+        ? Promise.reject(new Error('ENOENT'))
+        : '/* token-discovery */';
+    if (filePath.includes('deep-core.mjs'))
+      return opts.sharedFilesExist === false
+        ? Promise.reject(new Error('ENOENT'))
+        : '/* deep-core */';
     return '';
   });
 }
@@ -202,7 +215,15 @@ describe('tryEngineInjection', () => {
     mockBuildPaletteCss.mockReturnValue('/* palette */');
     mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
-    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, makeDeps());
+    await tryEngineInjection(
+      MOCK_SESSION,
+      'traework',
+      MOCK_BUNDLE,
+      MOCK_TARGET,
+      null,
+      null,
+      makeDeps(),
+    );
 
     const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     const adapterJs = callArgs.adapterJs;
@@ -223,7 +244,15 @@ describe('tryEngineInjection', () => {
     mockBuildPaletteCss.mockReturnValue('/* palette */');
     mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
-    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, makeDeps());
+    await tryEngineInjection(
+      MOCK_SESSION,
+      'traework',
+      MOCK_BUNDLE,
+      MOCK_TARGET,
+      null,
+      null,
+      makeDeps(),
+    );
 
     const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.adapterJs).not.toContain('/* adopted-sheets */');
@@ -237,7 +266,15 @@ describe('tryEngineInjection', () => {
     mockBuildPaletteCss.mockReturnValue('/* palette */');
     mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
-    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, makeDeps());
+    await tryEngineInjection(
+      MOCK_SESSION,
+      'traework',
+      MOCK_BUNDLE,
+      MOCK_TARGET,
+      null,
+      null,
+      makeDeps(),
+    );
 
     const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.verifyDelayMs).toBe(500);
@@ -288,7 +325,15 @@ describe('tryEngineInjection', () => {
     mockBuildPaletteCss.mockReturnValue('/* palette */');
     mockInjectThemeViaEngine.mockResolvedValue({ ok: true });
 
-    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, makeDeps());
+    await tryEngineInjection(
+      MOCK_SESSION,
+      'traework',
+      MOCK_BUNDLE,
+      MOCK_TARGET,
+      null,
+      null,
+      makeDeps(),
+    );
 
     const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.customCss).toBeUndefined();
@@ -311,9 +356,7 @@ describe('tryEngineInjection', () => {
     );
 
     expect(result).toBeNull();
-    expect(deps.log).toHaveBeenCalledWith(
-      expect.stringContaining('engine injection failed'),
-    );
+    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('engine injection failed'));
     expect(mockInjectThemeViaEngine).not.toHaveBeenCalled();
   });
 
@@ -324,7 +367,15 @@ describe('tryEngineInjection', () => {
 
     const imageDataUrls = { hero: 'data:image/png;base64,abc' };
 
-    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, imageDataUrls, null, makeDeps());
+    await tryEngineInjection(
+      MOCK_SESSION,
+      'traework',
+      MOCK_BUNDLE,
+      MOCK_TARGET,
+      imageDataUrls,
+      null,
+      makeDeps(),
+    );
 
     const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.imageDataUrls).toEqual(imageDataUrls);
@@ -339,7 +390,15 @@ describe('tryEngineInjection', () => {
     const imageDataUrls = { thumbnail: 'data:image/png;base64,xyz' };
     const imageFilePaths = { hero: '/path/to/hero.jpg' };
 
-    await tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, imageDataUrls, imageFilePaths, makeDeps());
+    await tryEngineInjection(
+      MOCK_SESSION,
+      'traework',
+      MOCK_BUNDLE,
+      MOCK_TARGET,
+      imageDataUrls,
+      imageFilePaths,
+      makeDeps(),
+    );
 
     const callArgs = mockInjectThemeViaEngine.mock.calls[0][1];
     expect(callArgs.heroPath).toBe('/path/to/hero.jpg');

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, it, expect, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 import { DownloadProgress } from '../../src/ui/components/themes/DownloadProgress';
 
 // happy-dom does not auto-cleanup between tests; ensure each test starts fresh
@@ -17,63 +17,44 @@ describe('DownloadProgress', () => {
   // --- 1. Basic rendering ---
 
   it('renders a progress bar', () => {
-    render(
-      <DownloadProgress progress={42} bytesDownloaded={0} totalBytes={1024} />,
-    );
+    render(<DownloadProgress progress={42} bytesDownloaded={0} totalBytes={1024} />);
     expect(screen.getByRole('progressbar')).toBeTruthy();
   });
 
   // --- 2. Progress display ---
 
   it('displays the correct percentage text', () => {
-    render(
-      <DownloadProgress progress={42} bytesDownloaded={0} totalBytes={1024} />,
-    );
+    render(<DownloadProgress progress={42} bytesDownloaded={0} totalBytes={1024} />);
     expect(screen.getByText('42%')).toBeTruthy();
   });
 
   it('clamps percentage to 0-100 range', () => {
     const { rerender } = render(
-      <DownloadProgress
-        progress={150}
-        bytesDownloaded={0}
-        totalBytes={1024}
-      />,
+      <DownloadProgress progress={150} bytesDownloaded={0} totalBytes={1024} />,
     );
     expect(screen.getByText('100%')).toBeTruthy();
 
-    rerender(
-      <DownloadProgress progress={-10} bytesDownloaded={0} totalBytes={1024} />,
-    );
+    rerender(<DownloadProgress progress={-10} bytesDownloaded={0} totalBytes={1024} />);
     expect(screen.getByText('0%')).toBeTruthy();
   });
 
   // --- 3. Detail row ---
 
   it('shows downloaded / total when showDetails is true', () => {
-    render(
-      <DownloadProgress
-        progress={50}
-        bytesDownloaded={512}
-        totalBytes={1024}
-        showDetails
-      />,
-    );
+    render(<DownloadProgress progress={50} bytesDownloaded={512} totalBytes={1024} showDetails />);
     // The detail row is a single div containing "512 B / 1.0 KB"
     expect(
-      screen.getByText((content, element) =>
-        content.includes('512 B') && content.includes('1.0 KB'),
+      screen.getByText(
+        (content, element) => content.includes('512 B') && content.includes('1.0 KB'),
       ),
     ).toBeTruthy();
   });
 
   it('hides detail row when showDetails is false', () => {
-    render(
-      <DownloadProgress progress={50} bytesDownloaded={512} totalBytes={1024} />,
-    );
+    render(<DownloadProgress progress={50} bytesDownloaded={512} totalBytes={1024} />);
     expect(
-      screen.queryByText((content, element) =>
-        content.includes('512 B') && content.includes('1.0 KB'),
+      screen.queryByText(
+        (content, element) => content.includes('512 B') && content.includes('1.0 KB'),
       ),
     ).toBeNull();
   });
@@ -82,31 +63,17 @@ describe('DownloadProgress', () => {
 
   it('formats bytes correctly for B / KB / MB', () => {
     const { rerender } = render(
-      <DownloadProgress
-        progress={10}
-        bytesDownloaded={500}
-        totalBytes={1024}
-        showDetails
-      />,
+      <DownloadProgress progress={10} bytesDownloaded={500} totalBytes={1024} showDetails />,
     );
     expect(
-      screen.getByText((content) =>
-        content.includes('500 B') && content.includes('1.0 KB'),
-      ),
+      screen.getByText((content) => content.includes('500 B') && content.includes('1.0 KB')),
     ).toBeTruthy();
 
     rerender(
-      <DownloadProgress
-        progress={10}
-        bytesDownloaded={1048576}
-        totalBytes={2097152}
-        showDetails
-      />,
+      <DownloadProgress progress={10} bytesDownloaded={1048576} totalBytes={2097152} showDetails />,
     );
     expect(
-      screen.getByText((content) =>
-        content.includes('1.0 MB') && content.includes('2.0 MB'),
-      ),
+      screen.getByText((content) => content.includes('1.0 MB') && content.includes('2.0 MB')),
     ).toBeTruthy();
   });
 
@@ -114,12 +81,7 @@ describe('DownloadProgress', () => {
 
   it('renders no icon during downloading phase', () => {
     render(
-      <DownloadProgress
-        progress={30}
-        bytesDownloaded={0}
-        totalBytes={1024}
-        phase="downloading"
-      />,
+      <DownloadProgress progress={30} bytesDownloaded={0} totalBytes={1024} phase="downloading" />,
     );
     expect(document.querySelector('svg')).toBeNull();
     expect(screen.getByText('下载中…')).toBeTruthy();
@@ -127,12 +89,7 @@ describe('DownloadProgress', () => {
 
   it('renders a Loader2 icon during verifying phase', () => {
     render(
-      <DownloadProgress
-        progress={60}
-        bytesDownloaded={512}
-        totalBytes={1024}
-        phase="verifying"
-      />,
+      <DownloadProgress progress={60} bytesDownloaded={512} totalBytes={1024} phase="verifying" />,
     );
     const icon = document.querySelector('svg');
     expect(icon).not.toBeNull();
@@ -143,12 +100,7 @@ describe('DownloadProgress', () => {
 
   it('renders a Package icon during installing phase', () => {
     render(
-      <DownloadProgress
-        progress={90}
-        bytesDownloaded={900}
-        totalBytes={1024}
-        phase="installing"
-      />,
+      <DownloadProgress progress={90} bytesDownloaded={900} totalBytes={1024} phase="installing" />,
     );
     const icon = document.querySelector('svg');
     expect(icon).not.toBeNull();
@@ -158,9 +110,7 @@ describe('DownloadProgress', () => {
   // --- 6. Progress bar width ---
 
   it('sets the fill width to match the progress value', () => {
-    render(
-      <DownloadProgress progress={75} bytesDownloaded={0} totalBytes={1024} />,
-    );
+    render(<DownloadProgress progress={75} bytesDownloaded={0} totalBytes={1024} />);
     const fill = document.querySelector('[style*="width: 75%"]');
     expect(fill).not.toBeNull();
   });

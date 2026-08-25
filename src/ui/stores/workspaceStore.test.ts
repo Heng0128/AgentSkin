@@ -38,9 +38,9 @@ vi.mock('@/api/agentSkinClient', () => ({
 }));
 
 import type { ToolOverride } from '@shared/types/override';
+import { resetWorkspaceStore } from './test-helpers/reset-workspace-store';
 // Import AFTER all mocks are in place
 import { useWorkspaceStore } from './workspaceStore';
-import { resetWorkspaceStore } from './test-helpers/reset-workspace-store';
 
 // ---------------------------------------------------------------------------
 // Helpers

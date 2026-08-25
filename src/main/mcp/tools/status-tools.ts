@@ -13,10 +13,10 @@
  */
 
 import { z } from 'zod';
-import type { McpContext, McpToolResult } from '../types';
+import type { AgentId } from '../../../shared/types';
 import type { McpToolDefinition } from '../tool-registry';
 import { registerTool } from '../tool-registry';
-import type { AgentId } from '../../../shared/types';
+import type { McpContext, McpToolResult } from '../types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -254,8 +254,7 @@ export function registerStatusTools(): void {
 
   registerTool({
     name: 'search_themes',
-    description:
-      'Search installed themes by query string. Optionally filter by mode and agent_id.',
+    description: 'Search installed themes by query string. Optionally filter by mode and agent_id.',
     inputSchema: searchThemesSchema,
     handler: searchThemesHandler,
   } satisfies McpToolDefinition);

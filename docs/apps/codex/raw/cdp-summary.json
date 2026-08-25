@@ -52,628 +52,169 @@
       "default": {
         "count": 1246,
         "namespaces": [
-          [
-            "vscode",
-            732
-          ],
-          [
-            "color",
-            218
-          ],
-          [
-            "tw",
-            32
-          ],
-          [
-            "radius",
-            21
-          ],
-          [
-            "text",
-            20
-          ],
-          [
-            "gray",
-            18
-          ],
-          [
-            "red",
-            12
-          ],
-          [
-            "green",
-            12
-          ],
-          [
-            "font",
-            11
-          ],
-          [
-            "orange",
-            11
-          ],
-          [
-            "codex",
-            10
-          ],
-          [
-            "blue",
-            10
-          ],
-          [
-            "container",
-            10
-          ],
-          [
-            "wb",
-            10
-          ],
-          [
-            "toast",
-            8
-          ],
-          [
-            "height",
-            7
-          ],
-          [
-            "diffs",
-            7
-          ],
-          [
-            "blur",
-            7
-          ],
-          [
-            "purple",
-            6
-          ],
-          [
-            "spacing",
-            6
-          ],
-          [
-            "shadow",
-            6
-          ],
-          [
-            "startup",
-            6
-          ],
-          [
-            "ease",
-            5
-          ],
-          [
-            "yellow",
-            5
-          ],
-          [
-            "padding",
-            5
-          ],
-          [
-            "composer",
-            4
-          ],
-          [
-            "default",
-            4
-          ],
-          [
-            "leading",
-            4
-          ],
-          [
-            "elevation",
-            3
-          ],
-          [
-            "animate",
-            3
-          ],
-          [
-            "none",
-            3
-          ],
-          [
-            "tracking",
-            3
-          ],
-          [
-            "pink",
-            3
-          ],
-          [
-            "transition",
-            2
-          ],
-          [
-            "inset",
-            2
-          ],
-          [
-            "conversation",
-            2
-          ],
-          [
-            "cubic",
-            2
-          ],
-          [
-            "markdown",
-            2
-          ],
-          [
-            "safe",
-            2
-          ],
-          [
-            "home",
-            1
-          ],
-          [
-            "right",
-            1
-          ],
-          [
-            "aspect",
-            1
-          ],
-          [
-            "left",
-            1
-          ],
-          [
-            "h",
-            1
-          ],
-          [
-            "bottom",
-            1
-          ],
-          [
-            "drop",
-            1
-          ],
-          [
-            "cursor",
-            1
-          ],
-          [
-            "max",
-            1
-          ],
-          [
-            "thread",
-            1
-          ],
-          [
-            "corner",
-            1
-          ],
-          [
-            "top",
-            1
-          ]
+          ["vscode", 732],
+          ["color", 218],
+          ["tw", 32],
+          ["radius", 21],
+          ["text", 20],
+          ["gray", 18],
+          ["red", 12],
+          ["green", 12],
+          ["font", 11],
+          ["orange", 11],
+          ["codex", 10],
+          ["blue", 10],
+          ["container", 10],
+          ["wb", 10],
+          ["toast", 8],
+          ["height", 7],
+          ["diffs", 7],
+          ["blur", 7],
+          ["purple", 6],
+          ["spacing", 6],
+          ["shadow", 6],
+          ["startup", 6],
+          ["ease", 5],
+          ["yellow", 5],
+          ["padding", 5],
+          ["composer", 4],
+          ["default", 4],
+          ["leading", 4],
+          ["elevation", 3],
+          ["animate", 3],
+          ["none", 3],
+          ["tracking", 3],
+          ["pink", 3],
+          ["transition", 2],
+          ["inset", 2],
+          ["conversation", 2],
+          ["cubic", 2],
+          ["markdown", 2],
+          ["safe", 2],
+          ["home", 1],
+          ["right", 1],
+          ["aspect", 1],
+          ["left", 1],
+          ["h", 1],
+          ["bottom", 1],
+          ["drop", 1],
+          ["cursor", 1],
+          ["max", 1],
+          ["thread", 1],
+          ["corner", 1],
+          ["top", 1]
         ]
       },
       "dark": {
         "count": 1246,
         "namespaces": [
-          [
-            "vscode",
-            732
-          ],
-          [
-            "color",
-            218
-          ],
-          [
-            "tw",
-            32
-          ],
-          [
-            "radius",
-            21
-          ],
-          [
-            "text",
-            20
-          ],
-          [
-            "gray",
-            18
-          ],
-          [
-            "red",
-            12
-          ],
-          [
-            "green",
-            12
-          ],
-          [
-            "font",
-            11
-          ],
-          [
-            "orange",
-            11
-          ],
-          [
-            "codex",
-            10
-          ],
-          [
-            "blue",
-            10
-          ],
-          [
-            "container",
-            10
-          ],
-          [
-            "wb",
-            10
-          ],
-          [
-            "toast",
-            8
-          ],
-          [
-            "height",
-            7
-          ],
-          [
-            "diffs",
-            7
-          ],
-          [
-            "blur",
-            7
-          ],
-          [
-            "purple",
-            6
-          ],
-          [
-            "spacing",
-            6
-          ],
-          [
-            "shadow",
-            6
-          ],
-          [
-            "startup",
-            6
-          ],
-          [
-            "ease",
-            5
-          ],
-          [
-            "yellow",
-            5
-          ],
-          [
-            "padding",
-            5
-          ],
-          [
-            "composer",
-            4
-          ],
-          [
-            "default",
-            4
-          ],
-          [
-            "leading",
-            4
-          ],
-          [
-            "elevation",
-            3
-          ],
-          [
-            "animate",
-            3
-          ],
-          [
-            "none",
-            3
-          ],
-          [
-            "tracking",
-            3
-          ],
-          [
-            "pink",
-            3
-          ],
-          [
-            "transition",
-            2
-          ],
-          [
-            "inset",
-            2
-          ],
-          [
-            "conversation",
-            2
-          ],
-          [
-            "cubic",
-            2
-          ],
-          [
-            "markdown",
-            2
-          ],
-          [
-            "safe",
-            2
-          ],
-          [
-            "home",
-            1
-          ],
-          [
-            "right",
-            1
-          ],
-          [
-            "aspect",
-            1
-          ],
-          [
-            "left",
-            1
-          ],
-          [
-            "h",
-            1
-          ],
-          [
-            "bottom",
-            1
-          ],
-          [
-            "drop",
-            1
-          ],
-          [
-            "cursor",
-            1
-          ],
-          [
-            "max",
-            1
-          ],
-          [
-            "thread",
-            1
-          ],
-          [
-            "corner",
-            1
-          ],
-          [
-            "top",
-            1
-          ]
+          ["vscode", 732],
+          ["color", 218],
+          ["tw", 32],
+          ["radius", 21],
+          ["text", 20],
+          ["gray", 18],
+          ["red", 12],
+          ["green", 12],
+          ["font", 11],
+          ["orange", 11],
+          ["codex", 10],
+          ["blue", 10],
+          ["container", 10],
+          ["wb", 10],
+          ["toast", 8],
+          ["height", 7],
+          ["diffs", 7],
+          ["blur", 7],
+          ["purple", 6],
+          ["spacing", 6],
+          ["shadow", 6],
+          ["startup", 6],
+          ["ease", 5],
+          ["yellow", 5],
+          ["padding", 5],
+          ["composer", 4],
+          ["default", 4],
+          ["leading", 4],
+          ["elevation", 3],
+          ["animate", 3],
+          ["none", 3],
+          ["tracking", 3],
+          ["pink", 3],
+          ["transition", 2],
+          ["inset", 2],
+          ["conversation", 2],
+          ["cubic", 2],
+          ["markdown", 2],
+          ["safe", 2],
+          ["home", 1],
+          ["right", 1],
+          ["aspect", 1],
+          ["left", 1],
+          ["h", 1],
+          ["bottom", 1],
+          ["drop", 1],
+          ["cursor", 1],
+          ["max", 1],
+          ["thread", 1],
+          ["corner", 1],
+          ["top", 1]
         ]
       },
       "light": {
         "count": 1246,
         "namespaces": [
-          [
-            "vscode",
-            732
-          ],
-          [
-            "color",
-            218
-          ],
-          [
-            "tw",
-            32
-          ],
-          [
-            "radius",
-            21
-          ],
-          [
-            "text",
-            20
-          ],
-          [
-            "gray",
-            18
-          ],
-          [
-            "red",
-            12
-          ],
-          [
-            "green",
-            12
-          ],
-          [
-            "font",
-            11
-          ],
-          [
-            "orange",
-            11
-          ],
-          [
-            "codex",
-            10
-          ],
-          [
-            "blue",
-            10
-          ],
-          [
-            "container",
-            10
-          ],
-          [
-            "wb",
-            10
-          ],
-          [
-            "toast",
-            8
-          ],
-          [
-            "height",
-            7
-          ],
-          [
-            "diffs",
-            7
-          ],
-          [
-            "blur",
-            7
-          ],
-          [
-            "purple",
-            6
-          ],
-          [
-            "spacing",
-            6
-          ],
-          [
-            "shadow",
-            6
-          ],
-          [
-            "startup",
-            6
-          ],
-          [
-            "ease",
-            5
-          ],
-          [
-            "yellow",
-            5
-          ],
-          [
-            "padding",
-            5
-          ],
-          [
-            "composer",
-            4
-          ],
-          [
-            "default",
-            4
-          ],
-          [
-            "leading",
-            4
-          ],
-          [
-            "elevation",
-            3
-          ],
-          [
-            "animate",
-            3
-          ],
-          [
-            "none",
-            3
-          ],
-          [
-            "tracking",
-            3
-          ],
-          [
-            "pink",
-            3
-          ],
-          [
-            "transition",
-            2
-          ],
-          [
-            "inset",
-            2
-          ],
-          [
-            "conversation",
-            2
-          ],
-          [
-            "cubic",
-            2
-          ],
-          [
-            "markdown",
-            2
-          ],
-          [
-            "safe",
-            2
-          ],
-          [
-            "home",
-            1
-          ],
-          [
-            "right",
-            1
-          ],
-          [
-            "aspect",
-            1
-          ],
-          [
-            "left",
-            1
-          ],
-          [
-            "h",
-            1
-          ],
-          [
-            "bottom",
-            1
-          ],
-          [
-            "drop",
-            1
-          ],
-          [
-            "cursor",
-            1
-          ],
-          [
-            "max",
-            1
-          ],
-          [
-            "thread",
-            1
-          ],
-          [
-            "corner",
-            1
-          ],
-          [
-            "top",
-            1
-          ]
+          ["vscode", 732],
+          ["color", 218],
+          ["tw", 32],
+          ["radius", 21],
+          ["text", 20],
+          ["gray", 18],
+          ["red", 12],
+          ["green", 12],
+          ["font", 11],
+          ["orange", 11],
+          ["codex", 10],
+          ["blue", 10],
+          ["container", 10],
+          ["wb", 10],
+          ["toast", 8],
+          ["height", 7],
+          ["diffs", 7],
+          ["blur", 7],
+          ["purple", 6],
+          ["spacing", 6],
+          ["shadow", 6],
+          ["startup", 6],
+          ["ease", 5],
+          ["yellow", 5],
+          ["padding", 5],
+          ["composer", 4],
+          ["default", 4],
+          ["leading", 4],
+          ["elevation", 3],
+          ["animate", 3],
+          ["none", 3],
+          ["tracking", 3],
+          ["pink", 3],
+          ["transition", 2],
+          ["inset", 2],
+          ["conversation", 2],
+          ["cubic", 2],
+          ["markdown", 2],
+          ["safe", 2],
+          ["home", 1],
+          ["right", 1],
+          ["aspect", 1],
+          ["left", 1],
+          ["h", 1],
+          ["bottom", 1],
+          ["drop", 1],
+          ["cursor", 1],
+          ["max", 1],
+          ["thread", 1],
+          ["corner", 1],
+          ["top", 1]
         ]
       }
     },

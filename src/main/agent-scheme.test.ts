@@ -106,7 +106,7 @@ describe('resolveSchemeMode', () => {
     expect(resolveSchemeMode('dark')).toBe('dark');
   });
 
-  it("should map auto to light to match the unified auto fallback (community-color-bridge + buildContext)", () => {
+  it('should map auto to light to match the unified auto fallback (community-color-bridge + buildContext)', () => {
     expect(resolveSchemeMode('auto')).toBe('light');
   });
 

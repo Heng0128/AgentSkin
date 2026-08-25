@@ -165,7 +165,9 @@ describe('bridge-theme-consistency', () => {
           return;
         }
         for (const key of Object.keys(vb)) {
-          expect(isValidCssVarName(key), `key "${key}" is not a valid CSS variable name`).toBe(true);
+          expect(isValidCssVarName(key), `key "${key}" is not a valid CSS variable name`).toBe(
+            true,
+          );
         }
       });
 

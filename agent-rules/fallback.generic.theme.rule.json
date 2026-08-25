@@ -17,11 +17,7 @@
   ],
   "globalApiCandidates": [],
   "globalStorePathCandidates": [],
-  "lazyRiskComponents": [
-    "Modal",
-    "Dropdown",
-    "Popover"
-  ],
+  "lazyRiskComponents": ["Modal", "Dropdown", "Popover"],
   "shadowDomRiskSelectors": [],
   "themeImplMode": "mixed",
   "canSilentSwitch": false,

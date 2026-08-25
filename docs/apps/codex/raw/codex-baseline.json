@@ -23,30 +23,22 @@
           {
             "name": "--bg-secondary",
             "value": "var(--color-surface-secondary)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           },
           {
             "name": "--bg-tertiary",
             "value": "var(--color-surface-tertiary)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           },
           {
             "name": "--bg-elevated-secondary",
             "value": "var(--color-surface-elevated-secondary)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           },
           {
             "name": "--bg-tooltip",
             "value": "var(--color-surface-elevated)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           }
         ],
         "bg": [],
@@ -57,16 +49,12 @@
           {
             "name": "--bg-primary",
             "value": "var(--color-surface)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           },
           {
             "name": "--bg-elevated-primary",
             "value": "var(--color-surface-elevated)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           }
         ],
         "neutral": [],
@@ -74,74 +62,47 @@
           {
             "name": "--border-radius",
             "value": "8px",
-            "selectors": [
-              "[data-sonner-toaster]",
-              "[data-sonner-toaster]"
-            ]
+            "selectors": ["[data-sonner-toaster]", "[data-sonner-toaster]"]
           },
           {
             "name": "--text-xs--line-height",
             "value": "calc(1 / .75)",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-sm--line-height",
             "value": "calc(1.25 / .875)",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-base--line-height",
             "value": "calc(1.5 / 1)",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-lg--line-height",
             "value": "calc(1.75 / 1.125)",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-xl--line-height",
             "value": "calc(1.75 / 1.25)",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-2xl--line-height",
             "value": "calc(2 / 1.5)",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-3xl--line-height",
             "value": "calc(2.25 / 1.875)",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-4xl--line-height",
             "value": "calc(2.5 / 2.25)",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           }
         ],
         "shadow": [],
@@ -162,17 +123,12 @@
           {
             "name": "--border-medium",
             "value": "var(--color-border-strong)",
-            "selectors": [
-              "._MarkdownRoot_1uhvf_309"
-            ]
+            "selectors": ["._MarkdownRoot_1uhvf_309"]
           },
           {
             "name": "--border-light",
             "value": "var(--color-border-subtle)",
-            "selectors": [
-              "._MarkdownRoot_1uhvf_309",
-              ".learning-block-color-scope"
-            ]
+            "selectors": ["._MarkdownRoot_1uhvf_309", ".learning-block-color-scope"]
           },
           {
             "name": "--text-xs",
@@ -197,58 +153,37 @@
           {
             "name": "--text-base",
             "value": "14px",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-lg",
             "value": "16px",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-xl",
             "value": "28px",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-2xl",
             "value": "36px",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-3xl",
             "value": "48px",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-4xl",
             "value": "72px",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-heading-lg",
             "value": "24px",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-heading-md",
@@ -264,10 +199,7 @@
           {
             "name": "--text-heading-sm",
             "value": "18px",
-            "selectors": [
-              ":root, :host",
-              ":root@runtime"
-            ]
+            "selectors": [":root, :host", ":root@runtime"]
           },
           {
             "name": "--text-secondary",
@@ -307,44 +239,32 @@
           {
             "name": "--text-tracking",
             "value": "0em",
-            "selectors": [
-              ".\\[--text-tracking\\:0em\\]"
-            ]
+            "selectors": [".\\[--text-tracking\\:0em\\]"]
           },
           {
             "name": "--text-error",
             "value": "var(--color-text-danger)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           },
           {
             "name": "--text-inverted-static",
             "value": "var(--color-text-inverse)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           },
           {
             "name": "--border-default",
             "value": "var(--color-border)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           },
           {
             "name": "--border-subtle",
             "value": "var(--color-border-subtle)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           },
           {
             "name": "--border-heavy",
             "value": "var(--color-border-strong)",
-            "selectors": [
-              ".learning-block-color-scope"
-            ]
+            "selectors": [".learning-block-color-scope"]
           }
         ],
         "_ignoredNamespaceVars": [
@@ -1918,11 +1838,7 @@
         {
           "color": "#000",
           "count": 3,
-          "vars": [
-            "--color-black",
-            "--black",
-            "--vscode-terminal-ansiBrightBlack"
-          ]
+          "vars": ["--color-black", "--black", "--vscode-terminal-ansiBrightBlack"]
         },
         {
           "color": "#414141",
@@ -1945,114 +1861,72 @@
         {
           "color": "#ffffff1f",
           "count": 2,
-          "vars": [
-            "--tw-shadow",
-            "--color-background-button-secondary-active"
-          ]
+          "vars": ["--tw-shadow", "--color-background-button-secondary-active"]
         },
         {
           "color": "#00000014",
           "count": 2,
-          "vars": [
-            "--shadow-sm",
-            "--shadow-md"
-          ]
+          "vars": ["--shadow-sm", "--shadow-md"]
         },
         {
           "color": "#0000001a",
           "count": 2,
-          "vars": [
-            "--shadow-lg",
-            "--shadow-hairline"
-          ]
+          "vars": ["--shadow-lg", "--shadow-hairline"]
         },
         {
           "color": "#181818",
           "count": 2,
-          "vars": [
-            "--gray-900",
-            "--codex-base-surface"
-          ]
+          "vars": ["--gray-900", "--codex-base-surface"]
         },
         {
           "color": "#40c977",
           "count": 2,
-          "vars": [
-            "--green-300",
-            "--vscode-testing-iconPassed.retired"
-          ]
+          "vars": ["--green-300", "--vscode-testing-iconPassed.retired"]
         },
         {
           "color": "#04b84c",
           "count": 2,
-          "vars": [
-            "--green-400",
-            "--vscode-mergeEditor-conflict.handled.minimapOverViewRuler"
-          ]
+          "vars": ["--green-400", "--vscode-mergeEditor-conflict.handled.minimapOverViewRuler"]
         },
         {
           "color": "#4d100e",
           "count": 2,
-          "vars": [
-            "--red-900",
-            "--vscode-mergeEditor-conflictingLines.background"
-          ]
+          "vars": ["--red-900", "--vscode-mergeEditor-conflictingLines.background"]
         },
         {
           "color": "#339cff",
           "count": 2,
-          "vars": [
-            "--blue-300",
-            "--codex-base-accent"
-          ]
+          "vars": ["--blue-300", "--codex-base-accent"]
         },
         {
           "color": "#ffffff08",
           "count": 2,
-          "vars": [
-            "--color-background-elevated-secondary",
-            "--color-background-button-tertiary"
-          ]
+          "vars": ["--color-background-elevated-secondary", "--color-background-button-tertiary"]
         },
         {
           "color": "#ffffff0a",
           "count": 2,
-          "vars": [
-            "--color-background-button-secondary-inactive",
-            "--color-border-light"
-          ]
+          "vars": ["--color-background-button-secondary-inactive", "--color-border-light"]
         },
         {
           "color": "#ffffff1a",
           "count": 2,
-          "vars": [
-            "--color-background-button-tertiary-active",
-            "--color-simple-scrim"
-          ]
+          "vars": ["--color-background-button-tertiary-active", "--color-simple-scrim"]
         },
         {
           "color": "#ffffffb3",
           "count": 2,
-          "vars": [
-            "--color-text-foreground-secondary",
-            "--color-icon-secondary"
-          ]
+          "vars": ["--color-text-foreground-secondary", "--color-icon-secondary"]
         },
         {
           "color": "#ffffff80",
           "count": 2,
-          "vars": [
-            "--color-text-foreground-tertiary",
-            "--color-icon-tertiary"
-          ]
+          "vars": ["--color-text-foreground-tertiary", "--color-icon-tertiary"]
         },
         {
           "color": "rgba(255, 255, 255, 0.084)",
           "count": 2,
-          "vars": [
-            "--vscode-inlineEdit-indicator.border",
-            "--vscode-diffEditor-move.border"
-          ]
+          "vars": ["--vscode-inlineEdit-indicator.border", "--vscode-diffEditor-move.border"]
         },
         {
           "color": "rgba(255, 255, 255, 0.498)",
@@ -2073,249 +1947,177 @@
         {
           "color": "rgba(255, 255, 255, 0.71)",
           "count": 2,
-          "vars": [
-            "--vscode-testing-iconUnset.retired",
-            "--vscode-testing-iconSkipped.retired"
-          ]
+          "vars": ["--vscode-testing-iconUnset.retired", "--vscode-testing-iconSkipped.retired"]
         },
         {
           "color": "rgba(255, 255, 255, 0.156)",
           "count": 2,
-          "vars": [
-            "--vscode-terminal-tab.activeBorder",
-            "--vscode-diffEditor-moveActive.border"
-          ]
+          "vars": ["--vscode-terminal-tab.activeBorder", "--vscode-diffEditor-moveActive.border"]
         },
         {
           "color": "rgb(0 0 0 / 0.24)",
           "count": 1,
-          "vars": [
-            "--startup-logo-shimmer-base"
-          ]
+          "vars": ["--startup-logo-shimmer-base"]
         },
         {
           "color": "rgb(255 255 255 / 0.48)",
           "count": 1,
-          "vars": [
-            "--startup-logo-shimmer-peak"
-          ]
+          "vars": ["--startup-logo-shimmer-peak"]
         },
         {
           "color": "rgb(255 255 255 / 0.04)",
           "count": 1,
-          "vars": [
-            "--startup-logo-shimmer-soft"
-          ]
+          "vars": ["--startup-logo-shimmer-soft"]
         },
         {
           "color": "rgb(255 255 255 / 0.08)",
           "count": 1,
-          "vars": [
-            "--startup-logo-shimmer-tail"
-          ]
+          "vars": ["--startup-logo-shimmer-tail"]
         },
         {
           "color": "#000000e0",
           "count": 1,
-          "vars": [
-            "--sidebar-scroll-mask-image"
-          ]
+          "vars": ["--sidebar-scroll-mask-image"]
         },
         {
           "color": "#00000085",
           "count": 1,
-          "vars": [
-            "--sidebar-scroll-mask-image"
-          ]
+          "vars": ["--sidebar-scroll-mask-image"]
         },
         {
           "color": "#0000002e",
           "count": 1,
-          "vars": [
-            "--sidebar-scroll-mask-image"
-          ]
+          "vars": ["--sidebar-scroll-mask-image"]
         },
         {
           "color": "hsl(0, 0%, 99%)",
           "count": 1,
-          "vars": [
-            "--gray1"
-          ]
+          "vars": ["--gray1"]
         },
         {
           "color": "hsl(0, 0%, 97.3%)",
           "count": 1,
-          "vars": [
-            "--gray2"
-          ]
+          "vars": ["--gray2"]
         },
         {
           "color": "hsl(0, 0%, 95.1%)",
           "count": 1,
-          "vars": [
-            "--gray3"
-          ]
+          "vars": ["--gray3"]
         },
         {
           "color": "hsl(0, 0%, 93%)",
           "count": 1,
-          "vars": [
-            "--gray4"
-          ]
+          "vars": ["--gray4"]
         },
         {
           "color": "hsl(0, 0%, 90.9%)",
           "count": 1,
-          "vars": [
-            "--gray5"
-          ]
+          "vars": ["--gray5"]
         },
         {
           "color": "hsl(0, 0%, 88.7%)",
           "count": 1,
-          "vars": [
-            "--gray6"
-          ]
+          "vars": ["--gray6"]
         },
         {
           "color": "hsl(0, 0%, 85.8%)",
           "count": 1,
-          "vars": [
-            "--gray7"
-          ]
+          "vars": ["--gray7"]
         },
         {
           "color": "hsl(0, 0%, 78%)",
           "count": 1,
-          "vars": [
-            "--gray8"
-          ]
+          "vars": ["--gray8"]
         },
         {
           "color": "hsl(0, 0%, 56.1%)",
           "count": 1,
-          "vars": [
-            "--gray9"
-          ]
+          "vars": ["--gray9"]
         },
         {
           "color": "hsl(0, 0%, 52.3%)",
           "count": 1,
-          "vars": [
-            "--gray10"
-          ]
+          "vars": ["--gray10"]
         },
         {
           "color": "hsl(0, 0%, 43.5%)",
           "count": 1,
-          "vars": [
-            "--gray11"
-          ]
+          "vars": ["--gray11"]
         },
         {
           "color": "hsl(0, 0%, 9%)",
           "count": 1,
-          "vars": [
-            "--gray12"
-          ]
+          "vars": ["--gray12"]
         },
         {
           "color": "hsl(143, 85%, 96%)",
           "count": 1,
-          "vars": [
-            "--success-bg"
-          ]
+          "vars": ["--success-bg"]
         },
         {
           "color": "hsl(145, 92%, 87%)",
           "count": 1,
-          "vars": [
-            "--success-border"
-          ]
+          "vars": ["--success-border"]
         },
         {
           "color": "hsl(140, 100%, 27%)",
           "count": 1,
-          "vars": [
-            "--success-text"
-          ]
+          "vars": ["--success-text"]
         },
         {
           "color": "hsl(208, 100%, 97%)",
           "count": 1,
-          "vars": [
-            "--info-bg"
-          ]
+          "vars": ["--info-bg"]
         },
         {
           "color": "hsl(221, 91%, 93%)",
           "count": 1,
-          "vars": [
-            "--info-border"
-          ]
+          "vars": ["--info-border"]
         },
         {
           "color": "hsl(210, 92%, 45%)",
           "count": 1,
-          "vars": [
-            "--info-text"
-          ]
+          "vars": ["--info-text"]
         },
         {
           "color": "hsl(49, 100%, 97%)",
           "count": 1,
-          "vars": [
-            "--warning-bg"
-          ]
+          "vars": ["--warning-bg"]
         },
         {
           "color": "hsl(49, 91%, 84%)",
           "count": 1,
-          "vars": [
-            "--warning-border"
-          ]
+          "vars": ["--warning-border"]
         },
         {
           "color": "hsl(31, 92%, 45%)",
           "count": 1,
-          "vars": [
-            "--warning-text"
-          ]
+          "vars": ["--warning-text"]
         },
         {
           "color": "hsl(359, 100%, 97%)",
           "count": 1,
-          "vars": [
-            "--error-bg"
-          ]
+          "vars": ["--error-bg"]
         },
         {
           "color": "hsl(359, 100%, 94%)",
           "count": 1,
-          "vars": [
-            "--error-border"
-          ]
+          "vars": ["--error-border"]
         },
         {
           "color": "hsl(360, 100%, 45%)",
           "count": 1,
-          "vars": [
-            "--error-text"
-          ]
+          "vars": ["--error-text"]
         },
         {
           "color": "hsl(0, 0%, 12%)",
           "count": 1,
-          "vars": [
-            "--normal-bg-hover"
-          ]
+          "vars": ["--normal-bg-hover"]
         },
         {
           "color": "hsl(0, 0%, 25%)",
           "count": 1,
-          "vars": [
-            "--normal-border-hover"
-          ]
+          "vars": ["--normal-border-hover"]
         }
       ]
     },
@@ -3580,58 +3382,42 @@
           {
             "name": "--text-base--line-height",
             "value": "calc(1.5 / 1)",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-3xl--line-height",
             "value": "calc(2.25 / 1.875)",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-2xl--line-height",
             "value": "calc(2 / 1.5)",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-4xl--line-height",
             "value": "calc(2.5 / 2.25)",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-lg--line-height",
             "value": "calc(1.75 / 1.125)",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-sm--line-height",
             "value": "calc(1.25 / .875)",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-xs--line-height",
             "value": "calc(1 / .75)",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-xl--line-height",
             "value": "calc(1.75 / 1.25)",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           }
         ],
         "shadow": [],
@@ -3642,86 +3428,62 @@
           {
             "name": "--text-3xl",
             "value": "48px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-base",
             "value": "14px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-xl",
             "value": "28px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-2xl",
             "value": "36px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-4xl",
             "value": "72px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-heading-sm",
             "value": "18px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-sm",
             "value": "13px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-lg",
             "value": "16px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-xs",
             "value": "12px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-heading-lg",
             "value": "24px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-heading-md",
             "value": "20px",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           },
           {
             "name": "--text-link-decoration",
             "value": "none",
-            "selectors": [
-              ":root@runtime:dark"
-            ]
+            "selectors": [":root@runtime:dark"]
           }
         ],
         "_ignoredNamespaceVars": [
@@ -6140,11 +5902,7 @@
         {
           "color": "rgb(255, 255, 255)",
           "count": 3,
-          "vars": [
-            "--color-text-info-solid",
-            "--color-text-on-accent",
-            "--color-text-danger-solid"
-          ]
+          "vars": ["--color-text-info-solid", "--color-text-on-accent", "--color-text-danger-solid"]
         },
         {
           "color": "#4f4f4f",
@@ -6167,19 +5925,12 @@
         {
           "color": "#99ceff",
           "count": 3,
-          "vars": [
-            "--blue-100",
-            "--color-text-tip",
-            "--color-text-tip-badge"
-          ]
+          "vars": ["--blue-100", "--color-text-tip", "--color-text-tip-badge"]
         },
         {
           "color": "#1f1f1f",
           "count": 2,
-          "vars": [
-            "--color-background-application-menu",
-            "--color-codex-application-menu"
-          ]
+          "vars": ["--color-background-application-menu", "--color-codex-application-menu"]
         },
         {
           "color": "rgb(54, 54, 54)",
@@ -6192,102 +5943,67 @@
         {
           "color": "#00000014",
           "count": 2,
-          "vars": [
-            "--shadow-sm",
-            "--shadow-md"
-          ]
+          "vars": ["--shadow-sm", "--shadow-md"]
         },
         {
           "color": "#011c0b",
           "count": 2,
-          "vars": [
-            "--green-950",
-            "--color-background-success-surface"
-          ]
+          "vars": ["--green-950", "--color-background-success-surface"]
         },
         {
           "color": "#282828",
           "count": 2,
-          "vars": [
-            "--gray-750",
-            "--color-background-elevated-secondary-opaque"
-          ]
+          "vars": ["--gray-750", "--color-background-elevated-secondary-opaque"]
         },
         {
           "color": "#0000001a",
           "count": 2,
-          "vars": [
-            "--shadow-lg",
-            "--shadow-hairline"
-          ]
+          "vars": ["--shadow-lg", "--shadow-hairline"]
         },
         {
           "color": "#281105",
           "count": 2,
-          "vars": [
-            "--color-background-warning-surface",
-            "--orange-950"
-          ]
+          "vars": ["--color-background-warning-surface", "--orange-950"]
         },
         {
           "color": "#008635",
           "count": 2,
-          "vars": [
-            "--green-600",
-            "--color-background-success-solid"
-          ]
+          "vars": ["--green-600", "--color-background-success-solid"]
         },
         {
           "color": "#280b0a",
           "count": 2,
-          "vars": [
-            "--red-950",
-            "--color-background-danger-surface"
-          ]
+          "vars": ["--red-950", "--color-background-danger-surface"]
         },
         {
           "color": "rgba(255, 255, 255, 0.058)",
           "count": 2,
-          "vars": [
-            "--vscode-button-hoverBackground",
-            "--color-background-button-primary-hover"
-          ]
+          "vars": ["--vscode-button-hoverBackground", "--color-background-button-primary-hover"]
         },
         {
           "color": "#000",
           "count": 2,
-          "vars": [
-            "--black",
-            "--color-black"
-          ]
+          "vars": ["--black", "--color-black"]
         },
         {
           "color": "rgb(255 255 255 / 0.68)",
           "count": 1,
-          "vars": [
-            "--startup-logo-shimmer-base"
-          ]
+          "vars": ["--startup-logo-shimmer-base"]
         },
         {
           "color": "#7668c580",
           "count": 1,
-          "vars": [
-            "--tw-shadow"
-          ]
+          "vars": ["--tw-shadow"]
         },
         {
           "color": "#be95fa",
           "count": 1,
-          "vars": [
-            "--purple-200"
-          ]
+          "vars": ["--purple-200"]
         },
         {
           "color": "#004f99",
           "count": 1,
-          "vars": [
-            "--blue-600"
-          ]
+          "vars": ["--blue-600"]
         }
       ]
     },
@@ -7552,58 +7268,42 @@
           {
             "name": "--text-base--line-height",
             "value": "calc(1.5 / 1)",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-3xl--line-height",
             "value": "calc(2.25 / 1.875)",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-2xl--line-height",
             "value": "calc(2 / 1.5)",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-4xl--line-height",
             "value": "calc(2.5 / 2.25)",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-lg--line-height",
             "value": "calc(1.75 / 1.125)",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-sm--line-height",
             "value": "calc(1.25 / .875)",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-xs--line-height",
             "value": "calc(1 / .75)",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-xl--line-height",
             "value": "calc(1.75 / 1.25)",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           }
         ],
         "shadow": [],
@@ -7614,86 +7314,62 @@
           {
             "name": "--text-3xl",
             "value": "48px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-base",
             "value": "14px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-xl",
             "value": "28px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-2xl",
             "value": "36px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-4xl",
             "value": "72px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-heading-sm",
             "value": "18px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-sm",
             "value": "13px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-lg",
             "value": "16px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-xs",
             "value": "12px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-heading-lg",
             "value": "24px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-heading-md",
             "value": "20px",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           },
           {
             "name": "--text-link-decoration",
             "value": "none",
-            "selectors": [
-              ":root@runtime:light"
-            ]
+            "selectors": [":root@runtime:light"]
           }
         ],
         "_ignoredNamespaceVars": [
@@ -10104,11 +9780,7 @@
         {
           "color": "rgb(255, 255, 255)",
           "count": 3,
-          "vars": [
-            "--color-text-info-solid",
-            "--color-text-on-accent",
-            "--color-text-danger-solid"
-          ]
+          "vars": ["--color-text-info-solid", "--color-text-on-accent", "--color-text-danger-solid"]
         },
         {
           "color": "#4f4f4f",
@@ -10131,28 +9803,17 @@
         {
           "color": "#99ceff",
           "count": 3,
-          "vars": [
-            "--blue-100",
-            "--color-text-tip",
-            "--color-text-tip-badge"
-          ]
+          "vars": ["--blue-100", "--color-text-tip", "--color-text-tip-badge"]
         },
         {
           "color": "rgba(0, 0, 0, 0)",
           "count": 3,
-          "vars": [
-            "--tw-gradient-from",
-            "--tw-gradient-via",
-            "--tw-gradient-to"
-          ]
+          "vars": ["--tw-gradient-from", "--tw-gradient-via", "--tw-gradient-to"]
         },
         {
           "color": "#1f1f1f",
           "count": 2,
-          "vars": [
-            "--color-background-application-menu",
-            "--color-codex-application-menu"
-          ]
+          "vars": ["--color-background-application-menu", "--color-codex-application-menu"]
         },
         {
           "color": "rgb(54, 54, 54)",
@@ -10165,95 +9826,62 @@
         {
           "color": "#00000014",
           "count": 2,
-          "vars": [
-            "--shadow-sm",
-            "--shadow-md"
-          ]
+          "vars": ["--shadow-sm", "--shadow-md"]
         },
         {
           "color": "#011c0b",
           "count": 2,
-          "vars": [
-            "--green-950",
-            "--color-background-success-surface"
-          ]
+          "vars": ["--green-950", "--color-background-success-surface"]
         },
         {
           "color": "#282828",
           "count": 2,
-          "vars": [
-            "--gray-750",
-            "--color-background-elevated-secondary-opaque"
-          ]
+          "vars": ["--gray-750", "--color-background-elevated-secondary-opaque"]
         },
         {
           "color": "#0000001a",
           "count": 2,
-          "vars": [
-            "--shadow-lg",
-            "--shadow-hairline"
-          ]
+          "vars": ["--shadow-lg", "--shadow-hairline"]
         },
         {
           "color": "#281105",
           "count": 2,
-          "vars": [
-            "--color-background-warning-surface",
-            "--orange-950"
-          ]
+          "vars": ["--color-background-warning-surface", "--orange-950"]
         },
         {
           "color": "#008635",
           "count": 2,
-          "vars": [
-            "--green-600",
-            "--color-background-success-solid"
-          ]
+          "vars": ["--green-600", "--color-background-success-solid"]
         },
         {
           "color": "#280b0a",
           "count": 2,
-          "vars": [
-            "--red-950",
-            "--color-background-danger-surface"
-          ]
+          "vars": ["--red-950", "--color-background-danger-surface"]
         },
         {
           "color": "rgba(255, 255, 255, 0.058)",
           "count": 2,
-          "vars": [
-            "--vscode-button-hoverBackground",
-            "--color-background-button-primary-hover"
-          ]
+          "vars": ["--vscode-button-hoverBackground", "--color-background-button-primary-hover"]
         },
         {
           "color": "#000",
           "count": 2,
-          "vars": [
-            "--black",
-            "--color-black"
-          ]
+          "vars": ["--black", "--color-black"]
         },
         {
           "color": "#be95fa",
           "count": 1,
-          "vars": [
-            "--purple-200"
-          ]
+          "vars": ["--purple-200"]
         },
         {
           "color": "#004f99",
           "count": 1,
-          "vars": [
-            "--blue-600"
-          ]
+          "vars": ["--blue-600"]
         },
         {
           "color": "#ff9e6c",
           "count": 1,
-          "vars": [
-            "--orange-200"
-          ]
+          "vars": ["--orange-200"]
         }
       ]
     }

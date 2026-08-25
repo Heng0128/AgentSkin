@@ -22,12 +22,12 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
 import { APP_META } from '@/components/AppMark';
+import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { format } from 'date-fns';
-import { EmptyState } from '@/components/ui/empty-state';
 import { Activity, Hourglass, PieChart, Trash2 } from 'lucide-react';
 
 // --- Types (mirror AgentSkinApi.getPerformanceHistory response) ---------
@@ -416,9 +416,7 @@ function TimeoutRow({
 
 function TH({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <th
-      className={cn('px-3 py-2 text-left text-[10px] text-muted-foreground', className)}
-    >
+    <th className={cn('px-3 py-2 text-left text-[10px] text-muted-foreground', className)}>
       {children}
     </th>
   );

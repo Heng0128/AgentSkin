@@ -21,9 +21,8 @@
  */
 
 import type { AgentId, InstalledTheme, SystemStatus } from '../../shared/types';
+import type { AgentCatalogItem, ThemeCatalogItem } from '../catalog/types';
 import type { MainContext } from '../main-context';
-import type { ThemeCatalogItem } from '../catalog/types';
-import type { AgentCatalogItem } from '../catalog/types';
 
 /**
  * Read-only view of the theme catalog for MCP tool handlers.

@@ -24,9 +24,9 @@
  * TreatmentVerdict[]。
  */
 
+import { cssEscape } from '@shared/css-escape';
 import { blendOver, classifyAlpha, type Rgba, wcagContrast } from './color-quantize';
 import type { ComponentProfile } from './native-profile';
-import { cssEscape } from '@shared/css-escape';
 
 // ---------------------------------------------------------------------------
 // 类型
@@ -345,4 +345,3 @@ export function buildTreatmentCss(verdicts: TreatmentVerdict[]): string {
   }
   return rules.join('\n');
 }
-

@@ -51,9 +51,7 @@ export function ContrastBadge({
   const colorClass = passesAA ? 'text-cr-success' : 'text-destructive';
 
   return (
-    <span
-      className={`inline-flex items-center gap-1 text-[10px] ${colorClass} ${className}`}
-    >
+    <span className={`inline-flex items-center gap-1 text-[10px] ${colorClass} ${className}`}>
       <span>{ratioText}</span>
       {passesAAA && (
         <span className="rounded-sm bg-cr-success/15 px-1 text-[9px] font-normal leading-none">

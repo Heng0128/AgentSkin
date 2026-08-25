@@ -29,8 +29,8 @@
  */
 
 import type { AgentId, InstalledTheme } from '../../shared/types';
-import type { ThemeCatalogItem } from './types';
 import { themeCoverUrl } from '../theme/scheme';
+import type { ThemeCatalogItem } from './types';
 
 /**
  * Minimal data provider the catalog consumes. `ThemeLibrary` satisfies this
@@ -148,9 +148,7 @@ export class ThemeCatalog {
       // extracted original via the registered agentskin-theme://cover protocol
       // (privileged + bypassCSP, see main.ts). The protocol streams the file
       // directly — pixel-perfect and keeps base64 out of the renderer heap.
-      preview:
-        theme.coverDataUrl ??
-        (theme.coverPath ? themeCoverUrl(theme.id) : null),
+      preview: theme.coverDataUrl ?? (theme.coverPath ? themeCoverUrl(theme.id) : null),
       icon: theme.icon ?? null,
       supportedAgents: theme.supportedAgents,
       legacyTargets: theme.legacyTargets ?? [],

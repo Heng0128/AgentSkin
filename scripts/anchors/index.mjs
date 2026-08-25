@@ -64,7 +64,8 @@ const codex = {
   /** Project rows. PROBE: data-app-action-sidebar-project-id. */
   projectRow: '[data-app-action-sidebar-project-id]',
   /** Active thread. PROBE: data-app-action-sidebar-thread-selected/active. */
-  navActive: '[data-app-action-sidebar-thread-selected="true"], [data-app-action-sidebar-thread-active="true"]',
+  navActive:
+    '[data-app-action-sidebar-thread-selected="true"], [data-app-action-sidebar-thread-active="true"]',
   /** Composer root. PROBE: data-codex-composer-root. */
   composer: '[data-codex-composer-root]',
   /** Composer editable. PROBE: [contenteditable="true"].ProseMirror. */

@@ -27,8 +27,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buttonVariants } from '../../src/ui/components/ui/button';
 import { badgeVariants } from '../../src/ui/components/ui/badge';
+import { buttonVariants } from '../../src/ui/components/ui/button';
 
 // ---------------------------------------------------------------------------
 // CSS class patterns (from src/ui/components/ui/progress.tsx)
@@ -44,13 +44,13 @@ const PROGRESS_INDETERMINATE_CLASSES =
 // ---------------------------------------------------------------------------
 
 const INPUT_CLASSES =
-  'h-8 w-full min-w-0 rounded-md border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 read-only:border-transparent read-only:bg-muted read-only:cursor-default read-only:focus-visible:border-transparent read-only:focus-visible:ring-0 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40';
+  'h-8 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-[12px] transition-colors outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 read-only:border-transparent read-only:bg-muted read-only:cursor-default read-only:focus-visible:border-transparent read-only:focus-visible:ring-0 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/20 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40';
 
 // ---------------------------------------------------------------------------
 // CSS class patterns (from src/ui/components/ui/segmented-control.tsx)
 // ---------------------------------------------------------------------------
 
-const SEGMENTED_BASE_CLASSES = 'inline-flex items-center gap-1 rounded-md bg-muted p-1';
+const SEGMENTED_BASE_CLASSES = 'inline-flex items-center gap-1 rounded-lg bg-muted p-1';
 const SEGMENTED_DISABLED_CLASSES = 'pointer-events-none opacity-50';
 const SEGMENTED_ACTIVE_CLASSES = 'bg-card text-foreground';
 const SEGMENTED_INACTIVE_CLASSES = 'text-muted-foreground hover:text-foreground';
@@ -68,7 +68,15 @@ function clampProgressValue(value: number): number {
 // ---------------------------------------------------------------------------
 
 describe('Button', () => {
-  const allVariants = ['default', 'primary', 'outline', 'secondary', 'ghost', 'destructive', 'link'] as const;
+  const allVariants = [
+    'default',
+    'primary',
+    'outline',
+    'secondary',
+    'ghost',
+    'destructive',
+    'link',
+  ] as const;
   const allSizes = ['default', 'xs', 'sm', 'lg', 'icon', 'icon-xs', 'icon-sm', 'icon-lg'] as const;
 
   describe('variants', () => {
@@ -135,13 +143,13 @@ describe('Button', () => {
 
     it('each size has a distinct height or size class', () => {
       const sizeHeights: Record<string, string> = {
-        default: 'h-[30px]',
+        default: 'h-8',
         xs: 'h-6',
-        sm: 'h-6',
+        sm: 'h-7',
         lg: 'h-9',
-        icon: 'size-[30px]',
+        icon: 'size-8',
         'icon-xs': 'size-6',
-        'icon-sm': 'size-[26px]',
+        'icon-sm': 'size-7',
         'icon-lg': 'size-9',
       };
       for (const [size, expected] of Object.entries(sizeHeights)) {
@@ -214,7 +222,15 @@ describe('Button', () => {
 // ---------------------------------------------------------------------------
 
 describe('Badge', () => {
-  const allVariants = ['default', 'secondary', 'destructive', 'outline', 'ghost', 'dot', 'red'] as const;
+  const allVariants = [
+    'default',
+    'secondary',
+    'destructive',
+    'outline',
+    'ghost',
+    'dot',
+    'red',
+  ] as const;
 
   describe('variants', () => {
     it('every variant produces a non-empty class string', () => {
@@ -261,20 +277,20 @@ describe('Badge', () => {
       expect(classes).toContain('bg-primary');
     });
 
-    it('red variant includes text-primary and border-primary/45', () => {
+    it('red variant includes text-accent-foreground and border-primary/30', () => {
       const classes = badgeVariants({ variant: 'red' });
-      expect(classes).toContain('text-primary');
-      expect(classes).toContain('border-primary/45');
+      expect(classes).toContain('text-accent-foreground');
+      expect(classes).toContain('border-primary/30');
       expect(classes).toContain('bg-accent');
     });
   });
 
   describe('base classes (shared across all variants)', () => {
-    it('includes text-[9px] font-normal and tracking-wider', () => {
+    it('includes text-[10px] font-medium and tracking-wide', () => {
       const classes = badgeVariants({});
-      expect(classes).toContain('text-[9px]');
-      expect(classes).toContain('font-normal');
-      expect(classes).toContain('tracking-wider');
+      expect(classes).toContain('text-[10px]');
+      expect(classes).toContain('font-medium');
+      expect(classes).toContain('tracking-wide');
     });
 
     it('includes focus-visible classes', () => {
@@ -392,8 +408,8 @@ describe('Input', () => {
       expect(INPUT_CLASSES).toContain('rounded-md');
     });
 
-    it('includes px-2.5 for horizontal padding', () => {
-      expect(INPUT_CLASSES).toContain('px-2.5');
+    it('includes px-3 for horizontal padding', () => {
+      expect(INPUT_CLASSES).toContain('px-3');
     });
 
     it('includes placeholder:text-muted-foreground', () => {
@@ -484,8 +500,8 @@ describe('SegmentedControl', () => {
       expect(SEGMENTED_BASE_CLASSES).toContain('gap-1');
     });
 
-    it('base track includes rounded-md', () => {
-      expect(SEGMENTED_BASE_CLASSES).toContain('rounded-md');
+    it('base track includes rounded-lg', () => {
+      expect(SEGMENTED_BASE_CLASSES).toContain('rounded-lg');
     });
 
     it('base track includes p-1 for padding', () => {

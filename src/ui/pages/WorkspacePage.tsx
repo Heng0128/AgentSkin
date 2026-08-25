@@ -180,7 +180,7 @@ export function WorkspacePage() {
         </button>
         <div className="h-px w-6 bg-border" />
         {runningAgents.length === 0 ? (
-          <p className="mt-4 px-1 text-center text-[9px] leading-tight text-muted-foreground/50">
+          <p className="mt-4 px-1 text-center text-[10px] leading-tight text-muted-foreground/50">
             {t.workspaceNoRunningAgents.slice(0, 4)}
           </p>
         ) : (

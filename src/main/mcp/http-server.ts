@@ -22,14 +22,14 @@
  * DELETE http://127.0.0.1:<port>/mcp — session termination
  */
 
-import http from 'node:http';
 import fs from 'node:fs';
+import http from 'node:http';
 import path from 'node:path';
 import type { ZodRawShape } from 'zod';
+import { generateApiKey, validateApiKey } from './auth';
+import { executeTool } from './capability-orchestrator';
 import { getMcpConfig } from './config';
 import { getTool, listTools } from './tool-registry';
-import { executeTool } from './capability-orchestrator';
-import { generateApiKey, validateApiKey } from './auth';
 import type { McpContext } from './types';
 
 // ---------------------------------------------------------------------------
@@ -139,12 +139,12 @@ export async function startMcpHttpServer(ctx: McpContext): Promise<number> {
     // Auth check (when enabled)
     if (cfg.authRequired && sessionApiKey) {
       const authHeader = req.headers['authorization'];
-      const providedKey = authHeader?.startsWith('Bearer ')
-        ? authHeader.slice(7)
-        : undefined;
+      const providedKey = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
       if (!validateApiKey(providedKey)) {
         res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Unauthorized — provide Bearer token in Authorization header' }));
+        res.end(
+          JSON.stringify({ error: 'Unauthorized — provide Bearer token in Authorization header' }),
+        );
         return;
       }
     }
@@ -152,7 +152,10 @@ export async function startMcpHttpServer(ctx: McpContext): Promise<number> {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization, mcp-session-id');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'Content-Type, Accept, Authorization, mcp-session-id',
+    );
     res.setHeader('Access-Control-Expose-Headers', 'mcp-session-id');
 
     if (req.method === 'OPTIONS') {
@@ -220,7 +223,9 @@ export async function startMcpHttpServer(ctx: McpContext): Promise<number> {
       // Stateless: create a new server + transport per request
       try {
         const { McpServer } = await import('@modelcontextprotocol/sdk/server/mcp.js');
-        const { StreamableHTTPServerTransport } = await import('@modelcontextprotocol/sdk/server/streamableHttp.js');
+        const { StreamableHTTPServerTransport } = await import(
+          '@modelcontextprotocol/sdk/server/streamableHttp.js'
+        );
 
         const transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: undefined,

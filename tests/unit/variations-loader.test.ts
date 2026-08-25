@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -61,9 +61,7 @@ describe('filterByAgent', () => {
   });
 
   it('keeps variations that explicitly support the agent', () => {
-    const variations = [
-      { id: 'v1', name: 'V1', css: '', agents: ['traework', 'codex'] },
-    ];
+    const variations = [{ id: 'v1', name: 'V1', css: '', agents: ['traework', 'codex'] }];
     expect(filterByAgent(variations, 'traework')).toHaveLength(1);
   });
 
@@ -113,10 +111,7 @@ describe('loadVariations (integration)', () => {
 
   it('returns empty array when manifest has no componentVariations', async () => {
     const tmp = await mkdtemp(join(tmpdir(), 'variations-test-'));
-    await writeFile(
-      join(tmp, 'manifest.json'),
-      JSON.stringify({ id: 'test' }),
-    );
+    await writeFile(join(tmp, 'manifest.json'), JSON.stringify({ id: 'test' }));
     const result = await loadVariations(tmp);
     expect(result).toEqual([]);
   });
@@ -130,10 +125,7 @@ describe('loadVariations (integration)', () => {
       }),
     );
     await mkdir(join(tmp, 'variations'));
-    await writeFile(
-      join(tmp, 'variations/bad.json'),
-      JSON.stringify({ name: 'No ID' }),
-    );
+    await writeFile(join(tmp, 'variations/bad.json'), JSON.stringify({ name: 'No ID' }));
 
     const result = await loadVariations(tmp);
     expect(result).toHaveLength(0);

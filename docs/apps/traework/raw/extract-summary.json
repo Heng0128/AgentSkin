@@ -11,28 +11,19 @@
     "entries": [
       {
         "file": "out/vs/code/electron-browser/workbench/workbench.html",
-        "scripts": [
-          "../scenes/desktop.config.js",
-          "./workbench.js"
-        ]
+        "scripts": ["../scenes/desktop.config.js", "./workbench.js"]
       },
       {
         "file": "out/vs/code/electron-browser/setup/setup.html",
-        "scripts": [
-          "setup.js"
-        ]
+        "scripts": ["setup.js"]
       },
       {
         "file": "out/vs/code/electron-browser/icubeProcessExplorer/icubeProcessExplorer.html",
-        "scripts": [
-          "icubeProcessExplorer.js"
-        ]
+        "scripts": ["icubeProcessExplorer.js"]
       },
       {
         "file": "out/vs/code/electron-browser/filePreview/file-preview.html",
-        "scripts": [
-          "../../../../../node_modules/trae-browser-inspect/dist/file-preview.mjs"
-        ]
+        "scripts": ["../../../../../node_modules/trae-browser-inspect/dist/file-preview.mjs"]
       }
     ],
     "chunks": [
@@ -16910,14 +16901,8 @@
     "csp": {
       "from": "meta:out/vs/workbench/services/extensions/worker/webWorkerExtensionHostIframe.html",
       "directives": {
-        "default-src": [
-          "'none'"
-        ],
-        "child-src": [
-          "'self'",
-          "data:",
-          "blob:"
-        ],
+        "default-src": ["'none'"],
+        "child-src": ["'self'", "data:", "blob:"],
         "script-src": [
           "'self'",
           "'unsafe-eval'",

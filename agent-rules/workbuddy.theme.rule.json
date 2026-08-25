@@ -41,14 +41,7 @@
   ],
   "globalApiCandidates": [],
   "globalStorePathCandidates": [],
-  "lazyRiskComponents": [
-    "Modal",
-    "Dropdown",
-    "Popover",
-    "Select",
-    "Tooltip",
-    "Dialog"
-  ],
+  "lazyRiskComponents": ["Modal", "Dropdown", "Popover", "Select", "Tooltip", "Dialog"],
   "shadowDomRiskSelectors": [
     "div.wb-slot--closable-content",
     "input[type=\"range\"]",

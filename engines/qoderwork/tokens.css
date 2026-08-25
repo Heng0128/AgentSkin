@@ -14,7 +14,11 @@ html.agentskin-host-qoderwork:root {
   --color-primary-bg: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
   --color-primary-bg-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
   --color-primary-border: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
-  --color-primary-border-hover: color-mix(in srgb, var(--agentskin-accent) 55%, transparent) !important;
+  --color-primary-border-hover: color-mix(
+    in srgb,
+    var(--agentskin-accent) 55%,
+    transparent
+  ) !important;
   --color-primary-text: var(--agentskin-text) !important;
   --color-primary-text-hover: color-mix(in srgb, var(--agentskin-accent) 85%, white) !important;
   --color-primary-text-active: color-mix(in srgb, var(--agentskin-accent) 75%, white) !important;
@@ -31,13 +35,21 @@ html.agentskin-host-qoderwork:root {
 
   /* Backgrounds — transparent for art punch-through */
   --color-bg-container: transparent !important;
-  --color-bg-elevated: color-mix(in srgb, var(--agentskin-surface-elevated) 85%, var(--agentskin-accent) 15%) !important;
+  --color-bg-elevated: color-mix(
+    in srgb,
+    var(--agentskin-surface-elevated) 85%,
+    var(--agentskin-accent) 15%
+  ) !important;
   --color-bg-layout: color-mix(in srgb, var(--agentskin-bg) 96%, black) !important;
   --color-bg-spotlight: color-mix(in srgb, var(--agentskin-bg) 92%, black) !important;
   --color-bg-base: transparent !important;
   --color-bg-mask: color-mix(in srgb, var(--agentskin-bg) 60%, transparent) !important;
   --color-bg-highlight: color-mix(in srgb, var(--agentskin-accent) 6%, transparent) !important;
-  --color-bg-highlight-hover: color-mix(in srgb, var(--agentskin-accent) 10%, transparent) !important;
+  --color-bg-highlight-hover: color-mix(
+    in srgb,
+    var(--agentskin-accent) 10%,
+    transparent
+  ) !important;
   --color-background: transparent !important;
   --color-popover: var(--agentskin-surface-elevated) !important;
   --color-white-opacity: #fff !important;
@@ -64,7 +76,11 @@ html.agentskin-host-qoderwork:root {
   --color-success-bg: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
   --color-success-bg-hover: color-mix(in srgb, var(--agentskin-accent) 18%, transparent) !important;
   --color-success-border: color-mix(in srgb, var(--agentskin-accent) 35%, transparent) !important;
-  --color-success-border-hover: color-mix(in srgb, var(--agentskin-accent) 55%, transparent) !important;
+  --color-success-border-hover: color-mix(
+    in srgb,
+    var(--agentskin-accent) 55%,
+    transparent
+  ) !important;
 
   /* Semantic: error (fixed) */
   --color-error: #ff4d4f !important;
@@ -143,7 +159,15 @@ html.agentskin-host-qoderwork:root {
   --settings-nav-row-selected-bg: var(--color-fill-secondary) !important;
 
   /* Chat input parchment — extremely subtle */
-  --chat-input-parchment-edge: color-mix(in srgb, var(--agentskin-accent) 12%, transparent) !important;
-  --chat-input-parchment-glow: color-mix(in srgb, var(--agentskin-secondary) 6%, transparent) !important;
+  --chat-input-parchment-edge: color-mix(
+    in srgb,
+    var(--agentskin-accent) 12%,
+    transparent
+  ) !important;
+  --chat-input-parchment-glow: color-mix(
+    in srgb,
+    var(--agentskin-secondary) 6%,
+    transparent
+  ) !important;
   --chat-input-parchment-halo: transparent !important;
 }

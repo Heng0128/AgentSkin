@@ -16,8 +16,15 @@
     "totalRequirements": 9,
     "criticalRequirements": [],
     "autoImplementable": [
-      "REQ-001", "REQ-002", "REQ-003", "REQ-004",
-      "REQ-005", "REQ-006", "REQ-007", "REQ-008", "REQ-009"
+      "REQ-001",
+      "REQ-002",
+      "REQ-003",
+      "REQ-004",
+      "REQ-005",
+      "REQ-006",
+      "REQ-007",
+      "REQ-008",
+      "REQ-009"
     ],
     "note": "全部 9 条需求均满足硬约束，无需要人工确认的 CRITICAL 变更（无公共 API 破坏性变更、无架构重构）。所有需求均可分阶段实施、自动化 git revert 回滚。"
   },

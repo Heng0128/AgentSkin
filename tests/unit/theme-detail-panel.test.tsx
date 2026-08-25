@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import { ThemeDetailPanel } from '../../src/ui/components/themes/ThemeDetailPanel';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CommunityTheme } from '../../src/shared/types/community';
+import { ThemeDetailPanel } from '../../src/ui/components/themes/ThemeDetailPanel';
 
 // happy-dom does not auto-cleanup between tests; ensure each test starts fresh
 afterEach(() => {
@@ -97,9 +97,7 @@ describe('ThemeDetailPanel', () => {
   it('displays the theme description', () => {
     const theme = createTheme();
     render(<ThemeDetailPanel theme={theme} onClose={() => {}} />);
-    expect(
-      screen.getByText('A warm dark theme optimized for long coding sessions.'),
-    ).toBeTruthy();
+    expect(screen.getByText('A warm dark theme optimized for long coding sessions.')).toBeTruthy();
   });
 
   // --- 4. Stats display ---
@@ -115,9 +113,7 @@ describe('ThemeDetailPanel', () => {
     // Package size: 204800 bytes = 200.0 KB
     expect(screen.getByText('200.0 KB')).toBeTruthy();
     // Updated date
-    expect(
-      screen.getByText((content) => content.includes('2026')),
-    ).toBeTruthy();
+    expect(screen.getByText((content) => content.includes('2026'))).toBeTruthy();
   });
 
   // --- 5. Tags display ---
@@ -137,10 +133,10 @@ describe('ThemeDetailPanel', () => {
     const theme = createTheme();
     render(<ThemeDetailPanel theme={theme} onClose={onClose} />);
 
-    // Both header (aria-label) and footer (text content) have "关闭" button
+    // Backdrop (aria-label), header (aria-label), and footer (text) all close
     const closeButtons = screen.getAllByRole('button', { name: '关闭' });
-    expect(closeButtons.length).toBe(2);
-    fireEvent.click(closeButtons[0]); // header close button
+    expect(closeButtons.length).toBe(3);
+    fireEvent.click(closeButtons[1]); // header close button
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -151,8 +147,8 @@ describe('ThemeDetailPanel', () => {
 
     // Footer has a "关闭" button as well
     const buttons = screen.getAllByRole('button', { name: '关闭' });
-    expect(buttons.length).toBe(2); // header + footer
-    fireEvent.click(buttons[1]);
+    expect(buttons.length).toBe(3); // backdrop + header + footer
+    fireEvent.click(buttons[2]);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -161,9 +157,7 @@ describe('ThemeDetailPanel', () => {
   it('calls onInstall when the install button is clicked', () => {
     const onInstall = vi.fn();
     const theme = createTheme();
-    render(
-      <ThemeDetailPanel theme={theme} onClose={() => {}} onInstall={onInstall} />,
-    );
+    render(<ThemeDetailPanel theme={theme} onClose={() => {}} onInstall={onInstall} />);
 
     const installButton = screen.getByRole('button', { name: '安装' });
     fireEvent.click(installButton);
@@ -182,12 +176,7 @@ describe('ThemeDetailPanel', () => {
     const onInstall = vi.fn();
     const theme = createTheme();
     render(
-      <ThemeDetailPanel
-        theme={theme}
-        onClose={() => {}}
-        onInstall={onInstall}
-        isInstalling
-      />,
+      <ThemeDetailPanel theme={theme} onClose={() => {}} onInstall={onInstall} isInstalling />,
     );
 
     const installButton = screen.getByRole('button', {
@@ -221,9 +210,7 @@ describe('ThemeDetailPanel', () => {
     // Author section should show "Unknown" when displayName is missing
     expect(screen.getByText('by Unknown')).toBeTruthy();
     // No description rendered
-    expect(
-      screen.queryByText('A warm dark theme optimized for long coding sessions.'),
-    ).toBeNull();
+    expect(screen.queryByText('A warm dark theme optimized for long coding sessions.')).toBeNull();
     // Rating falls back to "0.0"
     expect(screen.getByText('0.0')).toBeTruthy();
     // Downloads falls back to 0

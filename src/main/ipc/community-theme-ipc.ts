@@ -16,9 +16,12 @@
  */
 
 import { createHash } from 'node:crypto';
-import { ipcMain, type BrowserWindow } from 'electron';
-import { IpcChannel } from '../../shared/ipc-channels';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { type BrowserWindow, ipcMain } from 'electron';
 import { getMainMessages } from '../../shared/i18n';
+import { IpcChannel } from '../../shared/ipc-channels';
 import type {
   CommunityThemeDetail,
   CommunityThemeListParams,
@@ -27,14 +30,15 @@ import type {
   InstallResult,
 } from '../../shared/types/community';
 import {
+  DreamSkinApiError,
   downloadTheme,
   fetchThemes,
   getThemeDetail,
-  DreamSkinApiError,
 } from '../community/community-theme-api';
+import { convertThemePackage } from '../community/community-theme-converter';
 import type { MainContext } from '../main-context';
-import { MAX_THEME_PACKAGE_BYTES as MAX_IMPORT_BYTES } from '../theme/utils';
 import { notifyStatusChanged, sendLog } from '../main-context';
+import { MAX_THEME_PACKAGE_BYTES as MAX_IMPORT_BYTES } from '../theme/utils';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
 /** Active downloads keyed by community theme id. */
@@ -80,7 +84,10 @@ export function registerCommunityThemeIpc(deps: MainContext): void {
   // --- Download, verify, and install a community theme ---
   ipcMain.handle(IpcChannel.COMMUNITY_THEME_DOWNLOAD, async (_event, themeId: unknown) => {
     if (typeof themeId !== 'string' || !themeId) {
-      return { success: false as const, data: { success: false, error: getMainMessages().invalidThemeId } };
+      return {
+        success: false as const,
+        data: { success: false, error: getMainMessages().invalidThemeId },
+      };
     }
 
     // Guard against duplicate downloads for the same theme.
@@ -170,20 +177,39 @@ async function performDownload(
     }
   }
 
-  // 5. Install into the local theme library.
-  pushProgress(mainWindow, themeId, 'installing', 99, zipBuffer.length, zipBuffer.length);
+  // 5. Convert DreamSkin ZIP → v1 `.agentskin-theme` package.
+  //    The ZIP contains theme.json + theme.css + hero image — none of which
+  //    is a valid agentskin-theme JSON. We must extract, convert, and inline
+  //    CSS + base64 hero into the v1 schema that validateThemePackage accepts.
+  pushProgress(mainWindow, themeId, 'installing', 50, zipBuffer.length, zipBuffer.length);
 
-  // The library's installBytes expects a suggested id; we prefix with `community-`
-  // to avoid collisions with built-in themes.
-  const suggestedId = `community-${themeId}`;
-  const installed = await deps.library.installBytes(zipBuffer, suggestedId);
+  const converted = await convertThemePackage(zipBuffer, detail);
 
-  pushProgress(mainWindow, themeId, 'installing', 100, zipBuffer.length, zipBuffer.length);
+  // 6. Write the v1 package JSON to a temp file, then install via installFile.
+  //    installFile reads the file, validates it, and copies to the theme library.
+  let tempPath = '';
+  try {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'community-install-'));
+    // installFile expects the .agentskin-theme extension
+    tempPath = path.join(tempDir, `${converted.themeId}.agentskin-theme`);
+    fs.writeFileSync(tempPath, converted.manifestJson, 'utf-8');
 
-  return {
-    success: true,
-    themeId: installed.id,
-  };
+    pushProgress(mainWindow, themeId, 'installing', 99, zipBuffer.length, zipBuffer.length);
+
+    const installed = await deps.library.installFile(tempPath);
+
+    pushProgress(mainWindow, themeId, 'installing', 100, zipBuffer.length, zipBuffer.length);
+
+    return {
+      success: true,
+      themeId: installed.id,
+    };
+  } finally {
+    // Clean up temp file + directory
+    if (tempPath) {
+      fs.rmSync(path.dirname(tempPath), { recursive: true, force: true });
+    }
+  }
 }
 
 function pushProgress(

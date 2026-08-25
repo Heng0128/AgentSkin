@@ -21,14 +21,7 @@
   ],
   "globalApiCandidates": [],
   "globalStorePathCandidates": [],
-  "lazyRiskComponents": [
-    "Modal",
-    "Dropdown",
-    "Popover",
-    "Select",
-    "Tooltip",
-    "Dialog"
-  ],
+  "lazyRiskComponents": ["Modal", "Dropdown", "Popover", "Select", "Tooltip", "Dialog"],
   "shadowDomRiskSelectors": [
     "input[type=\"range\"]",
     "input[type=\"color\"]",

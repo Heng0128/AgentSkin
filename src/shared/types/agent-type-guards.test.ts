@@ -16,7 +16,17 @@ import { isAgentId, isAnyAgentId } from './agent';
 // ---------------------------------------------------------------------------
 
 const VALID_AGENT_IDS = ['traework', 'qoderwork', 'workbuddy', 'doubao', 'codex', 'zcode'];
-const INVALID_IDS = ['', 'unknown', 'test', 'demo', 'preview', 'AGENTSkin', 'TRAework', 'Codex123', 'agentskin-preview'];
+const INVALID_IDS = [
+  '',
+  'unknown',
+  'test',
+  'demo',
+  'preview',
+  'AGENTSkin',
+  'TRAework',
+  'Codex123',
+  'agentskin-preview',
+];
 
 // ---------------------------------------------------------------------------
 // isAgentId tests

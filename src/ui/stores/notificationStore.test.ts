@@ -8,7 +8,7 @@
  * - fail: translates errors to user-friendly messages, handles IPC timeout errors
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock dependencies
 vi.mock('@/stores/shellStore', () => ({

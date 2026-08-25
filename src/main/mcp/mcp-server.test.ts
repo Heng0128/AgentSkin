@@ -26,13 +26,11 @@ const mockExecuteTool = vi.fn();
 // ---------------------------------------------------------------------------
 
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => ({
-  McpServer: vi.fn().mockImplementation(function () {
-    return {
-      registerTool: mockRegisterTool,
-      connect: vi.fn().mockResolvedValue(undefined),
-      close: vi.fn().mockResolvedValue(undefined),
-    };
-  }),
+  McpServer: vi.fn().mockImplementation(() => ({
+    registerTool: mockRegisterTool,
+    connect: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined),
+  })),
 }));
 
 vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
@@ -40,7 +38,9 @@ vi.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
 }));
 
 vi.mock('./capability-orchestrator', async () => {
-  const actual = await vi.importActual<typeof import('./capability-orchestrator')>('./capability-orchestrator');
+  const actual = await vi.importActual<typeof import('./capability-orchestrator')>(
+    './capability-orchestrator',
+  );
   return {
     ...actual,
     executeTool: mockExecuteTool,
@@ -115,9 +115,7 @@ describe('createMcpServer', () => {
     mockGetAllRegisteredToolDefinitions.mockReturnValue([]);
 
     const { createMcpServer } = await import('./mcp-server');
-    expect(() => createMcpServer(MOCK_CONTEXT)).toThrow(
-      'No MCP tools could be registered',
-    );
+    expect(() => createMcpServer(MOCK_CONTEXT)).toThrow('No MCP tools could be registered');
     expect(mockRegisterTool).not.toHaveBeenCalled();
   });
 
@@ -181,7 +179,9 @@ describe('tool handler delegation', () => {
       (call: unknown[]) => (call[0] as string) === 'my_tool',
     );
     expect(registerCall).toBeDefined();
-    const handler = registerCall![2] as (args: Record<string, unknown>) => Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }>;
+    const handler = registerCall![2] as (
+      args: Record<string, unknown>,
+    ) => Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }>;
 
     // Call the handler with test args
     const result = await handler({ param1: 'value1' });
@@ -206,7 +206,9 @@ describe('tool handler delegation', () => {
     const registerCall = mockRegisterTool.mock.calls.find(
       (call: unknown[]) => (call[0] as string) === 'failing_tool',
     );
-    const handler = registerCall![2] as (args: Record<string, unknown>) => Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }>;
+    const handler = registerCall![2] as (
+      args: Record<string, unknown>,
+    ) => Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }>;
 
     const result = await handler({});
 
@@ -226,7 +228,9 @@ describe('tool handler delegation', () => {
     const registerCall = mockRegisterTool.mock.calls.find(
       (call: unknown[]) => (call[0] as string) === 'err_tool',
     );
-    const handler = registerCall![2] as (args: Record<string, unknown>) => Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }>;
+    const handler = registerCall![2] as (
+      args: Record<string, unknown>,
+    ) => Promise<{ content: Array<{ type: 'text'; text: string }>; isError?: boolean }>;
 
     const result = await handler({ bad_param: true });
 

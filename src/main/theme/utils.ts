@@ -263,10 +263,7 @@ export function extractCover(id: string, bundle: ThemeBundle): string | null {
       // packageRoot points at the theme's OWN dir in new bundles
       // (themes/art-xxx). Older bundles recorded the parent themes dir
       // (themes/), so also try root/<themeId> to stay forward-compatible.
-      const candidates = [
-        path.resolve(root, image.file),
-        path.resolve(root, id, image.file),
-      ];
+      const candidates = [path.resolve(root, image.file), path.resolve(root, id, image.file)];
       for (const absTarget of candidates) {
         const absRoot = path.resolve(root);
         if (absTarget.startsWith(absRoot) && fsSync.existsSync(absTarget)) {

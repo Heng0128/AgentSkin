@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadDeepCore, resetDom } from '../unit/deep-core-helpers';
 
 const { FragmentRegistry } = loadDeepCore();

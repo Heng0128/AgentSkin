@@ -54,9 +54,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
     display?: string,
   ) => (
     <div className="we-prow flex items-center gap-2">
-      <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">
-        {label}
-      </span>
+      <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">{label}</span>
       <input
         type="range"
         min={min}
@@ -88,9 +86,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
 
       {/* Theme tint */}
       <div className="we-prow flex items-center gap-2">
-        <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">
-          THEME_TINT
-        </span>
+        <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">THEME_TINT</span>
         <input
           type="color"
           value={r.tint ?? '#c41e2a'}
@@ -104,9 +100,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
 
       {/* Alignment */}
       <div className="we-prow flex items-center gap-2">
-        <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">
-          ALIGNMENT
-        </span>
+        <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">ALIGNMENT</span>
         <select
           value={r.alignment ?? 'fill'}
           onChange={(e) =>
@@ -128,9 +122,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       {/* Loop (video only) */}
       {isVideo && (
         <div className="we-prow flex items-center gap-2">
-          <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">
-            LOOP
-          </span>
+          <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">LOOP</span>
           <Switch checked={r.loop ?? true} onCheckedChange={(v) => set({ loop: v })} />
         </div>
       )}

@@ -17,7 +17,15 @@ import { type ThemeSortKey, useThemeCenter } from '@/hooks/useThemeCenter';
 import { cn } from '@/lib/utils';
 
 import type { AgentId } from '@shared/types';
-import { CheckCircle2, Layers, Package, PaintBucket, Palette, UploadCloud, Users } from 'lucide-react';
+import {
+  CheckCircle2,
+  Layers,
+  Package,
+  PaintBucket,
+  Palette,
+  UploadCloud,
+  Users,
+} from 'lucide-react';
 
 type ThemesTab = 'installed' | 'community';
 
@@ -87,19 +95,19 @@ export function ThemesPage({ controller }: { controller: AppController }) {
       className="relative flex h-full min-h-0 flex-col"
     >
       {/* Tab navigation */}
-      <TabsList variant="line" className="border-b border-border px-6 py-3">
-        <TabsTrigger value="installed" className="text-[13px]">
+      <TabsList variant="line" className="border-b border-border pb-2">
+        <TabsTrigger value="installed" className="text-[12px]">
           <Palette className="size-3.5" />
           {t.installedTitle}
         </TabsTrigger>
-        <TabsTrigger value="community" className="text-[13px]">
+        <TabsTrigger value="community" className="text-[12px]">
           <Users className="size-3.5" />
           {t.sourceCommunity}
         </TabsTrigger>
       </TabsList>
 
       {/* Community tab */}
-      <TabsContent value="community" className="flex-1 overflow-auto p-6">
+      <TabsContent value="community" className="flex-1 overflow-auto pt-4">
         <CommunityTabPanel />
       </TabsContent>
 
@@ -168,31 +176,38 @@ export function ThemesPage({ controller }: { controller: AppController }) {
           </PageHeader>
 
           {/* Stats overview bar */}
-          <div className="my-3 flex items-center gap-4 rounded-md border border-border bg-card/50 px-3 py-2">
-            <div className="flex items-center gap-1.5">
+          <div className="as-stat-bar my-3">
+            <div className="flex items-center gap-2">
               <Layers className="size-3.5 text-muted-foreground" />
-              <span className="text-label font-medium tabular-nums text-foreground">{tc.allCount}</span>
+              <span className="text-[12px] font-semibold tabular-nums text-foreground">
+                {tc.allCount}
+              </span>
+              <span className="text-[11px] text-muted-foreground">{t.installedTitle}</span>
             </div>
-            <span className="h-3 w-px bg-border" />
-            <div className="flex items-center gap-1.5">
+            <span className="as-hairline-v h-4" />
+            <div className="flex items-center gap-2">
               <CheckCircle2 className="size-3.5 text-cr-success" />
-              <span className="text-label font-medium tabular-nums text-foreground">{activeThemeCount}</span>
-              <span className="text-micro text-muted-foreground">{t.themeActive}</span>
+              <span className="text-[12px] font-semibold tabular-nums text-foreground">
+                {activeThemeCount}
+              </span>
+              <span className="text-[11px] text-muted-foreground">{t.themeActive}</span>
             </div>
             {dynamicCount > 0 && (
               <>
-                <span className="h-3 w-px bg-border" />
-                <div className="flex items-center gap-1.5">
+                <span className="as-hairline-v h-4" />
+                <div className="flex items-center gap-2">
                   <UploadCloud className="size-3.5 text-primary" />
-                  <span className="text-label font-medium tabular-nums text-foreground">{dynamicCount}</span>
-                  <span className="text-micro text-muted-foreground">{t.themeDynamic}</span>
+                  <span className="text-[12px] font-semibold tabular-nums text-foreground">
+                    {dynamicCount}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">{t.themeDynamic}</span>
                 </div>
               </>
             )}
           </div>
 
           {/* Filter row — chip pills */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 pb-3">
             {/* Category filter */}
             {tc.categories.length > 0 && (
               <FilterChips
@@ -225,16 +240,18 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                 }
                 title={t.themeDynamicHint}
                 className={cn(
-                  'inline-flex h-6 items-center gap-1 rounded-pill px-2 text-[10px] font-normal transition-all duration-fast',
+                  'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-all duration-fast',
                   tc.dynamicFilter === 'dynamic'
-                    ? 'bg-accent text-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
+                    ? 'bg-accent text-accent-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                 )}
               >
                 <span
                   className={cn(
                     'inline-flex size-1.5 rounded-full',
-                    tc.dynamicFilter === 'dynamic' ? 'bg-foreground' : 'bg-muted-foreground/50',
+                    tc.dynamicFilter === 'dynamic'
+                      ? 'bg-accent-foreground'
+                      : 'bg-muted-foreground/50',
                   )}
                 />
                 {t.themeDynamicFilter}
@@ -269,13 +286,13 @@ export function ThemesPage({ controller }: { controller: AppController }) {
 
           {/* Drag-and-drop import overlay */}
           {dragOver && (
-            <div className="pointer-events-none absolute inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-background/80">
-              <div className="flex flex-col items-center gap-3 rounded-md border-2 border-dashed border-border bg-card px-12 py-9 text-center shadow-lg">
-                <div className="flex size-14 items-center justify-center rounded-md bg-accent">
-                  <UploadCloud className="size-7 text-primary" />
+            <div className="pointer-events-none absolute inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-4 rounded-lg border-2 border-dashed border-primary/40 bg-card px-12 py-10 text-center shadow-xl">
+                <div className="flex size-16 items-center justify-center rounded-lg bg-accent">
+                  <UploadCloud className="size-8 text-primary" />
                 </div>
-                <p className="text-[11px] font-normal text-foreground">{t.dropThemeHere}</p>
-                <p className="max-w-60 text-[10px] leading-relaxed text-muted-foreground">
+                <p className="text-[14px] font-semibold text-foreground">{t.dropThemeHere}</p>
+                <p className="max-w-60 text-[11px] leading-relaxed text-muted-foreground">
                   {t.dropThemeHint}
                 </p>
               </div>

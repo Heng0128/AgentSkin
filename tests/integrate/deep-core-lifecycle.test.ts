@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { loadDeepCore, resetDom } from '../unit/deep-core-helpers';
 
 const { DeepCore, createDeepCore } = loadDeepCore();
@@ -17,7 +17,9 @@ describe('DeepCore Lifecycle (L2 Integration)', () => {
   afterEach(() => {
     // Clean up any DeepCore instance
     if ((window as any).__AGENTSKIN_DEEP_CORE__) {
-      try { (window as any).__AGENTSKIN_DEEP_CORE__.dispose(); } catch {}
+      try {
+        (window as any).__AGENTSKIN_DEEP_CORE__.dispose();
+      } catch {}
     }
     resetDom();
   });
@@ -58,13 +60,16 @@ describe('DeepCore Lifecycle (L2 Integration)', () => {
   });
 
   it('should register and activate fragments via DeepCore', () => {
-    const handles = createDeepCore({
-      shadowMode: 'open-only',
-      routes: [],
-      fragments: {
-        'test-fragment': '.test { color: red; }',
+    const handles = createDeepCore(
+      {
+        shadowMode: 'open-only',
+        routes: [],
+        fragments: {
+          'test-fragment': '.test { color: red; }',
+        },
       },
-    }, { agent: 'codex' });
+      { agent: 'codex' },
+    );
 
     // Fragment should be registered but not yet activated
     expect(document.adoptedStyleSheets.length).toBe(0);
@@ -77,21 +82,27 @@ describe('DeepCore Lifecycle (L2 Integration)', () => {
   });
 
   it('should handle re-construction (dispose previous before new)', () => {
-    const handles1 = createDeepCore({
-      shadowMode: 'open-only',
-      routes: [],
-      fragments: { 'frag-1': '.a { color: red; }' },
-    }, { agent: 'codex' });
+    const handles1 = createDeepCore(
+      {
+        shadowMode: 'open-only',
+        routes: [],
+        fragments: { 'frag-1': '.a { color: red; }' },
+      },
+      { agent: 'codex' },
+    );
 
     handles1.fragmentRegistry.activate('frag-1');
     expect(document.adoptedStyleSheets.length).toBe(1);
 
     // Constructing a new instance should dispose the old one
-    const handles2 = createDeepCore({
-      shadowMode: 'open-only',
-      routes: [],
-      fragments: { 'frag-2': '.b { color: blue; }' },
-    }, { agent: 'codex' });
+    const handles2 = createDeepCore(
+      {
+        shadowMode: 'open-only',
+        routes: [],
+        fragments: { 'frag-2': '.b { color: blue; }' },
+      },
+      { agent: 'codex' },
+    );
 
     // Old fragment should be cleaned up by dispose
     expect((window as any).__AGENTSKIN_DEEP_CORE__).toBe(handles2.instance);

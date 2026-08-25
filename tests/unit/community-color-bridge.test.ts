@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { describe, expect, it } from 'vitest';
+import type { CommunityTheme } from '../../shared/types/community';
 import {
-  bridgeColors,
-  parseHex,
+  AGENTSKIN_TOKEN_KEYS,
   adjustBrightness,
+  bridgeColors,
   getContrastColor,
   hexToRgb,
+  parseHex,
   rgbToHex,
-  AGENTSKIN_TOKEN_KEYS,
 } from '../../src/main/community/community-color-bridge';
-import type { CommunityTheme } from '../../shared/types/community';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -122,10 +122,20 @@ describe('AGENTSKIN_TOKEN_KEYS', () => {
 
   it('includes all required token keys', () => {
     const expected = [
-      'accent', 'secondary', 'background', 'foreground', 'muted',
-      'surface', 'surfaceElevated', 'border', 'codeBackground',
-      'codeForeground', 'inputBackground', 'buttonBackground',
-      'buttonForeground', 'focusRing',
+      'accent',
+      'secondary',
+      'background',
+      'foreground',
+      'muted',
+      'surface',
+      'surfaceElevated',
+      'border',
+      'codeBackground',
+      'codeForeground',
+      'inputBackground',
+      'buttonBackground',
+      'buttonForeground',
+      'focusRing',
     ];
     for (const key of expected) {
       expect(AGENTSKIN_TOKEN_KEYS).toContain(key);

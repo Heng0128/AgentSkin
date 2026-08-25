@@ -22,13 +22,13 @@ import { runBootSequence } from './main/boot-sequence';
 import { extractThemeFilesFromArgv } from './main/file-open';
 import { flushLocalePreference } from './main/locale-preferences';
 import { ctx, drainDisposables } from './main/main-context';
+import { THEME_SCHEME } from './main/theme/scheme';
+import { themeCoverPathForScheme, themeHeroPathForScheme } from './main/theme/utils';
 import { disposeAudioBroadcast } from './main/wallpaper-injector';
 import { createMainWindow } from './main/window-manager';
 import { toMessage } from './shared/errors';
 import { getMainMessages } from './shared/i18n';
 import { IpcChannel } from './shared/ipc-channels';
-import { THEME_SCHEME } from './main/theme/scheme';
-import { themeCoverPathForScheme, themeHeroPathForScheme } from './main/theme/utils';
 import type { AgentId } from './shared/types';
 
 const hasSingleInstanceLock = app.requestSingleInstanceLock();

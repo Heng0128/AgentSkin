@@ -6,7 +6,7 @@ import { useRender } from '@base-ui/react/use-render';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const badgeVariants = cva(
-  'group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-sm text-[9px] font-normal tracking-wider whitespace-nowrap border border-transparent px-1 py-0 transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon-inline-end]:pr-1.5 has-data-[icon-inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!',
+  'group/badge inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-md text-[10px] font-medium tracking-wide whitespace-nowrap border border-transparent px-1.5 py-0.5 transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon-inline-end]:pr-2 has-data-[icon-inline-start]:pl-2 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!',
   {
     variants: {
       variant: {
@@ -18,8 +18,8 @@ const badgeVariants = cva(
         ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
         /* status dot indicator — auto-sized colored circle */
         dot: 'size-2 rounded-full bg-primary p-0 border-transparent',
-        /* color tag — only brand red Remix residue cleanup */
-        red: 'text-primary border-primary/45 bg-accent',
+        /* color tag — brand red accent */
+        red: 'text-accent-foreground border-primary/30 bg-accent',
       },
     },
     defaultVariants: {

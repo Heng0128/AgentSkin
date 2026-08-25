@@ -64,7 +64,6 @@ export function WallpaperGrid({
           deletable={wp.source === 'local' && wp.id.startsWith('local:')}
           isDeleting={deletingId === wp.id}
           onDelete={handleDelete}
-          deleteLabel={t.wallpaperDelete}
           confirmLabel={t.wallpaperDeleteConfirm}
           t={t}
         />

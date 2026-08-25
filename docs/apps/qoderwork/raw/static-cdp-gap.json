@@ -65,14 +65,7 @@
     {
       "ns": "radius",
       "varCount": 6,
-      "sampleVars": [
-        "radius-sm",
-        "radius-md",
-        "radius-lg",
-        "radius-xl",
-        "radius-2xl",
-        "radius"
-      ],
+      "sampleVars": ["radius-sm", "radius-md", "radius-lg", "radius-xl", "radius-2xl", "radius"],
       "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
     },
     {
@@ -101,172 +94,115 @@
     {
       "ns": "leading",
       "varCount": 3,
-      "sampleVars": [
-        "leading-tight",
-        "leading-snug",
-        "leading-relaxed"
-      ],
+      "sampleVars": ["leading-tight", "leading-snug", "leading-relaxed"],
       "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
     },
     {
       "ns": "ease",
       "varCount": 3,
-      "sampleVars": [
-        "ease-in",
-        "ease-out",
-        "ease-in-out"
-      ],
+      "sampleVars": ["ease-in", "ease-out", "ease-in-out"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "blur",
       "varCount": 3,
-      "sampleVars": [
-        "blur-sm",
-        "blur-md",
-        "blur-xl"
-      ],
+      "sampleVars": ["blur-sm", "blur-md", "blur-xl"],
       "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
     },
     {
       "ns": "normal",
       "varCount": 3,
-      "sampleVars": [
-        "normal-bg",
-        "normal-text",
-        "normal-border"
-      ],
+      "sampleVars": ["normal-bg", "normal-text", "normal-border"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "success",
       "varCount": 3,
-      "sampleVars": [
-        "success-bg",
-        "success-border",
-        "success-text"
-      ],
+      "sampleVars": ["success-bg", "success-border", "success-text"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "info",
       "varCount": 3,
-      "sampleVars": [
-        "info-bg",
-        "info-border",
-        "info-text"
-      ],
+      "sampleVars": ["info-bg", "info-border", "info-text"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "warning",
       "varCount": 3,
-      "sampleVars": [
-        "warning-bg",
-        "warning-border",
-        "warning-text"
-      ],
+      "sampleVars": ["warning-bg", "warning-border", "warning-text"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "error",
       "varCount": 3,
-      "sampleVars": [
-        "error-bg",
-        "error-border",
-        "error-text"
-      ],
+      "sampleVars": ["error-bg", "error-border", "error-text"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "animate",
       "varCount": 2,
-      "sampleVars": [
-        "animate-spin",
-        "animate-pulse"
-      ],
+      "sampleVars": ["animate-spin", "animate-pulse"],
       "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
     },
     {
       "ns": "base",
       "varCount": 2,
-      "sampleVars": [
-        "base-color",
-        "base-gradient-color"
-      ],
+      "sampleVars": ["base-color", "base-gradient-color"],
       "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
     },
     {
       "ns": "diff",
       "varCount": 2,
-      "sampleVars": [
-        "diff-font-size--",
-        "diff-line-height--"
-      ],
+      "sampleVars": ["diff-font-size--", "diff-line-height--"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "spacing",
       "varCount": 1,
-      "sampleVars": [
-        "spacing"
-      ],
+      "sampleVars": ["spacing"],
       "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
     },
     {
       "ns": "drop",
       "varCount": 1,
-      "sampleVars": [
-        "drop-shadow-lg"
-      ],
+      "sampleVars": ["drop-shadow-lg"],
       "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
     },
     {
       "ns": "aspect",
       "varCount": 1,
-      "sampleVars": [
-        "aspect-video"
-      ],
+      "sampleVars": ["aspect-video"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "bg",
       "varCount": 1,
-      "sampleVars": [
-        "bg"
-      ],
+      "sampleVars": ["bg"],
       "hint": "design-token 可能走 distributed/component-inline，非 :root 暴露——需核是否在核心渲染面"
     },
     {
       "ns": "cell",
       "varCount": 1,
-      "sampleVars": [
-        "cell-size"
-      ],
+      "sampleVars": ["cell-size"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "sidebar",
       "varCount": 1,
-      "sampleVars": [
-        "sidebar-width"
-      ],
+      "sampleVars": ["sidebar-width"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "border",
       "varCount": 1,
-      "sampleVars": [
-        "border-radius"
-      ],
+      "sampleVars": ["border-radius"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "size",
       "varCount": 1,
-      "sampleVars": [
-        "size"
-      ],
+      "sampleVars": ["size"],
       "hint": "Radix(.rt-)结构/尺寸 token——定义在组件规则内、非 :root 暴露；其可着色基底（--gray-/--black-/--white-）已在运行时 rootVars，结构 token 不纳入注入作用域，无需补采"
     }
   ],

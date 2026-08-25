@@ -12,11 +12,13 @@ import { createElectronMock } from '../../fixtures/mocks/electron';
 // boot-sequence.ts call app.getPath() at module scope, which crashes in a
 // bare node environment. We stub it out so we can unit-test runStep in
 // isolation.
-vi.mock('electron', () => createElectronMock(new Map(), {
-  app: {
-    getPath: () => '/tmp/agentskin-test',
-  },
-}));
+vi.mock('electron', () =>
+  createElectronMock(new Map(), {
+    app: {
+      getPath: () => '/tmp/agentskin-test',
+    },
+  }),
+);
 
 import { BootProfiler } from './boot-profiler';
 import { BootProgressReporter } from './boot-reporter';

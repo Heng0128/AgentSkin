@@ -15,9 +15,7 @@
         "anchor": "popcorn-annotation-editor",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "composer"
-      ]
+      "suggestedSemantics": ["composer"]
     },
     {
       "selector": "[data-testid=\"math-block-layout-content\"]",
@@ -44,9 +42,7 @@
         "anchor": "popcorn-edit-toolbar",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "toolbar"
-      ]
+      "suggestedSemantics": ["toolbar"]
     },
     {
       "selector": "[data-testid=\"popcorn-find-bar\"]",
@@ -73,9 +69,7 @@
         "anchor": "root",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-mcp-app-portal-target]",
@@ -84,9 +78,7 @@
         "anchor": "data-mcp-app-portal-target",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-tab-close-button]",
@@ -95,9 +87,7 @@
         "anchor": "data-app-shell-tab-close-button",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-tab-controller]",
@@ -106,9 +96,7 @@
         "anchor": "data-app-shell-tab-controller",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-above-composer-portal]",
@@ -117,9 +105,7 @@
         "anchor": "data-above-composer-portal",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "composer"
-      ]
+      "suggestedSemantics": ["composer"]
     },
     {
       "selector": "[data-app-shell-tab-strip-controller]",
@@ -128,9 +114,7 @@
         "anchor": "data-app-shell-tab-strip-controller",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-focus-area]",
@@ -139,9 +123,7 @@
         "anchor": "data-app-shell-focus-area",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-main-content-layout]",
@@ -150,9 +132,7 @@
         "anchor": "data-app-shell-main-content-layout",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-tab-separator]",
@@ -161,9 +141,7 @@
         "anchor": "data-app-shell-tab-separator",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-tab-separator-index]",
@@ -172,9 +150,7 @@
         "anchor": "data-app-shell-tab-separator-index",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-sidebar-trigger]",
@@ -183,10 +159,7 @@
         "anchor": "data-app-shell-sidebar-trigger",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "sidebar",
-        "root"
-      ]
+      "suggestedSemantics": ["sidebar", "root"]
     },
     {
       "selector": "[data-mcp-app-card]",
@@ -195,9 +168,7 @@
         "anchor": "data-mcp-app-card",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-aura-tab-strip]",
@@ -206,9 +177,7 @@
         "anchor": "data-app-shell-aura-tab-strip",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-tabs]",
@@ -217,9 +186,7 @@
         "anchor": "data-app-shell-tabs",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-tab-panel-controller]",
@@ -228,9 +195,7 @@
         "anchor": "data-app-shell-tab-panel-controller",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-application-menu-bar]",
@@ -239,10 +204,7 @@
         "anchor": "data-app-shell-application-menu-bar",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "sidebar",
-        "root"
-      ]
+      "suggestedSemantics": ["sidebar", "root"]
     },
     {
       "selector": "[data-app-shell-header-edge-scroll]",
@@ -251,9 +213,7 @@
         "anchor": "data-app-shell-header-edge-scroll",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-main-surface]",
@@ -262,9 +222,7 @@
         "anchor": "data-app-shell-main-surface",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-right-panel-full-width]",
@@ -273,9 +231,7 @@
         "anchor": "data-app-shell-right-panel-full-width",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-app-shell-thread-edge-divider]",
@@ -284,10 +240,7 @@
         "anchor": "data-app-shell-thread-edge-divider",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "messageList",
-        "root"
-      ]
+      "suggestedSemantics": ["messageList", "root"]
     },
     {
       "selector": "[data-app-shell-main-content-top-fade]",
@@ -296,9 +249,7 @@
         "anchor": "data-app-shell-main-content-top-fade",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-mcp-app-side-panel-frame-container]",
@@ -307,9 +258,7 @@
         "anchor": "data-mcp-app-side-panel-frame-container",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-mcp-app-loading]",
@@ -318,9 +267,7 @@
         "anchor": "data-mcp-app-loading",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-mcp-app-expanded]",
@@ -329,9 +276,7 @@
         "anchor": "data-mcp-app-expanded",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-mcp-app-inline-surface]",
@@ -340,9 +285,7 @@
         "anchor": "data-mcp-app-inline-surface",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     },
     {
       "selector": "[data-mcp-app-navigation-controls]",
@@ -351,10 +294,7 @@
         "anchor": "data-mcp-app-navigation-controls",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "sidebar",
-        "root"
-      ]
+      "suggestedSemantics": ["sidebar", "root"]
     },
     {
       "selector": "[data-mcp-app-expanding-placeholder]",
@@ -363,9 +303,7 @@
         "anchor": "data-mcp-app-expanding-placeholder",
         "stability": "high"
       },
-      "suggestedSemantics": [
-        "root"
-      ]
+      "suggestedSemantics": ["root"]
     }
   ],
   "byKind": {
@@ -377,9 +315,7 @@
           "anchor": "popcorn-annotation-editor",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "composer"
-        ]
+        "suggestedSemantics": ["composer"]
       },
       {
         "selector": "[data-testid=\"math-block-layout-content\"]",
@@ -406,9 +342,7 @@
           "anchor": "popcorn-edit-toolbar",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "toolbar"
-        ]
+        "suggestedSemantics": ["toolbar"]
       },
       {
         "selector": "[data-testid=\"popcorn-find-bar\"]",
@@ -437,9 +371,7 @@
           "anchor": "root",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       }
     ],
     "data-attr": [
@@ -450,9 +382,7 @@
           "anchor": "data-mcp-app-portal-target",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-tab-close-button]",
@@ -461,9 +391,7 @@
           "anchor": "data-app-shell-tab-close-button",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-tab-controller]",
@@ -472,9 +400,7 @@
           "anchor": "data-app-shell-tab-controller",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-above-composer-portal]",
@@ -483,9 +409,7 @@
           "anchor": "data-above-composer-portal",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "composer"
-        ]
+        "suggestedSemantics": ["composer"]
       },
       {
         "selector": "[data-app-shell-tab-strip-controller]",
@@ -494,9 +418,7 @@
           "anchor": "data-app-shell-tab-strip-controller",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-focus-area]",
@@ -505,9 +427,7 @@
           "anchor": "data-app-shell-focus-area",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-main-content-layout]",
@@ -516,9 +436,7 @@
           "anchor": "data-app-shell-main-content-layout",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-tab-separator]",
@@ -527,9 +445,7 @@
           "anchor": "data-app-shell-tab-separator",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-tab-separator-index]",
@@ -538,9 +454,7 @@
           "anchor": "data-app-shell-tab-separator-index",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-sidebar-trigger]",
@@ -549,10 +463,7 @@
           "anchor": "data-app-shell-sidebar-trigger",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "sidebar",
-          "root"
-        ]
+        "suggestedSemantics": ["sidebar", "root"]
       },
       {
         "selector": "[data-mcp-app-card]",
@@ -561,9 +472,7 @@
           "anchor": "data-mcp-app-card",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-aura-tab-strip]",
@@ -572,9 +481,7 @@
           "anchor": "data-app-shell-aura-tab-strip",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-tabs]",
@@ -583,9 +490,7 @@
           "anchor": "data-app-shell-tabs",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-tab-panel-controller]",
@@ -594,9 +499,7 @@
           "anchor": "data-app-shell-tab-panel-controller",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-application-menu-bar]",
@@ -605,10 +508,7 @@
           "anchor": "data-app-shell-application-menu-bar",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "sidebar",
-          "root"
-        ]
+        "suggestedSemantics": ["sidebar", "root"]
       },
       {
         "selector": "[data-app-shell-header-edge-scroll]",
@@ -617,9 +517,7 @@
           "anchor": "data-app-shell-header-edge-scroll",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-main-surface]",
@@ -628,9 +526,7 @@
           "anchor": "data-app-shell-main-surface",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-right-panel-full-width]",
@@ -639,9 +535,7 @@
           "anchor": "data-app-shell-right-panel-full-width",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-app-shell-thread-edge-divider]",
@@ -650,10 +544,7 @@
           "anchor": "data-app-shell-thread-edge-divider",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "messageList",
-          "root"
-        ]
+        "suggestedSemantics": ["messageList", "root"]
       },
       {
         "selector": "[data-app-shell-main-content-top-fade]",
@@ -662,9 +553,7 @@
           "anchor": "data-app-shell-main-content-top-fade",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-mcp-app-side-panel-frame-container]",
@@ -673,9 +562,7 @@
           "anchor": "data-mcp-app-side-panel-frame-container",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-mcp-app-loading]",
@@ -684,9 +571,7 @@
           "anchor": "data-mcp-app-loading",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-mcp-app-expanded]",
@@ -695,9 +580,7 @@
           "anchor": "data-mcp-app-expanded",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-mcp-app-inline-surface]",
@@ -706,9 +589,7 @@
           "anchor": "data-mcp-app-inline-surface",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       },
       {
         "selector": "[data-mcp-app-navigation-controls]",
@@ -717,10 +598,7 @@
           "anchor": "data-mcp-app-navigation-controls",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "sidebar",
-          "root"
-        ]
+        "suggestedSemantics": ["sidebar", "root"]
       },
       {
         "selector": "[data-mcp-app-expanding-placeholder]",
@@ -729,9 +607,7 @@
           "anchor": "data-mcp-app-expanding-placeholder",
           "stability": "high"
         },
-        "suggestedSemantics": [
-          "root"
-        ]
+        "suggestedSemantics": ["root"]
       }
     ]
   }

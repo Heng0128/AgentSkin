@@ -15,7 +15,7 @@
  * - Facade getState/setState behavior
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Mocks — must precede imports that use them at module level
@@ -73,6 +73,7 @@ vi.mock('@shared/i18n', () => ({
 // ---------------------------------------------------------------------------
 
 import { useProjectStore } from '@/studio/project-store';
+
 import type { AgentId, StudioProject } from '@shared/types';
 
 function makeProject(id: string, name: string): StudioProject {
@@ -299,7 +300,7 @@ describe('capture-store initial state', () => {
     expect(state.redoStack).toEqual([]);
     expect(state.inspectMode).toBe(false);
     expect(state.liveNode).toBeNull();
-      expect(state.liveError).toBeNull();
+    expect(state.liveError).toBeNull();
   });
 });
 

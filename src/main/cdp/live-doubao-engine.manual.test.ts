@@ -41,7 +41,9 @@ import { ThemeLibrary } from '../theme-library';
 import { connectCdp } from './cdp-client';
 import { waitForTheme } from './injection/shared';
 
-const THEMES_ROOT = process.env.AGENTSKIN_THEMES_PATH || path.join(os.homedir(), 'AppData', 'Roaming', 'AgentSkin', 'themes');
+const THEMES_ROOT =
+  process.env.AGENTSKIN_THEMES_PATH ||
+  path.join(os.homedir(), 'AppData', 'Roaming', 'AgentSkin', 'themes');
 const THEME_ID = process.env.THEME_ID ?? 'aurora-dusk';
 const MANUAL = process.env.AGENTSKIN_MANUAL === '1';
 const noop = (): void => {};
@@ -100,7 +102,15 @@ describe.skipIf(!MANUAL)('batch-8 doubao full-chain engine injection (manual)', 
       console.log(`[B0] doubao: disabled-before=${beforeDisabled}`);
 
       // B2: full engine injection (engine files + palette + injectThemeViaEngine).
-      const result = await tryEngineInjection(session, 'doubao', bundle, targetTheme, null, null, deps);
+      const result = await tryEngineInjection(
+        session,
+        'doubao',
+        bundle,
+        targetTheme,
+        null,
+        null,
+        deps,
+      );
       console.log(
         `[B2] doubao: layers=${result?.layersInjected ?? 'null'} ` +
           `adapter=${result?.adapterApplied ?? false} success=${result?.success ?? false}`,

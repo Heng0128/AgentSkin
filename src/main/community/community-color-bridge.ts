@@ -126,9 +126,7 @@ export function bridgeColors(theme: CommunityTheme): AgentSkinTokens {
  * (meaning "follow system") — we treat it as `light` for color derivation
  * purposes since the actual system-mode resolution happens at apply time.
  */
-function normalizeAppearance(
-  appearance: string | undefined,
-): 'light' | 'dark' {
+function normalizeAppearance(appearance: string | undefined): 'light' | 'dark' {
   if (appearance === 'dark') return 'dark';
   return 'light';
 }
@@ -260,12 +258,7 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } | nul
 
 /** Convert r, g, b channel values (0-255) to a `#rrggbb` string. */
 export function rgbToHex(r: number, g: number, b: number): string {
-  return (
-    '#' +
-    [r, g, b]
-      .map((c) => Math.round(c).toString(16).padStart(2, '0'))
-      .join('')
-  );
+  return '#' + [r, g, b].map((c) => Math.round(c).toString(16).padStart(2, '0')).join('');
 }
 
 /** Clamp a numeric value to the inclusive [min, max] range. */

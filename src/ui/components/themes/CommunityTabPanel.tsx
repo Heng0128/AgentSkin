@@ -6,26 +6,24 @@
  * Community theme browser panel — search bar, sort selector, responsive
  * card grid, and a "load more" button. Consumes `useCommunityStore` for
  * all state and actions.
- *
- * Handles three visual states:
- *   - Loading (initial fetch) → skeleton card grid (6 placeholders)
- *   - Empty → empty-state message
- *   - Error → error message with retry button
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, Search, Users } from 'lucide-react';
-import { CommunityThemeCard } from './CommunityThemeCard';
-import { ThemeDetailPanel } from './ThemeDetailPanel';
-import { useCommunityStore } from '@/stores/communityStore';
+import { CommunityThemeCard } from '@/components/themes/CommunityThemeCard';
+import { ThemeDetailPanel } from '@/components/themes/ThemeDetailPanel';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { cn } from '@/lib/utils';
-import { uiMessages } from '@shared/i18n';
+import { Input } from '@/components/ui/input';
+import { SegmentedControl, type SegmentedOption } from '@/components/ui/segmented-control';
+import { useCommunityStore } from '@/stores/communityStore';
 import { useShellStore } from '@/stores/shellStore';
 
-/** Debounce delay for search input (ms). */
+import { uiMessages } from '@shared/i18n';
+import { AlertCircle, Search, Users } from 'lucide-react';
+
 const SEARCH_DEBOUNCE = 300;
+
+type SortKey = 'popular' | 'recent' | 'rating';
 
 export function CommunityTabPanel() {
   const {
@@ -49,13 +47,13 @@ export function CommunityTabPanel() {
     loadThemeDetail,
   } = useCommunityStore();
 
-  // Track per-theme install errors and retry counts
-  const [installErrors, setInstallErrors] = useState<Map<string, { error: string; retryCount: number }>>(new Map());
+  const [installErrors, setInstallErrors] = useState<
+    Map<string, { error: string; retryCount: number }>
+  >(new Map());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const locale = useShellStore((s) => s.locale);
   const t = uiMessages[locale];
 
-  // Clear error for a theme when install starts/retry is attempted
   const handleInstall = useCallback(async (themeId: string) => {
     setInstallErrors((prev) => {
       const next = new Map(prev);
@@ -65,33 +63,32 @@ export function CommunityTabPanel() {
     await useCommunityStore.getState().installTheme(themeId);
   }, []);
 
-  // Handle installTheme result and capture errors
-  const handleInstallWithTracking = useCallback(async (themeId: string) => {
-    const retryCount = installErrors.get(themeId)?.retryCount ?? 0;
-    const result = await useCommunityStore.getState().installTheme(themeId);
+  const handleInstallWithTracking = useCallback(
+    async (themeId: string) => {
+      const retryCount = installErrors.get(themeId)?.retryCount ?? 0;
+      const result = await useCommunityStore.getState().installTheme(themeId);
 
-    if (!result.success && result.error) {
-      setInstallErrors((prev) => {
-        const next = new Map(prev);
-        next.set(themeId, { error: result.error, retryCount: retryCount + 1 });
-        return next;
-      });
-    } else if (result.success) {
-      // Clear error on success
-      setInstallErrors((prev) => {
-        const next = new Map(prev);
-        next.delete(themeId);
-        return next;
-      });
-    }
-  }, [installErrors]);
+      if (!result.success && result.error) {
+        setInstallErrors((prev) => {
+          const next = new Map(prev);
+          next.set(themeId, { error: result.error!, retryCount: retryCount + 1 });
+          return next;
+        });
+      } else if (result.success) {
+        setInstallErrors((prev) => {
+          const next = new Map(prev);
+          next.delete(themeId);
+          return next;
+        });
+      }
+    },
+    [installErrors],
+  );
 
-  // Initial load
   useEffect(() => {
     loadThemes();
   }, [loadThemes]);
 
-  // Search with debounce
   const handleSearch = useCallback(
     (value: string) => {
       setQuery(value);
@@ -103,16 +100,20 @@ export function CommunityTabPanel() {
     [setQuery, loadThemes],
   );
 
-  // Sort change — immediate reload
   const handleSortChange = useCallback(
-    (sort: 'popular' | 'recent' | 'rating') => {
+    (sort: SortKey) => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       setSortBy(sort);
     },
     [setSortBy],
   );
 
-  // --- Error state ---
+  const sortOptions: SegmentedOption<SortKey>[] = [
+    { value: 'popular', label: t.communitySortPopular },
+    { value: 'recent', label: t.communitySortRecent },
+    { value: 'rating', label: t.communitySortRating },
+  ];
+
   if (error) {
     return (
       <EmptyState
@@ -129,7 +130,6 @@ export function CommunityTabPanel() {
     );
   }
 
-  // --- Loading state (initial) ---
   if (loading && themes.length === 0) {
     return (
       <div className="grid grid-cols-1 gap-3 animate-pulse sm:grid-cols-2 lg:grid-cols-3">
@@ -138,9 +138,7 @@ export function CommunityTabPanel() {
             key={i}
             className="flex flex-col overflow-hidden rounded-md border border-border bg-card"
           >
-            {/* Skeleton preview area — 16:9 aspect */}
             <div className="aspect-[16/9] w-full bg-muted" />
-            {/* Skeleton info section */}
             <div className="flex flex-col gap-2 p-2.5">
               <div className="h-3.5 w-3/4 rounded bg-muted" />
               <div className="h-3 w-1/2 rounded bg-muted" />
@@ -149,7 +147,6 @@ export function CommunityTabPanel() {
                 <div className="h-3 w-12 rounded bg-muted" />
               </div>
             </div>
-            {/* Skeleton action button */}
             <div className="border-t border-border p-2">
               <div className="h-7 w-full rounded-md bg-muted" />
             </div>
@@ -159,7 +156,6 @@ export function CommunityTabPanel() {
     );
   }
 
-  // --- Empty state ---
   if (themes.length === 0) {
     return (
       <EmptyState
@@ -171,116 +167,77 @@ export function CommunityTabPanel() {
     );
   }
 
-  // --- Theme grid ---
   return (
-    <div className="flex flex-col gap-4">
-      {/* Search and filter bar */}
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-        {/* Search input */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      {/* Toolbar */}
+      <div className="flex items-center gap-2">
+        <div className="relative w-[240px]">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
+          <Input
             type="text"
             value={query}
             onChange={(e) => handleSearch(e.target.value)}
             placeholder={t.communitySearchPlaceholder}
-            className="w-full rounded-md border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="pl-8"
           />
         </div>
-
-        {/* Sort toggle */}
-        <div className="flex gap-1 rounded-md border border-border p-1">
-          <button
-            type="button"
-            onClick={() => handleSortChange('popular')}
-            className={cn(
-              'rounded-md px-3 py-1 text-xs font-medium transition-all duration-fast',
-              sortBy === 'popular'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {t.communitySortPopular}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSortChange('recent')}
-            className={cn(
-              'rounded-md px-3 py-1 text-xs font-medium transition-all duration-fast',
-              sortBy === 'recent'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {t.communitySortRecent}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSortChange('rating')}
-            className={cn(
-              'rounded-md px-3 py-1 text-xs font-medium transition-all duration-fast',
-              sortBy === 'rating'
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
-          >
-            {t.communitySortRating}
-          </button>
-        </div>
+        <SegmentedControl
+          options={sortOptions}
+          value={sortBy}
+          onChange={(v) => handleSortChange(v)}
+          size="sm"
+        />
       </div>
 
-      {/* Card grid — responsive columns */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {themes.map((theme) => {
-          const isInstalled = installedIds.has(theme.themeId);
-          const isInstalling = installingIds.has(theme.themeId);
-          const progress = downloadProgress.get(theme.themeId);
-          const installError = installErrors.get(theme.themeId);
+      {/* Card grid */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <div className="grid grid-cols-1 gap-3 pb-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {themes.map((theme) => {
+            const isInstalled = installedIds.has(theme.themeId);
+            const isInstalling = installingIds.has(theme.themeId);
+            const progress = downloadProgress.get(theme.themeId);
+            const installError = installErrors.get(theme.themeId);
 
-          return (
-            <div
-              key={theme.themeId}
-              onClick={() => {
-                selectTheme(theme.themeId);
-                loadThemeDetail(theme.themeId);
-              }}
-              className="cursor-pointer"
-            >
-              <CommunityThemeCard
-                theme={theme}
-                isInstalled={isInstalled}
-                isInstalling={isInstalling}
-                downloadProgress={progress}
-                installError={installError?.error ?? null}
-                retryCount={installError?.retryCount ?? 0}
-                onInstall={() => {
-                  void handleInstallWithTracking(theme.themeId);
+            return (
+              <div
+                key={theme.themeId}
+                onClick={() => {
+                  selectTheme(theme.themeId);
+                  loadThemeDetail(theme.themeId);
                 }}
-                onUninstall={() => {
-                  useCommunityStore.getState().uninstallTheme(theme.themeId);
-                }}
-                onCancel={() => {
-                  useCommunityStore.getState().cancelInstall(theme.themeId);
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Load more */}
-      {themes.length < total && (
-        <div className="flex justify-center py-4">
-          <Button
-            variant="outline"
-            size="default"
-            onClick={loadMore}
-            disabled={loadingMore}
-          >
-            {loadingMore ? t.communityLoading : t.communityLoadMore}
-          </Button>
+                className="cursor-pointer"
+              >
+                <CommunityThemeCard
+                  theme={theme}
+                  isInstalled={isInstalled}
+                  isInstalling={isInstalling}
+                  downloadProgress={progress}
+                  installError={installError?.error ?? null}
+                  retryCount={installError?.retryCount ?? 0}
+                  onInstall={() => {
+                    void handleInstallWithTracking(theme.themeId);
+                  }}
+                  onUninstall={() => {
+                    useCommunityStore.getState().uninstallTheme(theme.themeId);
+                  }}
+                  onCancel={() => {
+                    useCommunityStore.getState().cancelInstall(theme.themeId);
+                  }}
+                />
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Load more */}
+        {themes.length < total && (
+          <div className="flex justify-center py-4">
+            <Button variant="outline" size="default" onClick={loadMore} disabled={loadingMore}>
+              {loadingMore ? t.communityLoading : t.communityLoadMore}
+            </Button>
+          </div>
+        )}
+      </div>
 
       {/* Theme detail panel */}
       {selectedThemeId && selectedThemeDetail && (

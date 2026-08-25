@@ -11,7 +11,6 @@ import type {
   Platform,
   ScanProgressEvent,
 } from './agent';
-import type { ConcurrencyMetrics } from './concurrency';
 import type {
   CommunityThemeDetail,
   CommunityThemeListParams,
@@ -19,6 +18,7 @@ import type {
   DownloadProgress,
   InstallResult,
 } from './community';
+import type { ConcurrencyMetrics } from './concurrency';
 import type { DriftStatus, RegenResult } from './drift-status';
 import type { EnvironmentPreset } from './environment';
 import type { HealthCheckReport } from './health-check';

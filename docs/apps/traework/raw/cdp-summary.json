@@ -52,520 +52,142 @@
       "default": {
         "count": 4315,
         "namespaces": [
-          [
-            "vscode",
-            3771
-          ],
-          [
-            "brand",
-            92
-          ],
-          [
-            "bg",
-            36
-          ],
-          [
-            "z",
-            31
-          ],
-          [
-            "status",
-            30
-          ],
-          [
-            "body",
-            28
-          ],
-          [
-            "heading",
-            27
-          ],
-          [
-            "query",
-            25
-          ],
-          [
-            "radius",
-            23
-          ],
-          [
-            "code",
-            21
-          ],
-          [
-            "chat",
-            18
-          ],
-          [
-            "viz",
-            18
-          ],
-          [
-            "text",
-            17
-          ],
-          [
-            "tw",
-            17
-          ],
-          [
-            "icon",
-            15
-          ],
-          [
-            "font",
-            15
-          ],
-          [
-            "shadow",
-            15
-          ],
-          [
-            "spacer",
-            13
-          ],
-          [
-            "permission",
-            13
-          ],
-          [
-            "Spacers",
-            12
-          ],
-          [
-            "solo",
-            9
-          ],
-          [
-            "accent",
-            9
-          ],
-          [
-            "border",
-            9
-          ],
-          [
-            "motion",
-            6
-          ],
-          [
-            "spacing",
-            6
-          ],
-          [
-            "Radius",
-            6
-          ],
-          [
-            "special",
-            5
-          ],
-          [
-            "monaco",
-            5
-          ],
-          [
-            "user",
-            4
-          ],
-          [
-            "transition",
-            3
-          ],
-          [
-            "ul",
-            3
-          ],
-          [
-            "welcome",
-            2
-          ],
-          [
-            "gradient",
-            2
-          ],
-          [
-            "prop",
-            1
-          ],
-          [
-            "inline",
-            1
-          ],
-          [
-            "workspace",
-            1
-          ],
-          [
-            "slash",
-            1
-          ],
-          [
-            "header",
-            1
-          ],
-          [
-            "builtin",
-            1
-          ],
-          [
-            "sheet",
-            1
-          ],
-          [
-            "homepage",
-            1
-          ],
-          [
-            "icube",
-            1
-          ]
+          ["vscode", 3771],
+          ["brand", 92],
+          ["bg", 36],
+          ["z", 31],
+          ["status", 30],
+          ["body", 28],
+          ["heading", 27],
+          ["query", 25],
+          ["radius", 23],
+          ["code", 21],
+          ["chat", 18],
+          ["viz", 18],
+          ["text", 17],
+          ["tw", 17],
+          ["icon", 15],
+          ["font", 15],
+          ["shadow", 15],
+          ["spacer", 13],
+          ["permission", 13],
+          ["Spacers", 12],
+          ["solo", 9],
+          ["accent", 9],
+          ["border", 9],
+          ["motion", 6],
+          ["spacing", 6],
+          ["Radius", 6],
+          ["special", 5],
+          ["monaco", 5],
+          ["user", 4],
+          ["transition", 3],
+          ["ul", 3],
+          ["welcome", 2],
+          ["gradient", 2],
+          ["prop", 1],
+          ["inline", 1],
+          ["workspace", 1],
+          ["slash", 1],
+          ["header", 1],
+          ["builtin", 1],
+          ["sheet", 1],
+          ["homepage", 1],
+          ["icube", 1]
         ]
       },
       "dark": {
         "count": 4315,
         "namespaces": [
-          [
-            "vscode",
-            3771
-          ],
-          [
-            "brand",
-            92
-          ],
-          [
-            "bg",
-            36
-          ],
-          [
-            "z",
-            31
-          ],
-          [
-            "status",
-            30
-          ],
-          [
-            "body",
-            28
-          ],
-          [
-            "heading",
-            27
-          ],
-          [
-            "query",
-            25
-          ],
-          [
-            "radius",
-            23
-          ],
-          [
-            "code",
-            21
-          ],
-          [
-            "chat",
-            18
-          ],
-          [
-            "viz",
-            18
-          ],
-          [
-            "text",
-            17
-          ],
-          [
-            "tw",
-            17
-          ],
-          [
-            "icon",
-            15
-          ],
-          [
-            "font",
-            15
-          ],
-          [
-            "shadow",
-            15
-          ],
-          [
-            "spacer",
-            13
-          ],
-          [
-            "permission",
-            13
-          ],
-          [
-            "Spacers",
-            12
-          ],
-          [
-            "solo",
-            9
-          ],
-          [
-            "accent",
-            9
-          ],
-          [
-            "border",
-            9
-          ],
-          [
-            "motion",
-            6
-          ],
-          [
-            "spacing",
-            6
-          ],
-          [
-            "Radius",
-            6
-          ],
-          [
-            "special",
-            5
-          ],
-          [
-            "monaco",
-            5
-          ],
-          [
-            "user",
-            4
-          ],
-          [
-            "transition",
-            3
-          ],
-          [
-            "ul",
-            3
-          ],
-          [
-            "welcome",
-            2
-          ],
-          [
-            "gradient",
-            2
-          ],
-          [
-            "prop",
-            1
-          ],
-          [
-            "inline",
-            1
-          ],
-          [
-            "workspace",
-            1
-          ],
-          [
-            "slash",
-            1
-          ],
-          [
-            "header",
-            1
-          ],
-          [
-            "builtin",
-            1
-          ],
-          [
-            "sheet",
-            1
-          ],
-          [
-            "homepage",
-            1
-          ],
-          [
-            "icube",
-            1
-          ]
+          ["vscode", 3771],
+          ["brand", 92],
+          ["bg", 36],
+          ["z", 31],
+          ["status", 30],
+          ["body", 28],
+          ["heading", 27],
+          ["query", 25],
+          ["radius", 23],
+          ["code", 21],
+          ["chat", 18],
+          ["viz", 18],
+          ["text", 17],
+          ["tw", 17],
+          ["icon", 15],
+          ["font", 15],
+          ["shadow", 15],
+          ["spacer", 13],
+          ["permission", 13],
+          ["Spacers", 12],
+          ["solo", 9],
+          ["accent", 9],
+          ["border", 9],
+          ["motion", 6],
+          ["spacing", 6],
+          ["Radius", 6],
+          ["special", 5],
+          ["monaco", 5],
+          ["user", 4],
+          ["transition", 3],
+          ["ul", 3],
+          ["welcome", 2],
+          ["gradient", 2],
+          ["prop", 1],
+          ["inline", 1],
+          ["workspace", 1],
+          ["slash", 1],
+          ["header", 1],
+          ["builtin", 1],
+          ["sheet", 1],
+          ["homepage", 1],
+          ["icube", 1]
         ]
       },
       "light": {
         "count": 4315,
         "namespaces": [
-          [
-            "vscode",
-            3771
-          ],
-          [
-            "brand",
-            92
-          ],
-          [
-            "bg",
-            36
-          ],
-          [
-            "z",
-            31
-          ],
-          [
-            "status",
-            30
-          ],
-          [
-            "body",
-            28
-          ],
-          [
-            "heading",
-            27
-          ],
-          [
-            "query",
-            25
-          ],
-          [
-            "radius",
-            23
-          ],
-          [
-            "code",
-            21
-          ],
-          [
-            "chat",
-            18
-          ],
-          [
-            "viz",
-            18
-          ],
-          [
-            "text",
-            17
-          ],
-          [
-            "tw",
-            17
-          ],
-          [
-            "icon",
-            15
-          ],
-          [
-            "font",
-            15
-          ],
-          [
-            "shadow",
-            15
-          ],
-          [
-            "spacer",
-            13
-          ],
-          [
-            "permission",
-            13
-          ],
-          [
-            "Spacers",
-            12
-          ],
-          [
-            "solo",
-            9
-          ],
-          [
-            "accent",
-            9
-          ],
-          [
-            "border",
-            9
-          ],
-          [
-            "motion",
-            6
-          ],
-          [
-            "spacing",
-            6
-          ],
-          [
-            "Radius",
-            6
-          ],
-          [
-            "special",
-            5
-          ],
-          [
-            "monaco",
-            5
-          ],
-          [
-            "user",
-            4
-          ],
-          [
-            "transition",
-            3
-          ],
-          [
-            "ul",
-            3
-          ],
-          [
-            "welcome",
-            2
-          ],
-          [
-            "gradient",
-            2
-          ],
-          [
-            "prop",
-            1
-          ],
-          [
-            "inline",
-            1
-          ],
-          [
-            "workspace",
-            1
-          ],
-          [
-            "slash",
-            1
-          ],
-          [
-            "header",
-            1
-          ],
-          [
-            "builtin",
-            1
-          ],
-          [
-            "sheet",
-            1
-          ],
-          [
-            "homepage",
-            1
-          ],
-          [
-            "icube",
-            1
-          ]
+          ["vscode", 3771],
+          ["brand", 92],
+          ["bg", 36],
+          ["z", 31],
+          ["status", 30],
+          ["body", 28],
+          ["heading", 27],
+          ["query", 25],
+          ["radius", 23],
+          ["code", 21],
+          ["chat", 18],
+          ["viz", 18],
+          ["text", 17],
+          ["tw", 17],
+          ["icon", 15],
+          ["font", 15],
+          ["shadow", 15],
+          ["spacer", 13],
+          ["permission", 13],
+          ["Spacers", 12],
+          ["solo", 9],
+          ["accent", 9],
+          ["border", 9],
+          ["motion", 6],
+          ["spacing", 6],
+          ["Radius", 6],
+          ["special", 5],
+          ["monaco", 5],
+          ["user", 4],
+          ["transition", 3],
+          ["ul", 3],
+          ["welcome", 2],
+          ["gradient", 2],
+          ["prop", 1],
+          ["inline", 1],
+          ["workspace", 1],
+          ["slash", 1],
+          ["header", 1],
+          ["builtin", 1],
+          ["sheet", 1],
+          ["homepage", 1],
+          ["icube", 1]
         ]
       }
     },

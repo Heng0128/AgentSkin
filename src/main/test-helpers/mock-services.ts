@@ -19,7 +19,6 @@ import type {
   WallpaperAgentSetting,
   WallpaperSettings,
 } from '../../shared/types';
-import type { ThemeBundle } from '../services/theme-bundle';
 import type {
   LoggerApi,
   PackageInspection,
@@ -28,6 +27,7 @@ import type {
   ThemeLibraryApi,
   WallpaperResolver,
 } from '../services/contracts';
+import type { ThemeBundle } from '../services/theme-bundle';
 
 // ---------------------------------------------------------------------------
 // ThemeLibraryApi stub
@@ -49,7 +49,9 @@ export function makeThemeLibraryStub(): ThemeLibraryApi {
     installFile: vi.fn(async () => ({}) as InstalledTheme),
     installBytes: vi.fn(async () => ({}) as InstalledTheme),
     importPackage: vi.fn(async () => ({}) as InstalledTheme),
-    inspectPackage: vi.fn(async () => ({ incoming: {} as InstalledTheme, existing: null }) as PackageInspection),
+    inspectPackage: vi.fn(
+      async () => ({ incoming: {} as InstalledTheme, existing: null }) as PackageInspection,
+    ),
     exportPackage: vi.fn(async () => {}),
     delete: vi.fn(async () => {}),
   } satisfies ThemeLibraryApi;
@@ -78,16 +80,22 @@ export function makeSettingsStub(options: MakeSettingsOptions = {}): SettingsSer
       appPath: options.appPath ?? null,
       port: options.port ?? null,
     })),
-    wallpaper: vi.fn(() => ({
-      enabled: false,
-      id: null,
-      render: { alignment: 'fill', speed: 1, loop: true, brightness: 100 },
-      agents: {} as Record<AgentId, WallpaperAgentSetting>,
-    }) as WallpaperSettings),
-    agentWallpaper: vi.fn((appId: AgentId) => ({
-      enabled: wallpaperAgents.includes(appId),
-      id: null,
-    }) as WallpaperAgentSetting),
+    wallpaper: vi.fn(
+      () =>
+        ({
+          enabled: false,
+          id: null,
+          render: { alignment: 'fill', speed: 1, loop: true, brightness: 100 },
+          agents: {} as Record<AgentId, WallpaperAgentSetting>,
+        }) as WallpaperSettings,
+    ),
+    agentWallpaper: vi.fn(
+      (appId: AgentId) =>
+        ({
+          enabled: wallpaperAgents.includes(appId),
+          id: null,
+        }) as WallpaperAgentSetting,
+    ),
     toDto: vi.fn(() => ({}) as DesktopSettings),
     setAppPath: vi.fn(async () => {}),
     setAppPort: vi.fn(async () => {}),

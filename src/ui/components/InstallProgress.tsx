@@ -99,7 +99,7 @@ function LogEntryRow({ entry }: { entry: LogEntry }) {
   })();
 
   return (
-      <div className="flex gap-2 text-[11px] leading-5">
+    <div className="flex gap-2 text-[11px] leading-5">
       <span className="text-muted-foreground/40 shrink-0">{entry.time}</span>
       <span className="text-primary/70 shrink-0">[{entry.module}]</span>
       <span className={cn(levelColor, 'shrink-0')}>[{entry.level}]</span>

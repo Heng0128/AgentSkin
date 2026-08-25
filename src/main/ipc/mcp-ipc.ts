@@ -13,13 +13,13 @@ import { ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { MainContext } from '../main-context';
 import { createMcpContext } from '../mcp/context';
-import { registerAllTools } from '../mcp/index';
 import {
   getMcpHttpPort,
   isMcpHttpRunning,
   startMcpHttpServer,
   stopMcpHttpServer,
 } from '../mcp/http-server';
+import { registerAllTools } from '../mcp/index';
 
 export function registerMcpIpc(deps: MainContext): void {
   // Get current MCP HTTP server status

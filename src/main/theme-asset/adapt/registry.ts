@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { AGENT_IDS, type AgentId } from '@shared/types/agent';
 import type { AdapterResult, GeneratorInput } from '../ir/types';
 import { toGeneratorInput } from './toGeneratorInput';
-import { AGENT_IDS, type AgentId } from '@shared/types/agent';
 
 export type { AgentId };
 

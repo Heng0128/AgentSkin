@@ -26,6 +26,7 @@ import { registerCoordinatorIpc } from './coordinator-ipc';
 import { registerCoreIpc } from './core-ipc';
 import { registerElectronIpc } from './electron-ipc';
 import { registerEnvironmentIpc } from './environment-ipc';
+import { registerMcpIpc } from './mcp-ipc';
 import { registerPerformanceIpc } from './performance-ipc';
 import { registerSettingsIpc } from './settings-ipc';
 import { registerStudioIpc } from './studio-ipc';
@@ -36,7 +37,6 @@ import { registerVisualAnalyzerIpc } from './visual-analyzer-ipc';
 import { registerWallpaperIpc } from './wallpaper-ipc';
 import { registerWindowIpc } from './window-ipc';
 import { withMonitoredTimeout } from './with-monitored-timeout';
-import { registerMcpIpc } from './mcp-ipc';
 
 export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void>): void {
   registerCoreIpc(ctx, updateTrayMenu);

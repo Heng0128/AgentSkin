@@ -1,18 +1,16 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 import { useEffect, useRef, useState } from 'react';
 import { APP_META, AppMark } from '@/components/AppMark';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import type { AppController, Selection } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
-import { EmptyState } from '@/components/ui/empty-state';
 import { useWallpaperVideoUrl } from '@/lib/wallpaperVideo';
 
 import { AGENT_IDS, type AgentId } from '@shared/types';
-import { MousePointerClick, Package, PaintBucket, Share2, Trash2 } from 'lucide-react';
+import { Package, PaintBucket, Share2, Trash2, X } from 'lucide-react';
 
 /** Per-app apply rows: the drawer chooses the target app, not a global picker. */
 function AppActionList({
@@ -43,31 +41,21 @@ function AppActionList({
     }
   };
 
-  /** Agents this theme supports that are actually installed on this machine. */
   const eligibleApps = AGENT_IDS.filter(
     (appId) =>
       supportedAgents.includes(appId) && Boolean(controller.appStatusFor(appId)?.installed),
   );
 
-  /** Agents actually installed on this machine — the list only shows these, so
-   *  a user who doesn't own all 6 agents isn't shown rows for absent ones. */
   const installedApps = AGENT_IDS.filter((appId) =>
     Boolean(controller.appStatusFor(appId)?.installed),
   );
 
-  /** When the first detection round has not returned yet, every apply button
-   *  is replaced by a single "detecting" state instead of greyed-out rows. */
   const detecting = controller.statusStale;
 
-  /** Run applies across all eligible apps with a bounded worker pool so the
-   *  operations run concurrently (useThemes allows up to 4 in flight) instead
-   *  of blocking one after another. */
   const runAll = async () => {
     setPendingAll(true);
     try {
       const queue = [...eligibleApps];
-      // Up to 6 agents can apply in parallel — matches MAX_CONCURRENCY in
-      // themeStore so a full "apply to all" injects every agent concurrently.
       const CONCURRENCY = 6;
       const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
         for (;;) {
@@ -84,16 +72,9 @@ function AppActionList({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-[11px] font-normal">{t.appPickerTitle}</p>
-          <p className="text-[11px] text-muted-foreground">{t.appPickerHint}</p>
-        </div>
-      </div>
-
-      {/* One-click: apply to every detected agent on this computer */}
       <Button
         size="sm"
+        variant="primary"
         className="w-full"
         disabled={
           pendingAll ||
@@ -141,16 +122,26 @@ function AppActionList({
             <div
               key={appId}
               className={cn(
-                'flex items-center gap-2 rounded-md border bg-background/50 px-3 py-2 transition-colors',
+                'flex items-center gap-2.5 rounded-lg border px-3 py-2 transition-colors',
+                isActive
+                  ? 'border-cr-success/30 bg-cr-success/[0.04]'
+                  : 'border-border bg-muted/30',
                 !supported && 'opacity-50',
-                supported && detected && 'hover:bg-background/80',
+                supported && detected && 'hover:bg-muted/60',
               )}
             >
-              <AppMark appId={appId} size={22} />
+              <AppMark appId={appId} size={20} />
               <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-1 text-[11px] font-normal">
+                <p className="flex items-center gap-1.5 text-[12px] font-medium">
                   {displayName}
-                  {isActive && <Badge className="px-1 py-0 text-[10px]">{t.activeBadge}</Badge>}
+                  {isActive && (
+                    <Badge
+                      variant="secondary"
+                      className="bg-cr-success/15 text-cr-success text-[10px]"
+                    >
+                      {t.activeBadge}
+                    </Badge>
+                  )}
                 </p>
                 <p className="truncate text-[11px] text-muted-foreground">{stateText}</p>
               </div>
@@ -190,18 +181,15 @@ function AppActionList({
   );
 }
 
-/** Metadata row: label + value pair for theme info. */
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0">
-      <span className="text-[11px] text-muted-foreground/70">{label}</span>
-      <span className="text-[11px] font-normal">{value}</span>
+      <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70">{label}</span>
+      <span className="text-[12px] font-medium">{value}</span>
     </div>
   );
 }
 
-/** Color-scheme picker: one swatch card per scheme, using each scheme's
- *  actual colors so the difference is visible at a glance. */
 function ColorSchemePicker({
   schemes,
   activeSchemeId,
@@ -214,9 +202,11 @@ function ColorSchemePicker({
   t: import('@shared/i18n').UiMessages;
 }) {
   return (
-    <div className="mb-3">
-      <p className="mb-1 text-[11px] text-muted-foreground/70">{t.colorSchemesLabel}</p>
-      <div className="flex flex-wrap gap-1">
+    <div>
+      <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted-foreground/70">
+        {t.colorSchemesLabel}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
         {schemes.map((scheme) => {
           const selected = (activeSchemeId ?? 'default') === scheme.id;
           const bg = scheme.colors.background ?? scheme.colors.bg;
@@ -231,13 +221,13 @@ function ColorSchemePicker({
               aria-pressed={selected}
               onClick={() => onChange(scheme.id === 'default' ? undefined : scheme.id)}
               className={cn(
-                'flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] transition-colors',
+                'flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[11px] transition-colors',
                 selected
-                  ? 'border-primary bg-card text-foreground'
-                  : 'bg-background/50 text-muted-foreground hover:bg-background/80',
+                  ? 'border-primary bg-accent text-accent-foreground'
+                  : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/60',
               )}
             >
-              <span className="size-3 shrink-0 rounded-md" style={swatchStyle} aria-hidden="true" />
+              <span className="size-3 shrink-0 rounded-sm" style={swatchStyle} aria-hidden="true" />
               {scheme.id === 'default' ? t.colorSchemeDefault : scheme.name}
             </button>
           );
@@ -250,27 +240,22 @@ function ColorSchemePicker({
 export function DetailPanel({
   controller,
   selection: selectionOverride,
+  onClose,
 }: {
   controller: AppController;
   selection?: Selection;
+  onClose?: () => void;
 }) {
   const { t } = controller;
   const selection = selectionOverride !== undefined ? selectionOverride : controller.selection;
   const [schemeId, setSchemeId] = useState<string | undefined>(undefined);
 
-  // Theme-bundled wallpaper videos can't be a static preview; fetch the
-  // media as an inline base64 data URL (no custom scheme) so it plays
-  // reliably in the sandboxed renderer. Must be called before any early
-  // return to satisfy the Rules of Hooks.
   const dynamicWallpaperId =
     selection && (selection.theme.wallpaper?.video || selection.theme.wallpaper?.workshopId)
       ? `theme:${selection.theme.id}`
       : null;
   const { url: videoUrl, loading: videoLoading } = useWallpaperVideoUrl(dynamicWallpaperId);
 
-  // When the selection changes, reset the scheme back to default. Track the
-  // selection id in a ref so the effect only fires on theme switch, not on
-  // every schemeId update (biome's exhaustive-deps rule can't see the ref).
   const lastSelectionIdRef = useRef<string | null>(null);
   useEffect(() => {
     const current = selection?.theme.id ?? null;
@@ -281,22 +266,16 @@ export function DetailPanel({
   }, [selection]);
 
   if (!selection) {
-    return (
-      <EmptyState
-        icon={<MousePointerClick />}
-        title={t.selectThemeHint}
-        className="min-h-48 p-6 justify-center"
-      />
-    );
+    return null;
   }
 
   const theme = selection.theme;
   const isDynamic = Boolean(theme.wallpaper?.video || theme.wallpaper?.workshopId);
 
   return (
-    <div className="flex h-[min(80svh,38rem)] flex-col overflow-hidden md:flex-row">
-      {/* Left (desktop) / Top (mobile): preview image / video */}
-      <div className="relative flex h-[40svh] w-full shrink-0 items-center justify-center overflow-hidden bg-muted/60 md:h-auto md:w-[58%]">
+    <aside className="flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
+      {/* Preview — large 16:9 at top */}
+      <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
         {isDynamic && videoUrl ? (
           <video
             key={theme.id}
@@ -314,24 +293,32 @@ export function DetailPanel({
             <Spinner className="size-6 text-muted-foreground/50" />
           </div>
         ) : theme.preview ? (
-          <img src={theme.preview} alt={theme.name} className="size-full object-contain" />
+          <img src={theme.preview} alt={theme.name} className="size-full object-cover" />
         ) : (
           <div className="flex size-full items-center justify-center bg-muted text-muted-foreground">
-            <PaintBucket className="size-8 opacity-50" />
+            <PaintBucket className="size-10 opacity-30" />
           </div>
         )}
-        {/* Subtle border for depth */}
-        <div className="pointer-events-none absolute inset-0 shadow-none border border-border" />
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t.close}
+            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md bg-background/60 text-foreground backdrop-blur-sm transition-colors hover:bg-background/80"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
 
-      {/* Right: info + actions */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto p-4">
-        {/* Title block */}
-        <div className="mb-3">
+      {/* Scrollable body */}
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+        {/* Title */}
+        <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-normal tracking-[-0.015em]">{theme.name}</h2>
+            <h2 className="text-[16px] font-semibold tracking-tight">{theme.name}</h2>
             {isDynamic && (
-              <Badge className="bg-muted text-muted-foreground px-1 py-0 text-[10px]">
+              <Badge className="bg-primary/15 text-primary text-[10px]">
                 {t.themeDynamicBadge}
               </Badge>
             )}
@@ -341,14 +328,14 @@ export function DetailPanel({
               </Badge>
             )}
           </div>
-          <p className="mt-1 text-[11px] tabular-nums text-muted-foreground">
+          <p className="mt-0.5 font-mono text-[11px] tabular-nums text-muted-foreground">
             {t.versionLabel(theme.version)}
           </p>
         </div>
 
         {/* Metadata grid */}
         {(theme.author || theme.category || theme.license) && (
-          <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-2 rounded-md bg-muted/40 px-3 py-2">
+          <div className="grid grid-cols-3 gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
             {theme.author && <MetaRow label={t.themeAuthor} value={theme.author} />}
             {theme.category && (
               <MetaRow label={t.themeCategory} value={t.categoryLabel(theme.category)} />
@@ -359,12 +346,12 @@ export function DetailPanel({
 
         {/* Description */}
         {theme.description && (
-          <p className="mb-3 text-[11px] leading-relaxed text-muted-foreground">{theme.description}</p>
+          <p className="text-[12px] leading-relaxed text-muted-foreground">{theme.description}</p>
         )}
 
         {/* Tags */}
         {theme.tags.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-1.5">
             {theme.tags.map((tag) => (
               <Badge key={tag} variant="secondary" className="rounded-md text-[10px] font-normal">
                 {tag}
@@ -373,9 +360,7 @@ export function DetailPanel({
           </div>
         )}
 
-        <Separator className="mb-3" />
-
-        {/* Color-scheme picker (v2.2+): only when the theme ships alternatives */}
+        {/* Color-scheme picker */}
         {theme.schemes && theme.schemes.length > 1 && (
           <ColorSchemePicker
             schemes={theme.schemes}
@@ -386,48 +371,53 @@ export function DetailPanel({
         )}
 
         {/* Apply section */}
-        <AppActionList
-          controller={controller}
-          supportedAgents={theme.supportedAgents}
-          installedThemeId={theme.id}
-          onApply={(appId) => controller.applyToApp(theme.id, theme.name, appId, { schemeId })}
-        />
+        <div>
+          <p className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground/70">
+            {t.appPickerTitle}
+          </p>
+          <AppActionList
+            controller={controller}
+            supportedAgents={theme.supportedAgents}
+            installedThemeId={theme.id}
+            onApply={(appId) => controller.applyToApp(theme.id, theme.name, appId, { schemeId })}
+          />
+        </div>
+      </div>
 
-        {/* Bottom actions — pinned to bottom */}
-        <div className="mt-auto flex gap-2 border-t pt-3">
+      {/* Footer actions */}
+      <div className="flex gap-2 border-t border-border p-3">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => void controller.exportTheme(theme.id)}
+        >
+          <Share2 size={14} className="text-muted-foreground/70" />
+          {t.exportTheme}
+        </Button>
+        {theme.wallpaper && (
           <Button
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => void controller.exportTheme(theme.id)}
-          >
-            <Share2 size={14} className="text-muted-foreground/70" />
-            {t.exportTheme}
-          </Button>
-          {theme.wallpaper && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1"
-              disabled={controller.busy !== null}
-              onClick={() => void controller.createBundle(theme.id)}
-            >
-              <Package size={14} className="text-muted-foreground/70" />
-              {t.bundleExport}
-            </Button>
-          )}
-          <Button
-            variant="destructive"
-            size="sm"
-            className="flex-1"
             disabled={controller.busy !== null}
-            onClick={() => controller.setDeletePrompt(theme)}
+            onClick={() => void controller.createBundle(theme.id)}
           >
-            <Trash2 size={14} className="text-muted-foreground/70" />
-            {t.deleteTheme}
+            <Package size={14} className="text-muted-foreground/70" />
+            {t.bundleExport}
           </Button>
-        </div>
+        )}
+        <Button
+          variant="destructive"
+          size="sm"
+          className="flex-1"
+          disabled={controller.busy !== null}
+          onClick={() => controller.setDeletePrompt(theme)}
+        >
+          <Trash2 size={14} className="text-muted-foreground/70" />
+          {t.deleteTheme}
+        </Button>
       </div>
-    </div>
+    </aside>
   );
 }

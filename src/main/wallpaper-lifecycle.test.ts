@@ -11,25 +11,27 @@ import { createElectronMock } from '../../fixtures/mocks/electron';
 const mockAppHandlers: Record<string, unknown> = {};
 const mockPmHandlers: Record<string, unknown> = {};
 
-vi.mock('electron', () => createElectronMock(new Map(), {
-  app: {
-    on: vi.fn((event: string, fn: unknown) => {
-      mockAppHandlers[event] = fn;
-    }),
-    off: vi.fn((event: string, fn: unknown) => {
-      if (mockAppHandlers[event] === fn) delete mockAppHandlers[event];
-    }),
-  },
-  powerMonitor: {
-    on: vi.fn((event: string, fn: unknown) => {
-      mockPmHandlers[event] = fn;
-    }),
-    off: vi.fn((event: string, fn: unknown) => {
-      if (mockPmHandlers[event] === fn) delete mockPmHandlers[event];
-    }),
-  },
-  BrowserWindow: class {},
-}));
+vi.mock('electron', () =>
+  createElectronMock(new Map(), {
+    app: {
+      on: vi.fn((event: string, fn: unknown) => {
+        mockAppHandlers[event] = fn;
+      }),
+      off: vi.fn((event: string, fn: unknown) => {
+        if (mockAppHandlers[event] === fn) delete mockAppHandlers[event];
+      }),
+    },
+    powerMonitor: {
+      on: vi.fn((event: string, fn: unknown) => {
+        mockPmHandlers[event] = fn;
+      }),
+      off: vi.fn((event: string, fn: unknown) => {
+        if (mockPmHandlers[event] === fn) delete mockPmHandlers[event];
+      }),
+    },
+    BrowserWindow: class {},
+  }),
+);
 
 // Mock wallpaper-injector so we do not pull the heavy CDP dependency chain.
 // registerWallpaperLifecycle only calls getActiveWallpaperAgents() inside

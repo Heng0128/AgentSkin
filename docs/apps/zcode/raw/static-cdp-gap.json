@@ -16,59 +16,43 @@
     {
       "ns": "highlight",
       "varCount": 2,
-      "sampleVars": [
-        "highlight-bg-color",
-        "highlight-selected-bg-color"
-      ],
+      "sampleVars": ["highlight-bg-color", "highlight-selected-bg-color"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "markdown",
       "varCount": 2,
-      "sampleVars": [
-        "markdown-table-layout-left-inset",
-        "markdown-table-layout-right-inset"
-      ],
+      "sampleVars": ["markdown-table-layout-left-inset", "markdown-table-layout-right-inset"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "react",
       "varCount": 1,
-      "sampleVars": [
-        "react-pdf-text-layer"
-      ],
+      "sampleVars": ["react-pdf-text-layer"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "spacing",
       "varCount": 1,
-      "sampleVars": [
-        "spacing"
-      ],
+      "sampleVars": ["spacing"],
       "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
     },
     {
       "ns": "attachment",
       "varCount": 1,
-      "sampleVars": [
-        "attachment-bg"
-      ],
+      "sampleVars": ["attachment-bg"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "bg",
       "varCount": 1,
-      "sampleVars": [
-        "bg"
-      ],
+      "sampleVars": ["bg"],
       "hint": "design-token 可能走 distributed/component-inline，非 :root 暴露——需核是否在核心渲染面"
     },
     {
       "ns": "side",
       "varCount": 1,
-      "sampleVars": [
-        "side-pane-tab-bg"
-      ],
+      "sampleVars": ["side-pane-tab-bg"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     }
   ],
@@ -149,10 +133,6 @@
       "runtimeCount": 3
     }
   ],
-  "unverifiedTestIds": [
-    "chat-input",
-    "docx-editor-viewer",
-    "chat-view"
-  ],
+  "unverifiedTestIds": ["chat-input", "docx-editor-viewer", "chat-view"],
   "verifiedTestIds": []
 }

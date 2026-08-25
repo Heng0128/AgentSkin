@@ -20,7 +20,6 @@ export interface WallpaperCardProps {
   isDeleting: boolean;
   onSelect: (wp: WallpaperInfo) => void;
   onDelete: (id: string) => void;
-  deleteLabel: string;
   confirmLabel: string;
   t: UiMessages;
 }
@@ -95,7 +94,6 @@ export const WallpaperCard = memo(function WallpaperCard({
   isDeleting,
   onSelect,
   onDelete,
-  deleteLabel,
   confirmLabel,
   t,
 }: WallpaperCardProps) {
@@ -162,117 +160,90 @@ export const WallpaperCard = memo(function WallpaperCard({
               </div>
             }
           />
-          {/* WE-style hover overlay — dark scrim + hint sliding up on hover */}
+          {/* Hover overlay — dark scrim + type/size info */}
           <div
             className="pointer-events-none absolute inset-0 flex items-end opacity-0 transition-opacity duration-fast group-hover:opacity-100"
             aria-hidden
           >
-            <div className="absolute inset-0 bg-black/40" />
-            <span className="relative flex w-full items-center justify-between px-2 pb-2 text-micro text-popover-foreground/90">
-              {wallpaper.type === 'video'
-                ? t.weTypeVideo
-                : wallpaper.type === 'image'
-                  ? t.weTypeImage
-                  : wallpaper.type === 'web'
-                    ? t.weTypeWeb
-                    : t.weTypeScene}
-              <span className="tabular-nums">{formatSize(wallpaper.sizeBytes)}</span>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <span className="relative flex w-full items-center justify-between px-2.5 pb-2 text-[10px] text-white/90">
+              <span className="flex items-center gap-1">
+                {wallpaper.type === 'video' ? (
+                  <Video className="size-3" />
+                ) : (
+                  <Image className="size-3" />
+                )}
+                {wallpaper.type === 'video'
+                  ? t.weTypeVideo
+                  : wallpaper.type === 'image'
+                    ? t.weTypeImage
+                    : wallpaper.type === 'web'
+                      ? t.weTypeWeb
+                      : t.weTypeScene}
+              </span>
+              <span className="tabular-nums opacity-70">{formatSize(wallpaper.sizeBytes)}</span>
             </span>
           </div>
-          {/* Type badge (mono) */}
-          <span
-            className={cn(
-              'absolute bottom-1 right-1 flex items-center gap-0 rounded-sm px-1 py-0 text-micro',
-              wallpaper.type === 'video'
-                ? 'bg-primary text-primary-foreground'
-                : wallpaper.type === 'image'
-                  ? 'bg-info text-white'
-                  : wallpaper.type === 'web'
-                    ? 'bg-cr-success text-white'
-                  : 'bg-cr-warning text-white',
-            )}
-          >
-            {wallpaper.type === 'video' ? (
-              <Video className="size-2" />
-            ) : (
-              <Image className="size-2" />
-            )}
-            {wallpaper.type === 'video'
-              ? 'VID'
-              : wallpaper.type === 'image'
-                ? 'IMG'
-                : wallpaper.type === 'web'
-                  ? 'WEB'
-                  : 'SCN'}
-          </span>
-          {/* UI background indicator  */}
+          {/* Single status badge — top-left */}
           {isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-sm bg-primary px-1 py-0 text-micro text-primary-foreground">
+            <span className="absolute left-2 top-2 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground shadow-sm">
               UI
             </span>
           )}
-          {/* Preview-only badge (warning) */}
           {previewOnly && !isUiBackground && (
-            <span className="absolute left-1 top-1 rounded-sm bg-cr-warning px-1 py-0 text-micro text-yellow-950">
+            <span className="absolute left-2 top-2 rounded-md bg-cr-warning/90 px-1.5 py-0.5 text-[10px] font-medium text-yellow-950 shadow-sm">
               PREVIEW
             </span>
           )}
-          {/* Source badge for local imports  */}
-          {wallpaper.source === 'local' && (
-            <span className="absolute right-1 top-1 rounded-sm bg-muted px-1 py-0 text-micro text-muted-foreground">
-              LOCAL
-            </span>
+          {/* Delete button — top-right on hover */}
+          {deletable && (
+            <div className="absolute right-2 top-2 opacity-0 transition-opacity duration-fast group-hover:opacity-100 group-focus-within:opacity-100">
+              {confirming ? (
+                <div className="flex items-center gap-1 rounded-md bg-card/90 p-0.5 shadow-md backdrop-blur-sm">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(wallpaper.id);
+                      setConfirming(false);
+                    }}
+                    disabled={isDeleting}
+                    className="rounded-sm px-1.5 py-0.5 text-[10px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                  >
+                    {isDeleting ? '…' : confirmLabel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirming(false);
+                    }}
+                    className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setConfirming(true);
+                  }}
+                  className="flex size-6 items-center justify-center rounded-md bg-card/90 text-muted-foreground shadow-md backdrop-blur-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Title — 13px medium, single line, size folded into hover overlay */}
-        <div className="px-2 py-1.5">
+        {/* Title */}
+        <div className="px-2.5 py-2">
           <p className="truncate text-[13px] font-medium leading-snug">{wallpaper.title}</p>
         </div>
       </button>
-
-      {/* Delete button for local wallpapers  */}
-      {deletable && (
-        <div className="absolute left-1 bottom-1 opacity-0 transition-opacity duration-fast group-hover:opacity-100 group-focus-within:opacity-100">
-          {confirming ? (
-            <div className="flex items-center gap-0 rounded-md bg-card px-1 py-0">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(wallpaper.id);
-                  setConfirming(false);
-                }}
-                disabled={isDeleting}
-                className="rounded-sm px-1 py-0 text-micro font-normal text-destructive hover:bg-destructive/10 disabled:opacity-50"
-              >
-                {isDeleting ? '…' : confirmLabel}
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setConfirming(false);
-                }}
-                className="rounded-sm px-1 py-0 text-micro text-muted-foreground hover:bg-muted"
-              >
-                <X className="size-2.5" />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirming(true);
-              }}
-              className="rounded-sm bg-surface px-1 py-0 text-micro text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-            >
-              {deleteLabel}
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 });

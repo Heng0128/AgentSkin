@@ -8,10 +8,9 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { InjectDock } from '@/components/InjectDock';
 import { InstallWizard } from '@/components/InstallProgress';
 import { PageSkeleton } from '@/components/PageSkeleton';
-import { Sidebar } from '@/components/Sidebar';
 import { StatusBar } from '@/components/StatusBar';
+import { Sidebar } from '@/components/sidebar';
 import { TitleBar } from '@/components/TitleBar';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { type Selection, useAppController } from '@/hooks/useAppController';
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -89,28 +88,18 @@ export default function App() {
           controller.dropThemeFiles(Array.from(event.dataTransfer.files));
         }}
       >
-        <div
-          className={cn(
-            'grid min-h-0 overflow-hidden',
-            controller.route === 'settings' ? 'grid-cols-[1fr]' : 'grid-cols-[52px_1fr]',
-          )}
-        >
+        <div className={cn('grid min-h-0 overflow-hidden', 'grid-cols-[56px_1fr]')}>
           {/* Left column: narrow icon sidebar */}
-          {controller.route !== 'settings' && (
-            <div className="flex h-full min-h-0 flex-col">
-              <Sidebar />
-            </div>
-          )}
+          <div className="flex h-full min-h-0 flex-col">
+            <Sidebar />
+          </div>
 
           {/* Main column: title bar + scrollable content */}
           <main className="flex min-h-0 flex-col overflow-hidden">
-            {controller.route !== 'settings' && <TitleBar hasWallpaper={!!activeWallpaper} />}
+            <TitleBar hasWallpaper={!!activeWallpaper} />
 
             <div className="min-h-0 flex-1 overflow-y-auto">
-              <div
-                key={controller.route}
-                className={cn('page-enter h-full', controller.route !== 'settings' && 'p-3')}
-              >
+              <div key={controller.route} className={cn('page-enter h-full p-4')}>
                 <Suspense fallback={<PageSkeleton />}>
                   <ErrorBoundary inline>
                     {controller.route === 'workspace' && <WorkspacePage />}
@@ -128,24 +117,26 @@ export default function App() {
         </div>
 
         {/* Full-width status bar — spans the whole window below the nav */}
-        {controller.route !== 'settings' && <StatusBar />}
+        <StatusBar />
 
-        <Dialog
-          open={controller.selection !== null}
-          onOpenChange={(open) => {
-            if (!open) controller.setSelection(null);
-          }}
-        >
-          <DialogContent className="w-[calc(100vw-3rem)] max-w-3xl gap-0 overflow-hidden p-0">
-            <DialogTitle className="sr-only">
-              {(controller.selection ?? lastSelection.current)?.theme.name ?? ''}
-            </DialogTitle>
-            <DetailPanel
-              controller={controller}
-              selection={controller.selection ?? lastSelection.current}
+        {/* Theme detail sidebar (replaces modal Dialog) */}
+        {(controller.selection ?? lastSelection.current) && (
+          <div className="fixed inset-0 z-40">
+            <button
+              type="button"
+              aria-label="Close"
+              className="absolute inset-0 cursor-default bg-black/40 backdrop-blur-[2px]"
+              onClick={() => controller.setSelection(null)}
             />
-          </DialogContent>
-        </Dialog>
+            <div className="absolute right-0 top-0 h-full animate-slide-in-right">
+              <DetailPanel
+                controller={controller}
+                selection={controller.selection ?? lastSelection.current}
+                onClose={() => controller.setSelection(null)}
+              />
+            </div>
+          </div>
+        )}
 
         <DialogsHost controller={controller} />
         <InjectDock controller={controller} />
@@ -174,10 +165,11 @@ export default function App() {
           <div
             key={toast.id}
             className={cn(
-              'fixed bottom-14 left-1/2 z-[var(--z-toast)] -translate-x-1/2 rounded-md border px-4 py-2 text-[13px] shadow-md',
+              'fixed bottom-10 left-1/2 z-[var(--z-toast)] -translate-x-1/2 rounded-lg border px-4 py-2.5 text-[12px] font-medium shadow-lg backdrop-blur-md',
+              'animate-[page-fade-in_var(--duration-base)_ease-out]',
               toast.tone === 'destructive'
                 ? 'border-destructive/30 bg-destructive/10 text-destructive'
-                : 'border-border bg-popover text-popover-foreground',
+                : 'border-border bg-popover/90 text-popover-foreground',
             )}
           >
             {toast.message}

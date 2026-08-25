@@ -9,7 +9,7 @@
  * - Epoch-based cancellation
  */
 
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock dependencies before importing the store
 vi.mock('@/api/agentSkinClient', () => ({
@@ -45,7 +45,7 @@ vi.mock('@/stores/themeStore', () => ({
   },
 }));
 
-import { useInstallFlowStore, getProgress, type InstallStep } from './installFlowStore';
+import { getProgress, type InstallStep, useInstallFlowStore } from './installFlowStore';
 
 // Mock window.setTimeout/clearTimeout for Node.js test environment
 const mockSetTimeout = vi.fn(() => 123 as unknown as number);

@@ -118,9 +118,7 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
       </div>
 
       {/* Description */}
-      <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
-        {t.studioTabRawDesc}
-      </p>
+      <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">{t.studioTabRawDesc}</p>
 
       {/* Main content */}
       <div className="mt-4 flex min-h-0 flex-1 flex-col">

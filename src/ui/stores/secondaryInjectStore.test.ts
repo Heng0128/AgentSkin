@@ -36,7 +36,10 @@ import { useSecondaryInjectStore } from './secondaryInjectStore';
 
 function resetStore() {
   useSecondaryInjectStore.setState({
-    byAgent: {} as Record<import('@shared/types').AgentId, import('./secondaryInjectStore').SecondaryInjectAgentState>,
+    byAgent: {} as Record<
+      import('@shared/types').AgentId,
+      import('./secondaryInjectStore').SecondaryInjectAgentState
+    >,
     _initialized: false,
   });
 }
@@ -173,8 +176,8 @@ describe('secondaryInjectStore', () => {
 
       const state = useSecondaryInjectStore.getState();
       expect(Object.keys(state.byAgent)).toHaveLength(2);
-      expect(state.byAgent['traework']?.steps).toHaveLength(1);
-      expect(state.byAgent['qoderwork']?.steps).toHaveLength(1);
+      expect(state.byAgent.traework?.steps).toHaveLength(1);
+      expect(state.byAgent.qoderwork?.steps).toHaveLength(1);
     });
   });
 

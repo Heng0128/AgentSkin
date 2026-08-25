@@ -33,9 +33,9 @@ import {
   AGENT_IDS,
   AGENT_META,
   type AgentId,
-  type AppStatus,
   type ApplyRequest,
   type ApplyResponse,
+  type AppStatus,
   type ConcurrencyMetrics,
   type Platform,
   type SystemStatus,
@@ -58,6 +58,7 @@ import {
   withPageSession,
 } from './agent-engine/delegates';
 import { type DiscoveryDeps, LivePortCache } from './app-discovery';
+import { stopAudioLevelPolling } from './audio-level';
 import {
   ApplyBaselineCache,
   captureBaselineOnPort,
@@ -74,8 +75,6 @@ import { disposeReloadWatchdogs } from './cdp/reload-watchdog';
 import type { RendererHints } from './cdp/renderer-rank';
 import { CdpSessionPool } from './cdp/session-pool';
 import { EpochManager } from './epoch-manager';
-import { stopAudioLevelPolling } from './audio-level';
-import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { appendLogLine, writeJsonAtomic } from './fs-utils';
 import { ctx, notifyPersistFailure } from './main-context';
 import { resolveEngineDirDefault } from './palette-builder';
@@ -96,6 +95,7 @@ import type {
   ThemeLibraryApi,
   WallpaperResolver,
 } from './services/contracts';
+import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { disposeThemeAssetCache } from './theme/utils';
 import { type ApplyFlowDeps, applyThemeFlow as applyThemeFlowImpl } from './theme-apply-flow';
 import { type ThemeEntry, toInstalledTheme } from './theme-library';
@@ -537,8 +537,7 @@ export class AgentEngineService implements AgentEngineServiceApi {
         inferRestartReason(appId, this.discoveryDeps(), cdpFailureReason ?? null),
       findAgentTargets: (appId, port) => this.adapter(appId).findTargets(port, 1200),
       setAgentWallpaper: (appId, setting) => this.settings.setAgentWallpaper(appId, setting),
-      rendererHints: (appId): RendererHints | undefined =>
-        this.adapter(appId).rendererHints(),
+      rendererHints: (appId): RendererHints | undefined => this.adapter(appId).rendererHints(),
       isApplyingTheme: (appId) => this.applyingTheme.has(appId),
       isDisposed: () => this.disposed,
       log: (line) => this.log(line),
@@ -845,11 +844,15 @@ export class AgentEngineService implements AgentEngineServiceApi {
       }
       if (existing && existing.kind === 'restore') {
         if (retries >= AgentEngineService.APPLY_MAX_RETRY) {
-          this.log(`[apply] ${appId}: max retries (${AgentEngineService.APPLY_MAX_RETRY}) exceeded — aborting`);
+          this.log(
+            `[apply] ${appId}: max retries (${AgentEngineService.APPLY_MAX_RETRY}) exceeded — aborting`,
+          );
           throw new Error(`AgentEngineService apply aborted: max retries exceeded for ${appId}`);
         }
         retries++;
-        this.log(`[apply] ${appId}: restore in progress — queued behind in-flight retry ${retries}`);
+        this.log(
+          `[apply] ${appId}: restore in progress — queued behind in-flight retry ${retries}`,
+        );
         try {
           await existing.cleanup;
         } catch (error) {
@@ -916,11 +919,15 @@ export class AgentEngineService implements AgentEngineServiceApi {
       }
       if (existing && existing.kind === 'apply') {
         if (retries >= AgentEngineService.RESTORE_MAX_RETRY) {
-          this.log(`[restore] ${appId}: max retries (${AgentEngineService.RESTORE_MAX_RETRY}) exceeded — aborting`);
+          this.log(
+            `[restore] ${appId}: max retries (${AgentEngineService.RESTORE_MAX_RETRY}) exceeded — aborting`,
+          );
           throw new Error(`AgentEngineService restore aborted: max retries exceeded for ${appId}`);
         }
         retries++;
-        this.log(`[restore] ${appId}: apply in progress — queued behind in-flight retry ${retries}`);
+        this.log(
+          `[restore] ${appId}: apply in progress — queued behind in-flight retry ${retries}`,
+        );
         try {
           await existing.cleanup;
         } catch (error) {

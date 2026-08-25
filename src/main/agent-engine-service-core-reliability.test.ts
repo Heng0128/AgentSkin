@@ -16,26 +16,26 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AgentId, ApplyRequest } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
-import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
-import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
-import { writeJsonAtomic } from './fs-utils';
-import { disposeThemeAssetCache } from './theme/utils';
-import { applyThemeFlow } from './theme-apply-flow';
-import { restoreThemeFlow } from './theme-restore-flow';
-import { stopAudioLevelPolling } from './audio-level';
-import { PerformanceRecorder } from './services/performance/performance-recorder';
-import { disposeWallpaperInjectionState } from './wallpaper/injection-state';
-import { removeWallpaperFromAgent } from './wallpaper-injector';
-import { disposeSelfHealState } from './wallpaper-self-heal';
 import {
+  APPLY_RESPONSE,
   cleanupHarness,
   deferred,
   makeAppStatus,
   makeSettings,
-  APPLY_RESPONSE,
   STATUS,
   TEST_APP,
 } from './agent-engine-service-test-harness';
+import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
+import { stopAudioLevelPolling } from './audio-level';
+import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
+import { writeJsonAtomic } from './fs-utils';
+import { PerformanceRecorder } from './services/performance/performance-recorder';
+import { disposeThemeAssetCache } from './theme/utils';
+import { applyThemeFlow } from './theme-apply-flow';
+import { restoreThemeFlow } from './theme-restore-flow';
+import { disposeWallpaperInjectionState } from './wallpaper/injection-state';
+import { removeWallpaperFromAgent } from './wallpaper-injector';
+import { disposeSelfHealState } from './wallpaper-self-heal';
 
 // ---------------------------------------------------------------------------
 // Module mocks
@@ -97,7 +97,13 @@ vi.mock('./wallpaper-self-heal', () => ({
 vi.mock('./theme/utils', () => ({ disposeThemeAssetCache: vi.fn() }));
 vi.mock('./audio-level', () => ({ stopAudioLevelPolling: vi.fn() }));
 vi.mock('./services/performance/performance-recorder', () => ({
-  PerformanceRecorder: { reset: vi.fn(), start: vi.fn(), finishTrace: vi.fn(), release: vi.fn(), getActive: vi.fn(() => null) },
+  PerformanceRecorder: {
+    reset: vi.fn(),
+    start: vi.fn(),
+    finishTrace: vi.fn(),
+    release: vi.fn(),
+    getActive: vi.fn(() => null),
+  },
 }));
 
 // ---------------------------------------------------------------------------
@@ -105,7 +111,6 @@ vi.mock('./services/performance/performance-recorder', () => ({
 // ---------------------------------------------------------------------------
 
 const APPLY_REQUEST: ApplyRequest = { appId: TEST_APP, themeId: 't1' };
-
 
 // ---------------------------------------------------------------------------
 // Suite
@@ -156,7 +161,10 @@ describe('AgentEngineService (core reliability)', () => {
     it('throws after max retries when inflightOperations keeps getting restore entries', async () => {
       const svc = makeService();
       const privateSvc = svc as unknown as {
-        inflightOperations: Map<string, { kind: string; promise: Promise<unknown>; cleanup: Promise<void> }>;
+        inflightOperations: Map<
+          string,
+          { kind: string; promise: Promise<unknown>; cleanup: Promise<void> }
+        >;
       };
 
       // Simulate a scenario where a restore operation cleanup keeps
@@ -184,7 +192,10 @@ describe('AgentEngineService (core reliability)', () => {
     it('succeeds after restore cleanup completes', async () => {
       const svc = makeService();
       const privateSvc = svc as unknown as {
-        inflightOperations: Map<string, { kind: string; promise: Promise<unknown>; cleanup: Promise<void> }>;
+        inflightOperations: Map<
+          string,
+          { kind: string; promise: Promise<unknown>; cleanup: Promise<void> }
+        >;
       };
 
       // Add a restore entry that resolves quickly
@@ -231,7 +242,10 @@ describe('AgentEngineService (core reliability)', () => {
 
       // Mock applyInternal to return a background task gated by cleanupGate
       const svcWithPrivate = svc as unknown as {
-        applyInternal: (request: unknown) => Promise<{ response: { success: boolean; status: unknown }; background: Promise<void> }>;
+        applyInternal: (request: unknown) => Promise<{
+          response: { success: boolean; status: unknown };
+          background: Promise<void>;
+        }>;
       };
       vi.spyOn(svcWithPrivate, 'applyInternal').mockImplementation(async () => {
         const background = cleanupGate.catch(() => undefined);
@@ -243,7 +257,10 @@ describe('AgentEngineService (core reliability)', () => {
 
       // Get reference to the cleanup promise
       const privateSvc = svc as unknown as {
-        inflightOperations: Map<string, { kind: string; promise: Promise<unknown>; cleanup: Promise<void> }>;
+        inflightOperations: Map<
+          string,
+          { kind: string; promise: Promise<unknown>; cleanup: Promise<void> }
+        >;
         disposeAsync: () => Promise<void>;
       };
 

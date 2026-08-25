@@ -53,6 +53,13 @@ import { registerIpc } from './ipc';
 import { disposeCoordinatorIpc } from './ipc/coordinator-ipc';
 import { loadLocalePreference } from './locale-preferences';
 import {
+  brandingRoot,
+  clearStatusNotifyTimer,
+  ctx,
+  registerDisposable,
+  sendLog,
+} from './main-context';
+import {
   createMcpContext,
   createMcpServer,
   registerAllTools,
@@ -60,7 +67,6 @@ import {
   stopMcpServer,
 } from './mcp';
 import { startMcpHttpServer, stopMcpHttpServer } from './mcp/http-server';
-import { brandingRoot, clearStatusNotifyTimer, ctx, registerDisposable, sendLog } from './main-context';
 import { terminateSceneWorkerPool } from './scene-renderer-async';
 import { performanceLogger } from './services/performance';
 import { SettingsService } from './settings-service';

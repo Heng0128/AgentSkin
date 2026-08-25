@@ -31,7 +31,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 // λ safety guardrails (P0-2 sanitize + P0-1 specificity)
-import { sanitizeKeyframes, sanitizeDeclarationBlock } from '../src/compiler/sanitize.js';
+import { sanitizeDeclarationBlock, sanitizeKeyframes } from '../src/compiler/sanitize.js';
 import { AGENT_SPECIFICITY_PROFILES, validateSpecificity } from '../src/compiler/specificity.js';
 import { getAdapter } from '../src/engine/src/adapters/index.mjs';
 // 2a multi-asset: reuse the B-line engine gates (SAFE_IMAGE_TYPES /

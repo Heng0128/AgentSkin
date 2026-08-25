@@ -27,139 +27,103 @@
     {
       "ns": "dropdown",
       "varCount": 2,
-      "sampleVars": [
-        "dropdown-padding-top",
-        "dropdown-padding-bottom"
-      ],
+      "sampleVars": ["dropdown-padding-top", "dropdown-padding-bottom"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "color",
       "varCount": 2,
-      "sampleVars": [
-        "color-icon-rect",
-        "color-icon-path"
-      ],
+      "sampleVars": ["color-icon-rect", "color-icon-path"],
       "hint": "design-token 可能走 distributed/component-inline，非 :root 暴露——需核是否在核心渲染面"
     },
     {
       "ns": "DarkMode-Line-line-1",
       "varCount": 1,
-      "sampleVars": [
-        "DarkMode-Line-line-1"
-      ],
+      "sampleVars": ["DarkMode-Line-line-1"],
       "hint": "VS Code 可变色（inline/style 变量），CDP rootVars 收集不到——常见盲区"
     },
     {
       "ns": "DarkMode-Bg-bg-tr-1",
       "varCount": 1,
-      "sampleVars": [
-        "DarkMode-Bg-bg-tr-1"
-      ],
+      "sampleVars": ["DarkMode-Bg-bg-tr-1"],
       "hint": "VS Code 可变色（inline/style 变量），CDP rootVars 收集不到——常见盲区"
     },
     {
       "ns": "duplicate",
       "varCount": 1,
-      "sampleVars": [
-        "duplicate"
-      ],
+      "sampleVars": ["duplicate"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "multiEdit-family",
       "varCount": 1,
-      "sampleVars": [
-        "multiEdit-family"
-      ],
+      "sampleVars": ["multiEdit-family"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "multiEdit-background",
       "varCount": 1,
-      "sampleVars": [
-        "multiEdit-background"
-      ],
+      "sampleVars": ["multiEdit-background"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "multiEdit-border",
       "varCount": 1,
-      "sampleVars": [
-        "multiEdit-border"
-      ],
+      "sampleVars": ["multiEdit-border"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "multiEdit-button-border",
       "varCount": 1,
-      "sampleVars": [
-        "multiEdit-button-border"
-      ],
+      "sampleVars": ["multiEdit-button-border"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "multiEdit-button-background",
       "varCount": 1,
-      "sampleVars": [
-        "multiEdit-button-background"
-      ],
+      "sampleVars": ["multiEdit-button-background"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "multiEdit-icon-hover-background",
       "varCount": 1,
-      "sampleVars": [
-        "multiEdit-icon-hover-background"
-      ],
+      "sampleVars": ["multiEdit-icon-hover-background"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "multiEdit-icon-line-border",
       "varCount": 1,
-      "sampleVars": [
-        "multiEdit-icon-line-border"
-      ],
+      "sampleVars": ["multiEdit-icon-line-border"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "multiEdit-hint-background",
       "varCount": 1,
-      "sampleVars": [
-        "multiEdit-hint-background"
-      ],
+      "sampleVars": ["multiEdit-hint-background"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "multiEdit-card-item-hover-background",
       "varCount": 1,
-      "sampleVars": [
-        "multiEdit-card-item-hover-background"
-      ],
+      "sampleVars": ["multiEdit-card-item-hover-background"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "expanded",
       "varCount": 1,
-      "sampleVars": [
-        "expanded-width"
-      ],
+      "sampleVars": ["expanded-width"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     },
     {
       "ns": "container",
       "varCount": 1,
-      "sampleVars": [
-        "container-paddding"
-      ],
+      "sampleVars": ["container-paddding"],
       "hint": "结构类 design-token（字级/圆角/间距/尺寸，非颜色主题）——Tailwind @theme 生成于 :root, :host 规则，CDP rootVars 可能因聚合提前返回漏采；不纳入注入作用域，可收敛"
     },
     {
       "ns": "subtle",
       "varCount": 1,
-      "sampleVars": [
-        "subtle-bg"
-      ],
+      "sampleVars": ["subtle-bg"],
       "hint": "静态声明但其命名空间未见 CDP rootVars——可能来自未加载 chunk、封闭 shadow root、CORS 或 CSS-in-JS"
     }
   ],

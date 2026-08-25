@@ -53,10 +53,10 @@ export function FilterChips<T extends string>({
                 onMultipleChange(next);
               }}
               className={cn(
-                'inline-flex h-6 items-center gap-1 rounded-sm px-2 text-[10px] font-normal transition-all duration-fast',
+                'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-all duration-fast',
                 active
-                  ? 'bg-accent text-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
+                  ? 'bg-accent text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
               {Icon && <Icon className="size-3" />}
@@ -82,8 +82,10 @@ export function FilterChips<T extends string>({
             aria-checked={active}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'inline-flex h-6 items-center gap-1 rounded-sm px-2 text-[10px] font-normal transition-all duration-fast',
-              active ? 'bg-accent text-foreground' : 'text-muted-foreground hover:text-foreground',
+              'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-all duration-fast',
+              active
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
             )}
           >
             {Icon && <Icon className="size-3" />}

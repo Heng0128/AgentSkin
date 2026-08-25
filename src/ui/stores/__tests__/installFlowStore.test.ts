@@ -18,19 +18,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Hoisted mocks
 // ---------------------------------------------------------------------------
 
-const {
-  mockImportTheme,
-  mockImportThemeFromPath,
-  mockRefreshThemes,
-  mockShowToast,
-  mockLocale,
-} = vi.hoisted(() => ({
-  mockImportTheme: vi.fn(),
-  mockImportThemeFromPath: vi.fn(),
-  mockRefreshThemes: vi.fn().mockResolvedValue(undefined),
-  mockShowToast: vi.fn(),
-  mockLocale: 'zh-CN',
-}));
+const { mockImportTheme, mockImportThemeFromPath, mockRefreshThemes, mockShowToast, mockLocale } =
+  vi.hoisted(() => ({
+    mockImportTheme: vi.fn(),
+    mockImportThemeFromPath: vi.fn(),
+    mockRefreshThemes: vi.fn().mockResolvedValue(undefined),
+    mockShowToast: vi.fn(),
+    mockLocale: 'zh-CN',
+  }));
 
 vi.mock('@/api/agentSkinClient', () => ({
   api: {
@@ -160,9 +155,7 @@ describe('installFlowStore', () => {
     it('should transition to cancelled and clear steps', () => {
       // Setup: put store in installing state
       useInstallFlowStore.setState({
-        steps: [
-          { id: 'read', label: 'Reading', status: 'active' as const, timestamp: Date.now() },
-        ],
+        steps: [{ id: 'read', label: 'Reading', status: 'active' as const, timestamp: Date.now() }],
         flowState: 'installing',
       });
 
@@ -177,9 +170,7 @@ describe('installFlowStore', () => {
     it('should reset to idle after timeout', () => {
       // Setup: put store in completed state
       useInstallFlowStore.setState({
-        steps: [
-          { id: 'done', label: 'Done', status: 'done' as const, timestamp: Date.now() },
-        ],
+        steps: [{ id: 'done', label: 'Done', status: 'done' as const, timestamp: Date.now() }],
         flowState: 'completed',
         currentTheme: 'TestTheme',
       });

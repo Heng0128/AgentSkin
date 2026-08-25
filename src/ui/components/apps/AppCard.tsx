@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # AppCard
@@ -17,7 +17,6 @@
 
 import { useState } from 'react';
 import { AppMark } from '@/components/AppMark';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 import type { ScannedApp } from '@shared/types';
@@ -58,10 +57,10 @@ function StatusDot({ state }: { state: AppRunningState }) {
   return (
     <span
       className={cn(
-        'inline-block size-2 rounded-full',
+        'size-2.5 rounded-full ring-2 ring-background',
         state === 'running' && 'bg-cr-success',
         state === 'running-no-port' && 'bg-cr-warning',
-        state === 'idle' && 'bg-muted-foreground/25',
+        state === 'idle' && 'bg-muted-foreground/30',
       )}
     />
   );
@@ -91,19 +90,18 @@ export function AppCard({
       : null;
 
   return (
-    <Button
-      variant="ghost"
+    <button
+      type="button"
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'group flex h-auto w-full flex-col items-center gap-2 rounded-md p-2',
-        'transition-colors duration-fast ease-out hover:bg-muted',
-        'hover:bg-accent',
-        'active:bg-accent/70',
-        isRunning && 'ring-1 ring-success',
+        'group flex h-auto w-full flex-col items-center gap-2 rounded-lg border border-border bg-card p-3',
+        'transition-all duration-fast ease-out hover:border-border-strong hover:bg-card2 hover:shadow-md',
+        'active:scale-[0.98]',
+        isRunning && 'border-cr-success/30 bg-cr-success/[0.03]',
       )}
     >
-      {/* Icon — rendered directly (desktop-shortcut style), no container block */}
+      {/* Icon */}
       <div className="relative">
         {app.adapterMatch ? (
           <AppMark appId={app.adapterMatch} size={48} className="rounded-none" />
@@ -111,32 +109,30 @@ export function AppCard({
           <img
             src={iconSrc}
             alt={app.productName}
-            className="size-12 object-contain"
+            className="size-12 object-contain drop-shadow-sm"
             onError={() => setImgError(true)}
           />
         ) : (
-          <span className="flex size-12 items-center justify-center text-xl font-normal text-muted-foreground">
+          <span className="flex size-12 items-center justify-center rounded-lg bg-muted text-[20px] font-semibold text-muted-foreground">
             {placeholder}
           </span>
         )}
 
         {/* Status dot — overlaid on icon bottom-right */}
         {showRunningStatus && (
-          <span className="absolute -bottom-0.5 -right-0.5 flex size-[14px] items-center justify-center rounded-full bg-background">
+          <span className="absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-background">
             <StatusDot state={runningState} />
           </span>
         )}
       </div>
 
       {/* Name + port */}
-      <div className="flex w-full flex-col items-center gap-0">
-        <span className="max-w-full truncate text-body font-medium">{app.productName}</span>
+      <div className="flex w-full flex-col items-center gap-0.5">
+        <span className="max-w-full truncate text-[12px] font-medium">{app.productName}</span>
         {showRunningStatus && port !== null && (
-          <span className="font-mono text-micro tabular-nums text-muted-foreground/60">
-            :{port}
-          </span>
+          <span className="font-mono text-[10px] tabular-nums text-muted-foreground">:{port}</span>
         )}
       </div>
-    </Button>
+    </button>
   );
 }

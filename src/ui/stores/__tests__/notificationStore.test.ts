@@ -15,10 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // Hoisted mocks
 // ---------------------------------------------------------------------------
 
-const {
-  mockLocale,
-  mockMessages,
-} = vi.hoisted(() => ({
+const { mockLocale, mockMessages } = vi.hoisted(() => ({
   mockLocale: 'zh-CN',
   mockMessages: {
     'zh-CN': {
@@ -51,8 +48,8 @@ vi.mock('@shared/withTimeout', () => ({
 // Imports (after mocks)
 // ---------------------------------------------------------------------------
 
-import { useNotificationStore } from '../notificationStore';
 import { isIpcTimeoutError } from '@shared/withTimeout';
+import { useNotificationStore } from '../notificationStore';
 
 // ---------------------------------------------------------------------------
 // Tests

@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type * as React from 'react';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import {
   Select,
   SelectContent,
@@ -14,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+
 import { ArrowDown, ArrowUp, Search } from 'lucide-react';
 
 interface PageToolbarProps {
@@ -36,19 +33,12 @@ interface PageToolbarProps {
   className?: string;
 }
 
-function PageToolbar({
-  search,
-  sort,
-  sortOrder,
-  actions,
-  left,
-  className,
-}: PageToolbarProps) {
+function PageToolbar({ search, sort, sortOrder, actions, left, className }: PageToolbarProps) {
   return (
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
       {left}
       {search && (
-        <InputGroup className="h-6 rounded-sm" style={{ width: '240px' }}>
+        <InputGroup className="h-8 rounded-md" style={{ width: '240px' }}>
           <InputGroupInput
             value={search.value}
             onChange={(e) => search.onChange(e.target.value)}
@@ -63,14 +53,14 @@ function PageToolbar({
       {sort && (
         <Select value={sort.value} onValueChange={sort.onChange}>
           <SelectTrigger
-            className="h-6 w-[130px] rounded-sm border-input bg-muted text-[10px] focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--primary-rgb),0.13)]"
+            className="h-8 w-[130px] rounded-md border-border bg-muted text-[11px] focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--brand-rgb),0.13)]"
             aria-label={sort.options.find((o) => o.value === sort.value)?.label}
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="rounded-sm border-border bg-card">
+          <SelectContent className="rounded-md border-border bg-card">
             {sort.options.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value} className="text-[10px]">
+              <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
                 {opt.label}
               </SelectItem>
             ))}
@@ -78,15 +68,15 @@ function PageToolbar({
         </Select>
       )}
       {sortOrder && (
-        <div className="inline-flex items-center gap-0 rounded-sm bg-muted p-0.5">
+        <div className="inline-flex items-center gap-0 rounded-md bg-muted p-0.5">
           <button
             type="button"
             onClick={sortOrder.onToggle}
             aria-label={sortOrder.order === 'asc' ? 'Sort descending' : 'Sort ascending'}
             aria-pressed={sortOrder.order === 'asc'}
             className={cn(
-              'h-6 rounded-sm px-2 text-[10px] font-normal transition-all duration-fast',
-              'bg-card text-foreground',
+              'h-7 rounded-sm px-2 text-[11px] font-medium transition-all duration-fast',
+              'bg-card text-foreground shadow-sm',
             )}
           >
             {sortOrder.order === 'asc' ? (
@@ -102,5 +92,5 @@ function PageToolbar({
   );
 }
 
-export { PageToolbar };
 export type { PageToolbarProps };
+export { PageToolbar };

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const THEMES_DIR = join(process.cwd(), 'themes');
@@ -108,11 +108,20 @@ function main() {
       const manifest = readManifest(themeId);
       for (const token of REQUIRED_COLOR_TOKENS) {
         if (manifest.colors[token] === undefined) {
-          errors.push({ check: '14 required tokens', message: `${themeId} missing token ${token}` });
+          errors.push({
+            check: '14 required tokens',
+            message: `${themeId} missing token ${token}`,
+          });
         } else if (typeof manifest.colors[token] !== 'string') {
-          errors.push({ check: '14 required tokens', message: `${themeId} token ${token} is not a string` });
+          errors.push({
+            check: '14 required tokens',
+            message: `${themeId} token ${token} is not a string`,
+          });
         } else if (manifest.colors[token].length === 0) {
-          errors.push({ check: '14 required tokens', message: `${themeId} token ${token} is empty` });
+          errors.push({
+            check: '14 required tokens',
+            message: `${themeId} token ${token} is empty`,
+          });
         }
       }
     }
@@ -127,11 +136,17 @@ function main() {
       for (const agent of EXPECTED_AGENTS) {
         const relPath = manifest.targets[agent]?.css;
         if (relPath === undefined) {
-          errors.push({ check: '6 agent CSS files', message: `${themeId}: targets.${agent}.css missing` });
+          errors.push({
+            check: '6 agent CSS files',
+            message: `${themeId}: targets.${agent}.css missing`,
+          });
         } else {
           const cssPath = join(THEMES_DIR, themeId, relPath);
           if (!existsSync(cssPath)) {
-            errors.push({ check: '6 agent CSS files', message: `${themeId}: CSS file missing: ${cssPath}` });
+            errors.push({
+              check: '6 agent CSS files',
+              message: `${themeId}: CSS file missing: ${cssPath}`,
+            });
           }
         }
       }
@@ -150,7 +165,10 @@ function main() {
         if (!existsSync(cssPath)) continue;
         const css = readFileSync(cssPath, 'utf-8');
         if (!css.includes('--agentskin-accent:')) {
-          errors.push({ check: '--agentskin-accent variable', message: `${themeId}/${agent} missing --agentskin-accent` });
+          errors.push({
+            check: '--agentskin-accent variable',
+            message: `${themeId}/${agent} missing --agentskin-accent`,
+          });
         }
       }
     }
@@ -168,7 +186,10 @@ function main() {
         if (!existsSync(cssPath)) continue;
         const css = readFileSync(cssPath, 'utf-8');
         if (!css.includes('--agentskin-bg:')) {
-          errors.push({ check: '--agentskin-bg variable', message: `${themeId}/${agent} missing --agentskin-bg` });
+          errors.push({
+            check: '--agentskin-bg variable',
+            message: `${themeId}/${agent} missing --agentskin-bg`,
+          });
         }
       }
     }
@@ -186,7 +207,10 @@ function main() {
         if (!existsSync(cssPath)) continue;
         const css = readFileSync(cssPath, 'utf-8');
         if (!/color-scheme:\s*(dark|light)\s*(!important)?;/.test(css)) {
-          errors.push({ check: 'color-scheme declaration', message: `${themeId}/${agent} missing color-scheme` });
+          errors.push({
+            check: 'color-scheme declaration',
+            message: `${themeId}/${agent} missing color-scheme`,
+          });
         }
       }
     }
@@ -200,7 +224,10 @@ function main() {
       const full = join(THEMES_DIR, dir);
       if (!statSync(full).isDirectory()) continue;
       if (!existsSync(join(full, 'manifest.json'))) {
-        errors.push({ check: 'manifest.json exists', message: `Theme "${dir}" missing manifest.json` });
+        errors.push({
+          check: 'manifest.json exists',
+          message: `Theme "${dir}" missing manifest.json`,
+        });
       }
     }
     results.push({ name: 'manifest.json exists', passed: errors.length === 0, errors });
@@ -212,10 +239,16 @@ function main() {
     for (const themeId of availableThemes) {
       const manifest = readManifest(themeId);
       if (manifest.schemaVersion !== 2) {
-        errors.push({ check: 'v2 schema (schemaVersion)', message: `"${themeId}" schemaVersion mismatch (got ${manifest.schemaVersion})` });
+        errors.push({
+          check: 'v2 schema (schemaVersion)',
+          message: `"${themeId}" schemaVersion mismatch (got ${manifest.schemaVersion})`,
+        });
       }
       if (!manifest.$schema || !manifest.$schema.includes('manifest-v2')) {
-        errors.push({ check: 'v2 schema ($schema)', message: `"${themeId}" $schema missing or incorrect` });
+        errors.push({
+          check: 'v2 schema ($schema)',
+          message: `"${themeId}" $schema missing or incorrect`,
+        });
       }
     }
     results.push({ name: 'v2 schema', passed: errors.length === 0, errors });
@@ -232,13 +265,23 @@ function main() {
         if (!existsSync(cssPath)) continue;
         const css = readFileSync(cssPath, 'utf-8');
         if (css.length === 0) {
-          errors.push({ check: 'CSS non-empty with host/:root block', message: `${themeId}/${agent} CSS is empty` });
+          errors.push({
+            check: 'CSS non-empty with host/:root block',
+            message: `${themeId}/${agent} CSS is empty`,
+          });
         } else if (!HOST_SELECTOR.test(css)) {
-          errors.push({ check: 'CSS non-empty with host/:root block', message: `${themeId}/${agent} CSS missing :root or host selector` });
+          errors.push({
+            check: 'CSS non-empty with host/:root block',
+            message: `${themeId}/${agent} CSS missing :root or host selector`,
+          });
         }
       }
     }
-    results.push({ name: 'CSS non-empty with host/:root block', passed: errors.length === 0, errors });
+    results.push({
+      name: 'CSS non-empty with host/:root block',
+      passed: errors.length === 0,
+      errors,
+    });
   }
 
   // --- Output ---
@@ -250,7 +293,9 @@ function main() {
     const result = results[i];
     const checkNum = i + 1;
     if (result.passed) {
-      console.log(`✓ Check ${checkNum}: ${result.name} — ${availableThemes.length}/${availableThemes.length} themes passed`);
+      console.log(
+        `✓ Check ${checkNum}: ${result.name} — ${availableThemes.length}/${availableThemes.length} themes passed`,
+      );
       passedCount++;
     } else {
       const uniqueThemes = new Set(result.errors.map((e) => e.message.split(/[:\s]/)[0]));

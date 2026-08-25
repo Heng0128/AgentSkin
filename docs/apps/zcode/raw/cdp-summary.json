@@ -52,220 +52,67 @@
       "default": {
         "count": 390,
         "namespaces": [
-          [
-            "color",
-            256
-          ],
-          [
-            "tw",
-            46
-          ],
-          [
-            "text",
-            23
-          ],
-          [
-            "beam",
-            14
-          ],
-          [
-            "container",
-            10
-          ],
-          [
-            "radius",
-            7
-          ],
-          [
-            "font",
-            6
-          ],
-          [
-            "blur",
-            6
-          ],
-          [
-            "default",
-            4
-          ],
-          [
-            "leading",
-            4
-          ],
-          [
-            "tracking",
-            4
-          ],
-          [
-            "animate",
-            3
-          ],
-          [
-            "ease",
-            2
-          ],
-          [
-            "animated",
-            2
-          ],
-          [
-            "aspect",
-            1
-          ],
-          [
-            "none",
-            1
-          ],
-          [
-            "ui",
-            1
-          ]
+          ["color", 256],
+          ["tw", 46],
+          ["text", 23],
+          ["beam", 14],
+          ["container", 10],
+          ["radius", 7],
+          ["font", 6],
+          ["blur", 6],
+          ["default", 4],
+          ["leading", 4],
+          ["tracking", 4],
+          ["animate", 3],
+          ["ease", 2],
+          ["animated", 2],
+          ["aspect", 1],
+          ["none", 1],
+          ["ui", 1]
         ]
       },
       "dark": {
         "count": 390,
         "namespaces": [
-          [
-            "color",
-            256
-          ],
-          [
-            "tw",
-            46
-          ],
-          [
-            "text",
-            23
-          ],
-          [
-            "beam",
-            14
-          ],
-          [
-            "container",
-            10
-          ],
-          [
-            "radius",
-            7
-          ],
-          [
-            "font",
-            6
-          ],
-          [
-            "blur",
-            6
-          ],
-          [
-            "default",
-            4
-          ],
-          [
-            "leading",
-            4
-          ],
-          [
-            "tracking",
-            4
-          ],
-          [
-            "animate",
-            3
-          ],
-          [
-            "ease",
-            2
-          ],
-          [
-            "animated",
-            2
-          ],
-          [
-            "aspect",
-            1
-          ],
-          [
-            "none",
-            1
-          ],
-          [
-            "ui",
-            1
-          ]
+          ["color", 256],
+          ["tw", 46],
+          ["text", 23],
+          ["beam", 14],
+          ["container", 10],
+          ["radius", 7],
+          ["font", 6],
+          ["blur", 6],
+          ["default", 4],
+          ["leading", 4],
+          ["tracking", 4],
+          ["animate", 3],
+          ["ease", 2],
+          ["animated", 2],
+          ["aspect", 1],
+          ["none", 1],
+          ["ui", 1]
         ]
       },
       "light": {
         "count": 390,
         "namespaces": [
-          [
-            "color",
-            256
-          ],
-          [
-            "tw",
-            46
-          ],
-          [
-            "text",
-            23
-          ],
-          [
-            "beam",
-            14
-          ],
-          [
-            "container",
-            10
-          ],
-          [
-            "radius",
-            7
-          ],
-          [
-            "font",
-            6
-          ],
-          [
-            "blur",
-            6
-          ],
-          [
-            "default",
-            4
-          ],
-          [
-            "leading",
-            4
-          ],
-          [
-            "tracking",
-            4
-          ],
-          [
-            "animate",
-            3
-          ],
-          [
-            "ease",
-            2
-          ],
-          [
-            "animated",
-            2
-          ],
-          [
-            "aspect",
-            1
-          ],
-          [
-            "none",
-            1
-          ],
-          [
-            "ui",
-            1
-          ]
+          ["color", 256],
+          ["tw", 46],
+          ["text", 23],
+          ["beam", 14],
+          ["container", 10],
+          ["radius", 7],
+          ["font", 6],
+          ["blur", 6],
+          ["default", 4],
+          ["leading", 4],
+          ["tracking", 4],
+          ["animate", 3],
+          ["ease", 2],
+          ["animated", 2],
+          ["aspect", 1],
+          ["none", 1],
+          ["ui", 1]
         ]
       }
     },

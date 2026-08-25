@@ -26,8 +26,8 @@
 
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
-import path from 'node:path';
 import os from 'node:os';
+import path from 'node:path';
 import yauzl, { type Entry, type ZipFile } from 'yauzl';
 import { mainError } from '../logger';
 
@@ -144,11 +144,7 @@ function performExtraction(zipPath: string, tempDir: string): Promise<ExtractRes
 
           zipfile.openReadStream(entry, (readErr, readStream) => {
             if (readErr) {
-              reject(
-                new Error(
-                  `Failed to read entry "${entry.fileName}": ${readErr.message}`,
-                ),
-              );
+              reject(new Error(`Failed to read entry "${entry.fileName}": ${readErr.message}`));
               zipfile.close();
               return;
             }
@@ -170,11 +166,7 @@ function performExtraction(zipPath: string, tempDir: string): Promise<ExtractRes
                 } catch {
                   // ignore
                 }
-                reject(
-                  new Error(
-                    `Extracted size exceeds ${MAX_EXTRACT_SIZE} byte limit`,
-                  ),
-                );
+                reject(new Error(`Extracted size exceeds ${MAX_EXTRACT_SIZE} byte limit`));
                 zipfile.close();
               }
             });
@@ -188,11 +180,7 @@ function performExtraction(zipPath: string, tempDir: string): Promise<ExtractRes
             });
 
             writeStream.on('error', (writeError) => {
-              reject(
-                new Error(
-                  `Failed to write entry "${entry.fileName}": ${writeError.message}`,
-                ),
-              );
+              reject(new Error(`Failed to write entry "${entry.fileName}": ${writeError.message}`));
               zipfile.close();
             });
           });
@@ -202,11 +190,7 @@ function performExtraction(zipPath: string, tempDir: string): Promise<ExtractRes
           // Locate the theme root (directory containing theme.json).
           const themeRoot = findThemeRoot(tempDir);
           if (!themeRoot) {
-            reject(
-              new Error(
-                'No valid theme root found in ZIP (missing theme.json)',
-              ),
-            );
+            reject(new Error('No valid theme root found in ZIP (missing theme.json)'));
             zipfile.close();
             return;
           }
@@ -216,9 +200,7 @@ function performExtraction(zipPath: string, tempDir: string): Promise<ExtractRes
         });
 
         zipfile.on('error', (zipErr: Error) => {
-          reject(
-            new Error(`ZIP processing error: ${zipErr.message}`),
-          );
+          reject(new Error(`ZIP processing error: ${zipErr.message}`));
         });
       },
     );
@@ -234,11 +216,7 @@ function performExtraction(zipPath: string, tempDir: string): Promise<ExtractRes
  */
 function isWithinDir(dir: string, filePath: string): boolean {
   const relative = path.relative(dir, filePath);
-  return (
-    relative !== '' &&
-    !relative.startsWith('..') &&
-    !path.isAbsolute(relative)
-  );
+  return relative !== '' && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 
 /**

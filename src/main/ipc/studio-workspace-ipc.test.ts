@@ -19,10 +19,12 @@ const handlers = new Map<string, (...args: unknown[]) => unknown>();
 const showOpenDialog = vi.fn();
 const createFromBuffer = vi.fn();
 
-vi.mock('electron', () => createElectronMock(handlers, {
-  dialog: { showOpenDialog: (...args: unknown[]) => showOpenDialog(...args) },
-  nativeImage: { createFromBuffer: (...args: unknown[]) => createFromBuffer(...args) },
-}));
+vi.mock('electron', () =>
+  createElectronMock(handlers, {
+    dialog: { showOpenDialog: (...args: unknown[]) => showOpenDialog(...args) },
+    nativeImage: { createFromBuffer: (...args: unknown[]) => createFromBuffer(...args) },
+  }),
+);
 
 const deriveThemeFromImage = vi.fn();
 const sampleFromBitmap = vi.fn();

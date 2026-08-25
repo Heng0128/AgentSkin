@@ -147,7 +147,7 @@ export function AgentLivePreview({
 
   if (loading && !domTree) {
     return (
-      <div className="flex h-[280px] items-center justify-center rounded-md bg-card">
+      <div className="flex h-full items-center justify-center rounded-lg border border-border bg-card">
         <span className="as-mono">{t.workspacePreviewLoading}</span>
       </div>
     );
@@ -174,22 +174,26 @@ export function AgentLivePreview({
   // In dual-preview mode, render A/B side by side.
   if (dualPreview) {
     return (
-      <div className="relative overflow-hidden rounded-md">
+      <div className="relative h-full overflow-hidden rounded-lg border border-border">
         {statusBar}
-        <div className="grid grid-cols-2 gap-px bg-border">
+        <div className="grid h-full grid-cols-2 gap-px bg-border">
           {/* Left: current overrides */}
-          <div className="bg-[var(--surface)]">
-            <div className="px-2 py-1 text-center text-[10px] tracking-wider text-muted-foreground">
+          <div className="flex flex-col bg-[var(--surface)]">
+            <div className="shrink-0 px-2 py-1 text-center text-[10px] tracking-wider text-muted-foreground">
               {t.workspacePreviewDualA}
             </div>
-            <RealDomPreview domTree={domTree} overrides={overrides} t={t} />
+            <div className="min-h-0 flex-1">
+              <RealDomPreview domTree={domTree} overrides={overrides} t={t} chrome={false} />
+            </div>
           </div>
           {/* Right: baseline (no overrides) */}
-          <div className="bg-[var(--surface)]">
-            <div className="px-2 py-1 text-center text-[10px] tracking-wider text-muted-foreground">
+          <div className="flex flex-col bg-[var(--surface)]">
+            <div className="shrink-0 px-2 py-1 text-center text-[10px] tracking-wider text-muted-foreground">
               {t.workspacePreviewDualB}
             </div>
-            <RealDomPreview domTree={domTree} overrides={null} t={t} />
+            <div className="min-h-0 flex-1">
+              <RealDomPreview domTree={domTree} overrides={null} t={t} chrome={false} />
+            </div>
           </div>
         </div>
       </div>
@@ -198,13 +202,14 @@ export function AgentLivePreview({
 
   // Single preview mode (with optional inspect mode).
   return (
-    <div className="relative overflow-hidden rounded-md">
+    <div className="relative h-full overflow-hidden rounded-lg border border-border">
       {statusBar}
-      <div style={{ cursor: inspectMode ? 'crosshair' : 'default' }}>
+      <div className="h-full" style={{ cursor: inspectMode ? 'crosshair' : 'default' }}>
         <RealDomPreview
           domTree={domTree}
           overrides={overrides}
           t={t}
+          chrome={false}
           onIframeMount={inspectMode ? handleIframeMount : undefined}
         />
       </div>

@@ -8,52 +8,49 @@
  * server lifecycle for MCP integration.
  */
 
+import { registerCreationTools } from './tools/creation-tools';
 import { registerStatusTools } from './tools/status-tools';
 import { registerThemeTools } from './tools/theme-tools';
 import { registerWallpaperTools } from './tools/wallpaper-tools';
-import { registerCreationTools } from './tools/creation-tools';
 
-export { createMcpContext } from './context';
-export type {
-  McpContext,
-  McpThemeCatalog,
-  McpAgentCatalog,
-  McpThemeLibrary,
-  McpSettings,
-  McpAgentEngine,
-} from './context';
-
-export { registerApiKey, validateApiKey, generateApiKey } from './auth';
-
-export type {
-  McpToolResult,
-  McpToolHandler,
-  McpToolDefinition,
-  McpInputSchema,
-  CreateThemeParams,
-  ApplyThemeParams,
-} from './types';
-
-export { registerTool, getTool, listTools, getAllToolDefinitions } from './tool-registry';
-
+export { generateApiKey, registerApiKey, validateApiKey } from './auth';
 export {
   executeTool,
-  getRegisteredTools,
   getAllRegisteredToolDefinitions,
+  getRegisteredTools,
 } from './capability-orchestrator';
-
+export type { McpConfig } from './config';
+export { getMcpConfig } from './config';
+export type {
+  McpAgentCatalog,
+  McpAgentEngine,
+  McpContext,
+  McpSettings,
+  McpThemeCatalog,
+  McpThemeLibrary,
+} from './context';
+export { createMcpContext } from './context';
+export {
+  getMcpHttpPort,
+  isMcpHttpRunning,
+  startMcpHttpServer,
+  stopMcpHttpServer,
+} from './http-server';
 export {
   createMcpServer,
   startMcpServer,
   stopMcpServer,
 } from './mcp-server';
-
 export { syncStatusToGui } from './status-sync';
-
-export { startMcpHttpServer, stopMcpHttpServer, getMcpHttpPort, isMcpHttpRunning } from './http-server';
-
-export { getMcpConfig } from './config';
-export type { McpConfig } from './config';
+export { getAllToolDefinitions, getTool, listTools, registerTool } from './tool-registry';
+export type {
+  ApplyThemeParams,
+  CreateThemeParams,
+  McpInputSchema,
+  McpToolDefinition,
+  McpToolHandler,
+  McpToolResult,
+} from './types';
 
 /**
  * Register all MCP tools in the global tool registry.

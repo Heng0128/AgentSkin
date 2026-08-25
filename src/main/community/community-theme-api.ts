@@ -92,7 +92,12 @@ function mapApiToThemeSummary(raw: RawApiTheme): CommunityThemeSummary {
   const thumbUrl = `${API_BASE}/themes/${raw.id}/preview/background?width=320&height=180&fit=cover`;
 
   return {
-    themeId: raw.themeId || raw.slug || raw.id,
+    // CRITICAL: themeId MUST be the DreamSkin API `id` (e.g. "ver_15addf5eaaed738c3a8c")
+    // because it is used for /themes/{id}/detail and /themes/{id}/download API calls.
+    // The slug (raw.themeId) is only for display/SEO.
+    // Fallback: if `id` is missing (unexpected), use themeId/slug to avoid undefined.
+    themeId: raw.id || raw.themeId || raw.slug || '',
+    slug: raw.themeId || raw.slug || raw.id || '',
     name: raw.name || raw.slug || 'Untitled Theme',
     author: {
       id: raw.authorUserId || 'unknown',
@@ -108,9 +113,11 @@ function mapApiToThemeSummary(raw: RawApiTheme): CommunityThemeSummary {
     packageSha256: raw.packageSha256,
     thumbUrl,
     // Preserve theme colors for preview bar display
-    displayMeta: raw.displayMeta?.colors ? {
-      colors: raw.displayMeta.colors,
-    } : undefined,
+    displayMeta: raw.displayMeta?.colors
+      ? {
+          colors: raw.displayMeta.colors,
+        }
+      : undefined,
   };
 }
 

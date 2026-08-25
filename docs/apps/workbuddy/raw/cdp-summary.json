@@ -52,592 +52,160 @@
       "default": {
         "count": 3560,
         "namespaces": [
-          [
-            "vscode",
-            867
-          ],
-          [
-            "wb",
-            863
-          ],
-          [
-            "cb",
-            466
-          ],
-          [
-            "cr",
-            190
-          ],
-          [
-            "sc",
-            140
-          ],
-          [
-            "ec",
-            86
-          ],
-          [
-            "dc",
-            28
-          ],
-          [
-            "gray",
-            28
-          ],
-          [
-            "mauve",
-            28
-          ],
-          [
-            "slate",
-            28
-          ],
-          [
-            "sage",
-            28
-          ],
-          [
-            "olive",
-            28
-          ],
-          [
-            "sand",
-            28
-          ],
-          [
-            "amber",
-            28
-          ],
-          [
-            "blue",
-            28
-          ],
-          [
-            "bronze",
-            28
-          ],
-          [
-            "brown",
-            28
-          ],
-          [
-            "crimson",
-            28
-          ],
-          [
-            "cyan",
-            28
-          ],
-          [
-            "gold",
-            28
-          ],
-          [
-            "grass",
-            28
-          ],
-          [
-            "green",
-            28
-          ],
-          [
-            "indigo",
-            28
-          ],
-          [
-            "iris",
-            28
-          ],
-          [
-            "jade",
-            28
-          ],
-          [
-            "lime",
-            28
-          ],
-          [
-            "mint",
-            28
-          ],
-          [
-            "orange",
-            28
-          ],
-          [
-            "pink",
-            28
-          ],
-          [
-            "plum",
-            28
-          ],
-          [
-            "purple",
-            28
-          ],
-          [
-            "red",
-            28
-          ],
-          [
-            "ruby",
-            28
-          ],
-          [
-            "sky",
-            28
-          ],
-          [
-            "teal",
-            28
-          ],
-          [
-            "tomato",
-            28
-          ],
-          [
-            "violet",
-            28
-          ],
-          [
-            "yellow",
-            28
-          ],
-          [
-            "black",
-            12
-          ],
-          [
-            "white",
-            12
-          ],
-          [
-            "fe",
-            9
-          ],
-          [
-            "theme",
-            6
-          ],
-          [
-            "ic",
-            5
-          ],
-          [
-            "qad",
-            3
-          ],
-          [
-            "chat",
-            2
-          ],
-          [
-            "conversation",
-            1
-          ],
-          [
-            "oneid",
-            1
-          ],
-          [
-            "text",
-            1
-          ]
+          ["vscode", 867],
+          ["wb", 863],
+          ["cb", 466],
+          ["cr", 190],
+          ["sc", 140],
+          ["ec", 86],
+          ["dc", 28],
+          ["gray", 28],
+          ["mauve", 28],
+          ["slate", 28],
+          ["sage", 28],
+          ["olive", 28],
+          ["sand", 28],
+          ["amber", 28],
+          ["blue", 28],
+          ["bronze", 28],
+          ["brown", 28],
+          ["crimson", 28],
+          ["cyan", 28],
+          ["gold", 28],
+          ["grass", 28],
+          ["green", 28],
+          ["indigo", 28],
+          ["iris", 28],
+          ["jade", 28],
+          ["lime", 28],
+          ["mint", 28],
+          ["orange", 28],
+          ["pink", 28],
+          ["plum", 28],
+          ["purple", 28],
+          ["red", 28],
+          ["ruby", 28],
+          ["sky", 28],
+          ["teal", 28],
+          ["tomato", 28],
+          ["violet", 28],
+          ["yellow", 28],
+          ["black", 12],
+          ["white", 12],
+          ["fe", 9],
+          ["theme", 6],
+          ["ic", 5],
+          ["qad", 3],
+          ["chat", 2],
+          ["conversation", 1],
+          ["oneid", 1],
+          ["text", 1]
         ]
       },
       "dark": {
         "count": 3560,
         "namespaces": [
-          [
-            "vscode",
-            867
-          ],
-          [
-            "wb",
-            863
-          ],
-          [
-            "cb",
-            466
-          ],
-          [
-            "cr",
-            190
-          ],
-          [
-            "sc",
-            140
-          ],
-          [
-            "ec",
-            86
-          ],
-          [
-            "dc",
-            28
-          ],
-          [
-            "gray",
-            28
-          ],
-          [
-            "mauve",
-            28
-          ],
-          [
-            "slate",
-            28
-          ],
-          [
-            "sage",
-            28
-          ],
-          [
-            "olive",
-            28
-          ],
-          [
-            "sand",
-            28
-          ],
-          [
-            "amber",
-            28
-          ],
-          [
-            "blue",
-            28
-          ],
-          [
-            "bronze",
-            28
-          ],
-          [
-            "brown",
-            28
-          ],
-          [
-            "crimson",
-            28
-          ],
-          [
-            "cyan",
-            28
-          ],
-          [
-            "gold",
-            28
-          ],
-          [
-            "grass",
-            28
-          ],
-          [
-            "green",
-            28
-          ],
-          [
-            "indigo",
-            28
-          ],
-          [
-            "iris",
-            28
-          ],
-          [
-            "jade",
-            28
-          ],
-          [
-            "lime",
-            28
-          ],
-          [
-            "mint",
-            28
-          ],
-          [
-            "orange",
-            28
-          ],
-          [
-            "pink",
-            28
-          ],
-          [
-            "plum",
-            28
-          ],
-          [
-            "purple",
-            28
-          ],
-          [
-            "red",
-            28
-          ],
-          [
-            "ruby",
-            28
-          ],
-          [
-            "sky",
-            28
-          ],
-          [
-            "teal",
-            28
-          ],
-          [
-            "tomato",
-            28
-          ],
-          [
-            "violet",
-            28
-          ],
-          [
-            "yellow",
-            28
-          ],
-          [
-            "black",
-            12
-          ],
-          [
-            "white",
-            12
-          ],
-          [
-            "fe",
-            9
-          ],
-          [
-            "theme",
-            6
-          ],
-          [
-            "ic",
-            5
-          ],
-          [
-            "qad",
-            3
-          ],
-          [
-            "chat",
-            2
-          ],
-          [
-            "conversation",
-            1
-          ],
-          [
-            "oneid",
-            1
-          ],
-          [
-            "text",
-            1
-          ]
+          ["vscode", 867],
+          ["wb", 863],
+          ["cb", 466],
+          ["cr", 190],
+          ["sc", 140],
+          ["ec", 86],
+          ["dc", 28],
+          ["gray", 28],
+          ["mauve", 28],
+          ["slate", 28],
+          ["sage", 28],
+          ["olive", 28],
+          ["sand", 28],
+          ["amber", 28],
+          ["blue", 28],
+          ["bronze", 28],
+          ["brown", 28],
+          ["crimson", 28],
+          ["cyan", 28],
+          ["gold", 28],
+          ["grass", 28],
+          ["green", 28],
+          ["indigo", 28],
+          ["iris", 28],
+          ["jade", 28],
+          ["lime", 28],
+          ["mint", 28],
+          ["orange", 28],
+          ["pink", 28],
+          ["plum", 28],
+          ["purple", 28],
+          ["red", 28],
+          ["ruby", 28],
+          ["sky", 28],
+          ["teal", 28],
+          ["tomato", 28],
+          ["violet", 28],
+          ["yellow", 28],
+          ["black", 12],
+          ["white", 12],
+          ["fe", 9],
+          ["theme", 6],
+          ["ic", 5],
+          ["qad", 3],
+          ["chat", 2],
+          ["conversation", 1],
+          ["oneid", 1],
+          ["text", 1]
         ]
       },
       "light": {
         "count": 3560,
         "namespaces": [
-          [
-            "vscode",
-            867
-          ],
-          [
-            "wb",
-            863
-          ],
-          [
-            "cb",
-            466
-          ],
-          [
-            "cr",
-            190
-          ],
-          [
-            "sc",
-            140
-          ],
-          [
-            "ec",
-            86
-          ],
-          [
-            "dc",
-            28
-          ],
-          [
-            "gray",
-            28
-          ],
-          [
-            "mauve",
-            28
-          ],
-          [
-            "slate",
-            28
-          ],
-          [
-            "sage",
-            28
-          ],
-          [
-            "olive",
-            28
-          ],
-          [
-            "sand",
-            28
-          ],
-          [
-            "amber",
-            28
-          ],
-          [
-            "blue",
-            28
-          ],
-          [
-            "bronze",
-            28
-          ],
-          [
-            "brown",
-            28
-          ],
-          [
-            "crimson",
-            28
-          ],
-          [
-            "cyan",
-            28
-          ],
-          [
-            "gold",
-            28
-          ],
-          [
-            "grass",
-            28
-          ],
-          [
-            "green",
-            28
-          ],
-          [
-            "indigo",
-            28
-          ],
-          [
-            "iris",
-            28
-          ],
-          [
-            "jade",
-            28
-          ],
-          [
-            "lime",
-            28
-          ],
-          [
-            "mint",
-            28
-          ],
-          [
-            "orange",
-            28
-          ],
-          [
-            "pink",
-            28
-          ],
-          [
-            "plum",
-            28
-          ],
-          [
-            "purple",
-            28
-          ],
-          [
-            "red",
-            28
-          ],
-          [
-            "ruby",
-            28
-          ],
-          [
-            "sky",
-            28
-          ],
-          [
-            "teal",
-            28
-          ],
-          [
-            "tomato",
-            28
-          ],
-          [
-            "violet",
-            28
-          ],
-          [
-            "yellow",
-            28
-          ],
-          [
-            "black",
-            12
-          ],
-          [
-            "white",
-            12
-          ],
-          [
-            "fe",
-            9
-          ],
-          [
-            "theme",
-            6
-          ],
-          [
-            "ic",
-            5
-          ],
-          [
-            "qad",
-            3
-          ],
-          [
-            "chat",
-            2
-          ],
-          [
-            "conversation",
-            1
-          ],
-          [
-            "oneid",
-            1
-          ],
-          [
-            "text",
-            1
-          ]
+          ["vscode", 867],
+          ["wb", 863],
+          ["cb", 466],
+          ["cr", 190],
+          ["sc", 140],
+          ["ec", 86],
+          ["dc", 28],
+          ["gray", 28],
+          ["mauve", 28],
+          ["slate", 28],
+          ["sage", 28],
+          ["olive", 28],
+          ["sand", 28],
+          ["amber", 28],
+          ["blue", 28],
+          ["bronze", 28],
+          ["brown", 28],
+          ["crimson", 28],
+          ["cyan", 28],
+          ["gold", 28],
+          ["grass", 28],
+          ["green", 28],
+          ["indigo", 28],
+          ["iris", 28],
+          ["jade", 28],
+          ["lime", 28],
+          ["mint", 28],
+          ["orange", 28],
+          ["pink", 28],
+          ["plum", 28],
+          ["purple", 28],
+          ["red", 28],
+          ["ruby", 28],
+          ["sky", 28],
+          ["teal", 28],
+          ["tomato", 28],
+          ["violet", 28],
+          ["yellow", 28],
+          ["black", 12],
+          ["white", 12],
+          ["fe", 9],
+          ["theme", 6],
+          ["ic", 5],
+          ["qad", 3],
+          ["chat", 2],
+          ["conversation", 1],
+          ["oneid", 1],
+          ["text", 1]
         ]
       }
     },

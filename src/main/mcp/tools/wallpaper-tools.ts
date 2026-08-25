@@ -13,15 +13,15 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { nativeImage } from 'electron';
 import { z } from 'zod';
-import type { McpContext, McpToolResult } from '../types';
-import type { McpToolDefinition } from '../tool-registry';
-import { registerTool } from '../tool-registry';
 import type { AgentId } from '../../../shared/types';
 import type { ImagePixelSample } from '../../../shared/types/theme';
 import type { AgentEngineServiceApi } from '../../services/contracts';
-import { sampleFromBitmap } from '../../theme/wallpaper-theme';
 import { deriveThemeFromImage } from '../../theme/theme-from-image';
+import { sampleFromBitmap } from '../../theme/wallpaper-theme';
 import { syncStatusToGui } from '../status-sync';
+import type { McpToolDefinition } from '../tool-registry';
+import { registerTool } from '../tool-registry';
+import type { McpContext, McpToolResult } from '../types';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -127,7 +127,10 @@ const previewThemeFromImageSchema = z.object({
   mode: z.enum(['dark', 'light', 'auto']).optional(),
 });
 
-async function previewThemeFromImageHandler(args: unknown, ctx: McpContext): Promise<McpToolResult> {
+async function previewThemeFromImageHandler(
+  args: unknown,
+  ctx: McpContext,
+): Promise<McpToolResult> {
   const { image_path: imagePath, mode } = previewThemeFromImageSchema.parse(args);
 
   const validationError = await validateImagePath(imagePath);

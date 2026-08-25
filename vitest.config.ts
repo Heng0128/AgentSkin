@@ -54,8 +54,10 @@ export default defineConfig({
             // imports './dynamic_color' without .js extension (other imports in the
             // same file correctly use .js). This alias resolves the extensionless
             // import to the actual file on disk so vitest can load the package.
-            '@material/material-color-utilities/dynamiccolor/dynamic_color':
-              path.resolve(root, 'node_modules/@material/material-color-utilities/dynamiccolor/dynamic_color.js'),
+            '@material/material-color-utilities/dynamiccolor/dynamic_color': path.resolve(
+              root,
+              'node_modules/@material/material-color-utilities/dynamiccolor/dynamic_color.js',
+            ),
           },
         },
       },

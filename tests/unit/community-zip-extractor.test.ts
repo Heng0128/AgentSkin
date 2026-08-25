@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
-import path from 'node:path';
 import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -35,8 +35,8 @@ vi.mock('../../src/main/logger', () => ({
 // ---------------------------------------------------------------------------
 
 import {
-  extractThemeZip,
   cleanupExtractDir,
+  extractThemeZip,
 } from '../../src/main/community/community-zip-extractor';
 
 // ---------------------------------------------------------------------------
@@ -169,16 +169,12 @@ describe('extractThemeZip — security', () => {
       },
     );
 
-    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(
-      /too many entries/,
-    );
+    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(/too many entries/);
     expect(zipfile.close).toHaveBeenCalled();
   });
 
   it('rejects path traversal via ../ sequence', async () => {
-    const zipfile = createMockZipfile([
-      { fileName: '../../../etc/passwd' },
-    ]);
+    const zipfile = createMockZipfile([{ fileName: '../../../etc/passwd' }]);
 
     yauzlOpenMock.mockImplementation(
       (_p: string, _o: any, cb: (err: Error | null, zf: any) => void) => {
@@ -187,15 +183,11 @@ describe('extractThemeZip — security', () => {
       },
     );
 
-    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(
-      /Path traversal/,
-    );
+    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(/Path traversal/);
   });
 
   it('rejects path traversal via absolute path', async () => {
-    const zipfile = createMockZipfile([
-      { fileName: '/etc/shadow' },
-    ]);
+    const zipfile = createMockZipfile([{ fileName: '/etc/shadow' }]);
 
     yauzlOpenMock.mockImplementation(
       (_p: string, _o: any, cb: (err: Error | null, zf: any) => void) => {
@@ -204,15 +196,11 @@ describe('extractThemeZip — security', () => {
       },
     );
 
-    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(
-      /Path traversal/,
-    );
+    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(/Path traversal/);
   });
 
   it('rejects path traversal via encoded backslash (Windows-style)', async () => {
-    const zipfile = createMockZipfile([
-      { fileName: '..\\..\\windows\\system32\\config\\sam' },
-    ]);
+    const zipfile = createMockZipfile([{ fileName: '..\\..\\windows\\system32\\config\\sam' }]);
 
     yauzlOpenMock.mockImplementation(
       (_p: string, _o: any, cb: (err: Error | null, zf: any) => void) => {
@@ -221,15 +209,11 @@ describe('extractThemeZip — security', () => {
       },
     );
 
-    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(
-      /Path traversal/,
-    );
+    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(/Path traversal/);
   });
 
   it('rejects path traversal via null byte injection', async () => {
-    const zipfile = createMockZipfile([
-      { fileName: 'theme.json\x00/../../../etc/passwd' },
-    ]);
+    const zipfile = createMockZipfile([{ fileName: 'theme.json\x00/../../../etc/passwd' }]);
 
     yauzlOpenMock.mockImplementation(
       (_p: string, _o: any, cb: (err: Error | null, zf: any) => void) => {
@@ -240,9 +224,7 @@ describe('extractThemeZip — security', () => {
 
     // Null byte in filename — path.resolve will include it, but the
     // resolved path should still escape the temp dir.
-    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(
-      /Path traversal/,
-    );
+    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(/Path traversal/);
   });
 
   it('cleans up temp dir on extraction failure', async () => {
@@ -256,9 +238,7 @@ describe('extractThemeZip — security', () => {
       return dir;
     });
 
-    const zipfile = createMockZipfile([
-      { fileName: '../../../etc/passwd' },
-    ]);
+    const zipfile = createMockZipfile([{ fileName: '../../../etc/passwd' }]);
 
     yauzlOpenMock.mockImplementation(
       (_p: string, _o: any, cb: (err: Error | null, zf: any) => void) => {
@@ -364,15 +344,19 @@ describe('extractThemeZip — happy path', () => {
     });
 
     // Mock openReadStream to simulate file extraction
-    zipfile.openReadStream.mockImplementation((entry: any, cb: (err: Error | null, stream: any) => void) => {
-      // Return a mock stream that immediately ends
-      const mockStream = {
-        on: (e: string, h: () => void) => { if (e === 'end') process.nextTick(h); },
-        pipe: vi.fn(),
-        resume: vi.fn(),
-      };
-      cb(null, mockStream);
-    });
+    zipfile.openReadStream.mockImplementation(
+      (entry: any, cb: (err: Error | null, stream: any) => void) => {
+        // Return a mock stream that immediately ends
+        const mockStream = {
+          on: (e: string, h: () => void) => {
+            if (e === 'end') process.nextTick(h);
+          },
+          pipe: vi.fn(),
+          resume: vi.fn(),
+        };
+        cb(null, mockStream);
+      },
+    );
 
     let entryReadCount = 0;
     zipfile.readEntry.mockImplementation(() => {
@@ -523,9 +507,7 @@ describe('extractThemeZip — happy path', () => {
       },
     );
 
-    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(
-      /No valid theme root found/,
-    );
+    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(/No valid theme root found/);
 
     // Cleanup
     cleanupExtractDir(tempDir);
@@ -552,9 +534,7 @@ describe('extractThemeZip — error handling', () => {
       },
     );
 
-    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(
-      /Failed to open ZIP/,
-    );
+    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(/Failed to open ZIP/);
   });
 
   it('rejects when yauzl emits an error event', async () => {
@@ -582,9 +562,7 @@ describe('extractThemeZip — error handling', () => {
       },
     );
 
-    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(
-      /ZIP processing error/,
-    );
+    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(/ZIP processing error/);
   });
 
   it('rejects when openReadStream fails for an entry', async () => {
@@ -622,9 +600,7 @@ describe('extractThemeZip — error handling', () => {
       },
     );
 
-    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(
-      /Failed to read entry/,
-    );
+    await expect(extractThemeZip('/fake/path.zip')).rejects.toThrow(/Failed to read entry/);
 
     // Cleanup
     cleanupExtractDir(tempDir);

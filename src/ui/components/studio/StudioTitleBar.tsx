@@ -103,10 +103,7 @@ export function StudioTitleBar() {
           title={t.titlebarClose}
           aria-label={t.titlebarClose}
           onClick={() => api.windowClose()}
-          className={cn(
-            studioBtn,
-            'hover:bg-primary hover:text-white hover:border-primary',
-          )}
+          className={cn(studioBtn, 'hover:bg-primary hover:text-white hover:border-primary')}
         >
           <X className="size-3" />
         </button>

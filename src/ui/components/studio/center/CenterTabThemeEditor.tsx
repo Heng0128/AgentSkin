@@ -354,9 +354,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
                 <div
                   key={r}
                   className={`h-4 w-4 border ${
-                    r === scale
-                      ? 'border-primary bg-card2'
-                      : 'border-border bg-card'
+                    r === scale ? 'border-primary bg-card2' : 'border-border bg-card'
                   }`}
                   style={{ borderRadius: `${r}px` }}
                   title={`${r}px`}

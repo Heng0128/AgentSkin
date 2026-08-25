@@ -10,8 +10,8 @@
  * wallpaper, settings, and studio pages.
  */
 
-import { cn } from '@/lib/utils';
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 interface EmptyStateProps {
   /** Optional icon element (e.g. Lucide icon). */
@@ -29,9 +29,9 @@ interface EmptyStateProps {
 }
 
 const iconSizeMap: Record<'sm' | 'md' | 'lg', { container: string; icon: string }> = {
-  sm: { container: 'size-8', icon: 'size-4' },
-  md: { container: 'size-12', icon: 'size-6' },
-  lg: { container: 'size-16', icon: 'size-8' },
+  sm: { container: 'size-10', icon: 'size-5' },
+  md: { container: 'size-14', icon: 'size-7' },
+  lg: { container: 'size-18', icon: 'size-9' },
 };
 
 export function EmptyState({
@@ -44,26 +44,21 @@ export function EmptyState({
 }: EmptyStateProps) {
   const sizes = iconSizeMap[iconSize];
   return (
-    <div
-      className={cn(
-        'flex flex-col items-center gap-3 text-center',
-        className,
-      )}
-    >
+    <div className={cn('flex flex-col items-center justify-center gap-4 text-center', className)}>
       {icon && (
         <div
           className={cn(
-            'flex items-center justify-center rounded-full bg-muted/40 text-muted-foreground ring-1 ring-border/50',
+            'flex items-center justify-center rounded-lg bg-muted/60 text-muted-foreground ring-1 ring-border',
             sizes.container,
           )}
         >
           <span className={sizes.icon}>{icon}</span>
         </div>
       )}
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1.5">
         <p className="text-[13px] font-medium text-foreground">{title}</p>
         {hint && (
-          <p className="text-[11px] text-muted-foreground">{hint}</p>
+          <p className="max-w-xs text-[11px] leading-relaxed text-muted-foreground">{hint}</p>
         )}
       </div>
       {action}

@@ -26,7 +26,9 @@ import { ThemeLibrary } from '../theme-library';
 import { connectCdp } from './cdp-client';
 import { waitForTheme } from './injection/shared';
 
-const THEMES_ROOT = process.env.AGENTSKIN_THEMES_PATH || path.join(os.homedir(), 'AppData', 'Roaming', 'AgentSkin', 'themes');
+const THEMES_ROOT =
+  process.env.AGENTSKIN_THEMES_PATH ||
+  path.join(os.homedir(), 'AppData', 'Roaming', 'AgentSkin', 'themes');
 // Theme A/B to apply during the smoke. Override via THEME_A / THEME_B; defaults
 // to installed themes (aurora-dusk / aurora-glass) so real apply works without
 // forcing a reseed of test-only package names (sakura-noir / ocean-tide).

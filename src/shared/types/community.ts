@@ -17,7 +17,13 @@ export interface CommunityThemeAuthor {
 }
 
 export interface CommunityThemeSummary {
+  /**
+   * DreamSkin API 的 `id`（如 "ver_15addf5eaaed738c3a8c"）——用于详情/下载 API 调用。
+   * 不要与 slug 混淆。
+   */
   themeId: string;
+  /** Human-readable slug from DreamSkin API (`themeId` / `slug` field). Used for display/SEO. */
+  slug?: string;
   name: string;
   author: CommunityThemeAuthor;
   description: string;

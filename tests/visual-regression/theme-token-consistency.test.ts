@@ -316,7 +316,7 @@ function colorsEquivalent(a: string, b: string, bgColor?: string): boolean {
   if (!ca || !cb) return false;
   // Determine blend background: use theme bg if available, else white (light themes).
   const bg: Rgba = bgColor
-    ? parseColor(bgColor) ?? { r: 255, g: 255, b: 255, a: 1 }
+    ? (parseColor(bgColor) ?? { r: 255, g: 255, b: 255, a: 1 })
     : { r: 255, g: 255, b: 255, a: 1 };
   const aBlend = ca.a >= 1 ? ca : blendOver(ca, bg);
   const bBlend = cb.a >= 1 ? cb : blendOver(cb, bg);
@@ -334,7 +334,7 @@ function computeContrastRatio(color1: string, color2: string, bgColor?: string):
   const c2 = parseColor(color2);
   if (!c1 || !c2) return 1;
   const bg: Rgba = bgColor
-    ? parseColor(bgColor) ?? { r: 255, g: 255, b: 255, a: 1 }
+    ? (parseColor(bgColor) ?? { r: 255, g: 255, b: 255, a: 1 })
     : { r: 255, g: 255, b: 255, a: 1 };
   const b1 = c1.a >= 1 ? c1 : blendOver(c1, bg);
   const b2 = c2.a >= 1 ? c2 : blendOver(c2, bg);
@@ -345,7 +345,11 @@ function computeContrastRatio(color1: string, color2: string, bgColor?: string):
  * Check WCAG AA compliance for the key text-on-surface pairs.
  * Returns array of violation strings (empty = all pass).
  */
-function checkWcagCompliance(tokens: Map<string, string>, mode: 'dark' | 'light', bgColor?: string): string[] {
+function checkWcagCompliance(
+  tokens: Map<string, string>,
+  mode: 'dark' | 'light',
+  bgColor?: string,
+): string[] {
   const violations: string[] = [];
   const text = tokens.get('--agentskin-text');
   const muted = tokens.get('--agentskin-muted');

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { describe, expect, it } from 'vitest';
-import {
-  checkThemeContrast,
-  checkExtendedContrast,
-  formatContrastReport,
-  assertContrast,
-} from '../../scripts/wcag-apca-check.mjs';
 import { apcaContrast, wcagCheck } from '../../scripts/extended-colors.mjs';
+import {
+  assertContrast,
+  checkExtendedContrast,
+  checkThemeContrast,
+  formatContrastReport,
+} from '../../scripts/wcag-apca-check.mjs';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -80,12 +80,8 @@ describe('Theme contrast', () => {
   });
 
   it('returns null when foreground or background is missing', () => {
-    expect(
-      checkThemeContrast({ colors: { background: '#ffffff' } }),
-    ).toBeNull();
-    expect(
-      checkThemeContrast({ colors: { foreground: '#000000' } }),
-    ).toBeNull();
+    expect(checkThemeContrast({ colors: { background: '#ffffff' } })).toBeNull();
+    expect(checkThemeContrast({ colors: { foreground: '#000000' } })).toBeNull();
     expect(checkThemeContrast({ colors: {} })).toBeNull();
     expect(checkThemeContrast({})).toBeNull();
   });

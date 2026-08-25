@@ -180,7 +180,10 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
 
   function makeSvc(library?: ThemeLibraryApi, settings?: SettingsServiceApi) {
     return new AgentEngineService(
-      library ?? makeThemeLibraryStub({ find: vi.fn(async () => null) as unknown as ThemeLibraryApi['find'] }),
+      library ??
+        makeThemeLibraryStub({
+          find: vi.fn(async () => null) as unknown as ThemeLibraryApi['find'],
+        }),
       stateFile,
       settings ?? makeSettings(),
     );
@@ -294,7 +297,9 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
 
     it('returns null when no wallpaper configured anywhere (no active theme)', async () => {
       const settings = makeSettings();
-      const library = makeThemeLibraryStub({ find: vi.fn(async () => null) as unknown as ThemeLibraryApi['find'] });
+      const library = makeThemeLibraryStub({
+        find: vi.fn(async () => null) as unknown as ThemeLibraryApi['find'],
+      });
       const svc = makeSvc(library, settings);
 
       (svc as unknown as { registry: { getActiveThemeId: () => null } }).registry.getActiveThemeId =
@@ -343,7 +348,9 @@ describe('AgentEngineService — resolveAgentWallpaperId', () => {
 
       const settings = makeSettings();
       const library = makeThemeLibraryStub({
-        find: vi.fn(async () => themeEntry('video-t', { wallpaper: { video: 'sunset.mp4' } })) as unknown as ThemeLibraryApi['find'],
+        find: vi.fn(async () =>
+          themeEntry('video-t', { wallpaper: { video: 'sunset.mp4' } }),
+        ) as unknown as ThemeLibraryApi['find'],
       });
       const svc = makeSvc(library, settings);
       await svc.initialize();

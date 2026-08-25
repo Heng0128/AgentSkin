@@ -33,7 +33,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { REQUIRED_TOKENS, AGENT_ONLY_TOKENS } from './theme-tokens.mjs';
+import { AGENT_ONLY_TOKENS, REQUIRED_TOKENS } from './theme-tokens.mjs';
 
 const THEMES_DIR = path.resolve(process.cwd(), 'themes');
 

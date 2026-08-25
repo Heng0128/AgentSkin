@@ -185,13 +185,17 @@ export function AppsPage() {
     <div className="relative flex h-full flex-col overflow-hidden">
       {/* Scrollable content */}
       <div className="min-h-0 flex-1 snap-y snap-proximity overflow-y-auto scroll-smooth">
-        <div className="px-3 py-3 pb-[var(--pb-drawer,320px)]">
+        <div className="pb-[var(--pb-drawer,320px)]">
           {/* Page header */}
           <PageHeader title={t.navApps} count={visibleApps.length}>
             <PageToolbar
               actions={
                 <Button variant="outline" size="sm" onClick={handleScan} disabled={scanning}>
-                  {scanning ? <Spinner className="animate-spin" /> : <RefreshCw className="size-3.5" />}
+                  {scanning ? (
+                    <Spinner className="animate-spin" />
+                  ) : (
+                    <RefreshCw className="size-3.5" />
+                  )}
                   {t.scan}
                 </Button>
               }
@@ -199,7 +203,7 @@ export function AppsPage() {
           </PageHeader>
 
           {/* Category filter chips */}
-          <div className="mb-5">
+          <div className="py-3">
             <FilterChips
               options={filterOptions}
               value={categoryFilter}
@@ -210,12 +214,12 @@ export function AppsPage() {
           {/* Scan progress bar */}
           {scanning && (
             <div
-              className="mb-5 h-1 overflow-hidden rounded-full bg-muted"
+              className="mb-4 h-1 overflow-hidden rounded-full bg-muted"
               role="progressbar"
               aria-valuenow={scanProgress}
             >
               <div
-                className="h-full bg-primary transition-all duration-slow"
+                className="h-full rounded-full bg-primary transition-all duration-slow"
                 style={{ width: `${scanProgress}%` }}
               />
             </div>
@@ -225,9 +229,9 @@ export function AppsPage() {
           {scanError && (
             <div
               role="alert"
-              className="mb-5 flex items-center justify-between gap-2 rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2.5"
+              className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2.5"
             >
-              <p className="min-w-0 flex-1 truncate text-label text-destructive">
+              <p className="min-w-0 flex-1 truncate text-[11px] text-destructive">
                 {t.appsScanFailed}
                 {scanError}
               </p>
@@ -238,16 +242,16 @@ export function AppsPage() {
           )}
 
           {/* Status legend */}
-          <div className="mb-5 flex items-center gap-4 rounded-md border border-border bg-card/50 px-3 py-2 as-micro">
-            <span className="flex items-center gap-2">
+          <div className="as-stat-bar mb-4">
+            <span className="flex items-center gap-2 text-[11px]">
               <span className="inline-block size-2 rounded-full bg-cr-success" />
               {t.appsStatusRunning}
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 text-[11px]">
               <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
               {t.appsStatusStopped}
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 text-[11px]">
               <span className="inline-block size-2 rounded-full bg-cr-warning" />
               {t.appsStatusNoPort}
             </span>
@@ -256,9 +260,9 @@ export function AppsPage() {
           {/* Skeleton during initial scan */}
           {scanning && !scanResult && (
             <section className="mb-6 snap-start">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
                 {SKELETON_ITEMS.map((id) => (
-                  <div key={id} className="h-24 animate-pulse rounded-md bg-muted" />
+                  <div key={id} className="h-28 animate-pulse rounded-lg bg-muted" />
                 ))}
               </div>
             </section>
@@ -267,7 +271,7 @@ export function AppsPage() {
           {/* App grid — single unified grid based on active category */}
           {visibleApps.length > 0 && (
             <section className="mb-6 snap-start">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
                 {visibleApps.map(renderCard)}
               </div>
             </section>
@@ -298,7 +302,7 @@ export function AppsPage() {
           )}
 
           {/* Manual add button */}
-          <div className="mt-4">
+          <div className="pt-2">
             <Button variant="outline" size="sm" onClick={handleManualAdd}>
               <Plus size={14} />
               {t.appsActionAddManual}

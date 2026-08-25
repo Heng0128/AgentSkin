@@ -17,8 +17,8 @@
  *   - `toCss()` 生成只含 enabled 条目的注入 CSS（回灌注入引擎的产物）。
  */
 
-import type { Treatment } from './treatment-classifier';
 import { cssEscape } from '@shared/css-escape';
+import type { Treatment } from './treatment-classifier';
 
 export type LedgerAction = Treatment; // remove | transparentize | frost | keep
 
@@ -201,4 +201,3 @@ export class TransformLedger {
     return ledger;
   }
 }
-

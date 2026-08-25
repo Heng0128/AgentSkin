@@ -259,10 +259,13 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
   );
 
   // --- Swatch copy ---
-  const handleCopy = useCallback((value: string, label: string) => {
-    void navigator.clipboard.writeText(value).catch(() => {});
-    useNotificationStore.getState().showToast(t.studioImageToThemeCopyFormat(label), 'default');
-  }, []);
+  const handleCopy = useCallback(
+    (value: string, label: string) => {
+      void navigator.clipboard.writeText(value).catch(() => {});
+      useNotificationStore.getState().showToast(t.studioImageToThemeCopyFormat(label), 'default');
+    },
+    [t.studioImageToThemeCopyFormat],
+  );
 
   // ---------------------------------------------------------------------------
   // Render by status
@@ -316,10 +319,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
                     onClick={() => setExpandedToken(isExpanded ? null : token)}
                     className="rounded-md border border-border p-1 text-left"
                   >
-                    <div
-                      className="size-6 rounded-md"
-                      style={{ backgroundColor: value }}
-                    />
+                    <div className="size-6 rounded-md" style={{ backgroundColor: value }} />
                     <span className="mt-1 block font-mono text-[10px] text-muted-foreground">
                       {token}
                     </span>
@@ -356,9 +356,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
             <span className="text-[10px] text-muted-foreground/40">
               {t.studioImageToThemeTonalDerivative}
             </span>
-            <p className="text-[10px] text-muted-foreground">
-              {t.studioImageToThemeTonalHint}
-            </p>
+            <p className="text-[10px] text-muted-foreground">{t.studioImageToThemeTonalHint}</p>
             <div className="flex gap-1">
               {tonals.map((tone) => (
                 <button
@@ -401,11 +399,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
       <div className="space-y-2">
         <div className="flex items-center gap-2 rounded-md border border-border bg-card p-2">
           {previewUrl && (
-            <img
-              src={previewUrl}
-              alt={file.name}
-              className="size-12 rounded-md object-cover"
-            />
+            <img src={previewUrl} alt={file.name} className="size-12 rounded-md object-cover" />
           )}
           <div className="flex-1 truncate">
             <p className="truncate font-mono text-[11px] text-foreground">{file.name}</p>
@@ -437,11 +431,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-2 rounded-md border border-border bg-card p-2">
-          <img
-            src={previewUrl}
-            alt={file.name}
-            className="size-12 rounded-md object-cover"
-          />
+          <img src={previewUrl} alt={file.name} className="size-12 rounded-md object-cover" />
           <div className="flex-1 truncate">
             <p className="truncate font-mono text-[11px] text-foreground">{file.name}</p>
             <p className="font-mono text-[10px] text-muted-foreground">
@@ -489,9 +479,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         data-drag-over={dragOver ? 'true' : undefined}
       >
         <UploadCloud className="size-8 text-muted-foreground" />
-        <span className="text-[11px] text-foreground">
-          {t.studioImageToThemeDragOrClick}
-        </span>
+        <span className="text-[11px] text-foreground">{t.studioImageToThemeDragOrClick}</span>
         <span className="text-[10px] text-muted-foreground/40">
           {t.studioImageToThemeSupportedFormats}
         </span>

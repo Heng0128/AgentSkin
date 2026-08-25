@@ -160,7 +160,7 @@ export function extendedColorsBlock(ext, host = ':root') {
       if (RESERVED_EXT_KEYS.has(key)) {
         throw new Error(
           `Extended color key "${key}" is reserved (reserved keys: ${[...RESERVED_EXT_KEYS].join(', ')}). ` +
-          `This would generate --agentskin-ext-${key} which conflicts with internal naming.`,
+            `This would generate --agentskin-ext-${key} which conflicts with internal naming.`,
         );
       }
       const onColor = autoOnColor(color);

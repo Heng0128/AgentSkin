@@ -44,7 +44,6 @@ import {
   resolveLivePort as resolveLivePortImpl,
 } from '../app-discovery';
 import { type CdpSession, connectCdp } from '../cdp/cdp-client';
-import { backoffDelay } from '../cdp/injection/shared';
 import {
   type CdpFanoutDeps,
   hardeningPass as hardeningPassImpl,
@@ -52,6 +51,7 @@ import {
 } from '../cdp/cdp-fanout';
 import type { InjectEngineResult } from '../cdp/cdp-inject';
 import { pickPageTarget } from '../cdp/cdp-targets';
+import { backoffDelay } from '../cdp/injection/shared';
 import type { EngineInjectionDeps } from '../palette-builder';
 import { tryEngineInjection as tryEngineInjectionImpl } from '../palette-builder';
 import {

@@ -11,33 +11,23 @@
     "entries": [
       {
         "file": "out/renderer/artifact-preview.html",
-        "scripts": [
-          "./assets/artifact-preview-CLhWtJnW.js"
-        ]
+        "scripts": ["./assets/artifact-preview-CLhWtJnW.js"]
       },
       {
         "file": "out/renderer/index.html",
-        "scripts": [
-          "./assets/index-l1Vg9qkm.js"
-        ]
+        "scripts": ["./assets/index-l1Vg9qkm.js"]
       },
       {
         "file": "out/renderer/mcp-app-preview.html",
-        "scripts": [
-          "./assets/mcp-app-preview-C5J1-oou.js"
-        ]
+        "scripts": ["./assets/mcp-app-preview-C5J1-oou.js"]
       },
       {
         "file": "out/renderer/quickpick.html",
-        "scripts": [
-          "./assets/quickpick-Cxd2C_DR.js"
-        ]
+        "scripts": ["./assets/quickpick-Cxd2C_DR.js"]
       },
       {
         "file": "out/renderer/voice-overlay.html",
-        "scripts": [
-          "./assets/voice-overlay-CaQdtsXS.js"
-        ]
+        "scripts": ["./assets/voice-overlay-CaQdtsXS.js"]
       }
     ],
     "chunks": [
@@ -85,9 +75,7 @@
       "out/main/chunks/settings-heartbeat-DlIqBHvW.js",
       "out/main/chunks/voice-learning-service-BmjJrrDG.js"
     ],
-    "preloadScripts": [
-      "out/preload/index.js"
-    ],
+    "preloadScripts": ["out/preload/index.js"],
     "processArches": []
   },
   "strings": {
@@ -7626,52 +7614,14 @@
     "csp": {
       "from": "meta:out/renderer/artifact-preview.html",
       "directives": {
-        "default-src": [
-          "'self'",
-          "'unsafe-inline'",
-          "'unsafe-eval'"
-        ],
-        "script-src": [
-          "'self'",
-          "'unsafe-inline'",
-          "'unsafe-eval'",
-          "https:"
-        ],
-        "style-src": [
-          "'self'",
-          "'unsafe-inline'",
-          "https:"
-        ],
-        "connect-src": [
-          "'self'",
-          "ws://localhost:*",
-          "http://localhost:*",
-          "https:"
-        ],
-        "img-src": [
-          "'self'",
-          "data:",
-          "blob:",
-          "https:",
-          "local-file:"
-        ],
-        "media-src": [
-          "'self'",
-          "blob:"
-        ],
-        "font-src": [
-          "'self'",
-          "data:",
-          "https:"
-        ],
-        "frame-src": [
-          "'self'",
-          "file:",
-          "data:",
-          "blob:",
-          "http://localhost:*",
-          "https:"
-        ]
+        "default-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:"],
+        "style-src": ["'self'", "'unsafe-inline'", "https:"],
+        "connect-src": ["'self'", "ws://localhost:*", "http://localhost:*", "https:"],
+        "img-src": ["'self'", "data:", "blob:", "https:", "local-file:"],
+        "media-src": ["'self'", "blob:"],
+        "font-src": ["'self'", "data:", "https:"],
+        "frame-src": ["'self'", "file:", "data:", "blob:", "http://localhost:*", "https:"]
       }
     }
   },

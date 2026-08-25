@@ -17,8 +17,8 @@
  *    `isError: true`.
  */
 
-import type { McpContext, McpToolResult } from './types';
 import { getTool, listTools } from './tool-registry';
+import type { McpContext, McpToolResult } from './types';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -57,10 +57,7 @@ export async function executeTool(
   }
 
   try {
-    const result = await Promise.race([
-      tool.handler(args as unknown, ctx),
-      timeoutResult(),
-    ]);
+    const result = await Promise.race([tool.handler(args as unknown, ctx), timeoutResult()]);
     return result;
   } catch (err) {
     return {

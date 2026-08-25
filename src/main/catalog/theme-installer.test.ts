@@ -201,7 +201,12 @@ describe('ThemeInstaller — 2a multi-asset bundle embedding', () => {
     } as InstalledThemePackage);
 
     const bundle = library.capturedBundles[0] as {
-      assets: { images: Record<string, { base64?: string; file?: string; filename: string; mimeType: string }> };
+      assets: {
+        images: Record<
+          string,
+          { base64?: string; file?: string; filename: string; mimeType: string }
+        >;
+      };
     };
     // hero resolved from the image set (not the preview fallback) and no
     // duplicate hero key — the creative loop skips the reserved hero id.

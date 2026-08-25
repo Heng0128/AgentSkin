@@ -17,7 +17,7 @@
  *  radius scale (px), shadow elevation, and motion speed (ms). Themes reference
  *  a preset by id via manifest.designLanguage. */
 export const DESIGN_LANGUAGES = Object.freeze({
-  'default': {
+  default: {
     id: 'default',
     label: 'Default',
     spacing: { density: 'comfortable' },

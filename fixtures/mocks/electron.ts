@@ -54,12 +54,8 @@ export function createElectronMock(
       dock: undefined,
     },
     dialog: {
-      showOpenDialog: vi
-        .fn()
-        .mockResolvedValue({ canceled: true, filePaths: [] }),
-      showSaveDialog: vi
-        .fn()
-        .mockResolvedValue({ canceled: true, filePath: undefined }),
+      showOpenDialog: vi.fn().mockResolvedValue({ canceled: true, filePaths: [] }),
+      showSaveDialog: vi.fn().mockResolvedValue({ canceled: true, filePath: undefined }),
     },
     nativeImage: {
       createFromPath: vi.fn(() => ({ isEmpty: () => true })),
@@ -105,11 +101,9 @@ export function createElectronMock(
 
   // ipcMain always wires into the caller-provided handlers map.
   mock.ipcMain = {
-    handle: vi.fn(
-      (channel: string, handler: (...args: unknown[]) => unknown) => {
-        handlers.set(channel, handler);
-      },
-    ),
+    handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => {
+      handlers.set(channel, handler);
+    }),
     on: vi.fn(),
     removeHandler: vi.fn((channel: string) => {
       handlers.delete(channel);

@@ -19,11 +19,13 @@ const TEST_USER_DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'agentskin-studio-t
 
 const handlers = new Map<string, (...args: unknown[]) => unknown>();
 
-vi.mock('electron', () => createElectronMock(handlers, {
-  app: {
-    getPath: vi.fn((name: string) => (name === 'userData' ? TEST_USER_DATA : os.tmpdir())),
-  },
-}));
+vi.mock('electron', () =>
+  createElectronMock(handlers, {
+    app: {
+      getPath: vi.fn((name: string) => (name === 'userData' ? TEST_USER_DATA : os.tmpdir())),
+    },
+  }),
+);
 
 // Import AFTER mocks so PROJECTS_DIR resolves to the temp dir.
 const { registerStudioProjectIpc } = await import('./studio-project-ipc');

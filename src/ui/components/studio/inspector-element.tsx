@@ -160,9 +160,7 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
         <div className="flex items-center gap-2">
           {details ? (
             <>
-              <span className="text-micro font-semibold text-accent">
-                &lt;{details.tag}&gt;
-              </span>
+              <span className="text-micro font-semibold text-accent">&lt;{details.tag}&gt;</span>
               {details.id && (
                 <span className="text-[10px] text-muted-foreground">#{details.id}</span>
               )}
@@ -260,9 +258,7 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
 
           {/* Breadcrumb */}
           <div>
-            <div className="mb-1 text-[10px] font-semibold text-muted-foreground">
-              DOM Path
-            </div>
+            <div className="mb-1 text-[10px] font-semibold text-muted-foreground">DOM Path</div>
             <div
               className="rounded-sm border border-border p-2 text-[10px] text-foreground"
               style={{ background: 'var(--card)', wordBreak: 'break-all' }}

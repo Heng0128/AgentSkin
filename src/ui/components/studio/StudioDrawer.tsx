@@ -26,7 +26,16 @@ import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 import type { UiMessages } from '@shared/i18n';
 import { AGENT_IDS, AGENT_META, AGENT_SECURITY_PROFILES, type AgentId } from '@shared/types';
-import { Image, Layers, LayoutGrid, Lock, Package, Palette, Shield, ShieldCheck } from 'lucide-react';
+import {
+  Image,
+  Layers,
+  LayoutGrid,
+  Lock,
+  Package,
+  Palette,
+  Shield,
+  ShieldCheck,
+} from 'lucide-react';
 
 // ---------------------------------------------------------------------------
 // Static agent profile data — avoids adding IPC channels. Token counts and
@@ -273,7 +282,10 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                     {p.name}
                   </span>
                   {p.hasSnapshot && (
-                    <Badge variant="outline" className="text-[var(--cr-success)] border-[var(--cr-success)]/40">
+                    <Badge
+                      variant="outline"
+                      className="text-[var(--cr-success)] border-[var(--cr-success)]/40"
+                    >
                       snap
                     </Badge>
                   )}
@@ -303,9 +315,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
               <div>
                 <div className="flex items-center gap-1 mb-1">
                   <Layers className="size-3 text-muted-foreground" />
-                  <span className="text-micro text-muted-foreground">
-                    {t.themeLibrary}
-                  </span>
+                  <span className="text-micro text-muted-foreground">{t.themeLibrary}</span>
                 </div>
                 {installedThemes.length === 0 ? (
                   <EmptyState
@@ -370,9 +380,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
               <div>
                 <div className="flex items-center gap-1 mb-1">
                   <Package className="size-3 text-muted-foreground" />
-                  <span className="text-micro text-muted-foreground">
-                    {t.studioTabBundle}
-                  </span>
+                  <span className="text-micro text-muted-foreground">{t.studioTabBundle}</span>
                 </div>
                 <Button
                   variant="outline"
@@ -403,9 +411,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
           {agentsOpen && (
             <div className="flex flex-col gap-1 mt-1">
               {/* Security posture sub-header */}
-              <span className="text-micro text-muted-foreground px-1">
-                {t.studioSecurityLabel}
-              </span>
+              <span className="text-micro text-muted-foreground px-1">{t.studioSecurityLabel}</span>
 
               {AGENT_IDS.map((id) => {
                 const meta = AGENT_META[id as AgentId];
@@ -441,10 +447,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
 
                     {/* Security posture icons */}
                     {sec && (
-                      <span
-                        className="flex items-center gap-0.5"
-                        title={tooltipParts.join(' / ')}
-                      >
+                      <span className="flex items-center gap-0.5" title={tooltipParts.join(' / ')}>
                         <Lock
                           className="size-[10px]"
                           style={{

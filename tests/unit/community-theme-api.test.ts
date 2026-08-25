@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ---------------------------------------------------------------------------
 // Mock electron's net module before importing the module under test
@@ -21,24 +21,22 @@ vi.mock('../../src/main/logger', () => ({
   mainError: mockMainError,
 }));
 
+import type { CommunityThemeDetail, CommunityThemeSummary } from '../../shared/types/community';
 // Import after mocks are set up
 import {
+  DreamSkinApiError,
+  downloadTheme,
   fetchThemes,
   getThemeDetail,
-  downloadTheme,
-  DreamSkinApiError,
 } from '../../src/main/community/community-theme-api';
-import type {
-  CommunityThemeSummary,
-  CommunityThemeDetail,
-} from '../../shared/types/community';
 
 // ---------------------------------------------------------------------------
 // Test fixtures
 // ---------------------------------------------------------------------------
 
 const sampleThemeSummary: CommunityThemeSummary = {
-  themeId: 'theme-001',
+  themeId: 'ver_abc123def456',
+  slug: 'test-theme',
   name: 'Test Theme',
   author: { id: 'author-1', displayName: 'TestAuthor' },
   description: 'A test theme',
@@ -51,9 +49,33 @@ const sampleThemeSummary: CommunityThemeSummary = {
 
 const sampleThemeDetail: CommunityThemeDetail = {
   ...sampleThemeSummary,
-  themeId: 'theme-001',
+  themeId: 'ver_abc123def456',
+  slug: 'test-theme',
   screenshots: ['https://example.com/screenshot.png'],
   targetAgents: ['traework'],
+};
+
+/**
+ * Raw API theme object (as returned by DreamSkin API).
+ * `id` is the unique API identifier; `themeId` is the human-readable slug.
+ */
+const sampleRawApiTheme = {
+  id: 'ver_abc123def456',
+  themeId: 'test-theme',
+  slug: 'test-theme',
+  name: 'Test Theme',
+  version: '1.0.0',
+  authorDisplayName: 'TestAuthor',
+  authorUserId: 'author-1',
+  downloadCount: 100,
+  favoriteCount: 5,
+  submittedAt: '2025-01-15T10:00:00Z',
+  reviewedAt: '2025-01-15T10:30:00Z',
+  applyCompatible: true,
+  packageBytes: 1024000,
+  packageSha256: 'abc123',
+  description: 'A test theme',
+  displayMeta: null,
 };
 
 // Helper to create a mock Response
@@ -126,7 +148,7 @@ describe('fetchThemes', () => {
     const mockResponse = createMockResponse({
       ok: true,
       json: {
-        items: [sampleThemeSummary],
+        items: [sampleRawApiTheme],
         total: 1,
         limit: 20,
         offset: 0,
@@ -141,6 +163,26 @@ describe('fetchThemes', () => {
     expect(result.page).toBe(1);
     expect(result.pageSize).toBe(20);
     expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps raw API id to themeId and themeId (slug) to slug', async () => {
+    const mockResponse = createMockResponse({
+      ok: true,
+      json: {
+        items: [sampleRawApiTheme],
+        total: 1,
+        limit: 20,
+        offset: 0,
+      },
+    });
+    mockFetch.mockResolvedValueOnce(mockResponse);
+
+    const result = await fetchThemes();
+
+    // themeId MUST be the API `id` (used for /detail and /download calls)
+    expect(result.themes[0].themeId).toBe('ver_abc123def456');
+    // slug should be the human-readable themeId/slug from the API
+    expect(result.themes[0].slug).toBe('test-theme');
   });
 
   it('translates page/pageSize to limit/offset', async () => {
@@ -214,24 +256,25 @@ describe('getThemeDetail', () => {
     vi.useRealTimers();
   });
 
-  it('fetches theme detail by id', async () => {
+  it('fetches theme detail by id and maps to correct themeId', async () => {
     const mockResponse = createMockResponse({
       ok: true,
-      json: sampleThemeDetail,
+      json: sampleRawApiTheme,
     });
     mockFetch.mockResolvedValueOnce(mockResponse);
 
-    const result = await getThemeDetail('theme-001');
+    const result = await getThemeDetail('ver_abc123def456');
 
-    expect(result.themeId).toBe('theme-001');
+    // themeId should be the API `id`, not the slug
+    expect(result.themeId).toBe('ver_abc123def456');
+    expect(result.slug).toBe('test-theme');
     expect(result.name).toBe('Test Theme');
-    expect(result.screenshots).toHaveLength(1);
   });
 
   it('encodes the theme id in the URL', async () => {
     const mockResponse = createMockResponse({
       ok: true,
-      json: sampleThemeDetail,
+      json: sampleRawApiTheme,
     });
     mockFetch.mockResolvedValueOnce(mockResponse);
 

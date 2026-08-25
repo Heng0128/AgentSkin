@@ -25,8 +25,11 @@ import { ThemeInstaller } from '../catalog/theme-installer';
 import { ThemePackageLoader } from '../catalog/theme-package-loader';
 import { ThemeLibrary } from '../theme/store';
 
-const THEMES_ROOT = process.env.AGENTSKIN_THEMES_PATH || path.join(os.homedir(), 'AppData', 'Roaming', 'AgentSkin', 'themes');
-const REPO_THEMES = process.env.AGENTSKIN_REPO_THEMES_PATH || path.join(__dirname, '..', '..', '..', 'themes');
+const THEMES_ROOT =
+  process.env.AGENTSKIN_THEMES_PATH ||
+  path.join(os.homedir(), 'AppData', 'Roaming', 'AgentSkin', 'themes');
+const REPO_THEMES =
+  process.env.AGENTSKIN_REPO_THEMES_PATH || path.join(__dirname, '..', '..', '..', 'themes');
 // Manual gate: only runs when explicitly requested via `AGENTSKIN_MANUAL=1`,
 // so `npm run check` skips it (see header note).
 const MANUAL = process.env.AGENTSKIN_MANUAL === '1';

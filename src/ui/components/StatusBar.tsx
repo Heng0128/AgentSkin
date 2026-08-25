@@ -13,11 +13,9 @@ import type { SystemStatus } from '@shared/types';
 /**
  * # StatusBar
  *
- * Minimal inline status element for the Sidebar bottom area.
+ * Minimal inline status element for the bottom of the window.
  *
- * Shows: status LED (6px dot) + status label + clock.
- *
- * No fixed height — content-driven. No drag region — lives inside Sidebar.
+ * Shows: status LED (6px dot) + status label + version + clock.
  *
  * Reads directly from shellStore + statusStore.
  */
@@ -29,13 +27,6 @@ function deriveCdpState(status: SystemStatus | null): 'running' | 'standby' | 'o
   if (allReady) return 'running';
   const anyRunning = status.apps.some((app) => app.running);
   return anyRunning ? 'standby' : 'offline';
-}
-
-/** Map status variant to LED dot class. */
-function ledClass(variant: 'running' | 'standby' | 'offline'): string {
-  if (variant === 'running') return 'bg-cr-success';
-  if (variant === 'standby') return 'bg-cr-warning';
-  return 'bg-muted-foreground/30';
 }
 
 /** Local HH:mm:ss tick — re-renders only once a second, uses app locale. */
@@ -56,7 +47,7 @@ function useTick(): string {
  */
 function Clock() {
   return (
-    <span className="ml-auto font-mono text-micro tabular-nums text-muted-foreground">
+    <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
       {useTick()}
     </span>
   );
@@ -77,17 +68,25 @@ export function StatusBar() {
         : t.statusLedOffline;
 
   return (
-    <div className="flex shrink-0 items-center gap-3 border-t border-border bg-[var(--surface)] px-3 py-1">
+    <div className="flex h-7 shrink-0 items-center gap-3 border-t border-border bg-[var(--surface)] px-4">
       {/* Status — LED + label */}
-      <span className="flex items-center gap-1.5">
-        <span className={cn('status-dot shrink-0', ledClass(variant))} aria-hidden />
-        <span className="text-[11px] text-secondary-foreground">{cdpLabel}</span>
+      <span className="flex items-center gap-2">
+        <span
+          className={cn(
+            'size-1.5 shrink-0 rounded-full',
+            variant === 'running' && 'bg-cr-success animate-status-pulse-success',
+            variant === 'standby' && 'bg-cr-warning',
+            variant === 'offline' && 'bg-muted-foreground/30',
+          )}
+          aria-hidden
+        />
+        <span className="text-[11px] font-medium text-secondary-foreground">{cdpLabel}</span>
       </span>
 
       <span className="h-3.5 w-px bg-border" aria-hidden />
 
       {/* Version */}
-      <span className="text-[11px] tabular-nums text-muted-foreground">
+      <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
         {appVersion ? `v${appVersion}` : 'v—'}
       </span>
 
