@@ -20,11 +20,12 @@
 import { api } from '@/api/agentSkinClient';
 import { useNotificationStore } from '@/stores/notificationStore';
 
+import type { AgentId } from '@shared/types/agent';
 import type {
-  CommunityThemeSummary,
   CommunityThemeDetail,
   CommunityThemeListParams,
   CommunityThemeListResult,
+  CommunityThemeSummary,
   DownloadProgress,
   InstallResult,
 } from '@shared/types/community';
@@ -35,6 +36,28 @@ import { create } from 'zustand';
 // ---------------------------------------------------------------------------
 
 let loadToken = 0;
+
+// ---------------------------------------------------------------------------
+// Runtime type guards — validate external data before use
+// ---------------------------------------------------------------------------
+
+/**
+ * Runtime validation for CommunityThemeListResult.
+ * Prevents malformed API responses from corrupting store state.
+ */
+function isCommunityThemeListResult(value: unknown): value is CommunityThemeListResult {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return Array.isArray(v.themes) && typeof v.total === 'number';
+}
+
+/**
+ * Runtime validation for AgentId union type.
+ * Used to validate IPC event agent fields before state mutation.
+ */
+function isValidAgentId(value: string): value is AgentId {
+  return ['workbuddy', 'qoderwork', 'traework', 'doubao', 'codex', 'zcode'].includes(value);
+}
 
 // ---------------------------------------------------------------------------
 // Data sanitization — defend against incomplete API responses
@@ -52,7 +75,8 @@ function sanitizeTheme<T extends CommunityThemeSummary>(theme: T): T {
     theme.tags &&
     theme.name &&
     theme.description
-  ) return theme;
+  )
+    return theme;
   return {
     ...theme,
     author: theme.author ?? {
@@ -154,8 +178,8 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       // Discard stale response if a newer request has been issued
       if (token !== loadToken) return;
 
-      if (result?.success) {
-        const data = result.data as CommunityThemeListResult;
+      if (result?.success && isCommunityThemeListResult(result.data)) {
+        const data = result.data;
         set({
           themes: data.themes.map(sanitizeTheme),
           total: data.total,
@@ -197,8 +221,8 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       // Discard stale response if a newer request has been issued
       if (token !== loadToken) return;
 
-      if (result?.success) {
-        const data = result.data as CommunityThemeListResult;
+      if (result?.success && isCommunityThemeListResult(result.data)) {
+        const data = result.data;
         set({
           themes: [...themes, ...data.themes.map(sanitizeTheme)],
           total: data.total,
@@ -237,13 +261,23 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     set({ sortBy: sort, page: 1 });
     // Reload with new sort
     const state = get();
-    await get().loadThemes({ sort, query: state.query || undefined, page: 1, pageSize: state.pageSize });
+    await get().loadThemes({
+      sort,
+      query: state.query || undefined,
+      page: 1,
+      pageSize: state.pageSize,
+    });
   },
 
   setPage: async (page) => {
     set({ page });
     const state = get();
-    await get().loadThemes({ page, query: state.query || undefined, sort: state.sortBy, pageSize: state.pageSize });
+    await get().loadThemes({
+      page,
+      query: state.query || undefined,
+      sort: state.sortBy,
+      pageSize: state.pageSize,
+    });
   },
 
   // --- Selection ---
@@ -263,7 +297,8 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
           detailLoading: false,
         });
       } else {
-        const errorMsg = result?.success === false && result.error ? result.error : 'Failed to load theme detail';
+        const errorMsg =
+          result?.success === false && result.error ? result.error : 'Failed to load theme detail';
         set({
           error: errorMsg,
           detailLoading: false,
@@ -307,8 +342,8 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
         const newInstalledIds = new Set(get().installedIds);
         newInstalledIds.add(themeId);
 
-        // Remove from installing
-        const stillInstalling = new Set(installingIds);
+        // Remove from installing — read current state to avoid stale closure
+        const stillInstalling = new Set(get().installingIds);
         stillInstalling.delete(themeId);
 
         // Clear progress
@@ -322,16 +357,21 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
         });
 
         // Notify other parts of the app
-        useNotificationStore.getState().showToast(
-          result.data.themeId
-            ? `Theme "${themeId}" installed successfully`
-            : 'Theme installed successfully',
-        );
+        useNotificationStore
+          .getState()
+          .showToast(
+            result.data.themeId
+              ? `Theme "${themeId}" installed successfully`
+              : 'Theme installed successfully',
+          );
 
         return result.data;
       } else {
         // Install failed — clean up installing state
-        const stillInstalling = new Set(installingIds);
+        const wasCancelled = !get().installingIds.has(themeId);
+
+        // Read current state to avoid stale closure
+        const stillInstalling = new Set(get().installingIds);
         stillInstalling.delete(themeId);
         const progress = new Map(get().downloadProgress);
         progress.delete(themeId);
@@ -342,7 +382,14 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
         });
 
         const errorMsg = result?.data?.error || 'Installation failed';
-        useNotificationStore.getState().fail(errorMsg);
+
+        // When cancelInstall() is called, it removes the theme from
+        // installingIds before this promise resolves. A missing entry
+        // means the user intentionally cancelled — do not show an
+        // error toast for a deliberate cancellation.
+        if (!wasCancelled) {
+          useNotificationStore.getState().fail(errorMsg);
+        }
 
         return {
           success: false,
@@ -351,7 +398,10 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       }
     } catch (error) {
       // Exception — clean up
-      const stillInstalling = new Set(installingIds);
+      const wasCancelled = !get().installingIds.has(themeId);
+
+      // Read current state to avoid stale closure
+      const stillInstalling = new Set(get().installingIds);
       stillInstalling.delete(themeId);
       const progress = new Map(get().downloadProgress);
       progress.delete(themeId);
@@ -362,7 +412,14 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       });
 
       const errorMsg = error instanceof Error ? error.message : 'Unknown error during installation';
-      useNotificationStore.getState().fail(errorMsg);
+
+      // Same cancellation guard as the else branch above: if the theme
+      // was already removed from installingIds by cancelInstall(), the
+      // exception is a downstream consequence of the cancellation and
+      // should not surface as an error toast.
+      if (!wasCancelled) {
+        useNotificationStore.getState().fail(errorMsg);
+      }
 
       return { success: false, error: errorMsg };
     }
