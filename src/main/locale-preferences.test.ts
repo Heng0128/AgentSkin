@@ -17,11 +17,15 @@ afterEach(async () => {
 });
 
 describe('locale preferences', () => {
-  it('uses Chinese on first launch regardless of system locale and persists it', async () => {
-    await expect(loadLocalePreference(root, 'en-US')).resolves.toBe('zh-CN');
+  it('detects English on first launch when system locale is en-US and persists it', async () => {
+    await expect(loadLocalePreference(root, 'en-US')).resolves.toBe('en');
     await expect(fs.readFile(path.join(root, 'preferences.json'), 'utf8')).resolves.toContain(
-      '"locale": "zh-CN"',
+      '"locale": "en"',
     );
+  });
+
+  it('detects Chinese on first launch when system locale is zh-CN', async () => {
+    await expect(loadLocalePreference(root, 'zh-CN')).resolves.toBe('zh-CN');
   });
 
   it('falls back to Chinese for unsupported system languages', async () => {

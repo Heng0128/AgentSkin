@@ -289,7 +289,7 @@ describe('WorkspacePage — M8 inspect mode', () => {
 
   it('renders inspect mode toggle button', () => {
     const html = renderPage();
-    expect(html).toContain('选取元素');
+    expect(html).toContain('Pick element');
   });
 
   it('passes inspectMode=false when inspect mode is off', () => {
