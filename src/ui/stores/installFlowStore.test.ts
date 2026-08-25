@@ -46,7 +46,12 @@ vi.mock('@/stores/themeStore', () => ({
 }));
 
 import { useInstallFlowStore, getProgress, type InstallStep } from './installFlowStore';
-import type { uiMessages } from '@shared/i18n';
+
+// Mock window.setTimeout/clearTimeout for Node.js test environment
+const mockSetTimeout = vi.fn(() => 123 as unknown as number);
+const mockClearTimeout = vi.fn();
+Object.defineProperty(window, 'setTimeout', { value: mockSetTimeout, writable: true });
+Object.defineProperty(window, 'clearTimeout', { value: mockClearTimeout, writable: true });
 
 // ---------------------------------------------------------------------------
 // Pure function tests
