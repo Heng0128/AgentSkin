@@ -51,11 +51,20 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 app.on('second-instance', (_event, argv) => {
+  // macOS: bounce the dock icon to alert the user that AgentSkin is already
+  // running. Without this visual cue the user sees nothing when a second
+  // launch is attempted and may think the app failed to open.
+  if (process.platform === 'darwin') {
+    app.dock?.bounce('informational');
+  }
   // P2-2: Guard against a destroyed mainWindow (GPU/renderer crash leaves
   // the BrowserWindow JS wrapper non-null but isDestroyed()===true). Without
   // this, calling show() throws "Object has been destroyed" and the second
   // instance's file-open payload is dropped on the floor.
   if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+    // Windows/Linux: flash the taskbar frame to draw the user's attention
+    // to the existing instance.
+    ctx.mainWindow.flashFrame(true);
     ctx.mainWindow.show();
     ctx.mainWindow.focus();
   }
