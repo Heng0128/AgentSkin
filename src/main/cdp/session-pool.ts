@@ -224,8 +224,8 @@ export class CdpSessionPool {
     }
     const existing = byTarget.get(targetKey);
     if (existing) {
-      // Retired + grace period expired → discard and recreate
-      if (existing.retired && this.shouldHardClose(existing)) {
+      // Retired + grace period expired + no in-flight ops → discard and recreate
+      if (existing.retired && this.shouldHardClose(existing) && existing.refCount === 0) {
         this.discard(appId, targetKey, existing);
         // fallthrough to create new
       } else {

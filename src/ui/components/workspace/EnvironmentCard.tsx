@@ -133,7 +133,7 @@ export function EnvironmentCard({
   return (
     <article
       className={cn(
-        'group/card relative flex flex-col overflow-hidden rounded-[var(--radius-md)]  bg-card text-card-foreground',
+        'group/card relative flex flex-col overflow-hidden rounded-md  bg-card text-card-foreground',
         'transition-[background-color,border-color,box-shadow] duration-base ease-out',
         '',
         isActive ? 'border-2 border-primary' : '',

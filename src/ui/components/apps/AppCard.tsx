@@ -96,7 +96,7 @@ export function AppCard({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'group flex h-auto w-full flex-col items-center gap-2 rounded-[var(--radius-md)] p-2',
+        'group flex h-auto w-full flex-col items-center gap-2 rounded-md p-2',
         'transition-colors duration-fast ease-out hover:bg-muted',
         'hover:bg-accent',
         'active:bg-accent/70',

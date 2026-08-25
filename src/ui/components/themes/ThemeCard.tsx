@@ -31,7 +31,7 @@ export function ThemeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'group flex h-full flex-col overflow-hidden rounded-[var(--radius-md)] border bg-card text-left shadow-xs transition-all duration-fast ease-out',
+        'group flex h-full flex-col overflow-hidden rounded-md border bg-card text-left shadow-xs transition-all duration-fast ease-out',
         selected
           ? 'border-primary ring-1 ring-primary'
           : 'border-transparent hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',

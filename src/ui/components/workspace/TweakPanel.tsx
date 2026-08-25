@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # TweakPanel
@@ -348,7 +348,7 @@ function FieldRow({
   return (
     <div
       className={`flex flex-col gap-2 rounded-md px-1 py-0.5 transition-colors ${
-        highlighted ? 'bg-accent ring-1 ring-[var(--accent)]' : ''
+        highlighted ? 'bg-accent ring-1 ring-primary' : ''
       }`}
     >
       <div className="flex items-center gap-2">

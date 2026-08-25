@@ -34,6 +34,9 @@ import { registerThemeWallpaperForInstalled } from '../wallpaper/theme-wallpaper
 import { assertAgentId, assertNonEmptyString } from './ipc-validators';
 import { withMonitoredTimeout } from './with-monitored-timeout';
 
+/** Timeout for wallpaper IPC operations — must exceed ensureCdpReady internally. */
+const WALLPAPER_IPC_TIMEOUT_MS = 30000;
+
 export function registerWallpaperIpc(deps: MainContext): void {
   /** Guard: wallpaper service may be null if its initialization failed during
    *  boot (degradable step). Returns an empty array for list operations so
@@ -148,7 +151,7 @@ export function registerWallpaperIpc(deps: MainContext): void {
     async (_event, appId: unknown, options?: unknown) => {
       return withMonitoredTimeout(
         IpcChannel.WALLPAPER_APPLY_AGENT,
-        30000,
+        WALLPAPER_IPC_TIMEOUT_MS,
         (async () => {
           assertAgentId(appId);
           const opts = (options ?? {}) as { restartExisting?: boolean };

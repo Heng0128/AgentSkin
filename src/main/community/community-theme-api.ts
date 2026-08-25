@@ -85,6 +85,14 @@ interface RawApiTheme {
 
 /** Map a raw API theme object to our frontend CommunityThemeSummary. */
 function mapApiToThemeSummary(raw: RawApiTheme): CommunityThemeSummary {
+  // Extract thumbnail URL from various possible API fields
+  const thumbUrl =
+    (raw as { thumbUrl?: string }).thumbUrl ||
+    (raw as { thumbnail?: string }).thumbnail ||
+    (raw as { previewUrl?: string }).previewUrl ||
+    (raw as { image?: string }).image ||
+    undefined;
+
   return {
     themeId: raw.themeId || raw.slug || raw.id,
     name: raw.name || raw.slug || 'Untitled Theme',
@@ -100,6 +108,7 @@ function mapApiToThemeSummary(raw: RawApiTheme): CommunityThemeSummary {
     version: raw.version || '1.0.0',
     packageSize: raw.packageBytes,
     packageSha256: raw.packageSha256,
+    thumbUrl,
   };
 }
 
