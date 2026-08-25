@@ -180,11 +180,19 @@ export interface VisualAnalyzerDeps {
  * Overwritten each time `registerVisualAnalyzerIpc` is called (single-window app).
  * Safe no-op when no emitter is wired.
  */
-export let emitVisualAnalysisStatus: (payload: {
+let _emitVisualAnalysisStatus: (payload: {
   agent: string;
   step: string;
   progress: number;
 }) => void = () => {};
+
+export function emitVisualAnalysisStatus(payload: {
+  agent: string;
+  step: string;
+  progress: number;
+}): void {
+  _emitVisualAnalysisStatus(payload);
+}
 
 export function registerVisualAnalyzerIpc(deps?: VisualAnalyzerDeps): void {
   // List agent ids that have a bundled profile on disk (known AgentIds only).
@@ -284,7 +292,7 @@ export function registerVisualAnalyzerIpc(deps?: VisualAnalyzerDeps): void {
 
   // Module-level emit handle for the current registration. Safe no-op when no
   // emitter was supplied. The next registration overwrites (single-window app).
-  emitVisualAnalysisStatus = (payload) => _emitStatus?.(payload);
+  _emitVisualAnalysisStatus = (payload) => _emitStatus?.(payload);
 
   // Graceful no-op for CDP_EXTRACT — prevents renderer `invoke` from hanging
   // 30s (Electron "No handler registered" timeout). Live CDP extraction is not

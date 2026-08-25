@@ -121,6 +121,7 @@ export default defineConfig({
           alias: {
             '@': path.resolve(root, 'src/ui'),
             '@shared': path.resolve(root, 'src/shared'),
+            '@agentskin/engine': corePkg,
           },
         },
       },

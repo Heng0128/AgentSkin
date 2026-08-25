@@ -1,6 +1,23 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Mock @agentskin/engine so that filterTargets can be tested without booting
+// the full engine runtime. We use `importOriginal` to preserve all real
+// exports and only provide the connector symbols the engine needs — the
+// pure `filterTargets` function only reads `type`/`url` from CdpTarget and
+// never touches the engine, but the surrounding module code references
+// THEME_EXTENSION, LEGACY_THEME_EXTENSION, getAdapter, etc.
+vi.mock('@agentskin/engine', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@agentskin/engine')>();
+  return {
+    ...actual,
+    THEME_EXTENSION: '.agentskin-theme',
+    LEGACY_THEME_EXTENSION: '.codex-theme',
+  };
+});
+
+// Import AFTER mock so the module graph uses the mocked engine.
 import type { CdpTarget } from '../../src/legacy/agentskin-core-runtime';
 import {
   DEFAULT_INJECTION_BLOCKLIST,
