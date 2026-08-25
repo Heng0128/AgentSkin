@@ -358,4 +358,13 @@ export interface AgentEngineServiceApi {
    * retained references.
    */
   dispose(): void;
+  /**
+   * Async variant of {@link dispose} that waits for in-flight operations
+   * (apply/restore background tasks) to settle before releasing resources.
+   *
+   * Prevents background tasks from operating on already-released resources
+   * (cdpSessionPool, livePortCache). New code should prefer this over
+   * the synchronous {@link dispose}.
+   */
+  disposeAsync(): Promise<void>;
 }

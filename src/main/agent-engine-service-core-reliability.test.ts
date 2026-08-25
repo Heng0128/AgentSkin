@@ -184,51 +184,43 @@ describe('AgentEngineService (core reliability)', () => {
   // -------------------------------------------------------------------------
 
   describe('persistFailures counter (RC1)', () => {
-    it('increments persistFailures exactly once per failure via onError callback', async () => {
+    it('increments persistFailures exactly once per writeState failure', async () => {
       // Make writeJsonAtomic fail
       vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
 
       const svc = makeService();
-      const failures: number[] = [];
-
-      // Access internal persist chain to capture onError invocations
       const privateSvc = svc as unknown as {
-        persist: { onError?: (e: unknown) => void };
-        persistFailures: number;
-      };
-
-      // Trigger a persist operation through persist.safe
-      await privateSvc.persist.safe(() => {
-        // This mimics writeState being called via persist chain
-        // The actual writeState is private, but persist.safe wraps it
-      });
-
-      // Manually invoke onError to simulate what happens when writeJsonAtomic fails
-      privateSvc.persist.onError?.(new Error('disk full'));
-
-      // persistFailures should be exactly 1 (from onError), not 2
-      expect(privateSvc.persistFailures).toBe(1);
-    });
-
-    it('does not double-increment when writeState catch block fires', async () => {
-      // This test verifies the fix: the catch block in writeState should NOT
-      // increment persistFailures since onError is the single increment point.
-      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('EACCES'));
-
-      const svc = makeService();
-      const privateSvc = svc as unknown as {
-        persist: { onError?: (e: unknown) => void };
+        persist: { safe: (fn: () => unknown) => Promise<void> };
         persistFailures: number;
         writeState: () => Promise<void>;
       };
 
-      // Directly call writeState — this should NOT increment persistFailures
-      // (the increment happens in onError, called by persist.safe wrapper)
-      await privateSvc.writeState();
+      // Trigger writeState via persist.safe — same path apply/restore use.
+      // writeState catches the error internally and increments persistFailures.
+      await privateSvc.persist.safe(() => privateSvc.writeState());
 
-      // After writeState failure WITHOUT persist.safe wrapper, count should be 0
-      // because writeState catch block no longer increments
-      expect(privateSvc.persistFailures).toBe(0);
+      // persistFailures should be exactly 1 (from writeState catch block).
+      // Note: onError is NOT called because writeState catches the error
+      // internally and does not re-throw to persist.safe()'s .catch().
+      expect(privateSvc.persistFailures).toBe(1);
+    });
+
+    it('persistFailures accumulates across multiple failures', async () => {
+      vi.mocked(writeJsonAtomic).mockRejectedValue(new Error('disk full'));
+
+      const svc = makeService();
+      const privateSvc = svc as unknown as {
+        persist: { safe: (fn: () => unknown) => Promise<void> };
+        persistFailures: number;
+        writeState: () => Promise<void>;
+      };
+
+      // Trigger three consecutive writeState failures
+      await privateSvc.persist.safe(() => privateSvc.writeState());
+      await privateSvc.persist.safe(() => privateSvc.writeState());
+      await privateSvc.persist.safe(() => privateSvc.writeState());
+
+      expect(privateSvc.persistFailures).toBe(3);
     });
   });
 

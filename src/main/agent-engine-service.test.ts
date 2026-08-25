@@ -510,7 +510,7 @@ describe('AgentEngineService (orchestration)', () => {
   describe('dispose', () => {
     it('releases sub-module state and clears orchestration maps', async () => {
       const svc = makeService();
-      svc.dispose();
+      await svc.disposeAsync();
       expect(disposeWallpaperInjectionState).toHaveBeenCalledTimes(1);
       expect(disposeEngineInjectionState).toHaveBeenCalledTimes(1);
       expect(disposeSelfHealState).toHaveBeenCalledTimes(1);
@@ -523,13 +523,13 @@ describe('AgentEngineService (orchestration)', () => {
 
     it('stops audio level sampler on dispose (kills PowerShell proc + timer)', async () => {
       const svc = makeService();
-      svc.dispose();
+      await svc.disposeAsync();
       expect(stopAudioLevelPolling).toHaveBeenCalledTimes(1);
     });
 
     it('resets PerformanceRecorder static singleton on dispose', async () => {
       const svc = makeService();
-      svc.dispose();
+      await svc.disposeAsync();
       expect(PerformanceRecorder.reset).toHaveBeenCalledTimes(1);
     });
 
@@ -541,15 +541,15 @@ describe('AgentEngineService (orchestration)', () => {
       await svc.apply(APPLY_REQUEST);
       // After dispose, the service should be disposed but epoch Map cleared
       // (can't directly test private state, but verify no crash and service is disposed)
-      svc.dispose();
+      await svc.disposeAsync();
       expect(svc.disposed).toBe(true);
     });
 
     it('disposes all resources in single pass even if already disposed', async () => {
       const svc = makeService();
-      svc.dispose();
+      await svc.disposeAsync();
       // Second dispose should be safe (idempotent side effects mocks just increment)
-      svc.dispose();
+      await svc.disposeAsync();
       expect(stopAudioLevelPolling).toHaveBeenCalledTimes(2);
       expect(PerformanceRecorder.reset).toHaveBeenCalledTimes(2);
     });

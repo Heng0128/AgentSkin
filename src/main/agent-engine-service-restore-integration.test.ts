@@ -568,7 +568,7 @@ describe('AgentEngineService — Restore 流程集成测试', () => {
       vi.mocked(disposeEngineInjectionState).mockClear();
 
       // ── 执行 dispose ──
-      service.dispose();
+      await service.disposeAsync();
 
       // ── 验证三层 dispose 全部被调用 ──
       expect(disposeSelfHealState).toHaveBeenCalledTimes(1);
@@ -602,7 +602,7 @@ describe('AgentEngineService — Restore 流程集成测试', () => {
       await flushMicrotasks();
 
       // ── 执行 dispose ──
-      service.dispose();
+      await service.disposeAsync();
 
       // ── 验证内存状态被释放 ──
       expect(inflight.size).toBe(0);
@@ -618,7 +618,7 @@ describe('AgentEngineService — Restore 流程集成测试', () => {
     it('dispose 后可继续服务新请求（地图已清空，不误判 in-flight）', async () => {
       const { service } = await makeServiceWithTheme(TEST_APP, 't1', 9222);
 
-      service.dispose();
+      await service.disposeAsync();
 
       // dispose 后 apply 仍可正常执行（不会误判为同 kind 去重）
       const result = await service.apply({ appId: TEST_APP, themeId: 't2' });

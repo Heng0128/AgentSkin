@@ -279,7 +279,7 @@ describe('AgentEngineService apply 流程集成测试', () => {
       await flushMicrotasks();
 
       // 执行 dispose
-      service.dispose();
+      await service.disposeAsync();
 
       // 验证模块级清理函数被调用（真实实现 + spy）
       expect(disposeSelfHealState).toHaveBeenCalled();
