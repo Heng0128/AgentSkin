@@ -237,8 +237,8 @@ describe('StudioImageToThemePanel', () => {
     const html = renderPanel();
     // In extracting state without a file, the component falls through to idle
     // (file is null). Verify the idle upload zone is rendered.
-    expect(html).toContain('Drop to Upload');
     expect(html).toContain('Drag or Click to Upload');
+    expect(html).toContain('PNG · JPG · WebP · BMP · AVIF');
   });
 
   // -----------------------------------------------------------------------
