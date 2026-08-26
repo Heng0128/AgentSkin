@@ -218,7 +218,7 @@ function main() {
     const status = violated ? 'FAIL' : 'OK  ';
     const icon = violated ? '✗' : '✓';
     console.log(
-      `  ${icon} ${id.padEnd(12)} ${status}  !important: ${String(analysis.importantCount).padStart(4)}/${profile.importantBudget.padEnd?.(3) ?? profile.importantBudget}  selectors: ${analysis.selectorCount}`,
+      `  ${icon} ${id.padEnd(12)} ${status}  !important: ${String(analysis.importantCount).padStart(4)}/${String(profile.importantBudget).padEnd(3)}  selectors: ${analysis.selectorCount}`,
     );
 
     if (budgetExceeded) {
