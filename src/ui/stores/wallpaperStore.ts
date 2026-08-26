@@ -239,6 +239,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
       const prev = get().agentWallpapers;
       const next = { ...prev };
       let changed = false;
+      // TODO: type-guard — 待渐进式加固
       for (const key of Object.keys(prev) as AgentId[]) {
         if (prev[key].id === id) {
           next[key] = { enabled: false, id: null };
@@ -268,6 +269,7 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
 
   applyAgentWallpaper: async (appId, options): Promise<ApplyAgentWallpaperResult> => {
     try {
+      // TODO: type-guard — 待渐进式加固
       return (await api.applyAgentWallpaper(appId, options)) as ApplyAgentWallpaperResult;
     } catch (error) {
       useNotificationStore.getState().fail(error);

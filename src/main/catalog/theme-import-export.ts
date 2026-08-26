@@ -239,6 +239,7 @@ export async function validateThemeZip(input: string | Buffer): Promise<ImportVa
 
   let manifest: ThemeManifest;
   try {
+    // TODO: type-guard — 待渐进式加固
     manifest = JSON.parse(manifestBuf.toString('utf8')) as ThemeManifest;
   } catch {
     return { ok: false, errors: ['manifest.json is not valid JSON'], warnings, files };
@@ -292,6 +293,7 @@ export async function exportTheme(
   const entries: Array<{ name: string; data: Buffer }> = [];
 
   const manifestRaw = await fs.readFile(path.join(packagePath, 'manifest.json'), 'utf8');
+  // TODO: type-guard — 待渐进式加固
   const manifest = JSON.parse(manifestRaw) as ThemeManifest;
   entries.push({ name: 'manifest.json', data: Buffer.from(manifestRaw, 'utf8') });
 

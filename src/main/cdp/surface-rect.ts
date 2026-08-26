@@ -32,6 +32,7 @@ export async function readSurfaceRect(
       return JSON.stringify({ x: r.x, y: r.y, width: r.width, height: r.height });
     })()`);
     if (!raw) return null;
+    // TODO: type-guard — 待渐进式加固
     const parsed = JSON.parse(raw) as SurfaceRect | null;
     if (!parsed || !Number.isFinite(parsed.x) || !Number.isFinite(parsed.width)) return null;
     return parsed;

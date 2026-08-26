@@ -483,6 +483,7 @@ export async function snapshotThemeVisuals(
         return JSON.stringify(out);
       })()`;
       const raw = await session.evaluate(rootVarsExpr);
+      // TODO: type-guard — 待渐进式加固
       rootVars = raw && raw !== 'null' ? (JSON.parse(raw) as Record<string, string>) : undefined;
     } catch (error) {
       deps.log(`[studio] rootVars capture skipped: ${String(error)}`);

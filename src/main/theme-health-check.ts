@@ -341,6 +341,7 @@ async function detectOverriddenVariables(session: CdpSession): Promise<Overridde
       }
       return JSON.stringify(mismatches);
     })()`);
+    // TODO: type-guard — 待渐进式加固
     return JSON.parse(raw) as OverriddenVariable[];
   } catch {
     return [];

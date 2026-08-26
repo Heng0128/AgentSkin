@@ -102,18 +102,22 @@ export function StudioInspector({
       {/* Resolution preset control bar */}
       <div className="ws-inspector__resolution flex items-center gap-1 border-b border-border p-1">
         <div className="flex items-center gap-1">
-          {(Object.keys(RESOLUTION_PRESETS) as DesktopResolution[]).map((key) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onResolutionChange(key)}
-              className="ws-inspector__res-btn rounded-sm px-1 py-0 text-micro"
-              data-active={resolution === key ? 'true' : undefined}
-              title={RESOLUTION_PRESETS[key].label}
-            >
-              {RESOLUTION_PRESETS[key].width}
-            </button>
-          ))}
+          {
+            /* TODO: type-guard — 待渐进式加固 */ (
+              Object.keys(RESOLUTION_PRESETS) as DesktopResolution[]
+            ).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onResolutionChange(key)}
+                className="ws-inspector__res-btn rounded-sm px-1 py-0 text-micro"
+                data-active={resolution === key ? 'true' : undefined}
+                title={RESOLUTION_PRESETS[key].label}
+              >
+                {RESOLUTION_PRESETS[key].width}
+              </button>
+            ))
+          }
         </div>
         <button
           type="button"

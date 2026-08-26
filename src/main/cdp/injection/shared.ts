@@ -92,6 +92,7 @@ const VERIFY_THEME_BODY = [
 export async function verifyTheme(session: CdpSession): Promise<ThemeVerification | null> {
   try {
     const raw = await session.evaluate(`(() => { ${VERIFY_THEME_BODY} })()`);
+    // TODO: type-guard — 待渐进式加固
     return JSON.parse(raw) as ThemeVerification;
   } catch (error) {
     mainWarn('Inject.Verify', `theme-verify CDP evaluate failed: ${toMessage(error)}`);

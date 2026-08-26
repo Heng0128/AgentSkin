@@ -61,6 +61,7 @@ export function isValidPreset(p: unknown): p is EnvironmentPreset {
 export async function loadEnvPresets(userDataRoot: string): Promise<EnvironmentPreset[]> {
   try {
     const raw = await fs.readFile(envPresetsPath(userDataRoot), 'utf8');
+    // TODO: type-guard — 待渐进式加固
     const env = JSON.parse(raw) as Partial<PresetEnvelope>;
     if (!env || !Array.isArray(env.presets)) return [];
     return env.presets.filter(isValidPreset).map((p) => ({

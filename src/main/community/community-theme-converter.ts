@@ -192,6 +192,7 @@ export async function convertThemePackage(
     let sourceTheme: Record<string, unknown>;
     try {
       const raw = fs.readFileSync(sourceThemePath, 'utf-8');
+      // TODO: type-guard — 待渐进式加固
       sourceTheme = JSON.parse(raw) as Record<string, unknown>;
     } catch (err) {
       throw new Error(

@@ -156,6 +156,7 @@ export class ThemePackageLoader {
 
     let manifest: ThemeManifest;
     try {
+      // TODO: type-guard — 待渐进式加固
       manifest = JSON.parse(manifestRaw) as ThemeManifest;
     } catch {
       throw new ThemePackageValidationError(themeId, 'manifest.json is not valid JSON');
@@ -440,6 +441,7 @@ export class ThemePackageLoader {
             colors?: Record<string, unknown>;
           };
           try {
+            // TODO: type-guard — 待渐进式加固
             scheme = JSON.parse(schemeRaw) as typeof scheme;
           } catch {
             throw new ThemePackageValidationError(

@@ -209,6 +209,7 @@ async function readSchemeState(
   }
   if (!raw || raw === 'null') return null;
   try {
+    // TODO: type-guard — 待渐进式加固
     const parsed = JSON.parse(raw) as {
       dataTheme: string | null;
       storage: Record<string, string | null>;

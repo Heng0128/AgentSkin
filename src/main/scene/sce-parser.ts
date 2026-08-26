@@ -635,6 +635,7 @@ export async function parseSceMetadata(
 ): Promise<{ title?: string; author?: string } | null> {
   try {
     const raw = await fs.readFile(path.join(dir, 'project.json'), 'utf8');
+    // TODO: type-guard — 待渐进式加固
     const json = JSON.parse(raw) as SceProjectJson;
     return {
       title: json.title,

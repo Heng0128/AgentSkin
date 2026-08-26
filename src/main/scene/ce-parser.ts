@@ -313,6 +313,7 @@ export async function parseCeMetadata(dir: string): Promise<{ title?: string } |
   // 1. Try meta.json
   try {
     const raw = await fs.readFile(path.join(dir, CE_META_FILE), 'utf8');
+    // TODO: type-guard — 待渐进式加固
     const json = JSON.parse(raw) as { title?: string };
     if (json.title) return { title: json.title };
   } catch {

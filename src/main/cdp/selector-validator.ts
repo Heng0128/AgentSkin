@@ -108,6 +108,7 @@ export async function probeSelector(
   };
 
   try {
+    // TODO: type-guard — 待渐进式加固
     parsed = JSON.parse(raw) as typeof parsed;
   } catch {
     // CDP returned malformed JSON — treat as miss with context.

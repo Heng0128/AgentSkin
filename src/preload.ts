@@ -114,6 +114,7 @@ const api: AgentSkinApi = {
     ipcRenderer.invoke(IpcChannel.WORKSPACE_TWEAK_RESET, session) as Promise<boolean>,
   // --- CSS source editor ---
   listStyleSheets: (port: number) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.CSS_LIST, port) as Promise<
       Array<{
         styleSheetId: string;
@@ -145,6 +146,7 @@ const api: AgentSkinApi = {
   onBootWarnings: (listener) => subscribe<string[]>(IpcChannel.BOOT_WARNINGS, listener),
   // --- Theme Studio: snapshot theme DOM for replica renderer ---
   snapshotThemeDom: (agentId: AgentId, themeId?: string, options?: StudioSnapshotOptions) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.THEME_STUDIO_SNAPSHOT, {
       agentId,
       themeId,
@@ -152,12 +154,14 @@ const api: AgentSkinApi = {
     }) as Promise<ThemeVisualSnapshot>,
   // --- Theme Studio: capture the agent's native (un-themed) baseline ---
   snapshotBaseline: (agentId: AgentId, options?: StudioSnapshotOptions) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.THEME_STUDIO_SNAPSHOT_BASELINE, {
       agentId,
       options,
     }) as Promise<ThemeVisualSnapshot>,
   // --- Theme Studio: real-time DOM tree capture (no store) ---
   captureLiveDom: (agentId: AgentId) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.THEME_STUDIO_LIVE_DOM, { agentId }) as Promise<DomTreeNode>,
   // --- Theme Studio: domTree disk cache ---
   writeLiveDomCache: (req: StudioLiveDomCacheWriteRequest) =>
@@ -177,14 +181,18 @@ const api: AgentSkinApi = {
   openStudioWindow: () => ipcRenderer.invoke(IpcChannel.STUDIO_OPEN) as Promise<{ ok: boolean }>,
   // --- Theme Studio projects (file-backed, no installed-theme dependency) ---
   listStudioProjects: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_LIST) as Promise<StudioProject[]>,
   createStudioProject: (req: { name: string; author: string; agentId: AgentId }) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_CREATE, req) as Promise<StudioProject>,
   saveStudioProject: (project: StudioProject) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_SAVE, project) as Promise<StudioProject>,
   deleteStudioProject: (id: string) =>
     ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_DELETE, { id }) as Promise<{ ok: boolean }>,
   importStudioProject: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.STUDIO_PROJECT_IMPORT) as Promise<StudioProject | null>,
   saveStudioSnapshot: (
     projectId: string,
@@ -197,6 +205,7 @@ const api: AgentSkinApi = {
       kind,
     }) as Promise<{ ok: boolean }>,
   loadStudioSnapshot: (projectId: string, kind?: 'current' | 'baseline') =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.STUDIO_SNAPSHOT_LOAD, {
       projectId,
       kind,
@@ -210,15 +219,19 @@ const api: AgentSkinApi = {
     subscribe<boolean>(IpcChannel.WINDOW_MAXIMIZE_CHANGE, listener),
   // --- Visual Analysis ---
   getVisualAnalysisTarget: (agentName: string) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_GET, agentName) as Promise<Record<
       string,
       unknown
     > | null>,
   listVisualAnalysisTargets: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_LIST) as Promise<string[]>,
   listVisualAnalysisSummaries: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_LIST_SUMMARY) as Promise<VisualAnalysisSummary[]>,
   detectVisualAnalysisAgent: (agentName: string) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_DETECT, agentName) as Promise<{
       running: boolean;
       port?: number;
@@ -230,18 +243,21 @@ const api: AgentSkinApi = {
       listener,
     ),
   exportVisualAnalysisTheme: (agentName: string, themeData: Record<string, unknown>) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.VISUAL_ANALYSIS_EXPORT_THEME, agentName, themeData) as Promise<{
       ok: boolean;
       path?: string;
     }>,
   // --- Theme Studio: image → palette extraction ---
   extractThemeFromImage: (base64Data: string) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.STUDIO_IMAGE_EXTRACT_THEME, base64Data) as Promise<{
       palette: ThemeColorsFromImage;
       mode: 'light' | 'dark';
     }>,
   // --- Theme Studio: Bundles (workspace-scoped) ---
   listBundles: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.STUDIO_BUNDLE_LIST) as Promise<
       Array<{
         id: string;
@@ -268,6 +284,7 @@ const api: AgentSkinApi = {
     }>,
   // --- Theme Studio: Wallpaper picker ---
   listWallpapersForStudio: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.STUDIO_WALLPAPER_LIST) as Promise<
       Array<{
         id: string;
@@ -278,6 +295,7 @@ const api: AgentSkinApi = {
     >,
   // --- Diagnostics: IPC timeout events ---
   getPerformanceTimeouts: (count?: number) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.PERFORMANCE_GET_TIMEOUTS, count) as Promise<
       Array<{ id: string; channel: string; ms: number; timestamp: number }>
     >,
@@ -285,6 +303,7 @@ const api: AgentSkinApi = {
     ipcRenderer.invoke(IpcChannel.PERFORMANCE_CLEAR_TIMEOUTS) as Promise<{ ok: true }>,
   // --- Diagnostics: performance trace history ---
   getPerformanceHistory: (count?: number) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.PERFORMANCE_GET, count) as Promise<{
       recent: Array<{
         id: string;
@@ -304,6 +323,7 @@ const api: AgentSkinApi = {
       };
     }>,
   getPerformanceMemory: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.PERFORMANCE_GET_MEMORY) as Promise<
       Array<{ ts: number; heapUsed: number; rss: number; external: number }>
     >,
@@ -351,6 +371,7 @@ const api: AgentSkinApi = {
   // --- P3 Self-Healing drift status ---
   onThemeDriftStatus: (listener) => subscribe<DriftStatus>(IpcChannel.THEME_DRIFT_STATUS, listener),
   triggerManualRegen: (agentId, themeId) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.THEME_MANUAL_REGEN, agentId, themeId) as Promise<RegenResult>,
   /** Fire-and-forget push of renderer-side primitive sizes so the main
    *  process can include them in the unified metrics broadcast. */
@@ -384,8 +405,10 @@ const api: AgentSkinApi = {
   queryCoordinatorState: (appId: string) => ipcRenderer.invoke(IpcChannel.COORDINATOR_QUERY, appId),
   // --- Selector probe (selector-validator.ts) ---
   probeSelector: (port: number, selector: string) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.SELECTOR_PROBE, port, selector) as Promise<SelectorProbeResult>,
   validateSelectors: (port: number, agentId: string, selectors: string[]) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(
       IpcChannel.SELECTOR_VALIDATE,
       port,
@@ -394,11 +417,13 @@ const api: AgentSkinApi = {
     ) as Promise<SelectorValidationReport>,
   // --- MCP (Model Context Protocol) ---
   getMcpStatus: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.MCP_GET_STATUS) as Promise<{
       running: boolean;
       url: string | null;
     }>,
   startMcp: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.MCP_START) as Promise<{
       ok: boolean;
       url?: string;
@@ -406,6 +431,7 @@ const api: AgentSkinApi = {
       alreadyRunning?: boolean;
     }>,
   stopMcp: () =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.MCP_STOP) as Promise<{
       ok: boolean;
       error?: string;
@@ -413,6 +439,7 @@ const api: AgentSkinApi = {
     }>,
   // --- Community Theme (DreamSkin) ---
   listCommunityThemes: (params?: import('./shared/types').CommunityThemeListParams) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.COMMUNITY_THEME_LIST, params) as Promise<
       | {
           success: true;
@@ -424,6 +451,7 @@ const api: AgentSkinApi = {
         }
     >,
   getCommunityTheme: (themeId: string) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.COMMUNITY_THEME_GET, themeId) as Promise<
       | {
           success: true;
@@ -435,6 +463,7 @@ const api: AgentSkinApi = {
         }
     >,
   downloadCommunityTheme: (themeId: string) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.COMMUNITY_THEME_DOWNLOAD, themeId) as Promise<
       | {
           success: true;
@@ -446,6 +475,7 @@ const api: AgentSkinApi = {
         }
     >,
   cancelCommunityDownload: (themeId: string) =>
+    // TODO: type-guard — 待渐进式加固
     ipcRenderer.invoke(IpcChannel.COMMUNITY_DOWNLOAD_CANCEL, themeId) as Promise<{
       success: boolean;
       error?: string;

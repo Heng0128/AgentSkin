@@ -58,6 +58,7 @@ function isValidAgentId(id: unknown): id is AgentId {
 function readProjectFile(file: string): StudioProject | null {
   try {
     const raw = fs.readFileSync(file, 'utf8');
+    // TODO: type-guard — 待渐进式加固
     const data = JSON.parse(raw) as Partial<StudioProject>;
     if (data.schema !== PROJECT_SCHEMA || typeof data.id !== 'string') return null;
     if (!isValidAgentId(data.agentId)) return null;
@@ -328,6 +329,7 @@ export function registerStudioProjectIpc(): void {
           ? path.join(PROJECTS_DIR, id, 'baseline.json')
           : path.join(PROJECTS_DIR, id, 'snapshot.json');
       try {
+        // TODO: type-guard — 待渐进式加固
         return JSON.parse(fs.readFileSync(file, 'utf8')) as ThemeVisualSnapshot;
       } catch {
         return null;
@@ -338,6 +340,7 @@ export function registerStudioProjectIpc(): void {
 
 function readManifest(dir: string): Record<string, unknown> {
   try {
+    // TODO: type-guard — 待渐进式加固
     return JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8')) as Record<
       string,
       unknown

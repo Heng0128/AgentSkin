@@ -382,6 +382,7 @@ async function resolveColorSchemes(
       path.join(packagePath, 'color-schemes', `${schemeId}.json`),
       'utf8',
     );
+    // TODO: type-guard — 待渐进式加固
     const scheme = JSON.parse(raw) as {
       name?: unknown;
       mode?: unknown;

@@ -216,6 +216,7 @@ export class SettingsService implements SettingsServiceApi {
 
   async initialize(): Promise<void> {
     try {
+      // TODO: type-guard — 待渐进式加固
       const parsed = JSON.parse(await fs.readFile(this.file, 'utf8')) as {
         version?: number;
         apps?: unknown;

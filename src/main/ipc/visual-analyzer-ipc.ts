@@ -98,6 +98,7 @@ function buildVisualAnalysisSummaries(): VisualAnalysisSummary[] {
   let summaryMap: Record<string, Record<string, unknown>> = {};
   try {
     const raw = fs.readFileSync(path.join(dir, '_profiles-summary.json'), 'utf8');
+    // TODO: type-guard — 待渐进式加固
     const parsed = JSON.parse(raw) as { profiles?: Record<string, Record<string, unknown>> };
     summaryMap = parsed.profiles ?? {};
   } catch {

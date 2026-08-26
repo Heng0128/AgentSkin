@@ -48,6 +48,7 @@ export function loadBootBaseline(userDataRoot: string): BootBaseline {
     const parsed: unknown = JSON.parse(raw);
     if (typeof parsed !== 'object' || parsed === null) return {};
     const out: BootBaseline = {};
+    // TODO: type-guard — 待渐进式加固
     for (const [label, ms] of Object.entries(parsed as Record<string, unknown>)) {
       if (typeof ms === 'number' && Number.isFinite(ms) && ms > 0) {
         out[label] = ms;

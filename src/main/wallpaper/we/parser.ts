@@ -92,6 +92,7 @@ export async function parseWorkshopProject(
   let project: ProjectJson;
   try {
     const raw = await fs.readFile(projectFile, 'utf8');
+    // TODO: type-guard — 待渐进式加固
     project = JSON.parse(raw) as ProjectJson;
   } catch {
     // Missing or corrupt project.json — still try web/scene/video detection

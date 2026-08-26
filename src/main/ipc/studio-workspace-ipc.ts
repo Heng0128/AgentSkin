@@ -163,6 +163,7 @@ export function registerStudioWorkspaceIpc(ctx: MainContext): void {
                 path.join(dir, entry.name, 'manifest.json'),
                 'utf8',
               );
+              // TODO: type-guard — 待渐进式加固
               const manifest = JSON.parse(manifestRaw) as { wallpaper?: unknown };
               hasWallpaper = !!manifest.wallpaper;
             } catch {

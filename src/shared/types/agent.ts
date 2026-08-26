@@ -119,6 +119,7 @@ export const AGENT_META: Readonly<Record<AnyAgentId, AgentMeta>> = Object.freeze
 
 /** Formal product agents — shown in the main UI, checked for status, listed in settings. */
 export const AGENT_IDS: readonly AgentId[] = Object.freeze(
+  // TODO: type-guard — 待渐进式加固
   (Object.values(AGENT_META) as AgentMeta[])
     .filter((m) => m.tier === 'active')
     .map((m) => m.id as AgentId),

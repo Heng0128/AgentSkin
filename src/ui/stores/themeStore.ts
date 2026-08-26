@@ -82,6 +82,7 @@ const agentChains = new Map<AgentId, Promise<void>>();
 let globalChain: Promise<void> = Promise.resolve();
 
 function emptyAgentBusy(): Record<AgentId, BusyKey | null> {
+  // TODO: type-guard — 待渐进式加固
   return Object.fromEntries(AGENT_IDS.map((id) => [id, null])) as Record<AgentId, BusyKey | null>;
 }
 

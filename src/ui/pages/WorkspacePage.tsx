@@ -117,6 +117,7 @@ export function WorkspacePage() {
   }, [undo, redo]);
 
   const runningAgents = useMemo(
+    // TODO: type-guard — 待渐进式加固
     () => (status?.apps ?? []).filter((a) => a.running && a.port !== null) as AppStatus[],
     [status],
   );

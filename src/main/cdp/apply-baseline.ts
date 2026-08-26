@@ -211,6 +211,7 @@ export async function captureBaseline(
 ): Promise<BaselineSnapshot | null> {
   try {
     const raw = await session.evaluate(buildBaselineProbeExpr());
+    // TODO: type-guard — 待渐进式加固
     const parsed = JSON.parse(raw) as Omit<BaselineSnapshot, 'appId' | 'themeId' | 'capturedAt'>;
     return { ...parsed, appId, themeId, capturedAt: Date.now() };
   } catch (error) {
