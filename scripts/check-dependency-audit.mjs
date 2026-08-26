@@ -30,7 +30,7 @@ console.log('');
 
 if (result.risky.length > 0) {
   console.log(`Risky packages (${result.risky.length}):`);
-  for (const r of result.risk) {
+  for (const r of result.risky) {
     console.log(`  ⚠ ${r.name}@${r.version} — ${r.risk}`);
   }
   console.log('');
