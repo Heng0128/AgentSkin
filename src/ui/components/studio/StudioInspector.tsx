@@ -26,7 +26,7 @@ import { type DesktopResolution, RESOLUTION_PRESETS } from './device-frame';
 /** Map inspector tab IDs to their i18n label keys. */
 const TAB_LABEL: Record<InspectorTabId, (t: UiMessages) => string> = {
   profile: (t) => t.studioTabProfile,
-  element: (t) => t.studioTabElement ?? 'Element',
+  element: (t) => t.studioTabElement,
 };
 
 export function StudioInspector({
@@ -40,17 +40,17 @@ export function StudioInspector({
   onToggleDeviceFrame,
 }: {
   t: UiMessages;
-  iframeRef?: React.RefObject<HTMLIFrameElement | null>;
-  pickedPath?: string | null;
-  onClearPicked?: () => void;
+  iframeRef: React.RefObject<HTMLIFrameElement | null>;
+  pickedPath: string | null;
+  onClearPicked: () => void;
   /** Current resolution preset (controlled by parent). */
-  resolution?: DesktopResolution;
+  resolution: DesktopResolution;
   /** Callback when user changes resolution. */
-  onResolutionChange?: (preset: DesktopResolution) => void;
+  onResolutionChange: (preset: DesktopResolution) => void;
   /** Whether to show device frame. */
-  showDeviceFrame?: boolean;
+  showDeviceFrame: boolean;
   /** Toggle device frame. */
-  onToggleDeviceFrame?: () => void;
+  onToggleDeviceFrame: () => void;
 }) {
   const { inspector, setInspectorTab, setInspectorOpen } = useWorkspaceStore();
   const activeProject = useStudioStore((s) => s.getActiveProject());
@@ -97,7 +97,7 @@ export function StudioInspector({
             <button
               key={key}
               type="button"
-              onClick={() => onResolutionChange?.(key)}
+              onClick={() => onResolutionChange(key)}
               className="ws-inspector__res-btn rounded-sm px-1 py-0 text-micro"
               data-active={resolution === key ? 'true' : undefined}
               title={RESOLUTION_PRESETS[key].label}
@@ -108,7 +108,7 @@ export function StudioInspector({
         </div>
         <button
           type="button"
-          onClick={() => onToggleDeviceFrame?.()}
+          onClick={() => onToggleDeviceFrame()}
           className="ws-inspector__frame-toggle ml-auto text-micro"
           data-active={showDeviceFrame ? 'true' : undefined}
           title="Toggle Frame"
@@ -136,11 +136,7 @@ export function StudioInspector({
       <div className="ws-inspector__scroll">
         {inspector.activeTab === 'profile' && <InspectorProfile t={t} />}
         {inspector.activeTab === 'element' && (
-          <InspectorElement
-            iframeRef={iframeRef ?? { current: null }}
-            pickedPath={pickedPath ?? null}
-            onClose={() => onClearPicked?.()}
-          />
+          <InspectorElement iframeRef={iframeRef} pickedPath={pickedPath} onClose={onClearPicked} />
         )}
       </div>
     </aside>
