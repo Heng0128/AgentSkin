@@ -192,10 +192,10 @@ describe('AGENT_SPECIFICITY_PROFILES', () => {
     expect(p.decorationGuard).toBe(false);
   });
 
-  it('doubao: host-root, budget 150, max [0,2,1], decorationGuard true', () => {
+  it('doubao: host-root, budget 650, max [0,2,1], decorationGuard true', () => {
     const p = AGENT_SPECIFICITY_PROFILES.doubao;
     expect(p.scopeStrategy).toBe('host-root');
-    expect(p.importantBudget).toBe(150);
+    expect(p.importantBudget).toBe(650);
     expect(p.maxSpecificity).toEqual([0, 2, 1]);
     expect(p.fallbackOrder).toEqual(['add-layer', 'force-important']);
     expect(p.decorationGuard).toBe(true);
