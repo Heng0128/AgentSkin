@@ -13,9 +13,9 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { ConcurrencyMetrics } from './concurrency';
-import type { DriftStatus } from './drift-status';
-import type { HealthCheckReport } from './health-check';
+import type { ConcurrencyMetrics } from './types/concurrency';
+import type { DriftStatus } from './types/drift-status';
+import type { HealthCheckReport } from './types/health-check';
 
 // ---------------------------------------------------------------------------
 // ConcurrencyMetrics
