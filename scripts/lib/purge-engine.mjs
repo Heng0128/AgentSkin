@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MPL-2.0 OR MIT
 //
 // # purge-engine.mjs — Zero-Residual Cleanup Engine
 //

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MPL-2.0 OR MIT
 //
 // # agent-state-engine.mjs — Agent State Awareness Engine
 //

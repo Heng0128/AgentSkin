@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MPL-2.0 OR MIT
 //
 // # bundle-signature.mjs — Bundle Signature Generation & Verification
 //

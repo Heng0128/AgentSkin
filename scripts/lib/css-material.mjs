@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MPL-2.0 OR MIT
 //
 // # css-material.mjs — CSS Material Fragment Generator
 //

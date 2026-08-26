@@ -10,7 +10,6 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { PerformanceStep, ThemeApplyTrace } from '../main/services/performance/types';
 import type { ApplyRequest, ApplyResponse } from './types/ipc';
 import type { InstalledTheme } from './types/theme';
 
@@ -88,103 +87,5 @@ describe('InstalledTheme — round-trip', () => {
     };
     const roundTripped = JSON.parse(JSON.stringify(theme)) as InstalledTheme;
     expect(roundTripped).toEqual(theme);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// ThemeApplyTrace — performance trace record
-// ---------------------------------------------------------------------------
-
-describe('ThemeApplyTrace — round-trip', () => {
-  it('preserves nested steps and device info', () => {
-    const trace: ThemeApplyTrace = {
-      id: 'apply_003',
-      agentId: 'traework',
-      themeId: 'sakura-noir',
-      startedAt: 1000,
-      finishedAt: 1850,
-      duration: 850,
-      success: true,
-      steps: [
-        {
-          name: 'resolveTheme',
-          startedAt: 1000,
-          duration: 50,
-          success: true,
-          children: [
-            {
-              name: 'readManifest',
-              startedAt: 1000,
-              duration: 20,
-              success: true,
-              parentId: 'resolveTheme',
-            },
-          ],
-        },
-        { name: 'connectCdp', startedAt: 1050, duration: 120, success: true },
-      ],
-      device: {
-        platform: 'win32',
-        arch: 'x64',
-        cpus: 16,
-        totalMemory: 32768,
-        freeMemory: 16384,
-        electronVersion: '37.0.0',
-      },
-    };
-    const roundTripped = JSON.parse(JSON.stringify(trace)) as ThemeApplyTrace;
-    expect(roundTripped).toEqual(trace);
-  });
-
-  it('preserves error state and failed steps', () => {
-    const trace: ThemeApplyTrace = {
-      id: 'apply_004',
-      agentId: 'codex',
-      startedAt: 2000,
-      finishedAt: 2100,
-      duration: 100,
-      success: false,
-      steps: [
-        {
-          name: 'connectCdp',
-          startedAt: 2000,
-          duration: 100,
-          success: false,
-          error: 'CDP connection failed',
-        },
-      ],
-      error: 'CDP connection failed',
-      device: {
-        platform: 'darwin',
-        arch: 'arm64',
-        cpus: 10,
-        totalMemory: 16384,
-        freeMemory: 8192,
-        electronVersion: '37.0.0',
-      },
-    };
-    const roundTripped = JSON.parse(JSON.stringify(trace)) as ThemeApplyTrace;
-    expect(roundTripped).toEqual(trace);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// PerformanceStep — individual step within a trace
-// ---------------------------------------------------------------------------
-
-describe('PerformanceStep — round-trip', () => {
-  it('preserves sub-step parentId linkage', () => {
-    const step: PerformanceStep = {
-      name: 'injectCss',
-      startedAt: 1200,
-      duration: 300,
-      success: true,
-      children: [
-        { name: 'palette', startedAt: 1200, duration: 50, success: true, parentId: 'injectCss' },
-        { name: 'tokens', startedAt: 1250, duration: 80, success: true, parentId: 'injectCss' },
-      ],
-    };
-    const roundTripped = JSON.parse(JSON.stringify(step)) as PerformanceStep;
-    expect(roundTripped).toEqual(step);
   });
 });

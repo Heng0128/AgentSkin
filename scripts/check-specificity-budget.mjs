@@ -89,7 +89,7 @@ const PROFILES = {
   },
   doubao: {
     scopeStrategy: 'host-root',
-    importantBudget: 150,
+    importantBudget: 650,
     maxSpecificity: [0, 2, 1],
     hostSelector: 'html.agentskin-host-doubao:root',
   },

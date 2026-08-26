@@ -225,7 +225,7 @@ function DriftAgentCard({
           <div className="mt-0 flex items-center gap-1">
             <span
               className={cn(
-                'inline-flex size-3 items-center justify-center rounded-md font-mono text-[9px]',
+                'inline-flex size-3 items-center justify-center rounded-md font-mono text-[10px]',
                 status.lastRegenResult.status === 'success'
                   ? 'bg-cr-success/15 text-cr-success'
                   : status.lastRegenResult.status === 'failed'

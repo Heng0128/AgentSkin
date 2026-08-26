@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MPL-2.0 OR MIT
 //
 // # theme-distribution.mjs — Theme Store Distribution Protocol
 //

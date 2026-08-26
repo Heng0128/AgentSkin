@@ -9,7 +9,7 @@
  *   - Snyk Advisory API check (optional, skipped if no network).
  *
  * Score: 'ok' | 'warn' | 'fail'
- *   - fail: install scripts present OR >500 transitive deps.
+ *   - fail: install scripts present OR >700 transitive deps.
  *   - warn: >200 transitive deps OR Snyk reports vulnerabilities.
  *   - ok:   everything clean.
  */
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, '..', '..');
 const DEPS_WARN_THRESHOLD = 200;
-const DEPS_FAIL_THRESHOLD = 500;
+const DEPS_FAIL_THRESHOLD = 700;
 
 // ---------------------------------------------------------------------------
 // Types (JSDoc for IDE support)

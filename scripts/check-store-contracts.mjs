@@ -13,7 +13,8 @@
  *    (e.g. `useShellStore.setLocale()` is wrong; `useShellStore.getState().setLocale()` is correct).
  * 2. Store files in `src/ui/stores/` must follow the `*Store.ts` naming convention.
  *    Excluded: index.ts, import-guard.ts, workspace-presets.ts, `*.test.ts`.
- * 3. `create()` from zustand must only appear inside `src/ui/stores/`.
+ * 3. `create()` from zustand must only appear inside `src/ui/stores/` or
+ *    `src/ui/studio/` (Studio domain stores are co-located with their UI).
  *    Stores defined elsewhere violate the single-source-of-truth rule.
  * 4. A file named `*Store.ts` must export a properly named Zustand hook
  *    (`use*Store` pattern) created via `create()`.
@@ -169,6 +170,9 @@ function checkStoreLocation(filePath) {
 
   // Skip files inside src/ui/stores/ — those are allowed
   if (normRel.startsWith('src/ui/stores/')) return;
+  // Skip files inside src/ui/studio/ — Studio domain stores are co-located
+  // with their UI components (same pattern as engines/ and themes/ exemption)
+  if (normRel.startsWith('src/ui/studio/')) return;
 
   if (!normRel.endsWith('.ts')) return;
   if (normRel.endsWith('.test.ts')) return;

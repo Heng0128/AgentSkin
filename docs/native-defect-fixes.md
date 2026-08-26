@@ -63,7 +63,6 @@
 - `[class*="messageBubble"]`
 - `[class*="msg-bubble"]`
 - `[class*="chat-bubble"]`
-- `[class*="bubble"]`
 - `[class*="message-content"]`
 - `[class*="msg-content"]`
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MPL-2.0 OR MIT
 //
 // # render-plan.mjs — RenderPlan Semantic Intermediate Representation
 //
