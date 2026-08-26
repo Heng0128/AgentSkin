@@ -78,9 +78,10 @@ export function InjectDock({ controller }: { controller: AppController }) {
         type="button"
         onClick={() => {
           // Show confirmation dialog with active injection count
-          controller.setRestoreAllPrompt(activeApps.length);
+          setRestoreAllPrompt(activeApps.length);
         }}
-        className="flex items-center gap-1 rounded-md bg-card2 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+        disabled={activeApps.length === 0}
+        className="flex items-center gap-1 rounded-md bg-card2 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary disabled:pointer-events-none disabled:opacity-45"
       >
         <RotateCcw className="size-3" />
         {t.restoreAllAction}

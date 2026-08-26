@@ -51,11 +51,11 @@ function ColorSwatches({ colors }: { colors: Record<string, string | undefined> 
           className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2 py-1"
         >
           <span
-            className="size-3 shrink-0 rounded-sm border border-border"
+            className="size-3 shrink-0 rounded-md border border-border"
             style={{ backgroundColor: value }}
             aria-hidden="true"
           />
-          <span className="text-[10px] text-muted-foreground">{key}</span>
+          <span className="text-[11px] text-muted-foreground">{key}</span>
         </div>
       ))}
     </div>
@@ -75,7 +75,7 @@ function MetaItem({
     <div className="flex items-center gap-1.5">
       <Icon size={12} className="shrink-0 text-muted-foreground/60" />
       <span className="text-[12px] font-medium tabular-nums">{value}</span>
-      <span className="text-[10px] text-muted-foreground/70">{label}</span>
+      <span className="text-[11px] text-muted-foreground/70">{label}</span>
     </div>
   );
 }
@@ -93,7 +93,7 @@ export function ThemeDetailPanel({
   const previewUrl = theme.screenshots?.[0] ?? theme.thumbUrl;
 
   return (
-    <aside className="flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
+    <aside className="as-slide-up-enter flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
       {/* Preview */}
       {previewUrl && (
         <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
@@ -175,7 +175,7 @@ export function ThemeDetailPanel({
           {/* Color swatches */}
           {Object.keys(colors).length > 0 && (
             <div>
-              <p className="mb-1.5 flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground/70">
+              <p className="mb-1.5 flex items-center gap-1 text-[11px] uppercase tracking-wide text-muted-foreground/70">
                 <Palette size={12} />
                 {t.colors}
               </p>
@@ -191,12 +191,12 @@ export function ThemeDetailPanel({
           {/* Tags */}
           {theme.tags?.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70">Tags</p>
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Tags</p>
               <div className="flex flex-wrap gap-1.5">
               {theme.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                  className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[11px] text-muted-foreground"
                 >
                   {tag}
                 </span>
@@ -207,7 +207,7 @@ export function ThemeDetailPanel({
 
           {/* Screenshots count */}
           {theme.screenshots?.length > 1 && (
-            <p className="flex items-center gap-1 text-[10px] text-muted-foreground/60">
+            <p className="flex items-center gap-1 text-[11px] text-muted-foreground/60">
               <ImageIcon size={11} />
               {theme.screenshots.length} {t.screenshots}
             </p>

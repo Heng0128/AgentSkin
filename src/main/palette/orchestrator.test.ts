@@ -161,21 +161,14 @@ describe('tryEngineInjection', () => {
     expect(mockInjectThemeViaEngine).not.toHaveBeenCalled();
   });
 
-  it('returns null when palette CSS build fails', async () => {
+  it('throws when palette CSS build fails (so caller can notify user)', async () => {
     setupEngineFiles();
     mockBuildPaletteCss.mockReturnValue(null);
+    const deps = makeDeps();
 
-    const result = await tryEngineInjection(
-      MOCK_SESSION,
-      'traework',
-      MOCK_BUNDLE,
-      MOCK_TARGET,
-      null,
-      null,
-      makeDeps(),
-    );
-
-    expect(result).toBeNull();
+    await expect(
+      tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, deps),
+    ).rejects.toThrow('Failed to build palette CSS');
     expect(mockInjectThemeViaEngine).not.toHaveBeenCalled();
   });
 
@@ -339,23 +332,19 @@ describe('tryEngineInjection', () => {
     expect(callArgs.customCss).toBeUndefined();
   });
 
-  it('logs error and returns null on unexpected exception', async () => {
+  it('logs error and re-throws on unexpected exception (so caller can notify user)', async () => {
+    // Set up engine files so the code reaches buildPaletteCss() — without
+    // this, mockAccess returning undefined fails on .then() before we get
+    // to the palette build step.
+    setupEngineFiles();
     mockBuildPaletteCss.mockImplementation(() => {
       throw new Error('Unexpected generator failure');
     });
     const deps = makeDeps();
 
-    const result = await tryEngineInjection(
-      MOCK_SESSION,
-      'traework',
-      MOCK_BUNDLE,
-      MOCK_TARGET,
-      null,
-      null,
-      deps,
-    );
-
-    expect(result).toBeNull();
+    await expect(
+      tryEngineInjection(MOCK_SESSION, 'traework', MOCK_BUNDLE, MOCK_TARGET, null, null, deps),
+    ).rejects.toThrow('Engine injection failed for agent=traework: Unexpected generator failure');
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('engine injection failed'));
     expect(mockInjectThemeViaEngine).not.toHaveBeenCalled();
   });

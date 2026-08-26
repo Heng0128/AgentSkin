@@ -74,7 +74,7 @@ export function DeviceFrame({
           <div className="rounded-lg border-2 border-border bg-muted p-2 shadow-lg">
             {/* Screen area */}
             <div
-              className="overflow-hidden rounded-sm border border-border bg-background"
+              className="overflow-hidden rounded-md border border-border bg-background"
               style={{
                 width: `${scaledWidth}px`,
                 height: `${scaledHeight}px`,
@@ -101,7 +101,7 @@ export function DeviceFrame({
           />
         </div>
         {/* Resolution label */}
-        <span className="mt-2 text-[10px] text-muted-foreground">{label}</span>
+        <span className="mt-2 text-[11px] text-muted-foreground">{label}</span>
       </div>
     );
   }
@@ -128,7 +128,7 @@ export function DeviceFrame({
         </div>
       </div>
       {/* Resolution label */}
-      <span className="mt-1 block text-[10px] text-muted-foreground">{label}</span>
+      <span className="mt-1 block text-[11px] text-muted-foreground">{label}</span>
     </div>
   );
 }

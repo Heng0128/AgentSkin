@@ -19,6 +19,7 @@ import { useShellStore } from '@/stores/shellStore';
 import { uiMessages } from '@shared/i18n';
 import type { WallpaperInfo, WallpaperRenderOptions } from '@shared/types';
 import { VolumeX } from 'lucide-react';
+import { ParticleOverlay } from './wallpaper/ParticleOverlay';
 
 /**
  * # DynamicBackground
@@ -316,6 +317,9 @@ export function DynamicBackground({
           // so the frosted surfaces stay readable.
           <div className="absolute inset-0 bg-background" />
         )}
+        {/* Particle overlay — CSS-only animated particles above wallpaper,
+            below scrim for readability. Respects prefers-reduced-motion. */}
+        {render?.particles && <ParticleOverlay config={render.particles} />}
       </div>
       {/* Readability scrim tinted with the app background color.
           Opacity is driven by `render.scrimOpacity` so themes can tune how

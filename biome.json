@@ -49,10 +49,21 @@
     "rules": {
       "recommended": true,
       "style": {
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "useImportType": "error",
+        "useNodejsImportProtocol": "error"
       },
       "complexity": {
-        "useOptionalChain": "warn"
+        "useOptionalChain": "warn",
+        "noUselessFragments": "warn"
+      },
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "warn"
+      },
+      "a11y": {
+        "useSemanticElements": "off",
+        "noStaticElementInteractions": "off"
       }
     }
   },
@@ -75,6 +86,9 @@
         "rules": {
           "suspicious": {
             "noDuplicateCustomProperties": "off"
+          },
+          "complexity": {
+            "noImportantStyles": "off"
           }
         }
       }

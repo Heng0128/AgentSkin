@@ -62,7 +62,7 @@ export function AgentsSection({ t }: { t: UiMessages }) {
             }
 
             return (
-              <div key={id} className="flex items-center gap-1 p-1 rounded-sm">
+              <div key={id} className="flex items-center gap-1 p-1 rounded-md">
                 <AppMark appId={id} size={14} />
                 <span className="text-micro text-foreground truncate flex-1">
                   {meta.displayName}
@@ -97,7 +97,7 @@ export function AgentsSection({ t }: { t: UiMessages }) {
                 )}
 
                 <span
-                  className="size-[5px] rounded-sm"
+                  className="size-[5px] rounded-md"
                   style={{
                     background: status?.installed ? 'var(--cr-success)' : 'var(--muted-foreground)',
                   }}

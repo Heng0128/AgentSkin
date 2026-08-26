@@ -136,62 +136,56 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
 
   // --- Main content: toolbar + grid + detail sidebar ---
   return (
-    <div className="we-app flex h-full min-h-0 flex-col min-w-0">
+    <div className="we-app flex h-full min-h-0 flex-col min-w-0 gap-3">
       {/* Page header */}
-      <div className="pb-3">
-        <PageHeader title={t.wallpaperSection} description={t.wePageDesc} count={wallpapers.length}>
-          <Button variant="outline" size="sm" onClick={() => void importWallpaper()}>
-            <Download className="size-3.5" />
-            {t.wallpaperImport}
-          </Button>
-          <div className="flex items-center gap-2.5">
-            <span className="text-[11px] font-medium text-muted-foreground">
-              {t.wallpaperEnable}
-            </span>
-            <Switch
-              checked={enabled}
-              onCheckedChange={(v) => void setWallpaper(v, v ? selectedId : null)}
-            />
-          </div>
-        </PageHeader>
-      </div>
+      <PageHeader title={t.wallpaperSection} description={t.wePageDesc} count={wallpapers.length}>
+        <Button variant="outline" size="sm" onClick={() => void importWallpaper()}>
+          <Download className="size-3.5" />
+          {t.wallpaperImport}
+        </Button>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[11px] font-medium text-muted-foreground">{t.wallpaperEnable}</span>
+          <Switch
+            checked={enabled}
+            onCheckedChange={(v) => void setWallpaper(v, v ? selectedId : null)}
+          />
+        </div>
+      </PageHeader>
 
       {/* Toolbar: search + sort + segmented type filter */}
-      <div className="pb-3">
-        <PageToolbar
-          search={{
-            value: search,
-            onChange: setSearch,
-            placeholder: t.weSearchPlaceholder,
-          }}
-          sort={{
-            value: sortBy,
-            options: [
-              { value: 'title', label: t.weSortTitle },
-              { value: 'size', label: t.weSortSize },
-            ],
-            onChange: (value) => setSortBy(value as 'title' | 'size'),
-          }}
-          left={
-            <FilterChips
-              options={[
-                { value: 'all', label: t.weFilterAll },
-                { value: 'video', label: t.weFilterVideo, icon: Video },
-                { value: 'image', label: t.weFilterImage, icon: Image },
-                { value: 'web', label: t.weFilterWeb },
-                { value: 'scene', label: t.weFilterScene },
-              ]}
-              value={filter}
-              onChange={setFilter}
-              className="gap-1"
-            />
-          }
-        />
-      </div>
+      <PageToolbar
+        search={{
+          value: search,
+          onChange: setSearch,
+          placeholder: t.weSearchPlaceholder,
+        }}
+        sort={{
+          value: sortBy,
+          options: [
+            { value: 'title', label: t.weSortTitle },
+            { value: 'size', label: t.weSortSize },
+          ],
+          onChange: (value) => setSortBy(value as 'title' | 'size'),
+        }}
+        left={
+          <FilterChips
+            options={[
+              { value: 'all', label: t.weFilterAll },
+              { value: 'video', label: t.weFilterVideo, icon: Video },
+              { value: 'image', label: t.weFilterImage, icon: Image },
+              { value: 'web', label: t.weFilterWeb },
+              { value: 'scene', label: t.weFilterScene },
+            ]}
+            value={filter}
+            onChange={setFilter}
+            className="gap-1"
+          />
+        }
+      />
 
       {/* Grid + detail sidebar (desktop) / Sheet (mobile) */}
-      <div className="flex min-h-0 flex-1">
-        <div className="we-grid min-h-0 flex-1 overflow-y-auto pr-3">
+      <div className="flex min-h-0 flex-1 gap-3">
+        <div className="we-grid min-h-0 flex-1 overflow-y-auto">
           <WallpaperGrid
             wallpapers={filtered}
             selectedId={selected?.id ?? null}

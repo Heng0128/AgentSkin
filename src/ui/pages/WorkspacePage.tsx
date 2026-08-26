@@ -21,6 +21,7 @@ import { AppMark } from '@/components/AppMark';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { AgentLivePreview } from '@/components/workspace/AgentLivePreview';
+import { QuickActionsCard } from '@/components/workspace/QuickActionsCard';
 import { TweakPanel } from '@/components/workspace/TweakPanel';
 import { useDiagnosticsStore } from '@/stores/diagnosticsStore';
 import { useShellStore } from '@/stores/shellStore';
@@ -164,228 +165,238 @@ export function WorkspacePage() {
   const currentApp = runningAgents.find((a) => a.appId === currentAgentId);
 
   return (
-    <div className="flex h-full min-h-0 gap-3">
-      {/* ── Left: running-agent rail (icon-only) ── */}
-      <aside className="flex w-14 shrink-0 flex-col items-center gap-1 rounded-lg border border-border bg-card py-2">
-        <button
-          type="button"
-          onClick={handleRefreshStatus}
-          title={t.refreshStatus}
-          className="mb-1 flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        >
-          {isRefreshing ? (
-            <Spinner className="size-3.5 animate-spin" />
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      {/* ── Quick Actions ── */}
+      {currentAgentId && <QuickActionsCard activeAgentId={currentAgentId} />}
+
+      {/* ── Three-column workspace ── */}
+      <div className="flex min-h-0 flex-1 gap-3">
+        {/* ── Left: running-agent rail (icon-only) ── */}
+        <aside className="flex w-14 shrink-0 flex-col items-center gap-1.5 rounded-lg border border-border bg-card py-2.5">
+          <button
+            type="button"
+            onClick={handleRefreshStatus}
+            title={t.refreshStatus}
+            className="mb-1 flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {isRefreshing ? (
+              <Spinner className="size-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="size-3.5" />
+            )}
+          </button>
+          <div className="h-px w-6 bg-border" />
+          {runningAgents.length === 0 ? (
+            <p className="mt-4 px-1 text-center text-[11px] leading-tight line-clamp-2 text-muted-foreground/50">
+              {t.workspaceNoRunningAgents}
+            </p>
           ) : (
-            <RefreshCw className="size-3.5" />
+            runningAgents.map((app) => {
+              const active = app.appId === currentAgentId;
+              return (
+                <button
+                  key={app.appId}
+                  type="button"
+                  onClick={() => selectAgent(app.appId, app.port ?? 0)}
+                  title={`${app.displayName} :${app.port}`}
+                  className={`relative flex size-9 items-center justify-center rounded-lg transition-all duration-base ${
+                    active
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                >
+                  <AppMark appId={app.appId} size={18} />
+                  {active && (
+                    <span className="absolute -left-2 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })
           )}
-        </button>
-        <div className="h-px w-6 bg-border" />
-        {runningAgents.length === 0 ? (
-          <p className="mt-4 px-1 text-center text-[10px] leading-tight line-clamp-2 text-muted-foreground/50">
-            {t.workspaceNoRunningAgents}
-          </p>
-        ) : (
-          runningAgents.map((app) => {
-            const active = app.appId === currentAgentId;
-            return (
+        </aside>
+
+        {/* ── Center: preview (dominant) ── */}
+        <main className="flex min-w-0 flex-1 flex-col gap-3">
+          {/* Preview toolbar */}
+          <div className="flex h-8 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3">
+            {currentApp ? (
+              <>
+                <AppMark appId={currentApp.appId} size={14} />
+                <span className="text-[12px] font-medium">{currentApp.displayName}</span>
+                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                  :{currentApp.port}
+                </span>
+                {healthReport && (
+                  <>
+                    <span className="h-3.5 w-px bg-border" />
+                    <span
+                      className={`size-1.5 rounded-full ${
+                        healthReport.score >= 80
+                          ? 'bg-cr-success'
+                          : healthReport.score >= 50
+                            ? 'bg-cr-warning'
+                            : 'bg-destructive'
+                      }`}
+                    />
+                    <span className="text-[11px] font-medium tabular-nums">
+                      {healthReport.score}
+                    </span>
+                  </>
+                )}
+              </>
+            ) : (
+              <span className="text-[11px] text-muted-foreground">
+                {t.workspaceSelectAgentHint}
+              </span>
+            )}
+            <div className="ml-auto flex items-center gap-1">
               <button
-                key={app.appId}
                 type="button"
-                onClick={() => selectAgent(app.appId, app.port ?? 0)}
-                title={`${app.displayName} :${app.port}`}
-                className={`relative flex size-9 items-center justify-center rounded-lg transition-all duration-fast ${
-                  active
+                onClick={() => toggleInspectMode()}
+                title={inspectMode ? t.workspaceInspectStop : t.workspaceInspectStart}
+                className={`flex size-7 items-center justify-center rounded-md transition-colors ${
+                  inspectMode
                     ? 'bg-accent text-accent-foreground'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
-                <AppMark appId={app.appId} size={18} />
-                {active && (
-                  <span className="absolute -left-2 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" />
-                )}
+                <Search className="size-3.5" />
               </button>
-            );
-          })
-        )}
-      </aside>
-
-      {/* ── Center: preview (dominant) ── */}
-      <main className="flex min-w-0 flex-1 flex-col gap-2">
-        {/* Preview toolbar */}
-        <div className="flex h-8 shrink-0 items-center gap-2 rounded-lg border border-border bg-card px-3">
-          {currentApp ? (
-            <>
-              <AppMark appId={currentApp.appId} size={14} />
-              <span className="text-[12px] font-medium">{currentApp.displayName}</span>
-              <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
-                :{currentApp.port}
-              </span>
-              {healthReport && (
-                <>
-                  <span className="h-3.5 w-px bg-border" />
-                  <span
-                    className={`size-1.5 rounded-full ${
-                      healthReport.score >= 80
-                        ? 'bg-cr-success'
-                        : healthReport.score >= 50
-                          ? 'bg-cr-warning'
-                          : 'bg-destructive'
-                    }`}
-                  />
-                  <span className="text-[11px] font-medium tabular-nums">{healthReport.score}</span>
-                </>
-              )}
-            </>
-          ) : (
-            <span className="text-[11px] text-muted-foreground">{t.workspaceSelectAgentHint}</span>
-          )}
-          <div className="ml-auto flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => toggleInspectMode()}
-              title={inspectMode ? t.workspaceInspectStop : t.workspaceInspectStart}
-              className={`flex size-7 items-center justify-center rounded-md transition-colors ${
-                inspectMode
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-              }`}
-            >
-              <Search className="size-3.5" />
-            </button>
+            </div>
           </div>
-        </div>
 
-        {/* Preview surface */}
-        <div className="min-h-0 flex-1">
-          {currentAgentId === null ? (
-            <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border">
-              <p className="text-[12px] text-muted-foreground">{t.workspaceSelectAgentHint}</p>
-            </div>
-          ) : (
-            <AgentLivePreview
-              agentId={currentAgentId}
-              overrides={currentOverrides}
-              t={t}
-              dualPreview={dualPreviewActive}
-              inspectMode={inspectMode}
-              onElementPicked={handleElementPicked}
-            />
-          )}
-        </div>
-      </main>
-
-      {/* ── Right: tweak panel ── */}
-      <aside className="flex w-[300px] shrink-0 flex-col gap-2 overflow-y-auto rounded-lg border border-border bg-card p-3">
-        <div className="flex items-center justify-between">
-          <span className="as-section-title">{t.workspaceTweakControls}</span>
-          <div className="flex items-center gap-0.5">
-            <Button
-              type="button"
-              size="icon-sm"
-              variant="ghost"
-              disabled={!canUndo()}
-              onClick={() => void undo()}
-              title="Ctrl+Z"
-            >
-              <Undo2 className="size-3.5" />
-            </Button>
-            <Button
-              type="button"
-              size="icon-sm"
-              variant="ghost"
-              disabled={!canRedo()}
-              onClick={() => void redo()}
-              title="Ctrl+Shift+Z"
-            >
-              <Redo2 className="size-3.5" />
-            </Button>
-          </div>
-        </div>
-
-        {pushError && (
-          <ErrorBanner
-            message={pushError}
-            label={t.workspacePushFailed ?? PUSH_FAILED_FALLBACK}
-            onDismiss={clearPushError}
-            dismissLabel={t.commonDismiss ?? '关闭'}
-          />
-        )}
-
-        {currentAgentId !== null && (
-          <TweakPanel
-            overrides={currentOverrides}
-            onChange={(next) => {
-              for (const [k, v] of Object.entries(next)) {
-                if (currentOverrides[k as keyof ToolOverride] !== v) {
-                  void updateOverride(k as keyof ToolOverride, v);
-                  return;
-                }
-              }
-            }}
-            t={t}
-            highlightedField={highlightedField}
-          />
-        )}
-
-        {/* Actions */}
-        {currentAgentId !== null && (
-          <div className="mt-auto flex flex-col gap-2 border-t border-border pt-3">
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="primary"
-                className="flex-1"
-                disabled={!dirty}
-                onClick={() => void saveChanges()}
-              >
-                {t.workspaceSavePreset}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                disabled={!dirty}
-                onClick={() => void discardChanges()}
-              >
-                {t.workspaceDiscardChanges}
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="flex-1"
-                onClick={handleExport}
-                title={t.workspaceExportTooltip}
-              >
-                <Download className="size-3.5" />
-                <span className="text-[11px]">{t.workspaceExport}</span>
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="flex-1"
-                onClick={() => void handleImport()}
-                title={t.workspaceImportTooltip}
-              >
-                <Upload className="size-3.5" />
-                <span className="text-[11px]">{t.workspaceImport}</span>
-              </Button>
-            </div>
-            {importError && (
-              <ErrorBanner
-                message={importError}
-                label={IMPORT_FAILED_FALLBACK}
-                onDismiss={() => setImportError(null)}
-                dismissLabel={t.commonDismiss ?? '关闭'}
+          {/* Preview surface */}
+          <div className="min-h-0 flex-1">
+            {currentAgentId === null ? (
+              <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border">
+                <p className="text-[12px] text-muted-foreground">{t.workspaceSelectAgentHint}</p>
+              </div>
+            ) : (
+              <AgentLivePreview
+                agentId={currentAgentId}
+                overrides={currentOverrides}
+                t={t}
+                dualPreview={dualPreviewActive}
+                inspectMode={inspectMode}
+                onElementPicked={handleElementPicked}
               />
             )}
           </div>
-        )}
-      </aside>
+        </main>
+
+        {/* ── Right: tweak panel ── */}
+        <aside className="flex w-[300px] shrink-0 flex-col gap-3 overflow-y-auto rounded-lg border border-border bg-card p-3">
+          <div className="flex items-center justify-between">
+            <span className="as-section-title">{t.workspaceTweakControls}</span>
+            <div className="flex items-center gap-0.5">
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                disabled={!canUndo()}
+                onClick={() => void undo()}
+                title="Ctrl+Z"
+              >
+                <Undo2 className="size-3.5" />
+              </Button>
+              <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                disabled={!canRedo()}
+                onClick={() => void redo()}
+                title="Ctrl+Shift+Z"
+              >
+                <Redo2 className="size-3.5" />
+              </Button>
+            </div>
+          </div>
+
+          {pushError && (
+            <ErrorBanner
+              message={pushError}
+              label={t.workspacePushFailed ?? PUSH_FAILED_FALLBACK}
+              onDismiss={clearPushError}
+              dismissLabel={t.commonDismiss ?? '关闭'}
+            />
+          )}
+
+          {currentAgentId !== null && (
+            <TweakPanel
+              overrides={currentOverrides}
+              onChange={(next) => {
+                for (const [k, v] of Object.entries(next)) {
+                  if (currentOverrides[k as keyof ToolOverride] !== v) {
+                    void updateOverride(k as keyof ToolOverride, v);
+                    return;
+                  }
+                }
+              }}
+              t={t}
+              highlightedField={highlightedField}
+            />
+          )}
+
+          {/* Actions */}
+          {currentAgentId !== null && (
+            <div className="mt-auto flex flex-col gap-2 border-t border-border pt-3">
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="primary"
+                  className="flex-1"
+                  disabled={!dirty}
+                  onClick={() => void saveChanges()}
+                >
+                  {t.workspaceSavePreset}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={!dirty}
+                  onClick={() => void discardChanges()}
+                >
+                  {t.workspaceDiscardChanges}
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleExport}
+                  title={t.workspaceExportTooltip}
+                >
+                  <Download className="size-3.5" />
+                  <span>{t.workspaceExport}</span>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => void handleImport()}
+                  title={t.workspaceImportTooltip}
+                >
+                  <Upload className="size-3.5" />
+                  <span>{t.workspaceImport}</span>
+                </Button>
+              </div>
+              {importError && (
+                <ErrorBanner
+                  message={importError}
+                  label={IMPORT_FAILED_FALLBACK}
+                  onDismiss={() => setImportError(null)}
+                  dismissLabel={t.commonDismiss ?? '关闭'}
+                />
+              )}
+            </div>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

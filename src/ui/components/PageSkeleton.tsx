@@ -37,7 +37,7 @@ export function PageSkeleton() {
         {skeletonCardIds.map((id) => (
           <div
             key={id}
-            className="flex flex-col gap-2.5 rounded-lg border border-border bg-card p-2.5"
+            className="flex flex-col gap-2.5 rounded-lg border border-border bg-card p-2.5 transition-colors duration-base hover:border-border-strong"
           >
             <Skeleton className="aspect-[16/9] w-full rounded-lg" />
             <Skeleton className="h-3.5 w-3/4" />

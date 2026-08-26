@@ -397,7 +397,111 @@
   }
   ::selection {
     background: rgba(var(--brand-rgb), 0.25);
-    color: var(--foreground);
+  }
+
+  /* Particle system keyframes — GPU-friendly (transform + opacity only) */
+  @keyframes ps-rain {
+    0% {
+      transform: translateY(-100vh) scaleY(1);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) scaleY(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes ps-float {
+    0% {
+      transform: translateY(-10vh) translateX(0) scale(0.5);
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+      transform: translateY(0) translateX(0) scale(1);
+    }
+    85% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(100vh) translateX(40px) scale(0.3);
+      opacity: 0;
+    }
+  }
+
+  @keyframes ps-sway {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(30px);
+    }
+  }
+
+  @keyframes ps-thunder-flash {
+    0%,
+    100% {
+      opacity: 0;
+    }
+    2% {
+      opacity: 0.35;
+    }
+    4% {
+      opacity: 0;
+    }
+    6% {
+      opacity: 0.25;
+    }
+    8% {
+      opacity: 0;
+    }
+  }
+
+  .ps-particle {
+    will-change: transform, opacity;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .ps-rain {
+    animation-name: ps-rain;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+  }
+
+  .ps-float {
+    animation-name: ps-float;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+  }
+
+  .ps-sway-true {
+    animation-name: ps-float, ps-sway;
+    animation-timing-function: ease-in-out, ease-in-out;
+    animation-iteration-count: infinite, infinite;
+  }
+
+  .ps-flash {
+    background: rgba(255, 255, 255, 0.15);
+    animation: ps-thunder-flash 8s ease-in-out infinite;
+  }
+
+  /* Respect reduced motion for particles */
+  @media (prefers-reduced-motion: reduce) {
+    .ps-overlay {
+      display: none !important;
+    }
+  }
+
+  body.no-anim .ps-overlay {
+    display: none !important;
   }
 }
 
@@ -436,17 +540,19 @@
 @keyframes page-fade-in {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.998);
+    transform: translateY(12px) scale(0.996);
+    filter: blur(4px);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
 .page-enter {
   animation: page-fade-in var(--duration-slow) cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, transform;
+  will-change: opacity, transform, filter;
 }
 
 /* =================================================================== */
@@ -649,19 +755,23 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-elev1);
+    transition:
+      transform var(--duration-base) cubic-bezier(0.16, 1, 0.3, 1),
+      border-color var(--duration-base) ease,
+      box-shadow var(--duration-base) ease;
   }
 
   /* ---- Subtle hover lift for interactive cards ---- */
   .as-card-hover {
     transition:
-      transform var(--duration-fast) ease,
-      border-color var(--duration-fast) ease,
-      box-shadow var(--duration-fast) ease;
+      transform var(--duration-base) cubic-bezier(0.16, 1, 0.3, 1),
+      border-color var(--duration-base) ease,
+      box-shadow var(--duration-base) ease;
   }
   .as-card-hover:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     border-color: var(--border-strong);
-    box-shadow: var(--shadow-elev2);
+    box-shadow: var(--shadow-elev3);
   }
 
   /* ---- Brand accent line: thin gradient bar for active states ---- */
@@ -671,6 +781,188 @@
       rgba(var(--brand-rgb), 0.8),
       rgba(var(--brand-rgb), 0.3)
     );
+  }
+
+  /* ---- Brand gradient text ---- */
+  .as-brand-text {
+    background: linear-gradient(135deg, var(--foreground) 0%, rgba(var(--brand-rgb), 0.8) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* ---- Brand glow box ---- */
+  .as-glow {
+    box-shadow:
+      0 0 0 1px rgba(var(--brand-rgb), 0.12),
+      0 0 20px rgba(var(--brand-rgb), 0.08);
+  }
+  .as-glow:hover {
+    box-shadow:
+      0 0 0 1px rgba(var(--brand-rgb), 0.2),
+      0 0 28px rgba(var(--brand-rgb), 0.14);
+  }
+
+  /* ---- Glass surface enhanced ---- */
+  .as-glass-strong {
+    background: color-mix(in srgb, var(--surface) 80%, transparent);
+    backdrop-filter: blur(28px) saturate(1.6);
+    -webkit-backdrop-filter: blur(28px) saturate(1.6);
+  }
+
+  /* ---- Card shine sweep (hover) ---- */
+  .as-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .as-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.04) 48%,
+      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.04) 52%,
+      transparent 70%
+    );
+    background-size: 300% 100%;
+    background-position: 150% 0;
+    transition: background-position var(--duration-slower) ease;
+    pointer-events: none;
+  }
+  .as-shine:hover::after {
+    background-position: -150% 0;
+  }
+
+  /* ---- Breathing pulse for empty states and placeholders ---- */
+  @keyframes as-breathe {
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.05);
+    }
+  }
+  .as-breathe {
+    animation: as-breathe 3s ease-in-out infinite;
+  }
+
+  /* ---- Slide-up enter (for detail panels and drawers) ---- */
+  @keyframes as-slide-up-enter {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .as-slide-up-enter {
+    animation: as-slide-up-enter var(--duration-slow) cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+  }
+
+  /* ---- Toast enter/exit ---- */
+  @keyframes as-toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @keyframes as-toast-out {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+      pointer-events: none;
+    }
+  }
+  .as-toast-enter {
+    animation: as-toast-in var(--duration-slow) cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .as-toast-exit {
+    animation: as-toast-out var(--duration-base) ease-in forwards;
+  }
+
+  /* ---- Particle overlay (floating ambient particles) ---- */
+  @keyframes as-particle-float {
+    0%,
+    100% {
+      transform: translateY(0) translateX(0);
+    }
+    25% {
+      transform: translateY(-20px) translateX(10px);
+    }
+    50% {
+      transform: translateY(-10px) translateX(-15px);
+    }
+    75% {
+      transform: translateY(-25px) translateX(5px);
+    }
+  }
+  @keyframes as-particle-rain {
+    0% {
+      transform: translateY(-10vh) translateX(0);
+    }
+    100% {
+      transform: translateY(110vh) translateX(2px);
+    }
+  }
+  @keyframes as-particle-sway {
+    0%,
+    100% {
+      transform: translateY(0) translateX(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-15px) translateX(10px) rotate(15deg);
+    }
+  }
+  @keyframes as-particle-flash {
+    0%,
+    92%,
+    100% {
+      opacity: 0;
+    }
+    94%,
+    98% {
+      opacity: 0.4;
+    }
+  }
+  .as-particle {
+    will-change: transform, opacity;
+  }
+  .as-float {
+    animation: as-particle-float linear infinite;
+  }
+  .as-rain {
+    animation: as-particle-rain linear infinite;
+  }
+  .as-sway {
+    animation: as-particle-sway ease-in-out infinite;
+  }
+  .as-flash {
+    animation: as-particle-flash 8s ease-in-out infinite;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .as-particle,
+    .as-flash {
+      animation: none;
+    }
   }
 }
 
@@ -684,6 +976,80 @@ body {
 
 #root {
   height: 100%;
+}
+
+/* =================================================================== */
+/* Global Focus-Visible & Micro-interactions                            */
+/* =================================================================== */
+
+/* Unified focus-visible ring — applies to all interactive elements.
+   Uses var(--ring) so the brand color drives the focus indicator,
+   with a subtle outer glow for depth. */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+  border-radius: var(--radius-sm);
+}
+
+/* Remove focus ring for mouse-only clicks (:focus) vs keyboard (:focus-visible) */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Page enter animation — cross-fade + slight upward slide.
+   Triggered by the `key={route}` on the page container in App.tsx. */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-enter {
+  animation: page-enter var(--duration-base) cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Card hover micro-interaction — subtle lift + border glow.
+   Applied via .as-card-hover utility class on interactive cards. */
+.as-card-hover {
+  transition:
+    transform var(--duration-base) cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow var(--duration-base) ease-out,
+    border-color var(--duration-base) ease-out;
+}
+.as-card-hover:hover {
+  transform: translateY(-2px);
+}
+.as-card-hover:active {
+  transform: translateY(0);
+}
+
+/* Active scale — for buttons and interactive elements.
+   Complements the Button's active:scale-[0.97] with a CSS-level fallback. */
+.as-pressable:active {
+  transform: scale(0.97);
+}
+
+/* Reduced motion — disable all non-essential animations. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .page-enter,
+  .as-card-hover,
+  .as-pressable:active {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
 }
 
 /* Input focus */

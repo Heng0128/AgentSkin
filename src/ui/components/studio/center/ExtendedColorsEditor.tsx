@@ -75,7 +75,7 @@ function OklchSlider({
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="w-16 shrink-0 text-[10px] text-muted-foreground">{label}</span>
+      <span className="w-16 shrink-0 text-[11px] text-muted-foreground">{label}</span>
       <input
         type="range"
         min={min}
@@ -86,7 +86,7 @@ function OklchSlider({
         className="h-1 flex-1 cursor-pointer appearance-none rounded-md bg-card accent-primary"
         aria-label={label}
       />
-      <span className="w-12 shrink-0 text-right font-mono text-[10px] tabular-nums text-muted-foreground/40">
+      <span className="w-12 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground/40">
         {value}
         {unit}
       </span>
@@ -186,7 +186,7 @@ export function ExtendedColorsEditor({
         <h3 className="text-[11px] font-normal text-foreground">
           {t.studioExtColors ?? 'Extended Colors'}
         </h3>
-        <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
           {t.studioExtColorsDesc ??
             'Semantic color tokens (error, success, warning, info, glow…) with WCAG contrast and OKLCH adjustment.'}
         </p>
@@ -194,7 +194,7 @@ export function ExtendedColorsEditor({
 
       {/* ── Add new color ─────────────────────────────────────────────── */}
       <div className="mt-4 rounded-md border border-border bg-card p-4">
-        <h4 className="text-[10px] font-normal text-foreground">
+        <h4 className="text-[11px] font-normal text-foreground">
           {t.studioExtAddColor ?? 'Add Color'}
         </h4>
 
@@ -205,7 +205,7 @@ export function ExtendedColorsEditor({
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder={t.studioExtNamePlaceholder ?? 'color name'}
-            className="h-7 w-32 rounded-md border border-border bg-surface px-2 font-mono text-[10px] text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
+            className="h-7 w-32 rounded-md border border-border bg-surface px-2 font-mono text-[11px] text-foreground placeholder:text-muted-foreground/40 focus:border-primary focus:outline-none"
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleAdd();
             }}
@@ -221,7 +221,7 @@ export function ExtendedColorsEditor({
           />
 
           {/* Hex readout */}
-          <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
+          <span className="font-mono text-[11px] tabular-nums text-muted-foreground/40">
             {newHex}
           </span>
 
@@ -238,7 +238,7 @@ export function ExtendedColorsEditor({
 
         {/* Preset buttons */}
         <div className="mt-2 flex items-center gap-2">
-          <span className="text-[10px] text-muted-foreground/40">
+          <span className="text-[11px] text-muted-foreground/40">
             {t.studioExtPresets ?? 'Presets:'}
           </span>
           {PRESETS.map((p) => {
@@ -249,7 +249,7 @@ export function ExtendedColorsEditor({
                 type="button"
                 onClick={() => handlePreset(p.name, p.hex)}
                 disabled={disabled}
-                className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:border-muted-foreground/40 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:border-muted-foreground/40 disabled:cursor-not-allowed disabled:opacity-40"
                 title={`${p.name} — ${p.hex}`}
               >
                 <span
@@ -266,13 +266,13 @@ export function ExtendedColorsEditor({
 
       {/* ── Existing colors list ──────────────────────────────────────── */}
       <div className="mt-4 flex-1 overflow-y-auto rounded-md border border-border bg-card p-4">
-        <h4 className="text-[10px] font-normal text-foreground">
+        <h4 className="text-[11px] font-normal text-foreground">
           {t.studioExtCurrent ?? 'Current Colors'} ({entries.length})
         </h4>
 
         {entries.length === 0 ? (
           <div className="mt-4 rounded-md border border-dashed border-border p-6 text-center">
-            <p className="text-[10px] text-muted-foreground/40">
+            <p className="text-[11px] text-muted-foreground/40">
               {t.studioExtEmpty ?? 'No extended colors yet. Add one above.'}
             </p>
           </div>
@@ -295,7 +295,7 @@ export function ExtendedColorsEditor({
                   <button
                     type="button"
                     onClick={() => handleColorRowClick(name)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border font-mono text-[10px] font-normal"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border font-mono text-[11px] font-normal"
                     style={{ backgroundColor: hex, color: onColor }}
                     title={`${name} — ${hex}`}
                   >
@@ -304,10 +304,10 @@ export function ExtendedColorsEditor({
 
                   {/* Name + hex */}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-[10px] font-normal text-foreground">
+                    <div className="truncate font-mono text-[11px] font-normal text-foreground">
                       {name}
                     </div>
-                    <div className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
+                    <div className="font-mono text-[11px] tabular-nums text-muted-foreground/40">
                       {hex}
                     </div>
                   </div>
@@ -336,7 +336,7 @@ export function ExtendedColorsEditor({
       {selectedName && selectedHex && (
         <div className="mt-4 rounded-md border border-border bg-card p-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-[10px] font-normal text-foreground">
+            <h4 className="text-[11px] font-normal text-foreground">
               {t.studioExtOklch ?? 'OKLCH Adjust'} — {selectedName}
             </h4>
             <button
@@ -396,7 +396,7 @@ export function ExtendedColorsEditor({
           </div>
 
           {/* WCAG summary for the selected color */}
-          <div className="mt-3 flex items-center gap-3 font-mono text-[10px] text-muted-foreground">
+          <div className="mt-3 flex items-center gap-3 font-mono text-[11px] text-muted-foreground">
             <span>{t.studioExtContrast ?? 'Contrast:'}</span>
             <ContrastBadge
               fgHex={autoOnColor(colors[selectedName])}

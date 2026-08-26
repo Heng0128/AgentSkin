@@ -1,259 +1,548 @@
-/* Miku Future Beats · TRAE SOLO (solo-lite shell)
-   Deep adaptation: override the shell's --vscode-* design tokens (the app
-   defines them on plain `body` selectors inside style tags, so the host-class
-   scope below always outranks them), then layer texture, hero, and ♫
-   decorations on stable solo-lite surfaces. */
-
-html.agentskin-host-traework body {
-  --agentskin-bg: #fbfdff;
-  --agentskin-surface: #eefbff;
-  --agentskin-surface-elevated: #eafbfc;
+/* 初音未来 · Future Beats — TRAE Work CN (solo-lite shell)
+   Strategy: override --vscode-* / --vscode-icube-* design tokens (the app
+   declares them on plain `body` selectors; our host-scoped body rule at
+   specificity (0,1,2) always outranks them), then layer hero art + structural
+   touches on stable solo-lite landmarks. */
+html.agentskin-host-traework {
+  color-scheme: light !important;
+  --agentskin-accent: #0d9aa0;
   --agentskin-secondary: #74dce4;
-  --agentskin-code-bg: #eefbff;
-  --agentskin-code-fg: #163f4b;
-  --agentskin-focus-ring: rgba(22, 191, 196, .6);
-  --agentskin-selection: rgba(22, 191, 196, 0.2);
-  --agentskin-button-bg: #16bfc4;
-  --agentskin-input-bg: #f7fdff;
-  color-scheme: light;
-
+  --agentskin-bg: #f0f8fa;
+  --agentskin-surface: #ffffff;
+  --agentskin-surface-elevated: #ffffff;
   --agentskin-text: #163f4b;
   --agentskin-muted: #557480;
-  --agentskin-accent: #16bfc4;
-  --agentskin-accent-deep: #087b86;
-  --agentskin-accent-secondary: #ff8fc8;
-  --agentskin-accent-tertiary: #9f92f8;
-  --agentskin-border: rgba(22, 191, 196, .24);
-  --agentskin-shadow: rgba(12, 105, 119, .12);
+  --agentskin-border: rgba(13, 154, 160, .24);
+  --agentskin-code-bg: #eefbff;
+  --agentskin-code-fg: #163f4b;
+  --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #ffffff 82%, #0d9aa0 18%) 45%, transparent);
+  --agentskin-button-bg: #0d9aa0;
+  --agentskin-button-fg: #ffffff;
+  --agentskin-focus-ring: rgba(13, 154, 160, .6);
+  --agentskin-selection: color-mix(in srgb, #0d9aa0 32%, transparent);
+  --agentskin-text-shadow: 0 1px 2px rgba(255,255,255,0.6);
+  text-shadow: var(--agentskin-text-shadow);
+}
 
-  /* Ink */
-  --vscode-foreground: #163f4b;
-  --vscode-icube-colorDefaultText: #163f4b;
-  --vscode-icube--text-text-default: #163f4b;
-  --vscode-icube-colorHighlightText: #0e2f38;
-  --vscode-descriptionForeground: #557480;
-  --vscode-icube-colorGrayText: #557480;
-  --vscode-icube-colorDisableText: #8aa6ad;
+/* ---- design token override (global restyle via app's own variable system) ---- */
+html.agentskin-host-traework body {
+  /* color-scheme 已在 tokenBlock() 中声明 (:root 级)，此处删除以避免重复 */
 
-  /* Brand and links */
-  --vscode-textLink-foreground: #0e9ba1;
-  --vscode-textLink-activeForeground: #12a9ae;
-  --vscode-button-background: #16bfc4;
-  --vscode-button-foreground: #ffffff;
-  --vscode-icube-colorBrand: #0e9ba1;
-  --vscode-focusBorder: rgba(22, 191, 196, .6);
+  /* Ink / text */
+  --vscode-foreground: #163f4b !important;
+  --vscode-icube-colorDefaultText: #163f4b !important;
+  --vscode-icube--text-text-default: #163f4b !important;
+  --vscode-icube-colorHighlightText: #163f4b !important;
+  --vscode-descriptionForeground: #557480 !important;
+  --vscode-icube-colorGrayText: #557480 !important;
+  --vscode-icube-colorDisableText: rgba(22, 63, 75, 0.42) !important;
 
-  /* Lines */
-  --vscode-icube-colorLine1: rgba(22, 191, 196, .14);
-  --vscode-icube-colorLine2: rgba(22, 191, 196, .28);
-  --vscode-icube--border-border-neutral-l1: rgba(22, 191, 196, .14);
-  --vscode-chat-requestBorder: rgba(22, 191, 196, .25);
+  /* Brand / links / buttons */
+  --vscode-textLink-foreground: #0d9aa0 !important;
+  --vscode-textLink-activeForeground: #74dce4 !important;
+  --vscode-button-background: #0d9aa0 !important;
+  --vscode-button-foreground: #ffffff !important;
+  --vscode-button-hoverBackground: rgba(13, 154, 160, 0.85) !important;
+  --vscode-icube-colorBrand: #0d9aa0 !important;
+  --vscode-focusBorder: rgba(13, 154, 160, 0.6) !important;
 
-  /* Fills and hovers */
-  --vscode-toolbar-hoverBackground: rgba(22, 191, 196, .12);
-  --vscode-icube-colorBtnHover: rgba(22, 191, 196, .12);
-  --vscode-icube-colorBtnHover2: rgba(22, 191, 196, .18);
-  --vscode-list-hoverBackground: rgba(22, 191, 196, .12);
-  --vscode-icube--bg-bg-overlay-l2: rgba(22, 191, 196, .12);
-  --vscode-icube--bg-bg-overlay-l3: rgba(22, 191, 196, .18);
-  --vscode-input-background: rgba(22, 191, 196, .07);
+  /* Lines / borders */
+  --vscode-icube-colorLine1: rgba(13, 154, 160, 0.18) !important;
+  --vscode-icube-colorLine2: rgba(13, 154, 160, 0.32) !important;
+  --vscode-icube--border-border-neutral-l1: rgba(13, 154, 160, 0.18) !important;
+  --vscode-chat-requestBorder: rgba(13, 154, 160, 0.25) !important;
+  --vscode-widget-border: rgba(13, 154, 160, 0.18) !important;
+  --vscode-panel-border: rgba(13, 154, 160, 0.18) !important;
+
+  /* Fills / hovers */
+  --vscode-toolbar-hoverBackground: rgba(13, 154, 160, 0.12) !important;
+  --vscode-icube-colorBtnHover: rgba(13, 154, 160, 0.12) !important;
+  --vscode-icube-colorBtnHover2: rgba(13, 154, 160, 0.18) !important;
+  --vscode-list-hoverBackground: rgba(13, 154, 160, 0.12) !important;
+  --vscode-list-activeSelectionBackground: rgba(13, 154, 160, 0.18) !important;
+  --vscode-icube--bg-bg-overlay-l2: rgba(13, 154, 160, 0.12) !important;
+  --vscode-icube--bg-bg-overlay-l3: rgba(13, 154, 160, 0.18) !important;
+  --vscode-input-background: rgba(13, 154, 160, 0.07) !important;
 
   /* Surfaces */
-  --vscode-editor-background: #fbfeff;
-  --vscode-icube-colorBg1: #fbfeff;
-  --vscode-icube-colorBg2: #e6f6f9;
-  --vscode-icube-colorBg3: #fbfeff;
-  --vscode-editorWidget-background: #f0fafc;
-  --vscode-widget-shadow: rgba(12, 105, 119, .15);
-  --vscode-badge-background: #a5e3e6;
-}
+  --vscode-editor-background: #f0f8fa !important;
+  --vscode-icube-colorBg1: #f0f8fa !important;
+  --vscode-icube-colorBg2: #ffffff !important;
+  --vscode-icube-colorBg3: #ffffff !important;
+  --vscode-editorWidget-background: #ffffff !important;
+  --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-widget-shadow: rgba(13, 154, 160, 0.15) !important;
+  --vscode-badge-background: rgba(13, 154, 160, 0.65) !important;
+  --vscode-badge-foreground: #ffffff !important;
+  --vscode-scrollbarSlider-background: rgba(13, 154, 160, 0.22) !important;
+  --vscode-scrollbarSlider-hoverBackground: rgba(13, 154, 160, 0.38) !important;
+  --vscode-scrollbarSlider-activeBackground: rgba(13, 154, 160, 0.52) !important;
 
-/* ---- application shell and background ---------------------------------- */
+  /* App-level surface variables → transparent for art punch-through */
+  --bg-bg-base-default: transparent !important;
 
-html.agentskin-host-traework body.solo-lite {
-  background:
-    linear-gradient(135deg, rgba(247, 253, 255, .80), rgba(230, 248, 251, .86) 48%, rgba(249, 239, 255, .84)),
-    var(--codedrobe-image-texture) center / 560px auto repeat !important;
+  /* Selection (camelCase is the real token; kebab is dead — 0 refs in app source) */
+  --vscode-editor-selectionBackground: rgba(13, 154, 160, 0.18) !important;
+
+  /* ===== icube blind-spot completion (2026-08-19) =====
+     GitLab对标 l77948032-cyber/Trae-Skin: 41/50 blind-spot tokens verified live
+     on 58510 (icube text/bg/icon/invert + menu/dropdown/checkbox/input). */
+  /* Input */
+  --vscode-input-foreground: #163f4b !important;
+  --vscode-input-placeholderForeground: rgba(22, 63, 75, 0.48) !important;
+  --vscode-disabledForeground: rgba(22, 63, 75, 0.42) !important;
+
+  /* icube text system */
+  --vscode-icube-colorTextDefault: #163f4b !important;
+  --vscode-icube-colorTextGray: #557480 !important;
+  --vscode-icube--text-text-secondary: #557480 !important;
+  --vscode-icube--text-text-brand: #0d9aa0 !important;
+  --vscode-icube--text-text-default-hover: #163f4b !important;
+  --vscode-icube--text-text-default-active: #163f4b !important;
+  --vscode-icube--text-text-tertiary: rgba(85, 116, 128, 0.7) !important;
+  --vscode-icube--text-text-disabled: rgba(22, 63, 75, 0.42) !important;
+  --vscode-icube--text-text-onaccent: #f0f8fa !important;
+
+  /* icube backgrounds */
+  --vscode-icube--bg-bg-base-default: transparent !important;
+  --vscode-icube--bg-bg-base-secondary: color-mix(in srgb, #ffffff 88%, transparent) !important;
+  --vscode-icube--bg-bg-base-tertiary: color-mix(in srgb, #ffffff 85%, transparent) !important;
+  --vscode-icube--bg-bg-menu: color-mix(in srgb, #ffffff 92%, transparent) !important;
+  --vscode-icube--bg-bg-tooltip: color-mix(in srgb, #ffffff 94%, transparent) !important;
+  --vscode-icube--bg-bg-overlay-l4: color-mix(in srgb, #ffffff 78%, transparent) !important;
+  --vscode-icube--bg-bg-invert: #ffffff !important;
+  --vscode-icube--bg-bg-invert-hover: rgba(13, 154, 160, 0.12) !important;
+  --vscode-icube--bg-bg-invert-active: rgba(13, 154, 160, 0.18) !important;
+  --vscode-icube--bg-bg-invert-disabled: rgba(22, 63, 75, 0.04) !important;
+
+  /* icube icons */
+  --vscode-icube--icon-icon-default: #163f4b !important;
+  --vscode-icube--icon-icon-default-hover: #0d9aa0 !important;
+  --vscode-icube--icon-icon-secondary: #557480 !important;
+  --vscode-icube--icon-icon-tertiary: rgba(85, 116, 128, 0.7) !important;
+  --vscode-icube--icon-icon-disabled: rgba(22, 63, 75, 0.42) !important;
+  --vscode-icube--icon-icon-onaccent: #f0f8fa !important;
+
+  /* icube borders */
+  --vscode-icube--border-border-neutral-l2: rgba(13, 154, 160, 0.24) !important;
+  --vscode-icube--border-border-neutral-l3: rgba(13, 154, 160, 0.32) !important;
+
+  /* Menu / dropdown / checkbox / list (VS Code workbench chrome) */
+  --vscode-menu-background: color-mix(in srgb, #ffffff 92%, transparent) !important;
+  --vscode-menu-foreground: #163f4b !important;
+  --vscode-menu-border: rgba(13, 154, 160, 0.18) !important;
+  --vscode-menu-separatorBackground: rgba(13, 154, 160, 0.1) !important;
+  --vscode-dropdown-background: color-mix(in srgb, #ffffff 94%, transparent) !important;
+  --vscode-dropdown-foreground: #163f4b !important;
+  --vscode-dropdown-border: rgba(13, 154, 160, 0.18) !important;
+  --vscode-checkbox-background: color-mix(in srgb, #ffffff 90%, transparent) !important;
+  --vscode-checkbox-foreground: #163f4b !important;
+  --vscode-checkbox-border: rgba(13, 154, 160, 0.24) !important;
+  --vscode-list-activeSelectionForeground: #163f4b !important;
+
+  /* ===== Bare-prefix mirror (2026-08-19) =====
+     Same families exist bare (--bg-bg-*/--text-text-*/--icon-icon-*),
+     verified 25/25 native on 58510. Mirror icube mappings 1:1. */
+  --bg-bg-base-tertiary: color-mix(in srgb, #ffffff 85%, transparent) !important;
+  --bg-bg-menu: color-mix(in srgb, #ffffff 92%, transparent) !important;
+  --bg-bg-tooltip: color-mix(in srgb, #ffffff 94%, transparent) !important;
+  --bg-bg-overlay-l3: color-mix(in srgb, #ffffff 78%, transparent) !important;
+  --bg-bg-overlay-l4: color-mix(in srgb, #ffffff 82%, transparent) !important;
+  --bg-bg-brand: #0d9aa0 !important;
+  --bg-bg-brand-hover: color-mix(in srgb, #0d9aa0 88%, white) !important;
+  --bg-bg-brand-active: color-mix(in srgb, #0d9aa0 76%, black) !important;
+  --bg-bg-brand-disabled: rgba(13, 154, 160, 0.35) !important;
+  --bg-bg-invert: #ffffff !important;
+  --bg-bg-invert-hover: rgba(13, 154, 160, 0.12) !important;
+  --bg-bg-invert-active: rgba(13, 154, 160, 0.18) !important;
+  --bg-bg-invert-disabled: rgba(22, 63, 75, 0.04) !important;
+
+  --text-text-default: #163f4b !important;
+  --text-text-secondary: #557480 !important;
+  --text-text-tertiary: rgba(85, 116, 128, 0.7) !important;
+  --text-text-default-hover: #163f4b !important;
+  --text-text-default-active: #163f4b !important;
+  --text-text-brand: #0d9aa0 !important;
+
+  --icon-icon-default: #163f4b !important;
+  --icon-icon-secondary: #557480 !important;
+  --icon-icon-tertiary: rgba(85, 116, 128, 0.7) !important;
+  --icon-icon-default-hover: #0d9aa0 !important;
+  --icon-icon-onaccent: #f0f8fa !important;
+  --icon-icon-disabled: rgba(22, 63, 75, 0.42) !important;
+
+  background: transparent !important;
   color: var(--agentskin-text) !important;
 }
 
-/* ---- sidebar ------------------------------------------------------------ */
+/* VS Code shell re-declares tokens on .monaco-workbench — override there too */
+html.agentskin-host-traework .monaco-workbench {
+  --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  --vscode-editor-background: transparent !important;
+  --vscode-panel-background: transparent !important;
+  --vscode-activityBar-background: color-mix(in srgb, var(--agentskin-surface) 12%, transparent) !important;
+  --vscode-statusBar-background: color-mix(in srgb, var(--agentskin-surface) 10%, transparent) !important;
+  --vscode-titleBar-activeBackground: color-mix(in srgb, var(--agentskin-surface) 8%, transparent) !important;
+  --vscode-titleBar-inactiveBackground: color-mix(in srgb, var(--agentskin-surface) 6%, transparent) !important;
+  background: transparent !important;
+}
 
-html.agentskin-host-traework .task-list-base {
+/* ---- hero art on #root — palette-driven wash, hero visible right side ---- */
+html.agentskin-host-traework #root {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+html.agentskin-host-traework #root::before {
+  content: '' !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: -1 !important;
+  pointer-events: none !important;
   background:
-    linear-gradient(180deg,
-      rgba(247, 253, 255, .55) 0%,
-      rgba(218, 247, 250, .42) 56%,
-      rgba(246, 236, 255, .30) 82%,
-      rgba(255, 236, 247, .18) 100%),
-    var(--codedrobe-image-hero) left calc(100% + 40px) / 130% auto no-repeat,
-    var(--codedrobe-image-texture) center / 460px auto repeat !important;
-  box-shadow: inset -1px 0 var(--agentskin-border) !important;
-}
-
-html.agentskin-host-traework .task-list-heading {
-  color: var(--agentskin-accent-deep) !important;
-  letter-spacing: .04em;
-}
-
-/* ---- workspace cards (home .panel-content + conversation chat panel) ---- */
-
-html.agentskin-host-traework .solo-lite-panel-border {
-  border: 1px solid var(--agentskin-border) !important;
-}
-
-html.agentskin-host-traework .panel-content,
-html.agentskin-host-traework .solo-lite-chat-panel-container {
-  background:
-    linear-gradient(160deg, rgba(251, 254, 255, .96), rgba(236, 250, 252, .94) 55%, rgba(248, 242, 255, .93)),
-    var(--codedrobe-image-texture) center / 760px auto repeat !important;
-  box-shadow: 0 10px 30px var(--agentskin-shadow), inset 0 0 0 1px rgba(255, 255, 255, .65) !important;
-}
-
-/* ---- home hero ---------------------------------------------------------- */
-
-/* Full-height Miku artwork on the right of the home card, fading under the
-   centered welcome copy — the same treatment as the QoderWork home canvas. */
-html.agentskin-host-traework .panel-content:has(.initial-chat-panel) {
-  background-color: #f7fdff !important;
-  background-image:
     linear-gradient(90deg,
-      rgba(247, 253, 255, .97) 0%,
-      rgba(240, 251, 253, .95) 44%,
-      rgba(240, 251, 253, .80) 62%,
-      rgba(243, 240, 255, .38) 82%,
-      rgba(255, 236, 247, .12) 100%),
-    var(--codedrobe-image-hero),
-    var(--codedrobe-image-texture) !important;
-  background-repeat: no-repeat, no-repeat, repeat !important;
-  background-size: 100% 100%, auto 112%, 560px auto !important;
-  background-position: center, right -36px center, center !important;
+      color-mix(in srgb, var(--agentskin-surface) 42%, transparent) 0 16%,
+      color-mix(in srgb, var(--agentskin-surface) 14%, transparent) 44%,
+      transparent 70%),
+    linear-gradient(180deg, transparent 0 50%,
+      color-mix(in srgb, var(--agentskin-surface) 38%, transparent) 86% 100%),
+    radial-gradient(120% 80% at 84% 14%,
+      color-mix(in srgb, var(--agentskin-secondary) 24%, transparent), transparent 60%),
+    var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 
-html.agentskin-host-traework .initial-chat-panel {
-  position: relative !important;
+/* ---- route surfaces + inner containers transparent for art punch-through ----
+   PROBE 2026-08-23 (live TRAE): .panel-container (1139x856) is the main
+   column; .solo-lite-layout / .solo-lite-chat-panel-container were 0-hit
+   (dead selectors, removed). [class*="conversation"]/workspace kept only as
+   conservative transparency fallbacks (host-scoped, harmless). */
+html.agentskin-host-traework .panel-container,
+html.agentskin-host-traework [class*="chat-panel"],
+html.agentskin-host-traework [class*="message-list"],
+html.agentskin-host-traework [class*="conversation"],
+html.agentskin-host-traework [class*="main-content"],
+html.agentskin-host-traework [class*="workspace"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  color: var(--agentskin-text) !important;
 }
 
-html.agentskin-host-traework .initial-chat-panel::after {
-  content: "Miku Future Beats ♫ TRAE SOLO";
-  position: absolute;
-  right: 22px;
-  bottom: 16px;
-  z-index: 2;
-  color: var(--agentskin-accent-deep);
-  font: italic 650 13px/1.2 "Avenir Next", "PingFang SC", sans-serif;
-  letter-spacing: .04em;
-  text-shadow: 0 1px white, 0 0 12px rgba(255, 255, 255, .85);
-  pointer-events: none;
+/* ---- sidebar (frosted glass over art) ---- */
+html.agentskin-host-traework .task-list-base,
+html.agentskin-host-traework .task-list-panel {
+  background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
+  border-right: none !important;
+  color: var(--agentskin-text) !important;
+  backdrop-filter: blur(24px) saturate(1.15) !important;
 }
 
-/* Keep the animated per-mode title, add the Miku tagline underneath. */
-html.agentskin-host-traework .welcomeTitleWrapper::after {
-  content: "和初音未来一起，让灵感、代码与旋律同频闪耀 ♫";
-  display: block;
-  margin-top: 10px;
-  text-align: center;
-  color: var(--agentskin-muted);
-  font: 500 14px/1.6 "Avenir Next", "PingFang SC", sans-serif;
-  letter-spacing: .03em;
+/* PROBE-VERIFIED 2026-08-23: TRAE task rows are div.task-list-new-task-item
+   (exact class; active = trailing "active" class). Scope to the exact
+   task-list-* item classes under the exact containers. */
+html.agentskin-host-traework .task-list-base .task-list-new-task-item,
+html.agentskin-host-traework .task-list-base [class*="task-list-skills-item"],
+html.agentskin-host-traework .task-list-panel .task-list-new-task-item,
+html.agentskin-host-traework .task-list-panel [class*="task-list-skills-item"]:hover {
+  background: rgba(13, 154, 160, 0.12) !important;
 }
 
-/* ---- composer ----------------------------------------------------------- */
-
-html.agentskin-host-traework .messageInputContainer {
-  background:
-    linear-gradient(145deg, rgba(240, 251, 253, .90), rgba(224, 246, 250, .85) 65%, rgba(248, 234, 246, .82)),
-    var(--codedrobe-image-texture) center / 580px auto !important;
+html.agentskin-host-traework .task-list-base .task-list-new-task-item.active,
+html.agentskin-host-traework .task-list-base [class*="task-list-skills-item"].active,
+html.agentskin-host-traework .task-list-panel .task-list-new-task-item.active,
+html.agentskin-host-traework .task-list-panel [class*="task-list-skills-item"].active {
+  background: rgba(13, 154, 160, 0.18) !important;
+  box-shadow: inset 3px 0 0 0 var(--agentskin-accent), inset 0 0 0 1px rgba(13, 154, 160, 0.32) !important;
 }
 
-html.agentskin-host-traework .chat-input-v2-editor-part {
-  border: 1px solid rgba(22, 191, 196, .38) !important;
-  background: linear-gradient(145deg, rgba(252, 255, 255, .98), rgba(238, 251, 253, .96) 65%, rgba(251, 240, 250, .95)) !important;
-  box-shadow: 0 8px 22px rgba(12, 105, 119, .12), inset 0 0 0 3px rgba(255, 255, 255, .56) !important;
+/* ---- welcome/home-page opaque shells ----
+   PROBE 2026-08-23 (live TRAE welcome view): .messageInputContainer
+   (800x171) wraps the input and carries an opaque rgb(38,38,38) base that
+   blocks the art; .cardImage-<hash> showcase cards are the same grey. Punch
+   both through — the inner .chat-input-v2-container still gets its own
+   frosted glass below. */
+html.agentskin-host-traework [class*="messageInputContainer"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+html.agentskin-host-traework [class*="cardImage"] {
+  background: color-mix(in srgb, var(--agentskin-surface) 30%, transparent) !important;
+  border: 1px solid rgba(13, 154, 160, 0.1) !important;
 }
 
-html.agentskin-host-traework .messageInputContainer::before {
-  content: "♫";
-  position: absolute;
-  left: -12px;
-  top: -13px;
-  z-index: 30;
-  width: 27px;
-  height: 27px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  font-size: 14px;
-  color: white;
-  background: linear-gradient(145deg, #ff9dcc, #16bfc4 62%, #9f92f8);
-  box-shadow: 0 4px 12px rgba(12, 105, 119, .19), 0 0 0 3px rgba(255, 255, 255, .74);
-  pointer-events: none;
-}
-
-/* Tilted Miku polaroid peeking over the home composer's top-right corner. */
-html.agentskin-host-traework .initial-chat-panel .messageInputContainer::after {
-  content: "";
-  position: absolute;
-  right: 14px;
-  top: -74px;
-  z-index: 30;
-  width: 74px;
-  height: 92px;
-  border: 6px solid rgba(252, 254, 255, .98);
-  border-bottom-width: 16px;
-  border-radius: 3px;
-  background-image: var(--codedrobe-image-hero);
-  background-repeat: no-repeat;
-  background-size: 290% auto;
-  background-position: 80% 18%;
-  box-shadow: 0 9px 22px rgba(12, 105, 119, .20), 0 0 0 1px rgba(22, 191, 196, .22);
-  transform: rotate(5deg);
-  pointer-events: none;
-}
-
-html.agentskin-host-traework .chat-input-v2-input-box-editable[contenteditable='true'] {
+/* ---- composer ---- */
+html.agentskin-host-traework .chat-input-v2-input-box-editable {
+  background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 45%, transparent) !important;
+  backdrop-filter: blur(14px) saturate(1.1) !important;
   color: var(--agentskin-text) !important;
   caret-color: var(--agentskin-accent) !important;
+  border: 1px solid rgba(13, 154, 160, 0.25) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  transition: border-color 160ms ease, box-shadow 160ms ease !important;
 }
 
-html.agentskin-host-traework .chat-input-v2-send-button {
-  background: linear-gradient(160deg, #ff9dcc, #16bfc4 55%, #9f92f8) !important;
-  box-shadow: 0 4px 12px rgba(12, 105, 119, .28), inset 0 1px rgba(255, 255, 255, .40) !important;
+html.agentskin-host-traework .chat-input-v2-input-box-editable:focus,
+html.agentskin-host-traework .chat-input-v2-input-box-editable:focus-within {
+  border-color: rgba(13, 154, 160, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(13, 154, 160, 0.1), 0 4px 18px rgba(116, 220, 228, 0.12) !important;
 }
 
-html.agentskin-host-traework .chat-input-v2-send-button :is(svg, span) {
-  color: white !important;
+html.agentskin-host-traework [class*="chat-input-v2"] [class*="placeholder"] {
+  color: var(--agentskin-muted) !important;
 }
 
-/* ---- conversation content ----------------------------------------------- */
-
-html.agentskin-host-traework .user-message__text-box {
-  background: linear-gradient(135deg, rgba(214, 247, 250, .75), rgba(249, 236, 248, .70)) !important;
-  border: 1px solid rgba(22, 191, 196, .22) !important;
+/* Input outer container: frosted glass instead of opaque bg-base */
+html.agentskin-host-traework [class*="chat-input-primary-glow"] {
+  background: color-mix(in srgb, color-mix(in srgb, var(--agentskin-surface) 82%, var(--agentskin-accent) 18%) 40%, transparent) !important;
+  backdrop-filter: blur(14px) saturate(1.1) !important;
+  border: 1px solid rgba(13, 154, 160, 0.2) !important;
+  box-shadow: none !important;
 }
 
-/* ---- focus, responsive, reduced motion ---------------------------------- */
-
-html.agentskin-host-traework *:focus-visible {
-  outline-color: rgba(22, 191, 196, .78) !important;
+html.agentskin-host-traework [class*="chat-input-primary-glow"]:focus-within {
+  border-color: rgba(13, 154, 160, 0.45) !important;
+  box-shadow: 0 0 0 2px rgba(13, 154, 160, 0.08), 0 4px 16px rgba(116, 220, 228, 0.1) !important;
 }
 
-@media (max-width: 760px) {
-  html.agentskin-host-traework .initial-chat-panel .messageInputContainer::after,
-  html.agentskin-host-traework .initial-chat-panel::after {
-    display: none;
-  }
-
-  html.agentskin-host-traework .panel-content:has(.initial-chat-panel) {
-    background-image:
-      linear-gradient(90deg, rgba(247, 253, 255, .97), rgba(240, 251, 253, .95)),
-      none,
-      var(--codedrobe-image-texture) !important;
-  }
+/* ---- buttons ---- */
+/* PROBE-VERIFIED 2026-08-23: TRAE buttons are .solo-common-button /
+   .solo-header-btn / .solo-icon-btn (exact BEM). No [class*="primary"] /
+   [class*="send"] classes exist in the DOM. */
+html.agentskin-host-traework .solo-common-button,
+html.agentskin-host-traework .solo-header-btn,
+html.agentskin-host-traework [class*="solo-common-button"] {
+  transition: filter 160ms ease, transform 160ms ease, box-shadow 160ms ease !important;
 }
 
+html.agentskin-host-traework .solo-common-button:hover,
+html.agentskin-host-traework .solo-header-btn:hover {
+  filter: brightness(1.07) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* ---- message text ---- */
+/* PROBE-VERIFIED 2026-08-23: [class*="message"] matched 120 elements
+   (message-icon, message-count, message-list …) — over-broad. Use role-scoped
+   log/status + exact article only. */
+html.agentskin-host-traework [role="log"],
+html.agentskin-host-traework article {
+  color: var(--agentskin-text);
+}
+
+/* ---- native hardcoded visual defects (single source: ../native-defect-fixes.mjs) ---- */
+/* ---- kill native squared box-shadow on chat bubbles ---- */
+html.agentskin-host-traework [class*="message-bubble"],
+html.agentskin-host-traework [class*="messageBubble"],
+html.agentskin-host-traework [class*="msg-bubble"],
+html.agentskin-host-traework [class*="chat-bubble"],
+html.agentskin-host-traework [class*="message-content"],
+html.agentskin-host-traework [class*="msg-content"] {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ---- clear native grey rounded surface on the user-message text box ---- */
+html.agentskin-host-traework .user-message__text-box,
+html.agentskin-host-traework [class*="user-message__text-box"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+}
+
+/* ---- remove native hardcoded fade-gradient mask over the message list ---- */
+html.agentskin-host-traework [class*="user-message-navigator__mask"] {
+  background-image: none !important;
+  background: transparent !important;
+}
+
+/* ---- remove native hardcoded sticky fade-gradient shadow band under the sidebar task list (verified live: .task-list-shadow-bottom paints rgb(38,38,38) in dark) ---- */
+html.agentskin-host-traework .task-list-shadow-bottom,
+html.agentskin-host-traework .task-list-shadow-top {
+  background-image: none !important;
+  background: transparent !important;
+}
+
+/* ---- contrast fix: avatar badges with hardcoded light bg ----
+   PROBE-NOTE: keep only the semantic "agent-avatar" prefix. The bare
+   [class*="avatar"] substring matched unrelated elements (audit A-class). */
+html.agentskin-host-traework [class*="agent-avatar"] {
+  background: var(--agentskin-surface) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
+}
+
+/* ---- "files changed" cards in chat: always transparent (no flicker) ----
+   These cards use --vscode-editorWidget-background (opaque surface) normally,
+   but native :hover sets background to transparent, causing a visual flicker.
+   Make both normal and hover states transparent so the art punches through. */
+html.agentskin-host-traework [class*="file-change"],
+html.agentskin-host-traework [class*="fileChange"],
+html.agentskin-host-traework [class*="changed-file"],
+html.agentskin-host-traework [class*="changedFile"],
+html.agentskin-host-traework [class*="file-card"],
+html.agentskin-host-traework [class*="fileCard"],
+html.agentskin-host-traework [class*="file-tree"],
+html.agentskin-host-traework [class*="fileTree"],
+html.agentskin-host-traework [class*="edit-card"],
+html.agentskin-host-traework [class*="editCard"],
+html.agentskin-host-traework [class*="edit-result"],
+html.agentskin-host-traework [class*="editResult"],
+html.agentskin-host-traework [class*="apply-result"],
+html.agentskin-host-traework [class*="applyResult"],
+html.agentskin-host-traework [class*="modified-file"],
+html.agentskin-host-traework [class*="modifiedFile"],
+html.agentskin-host-traework [class*="change-summary"],
+html.agentskin-host-traework [class*="changeSummary"],
+html.agentskin-host-traework [class*="tool-result"],
+html.agentskin-host-traework [class*="toolResult"],
+html.agentskin-host-traework [class*="result-card"],
+html.agentskin-host-traework [class*="resultCard"],
+html.agentskin-host-traework [class*="chat-file"],
+html.agentskin-host-traework [class*="chatFile"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: rgba(13, 154, 160, 0.15) !important;
+}
+html.agentskin-host-traework [class*="file-change"]:hover,
+html.agentskin-host-traework [class*="fileChange"]:hover,
+html.agentskin-host-traework [class*="changed-file"]:hover,
+html.agentskin-host-traework [class*="changedFile"]:hover,
+html.agentskin-host-traework [class*="file-card"]:hover,
+html.agentskin-host-traework [class*="fileCard"]:hover,
+html.agentskin-host-traework [class*="file-tree"]:hover,
+html.agentskin-host-traework [class*="fileTree"]:hover,
+html.agentskin-host-traework [class*="edit-card"]:hover,
+html.agentskin-host-traework [class*="editCard"]:hover,
+html.agentskin-host-traework [class*="edit-result"]:hover,
+html.agentskin-host-traework [class*="editResult"]:hover,
+html.agentskin-host-traework [class*="apply-result"]:hover,
+html.agentskin-host-traework [class*="applyResult"]:hover,
+html.agentskin-host-traework [class*="modified-file"]:hover,
+html.agentskin-host-traework [class*="modifiedFile"]:hover,
+html.agentskin-host-traework [class*="change-summary"]:hover,
+html.agentskin-host-traework [class*="changeSummary"]:hover,
+html.agentskin-host-traework [class*="tool-result"]:hover,
+html.agentskin-host-traework [class*="toolResult"]:hover,
+html.agentskin-host-traework [class*="result-card"]:hover,
+html.agentskin-host-traework [class*="resultCard"]:hover,
+html.agentskin-host-traework [class*="chat-file"]:hover,
+html.agentskin-host-traework [class*="chatFile"]:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* ---- contrast fix: markdown file links must use theme accent ----
+   PROBE-NOTE: removed a[class*="link"] — it matched ANY anchor whose class
+   contains "link" (audit A-class, high-risk). Keep the semantic prefixes. */
+html.agentskin-host-traework .markdown-file-link,
+html.agentskin-host-traework [class*="file-link"] {
+  color: var(--agentskin-accent) !important;
+}
+html.agentskin-host-traework .markdown-file-link:hover,
+html.agentskin-host-traework [class*="file-link"]:hover {
+  color: var(--agentskin-secondary) !important;
+}
+
+/* ---- contrast fix: tab buttons ----
+   PROBE-VERIFIED 2026-08-23: TRAE tabs are button[role="tab"] (CSS-module
+   hash class, aria-selected="true" for active). Use the ARIA role — no
+   class sub-string guessing. */
+html.agentskin-host-traework button[role="tab"] {
+  color: var(--agentskin-text) !important;
+  background: transparent !important;
+}
+html.agentskin-host-traework button[role="tab"][aria-selected="true"] {
+  color: var(--agentskin-accent) !important;
+  background: rgba(13, 154, 160, 0.12) !important;
+}
+
+/* Text readability on frosted glass */
+html.agentskin-host-traework body {
+  text-shadow: 0 1px 2px rgba(255,255,255,0.6) !important;
+}
+
+html.agentskin-host-traework input,
+html.agentskin-host-traework textarea,
+html.agentskin-host-traework [contenteditable="true"] {
+  text-shadow: 0 1px 2px rgba(255,255,255,0.6) !important;
+}
+
+/* Links */
+html.agentskin-host-traework a {
+  color: var(--agentskin-accent) !important;
+}
+
+/* Selection */
+html.agentskin-host-traework ::selection {
+  background: var(--agentskin-selection) !important;
+}
+
+/* Generic inputs */
+html.agentskin-host-traework input,
+html.agentskin-host-traework textarea,
+html.agentskin-host-traework select {
+  background: var(--agentskin-input-bg) !important;
+  color: var(--agentskin-text) !important;
+  border-color: var(--agentskin-border) !important;
+}
+
+html.agentskin-host-traework input:focus,
+html.agentskin-host-traework textarea:focus,
+html.agentskin-host-traework select:focus {
+  outline: none !important;
+  border-color: var(--agentskin-accent) !important;
+  box-shadow: 0 0 0 2px var(--agentskin-focus-ring) !important;
+}
+
+/* Inline code & code blocks */
+html.agentskin-host-traework code {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(13, 154, 160, 0.144) !important;
+  border-radius: 6px !important;
+}
+
+html.agentskin-host-traework pre {
+  background: var(--agentskin-code-bg) !important;
+  color: var(--agentskin-code-fg) !important;
+  border: 1px solid rgba(13, 154, 160, 0.144) !important;
+  border-left: 3px solid rgba(13, 154, 160, 0.5) !important;
+  border-radius: 10px !important;
+}
+
+html.agentskin-host-traework pre code {
+  border: none !important;
+}
+
+/* Scrollbars */
+html.agentskin-host-traework ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html.agentskin-host-traework ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html.agentskin-host-traework ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(13, 154, 160, 0.3) 0%, rgba(116, 220, 228, 0.3) 100%) !important;
+  border-radius: 8px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+html.agentskin-host-traework ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(13, 154, 160, 0.5) 0%, rgba(116, 220, 228, 0.5) 100%) !important;
+  background-clip: padding-box !important;
+}
+
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  html.agentskin-host-traework .chat-input-v2-send-button {
-    transition: none !important;
+  html.agentskin-host-traework *,
+  html.agentskin-host-traework *::before,
+  html.agentskin-host-traework *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
   }
 }

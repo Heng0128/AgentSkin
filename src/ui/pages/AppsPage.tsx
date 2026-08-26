@@ -187,144 +187,149 @@ export function AppsPage() {
       <div className="flex min-h-0 flex-1">
         {/* Scrollable content */}
         <div className="min-h-0 min-w-0 flex-1 snap-y snap-proximity overflow-y-auto scroll-smooth">
-          <div>
-            {/* Page header */}
-            <PageHeader title={t.navApps} count={visibleApps.length}>
-              <PageToolbar
-                actions={
-                  <Button variant="outline" size="sm" onClick={handleScan} disabled={scanning}>
-                    {scanning ? (
-                      <Spinner className="animate-spin" />
-                    ) : (
-                      <RefreshCw className="size-3.5" />
-                    )}
-                    {t.scan}
-                  </Button>
-                }
-              />
-            </PageHeader>
-
-            {/* Category filter chips */}
-            <div className="py-3">
-              <FilterChips
-                options={filterOptions}
-                value={categoryFilter}
-                onChange={setCategoryFilter}
-              />
-            </div>
-
-            {/* Scan progress bar */}
-            {scanning && (
-              <div
-                className="mb-4 h-1 overflow-hidden rounded-full bg-muted"
-                role="progressbar"
-                aria-valuenow={scanProgress}
-              >
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-slow"
-                  style={{ width: `${scanProgress}%` }}
-                />
-              </div>
-            )}
-
-            {/* Scan error banner */}
-            {scanError && (
-              <div
-                role="alert"
-                className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2.5"
-              >
-                <p className="min-w-0 flex-1 truncate text-[11px] text-destructive">
-                  {t.appsScanFailed}
-                  {scanError}
-                </p>
-                <Button variant="ghost" size="sm" onClick={() => void scan(true)}>
-                  {t.appsActionRetry}
+          {/* Page header */}
+          <PageHeader title={t.navApps} count={visibleApps.length}>
+            <PageToolbar
+              actions={
+                <Button variant="outline" size="sm" onClick={handleScan} disabled={scanning}>
+                  {scanning ? (
+                    <Spinner className="animate-spin" />
+                  ) : (
+                    <RefreshCw className="size-3.5" />
+                  )}
+                  {t.scan}
                 </Button>
-              </div>
-            )}
+              }
+            />
+          </PageHeader>
 
-            {/* Status legend */}
-            <div className="as-stat-bar mb-4">
-              <span className="flex items-center gap-2 text-[11px]">
-                <span className="inline-block size-2 rounded-full bg-cr-success" />
-                {t.appsStatusRunning}
-              </span>
-              <span className="as-hairline-v h-3.5" />
-              <span className="flex items-center gap-2 text-[11px]">
-                <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
-                {t.appsStatusStopped}
-              </span>
-              <span className="as-hairline-v h-3.5" />
-              <span className="flex items-center gap-2 text-[11px]">
-                <span className="inline-block size-2 rounded-full bg-cr-warning" />
-                {t.appsStatusNoPort}
-              </span>
+          {/* Category filter chips */}
+          <div className="py-3">
+            <FilterChips
+              options={filterOptions}
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+            />
+          </div>
+
+          {/* Scan progress bar */}
+          {scanning && (
+            <div
+              className="mb-4 h-1 overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+              aria-valuenow={scanProgress}
+            >
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-slow"
+                style={{ width: `${scanProgress}%` }}
+              />
             </div>
+          )}
 
-            {/* Skeleton during initial scan */}
-            {scanning && !scanResult && (
-              <section className="mb-6 snap-start">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-                  {SKELETON_ITEMS.map((id) => (
-                    <div key={id} className="h-32 animate-pulse rounded-lg bg-muted" />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* App grid — single unified grid based on active category */}
-            {visibleApps.length > 0 && (
-              <section className="mb-6 snap-start">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-                  {visibleApps.map(renderCard)}
-                </div>
-              </section>
-            )}
-
-            {/* Empty state — scanned but no apps found for current filter */}
-            {scanResult && !scanning && visibleApps.length === 0 && (
-              <EmptyState
-                icon={<Monitor />}
-                iconSize="lg"
-                title={categoryFilter === 'hidden' ? t.appsEmptyHidden : t.appsEmptyNoApps}
-              />
-            )}
-
-            {/* Empty state — pre-scan guidance */}
-            {!scanResult && !scanning && !scanError && (
-              <EmptyState
-                icon={<Monitor />}
-                iconSize="lg"
-                title={t.appsScanToFind}
-                action={
-                  <Button variant="outline" size="sm" onClick={() => void scan(true)}>
-                    <RefreshCw size={14} />
-                    {t.appsActionScan}
-                  </Button>
-                }
-              />
-            )}
-
-            {/* Manual add button */}
-            <div className="pt-2">
-              <Button variant="outline" size="sm" onClick={handleManualAdd}>
-                <Plus size={14} />
-                {t.appsActionAddManual}
+          {/* Scan error banner */}
+          {scanError && (
+            <div
+              role="alert"
+              className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2.5"
+            >
+              <p className="min-w-0 flex-1 truncate text-[11px] text-destructive">
+                {t.appsScanFailed}
+                {scanError}
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => void scan(true)}>
+                {t.appsActionRetry}
               </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".exe"
-                className="hidden"
-                onChange={handleFileSelected}
-              />
             </div>
+          )}
+
+          {/* Status legend */}
+          <div className="as-stat-bar mb-4">
+            <span className="flex items-center gap-2 text-[11px]">
+              <span className="inline-block size-2 rounded-full bg-cr-success" />
+              {t.appsStatusRunning}
+            </span>
+            <span className="as-hairline-v h-3.5" />
+            <span className="flex items-center gap-2 text-[11px]">
+              <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
+              {t.appsStatusStopped}
+            </span>
+            <span className="as-hairline-v h-3.5" />
+            <span className="flex items-center gap-2 text-[11px]">
+              <span className="inline-block size-2 rounded-full bg-cr-warning" />
+              {t.appsStatusNoPort}
+            </span>
+          </div>
+
+          {/* Skeleton during initial scan */}
+          {scanning && !scanResult && (
+            <section className="mb-6 snap-start">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+                {SKELETON_ITEMS.map((id) => (
+                  <div
+                    key={id}
+                    className="flex h-36 flex-col items-center gap-2.5 rounded-lg border border-border bg-card p-3.5"
+                  >
+                    <div className="size-12 animate-pulse rounded-lg bg-muted" />
+                    <div className="h-2.5 w-2/3 animate-pulse rounded-lg bg-muted" />
+                    <div className="h-2 w-1/3 animate-pulse rounded-lg bg-muted" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* App grid — single unified grid based on active category */}
+          {visibleApps.length > 0 && (
+            <section className="mb-6 snap-start">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+                {visibleApps.map(renderCard)}
+              </div>
+            </section>
+          )}
+
+          {/* Empty state — scanned but no apps found for current filter */}
+          {scanResult && !scanning && visibleApps.length === 0 && (
+            <EmptyState
+              icon={<Monitor />}
+              iconSize="lg"
+              title={categoryFilter === 'hidden' ? t.appsEmptyHidden : t.appsEmptyNoApps}
+            />
+          )}
+
+          {/* Empty state — pre-scan guidance */}
+          {!scanResult && !scanning && !scanError && (
+            <EmptyState
+              icon={<Monitor />}
+              iconSize="lg"
+              title={t.appsScanToFind}
+              action={
+                <Button variant="outline" size="sm" onClick={() => void scan(true)}>
+                  <RefreshCw size={14} />
+                  {t.appsActionScan}
+                </Button>
+              }
+            />
+          )}
+
+          {/* Manual add button */}
+          <div className="pt-2">
+            <Button variant="outline" size="sm" onClick={handleManualAdd}>
+              <Plus size={14} />
+              {t.appsActionAddManual}
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".exe"
+              className="hidden"
+              onChange={handleFileSelected}
+            />
           </div>
         </div>
 
         {/* Right detail panel — in-flow, list yields width */}
         {drawerAppId !== null && (
-          <div className="h-full shrink-0 animate-slide-in-right">
+          <div className="h-full shrink-0 animate-slide-in-right as-slide-up-enter">
             <AppDetailsDrawer />
           </div>
         )}

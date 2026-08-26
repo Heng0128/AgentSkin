@@ -93,7 +93,7 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
         <h3 className="text-[11px] font-normal text-foreground">{t.studioTabRaw}</h3>
 
         <select
-          className="ml-auto h-6 max-w-[240px] rounded-md border border-border bg-card px-2 text-[10px] text-foreground/60"
+          className="ml-auto h-6 max-w-[240px] rounded-md border border-border bg-card px-2 text-[11px] text-foreground/60"
           value={rawSheetIndex ?? ''}
           onChange={handleSheetChange}
           disabled={!hasSheets || rawLoading}
@@ -111,28 +111,28 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
         </select>
 
         {rawDirty && (
-          <span className="rounded-md bg-[var(--cr-warn-subtle)] px-2 py-px text-[10px] text-[var(--cr-warn-fg)]">
+          <span className="rounded-md bg-[var(--cr-warn-subtle)] px-2 py-px text-[11px] text-[var(--cr-warn-fg)]">
             {t.studioRawDirty}
           </span>
         )}
       </div>
 
       {/* Description */}
-      <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">{t.studioTabRawDesc}</p>
+      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">{t.studioTabRawDesc}</p>
 
       {/* Main content */}
       <div className="mt-4 flex min-h-0 flex-1 flex-col">
         {!hasAgent ? (
           <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-border bg-card p-8">
-            <p className="text-[10px] text-muted-foreground/40">{t.studioRawNoAgent}</p>
+            <p className="text-[11px] text-muted-foreground/40">{t.studioRawNoAgent}</p>
           </div>
         ) : rawLoading ? (
           <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-border bg-card p-8">
-            <p className="text-[10px] text-muted-foreground/40">{t.studioRawLoading}</p>
+            <p className="text-[11px] text-muted-foreground/40">{t.studioRawLoading}</p>
           </div>
         ) : !hasSheets ? (
           <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-border bg-card p-8">
-            <p className="text-[10px] text-muted-foreground/40">{t.studioRawNoSheets}</p>
+            <p className="text-[11px] text-muted-foreground/40">{t.studioRawNoSheets}</p>
           </div>
         ) : (
           <textarea
@@ -152,7 +152,7 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
           type="button"
           onClick={handleApply}
           disabled={!rawDirty || rawLoading || !hasSheets}
-          className="h-7 rounded-md bg-foreground px-4 text-[10px] text-surface disabled:opacity-40"
+          className="h-7 rounded-md bg-foreground px-4 text-[11px] text-surface disabled:opacity-40"
         >
           {t.studioRawApply}
         </button>
@@ -160,19 +160,19 @@ export function CenterTabRaw({ t }: { t: UiMessages }) {
           type="button"
           onClick={handleReset}
           disabled={!rawDirty || rawLoading || !hasSheets}
-          className="h-7 rounded-md border border-border bg-card px-4 text-[10px] text-foreground/60 disabled:opacity-40"
+          className="h-7 rounded-md border border-border bg-card px-4 text-[11px] text-foreground/60 disabled:opacity-40"
         >
           {t.studioRawReset}
         </button>
 
         {rawError && (
-          <span className="ml-auto rounded-md bg-[var(--destructive-subtle)] px-2 py-px text-[10px] text-[var(--destructive-fg)]">
+          <span className="ml-auto rounded-md bg-[var(--destructive-subtle)] px-2 py-px text-[11px] text-[var(--destructive-fg)]">
             {rawError}
           </span>
         )}
 
         {selectedSheet && (
-          <span className="font-mono text-[10px] text-muted-foreground/40">
+          <span className="font-mono text-[11px] text-muted-foreground/40">
             {selectedSheet.isInline ? '(inline)' : selectedSheet.url} · {selectedSheet.length}B
           </span>
         )}

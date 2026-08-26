@@ -540,14 +540,24 @@ export async function hardeningPass(
         // Inject the engine architecture (palette + tokens + cosmetic + theme +
         // adapter.mjs). `injectThemeViaEngine` internally verifies adoption and
         // returns the per-layer outcome.
-        const engineResult = await deps.tryEngineInjection(
-          session,
-          appId,
-          bundle,
-          targetTheme,
-          resolvedImages,
-          resolvedFilePaths,
-        );
+        let engineResult: InjectEngineResult | null = null;
+        let engineError: Error | null = null;
+        try {
+          engineResult = await deps.tryEngineInjection(
+            session,
+            appId,
+            bundle,
+            targetTheme,
+            resolvedImages,
+            resolvedFilePaths,
+          );
+        } catch (error) {
+          // Engine injection failed (not just "files missing" — that returns
+          // null). This means buildPaletteCss() returned null (malformed theme)
+          // or a CSS layer failed to adopt via CDP. Capture the error so we can
+          // notify the user and then fall back to legacy injection.
+          engineError = error instanceof Error ? error : new Error(String(error));
+        }
 
         if (engineResult) {
           engineInjected++;
@@ -560,8 +570,24 @@ export async function hardeningPass(
             );
           }
         } else {
-          // Fallback: legacy single-CSS injection (when engine files missing).
-          // Page targets can still fall back to the core's CSS.
+          // Fallback: legacy single-CSS injection. Triggered either when engine
+          // files are missing (engineResult null, no error) or when engine
+          // injection failed (engineResult null, engineError set). In both cases
+          // we fall back to the core's CSS, but only the failure case notifies
+          // the user.
+          if (engineError) {
+            deps.log(
+              `[hardening] ${appId}: ENGINE injection failed, falling back to legacy: ${toMessage(engineError)}`,
+            );
+            // Notify the renderer so the user sees a non-blocking toast.
+            // The engine multi-layer injection failed but legacy fallback
+            // will attempt to apply the theme via single-CSS injection.
+            deps.mainWindow?.webContents.send(IpcChannel.THEME_ENGINE_INJECT_FAILURE, {
+              agent: appId,
+              themeId: bundle.theme?.id ?? 'unknown',
+              message: toMessage(engineError),
+            });
+          }
           const result = await injectThemeViaCdp(session, {
             css: targetTheme.css,
             imageDataUrls: resolvedImages,

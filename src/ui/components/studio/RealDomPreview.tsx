@@ -76,18 +76,18 @@ function RealDomPreview({
       {chrome && (
         <div className="flex h-7 items-center gap-2  px-3" style={{ background: 'var(--card)' }}>
           <div className="flex gap-1">
-            <span className="size-[7px] rounded-md bg-[var(--destructive)]" />
-            <span className="size-[7px] rounded-md bg-[var(--cr-warning)]" />
-            <span className="size-[7px] rounded-md bg-[var(--cr-success)]" />
+            <span className="size-[7px] rounded-md bg-destructive" />
+            <span className="size-[7px] rounded-md bg-cr-warning" />
+            <span className="size-[7px] rounded-md bg-cr-success" />
           </div>
           <span
-            className="ml-2 truncate text-[10px]"
+            className="ml-2 truncate text-[11px]"
             style={{ letterSpacing: '0.08em', color: 'var(--muted-foreground)' }}
           >
             {t.studioPreviewStatus}
           </span>
           {domTree && (
-            <span className="ml-auto text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
+            <span className="ml-auto text-[11px]" style={{ color: 'var(--muted-foreground)' }}>
               {t.studioLiveIndicator}
             </span>
           )}

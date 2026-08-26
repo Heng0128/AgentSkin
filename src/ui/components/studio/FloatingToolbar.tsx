@@ -58,7 +58,7 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
       <select
         value={activeAgentId ?? ''}
         onChange={(e) => handleAgentChange(e.target.value as AgentId)}
-        className="h-6 rounded-sm border border-border bg-card2 px-1 text-[10px] text-foreground outline-none"
+        className="h-6 rounded-md border border-border bg-card2 px-1 text-[11px] text-foreground outline-none"
         title={t.studioActiveWindowAgent}
       >
         {(['codex', 'traework', 'qoderwork', 'workbuddy', 'doubao', 'zcode'] as AgentId[]).map(
@@ -95,13 +95,13 @@ export function FloatingToolbar({ t }: { t: UiMessages }) {
           {window ? `${window.scale}×` : t.studioZoomFallback} ▾
         </Button>
         {zoomOpen && (
-          <div className="absolute bottom-full right-0 z-[var(--z-content)] mb-1 flex flex-col gap-0 rounded-sm border border-border bg-card p-0 shadow-[var(--shadow-float)]">
+          <div className="absolute bottom-full right-0 z-[var(--z-content)] mb-1 flex flex-col gap-0 rounded-md border border-border bg-card p-0 shadow-[var(--shadow-float)]">
             {ZOOM_PRESETS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => handleZoom(s)}
-                className="whitespace-nowrap rounded-sm px-2 py-0 text-left text-[10px] hover:bg-card2"
+                className="whitespace-nowrap rounded-md px-2 py-0 text-left text-[11px] hover:bg-card2"
                 style={{
                   background: window?.scale === s ? 'var(--primary)' : 'transparent',
                   color: window?.scale === s ? 'var(--primary-foreground)' : 'var(--foreground)',

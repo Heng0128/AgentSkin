@@ -54,7 +54,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
     display?: string,
   ) => (
     <div className="we-prow flex items-center gap-2">
-      <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">{label}</span>
+      <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">{label}</span>
       <input
         type="range"
         min={min}
@@ -64,7 +64,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
         onChange={(e) => set({ [key]: Number(e.target.value) } as Partial<WallpaperRenderOptions>)}
         className="we-range h-[4px] flex-1 cursor-pointer appearance-none rounded-md bg-border-strong [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-md [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:ring-2 [&::-webkit-slider-thumb]:ring-card"
       />
-      <span className="w-[42px] text-right text-[10px] font-normal tabular-nums text-foreground">
+      <span className="w-[42px] text-right text-[11px] font-normal tabular-nums text-foreground">
         {display ?? (typeof r[key] === 'number' ? String(r[key]) : '默认')}
       </span>
     </div>
@@ -78,7 +78,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
         <button
           type="button"
           onClick={() => onChange(undefined)}
-          className="text-[10px] text-muted-foreground/60 hover:text-primary"
+          className="text-[11px] text-muted-foreground/60 hover:text-primary"
         >
           RESET
         </button>
@@ -86,27 +86,27 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
 
       {/* Theme tint */}
       <div className="we-prow flex items-center gap-2">
-        <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">THEME_TINT</span>
+        <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">THEME_TINT</span>
         <input
           type="color"
           value={r.tint ?? '#c41e2a'}
           onChange={(e) => set({ tint: e.target.value })}
           className="h-6 w-[30px] cursor-pointer rounded-md  bg-card2 p-0"
         />
-        <span className="w-[42px] text-right text-[10px] font-normal text-foreground">
+        <span className="w-[42px] text-right text-[11px] font-normal text-foreground">
           {r.tint ? r.tint.toUpperCase() : '默认'}
         </span>
       </div>
 
       {/* Alignment */}
       <div className="we-prow flex items-center gap-2">
-        <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">ALIGNMENT</span>
+        <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">ALIGNMENT</span>
         <select
           value={r.alignment ?? 'fill'}
           onChange={(e) =>
             set({ alignment: e.target.value as WallpaperRenderOptions['alignment'] })
           }
-          className="h-6 flex-1 rounded-md  bg-card2 px-1 py-0 text-[10px] "
+          className="h-6 flex-1 rounded-md  bg-card2 px-1 py-0 text-[11px] "
         >
           {WALLPAPER_ALIGNMENTS.map((a) => (
             <option key={a} value={a}>
@@ -122,7 +122,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
       {/* Loop (video only) */}
       {isVideo && (
         <div className="we-prow flex items-center gap-2">
-          <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">LOOP</span>
+          <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">LOOP</span>
           <Switch checked={r.loop ?? true} onCheckedChange={(v) => set({ loop: v })} />
         </div>
       )}
@@ -162,13 +162,13 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
 
       {/* Flip */}
       <div className="we-prow flex items-center gap-2">
-        <span className="w-[76px] shrink-0 text-[10px]  text-muted-foreground">FLIP</span>
+        <span className="w-[76px] shrink-0 text-[11px]  text-muted-foreground">FLIP</span>
         <span className="flex flex-1 items-center gap-1">
           <button
             type="button"
             onClick={() => set({ flipH: !r.flipH })}
             className={cn(
-              'h-6 flex-1 rounded-md  bg-card2 text-[10px] font-normal  transition-colors',
+              'h-6 flex-1 rounded-md  bg-card2 text-[11px] font-normal  transition-colors',
               r.flipH ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground',
             )}
           >
@@ -178,7 +178,7 @@ export function RenderSettingsPanel({ value, onChange, playback }: RenderSetting
             type="button"
             onClick={() => set({ flipV: !r.flipV })}
             className={cn(
-              'h-6 flex-1 rounded-md  bg-card2 text-[10px] font-normal  transition-colors',
+              'h-6 flex-1 rounded-md  bg-card2 text-[11px] font-normal  transition-colors',
               r.flipV ? 'border-primary bg-primary/10 text-primary' : 'text-muted-foreground',
             )}
           >

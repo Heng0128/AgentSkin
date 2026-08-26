@@ -6,7 +6,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { Spinner } from './spinner';
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-md border border-border bg-card2 text-[11px] font-medium whitespace-nowrap transition-all duration-fast ease-out outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 hover:border-border-strong hover:bg-card [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-md border border-border bg-card2 text-[11px] font-medium whitespace-nowrap transition-all duration-base ease-out outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 hover:border-border-strong hover:bg-card [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
@@ -29,7 +29,7 @@ const buttonVariants = cva(
           'h-8 gap-1.5 px-3.5 has-data-[icon-inline-end]:pr-2.5 has-data-[icon-inline-start]:pl-2.5',
         xs: "h-6 gap-1 rounded-md px-2 text-[10px] in-data-[slot=button-group]:rounded-md has-data-[icon-inline-end]:pr-1.5 has-data-[icon-inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-7 gap-1.5 rounded-md px-2.5 text-[11px] in-data-[slot=button-group]:rounded-md has-data-[icon-inline-end]:pr-2 has-data-[icon-inline-start]:pl-2 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: 'h-9 gap-2 px-3 text-[13px] has-data-[icon-inline-end]:pr-2.5 has-data-[icon-inline-start]:pl-2.5',
+        lg: 'h-9 gap-2 px-3 text-sm has-data-[icon-inline-end]:pr-2.5 has-data-[icon-inline-start]:pl-2.5',
         icon: 'size-8 rounded-md',
         'icon-xs':
           "size-6 rounded-md in-data-[slot=button-group]:rounded-md [&_svg:not([class*='size-'])]:size-3",

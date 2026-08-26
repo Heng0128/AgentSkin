@@ -129,8 +129,8 @@ export const WallpaperCard = memo(function WallpaperCard({
     <div
       ref={cardRef}
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-md border border-transparent bg-surface text-left transition-all duration-fast ease-out',
-        'hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',
+        'group relative flex flex-col overflow-hidden rounded-lg border border-transparent bg-card text-left transition-all duration-base ease-out as-shine',
+        'hover:-translate-y-1 hover:border-border-strong hover:shadow-lg',
         selected && 'ring-1 ring-primary',
       )}
     >
@@ -162,11 +162,11 @@ export const WallpaperCard = memo(function WallpaperCard({
           />
           {/* Hover overlay — dark scrim + type/size info */}
           <div
-            className="pointer-events-none absolute inset-0 flex items-end opacity-0 transition-opacity duration-fast group-hover:opacity-100"
+            className="pointer-events-none absolute inset-0 flex items-end opacity-0 transition-opacity duration-base group-hover:opacity-100"
             aria-hidden
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <span className="relative flex w-full items-center justify-between px-3 pb-2.5 text-[10px] text-white/90">
+            <span className="relative flex w-full items-center justify-between px-3 pb-2.5 text-[11px] text-white/90">
               <span className="flex items-center gap-1">
                 {wallpaper.type === 'video' ? (
                   <Video className="size-3" />
@@ -186,12 +186,12 @@ export const WallpaperCard = memo(function WallpaperCard({
           </div>
           {/* Single status badge — top-left */}
           {isUiBackground && (
-            <span className="absolute left-2 top-2 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground shadow-sm">
+            <span className="absolute left-2 top-2 rounded-md bg-primary px-1.5 py-0.5 text-[11px] font-medium text-primary-foreground shadow-sm">
               UI
             </span>
           )}
           {previewOnly && !isUiBackground && (
-            <span className="absolute left-2 top-2 rounded-md bg-cr-warning/90 px-1.5 py-0.5 text-[10px] font-medium text-yellow-950 shadow-sm">
+            <span className="absolute left-2 top-2 rounded-md bg-cr-warning/90 px-1.5 py-0.5 text-[11px] font-medium text-yellow-950 shadow-sm">
               PREVIEW
             </span>
           )}
@@ -199,12 +199,12 @@ export const WallpaperCard = memo(function WallpaperCard({
 
         {/* Title */}
         <div className="px-3 py-2.5">
-          <p className="truncate text-[13px] font-medium leading-snug">{wallpaper.title}</p>
+          <p className="truncate text-sm font-medium leading-snug">{wallpaper.title}</p>
         </div>
       </button>
       {/* Delete button — top-right on hover (sibling of button to avoid button>button nesting) */}
       {deletable && (
-        <div className="absolute right-2 top-2 opacity-0 transition-opacity duration-fast group-hover:opacity-100 group-focus-within:opacity-100">
+        <div className="absolute right-2 top-2 opacity-0 transition-opacity duration-base group-hover:opacity-100 group-focus-within:opacity-100">
           {confirming ? (
             <div className="flex items-center gap-1 rounded-md bg-card/90 p-0.5 shadow-md backdrop-blur-sm">
               <button
@@ -215,7 +215,7 @@ export const WallpaperCard = memo(function WallpaperCard({
                   setConfirming(false);
                 }}
                 disabled={isDeleting}
-                className="rounded-sm px-1.5 py-0.5 text-[10px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
               >
                 {isDeleting ? '…' : confirmLabel}
               </button>
@@ -225,7 +225,7 @@ export const WallpaperCard = memo(function WallpaperCard({
                   e.stopPropagation();
                   setConfirming(false);
                 }}
-                className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted"
+                className="rounded-md p-0.5 text-muted-foreground hover:bg-muted"
               >
                 <X className="size-3" />
               </button>

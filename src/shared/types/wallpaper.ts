@@ -50,6 +50,19 @@ export interface WallpaperRenderOptions {
   tint?: string;
   /** 音频响应灵敏度 0-100（0=关闭，默认 0）。 */
   audioLevel?: number;
+  /**
+   * 粒子特效配置（可选）。当存在时在壁纸上方渲染 CSS 粒子动画层。
+   * 对齐 workbuddy-skin-lab 的粒子系统设计：pointer-events:none、
+   * 尊重 prefers-reduced-motion、最大 150 粒子。
+   */
+  particles?: {
+    type: 'rain' | 'thunderstorm' | 'snow' | 'hearts' | 'stars' | 'leaves' | 'custom';
+    density: number;
+    speed: 'slow' | 'normal' | 'fast';
+    opacity: number;
+    customSymbol?: string;
+    color?: string;
+  };
 }
 
 /** 对齐方式取值（UI 下拉 + 配置校验共用）。 */

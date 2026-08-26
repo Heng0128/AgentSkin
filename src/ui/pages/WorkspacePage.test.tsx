@@ -72,6 +72,14 @@ const { mockOnThemeHealthReport, mockUiMessages } = vi.hoisted(() => {
     workspaceInspectStartBtn: 'Pick element',
     workspaceInspectStopBtn: 'Exit picking',
     commonDismiss: 'Dismiss',
+    quickActionApplyTheme: 'Apply Theme',
+    quickActionApplyThemeDesc: 'Choose a theme for your agent',
+    quickActionSetWallpaper: 'Set Wallpaper',
+    quickActionSetWallpaperDesc: 'Customize background image',
+    quickActionVerifyInjection: 'Verify',
+    quickActionVerifyInjectionDesc: 'Check injection status',
+    quickActionRestoreNative: 'Restore',
+    quickActionRestoreNativeDesc: 'Restore official appearance',
   } as unknown as UiMessages;
 
   return {
@@ -86,6 +94,9 @@ const { mockOnThemeHealthReport, mockUiMessages } = vi.hoisted(() => {
 vi.mock('@/api/agentSkinClient', () => ({
   api: {
     onThemeHealthReport: mockOnThemeHealthReport,
+    onFileImported: vi.fn(() => () => {}),
+    onStatusChanged: vi.fn(() => () => {}),
+    refreshStatus: vi.fn(),
   },
 }));
 
@@ -133,6 +144,15 @@ vi.mock('@/stores/shellStore', () => {
   store.getState = () => state;
   return { useShellStore: store };
 });
+
+vi.mock('@/stores/themeStore', () => ({
+  useThemeStore: (selector?: (state: Record<string, unknown>) => unknown) => {
+    const state = {
+      restoreApp: vi.fn(),
+    };
+    return selector ? selector(state) : state;
+  },
+}));
 
 vi.mock('@/stores/diagnosticsStore', () => ({
   useDiagnosticsStore: (selector?: (state: Record<string, unknown>) => unknown) => {
@@ -201,15 +221,24 @@ vi.mock('@/components/workspace/TweakPanel', () => ({
   TweakPanel: () => '<div>TweakPanel</div>',
 }));
 
+vi.mock('@/components/workspace/QuickActionsCard', () => ({
+  QuickActionsCard: ({ activeAgentId }: { activeAgentId: string }) =>
+    `<div data-testid="quick-actions" data-agent="${activeAgentId}">QuickActions</div>`,
+}));
+
 vi.mock('lucide-react', () => {
   const stub = (props: Record<string, unknown>) =>
     `<svg data-icon="${props['data-icon'] ?? ''}"></svg>`;
   return {
+    Activity: stub,
     AlertTriangle: stub,
     CheckCircle: stub,
     Download: stub,
+    ImageIcon: stub,
+    Paintbrush: stub,
     Redo2: stub,
     RefreshCw: stub,
+    RotateCcw: stub,
     Search: stub,
     Undo2: stub,
     Upload: stub,

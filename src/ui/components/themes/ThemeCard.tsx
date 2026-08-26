@@ -32,10 +32,10 @@ export function ThemeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'group flex h-full flex-col overflow-hidden rounded-lg border bg-card text-left transition-all duration-fast ease-out',
+        'group flex h-full flex-col overflow-hidden rounded-lg border bg-card text-left transition-all duration-base ease-out as-shine',
         selected
           ? 'border-primary ring-2 ring-primary/30'
-          : 'border-border hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',
+          : 'border-border hover:-translate-y-1 hover:border-border-strong hover:shadow-lg',
       )}
     >
       {/* Preview — 16:9 aspect ratio */}
@@ -73,7 +73,7 @@ export function ThemeCard({
               <span
                 key={agentId}
                 aria-hidden="true"
-                className="flex size-4 items-center justify-center rounded-sm bg-popover/90"
+                className="flex size-4 items-center justify-center rounded-md bg-popover/90"
               >
                 <AppMark appId={agentId} size={10} />
               </span>
@@ -85,7 +85,7 @@ export function ThemeCard({
         {theme.mode && theme.mode !== 'auto' && (
           <span
             className={cn(
-              'absolute top-2 rounded-md px-1.5 py-0.5 text-[10px] font-medium backdrop-blur-sm',
+              'absolute top-2 rounded-md px-1.5 py-0.5 text-[11px] font-medium backdrop-blur-sm',
               isActive ? 'left-2' : 'right-2',
               theme.mode === 'dark'
                 ? 'bg-surface/80 text-secondary-foreground'
@@ -110,7 +110,7 @@ export function ThemeCard({
 
         {/* Dynamic wallpaper indicator — bottom-right */}
         {theme.hasWallpaper && (
-          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-surface/80 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground backdrop-blur-sm">
+          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-surface/80 px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground backdrop-blur-sm">
             <span className="inline-flex size-1 rounded-full bg-primary" />
             {t.themeDynamicBadge}
           </span>
@@ -123,7 +123,7 @@ export function ThemeCard({
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="min-w-0 truncate text-sm font-semibold leading-snug">{theme.name}</h3>
           {theme.version && (
-            <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
+            <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">
               v{theme.version}
             </span>
           )}
@@ -166,7 +166,7 @@ export function ThemeCard({
                 <Badge
                   key={tag}
                   variant="ghost"
-                  className="rounded-md px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                  className="rounded-md px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground"
                 >
                   {tag}
                 </Badge>

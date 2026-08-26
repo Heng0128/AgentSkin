@@ -44,11 +44,11 @@ export function EmptyState({
 }: EmptyStateProps) {
   const sizes = iconSizeMap[iconSize];
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-5 text-center', className)}>
+    <div className={cn('flex flex-col items-center justify-center gap-6 text-center', className)}>
       {icon && (
         <div
           className={cn(
-            'flex items-center justify-center rounded-lg bg-muted/50 text-muted-foreground ring-1 ring-border',
+            'as-breathe flex items-center justify-center rounded-lg bg-gradient-to-br from-muted/60 to-muted/30 text-muted-foreground ring-1 ring-border',
             sizes.container,
           )}
         >
@@ -56,7 +56,7 @@ export function EmptyState({
         </div>
       )}
       <div className="flex flex-col gap-2">
-        <p className="text-[14px] font-medium text-foreground">{title}</p>
+        <p className="text-sm font-medium text-foreground">{title}</p>
         {hint && (
           <p className="max-w-sm text-[12px] leading-relaxed text-muted-foreground">{hint}</p>
         )}

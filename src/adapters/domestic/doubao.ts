@@ -18,7 +18,7 @@ export class DoubaoAdapter extends BaseApplicationAdapter {
   readonly coreId = 'doubao';
 
   /** AgentSkin-side install detection hints (Windows). */
-  readonly installHints: InstallHints = {
+  override readonly installHints: InstallHints = {
     dirNames: ['Doubao'],
     exeNames: ['Doubao.exe'],
     registryNames: ['Doubao', '豆包'],

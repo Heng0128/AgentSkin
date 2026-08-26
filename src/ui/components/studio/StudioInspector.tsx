@@ -110,7 +110,7 @@ export function StudioInspector({
                 key={key}
                 type="button"
                 onClick={() => onResolutionChange(key)}
-                className="ws-inspector__res-btn rounded-sm px-1 py-0 text-micro"
+                className="ws-inspector__res-btn rounded-md px-1 py-0 text-micro"
                 data-active={resolution === key ? 'true' : undefined}
                 title={RESOLUTION_PRESETS[key].label}
               >

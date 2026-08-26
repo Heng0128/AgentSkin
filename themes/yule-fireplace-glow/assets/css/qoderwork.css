@@ -1,4 +1,4 @@
-/* Art 175022 — QoderWork CN (--color-* design tokens) */
+/* Yule Fireplace Glow — QoderWork CN (--color-* design tokens) */
 html.agentskin-host-qoderwork {
   color-scheme: dark !important;
   --agentskin-accent: #9d7ce0;
@@ -13,7 +13,8 @@ html.agentskin-host-qoderwork {
   --agentskin-code-fg: #f4f0eb;
   --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #414836 82%, #9d7ce0 18%) 45%, transparent);
   --agentskin-button-bg: #9d7ce0;
-  --agentskin-focus-ring: color-mix(in srgb, #9d7ce0 40%, transparent);
+  --agentskin-button-fg: #ffffff;
+  --agentskin-focus-ring: #9d7ce060;
   --agentskin-selection: color-mix(in srgb, #9d7ce0 32%, transparent);
   --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
   text-shadow: var(--agentskin-text-shadow);
@@ -21,19 +22,19 @@ html.agentskin-host-qoderwork {
 
 /* ===== Native token overrides (wins over :root[data-theme]) ===== */
 html.agentskin-host-qoderwork:root {
-  color-scheme: dark !important;
+  /* color-scheme 已在 tokenBlock() 中声明 (:root 级)，此处删除以避免重复 */
 
   /* Primary / brand */
   --color-primary: #9d7ce0 !important;
-  --color-primary-hover: rgb(116, 87, 203) !important;
-  --color-primary-active: rgb(132, 107, 209) !important;
+  --color-primary-hover: rgb(172, 144, 229) !important;
+  --color-primary-active: rgb(182, 157, 232) !important;
   --color-primary-bg: rgba(157, 124, 224, 0.12) !important;
   --color-primary-bg-hover: rgba(157, 124, 224, 0.18) !important;
   --color-primary-border: rgba(157, 124, 224, 0.35) !important;
   --color-primary-border-hover: rgba(157, 124, 224, 0.55) !important;
   --color-primary-text: #f4f0eb !important;
-  --color-primary-text-hover: rgb(116, 87, 203) !important;
-  --color-primary-text-active: rgb(132, 107, 209) !important;
+  --color-primary-text-hover: rgb(172, 144, 229) !important;
+  --color-primary-text-active: rgb(182, 157, 232) !important;
   --color-text-on-primary: rgb(6, 7, 5) !important;
 
   /* Text hierarchy */
@@ -92,7 +93,7 @@ html.agentskin-host-qoderwork:root {
 
   /* Semantic: success (tied to accent) */
   --color-success: #9d7ce0 !important;
-  --color-success-hover: rgb(116, 87, 203) !important;
+  --color-success-hover: rgb(172, 144, 229) !important;
   --color-success-bg: rgba(157, 124, 224, 0.12) !important;
   --color-success-bg-hover: rgba(157, 124, 224, 0.18) !important;
   --color-success-border: rgba(157, 124, 224, 0.35) !important;
@@ -116,18 +117,18 @@ html.agentskin-host-qoderwork:root {
   --color-pink: #7c61ce !important;
   --color-pink-bg: rgba(124, 97, 206, 0.1) !important;
   --color-pink-hover: rgb(150, 129, 216) !important;
-  --color-purple: rgb(73, 46, 155) !important;
+  --color-purple: rgb(126, 99, 179) !important;
   --color-purple-bg: rgba(157, 124, 224, 0.08) !important;
-  --color-purple-hover: rgb(124, 97, 206) !important;
+  --color-purple-hover: rgb(177, 150, 230) !important;
   --color-yellow: #fac414 !important;
   --color-yellow-bg: rgba(250, 196, 20, 0.1) !important;
   --color-yellow-hover: #f1d372 !important;
   --color-orange: #fa8125 !important;
   --color-orange-bg: rgba(250, 129, 37, 0.1) !important;
   --color-orange-hover: #e88c45 !important;
-  --color-teal: rgb(82, 51, 175) !important;
+  --color-teal: rgb(141, 112, 202) !important;
   --color-teal-bg: rgba(157, 124, 224, 0.08) !important;
-  --color-teal-hover: rgb(116, 87, 203) !important;
+  --color-teal-hover: rgb(172, 144, 229) !important;
   --color-blue: #0090ff !important;
   --color-blue-bg: rgba(0, 144, 255, 0.1) !important;
   --color-blue-hover: #72bcf5 !important;
@@ -140,7 +141,7 @@ html.agentskin-host-qoderwork:root {
   --color-lavender: rgb(163, 144, 221) !important;
   --color-lavender-bg: rgba(124, 97, 206, 0.08) !important;
   --color-lavender-hover: rgb(190, 176, 231) !important;
-  --color-sage: rgb(77, 48, 165) !important;
+  --color-sage: rgb(133, 105, 190) !important;
   --color-sage-bg: rgba(157, 124, 224, 0.06) !important;
   --color-sage-hover: rgba(157, 124, 224, 0.12) !important;
 
@@ -195,7 +196,7 @@ html.agentskin-host-qoderwork #root::before {
     linear-gradient(180deg, transparent 0 50%,
       color-mix(in srgb, var(--agentskin-surface) 26%, transparent) 86% 100%),
     radial-gradient(120% 80% at 84% 14%,
-      color-mix(in srgb, var(--agentskin-secondary) 27%, transparent), transparent 60%),
+      color-mix(in srgb, var(--agentskin-secondary) 28%, transparent), transparent 60%),
     var(--agentskin-art, none) right center / cover no-repeat !important;
 }
 

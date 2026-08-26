@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { BrowserWindow } from 'electron';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApplicationAdapter } from '../../adapters/base';
 import type {
@@ -196,6 +197,7 @@ function makeDeps(overrides: Partial<CdpFanoutDeps> = {}): CdpFanoutDeps {
     isEpochCurrent: vi.fn().mockReturnValue(true),
     tryEngineInjection: vi.fn().mockResolvedValue(makeMockEngineResult()),
     log: vi.fn(),
+    mainWindow: { webContents: { send: vi.fn() } } as unknown as BrowserWindow,
     ...overrides,
   };
 }
@@ -488,7 +490,11 @@ describe('hardeningPass', () => {
     expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('failed=1'));
   });
 
-  it('counts failures when tryEngineInjection throws', async () => {
+  it('falls back to legacy and notifies user when tryEngineInjection throws', async () => {
+    // When engine injection throws (e.g. palette build failure, CDP layer
+    // adoption failure), the error is caught, the user is notified via IPC,
+    // and the code falls back to legacy single-CSS injection instead of
+    // counting the target as a hard failure.
     const targets = [makeCdpTarget({ id: 'page-1', type: 'page' })];
     vi.mocked(findDomTargets).mockResolvedValue(targets);
     vi.mocked(connectCdp).mockResolvedValue(makeMockSession());
@@ -499,10 +505,22 @@ describe('hardeningPass', () => {
 
     await hardeningPass('doubao', 9222, makeBundle(), 1, deps);
 
+    // The engine failure is logged with the fallback message
     expect(deps.log).toHaveBeenCalledWith(
-      expect.stringContaining('injection failed: engine crash'),
+      expect.stringContaining('ENGINE injection failed, falling back to legacy: engine crash'),
     );
-    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('failed=1'));
+    // Legacy injection is attempted (and succeeds in the mock), so the
+    // target is counted as legacy injected — NOT as a hard failure.
+    expect(deps.log).toHaveBeenCalledWith(expect.stringContaining('legacy=1'));
+    expect(deps.log).not.toHaveBeenCalledWith(expect.stringContaining('failed=1'));
+    // The renderer is notified via IPC so the user sees a toast.
+    expect(deps.mainWindow?.webContents.send).toHaveBeenCalledWith(
+      'theme:engine-inject-failure',
+      expect.objectContaining({
+        agent: 'doubao',
+        message: expect.stringContaining('engine crash'),
+      }),
+    );
   });
 
   it('aborts mid-loop when epoch changes between targets', async () => {

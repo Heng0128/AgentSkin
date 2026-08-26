@@ -23,20 +23,20 @@
   "preview": "preview.png",
   "hero": "hero.png",
   "colors": {
-    "accent": "#16bfc4",
+    "accent": "#0d9aa0",
     "secondary": "#74dce4",
-    "background": "#fbfdff",
+    "background": "#f0f8fa",
     "foreground": "#163f4b",
     "muted": "#557480",
-    "surface": "#eefbff",
-    "surfaceElevated": "#eafbfc",
-    "border": "rgba(22, 191, 196, .24)",
+    "surface": "#ffffff",
+    "surfaceElevated": "#ffffff",
+    "border": "rgba(13, 154, 160, .24)",
     "codeBackground": "#eefbff",
     "codeForeground": "#163f4b",
     "inputBackground": "#f7fdff",
-    "buttonBackground": "#16bfc4",
+    "buttonBackground": "#0d9aa0",
     "buttonForeground": "#ffffff",
-    "focusRing": "rgba(22, 191, 196, .6)"
+    "focusRing": "rgba(13, 154, 160, .6)"
   },
   "targets": {
     "traework": {

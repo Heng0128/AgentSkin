@@ -29,6 +29,8 @@ interface Props {
   onInstall: () => void;
   onUninstall: () => void;
   onCancel: () => void;
+  className?: string;
+  onClick?: () => void;
 }
 
 export function CommunityThemeCard({
@@ -41,6 +43,8 @@ export function CommunityThemeCard({
   onInstall,
   onUninstall,
   onCancel,
+  className,
+  onClick,
 }: Props) {
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -49,7 +53,13 @@ export function CommunityThemeCard({
   const t = uiMessages[locale];
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all duration-fast hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md">
+    <div
+      onClick={onClick}
+      className={cn(
+        'group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all duration-base ease-out hover:-translate-y-1 hover:border-border-strong hover:shadow-lg as-shine',
+        className,
+      )}
+    >
       {/* Preview area — 16:9 */}
       <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
         {hasPreview ? (
@@ -100,12 +110,12 @@ export function CommunityThemeCard({
         <h3 className="truncate text-sm font-medium leading-snug" title={theme.name}>
           {theme.name}
         </h3>
-        <p className="truncate text-[10px] text-muted-foreground/60">
+        <p className="truncate text-[11px] text-muted-foreground/60">
           by {theme.author?.displayName ?? 'Unknown'}
         </p>
 
         {/* Stats */}
-        <div className="mt-0.5 flex items-center gap-3 text-[10px] text-muted-foreground">
+        <div className="mt-0.5 flex items-center gap-3 text-[11px] text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Download size={10} className="text-muted-foreground/70" />
             {theme.downloads ?? 0}
@@ -123,7 +133,7 @@ export function CommunityThemeCard({
               <Badge
                 key={tag}
                 variant="ghost"
-                className="rounded-md px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                className="rounded-md px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground"
               >
                 {tag}
               </Badge>
@@ -179,7 +189,7 @@ export function CommunityThemeCard({
               type="button"
               variant="ghost"
               size="sm"
-              className="w-full text-[10px]"
+              className="w-full text-[11px]"
               onClick={onCancel}
             >
               {t.cancel}
@@ -188,12 +198,12 @@ export function CommunityThemeCard({
         ) : installError ? (
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between rounded-md bg-destructive/10 px-2 py-1">
-              <span className="truncate text-[10px] text-destructive" title={installError}>
+              <span className="truncate text-[11px] text-destructive" title={installError}>
                 {installError}
               </span>
             </div>
             {retryCount >= 3 ? (
-              <div className="w-full rounded-md bg-muted px-3 py-1.5 text-center text-[10px] text-muted-foreground">
+              <div className="w-full rounded-md bg-muted px-3 py-1.5 text-center text-[11px] text-muted-foreground">
                 {t.installFailed}
               </div>
             ) : (

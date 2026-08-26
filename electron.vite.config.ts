@@ -91,7 +91,24 @@ export default defineConfig({
         },
       },
     },
-    plugins: [react()],
+    plugins: [
+      react({
+        babel: {
+          plugins: [
+            [
+              'babel-plugin-react-compiler',
+              {
+                // Run in development only — production builds compile at build time.
+                // The compiler auto-memoizes components and hooks, reducing
+                // unnecessary re-renders without manual useMemo/useCallback.
+                sources: (filename: string) =>
+                  filename.includes('node_modules') ? false : /[\\/]src[\\/]/.test(filename),
+              },
+            ],
+          ],
+        },
+      }),
+    ],
     assetsInclude: ['**/*.agentskin-theme'],
     resolve: {
       alias: {

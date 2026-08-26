@@ -96,7 +96,7 @@ export function InjectResultsPanel({
   t,
 }: InjectResultsPanelProps) {
   return (
-    <aside className="flex w-[320px] shrink-0 flex-col border-l border-border bg-card">
+    <aside className="as-slide-up-enter flex w-[360px] shrink-0 flex-col border-l border-border bg-card">
       {/* Header */}
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
@@ -104,7 +104,7 @@ export function InjectResultsPanel({
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium leading-tight">{selected.title}</p>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground">
             {typeLabel(t, selected.type)}
             {selected.sizeBytes ? ` · ${formatSize(selected.sizeBytes)}` : ''}
           </p>
@@ -165,11 +165,11 @@ export function InjectResultsPanel({
         {/* Apply to agents */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70">
+            <span className="text-[11px] uppercase tracking-wide text-muted-foreground/70">
               {t.weApplyToAgents}
             </span>
             {runningAgentCount > 0 && (
-              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                 <AgentStatusDot size="xs" variant={isRefreshing ? 'refreshing' : 'active'} />
                 {t.weRunningAgents(runningAgentCount)}
                 {readyAgentCount > 0 && readyAgentCount < runningAgentCount && (
@@ -206,7 +206,7 @@ export function InjectResultsPanel({
                     <p className="truncate text-[12px] font-medium leading-tight">
                       {meta.displayName}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-[11px] text-muted-foreground">
                       {isApplying
                         ? t.weApplying
                         : result?.status === 'ok'

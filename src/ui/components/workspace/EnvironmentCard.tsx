@@ -117,17 +117,17 @@ export function EnvironmentCard({
   const statusLabel = (() => {
     switch (env.status) {
       case 'active':
-        return <b className="text-[10px] font-normal text-cr-success">{t.envStatusActive}</b>;
+        return <b className="text-[11px] font-normal text-cr-success">{t.envStatusActive}</b>;
       case 'available':
         return (
-          <b className="text-[10px] font-normal text-muted-foreground">{t.envStatusAvailable}</b>
+          <b className="text-[11px] font-normal text-muted-foreground">{t.envStatusAvailable}</b>
         );
       case 'offline':
         return (
-          <b className="text-[10px] font-normal text-muted-foreground">{t.envStatusOffline}</b>
+          <b className="text-[11px] font-normal text-muted-foreground">{t.envStatusOffline}</b>
         );
       case 'detecting':
-        return <b className="text-[10px] font-normal text-cr-warning">{t.statusDetecting}</b>;
+        return <b className="text-[11px] font-normal text-cr-warning">{t.statusDetecting}</b>;
     }
   })();
 
@@ -195,7 +195,7 @@ export function EnvironmentCard({
             <div className="flex items-center gap-1">
               <p className="truncate font-display text-[16px] font-medium">{env.name}</p>
               {isActive && (
-                <span className="shrink-0 rounded-md bg-cr-success/15 px-1 py-0 text-[10px] font-normal text-cr-success">
+                <span className="shrink-0 rounded-md bg-cr-success/15 px-1 py-0 text-[11px] font-normal text-cr-success">
                   {t.activeBadge}
                 </span>
               )}
@@ -252,19 +252,19 @@ export function EnvironmentCard({
         <div className="mt-2 font-mono">
           <div className="grid grid-cols-3 gap-1 rounded-md bg-secondary px-2 py-2">
             <div>
-              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">{t.detailVersion}</i>
+              <i className="mb-0.5 block text-[11px] opacity-70 not-italic">{t.detailVersion}</i>
               <b className="block text-[11px] font-normal tabular-nums text-foreground/80">
                 {env.detectedVersion || '—'}
               </b>
             </div>
             <div>
-              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">
+              <i className="mb-0.5 block text-[11px] opacity-70 not-italic">
                 {t.agentDetailStatus}
               </i>
               {statusLabel}
             </div>
             <div>
-              <i className="mb-0.5 block text-[10px] opacity-70 not-italic">{t.capTheme}</i>
+              <i className="mb-0.5 block text-[11px] opacity-70 not-italic">{t.capTheme}</i>
               <b className="block truncate text-[11px] tabular-nums text-foreground/80">
                 {env.theme?.name || '—'}
               </b>
@@ -274,7 +274,7 @@ export function EnvironmentCard({
 
         {/* Wallpaper binding indicator (P0-3: environment = theme + wallpaper) */}
         {env.wallpaperId && (
-          <div className="mt-1.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+          <div className="mt-1.5 flex items-center gap-1 text-[11px] text-muted-foreground">
             <Image className="size-3" />
             <span>{t.envWallpaperBound}</span>
           </div>

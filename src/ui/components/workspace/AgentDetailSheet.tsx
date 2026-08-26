@@ -71,9 +71,7 @@ export function AgentDetailSheet({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <AgentStatusDot variant={envToDotVariant(env)} size="sm" />
-                  <span className="text-[13px] font-normal text-foreground">
-                    {statusLabel(env, t)}
-                  </span>
+                  <span className="text-sm font-normal text-foreground">{statusLabel(env, t)}</span>
                 </div>
                 {env.theme && <span className="as-mono">{env.theme.name}</span>}
               </div>
@@ -92,7 +90,7 @@ export function AgentDetailSheet({
               )}
 
               {/* 次要信息 — 紧凑一行 */}
-              <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                 <span>
                   {env.detectedVersion ? t.versionLabel(env.detectedVersion) : t.detailNotInstalled}
                 </span>

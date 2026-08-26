@@ -1,4 +1,4 @@
-/* Art 175236 — TRAE Work CN (solo-lite shell)
+/* Academy Corridor Winter — TRAE Work CN (solo-lite shell)
    Strategy: override --vscode-* / --vscode-icube-* design tokens (the app
    declares them on plain `body` selectors; our host-scoped body rule at
    specificity (0,1,2) always outranks them), then layer hero art + structural
@@ -17,7 +17,8 @@ html.agentskin-host-traework {
   --agentskin-code-fg: #f4f0eb;
   --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #292d30 82%, #afcad2 18%) 45%, transparent);
   --agentskin-button-bg: #afcad2;
-  --agentskin-focus-ring: color-mix(in srgb, #afcad2 40%, transparent);
+  --agentskin-button-fg: #ffffff;
+  --agentskin-focus-ring: #afcad260;
   --agentskin-selection: color-mix(in srgb, #afcad2 32%, transparent);
   --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
   text-shadow: var(--agentskin-text-shadow);
@@ -25,7 +26,7 @@ html.agentskin-host-traework {
 
 /* ---- design token override (global restyle via app's own variable system) ---- */
 html.agentskin-host-traework body {
-  color-scheme: dark !important;
+  /* color-scheme 已在 tokenBlock() 中声明 (:root 级)，此处删除以避免重复 */
 
   /* Ink / text */
   --vscode-foreground: #f4f0eb !important;

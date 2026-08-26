@@ -59,7 +59,7 @@ function StepRow({ step }: { step: InstallStep }) {
           <p className="truncate text-[11px] text-destructive/80">{step.message}</p>
         )}
         {step.elapsed !== undefined && step.elapsed > 0 && (
-          <span className="ml-1.5 text-[10px] text-muted-foreground/50">
+          <span className="ml-1.5 text-[11px] text-muted-foreground/50">
             {formatElapsed(step.elapsed)}
           </span>
         )}

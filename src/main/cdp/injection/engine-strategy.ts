@@ -251,9 +251,25 @@ export async function injectThemeViaEngine(
   ];
 
   let layersInjected = 0;
+  const failedLayers: string[] = [];
   for (const [layerName, layerCss] of layers) {
     const ok = await injectCssLayer(session, layerName, layerCss);
-    if (ok) layersInjected++;
+    if (ok) {
+      layersInjected++;
+    } else {
+      failedLayers.push(layerName);
+    }
+  }
+
+  // --- Step 4b: Verify all layers adopted successfully ---
+  // Every layer is critical — a missing palette means no color identity, a
+  // missing tokens layer means no native token overrides. Partial injection
+  // produces a broken half-themed UI that is worse than no injection.
+  if (failedLayers.length > 0) {
+    throw new Error(
+      `Engine CSS layer injection failed for agent=${agent ?? 'unknown'} theme=${themeId ?? 'unknown'}: ` +
+        `failed layers=[${failedLayers.join(', ')}] (${layersInjected}/${layers.length} succeeded)`,
+    );
   }
 
   // --- Step 5: Execute adapter.mjs (Layer 1: structural + L4/L5) ---

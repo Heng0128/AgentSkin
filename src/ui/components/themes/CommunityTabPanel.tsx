@@ -164,7 +164,7 @@ export function CommunityTabPanel() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex flex-col overflow-hidden rounded-md border border-border bg-card"
+            className="flex flex-col overflow-hidden rounded-lg border border-border bg-card"
           >
             <div className="aspect-[16/9] w-full bg-muted" />
             <div className="flex flex-col gap-2 p-2.5">
@@ -219,25 +219,18 @@ export function CommunityTabPanel() {
 
       {/* Master-detail: grid yields width to the detail panel on the right */}
       <div className="flex min-h-0 flex-1 gap-3">
-        {/* Card grid */}
+        {/* Card grid — scrollable */}
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
-        <div className="grid grid-cols-1 gap-3 pb-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {themes.map((theme) => {
-            const isInstalled = installedIds.has(theme.themeId);
-            const isInstalling = installingIds.has(theme.themeId);
-            const progress = downloadProgress.get(theme.themeId);
-            const installError = installErrors.get(theme.themeId);
+          <div className="grid grid-cols-1 gap-3 pb-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {themes.map((theme) => {
+              const isInstalled = installedIds.has(theme.themeId);
+              const isInstalling = installingIds.has(theme.themeId);
+              const progress = downloadProgress.get(theme.themeId);
+              const installError = installErrors.get(theme.themeId);
 
-            return (
-              <div
-                key={theme.themeId}
-                onClick={() => {
-                  selectTheme(theme.themeId);
-                  loadThemeDetail(theme.themeId);
-                }}
-                className="cursor-pointer"
-              >
+              return (
                 <CommunityThemeCard
+                  key={theme.themeId}
                   theme={theme}
                   isInstalled={isInstalled}
                   isInstalling={isInstalling}
@@ -253,25 +246,29 @@ export function CommunityTabPanel() {
                   onCancel={() => {
                     useCommunityStore.getState().cancelInstall(theme.themeId);
                   }}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    selectTheme(theme.themeId);
+                    loadThemeDetail(theme.themeId);
+                  }}
                 />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Load more */}
-        {themes.length < total && (
-          <div className="flex justify-center py-4">
-            <Button variant="outline" size="default" onClick={loadMore} disabled={loadingMore}>
-              {loadingMore ? t.communityLoading : t.communityLoadMore}
-            </Button>
+              );
+            })}
           </div>
-        )}
-      </div>
+
+          {/* Load more */}
+          {themes.length < total && (
+            <div className="flex justify-center py-4">
+              <Button variant="outline" size="default" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? t.communityLoading : t.communityLoadMore}
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Theme detail panel */}
         {selectedThemeId && selectedThemeDetail && (
-          <div className="h-full shrink-0 animate-slide-in-right">
+          <div className="h-full shrink-0 animate-slide-in-right as-slide-up-enter">
             <ThemeDetailPanel
               theme={selectedThemeDetail}
               onClose={() => selectTheme(null)}

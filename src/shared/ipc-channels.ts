@@ -307,6 +307,15 @@ export const IpcChannel = {
   // have been attempted. Payload: { appId, injected, failed, total, duration }.
   THEME_SECONDARY_INJECT_SUMMARY: 'theme:secondary-inject-summary',
 
+  // --- Engine injection failure notification ---
+  // SEND_ONLY — main → renderer event. Pushed when the multi-layer engine
+  // injection (palette + tokens + cosmetic + theme + adapter.mjs) fails
+  // partway — e.g. buildPaletteCss() returned null (malformed theme) or a
+  // CSS layer failed to adopt via CDP. The renderer surfaces this as a
+  // non-blocking toast so the user knows the engine path fell back to the
+  // legacy single-CSS injection. Payload: { agent, themeId, message }.
+  THEME_ENGINE_INJECT_FAILURE: 'theme:engine-inject-failure',
+
   // --- MCP (Model Context Protocol) ---
   /** INVOKE — renderer → main. Get current MCP server status (running, port). */
   MCP_GET_STATUS: 'mcp:get-status',

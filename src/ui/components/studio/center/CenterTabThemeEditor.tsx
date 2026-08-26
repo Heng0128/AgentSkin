@@ -101,7 +101,7 @@ function SegmentedControl<T extends string>({
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`rounded-md border px-2 py-1 text-[10px] transition-colors ${
+            className={`rounded-md border px-2 py-1 text-[11px] transition-colors ${
               isSelected
                 ? 'border-primary bg-card2 text-foreground'
                 : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40'
@@ -124,15 +124,15 @@ function WCAGContrastPill({ fgHex, bgHex }: { fgHex: string; bgHex: string }) {
   const ratioText = `${ratio.toFixed(1)}:1`;
 
   return (
-    <span className="inline-flex items-center gap-1 font-mono text-[10px]">
+    <span className="inline-flex items-center gap-1 font-mono text-[11px]">
       <span className={passesAA ? 'text-cr-success' : 'text-destructive'}>{ratioText}</span>
       {passesAAA && (
-        <span className="rounded-sm bg-cr-success/15 px-1 text-[9px] font-normal leading-none text-cr-success">
+        <span className="rounded-md bg-cr-success/15 px-1 text-[9px] font-normal leading-none text-cr-success">
           AAA
         </span>
       )}
       {!passesAA && (
-        <span className="rounded-sm bg-destructive/15 px-1 text-[9px] font-normal leading-none text-destructive">
+        <span className="rounded-md bg-destructive/15 px-1 text-[9px] font-normal leading-none text-destructive">
           AA
         </span>
       )}
@@ -215,7 +215,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         <h3 className="text-[11px] font-normal text-foreground">
           {t.studioTabTheme ?? 'Theme Editor'}
         </h3>
-        <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
           {t.studioTabThemeDesc ??
             'Visual theme editor — adjust design language parameters and inspect color token contrast.'}
         </p>
@@ -223,10 +223,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
 
       {/* Live CSS preview bar */}
       <div className="mt-4 rounded-md border border-border bg-card p-4">
-        <h4 className="text-[10px] font-normal text-foreground">
+        <h4 className="text-[11px] font-normal text-foreground">
           {t.studioDLCssPreview ?? 'CSS Variables'}
         </h4>
-        <pre className="mt-2 overflow-x-auto whitespace-pre font-mono text-[10px] leading-relaxed text-muted-foreground">
+        <pre className="mt-2 overflow-x-auto whitespace-pre font-mono text-[11px] leading-relaxed text-muted-foreground">
           {cssPreview}
         </pre>
       </div>
@@ -236,10 +236,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Spacing Density */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-foreground">
+            <span className="text-[11px] font-normal text-foreground">
               {t.studioDLSpacing ?? 'Spacing Density'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground/40">
               --agentskin-space-3: {spacingPx(density)}
             </span>
           </div>
@@ -264,10 +264,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Radius Scale */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-foreground">
+            <span className="text-[11px] font-normal text-foreground">
               {t.studioDLRadius ?? 'Radius Scale'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground/40">
               --agentskin-radius-md: {radiusPx(scale)}
             </span>
           </div>
@@ -307,10 +307,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Shadow Elevation */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-foreground">
+            <span className="text-[11px] font-normal text-foreground">
               {t.studioDLShadow ?? 'Shadow Elevation'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground/40">
               --agentskin-shadow-float: {shadowValue(elevation).slice(0, 24)}...
             </span>
           </div>
@@ -340,10 +340,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
         {/* Motion Speed */}
         <div>
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-normal text-foreground">
+            <span className="text-[11px] font-normal text-foreground">
               {t.studioDLMotion ?? 'Motion Speed'}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground/40">
               --agentskin-duration-fast: {motionMs(speed)}
             </span>
           </div>
@@ -368,16 +368,16 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
 
       {/* Color Token display */}
       <div className="mt-4 rounded-md border border-border bg-card p-4">
-        <h4 className="text-[10px] font-normal text-foreground">
+        <h4 className="text-[11px] font-normal text-foreground">
           {t.studioThemeColors ?? 'Color Tokens (14)'}
         </h4>
-        <p className="mt-1 text-[10px] text-muted-foreground/40">
+        <p className="mt-1 text-[11px] text-muted-foreground/40">
           {t.studioThemeColorsHint ?? 'Click a swatch to rotate hue +30°'}
         </p>
 
         {colorTokens.length === 0 ? (
           <div className="mt-4 rounded-md border border-dashed border-border p-6 text-center">
-            <p className="text-[10px] text-muted-foreground/40">
+            <p className="text-[11px] text-muted-foreground/40">
               {t.studioThemeNoSelection ?? 'Select a theme to inspect its color tokens.'}
             </p>
           </div>
@@ -404,10 +404,10 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
                   />
                   {/* Token info */}
                   <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-[10px] font-normal text-foreground">
+                    <div className="truncate font-mono text-[11px] font-normal text-foreground">
                       {key}
                     </div>
-                    <div className="font-mono text-[10px] tabular-nums text-muted-foreground/40">
+                    <div className="font-mono text-[11px] tabular-nums text-muted-foreground/40">
                       {displayHex}
                     </div>
                     {/* WCAG contrast pill */}

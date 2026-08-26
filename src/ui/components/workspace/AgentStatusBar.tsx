@@ -117,7 +117,7 @@ function StatusRefreshLabel({
   useTick();
   const agoLabel = lastStatusAt ? relativeAgo(lastStatusAt, Date.now()) : null;
   return (
-    <span className="ml-auto inline-flex items-center gap-1 text-[10px] text-muted-foreground/60">
+    <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground/60">
       {isRefreshing ? (
         <>
           <span className="relative flex size-1.5">
@@ -249,7 +249,7 @@ export function AgentStatusBar({
                 </p>
                 <p
                   className={cn(
-                    'mt-0.5 truncate text-[10px] leading-tight',
+                    'mt-0.5 truncate text-[11px] leading-tight',
                     hasLivePhase
                       ? 'font-normal text-cr-warning'
                       : isFailed

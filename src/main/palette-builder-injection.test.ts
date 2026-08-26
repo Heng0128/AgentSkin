@@ -174,49 +174,52 @@ describe('tryEngineInjection', () => {
     expect(injectThemeViaEngine).not.toHaveBeenCalled();
   });
 
-  it('returns null when the per-agent CSS cannot yield a palette (< 6 tokens)', async () => {
-    const result = await tryEngineInjection(
-      {} as unknown as CdpSession,
-      'workbuddy',
-      makeBundle(),
-      makeTarget('--agentskin-accent: #ff0000;'), // too few tokens
-      null,
-      null,
-      deps,
-    );
-    expect(result).toBeNull();
+  it('throws when the per-agent CSS cannot yield a palette (< 6 tokens)', async () => {
+    await expect(
+      tryEngineInjection(
+        {} as unknown as CdpSession,
+        'workbuddy',
+        makeBundle(),
+        makeTarget('--agentskin-accent: #ff0000;'), // too few tokens
+        null,
+        null,
+        deps,
+      ),
+    ).rejects.toThrow('Failed to build palette CSS for agent=workbuddy');
     expect(injectThemeViaEngine).not.toHaveBeenCalled();
   });
 
-  it('logs and returns null when injectThemeViaEngine throws', async () => {
+  it('logs and throws when injectThemeViaEngine throws', async () => {
     vi.mocked(injectThemeViaEngine).mockRejectedValueOnce(new Error('CDP down'));
-    const result = await tryEngineInjection(
-      {} as unknown as CdpSession,
-      'workbuddy',
-      makeBundle(),
-      makeTarget(),
-      null,
-      null,
-      deps,
-    );
-    expect(result).toBeNull();
+    await expect(
+      tryEngineInjection(
+        {} as unknown as CdpSession,
+        'workbuddy',
+        makeBundle(),
+        makeTarget(),
+        null,
+        null,
+        deps,
+      ),
+    ).rejects.toThrow('Engine injection failed for agent=workbuddy: CDP down');
     expect(deps.log).toHaveBeenCalledWith(
       expect.stringContaining('engine injection failed: CDP down'),
     );
   });
 
-  it('logs and returns null when resolveEngineDir rejects', async () => {
+  it('logs and throws when resolveEngineDir rejects', async () => {
     vi.mocked(deps.resolveEngineDir).mockRejectedValueOnce(new Error('no resources'));
-    const result = await tryEngineInjection(
-      {} as unknown as CdpSession,
-      'workbuddy',
-      makeBundle(),
-      makeTarget(),
-      null,
-      null,
-      deps,
-    );
-    expect(result).toBeNull();
+    await expect(
+      tryEngineInjection(
+        {} as unknown as CdpSession,
+        'workbuddy',
+        makeBundle(),
+        makeTarget(),
+        null,
+        null,
+        deps,
+      ),
+    ).rejects.toThrow('Engine injection failed for agent=workbuddy: no resources');
     expect(deps.log).toHaveBeenCalledWith(
       expect.stringContaining('engine injection failed: no resources'),
     );

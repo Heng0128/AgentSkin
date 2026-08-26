@@ -244,7 +244,7 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
         {mcpRunning && mcpUrl && (
           <div className="flex items-center gap-1.5 text-[11px]">
             <span className="text-muted-foreground">{t.settingsMcpEndpoint}:</span>
-            <code className="rounded bg-muted px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+            <code className="rounded bg-muted px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
               {mcpUrl}
             </code>
             <Button
@@ -520,10 +520,10 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                   <div className="mb-2 px-1 text-[11px] text-muted-foreground/60">
                     {logs.length} {t.showLogs}
                   </div>
-                  <div className="max-h-[calc(100vh-280px)] overflow-y-auto rounded-md bg-background/40 p-2">
+                  <div className="max-h-[calc(100vh-280px)] overflow-y-auto rounded-md bg-background/60 p-2">
                     {logs.map((line, i) => (
                       // biome-ignore lint/suspicious/noArrayIndexKey: log lines are append-only display items — no reorder, insert, or delete, so index keys are safe.
-                      <div key={i} className="flex gap-2 rounded px-1 py-0.5 odd:bg-muted/30">
+                      <div key={i} className="flex gap-2 rounded px-1 py-1 odd:bg-muted/30">
                         <span className="w-6 shrink-0 select-none text-right text-muted-foreground/40 tabular-nums">
                           {i + 1}
                         </span>

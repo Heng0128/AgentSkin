@@ -14,7 +14,7 @@ export class WorkbuddyAdapter extends BaseApplicationAdapter {
   readonly coreId = 'workbuddy';
 
   /** AgentSkin-side install detection hints (Windows). */
-  readonly installHints: InstallHints = {
+  override readonly installHints: InstallHints = {
     dirNames: ['WorkBuddy'],
     exeNames: ['WorkBuddy.exe'],
     registryNames: ['WorkBuddy'],

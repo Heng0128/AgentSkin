@@ -57,10 +57,10 @@ export function ResourcesSection({ t }: { t: UiMessages }) {
                 {installedThemes.map((theme) => (
                   <div
                     key={theme.id}
-                    className="flex items-center gap-1 p-0 rounded-sm hover:bg-muted"
+                    className="flex items-center gap-1 p-0 rounded-md hover:bg-muted"
                   >
                     <span
-                      className="size-[10px] rounded-sm border border-border"
+                      className="size-[10px] rounded-md border border-border"
                       style={{ background: theme.colors?.accent || 'var(--muted)' }}
                     />
                     <span className="text-micro text-foreground truncate flex-1">{theme.name}</span>
@@ -88,7 +88,7 @@ export function ResourcesSection({ t }: { t: UiMessages }) {
                 {wallpapers.map((wp) => (
                   <div
                     key={wp.id}
-                    className="flex items-center gap-1 p-0 rounded-sm hover:bg-muted"
+                    className="flex items-center gap-1 p-0 rounded-md hover:bg-muted"
                   >
                     <Image className="size-2.5 text-muted-foreground" />
                     <span className="text-micro text-foreground truncate flex-1">

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MPL-2.0
-
 import { cn } from '@/lib/utils';
 
 interface ProgressProps {
@@ -11,13 +10,25 @@ interface ProgressProps {
   className?: string;
   /** Class for the inner fill bar (color overrides, e.g. 'bg-destructive'). */
   fillClassName?: string;
+  /** Show a shimmer sweep on the fill bar (determinate mode only). */
+  shimmer?: boolean;
+  /** Size preset — 'sm' (h-1.5), 'md' (h-2, default), 'lg' (h-3). */
+  size?: 'sm' | 'md' | 'lg';
 }
+
+const SIZE_MAP = {
+  sm: 'h-1.5',
+  md: 'h-2',
+  lg: 'h-3',
+} as const;
 
 export function Progress({
   value = 0,
   indeterminate = false,
   className,
   fillClassName,
+  shimmer = false,
+  size = 'md',
 }: ProgressProps) {
   const clamped = Math.max(0, Math.min(100, value));
   return (
@@ -26,7 +37,11 @@ export function Progress({
       aria-valuenow={indeterminate ? undefined : clamped}
       aria-valuemin={0}
       aria-valuemax={100}
-      className={cn('relative h-2 w-full overflow-hidden rounded-md bg-muted', className)}
+      className={cn(
+        'relative w-full overflow-hidden rounded-md bg-muted',
+        SIZE_MAP[size],
+        className,
+      )}
     >
       {indeterminate ? (
         <div
@@ -37,7 +52,11 @@ export function Progress({
         />
       ) : (
         <div
-          className={cn('h-full bg-primary transition-all duration-slower ease-out', fillClassName)}
+          className={cn(
+            'h-full rounded-md bg-primary transition-all duration-slower ease-out',
+            shimmer && 'shimmer',
+            fillClassName,
+          )}
           style={{ width: `${clamped}%` }}
         />
       )}

@@ -12,7 +12,7 @@
  * Visual style follows Quiet Workbench design tokens:
  *   · rounded-md corners
  *   · spacing from the 4/8/16/24/32/48 Tailwind scale only
- *   · typography: text-[10px] mono for body, text-xs for headings
+ *   · typography: text-[11px] mono for body, text-xs for headings
  *   · all colors via CSS custom properties (no bare hex/rgba)
  */
 
@@ -69,7 +69,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
             type="button"
             onClick={handleRefresh}
             disabled={bundlesLoading}
-            className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[10px] text-foreground/60 transition-colors hover:bg-card2 disabled:opacity-50"
+            className="flex items-center gap-1 rounded-md border border-border bg-card px-2 py-1 text-[11px] text-foreground/60 transition-colors hover:bg-card2 disabled:opacity-50"
           >
             <RefreshCw className={`h-3 w-3 ${bundlesLoading ? 'animate-spin' : ''}`} />
             {t.studioBundleRefresh}
@@ -78,7 +78,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
             type="button"
             onClick={handleImport}
             disabled={bundlesLoading}
-            className="flex items-center gap-1 rounded-md border border-[var(--primary)] bg-[var(--primary)] px-2 py-1 text-[10px] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="flex items-center gap-1 rounded-md border border-[var(--primary)] bg-[var(--primary)] px-2 py-1 text-[11px] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             <Plus className="h-3 w-3" />
             {t.studioBundleImportBtn}
@@ -87,7 +87,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
       </div>
 
       {/* Description */}
-      <p className="mt-2 text-[10px] leading-relaxed text-muted-foreground">
+      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
         {t.studioBundlePanelDesc}
       </p>
 
@@ -95,7 +95,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
       <div className="mt-4 flex-1 overflow-auto">
         {bundlesLoading && bundles.length === 0 ? (
           <div className="flex items-center justify-center py-12">
-            <p className="text-[10px] text-muted-foreground/40">{t.studioBundleLoading}</p>
+            <p className="text-[11px] text-muted-foreground/40">{t.studioBundleLoading}</p>
           </div>
         ) : bundles.length === 0 ? (
           <div className="flex items-center justify-center py-12">
@@ -116,16 +116,16 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
                 <div className="flex flex-col gap-1">
                   <span className="text-[11px] font-normal text-foreground">{bundle.name}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-[11px] text-muted-foreground">
                       {t.studioBundleTagTheme}: {bundle.themeId ?? '—'}
                     </span>
                     {bundle.hasWallpaper && (
-                      <span className="rounded-md bg-card2 px-1 py-0.5 text-[10px] text-foreground/60">
+                      <span className="rounded-md bg-card2 px-1 py-0.5 text-[11px] text-foreground/60">
                         {t.studioBundleHasWallpaper}
                       </span>
                     )}
                   </div>
-                  <span className="text-[10px] tabular-nums text-muted-foreground/40">
+                  <span className="text-[11px] tabular-nums text-muted-foreground/40">
                     {bundle.createdAt !== undefined && bundle.createdAt !== ''
                       ? bundle.createdAt
                       : '—'}
@@ -134,7 +134,7 @@ export function CenterTabBundle({ t }: { t: UiMessages }) {
                 <button
                   type="button"
                   onClick={() => handleDelete(bundle.id)}
-                  className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
+                  className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
                 >
                   <Trash2 className="h-3 w-3" />
                   {t.studioBundleDeleteBtn}

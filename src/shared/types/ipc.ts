@@ -760,4 +760,14 @@ export interface AgentSkinApi {
   /** Subscribe to download progress events pushed from the main process.
    *  Returns an unsubscribe function. */
   onCommunityDownloadProgress(listener: (progress: DownloadProgress) => void): () => void;
+  /** Subscribe to engine-injection-failure events pushed from the main process
+   *  when the multi-layer engine injection fails partway and falls back to the
+   *  legacy single-CSS injection. The renderer surfaces this as a non-blocking
+   *  toast so the user knows the engine path degraded. Payload carries the agent,
+   *  themeId, and a human-readable error message. Returns an unsubscribe function.
+   *  No ipcMain.handle is registered — this is a main→renderer push event sent
+   *  via webContents.send. */
+  onThemeEngineInjectFailure(
+    listener: (event: { agent: string; themeId: string; message: string }) => void,
+  ): () => void;
 }

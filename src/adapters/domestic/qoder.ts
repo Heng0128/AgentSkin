@@ -19,7 +19,7 @@ export class QoderAdapter extends BaseApplicationAdapter {
    * off the running app; these let AgentSkin confirm a local install even
    * when QoderWork CN is closed (Program Files / AppData / Uninstall registry).
    */
-  readonly installHints: InstallHints = {
+  override readonly installHints: InstallHints = {
     dirNames: ['QoderWork CN', 'QoderWork CN\\QoderWork CN'],
     exeNames: ['QoderWork CN.exe'],
     registryNames: ['QoderWork CN', 'QoderWork'],

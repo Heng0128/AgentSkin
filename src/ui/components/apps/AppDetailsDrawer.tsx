@@ -52,13 +52,13 @@ export function AppDetailsDrawer() {
   const handleClose = () => openDrawer(null);
 
   return (
-    <aside className="relative flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
+    <aside className="as-slide-up-enter relative flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
       {/* Close button */}
       <button
         type="button"
         onClick={handleClose}
         aria-label={t.appDetailsClose}
-        className="absolute right-3 top-3 z-[var(--z-content)] flex size-6 items-center justify-center rounded-sm bg-transparent text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="absolute right-3 top-3 z-[var(--z-content)] flex size-7 items-center justify-center rounded-md bg-transparent text-muted-foreground transition-all duration-base ease-out hover:bg-muted hover:text-foreground hover:scale-110"
       >
         <X size={14} />
       </button>
@@ -69,7 +69,7 @@ export function AppDetailsDrawer() {
           <p className="text-[11px] text-muted-foreground">{t.appDetailsAppUnavailable}</p>
         </div>
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
           {/* Identity: icon + name + status */}
           <div className="flex items-center gap-3 pr-8">
             {app.adapterMatch ? (
@@ -80,7 +80,7 @@ export function AppDetailsDrawer() {
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-medium leading-snug">{app.productName}</p>
+              <p className="truncate text-sm font-medium leading-snug">{app.productName}</p>
               <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <span
                   className={cn(

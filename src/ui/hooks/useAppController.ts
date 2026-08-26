@@ -278,6 +278,19 @@ export function useAppController() {
   }, []);
 
   // -----------------------------------------------------------------------
+  // Engine injection failure — surface a non-blocking toast when the
+  // multi-layer engine injection falls back to legacy single-CSS mode.
+  // -----------------------------------------------------------------------
+  useEffect(() => {
+    const off = api.onThemeEngineInjectFailure(({ agent, themeId, message }) => {
+      const agentName = AGENT_META[agent as AgentId]?.displayName ?? agent;
+      const toastMsg = `主题引擎注入失败，已降级到兼容模式 (${agentName} / ${themeId}): ${message}`;
+      useNotificationStore.getState().showToast(toastMsg, 'destructive');
+    });
+    return off;
+  }, []);
+
+  // -----------------------------------------------------------------------
   // Persist failure warnings — subscribe once at boot.
   // Increment persistFailures in the store whenever the main process fires
   // PERSIST_FAILURE_WARNING (threshold reached).

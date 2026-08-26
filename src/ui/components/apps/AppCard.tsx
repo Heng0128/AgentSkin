@@ -95,8 +95,8 @@ export function AppCard({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'group flex h-auto w-full flex-col items-center gap-2.5 rounded-lg border border-border bg-card p-3.5',
-        'transition-all duration-fast ease-out hover:border-border-strong hover:bg-card2 hover:shadow-md',
+        'group flex h-auto w-full flex-col items-center gap-2.5 rounded-lg border border-border bg-card p-3.5 as-shine',
+        'transition-all duration-base ease-out hover:border-border-strong hover:bg-card2 hover:shadow-lg hover:-translate-y-0.5',
         'active:scale-[0.98]',
         isRunning && 'border-cr-success/30 bg-cr-success/[0.03]',
       )}
@@ -132,7 +132,7 @@ export function AppCard({
           {app.productName}
         </span>
         {showRunningStatus && port !== null && (
-          <span className="font-mono text-[10px] tabular-nums text-muted-foreground">:{port}</span>
+          <span className="font-mono text-[11px] tabular-nums text-muted-foreground">:{port}</span>
         )}
       </div>
     </button>

@@ -15,7 +15,7 @@
  * Visual style follows Quiet Workbench design tokens:
  *   · rounded-md corners, no radius inflation
  *   · spacing from the 4/8/16/24/32/48 Tailwind scale only
- *   · typography: text-[10px] mono for token names, tabular-nums
+ *   · typography: text-[11px] mono for token names, tabular-nums
  *   · all colors via CSS custom properties (no bare hex/rgba)
  */
 
@@ -281,7 +281,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
             <button
               type="button"
               onClick={handleClear}
-              className="rounded-md border border-border bg-card2 px-4 py-1 text-[10px] text-foreground/60"
+              className="rounded-md border border-border bg-card2 px-4 py-1 text-[11px] text-foreground/60"
             >
               {t.studioImageToThemeClear}
             </button>
@@ -303,7 +303,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         {/* Palette groups */}
         {TOKEN_GROUPS.map((group) => (
           <div key={group.labelKey} className="space-y-1">
-            <span className="text-[10px] text-muted-foreground/40">{t[group.labelKey]}</span>
+            <span className="text-[11px] text-muted-foreground/40">{t[group.labelKey]}</span>
             <div className="flex flex-wrap gap-1">
               {group.tokens.map((token) => {
                 // ThemeColorsFromImage has no index signature; tokens are a
@@ -320,15 +320,15 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
                     className="rounded-md border border-border p-1 text-left"
                   >
                     <div className="size-6 rounded-md" style={{ backgroundColor: value }} />
-                    <span className="mt-1 block font-mono text-[10px] text-muted-foreground">
+                    <span className="mt-1 block font-mono text-[11px] text-muted-foreground">
                       {token}
                     </span>
                     {isExpanded && (
                       <div className="mt-1 space-y-1">
-                        <span className="block font-mono text-[10px] tabular-nums text-foreground/60">
+                        <span className="block font-mono text-[11px] tabular-nums text-foreground/60">
                           {value}
                         </span>
-                        <span className="block font-mono text-[10px] tabular-nums text-muted-foreground">
+                        <span className="block font-mono text-[11px] tabular-nums text-muted-foreground">
                           {hexToRgbDisplay(value)}
                         </span>
                         <button
@@ -337,7 +337,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
                             e.stopPropagation();
                             handleCopy(value, token);
                           }}
-                          className="rounded-md border border-border bg-card2 px-2 py-0.5 text-[10px] text-foreground/60"
+                          className="rounded-md border border-border bg-card2 px-2 py-0.5 text-[11px] text-foreground/60"
                         >
                           {t.studioImageToThemeCopyFormat(token)}
                         </button>
@@ -353,10 +353,10 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         {/* Tonal derivative */}
         {activeAccent && tonals.length > 0 && (
           <div className="space-y-1">
-            <span className="text-[10px] text-muted-foreground/40">
+            <span className="text-[11px] text-muted-foreground/40">
               {t.studioImageToThemeTonalDerivative}
             </span>
-            <p className="text-[10px] text-muted-foreground">{t.studioImageToThemeTonalHint}</p>
+            <p className="text-[11px] text-muted-foreground">{t.studioImageToThemeTonalHint}</p>
             <div className="flex gap-1">
               {tonals.map((tone) => (
                 <button
@@ -377,14 +377,14 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
           <button
             type="button"
             onClick={handleApply}
-            className="rounded-md bg-[var(--primary)] px-4 py-1 text-[11px] text-[var(--primary-foreground)]"
+            className="rounded-md bg-primary px-4 py-1 text-[11px] text-primary-foreground"
           >
             {t.studioImageToThemeApplyToProject}
           </button>
           <button
             type="button"
             onClick={handleClear}
-            className="rounded-md border border-border bg-card2 px-4 py-1 text-[10px] text-foreground/60"
+            className="rounded-md border border-border bg-card2 px-4 py-1 text-[11px] text-foreground/60"
           >
             {t.studioImageToThemeClear}
           </button>
@@ -403,7 +403,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
           )}
           <div className="flex-1 truncate">
             <p className="truncate font-mono text-[11px] text-foreground">{file.name}</p>
-            <p className="font-mono text-[10px] text-muted-foreground">
+            <p className="font-mono text-[11px] text-muted-foreground">
               {(file.size / 1024).toFixed(1)} KB
             </p>
           </div>
@@ -418,7 +418,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         <button
           type="button"
           onClick={handleClear}
-          className="w-full rounded-md border border-border bg-transparent px-4 py-1 text-[10px] text-muted-foreground"
+          className="w-full rounded-md border border-border bg-transparent px-4 py-1 text-[11px] text-muted-foreground"
         >
           {t.studioImageToThemeClear}
         </button>
@@ -434,7 +434,7 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
           <img src={previewUrl} alt={file.name} className="size-12 rounded-md object-cover" />
           <div className="flex-1 truncate">
             <p className="truncate font-mono text-[11px] text-foreground">{file.name}</p>
-            <p className="font-mono text-[10px] text-muted-foreground">
+            <p className="font-mono text-[11px] text-muted-foreground">
               {(file.size / 1024).toFixed(1)} KB
             </p>
           </div>
@@ -442,14 +442,14 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
         <button
           type="button"
           onClick={handleExtract}
-          className="w-full rounded-md bg-[var(--primary)] px-4 py-2 text-[11px] text-[var(--primary-foreground)]"
+          className="w-full rounded-md bg-primary px-4 py-2 text-[11px] text-primary-foreground"
         >
           {t.studioImageToThemeExtractButton}
         </button>
         <button
           type="button"
           onClick={handleClear}
-          className="w-full rounded-md border border-border bg-transparent px-4 py-1 text-[10px] text-muted-foreground"
+          className="w-full rounded-md border border-border bg-transparent px-4 py-1 text-[11px] text-muted-foreground"
         >
           {t.studioImageToThemeClear}
         </button>
@@ -480,11 +480,11 @@ export function StudioImageToThemePanel({ t }: { t: UiMessages }) {
       >
         <UploadCloud className="size-8 text-muted-foreground" />
         <span className="text-[11px] text-foreground">{t.studioImageToThemeDragOrClick}</span>
-        <span className="text-[10px] text-muted-foreground/40">
+        <span className="text-[11px] text-muted-foreground/40">
           {t.studioImageToThemeSupportedFormats}
         </span>
       </span>
-      <p className="text-[10px] leading-relaxed text-muted-foreground/40">
+      <p className="text-[11px] leading-relaxed text-muted-foreground/40">
         {t.studioImageToThemeHintText}
       </p>
     </label>

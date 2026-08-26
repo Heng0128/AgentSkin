@@ -133,10 +133,11 @@ describe('ThemeDetailPanel', () => {
     const theme = createTheme();
     render(<ThemeDetailPanel theme={theme} onClose={onClose} />);
 
-    // Backdrop (aria-label), header (aria-label), and footer (text) all close
+    // Header (aria-label) and footer (text) both close; preview close is
+    // mutually exclusive with header — at most 2 in the accessible tree.
     const closeButtons = screen.getAllByRole('button', { name: '关闭' });
-    expect(closeButtons.length).toBe(3);
-    fireEvent.click(closeButtons[1]); // header close button
+    expect(closeButtons.length).toBe(2);
+    fireEvent.click(closeButtons[0]); // header close button
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -145,10 +146,10 @@ describe('ThemeDetailPanel', () => {
     const theme = createTheme();
     render(<ThemeDetailPanel theme={theme} onClose={onClose} />);
 
-    // Footer has a "关闭" button as well
+    // Footer has a "关闭" button as well (header + footer = 2)
     const buttons = screen.getAllByRole('button', { name: '关闭' });
-    expect(buttons.length).toBe(3); // backdrop + header + footer
-    fireEvent.click(buttons[2]);
+    expect(buttons.length).toBe(2); // header + footer
+    fireEvent.click(buttons[1]); // footer close button
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

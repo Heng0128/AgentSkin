@@ -24,7 +24,7 @@ export class ZcodeAdapter extends BaseApplicationAdapter {
    * so the exe-name/registry probes below let AgentSkin confirm a local
    * install even when the app is closed.
    */
-  readonly installHints: InstallHints = {
+  override readonly installHints: InstallHints = {
     dirNames: ['ZCode'],
     exeNames: ['ZCode.exe'],
     registryNames: ['ZCode'],

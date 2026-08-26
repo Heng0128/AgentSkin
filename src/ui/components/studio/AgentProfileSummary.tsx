@@ -17,7 +17,7 @@ export function AgentProfileSummary({ t, newAgent }: { t: UiMessages; newAgent: 
   if (!tokens || !brand) return null;
   const strategyKey = getStrategyKey(tokens.dark);
   return (
-    <div className="flex flex-col gap-1 p-2 rounded-sm border border-muted">
+    <div className="flex flex-col gap-1 p-2 rounded-md border border-muted">
       <div className="flex items-center justify-between">
         <span className="text-micro text-muted-foreground">{t.studioProfileSummary}</span>
         <span className="text-micro text-muted-foreground tabular-nums font-mono">
@@ -28,12 +28,12 @@ export function AgentProfileSummary({ t, newAgent }: { t: UiMessages; newAgent: 
         {/* Brand color swatches */}
         <div className="flex items-center gap-1">
           <span
-            className="size-4 rounded-sm border border-border"
+            className="size-4 rounded-md border border-border"
             style={{ background: brand.dark }}
             title={`${t.studioProfileAccent} (dark)`}
           />
           <span
-            className="size-4 rounded-sm border border-border"
+            className="size-4 rounded-md border border-border"
             style={{ background: brand.light }}
             title={`${t.studioProfileAccent} (light)`}
           />

@@ -45,10 +45,10 @@ export function Sidebar() {
   const runningCount = status?.apps.filter((a) => a.running).length ?? 0;
 
   return (
-    <aside className="flex h-full w-14 flex-col border-r border-border bg-surface">
+    <aside className="flex h-full w-14 flex-col border-r border-border bg-surface/80 backdrop-blur-md">
       {/* Top — logo mark */}
-      <div className="flex h-10 shrink-0 items-center justify-center border-b border-border">
-        <Logo variant="mono" className="size-5" />
+      <div className="flex h-10 shrink-0 items-center justify-center border-b border-border/60">
+        <Logo variant="mono" className="size-5 as-glow rounded-md" />
       </div>
 
       {/* Navigation — pure icon buttons */}
@@ -65,7 +65,7 @@ export function Sidebar() {
               aria-current={active ? 'page' : undefined}
               aria-label={t[item.labelKey]}
               className={cn(
-                'group relative flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-fast ease-out',
+                'group relative flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-base ease-out',
                 'hover:bg-card2 hover:text-foreground active:scale-90',
                 active &&
                   'bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground',
@@ -85,9 +85,9 @@ export function Sidebar() {
               {/* Tooltip — appears on hover to the right */}
               <span
                 className={cn(
-                  'pointer-events-none absolute left-11 z-[var(--z-overlay)] whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[11px] font-medium text-popover-foreground shadow-md',
-                  'opacity-0 transition-opacity duration-fast',
-                  'group-hover:opacity-100',
+                  'pointer-events-none absolute left-11 z-[var(--z-overlay)] whitespace-nowrap rounded-lg border border-border bg-popover px-2.5 py-1.5 text-[11px] font-medium text-popover-foreground shadow-md',
+                  'opacity-0 transition-all duration-base',
+                  'group-hover:opacity-100 group-hover:translate-x-0.5',
                 )}
               >
                 {t[item.labelKey]}
@@ -99,13 +99,13 @@ export function Sidebar() {
 
       {/* Bottom — running agent count badge */}
       {runningCount > 0 && (
-        <div className="flex h-10 shrink-0 items-center justify-center border-t border-border">
+        <div className="flex h-10 shrink-0 items-center justify-center border-t border-border/60">
           <div
-            className="flex items-center gap-1 rounded-full bg-accent px-2 py-0.5"
+            className="flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 ring-1 ring-border/40"
             title={`${runningCount} agents running`}
           >
             <span className="size-1.5 animate-status-pulse rounded-full bg-primary" />
-            <span className="text-[10px] font-semibold tabular-nums text-accent-foreground">
+            <span className="text-[11px] font-semibold tabular-nums text-accent-foreground">
               {runningCount}
             </span>
           </div>

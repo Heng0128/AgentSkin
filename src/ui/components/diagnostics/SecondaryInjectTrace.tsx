@@ -72,7 +72,7 @@ function AgentTraceCard({
           <span className="text-[11px] text-muted-foreground/50">{steps.length} targets</span>
         </div>
         {summary && (
-          <span className="font-mono text-[10px] tabular-nums text-muted-foreground/70">
+          <span className="font-mono text-[11px] tabular-nums text-muted-foreground/70">
             {t.settingsSecondaryInjectSummary(summary.injected, summary.failed, summary.total)}
           </span>
         )}
@@ -93,28 +93,28 @@ function AgentTraceCard({
             {steps.map((step) => (
               <tr key={`${step.targetId}-${step.timestamp}`} className=" last:border-b-0">
                 <TD>
-                  <span className="font-mono text-[10px] text-foreground truncate max-w-[160px]">
+                  <span className="font-mono text-[11px] text-foreground truncate max-w-[160px]">
                     {step.title || step.targetId}
                   </span>
                 </TD>
                 <TD>
-                  <span className="inline-flex rounded-sm  px-1 py-0 font-mono text-[10px] text-muted-foreground">
+                  <span className="inline-flex rounded-md  px-1 py-0 font-mono text-[11px] text-muted-foreground">
                     {step.targetType}
                   </span>
                 </TD>
                 <TD className="text-right">
-                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+                  <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
                     {step.elapsed}ms
                   </span>
                 </TD>
                 <TD className="text-center">
                   {step.success ? (
-                    <span className="inline-flex size-4 items-center justify-center rounded-md bg-cr-success/15 font-mono text-[10px] text-cr-success">
+                    <span className="inline-flex size-4 items-center justify-center rounded-md bg-cr-success/15 font-mono text-[11px] text-cr-success">
                       ✓
                     </span>
                   ) : (
                     <span
-                      className="inline-flex size-4 items-center justify-center rounded-md bg-destructive/15 font-mono text-[10px] text-destructive"
+                      className="inline-flex size-4 items-center justify-center rounded-md bg-destructive/15 font-mono text-[11px] text-destructive"
                       title={step.error ?? 'Injection failed'}
                     >
                       ✗
@@ -133,7 +133,7 @@ function AgentTraceCard({
 function TH({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <th
-      className={['px-3 py-2 text-left text-[10px] text-muted-foreground', className]
+      className={['px-3 py-2 text-left text-[11px] text-muted-foreground', className]
         .filter(Boolean)
         .join(' ')}
     >

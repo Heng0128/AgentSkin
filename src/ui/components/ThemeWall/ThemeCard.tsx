@@ -110,7 +110,7 @@ export function ThemeCard({ theme, selected, onSelect }: ThemeCardProps) {
             {theme.tags.slice(0, 2).map((tag) => (
               <span
                 key={tag}
-                className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground"
               >
                 {tag}
               </span>

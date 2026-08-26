@@ -147,7 +147,7 @@ function DriftAgentCard({
             className={cn('inline-block size-2 rounded-md', scoreColor.split(' ')[0], 'opacity-80')}
             aria-hidden
           />
-          <span className="font-mono text-[10px]  text-muted-foreground/60">
+          <span className="font-mono text-[11px]  text-muted-foreground/60">
             {t.settingsDriftStatusScore}
           </span>
           <span
@@ -163,7 +163,7 @@ function DriftAgentCard({
         {/* Confidence badge */}
         <span
           className={cn(
-            'inline-flex items-center rounded-md  px-1 py-0 font-mono text-[10px] leading-4',
+            'inline-flex items-center rounded-md  px-1 py-0 font-mono text-[11px] leading-4',
             status.confidence === 'high'
               ? 'bg-cr-success/15 text-cr-success'
               : 'bg-cr-warning/15 text-cr-warning',
@@ -175,7 +175,7 @@ function DriftAgentCard({
         </span>
 
         {/* Last capture */}
-        <span className="ml-auto font-mono text-[10px] tabular-nums text-muted-foreground/50">
+        <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground/50">
           {lastCaptureLabel}
         </span>
       </div>
@@ -183,7 +183,7 @@ function DriftAgentCard({
       {/* Signals */}
       {status.signals.length > 0 && (
         <div className="border-t border-border/30  px-3 py-2">
-          <p className="mb-1 text-[10px]  text-muted-foreground/50">
+          <p className="mb-1 text-[11px]  text-muted-foreground/50">
             {t.settingsDriftStatusSignals} ({status.signals.length})
           </p>
           <div className="flex flex-col gap-0">
@@ -196,13 +196,13 @@ function DriftAgentCard({
                   className="inline-block size-1.5 rounded-md bg-cr-warning opacity-60"
                   aria-hidden
                 />
-                <span className="font-mono text-[10px]  text-muted-foreground/70">
+                <span className="font-mono text-[11px]  text-muted-foreground/70">
                   {signalTypeLabel(signal.type, t)}
                 </span>
-                <span className="truncate font-mono text-[10px]  text-foreground">
+                <span className="truncate font-mono text-[11px]  text-foreground">
                   {signal.detail}
                 </span>
-                <span className="ml-auto shrink-0 font-display text-[10px] tabular-nums text-muted-foreground/40">
+                <span className="ml-auto shrink-0 font-display text-[11px] tabular-nums text-muted-foreground/40">
                   ×{(signal.weight * 100).toFixed(0)}%
                 </span>
               </div>
@@ -215,17 +215,17 @@ function DriftAgentCard({
       {status.lastRegenResult && (
         <div className="border-t border-border/30  px-3 py-2">
           <div className="flex items-center justify-between">
-            <span className="text-[10px]  text-muted-foreground/50">
+            <span className="text-[11px]  text-muted-foreground/50">
               {t.settingsDriftStatusLastRegen}
             </span>
-            <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground/50">
               {regenTimeLabel}
             </span>
           </div>
           <div className="mt-0 flex items-center gap-1">
             <span
               className={cn(
-                'inline-flex size-3 items-center justify-center rounded-md font-mono text-[10px]',
+                'inline-flex size-3 items-center justify-center rounded-md font-mono text-[11px]',
                 status.lastRegenResult.status === 'success'
                   ? 'bg-cr-success/15 text-cr-success'
                   : status.lastRegenResult.status === 'failed'
@@ -239,7 +239,7 @@ function DriftAgentCard({
                   ? '✗'
                   : '–'}
             </span>
-            <span className="truncate font-mono text-[10px]  text-muted-foreground/70">
+            <span className="truncate font-mono text-[11px]  text-muted-foreground/70">
               {status.lastRegenResult.reason}
             </span>
           </div>
@@ -256,7 +256,7 @@ function DriftAgentCard({
         >
           <span
             className={cn(
-              'font-mono text-[10px]',
+              'font-mono text-[11px]',
               regenFeedback.type === 'success' ? 'text-cr-success' : 'text-destructive',
             )}
           >

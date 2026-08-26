@@ -274,7 +274,7 @@ function StatCard({
         <span className="font-display text-[20px] font-normal tabular-nums text-foreground">
           {value}
         </span>
-        {suffix && <span className="font-mono text-[10px] text-muted-foreground/50">{suffix}</span>}
+        {suffix && <span className="font-mono text-[11px] text-muted-foreground/50">{suffix}</span>}
       </div>
     </div>
   );
@@ -307,7 +307,7 @@ function PerAgentCard({
         <div className="flex flex-col gap-0">
           {entries.map(([agentId, avgMs]) => (
             <div key={agentId} className="flex items-center justify-between gap-2">
-              <span className="truncate font-mono text-[10px] text-muted-foreground/70">
+              <span className="truncate font-mono text-[11px] text-muted-foreground/70">
                 {APP_META[agentId as keyof typeof APP_META]?.name ?? agentId}
               </span>
               <span className="shrink-0 font-display text-[11px] font-normal tabular-nums text-foreground">
@@ -336,14 +336,14 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
   return (
     <tr className=" last:border-b-0">
       <TD>
-        <span className="font-mono text-[10px] text-muted-foreground/70" title={fullDate}>
+        <span className="font-mono text-[11px] text-muted-foreground/70" title={fullDate}>
           {timeLabel}
         </span>
       </TD>
       <TD>
         <div className="flex items-center gap-1">
           <AppMarkSmall appId={trace.agentId as keyof typeof APP_META} />
-          <span className="font-mono text-[10px] text-foreground truncate max-w-[80px]">
+          <span className="font-mono text-[11px] text-foreground truncate max-w-[80px]">
             {agentName}
           </span>
         </div>
@@ -357,7 +357,7 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
             <span
               key={step.name}
               className={cn(
-                'inline-flex items-center rounded-md border px-1 py-0 font-mono text-[10px] leading-4',
+                'inline-flex items-center rounded-md border px-1 py-0 font-mono text-[11px] leading-4',
                 step.success
                   ? 'bg-muted/30 text-muted-foreground/80'
                   : 'border-destructive/30 bg-destructive/10 text-destructive',
@@ -371,12 +371,12 @@ function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
       </TD>
       <TD className="text-center">
         {trace.success ? (
-          <span className="inline-flex size-4 items-center justify-center rounded-md bg-cr-success/15 font-mono text-[10px] text-cr-success">
+          <span className="inline-flex size-4 items-center justify-center rounded-md bg-cr-success/15 font-mono text-[11px] text-cr-success">
             ✓
           </span>
         ) : (
           <span
-            className="inline-flex size-4 items-center justify-center rounded-md bg-destructive/15 font-mono text-[10px] text-destructive"
+            className="inline-flex size-4 items-center justify-center rounded-md bg-destructive/15 font-mono text-[11px] text-destructive"
             title={trace.error ?? t.settingsPerfStatusFailed}
           >
             ✗
@@ -400,10 +400,10 @@ function TimeoutRow({
   return (
     <tr className=" last:border-b-0">
       <TD>
-        <span className="font-mono text-[10px] text-muted-foreground/70">{timeLabel}</span>
+        <span className="font-mono text-[11px] text-muted-foreground/70">{timeLabel}</span>
       </TD>
       <TD>
-        <span className="font-mono text-[10px] text-foreground truncate max-w-[200px]">
+        <span className="font-mono text-[11px] text-foreground truncate max-w-[200px]">
           {event.channel}
         </span>
       </TD>
@@ -418,7 +418,7 @@ function TimeoutRow({
 
 function TH({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <th className={cn('px-3 py-2 text-left text-[10px] text-muted-foreground', className)}>
+    <th className={cn('px-3 py-2 text-left text-[11px] text-muted-foreground', className)}>
       {children}
     </th>
   );
@@ -461,7 +461,7 @@ function AppMarkSmall({ appId }: { appId: keyof typeof APP_META }) {
     return <img src={iconUrl} className="size-4 rounded-md" width={14} height={14} alt="" />;
   }
   return (
-    <span className="inline-flex size-4 items-center justify-center rounded-md bg-muted text-[10px] text-muted-foreground/50">
+    <span className="inline-flex size-4 items-center justify-center rounded-md bg-muted text-[11px] text-muted-foreground/50">
       ?
     </span>
   );

@@ -18,6 +18,7 @@ import { AppMark } from '@/components/AppMark';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 import { appStatusFor } from '@/stores/agentStore';
 import { useStudioStore } from '@/stores/studioStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
@@ -119,7 +120,7 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
               </Button>
 
               {creatingProject && (
-                <div className="flex flex-col gap-1 p-2 rounded-sm border border-border bg-surface">
+                <div className="flex flex-col gap-1 p-2 rounded-md border border-border bg-surface">
                   <Input
                     type="text"
                     placeholder={t.studioProjectPlaceholder}
@@ -183,12 +184,12 @@ export function StudioDrawer({ t }: { t: UiMessages }) {
                   key={p.id}
                   type="button"
                   onClick={() => selectProject(p.id)}
-                  className="flex items-center gap-1 w-full p-1 rounded-sm hover:bg-muted"
-                  style={{
-                    borderColor: activeProjectId === p.id ? 'var(--primary)' : 'transparent',
-                    background: activeProjectId === p.id ? 'var(--primary)' : 'transparent',
-                    border: '1px solid',
-                  }}
+                  className={cn(
+                    'flex items-center gap-1 w-full p-1 rounded-md hover:bg-muted',
+                    activeProjectId === p.id
+                      ? 'border border-primary bg-primary text-primary-foreground'
+                      : 'border border-transparent',
+                  )}
                 >
                   <AppMark appId={p.agentId} size={12} />
                   <span className="text-micro text-foreground truncate flex-1 text-left">

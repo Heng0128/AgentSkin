@@ -490,6 +490,12 @@ const api: AgentSkinApi = {
     ipcRenderer.on(IpcChannel.COMMUNITY_DOWNLOAD_PROGRESS, handler);
     return () => ipcRenderer.removeListener(IpcChannel.COMMUNITY_DOWNLOAD_PROGRESS, handler);
   },
+  // --- Engine injection failure notification ---
+  onThemeEngineInjectFailure: (listener) =>
+    subscribe<{ agent: string; themeId: string; message: string }>(
+      IpcChannel.THEME_ENGINE_INJECT_FAILURE,
+      listener,
+    ),
 };
 
 contextBridge.exposeInMainWorld('agentSkin', api);

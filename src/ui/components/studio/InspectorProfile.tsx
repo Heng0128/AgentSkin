@@ -49,13 +49,13 @@ export function InspectorProfile({ t }: { t: UiMessages }) {
   return (
     <div className="space-y-2">
       {/* Header: agent + step badge */}
-      <div className="border border-border bg-muted p-2 rounded-sm">
+      <div className="border border-border bg-muted p-2 rounded-md">
         <div className="flex items-center gap-1">
           <AppMark appId={agent as never} size={10} />
           <span className="text-micro font-normal   text-muted-foreground">
             {agentMeta?.displayName ?? agent}
           </span>
-          <span className="ml-auto rounded-sm bg-primary px-1 py-0 text-micro font-normal text-white">
+          <span className="ml-auto rounded-md bg-primary px-1 py-0 text-micro font-normal text-white">
             {step}
           </span>
         </div>

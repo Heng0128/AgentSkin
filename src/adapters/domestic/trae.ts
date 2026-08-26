@@ -23,7 +23,7 @@ export class TraeAdapter extends BaseApplicationAdapter {
    * shipped by the official Inno Setup installer; the previous hints
    * ("Trae", "Trae.exe") never matched any real install.
    */
-  readonly installHints: InstallHints = {
+  override readonly installHints: InstallHints = {
     dirNames: ['TRAE SOLO', 'TRAE SOLO CN'],
     exeNames: ['TRAE SOLO.exe', 'TRAE SOLO CN.exe'],
     registryNames: ['TRAE SOLO', 'TRAE SOLO CN'],

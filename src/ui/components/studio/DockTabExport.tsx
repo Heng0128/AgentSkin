@@ -47,10 +47,10 @@ export function DockTabExport({ t }: { t: UiMessages }) {
         <SectionLabel label={`${t.studioLandmark} · ${t.studioExport}`} />
 
         {!toolOverrides ? (
-          <p className="text-[10px] text-muted-foreground">{t.studioInspectorEmpty}</p>
+          <p className="text-[11px] text-muted-foreground">{t.studioInspectorEmpty}</p>
         ) : (
           <>
-            <p className="text-[10px] text-muted-foreground leading-relaxed">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
               {t.studioExportDesc('.agentskin-theme')}
             </p>
             <div className="space-y-1">
@@ -82,9 +82,9 @@ export function DockTabExport({ t }: { t: UiMessages }) {
             </Button>
 
             {exportState.dir && (
-              <div className="rounded-sm border border-border bg-card2 p-2">
-                <p className="text-[10px] text-muted-foreground">{t.studioExportedTo}</p>
-                <p className="break-all text-[10px] text-foreground">{exportState.dir}</p>
+              <div className="rounded-md border border-border bg-card2 p-2">
+                <p className="text-[11px] text-muted-foreground">{t.studioExportedTo}</p>
+                <p className="break-all text-[11px] text-foreground">{exportState.dir}</p>
                 <Button
                   size="sm"
                   onClick={() => exportState.dir && api.showInFolder(exportState.dir)}
@@ -97,7 +97,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
             )}
 
             {exportState.error && (
-              <p className="text-[10px] text-primary">{t.studioExportError(exportState.error)}</p>
+              <p className="text-[11px] text-primary">{t.studioExportError(exportState.error)}</p>
             )}
           </>
         )}

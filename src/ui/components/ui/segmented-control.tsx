@@ -80,7 +80,7 @@ export function SegmentedControl<T extends string>({
             disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'inline-flex items-center justify-center rounded-md font-medium transition-all duration-fast',
+              'inline-flex items-center justify-center rounded-md font-medium transition-all duration-base',
               iconOnly
                 ? size === 'sm'
                   ? 'size-6'

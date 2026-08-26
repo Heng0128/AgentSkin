@@ -247,7 +247,7 @@ export function PreviewWindow({
             <button
               type="button"
               onClick={refresh}
-              className="rounded-sm border border-border px-2 py-0 text-micro text-muted-foreground hover:bg-muted"
+              className="rounded-md border border-border px-2 py-0 text-micro text-muted-foreground hover:bg-muted"
             >
               {t.studioPreviewRetry}
             </button>
@@ -274,7 +274,7 @@ export function PreviewWindow({
             {t.studioZoomTrigger} ▾
           </button>
           {zoomOpen && (
-            <div className="absolute bottom-full right-0 z-[var(--z-content)] mb-1 flex flex-col gap-0 rounded-sm border border-border bg-surface p-0 shadow-md">
+            <div className="absolute bottom-full right-0 z-[var(--z-content)] mb-1 flex flex-col gap-0 rounded-md border border-border bg-surface p-0 shadow-md">
               {SCALE_PRESETS.map((s) => (
                 <button
                   key={s}
@@ -283,7 +283,7 @@ export function PreviewWindow({
                     onScaleChange(s);
                     setZoomOpen(false);
                   }}
-                  className="whitespace-nowrap rounded-sm px-2 py-0 text-left text-micro hover:bg-muted"
+                  className="whitespace-nowrap rounded-md px-2 py-0 text-left text-micro hover:bg-muted"
                   style={{
                     background: win.scale === s ? 'var(--primary)' : 'transparent',
                     color: win.scale === s ? 'var(--accent-foreground)' : 'var(--foreground)',

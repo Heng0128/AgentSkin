@@ -115,10 +115,10 @@ export function ThemesPage({ controller }: { controller: AppController }) {
       {/* Installed tab */}
       <TabsContent value="installed" className="relative flex min-h-0 flex-1 flex-col">
         {/* Master-detail: grid yields width to the detail panel on the right */}
-        <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 flex-1 gap-3">
           <section
             aria-label="Drop theme package to install"
-            className="flex min-h-0 min-w-0 flex-1 flex-col"
+            className="flex min-h-0 min-w-0 flex-1 flex-col gap-4"
             onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -179,12 +179,12 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             </PageHeader>
 
             {/* Stats overview bar */}
-            <div className="as-stat-bar my-4">
+            <div className="as-stat-bar">
               <div className="flex items-center gap-2.5">
                 <div className="flex size-7 items-center justify-center rounded-lg bg-muted">
                   <Layers className="size-3.5 text-muted-foreground" />
                 </div>
-                <span className="text-[14px] font-bold tabular-nums text-foreground">
+                <span className="text-base font-semibold tabular-nums text-foreground">
                   {tc.allCount}
                 </span>
                 <span className="text-[11px] text-muted-foreground">{t.installedTitle}</span>
@@ -194,7 +194,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                 <div className="flex size-7 items-center justify-center rounded-lg bg-cr-success/10">
                   <CheckCircle2 className="size-3.5 text-cr-success" />
                 </div>
-                <span className="text-[14px] font-bold tabular-nums text-foreground">
+                <span className="text-base font-semibold tabular-nums text-foreground">
                   {activeThemeCount}
                 </span>
                 <span className="text-[11px] text-muted-foreground">{t.themeActive}</span>
@@ -206,7 +206,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                     <div className="flex size-7 items-center justify-center rounded-lg bg-accent">
                       <UploadCloud className="size-3.5 text-primary" />
                     </div>
-                    <span className="text-[14px] font-bold tabular-nums text-foreground">
+                    <span className="text-base font-semibold tabular-nums text-foreground">
                       {dynamicCount}
                     </span>
                     <span className="text-[11px] text-muted-foreground">{t.themeDynamic}</span>
@@ -216,7 +216,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
             </div>
 
             {/* Filter row — chip pills */}
-            <div className="flex flex-wrap items-center gap-2 pb-4">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Category filter */}
               {tc.categories.length > 0 && (
                 <FilterChips
@@ -302,8 +302,8 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                   <div className="flex size-16 items-center justify-center rounded-lg bg-accent">
                     <UploadCloud className="size-8 text-primary" />
                   </div>
-                  <p className="text-[14px] font-semibold text-foreground">{t.dropThemeHere}</p>
-                  <p className="max-w-60 text-[11px] leading-relaxed text-muted-foreground">
+                  <p className="text-sm font-semibold text-foreground">{t.dropThemeHere}</p>
+                  <p className="max-w-80 text-[11px] leading-relaxed text-muted-foreground">
                     {t.dropThemeHint}
                   </p>
                 </div>
@@ -313,7 +313,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
 
           {/* Installed-theme detail panel — in-flow on the right, grid yields width */}
           {controller.selection && (
-            <div className="h-full shrink-0 animate-slide-in-right">
+            <div className="h-full shrink-0 animate-slide-in-right as-slide-up-enter">
               <DetailPanel
                 controller={controller}
                 selection={controller.selection}

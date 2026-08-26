@@ -28,7 +28,7 @@ export class CodexAdapter extends BaseApplicationAdapter {
    * The hints below let AgentSkin confirm a local install even when the app
    * is closed, complementing @agentskin/engine's discovery.
    */
-  readonly installHints: InstallHints = {
+  override readonly installHints: InstallHints = {
     dirNames: ['ChatGPT'],
     exeNames: ['ChatGPT.exe'],
     registryNames: ['ChatGPT', 'OpenAI Codex'],

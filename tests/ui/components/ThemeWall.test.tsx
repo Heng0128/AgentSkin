@@ -279,8 +279,8 @@ describe('ThemeWall', () => {
       />,
     );
 
-    // Skeleton uses animate-pulse class
-    const skeletons = document.querySelectorAll('.animate-pulse');
+    // Skeleton uses shimmer class
+    const skeletons = document.querySelectorAll('.shimmer');
     expect(skeletons.length).toBeGreaterThan(0);
   });
 

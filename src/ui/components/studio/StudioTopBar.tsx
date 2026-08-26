@@ -76,7 +76,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
       <div className="ws-topbar__left">
         <span className="ws-topbar__brand-icon">✦</span>
         <span className="ws-topbar__brand-name">{t.studioBrand}</span>
-        <Badge variant="default" className="h-4 px-1 text-[10px] font-normal">
+        <Badge variant="default" className="h-4 px-1 text-[11px] font-normal">
           {t.studioHeaderBeta}
         </Badge>
         {activeProject && (
@@ -94,7 +94,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
       {/* Center: undo/redo + panel toggles */}
       <div className="ws-topbar__center">
         {/* Undo / Redo */}
-        <div className="flex items-center gap-0.5 rounded-sm bg-muted p-0.5">
+        <div className="flex items-center gap-0.5 rounded-md bg-muted p-0.5">
           <Button
             size="icon-xs"
             variant="ghost"
@@ -116,7 +116,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
         </div>
 
         {/* Center view switcher: 4 tabs (theme / wallpaper / bundle / raw) */}
-        <div className="ml-2 flex items-center gap-0.5 rounded-sm bg-muted p-0.5">
+        <div className="ml-2 flex items-center gap-0.5 rounded-md bg-muted p-0.5">
           {TOPBAR_TABS.map((tab) => (
             <Button
               key={tab.view}
@@ -131,7 +131,7 @@ export function StudioTopBar({ t }: { t: UiMessages }) {
         </div>
 
         {/* Panel toggles */}
-        <div className="ml-2 flex items-center gap-0.5 rounded-sm bg-muted p-0.5">
+        <div className="ml-2 flex items-center gap-0.5 rounded-md bg-muted p-0.5">
           <Button
             size="xs"
             variant={dock.open ? 'primary' : 'ghost'}

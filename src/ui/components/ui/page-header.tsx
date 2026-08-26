@@ -14,7 +14,7 @@ function PageHeader({ title, description, count, children }: PageHeaderProps) {
         <div className="flex items-center gap-3">
           <h1 className="text-base font-semibold tracking-[-0.02em] text-foreground">{title}</h1>
           {count !== undefined && (
-            <span className="inline-flex min-w-5 items-center justify-center rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted-foreground">
+            <span className="inline-flex min-w-5 items-center justify-center rounded-full border border-border bg-gradient-to-br from-muted/60 to-muted/30 px-2 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground ring-1 ring-border/50">
               {count}
             </span>
           )}

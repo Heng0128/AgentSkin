@@ -363,7 +363,7 @@ function FieldRow({
           <button
             type="button"
             onClick={onReset}
-            className="size-5 flex items-center justify-center rounded-[var(--radius-sm)] text-muted-foreground hover:text-foreground hover:bg-[var(--surface)] transition-colors"
+            className="size-5 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
             title={str(t, 'studioToolboxReset') ?? '重置'}
             aria-label={str(t, 'studioToolboxReset') ?? '重置'}
           >

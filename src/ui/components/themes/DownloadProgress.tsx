@@ -99,7 +99,7 @@ export function DownloadProgress({
 
       {/* Optional byte-level detail */}
       {showDetails && (
-        <div className="font-mono text-[10px] text-muted-foreground/60 tabular-nums">
+        <div className="font-mono text-[11px] text-muted-foreground/60 tabular-nums">
           {formatBytes(bytesDownloaded)} / {formatBytes(totalBytes)}
         </div>
       )}

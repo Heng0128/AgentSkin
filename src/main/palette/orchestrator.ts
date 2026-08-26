@@ -154,7 +154,12 @@ export async function tryEngineInjection(
     // respected and --agentskin-*-raw RGB triplets are derived for the
     // engine tokens.css that references var(--agentskin-accent-raw) etc.
     const paletteCss = buildPaletteCss(targetTheme.css);
-    if (!paletteCss) return null;
+    if (!paletteCss) {
+      throw new Error(
+        `Failed to build palette CSS for agent=${appId} theme=${bundle.theme?.id ?? 'unknown'}: ` +
+          'theme CSS is empty or has fewer than 6 --agentskin-* declarations (malformed theme)',
+      );
+    }
 
     // Load engine files (+ shared runtime modules if present).
     // Injection order matters: adopted-sheets-manager → token-discovery → deep-core → adapter.
@@ -218,7 +223,14 @@ export async function tryEngineInjection(
       verifyIntervalMs: deps.verifyIntervalMs ?? 50,
     });
   } catch (error) {
-    deps.log(`[hardening] ${appId}: engine injection failed: ${toMessage(error)}`);
-    return null;
+    // Distinguish between "engine files not available" (return null → caller
+    // falls back to legacy) and "engine injection failed" (re-throw → caller
+    // notifies the user and then falls back). The former is an expected
+    // condition for agents without engine support; the latter is a real
+    // failure (malformed theme, CDP layer adoption failure) that the user
+    // should know about.
+    const message = toMessage(error);
+    deps.log(`[hardening] ${appId}: engine injection failed: ${message}`);
+    throw new Error(`Engine injection failed for agent=${appId}: ${message}`);
   }
 }

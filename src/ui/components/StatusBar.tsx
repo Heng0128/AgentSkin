@@ -73,7 +73,7 @@ export function StatusBar() {
   const themedCount = status?.apps.filter((a) => a.activeThemeId !== null).length ?? 0;
 
   return (
-    <div className="flex h-7 shrink-0 items-center gap-3 border-t border-border bg-[var(--surface)] px-4">
+    <div className="flex h-7 shrink-0 items-center gap-3 border-t border-border bg-surface/80 backdrop-blur-md px-4">
       {/* Status — LED + label */}
       <span className="flex items-center gap-2">
         <span

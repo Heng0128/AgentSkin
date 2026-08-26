@@ -1,4 +1,4 @@
-/* Art 174043 — OpenAI Codex (--color-token-* design tokens) */
+/* Fuji Rooftop Winter — OpenAI Codex (--color-token-* design tokens) */
 :root.agentskin-host-codex {
   color-scheme: dark !important;
   --agentskin-accent: #cac2af;
@@ -13,7 +13,8 @@
   --agentskin-code-fg: #f4f0eb;
   --agentskin-input-bg: color-mix(in srgb, color-mix(in srgb, #3e3d36 82%, #cac2af 18%) 45%, transparent);
   --agentskin-button-bg: #cac2af;
-  --agentskin-focus-ring: color-mix(in srgb, #cac2af 40%, transparent);
+  --agentskin-button-fg: #ffffff;
+  --agentskin-focus-ring: #cac2af60;
   --agentskin-selection: color-mix(in srgb, #cac2af 32%, transparent);
   --agentskin-text-shadow: 0 1px 3px rgba(0,0,0,0.5);
   text-shadow: var(--agentskin-text-shadow);
@@ -21,7 +22,7 @@
 
 /* ===== Native token overrides (Codex --color-token-* system) ===== */
 :root.agentskin-host-codex {
-  color-scheme: dark !important;
+  /* color-scheme 已在 tokenBlock() 中声明，此处删除以避免重复 */
 
   /* Accent / brand */
   --color-token-primary: #cac2af !important;

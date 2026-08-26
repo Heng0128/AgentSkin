@@ -137,7 +137,7 @@ function AppActionList({
                   {isActive && (
                     <Badge
                       variant="secondary"
-                      className="bg-cr-success/15 text-cr-success text-[10px]"
+                      className="bg-cr-success/15 text-cr-success text-[11px]"
                     >
                       {t.activeBadge}
                     </Badge>
@@ -184,8 +184,8 @@ function AppActionList({
 function MetaRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-0">
-      <span className="text-[10px] uppercase tracking-wide text-muted-foreground/70">{label}</span>
-      <span className="text-[12px] font-medium">{value}</span>
+      <span className="text-[11px] uppercase tracking-wide text-muted-foreground/70">{label}</span>
+      <span className="text-sm font-medium">{value}</span>
     </div>
   );
 }
@@ -203,7 +203,7 @@ function ColorSchemePicker({
 }) {
   return (
     <div>
-      <p className="mb-1.5 text-[10px] uppercase tracking-wide text-muted-foreground/70">
+      <p className="mb-1.5 text-[11px] uppercase tracking-wide text-muted-foreground/70">
         {t.colorSchemesLabel}
       </p>
       <div className="flex flex-wrap gap-1.5">
@@ -227,7 +227,7 @@ function ColorSchemePicker({
                   : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/60',
               )}
             >
-              <span className="size-3 shrink-0 rounded-sm" style={swatchStyle} aria-hidden="true" />
+              <span className="size-3 shrink-0 rounded-md" style={swatchStyle} aria-hidden="true" />
               {scheme.id === 'default' ? t.colorSchemeDefault : scheme.name}
             </button>
           );
@@ -273,7 +273,10 @@ export function DetailPanel({
   const isDynamic = Boolean(theme.wallpaper?.video || theme.wallpaper?.workshopId);
 
   return (
-    <aside className="flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
+    <aside
+      aria-label={theme.name}
+      className="flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card"
+    >
       {/* Preview — large 16:9 at top */}
       <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
         {isDynamic && videoUrl ? (
@@ -304,7 +307,7 @@ export function DetailPanel({
             type="button"
             onClick={onClose}
             aria-label={t.close}
-            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md bg-background/60 text-foreground backdrop-blur-sm transition-colors hover:bg-background/80"
+            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md bg-background/60 text-foreground backdrop-blur-sm transition-all duration-base ease-out hover:bg-background/90 hover:scale-110"
           >
             <X className="size-4" />
           </button>
@@ -318,12 +321,12 @@ export function DetailPanel({
           <div className="flex items-center gap-2">
             <h2 className="text-base font-semibold tracking-tight">{theme.name}</h2>
             {isDynamic && (
-              <Badge className="bg-primary/15 text-primary text-[10px]">
+              <Badge className="bg-primary/15 text-primary text-[11px]">
                 {t.themeDynamicBadge}
               </Badge>
             )}
             {theme.unofficial && (
-              <Badge variant="outline" className="text-[10px]">
+              <Badge variant="outline" className="text-[11px]">
                 {t.themeUnofficial}
               </Badge>
             )}
@@ -335,7 +338,7 @@ export function DetailPanel({
 
         {/* Metadata grid */}
         {(theme.author || theme.category || theme.license) && (
-          <div className="grid grid-cols-3 gap-3 rounded-lg border border-border bg-muted/30 px-3.5 py-3">
+          <div className="grid grid-cols-3 gap-3 rounded-lg border border-border bg-gradient-to-br from-muted/40 to-transparent px-3.5 py-3">
             {theme.author && <MetaRow label={t.themeAuthor} value={theme.author} />}
             {theme.category && (
               <MetaRow label={t.themeCategory} value={t.categoryLabel(theme.category)} />
@@ -351,12 +354,15 @@ export function DetailPanel({
 
         {/* Tags */}
         {theme.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {theme.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="rounded-md text-[10px] font-normal">
-                {tag}
-              </Badge>
-            ))}
+          <div className="flex flex-col gap-1.5">
+            <p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Tags</p>
+            <div className="flex flex-wrap gap-1.5">
+              {theme.tags.map((tag) => (
+                <Badge key={tag} variant="secondary" className="rounded-md text-[11px] font-normal">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
           </div>
         )}
 
@@ -372,7 +378,7 @@ export function DetailPanel({
 
         {/* Apply section */}
         <div>
-          <p className="mb-2 text-[10px] uppercase tracking-wide text-muted-foreground/70">
+          <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground/70">
             {t.appPickerTitle}
           </p>
           <AppActionList
@@ -385,7 +391,7 @@ export function DetailPanel({
       </div>
 
       {/* Footer actions */}
-      <div className="flex gap-2 border-t border-border p-3.5">
+      <div className="flex gap-2 border-t border-border bg-muted/20 p-3.5">
         <Button
           variant="outline"
           size="sm"

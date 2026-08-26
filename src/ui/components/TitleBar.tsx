@@ -85,7 +85,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
         // Base: h-9 bar with surface background and drag region.
         'relative flex h-9 items-center gap-2 px-3 transition-[background] duration-slower',
         // Surface solid default; glass switch when wallpaper active.
-        hasWallpaper ? 'as-glass border-b border-border/50' : 'bg-[var(--surface)]',
+        hasWallpaper ? 'as-glass border-b border-border/50' : 'bg-surface',
         // The whole bar is a drag region; interactive elements opt out below.
         '[-webkit-app-region:drag]',
         isMac ? 'pl-20' : 'pl-3',
@@ -93,7 +93,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
     >
       {/* Left: brand + page breadcrumb with refined visual hierarchy */}
       <div className="pointer-events-none flex items-center gap-2">
-        <span className="text-[13px] font-bold tracking-tight text-foreground">AgentSkin</span>
+        <span className="as-brand-text text-[13px] font-bold tracking-tight">AgentSkin</span>
         <span className="h-3.5 w-px bg-border-strong" aria-hidden />
         <span className="text-[11px] font-medium text-muted-foreground/80">{routeLabel}</span>
       </div>
