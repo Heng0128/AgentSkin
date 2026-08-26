@@ -205,9 +205,20 @@ describe('wallpaperStore — Toast notification behavior', () => {
   });
 
   it('importWallpaper extracts items from { ok: true, items } response', async () => {
-    const imported = [{ id: 'wp-new', title: 'new', type: 'image' }] as ReturnType<
-      typeof mockListWallpapers
-    >;
+    const imported = [
+      {
+        id: 'wp-new',
+        title: 'new',
+        type: 'image',
+        projectType: 'static',
+        playback: 'loop',
+        previewUrl: null,
+        sizeBytes: 1024,
+        tags: ['test'],
+        source: 'local',
+        previewOnly: false,
+      },
+    ] as ReturnType<typeof mockListWallpapers>;
     mockImportWallpaper.mockResolvedValueOnce({ ok: true, items: imported });
 
     await useWallpaperStore.getState().importWallpaper();
@@ -220,9 +231,20 @@ describe('wallpaperStore — Toast notification behavior', () => {
   });
 
   it('importWallpaper handles bare-array response (dialog cancelled)', async () => {
-    const current = [{ id: 'wp-existing', title: 'existing', type: 'video' }] as ReturnType<
-      typeof mockListWallpapers
-    >;
+    const current = [
+      {
+        id: 'wp-existing',
+        title: 'existing',
+        type: 'video',
+        projectType: 'dynamic',
+        playback: 'once',
+        previewUrl: null,
+        sizeBytes: 2048,
+        tags: ['existing'],
+        source: 'workshop',
+        previewOnly: false,
+      },
+    ] as ReturnType<typeof mockListWallpapers>;
     mockImportWallpaper.mockResolvedValueOnce(current);
 
     await useWallpaperStore.getState().importWallpaper();
