@@ -97,9 +97,6 @@ export function checkExtendedContrast(manifest) {
   const ext = colors.extended;
   if (!ext || typeof ext !== 'object') return [];
 
-  const bg = colors.background;
-  const fg = colors.foreground;
-
   // Use the same algorithm as the runtime engine (extended-colors.mjs autoOnColor)
   // to ensure CI validation matches actual generated --agentskin-ext-on-* values.
   const onFor = autoOnColor;
@@ -171,3 +168,108 @@ export function assertContrast(manifest) {
       `WCAG AA contrast requirement not met (ratio ${wcag.ratio}:1 < ${WCAG_AA_RATIO}:1)`,
     );
 }
+
+// ---------------------------------------------------------------------------
+// Enhanced contrast checking — single pair and full-theme batch
+// ---------------------------------------------------------------------------
+
+/**
+ * Check a single foreground/background color pair against WCAG and APCA.
+ *
+ * Provides a comprehensive contrast report for an arbitrary color pair,
+ * suitable for validating individual token combinations (e.g. accent on
+ * background, muted on surface).
+ *
+ * @param {string} foreground - Foreground (text) hex color.
+ * @param {string} background - Background hex color.
+ * @returns {{ ratio: number, passesAA: boolean, passesAAA: boolean, passesAPCA: boolean }}
+ */
+export function checkContrast(foreground, background) {
+  const ratio = contrastRatio(foreground, background);
+  const lc = Math.round(apcaContrast(background, foreground));
+
+  return {
+    ratio,
+    passesAA: ratio >= WCAG_AA_RATIO,
+    passesAAA: ratio >= WCAG_AAA_RATIO,
+    passesAPCA: lc >= APCA_LC60,
+  };
+}
+
+/**
+ * Batch-check all meaningful color pairs in a theme token map.
+ *
+ * Given a set of theme tokens (token ID → hex color), checks contrast for all
+ * token pairs where one token is a foreground-type and the other is a
+ * background-type. This catches accessibility issues across the entire theme.
+ *
+ * Recognized token categories:
+ *   - background: bg, surface, surface-elevated, code-bg, button-bg, input-bg
+ *   - foreground: text, muted, accent, secondary, code-fg, border, success, error, warning, info
+ *
+ * @param {Record<string, string>} themeTokens - Map of token ID → hex color.
+ * @param {'light' | 'dark'} scheme - Color scheme (affects semantic reference values).
+ * @returns {{ results: Array<{ fg: string, bg: string, ratio: number, level: 'AAA' | 'AA' | 'fail' }>, allPassAA: boolean }}
+ */
+export function checkThemeContrastBatch(themeTokens, _scheme) {
+  // Categorize tokens by their visual role
+  const bgPatterns = [
+    '--agentskin-bg',
+    '--agentskin-surface',
+    '--agentskin-surface-elevated',
+    '--agentskin-code-bg',
+    '--agentskin-button-bg',
+    '--agentskin-input-bg',
+  ];
+
+  const fgPatterns = [
+    '--agentskin-text',
+    '--agentskin-muted',
+    '--agentskin-accent',
+    '--agentskin-secondary',
+    '--agentskin-code-fg',
+    '--agentskin-border',
+    '--agentskin-success',
+    '--agentskin-error',
+    '--agentskin-warning',
+    '--agentskin-info',
+  ];
+
+  const bgTokens = bgPatterns.filter((p) => themeTokens[p]);
+  const fgTokens = fgPatterns.filter((p) => themeTokens[p]);
+
+  const results = [];
+  let allPassAA = true;
+
+  for (const fg of fgTokens) {
+    for (const bg of bgTokens) {
+      const result = checkContrast(themeTokens[fg], themeTokens[bg]);
+      const level = result.passesAAA ? 'AAA' : result.passesAA ? 'AA' : 'fail';
+      if (level === 'fail') allPassAA = false;
+      results.push({
+        fg,
+        bg,
+        ratio: result.ratio,
+        level,
+      });
+    }
+  }
+
+  // Also check the primary foreground/background pair directly
+  if (themeTokens['--agentskin-text'] && themeTokens['--agentskin-bg']) {
+    const primary = checkContrast(themeTokens['--agentskin-text'], themeTokens['--agentskin-bg']);
+    const level = primary.passesAAA ? 'AAA' : primary.passesAA ? 'AA' : 'fail';
+    if (level === 'fail') allPassAA = false;
+    results.unshift({
+      fg: '--agentskin-text',
+      bg: '--agentskin-bg',
+      ratio: primary.ratio,
+      level,
+    });
+  }
+
+  return { results, allPassAA };
+}
+
+// Re-export for backward compatibility and convenience
+export { apcaContrast, autoOnColor } from './extended-colors.mjs';
