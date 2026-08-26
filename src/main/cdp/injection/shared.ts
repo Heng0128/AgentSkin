@@ -13,7 +13,10 @@
  */
 
 import { toMessage } from '../../../shared/errors';
-import { isThemeFullyApplied } from '../../../shared/injection-runtime';
+import {
+  isThemeFullyApplyVerdict,
+  type ThemeApplyVerdict,
+} from '../../../shared/injection-runtime';
 import { mainWarn } from '../../logger';
 import { PerformanceRecorder } from '../../services/performance';
 import type { CdpSession } from '../cdp-client';
@@ -120,6 +123,28 @@ export function backoffDelay(attempt: number, base = 500, max = 8000): Promise<v
 }
 
 /**
+ * Result of a `waitForTheme` polling call.
+ *
+ * RC4-A: instead of returning a bare `ThemeVerification | null`, the polling
+ * function now reports the **last observed** verification plus a graded
+ * {@link ThemeApplyVerdict} so the caller can make a nuanced decision
+ * (skip / partial re-inject / full re-inject) rather than interpreting null
+ * as "unknown".
+ */
+export interface WaitForThemeResult {
+  /** True only when verdict === 'full'. */
+  applied: boolean;
+  /** Graded verdict derived from the last observed verification. */
+  verdict: ThemeApplyVerdict;
+  /**
+   * The last non-null `ThemeVerification` observed during polling, or null
+   * if every `verifyTheme` call failed (CDP transport error). Always the
+   * freshest data the caller needs for diagnostics.
+   */
+  verification: ThemeVerification | null;
+}
+
+/**
  * Poll `verifyTheme` until it succeeds or `timeoutMs` is reached.
  *
  * Replaces the pattern of `await delay(fixedMs); verifyTheme()` with a
@@ -130,12 +155,14 @@ export function backoffDelay(attempt: number, base = 500, max = 8000): Promise<v
  * wait before starting to poll, which is useful when the caller knows the
  * theme takes at least that long to apply.
  *
- * Returns the first non-null `ThemeVerification`, or null if timeout is reached.
+ * RC4-A: on timeout, returns the **last observed** `ThemeVerification` (not
+ * null) plus a graded verdict so the caller can distinguish "partial
+ * injection" from "total failure" and act accordingly.
  */
 export async function waitForTheme(
   session: CdpSession,
   options: { timeoutMs?: number; intervalMs?: number; minDelayMs?: number } = {},
-): Promise<ThemeVerification | null> {
+): Promise<WaitForThemeResult> {
   const { timeoutMs = 3000, intervalMs = 50, minDelayMs = 0 } = options;
   const t0 = performance.now();
 
@@ -147,23 +174,30 @@ export async function waitForTheme(
   // timeout check and the trace step. Mixing with Date.now() would risk
   // clock-skew divergence (NTP sync, DTP adjustments).
   const start = performance.now();
+  let lastVerification: ThemeVerification | null = null;
   while (performance.now() - start < timeoutMs) {
     const verification = await verifyTheme(session);
-    if (verification && isThemeFullyApplied(verification)) {
-      PerformanceRecorder.recordNamedStep(undefined, 'waitForTheme', performance.now() - t0);
-      return verification;
+    if (verification) {
+      lastVerification = verification;
+      const verdict = isThemeFullyApplyVerdict(verification);
+      if (verdict === 'full') {
+        PerformanceRecorder.recordNamedStep(undefined, 'waitForTheme', performance.now() - t0);
+        return { applied: true, verdict, verification };
+      }
     }
     await delay(intervalMs);
   }
 
-  // Final attempt after timeout
-  const verification = await verifyTheme(session);
+  // Final attempt after timeout — may capture a verification the loop missed.
+  const finalVerification = await verifyTheme(session);
+  if (finalVerification) lastVerification = finalVerification;
+  const verdict = lastVerification ? isThemeFullyApplyVerdict(lastVerification) : 'failed';
   PerformanceRecorder.recordNamedStep(
     undefined,
     'waitForTheme',
     performance.now() - t0,
-    verification !== null,
-    verification === null ? 'theme not verified within timeout' : undefined,
+    verdict === 'full',
+    verdict !== 'full' ? 'theme not fully verified within timeout' : undefined,
   );
-  return verification;
+  return { applied: verdict === 'full', verdict, verification: lastVerification };
 }
