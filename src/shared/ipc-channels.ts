@@ -211,6 +211,11 @@ export const IpcChannel = {
   PERFORMANCE_CLEAR_TIMEOUTS: 'performance:clear-timeouts',
   /** Renderer asks for main-process memory trend samples (most-recent-first). */
   PERFORMANCE_GET_MEMORY: 'performance:get-memory',
+  // SEND_ONLY — main → renderer event. Pushed when a new theme-apply trace
+  // is finalized so the Diagnostics UI can incrementally update without
+  // waiting for the next poll tick. Registering ipcMain.handle here would
+  // cause invoke() to hang forever.
+  PERFORMANCE_NEW_TRACE: 'performance:new-trace',
   // SEND_ONLY — main → renderer event, DO NOT register ipcMain.handle
   // Subscribed via ipcRenderer.on in preload. Emitted with webContents.send
   // to push live concurrency metrics ({ active, queued, max }) to the

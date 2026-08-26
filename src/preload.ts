@@ -309,6 +309,19 @@ const api: AgentSkinApi = {
     >,
   onDiagnosticsConcurrencyMetrics: (listener) =>
     subscribe<ConcurrencyMetrics>(IpcChannel.DIAGNOSTICS_CONCURRENCY_METRICS, listener),
+  // --- Diagnostics: new-trace push (main → renderer, no poll) ---
+  onPerformanceNewTrace: (listener) =>
+    subscribe<{
+      id: string;
+      agentId: string;
+      themeId?: string;
+      startedAt: number;
+      finishedAt: number;
+      duration: number;
+      success: boolean;
+      steps: Array<{ name: string; duration: number; success: boolean; error?: string }>;
+      error?: string;
+    }>(IpcChannel.PERFORMANCE_NEW_TRACE, listener),
   onPersistFailureWarning: (listener) =>
     subscribe<{ failureCount: number }>(IpcChannel.PERSIST_FAILURE_WARNING, listener),
   // --- Secondary target injection trace ---

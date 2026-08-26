@@ -44,7 +44,7 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
   registerBundleIpc(ctx, updateTrayMenu);
   registerSettingsIpc(ctx);
   registerWallpaperIpc(ctx);
-  registerPerformanceIpc();
+  registerPerformanceIpc(ctx);
   // Concurrency-metrics push (main → renderer via webContents.send every 5s)
   // + the renderer→main update path for renderer-side primitive sizes.
   registerConcurrencyMetricsIpc(ctx);

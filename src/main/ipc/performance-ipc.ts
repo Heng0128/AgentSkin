@@ -3,11 +3,17 @@
 /**
  * # Performance IPC
  *
- * Read-only IPC handler for the Diagnostics tab. Returns recently completed
- * theme-apply traces and aggregate statistics from the {@link PerformanceLogger}
- * singleton. The UI polls this on a fixed cadence (5s) for a low-fidelity
- * update; future iterations may push live updates via
- * `webContents.send`.
+ * Read-write IPC handler for the Diagnostics tab. Provides:
+ *
+ *   - Read: renderer-poll handlers (`performance:get`, `performance:get-timeouts`,
+ *     `performance:get-memory`) that return recent traces and aggregate stats.
+ *   - Push: main → renderer subscription (`performance:new-trace`) that fires
+ *     when a new trace is finalized, so the UI can incrementally update instead
+ *     of waiting for the next poll tick.
+ *
+ * The push path is wired by subscribing to `performanceLogger.subscribeTrace()`
+ * and fanning out to the main window + studio window (same pattern as
+ * `concurrency-metrics-ipc`).
  *
  * No write handlers exist — only `ThemeApplyTrace` producers (the apply/restore
  * flows) call `PerformanceLogger.log()` directly.
@@ -15,6 +21,7 @@
 
 import { ipcMain } from 'electron';
 import { IpcChannel } from '../../shared/ipc-channels';
+import type { MainContext } from '../main-context';
 import {
   type IpcTimeoutEvent,
   type MemorySample,
@@ -34,7 +41,7 @@ function clampCount(value: unknown, max: number, fallback = 10): number {
   return Math.min(max, Math.max(1, value));
 }
 
-export function registerPerformanceIpc(): void {
+export function registerPerformanceIpc(ctx: MainContext): void {
   ipcMain.handle(
     IpcChannel.PERFORMANCE_GET,
     (_event, count: unknown): PerformanceHistoryResponse => {
@@ -59,5 +66,17 @@ export function registerPerformanceIpc(): void {
     // This channel floors at 0 (not 1): count <= 0 or non-numeric means "all".
     if (typeof count !== 'number' || !Number.isFinite(count) || count <= 0) return all;
     return all.slice(-Math.min(count, all.length));
+  });
+
+  // Push channel: subscribe to new traces and fan-out to main + studio windows.
+  // The unsubscribe function is tracked so it can be called on app shutdown
+  // (though in practice the logger singleton lives for the process lifetime).
+  performanceLogger.subscribeTrace((trace) => {
+    if (ctx.mainWindow && !ctx.mainWindow.isDestroyed()) {
+      ctx.mainWindow.webContents.send(IpcChannel.PERFORMANCE_NEW_TRACE, trace);
+    }
+    if (ctx.studioWindow && !ctx.studioWindow.isDestroyed()) {
+      ctx.studioWindow.webContents.send(IpcChannel.PERFORMANCE_NEW_TRACE, trace);
+    }
   });
 }

@@ -109,6 +109,10 @@ export interface PerformanceLoggerApi {
   getLatestMemory(): MemorySample | null;
   /** Clear all retained memory samples (does not stop the sampler). */
   clearMemorySamples(): void;
+  /** Subscribe to new trace records. Returns an unsubscribe function.
+   *  Called synchronously from `log()` so subscribers are notified before
+   *  the `log()` call returns. */
+  subscribeTrace(listener: (trace: ThemeApplyTrace) => void): () => void;
 }
 
 /** Overflow warning re-print interval. Every N discarded traces the operator
@@ -129,6 +133,9 @@ function createPerformanceLogger(): PerformanceLoggerApi {
   // --- Main-process memory trend ring buffer ---
   let memSamples: MemorySample[] = [];
   let memoryTimer: ReturnType<typeof setInterval> | undefined;
+
+  // --- Trace push subscribers (main → renderer) ---
+  const traceListeners: Array<(trace: ThemeApplyTrace) => void> = [];
 
   function sampleMemory(): void {
     const usage = process.memoryUsage();
@@ -190,6 +197,15 @@ function createPerformanceLogger(): PerformanceLoggerApi {
   return {
     log(trace: ThemeApplyTrace): void {
       buffer.push(trace);
+      // Notify push subscribers synchronously so the renderer learns about
+      // the new trace before log() returns (no polling lag).
+      for (const listener of traceListeners) {
+        try {
+          listener(trace);
+        } catch {
+          // A broken listener must not prevent logging or other subscribers.
+        }
+      }
       if (buffer.length > MAX_HISTORY) {
         buffer.shift();
         traceOverflowCount += 1;
@@ -266,6 +282,13 @@ function createPerformanceLogger(): PerformanceLoggerApi {
     },
     clearMemorySamples(): void {
       memSamples = [];
+    },
+    subscribeTrace(listener: (trace: ThemeApplyTrace) => void): () => void {
+      traceListeners.push(listener);
+      return () => {
+        const idx = traceListeners.indexOf(listener);
+        if (idx !== -1) traceListeners.splice(idx, 1);
+      };
     },
   };
 }

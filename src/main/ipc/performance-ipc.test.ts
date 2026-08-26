@@ -36,8 +36,9 @@ const mockStopMemorySampler = vi.fn();
 const mockGetMemorySamples = vi.fn();
 const mockGetLatestMemory = vi.fn();
 const mockClearMemorySamples = vi.fn();
+const mockSubscribeTrace = vi.fn();
 
-// Full PerformanceLoggerApi mock — all 14 methods to prevent "is not a function"
+// Full PerformanceLoggerApi mock — all 15 methods to prevent "is not a function"
 // runtime errors if new IPC handlers are added.
 vi.mock('../services/performance', () => ({
   performanceLogger: {
@@ -55,6 +56,7 @@ vi.mock('../services/performance', () => ({
     getMemorySamples: () => mockGetMemorySamples(),
     getLatestMemory: () => mockGetLatestMemory(),
     clearMemorySamples: () => mockClearMemorySamples(),
+    subscribeTrace: (listener: unknown) => mockSubscribeTrace(listener),
   },
 }));
 
@@ -99,6 +101,7 @@ describe('performance-ipc — clamp behavior', () => {
     mockGetMemorySamples.mockReset();
     mockGetLatestMemory.mockReset();
     mockClearMemorySamples.mockReset();
+    mockSubscribeTrace.mockReset();
     mockGetMemorySamples.mockReturnValue([...SAMPLES]);
     // Re-register handlers after each clear (registerPerformanceIpc runs once
     // at import time, but handlers Map is cleared in beforeEach).
@@ -240,5 +243,7 @@ describe('performance-ipc — clamp behavior', () => {
  */
 async function reRegister(): Promise<void> {
   const mod = await import('./performance-ipc');
-  mod.registerPerformanceIpc();
+  // Pass a minimal ctx stub; the push subscription is a no-op when
+  // mainWindow/studioWindow are null (no crash, no send).
+  mod.registerPerformanceIpc({ mainWindow: null, studioWindow: null } as never);
 }
