@@ -239,6 +239,15 @@ function isToolOverride(value: unknown): value is ToolOverride {
 }
 
 /**
+ * Resolve overrides from a history entry, falling back to an empty
+ * ToolOverride when the entry fails the type guard. This prevents
+ * malformed history data from silently corrupting the workspace state.
+ */
+function resolveOverrides(entry: HistoryEntry): ToolOverride {
+  return isToolOverride(entry.overrides) ? entry.overrides : {};
+}
+
+/**
  * Runtime type guard for a Record<string, ToolOverride> map.
  * Validates every value in the record satisfies isToolOverride.
  */
@@ -740,14 +749,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     if (!agentId) return false;
     const nextIndex = historyIndex - 1;
     const entry = history[nextIndex];
+    const overrides = resolveOverrides(entry);
     // Apply the overrides from the previous history entry (without pushing to history).
     const overridesByAgent = {
       ...get().overridesByAgent,
-      [agentId]: entry.overrides as ToolOverride,
+      [agentId]: overrides,
     };
     persistOverridesByAgent(overridesByAgent);
     set({
-      currentOverrides: entry.overrides as ToolOverride,
+      currentOverrides: overrides,
       historyIndex: nextIndex,
       overridesByAgent,
       dirty: true,
@@ -758,10 +768,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       {
         agentId,
         port: get().currentPort ?? 0,
-        overrides: entry.overrides as ToolOverride,
+        overrides,
         dirty: true,
       },
-      entry.overrides as ToolOverride,
+      overrides,
     );
     return true;
   },
@@ -773,13 +783,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     if (!agentId) return false;
     const nextIndex = historyIndex + 1;
     const entry = history[nextIndex];
+    const overrides = resolveOverrides(entry);
     const overridesByAgent = {
       ...get().overridesByAgent,
-      [agentId]: entry.overrides as ToolOverride,
+      [agentId]: overrides,
     };
     persistOverridesByAgent(overridesByAgent);
     set({
-      currentOverrides: entry.overrides as ToolOverride,
+      currentOverrides: overrides,
       historyIndex: nextIndex,
       overridesByAgent,
       dirty: true,
@@ -789,10 +800,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       {
         agentId,
         port: get().currentPort ?? 0,
-        overrides: entry.overrides as ToolOverride,
+        overrides,
         dirty: true,
       },
-      entry.overrides as ToolOverride,
+      overrides,
     );
     return true;
   },
