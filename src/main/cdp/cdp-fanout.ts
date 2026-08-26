@@ -505,23 +505,38 @@ export async function hardeningPass(
       // 否则仍强制注入，避免 CSS 层在、hero 大图 Blob 丢失的场景误判为"已应用"
       // 而补不上 hero（背景剩纯色块）。
       const requireHero = !!(imageDataUrls?.hero || resolvedFilePaths?.hero);
-      if (watchdogVerification && isThemeFullyApplied(watchdogVerification, { requireHero })) {
+      // RC4-A: graded watchdog response — 'full' skips, 'partial'/'failed'
+      // re-inject. Previously a partial state (e.g. missing tokens layer) was
+      // silently skipped, leaving the user with a half-themed UI.
+      const watchdogVerdict = watchdogVerification
+        ? isThemeFullyApplyVerdict(watchdogVerification, { requireHero })
+        : 'failed';
+      if (watchdogVerdict === 'full') {
         watchdogSkipped++;
         if (!firstSession) {
           firstSession = session;
           firstPooled = handle.pooled;
           firstSessionTargetKey = targetKeyFor(target.id, target.webSocketDebuggerUrl);
         }
-        const layerDetail = watchdogVerification.layers
-          ? Object.entries(watchdogVerification.layers)
+        const layerDetail = watchdogVerification!.layers
+          ? Object.entries(watchdogVerification!.layers)
               .map(([k, v]) => `${k}:${v}`)
               .join(',')
           : 'legacy';
         deps.log(
           `[hardening] ${appId}: WATCHDOG skip ${target.type} "${target.title?.slice(0, 40)}" ` +
-            `(accent=${watchdogVerification.accent || '?'}, sheets=${watchdogVerification.adoptedSheetCount}, layers=[${layerDetail}])`,
+            `(accent=${watchdogVerification!.accent || '?'}, sheets=${watchdogVerification!.adoptedSheetCount}, layers=[${layerDetail}])`,
         );
       } else {
+        // RC4-A: 'partial' (some layers missing) and 'failed' (no sheets/accent)
+        // both trigger re-injection. Log the verdict so diagnostics can
+        // distinguish a partial recovery from a total loss.
+        if (watchdogVerification) {
+          deps.log(
+            `[hardening] ${appId}: WATCHDOG ${watchdogVerdict} ${target.type} "${target.title?.slice(0, 40)}" ` +
+              `(accent=${watchdogVerification.accent || '?'}, sheets=${watchdogVerification.adoptedSheetCount}) → re-injecting`,
+          );
+        }
         // Inject the engine architecture (palette + tokens + cosmetic + theme +
         // adapter.mjs). `injectThemeViaEngine` internally verifies adoption and
         // returns the per-layer outcome.
