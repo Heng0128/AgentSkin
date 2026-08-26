@@ -228,23 +228,48 @@ interface StorageWrapper {
   data: Record<string, ToolOverride>;
 }
 
+/**
+ * Runtime type guard for a single ToolOverride value.
+ * Since ToolOverride is a flat record of optional primitive fields, we
+ * validate that the value is a non-null object (all fields are optional
+ * so no individual field check is required at this layer).
+ */
+function isToolOverride(value: unknown): value is ToolOverride {
+  return value !== null && typeof value === 'object';
+}
+
+/**
+ * Runtime type guard for a Record<string, ToolOverride> map.
+ * Validates every value in the record satisfies isToolOverride.
+ */
+function isValidOverrides(value: unknown): value is Record<string, ToolOverride> {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  for (const key of Object.keys(obj)) {
+    if (!isToolOverride(obj[key])) return false;
+  }
+  return true;
+}
+
 /** Load per-agent overrides from localStorage. Returns empty map on any error. */
 function loadOverridesByAgent(): Record<string, ToolOverride> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
-    const parsed = JSON.parse(raw) as StorageWrapper | Record<string, ToolOverride>;
+    const parsed: unknown = JSON.parse(raw);
     // v1 format
     if (
       parsed &&
       typeof parsed === 'object' &&
-      '_version' in parsed &&
-      (parsed as StorageWrapper)._version === 1
+      (parsed as StorageWrapper)._version === 1 &&
+      isValidOverrides((parsed as StorageWrapper).data)
     ) {
       return (parsed as StorageWrapper).data;
     }
-    // legacy format (no _version) — return as-is
-    if (parsed && typeof parsed === 'object') return parsed as Record<string, ToolOverride>;
+    // legacy format (no _version) — validate before returning
+    if (isValidOverrides(parsed)) {
+      return parsed;
+    }
     return {};
   } catch {
     return {}; // quota / parse error — degrade to in-session only
@@ -262,13 +287,37 @@ function persistOverridesByAgent(map: Record<string, ToolOverride>): void {
   }
 }
 
+/**
+ * Runtime type guard for a single TweakPreset value.
+ * Validates required fields exist with correct types.
+ */
+function isTweakPreset(value: unknown): value is TweakPreset {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.id !== 'string') return false;
+  if (typeof obj.name !== 'string') return false;
+  if (typeof obj.agentId !== 'string') return false;
+  if (!obj.overrides || typeof obj.overrides !== 'object') return false;
+  if (typeof obj.createdAt !== 'string') return false;
+  if (typeof obj.updatedAt !== 'string') return false;
+  return true;
+}
+
+/**
+ * Runtime type guard for a TweakPreset[] array.
+ * Filters out any entries that fail isTweakPreset validation.
+ */
+function isValidTweakPresets(value: unknown): value is TweakPreset[] {
+  return Array.isArray(value) && value.every(isTweakPreset);
+}
+
 /** Load tweak presets from localStorage. Returns empty array on any error. */
 function loadTweakPresets(): TweakPreset[] {
   try {
     const raw = localStorage.getItem(PRESET_STORAGE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (Array.isArray(parsed)) return parsed as TweakPreset[];
+    const parsed: unknown = JSON.parse(raw);
+    if (isValidTweakPresets(parsed)) return parsed;
     return [];
   } catch {
     return []; // quota / parse error — degrade to in-session only
