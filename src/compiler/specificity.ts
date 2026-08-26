@@ -76,7 +76,7 @@ export const AGENT_SPECIFICITY_PROFILES: Record<AgentId, SpecificityProfile> = {
   doubao: {
     adapterId: 'doubao',
     scopeStrategy: 'host-root',
-    importantBudget: 150,
+    importantBudget: 650,
     fallbackOrder: ['add-layer', 'force-important'],
     maxSpecificity: [0, 2, 1],
     decorationGuard: true,

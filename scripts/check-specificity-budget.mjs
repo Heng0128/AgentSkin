@@ -84,7 +84,7 @@ const PROFILES = {
   codex: {
     scopeStrategy: 'host-class-only',
     importantBudget: 150,
-    maxSpecificity: [0, 1, 0],
+    maxSpecificity: [0, 2, 0],
     hostSelector: ':root.agentskin-host-codex',
   },
   doubao: {
