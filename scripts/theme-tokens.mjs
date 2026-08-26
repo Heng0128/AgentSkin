@@ -4,7 +4,7 @@
 //
 // Canonical single source of truth for the 14 required `--agentskin-*` design
 // tokens. All consumers (check-themes.mjs, check-theme-staleness.mjs,
-// check-variable-bridge.mjs, contract tests) import from here to prevent drift.
+// contract tests) import from here to prevent drift.
 //
 // Canonical token list (14 tokens):
 //   1. --agentskin-bg

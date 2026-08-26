@@ -272,7 +272,7 @@ async function main() {
     const exManifestPath = path.join(THEMES_DIR, entry.name, 'manifest.json');
     let exManifestRaw;
     try {
-      if (exManifestPath) exManifestRaw = await fs.readFile(exManifestPath, 'utf8');
+      exManifestRaw = await fs.readFile(exManifestPath, 'utf8');
     } catch {
       continue;
     }

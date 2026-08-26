@@ -76,23 +76,6 @@ const ALLOWED_SPACING_ARBITRARY_PX = new Set([
   2, 3, 4, 6, 8, 10, 12, 14, 16, 20, 22, 24, 28, 30, 32, 36, 38, 48, 64, 70, 72, 76, 80, 96, 100,
 ]);
 
-/** Allowed Tailwind text size names (not arbitrary values). */
-const _ALLOWED_TEXT_NAMES = new Set([
-  'xs',
-  'sm',
-  'base',
-  'lg',
-  'xl',
-  '2xl',
-  '3xl',
-  '4xl',
-  '5xl',
-  '6xl',
-  '7xl',
-  '8xl',
-  '9xl',
-]);
-
 /**
  * px values allowed for arbitrary `text-[Npx]` — the project's actual font
  * ladder (design-tokens.md §3.3): 10px minimum (CRITICAL data must stay >= 10px),
