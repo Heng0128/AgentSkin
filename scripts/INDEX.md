@@ -33,6 +33,7 @@
 | 脚本 | 用途 |
 |------|------|
 | `runtime-check-all.mjs` | CLI 入口：连接本地 CDP，读取 agentskin manifest 获取选择器配置，调用运行时验证器，输出结构化 JSON 报告 |
+| `lib/bundle-signature.mjs` | Bundle 签名生成与验证（RSA-2048 + SHA-256）：防篡改、签名完整性校验 |
 | `lib/runtime-validator.mjs` | 核心验证逻辑：对比度采样（WCAG AA）、水平溢出检测、组件选择器命中验证 |
 
 ### 构建脚本（build-*）
