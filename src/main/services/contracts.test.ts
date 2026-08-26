@@ -114,7 +114,9 @@ describe('Service Contract Conformity', () => {
       const findResult = stub.find('test-theme');
       expect(findResult).toBeInstanceOf(Promise);
       const found = await findResult;
-      expect(found).toBeNull();
+      // Default stub returns a minimal ThemeEntry-like object (not null)
+      expect(found).toHaveProperty('bundle');
+      expect(found).toHaveProperty('filePath');
     });
 
     it('stub sync methods return expected types', () => {
