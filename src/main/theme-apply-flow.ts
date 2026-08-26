@@ -58,7 +58,11 @@ import type { ThemeColors } from './catalog/theme-manifest';
 import type { BaselineSnapshot } from './cdp/apply-baseline';
 import { ensureAgentCdpReady } from './cdp/cdp-ready';
 import type { LogCallback, StructuredLogEvent, ThemeEntry } from './services/contracts';
-import { PerformanceRecorder, performanceLogger } from './services/performance';
+import {
+  type ApplyTraceBuilder,
+  PerformanceRecorder,
+  performanceLogger,
+} from './services/performance';
 import { inferModeFromColors, toInstalledTheme } from './theme-library';
 
 // ---------------------------------------------------------------------------
@@ -408,7 +412,7 @@ async function applyOnResolvedPort(
   deps: ApplyFlowDeps,
   port: number,
   source: 'cache' | 'discovered',
-  trace: ReturnType<typeof PerformanceRecorder.start>,
+  trace: ApplyTraceBuilder,
   finishTrace: () => void,
 ): Promise<{ response: ApplyResponse; background: Promise<void> }> {
   // Collect fire-and-forget follow-up promises so the caller can track when
@@ -634,7 +638,6 @@ async function applyOnResolvedPort(
     themeId: entry.bundle.theme.id,
     timestamp: new Date().toISOString(),
   });
-  finishTrace();
   return {
     response: {
       status: 'applied',
@@ -642,6 +645,9 @@ async function applyOnResolvedPort(
       system: await deps.status(),
     },
     background: Promise.allSettled(backgroundTasks).then((results) => {
+      // Finalize the trace AFTER background tasks settle so the trace
+      // captures the full apply duration including hardening/wallpaper/scheme.
+      finishTrace();
       const failed = results.filter((r) => r.status === 'rejected');
       if (failed.length > 0) {
         const reasons = failed
