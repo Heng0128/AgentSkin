@@ -24,6 +24,20 @@ function currentT(): UiMessages {
   return uiMessages[useShellStore.getState().locale];
 }
 
+// ---------------------------------------------------------------------------
+// RC1-step2: getActiveProject stable-reference cache
+// ---------------------------------------------------------------------------
+// Caches the last returned active-project reference keyed by id + updatedAt.
+// When the projects array is rebuilt (e.g. after saveActiveProject) but the
+// active project's identity is unchanged, getActiveProjectStable() returns
+// the cached reference, preventing downstream re-renders.
+interface _ActiveProjectCacheEntry {
+  id: string;
+  updatedAt: string;
+  ref: StudioProject;
+}
+let _activeProjectCache: _ActiveProjectCacheEntry | null = null;
+
 export interface ProjectForm {
   name: string;
   author: string;
@@ -47,6 +61,7 @@ export interface ProjectState {
 
   // --- Derived helper ---
   getActiveProject(): StudioProject | null;
+  getActiveProjectStable(): StudioProject | null;
 
   // --- Actions ---
   refreshProjects(): Promise<void>;
@@ -76,6 +91,23 @@ export const useProjectStore = create<ProjectState>()((set, get) => ({
   getActiveProject: () => {
     const { projects, activeProjectId } = get();
     return projects.find((p) => p.id === activeProjectId) ?? null;
+  },
+
+  // RC1-step2: Memoized version of getActiveProject that returns a stable
+  // reference when the projects array is rebuilt but the active project's
+  // identity (id + updatedAt) hasn't changed. This prevents unnecessary
+  // re-renders in consumers that select the active project.
+  getActiveProjectStable: () => {
+    const { projects, activeProjectId } = get();
+    const found = projects.find((p) => p.id === activeProjectId) ?? null;
+    // Use the cache from the store's closure via _activeProjectCache
+    const cache = _activeProjectCache;
+    if (found && cache && cache.id === found.id && cache.updatedAt === found.updatedAt) {
+      return cache.ref;
+    }
+    // Update cache (even for null — cache the null result)
+    _activeProjectCache = found ? { id: found.id, updatedAt: found.updatedAt, ref: found } : null;
+    return found;
   },
 
   refreshProjects: async () => {

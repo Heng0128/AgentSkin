@@ -20,12 +20,15 @@ import { useShellStore } from '@/stores/shellStore';
 
 import { uiMessages } from '@shared/i18n';
 import { AlertCircle, Search, Users } from 'lucide-react';
+import { useShallow } from 'zustand/react/shallow';
 
 const SEARCH_DEBOUNCE = 300;
 
 type SortKey = 'popular' | 'recent' | 'rating';
 
 export function CommunityTabPanel() {
+  // RC1-step4: Replace full-store subscription with precise selector + useShallow
+  // to prevent re-renders when unrelated community fields change.
   const {
     themes,
     total,
@@ -45,12 +48,39 @@ export function CommunityTabPanel() {
     setSortBy,
     selectTheme,
     loadThemeDetail,
-  } = useCommunityStore();
+  } = useCommunityStore(
+    useShallow((s) => ({
+      themes: s.themes,
+      total: s.total,
+      loading: s.loading,
+      loadingMore: s.loadingMore,
+      error: s.error,
+      query: s.query,
+      sortBy: s.sortBy,
+      installingIds: s.installingIds,
+      installedIds: s.installedIds,
+      downloadProgress: s.downloadProgress,
+      selectedThemeId: s.selectedThemeId,
+      selectedThemeDetail: s.selectedThemeDetail,
+      loadThemes: s.loadThemes,
+      loadMore: s.loadMore,
+      setQuery: s.setQuery,
+      setSortBy: s.setSortBy,
+      selectTheme: s.selectTheme,
+      loadThemeDetail: s.loadThemeDetail,
+    })),
+  );
 
   const [installErrors, setInstallErrors] = useState<
     Map<string, { error: string; retryCount: number }>
   >(new Map());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // RC4-step8: Use a ref to always read the latest installErrors without stale closure.
+  // The useCallback below has an empty dependency array, so it captures the initial
+  // `installErrors` Map forever. The ref is updated on every render to point to the
+  // latest Map, ensuring retryCount reads are always fresh.
+  const installErrorsRef = useRef(installErrors);
+  installErrorsRef.current = installErrors;
   const locale = useShellStore((s) => s.locale);
   const t = uiMessages[locale];
 
@@ -63,27 +93,25 @@ export function CommunityTabPanel() {
     await useCommunityStore.getState().installTheme(themeId);
   }, []);
 
-  const handleInstallWithTracking = useCallback(
-    async (themeId: string) => {
-      const retryCount = installErrors.get(themeId)?.retryCount ?? 0;
-      const result = await useCommunityStore.getState().installTheme(themeId);
+  const handleInstallWithTracking = useCallback(async (themeId: string) => {
+    // RC4-step8: Read retryCount from the ref (always latest) instead of closure.
+    const retryCount = installErrorsRef.current.get(themeId)?.retryCount ?? 0;
+    const result = await useCommunityStore.getState().installTheme(themeId);
 
-      if (!result.success && result.error) {
-        setInstallErrors((prev) => {
-          const next = new Map(prev);
-          next.set(themeId, { error: result.error ?? '', retryCount: retryCount + 1 });
-          return next;
-        });
-      } else if (result.success) {
-        setInstallErrors((prev) => {
-          const next = new Map(prev);
-          next.delete(themeId);
-          return next;
-        });
-      }
-    },
-    [installErrors],
-  );
+    if (!result.success && result.error) {
+      setInstallErrors((prev) => {
+        const next = new Map(prev);
+        next.set(themeId, { error: result.error ?? '', retryCount: retryCount + 1 });
+        return next;
+      });
+    } else if (result.success) {
+      setInstallErrors((prev) => {
+        const next = new Map(prev);
+        next.delete(themeId);
+        return next;
+      });
+    }
+  }, []);
 
   useEffect(() => {
     loadThemes();

@@ -335,6 +335,11 @@ export function useStudioStore<T>(
   // RC2-A fix: Cache actions in a ref to keep a stable reference across renders.
   // Actions are static functions that never change identity — caching them in a ref
   // prevents useMemo from re-creating the result object on every render.
+  //
+  // RC1-step5: The ref is updated during render to always hold the latest actions.
+  // This is the standard React pattern for keeping a ref in sync with the latest
+  // value. Since getState() is now cached (RC1-step1), it returns the same
+  // reference when no sub-store has changed, so the useMemo below remains stable.
   const actionsRef = useRef(useStudioStore.getState());
   actionsRef.current = useStudioStore.getState();
   const result = useMemo(() => ({ ...actionsRef.current, ...combined }), [combined]);
@@ -473,16 +478,58 @@ export interface CombinedStudioStore {
 // getState / setState (imperative API for non-React consumers & tests)
 // ------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// getState() reference stability cache
+// ---------------------------------------------------------------------------
+// RC1-step1: Cache the previous combined state and only return a new reference
+// when one of the four sub-store states actually changes (by reference).
+// Without this, every getState() call creates a new object + new action closures,
+// breaking referential equality for consumers that compare prev/next state.
+let _cachedState: CombinedStudioStore | null = null;
+let _cachedProjectVersion: object | null = null;
+let _cachedBundleVersion: object | null = null;
+let _cachedCaptureVersion: object | null = null;
+let _cachedIwVersion: object | null = null;
+
 /**
  * Imperative state access — mirrors zustand's `useStore.getState()`.
  * Returns the full combined state with all actions bound.
+ *
+ * RC1-step1: Returns a cached reference when no sub-store has changed since
+ * the last call, preventing unnecessary re-renders in subscribers that rely
+ * on referential equality (e.g. React.memo, useEffect deps).
  */
 useStudioStore.getState = (): CombinedStudioStore => {
+  // Read raw sub-store states (zustand returns same ref until setState is called)
+  const projectSnap = useProjectStore.getState();
+  const bundleSnap = useBundleStore.getState();
+  const captureSnap = useCaptureStore.getState();
+  const iwSnap = useImageWallpaperStore.getState();
+
+  // If none of the four sub-stores changed their root reference, return cached.
+  if (
+    _cachedState &&
+    _cachedProjectVersion === projectSnap &&
+    _cachedBundleVersion === bundleSnap &&
+    _cachedCaptureVersion === captureSnap &&
+    _cachedIwVersion === iwSnap
+  ) {
+    return _cachedState;
+  }
+
+  // Cache miss — rebuild and store version markers.
+  _cachedProjectVersion = projectSnap;
+  _cachedBundleVersion = bundleSnap;
+  _cachedCaptureVersion = captureSnap;
+  _cachedIwVersion = iwSnap;
+
   const state = getCombinedState();
-  return {
+  _cachedState = {
     ...state,
-    // Derived helpers
-    getActiveProject: () => useProjectStore.getState().getActiveProject(),
+    // Derived helpers — RC1-step2: use the stable-reference variant so that
+    // getState().getActiveProject() returns a cached reference when the
+    // active project's identity (id + updatedAt) hasn't changed.
+    getActiveProject: () => useProjectStore.getState().getActiveProjectStable(),
 
     // Project actions
     refreshProjects: () => useProjectStore.getState().refreshProjects(),
@@ -584,6 +631,7 @@ useStudioStore.getState = (): CombinedStudioStore => {
       });
     },
   };
+  return _cachedState;
 };
 
 /**

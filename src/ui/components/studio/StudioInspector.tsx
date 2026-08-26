@@ -21,6 +21,7 @@ import type { InspectorTabId } from '@/types/workspace';
 
 import type { UiMessages } from '@shared/i18n';
 import { AGENT_META } from '@shared/types';
+import { useShallow } from 'zustand/react/shallow';
 import { type DesktopResolution, RESOLUTION_PRESETS } from './device-frame';
 
 /** Map inspector tab IDs to their i18n label keys. */
@@ -52,7 +53,15 @@ export function StudioInspector({
   /** Toggle device frame. */
   onToggleDeviceFrame: () => void;
 }) {
-  const { inspector, setInspectorTab, setInspectorOpen } = useWorkspaceStore();
+  // RC1-step3: Replace full-store subscription with precise selector + useShallow
+  // to prevent re-renders when unrelated workspace fields change.
+  const { inspector, setInspectorTab, setInspectorOpen } = useWorkspaceStore(
+    useShallow((s) => ({
+      inspector: s.inspector,
+      setInspectorTab: s.setInspectorTab,
+      setInspectorOpen: s.setInspectorOpen,
+    })),
+  );
   const activeProject = useStudioStore((s) => s.getActiveProject());
 
   const activeAgentMeta = activeProject ? AGENT_META[activeProject.agentId] : null;

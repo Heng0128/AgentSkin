@@ -31,7 +31,14 @@ import { AgentsSection } from './AgentsSection';
 import { ResourcesSection } from './ResourcesSection';
 
 export function StudioDrawer({ t }: { t: UiMessages }) {
-  const { drawer, setDrawerCollapsed } = useWorkspaceStore();
+  // RC1-step3: Replace full-store subscription with precise selector + useShallow
+  // to prevent re-renders when unrelated workspace fields change.
+  const { drawer, setDrawerCollapsed } = useWorkspaceStore(
+    useShallow((s) => ({
+      drawer: s.drawer,
+      setDrawerCollapsed: s.setDrawerCollapsed,
+    })),
+  );
 
   // RC2-A fix: Replace full-store subscription with precise selector + useShallow.
   const {

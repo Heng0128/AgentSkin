@@ -37,8 +37,18 @@ const TOPBAR_TABS: {
 ];
 
 export function StudioTopBar({ t }: { t: UiMessages }) {
-  const { dock, drawer, inspector, toggleDock, toggleDrawer, toggleInspector } =
-    useWorkspaceStore();
+  // RC1-step3: Replace full-store subscription with precise selector + useShallow
+  // to prevent re-renders when unrelated workspace fields change.
+  const { dock, drawer, inspector, toggleDock, toggleDrawer, toggleInspector } = useWorkspaceStore(
+    useShallow((s) => ({
+      dock: s.dock,
+      drawer: s.drawer,
+      inspector: s.inspector,
+      toggleDock: s.toggleDock,
+      toggleDrawer: s.toggleDrawer,
+      toggleInspector: s.toggleInspector,
+    })),
+  );
 
   const activeProject = useStudioStore((s) => s.getActiveProject());
   // RC2-A fix: Replace full-store subscription with precise selector + useShallow
