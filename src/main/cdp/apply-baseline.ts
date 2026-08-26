@@ -34,6 +34,13 @@ import { mainWarn } from '../logger';
 import { type CdpSession, connectCdp } from './cdp-client';
 import { findDomTargets } from './cdp-targets';
 import { verifyTheme } from './injection/shared';
+import {
+  acquireSession,
+  type CdpSessionPool,
+  releaseSession,
+  type SessionHandle,
+  targetKeyFor,
+} from './session-pool';
 
 // ---------------------------------------------------------------------------
 // BaselineSnapshot
@@ -228,44 +235,80 @@ export async function probeThemeLive(session: CdpSession): Promise<boolean> {
 
 /**
  * Open a session to the main DOM-bearing target on a port, capture a baseline,
- * and close. Returns null when no DOM target is reachable or capture fails.
+ * and release. Returns null when no DOM target is reachable or capture fails.
+ *
+ * When `pool` is provided the session is acquired from the pool (reusing an
+ * existing connection to the same target if one exists) and released back into
+ * the pool on completion. Without a pool a one-shot connect-then-close
+ * session is used (backwards-compatible path for callers that don't pass one).
  */
 export async function captureBaselineOnPort(
   port: number,
   appId: AgentId,
   themeId: string,
+  pool?: CdpSessionPool,
 ): Promise<BaselineSnapshot | null> {
-  const session = await openMainDomSession(port);
+  const { session, targetKey, pooled } = await openMainDomSession(port, appId, pool);
   if (!session) return null;
   try {
     return await captureBaseline(session, appId, themeId);
   } finally {
-    closeSafely(session);
+    if (pooled) {
+      releaseSession(pool, appId, targetKey);
+    } else {
+      closeSafely(session);
+    }
   }
 }
 
 /**
  * Open a session to the main DOM-bearing target on a port and probe whether
  * the theme is live. Returns false when no DOM target is reachable.
+ *
+ * Pooling follows the same contract as {@link captureBaselineOnPort}.
  */
-export async function probeThemeLiveOnPort(port: number): Promise<boolean> {
-  const session = await openMainDomSession(port);
+export async function probeThemeLiveOnPort(
+  port: number,
+  appId: AgentId,
+  pool?: CdpSessionPool,
+): Promise<boolean> {
+  const { session, targetKey, pooled } = await openMainDomSession(port, appId, pool);
   if (!session) return false;
   try {
     return await probeThemeLive(session);
   } finally {
-    closeSafely(session);
+    if (pooled) {
+      releaseSession(pool, appId, targetKey);
+    } else {
+      closeSafely(session);
+    }
   }
 }
 
-async function openMainDomSession(port: number): Promise<CdpSession | null> {
+/**
+ * Acquire (or one-shot-connect) a session to the main DOM-bearing target on a
+ * port. Returns the session, the pool targetKey, and whether it was pooled
+ * (so the caller knows whether to release or close).
+ */
+async function openMainDomSession(
+  port: number,
+  appId: AgentId,
+  pool?: CdpSessionPool,
+): Promise<{ session: CdpSession | null; targetKey: string; pooled: boolean }> {
   try {
     const targets = await findDomTargets(port);
-    if (!targets.length || !targets[0].webSocketDebuggerUrl) return null;
-    return await connectCdp(targets[0].webSocketDebuggerUrl, 3000);
+    if (!targets.length || !targets[0].webSocketDebuggerUrl) {
+      return { session: null, targetKey: '', pooled: false };
+    }
+    const target = targets[0];
+    const targetKey = targetKeyFor(target.id, target.webSocketDebuggerUrl);
+    const handle: SessionHandle = await acquireSession(pool, appId, targetKey, () =>
+      connectCdp(target.webSocketDebuggerUrl!, 3000),
+    );
+    return { session: handle.session, targetKey, pooled: handle.pooled };
   } catch (error) {
     mainWarn('Baseline.Connect', `open main DOM session failed: ${toMessage(error)}`);
-    return null;
+    return { session: null, targetKey: '', pooled: false };
   }
 }
 

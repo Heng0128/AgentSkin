@@ -122,7 +122,7 @@ export interface ApplyFlowDeps {
   /** Invalidate baseline cache entries for an agent (probe failure / epoch flip). */
   baselineInvalidate: (appId: AgentId) => void;
   /** §4.6 light theme-live probe on the main DOM target of a port. */
-  probeThemeLiveOnPort: (port: number) => Promise<boolean>;
+  probeThemeLiveOnPort: (port: number, appId: AgentId) => Promise<boolean>;
   /** Capture a {@link BaselineSnapshot} from the main DOM target of a port. */
   captureBaselineOnPort: (
     port: number,
@@ -593,7 +593,7 @@ async function applyOnResolvedPort(
       const snap = await deps.captureBaselineOnPort(port, appId, resolvedThemeId);
       if (snap) deps.baselinePut(snap);
       if (!deps.isEpochCurrent(appId, epoch)) return;
-      const live = await deps.probeThemeLiveOnPort(port);
+      const live = await deps.probeThemeLiveOnPort(port, appId);
       if (!live) {
         deps.log(`[apply] ${appId}: light probe failed — invalidating baseline cache`);
         deps.baselineInvalidate(appId);

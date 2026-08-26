@@ -636,8 +636,9 @@ export class AgentEngineService implements AgentEngineServiceApi {
       baselineGet: (appId, url, themeId) => this.applyBaselineCache.get(appId, url, themeId),
       baselinePut: (snap) => this.applyBaselineCache.put(snap),
       baselineInvalidate: (appId) => this.applyBaselineCache.invalidate(appId),
-      probeThemeLiveOnPort: (port) => probeThemeLiveOnPort(port),
-      captureBaselineOnPort: (port, appId, themeId) => captureBaselineOnPort(port, appId, themeId),
+      probeThemeLiveOnPort: (port, appId) => probeThemeLiveOnPort(port, appId, this.cdpSessionPool),
+      captureBaselineOnPort: (port, appId, themeId) =>
+        captureBaselineOnPort(port, appId, themeId, this.cdpSessionPool),
       captureFingerprintOnPort: (port, appId, themeId, colors, themeDir) =>
         captureFingerprintOnPort(port, appId, themeId, colors, themeDir),
       findTheme: (themeId) => this.library.find(themeId),
