@@ -46,6 +46,46 @@ export interface ApplyAgentWallpaperResult {
   restartReason?: RestartReason;
 }
 
+/**
+ * Runtime type guard for a single WallpaperInfo object.
+ * Validates required fields exist with correct types. Optional/nullable
+ * fields are only checked for type when present.
+ */
+function isWallpaperInfo(value: unknown): value is WallpaperInfo {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.id !== 'string') return false;
+  if (typeof obj.title !== 'string') return false;
+  if (typeof obj.type !== 'string' || !['video', 'image', 'web', 'scene'].includes(obj.type))
+    return false;
+  if (typeof obj.projectType !== 'string') return false;
+  if (typeof obj.playback !== 'string') return false;
+  if (obj.previewUrl !== null && typeof obj.previewUrl !== 'string') return false;
+  if (typeof obj.sizeBytes !== 'number') return false;
+  if (!Array.isArray(obj.tags) || !obj.tags.every((t) => typeof t === 'string')) return false;
+  if (typeof obj.source !== 'string' || !['workshop', 'local'].includes(obj.source)) return false;
+  if (typeof obj.previewOnly !== 'boolean') return false;
+  return true;
+}
+
+/**
+ * Normalize the three possible return shapes from the importWallpaper IPC
+ * into a single WallpaperInfo[] array. Returns an empty array for any
+ * unrecognized shape so callers always get a safe iterable.
+ */
+function normalizeWallpaperResult(result: unknown): WallpaperInfo[] {
+  if (Array.isArray(result)) {
+    return result.filter(isWallpaperInfo);
+  }
+  if (result && typeof result === 'object') {
+    const obj = result as Record<string, unknown>;
+    if (obj.ok === true && Array.isArray(obj.items)) {
+      return obj.items.filter(isWallpaperInfo);
+    }
+  }
+  return [];
+}
+
 /** Build a default empty per-agent setting map (all agents disabled, null id). */
 function emptyAgentWallpapers(): Record<AgentId, WallpaperAgentSetting> {
   const result = {} as Record<AgentId, WallpaperAgentSetting>;
@@ -164,18 +204,21 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
       // IPC handler 三种返回形态（类型声明为 WallpaperInfo[] 但实际更宽）：
       //   1. 取消/未选文件 → WallpaperInfo[] (deps.wallpapers.list())
       //   2. 成功          → { ok: true, items: WallpaperInfo[] }
-      //   3. 失败          → { ok: false, error: string }
-      const shaped = result as
-        | WallpaperInfo[]
-        | { ok: true; items: WallpaperInfo[] }
-        | { ok: false; error: string };
-      if (Array.isArray(shaped)) {
-        set({ wallpapers: shaped });
-      } else if (shaped.ok && Array.isArray(shaped.items)) {
-        set({ wallpapers: shaped.items });
-      } else if (!shaped.ok && shaped.error) {
+      //   3. 失败          → { ok: false; error: string }
+      // normalizeWallpaperResult handles shapes 1 and 2; shape 3 is handled below.
+      const items = normalizeWallpaperResult(result);
+      if (items.length > 0) {
+        set({ wallpapers: items });
+      } else if (
+        result &&
+        typeof result === 'object' &&
+        (result as Record<string, unknown>).ok === false &&
+        typeof (result as Record<string, unknown>).error === 'string'
+      ) {
         // ok=false 路径：报告具体错误给用户
-        useNotificationStore.getState().fail(new Error(shaped.error));
+        useNotificationStore
+          .getState()
+          .fail(new Error((result as Record<string, unknown>).error as string));
       }
       // ok=false 且无 error 信息时静默降级（避免无意义报错）
     } catch (error) {
