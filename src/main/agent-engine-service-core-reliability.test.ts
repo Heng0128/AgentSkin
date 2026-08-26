@@ -30,6 +30,7 @@ import { stopAudioLevelPolling } from './audio-level';
 import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
 import { writeJsonAtomic } from './fs-utils';
 import { PerformanceRecorder } from './services/performance/performance-recorder';
+import { makeThemeLibraryStub } from './test-helpers/mock-services';
 import { disposeThemeAssetCache } from './theme/utils';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
@@ -141,8 +142,7 @@ describe('AgentEngineService (core reliability)', () => {
   });
 
   function makeService() {
-    // biome-ignore lint/suspicious/noExplicitAny: test stub — library is never exercised here
-    return new AgentEngineService({} as any, stateFile, makeSettings());
+    return new AgentEngineService(makeThemeLibraryStub(), stateFile, makeSettings());
   }
 
   // -------------------------------------------------------------------------

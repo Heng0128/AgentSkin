@@ -282,8 +282,7 @@ describe('AgentEngineService (orchestration)', () => {
         'utf8',
       );
       const svc = new AgentEngineService(
-        // biome-ignore lint/suspicious/noExplicitAny: test stub
-        {} as any,
+        makeThemeLibraryStub(),
         stateFile,
         makeSettings({ port: 5555 }),
       );
@@ -488,8 +487,7 @@ describe('AgentEngineService (orchestration)', () => {
       );
       // doubao 没有主题但有壁纸偏好 —— restoreAll 必须连它一起清理。
       const svc = new AgentEngineService(
-        // biome-ignore lint/suspicious/noExplicitAny: test stub
-        {} as any,
+        makeThemeLibraryStub(),
         stateFile,
         makeSettings({ wallpaperAgents: ['doubao'] }),
       );
