@@ -19,7 +19,8 @@ const { glob } = pkg;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const rootDir = join(__dirname, '..');
-const i18nFile = join(rootDir, 'src', 'shared', 'i18n.ts');
+const i18nDir = join(rootDir, 'src', 'shared', 'i18n');
+const i18nModulesDir = join(i18nDir, 'modules');
 
 let exitCode = 0;
 
@@ -36,8 +37,26 @@ function success(msg) {
   console.log(`  ✓ ${msg}`);
 }
 
-// Read the i18n file
-const i18nContent = readFileSync(i18nFile, 'utf-8');
+// Read all i18n source files (index.ts + modules/*.ts) into a map keyed by
+// fully-qualified export name. uiMessages lives in index.ts (aggregated),
+// mainMessages lives in modules/main.ts. Searching by export marker across
+// all files is resilient to future file moves.
+const i18nFiles = glob
+  .sync(join(i18nDir, '{index,base}.ts'))
+  .concat(glob.sync(join(i18nModulesDir, '*.ts')));
+if (i18nFiles.length === 0) {
+  console.error(`✗ No i18n source files found in ${i18nDir}`);
+  process.exit(1);
+}
+const allI18nContent = i18nFiles.map((f) => readFileSync(f, 'utf-8')).join('\n');
+
+// Helper: find the file content that contains a given top-level export
+function findExportContent(varName) {
+  const marker = `export const ${varName}`;
+  const idx = allI18nContent.indexOf(marker);
+  if (idx === -1) return null;
+  return idx;
+}
 
 // Extract a top-level object block by marker, using brace-depth counting.
 // Returns the inner content (between the outer { and }).
@@ -89,8 +108,15 @@ function extractKeys(block) {
 }
 
 // Extract both locale blocks for a given message category.
-function extractLocaleBlocks(content, varName) {
-  const fullBlock = extractBlock(content, `export const ${varName}`, '\n};');
+function extractLocaleBlocks(varName) {
+  const exportIdx = findExportContent(varName);
+  if (exportIdx === null) {
+    console.error(`✗ Failed to find export: ${varName}`);
+    return null;
+  }
+  // Slice from the export marker to end of file content to capture full block
+  const contentFromExport = allI18nContent.slice(exportIdx);
+  const fullBlock = extractBlock(contentFromExport, `export const ${varName}`, '\n};');
   if (!fullBlock) return null;
   // Extract zh-CN block
   const zhBlock = extractBlock(fullBlock, "'zh-CN':", 'en: {');
@@ -121,7 +147,7 @@ function extractLocaleBlocks(content, varName) {
 }
 
 function checkCategory(varName) {
-  const blocks = extractLocaleBlocks(i18nContent, varName);
+  const blocks = extractLocaleBlocks(varName);
   if (!blocks || !blocks.zhBlock || !blocks.enBlock) {
     console.error(`✗ Failed to parse ${varName} — could not locate locale blocks`);
     process.exit(1);
