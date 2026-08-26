@@ -587,6 +587,23 @@ export interface AgentSkinApi {
    *  Returns an unsubscribe function. No ipcMain.handle is registered —
    *  this is a main->renderer push event sent via webContents.send. */
   onDiagnosticsConcurrencyMetrics(listener: (metrics: ConcurrencyMetrics) => void): () => void;
+  /** Subscribe to new theme-apply trace records pushed from the main process
+   *  when a trace is finalized. The payload is the completed ThemeApplyTrace.
+   *  Returns an unsubscribe function. No ipcMain.handle is registered —
+   *  this is a main→renderer push event sent via webContents.send. */
+  onPerformanceNewTrace(
+    listener: (trace: {
+      id: string;
+      agentId: string;
+      themeId?: string;
+      startedAt: number;
+      finishedAt: number;
+      duration: number;
+      success: boolean;
+      steps: Array<{ name: string; duration: number; success: boolean; error?: string }>;
+      error?: string;
+    }) => void,
+  ): () => void;
   /** Subscribe to persist-failure warnings pushed from the main process when
    *  persistFailures reaches threshold. The payload carries the current
    *  failureCount so the UI can surface a destructive toast. Returns an

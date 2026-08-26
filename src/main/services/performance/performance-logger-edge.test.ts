@@ -183,9 +183,13 @@ describe('getRecentTimeouts — count boundary', () => {
 /* ------------------------------------------------------------------ */
 
 describe('clearTimeouts vs clear — state isolation', () => {
+  beforeEach(() => {
+    performanceLogger.clear();
+  });
+
   it('clearTimeouts resets only timeouts/timeoutSeq, leaves buffer/overflow intact', () => {
     // --- Arrange: fill traces, trigger overflow, log timeouts ---
-    fillTraces(51); // 51 > MAX_HISTORY(50) → traceOverflowCount=1, overflowWarned=true
+    fillTraces(51); // 51 > MAX_HISTORY(50) → traceOverflowCount=1
     performanceLogger.logTimeout({ channel: 'T1', ms: 5000, timestamp: Date.now() });
     performanceLogger.logTimeout({ channel: 'T2', ms: 6000, timestamp: Date.now() + 1 });
 
@@ -205,7 +209,7 @@ describe('clearTimeouts vs clear — state isolation', () => {
     expect(statsAfter.overflowCount).toBe(1); // traceOverflowCount untouched
   });
 
-  it('clear() resets all 5 state variables (buffer, traceOverflowCount, overflowWarned, timeouts, timeoutSeq)', () => {
+  it('clear() resets all state variables (buffer, traceOverflowCount, nextOverflowWarnAt, timeouts, timeoutSeq)', () => {
     // --- Arrange: fill everything, trigger overflow ---
     fillTraces(51);
     performanceLogger.logTimeout({ channel: 'X', ms: 1000, timestamp: Date.now() });
@@ -221,20 +225,20 @@ describe('clearTimeouts vs clear — state isolation', () => {
     expect(performanceLogger.getRecent(10)).toHaveLength(0);
   });
 
-  it('after clear(), traceOverflowCount is zero so overflow re-triggers console.warn', () => {
-    // --- First overflow: triggers warn, sets overflowWarned=true ---
-    fillTraces(51);
-    expect(performanceLogger.getStats().overflowCount).toBe(1);
+  it('after clear(), periodic warning re-fires at INTERVAL (100) overflows', () => {
+    // --- Push to 150 logs → 100 overflows → warning fires at 100 ---
+    fillTraces(150);
+    expect(performanceLogger.getStats().overflowCount).toBe(100);
 
-    // --- clear() resets overflowWarned=false ---
+    // --- clear() resets nextOverflowWarnAt to INTERVAL (100) ---
     performanceLogger.clear();
     expect(performanceLogger.getStats().overflowCount).toBe(0);
 
-    // --- Spy on console.warn before second overflow ---
+    // --- Spy on console.warn before second batch ---
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    // --- Second overflow: should warn again because overflowWarned was reset ---
-    fillTraces(51);
+    // --- Push to 150 logs again → warning fires at 100 again ---
+    fillTraces(150);
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('ring buffer overflow'));
 
     warnSpy.mockRestore();

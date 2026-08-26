@@ -81,16 +81,22 @@ describe('PerformanceLogger — log() & ring buffer', () => {
     expect(performanceLogger.getStats().totalApplies).toBe(50);
   });
 
-  it('warns via console.warn exactly once on first overflow, not on subsequent ones', () => {
+  it('warns via console.warn periodically (every 100 overflows), not on first overflow', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
+    // 55 logs → 5 overflows. With INTERVAL=100, no warning yet.
     for (let i = 0; i < 55; i++) {
       performanceLogger.log(makeTrace({ id: `apply_${i}` }));
     }
+    expect(warnSpy).toHaveBeenCalledTimes(0);
 
-    // console.warn should only be called once (one-shot warning)
+    // Push to 150 logs → 100 overflows total. First warning fires at 100.
+    for (let i = 55; i < 150; i++) {
+      performanceLogger.log(makeTrace({ id: `apply_${i}` }));
+    }
     expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy.mock.calls[0]![0]).toContain('ring buffer overflow');
+    expect(warnSpy.mock.calls[0]![0]).toContain('100 traces discarded');
 
     warnSpy.mockRestore();
   });
@@ -346,20 +352,20 @@ describe('PerformanceLogger — clear()', () => {
     expect(performanceLogger.getStats().overflowCount).toBe(0);
   });
 
-  it('resets overflowWarned — next overflow triggers console.warn again', () => {
+  it('resets nextOverflowWarnAt on clear — warning interval restarts from zero', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    // First overflow
-    for (let i = 0; i < 51; i++) {
+    // Push to 150 logs → 100 overflows → first warning at 100.
+    for (let i = 0; i < 150; i++) {
       performanceLogger.log(makeTrace({ id: `w1_${i}` }));
     }
     expect(warnSpy).toHaveBeenCalledTimes(1);
 
-    // Clear — this should reset overflowWarned
+    // Clear — resets nextOverflowWarnAt to INTERVAL (100).
     performanceLogger.clear();
 
-    // Second overflow after clear — should warn again
-    for (let i = 0; i < 51; i++) {
+    // Push to 150 logs again → 100 overflows → warning fires at 100 again.
+    for (let i = 0; i < 150; i++) {
       performanceLogger.log(makeTrace({ id: `w2_${i}` }));
     }
     expect(warnSpy).toHaveBeenCalledTimes(2);
