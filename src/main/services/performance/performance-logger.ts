@@ -111,10 +111,16 @@ export interface PerformanceLoggerApi {
   clearMemorySamples(): void;
 }
 
+/** Overflow warning re-print interval. Every N discarded traces the operator
+ *  gets a fresh console.warn with the cumulative overflow count so sustained
+ *  pressure is visible without flooding the console with one warn per trace. */
+const OVERFLOW_WARN_INTERVAL = 100;
+
 function createPerformanceLogger(): PerformanceLoggerApi {
   let buffer: ThemeApplyTrace[] = [];
   let traceOverflowCount = 0;
-  let overflowWarned = false;
+  /** Threshold at which the next overflow summary is printed. */
+  let nextOverflowWarnAt = OVERFLOW_WARN_INTERVAL;
 
   // --- IPC timeout ring buffer ---
   let timeouts: IpcTimeoutEvent[] = [];
@@ -187,11 +193,13 @@ function createPerformanceLogger(): PerformanceLoggerApi {
       if (buffer.length > MAX_HISTORY) {
         buffer.shift();
         traceOverflowCount += 1;
-        if (!overflowWarned) {
-          overflowWarned = true;
+        // Periodic overflow summary: re-warn every OVERFLOW_WARN_INTERVAL
+        // discards so sustained pressure is visible without flooding.
+        if (traceOverflowCount >= nextOverflowWarnAt) {
+          nextOverflowWarnAt = traceOverflowCount + OVERFLOW_WARN_INTERVAL;
           console.warn(
-            `[PerformanceLogger] ring buffer overflow: MAX_HISTORY=${MAX_HISTORY} exceeded, ` +
-              'oldest trace discarded. Increase MAX_HISTORY or persist traces to disk ' +
+            `[PerformanceLogger] ring buffer overflow: ${traceOverflowCount} traces discarded ` +
+              `(MAX_HISTORY=${MAX_HISTORY}). Increase MAX_HISTORY or persist traces to disk ` +
               'if historical data retention is required.',
           );
         }
@@ -205,7 +213,7 @@ function createPerformanceLogger(): PerformanceLoggerApi {
     clear(): void {
       buffer = [];
       traceOverflowCount = 0;
-      overflowWarned = false;
+      nextOverflowWarnAt = OVERFLOW_WARN_INTERVAL;
       timeouts = [];
       timeoutSeq = 0;
       memSamples = [];
