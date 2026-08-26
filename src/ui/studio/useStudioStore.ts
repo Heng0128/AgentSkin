@@ -682,12 +682,14 @@ useStudioStore.setState = (partial: Partial<CombinedStudioStore>): void => {
 useStudioStore.subscribe = (
   listener: (state: CombinedStudioStore, prevState: CombinedStudioStore) => void,
 ): (() => void) => {
-  // R7: 缓存上一次 combined state，确保 prevState !== currentState。
-  let prevCombined = useStudioStore.getState();
+  // RC5-3: Use a ref-like object to track prevCombined per subscriber.
+  // Each subscribe() call gets its own independent ref, avoiding cross-subscriber
+  // contamination and ensuring prevState !== currentState.
+  const prevRef = { current: useStudioStore.getState() };
   const notify = () => {
     const current = useStudioStore.getState();
-    listener(current, prevCombined);
-    prevCombined = current;
+    listener(current, prevRef.current);
+    prevRef.current = current;
   };
   // Subscribe to all sub-stores and re-emit combined state.
   const unsubs = [

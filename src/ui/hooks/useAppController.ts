@@ -143,6 +143,9 @@ export function useAppController() {
 
   const setRoute = useShellStore((s) => s.setRoute);
 
+  // RC5-1: Subscribe forceRestartLaunch reactively to avoid getState() during render.
+  const forceRestartLaunch = useAppsStore((s) => s.forceRestartLaunch);
+
   // -----------------------------------------------------------------------
   // Status slice
   // -----------------------------------------------------------------------
@@ -198,22 +201,31 @@ export function useAppController() {
   // -----------------------------------------------------------------------
   // Boot progress — per-agent phase map + lifecycle toasts
   // -----------------------------------------------------------------------
-  const onBootEvent = (event: StructuredEvent) => {
+  // RC5-2: Use refs for t and showToast so onBootEvent has a stable identity
+  // across renders, preventing re-subscription in useBootProgress.
+  const tRef = useRef(t);
+  tRef.current = t;
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+  const onBootEvent = useCallback((event: StructuredEvent) => {
     const displayName = (id: string): string => AGENT_META[id as AgentId]?.displayName ?? id;
     switch (event.type) {
       case 'boot_start':
         if (event.agentCount && event.agentCount > 0) {
-          showToast(t.bootRestoringToast(event.agentCount));
+          showToastRef.current(tRef.current.bootRestoringToast(event.agentCount));
         }
         break;
       case 'boot_agent_done':
-        showToast(t.bootAgentRestoredToast(displayName(event.agentId)));
+        showToastRef.current(tRef.current.bootAgentRestoredToast(displayName(event.agentId)));
         break;
       case 'boot_agent_failed':
-        showToast(t.bootAgentFailedToast(displayName(event.agentId)), 'destructive');
+        showToastRef.current(
+          tRef.current.bootAgentFailedToast(displayName(event.agentId)),
+          'destructive',
+        );
         break;
     }
-  };
+  }, []);
   const bootProgress = useBootProgress(api.onRuntimeLog, onBootEvent);
 
   // Boot-time catalog / data refresh — these call IPC so they stay in the
@@ -412,7 +424,7 @@ export function useAppController() {
       setWallpaperRestartPrompt,
       launchRestartPrompt,
       setLaunchRestartPrompt,
-      forceRestartLaunch: useAppsStore.getState().forceRestartLaunch,
+      forceRestartLaunch,
       deletePrompt,
       setDeletePrompt,
       fileImportPrompt,
@@ -499,6 +511,7 @@ export function useAppController() {
       setWallpaperRestartPrompt,
       launchRestartPrompt,
       setLaunchRestartPrompt,
+      forceRestartLaunch,
       deletePrompt,
       setDeletePrompt,
       fileImportPrompt,
