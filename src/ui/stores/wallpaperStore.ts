@@ -212,13 +212,13 @@ export const useWallpaperStore = create<WallpaperState>((set, get) => ({
       } else if (
         result &&
         typeof result === 'object' &&
-        (result as Record<string, unknown>).ok === false &&
-        typeof (result as Record<string, unknown>).error === 'string'
+        (result as unknown as Record<string, unknown>).ok === false &&
+        typeof (result as unknown as Record<string, unknown>).error === 'string'
       ) {
         // ok=false 路径：报告具体错误给用户
         useNotificationStore
           .getState()
-          .fail(new Error((result as Record<string, unknown>).error as string));
+          .fail(new Error((result as unknown as Record<string, unknown>).error as string));
       }
       // ok=false 且无 error 信息时静默降级（避免无意义报错）
     } catch (error) {
