@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: MPL-2.0 OR MIT
+//
 /**
  * @file Check suite runner — runs all invariant checks independently,
  * collects results, and reports a summary. Avoids `&&` short-circuiting
  * so that one failing check doesn't mask others.
- * @license MPL-2.0 OR MIT
  */
 
 import { spawnSync } from 'node:child_process';
