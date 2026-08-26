@@ -166,7 +166,10 @@ function openCdpSocket(
     }
     // Response (has an id) → resolve/reject a pending command.
     if (message.id != null && pending.has(message.id)) {
-      const waiter = pending.get(message.id)!;
+      const waiter = pending.get(message.id);
+      // Defensive null-guard: the entry may have been removed by a concurrent
+      // timeout or socket-close between the .has() check and this .get().
+      if (!waiter) return;
       pending.delete(message.id);
       if (message.error) {
         waiter.reject(new Error(`${message.error.message} (${message.error.code})`));
