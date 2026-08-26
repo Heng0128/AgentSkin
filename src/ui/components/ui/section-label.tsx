@@ -11,11 +11,11 @@ interface SectionLabelProps {
 function SectionLabel({ label, count, action, className }: SectionLabelProps) {
   return (
     <div className={cn('flex items-center justify-between', className)}>
-      <span className="text-[10px] font-normal tracking-tight text-muted-foreground">{label}</span>
+      <span className="text-[11px] font-medium tracking-tight text-muted-foreground">{label}</span>
       {(count !== undefined || action) && (
         <div className="flex items-center gap-1">
           {count !== undefined && (
-            <span className="text-[10px] text-muted-foreground/60">{count}</span>
+            <span className="text-[11px] tabular-nums text-muted-foreground/60">{count}</span>
           )}
           {action}
         </div>

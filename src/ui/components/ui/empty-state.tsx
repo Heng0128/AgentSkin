@@ -31,7 +31,7 @@ interface EmptyStateProps {
 const iconSizeMap: Record<'sm' | 'md' | 'lg', { container: string; icon: string }> = {
   sm: { container: 'size-10', icon: 'size-5' },
   md: { container: 'size-14', icon: 'size-7' },
-  lg: { container: 'size-18', icon: 'size-9' },
+  lg: { container: 'size-20', icon: 'size-10' },
 };
 
 export function EmptyState({
@@ -44,21 +44,21 @@ export function EmptyState({
 }: EmptyStateProps) {
   const sizes = iconSizeMap[iconSize];
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-4 text-center', className)}>
+    <div className={cn('flex flex-col items-center justify-center gap-5 text-center', className)}>
       {icon && (
         <div
           className={cn(
-            'flex items-center justify-center rounded-lg bg-muted/60 text-muted-foreground ring-1 ring-border',
+            'flex items-center justify-center rounded-lg bg-muted/50 text-muted-foreground ring-1 ring-border',
             sizes.container,
           )}
         >
           <span className={sizes.icon}>{icon}</span>
         </div>
       )}
-      <div className="flex flex-col gap-1.5">
-        <p className="text-[13px] font-medium text-foreground">{title}</p>
+      <div className="flex flex-col gap-2">
+        <p className="text-[14px] font-medium text-foreground">{title}</p>
         {hint && (
-          <p className="max-w-xs text-[11px] leading-relaxed text-muted-foreground">{hint}</p>
+          <p className="max-w-sm text-[12px] leading-relaxed text-muted-foreground">{hint}</p>
         )}
       </div>
       {action}

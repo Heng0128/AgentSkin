@@ -91,11 +91,11 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
         isMac ? 'pl-20' : 'pl-3',
       )}
     >
-      {/* Left: brand + page — medium weight, page label after a hairline divider. */}
+      {/* Left: brand + page breadcrumb with refined visual hierarchy */}
       <div className="pointer-events-none flex items-center gap-2">
-        <span className="text-[12px] font-semibold tracking-tight text-foreground">AgentSkin</span>
+        <span className="text-[13px] font-bold tracking-tight text-foreground">AgentSkin</span>
         <span className="h-3.5 w-px bg-border-strong" aria-hidden />
-        <span className="text-[11px] font-medium text-muted-foreground">{routeLabel}</span>
+        <span className="text-[11px] font-medium text-muted-foreground/80">{routeLabel}</span>
       </div>
 
       {/* Spacer — pushes everything after it to the far right. */}

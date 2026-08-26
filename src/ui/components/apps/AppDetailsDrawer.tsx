@@ -1,17 +1,18 @@
-﻿// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MPL-2.0
 
 /**
  * # AppDetailsDrawer
  *
- * Bottom detail drawer for the Apps page. Shows extended metadata and actions
- * for the selected app (`drawerAppId` in appsStore).
+ * Right-side detail panel for the Apps page. Shows extended metadata and
+ * actions for the selected app (`drawerAppId` in appsStore).
  *
  * Actions:
  *   · 启动 (launch) — calls appsStore.launch(app)
  *   · 隐藏/显示 (toggle hidden) — calls appsStore.toggleHidden(appId)
  *   · 关闭 (close) — sets drawerAppId to null
  *
- * Slides up from the bottom with a translate-y animation. Height ~300px.
+ * In-flow right column (400px, border-l) matching the Themes/Wallpaper detail
+ * panels — the app list yields width to it instead of a bottom-drawer overlay.
  */
 
 import { AppMark } from '@/components/AppMark';
@@ -51,14 +52,7 @@ export function AppDetailsDrawer() {
   const handleClose = () => openDrawer(null);
 
   return (
-    <div
-      aria-hidden={!drawerAppId}
-      className={cn(
-        'absolute bottom-0 left-0 right-0 z-[var(--z-overlay)] h-[300px] border-t border-border bg-card',
-        'transition-transform duration-slow ease-[cubic-bezier(.16,1,.3,1)]',
-        drawerAppId ? 'translate-y-0' : 'translate-y-full pointer-events-none',
-      )}
-    >
+    <aside className="relative flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
       {/* Close button */}
       <button
         type="button"
@@ -71,86 +65,98 @@ export function AppDetailsDrawer() {
 
       {!app ? (
         /* App not found (e.g. uninstalled while drawer was open) */
-        <div className="flex h-full items-center justify-center">
-          <p className="as-mono">{t.appDetailsAppUnavailable}</p>
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-[11px] text-muted-foreground">{t.appDetailsAppUnavailable}</p>
         </div>
       ) : (
-        <div className="flex h-full gap-6 px-6 py-5">
-          {/* Left: icon + name */}
-          <div className="flex flex-col items-center gap-2 pt-1">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
+          {/* Identity: icon + name + status */}
+          <div className="flex items-center gap-3 pr-8">
             {app.adapterMatch ? (
-              <AppMark appId={app.adapterMatch} size={48} />
+              <AppMark appId={app.adapterMatch} size={36} />
             ) : (
-              <span className="flex size-12 items-center justify-center text-xl font-normal text-muted-foreground">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-lg font-normal text-muted-foreground">
                 {app.productName.slice(0, 1).toUpperCase()}
               </span>
             )}
-            <span className="max-w-[80px] truncate text-[11px] font-medium text-foreground">
-              {app.productName}
-            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-medium leading-snug">{app.productName}</p>
+              <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <span
+                  className={cn(
+                    'inline-block size-1.5 shrink-0 rounded-full',
+                    isRunning ? 'bg-cr-success' : 'bg-muted-foreground/25',
+                  )}
+                />
+                {isRunning ? t.appDetailsRunning : t.appDetailsNotStarted}
+              </p>
+            </div>
           </div>
 
-          {/* Right: details + actions */}
-          <div className="flex min-w-0 flex-1 flex-col gap-4">
-            {/* Metadata grid */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-              <DetailRow label={t.appDetailsPath} value={app.exePath} mono />
-              <DetailRow
-                label={t.appDetailsStatus}
-                value={
-                  isRunning ? (
-                    <span className="flex items-center gap-1.5">
-                      <span className="inline-block size-2 rounded-full bg-cr-success" />
-                      {t.appDetailsRunning}
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1.5">
-                      <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
-                      {t.appDetailsNotStarted}
-                    </span>
-                  )
-                }
-              />
-              <DetailRow
-                label={t.appDetailsCdpPort}
-                value={
-                  running?.port !== undefined && running.port !== null ? `:${running.port}` : '—'
-                }
-              />
-              <DetailRow label={t.appDetailsPid} value={running?.pid ? String(running.pid) : '—'} />
-              <DetailRow label={t.appDetailsAdapter} value={app.adapterMatch ?? '—'} />
-              <DetailRow label={t.appDetailsSource} value={app.source ?? '—'} />
-            </div>
-
-            {/* Action buttons */}
-            <div className="mt-auto flex items-center gap-2">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => void launch(app)}
-                disabled={isRunning}
-              >
-                <Play size={12} />
-                {isRunning ? t.appDetailsRunning : t.appDetailsLaunch}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => toggleHidden(app.id)}>
-                {isHidden ? (
-                  <>
-                    <Eye size={12} />
-                    {t.appDetailsShow}
-                  </>
+          {/* Metadata grid */}
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-lg border border-border bg-muted/30 px-3.5 py-3">
+            <DetailRow label={t.appDetailsPath} value={app.exePath} mono />
+            <DetailRow
+              label={t.appDetailsStatus}
+              value={
+                isRunning ? (
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block size-2 rounded-full bg-cr-success" />
+                    {t.appDetailsRunning}
+                  </span>
                 ) : (
-                  <>
-                    <EyeOff size={12} />
-                    {t.appDetailsHide}
-                  </>
-                )}
-              </Button>
-            </div>
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
+                    {t.appDetailsNotStarted}
+                  </span>
+                )
+              }
+            />
+            <DetailRow
+              label={t.appDetailsCdpPort}
+              value={
+                running?.port !== undefined && running.port !== null ? `:${running.port}` : '—'
+              }
+            />
+            <DetailRow label={t.appDetailsPid} value={running?.pid ? String(running.pid) : '—'} />
+            <DetailRow label={t.appDetailsAdapter} value={app.adapterMatch ?? '—'} />
+            <DetailRow label={t.appDetailsSource} value={app.source ?? '—'} />
+          </div>
+
+          {/* Action buttons */}
+          <div className="mt-auto flex items-center gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              className="flex-1"
+              onClick={() => void launch(app)}
+              disabled={isRunning}
+            >
+              <Play size={12} />
+              {isRunning ? t.appDetailsRunning : t.appDetailsLaunch}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => toggleHidden(app.id)}
+            >
+              {isHidden ? (
+                <>
+                  <Eye size={12} />
+                  {t.appDetailsShow}
+                </>
+              ) : (
+                <>
+                  <EyeOff size={12} />
+                  {t.appDetailsHide}
+                </>
+              )}
+            </Button>
           </div>
         </div>
       )}
-    </div>
+    </aside>
   );
 }
 

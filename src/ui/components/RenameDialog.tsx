@@ -51,13 +51,13 @@ export function RenameDialog({
       {/* biome-ignore lint/a11y/noStaticElementInteractions: stopPropagation only — prevents background close when clicking inside the dialog content. No keyboard equivalent needed. */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: stopPropagation only — no keyboard action needed. */}
       <div
-        className="w-80 rounded-md  bg-card p-4 shadow-float animate-page-enter duration-fast"
+        className="w-80 rounded-lg border border-border bg-card p-5 shadow-float animate-page-enter duration-fast"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-[13px] font-normal">{title}</h3>
+        <h3 className="text-sm font-medium">{title}</h3>
         <input
           ref={inputRef}
-          className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-[13px] outline-none transition-colors focus:ring-2 focus:ring-primary/30"
+          className="mt-3 w-full rounded-md border border-input bg-background px-3 py-2 text-[12px] outline-none transition-colors focus:ring-2 focus:ring-primary/30"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
@@ -66,17 +66,17 @@ export function RenameDialog({
           }}
           maxLength={maxLength}
         />
-        <div className="mt-3 flex justify-end gap-2">
+        <div className="mt-4 flex justify-end gap-2">
           <button
             type="button"
-            className="rounded-md px-3 py-1 text-[11px] font-normal text-muted-foreground transition-colors hover:bg-secondary"
+            className="rounded-md px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-secondary"
             onClick={onCancel}
           >
             {cancelLabel}
           </button>
           <button
             type="button"
-            className="rounded-md bg-primary px-3 py-1 text-[11px] font-normal text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+            className="rounded-md bg-primary px-3 py-1.5 text-[11px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
             disabled={!value.trim()}
             onClick={onConfirm}
           >

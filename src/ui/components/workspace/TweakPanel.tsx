@@ -256,12 +256,12 @@ export function TweakPanel({
               value={overrides.shadowLevel ?? 'none'}
               onValueChange={(v) => setField('shadowLevel', v as ToolOverride['shadowLevel'])}
             >
-              <SelectTrigger className="h-8 w-32 rounded-md text-[13px]">
+              <SelectTrigger className="h-8 w-32 rounded-md text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {SHADOW_LEVELS.map((level) => (
-                  <SelectItem key={level} value={level} className="text-[13px]">
+                  <SelectItem key={level} value={level} className="text-sm">
                     {str(t, SHADOW_LABEL_KEY[level])}
                   </SelectItem>
                 ))}

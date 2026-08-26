@@ -95,7 +95,7 @@ export function AppCard({
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'group flex h-auto w-full flex-col items-center gap-2 rounded-lg border border-border bg-card p-3',
+        'group flex h-auto w-full flex-col items-center gap-2.5 rounded-lg border border-border bg-card p-3.5',
         'transition-all duration-fast ease-out hover:border-border-strong hover:bg-card2 hover:shadow-md',
         'active:scale-[0.98]',
         isRunning && 'border-cr-success/30 bg-cr-success/[0.03]',
@@ -109,7 +109,7 @@ export function AppCard({
           <img
             src={iconSrc}
             alt={app.productName}
-            className="size-12 object-contain drop-shadow-sm"
+            className="size-12 object-contain drop-shadow-sm transition-transform duration-fast group-hover:scale-105"
             onError={() => setImgError(true)}
           />
         ) : (
@@ -120,7 +120,7 @@ export function AppCard({
 
         {/* Status dot — overlaid on icon bottom-right */}
         {showRunningStatus && (
-          <span className="absolute -bottom-1 -right-1 flex items-center justify-center rounded-full bg-background">
+          <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-background">
             <StatusDot state={runningState} />
           </span>
         )}
@@ -128,7 +128,9 @@ export function AppCard({
 
       {/* Name + port */}
       <div className="flex w-full flex-col items-center gap-0.5">
-        <span className="max-w-full truncate text-[12px] font-medium">{app.productName}</span>
+        <span className="max-w-full truncate text-[12px] font-medium leading-tight">
+          {app.productName}
+        </span>
         {showRunningStatus && port !== null && (
           <span className="font-mono text-[10px] tabular-nums text-muted-foreground">:{port}</span>
         )}

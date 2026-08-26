@@ -269,14 +269,24 @@ export async function resolveLivePort(
     // update) with a fast TCP probe instead of a 1.2s HTTP /json/list timeout
     // against a dead port. Without this, every status() poll and apply attempt
     // wastes ~1.2s on the zombie port before falling through to auto-detect.
-    if (!(await probePortLive(filePort, 300))) continue;
+    if (!(await probePortLive(filePort, 300))) {
+      // Observable: a stale port file is exactly the "silent skip" that made
+      // WorkBuddy's failure invisible — state the reason instead of vanishing.
+      log(
+        `[port] ${appId}: layer 1 (DevToolsActivePort file) — port ${filePort} not listening, skipping (stale file?)`,
+      );
+      continue;
+    }
     try {
       if ((await adapter.findTargets(filePort, 1200)).length) {
         log(`[port] ${appId}: layer 1 (DevToolsActivePort file) — CDP on ${filePort}`);
         return filePort;
       }
-    } catch {
-      // Try the next candidate.
+    } catch (error) {
+      // Try the next candidate — but say why the candidate was rejected.
+      log(
+        `[port] ${appId}: layer 1 (DevToolsActivePort file) — CDP probe on ${filePort} failed (${error instanceof Error ? error.message : String(error)})`,
+      );
     }
   }
 

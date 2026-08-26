@@ -166,7 +166,7 @@ export const WallpaperCard = memo(function WallpaperCard({
             aria-hidden
           >
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <span className="relative flex w-full items-center justify-between px-2.5 pb-2 text-[10px] text-white/90">
+            <span className="relative flex w-full items-center justify-between px-3 pb-2.5 text-[10px] text-white/90">
               <span className="flex items-center gap-1">
                 {wallpaper.type === 'video' ? (
                   <Video className="size-3" />
@@ -195,55 +195,55 @@ export const WallpaperCard = memo(function WallpaperCard({
               PREVIEW
             </span>
           )}
-          {/* Delete button — top-right on hover */}
-          {deletable && (
-            <div className="absolute right-2 top-2 opacity-0 transition-opacity duration-fast group-hover:opacity-100 group-focus-within:opacity-100">
-              {confirming ? (
-                <div className="flex items-center gap-1 rounded-md bg-card/90 p-0.5 shadow-md backdrop-blur-sm">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(wallpaper.id);
-                      setConfirming(false);
-                    }}
-                    disabled={isDeleting}
-                    className="rounded-sm px-1.5 py-0.5 text-[10px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
-                  >
-                    {isDeleting ? '…' : confirmLabel}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirming(false);
-                    }}
-                    className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted"
-                  >
-                    <X className="size-3" />
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirming(true);
-                  }}
-                  className="flex size-6 items-center justify-center rounded-md bg-card/90 text-muted-foreground shadow-md backdrop-blur-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Title */}
-        <div className="px-2.5 py-2">
+        <div className="px-3 py-2.5">
           <p className="truncate text-[13px] font-medium leading-snug">{wallpaper.title}</p>
         </div>
       </button>
+      {/* Delete button — top-right on hover (sibling of button to avoid button>button nesting) */}
+      {deletable && (
+        <div className="absolute right-2 top-2 opacity-0 transition-opacity duration-fast group-hover:opacity-100 group-focus-within:opacity-100">
+          {confirming ? (
+            <div className="flex items-center gap-1 rounded-md bg-card/90 p-0.5 shadow-md backdrop-blur-sm">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(wallpaper.id);
+                  setConfirming(false);
+                }}
+                disabled={isDeleting}
+                className="rounded-sm px-1.5 py-0.5 text-[10px] font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+              >
+                {isDeleting ? '…' : confirmLabel}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setConfirming(false);
+                }}
+                className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted"
+              >
+                <X className="size-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirming(true);
+              }}
+              className="flex size-6 items-center justify-center rounded-md bg-card/90 text-muted-foreground shadow-md backdrop-blur-sm transition-colors hover:bg-destructive/10 hover:text-destructive"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 });

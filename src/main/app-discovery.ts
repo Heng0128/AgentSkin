@@ -46,6 +46,21 @@ import { PerformanceRecorder } from './services/performance';
 // ---------------------------------------------------------------------------
 
 /**
+ * After a full live-port discovery fails for an app (running but no CDP),
+ * back off before re-running the whole chain. `status()` is polled every few
+ * seconds (2s TTL on the renderer side), and a CDP-less app (e.g. WorkBuddy
+ * launched without --remote-debugging-port, which leaves a stale
+ * DevToolsActivePort file behind) would otherwise re-run tasklist + argv
+ * parsing + netstat + HTTP probes every poll and emit 3 log lines each time.
+ *
+ * Deliberately applied ONLY in `probeAppStatus` (the status polling path).
+ * Apply/restart flows (`ensureCdpReady`, `theme-apply-flow`) resolve the port
+ * decisively and MUST NOT be affected by this backoff.
+ */
+const NEGATIVE_PORT_BACKOFF_MS = 5000;
+const negativePortBackoffUntil = new Map<string, number>();
+
+/**
  * Result of {@link ensureCdpReady}. When `port` is null, `reason` carries the
  * precise failure cause so {@link inferRestartReason} can map it to a
  * user-facing restart reason instead of re-detecting from scratch.
@@ -888,19 +903,32 @@ export async function probeAppStatus(
     }
   }
   if (running) {
-    const livePort = await resolveLivePort(appId, deps);
-    if (livePort != null) {
-      port = livePort;
-      try {
-        debugReady = (await adapter.findTargets(port, 1200)).length > 0;
-      } catch (error) {
-        deps.log(`[detect] ${appId}: findTargets failed on port ${port} — ${toMessage(error)}`);
-        debugReady = false;
-      }
-    } else {
-      // App is running but no live CDP port found. Discard any stale port
-      // from the persisted state so the UI never reports a zombie port.
+    const backoffAt = negativePortBackoffUntil.get(appId) ?? 0;
+    if (Date.now() < backoffAt) {
+      // Running but still CDP-less, inside the backoff window (see
+      // NEGATIVE_PORT_BACKOFF_MS). Skip the full discovery chain and the log
+      // spam it would emit — the UI already reports "running without a debug
+      // port". Any newly-opened CDP port is picked up at the next backoff
+      // expiry (≤5s).
       port = null;
+    } else {
+      const livePort = await resolveLivePort(appId, deps);
+      if (livePort != null) {
+        negativePortBackoffUntil.delete(appId);
+        port = livePort;
+        try {
+          debugReady = (await adapter.findTargets(port, 1200)).length > 0;
+        } catch (error) {
+          deps.log(`[detect] ${appId}: findTargets failed on port ${port} — ${toMessage(error)}`);
+          debugReady = false;
+        }
+      } else {
+        // App is running but no live CDP port found. Discard any stale port
+        // from the persisted state so the UI never reports a zombie port,
+        // and back off the next poll so discovery doesn't run hot.
+        negativePortBackoffUntil.set(appId, Date.now() + NEGATIVE_PORT_BACKOFF_MS);
+        port = null;
+      }
     }
   }
 

@@ -35,9 +35,11 @@
  * to subscribed handlers; responses (has `id`) resolve/reject pending
  * commands. Unknown events with no subscribers are ignored.
  *
- * Relies on the global WebSocket client shipped with Node 22+ / Electron 37+.
+ * Uses the `ws` package for WebSocket connections (native WebSocket global is
+ * not exposed in Electron's main process environment).
  */
 
+import { type ErrorEvent, type MessageEvent, WebSocket } from 'ws';
 import { mainDebug } from '../logger';
 import { PerformanceRecorder } from '../services/performance';
 
@@ -312,7 +314,7 @@ function openCdpSocket(
       clearTimeout(timer);
       resolve(core);
     };
-    ws.onerror = (_event: Event) => {
+    ws.onerror = (_event: ErrorEvent) => {
       if (closed) return; // Already handled — prevent re-entrant stack overflow
       // Don't set closed=true here; close() will set it and call ws.close().
       // If we set it first, close() would skip ws.close().

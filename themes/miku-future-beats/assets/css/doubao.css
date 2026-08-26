@@ -1,0 +1,103 @@
+/* Miku Future Beats · 豆包 (Doubao) (--dbx-* design tokens)
+   Strategy: override the semantic layer of Doubao's 251-token --dbx-* system
+   (text/bg/fill/line/code/brand) while leaving the neutral scale, static alpha
+   ramps, and color palettes untouched. Selector specificity (0,2,1) beats both
+   :root[data-theme="dark"] (0,1,1) and the light selector list. */
+
+html.agentskin-host-doubao {
+  color-scheme: light !important;
+  --agentskin-accent: #16bfc4;
+  --agentskin-accent-deep: #087b86;
+  --agentskin-secondary: #74dce4;
+  --agentskin-bg: #fbfdff;
+  --agentskin-surface: #eefbff;
+  --agentskin-surface-elevated: #eafbfc;
+  --agentskin-text: #163f4b;
+  --agentskin-muted: #557480;
+  --agentskin-border: rgba(22, 191, 196, .24);
+  --agentskin-code-bg: #eefbff;
+  --agentskin-code-fg: #163f4b;
+  --agentskin-input-bg: #f7fdff;
+  --agentskin-button-bg: #16bfc4;
+  --agentskin-focus-ring: rgba(22, 191, 196, .6);
+  --agentskin-selection: rgba(22, 191, 196, 0.2);
+  --agentskin-text-shadow: 0 1px 2px rgba(20, 102, 118, 0.06);
+  text-shadow: var(--agentskin-text-shadow);
+}
+
+/* ===== Native token overrides ===== */
+html.agentskin-host-doubao:root {
+  color-scheme: light !important;
+
+  /* Backgrounds */
+  --dbx-bg-body-web: #fbfdff !important;
+  --dbx-bg-base-web: #fbfdff !important;
+  --dbx-bg-base-2: #eefbff !important;
+  --dbx-bg-base-5: #eafbfc !important;
+  --dbx-bg-float: #eafbfc !important;
+  --dbx-bg-body-overlay-web: #eefbff !important;
+  --dbx-bg-body-white: #fbfdff !important;
+  --dbx-bg-body-mac: rgba(251, 253, 255, 0.85) !important;
+  --dbx-bg-base-mac: rgba(22, 63, 75, 0.03) !important;
+  --dbx-bg-browser-win: #fbfdff !important;
+  --dbx-bg-browser-mac: rgba(251, 253, 255, 0.7) !important;
+  --dbx-bg-body-launcher: rgba(238, 251, 255, 0.8) !important;
+  --dbx-bg-body-overlay-launcher: rgba(238, 251, 255, 0.45) !important;
+  --dbx-bg-float-launcher: rgba(234, 251, 252, 0.6) !important;
+  --dbx-bg-body-overlay-mac: rgba(238, 251, 255, 0.6) !important;
+  --dbx-bg-body-overlay-white: rgba(238, 251, 255, 0.6) !important;
+  --dbx-bg-base-2-mobile: #eefbff !important;
+  --dbx-bg-base-2-overlay-mobile: #eefbff !important;
+  --dbx-bg-base-3-mobile: #eafbfc !important;
+  --dbx-bg-base-3-enterprisebubble: #eafbfc !important;
+
+  /* Text hierarchy */
+  --dbx-text-main: #163f4b !important;
+  --dbx-text-secondary: #557480 !important;
+  --dbx-text-tertiary: rgba(22, 63, 75, 0.55) !important;
+  --dbx-text-quaternary: rgba(22, 63, 75, 0.4) !important;
+  --dbx-text-disabled: rgba(22, 63, 75, 0.3) !important;
+  --dbx-text-brand: #16bfc4 !important;
+  --dbx-text-link: #16bfc4 !important;
+  --dbx-text-hover: undefined !important;
+  --dbx-text-active: undefined !important;
+  --dbx-text-onbrand: #ffffff !important;
+
+  /* Borders / dividers */
+  --dbx-line-main: rgba(22, 191, 196, .24) !important;
+  --dbx-line-secondary: rgba(22, 191, 196, 0.14) !important;
+  --dbx-line-tertiary: rgba(22, 191, 196, 0.09) !important;
+  --dbx-line-brand: #16bfc4 !important;
+
+  /* Fills / hovers */
+  --dbx-fill-main: #eefbff !important;
+  --dbx-fill-secondary: rgba(22, 191, 196, 0.08) !important;
+  --dbx-fill-tertiary: rgba(22, 191, 196, 0.12) !important;
+  --dbx-fill-hover: rgba(22, 191, 196, 0.1) !important;
+  --dbx-fill-active: rgba(22, 191, 196, 0.16) !important;
+  --dbx-fill-brand: #16bfc4 !important;
+  --dbx-fill-brand-hover: undefined !important;
+  --dbx-fill-brand-active: #0e9ba1 !important;
+
+  /* Brand / accent */
+  --dbx-brand: #16bfc4 !important;
+  --dbx-brand-hover: undefined !important;
+  --dbx-brand-active: #0e9ba1 !important;
+  --dbx-brand-text: #ffffff !important;
+  --dbx-brand-bg: rgba(22, 191, 196, 0.1) !important;
+  --dbx-brand-border: rgba(22, 191, 196, 0.24) !important;
+
+  /* Code surfaces */
+  --dbx-code-bg: #eefbff !important;
+  --dbx-code-text: #163f4b !important;
+  --dbx-code-comment: #557480 !important;
+  --dbx-code-keyword: #16bfc4 !important;
+  --dbx-code-string: #0e9ba1 !important;
+  --dbx-code-number: undefined !important;
+
+  /* Shadows */
+  --dbx-shadow-sm: 0 1px 2px rgba(20, 102, 118, 0.06) !important;
+  --dbx-shadow-md: 0 4px 8px rgba(20, 102, 118, 0.1) !important;
+  --dbx-shadow-lg: 0 8px 16px rgba(20, 102, 118, 0.14) !important;
+  --dbx-shadow-xl: 0 12px 24px rgba(20, 102, 118, 0.18) !important;
+}

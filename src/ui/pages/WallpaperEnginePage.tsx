@@ -144,8 +144,10 @@ function WallpaperEnginePageInner({ controller }: { controller: AppController })
             <Download className="size-3.5" />
             {t.wallpaperImport}
           </Button>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">{t.wallpaperEnable}</span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {t.wallpaperEnable}
+            </span>
             <Switch
               checked={enabled}
               onCheckedChange={(v) => void setWallpaper(v, v ? selectedId : null)}

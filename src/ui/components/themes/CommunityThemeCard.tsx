@@ -9,13 +9,14 @@
  */
 
 import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useShellStore } from '@/stores/shellStore';
 
 import { uiMessages } from '@shared/i18n';
 import type { CommunityThemeSummary, DownloadProgress as DownloadProgressData } from '@shared/types/community';
-import { ImageIcon } from 'lucide-react';
+import { Download, ImageIcon, Star } from 'lucide-react';
 import { DownloadProgress } from './DownloadProgress';
 
 interface Props {
@@ -79,7 +80,7 @@ export function CommunityThemeCard({
         {/* Download progress overlay */}
         {isInstalling && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white backdrop-blur-sm">
-            <span className="mb-2 text-[13px] font-medium">
+            <span className="mb-2 text-sm font-medium">
               {(downloadProgress?.progress ?? 0) < 100
                 ? `${locale === 'zh-CN' ? '下载中' : 'Downloading'} ${downloadProgress?.progress ?? 0}%`
                 : t.installing}
@@ -96,7 +97,7 @@ export function CommunityThemeCard({
 
       {/* Info section */}
       <div className="flex flex-1 flex-col gap-1 p-2.5">
-        <h3 className="truncate text-[13px] font-medium leading-snug" title={theme.name}>
+        <h3 className="truncate text-sm font-medium leading-snug" title={theme.name}>
           {theme.name}
         </h3>
         <p className="truncate text-[10px] text-muted-foreground/60">
@@ -105,20 +106,27 @@ export function CommunityThemeCard({
 
         {/* Stats */}
         <div className="mt-0.5 flex items-center gap-3 text-[10px] text-muted-foreground">
-          <span>↓ {theme.downloads ?? 0}</span>
-          <span>★ {theme.rating?.toFixed(1) ?? '0.0'}</span>
+          <span className="inline-flex items-center gap-1">
+            <Download size={10} className="text-muted-foreground/70" />
+            {theme.downloads ?? 0}
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Star size={10} className="text-muted-foreground/70" />
+            {theme.rating?.toFixed(1) ?? '0.0'}
+          </span>
         </div>
 
         {/* Tags — max 3 */}
         {theme.tags?.length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1">
             {theme.tags.slice(0, 3).map((tag) => (
-              <span
+              <Badge
                 key={tag}
-                className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                variant="ghost"
+                className="rounded-md px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
               >
                 {tag}
-              </span>
+              </Badge>
             ))}
           </div>
         )}

@@ -198,7 +198,7 @@ export function CommunityTabPanel() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       {/* Toolbar */}
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <div className="relative w-[240px]">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground/60" />
           <Input
@@ -217,8 +217,10 @@ export function CommunityTabPanel() {
         />
       </div>
 
-      {/* Card grid */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      {/* Master-detail: grid yields width to the detail panel on the right */}
+      <div className="flex min-h-0 flex-1 gap-3">
+        {/* Card grid */}
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
         <div className="grid grid-cols-1 gap-3 pb-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {themes.map((theme) => {
             const isInstalled = installedIds.has(theme.themeId);
@@ -267,17 +269,20 @@ export function CommunityTabPanel() {
         )}
       </div>
 
-      {/* Theme detail panel */}
-      {selectedThemeId && selectedThemeDetail && (
-        <ThemeDetailPanel
-          theme={selectedThemeDetail}
-          onClose={() => selectTheme(null)}
-          onInstall={() => {
-            useCommunityStore.getState().installTheme(selectedThemeId);
-          }}
-          isInstalling={installingIds.has(selectedThemeId)}
-        />
-      )}
+        {/* Theme detail panel */}
+        {selectedThemeId && selectedThemeDetail && (
+          <div className="h-full shrink-0 animate-slide-in-right">
+            <ThemeDetailPanel
+              theme={selectedThemeDetail}
+              onClose={() => selectTheme(null)}
+              onInstall={() => {
+                useCommunityStore.getState().installTheme(selectedThemeId);
+              }}
+              isInstalling={installingIds.has(selectedThemeId)}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

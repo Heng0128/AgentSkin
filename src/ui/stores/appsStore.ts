@@ -26,7 +26,7 @@
  * ## UI State
  *
  * The store also tracks `scanProgress` for animated progress indicators and
- * `drawerAppId` for the bottom detail drawer.
+ * `drawerAppId` for the right-side detail panel.
  */
 
 import { api } from '@/api/agentSkinClient';

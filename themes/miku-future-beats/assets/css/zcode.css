@@ -1,0 +1,73 @@
+/* Miku Future Beats · ZCode (--color-* Tailwind v4 native tokens + engine flat semantic layer) */
+
+html.agentskin-host-zcode {
+  color-scheme: light !important;
+  --agentskin-accent: #16bfc4;
+  --agentskin-accent-deep: #087b86;
+  --agentskin-secondary: #74dce4;
+  --agentskin-bg: #fbfdff;
+  --agentskin-surface: #eefbff;
+  --agentskin-surface-elevated: #eafbfc;
+  --agentskin-text: #163f4b;
+  --agentskin-muted: #557480;
+  --agentskin-border: rgba(22, 191, 196, .24);
+  --agentskin-code-bg: #eefbff;
+  --agentskin-code-fg: #163f4b;
+  --agentskin-input-bg: #f7fdff;
+  --agentskin-button-bg: #16bfc4;
+  --agentskin-focus-ring: rgba(22, 191, 196, .6);
+  --agentskin-selection: rgba(22, 191, 196, 0.2);
+  --agentskin-text-shadow: 0 1px 2px rgba(20, 102, 118, 0.06);
+  text-shadow: var(--agentskin-text-shadow);
+}
+
+/* ===== Native token overrides ===== */
+html.agentskin-host-zcode {
+  color-scheme: light !important;
+
+  /* Text hierarchy */
+  --text-primary: #163f4b !important;
+  --text-secondary: #557480 !important;
+  --text-tertiary: rgba(22, 63, 75, 0.55) !important;
+  --text-quaternary: rgba(22, 63, 75, 0.4) !important;
+
+  /* Backgrounds — transparent for art punch-through */
+  --bg-primary: #fbfdff !important;
+  --gb-secondary: #eefbff !important;
+  --bg-tertiary: #eafbfc !important;
+  --bg-elevated: #eafbfc !important;
+  --bg-base: #fbfdff !important;
+  --bg-canvas: #fbfdff !important;
+  --bg-surface: #eefbff !important;
+  --bg-hover: rgba(22, 191, 196, 0.08) !important;
+  --bg-active: rgba(22, 191, 196, 0.12) !important;
+  --bg-selected: rgba(22, 191, 196, 0.1) !important;
+
+  /* Borders */
+  --border-xsubtle: rgba(22, 191, 196, 0.06) !important;
+  --border-subtle: rgba(22, 191, 196, 0.09) !important;
+  --border-medium: rgba(22, 191, 196, .24) !important;
+  --border-strong: rgba(22, 191, 196, 0.3) !important;
+
+  /* Accent / brand */
+  --accent: #16bfc4 !important;
+  --accent-hover: undefined !important;
+  --accent-active: #0e9ba1 !important;
+  --accent-foreground: #ffffff !important;
+  --accent-subtle: rgba(22, 191, 196, 0.1) !important;
+
+  /* Semantic colors */
+  --success: #16bfc4 !important;
+  --warning: #f59e0b !important;
+  --error: #ef4444 !important;
+  --info: #9f92f8 !important;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(20, 102, 118, 0.06) !important;
+  --shadow-md: 0 4px 8px rgba(20, 102, 118, 0.1) !important;
+  --shadow-lg: 0 8px 16px rgba(20, 102, 118, 0.14) !important;
+
+  /* Ring / focus */
+  --ring: rgba(22, 191, 196, .6) !important;
+  --ring-offset: #fbfdff !important;
+}

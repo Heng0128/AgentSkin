@@ -1,0 +1,163 @@
+{
+  "$schema": "https://agentskin.dev/schema/manifest-v2.json",
+  "schemaVersion": 2,
+  "id": "miku-future-beats",
+  "name": "miku-future-beats",
+  "displayName": "初音未来 · Future Beats",
+  "version": "1.2.0",
+  "description": "和初音未来一起，让灵感、代码与旋律同频闪耀。Miku Future Beats ♫ — Codex × WorkBuddy × QoderWork × TRAE 未来节拍工作台。",
+  "author": {
+    "name": "Codedrobe"
+  },
+  "mode": "light",
+  "category": "anime",
+  "tags": [
+    "light",
+    "anime",
+    "miku",
+    "teal",
+    "cyber-pop",
+    "future-beats"
+  ],
+  "icon": "icon.png",
+  "preview": "preview.png",
+  "hero": "hero.png",
+  "colors": {
+    "accent": "#16bfc4",
+    "secondary": "#74dce4",
+    "background": "#fbfdff",
+    "foreground": "#163f4b",
+    "muted": "#557480",
+    "surface": "#eefbff",
+    "surfaceElevated": "#eafbfc",
+    "border": "rgba(22, 191, 196, .24)",
+    "codeBackground": "#eefbff",
+    "codeForeground": "#163f4b",
+    "inputBackground": "#f7fdff",
+    "buttonBackground": "#16bfc4",
+    "buttonForeground": "#ffffff",
+    "focusRing": "rgba(22, 191, 196, .6)"
+  },
+  "targets": {
+    "traework": {
+      "css": "assets/css/traework.css",
+      "verification": {
+        "required": [
+          {
+            "name": "solo-shell",
+            "any": [
+              ".panel-container",
+              ".solo-lite-layout"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "task-sidebar",
+            "any": [
+              ".task-list-base",
+              ".task-list-panel"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-v2-input-box-editable[contenteditable=\"true\"]"
+            ]
+          }
+        ]
+      }
+    },
+    "qoderwork": {
+      "css": "assets/css/qoderwork.css",
+      "verification": {
+        "required": [
+          {
+            "name": "agents-root",
+            "any": [
+              ".agents-layout-root"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".agents-sidebar",
+              "[data-resizable-sidebar]"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".agents-content-area",
+              ".agents-layout-body"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              ".chat-input-editor-text[contenteditable=\"true\"]"
+            ]
+          }
+        ]
+      }
+    },
+    "workbuddy": {
+      "css": "assets/css/workbuddy.css",
+      "verification": {
+        "required": [
+          {
+            "name": "teams-root",
+            "any": [
+              ".teams-container"
+            ]
+          }
+        ],
+        "recommended": [
+          {
+            "name": "sidebar",
+            "any": [
+              ".conversation-sidebar",
+              ".conversation-list"
+            ]
+          },
+          {
+            "name": "workspace",
+            "any": [
+              ".teams-main-content",
+              ".main-content",
+              ".chat-container"
+            ]
+          },
+          {
+            "name": "composer",
+            "any": [
+              "[role=\"textbox\"][contenteditable=\"true\"]",
+              ".wb-home-composer [contenteditable=\"true\"]"
+            ]
+          }
+        ]
+      }
+    },
+    "doubao": {
+      "css": "assets/css/doubao.css"
+    },
+    "codex": {
+      "css": "assets/css/codex.css"
+    },
+    "zcode": {
+      "css": "assets/css/zcode.css"
+    }
+  },
+  "supportedAgents": [
+    "traework",
+    "qoderwork",
+    "workbuddy",
+    "doubao",
+    "codex",
+    "zcode"
+  ],
+  "license": "MPL-2.0",
+  "minAppVersion": "1.0.0"
+}

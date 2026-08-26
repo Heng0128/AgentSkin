@@ -32,7 +32,7 @@ export function ThemeCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'group flex h-full flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-all duration-fast ease-out',
+        'group flex h-full flex-col overflow-hidden rounded-lg border bg-card text-left transition-all duration-fast ease-out',
         selected
           ? 'border-primary ring-2 ring-primary/30'
           : 'border-border hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',
@@ -46,7 +46,7 @@ export function ThemeCard({
             alt={theme.name}
             loading="lazy"
             decoding="async"
-            className="size-full object-cover transition-transform duration-slower ease-out group-hover:scale-[1.03]"
+            className="size-full object-cover transition-transform duration-slower ease-out group-hover:scale-[1.04]"
             onError={() => setImgError(true)}
           />
         ) : null}
@@ -56,8 +56,11 @@ export function ThemeCard({
             theme.preview && !imgError ? 'hidden' : 'flex',
           )}
         >
-          <span className="text-[14px] font-semibold opacity-15">{theme.name.slice(0, 2)}</span>
+          <span className="text-[16px] font-bold opacity-10">{theme.name.slice(0, 2)}</span>
         </div>
+
+        {/* Gradient overlay on hover */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 transition-opacity duration-fast group-hover:opacity-100" />
 
         {/* Active agent indicators — top-right */}
         {isActive && (
@@ -115,10 +118,10 @@ export function ThemeCard({
       </div>
 
       {/* Info section */}
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 p-3">
-        {/* Name */}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 p-3.5">
+        {/* Name + version */}
         <div className="flex items-baseline justify-between gap-2">
-          <h3 className="min-w-0 truncate text-[13px] font-semibold leading-snug">{theme.name}</h3>
+          <h3 className="min-w-0 truncate text-sm font-semibold leading-snug">{theme.name}</h3>
           {theme.version && (
             <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
               v{theme.version}
@@ -126,7 +129,7 @@ export function ThemeCard({
           )}
         </div>
 
-        {/* Author */}
+        {/* Author + category */}
         <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <span className="truncate">{theme.author}</span>
           {theme.category && (
@@ -137,8 +140,8 @@ export function ThemeCard({
           )}
         </div>
 
-        {/* Supported agents + tags */}
-        <div className="flex items-center gap-1 pt-1">
+        {/* Supported agents + tags — separated with spacing */}
+        <div className="flex items-center justify-between gap-2 pt-1.5">
           <span aria-hidden="true" className="flex items-center gap-1">
             {theme.supportedAgents.map((agentId) => {
               const agentActive = activeAgentIds.includes(agentId);
@@ -147,7 +150,9 @@ export function ThemeCard({
                   key={agentId}
                   className={cn(
                     'flex size-5 items-center justify-center rounded-full transition-all',
-                    agentActive ? 'bg-cr-success/15 ring-1 ring-cr-success/30' : 'bg-muted',
+                    agentActive
+                      ? 'bg-cr-success/15 ring-1 ring-cr-success/30'
+                      : 'bg-muted',
                   )}
                 >
                   <AppMark appId={agentId} size={12} />
@@ -156,9 +161,15 @@ export function ThemeCard({
             })}
           </span>
           {theme.tags.length > 0 && (
-            <div className="ml-auto flex gap-1">
+            <div className="flex gap-1">
               {theme.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="ghost" className="rounded-md px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">{tag}</Badge>
+                <Badge
+                  key={tag}
+                  variant="ghost"
+                  className="rounded-md px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground"
+                >
+                  {tag}
+                </Badge>
               ))}
             </div>
           )}

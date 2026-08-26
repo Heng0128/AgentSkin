@@ -2,6 +2,7 @@
 
 import { type DragEvent, useMemo, useRef, useState } from 'react';
 import { api } from '@/api/agentSkinClient';
+import { DetailPanel } from '@/components/DetailPanel';
 import { CommunityTabPanel } from '@/components/themes/CommunityTabPanel';
 import { ThemeGridSkeleton } from '@/components/themes/ThemeGridSkeleton';
 import { VirtualThemeGrid } from '@/components/themes/VirtualThemeGrid';
@@ -112,193 +113,215 @@ export function ThemesPage({ controller }: { controller: AppController }) {
       </TabsContent>
 
       {/* Installed tab */}
-      <TabsContent value="installed" className="flex min-h-0 flex-1 flex-col">
-        <section
-          aria-label="Drop theme package to install"
-          className="flex min-h-0 flex-1 flex-col"
-          onDragEnter={handleDragEnter}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          {/* Toolbar — title integrated inline */}
-          <PageHeader
-            title={t.navThemes}
-            count={tc.allCount}
-            description={
-              tc.themes.length === tc.allCount
-                ? t.themeCount(tc.allCount)
-                : `${tc.themes.length} / ${tc.allCount}`
-            }
+      <TabsContent value="installed" className="relative flex min-h-0 flex-1 flex-col">
+        {/* Master-detail: grid yields width to the detail panel on the right */}
+        <div className="flex min-h-0 flex-1">
+          <section
+            aria-label="Drop theme package to install"
+            className="flex min-h-0 min-w-0 flex-1 flex-col"
+            onDragEnter={handleDragEnter}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
           >
-            <PageToolbar
-              search={{
-                value: tc.query,
-                onChange: tc.setQuery,
-                placeholder: t.searchInstalled,
-              }}
-              sort={{
-                value: tc.sortBy,
-                options: [
-                  { value: 'name', label: t.sortName },
-                  { value: 'author', label: t.sortAuthor },
-                  { value: 'category', label: t.sortCategory },
-                  { value: 'version', label: t.sortVersion },
-                ],
-                onChange: (value) => tc.setSortBy(value as ThemeSortKey),
-              }}
-              sortOrder={{
-                order: tc.sortOrder === 'asc' ? 'asc' : 'desc',
-                onToggle: () => tc.setSortOrder(tc.sortOrder === 'asc' ? 'desc' : 'asc'),
-              }}
-              actions={
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => void controller.importTheme()}
-                    disabled={controller.isInstalling}
-                  >
-                    {controller.isInstalling ? (
-                      <Spinner className="animate-spin" />
-                    ) : (
-                      <Package className="size-3.5" />
-                    )}
-                    {controller.isInstalling ? t.importing : t.importTheme}
-                  </Button>
-                  <Button variant="primary" size="sm" onClick={() => void api.openStudioWindow()}>
-                    <Palette className="size-3.5" />
-                    {t.navStudio}
-                  </Button>
-                </>
+            {/* Toolbar — title integrated inline */}
+            <PageHeader
+              title={t.navThemes}
+              count={tc.allCount}
+              description={
+                tc.themes.length === tc.allCount
+                  ? t.themeCount(tc.allCount)
+                  : `${tc.themes.length} / ${tc.allCount}`
               }
-            />
-          </PageHeader>
+            >
+              <PageToolbar
+                search={{
+                  value: tc.query,
+                  onChange: tc.setQuery,
+                  placeholder: t.searchInstalled,
+                }}
+                sort={{
+                  value: tc.sortBy,
+                  options: [
+                    { value: 'name', label: t.sortName },
+                    { value: 'author', label: t.sortAuthor },
+                    { value: 'category', label: t.sortCategory },
+                    { value: 'version', label: t.sortVersion },
+                  ],
+                  onChange: (value) => tc.setSortBy(value as ThemeSortKey),
+                }}
+                sortOrder={{
+                  order: tc.sortOrder === 'asc' ? 'asc' : 'desc',
+                  onToggle: () => tc.setSortOrder(tc.sortOrder === 'asc' ? 'desc' : 'asc'),
+                }}
+                actions={
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => void controller.importTheme()}
+                      disabled={controller.isInstalling}
+                    >
+                      {controller.isInstalling ? (
+                        <Spinner className="animate-spin" />
+                      ) : (
+                        <Package className="size-3.5" />
+                      )}
+                      {controller.isInstalling ? t.importing : t.importTheme}
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={() => void api.openStudioWindow()}>
+                      <Palette className="size-3.5" />
+                      {t.navStudio}
+                    </Button>
+                  </>
+                }
+              />
+            </PageHeader>
 
-          {/* Stats overview bar */}
-          <div className="as-stat-bar my-3">
-            <div className="flex items-center gap-2">
-              <Layers className="size-3.5 text-muted-foreground" />
-              <span className="text-[12px] font-semibold tabular-nums text-foreground">
-                {tc.allCount}
-              </span>
-              <span className="text-[11px] text-muted-foreground">{t.installedTitle}</span>
-            </div>
-            <span className="as-hairline-v h-4" />
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="size-3.5 text-cr-success" />
-              <span className="text-[12px] font-semibold tabular-nums text-foreground">
-                {activeThemeCount}
-              </span>
-              <span className="text-[11px] text-muted-foreground">{t.themeActive}</span>
-            </div>
-            {dynamicCount > 0 && (
-              <>
-                <span className="as-hairline-v h-4" />
-                <div className="flex items-center gap-2">
-                  <UploadCloud className="size-3.5 text-primary" />
-                  <span className="text-[12px] font-semibold tabular-nums text-foreground">
-                    {dynamicCount}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">{t.themeDynamic}</span>
+            {/* Stats overview bar */}
+            <div className="as-stat-bar my-4">
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-7 items-center justify-center rounded-lg bg-muted">
+                  <Layers className="size-3.5 text-muted-foreground" />
                 </div>
-              </>
-            )}
-          </div>
+                <span className="text-[14px] font-bold tabular-nums text-foreground">
+                  {tc.allCount}
+                </span>
+                <span className="text-[11px] text-muted-foreground">{t.installedTitle}</span>
+              </div>
+              <span className="as-hairline-v h-5" />
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-7 items-center justify-center rounded-lg bg-cr-success/10">
+                  <CheckCircle2 className="size-3.5 text-cr-success" />
+                </div>
+                <span className="text-[14px] font-bold tabular-nums text-foreground">
+                  {activeThemeCount}
+                </span>
+                <span className="text-[11px] text-muted-foreground">{t.themeActive}</span>
+              </div>
+              {dynamicCount > 0 && (
+                <>
+                  <span className="as-hairline-v h-5" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex size-7 items-center justify-center rounded-lg bg-accent">
+                      <UploadCloud className="size-3.5 text-primary" />
+                    </div>
+                    <span className="text-[14px] font-bold tabular-nums text-foreground">
+                      {dynamicCount}
+                    </span>
+                    <span className="text-[11px] text-muted-foreground">{t.themeDynamic}</span>
+                  </div>
+                </>
+              )}
+            </div>
 
-          {/* Filter row — chip pills */}
-          <div className="flex flex-wrap items-center gap-2 pb-3">
-            {/* Category filter */}
-            {tc.categories.length > 0 && (
+            {/* Filter row — chip pills */}
+            <div className="flex flex-wrap items-center gap-2 pb-4">
+              {/* Category filter */}
+              {tc.categories.length > 0 && (
+                <FilterChips
+                  options={[
+                    { value: 'all', label: t.themeFilterAll },
+                    ...tc.categories.map((cat) => ({ value: cat, label: t.categoryLabel(cat) })),
+                  ]}
+                  value={tc.selectedCategory ?? 'all'}
+                  onChange={(v) => tc.setSelectedCategory(v === 'all' ? null : v)}
+                />
+              )}
+
+              {/* Mode filter */}
               <FilterChips
                 options={[
-                  { value: 'all', label: t.themeFilterAll },
-                  ...tc.categories.map((cat) => ({ value: cat, label: t.categoryLabel(cat) })),
+                  { value: 'all', label: t.themeModeAll },
+                  { value: 'dark', label: t.themeModeDark },
+                  { value: 'light', label: t.themeModeLight },
                 ]}
-                value={tc.selectedCategory ?? 'all'}
-                onChange={(v) => tc.setSelectedCategory(v === 'all' ? null : v)}
+                value={tc.modeFilter}
+                onChange={tc.setModeFilter}
+              />
+
+              {/* Dynamic filter — toggle */}
+              {tc.hasDynamic && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    tc.setDynamicFilter(tc.dynamicFilter === 'dynamic' ? 'all' : 'dynamic')
+                  }
+                  title={t.themeDynamicHint}
+                  className={cn(
+                    'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-all duration-fast',
+                    tc.dynamicFilter === 'dynamic'
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'inline-flex size-1.5 rounded-full',
+                      tc.dynamicFilter === 'dynamic'
+                        ? 'bg-accent-foreground'
+                        : 'bg-muted-foreground/50',
+                    )}
+                  />
+                  {t.themeDynamicFilter}
+                </button>
+              )}
+            </div>
+
+            {/* Stats rendered once (above, in toolbar badges). This row removed to eliminate duplicate counts. */}
+
+            {/* Grid — virtualized for large libraries */}
+            {controller.loading ? (
+              <ThemeGridSkeleton />
+            ) : tc.themes.length === 0 ? (
+              <EmptyState
+                icon={<PaintBucket />}
+                iconSize="lg"
+                title={tc.query ? t.themeNoResults : t.themeLibraryEmpty}
+                hint={
+                  tc.query || tc.selectedCategory ? t.noSearchResultsHint : t.emptyInstalledHint
+                }
+                className="min-h-[520px] w-full"
+              />
+            ) : (
+              <VirtualThemeGrid
+                themes={tc.themes}
+                activeAgentsByTheme={activeAgentsByTheme}
+                selectedId={
+                  controller.selection?.kind === 'installed' ? controller.selection.theme.id : null
+                }
+                onSelect={handleSelect}
+                t={t}
               />
             )}
 
-            {/* Mode filter */}
-            <FilterChips
-              options={[
-                { value: 'all', label: t.themeModeAll },
-                { value: 'dark', label: t.themeModeDark },
-                { value: 'light', label: t.themeModeLight },
-              ]}
-              value={tc.modeFilter}
-              onChange={tc.setModeFilter}
-            />
-
-            {/* Dynamic filter — toggle */}
-            {tc.hasDynamic && (
-              <button
-                type="button"
-                onClick={() =>
-                  tc.setDynamicFilter(tc.dynamicFilter === 'dynamic' ? 'all' : 'dynamic')
-                }
-                title={t.themeDynamicHint}
-                className={cn(
-                  'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-all duration-fast',
-                  tc.dynamicFilter === 'dynamic'
-                    ? 'bg-accent text-accent-foreground'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                )}
-              >
-                <span
-                  className={cn(
-                    'inline-flex size-1.5 rounded-full',
-                    tc.dynamicFilter === 'dynamic'
-                      ? 'bg-accent-foreground'
-                      : 'bg-muted-foreground/50',
-                  )}
-                />
-                {t.themeDynamicFilter}
-              </button>
-            )}
-          </div>
-
-          {/* Stats rendered once (above, in toolbar badges). This row removed to eliminate duplicate counts. */}
-
-          {/* Grid — virtualized for large libraries */}
-          {controller.loading ? (
-            <ThemeGridSkeleton />
-          ) : tc.themes.length === 0 ? (
-            <EmptyState
-              icon={<PaintBucket />}
-              iconSize="lg"
-              title={tc.query ? t.themeNoResults : t.themeLibraryEmpty}
-              hint={tc.query || tc.selectedCategory ? t.noSearchResultsHint : t.emptyInstalledHint}
-              className="min-h-[520px] w-full"
-            />
-          ) : (
-            <VirtualThemeGrid
-              themes={tc.themes}
-              activeAgentsByTheme={activeAgentsByTheme}
-              selectedId={
-                controller.selection?.kind === 'installed' ? controller.selection.theme.id : null
-              }
-              onSelect={handleSelect}
-              t={t}
-            />
-          )}
-
-          {/* Drag-and-drop import overlay */}
-          {dragOver && (
-            <div className="pointer-events-none absolute inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-background/80 backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-4 rounded-lg border-2 border-dashed border-primary/40 bg-card px-12 py-10 text-center shadow-xl">
-                <div className="flex size-16 items-center justify-center rounded-lg bg-accent">
-                  <UploadCloud className="size-8 text-primary" />
+            {/* Drag-and-drop import overlay */}
+            {dragOver && (
+              <div className="pointer-events-none absolute inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                <div className="flex flex-col items-center gap-4 rounded-lg border-2 border-dashed border-primary/40 bg-card px-12 py-10 text-center shadow-xl">
+                  <div className="flex size-16 items-center justify-center rounded-lg bg-accent">
+                    <UploadCloud className="size-8 text-primary" />
+                  </div>
+                  <p className="text-[14px] font-semibold text-foreground">{t.dropThemeHere}</p>
+                  <p className="max-w-60 text-[11px] leading-relaxed text-muted-foreground">
+                    {t.dropThemeHint}
+                  </p>
                 </div>
-                <p className="text-[14px] font-semibold text-foreground">{t.dropThemeHere}</p>
-                <p className="max-w-60 text-[11px] leading-relaxed text-muted-foreground">
-                  {t.dropThemeHint}
-                </p>
               </div>
+            )}
+          </section>
+
+          {/* Installed-theme detail panel — in-flow on the right, grid yields width */}
+          {controller.selection && (
+            <div className="h-full shrink-0 animate-slide-in-right">
+              <DetailPanel
+                controller={controller}
+                selection={controller.selection}
+                onClose={() => controller.setSelection(null)}
+              />
             </div>
           )}
-        </section>
+        </div>
       </TabsContent>
     </Tabs>
   );

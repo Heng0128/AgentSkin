@@ -9,7 +9,6 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { useShellStore } from '@/stores/shellStore';
 
 import { uiMessages } from '@shared/i18n';
@@ -94,41 +93,26 @@ export function ThemeDetailPanel({
   const previewUrl = theme.screenshots?.[0] ?? theme.thumbUrl;
 
   return (
-    <div className="fixed inset-0 z-[var(--z-overlay)]" role="dialog" aria-modal="true">
-      {/* Backdrop */}
-      <button
-        type="button"
-        aria-label={t.close}
-        className="absolute inset-0 cursor-default bg-black/40 backdrop-blur-[2px]"
-        onClick={onClose}
-      />
-
-      {/* Panel */}
-      <aside
-        className={cn(
-          'absolute top-0 right-0 flex max-h-[90vh] w-[400px] flex-col border-l border-border bg-card shadow-lg',
-          'animate-slide-in-right',
-        )}
-      >
-        {/* Preview */}
-        {previewUrl && (
-          <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
-            <img
-              src={previewUrl}
-              alt={theme.name}
-              className="size-full object-cover"
-              loading="lazy"
-            />
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label={t.close}
-              className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md bg-background/60 backdrop-blur-sm transition-colors hover:bg-background/80"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-        )}
+    <aside className="flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
+      {/* Preview */}
+      {previewUrl && (
+        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
+          <img
+            src={previewUrl}
+            alt={theme.name}
+            className="size-full object-cover"
+            loading="lazy"
+          />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t.close}
+            className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-md bg-background/60 backdrop-blur-sm transition-colors hover:bg-background/80"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
 
         {/* Header (when no preview) */}
         {!previewUrl && (
@@ -151,7 +135,7 @@ export function ThemeDetailPanel({
         )}
 
         {/* Scrollable body */}
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
           {/* Title (when preview shown) */}
           {previewUrl && (
             <div>
@@ -177,7 +161,7 @@ export function ThemeDetailPanel({
           </div>
 
           {/* Stats grid */}
-          <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+          <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-muted/30 px-3.5 py-3">
             <MetaItem icon={Download} label={t.downloads} value={String(theme.downloads ?? 0)} />
             <MetaItem icon={Star} label={t.rating} value={theme.rating?.toFixed(1) ?? '0.0'} />
             <MetaItem icon={FileArchive} label={t.size} value={formatSize(theme.packageSize)} />
@@ -206,7 +190,9 @@ export function ThemeDetailPanel({
 
           {/* Tags */}
           {theme.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-col gap-1.5">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground/70">Tags</p>
+              <div className="flex flex-wrap gap-1.5">
               {theme.tags.map((tag) => (
                 <span
                   key={tag}
@@ -215,6 +201,7 @@ export function ThemeDetailPanel({
                   {tag}
                 </span>
               ))}
+              </div>
             </div>
           )}
 
@@ -228,7 +215,7 @@ export function ThemeDetailPanel({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-2 border-t border-border p-3">
+        <div className="flex gap-2 border-t border-border p-3.5">
           <Button variant="outline" size="sm" className="flex-1" onClick={onClose}>
             {t.close}
           </Button>
@@ -245,6 +232,5 @@ export function ThemeDetailPanel({
           )}
         </div>
       </aside>
-    </div>
   );
 }

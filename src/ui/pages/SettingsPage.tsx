@@ -56,7 +56,7 @@ function SettingRow({
   children?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 py-2.5 px-3 border-b border-border last:border-0">
+    <div className="flex items-center justify-between gap-4 py-3 px-3.5 border-b border-border last:border-0">
       <div>
         <p className="text-[12px] font-medium text-foreground">{title}</p>
         {description && <p className="text-[11px] text-muted-foreground mt-0.5">{description}</p>}

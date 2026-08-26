@@ -1,3 +1,5 @@
+import { WebSocket } from "ws";
+
 export async function listCdpTargets(port, timeoutMs = 1500) {
   const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
     signal: AbortSignal.timeout(timeoutMs),
@@ -10,9 +12,6 @@ export async function listCdpTargets(port, timeoutMs = 1500) {
 
 export class CdpSession {
   constructor(target, timeoutMs = 10000) {
-    if (typeof WebSocket !== "function") {
-      throw new Error("The agentskin CLI requires Node.js 22.4 or newer for WebSocket support.");
-    }
     this.target = target;
     this.timeoutMs = timeoutMs;
     this.socket = new WebSocket(target.webSocketDebuggerUrl);
@@ -25,26 +24,26 @@ export class CdpSession {
   async open() {
     await new Promise((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error("CDP socket open timed out.")), this.timeoutMs);
-      this.socket.addEventListener("open", () => {
+      this.socket.once("open", () => {
         clearTimeout(timer);
         resolve();
-      }, { once: true });
-      this.socket.addEventListener("error", (error) => {
+      });
+      this.socket.once("error", (error) => {
         clearTimeout(timer);
         reject(error);
-      }, { once: true });
+      });
     });
-    this.socket.addEventListener("message", (event) => this.#onMessage(event));
-    this.socket.addEventListener("close", () => this.#closePending("CDP socket closed."));
+    this.socket.on("message", (data) => this.#onMessage(data));
+    this.socket.on("close", () => this.#closePending("CDP socket closed."));
     await this.send("Runtime.enable");
     await this.send("Page.enable");
     return this;
   }
 
-  #onMessage(event) {
+  #onMessage(data) {
     let message;
     try {
-      message = JSON.parse(String(event.data));
+      message = JSON.parse(String(data));
     } catch {
       // Skip non-JSON frames (binary data, truncated messages, protocol errors).
       return;

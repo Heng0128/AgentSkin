@@ -6,23 +6,22 @@
  * Application quick-launcher page. Displays scanned Electron applications in
  * two sections: "adapted" (backed by an AgentSkin adapter, auto-injected
  * with CDP port) and "other" (raw Electron, launched as-is). Double-clicking
- * a card launches the app. Single-clicking opens the bottom detail drawer.
+ * a card launches the app. Single-clicking opens the right-side detail panel.
  *
  * ## Layout
  *
- *   ┌───────────────────────────────────────────────────────────────┐
- *   │  应用                                      [扫描]            │
- *   │  全部 (5)  已适配 (3)  其它 (2)  隐藏 (0)                     │
- *   │  ─────────────────────────────────────────────────────────    │
- *   │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐         │
- *   │  │icon │ │icon │ │icon │ │icon │ │icon │ │icon │         │
- *   │  │ ●   │ │ ○   │ │ ●   │ │ ○   │ │ ●   │ │ ○   │         │
- *   │  │TRAE │ │Qoder│ │WorkB│ │App1 │ │App2 │ │App3 │         │
- *   │  │:9222│ │     │ │:9225│ │     │ │     │ │     │         │
- *   │  └─────┘ └─────┘ └─────┘ └─────┘ └─────┘ └─────┘         │
- *   ├───────────────────────────────────────────────────────────────┤
- *   │ AppDetailsDrawer (bottom, ~300px)                            │
- *   └───────────────────────────────────────────────────────────────┘
+ *   ┌──────────────────────────────────────────────────────────────┐
+ *   │  应用                                      [扫描]   │  ┌─────┐ │
+ *   │  全部 (5)  已适配 (3)  其它 (2)  隐藏 (0)            │  │icon │ │
+ *   │  ───────────────────────────────────────────────    │  │ ●   │ │
+ *   │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐                   │  │TRAE │ │
+ *   │  │icon │ │icon │ │icon │ │icon │                   │  │:9222│ │
+ *   │  │ ●   │ │ ○   │ │ ●   │ │ ○   │                   │  └─────┘ │
+ *   │  │TRAE │ │Qoder│ │WorkB│ │App1 │                   │  详情面板 │
+ *   │  └─────┘ └─────┘ └─────┘ └─────┘                   │  (400px) │
+ *   ├─────────────────────────────────────────────────────┤          │
+ *   │  AppDetailsDrawer (right column, in-flow)           └──────────┘
+ *   └──────────────────────────────────────────────────────────────┘
  *
  * ## Filtering
  *
@@ -72,6 +71,7 @@ export function AppsPage() {
   const t = uiMessages[locale];
 
   const scanResult = useAppsStore((s) => s.scanResult);
+  const drawerAppId = useAppsStore((s) => s.drawerAppId);
   const scanning = useAppsStore((s) => s.scanning);
   const scanError = useAppsStore((s) => s.scanError);
   const launchingApps = useAppsStore((s) => s.launchingApps);
@@ -183,143 +183,152 @@ export function AppsPage() {
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
-      {/* Scrollable content */}
-      <div className="min-h-0 flex-1 snap-y snap-proximity overflow-y-auto scroll-smooth">
-        <div className="pb-[var(--pb-drawer,320px)]">
-          {/* Page header */}
-          <PageHeader title={t.navApps} count={visibleApps.length}>
-            <PageToolbar
-              actions={
-                <Button variant="outline" size="sm" onClick={handleScan} disabled={scanning}>
-                  {scanning ? (
-                    <Spinner className="animate-spin" />
-                  ) : (
-                    <RefreshCw className="size-3.5" />
-                  )}
-                  {t.scan}
-                </Button>
-              }
-            />
-          </PageHeader>
+      {/* Master-detail: list yields width to the detail panel on the right */}
+      <div className="flex min-h-0 flex-1">
+        {/* Scrollable content */}
+        <div className="min-h-0 min-w-0 flex-1 snap-y snap-proximity overflow-y-auto scroll-smooth">
+          <div>
+            {/* Page header */}
+            <PageHeader title={t.navApps} count={visibleApps.length}>
+              <PageToolbar
+                actions={
+                  <Button variant="outline" size="sm" onClick={handleScan} disabled={scanning}>
+                    {scanning ? (
+                      <Spinner className="animate-spin" />
+                    ) : (
+                      <RefreshCw className="size-3.5" />
+                    )}
+                    {t.scan}
+                  </Button>
+                }
+              />
+            </PageHeader>
 
-          {/* Category filter chips */}
-          <div className="py-3">
-            <FilterChips
-              options={filterOptions}
-              value={categoryFilter}
-              onChange={setCategoryFilter}
-            />
-          </div>
-
-          {/* Scan progress bar */}
-          {scanning && (
-            <div
-              className="mb-4 h-1 overflow-hidden rounded-full bg-muted"
-              role="progressbar"
-              aria-valuenow={scanProgress}
-            >
-              <div
-                className="h-full rounded-full bg-primary transition-all duration-slow"
-                style={{ width: `${scanProgress}%` }}
+            {/* Category filter chips */}
+            <div className="py-3">
+              <FilterChips
+                options={filterOptions}
+                value={categoryFilter}
+                onChange={setCategoryFilter}
               />
             </div>
-          )}
 
-          {/* Scan error banner */}
-          {scanError && (
-            <div
-              role="alert"
-              className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2.5"
-            >
-              <p className="min-w-0 flex-1 truncate text-[11px] text-destructive">
-                {t.appsScanFailed}
-                {scanError}
-              </p>
-              <Button variant="ghost" size="sm" onClick={() => void scan(true)}>
-                {t.appsActionRetry}
-              </Button>
-            </div>
-          )}
-
-          {/* Status legend */}
-          <div className="as-stat-bar mb-4">
-            <span className="flex items-center gap-2 text-[11px]">
-              <span className="inline-block size-2 rounded-full bg-cr-success" />
-              {t.appsStatusRunning}
-            </span>
-            <span className="flex items-center gap-2 text-[11px]">
-              <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
-              {t.appsStatusStopped}
-            </span>
-            <span className="flex items-center gap-2 text-[11px]">
-              <span className="inline-block size-2 rounded-full bg-cr-warning" />
-              {t.appsStatusNoPort}
-            </span>
-          </div>
-
-          {/* Skeleton during initial scan */}
-          {scanning && !scanResult && (
-            <section className="mb-6 snap-start">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-                {SKELETON_ITEMS.map((id) => (
-                  <div key={id} className="h-28 animate-pulse rounded-lg bg-muted" />
-                ))}
+            {/* Scan progress bar */}
+            {scanning && (
+              <div
+                className="mb-4 h-1 overflow-hidden rounded-full bg-muted"
+                role="progressbar"
+                aria-valuenow={scanProgress}
+              >
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-slow"
+                  style={{ width: `${scanProgress}%` }}
+                />
               </div>
-            </section>
-          )}
+            )}
 
-          {/* App grid — single unified grid based on active category */}
-          {visibleApps.length > 0 && (
-            <section className="mb-6 snap-start">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
-                {visibleApps.map(renderCard)}
-              </div>
-            </section>
-          )}
-
-          {/* Empty state — scanned but no apps found for current filter */}
-          {scanResult && !scanning && visibleApps.length === 0 && (
-            <EmptyState
-              icon={<Monitor />}
-              iconSize="lg"
-              title={categoryFilter === 'hidden' ? t.appsEmptyHidden : t.appsEmptyNoApps}
-            />
-          )}
-
-          {/* Empty state — pre-scan guidance */}
-          {!scanResult && !scanning && !scanError && (
-            <EmptyState
-              icon={<Monitor />}
-              iconSize="lg"
-              title={t.appsScanToFind}
-              action={
-                <Button variant="outline" size="sm" onClick={() => void scan(true)}>
-                  <RefreshCw size={14} />
-                  {t.appsActionScan}
+            {/* Scan error banner */}
+            {scanError && (
+              <div
+                role="alert"
+                className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2.5"
+              >
+                <p className="min-w-0 flex-1 truncate text-[11px] text-destructive">
+                  {t.appsScanFailed}
+                  {scanError}
+                </p>
+                <Button variant="ghost" size="sm" onClick={() => void scan(true)}>
+                  {t.appsActionRetry}
                 </Button>
-              }
-            />
-          )}
+              </div>
+            )}
 
-          {/* Manual add button */}
-          <div className="pt-2">
-            <Button variant="outline" size="sm" onClick={handleManualAdd}>
-              <Plus size={14} />
-              {t.appsActionAddManual}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".exe"
-              className="hidden"
-              onChange={handleFileSelected}
-            />
+            {/* Status legend */}
+            <div className="as-stat-bar mb-4">
+              <span className="flex items-center gap-2 text-[11px]">
+                <span className="inline-block size-2 rounded-full bg-cr-success" />
+                {t.appsStatusRunning}
+              </span>
+              <span className="as-hairline-v h-3.5" />
+              <span className="flex items-center gap-2 text-[11px]">
+                <span className="inline-block size-2 rounded-full bg-muted-foreground/25" />
+                {t.appsStatusStopped}
+              </span>
+              <span className="as-hairline-v h-3.5" />
+              <span className="flex items-center gap-2 text-[11px]">
+                <span className="inline-block size-2 rounded-full bg-cr-warning" />
+                {t.appsStatusNoPort}
+              </span>
+            </div>
+
+            {/* Skeleton during initial scan */}
+            {scanning && !scanResult && (
+              <section className="mb-6 snap-start">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+                  {SKELETON_ITEMS.map((id) => (
+                    <div key={id} className="h-32 animate-pulse rounded-lg bg-muted" />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* App grid — single unified grid based on active category */}
+            {visibleApps.length > 0 && (
+              <section className="mb-6 snap-start">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+                  {visibleApps.map(renderCard)}
+                </div>
+              </section>
+            )}
+
+            {/* Empty state — scanned but no apps found for current filter */}
+            {scanResult && !scanning && visibleApps.length === 0 && (
+              <EmptyState
+                icon={<Monitor />}
+                iconSize="lg"
+                title={categoryFilter === 'hidden' ? t.appsEmptyHidden : t.appsEmptyNoApps}
+              />
+            )}
+
+            {/* Empty state — pre-scan guidance */}
+            {!scanResult && !scanning && !scanError && (
+              <EmptyState
+                icon={<Monitor />}
+                iconSize="lg"
+                title={t.appsScanToFind}
+                action={
+                  <Button variant="outline" size="sm" onClick={() => void scan(true)}>
+                    <RefreshCw size={14} />
+                    {t.appsActionScan}
+                  </Button>
+                }
+              />
+            )}
+
+            {/* Manual add button */}
+            <div className="pt-2">
+              <Button variant="outline" size="sm" onClick={handleManualAdd}>
+                <Plus size={14} />
+                {t.appsActionAddManual}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".exe"
+                className="hidden"
+                onChange={handleFileSelected}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Bottom detail drawer */}
-      <AppDetailsDrawer />
+        {/* Right detail panel — in-flow, list yields width */}
+        {drawerAppId !== null && (
+          <div className="h-full shrink-0 animate-slide-in-right">
+            <AppDetailsDrawer />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

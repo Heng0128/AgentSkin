@@ -273,7 +273,7 @@ export function DetailPanel({
   const isDynamic = Boolean(theme.wallpaper?.video || theme.wallpaper?.workshopId);
 
   return (
-    <aside className="flex h-full max-h-[90vh] w-[400px] shrink-0 flex-col border-l border-border bg-card">
+    <aside className="flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
       {/* Preview — large 16:9 at top */}
       <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
         {isDynamic && videoUrl ? (
@@ -312,11 +312,11 @@ export function DetailPanel({
       </div>
 
       {/* Scrollable body */}
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
         {/* Title */}
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-[16px] font-semibold tracking-tight">{theme.name}</h2>
+            <h2 className="text-base font-semibold tracking-tight">{theme.name}</h2>
             {isDynamic && (
               <Badge className="bg-primary/15 text-primary text-[10px]">
                 {t.themeDynamicBadge}
@@ -335,7 +335,7 @@ export function DetailPanel({
 
         {/* Metadata grid */}
         {(theme.author || theme.category || theme.license) && (
-          <div className="grid grid-cols-3 gap-3 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
+          <div className="grid grid-cols-3 gap-3 rounded-lg border border-border bg-muted/30 px-3.5 py-3">
             {theme.author && <MetaRow label={t.themeAuthor} value={theme.author} />}
             {theme.category && (
               <MetaRow label={t.themeCategory} value={t.categoryLabel(theme.category)} />
@@ -385,7 +385,7 @@ export function DetailPanel({
       </div>
 
       {/* Footer actions */}
-      <div className="flex gap-2 border-t border-border p-3">
+      <div className="flex gap-2 border-t border-border p-3.5">
         <Button
           variant="outline"
           size="sm"

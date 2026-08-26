@@ -38,7 +38,7 @@ function PageToolbar({ search, sort, sortOrder, actions, left, className }: Page
     <div className={cn('flex flex-wrap items-center gap-2', className)}>
       {left}
       {search && (
-        <InputGroup className="h-8 rounded-md" style={{ width: '240px' }}>
+        <InputGroup className="h-8 rounded-md" style={{ width: '260px' }}>
           <InputGroupInput
             value={search.value}
             onChange={(e) => search.onChange(e.target.value)}
@@ -46,14 +46,14 @@ function PageToolbar({ search, sort, sortOrder, actions, left, className }: Page
             aria-label={search.placeholder}
           />
           <InputGroupAddon align="inline-start">
-            <Search />
+            <Search className="size-3.5 text-muted-foreground" />
           </InputGroupAddon>
         </InputGroup>
       )}
       {sort && (
         <Select value={sort.value} onValueChange={sort.onChange}>
           <SelectTrigger
-            className="h-8 w-[130px] rounded-md border-border bg-muted text-[11px] focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--brand-rgb),0.13)]"
+            className="h-8 w-[140px] rounded-md border-border bg-muted text-[11px] focus:border-primary focus:shadow-[0_0_0_3px_rgba(var(--brand-rgb),0.13)]"
             aria-label={sort.options.find((o) => o.value === sort.value)?.label}
           >
             <SelectValue />
@@ -75,7 +75,7 @@ function PageToolbar({ search, sort, sortOrder, actions, left, className }: Page
             aria-label={sortOrder.order === 'asc' ? 'Sort descending' : 'Sort ascending'}
             aria-pressed={sortOrder.order === 'asc'}
             className={cn(
-              'h-7 rounded-sm px-2 text-[11px] font-medium transition-all duration-fast',
+              'flex h-7 items-center rounded-sm px-2 text-[11px] font-medium transition-all duration-fast',
               'bg-card text-foreground shadow-sm',
             )}
           >

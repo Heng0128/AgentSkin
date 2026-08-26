@@ -9,13 +9,14 @@ import type { UiMessages } from '@shared/i18n';
 import { uiMessages } from '@shared/i18n';
 import { formatTime } from '@shared/intl';
 import type { SystemStatus } from '@shared/types';
+import { Activity, Cpu } from 'lucide-react';
 
 /**
  * # StatusBar
  *
  * Minimal inline status element for the bottom of the window.
  *
- * Shows: status LED (6px dot) + status label + version + clock.
+ * Shows: status LED (6px dot) + status label + running agent count + version + clock.
  *
  * Reads directly from shellStore + statusStore.
  */
@@ -67,6 +68,10 @@ export function StatusBar() {
         ? t.statusLedStandby
         : t.statusLedOffline;
 
+  const runningCount = status?.apps.filter((a) => a.running).length ?? 0;
+  const totalApps = status?.apps.length ?? 0;
+  const themedCount = status?.apps.filter((a) => a.activeThemeId !== null).length ?? 0;
+
   return (
     <div className="flex h-7 shrink-0 items-center gap-3 border-t border-border bg-[var(--surface)] px-4">
       {/* Status — LED + label */}
@@ -82,6 +87,28 @@ export function StatusBar() {
         />
         <span className="text-[11px] font-medium text-secondary-foreground">{cdpLabel}</span>
       </span>
+
+      <span className="h-3.5 w-px bg-border" aria-hidden />
+
+      {/* Running agents */}
+      <span className="flex items-center gap-1.5">
+        <Activity className="size-3 text-muted-foreground/70" />
+        <span className="text-[11px] tabular-nums text-muted-foreground">
+          {runningCount}/{totalApps}
+        </span>
+        <span className="text-[11px] text-muted-foreground/60">agents</span>
+      </span>
+
+      {themedCount > 0 && (
+        <>
+          <span className="h-3.5 w-px bg-border" aria-hidden />
+          <span className="flex items-center gap-1.5">
+            <Cpu className="size-3 text-muted-foreground/70" />
+            <span className="text-[11px] tabular-nums text-muted-foreground">{themedCount}</span>
+            <span className="text-[11px] text-muted-foreground/60">themed</span>
+          </span>
+        </>
+      )}
 
       <span className="h-3.5 w-px bg-border" aria-hidden />
 

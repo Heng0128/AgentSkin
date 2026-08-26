@@ -52,6 +52,7 @@ import {
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { WebSocket, type MessageEvent } from 'ws';
 import { execFileAsync } from '../shared/exec-async';
 import type {
   AppAdapter,

@@ -61,17 +61,18 @@ export function InjectDock({ controller }: { controller: AppController }) {
     <div
       className={cn(
         'fixed bottom-12 left-1/2 z-[var(--z-dock)] -translate-x-1/2',
-        'flex items-center gap-2 rounded-md  bg-popover px-4 py-2 shadow-float backdrop-blur-none',
+        'flex items-center gap-3 rounded-lg border border-border bg-popover px-4 py-2.5 shadow-float backdrop-blur-none',
         'transition-[opacity,filter] duration-slow',
         dimmed && 'opacity-40 saturate-[0.6]',
       )}
       role="dialog"
       aria-label={t.injectDockTitle}
     >
-      <span className="flex items-center gap-1 text-[11px] text-foreground">
-        <Upload className="size-3.5" />
+      <span className="flex items-center gap-1.5 text-[11px] font-medium text-foreground">
+        <Upload className="size-3.5 text-primary" />
         {t.injectDockTitle}
       </span>
+      <span className="h-3.5 w-px bg-border" />
       <span className="text-[11px] text-muted-foreground">{label}</span>
       <button
         type="button"
@@ -79,7 +80,7 @@ export function InjectDock({ controller }: { controller: AppController }) {
           // Show confirmation dialog with active injection count
           controller.setRestoreAllPrompt(activeApps.length);
         }}
-        className="flex items-center gap-1 rounded-md bg-card2 px-2 py-1 text-[10px] text-foreground transition-colors hover:border-primary hover:text-primary"
+        className="flex items-center gap-1 rounded-md bg-card2 px-2.5 py-1 text-[11px] font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
       >
         <RotateCcw className="size-3" />
         {t.restoreAllAction}

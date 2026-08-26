@@ -58,6 +58,10 @@ vi.mock('@/api/agentSkinClient', () => ({
     registerCustomExe: mockRegisterCustomExe,
     onCoordinatorStatus: mockOnCoordinatorStatus,
     getCoordinatorSnapshot: mockGetCoordinatorSnapshot,
+    onFileImported: vi.fn(),
+    onFileImportConfirm: vi.fn(),
+    onFileImportFailed: vi.fn(),
+    onTrayApply: vi.fn(),
   },
 }));
 
@@ -90,6 +94,14 @@ vi.mock('@/stores/settingsStore', () => ({
   useSettingsStore: {
     getState: vi.fn(() => ({
       settings: null,
+    })),
+  },
+}));
+
+vi.mock('@/stores/themeStore', () => ({
+  useThemeStore: {
+    getState: vi.fn(() => ({
+      selection: null,
     })),
   },
 }));

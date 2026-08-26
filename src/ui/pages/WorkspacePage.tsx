@@ -30,7 +30,7 @@ import type { ToolOverride } from '@/types/override';
 
 import { uiMessages } from '@shared/i18n';
 import type { AppStatus } from '@shared/types';
-import { Download, Redo2, Search, Undo2, Upload } from 'lucide-react';
+import { Download, Redo2, RefreshCw, Search, Undo2, Upload } from 'lucide-react';
 
 const PUSH_FAILED_FALLBACK = '实时推送失败：';
 const IMPORT_FAILED_FALLBACK = '导入失败：';
@@ -176,13 +176,13 @@ export function WorkspacePage() {
           {isRefreshing ? (
             <Spinner className="size-3.5 animate-spin" />
           ) : (
-            <span className="text-[10px] font-medium">↻</span>
+            <RefreshCw className="size-3.5" />
           )}
         </button>
         <div className="h-px w-6 bg-border" />
         {runningAgents.length === 0 ? (
-          <p className="mt-4 px-1 text-center text-[10px] leading-tight text-muted-foreground/50">
-            {t.workspaceNoRunningAgents.slice(0, 4)}
+          <p className="mt-4 px-1 text-center text-[10px] leading-tight line-clamp-2 text-muted-foreground/50">
+            {t.workspaceNoRunningAgents}
           </p>
         ) : (
           runningAgents.map((app) => {

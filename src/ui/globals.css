@@ -139,6 +139,13 @@
 
   /* ---- Elevated card surface ---- */
   --card2: #1c1c23;
+
+  /* ---- Layout rhythm tokens ---- */
+  --space-page-x: 20px;
+  --space-page-y: 16px;
+  --space-section: 20px;
+  --space-card-pad: 14px;
+  --radius-card: 10px;
 }
 
 /* =================================================================== */
@@ -245,12 +252,20 @@
 
   /* ---- Elevated card surface ---- */
   --card2: #ffffff;
+
+  /* ---- Layout rhythm tokens ---- */
+  --space-page-x: 20px;
+  --space-page-y: 16px;
+  --space-section: 20px;
+  --space-card-pad: 14px;
+  --radius-card: 10px;
 }
 
 /* =================================================================== */
 /* Tailwind @theme inline — maps CSS vars to Tailwind utilities        */
 /* =================================================================== */
 @theme inline {
+  --color-page-gutter: var(--space-page-x);
   --font-sans: var(--font-ui);
   --font-heading: var(--font-ui);
   --font-display: var(--font-ui);
@@ -421,16 +436,16 @@
 @keyframes page-fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px) scale(0.998);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 .page-enter {
-  animation: page-fade-in var(--duration-base) cubic-bezier(0.16, 1, 0.3, 1);
+  animation: page-fade-in var(--duration-slow) cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
@@ -575,7 +590,7 @@
   .as-panel {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-card);
   }
 
   /* ---- Section title ---- */
@@ -604,10 +619,10 @@
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 8px 12px;
+    padding: 10px 14px;
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-card);
   }
 
   /* ---- Subtle brand tint for active/selected rows ---- */
@@ -621,6 +636,41 @@
     background: color-mix(in srgb, var(--surface) 72%, transparent);
     backdrop-filter: blur(20px) saturate(1.4);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  }
+
+  /* ---- Section gap: consistent vertical rhythm between page sections ---- */
+  .as-section-gap {
+    height: var(--space-section);
+  }
+
+  /* ---- Card surface: unified elevated card ---- */
+  .as-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-elev1);
+  }
+
+  /* ---- Subtle hover lift for interactive cards ---- */
+  .as-card-hover {
+    transition:
+      transform var(--duration-fast) ease,
+      border-color var(--duration-fast) ease,
+      box-shadow var(--duration-fast) ease;
+  }
+  .as-card-hover:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-elev2);
+  }
+
+  /* ---- Brand accent line: thin gradient bar for active states ---- */
+  .as-brand-line {
+    background: linear-gradient(
+      to bottom,
+      rgba(var(--brand-rgb), 0.8),
+      rgba(var(--brand-rgb), 0.3)
+    );
   }
 }
 

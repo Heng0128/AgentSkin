@@ -3,6 +3,7 @@
 import { Logo } from '@/components/Logo';
 import { cn } from '@/lib/utils';
 import { useShellStore } from '@/stores/shellStore';
+import { useStatusStore } from '@/stores/statusStore';
 import type { Route } from '@/types/navigation';
 
 import { uiMessages } from '@shared/i18n';
@@ -28,6 +29,8 @@ const NAV_ICONS: NavIcon[] = [
  * Structure:
  *   Logo (top, 40px strip)
  *   Navigation — 32x32px icon buttons, active item gets accent bg + left indicator bar
+ *   Spacer
+ *   Bottom — running agent count badge
  *
  * Global status (LED + version + clock) lives in the full-width StatusBar,
  * which spans below this rail — keeping the narrow column clean.
@@ -36,7 +39,10 @@ export function Sidebar() {
   const route = useShellStore((s) => s.route);
   const setRoute = useShellStore((s) => s.setRoute);
   const locale = useShellStore((s) => s.locale);
+  const status = useStatusStore((s) => s.status);
   const t = uiMessages[locale];
+
+  const runningCount = status?.apps.filter((a) => a.running).length ?? 0;
 
   return (
     <aside className="flex h-full w-14 flex-col border-r border-border bg-surface">
@@ -59,20 +65,52 @@ export function Sidebar() {
               aria-current={active ? 'page' : undefined}
               aria-label={t[item.labelKey]}
               className={cn(
-                'relative flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-fast ease-out',
+                'group relative flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-all duration-fast ease-out',
                 'hover:bg-card2 hover:text-foreground active:scale-90',
                 active &&
                   'bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground',
               )}
             >
               {active && (
-                <span className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--brand-rgb),0.5)]" />
+                <span className="as-brand-line absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full shadow-[0_0_8px_rgba(var(--brand-rgb),0.5)]" />
               )}
-              <Icon className="size-[15px]" strokeWidth={active ? 2.2 : 1.8} />
+              <Icon
+                className={cn(
+                  'transition-transform duration-fast',
+                  active ? 'scale-105' : 'group-hover:scale-110',
+                )}
+                strokeWidth={active ? 2.2 : 1.8}
+                style={{ width: '15px', height: '15px' }}
+              />
+              {/* Tooltip — appears on hover to the right */}
+              <span
+                className={cn(
+                  'pointer-events-none absolute left-11 z-[var(--z-overlay)] whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-[11px] font-medium text-popover-foreground shadow-md',
+                  'opacity-0 transition-opacity duration-fast',
+                  'group-hover:opacity-100',
+                )}
+              >
+                {t[item.labelKey]}
+              </span>
             </button>
           );
         })}
       </nav>
+
+      {/* Bottom — running agent count badge */}
+      {runningCount > 0 && (
+        <div className="flex h-10 shrink-0 items-center justify-center border-t border-border">
+          <div
+            className="flex items-center gap-1 rounded-full bg-accent px-2 py-0.5"
+            title={`${runningCount} agents running`}
+          >
+            <span className="size-1.5 animate-status-pulse rounded-full bg-primary" />
+            <span className="text-[10px] font-semibold tabular-nums text-accent-foreground">
+              {runningCount}
+            </span>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

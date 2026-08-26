@@ -5,12 +5,12 @@ import { PerformanceRecorder } from '../services/performance';
 import { type CdpSession, connectCdp, connectEventCdp, type EventCdpSession } from './cdp-client';
 
 // ---------------------------------------------------------------------------
-// FakeWebSocket — a minimal, controllable stand-in for the global WebSocket.
+// FakeWebSocket — a minimal, controllable stand-in for the `ws` WebSocket.
 //
-// `cdp-client.ts` relies on the Node 22+ / Electron 37+ global WebSocket.
-// We replace it with this fake so tests can deterministically drive the
-// event callbacks (`onopen`, `onmessage`, `onclose`, `onerror`) and capture
-// outgoing `send()` payloads to simulate CDP responses.
+// `cdp-client.ts` imports WebSocket from the `ws` package. We mock the module
+// with this fake so tests can deterministically drive the event callbacks
+// (`onopen`, `onmessage`, `onclose`, `onerror`) and capture outgoing `send()`
+// payloads to simulate CDP responses.
 // ---------------------------------------------------------------------------
 
 interface FakeWebSocketInstance {
@@ -33,58 +33,59 @@ interface FakeWebSocketInstance {
   sentMessages: string[];
 }
 
-let currentFake: FakeWebSocketInstance | null = null;
+// Hoist a mutable container so the mock factory (also hoisted) can reference it.
+const fakeState = vi.hoisted(() => {
+  return { currentFake: null as FakeWebSocketInstance | null };
+});
 
-class FakeWebSocket {
-  readonly url: string;
-  onopen: (() => void) | null = null;
-  onmessage: ((event: { data: string }) => void) | null = null;
-  onclose: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  closed = false;
-  sentMessages: string[] = [];
+// Mock the `ws` module with a class that captures the current instance.
+vi.mock('ws', () => ({
+  WebSocket: class {
+    readonly url: string;
+    onopen: (() => void) | null = null;
+    onmessage: ((event: { data: string }) => void) | null = null;
+    onclose: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    closed = false;
+    sentMessages: string[] = [];
 
-  constructor(url: string) {
-    this.url = url;
-    currentFake = this as unknown as FakeWebSocketInstance;
-  }
+    constructor(url: string) {
+      this.url = url;
+      fakeState.currentFake = this;
+    }
 
-  send(data: string): void {
-    this.sentMessages.push(data);
-  }
+    send(data: string): void {
+      this.sentMessages.push(data);
+    }
 
-  close(): void {
-    this.closed = true;
-  }
+    close(): void {
+      this.closed = true;
+    }
 
-  serverSend(data: string): void {
-    this.onmessage?.({ data });
-  }
+    serverSend(data: string): void {
+      this.onmessage?.({ data });
+    }
 
-  triggerOpen(): void {
-    this.onopen?.();
-  }
+    triggerOpen(): void {
+      this.onopen?.();
+    }
 
-  triggerClose(): void {
-    this.onclose?.();
-  }
+    triggerClose(): void {
+      this.onclose?.();
+    }
 
-  triggerError(): void {
-    this.onerror?.();
-  }
-}
-
-// Keep a reference so we can restore it after each test.
-const OriginalWebSocket = globalThis.WebSocket;
+    triggerError(): void {
+      this.onerror?.();
+    }
+  },
+}));
 
 beforeEach(() => {
-  currentFake = null;
-  globalThis.WebSocket = FakeWebSocket as unknown as typeof WebSocket;
+  fakeState.currentFake = null;
 });
 
 afterEach(() => {
-  globalThis.WebSocket = OriginalWebSocket;
-  currentFake = null;
+  fakeState.currentFake = null;
 });
 
 // ---------------------------------------------------------------------------
@@ -93,7 +94,7 @@ afterEach(() => {
 
 /** Parse the last outgoing CDP message sent via ws.send(). */
 function lastSentMessage(): { id: number; method: string; params: Record<string, unknown> } {
-  const fake = currentFake!;
+  const fake = fakeState.currentFake!;
   const raw = fake.sentMessages[fake.sentMessages.length - 1];
   return JSON.parse(raw);
 }
@@ -103,7 +104,7 @@ async function connectAndOpen(): Promise<CdpSession> {
   const promise = connectCdp('ws://127.0.0.1:9336/devtools/page/abc');
   // Microtask: let connectCdp attach handlers before we trigger open.
   await Promise.resolve();
-  currentFake!.triggerOpen();
+  fakeState.currentFake!.triggerOpen();
   return promise;
 }
 
@@ -111,7 +112,7 @@ async function connectAndOpen(): Promise<CdpSession> {
 async function connectEventAndOpen(): Promise<EventCdpSession> {
   const promise = connectEventCdp('ws://127.0.0.1:9336/devtools/page/abc');
   await Promise.resolve();
-  currentFake!.triggerOpen();
+  fakeState.currentFake!.triggerOpen();
   return promise;
 }
 
@@ -133,8 +134,8 @@ describe('connectCdp', () => {
       const url = 'ws://127.0.0.1:9999/devtools/page/xyz';
       const promise = connectCdp(url);
       await Promise.resolve();
-      expect(currentFake!.url).toBe(url);
-      currentFake!.triggerOpen();
+      expect(fakeState.currentFake!.url).toBe(url);
+      fakeState.currentFake!.triggerOpen();
       await promise;
     });
   });
@@ -162,7 +163,7 @@ describe('connectCdp', () => {
         const assertion = expect(promise).rejects.toThrow();
         await vi.advanceTimersByTimeAsync(1001);
         await assertion;
-        expect(currentFake!.closed).toBe(true);
+        expect(fakeState.currentFake!.closed).toBe(true);
       } finally {
         vi.useRealTimers();
       }
@@ -173,16 +174,16 @@ describe('connectCdp', () => {
     it('rejects with "CDP connection failed" when ws.onerror fires', async () => {
       const promise = connectCdp('ws://localhost/x');
       await Promise.resolve();
-      currentFake!.triggerError();
+      fakeState.currentFake!.triggerError();
       await expect(promise).rejects.toThrow('CDP connection failed');
     });
 
     it('calls session.close() on connection error', async () => {
       const promise = connectCdp('ws://localhost/x');
       await Promise.resolve();
-      currentFake!.triggerError();
+      fakeState.currentFake!.triggerError();
       await expect(promise).rejects.toThrow();
-      expect(currentFake!.closed).toBe(true);
+      expect(fakeState.currentFake!.closed).toBe(true);
     });
   });
 
@@ -221,7 +222,7 @@ describe('CdpSession.send', () => {
     expect(msg.params).toEqual({ frameId: 'main' });
 
     // Respond so the promise resolves.
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: { ok: true } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: { ok: true } }));
     await expect(sendPromise).resolves.toEqual({ ok: true });
   });
 
@@ -233,7 +234,7 @@ describe('CdpSession.send', () => {
     const msg = lastSentMessage();
     expect(msg.params).toEqual({});
 
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: {} }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: {} }));
     await sendPromise;
   });
 
@@ -243,13 +244,13 @@ describe('CdpSession.send', () => {
     const p1 = session.send('Method.one');
     await Promise.resolve();
     expect(lastSentMessage().id).toBe(1);
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: 'r1' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: 'r1' }));
     await p1;
 
     const p2 = session.send('Method.two');
     await Promise.resolve();
     expect(lastSentMessage().id).toBe(2);
-    currentFake!.serverSend(JSON.stringify({ id: 2, result: 'r2' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 2, result: 'r2' }));
     await p2;
   });
 
@@ -257,7 +258,7 @@ describe('CdpSession.send', () => {
     const session = await connectAndOpen();
     const p = session.send<{ value: number }>('Runtime.evaluate', { expression: '1+1' });
     await Promise.resolve();
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: { value: 42 } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: { value: 42 } }));
     await expect(p).resolves.toEqual({ value: 42 });
   });
 
@@ -265,7 +266,7 @@ describe('CdpSession.send', () => {
     const session = await connectAndOpen();
     const p = session.send('Page.navigate', { url: 'bad://' });
     await Promise.resolve();
-    currentFake!.serverSend(
+    fakeState.currentFake!.serverSend(
       JSON.stringify({ id: 1, error: { message: 'Cannot navigate', code: -32000 } }),
     );
     await expect(p).rejects.toThrow('Cannot navigate (-32000)');
@@ -276,7 +277,7 @@ describe('CdpSession.send', () => {
     try {
       const promise = connectCdp('ws://localhost/x', 5000, 200);
       await Promise.resolve();
-      currentFake!.triggerOpen();
+      fakeState.currentFake!.triggerOpen();
       const session = await promise;
       const p = session.send('Slow.method');
       await Promise.resolve();
@@ -293,7 +294,7 @@ describe('CdpSession.send', () => {
     try {
       const promise = connectCdp('ws://localhost/x', 5000, 200);
       await Promise.resolve();
-      currentFake!.triggerOpen();
+      fakeState.currentFake!.triggerOpen();
       const session = await promise;
       const p = session.send('Slow.method');
       await Promise.resolve();
@@ -302,7 +303,7 @@ describe('CdpSession.send', () => {
       await assertion;
 
       // Late response should be ignored (pending entry already deleted).
-      currentFake!.serverSend(JSON.stringify({ id: 1, result: 'late' }));
+      fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: 'late' }));
       // Give it a microtask to potentially reject again.
       await Promise.resolve();
       // No unhandled rejection — the test passes if we get here.
@@ -314,7 +315,7 @@ describe('CdpSession.send', () => {
   it('rejects if ws.send() throws (socket not ready)', async () => {
     const session = await connectAndOpen();
     // Override send to throw.
-    currentFake!.send = () => {
+    fakeState.currentFake!.send = () => {
       throw new Error('WebSocket is not open');
     };
     await expect(session.send('Any.method')).rejects.toThrow('WebSocket is not open');
@@ -322,7 +323,7 @@ describe('CdpSession.send', () => {
 
   it('handles non-Error throws from ws.send() by wrapping in Error', async () => {
     const session = await connectAndOpen();
-    currentFake!.send = () => {
+    fakeState.currentFake!.send = () => {
       throw 'string error';
     };
     await expect(session.send('Any.method')).rejects.toThrow('string error');
@@ -347,7 +348,9 @@ describe('CdpSession.evaluate', () => {
       awaitPromise: true,
     });
 
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: { result: { value: 'My Page' } } }));
+    fakeState.currentFake!.serverSend(
+      JSON.stringify({ id: 1, result: { result: { value: 'My Page' } } }),
+    );
     await expect(p).resolves.toBe('My Page');
   });
 
@@ -355,7 +358,7 @@ describe('CdpSession.evaluate', () => {
     const session = await connectAndOpen();
     const p = session.evaluate('1 + 1');
     await Promise.resolve();
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: { result: { value: 2 } } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: { result: { value: 2 } } }));
     await expect(p).resolves.toBe('2');
   });
 
@@ -363,7 +366,9 @@ describe('CdpSession.evaluate', () => {
     const session = await connectAndOpen();
     const p = session.evaluate('void 0');
     await Promise.resolve();
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: { result: { value: null } } }));
+    fakeState.currentFake!.serverSend(
+      JSON.stringify({ id: 1, result: { result: { value: null } } }),
+    );
     await expect(p).resolves.toBe('null');
   });
 
@@ -371,7 +376,7 @@ describe('CdpSession.evaluate', () => {
     const session = await connectAndOpen();
     const p = session.evaluate('someExpression');
     await Promise.resolve();
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: { result: {} } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: { result: {} } }));
     await expect(p).resolves.toBe('null');
   });
 
@@ -379,7 +384,7 @@ describe('CdpSession.evaluate', () => {
     const session = await connectAndOpen();
     const p = session.evaluate('throw new Error("boom")');
     await Promise.resolve();
-    currentFake!.serverSend(
+    fakeState.currentFake!.serverSend(
       JSON.stringify({
         id: 1,
         result: {
@@ -397,7 +402,7 @@ describe('CdpSession.evaluate', () => {
     const session = await connectAndOpen();
     const p = session.evaluate('badCode');
     await Promise.resolve();
-    currentFake!.serverSend(
+    fakeState.currentFake!.serverSend(
       JSON.stringify({
         id: 1,
         result: {
@@ -413,7 +418,7 @@ describe('CdpSession.evaluate', () => {
     const session = await connectAndOpen();
     const p = session.evaluate('badCode');
     await Promise.resolve();
-    currentFake!.serverSend(
+    fakeState.currentFake!.serverSend(
       JSON.stringify({
         id: 1,
         result: {
@@ -433,9 +438,9 @@ describe('CdpSession.evaluate', () => {
 describe('CdpSession.close', () => {
   it('closes the underlying WebSocket', async () => {
     const session = await connectAndOpen();
-    expect(currentFake!.closed).toBe(false);
+    expect(fakeState.currentFake!.closed).toBe(false);
     session.close();
-    expect(currentFake!.closed).toBe(true);
+    expect(fakeState.currentFake!.closed).toBe(true);
   });
 
   it('rejects all pending commands with "CDP session closed."', async () => {
@@ -452,7 +457,7 @@ describe('CdpSession.close', () => {
 
   it('does not throw if ws.close() throws (already closed)', async () => {
     const session = await connectAndOpen();
-    currentFake!.close = () => {
+    fakeState.currentFake!.close = () => {
       throw new Error('already closed');
     };
     // Should not throw.
@@ -477,7 +482,7 @@ describe('CdpSession.close — resource cleanup (RC1)', () => {
     try {
       const promise = connectCdp('ws://localhost/x', 5000, 200);
       await Promise.resolve();
-      currentFake!.triggerOpen();
+      fakeState.currentFake!.triggerOpen();
       const session = await promise;
       const p = session.send('Slow.method');
       await Promise.resolve();
@@ -502,7 +507,9 @@ describe('CdpSession.close — resource cleanup (RC1)', () => {
     session.on('Target.targetCreated', (p) => events.push(p));
     session.close();
     // After close, listeners must be cleared; event must not reach handler.
-    currentFake!.serverSend(JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }));
+    fakeState.currentFake!.serverSend(
+      JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }),
+    );
     await Promise.resolve();
     expect(events).toEqual([]);
   });
@@ -519,7 +526,7 @@ describe('unexpected WebSocket close', () => {
     const p2 = session.send('Pending.two');
     await Promise.resolve();
 
-    currentFake!.triggerClose();
+    fakeState.currentFake!.triggerClose();
 
     await expect(p1).rejects.toThrow('CDP WebSocket closed unexpectedly');
     await expect(p2).rejects.toThrow('CDP WebSocket closed unexpectedly');
@@ -530,9 +537,9 @@ describe('unexpected WebSocket close', () => {
     try {
       const promise = connectCdp('ws://localhost/x', 5000, 200);
       await Promise.resolve();
-      currentFake!.triggerOpen();
+      fakeState.currentFake!.triggerOpen();
       const session = await promise;
-      currentFake!.triggerClose();
+      fakeState.currentFake!.triggerClose();
 
       const p = session.send('After.close');
       await Promise.resolve();
@@ -558,25 +565,27 @@ describe('onmessage edge cases', () => {
     await Promise.resolve();
 
     // Send garbage — should be silently ignored, not crash.
-    currentFake!.serverSend('not valid json {{{');
-    currentFake!.serverSend('');
-    currentFake!.serverSend('{ broken');
+    fakeState.currentFake!.serverSend('not valid json {{{');
+    fakeState.currentFake!.serverSend('');
+    fakeState.currentFake!.serverSend('{ broken');
 
     // The real response still works.
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
     await expect(p).resolves.toBe('ok');
   });
 
   it('ignores messages with no id field', async () => {
     const session = await connectAndOpen();
     // These are events (e.g. Target.targetCreated) — no id, no pending waiter.
-    currentFake!.serverSend(JSON.stringify({ method: 'Target.targetCreated', params: {} }));
-    currentFake!.serverSend(JSON.stringify({ result: 'orphan' }));
+    fakeState.currentFake!.serverSend(
+      JSON.stringify({ method: 'Target.targetCreated', params: {} }),
+    );
+    fakeState.currentFake!.serverSend(JSON.stringify({ result: 'orphan' }));
 
     // Session is still usable.
     const p = session.send('Test.method');
     await Promise.resolve();
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
     await expect(p).resolves.toBe('ok');
   });
 
@@ -585,7 +594,7 @@ describe('onmessage edge cases', () => {
     try {
       const promise = connectCdp('ws://localhost/x', 5000, 200);
       await Promise.resolve();
-      currentFake!.triggerOpen();
+      fakeState.currentFake!.triggerOpen();
       const session = await promise;
       const p = session.send('Test.method');
       await Promise.resolve();
@@ -594,7 +603,7 @@ describe('onmessage edge cases', () => {
       await assertion;
 
       // Late response with the timed-out id — should be silently ignored.
-      currentFake!.serverSend(JSON.stringify({ id: 1, result: 'late' }));
+      fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: 'late' }));
       await Promise.resolve();
       // No crash, no unhandled rejection.
     } finally {
@@ -610,9 +619,9 @@ describe('onmessage edge cases', () => {
     await Promise.resolve();
 
     // Respond out of order.
-    currentFake!.serverSend(JSON.stringify({ id: 2, result: { n: 20 } }));
-    currentFake!.serverSend(JSON.stringify({ id: 3, result: { n: 30 } }));
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: { n: 10 } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 2, result: { n: 20 } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 3, result: { n: 30 } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: { n: 10 } }));
 
     await expect(p1).resolves.toEqual({ n: 10 });
     await expect(p2).resolves.toEqual({ n: 20 });
@@ -639,7 +648,7 @@ describe('connectEventCdp', () => {
     const events: unknown[] = [];
     session.on('Overlay.inspectNodeRequested', (params) => events.push(params));
 
-    currentFake!.serverSend(
+    fakeState.currentFake!.serverSend(
       JSON.stringify({ method: 'Overlay.inspectNodeRequested', params: { backendNodeId: 7 } }),
     );
     await Promise.resolve();
@@ -653,7 +662,9 @@ describe('connectEventCdp', () => {
     session.on('Target.targetCreated', (p) => a.push(p));
     session.on('Target.targetCreated', (p) => b.push(p));
 
-    currentFake!.serverSend(JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }));
+    fakeState.currentFake!.serverSend(
+      JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }),
+    );
     await Promise.resolve();
     expect(a).toEqual([{ x: 1 }]);
     expect(b).toEqual([{ x: 1 }]);
@@ -666,7 +677,9 @@ describe('connectEventCdp', () => {
     session.on('Target.targetCreated', handler);
     session.off('Target.targetCreated', handler);
 
-    currentFake!.serverSend(JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }));
+    fakeState.currentFake!.serverSend(
+      JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }),
+    );
     await Promise.resolve();
     expect(events).toEqual([]);
   });
@@ -681,7 +694,9 @@ describe('connectEventCdp', () => {
     session.on('Target.targetCreated', handlerB);
     session.off('Target.targetCreated', handlerA);
 
-    currentFake!.serverSend(JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }));
+    fakeState.currentFake!.serverSend(
+      JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }),
+    );
     await Promise.resolve();
     expect(a).toEqual([]);
     expect(b).toEqual([{ x: 1 }]);
@@ -690,13 +705,13 @@ describe('connectEventCdp', () => {
   it('ignores events with no subscribers', async () => {
     const session = await connectEventAndOpen();
     // No subscriber — must not throw or corrupt pending map.
-    currentFake!.serverSend(JSON.stringify({ method: 'Some.event', params: { a: 1 } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ method: 'Some.event', params: { a: 1 } }));
     await Promise.resolve();
 
     // Session still usable.
     const p = session.send('Test.method');
     await Promise.resolve();
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
     await expect(p).resolves.toBe('ok');
   });
 
@@ -708,14 +723,16 @@ describe('connectEventCdp', () => {
     });
     session.on('Target.targetCreated', (p) => b.push(p));
 
-    currentFake!.serverSend(JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }));
+    fakeState.currentFake!.serverSend(
+      JSON.stringify({ method: 'Target.targetCreated', params: { x: 1 } }),
+    );
     await Promise.resolve();
     expect(b).toEqual([{ x: 1 }]);
 
     // Socket still usable after the throwing handler.
     const p = session.send('Test.method');
     await Promise.resolve();
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
     await expect(p).resolves.toBe('ok');
   });
 
@@ -725,10 +742,12 @@ describe('connectEventCdp', () => {
     session.on('Log.entryAdded', (p) => events.push(p));
 
     // Event and response interleaved — the event must not steal the response.
-    currentFake!.serverSend(JSON.stringify({ method: 'Log.entryAdded', params: { entry: 1 } }));
+    fakeState.currentFake!.serverSend(
+      JSON.stringify({ method: 'Log.entryAdded', params: { entry: 1 } }),
+    );
     const p = session.evaluate('1+1');
     await Promise.resolve();
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: { result: { value: 2 } } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: { result: { value: 2 } } }));
     await expect(p).resolves.toBe('2');
     expect(events).toEqual([{ entry: 1 }]);
   });
@@ -743,11 +762,11 @@ describe('connectEventCdp', () => {
     await Promise.resolve();
 
     // Interleave an event between the two responses.
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: { n: 10 } }));
-    currentFake!.serverSend(
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: { n: 10 } }));
+    fakeState.currentFake!.serverSend(
       JSON.stringify({ method: 'Target.targetCreated', params: { t: 'new' } }),
     );
-    currentFake!.serverSend(JSON.stringify({ id: 2, result: { n: 20 } }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 2, result: { n: 20 } }));
 
     await expect(p1).resolves.toEqual({ n: 10 });
     await expect(p2).resolves.toEqual({ n: 20 });
@@ -765,7 +784,7 @@ describe('connectEventCdp — error path records timing step', () => {
     try {
       const promise = connectEventCdp('ws://localhost/x');
       await Promise.resolve();
-      currentFake!.triggerError();
+      fakeState.currentFake!.triggerError();
       await expect(promise).rejects.toThrow('CDP connection failed');
 
       // Verify the error-path .catch() branch recorded the step with the
@@ -815,13 +834,13 @@ describe('pending Map ghost response', () => {
   it('silently ignores a response whose id is not in the pending map', async () => {
     const session = await connectAndOpen();
     // No command was sent — id 42 does not exist in pending. Must not throw.
-    currentFake!.serverSend(JSON.stringify({ id: 42, result: 'ghost' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 42, result: 'ghost' }));
     await Promise.resolve();
 
     // Session remains usable after the ghost response.
     const p = session.send('Test.method');
     await Promise.resolve();
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
     await expect(p).resolves.toBe('ok');
   });
 
@@ -831,11 +850,11 @@ describe('pending Map ghost response', () => {
     await Promise.resolve();
 
     // Ghost response for a non-existent id — must not affect p1.
-    currentFake!.serverSend(JSON.stringify({ id: 999, result: 'phantom' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 999, result: 'phantom' }));
     await Promise.resolve();
 
     // The real response still resolves correctly.
-    currentFake!.serverSend(JSON.stringify({ id: 1, result: 'real' }));
+    fakeState.currentFake!.serverSend(JSON.stringify({ id: 1, result: 'real' }));
     await expect(p1).resolves.toBe('real');
   });
 });
