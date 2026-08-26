@@ -81,6 +81,13 @@
 | `analyze-deps.mjs` | 依赖关系分析，生成模块依赖图 |
 | `analyze-rendering-necessity.mjs` | 分析渲染必要性，检测可跳过的渲染操作 |
 
+### 脚手架与 QA 脚本（scaffold-* / qa-*）
+
+| 脚本 | 用途 |
+|------|------|
+| `scaffold-skin-package.mjs` | 皮肤包脚手架生成器：输入 name/slug/agent/colors → 输出完整主题包（manifest + CSS + install/verify/restore 脚本 + SKILL.md + README.md），遵守 14-token 契约 |
+| `qa-skin-package.mjs` | 皮肤包 QA 验证清单：manifest 格式、CSS 语法、图片资源、脚本可执行性、目录结构、路径泄漏、敏感信息 |
+
 ### 其他工具脚本
 
 | 脚本 | 用途 |

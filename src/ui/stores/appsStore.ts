@@ -35,6 +35,7 @@ import { sha256Hex16 } from '@/lib/hash';
 import { useDialogStore } from '@/stores/dialogStore';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useThemeStore } from '@/stores/themeStore';
 
 import { identityKey } from '@shared/app-identity';
 import type {
@@ -351,6 +352,24 @@ export const useAppsStore = create<AppsState>((set, get) => {
       useDialogStore.getState().setLaunchRestartPrompt(null);
       if (!app) return;
       await get().launch(app, { forceRestart: true });
+      // After successful launch, apply the currently selected theme so the
+      // "Launch & apply" flow restarts the app with the theme already active.
+      const themeSel = useThemeStore.getState().selection;
+      if (themeSel) {
+        try {
+          await useThemeStore
+            .getState()
+            .applyToApp(themeSel.theme.id, themeSel.theme.name, appId as AgentId, {
+              restartExisting: true,
+            });
+        } catch (error) {
+          // Theme application failure must not disrupt the launch flow.
+          console.warn(
+            '[appsStore] forceRestartLaunch: applyToApp failed —',
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      }
     },
 
     refreshStatus: async () => {

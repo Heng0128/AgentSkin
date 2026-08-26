@@ -116,6 +116,8 @@ export default defineConfig({
             'tests/main/**/*.test.ts',
             'tests/ui/**/*.test.ts',
             'tests/ui/**/*.test.tsx',
+            'tests/lib/**/*.test.ts',
+            'tests/lib/**/*.test.tsx',
           ],
           testTimeout: 10000,
           pool: 'threads',

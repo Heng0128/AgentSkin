@@ -106,7 +106,7 @@ export function ThemeDetailPanel({
       {/* Panel */}
       <aside
         className={cn(
-          'absolute inset-y-0 right-0 flex w-[400px] flex-col border-l border-border bg-card shadow-lg',
+          'absolute top-0 right-0 flex max-h-[90vh] w-[400px] flex-col border-l border-border bg-card shadow-lg',
           'animate-slide-in-right',
         )}
       >

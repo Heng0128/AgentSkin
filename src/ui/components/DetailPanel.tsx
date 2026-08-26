@@ -273,7 +273,7 @@ export function DetailPanel({
   const isDynamic = Boolean(theme.wallpaper?.video || theme.wallpaper?.workshopId);
 
   return (
-    <aside className="flex h-full w-[400px] shrink-0 flex-col border-l border-border bg-card">
+    <aside className="flex h-full max-h-[90vh] w-[400px] shrink-0 flex-col border-l border-border bg-card">
       {/* Preview — large 16:9 at top */}
       <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
         {isDynamic && videoUrl ? (
