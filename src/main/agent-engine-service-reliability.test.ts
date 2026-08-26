@@ -257,71 +257,15 @@ describe('AgentEngineService Reliability Verification', () => {
   });
 
   // =========================================================================
-  // Section 2: Concurrency Final Consistency
+  // Section 2: Concurrency Final Consistency (unique coverage)
   // =========================================================================
+  // Note: Basic concurrency dedup/ordering tests live in
+  // agent-engine-service.test.ts «apply/restore concurrency» (stronger assertions).
+  // This section covers only reliability-unique scenarios:
+  //   - inflight map cleanup after completion
+  //   - state consistency during interrupted restore
 
   describe('Concurrency final consistency', () => {
-    it('deduplicates same-kind concurrent applies into one execution', async () => {
-      const gate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
-      vi.mocked(applyThemeFlow).mockImplementation(() => gate.promise);
-      const svc = makeService();
-
-      const p1 = svc.apply(APPLY_REQUEST);
-      const p2 = svc.apply(APPLY_REQUEST);
-
-      // Both promises should resolve to the same result
-      gate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
-
-      const [r1, r2] = await Promise.all([p1, p2]);
-      expect(r1.status).toBe('applied');
-      expect(r2.status).toBe('applied');
-
-      // Only one execution should have occurred
-      expect(applyThemeFlow).toHaveBeenCalledTimes(1);
-    });
-
-    it('queues restore behind in-flight apply with deterministic ordering', async () => {
-      const gate = deferred<{ response: ApplyResponse; background: Promise<void> }>();
-      vi.mocked(applyThemeFlow).mockImplementation(() => gate.promise);
-      const svc = await makeServiceWithTheme();
-
-      const applyPromise = svc.apply(APPLY_REQUEST);
-      const restorePromise = svc.restore(TEST_APP);
-
-      // restore should wait for apply cleanup (background follow-ups) to finish
-      expect(restoreThemeFlow).not.toHaveBeenCalled();
-
-      gate.resolve({ response: APPLY_RESPONSE, background: Promise.resolve() });
-      await applyPromise;
-      await restorePromise;
-
-      // verify apply executed before restore
-      const applyOrder = vi.mocked(applyThemeFlow).mock.invocationCallOrder[0];
-      const restoreOrder = vi.mocked(restoreThemeFlow).mock.invocationCallOrder[0];
-      expect(applyOrder).toBeLessThan(restoreOrder!);
-    });
-
-    it('queues apply behind in-flight restore with deterministic ordering', async () => {
-      const gate = deferred<SystemStatus>();
-      vi.mocked(restoreThemeFlow).mockImplementation(() => gate.promise);
-      const svc = await makeServiceWithTheme();
-
-      const restorePromise = svc.restore(TEST_APP);
-      const applyPromise = svc.apply(APPLY_REQUEST);
-
-      // apply should wait for restore to complete
-      expect(applyThemeFlow).not.toHaveBeenCalled();
-
-      gate.resolve(STATUS);
-      await restorePromise;
-      await applyPromise;
-
-      // verify restore executed before apply
-      const restoreOrder = vi.mocked(restoreThemeFlow).mock.invocationCallOrder[0];
-      const applyOrder = vi.mocked(applyThemeFlow).mock.invocationCallOrder[0];
-      expect(restoreOrder).toBeLessThan(applyOrder);
-    });
-
     it('cleans up inflight operations map after completion', async () => {
       const svc = makeService();
 
@@ -1448,24 +1392,17 @@ describe('AgentEngineService Reliability Verification', () => {
       expect(raw.endsWith('\n')).toBe(true);
     });
 
-    it('retries fs operations on transient failure with real tmpdir', async () => {
-      const target = path.join(fsTestDir, 'retry-target.json');
-      let attempts = 0;
+    it('writeJsonAtomic surfaces the first write error without silent retry', async () => {
+      // writeJsonAtomic / atomicWriteJson has no built-in retry: it delegates
+      // to a temp-file → fsync → rename protocol that surfaces the first error.
+      // To trigger a real fs error: create a file as a path component, then
+      // attempt to write THROUGH it as if it were a directory — mkdir will
+      // fail with EEXIST because the component is a regular file, not a dir.
+      const blocker = path.join(fsTestDir, 'blocker-file');
+      writeFileSync(blocker, 'I am a file, not a dir');
+      const target = path.join(blocker, 'target.json');
 
-      for (let i = 0; i < 3; i++) {
-        try {
-          attempts++;
-          if (attempts < 2) throw Object.assign(new Error('transient'), { code: 'ENOENT' });
-          await writeJsonAtomic(target, { attempts });
-          break;
-        } catch (err) {
-          if (i === 2) throw err;
-          await new Promise((r) => setTimeout(r, 10));
-        }
-      }
-
-      expect(attempts).toBe(2);
-      expect(JSON.parse(await readFile(target, 'utf8'))).toEqual({ attempts: 2 });
+      await expect(writeJsonAtomic(target, { foo: 'bar' })).rejects.toThrow();
     });
 
     it('writeJsonAtomic leaves no temp files behind after write', async () => {
