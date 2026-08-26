@@ -57,13 +57,56 @@ export interface StructuredEvent {
 
 const STRUCTURED_PREFIX = '[STRUCTURED]|';
 
+/** Event types emitted by the main process on the structured log channel. */
+const STRUCTURED_EVENT_TYPES = new Set([
+  'boot_agent_start',
+  'cdp_resolving',
+  'cdp_killing',
+  'cdp_spawning',
+  'cdp_ready',
+  'cdp_timeout',
+  'cdp_spawn_failed',
+  'inject_start',
+  'inject_done',
+  'inject_failed',
+  'apply_failed',
+  'restore_failed',
+  'boot_agent_failed',
+  'scheme_sync',
+  'theme_apply',
+  'theme_restore',
+  'boot_agent_done',
+]);
+
+/**
+ * Runtime type guard for a parsed structured-event JSON object.
+ * Validates the `type` field is a known event type and required fields
+ * (`agentId`, `timestamp`) are present with correct types. Returns null
+ * on any structural mismatch so callers can safely skip malformed events.
+ */
+function isStructuredEvent(value: unknown): value is StructuredEvent {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.type !== 'string' || !STRUCTURED_EVENT_TYPES.has(obj.type)) return false;
+  if (typeof obj.agentId !== 'string') return false;
+  if (typeof obj.timestamp !== 'string') return false;
+  // Optional fields — validate type when present.
+  if (obj.themeId !== undefined && typeof obj.themeId !== 'string') return false;
+  if (obj.phase !== undefined && typeof obj.phase !== 'string') return false;
+  if (obj.progress !== undefined && typeof obj.progress !== 'number') return false;
+  if (obj.reason !== undefined && typeof obj.reason !== 'string') return false;
+  if (obj.agentCount !== undefined && typeof obj.agentCount !== 'number') return false;
+  return true;
+}
+
 function parseStructured(line: string): StructuredEvent | null {
   // The renderer wraps each log line as `[time] [Renderer] [INFO] <raw>`,
   // so the structured prefix sits at the end of the message.
   const idx = line.indexOf(STRUCTURED_PREFIX);
   if (idx < 0) return null;
   try {
-    return JSON.parse(line.slice(idx + STRUCTURED_PREFIX.length)) as StructuredEvent;
+    const raw = JSON.parse(line.slice(idx + STRUCTURED_PREFIX.length));
+    return isStructuredEvent(raw) ? raw : null;
   } catch {
     return null;
   }
