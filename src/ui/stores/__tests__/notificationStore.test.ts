@@ -20,11 +20,13 @@ const { mockLocale, mockMessages } = vi.hoisted(() => ({
   mockMessages: {
     'zh-CN': {
       actionFailed: '操作失败',
-      studioTimeoutDesc: 'IPC 通道 {channel} 超时 {ms/1000} 秒',
+      studioTimeoutDesc: (channel: string, seconds: string) =>
+        `IPC 通道 ${channel} 超时 ${seconds} 秒`,
     },
     'en-US': {
       actionFailed: 'Action failed',
-      studioTimeoutDesc: 'IPC channel {channel} timed out after {ms/1000}s',
+      studioTimeoutDesc: (channel: string, seconds: string) =>
+        `IPC channel ${channel} timed out after ${seconds}s`,
     },
   },
 }));

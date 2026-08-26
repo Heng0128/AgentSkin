@@ -54,5 +54,6 @@
 
 | 报告 | 日期时间 | 方向 | 状态 |
 |------|----------|------|------|
+| `PREINSPECTION_REPORT_2026-08-26-0900.md` | 2026-08-26 09:00 | 预存问题与测试问题巡检 | COMPLETED |
 | `INSPECTION_REPORT_2026-08-26-0700.md` | 2026-08-26 07:00 | H — Studio 工程瘦身 | COMPLETED |
 | `INSPECTION_REPORT_2026-08-26-0600.md` | 2026-08-26 06:00 | M — 工程卫生 | COMPLETED |

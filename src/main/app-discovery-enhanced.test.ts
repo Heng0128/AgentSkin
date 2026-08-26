@@ -11,11 +11,10 @@ import path from 'node:path';
 import { APP_REGISTRY, getAppVersion, scanApps } from './app-discovery-enhanced';
 
 const mockExec = vi.mocked(execFile);
-const cb =
-  (val: string) => (_c: string, _a: string[], _o: object, fn: (e: null, s: string) => void) => {
-    fn(null, val);
-    return {} as never;
-  };
+const cb = (val: string) => (_c: string, _a: any, _o: any, fn: any) => {
+  fn(null, val);
+  return {} as never;
+};
 
 describe('app-discovery-enhanced', () => {
   let tempDir: string;
@@ -56,8 +55,8 @@ describe('app-discovery-enhanced', () => {
     });
 
     it('returns null on exec failure', async () => {
-      mockExec.mockImplementation((_c, _a, _o, fn) => {
-        fn(new Error('ENOENT'), '');
+      mockExec.mockImplementation((_c, _a, _o, fn: any) => {
+        fn(new Error('ENOENT'), '', '');
         return {} as never;
       });
       expect(await getAppVersion('/usr/bin/missing', 'linux')).toBeNull();
@@ -108,8 +107,8 @@ describe('app-discovery-enhanced', () => {
     it('discovers app via which resolution', async () => {
       vi.spyOn(process, 'platform', 'get').mockReturnValue('linux');
       process.env.HOME = '/home/test';
-      mockExec.mockImplementation((_c, _a, _o, fn) => {
-        fn(null, _c === 'which' ? '/usr/bin/doubao\n' : 'doubao 1.8.0\n');
+      mockExec.mockImplementation((_c, _a, _o, fn: any) => {
+        fn(null, _c === 'which' ? '/usr/bin/doubao\n' : 'doubao 1.8.0\n', '');
         return {} as never;
       });
       const results = await scanApps('doubao', { strategy: 'quick', platform: 'linux' });

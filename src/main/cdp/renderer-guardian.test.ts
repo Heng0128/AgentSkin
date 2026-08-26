@@ -151,7 +151,7 @@ describe('recreation (debounce)', () => {
       { port: 9222, rendererHint: 'chat', onRendererRecreated: onRecreated },
       { resolveRenderer: resolveHint },
     );
-    g.stableTargetId = 'OLD';
+    (g as any).stableTargetId = 'OLD';
     await g.startWatching();
     handlers.get('Target.targetDestroyed')!({ targetId: 'OLD' });
     handlers.get('Target.targetCreated')!({ targetId: 'NEW1' });
@@ -171,7 +171,7 @@ describe('recreation (debounce)', () => {
       { port: 9222, rendererHint: 'chat', onRendererRecreated: onRecreated },
       { resolveRenderer: resolveHint },
     );
-    g.stableTargetId = 'STABLE';
+    (g as any).stableTargetId = 'STABLE';
     await g.startWatching();
     handlers.get('Target.targetDestroyed')!({ targetId: 'OTHER' });
     handlers.get('Target.targetCreated')!({ targetId: 'NEW' });
@@ -197,7 +197,7 @@ describe('health check & failure threshold', () => {
       { port: 9222, rendererHint: 'chat', onInjectionLost: onLost },
       { resolveRenderer: resolveHint, checkInjection: async () => false },
     );
-    gLost.stableTargetId = 'T1';
+    (gLost as any).stableTargetId = 'T1';
     await gLost.startWatching();
     await vi.advanceTimersByTimeAsync(5100);
     expect(onLost).toHaveBeenCalled();
@@ -207,7 +207,7 @@ describe('health check & failure threshold', () => {
       { port: 9222, rendererHint: 'chat', onInjectionLost: onLost },
       { resolveRenderer: resolveHint, checkInjection: async () => true },
     );
-    gIntact.stableTargetId = 'T1';
+    (gIntact as any).stableTargetId = 'T1';
     await gIntact.startWatching();
     await vi.advanceTimersByTimeAsync(5100);
     expect(gIntact.isHealthy).toBe(true);
@@ -222,7 +222,7 @@ describe('health check & failure threshold', () => {
       { port: 9222, rendererHint: 'chat', maxFailures: 2, onInjectionLost: onLost },
       { resolveRenderer: resolveHint, checkInjection: async () => false },
     );
-    g.stableTargetId = 'T1';
+    (g as any).stableTargetId = 'T1';
     await g.startWatching();
     await vi.advanceTimersByTimeAsync(5100);
     expect(g.failureCount).toBe(1);

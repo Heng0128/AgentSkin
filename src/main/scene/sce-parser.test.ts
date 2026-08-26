@@ -42,7 +42,9 @@ function clearMockFiles() {
 
 beforeEach(() => {
   clearMockFiles();
-  vi.mocked(fs.readFile).mockImplementation(async (filePath: Parameters<typeof fs.readFile>[0]) => {
+  vi.mocked(fs.readFile).mockImplementation(((
+    filePath: string | Buffer | URL | NodeJS.ArrayBufferView,
+  ) => {
     const p = String(filePath).replace(/\\/g, '/');
     // Try direct match first, then resolve
     if (p in mockFiles) {
@@ -56,7 +58,7 @@ beforeEach(() => {
       }
     }
     throw new Error(`ENOENT: no such file or directory, open '${p}'`);
-  });
+  }) as unknown as typeof fs.readFile);
   vi.mocked(fs.stat).mockImplementation(async (filePath: Parameters<typeof fs.stat>[0]) => {
     const p = String(filePath).replace(/\\/g, '/');
     if (p.endsWith('project.json') && mockFiles[p.replace(/.*\/?/, '')] !== undefined) {
@@ -205,13 +207,13 @@ describe('parseSce', () => {
     const particle = result!.objects.find((o) => o.id === 1);
     expect(particle).toBeDefined();
     expect(particle!.name).toBe('particle_1');
-    expect(particle!.config.rate).toBe(100);
-    expect(particle!.config.sizeMin).toBe(5); // 10 * 0.5
-    expect(particle!.config.sizeMax).toBe(10);
-    expect(particle!.config.speed).toBe(5);
-    expect(particle!.config.alpha || particle!.alpha).toBeDefined();
+    expect(particle!.config!.rate).toBe(100);
+    expect(particle!.config!.sizeMin).toBe(5); // 10 * 0.5
+    expect(particle!.config!.sizeMax).toBe(10);
+    expect(particle!.config!.speed).toBe(5);
+    expect(particle!.config!.alpha || particle!.alpha).toBeDefined();
     expect(particle!.alpha).toBeCloseTo(0.8);
-    expect(particle!.config.lifespan).toBe(3000);
+    expect(particle!.config!.lifespan).toBe(3000);
   });
 
   it('parses particles with scalar size (min = size * 0.5)', async () => {
@@ -223,8 +225,8 @@ describe('parseSce', () => {
     );
     const result = await parseSce('/fake/sce-project');
     const particle = result!.objects.find((o) => o.id === 1);
-    expect(particle!.config.sizeMin).toBe(10);
-    expect(particle!.config.sizeMax).toBe(20);
+    expect(particle!.config!.sizeMin).toBe(10);
+    expect(particle!.config!.sizeMax).toBe(20);
   });
 
   it('parses particles with {min, max} size', async () => {
@@ -236,8 +238,8 @@ describe('parseSce', () => {
     );
     const result = await parseSce('/fake/sce-project');
     const particle = result!.objects.find((o) => o.id === 1);
-    expect(particle!.config.sizeMin).toBe(3);
-    expect(particle!.config.sizeMax).toBe(15);
+    expect(particle!.config!.sizeMin).toBe(3);
+    expect(particle!.config!.sizeMax).toBe(15);
   });
 
   it('parses effects array', async () => {
@@ -271,10 +273,7 @@ describe('parseSce', () => {
     setMockFile(
       'project.json',
       makeProjectJson({
-        effects: [
-          // @ts-expect-error testing unknown type handling
-          { type: 'unknown-effect' },
-        ],
+        effects: [{ type: 'unknown-effect' }],
       }),
     );
     const result = await parseSce('/fake/sce-project');

@@ -49,11 +49,12 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { mainError } from '../logger';
+import type { AgentSkinTokenKey, AgentSkinTokens } from './shared-color-utils';
 import { adjustBrightness, getContrastColor, hexToRgb, wcagLuminance } from './shared-color-utils';
 import { normalizeTitle } from './shared-utils';
 
-export type { AgentSkinTokenKey, AgentSkinTokens } from './shared-color-utils';
 // Re-exports for consumers that import these types from this module.
+export type { AgentSkinTokenKey, AgentSkinTokens } from './shared-color-utils';
 export { AGENTSKIN_TOKEN_KEYS } from './shared-color-utils';
 
 // ---------------------------------------------------------------------------

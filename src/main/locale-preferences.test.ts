@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -43,14 +44,14 @@ describe('locale preferences', () => {
 
   it('flushLocalePreference writes preferences synchronously', () => {
     flushLocalePreference(root, 'en');
-    const content = fs.readFileSync(path.join(root, 'preferences.json'), 'utf8');
+    const content = fsSync.readFileSync(path.join(root, 'preferences.json'), 'utf8');
     expect(content).toContain('"locale": "en"');
   });
 
   it('flushLocalePreference overwrites previous locale', async () => {
     await saveLocalePreference(root, 'en');
     flushLocalePreference(root, 'zh-CN');
-    const content = fs.readFileSync(path.join(root, 'preferences.json'), 'utf8');
+    const content = fsSync.readFileSync(path.join(root, 'preferences.json'), 'utf8');
     expect(content).toContain('"locale": "zh-CN"');
   });
 });

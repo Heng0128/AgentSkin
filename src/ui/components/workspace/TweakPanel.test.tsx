@@ -66,6 +66,10 @@ const mockT = {
   workspaceTweakShadowSm: 'SM',
   workspaceTweakShadowMd: 'MD',
   workspaceTweakShadowLg: 'LG',
+  workspaceGroupColor: '颜色',
+  workspaceGroupShape: '形状',
+  workspaceGroupTypography: '排版',
+  workspaceGroupMotion: '动效',
   studioToolboxReset: 'Reset',
 } as unknown as UiMessages;
 

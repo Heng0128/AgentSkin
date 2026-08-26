@@ -182,7 +182,7 @@ describe('wallpaper-self-heal', () => {
       expect(thunk1).not.toBeNull();
 
       // Start the thunk (it will block on the inner promise)
-      const thunkPromise = thunk1();
+      const thunkPromise = thunk1!();
 
       // While first self-heal is pending, more failures should be suppressed
       // (concurrent guard blocks re-entry)

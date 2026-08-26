@@ -43,6 +43,13 @@ vi.mock('./with-monitored-timeout', () => ({
   withMonitoredTimeout: <T>(_channel: string, _ms: number, promise: Promise<T>) => promise,
 }));
 
+vi.mock('../community/community-theme-converter', () => ({
+  convertThemePackage: vi.fn().mockResolvedValue({
+    themeId: 'community-dreamskin-001',
+    manifestJson: '{"id":"community-dreamskin-001","name":"Aurora"}',
+  }),
+}));
+
 // Import after mocks are declared.
 const { registerCommunityThemeIpc } = await import('./community-theme-ipc');
 
@@ -100,7 +107,7 @@ function makeMockDeps(): MainContext {
     locale: 'zh-CN',
     userDataRoot: '/tmp/test',
     library: {
-      installBytes: vi.fn().mockResolvedValue({ id: 'community-dreamskin-001', name: 'Aurora' }),
+      installFile: vi.fn().mockResolvedValue({ id: 'community-dreamskin-001', name: 'Aurora' }),
     },
     settings: {},
     fileOpens: { handlePath: vi.fn() },
