@@ -105,6 +105,9 @@ export function registerIpc(ctx: MainContext, updateTrayMenu: () => Promise<void
       const target = ctx.studioWindow ?? ctx.mainWindow;
       target?.webContents.send(channel, payload);
     },
+    // Share the agent CDP session pool so Studio live-inspect reuses existing
+    // target connections instead of handshaking a fresh socket per session.
+    pool: ctx.core.getCdpSessionPool(),
   });
 
   // Tear down any live CDP inspect session when the studio window closes —

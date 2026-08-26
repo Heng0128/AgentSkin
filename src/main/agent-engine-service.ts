@@ -719,6 +719,11 @@ export class AgentEngineService implements AgentEngineServiceApi {
     return this.lastPersistErrorMessage;
   }
 
+  /** Expose the per-agent CDP session pool for cross-subsystem reuse (e.g. Studio live-inspect). */
+  getCdpSessionPool(): CdpSessionPool {
+    return this.cdpSessionPool;
+  }
+
   // -----------------------------------------------------------------------
   // State accessors (delegated to registry)
   // -----------------------------------------------------------------------

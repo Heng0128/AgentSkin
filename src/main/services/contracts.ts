@@ -41,6 +41,7 @@ import type {
   WallpaperSettings,
 } from '../../shared/types';
 import type { ConcurrencyMetrics } from '../../shared/types/concurrency';
+import type { CdpSessionPool } from '../cdp/session-pool';
 import type { ThemeBundle } from './theme-bundle';
 
 // ---------------------------------------------------------------------------
@@ -373,4 +374,10 @@ export interface AgentEngineServiceApi {
    * persist succeeded. Useful for surfacing silent storage errors to the UI.
    */
   lastPersistError(): string | null;
+  /**
+   * Expose the per-agent CDP session pool so other subsystems (e.g. Studio
+   * live-inspect) can reuse existing target connections instead of handshaking
+   * a fresh socket for every short-lived operation.
+   */
+  getCdpSessionPool(): CdpSessionPool;
 }
