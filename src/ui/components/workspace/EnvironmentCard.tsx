@@ -110,7 +110,8 @@ export function EnvironmentCard({
   t: UiMessages;
   progress?: AgentProgress | null;
 }) {
-  const hasActions = env.presetId && (onRename || onDuplicate || onDelete);
+  const presetId = env.presetId;
+  const hasActions = presetId && (onRename || onDuplicate || onDelete);
   const _accent = statusAccent[env.status];
 
   const statusLabel = (() => {
