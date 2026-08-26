@@ -16,6 +16,7 @@
 
 | 脚本 | 用途 |
 |------|------|
+| `check-suite.mjs` | 全量校验调度器：独立运行所有 check 脚本，收集结果并汇总（避免 `&&` 短路导致后续检查被跳过） |
 | `check-architecture-boundaries.mjs` | 验证分层依赖方向（C4）：UI → preload → IPC → 主进程 → 适配器 |
 | `check-design-tokens.mjs` | 验证设计 token 合规（C6）：间距、字号、圆角、阴影、硬编码颜色、内联 box-shadow |
 | `check-injection-contract.mjs` | 验证 AgentId 四源一致（C1）：主进程、渲染进程、引擎、Store 中的 AgentId 一致 |

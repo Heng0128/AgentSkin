@@ -35,7 +35,7 @@
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
     "design-tokens": "node scripts/check-design-tokens.mjs",
-    "check": "biome check src/ && tsc --noEmit && node scripts/check-design-tokens.mjs && node scripts/check-i18n.mjs && node scripts/check-themes.mjs && node scripts/check-architecture-boundaries.mjs && node scripts/check-injection-contract.mjs && node scripts/check-store-contracts.mjs && node scripts/check-native-defect-consistency.mjs && node scripts/check-license-header.mjs && node scripts/check-theme-staleness.mjs && node scripts/check-semantic-contract.mjs && node scripts/check-specificity-budget.mjs && node scripts/check-dependency-audit.mjs && node scripts/check-selector-fragility.mjs && node scripts/generate-defect-fixes-doc.mjs --verify",
+    "check": "node scripts/check-suite.mjs",
     "check:fast": "biome check src/ && tsc --noEmit && node scripts/check-design-tokens.mjs && node scripts/check-i18n.mjs",
     "check:defect-doc": "node scripts/generate-defect-fixes-doc.mjs --verify",
     "package": "electron-builder --win --x64 --publish never",
