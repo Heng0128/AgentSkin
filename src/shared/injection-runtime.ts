@@ -41,15 +41,67 @@ import {
 import { AGENT_IDS } from './types';
 
 /**
+ * Three-tier verdict for theme application state.
+ *
+ *   - `full`    — accent + sheets + all required layers present (and hero resolved
+ *                 when required). Safe to skip re-injection.
+ *   - `partial` — accent and sheets exist but some required layer is missing, or
+ *                 layers data is unavailable (old client), or hero not resolved.
+ *                 Watchdog should re-inject the missing layers.
+ *   - `failed`  — no accent or no owned sheets at all. Full re-injection needed.
+ *
+ * RC4-A: replaces the boolean `isThemeFullyApplied` with graded degradation so
+ * the watchdog can make a nuanced decision instead of a binary skip/re-inject.
+ */
+export type ThemeApplyVerdict = 'full' | 'partial' | 'failed';
+
+/**
+ * Determine the detailed theme application verdict based on a verifyTheme result.
+ *
+ * This is the RC4-A enhanced version that returns a three-tier verdict instead
+ * of a flat boolean. New code should use this function; existing callers that
+ * need a boolean can use {@link isThemeFullyApplied} (which maps `full` → true,
+ * everything else → false).
+ *
+ * Consumers: waitForTheme (shared.ts), watchdog skip decision (cdp-fanout.ts),
+ * watchdog reload decision (reload-watchdog.ts).
+ */
+export function isThemeFullyApplyVerdict(
+  v: {
+    accent: string;
+    adoptedSheetCount: number;
+    layers?: Record<string, number>;
+    artResolved?: boolean;
+  },
+  opts?: {
+    /** When true, require the hero art variable to actually resolve. */
+    requireHero?: boolean;
+  },
+): ThemeApplyVerdict {
+  if (!v || v.adoptedSheetCount <= 0) return 'failed';
+  if (!v.accent) return 'failed';
+  // If layers data is unavailable (old client), we cannot confirm full —
+  // report 'partial' so the watchdog still re-injects rather than skipping.
+  if (!v.layers) return opts?.requireHero && v.artResolved === true ? 'full' : 'partial';
+  const required = ['palette', 'tokens', 'cosmetic'];
+  for (const layer of required) {
+    if (!v.layers[layer] || v.layers[layer] <= 0) return 'partial';
+  }
+  // Hero gating: when the theme carries a hero, an unresolved art variable means
+  // the background is still a solid color — treat as 'partial' so the watchdog
+  // re-injects the hero blob.
+  if (opts?.requireHero && !v.artResolved) return 'partial';
+  return 'full';
+}
+
+/**
  * Determine whether the theme is fully applied based on a verifyTheme result.
  *
- * Three conditions must ALL hold:
- *   1. accent token is non-empty (CSS variable actually inherited/cascade)
- *   2. At least one owned adoptedStyleSheet exists
- *   3. Every required engine layer (palette, tokens, cosmetic) is present
- *      with ruleCount > 0 (when layer data is available)
+ * Backward-compatible boolean wrapper around {@link isThemeFullyApplyVerdict}.
+ * Maps `full` → true, `partial`/`failed` → false.
  *
- * Consumers: waitForTheme (shared.ts), watchdog skip decision (cdp-fanout.ts).
+ * @deprecated Use {@link isThemeFullyApplyVerdict} for new code that needs to
+ * distinguish partial from failed states.
  */
 export function isThemeFullyApplied(
   v: {
@@ -59,23 +111,11 @@ export function isThemeFullyApplied(
     artResolved?: boolean;
   },
   opts?: {
-    /** When true, require the hero art variable to actually resolve. */ requireHero?: boolean;
+    /** When true, require the hero art variable to actually resolve. */
+    requireHero?: boolean;
   },
 ): boolean {
-  if (!v || v.adoptedSheetCount <= 0) return false;
-  if (!v.accent) return false;
-  // If layers data is unavailable (old client), fall back to count-only check;
-  // when the theme requires a hero, still gate on art actually resolving so a
-  // lost hero blob (CSS present, background empty) is not treated as complete.
-  if (!v.layers) return opts?.requireHero ? v.artResolved === true : true;
-  const required = ['palette', 'tokens', 'cosmetic'];
-  for (const layer of required) {
-    if (!v.layers[layer] || v.layers[layer] <= 0) return false;
-  }
-  // 2026-08-23 hero 修复:当主题带 hero 背景时，若 --agentskin-art 未解析为
-  // url(blob:)，则不视为"已完全应用"，watchdog 才不会被跳过、从而补注入 hero。
-  if (opts?.requireHero && !v.artResolved) return false;
-  return true;
+  return isThemeFullyApplyVerdict(v, opts) === 'full';
 }
 
 // ---------------------------------------------------------------------------
