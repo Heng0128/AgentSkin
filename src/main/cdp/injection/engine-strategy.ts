@@ -33,7 +33,6 @@ import {
 import {
   buildClearEngineInjectionExpression,
   CLEAR_ADAPTERS_BODY,
-  isThemeFullyApplied,
 } from '../../../shared/injection-runtime';
 import { mainWarnFromCatch } from '../../logger';
 import type { CdpSession } from '../cdp-client';
@@ -284,17 +283,16 @@ export async function injectThemeViaEngine(
   // below still sets the shared `SESSION_DISABLED_KEY` as belt-and-suspenders.
 
   // --- Step 6: Verify (polling with timeout) ---
-  const verification = await waitForTheme(session, {
+  const { verification, applied } = await waitForTheme(session, {
     timeoutMs: verifyTimeoutMs,
     intervalMs: verifyIntervalMs,
     minDelayMs: verifyDelayMs,
   });
 
-  const success =
-    layersInjected >= 2 &&
-    adapterApplied &&
-    verification !== null &&
-    isThemeFullyApplied(verification, { requireHero: heroInjected });
+  // RC4-A: waitForTheme returns a rich WaitForThemeResult. `applied` is the
+  // backward-compatible boolean (verdict === 'full'), equivalent to the old
+  // isThemeFullyApplied(verification, { requireHero }) check.
+  const success = layersInjected >= 2 && adapterApplied && applied;
 
   return { layersInjected, adapterApplied, heroInjected, imagesInjected, verification, success };
 }

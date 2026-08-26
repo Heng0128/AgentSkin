@@ -156,13 +156,13 @@ export async function injectThemeViaCdp(
   let cssInjected = await injectCssAdopted(session, css);
 
   // --- Step 4: Verify (+ retry with polling) ---
-  let verification = await waitForTheme(session, {
+  let { verification } = await waitForTheme(session, {
     timeoutMs: 3000,
     intervalMs: verifyIntervalMs,
     minDelayMs: verifyDelayMs,
   });
 
-  if (!verification?.heroBlobActive && heroInjected) {
+  if (verification && !verification.heroBlobActive && heroInjected) {
     // Hero might have been GC'd or page re-rendered; retry once.
     for (let i = 0; i < retries && !verification?.heroBlobActive; i++) {
       if (imageSet) {
