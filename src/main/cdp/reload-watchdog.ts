@@ -37,6 +37,13 @@ import type { AgentId } from '../../shared/types';
 import { type CdpSession, connectEventCdp, type EventCdpSession } from './cdp-client';
 import type { InjectEngineResult } from './cdp-inject';
 import { verifyTheme } from './injection/shared';
+import {
+  acquireSession,
+  type CdpSessionPool,
+  releaseSession,
+  type SessionHandle,
+  targetKeyFor,
+} from './session-pool';
 
 /** Debounce so a burst of nav events (redirects, initial load) coalesces. */
 const RELOAD_DEBOUNCE_MS = 600;
@@ -67,11 +74,23 @@ export interface AttachReloadWatchdogOptions {
   imageFilePaths?: Record<string, string> | null;
   epoch: number;
   deps: ReloadWatchdogDeps;
+  /**
+   * Optional session pool. When provided, the watchdog session is acquired
+   * from the pool (reusing an existing connection to the same target) and
+   * released back on detach. Without a pool a one-shot connect-then-close
+   * session is used (backwards-compatible path for callers that don't pass
+   * one).
+   */
+  pool?: CdpSessionPool;
 }
 
 interface ReloadWatchdogState {
   options: AttachReloadWatchdogOptions;
   session?: EventCdpSession;
+  /** Pool targetKey — needed to release the session back to the pool. */
+  targetKey?: string;
+  /** Whether the session was acquired from the pool (release) or one-shot (close). */
+  pooled?: boolean;
   navHandler?: (params: unknown) => void;
   navTimer?: ReturnType<typeof setTimeout>;
   closed: boolean;
@@ -104,24 +123,39 @@ export function attachReloadWatchdog(options: AttachReloadWatchdogOptions): void
 }
 
 async function openWatchdogSession(state: ReloadWatchdogState): Promise<void> {
-  const { appId, deps } = state.options;
-  let session: EventCdpSession | null = null;
+  const { appId, deps, pool } = state.options;
+  const targetKey = targetKeyFor(null, state.options.pageTargetUrl);
+  let handle: SessionHandle = { session: null, pooled: false };
   try {
-    session = await connectEventCdp(state.options.pageTargetUrl!);
+    handle = await acquireSession(pool, appId, targetKey, () =>
+      connectEventCdp(state.options.pageTargetUrl!),
+    );
   } catch (error) {
     deps.log(`[reload-watchdog] ${appId}: open failed: ${toMessage(error)}`);
     return;
   }
+  // The pool stores CdpSession, but our open callback created an
+  // EventCdpSession — cast so we can subscribe to CDP events (event
+  // delegation: the pooled socket is shared, events are dispatched here).
+  const session = handle.session as EventCdpSession | null;
   if (state.closed) {
-    session.close();
+    if (handle.pooled) {
+      releaseSession(pool, appId, targetKey);
+    } else {
+      session?.close();
+    }
     return;
   }
   state.session = session;
+  state.targetKey = targetKey;
+  state.pooled = handle.pooled;
   const navHandler = (): void => handleNavigationEvent(state);
   state.navHandler = navHandler;
-  session.on('Page.loadEventFired', navHandler);
+  if (session) {
+    session.on('Page.loadEventFired', navHandler);
+  }
   try {
-    await session.send('Page.enable'); // deliver Page.* events
+    if (session) await session.send('Page.enable'); // deliver Page.* events
   } catch {
     // best-effort — some targets already emit without explicit enable.
   }
@@ -191,10 +225,15 @@ export function detachReloadWatchdog(appId: AgentId): void {
   if (state.navTimer) clearTimeout(state.navTimer);
   if (state.session) {
     if (state.navHandler) state.session.off('Page.loadEventFired', state.navHandler);
-    try {
-      state.session.close();
-    } catch {
-      // Already closed.
+    if (state.pooled && state.targetKey) {
+      // Pooled session: release back to the pool instead of closing.
+      releaseSession(state.options.pool, appId, state.targetKey);
+    } else {
+      try {
+        state.session.close();
+      } catch {
+        // Already closed.
+      }
     }
   }
 }
