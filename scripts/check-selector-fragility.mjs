@@ -30,7 +30,7 @@
  *   1 — critical error (file not readable, etc.)
  */
 
-import fs, { glob } from 'node:fs/promises';
+import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const THEMES_DIR = path.resolve(process.cwd(), 'themes');
@@ -292,7 +292,8 @@ async function main() {
     }
   }
 
-  // Count files in engines and src by re-scanning quickly (approximate)
+  // Count engines/src CSS files via lightweight directory walk
+  // (scanDirectory already scanned content; this only counts unscanned files)
   try {
     const countFiles = async (dir) => {
       let count = 0;
