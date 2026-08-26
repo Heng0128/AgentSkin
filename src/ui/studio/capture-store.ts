@@ -483,6 +483,3 @@ export const useCaptureStore = create<CaptureState>()((set, get) => ({
     set({ liveNode: node, liveError: null });
   },
 }));
-
-// Re-export helpers for external consumers
-export { asToolOverride, pushUndo, releaseLock, serializeToolOverride, tryAcquireLock };

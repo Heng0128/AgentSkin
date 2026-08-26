@@ -36,6 +36,7 @@ import { connectCdp } from '../cdp/cdp-client';
 import { findDomTargets } from '../cdp/cdp-targets';
 import { captureDomTree } from '../cdp/dom-tree';
 import { type InspectController, startInspect } from '../cdp/inspect-session';
+import type { CdpSessionPool } from '../cdp/session-pool';
 import { snapshotThemeVisuals } from '../cdp/snapshot-theme';
 import { writeJsonAtomic } from '../fs-utils';
 import { assertAgentId, assertSafeThemeId } from './ipc-validators';
@@ -52,6 +53,8 @@ export function registerStudioIpc(deps: {
   log: (line: string) => void;
   /** Push a main→renderer event. Wired to the main window's webContents. */
   push: (channel: string, payload: unknown) => void;
+  /** Optional CDP session pool for reusing inspect connections. */
+  pool?: CdpSessionPool;
 }): { stopAllInspects: () => Promise<void> } {
   // Single active live-inspect session (one agent at a time).
   let activeInspect: InspectController | null = null;
@@ -163,6 +166,7 @@ export function registerStudioIpc(deps: {
             onPick: (node) => deps.push(IpcChannel.THEME_STUDIO_INSPECT_RESULT, node),
             onError: (message) =>
               deps.push(IpcChannel.THEME_STUDIO_INSPECT_RESULT, { error: message }),
+            pool: deps.pool,
           });
           return { ok: true };
         })(),
