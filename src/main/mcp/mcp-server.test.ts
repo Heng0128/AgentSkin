@@ -137,6 +137,18 @@ describe('createMcpServer', () => {
 
     // All 3 tools attempted
     expect(mockRegisterTool).toHaveBeenCalledTimes(3);
+
+    // Verify good_1 and good_2 were actually registered (not just attempted)
+    expect(mockRegisterTool).toHaveBeenCalledWith(
+      'good_1',
+      expect.objectContaining({ description: 'Tool: good_1' }),
+      expect.any(Function),
+    );
+    expect(mockRegisterTool).toHaveBeenCalledWith(
+      'good_2',
+      expect.objectContaining({ description: 'Tool: good_2' }),
+      expect.any(Function),
+    );
   });
 
   it('passes inputSchema.shape as the schema to registerTool', async () => {

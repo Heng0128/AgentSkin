@@ -100,18 +100,21 @@ describe('Service Contract Conformity', () => {
     it('stub methods return expected default values', async () => {
       const stub = makeThemeLibraryStub();
 
-      // Verify async methods return promises
+      // Verify async methods return promises with correct resolved values
       const entriesResult = stub.entries();
       expect(entriesResult).toBeInstanceOf(Promise);
-      await entriesResult;
+      const entries = await entriesResult;
+      expect(entries).toEqual([]);
 
       const summariesResult = stub.summaries();
       expect(summariesResult).toBeInstanceOf(Promise);
-      await summariesResult;
+      const summaries = await summariesResult;
+      expect(summaries).toEqual([]);
 
       const findResult = stub.find('test-theme');
       expect(findResult).toBeInstanceOf(Promise);
-      await findResult;
+      const found = await findResult;
+      expect(found).toBeNull();
     });
 
     it('stub sync methods return expected types', () => {
@@ -135,14 +138,16 @@ describe('Service Contract Conformity', () => {
     it('stub methods return expected default values', async () => {
       const stub = makeSettingsStub();
 
-      // Verify async methods return promises
+      // Verify async methods return promises with correct resolved values
       const initResult = stub.initialize();
       expect(initResult).toBeInstanceOf(Promise);
-      await initResult;
+      const init = await initResult;
+      expect(init).toBeUndefined();
 
       const setAppPathResult = stub.setAppPath('traework', '/path/to/app');
       expect(setAppPathResult).toBeInstanceOf(Promise);
-      await setAppPathResult;
+      const setAppPath = await setAppPathResult;
+      expect(setAppPath).toBeUndefined();
     });
 
     it('stub sync methods return expected types', () => {
@@ -188,18 +193,21 @@ describe('Service Contract Conformity', () => {
     it('stub methods return expected default values', async () => {
       const stub = makeWallpaperResolverStub();
 
-      // All methods should return promises
+      // All methods should return promises with correct resolved values
       const videoResult = stub.videoPathFor('test-wp');
       expect(videoResult).toBeInstanceOf(Promise);
-      await videoResult;
+      const video = await videoResult;
+      expect(video).toBeNull();
 
       const mediaResult = stub.mediaInfoFor('test-wp');
       expect(mediaResult).toBeInstanceOf(Promise);
-      await mediaResult;
+      const media = await mediaResult;
+      expect(media).toBeNull();
 
       const webResult = stub.webUrlFor('test-wp');
       expect(webResult).toBeInstanceOf(Promise);
-      await webResult;
+      const web = await webResult;
+      expect(web).toBeNull();
     });
   });
 
