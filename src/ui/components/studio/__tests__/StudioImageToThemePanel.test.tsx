@@ -231,14 +231,14 @@ describe('StudioImageToThemePanel', () => {
   // -----------------------------------------------------------------------
   // 5. Extracting state: shows extracting text
   // -----------------------------------------------------------------------
-  it('shows extracting text when status is extracting', () => {
+  it('falls back to idle upload zone when status is extracting without a file', () => {
     mockStatus = 'extracting';
 
     const html = renderPanel();
     // In extracting state without a file, the component falls through to idle
-    // (file is null). This is acceptable — the store guards against this.
-    // The important thing is no crash.
-    expect(html).toBeDefined();
+    // (file is null). Verify the idle upload zone is rendered.
+    expect(html).toContain('Drop to Upload');
+    expect(html).toContain('Drag or Click to Upload');
   });
 
   // -----------------------------------------------------------------------

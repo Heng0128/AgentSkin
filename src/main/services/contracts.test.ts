@@ -264,6 +264,7 @@ describe('AgentEngineServiceApi Structural Contract', () => {
       dispose: true,
       disposeAsync: true,
       lastPersistError: true,
+      getCdpSessionPool: true,
     };
 
     // Touch the value so the compiler does not tree-shake it away,

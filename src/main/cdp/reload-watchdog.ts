@@ -138,11 +138,15 @@ async function openWatchdogSession(state: ReloadWatchdogState): Promise<void> {
   // EventCdpSession — cast so we can subscribe to CDP events (event
   // delegation: the pooled socket is shared, events are dispatched here).
   const session = handle.session as EventCdpSession | null;
+  if (!session) {
+    deps.log(`[reload-watchdog] ${appId}: open returned no session`);
+    return;
+  }
   if (state.closed) {
     if (handle.pooled) {
       releaseSession(pool, appId, targetKey);
     } else {
-      session?.close();
+      session.close();
     }
     return;
   }
@@ -151,11 +155,9 @@ async function openWatchdogSession(state: ReloadWatchdogState): Promise<void> {
   state.pooled = handle.pooled;
   const navHandler = (): void => handleNavigationEvent(state);
   state.navHandler = navHandler;
-  if (session) {
-    session.on('Page.loadEventFired', navHandler);
-  }
+  session.on('Page.loadEventFired', navHandler);
   try {
-    if (session) await session.send('Page.enable'); // deliver Page.* events
+    await session.send('Page.enable'); // deliver Page.* events
   } catch {
     // best-effort — some targets already emit without explicit enable.
   }
