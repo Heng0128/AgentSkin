@@ -33,6 +33,7 @@
 
 import type { ResolvedThemeTarget, ThemeBundle } from '../../legacy/agentskin-core-runtime';
 import { toMessage } from '../../shared/errors';
+import { isThemeFullyApplyVerdict } from '../../shared/injection-runtime';
 import type { AgentId } from '../../shared/types';
 import { type CdpSession, connectEventCdp, type EventCdpSession } from './cdp-client';
 import type { InjectEngineResult } from './cdp-inject';
@@ -186,14 +187,24 @@ async function reverifyAfterNavigation(state: ReloadWatchdogState): Promise<void
   if (!session) return;
   try {
     const verification = await verifyTheme(session);
-    if (verification && verification.adoptedSheetCount > 0) {
+    // RC4-A: graded watchdog response — use three-tier verdict instead of
+    // the previous adoptedSheetCount > 0 heuristic. A partial state (some
+    // layers missing) now triggers re-injection instead of staying silent.
+    const requireHero = !!(state.options.imageDataUrls?.hero || state.options.imageFilePaths?.hero);
+    const verdict = verification
+      ? isThemeFullyApplyVerdict(verification, { requireHero })
+      : 'failed';
+    if (verdict === 'full') {
       deps.log(
-        `[reload-watchdog] ${appId}: after reload, engine sheets present ` +
-          `(${verification.adoptedSheetCount}) — no re-inject`,
+        `[reload-watchdog] ${appId}: after reload, theme fully applied ` +
+          `(sheets=${verification!.adoptedSheetCount}) — no re-inject`,
       );
       return; // stay armed for the next navigation
     }
-    deps.log(`[reload-watchdog] ${appId}: after reload, engine sheets missing → re-injecting once`);
+    deps.log(
+      `[reload-watchdog] ${appId}: after reload, theme ${verdict} ` +
+        `(accent=${verification?.accent || '?'}, sheets=${verification?.adoptedSheetCount ?? 0}) → re-injecting once`,
+    );
     const result = await deps.tryEngineInjection(
       session,
       appId,
