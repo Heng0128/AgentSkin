@@ -1,0 +1,40 @@
+{
+  "schema": "builder-report/v1",
+  "scheme": "RC3-B",
+  "title": "计数器安全审计 + pending Map 防护",
+  "snapshot": "b7933e29",
+  "branch": "main",
+  "completedAt": "2025-01-15T00:00:00Z",
+  "phases": [
+    {
+      "step": 1,
+      "commit": "f9866d94",
+      "file": "src/main/cdp/session-pool.ts",
+      "change": "release() 零 refCount 守卫 + warning log",
+      "detail": "将 `Math.max(0, entry.refCount - 1)` 替换为显式 `if (entry.refCount <= 0)` 守卫：当 refCount 已为 0 时不再 decrement，输出 warning log 帮助追踪双释放来源。消除了静默 clamp 掩盖问题的风险。",
+      "linesChanged": { "inserted": 10, "deleted": 1 }
+    },
+    {
+      "step": 2,
+      "commit": "5e1d2ace",
+      "file": "src/main/cdp/cdp-client.ts",
+      "change": "pending Map null-guard",
+      "detail": "将 `pending.get(message.id)!` 替换为 `const waiter = pending.get(message.id); if (!waiter) return;` 防御性检查。虽然 .has() 已做存在性检查，但非空断言在并发超时/close 场景下存在理论风险，防御性检查消除 TS non-null assertion 隐患。",
+      "linesChanged": { "inserted": 4, "deleted": 1 }
+    },
+    {
+      "step": 3,
+      "commit": "ddea8924",
+      "file": "src/main/cdp/cdp-fanout.ts",
+      "change": "firstSession 所有权转移修复双重释放",
+      "detail": "在 hardeningPass 的 page 循环 finally 块中，当 `handle.pooled && session === firstSession` 时不再 release。firstSession 的所有权从 fanout 的 for 循环显式 transfer 到 health-check 的 finally 块，由后者统一释放一次。消除了原本的双释放问题（for 循环 finally release 一次 + health-check finally 又 release 一次）。",
+      "linesChanged": { "inserted": 9, "deleted": 2 }
+    }
+  ],
+  "verification": {
+    "tscNoEmit": "pass",
+    "biomeCheck": "pass (via pre-commit hook)",
+    "totalLines": { "inserted": 23, "deleted": 4, "net": 19 }
+  },
+  "summary": "RC3-B 三处安全修复全部落地：(1) session-pool release() 不再静默 clamp 双释放，改为 warning 日志追踪；(2) cdp-client pending Map 增加防御性 null-guard；(3) cdp-fanout firstSession 所有权从 for 循环 finally 转移到 health-check finally，确保只释放一次。tsc --noEmit 全绿，pre-commit biome 检查通过。"
+}
