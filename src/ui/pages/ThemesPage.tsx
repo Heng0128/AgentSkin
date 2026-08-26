@@ -249,7 +249,7 @@ export function ThemesPage({ controller }: { controller: AppController }) {
                   }
                   title={t.themeDynamicHint}
                   className={cn(
-                    'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-all duration-fast',
+                    'inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[11px] font-medium transition-all duration-base',
                     tc.dynamicFilter === 'dynamic'
                       ? 'bg-accent text-accent-foreground'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground',

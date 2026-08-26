@@ -68,7 +68,7 @@ import {
   detachReloadWatchdog,
   type ReloadWatchdogDeps,
 } from './reload-watchdog';
-import { pickPrimaryRenderer, type RendererHints } from './renderer-rank';
+import { pickPrimaryRenderer } from './renderer-rank';
 import { buildSecondaryInjectExpression, buildSecondaryRemoveExpression } from './secondary-inject';
 import {
   acquireSession,
@@ -416,10 +416,18 @@ export async function hardeningPass(
   // Fallback root: bundles recorded by older builds stored the PARENT themes
   // dir (e.g. .../themes) instead of the theme's own dir. Try packageRoot,
   // then packageRoot/<themeId> so hero.jpg resolves to themes/art-xxx/hero.jpg.
+  // Only add the fallback if packageRoot doesn't already end with themeId
+  // (current builds store the theme's own dir, so doubling would create a
+  // wrong path like themes/art-xxx/art-xxx/hero.jpg).
   const themeId = bundle.theme?.id ?? '';
+  const rootEndsWithThemeId = packageRoot
+    ? packageRoot.replace(/[/\\]$/, '').endsWith(`/${themeId}`) ||
+      packageRoot.replace(/[/\\]$/, '').endsWith(`\\${themeId}`) ||
+      packageRoot.replace(/[/\\]$/, '') === themeId
+    : false;
   const candidateRoots = [
     packageRoot,
-    packageRoot && themeId ? `${packageRoot}/${themeId}` : null,
+    packageRoot && themeId && !rootEndsWithThemeId ? `${packageRoot}/${themeId}` : null,
   ].filter((r): r is string => !!r);
   for (const root of candidateRoots) {
     for (const [name, rel] of Object.entries(targetTheme.imageFilePaths ?? {})) {
@@ -432,6 +440,15 @@ export async function hardeningPass(
     }
   }
   const resolvedFilePaths = Object.keys(imageFilePaths).length > 0 ? imageFilePaths : null;
+
+  // --- DIAGNOSTIC: packageRoot / candidateRoots / file resolution ---
+  deps.log(
+    `[hardening] ${appId}: FILE-RESOLUTION packageRoot=${packageRoot ?? '<null>'} ` +
+      `themeId=${themeId} candidateRoots=[${candidateRoots.join(', ')}] ` +
+      `imageFilePaths(entries)=${JSON.stringify(targetTheme.imageFilePaths ?? {})} ` +
+      `artFilePath=${targetTheme.artFilePath ?? '<null>'} ` +
+      `resolvedFilePaths=${JSON.stringify(resolvedFilePaths ?? {})}`,
+  );
 
   // Split page and non-page targets. Page targets are processed serially
   // (they compete for firstSession); non-page targets (webview/iframe) are

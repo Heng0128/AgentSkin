@@ -60,12 +60,14 @@ ${host} body {
   --vscode-icube--bg-bg-overlay-l3: ${hoverBg2} !important;
   --vscode-input-background: ${alpha(c.accent, 0.07)} !important;
 
-  /* Surfaces */
-  --vscode-editor-background: ${c.background} !important;
-  --vscode-icube-colorBg1: ${c.background} !important;
-  --vscode-icube-colorBg2: ${c.surface} !important;
-  --vscode-icube-colorBg3: ${c.surfaceElevated} !important;
-  --vscode-editorWidget-background: ${c.surface} !important;
+  /* Surfaces — transparent/semi-transparent for art punch-through
+     (matches QoderWork strategy: --color-bg-base/container/background → transparent).
+     Flash-fix: opaque --vscode-icube-colorBg* were covering #root::before hero art. */
+  --vscode-editor-background: transparent !important;
+  --vscode-icube-colorBg1: transparent !important;
+  --vscode-icube-colorBg2: color-mix(in srgb, ${c.surface} 45%, transparent) !important;
+  --vscode-icube-colorBg3: color-mix(in srgb, ${c.surfaceElevated} 55%, transparent) !important;
+  --vscode-editorWidget-background: color-mix(in srgb, ${c.surface} 50%, transparent) !important;
   --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
   --vscode-widget-shadow: ${alpha(c.accent, 0.15)} !important;
   --vscode-badge-background: ${alpha(c.accent, 0.65)} !important;
@@ -180,6 +182,11 @@ ${host} .monaco-workbench {
   --vscode-statusBar-background: color-mix(in srgb, var(--agentskin-surface) 10%, transparent) !important;
   --vscode-titleBar-activeBackground: color-mix(in srgb, var(--agentskin-surface) 8%, transparent) !important;
   --vscode-titleBar-inactiveBackground: color-mix(in srgb, var(--agentskin-surface) 6%, transparent) !important;
+  /* Flash-fix: pin workbench-level colorBg* tokens transparent so VS Code
+     internal containers don't paint opaque over #root::before hero art. */
+  --vscode-icube-colorBg1: transparent !important;
+  --vscode-icube-colorBg2: color-mix(in srgb, var(--agentskin-surface) 45%, transparent) !important;
+  --vscode-icube-colorBg3: color-mix(in srgb, var(--agentskin-surface-elevated) 55%, transparent) !important;
   background: transparent !important;
 }
 

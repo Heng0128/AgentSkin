@@ -250,12 +250,12 @@ describe('resolveDesignLanguage', () => {
   });
 
   it('DESIGN_LANGUAGES contains default, soft-rounded, and compact-flat presets', () => {
-    expect(DESIGN_LANGUAGES['default']).toBeDefined();
+    expect(DESIGN_LANGUAGES.default).toBeDefined();
     expect(DESIGN_LANGUAGES['soft-rounded']).toBeDefined();
     expect(DESIGN_LANGUAGES['compact-flat']).toBeDefined();
 
     // Verify key preset properties
-    expect(DESIGN_LANGUAGES['default'].spacing.density).toBe('comfortable');
+    expect(DESIGN_LANGUAGES.default.spacing.density).toBe('comfortable');
     expect(DESIGN_LANGUAGES['soft-rounded'].radius.scale).toBe('8');
     expect(DESIGN_LANGUAGES['compact-flat'].shadow.elevation).toBe('flat');
   });

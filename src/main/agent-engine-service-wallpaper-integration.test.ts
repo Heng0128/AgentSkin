@@ -208,7 +208,7 @@ describe('AgentEngineService — wallpaper 流程集成', () => {
       disposeSelfHealState();
 
       const stub = await makeServiceStub();
-      const svc = stub.service;
+      const _svc = stub.service;
       tmpDirs.push(stub.tmpDir);
 
       let healCallbackCount = 0;
@@ -247,7 +247,7 @@ describe('AgentEngineService — wallpaper 流程集成', () => {
       disposeSelfHealState();
 
       const stub = await makeServiceStub();
-      const svc = stub.service;
+      const _svc = stub.service;
       tmpDirs.push(stub.tmpDir);
 
       let thunkExecuted = false;
@@ -274,7 +274,7 @@ describe('AgentEngineService — wallpaper 流程集成', () => {
       disposeSelfHealState();
 
       const stub = await makeServiceStub();
-      const svc = stub.service;
+      const _svc = stub.service;
       tmpDirs.push(stub.tmpDir);
 
       let healCallbackCount = 0;
@@ -409,7 +409,7 @@ describe('AgentEngineService — wallpaper 流程集成', () => {
 
     it('真实 cleanupWallpaperStateForAgent 通过 restore 流程被调用', async () => {
       const stub = await makeServiceStub();
-      const svc = stub.service;
+      const _svc = stub.service;
       tmpDirs.push(stub.tmpDir);
 
       // registry 中无 active theme 且无 wallpaper → restore 走 no-op 短路
@@ -423,7 +423,7 @@ describe('AgentEngineService — wallpaper 流程集成', () => {
       disposeSelfHealState();
 
       const stub = await makeServiceStub();
-      const svc = stub.service;
+      const _svc = stub.service;
       tmpDirs.push(stub.tmpDir);
 
       // 先记录失败

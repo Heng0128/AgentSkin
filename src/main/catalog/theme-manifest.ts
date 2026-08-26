@@ -378,6 +378,21 @@ export interface ThemeManifest {
    * （短板原则：取各端最小值）。
    */
   depth?: 'L1' | 'L2' | 'L3';
+
+  /**
+   * 主题接线配置（P2 署名链合规，对齐 dsh-deep-whale wiring 模型）。
+   * 声明主题在运行时如何与目标应用绑定。
+   */
+  wiring?: {
+    /**
+     * 主题接线唯一标识（必填）。
+     * 格式：小写字母数字 + 连字符/下划线。
+     * 用于在运行时唯一标识主题的接线配置。
+     */
+    id: string;
+    /** 是否已打包接线（默认 false）。 */
+    bundleWired?: boolean;
+  };
 }
 
 /** Re-export under an unambiguous name for consumers outside this file. */

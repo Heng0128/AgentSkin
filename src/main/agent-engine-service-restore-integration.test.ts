@@ -45,11 +45,7 @@ import {
   cleanupEngineInjectionForAgent,
   disposeEngineInjectionState,
 } from './cdp/injection/engine-strategy';
-import type {
-  AgentEngineServiceApi,
-  SettingsServiceApi,
-  ThemeLibraryApi,
-} from './services/contracts';
+import type { SettingsServiceApi } from './services/contracts';
 import { applyThemeFlow } from './theme-apply-flow';
 import type { RestoreFlowDeps } from './theme-restore-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
@@ -340,7 +336,7 @@ describe('AgentEngineService — Restore 流程集成测试', () => {
     });
 
     it('有端口时 persist 被调用（状态落盘）', async () => {
-      const { service, settings } = await makeServiceWithTheme(TEST_APP, 't1', 9222);
+      const { service, settings: _settings } = await makeServiceWithTheme(TEST_APP, 't1', 9222);
 
       await service.restore(TEST_APP);
 

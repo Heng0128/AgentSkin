@@ -63,7 +63,7 @@ export function acrylicMaterial(options = {}) {
   } = options;
 
   // Convert noiseOpacity (0-1) to two-digit hex for the feColorMatrix alpha.
-  const alphaHex = Math.round(Math.max(0, Math.min(1, noiseOpacity)) * 255)
+  const _alphaHex = Math.round(Math.max(0, Math.min(1, noiseOpacity)) * 255)
     .toString(16)
     .padStart(2, '0');
 

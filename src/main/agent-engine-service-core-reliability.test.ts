@@ -25,18 +25,11 @@ import {
   STATUS,
   TEST_APP,
 } from './agent-engine-service-test-harness';
-import { probeAppStatus, reconcileZombiePorts } from './app-discovery';
-import { stopAudioLevelPolling } from './audio-level';
-import { disposeEngineInjectionState } from './cdp/injection/engine-strategy';
+import { probeAppStatus } from './app-discovery';
 import { writeJsonAtomic } from './fs-utils';
-import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { makeThemeLibraryStub } from './test-helpers/mock-services';
-import { disposeThemeAssetCache } from './theme/utils';
 import { applyThemeFlow } from './theme-apply-flow';
 import { restoreThemeFlow } from './theme-restore-flow';
-import { disposeWallpaperInjectionState } from './wallpaper/injection-state';
-import { removeWallpaperFromAgent } from './wallpaper-injector';
-import { disposeSelfHealState } from './wallpaper-self-heal';
 
 // ---------------------------------------------------------------------------
 // Module mocks
@@ -264,7 +257,7 @@ describe('AgentEngineService (core reliability)', () => {
         disposeAsync: () => Promise<void>;
       };
 
-      const inflightCleanup = privateSvc.inflightOperations.get(TEST_APP)?.cleanup;
+      const _inflightCleanup = privateSvc.inflightOperations.get(TEST_APP)?.cleanup;
 
       // Start disposeAsync in background — it should block waiting for cleanup
       const disposePromise = privateSvc.disposeAsync().then(() => {

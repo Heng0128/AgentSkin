@@ -27,7 +27,12 @@ class MockCdpSession {
     this.sentMessages.push({ method, params });
     // Synthesize a plausible CDP result frame.
     if (method === 'Runtime.evaluate') {
-      return { result: { type: 'string', value: `evaluated:${(params as { expression: string }).expression}` } };
+      return {
+        result: {
+          type: 'string',
+          value: `evaluated:${(params as { expression: string }).expression}`,
+        },
+      };
     }
     return {};
   }
@@ -211,7 +216,11 @@ describe('SessionCollection', () => {
       makeTarget({ id: 'worker-1', type: 'service_worker' }),
     ];
     // Include 'worker' type so the worker is managed.
-    const coll = new SessionCollection({ port: 9222, types: ['page', 'iframe', 'worker'], sessionFactory: mockSessionFactory });
+    const coll = new SessionCollection({
+      port: 9222,
+      types: ['page', 'iframe', 'worker'],
+      sessionFactory: mockSessionFactory,
+    });
     await coll.connect();
     const stats = coll.stats();
     expect(stats.total).toBe(4);
@@ -240,7 +249,7 @@ describe('SessionCollection', () => {
     ];
     const coll = new SessionCollection({ port: 9222, sessionFactory: mockSessionFactory });
     await coll.connect();
-    const results = await coll.send('Page.reload') as unknown[];
+    const results = (await coll.send('Page.reload')) as unknown[];
     expect(results).toHaveLength(2); // 2 page sessions
     expect(createdSessions[0].sentMessages).toHaveLength(1);
     expect(createdSessions[1].sentMessages).toHaveLength(1);

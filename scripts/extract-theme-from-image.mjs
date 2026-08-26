@@ -62,7 +62,7 @@ try {
 const json = pretty ? JSON.stringify(result, null, 2) : JSON.stringify(result);
 
 if (outputPath) {
-  writeFileSync(resolve(outputPath), json + '\n', 'utf-8');
+  writeFileSync(resolve(outputPath), `${json}\n`, 'utf-8');
   console.error(`Theme written to ${resolve(outputPath)}`);
 } else {
   console.log(json);

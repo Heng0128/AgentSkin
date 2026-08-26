@@ -48,7 +48,7 @@ export function StudioTitleBar() {
    * 24×24 px for the compact 32 px bar (vs 27×27 in the main TitleBar).
    */
   const studioBtn =
-    'flex h-6 w-6 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-[background-color,border-color,color] duration-fast hover:bg-card2 hover:text-foreground';
+    'flex h-6 w-6 items-center justify-center rounded-md border border-transparent text-muted-foreground transition-[background-color,border-color,color] duration-base hover:bg-card2 hover:text-foreground';
 
   const projectName = activeProject?.name;
 

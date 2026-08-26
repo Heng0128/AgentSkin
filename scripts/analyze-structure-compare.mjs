@@ -849,7 +849,7 @@ async function collectFiles(root, extensions, byteCap, opts = {}) {
         // 跳过体积巨大且与 UI 无关的目录
         if (/node_modules|\.git|locales|bin|extensions|licenses/i.test(entry.name)) continue;
         // CEF 子应用过滤：--skip-cef-subapp 时跳过 local_webcontents/apps 等无关子应用目录
-        if (opts.skipDirs && opts.skipDirs.test(entry.name)) {
+        if (opts.skipDirs?.test(entry.name)) {
           debugLog(`跳过子应用目录: ${full}`);
           continue;
         }
@@ -869,7 +869,7 @@ async function collectFiles(root, extensions, byteCap, opts = {}) {
   return { files: results, bytes };
 }
 
-async function probeUnpacked(unpackedRoot, displayName, layout = 'unpacked', opts = {}) {
+async function probeUnpacked(unpackedRoot, _displayName, layout = 'unpacked', opts = {}) {
   // CEF 专属：--skip-cef-subapp 时跳过 apps 等无关子应用目录，避免 office 套件污染对拍结果
   const collectOpts = layout === 'cef' && opts.skipCefSubapp ? { skipDirs: /^apps$/i } : {};
   const { files: jsFiles, bytes: jsBytes } = await collectFiles(
@@ -949,7 +949,7 @@ async function probeStatic(adapter) {
   if (!discovered) discovered = await discoverByProcess(adapter);
   if (!discovered) return { ok: false, error: '安装路径未发现（也未找到运行中的进程）' };
   const asarPath = locateAsar(discovered.appPath, discovered.executable);
-  if (asarPath && asarPath.endsWith('.asar')) {
+  if (asarPath?.endsWith('.asar')) {
     return probeAsar(adapter, discovered, asarPath);
   }
 
@@ -1016,7 +1016,7 @@ async function discoverByProcess(adapter) {
   return null;
 }
 
-async function probeAsar(adapter, discovered, asarPath) {
+async function probeAsar(_adapter, discovered, asarPath) {
   let files = [];
   try {
     files = asar.listPackage(asarPath);

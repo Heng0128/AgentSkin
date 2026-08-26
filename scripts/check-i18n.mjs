@@ -119,7 +119,7 @@ function extractLocaleBlocks(varName, aggregate = false) {
     const enBlocks = [];
     for (const name of messageExportNames) {
       const single = extractSingleLocaleBlocks(name);
-      if (single && single.zhBlock && single.enBlock) {
+      if (single?.zhBlock && single.enBlock) {
         zhBlocks.push(single.zhBlock);
         enBlocks.push(single.enBlock);
       }
@@ -185,7 +185,7 @@ function extractSingleLocaleBlocks(varName) {
 
 function checkCategory(varName, aggregate = false) {
   const blocks = extractLocaleBlocks(varName, aggregate);
-  if (!blocks || !blocks.zhBlock || !blocks.enBlock) {
+  if (!blocks?.zhBlock || !blocks.enBlock) {
     console.error(`✗ Failed to parse ${varName} — could not locate locale blocks`);
     process.exit(1);
   }

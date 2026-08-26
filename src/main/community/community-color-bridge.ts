@@ -193,7 +193,7 @@ export function parseHex(value: string | undefined): string | null {
   }
 
   // Strip alpha channel if present (#RRGGBBAA → #RRGGBB).
-  return '#' + hex.slice(0, 6);
+  return `#${hex.slice(0, 6)}`;
 }
 
 /**
@@ -258,7 +258,7 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } | nul
 
 /** Convert r, g, b channel values (0-255) to a `#rrggbb` string. */
 export function rgbToHex(r: number, g: number, b: number): string {
-  return '#' + [r, g, b].map((c) => Math.round(c).toString(16).padStart(2, '0')).join('');
+  return `#${[r, g, b].map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')}`;
 }
 
 /** Clamp a numeric value to the inclusive [min, max] range. */

@@ -162,6 +162,67 @@ group('F8: STATUS_VALUES export');
   assert(STATUS_VALUES.has('error') && STATUS_VALUES.has('cancelled'), 'has error/cancelled');
 }
 
+// ---------------------------------------------------------------------------
+// Boundary condition tests (group B)
+// ---------------------------------------------------------------------------
+
+group('B1: showStatus with undefined message uses default');
+{
+  const fb = new InjectionFeedback();
+  fb.showStatus('loading');
+  const el = mockDocument.getElementById('agentskin-feedback-overlay');
+  assert(el !== null, 'overlay created');
+  assert(el.textContent.includes('Applying theme...'), 'default loading message used');
+  fb.dispose();
+}
+
+group('B2: updateProgress after dispose is safely ignored');
+{
+  const fb = new InjectionFeedback();
+  fb.showStatus('loading');
+  const el = mockDocument.getElementById('agentskin-feedback-overlay');
+  const bar = el.childNodes.find(c => c.className === 'af-progress');
+  fb.updateProgress(75);
+  assert(bar.style.width === '75%', 'progress set before dispose');
+  fb.dispose();
+  fb.updateProgress(99);
+  assert(bar.style.width === '75%', 'progress unchanged after dispose');
+  assert(fb.isVisible === false, 'not visible after dispose');
+}
+
+group('B3: hideStatus without prior show is safely ignored');
+{
+  const fb = new InjectionFeedback();
+  assert(fb.isVisible === false, 'initially not visible');
+  fb.hideStatus();
+  assert(true, 'hideStatus on fresh instance does not throw');
+  assert(fb.isVisible === false, 'still not visible');
+  fb.dispose();
+}
+
+group('B4: rapid showStatus transitions update overlay correctly');
+{
+  const fb = new InjectionFeedback();
+  fb.showStatus('loading', 'Step 1');
+  fb.showStatus('success', 'Step 2');
+  fb.showStatus('error', 'Step 3');
+  fb.showStatus('cancelled', 'Step 4');
+  const el = mockDocument.getElementById('agentskin-feedback-overlay');
+  assert(el.getAttribute('data-agentskin-feedback-status') === 'cancelled', 'final status=cancelled');
+  assert(el.getAttribute('data-agentskin-feedback') === 'active', 'overlay still active');
+  assert(el.textContent.includes('Step 4'), 'final message rendered');
+  fb.dispose();
+}
+
+group('B5: instanceId is unique across multiple instances');
+{
+  const instances = Array.from({ length: 20 }, () => new InjectionFeedback());
+  const ids = instances.map(fb => fb.instanceId);
+  const unique = new Set(ids);
+  assert(unique.size === ids.length, 'all 20 instanceIds are unique');
+  instances.forEach(fb => fb.dispose());
+}
+
 console.log(`\n${'='.repeat(50)}`);
 console.log(`Result: ${passed} passed, ${failed} failed`);
 console.log('='.repeat(50));

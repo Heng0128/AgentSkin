@@ -60,7 +60,7 @@ export function ThemeCard({
         </div>
 
         {/* Gradient overlay on hover */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 transition-opacity duration-fast group-hover:opacity-100" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 transition-opacity duration-base group-hover:opacity-100" />
 
         {/* Active agent indicators — top-right */}
         {isActive && (
@@ -98,7 +98,7 @@ export function ThemeCard({
 
         {/* Icon overlay — bottom-left */}
         {theme.icon && !iconError && (
-          <div className="absolute bottom-2 left-2 opacity-0 transition-all duration-fast group-hover:opacity-100">
+          <div className="absolute bottom-2 left-2 opacity-0 transition-all duration-base group-hover:opacity-100">
             <img
               src={theme.icon}
               alt=""

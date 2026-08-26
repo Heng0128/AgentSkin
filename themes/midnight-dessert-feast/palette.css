@@ -1,4 +1,4 @@
-/* palette.css — art-174714 (Art 174714) */
+/* palette.css — midnight-dessert-feast (Midnight Dessert Feast) */
 /* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #020302;
@@ -11,7 +11,7 @@
   --agentskin-border: #1b1c1b;
   --agentskin-code-bg: #020202;
   --agentskin-code-fg: #f4f0eb;
-  --agentskin-focus-ring: color-mix(in srgb, #8cbf9c 40%, transparent);
+  --agentskin-focus-ring: #8cbf9c60;
   --agentskin-selection: color-mix(in srgb, #8cbf9c 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */

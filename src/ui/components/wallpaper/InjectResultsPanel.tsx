@@ -268,7 +268,7 @@ export function InjectResultsPanel({
           {batchProgress && (
             <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-fast"
+                className="h-full rounded-full bg-primary transition-all duration-base"
                 style={{ width: `${(batchProgress.done / batchProgress.total) * 100}%` }}
               />
             </div>

@@ -119,7 +119,7 @@ function StatusErrorBanner({
         type="button"
         onClick={onRetry}
         disabled={isRefreshing}
-        className="inline-flex shrink-0 items-center gap-1 rounded-md border border-destructive/30 bg-card2 px-2 py-1 text-[11px] text-destructive transition-colors duration-fast hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-45"
+        className="inline-flex shrink-0 items-center gap-1 rounded-md border border-destructive/30 bg-card2 px-2 py-1 text-[11px] text-destructive transition-colors duration-base hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-45"
       >
         {isRefreshing ? <Spinner className="size-3" /> : <RefreshCw className="size-3" />}
         {t.statusRetry}

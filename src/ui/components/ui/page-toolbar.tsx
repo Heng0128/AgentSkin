@@ -75,7 +75,7 @@ function PageToolbar({ search, sort, sortOrder, actions, left, className }: Page
             aria-label={sortOrder.order === 'asc' ? 'Sort descending' : 'Sort ascending'}
             aria-pressed={sortOrder.order === 'asc'}
             className={cn(
-              'flex h-7 items-center rounded-sm px-2 text-[11px] font-medium transition-all duration-fast',
+              'flex h-7 items-center rounded-md px-2 text-[11px] font-medium transition-all duration-base',
               'bg-card text-foreground shadow-sm',
             )}
           >

@@ -43,6 +43,11 @@ import {
   MAX_THEME_IMAGES,
   SAFE_IMAGE_TYPES,
 } from '../src/engine/src/theme/package.mjs';
+// Build fingerprint: SHA-256 integrity manifest for theme package files.
+import {
+  FINGERPRINT_FILENAME,
+  generateBuildFingerprint,
+} from '../src/shared/theme-build-fingerprint.js';
 import { hexToRgb, luminance } from './utils/color-utils.mjs';
 
 // ---------------------------------------------------------------------------
@@ -1128,10 +1133,12 @@ export function deriveTokens(root) {
   // button-fg: 根据背景色亮度选择 #000000 或 #ffffff，保证对比度。
   // text-shadow: 亮色主题为空，暗色主题为 0 1px 2px rgba(0,0,0,0.3)。
   if (!('--agentskin-button-fg' in tokens)) {
-    tokens['--agentskin-button-fg'] = luminance(tokens['--agentskin-bg']) < 0.5 ? '#ffffff' : '#000000';
+    tokens['--agentskin-button-fg'] =
+      luminance(tokens['--agentskin-bg']) < 0.5 ? '#ffffff' : '#000000';
   }
   if (!('--agentskin-text-shadow' in tokens)) {
-    tokens['--agentskin-text-shadow'] = luminance(tokens['--agentskin-bg']) < 0.5 ? '0 1px 2px rgba(0,0,0,0.3)' : '';
+    tokens['--agentskin-text-shadow'] =
+      luminance(tokens['--agentskin-bg']) < 0.5 ? '0 1px 2px rgba(0,0,0,0.3)' : '';
   }
   const mode = luminance(tokens['--agentskin-bg']) < 0.5 ? 'dark' : 'light';
   return { tokens, mode };
@@ -1358,10 +1365,13 @@ const RESERVED_IMAGE_IDS = new Set(['icon', 'preview']);
 
 /**
  * Normalize `request.images` (image id → base64 data URL) into embeddable
- * image records `{ filename, mimeType, base64 }`, enforcing the SAME gates
- * as the B-line engine validator (RFC themes-asset-injection-2a §2.3):
+ * image records `{ filename, mimeType, base64 }` or external-file records
+ * `{ filename, mimeType, filePath }`, enforcing the SAME gates as the B-line
+ * engine validator (RFC themes-asset-injection-2a §2.3):
  * SAFE_ID ids, SAFE_IMAGE_TYPES mime whitelist, ≤29 creative images and the
- * 8MB cumulative base64 ceiling. `hero` is the backdrop special case.
+ * 8MB cumulative base64 ceiling (external-file images are exempt from the
+ * base64 ceiling since they are copied as raw bytes). `hero` is the backdrop
+ * special case.
  * Returns null when no images are declared (backward compatible).
  */
 function processThemeImages(request) {
@@ -1381,32 +1391,69 @@ function processThemeImages(request) {
   }
   const images = {};
   let totalBase64 = 0;
-  for (const [id, dataUrl] of entries) {
+  for (const [id, value] of entries) {
     if (!IMAGE_ID.test(id)) throw new Error(`[build-theme-package] invalid image id '${id}'.`);
     if (RESERVED_IMAGE_IDS.has(id)) {
       throw new Error(
         `[build-theme-package] '${id}' is a reserved image id (icon/preview are system-managed).`,
       );
     }
-    if (typeof dataUrl !== 'string') {
-      throw new Error(`[build-theme-package] images.${id} must be a base64 data URL string.`);
+
+    let mimeType;
+    let base64 = null;
+    let filePath = null;
+    let providedFilename = null;
+
+    if (typeof value === 'string') {
+      // Data URL format: data:image/png;base64,...
+      const match = DATA_URL.exec(value.trim());
+      if (!match) {
+        throw new Error(`[build-theme-package] images.${id} dataUrl is not a base64 data URL.`);
+      }
+      mimeType = match[1].toLowerCase();
+      base64 = match[2].replace(/\s+/g, '');
+    } else if (value && typeof value === 'object') {
+      // Object format: { filename, mimeType, base64 } or { filename, mimeType, file }
+      const obj = value;
+      if (typeof obj.mimeType !== 'string') {
+        throw new Error(`[build-theme-package] images.${id}.mimeType must be a string.`);
+      }
+      mimeType = obj.mimeType.toLowerCase();
+      if (typeof obj.base64 === 'string') {
+        base64 = obj.base64.replace(/\s+/g, '');
+      } else if (typeof obj.file === 'string') {
+        // External-file mode: copy from this path instead of embedding base64.
+        filePath = obj.file;
+      } else {
+        throw new Error(
+          `[build-theme-package] images.${id} must provide either base64 or file path.`,
+        );
+      }
+      if (obj.filename != null) {
+        if (typeof obj.filename !== 'string') {
+          throw new Error(`[build-theme-package] images.${id}.filename must be a string.`);
+        }
+        providedFilename = obj.filename;
+      }
+    } else {
+      throw new Error(
+        `[build-theme-package] images.${id} must be a base64 data URL string or an image object.`,
+      );
     }
-    const match = DATA_URL.exec(dataUrl.trim());
-    if (!match) {
-      throw new Error(`[build-theme-package] images.${id} dataUrl is not a base64 data URL.`);
-    }
-    const mimeType = match[1].toLowerCase();
+
     if (!SAFE_IMAGE_TYPES.has(mimeType)) {
       throw new Error(
         `[build-theme-package] images.${id} mimeType '${mimeType}' is not supported.`,
       );
     }
-    const base64 = match[2].replace(/\s+/g, '');
-    totalBase64 += base64.length;
+    if (base64 != null) {
+      totalBase64 += base64.length;
+    }
     images[id] = {
-      filename: `${id}${EXT_BY_MIME[mimeType]}`,
+      filename: providedFilename || `${id}${EXT_BY_MIME[mimeType]}`,
       mimeType,
-      base64,
+      ...(base64 != null ? { base64 } : {}),
+      ...(filePath != null ? { filePath } : {}),
     };
   }
   if (totalBase64 > MAX_THEME_IMAGE_BASE64) {
@@ -1535,7 +1582,7 @@ function buildIcon(palette) {
 // Public entry
 // ---------------------------------------------------------------------------
 
-export function buildThemePackage(request, outDir) {
+export async function buildThemePackage(request, outDir) {
   // A-10 / Q13：非法或缺失 agentId 直接拒绝，避免静默生成"空白主题包"。
   if (!request?.agentId || typeof request.agentId !== 'string') {
     throw new Error(
@@ -1589,14 +1636,28 @@ export function buildThemePackage(request, outDir) {
 
   // 2a multi-asset: write each image into assets/images/<id>.<ext> so the
   // manifest's `hero` + `assets.images` references resolve at install time.
+  // External-file images are copied from their source path; base64 images are
+  // decoded and written.
   if (images) {
     for (const img of Object.values(images)) {
-      fs.writeFileSync(
-        path.join(pkgDir, 'assets', 'images', img.filename),
-        Buffer.from(img.base64, 'base64'),
-      );
+      const destPath = path.join(pkgDir, 'assets', 'images', img.filename);
+      if (img.filePath) {
+        fs.copyFileSync(img.filePath, destPath);
+      } else {
+        fs.writeFileSync(destPath, Buffer.from(img.base64, 'base64'));
+      }
     }
   }
+
+  // Build fingerprint: generate SHA-256 integrity manifest covering
+  // manifest.json + per-agent CSS files. Written last so it hashes the
+  // final state of all fingerprinted files.
+  const fingerprint = await generateBuildFingerprint(pkgDir);
+  fs.writeFileSync(
+    path.join(pkgDir, FINGERPRINT_FILENAME),
+    `${JSON.stringify(fingerprint, null, 2)}\n`,
+    'utf8',
+  );
 
   return pkgDir;
 }

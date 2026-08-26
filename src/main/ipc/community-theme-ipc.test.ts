@@ -358,10 +358,10 @@ describe('community-theme-ipc handlers', () => {
       const mockDownload = downloadTheme as Mock;
 
       // Track if the download was aborted.
-      let progressCallback: ((downloaded: number, total: number) => void) | undefined;
+      let _progressCallback: ((downloaded: number, total: number) => void) | undefined;
       mockDownload.mockImplementation(
         (_id: string, onProgress?: (downloaded: number, total: number) => void) => {
-          progressCallback = onProgress;
+          _progressCallback = onProgress;
           // Return a delayed promise so we have time to cancel.
           return new Promise<Buffer>(() => {});
         },

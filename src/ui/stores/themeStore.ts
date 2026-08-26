@@ -190,6 +190,7 @@ let offFileImported: (() => void) | null = null;
 let offFileImportConfirm: (() => void) | null = null;
 let offFileImportFailed: (() => void) | null = null;
 let offTrayApply: (() => void) | null = null;
+let offThemeHotReload: (() => void) | null = null;
 
 // ---------------------------------------------------------------------------
 // state shape
@@ -266,10 +267,12 @@ export const useThemeStore = create<ThemeState>((set, get) => {
     offFileImportConfirm?.();
     offFileImportFailed?.();
     offTrayApply?.();
+    offThemeHotReload?.();
     offFileImported = null;
     offFileImportConfirm = null;
     offFileImportFailed = null;
     offTrayApply = null;
+    offThemeHotReload = null;
   }
 
   // Clean up the previous create() round's listeners (no-op on first mount).
@@ -289,6 +292,21 @@ export const useThemeStore = create<ThemeState>((set, get) => {
   });
   offTrayApply = api.onTrayApply((request) => {
     void get().applyToApp(request.themeId, request.themeName, request.appId);
+  });
+  offThemeHotReload = api.onThemeHotReload((payload) => {
+    // P1: Theme hot-reload notification from the main process. The CSS has
+    // already been injected into the target agent via CDP; this handler only
+    // updates the UI to reflect the new state.
+    if (payload.reloadKind === 'scheme-switch') {
+      const t = currentT() as unknown as Record<string, unknown>;
+      const switcher = t.themeSchemeSwitched;
+      const message = typeof switcher === 'function' ? switcher(payload.mode) : undefined;
+      useNotificationStore.getState().showToast(message ?? `已切换到${payload.mode}模式`);
+    }
+    // StatusChanged will also fire from the main process, so we don't need
+    // to call refreshThemes here — the apply flow already updated the state.
+    // However, we ensure a status refresh so the UI reflects the new mode.
+    void useStatusStore.getState().refreshStatus?.();
   });
 
   return {

@@ -66,6 +66,8 @@ interface AppsApiExtension {
   onCoordinatorStatus(listener: (event: { appId: string; state: AppRunState }) => void): () => void;
   /** One-shot full snapshot on boot. */
   getCoordinatorSnapshot(): Promise<Map<string, AppRunState>>;
+  /** Query a single app's run state (one-shot). */
+  queryCoordinatorState(appId: string): Promise<AppRunState | null>;
 }
 
 /**
@@ -174,6 +176,9 @@ interface AppsState {
   setScanProgress: (progress: number) => void;
   /** Open the detail drawer for an app. */
   openDrawer: (appId: string | null) => void;
+  /** Query the coordinator for a single app's run state (one-shot).
+   *  Unlike `refreshStatus()` which loads the full snapshot, this targets one app. */
+  queryAppState: (appId: string) => Promise<AppRunState | null>;
 }
 
 export const useAppsStore = create<AppsState>((set, get) => {
@@ -427,5 +432,22 @@ export const useAppsStore = create<AppsState>((set, get) => {
     setScanProgress: (progress: number) => set({ scanProgress: progress }),
 
     openDrawer: (appId: string | null) => set({ drawerAppId: appId }),
+
+    queryAppState: async (appId: string) => {
+      try {
+        const state = await appsApi.queryCoordinatorState(appId);
+        if (state) {
+          set((s) => {
+            const next = new Map(s.runningApps);
+            next.set(appId, state);
+            return { runningApps: next };
+          });
+        }
+        return state;
+      } catch (error) {
+        console.error('[appsStore] queryAppState failed —', error);
+        return null;
+      }
+    },
   };
 });

@@ -103,7 +103,7 @@ export function cleanupExtractDir(extractDir: string): void {
 function performExtraction(zipPath: string, tempDir: string): Promise<ExtractResult> {
   return new Promise((resolve, reject) => {
     let totalSize = 0;
-    let completedEntries = 0;
+    let _completedEntries = 0;
 
     yauzl.open(
       zipPath,
@@ -150,10 +150,10 @@ function performExtraction(zipPath: string, tempDir: string): Promise<ExtractRes
             }
 
             const writeStream = fs.createWriteStream(resolvedPath);
-            let entrySize = 0;
+            let _entrySize = 0;
 
             readStream.on('data', (chunk: Buffer) => {
-              entrySize += chunk.length;
+              _entrySize += chunk.length;
               totalSize += chunk.length;
 
               // Abort if cumulative size exceeds the bomb limit.
@@ -175,7 +175,7 @@ function performExtraction(zipPath: string, tempDir: string): Promise<ExtractRes
             readStream.pipe(writeStream);
 
             writeStream.on('finish', () => {
-              completedEntries++;
+              _completedEntries++;
               zipfile.readEntry();
             });
 

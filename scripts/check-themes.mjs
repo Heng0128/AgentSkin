@@ -35,7 +35,7 @@ const ENGINES_DIR = path.resolve(process.cwd(), 'engines');
  * `--agentskin-text-shadow` is emitted by `tokenBlock()` as a global default;
  * it is checked separately in addition to the canonical 14 tokens.
  */
-const EXTRA_TOKENS = ['--agentskin-text-shadow'];
+const _EXTRA_TOKENS = ['--agentskin-text-shadow'];
 
 /**
  * RGB-raw companion tokens — derived in `build-palette.mjs` from their parent
@@ -56,6 +56,112 @@ const RAW_TOKENS = [
 ];
 
 const ALL_PALETTE_TOKENS = [...PALETTE_TOKENS, ...RAW_TOKENS];
+
+// --- P2 署名链合规校验常量 ---
+
+const KNOWN_LICENSES = new Set([
+  'MPL-2.0',
+  'MIT',
+  'Apache-2.0',
+  'GPL-2.0',
+  'GPL-3.0',
+  'LGPL-2.1',
+  'LGPL-3.0',
+  'BSD-2-Clause',
+  'BSD-3-Clause',
+  'CC-BY-4.0',
+  'CC-BY-SA-4.0',
+  'CC-BY-NC-4.0',
+  'CC-BY-NC-SA-4.0',
+  'CC-BY-ND-4.0',
+  'CC-BY-NC-ND-4.0',
+  'CC0-1.0',
+  'Unlicense',
+  'Proprietary',
+]);
+
+const WIRING_ID_REGEX = /^[a-z0-9][a-z0-9_-]*$/;
+const SEMVER_REGEX = /^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/;
+const COLOR_REGEX = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+
+/**
+ * 内联署名链校验（避免 import .ts 模块）。返回错误字符串数组。
+ * 与 src/main/catalog/theme-metadata.ts 的 validateThemeMetadata 保持逻辑一致。
+ */
+function validateThemeMetadataInline(manifest, themeName) {
+  const errs = [];
+
+  if (!manifest.author) {
+    errs.push(
+      `${themeName}: missing required author field (署名链必填)\n    Fix: Add "author": { "name": "Your Name" } to themes/${themeName}/manifest.json`,
+    );
+  } else if (
+    !manifest.author.name ||
+    typeof manifest.author.name !== 'string' ||
+    manifest.author.name.trim().length === 0
+  ) {
+    errs.push(
+      `${themeName}: author.name is required and must be a non-empty string\n    Fix: Set "author.name" to the theme author's name in themes/${themeName}/manifest.json`,
+    );
+  } else if (manifest.author.url !== undefined) {
+    if (typeof manifest.author.url !== 'string') {
+      errs.push(`${themeName}: author.url must be a string`);
+    } else {
+      try {
+        const url = new URL(manifest.author.url);
+        if (!['http:', 'https:', 'mailto:'].includes(url.protocol)) {
+          errs.push(`${themeName}: author.url must be an http, https, or mailto URL`);
+        }
+      } catch {
+        errs.push(`${themeName}: author.url is not a valid URL: "${manifest.author.url}"`);
+      }
+    }
+  }
+
+  if (!manifest.license) {
+    errs.push(
+      `${themeName}: missing required license field (署名链必填)\n    Fix: Add "license": "MPL-2.0" (or another SPDX identifier) to themes/${themeName}/manifest.json`,
+    );
+  } else if (!KNOWN_LICENSES.has(manifest.license)) {
+    errs.push(
+      `${themeName}: license "${manifest.license}" is not a known SPDX identifier\n    Fix: Use a standard SPDX license identifier (e.g. "MPL-2.0", "MIT", "CC-BY-NC-SA-4.0")`,
+    );
+  }
+
+  if (!manifest.version) {
+    errs.push(
+      `${themeName}: missing required version field\n    Fix: Add "version": "1.0.0" to themes/${themeName}/manifest.json`,
+    );
+  } else if (!SEMVER_REGEX.test(manifest.version)) {
+    errs.push(
+      `${themeName}: version "${manifest.version}" is not valid semver\n    Fix: Use semantic versioning (e.g. "1.0.0", "2.1.0-beta.1")`,
+    );
+  }
+
+  const accent = manifest.colors?.accent ?? manifest.colors?.primary;
+  if (!accent) {
+    errs.push(
+      `${themeName}: missing required accent color (colors.accent)\n    Fix: Add "accent": "#hex" to the colors object in themes/${themeName}/manifest.json`,
+    );
+  } else if (!COLOR_REGEX.test(accent)) {
+    errs.push(
+      `${themeName}: accent color "${accent}" is not a valid CSS color\n    Fix: Use a valid hex color (e.g. "#a78bfa") for colors.accent`,
+    );
+  }
+
+  const wiringId = manifest.wiring?.id;
+  if (!wiringId) {
+    errs.push(
+      `${themeName}: missing required wiring.id (署名链必填，对齐 dsh-deep-whale wiring 模型)\n    Fix: Add "wiring": { "id": "ui-skin-your-theme-id" } to themes/${themeName}/manifest.json`,
+    );
+  } else if (!WIRING_ID_REGEX.test(wiringId)) {
+    errs.push(
+      `${themeName}: wiring.id "${wiringId}" must match pattern ${WIRING_ID_REGEX.source}\n    Fix: Use lowercase alphanumeric + hyphens/underscores (e.g. "ui-skin-cyber-neon")`,
+    );
+  }
+
+  return errs;
+}
 
 /** Detect `var(--x, fallback)` where fallback is hardcoded (e.g. 128,128,128).
  *  These indicate tokens that the palette may not declare, risking silent
@@ -265,6 +371,30 @@ async function main() {
     // engines/ may not exist in minimal checkouts — non-fatal
   }
 
+  // 2) P2 署名链合规校验（author + license + version + accent + wiring.id）
+  for (const entry of dirs) {
+    if (!entry.isDirectory()) continue;
+    if (entry.name === '_shared') continue;
+    const metaManifestPath = path.join(THEMES_DIR, entry.name, 'manifest.json');
+    let metaManifestRaw;
+    try {
+      metaManifestRaw = await fs.readFile(metaManifestPath, 'utf8');
+    } catch {
+      continue;
+    }
+    if (!metaManifestRaw) continue;
+    let metaManifest;
+    try {
+      metaManifest = JSON.parse(metaManifestRaw);
+    } catch {
+      continue; // JSON parse error already reported above
+    }
+    const metaErrors = validateThemeMetadataInline(metaManifest, entry.name);
+    for (const e of metaErrors) {
+      errors.push(e);
+    }
+  }
+
   // 4) Extended colors format validation (blocking for declared keys).
   for (const entry of dirs) {
     if (!entry.isDirectory()) continue;
@@ -315,7 +445,7 @@ async function main() {
     process.exit(1);
   }
   console.log(
-    `check-themes: OK — ${checked} theme(s) pass (schema+assets+14 tokens+color-scheme+wcag)`,
+    `check-themes: OK — ${checked} theme(s) pass (schema+assets+14 tokens+color-scheme+wcag+metadata)`,
   );
 }
 

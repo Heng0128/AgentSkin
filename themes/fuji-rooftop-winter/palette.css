@@ -1,4 +1,4 @@
-/* palette.css — art-174043 (Art 174043) */
+/* palette.css — fuji-rooftop-winter (Fuji Rooftop Winter) */
 /* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #26251f;
@@ -11,7 +11,7 @@
   --agentskin-border: #42413a;
   --agentskin-code-bg: #23221c;
   --agentskin-code-fg: #f4f0eb;
-  --agentskin-focus-ring: color-mix(in srgb, #cac2af 40%, transparent);
+  --agentskin-focus-ring: #cac2af60;
   --agentskin-selection: color-mix(in srgb, #cac2af 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */

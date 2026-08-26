@@ -179,6 +179,7 @@ group('V6: hotReplace flicker-free swap');
 
 group('V7: dispose full cleanup');
 {
+  _adoptedSheets.length = 0;
   const h = new HybridInjector();
   h.applyFullTheme('palette', 'html { color: red; }');
   h.applyFullTheme('tokens', 'html { color: blue; }');
@@ -196,6 +197,7 @@ group('V8: idempotency guard');
 
 group('V9: removeLayer');
 {
+  _adoptedSheets.length = 0;
   const h = new HybridInjector();
   h.applyFullTheme('palette', 'html { color: red; }');
   h.applyFullTheme('tokens', 'html { color: blue; }');
@@ -206,6 +208,92 @@ group('V9: removeLayer');
     !_adoptedSheets.some(s => s.__agentskin_layer === 'palette'),
     'palette layer removed'
   );
+}
+
+// ---------------------------------------------------------------------------
+// Group B: Boundary condition tests
+// ---------------------------------------------------------------------------
+
+group('B1: applyIncremental null/undefined/empty input');
+{
+  const h = new HybridInjector();
+  const r1 = h.applyIncremental(null, true);
+  assert(r1 === 0, 'null tokens returns 0');
+  const r2 = h.applyIncremental(undefined, true);
+  assert(r2 === 0, 'undefined tokens returns 0');
+  const r3 = h.applyIncremental({}, true);
+  assert(r3 === 0, 'empty object returns 0');
+  const r4 = h.applyIncremental('not-an-object', true);
+  assert(r4 === 0, 'string input returns 0');
+  const r5 = h.applyIncremental(42, true);
+  assert(r5 === 0, 'number input returns 0');
+}
+
+group('B2: applyFullTheme empty string CSS');
+{
+  _adoptedSheets.length = 0;
+  const h = new HybridInjector();
+  const ruleCount = h.applyFullTheme('palette', '');
+  assert(ruleCount === 0, 'empty CSS returns 0 rules');
+  assert(_adoptedSheets.length === 1, 'sheet still adopted even with empty CSS');
+  assert(
+    _adoptedSheets[0].__agentskin_layer === 'palette',
+    'empty CSS sheet tagged as palette'
+  );
+}
+
+group('B3: applyBatch empty array');
+{
+  _adoptedSheets.length = 0;
+  const h = new HybridInjector();
+  const r1 = h.applyBatch('tokens', []);
+  assert(r1 === 0, 'empty array returns 0');
+  const r2 = h.applyBatch('tokens', null);
+  assert(r2 === 0, 'null rules returns 0');
+  const r3 = h.applyBatch('tokens', undefined);
+  assert(r3 === 0, 'undefined rules returns 0');
+  const r4 = h.applyBatch('tokens', 'not-array');
+  assert(r4 === 0, 'string rules returns 0');
+  assert(_adoptedSheets.length === 0, 'no sheets adopted for invalid batch');
+}
+
+group('B4: multiple dispose calls idempotency');
+{
+  _adoptedSheets.length = 0;
+  const h = new HybridInjector();
+  h.applyFullTheme('palette', 'html { color: red; }');
+  h.applyFullTheme('tokens', 'html { color: blue; }');
+  h.applyIncremental({ '--agentskin-accent': '#fff' }, true);
+  h.dispose();
+  assert(_adoptedSheets.length === 0, 'first dispose removes all sheets');
+  // Second dispose should not throw
+  let threw = false;
+  try {
+    h.dispose();
+  } catch {
+    threw = true;
+  }
+  assert(!threw, 'second dispose does not throw');
+  assert(_adoptedSheets.length === 0, 'state remains clean after second dispose');
+  // Third dispose for good measure
+  threw = false;
+  try {
+    h.dispose();
+  } catch {
+    threw = true;
+  }
+  assert(!threw, 'third dispose does not throw');
+}
+
+group('B5: hotReplace non-existent layer');
+{
+  const h = new HybridInjector();
+  const before = _adoptedSheets.length;
+  const result = h.hotReplace('nonexistent', 'html { color: green; }');
+  assert(result >= 1, 'hotReplace on missing layer falls back to applyFullTheme');
+  assert(_adoptedSheets.length === before + 1, 'new sheet created for previously missing layer');
+  const sheet = _adoptedSheets.find(s => s.__agentskin_layer === 'nonexistent');
+  assert(sheet !== undefined, 'sheet tagged as nonexistent layer');
 }
 
 console.log(`\n${'='.repeat(50)}`);

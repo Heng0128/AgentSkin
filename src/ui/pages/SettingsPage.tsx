@@ -5,6 +5,9 @@ import { api } from '@/api/agentSkinClient';
 import { DriftStatusPanel } from '@/components/diagnostics/DriftStatusPanel';
 import { PerformancePanel } from '@/components/diagnostics/PerformancePanel';
 import { SecondaryInjectTrace } from '@/components/diagnostics/SecondaryInjectTrace';
+import { SelectorProbePanel } from '@/components/diagnostics/SelectorProbePanel';
+import { VisualAnalysisPanel } from '@/components/diagnostics/VisualAnalysisPanel';
+import { SettingsDashboard } from '@/components/settings/SettingsDashboard';
 import {
   Accordion,
   AccordionContent,
@@ -27,6 +30,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { ThemeMode } from '@/design/theme-mode';
 import type { AppController, SettingsSection } from '@/hooks/useAppController';
+import { useDiagnosticsSync } from '@/hooks/useDiagnosticsSync';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import { cn } from '@/lib/utils';
 import {
@@ -276,6 +280,9 @@ function McpSettingsPanel({ t }: { t: AppController['t'] }) {
 export function SettingsPage({ controller }: { controller: AppController }) {
   const { t, appVersion, logs, showToast } = controller;
   const { mode, setMode } = useThemeMode();
+
+  // Subscribe to real-time diagnostics events (concurrency metrics + new traces)
+  useDiagnosticsSync();
   const section = controller.settingsSection;
   const setSection = controller.setSettingsSection;
   const radiusScale = useSettingsStore((s) => s.radiusScale);
@@ -446,39 +453,42 @@ export function SettingsPage({ controller }: { controller: AppController }) {
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div className="mx-auto flex max-w-2xl flex-col gap-3 pb-4">
             {section === 'general' && (
-              <div className="as-panel overflow-hidden">
-                <SettingRow title={t.themeModeLabel}>
-                  <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
-                    <SelectTrigger className="h-8 w-[140px] rounded-md border-border bg-muted text-[11px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-md border-border bg-card">
-                      {themeOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
-                          {opt.label}
+              <div className="flex flex-col gap-4">
+                <SettingsDashboard t={t} />
+                <div className="as-panel overflow-hidden">
+                  <SettingRow title={t.themeModeLabel}>
+                    <Select value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
+                      <SelectTrigger className="h-8 w-[140px] rounded-md border-border bg-muted text-[11px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-md border-border bg-card">
+                        {themeOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value} className="text-[11px]">
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </SettingRow>
+                  <SettingRow title={t.languageLabel}>
+                    <Select
+                      value={controller.locale}
+                      onValueChange={(v) => void controller.setLocale(v as 'zh-CN' | 'en')}
+                    >
+                      <SelectTrigger className="h-8 w-[140px] rounded-md border-border bg-muted text-[11px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-md border-border bg-card">
+                        <SelectItem value="zh-CN" className="text-[11px]">
+                          {t.chinese}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </SettingRow>
-                <SettingRow title={t.languageLabel}>
-                  <Select
-                    value={controller.locale}
-                    onValueChange={(v) => void controller.setLocale(v as 'zh-CN' | 'en')}
-                  >
-                    <SelectTrigger className="h-8 w-[140px] rounded-md border-border bg-muted text-[11px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-md border-border bg-card">
-                      <SelectItem value="zh-CN" className="text-[11px]">
-                        {t.chinese}
-                      </SelectItem>
-                      <SelectItem value="en" className="text-[11px]">
-                        {t.english}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </SettingRow>
+                        <SelectItem value="en" className="text-[11px]">
+                          {t.english}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </SettingRow>
+                </div>
               </div>
             )}
             {section === 'appearance' && (
@@ -577,6 +587,22 @@ export function SettingsPage({ controller }: { controller: AppController }) {
                     </AccordionTrigger>
                     <AccordionContent className="px-3 pb-3">
                       <DriftStatusPanel t={t} />
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="visual-analysis" className="border-t border-border">
+                    <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
+                      Visual Analysis
+                    </AccordionTrigger>
+                    <AccordionContent className="px-3 pb-3">
+                      <VisualAnalysisPanel />
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="selector-probe" className="border-t border-border">
+                    <AccordionTrigger className="px-3 py-2.5 text-[12px] font-medium hover:no-underline">
+                      Selector Probe
+                    </AccordionTrigger>
+                    <AccordionContent className="px-3 pb-3">
+                      <SelectorProbePanel />
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>

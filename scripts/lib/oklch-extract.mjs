@@ -325,7 +325,7 @@ export function detectMode(avgL) {
  */
 export function assembleTokens(hist, dominant, mode) {
   const dark = mode === 'dark';
-  const [primary, secondary] = dominant;
+  const [primary, _secondary] = dominant;
 
   // --- Background ---
   // For dark mode, background is a slightly-lifted minL with low chroma tinted by primary hue.

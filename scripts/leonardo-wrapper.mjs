@@ -100,7 +100,7 @@ function safeHex(hex) {
  * @param {number} lightness 0-100
  * @returns {Theme|null}
  */
-function buildSingleColorTheme(name, baseHex, ratios, bgHex, lightness) {
+function _buildSingleColorTheme(name, baseHex, ratios, bgHex, lightness) {
   try {
     const color = new Color({
       name,
@@ -203,7 +203,7 @@ export function generate14TokenPalette(baseHex, options = {}) {
     // Map Leonardo output keys back to token names
     for (const key of TOKEN_KEYS) {
       if (key === 'background') {
-        result.background = pairs['background100'] ?? pairs['background25'] ?? bgHex;
+        result.background = pairs.background100 ?? pairs.background25 ?? bgHex;
         continue;
       }
       // Leonardo names like "accent100", "accent200" based on ratio order
@@ -279,7 +279,7 @@ export function suggestForeground(bgHex, targetRatio = 4.5) {
  * @param {number} targetRatio - minimum WCAG contrast ratio
  * @returns {string} grayscale hex
  */
-function fineTuneForeground(bgLum, idealFgLum, isLight, targetRatio) {
+function fineTuneForeground(bgLum, _idealFgLum, isLight, targetRatio) {
   // Determine search range and direction
   // Light bg: fg must be dark → search v from 0 upward (black first)
   // Dark bg: fg must be light → search v from 255 downward (white first)
@@ -413,7 +413,7 @@ function relativeLuminance(hex) {
  * @param {number} l - relative luminance, 0-1
  * @returns {string} hex color (e.g. '#808080')
  */
-function luminanceToHex(l) {
+function _luminanceToHex(l) {
   const lum = Math.max(0, Math.min(1, l));
   // Inverse gamma: linear -> sRGB
   const srgb = lum <= 0.0031308 ? lum * 12.92 : 1.055 * lum ** (1 / 2.4) - 0.055;

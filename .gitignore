@@ -173,3 +173,5 @@ test-output/image-analyzer-run.txt
 *.bmp
 # Temp icon assets (icon_temp*.png pattern)
 icon_temp*.png
+C*tsc-output.txt
+C*tsc-output.txt

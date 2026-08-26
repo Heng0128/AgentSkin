@@ -23,7 +23,7 @@
  *     允许 import semantic-quant/*（注入执行层其余模块禁止）。
  */
 
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { listAdapters } from '../src/engine/src/adapters/index.mjs';

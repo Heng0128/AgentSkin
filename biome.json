@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.5/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.10/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -14,13 +14,15 @@
       "!**/.vite",
       "!**/coverage",
       "!**/engines/**/*.mjs",
+      "!**/engines/**/*.css",
       "!**/src/engine",
       "!**/src/legacy/agentskin-core-runtime.ts",
       "!**/themes",
       "!**/build",
       "!**/assets",
       "!**/.build-tmp",
-      "!**/out_make_trash_*"
+      "!**/out_make_trash_*",
+      "!**/docs"
     ]
   },
   "formatter": {
@@ -47,7 +49,20 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
+      "suspicious": {
+        "noArrayIndexKey": "off",
+        "noDuplicateCustomProperties": "off"
+      },
+      "a11y": {
+        "useSemanticElements": "off",
+        "noStaticElementInteractions": "off",
+        "useKeyWithClickEvents": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "noUnusedImports": "warn"
+      },
       "style": {
         "noNonNullAssertion": "off",
         "useImportType": "error",
@@ -56,14 +71,6 @@
       "complexity": {
         "useOptionalChain": "warn",
         "noUselessFragments": "warn"
-      },
-      "correctness": {
-        "noUnusedVariables": "warn",
-        "noUnusedImports": "warn"
-      },
-      "a11y": {
-        "useSemanticElements": "off",
-        "noStaticElementInteractions": "off"
       }
     }
   },

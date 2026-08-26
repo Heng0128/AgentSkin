@@ -21,9 +21,10 @@ export function SkeletonText({
 }) {
   return (
     <div className={cn('flex flex-col gap-2', className)}>
+      {/* biome-ignore lint/suspicious/noArrayIndexKey: static placeholder lines — no dynamic reordering possible */}
       {Array.from({ length: lines }).map((_, i) => (
         <div
-          key={`skeleton-line-${i}-${lines}`}
+          key={`skeleton-line-${i}`}
           className={cn(
             'shimmer h-3 rounded-md',
             i === lines - 1 ? 'w-3/5' : i % 3 === 1 ? 'w-4/5' : 'w-full',

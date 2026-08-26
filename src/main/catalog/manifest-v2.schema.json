@@ -524,6 +524,24 @@
     "depth": {
       "type": "string",
       "enum": ["L1", "L2", "L3"]
+    },
+    "wiring": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9_-]*$",
+          "description": "主题接线唯一标识（P2 署名链合规，对齐 dsh-deep-whale wiring.id）"
+        },
+        "bundleWired": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否已打包接线"
+        }
+      },
+      "description": "(P2+) 主题接线配置，声明主题在运行时如何与目标应用绑定。对齐 dsh-deep-whale 署名链模型。"
     }
   },
   "$defs": {

@@ -23,6 +23,7 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { verifyBuildFingerprint } from '../../shared/theme-build-fingerprint';
 import { isSafeThemeId } from '../../shared/theme-id';
 import { mainErrorFromCatch, mainWarn } from '../logger';
 import { formatSchemaErrors, validateManifest } from './manifest-validator';
@@ -481,6 +482,17 @@ export class ThemePackageLoader {
       if (manifest.repository !== undefined && typeof manifest.repository !== 'string') {
         throw new ThemePackageValidationError(themeId, 'repository must be a string URL');
       }
+    }
+
+    // Build fingerprint verification: if the package ships a build.fingerprint.json,
+    // validate that the fingerprinted files have not been tampered with or corrupted.
+    // Packages without a fingerprint are allowed (backward compatibility).
+    const fingerprintResult = await verifyBuildFingerprint(packagePath);
+    if (!fingerprintResult.valid) {
+      throw new ThemePackageValidationError(
+        themeId,
+        `build.fingerprint.json verification failed: ${fingerprintResult.errors.join('; ')}`,
+      );
     }
 
     return { packagePath, manifest };

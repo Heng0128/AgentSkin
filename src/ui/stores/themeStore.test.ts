@@ -22,6 +22,7 @@ const {
   mockOnFileImportConfirm,
   mockOnFileImportFailed,
   mockOnTrayApply,
+  mockOnThemeHotReload,
   mockRefreshStatus,
   mockShowToast,
   mockFail,
@@ -40,6 +41,7 @@ const {
   mockOnFileImportConfirm: vi.fn(),
   mockOnFileImportFailed: vi.fn(),
   mockOnTrayApply: vi.fn(),
+  mockOnThemeHotReload: vi.fn(),
   mockRefreshStatus: vi.fn(),
   mockShowToast: vi.fn(),
   mockFail: vi.fn(),
@@ -63,6 +65,7 @@ vi.mock('@/api/agentSkinClient', () => ({
     onFileImportConfirm: mockOnFileImportConfirm,
     onFileImportFailed: mockOnFileImportFailed,
     onTrayApply: mockOnTrayApply,
+    onThemeHotReload: mockOnThemeHotReload,
   },
 }));
 

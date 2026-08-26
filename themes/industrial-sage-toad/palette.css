@@ -1,4 +1,4 @@
-/* palette.css — art-175324 (Art 175324) */
+/* palette.css — industrial-sage-toad (Industrial Sage Toad) */
 /* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #11120d;
@@ -11,7 +11,7 @@
   --agentskin-border: #2c2c27;
   --agentskin-code-bg: #10100c;
   --agentskin-code-fg: #f4f0eb;
-  --agentskin-focus-ring: color-mix(in srgb, #6d906a 40%, transparent);
+  --agentskin-focus-ring: #6d906a60;
   --agentskin-selection: color-mix(in srgb, #6d906a 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */

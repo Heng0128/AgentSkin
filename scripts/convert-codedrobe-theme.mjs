@@ -9,7 +9,7 @@
  * Generates CSS for all 6 adapters (codex/qoderwork/traework/workbuddy/doubao/zcode)
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -177,7 +177,7 @@ function agentskinTokenBlock(selector, extraProps = '') {
  * Generate the standard --agentskin-* token block for converted CSS
  * Ensures all required tokens are present for check-themes validation
  */
-function generateRequiredTokensBlock() {
+function _generateRequiredTokensBlock() {
   return `  --agentskin-bg: ${tokens.background};
   --agentskin-surface: ${tokens.surface};
   --agentskin-surface-elevated: ${tokens.surfaceElevated};
@@ -200,7 +200,7 @@ function generateRequiredTokensBlock() {
  * - Replace --miku-* / --doll-* vars with --agentskin-* equivalents
  * - Preserve all structural overrides
  */
-function convertCSS(css, adapter) {
+function convertCSS(css, _adapter) {
   let result = css;
 
   // Replace selector patterns
@@ -338,7 +338,7 @@ function convertCSS(css, adapter) {
     const firstBraceIdx = result.indexOf('{');
     if (firstBraceIdx !== -1) {
       const insertPos = firstBraceIdx + 1;
-      result = result.substring(0, insertPos) + '\n' + tokensToInject + result.substring(insertPos);
+      result = `${result.substring(0, insertPos)}\n${tokensToInject}${result.substring(insertPos)}`;
     }
   }
 
@@ -501,13 +501,13 @@ html.agentskin-host-zcode {
 function decodeImage(base64Str, outputPath) {
   const buffer = Buffer.from(base64Str, 'base64');
   writeFileSync(outputPath, buffer);
-  console.log(`  Saved: ${outputPath.replace(OUTPUT_DIR + '/', '')} (${buffer.length} bytes)`);
+  console.log(`  Saved: ${outputPath.replace(`${OUTPUT_DIR}/`, '')} (${buffer.length} bytes)`);
 }
 
-function decodeImageWithAlpha(base64Str, outputPath) {
+function _decodeImageWithAlpha(base64Str, outputPath) {
   const buffer = Buffer.from(base64Str, 'base64');
   writeFileSync(outputPath, buffer);
-  console.log(`  Saved: ${outputPath.replace(OUTPUT_DIR + '/', '')} (${buffer.length} bytes)`);
+  console.log(`  Saved: ${outputPath.replace(`${OUTPUT_DIR}/`, '')} (${buffer.length} bytes)`);
 }
 
 // ===== 7. Main conversion =====

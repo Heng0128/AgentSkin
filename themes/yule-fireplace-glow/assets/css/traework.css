@@ -64,12 +64,14 @@ html.agentskin-host-traework body {
   --vscode-icube--bg-bg-overlay-l3: rgba(157, 124, 224, 0.18) !important;
   --vscode-input-background: rgba(157, 124, 224, 0.07) !important;
 
-  /* Surfaces */
-  --vscode-editor-background: #2a301f !important;
-  --vscode-icube-colorBg1: #2a301f !important;
-  --vscode-icube-colorBg2: #414836 !important;
-  --vscode-icube-colorBg3: #4e5443 !important;
-  --vscode-editorWidget-background: #414836 !important;
+  /* Surfaces — transparent/semi-transparent for art punch-through
+     (matches QoderWork strategy: --color-bg-base/container/background → transparent).
+     Flash-fix: opaque --vscode-icube-colorBg* were covering #root::before hero art. */
+  --vscode-editor-background: transparent !important;
+  --vscode-icube-colorBg1: transparent !important;
+  --vscode-icube-colorBg2: color-mix(in srgb, #414836 45%, transparent) !important;
+  --vscode-icube-colorBg3: color-mix(in srgb, #4e5443 55%, transparent) !important;
+  --vscode-editorWidget-background: color-mix(in srgb, #414836 50%, transparent) !important;
   --vscode-sideBar-background: color-mix(in srgb, var(--agentskin-surface) 15%, transparent) !important;
   --vscode-widget-shadow: rgba(157, 124, 224, 0.15) !important;
   --vscode-badge-background: rgba(157, 124, 224, 0.65) !important;
@@ -184,6 +186,11 @@ html.agentskin-host-traework .monaco-workbench {
   --vscode-statusBar-background: color-mix(in srgb, var(--agentskin-surface) 10%, transparent) !important;
   --vscode-titleBar-activeBackground: color-mix(in srgb, var(--agentskin-surface) 8%, transparent) !important;
   --vscode-titleBar-inactiveBackground: color-mix(in srgb, var(--agentskin-surface) 6%, transparent) !important;
+  /* Flash-fix: pin workbench-level colorBg* tokens transparent so VS Code
+     internal containers don't paint opaque over #root::before hero art. */
+  --vscode-icube-colorBg1: transparent !important;
+  --vscode-icube-colorBg2: color-mix(in srgb, var(--agentskin-surface) 45%, transparent) !important;
+  --vscode-icube-colorBg3: color-mix(in srgb, var(--agentskin-surface-elevated) 55%, transparent) !important;
   background: transparent !important;
 }
 

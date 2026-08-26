@@ -1,4 +1,4 @@
-/* palette.css — art-174835 (Art 174835) */
+/* palette.css — sunset-cellphone-girl (Sunset Cellphone Girl) */
 /* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #060409;
@@ -11,7 +11,7 @@
   --agentskin-border: #201e23;
   --agentskin-code-bg: #050408;
   --agentskin-code-fg: #f4f0eb;
-  --agentskin-focus-ring: color-mix(in srgb, #ff9a30 40%, transparent);
+  --agentskin-focus-ring: #ff9a3060;
   --agentskin-selection: color-mix(in srgb, #ff9a30 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */

@@ -30,7 +30,7 @@ import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { app, dialog, ipcMain } from 'electron';
-import { getMainLocale, getMainMessages, uiMessages } from '../../shared/i18n';
+import { getMainLocale, uiMessages } from '../../shared/i18n';
 import { IpcChannel } from '../../shared/ipc-channels';
 import { isSafeThemeId } from '../../shared/theme-id';
 import { semanticColorsToPalette } from '../../shared/theme-mapping';

@@ -37,7 +37,9 @@ class MockEventEmitter {
   }
 
   emit(event: string | symbol, ...args: unknown[]): boolean {
-    this.listeners.get(event)?.forEach((fn) => fn(args));
+    this.listeners.get(event)?.forEach((fn) => {
+      fn(args);
+    });
     return this.listeners.has(event);
   }
 
@@ -151,9 +153,6 @@ class MockTray extends MockEventEmitter {
 // Menu mock
 // ---------------------------------------------------------------------------
 class MockMenu extends MockEventEmitter {
-  constructor() {
-    super();
-  }
   static setApplicationMenu = vi.fn();
   static getApplicationMenu = vi.fn(() => null);
   static buildFromTemplate = vi.fn(() => new MockMenu());

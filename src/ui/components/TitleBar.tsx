@@ -77,7 +77,7 @@ export function TitleBar({ hasWallpaper = false }: { hasWallpaper?: boolean }) {
 
   // Icon button class — transparent by default, reveals bg on hover.
   const iconBtn =
-    'flex size-7 items-center justify-center rounded-md text-muted-foreground transition-[background-color,color] duration-fast hover:bg-card2 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
+    'flex size-7 items-center justify-center rounded-md text-muted-foreground transition-[background-color,color] duration-base hover:bg-card2 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent';
 
   return (
     <header

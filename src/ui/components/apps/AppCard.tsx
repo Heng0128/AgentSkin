@@ -109,7 +109,7 @@ export function AppCard({
           <img
             src={iconSrc}
             alt={app.productName}
-            className="size-12 object-contain drop-shadow-sm transition-transform duration-fast group-hover:scale-105"
+            className="size-12 object-contain drop-shadow-sm transition-transform duration-base group-hover:scale-105"
             onError={() => setImgError(true)}
           />
         ) : (

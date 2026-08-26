@@ -17,16 +17,10 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type {
-  AgentId,
-  ApplyRequest,
-  ApplyResponse,
-  SystemStatus,
-  WallpaperAgentSetting,
-} from '../shared/types';
+import type { AgentId, ApplyRequest, ApplyResponse, SystemStatus } from '../shared/types';
 import { AgentEngineService } from './agent-engine-service';
 import { EpochManager } from './epoch-manager';
-import { appendLogLine, writeJsonAtomic } from './fs-utils';
+import { writeJsonAtomic } from './fs-utils';
 import type { SettingsServiceApi } from './services/contracts';
 // RC4-S4-A: Import shared mock factory for type-safe stubs
 import {

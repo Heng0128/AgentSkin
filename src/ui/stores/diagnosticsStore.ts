@@ -20,6 +20,25 @@ import { create } from 'zustand';
 import type { ConcurrencyMetrics } from '../../shared/types/concurrency';
 import type { DriftStatus } from '../types/drift-status';
 
+interface MemorySample {
+  ts: number;
+  heapUsed: number;
+  rss: number;
+  external: number;
+}
+
+interface PerfTrace {
+  id: string;
+  agentId: string;
+  themeId?: string;
+  startedAt: number;
+  finishedAt: number;
+  duration: number;
+  success: boolean;
+  steps: Array<{ name: string; duration: number; success: boolean; error?: string }>;
+  error?: string;
+}
+
 interface DiagnosticsState {
   timeoutEvents: Array<{ id: string; channel: string; ms: number; timestamp: number }>;
   timeoutsLoading: boolean;
@@ -31,6 +50,14 @@ interface DiagnosticsState {
   /** Per-agent drift-detection status pushed from the main process after each
    *  fingerprint capture + drift cycle. Keyed by agentId. */
   driftStatusByAgent: Record<string, DriftStatus>;
+  /** Recent memory samples (heap/rss/external) from the main process.
+   *  Populated by `loadMemorySamples()`; capped at 60 entries (5 min @ 5s). */
+  memorySamples: MemorySample[];
+  memoryLoading: boolean;
+  memoryError: string | null;
+  /** Recent performance traces pushed in real-time from the main process.
+   *  Each new trace is prepended; list capped at 50 entries. */
+  recentTraces: PerfTrace[];
 
   loadTimeouts: (count?: number) => Promise<void>;
   clearTimeouts: () => Promise<void>;
@@ -39,6 +66,10 @@ interface DiagnosticsState {
   setDriftReport: (report: DriftStatus) => void;
   /** Increment persistFailures by the failure count carried in the warning. */
   incrementPersistFailures: (count: number) => void;
+  /** Load main-process memory samples (heap/rss/external). */
+  loadMemorySamples: () => Promise<void>;
+  /** Push a real-time trace from the `performance:new-trace` IPC event. */
+  pushTrace: (trace: PerfTrace) => void;
 }
 
 const initialConcurrencyMetrics: ConcurrencyMetrics = {
@@ -59,6 +90,10 @@ export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({
   concurrencyMetrics: initialConcurrencyMetrics,
   healthReportByAgent: {},
   driftStatusByAgent: {},
+  memorySamples: [],
+  memoryLoading: false,
+  memoryError: null,
+  recentTraces: [],
 
   loadTimeouts: async (count = 10) => {
     set({ timeoutsLoading: true, timeoutsError: null });
@@ -116,6 +151,25 @@ export const useDiagnosticsStore = create<DiagnosticsState>((set) => ({
         ...state.concurrencyMetrics,
         persistFailures: state.concurrencyMetrics.persistFailures + count,
       },
+    }));
+  },
+
+  loadMemorySamples: async () => {
+    set({ memoryLoading: true, memoryError: null });
+    try {
+      const samples = await api.getPerformanceMemory();
+      set({ memorySamples: samples, memoryLoading: false });
+    } catch (error) {
+      set({
+        memoryError: error instanceof Error ? error.message : String(error),
+        memoryLoading: false,
+      });
+    }
+  },
+
+  pushTrace: (trace) => {
+    set((state) => ({
+      recentTraces: [trace, ...state.recentTraces].slice(0, 50),
     }));
   },
 }));

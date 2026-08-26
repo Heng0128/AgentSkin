@@ -244,7 +244,7 @@ function main() {
           message: `"${themeId}" schemaVersion mismatch (got ${manifest.schemaVersion})`,
         });
       }
-      if (!manifest.$schema || !manifest.$schema.includes('manifest-v2')) {
+      if (!manifest.$schema?.includes('manifest-v2')) {
         errors.push({
           check: 'v2 schema ($schema)',
           message: `"${themeId}" $schema missing or incorrect`,

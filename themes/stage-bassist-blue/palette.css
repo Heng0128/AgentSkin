@@ -1,4 +1,4 @@
-/* palette.css — art-175108 (Art 175108) */
+/* palette.css — stage-bassist-blue (Stage Bassist Blue) */
 /* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #0b1220;
@@ -11,7 +11,7 @@
   --agentskin-border: #252c3c;
   --agentskin-code-bg: #0a101e;
   --agentskin-code-fg: #f4f0eb;
-  --agentskin-focus-ring: color-mix(in srgb, #6c769b 40%, transparent);
+  --agentskin-focus-ring: #6c769b60;
   --agentskin-selection: color-mix(in srgb, #6c769b 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */

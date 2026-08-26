@@ -7,7 +7,7 @@
  * script executability, directory structure, path leakage, and sensitive info.
  */
 
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -225,7 +225,10 @@ describe('checkCssSyntax', () => {
 
   it('fails for unbalanced braces', () => {
     mkdirSync(join(testDir, 'assets', 'css'), { recursive: true });
-    writeFileSync(join(testDir, 'manifest.json'), JSON.stringify({ targets: { workbuddy: { css: 'assets/css/workbuddy.css' } } }));
+    writeFileSync(
+      join(testDir, 'manifest.json'),
+      JSON.stringify({ targets: { workbuddy: { css: 'assets/css/workbuddy.css' } } }),
+    );
     writeFileSync(join(testDir, 'assets', 'css', 'workbuddy.css'), ':root { color-scheme: dark; ');
     const result = checkCssSyntax(testDir);
     expect(result.passed).toBe(false);
@@ -234,7 +237,10 @@ describe('checkCssSyntax', () => {
 
   it('fails for missing required tokens', () => {
     mkdirSync(join(testDir, 'assets', 'css'), { recursive: true });
-    writeFileSync(join(testDir, 'manifest.json'), JSON.stringify({ targets: { workbuddy: { css: 'assets/css/workbuddy.css' } } }));
+    writeFileSync(
+      join(testDir, 'manifest.json'),
+      JSON.stringify({ targets: { workbuddy: { css: 'assets/css/workbuddy.css' } } }),
+    );
     writeFileSync(join(testDir, 'assets', 'css', 'workbuddy.css'), ':root { color-scheme: dark; }');
     const result = checkCssSyntax(testDir);
     expect(result.passed).toBe(false);
@@ -242,7 +248,10 @@ describe('checkCssSyntax', () => {
   });
 
   it('fails when CSS file is missing', () => {
-    writeFileSync(join(testDir, 'manifest.json'), JSON.stringify({ targets: { workbuddy: { css: 'assets/css/workbuddy.css' } } }));
+    writeFileSync(
+      join(testDir, 'manifest.json'),
+      JSON.stringify({ targets: { workbuddy: { css: 'assets/css/workbuddy.css' } } }),
+    );
     const result = checkCssSyntax(testDir);
     expect(result.passed).toBe(false);
     expect(result.message).toContain('not found');
@@ -329,7 +338,10 @@ describe('checkNoSensitiveInfo', () => {
 
   it('fails when a file contains an API key pattern', () => {
     createValidPackage(testDir);
-    writeFileSync(join(testDir, 'scripts', 'install.mjs'), '// api_key = "sk-abc123def456ghi789jkl012mno345pq"\n');
+    writeFileSync(
+      join(testDir, 'scripts', 'install.mjs'),
+      '// api_key = "sk-abc123def456ghi789jkl012mno345pq"\n',
+    );
     const result = checkNoSensitiveInfo(testDir);
     expect(result.passed).toBe(false);
     expect(result.severity).toBe('warning');

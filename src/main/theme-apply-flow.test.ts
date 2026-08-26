@@ -177,6 +177,7 @@ function makeDeps(overrides: Partial<ApplyFlowDeps> = {}): ApplyFlowDeps {
     displayName: () => 'WorkBuddy',
     log: () => {},
     logStructured: () => {},
+    notifyHotReload: vi.fn(),
     ...overrides,
   };
   return deps;

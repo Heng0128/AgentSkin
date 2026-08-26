@@ -91,6 +91,9 @@
     0 8px 32px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.09),
     0 0 24px rgba(225, 29, 72, 0.05);
 
+  /* ---- Scrim / overlay ---- */
+  --scrim: rgba(0, 0, 0, 0.5);
+
   --shadow: var(--shadow-elev1);
   --shadow-xs: var(--shadow-elev1);
   --shadow-sm: var(--shadow-elev1);
@@ -203,6 +206,9 @@
   --shadow-elev3: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.08);
   --shadow-float:
     0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.09), 0 0 24px rgba(225, 29, 72, 0.03);
+
+  /* ---- Scrim / overlay ---- */
+  --scrim: rgba(0, 0, 0, 0.5);
 
   --shadow: var(--shadow-elev1);
   --shadow-xs: var(--shadow-elev1);
@@ -1050,6 +1056,12 @@ body {
     transition: none !important;
     transform: none !important;
   }
+}
+
+/* Crop mask — used by ImageCropDialog to dim everything outside the crop frame.
+   Uses var(--scrim) for a semi-transparent overlay that lets the image show through. */
+.as-crop-mask {
+  box-shadow: 0 0 0 9999px var(--scrim);
 }
 
 /* Input focus */

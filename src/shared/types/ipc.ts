@@ -770,4 +770,12 @@ export interface AgentSkinApi {
   onThemeEngineInjectFailure(
     listener: (event: { agent: string; themeId: string; message: string }) => void,
   ): () => void;
+  /** Subscribe to theme hot-reload events pushed from the main process after
+   *  a theme hot-reload completes. The renderer uses this to update its UI
+   *  (token preview, scheme picker, drift status) without a full page reload.
+   *  Returns an unsubscribe function. No ipcMain.handle is registered —
+   *  this is a main→renderer push event sent via webContents.send. */
+  onThemeHotReload(
+    listener: (payload: import('./theme').ThemeHotReloadPayload) => void,
+  ): () => void;
 }

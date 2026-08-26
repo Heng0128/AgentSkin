@@ -1,4 +1,4 @@
-/* palette.css — art-175236 (Art 175236) */
+/* palette.css — academy-corridor-winter (Academy Corridor Winter) */
 /* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #13171a;
@@ -11,7 +11,7 @@
   --agentskin-border: #2d3235;
   --agentskin-code-bg: #111517;
   --agentskin-code-fg: #f4f0eb;
-  --agentskin-focus-ring: color-mix(in srgb, #afcad2 40%, transparent);
+  --agentskin-focus-ring: #afcad260;
   --agentskin-selection: color-mix(in srgb, #afcad2 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */

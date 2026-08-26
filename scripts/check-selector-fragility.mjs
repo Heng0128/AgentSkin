@@ -35,7 +35,7 @@ import path from 'node:path';
 
 const THEMES_DIR = path.resolve(process.cwd(), 'themes');
 const ENGINES_DIR = path.resolve(process.cwd(), 'engines');
-const SRC_DIR = path.resolve(process.cwd(), 'src');
+const _SRC_DIR = path.resolve(process.cwd(), 'src');
 
 // ---------------------------------------------------------------------------
 // Fragility pattern matchers

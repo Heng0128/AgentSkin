@@ -1,4 +1,4 @@
-/* palette.css — art-174751 (Art 174751) */
+/* palette.css — winged-mecha-ascendant (Winged Mecha Ascendant) */
 /* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #170d13;
@@ -11,7 +11,7 @@
   --agentskin-border: #32272d;
   --agentskin-code-bg: #150c11;
   --agentskin-code-fg: #f4f0eb;
-  --agentskin-focus-ring: color-mix(in srgb, #98b863 40%, transparent);
+  --agentskin-focus-ring: #98b86360;
   --agentskin-selection: color-mix(in srgb, #98b863 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */

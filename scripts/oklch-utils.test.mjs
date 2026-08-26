@@ -138,10 +138,10 @@ describe('adjustLightness', () => {
 describe('rotateHue', () => {
   it('H 近似变化 deltaH 度', () => {
     const original = '#6366f1';
-    const [, c, h1] = hexToOklch(original);
+    const [, _c, h1] = hexToOklch(original);
     const delta = 30;
     const rotated = rotateHue(original, delta);
-    const [, c2, h2] = hexToOklch(rotated);
+    const [, _c2, h2] = hexToOklch(rotated);
     // 允许角度环绕导致的差值（如 350° + 30° → 20°）
     const diff = Math.abs(((h2 - h1 + 540) % 360) - 180);
     expect(Math.abs(diff - delta)).toBeLessThanOrEqual(2); // 2° 容差（量化）

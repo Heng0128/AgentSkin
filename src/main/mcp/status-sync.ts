@@ -21,7 +21,7 @@ import { notifyStatusChanged } from '../main-context';
  *
  * @param operation - human-readable operation name for logging
  */
-export function syncStatusToGui(operation: string): void {
+export function syncStatusToGui(_operation: string): void {
   try {
     notifyStatusChanged();
   } catch {

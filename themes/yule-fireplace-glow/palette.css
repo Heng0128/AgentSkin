@@ -1,4 +1,4 @@
-/* palette.css — art-175022 (Art 175022) */
+/* palette.css — yule-fireplace-glow (Yule Fireplace Glow) */
 /* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #2a301f;
@@ -11,7 +11,7 @@
   --agentskin-border: #464c3a;
   --agentskin-code-bg: #262c1c;
   --agentskin-code-fg: #f4f0eb;
-  --agentskin-focus-ring: color-mix(in srgb, #9d7ce0 40%, transparent);
+  --agentskin-focus-ring: #9d7ce060;
   --agentskin-selection: color-mix(in srgb, #9d7ce0 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */

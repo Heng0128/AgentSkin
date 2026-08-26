@@ -53,7 +53,7 @@ export function ThemeCard({ theme, selected, onSelect }: ThemeCardProps) {
       type="button"
       onClick={() => onSelect(theme.id)}
       className={cn(
-        'group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-all duration-fast ease-out',
+        'group relative flex h-full flex-col overflow-hidden rounded-lg border bg-card text-left shadow-sm transition-all duration-base ease-out',
         selected
           ? 'border-primary ring-2 ring-primary/30'
           : 'border-border hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md',

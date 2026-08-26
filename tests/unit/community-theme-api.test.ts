@@ -47,7 +47,7 @@ const sampleThemeSummary: CommunityThemeSummary = {
   version: '1.0.0',
 };
 
-const sampleThemeDetail: CommunityThemeDetail = {
+const _sampleThemeDetail: CommunityThemeDetail = {
   ...sampleThemeSummary,
   themeId: 'ver_abc123def456',
   slug: 'test-theme',

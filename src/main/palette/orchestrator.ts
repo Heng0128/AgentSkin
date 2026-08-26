@@ -25,7 +25,6 @@ import type { ResolvedThemeTarget, ThemeBundle } from '../../legacy/agentskin-co
 import { toMessage } from '../../shared/errors';
 import type { CdpSession } from '../cdp/cdp-client';
 import { type InjectEngineResult, injectThemeViaEngine } from '../cdp/cdp-inject';
-import { themeHeroUrl } from '../theme/scheme';
 import { buildPaletteCss } from './generator';
 
 // ---------------------------------------------------------------------------

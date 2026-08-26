@@ -223,6 +223,29 @@ export interface ApplyFlowDeps {
   log: LogCallback;
   /** Structured log event sink (parsed by the renderer for progress UI). */
   logStructured: (event: StructuredLogEvent) => void;
+
+  // -- Hot-reload notification (P1) --------------------------------------
+
+  /**
+   * Notify the renderer that a theme hot-reload has completed for this
+   * agent. Called after the apply succeeds so the renderer can update its
+   * UI (token preview, scheme picker, drift status) without a full page
+   * reload. Best-effort — failures are swallowed by the notifier.
+   *
+   * `fastPath` distinguishes the cached-port fast path from the full-init
+   * path so the renderer can show a subtler indicator for fast reloads.
+   */
+  notifyHotReload: (payload: {
+    agentId: AgentId;
+    themeId: string;
+    schemeId?: string | null;
+    mode: 'light' | 'dark';
+    reloadKind: 'scheme-switch' | 'theme-switch';
+    wallpaperId: string | null;
+    palette?: Record<string, string>;
+    fastPath: boolean;
+    themeVersion?: string;
+  }) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -638,6 +661,23 @@ async function applyOnResolvedPort(
     themeId: entry.bundle.theme.id,
     timestamp: new Date().toISOString(),
   });
+
+  // P1: Notify the renderer of the hot-reload so it can update its UI
+  // (token preview, scheme picker, drift status) without a full reload.
+  // Best-effort — the notifier coalesces rapid scheme-switches and swallows
+  // errors, so this never affects the apply response.
+  deps.notifyHotReload({
+    agentId: appId,
+    themeId: request.themeId,
+    schemeId: request.schemeId,
+    mode: schemeMode ?? (installed.mode === 'light' ? 'light' : 'dark'),
+    reloadKind: request.schemeId ? 'scheme-switch' : 'theme-switch',
+    wallpaperId: wpId,
+    palette: installed.colors as Record<string, string> | undefined,
+    fastPath: source === 'cache',
+    themeVersion: entry.bundle.theme.version,
+  });
+
   return {
     response: {
       status: 'applied',

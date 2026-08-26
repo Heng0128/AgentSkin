@@ -37,22 +37,23 @@ export function RenameDialog({
   if (!open) return null;
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: modal overlay — a <button> element would interfere with focus management and form semantics inside the dialog.
     <div
-      className="fixed inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-black/40 animate-in fade-in duration-fast"
+      className="fixed inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-black/40 animate-in fade-in duration-base"
       onClick={onCancel}
       onKeyDown={(e) => {
-        if (e.key === 'Escape') onCancel();
+        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onCancel();
+        }
       }}
       role="button"
       tabIndex={0}
       aria-label={cancelLabel}
     >
-      {/* biome-ignore lint/a11y/noStaticElementInteractions: stopPropagation only — prevents background close when clicking inside the dialog content. No keyboard equivalent needed. */}
-      {/* biome-ignore lint/a11y/useKeyWithClickEvents: stopPropagation only — no keyboard action needed. */}
       <div
-        className="w-80 rounded-lg border border-border bg-card p-5 shadow-float animate-page-enter duration-fast"
+        className="w-80 rounded-lg border border-border bg-card p-5 shadow-float animate-page-enter duration-base"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
       >
         <h3 className="text-sm font-medium">{title}</h3>
         <input

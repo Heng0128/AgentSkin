@@ -286,12 +286,13 @@ function blendOver(fg: Rgba, bg: Rgba): Rgba {
 function extractTokensFromCss(css: string): Map<string, string> {
   const tokens = new Map<string, string>();
   const re = /(--agentskin-[\w-]+)\s*:\s*([^;{}]+)/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(css)) !== null) {
+  let m: RegExpExecArray | null = re.exec(css);
+  while (m !== null) {
     const token = m[1];
     const value = m[2].trim();
     // Last declaration wins (mirrors CSS cascade).
     tokens.set(token, value);
+    m = re.exec(css);
   }
   return tokens;
 }
@@ -468,7 +469,7 @@ function themeAgents(t: ThemeManifest): string[] {
 /** Resolve an agent's CSS path safely, or null when not configured. */
 function agentCssPath(t: ThemeManifest, agent: string): string | null {
   const cfg = t.targets[agent];
-  if (!cfg || !cfg.css) return null;
+  if (!cfg?.css) return null;
   return join(THEMES_DIR, t.id, cfg.css);
 }
 

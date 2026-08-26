@@ -198,7 +198,7 @@ export function ImageCropDialog({
   return (
     // biome-ignore lint/a11y/useSemanticElements: modal overlay — a <button> element would interfere with focus management and form semantics inside the dialog.
     <div
-      className="fixed inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-black/40 animate-in fade-in duration-fast"
+      className="fixed inset-0 z-[var(--z-overlay)] flex items-center justify-center bg-black/40 animate-in fade-in duration-base"
       onClick={onCancel}
       onKeyDown={(e) => {
         if (e.key === 'Escape') onCancel();
@@ -210,7 +210,7 @@ export function ImageCropDialog({
       {/* biome-ignore lint/a11y/noStaticElementInteractions: stopPropagation only — prevents background close when clicking inside the dialog content. No keyboard equivalent needed. */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: stopPropagation only — no keyboard action needed. */}
       <div
-        className="w-[420px] rounded-lg border border-border bg-card p-5 shadow-float animate-page-enter duration-fast"
+        className="w-[420px] rounded-lg border border-border bg-card p-5 shadow-float animate-page-enter duration-base"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-sm font-medium">Crop Image</h3>
@@ -237,12 +237,7 @@ export function ImageCropDialog({
               onTouchEnd={handleTouchEnd}
             />
             {/* Crop frame overlay */}
-            <div
-              className="pointer-events-none absolute inset-0 border-2 border-primary/60"
-              style={{
-                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
-              }}
-            />
+            <div className="as-crop-mask pointer-events-none absolute inset-0 border-2 border-primary/60" />
           </div>
         </div>
 

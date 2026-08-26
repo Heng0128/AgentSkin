@@ -129,7 +129,7 @@ const previewThemeFromImageSchema = z.object({
 
 async function previewThemeFromImageHandler(
   args: unknown,
-  ctx: McpContext,
+  _ctx: McpContext,
 ): Promise<McpToolResult> {
   const { image_path: imagePath, mode } = previewThemeFromImageSchema.parse(args);
 

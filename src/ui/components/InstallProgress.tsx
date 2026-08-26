@@ -224,7 +224,6 @@ export function InstallWizard({
           className="mx-4 mt-2 max-h-24 overflow-y-auto rounded-md border bg-muted/20 p-2"
         >
           {logEntries.map((entry, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: log entries are append-only display items — no reorder, insert, or delete, so index keys are safe.
             <LogEntryRow key={i} entry={entry} />
           ))}
         </div>

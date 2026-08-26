@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ThemePackageLoader } from './theme-package-loader';
+import { ThemePackageLoader, ThemePackageValidationError } from './theme-package-loader';
 
 function createMinimalManifest(themeId: string): string {
   return JSON.stringify({
@@ -485,6 +485,163 @@ describe('ThemePackageLoader', () => {
         'Test Theme beta-theme',
         'Test Theme zebra-theme',
       ]);
+    });
+  });
+
+  describe('build.fingerprint.json verification', () => {
+    it('loads a theme with a valid build.fingerprint.json', async () => {
+      const themeId = 'valid-fingerprint';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+      await fs.mkdir(path.join(themeDir, 'assets', 'css'), { recursive: true });
+
+      const manifest = JSON.parse(createMinimalManifest(themeId)) as Record<string, unknown>;
+      manifest.targets = { traework: { css: 'assets/css/traework.css' } };
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(manifest));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'assets', 'css', 'traework.css'),
+        '/* traework CSS */\n:root { --test: 1; }\n',
+      );
+
+      // Generate a valid fingerprint
+      const { generateBuildFingerprint } = await import('../../shared/theme-build-fingerprint');
+      const fingerprint = await generateBuildFingerprint(themeDir);
+      await fs.writeFile(
+        path.join(themeDir, 'build.fingerprint.json'),
+        JSON.stringify(fingerprint),
+      );
+
+      const pkg = await loader.load(themeId);
+      expect(pkg.manifest.id).toBe(themeId);
+    });
+
+    it('loads a theme without build.fingerprint.json (backward compatible)', async () => {
+      const themeId = 'no-fingerprint';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), createMinimalManifest(themeId));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+
+      // No build.fingerprint.json — should still load fine
+      const pkg = await loader.load(themeId);
+      expect(pkg.manifest.id).toBe(themeId);
+    });
+
+    it('rejects a theme with a tampered manifest (fingerprint mismatch)', async () => {
+      const themeId = 'tampered-manifest';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+      await fs.mkdir(path.join(themeDir, 'assets', 'css'), { recursive: true });
+
+      const manifest = JSON.parse(createMinimalManifest(themeId)) as Record<string, unknown>;
+      manifest.targets = { traework: { css: 'assets/css/traework.css' } };
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(manifest));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'assets', 'css', 'traework.css'),
+        '/* traework CSS */\n:root { --test: 1; }\n',
+      );
+
+      // Generate a valid fingerprint, then tamper with the manifest
+      const { generateBuildFingerprint } = await import('../../shared/theme-build-fingerprint');
+      const fingerprint = await generateBuildFingerprint(themeDir);
+      await fs.writeFile(
+        path.join(themeDir, 'build.fingerprint.json'),
+        JSON.stringify(fingerprint),
+      );
+      // Tamper with manifest after fingerprint was generated
+      const tamperedManifest = { ...manifest, name: 'Tampered Name' };
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(tamperedManifest));
+
+      await expect(loader.load(themeId)).rejects.toThrow(ThemePackageValidationError);
+      await expect(loader.load(themeId)).rejects.toThrow(
+        'build.fingerprint.json verification failed',
+      );
+    });
+
+    it('rejects a theme with an injected CSS file not in the fingerprint', async () => {
+      const themeId = 'injected-css';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+      await fs.mkdir(path.join(themeDir, 'assets', 'css'), { recursive: true });
+
+      const manifest = JSON.parse(createMinimalManifest(themeId)) as Record<string, unknown>;
+      manifest.targets = { traework: { css: 'assets/css/traework.css' } };
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), JSON.stringify(manifest));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'assets', 'css', 'traework.css'),
+        '/* traework CSS */\n:root { --test: 1; }\n',
+      );
+
+      // Generate fingerprint for traework only
+      const { generateBuildFingerprint } = await import('../../shared/theme-build-fingerprint');
+      const fingerprint = await generateBuildFingerprint(themeDir);
+      await fs.writeFile(
+        path.join(themeDir, 'build.fingerprint.json'),
+        JSON.stringify(fingerprint),
+      );
+
+      // Inject an additional CSS file not covered by the fingerprint
+      await fs.writeFile(
+        path.join(themeDir, 'assets', 'css', 'codex.css'),
+        '/* malicious injection */\n',
+      );
+
+      await expect(loader.load(themeId)).rejects.toThrow(ThemePackageValidationError);
+      await expect(loader.load(themeId)).rejects.toThrow('unexpected CSS file');
+    });
+
+    it('rejects a theme with malformed build.fingerprint.json', async () => {
+      const themeId = 'bad-fingerprint';
+      const themeDir = path.join(themesRoot, themeId);
+      await fs.mkdir(themeDir, { recursive: true });
+
+      await fs.writeFile(path.join(themeDir, 'manifest.json'), createMinimalManifest(themeId));
+      await fs.writeFile(
+        path.join(themeDir, 'icon.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(
+        path.join(themeDir, 'preview.png'),
+        Buffer.from(createPlaceholderPng(), 'base64'),
+      );
+      await fs.writeFile(path.join(themeDir, 'build.fingerprint.json'), '{not valid json');
+
+      await expect(loader.load(themeId)).rejects.toThrow(ThemePackageValidationError);
+      await expect(loader.load(themeId)).rejects.toThrow(
+        'build.fingerprint.json verification failed',
+      );
     });
   });
 });

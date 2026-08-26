@@ -137,7 +137,7 @@ export class PersistChain {
    * when it is queued). The returned promise rejects if the update throws,
    * but the chain itself always continues (see `chain` field).
    */
-  safe(update: () => Promise<void> | void, label?: string): Promise<void> {
+  safe(update: () => Promise<void> | void, _label?: string): Promise<void> {
     this.pending++;
     const result = this.chain.then(() => update());
     // Swallow rejection so a single failed write does not poison the chain,

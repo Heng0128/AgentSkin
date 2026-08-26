@@ -76,7 +76,7 @@ export function Sidebar() {
               )}
               <Icon
                 className={cn(
-                  'transition-transform duration-fast',
+                  'transition-transform duration-base',
                   active ? 'scale-105' : 'group-hover:scale-110',
                 )}
                 strokeWidth={active ? 2.2 : 1.8}

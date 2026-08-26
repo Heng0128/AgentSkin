@@ -3,9 +3,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   acrylicMaterial,
-  liquidGlassMaterial,
-  generateSurfaceRule,
   bridgeMaterialToTokens,
+  generateSurfaceRule,
+  liquidGlassMaterial,
 } from '../../scripts/lib/css-material.mjs';
 
 // ---------------------------------------------------------------------------

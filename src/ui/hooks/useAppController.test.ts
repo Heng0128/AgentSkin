@@ -48,7 +48,7 @@ const {
   const shellMock = {
     locale: 'en',
     appVersion: '0.0.0-test',
-    route: 'dashboard' as const,
+    route: 'workspace' as const,
     activeAgentId: null as string | null,
     logs: [] as string[],
     injectDockOpen: false,
@@ -524,7 +524,7 @@ describe('useAppController — smoke tests', () => {
 
     it('reads route from shellStore', () => {
       renderToString(createElement(Capture));
-      expect(captured!.route).toBe('dashboard');
+      expect(captured!.route).toBe('workspace');
     });
 
     it('reads status from statusStore', () => {

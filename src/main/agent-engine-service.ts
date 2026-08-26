@@ -98,6 +98,7 @@ import type {
 import { PerformanceRecorder } from './services/performance/performance-recorder';
 import { disposeThemeAssetCache } from './theme/utils';
 import { type ApplyFlowDeps, applyThemeFlow as applyThemeFlowImpl } from './theme-apply-flow';
+import { notifyThemeHotReload } from './theme-hot-reload';
 import { type ThemeEntry, toInstalledTheme } from './theme-library';
 import {
   type RestoreFlowDeps,
@@ -666,6 +667,11 @@ export class AgentEngineService implements AgentEngineServiceApi {
       displayName: (appId) => PRODUCT_DISPLAY_NAMES[appId],
       log: (line) => this.log(line),
       logStructured: (event) => this.logStructured(event),
+      notifyHotReload: (payload) =>
+        notifyThemeHotReload(
+          { mainWindow: ctx.mainWindow, studioWindow: ctx.studioWindow },
+          payload,
+        ),
     };
   }
 

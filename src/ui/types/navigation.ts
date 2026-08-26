@@ -12,8 +12,6 @@
  *   🖼 Wallpaper  · wallpaper engine integration
  *   🔬 Studio     · theme visual replica + mock DOM preview
  *   ⚙️ Settings   · preferences, app paths
- *
- * The old 'dashboard' / 'agents' / 'workspace' views are merged into Workspace + Apps.
  */
 
 export type Route = 'workspace' | 'apps' | 'themes' | 'wallpaper' | 'studio' | 'settings';

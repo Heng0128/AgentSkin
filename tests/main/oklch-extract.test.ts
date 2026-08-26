@@ -1,19 +1,11 @@
-// SPDX-License-Identifier: MPL-2.0
-
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import {
-  assembleTokens,
-  computeHistogram,
   contrastRatioRgb,
   createTestBmp,
   decodeBmp,
   detectMode,
   enforceWcag,
   extractTheme,
-  oklchToHex,
-  pickPrimarySecondary,
   rgbToOklch,
 } from '../../scripts/lib/oklch-extract.mjs';
 
@@ -100,7 +92,7 @@ describe('Pure blue → dark mode', () => {
     const buf = solidColorBmp(30, 60, 200);
     const result = extractTheme(buf);
     expect(result.mode).toBe('dark');
-    const [,, accentHue] = rgbToOklch(
+    const [, , accentHue] = rgbToOklch(
       parseInt(result.tokens.accent.slice(1, 3), 16),
       parseInt(result.tokens.accent.slice(3, 5), 16),
       parseInt(result.tokens.accent.slice(5, 7), 16),
@@ -146,7 +138,7 @@ describe('Multi-color image → distinct primary/secondary', () => {
   it('picks two distinct hues from a red + cyan banded image', () => {
     const buf = twoBandBmp(220, 40, 40, 40, 200, 220);
     const result = extractTheme(buf);
-    const [,, h1] = rgbToOklch(
+    const [, , _h1] = rgbToOklch(
       parseInt(result.tokens.accent.slice(1, 3), 16),
       parseInt(result.tokens.accent.slice(3, 5), 16),
       parseInt(result.tokens.accent.slice(5, 7), 16),

@@ -75,7 +75,7 @@ function main() {
   }
 
   if (failures.length > 0) {
-    console.error('[check-native-defect-consistency] FAIL\n\n' + failures.join('\n\n') + '\n');
+    console.error(`[check-native-defect-consistency] FAIL\n\n${failures.join('\n\n')}\n`);
     process.exit(1);
   }
   console.log(

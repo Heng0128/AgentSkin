@@ -35,7 +35,7 @@ describe('DeepCore Lifecycle (L2 Integration)', () => {
   });
 
   it('should write to window[MARKER] for cleanup chain (P0-2)', () => {
-    const instance = new DeepCore(
+    const _instance = new DeepCore(
       { shadowMode: 'open-only', routes: [], fragments: {} },
       { agent: 'codex' },
     );

@@ -54,6 +54,15 @@ export interface ThemeManifest {
   extended?: Record<string, string>;
   /** Per-agent CSS targets (present in manifest.json but not in runtime ThemePackage). */
   targets?: Record<string, { css: string; verification?: unknown }>;
+  /**
+   * 主题接线配置（P2 署名链合规，对齐 dsh-deep-whale wiring 模型）。
+   */
+  wiring?: {
+    /** 主题接线唯一标识。 */
+    id: string;
+    /** 是否已打包接线。 */
+    bundleWired?: boolean;
+  };
 }
 
 /**
@@ -249,6 +258,40 @@ export interface StudioProject {
   signature?: Record<string, unknown>;
   /** Toolbox overrides applied on top of the snapshot. */
   overrides?: Record<string, unknown>;
+}
+
+/**
+ * Payload pushed from the main process after a theme hot-reload completes.
+ * The renderer subscribes to THEME_HOT_RELOAD to update its UI without a
+ * full page reload.
+ *
+ * Two reload modes:
+ * - `scheme-switch`: only the color scheme changed (light/dark); the same
+ *   theme CSS is reused with a different 14-token palette. Fast path.
+ * - `theme-switch`: a different theme (or theme + scheme) was applied.
+ *
+ * `mode` is the resolved light/dark mode that the agent is now using, so
+ * the renderer can update its theme-mode indicator without re-probing.
+ */
+export interface ThemeHotReloadPayload {
+  /** The agent that received the hot-reload. */
+  agentId: AgentId;
+  /** The (possibly new) active theme id. */
+  themeId: string;
+  /** The active color-scheme id of the theme (null/undefined = default). */
+  schemeId?: string | null;
+  /** The resolved light/dark mode for the agent after reload. */
+  mode: 'light' | 'dark';
+  /** What kind of reload occurred. */
+  reloadKind: 'scheme-switch' | 'theme-switch';
+  /** Wallpaper id now active for this agent (null when no wallpaper). */
+  wallpaperId: string | null;
+  /** The 14-token palette that is now live (for UI preview). */
+  palette?: Record<string, string>;
+  /** True when the reload took the fast path (cached CDP port). */
+  fastPath: boolean;
+  /** Schema version of the active theme (for cache-busting). */
+  themeVersion?: string;
 }
 
 /** Options controlling how deep the Theme Studio's DOM/style probe goes. */

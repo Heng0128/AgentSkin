@@ -9,9 +9,14 @@
  * Usage: node scripts/rebuild-all-themes.mjs [outputDir]
  * Default output: themes/{id}/*.agentskin-theme/
  */
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { extname, join, resolve } from 'node:path';
 import { buildThemePackage } from './build-theme-package.mjs';
+
+// Threshold for external-mode: base64 inflates ~33%, so a 2MB raw file becomes
+// ~2.66MB base64. Staying well under the 8MB cumulative ceiling avoids tripping
+// MAX_THEME_IMAGE_BASE64 at install time.
+const HERO_EXTERNAL_THRESHOLD = 2 * 1024 * 1024; // 2MB
 
 const ROOT = resolve(import.meta.dirname, '..');
 const THEMES_DIR = join(ROOT, 'themes');
@@ -65,6 +70,48 @@ for (const id of dirs) {
         author: manifest.author?.name || 'AgentSkin',
       },
     };
+    // Read hero image if declared in manifest (path relative to theme directory)
+    if (manifest.hero) {
+      const heroPath = join(themeDir, manifest.hero);
+      if (existsSync(heroPath)) {
+        const ext = extname(heroPath).toLowerCase();
+        const mimeMap = {
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.png': 'image/png',
+          '.webp': 'image/webp',
+          '.gif': 'image/gif',
+        };
+        const mimeType = mimeMap[ext];
+        if (mimeType) {
+          const filename = manifest.hero.split('/').pop() || `hero${ext}`;
+          const fileSize = statSync(heroPath).size;
+          if (fileSize > HERO_EXTERNAL_THRESHOLD) {
+            // External-file mode: skip base64, reference the file directly.
+            // Avoids tripping MAX_THEME_IMAGE_BASE64 (8MB) at install time.
+            request.images = {
+              hero: {
+                filename,
+                mimeType,
+                file: heroPath,
+              },
+            };
+            console.log(
+              `[external] ${id}: hero ${(fileSize / 1024 / 1024).toFixed(1)}MB > 2MB, using external-file mode`,
+            );
+          } else {
+            const base64 = readFileSync(heroPath).toString('base64');
+            request.images = {
+              hero: {
+                filename,
+                mimeType,
+                base64,
+              },
+            };
+          }
+        }
+      }
+    }
     const outBase = OUT_DIR || themeDir;
     const pkgDir = await buildThemePackage(request, outBase);
     console.log(`[ok] ${id} → ${pkgDir}`);

@@ -1,4 +1,4 @@
-/* palette.css — art-175402 (Art 175402) */
+/* palette.css — exploding-tag-storm (Exploding Tag Storm) */
 /* Auto-generated from manifest.json — do not edit. */
 :root {
   --agentskin-bg: #131214;
@@ -11,7 +11,7 @@
   --agentskin-border: #2d2c2e;
   --agentskin-code-bg: #111012;
   --agentskin-code-fg: #f4f0eb;
-  --agentskin-focus-ring: color-mix(in srgb, #83a39a 40%, transparent);
+  --agentskin-focus-ring: #83a39a60;
   --agentskin-selection: color-mix(in srgb, #83a39a 32%, transparent);
 
   /* Derived raw RGB values for agents using rgba(var(--raw), alpha) pattern */

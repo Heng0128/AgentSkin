@@ -12,8 +12,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  MANIFEST_COLOR_KEYS,
-  SUPPORTED_AGENTS,
   deriveColors,
   generateCss,
   generateInstallScript,
@@ -22,7 +20,9 @@ import {
   generateRestoreScript,
   generateSkillMd,
   generateVerifyScript,
+  MANIFEST_COLOR_KEYS,
   parseArgs,
+  SUPPORTED_AGENTS,
   scaffoldSkinPackage,
   validateOptions,
 } from '../../../scripts/scaffold-skin-package.mjs';

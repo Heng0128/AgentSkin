@@ -88,6 +88,11 @@ export interface ImageWallpaperState {
   applyWallpaperTheme(wallpaperId: string): Promise<boolean>;
   clearWallpaperPreview(): void;
 
+  // --- Studio wallpaper picker ---
+  studioWallpapers: Array<{ id: string; name: string; type: string; thumbUrl?: string }>;
+  studioWallpapersLoading: boolean;
+  loadStudioWallpapers(): Promise<void>;
+
   // --- Theme library linkage ---
   refreshThemeLibrary(): Promise<void>;
   loadThemeIntoProject(themeId: string): Promise<void>;
@@ -118,6 +123,8 @@ export const useImageWallpaperStore = create<ImageWallpaperState>()((set, get) =
 
   installedThemes: [],
   themeLibraryOpen: false,
+  studioWallpapers: [],
+  studioWallpapersLoading: false,
 
   // ------------------------------------------------------------------
   // Image → Theme actions
@@ -265,6 +272,27 @@ export const useImageWallpaperStore = create<ImageWallpaperState>()((set, get) =
   },
 
   // ------------------------------------------------------------------
+  // Studio wallpaper picker
+  // ------------------------------------------------------------------
+
+  loadStudioWallpapers: async () => {
+    if (get().studioWallpapersLoading) return;
+    set({ studioWallpapersLoading: true });
+    try {
+      const list = await api.listWallpapersForStudio();
+      set({ studioWallpapers: list, studioWallpapersLoading: false });
+    } catch (e) {
+      set({ studioWallpapersLoading: false });
+      useNotificationStore
+        .getState()
+        .showToast(
+          `${currentT().studioImageToThemeErrorExtractFailed}：${toMessage(e)}`,
+          'destructive',
+        );
+    }
+  },
+
+  // ------------------------------------------------------------------
   // Theme library linkage
   // ------------------------------------------------------------------
 
@@ -327,6 +355,8 @@ export const useImageWallpaperStore = create<ImageWallpaperState>()((set, get) =
       },
       wallpaperPreview: { palette: null, loading: false, error: null },
       wallpaperApply: { loading: false, error: null },
+      studioWallpapers: [],
+      studioWallpapersLoading: false,
     });
   },
 }));

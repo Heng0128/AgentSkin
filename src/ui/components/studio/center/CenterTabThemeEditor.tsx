@@ -182,7 +182,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
   --agentskin-radius-md: ${radiusMd}px;
   --agentskin-radius-lg: ${radiusLg}px;
   --agentskin-shadow-float: ${shadow};
-  --agentskin-duration-fast: ${dur}ms;
+  --agentskin-duration-base: ${dur}ms;
   --agentskin-duration-smooth: ${durNum === 0 ? 100 : durNum + 100}ms;
   --agentskin-duration-normal: ${durNormal}ms;
 }`;
@@ -344,7 +344,7 @@ export function CenterTabThemeEditor({ t }: { t: UiMessages }) {
               {t.studioDLMotion ?? 'Motion Speed'}
             </span>
             <span className="font-mono text-[11px] tabular-nums text-muted-foreground/40">
-              --agentskin-duration-fast: {motionMs(speed)}
+              --agentskin-duration-base: {motionMs(speed)}
             </span>
           </div>
           <div className="mt-2">
