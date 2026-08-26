@@ -713,6 +713,7 @@ export async function hardeningPass(
         imageFilePaths: resolvedFilePaths,
         epoch,
         deps: watchdogDeps,
+        pool: deps.sessions,
       });
     }
   }
