@@ -407,7 +407,7 @@ export function connectEventCdp(
     })
     .catch((error) => {
       PerformanceRecorder.recordNamedStep(
-        'connectCdp',
+        'connectEventCdp',
         performance.now() - t0,
         false,
         error instanceof Error ? error.message : String(error),
