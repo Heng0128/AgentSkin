@@ -60,7 +60,7 @@ function findExportContent(varName) {
 
 // Extract a top-level object block by marker, using brace-depth counting.
 // Returns the inner content (between the outer { and }).
-function extractBlock(content, startMarker, endMarker) {
+function extractBlock(content, startMarker, _endMarker) {
   const startIdx = content.indexOf(startMarker);
   if (startIdx === -1) return null;
   // Find the opening brace after the marker
@@ -108,7 +108,44 @@ function extractKeys(block) {
 }
 
 // Extract both locale blocks for a given message category.
-function extractLocaleBlocks(varName) {
+// For aggregated exports (uiMessages), pass aggregate=true to collect all
+// `*Messages` exports from module files and merge their keys.
+function extractLocaleBlocks(varName, aggregate = false) {
+  if (aggregate) {
+    // Collect all `*Messages` exports from module files and合成 a virtual block
+    // whose 'zh-CN' / 'en' blocks contain all sub-module keys
+    const messageExportNames = findAllMessageExports();
+    const zhBlocks = [];
+    const enBlocks = [];
+    for (const name of messageExportNames) {
+      const single = extractSingleLocaleBlocks(name);
+      if (single && single.zhBlock && single.enBlock) {
+        zhBlocks.push(single.zhBlock);
+        enBlocks.push(single.enBlock);
+      }
+    }
+    if (zhBlocks.length === 0) return null;
+    return { zhBlock: zhBlocks.join('\n'), enBlock: enBlocks.join('\n') };
+  }
+
+  const result = extractSingleLocaleBlocks(varName);
+  return result;
+}
+
+// Find all export names matching `*Messages` pattern in module files
+function findAllMessageExports() {
+  const exports = [];
+  const regex = /export\s+const\s+(\w*Messages)\s*=/g;
+  let match = regex.exec(allI18nContent);
+  while (match !== null) {
+    exports.push(match[1]);
+    match = regex.exec(allI18nContent);
+  }
+  return [...new Set(exports)];
+}
+
+// Extract locale blocks from a single named export
+function extractSingleLocaleBlocks(varName) {
   const exportIdx = findExportContent(varName);
   if (exportIdx === null) {
     console.error(`✗ Failed to find export: ${varName}`);
@@ -146,8 +183,8 @@ function extractLocaleBlocks(varName) {
   return { zhBlock, enBlock };
 }
 
-function checkCategory(varName) {
-  const blocks = extractLocaleBlocks(varName);
+function checkCategory(varName, aggregate = false) {
+  const blocks = extractLocaleBlocks(varName, aggregate);
   if (!blocks || !blocks.zhBlock || !blocks.enBlock) {
     console.error(`✗ Failed to parse ${varName} — could not locate locale blocks`);
     process.exit(1);
@@ -160,8 +197,8 @@ function checkCategory(varName) {
   };
 }
 
-const ui = checkCategory('uiMessages');
-const main = checkCategory('mainMessages');
+const ui = checkCategory('uiMessages', true);
+const main = checkCategory('mainMessages', false);
 
 console.log('\n=== i18n Completeness Check ===\n');
 
@@ -185,7 +222,7 @@ checkAlignment(main.zhKeys, main.enKeys, 'mainMessages');
 // 2. Check for empty translations
 console.log('\n[2/4] Empty translation check');
 
-function checkEmpty(block, label) {
+function checkEmpty(block, _label) {
   const empty = [];
   const lines = block.split('\n');
   let depth = 0;
@@ -228,7 +265,7 @@ const mainFiles = glob.sync(join(rootDir, 'src', 'main', '**', '*.{ts,tsx}'));
 const uiContent = uiFiles.map((f) => readFileSync(f, 'utf-8')).join('\n');
 const mainContent = mainFiles.map((f) => readFileSync(f, 'utf-8')).join('\n');
 
-function findOrphans(zhKeys, content, label) {
+function findOrphans(zhKeys, content, _label) {
   const usedKeys = new Set();
   for (const key of zhKeys) {
     const patterns = [
