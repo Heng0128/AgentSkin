@@ -276,7 +276,16 @@ export class CdpSessionPool {
   release(appId: AgentId, targetKey: string): void {
     const entry = this.pools.get(appId)?.get(targetKey);
     if (!entry) return;
-    entry.refCount = Math.max(0, entry.refCount - 1);
+    if (entry.refCount <= 0) {
+      // Already zero — a second decrement would underflow. Log so the
+      // double-release source can be traced instead of silently clamping.
+      mainWarn(
+        'SessionPool',
+        `release called on zero-refCount session ${appId}/${targetKey} — possible double-release`,
+      );
+      return;
+    }
+    entry.refCount--;
     entry.lastUsedAt = Date.now();
     // Retired + refCount=0 → safe to close
     if (entry.retired && entry.refCount === 0) {
