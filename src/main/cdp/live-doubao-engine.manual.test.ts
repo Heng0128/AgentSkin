@@ -119,7 +119,7 @@ describe.skipIf(!MANUAL)('batch-8 doubao full-chain engine injection (manual)', 
       expect(result!.success).toBe(true);
 
       // B3: engine sheets adopted (the watchdog's skip/re-inject focal point).
-      const verification = await waitForTheme(session, { timeoutMs: 5000, intervalMs: 50 });
+      const { verification } = await waitForTheme(session, { timeoutMs: 5000, intervalMs: 50 });
       console.log(`[B3] doubao: adoptedSheetCount=${verification?.adoptedSheetCount}`);
       expect(verification?.adoptedSheetCount ?? 0).toBeGreaterThan(0);
 

@@ -83,8 +83,8 @@ async function verifyApplied(agentId: string, port: number): Promise<number> {
 
   const session = await openMainSession(agentId, port);
   try {
-    const v = await waitForTheme(session, { timeoutMs: 5000, intervalMs: 50 });
-    return v?.adoptedSheetCount ?? 0;
+    const { verification } = await waitForTheme(session, { timeoutMs: 5000, intervalMs: 50 });
+    return verification?.adoptedSheetCount ?? 0;
   } finally {
     session.close();
   }
