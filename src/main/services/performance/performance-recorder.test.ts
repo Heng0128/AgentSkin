@@ -197,3 +197,87 @@ describe('ApplyTraceBuilder.addSubStep / appendStep', () => {
     expect(() => builder.appendStep('late', 10)).toThrow(/already finalized/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// RC5-B: Concurrent trace data integrity across per-agent map
+// ---------------------------------------------------------------------------
+
+describe('PerformanceRecorder — concurrent trace data integrity (RC5-B)', () => {
+  beforeEach(() => {
+    PerformanceRecorder.reset();
+  });
+
+  afterEach(() => {
+    PerformanceRecorder.reset();
+  });
+
+  it('maintains isolated traces for 3 agents under concurrent apply', async () => {
+    const builderA = PerformanceRecorder.start('traework', 'theme-alpha');
+    const builderB = PerformanceRecorder.start('codex', 'theme-beta');
+    const builderC = PerformanceRecorder.start('doubao', 'theme-gamma');
+
+    // Concurrent steps across agents — each builder is independent.
+    await Promise.all([
+      builderA.step('resolveTheme', async () => 'alpha'),
+      builderB.step('resolveTheme', async () => 'beta'),
+      builderC.step('resolveTheme', async () => 'gamma'),
+    ]);
+
+    // recordNamedStep must land in the correct agent's trace.
+    PerformanceRecorder.recordNamedStep('traework', 'connectCdp', 100);
+    PerformanceRecorder.recordNamedStep('codex', 'connectCdp', 200);
+    PerformanceRecorder.recordNamedStep('doubao', 'connectCdp', 300);
+
+    // recordNamedStep for an unknown agent is a no-op (no crash).
+    PerformanceRecorder.recordNamedStep('unknown-agent', 'connectCdp', 999);
+
+    const traceA = builderA.finish();
+    const traceB = builderB.finish();
+    const traceC = builderC.finish();
+
+    // Each trace has exactly 2 steps: resolveTheme + connectCdp.
+    expect(traceA.steps).toHaveLength(2);
+    expect(traceB.steps).toHaveLength(2);
+    expect(traceC.steps).toHaveLength(2);
+
+    // Verify the correct recordNamedStep duration landed in each trace.
+    const cdpA = traceA.steps.find((s) => s.name === 'connectCdp');
+    expect(cdpA?.duration).toBe(100);
+    const cdpB = traceB.steps.find((s) => s.name === 'connectCdp');
+    expect(cdpB?.duration).toBe(200);
+    const cdpC = traceC.steps.find((s) => s.name === 'connectCdp');
+    expect(cdpC?.duration).toBe(300);
+
+    // resolveStep belongs to its own agent.
+    const resolveA = traceA.steps.find((s) => s.name === 'resolveTheme');
+    expect(resolveA?.success).toBe(true);
+
+    // All agent slots released.
+    expect(PerformanceRecorder.getActive('traework')).toBeNull();
+    expect(PerformanceRecorder.getActive('codex')).toBeNull();
+    expect(PerformanceRecorder.getActive('doubao')).toBeNull();
+  });
+
+  it('isolates steps when concurrent applies hit the same agent', async () => {
+    // First apply locks the agent.
+    const first = PerformanceRecorder.start('traework', 'theme-1');
+    // Second apply to same agent gets an unregistered builder.
+    const second = PerformanceRecorder.start('traework', 'theme-2');
+
+    await first.step('resolveTheme', async () => 'first');
+    await second.step('resolveTheme', async () => 'second');
+
+    // recordNamedStep lands only in the registered trace.
+    PerformanceRecorder.recordNamedStep('traework', 'connectCdp', 150);
+
+    const traceFirst = first.finish();
+    const traceSecond = second.finish();
+
+    // Only the registered trace has the connectCdp step.
+    expect(traceFirst.steps.find((s) => s.name === 'connectCdp')?.duration).toBe(150);
+    expect(traceSecond.steps.find((s) => s.name === 'connectCdp')).toBeUndefined();
+
+    // Second builder's release was a no-op — first already released the slot.
+    expect(PerformanceRecorder.getActive('traework')).toBeNull();
+  });
+});

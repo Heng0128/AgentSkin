@@ -15,12 +15,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
-  SUPPORTED_AGENTS,
-  ThemeDistribution,
   computeSha256,
   generateDeepLink,
   generateManifest,
   parseDeepLink,
+  SUPPORTED_AGENTS,
+  ThemeDistribution,
   verifyIntegrity,
 } from '../../scripts/lib/theme-distribution.mjs';
 
@@ -31,10 +31,7 @@ import {
 let tempDir: string;
 
 beforeEach(() => {
-  tempDir = join(
-    tmpdir(),
-    `theme-dist-test-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-  );
+  tempDir = join(tmpdir(), `theme-dist-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
   mkdirSync(tempDir, { recursive: true });
 });
 
@@ -220,21 +217,19 @@ describe('generateDeepLink', () => {
   it('generates a valid deep link with themeId only (no agent)', () => {
     const link = generateDeepLink('midnight-dessert-feast');
 
-    expect(link).toBe('agentskin://themes/apply?theme=midnight-dessert-feast');
+    expect(link).toBe('agentskin:///themes/apply?theme=midnight-dessert-feast');
   });
 
   it('generates a valid deep link with both themeId and agent', () => {
     const link = generateDeepLink('midnight-dessert-feast', 'traework');
 
-    expect(link).toBe(
-      'agentskin://themes/apply?theme=midnight-dessert-feast&app=traework',
-    );
+    expect(link).toBe('agentskin:///themes/apply?theme=midnight-dessert-feast&app=traework');
   });
 
   it('URL-encodes special characters in themeId', () => {
     const link = generateDeepLink('my theme & co');
 
-    expect(link).toContain('theme=my+theme+%26+co');
+    expect(link).toBe('agentskin:///themes/apply?theme=my+theme+%26+co');
   });
 
   it('URL-encodes special characters in agent', () => {
@@ -250,9 +245,7 @@ describe('generateDeepLink', () => {
 
 describe('parseDeepLink', () => {
   it('parses a deep link with themeId and agent', () => {
-    const result = parseDeepLink(
-      'agentskin://themes/apply?theme=test-theme&app=codex',
-    );
+    const result = parseDeepLink('agentskin:///themes/apply?theme=test-theme&app=codex');
 
     expect(result).toEqual({
       action: 'themes/apply',
@@ -262,9 +255,7 @@ describe('parseDeepLink', () => {
   });
 
   it('parses a deep link with themeId only (agent is undefined)', () => {
-    const result = parseDeepLink(
-      'agentskin://themes/apply?theme=test-theme',
-    );
+    const result = parseDeepLink('agentskin:///themes/apply?theme=test-theme');
 
     expect(result.action).toBe('themes/apply');
     expect(result.themeId).toBe('test-theme');
@@ -272,23 +263,19 @@ describe('parseDeepLink', () => {
   });
 
   it('preserves URL-encoded themeId', () => {
-    const result = parseDeepLink(
-      'agentskin://themes/apply?theme=my+theme+%26+co',
-    );
+    const result = parseDeepLink('agentskin:///themes/apply?theme=my+theme+%26+co');
 
     expect(result.themeId).toBe('my theme & co');
   });
 
   it('throws on an invalid scheme', () => {
-    expect(() =>
-      parseDeepLink('https://themes/apply?theme=test'),
-    ).toThrow(/Invalid scheme/);
+    expect(() => parseDeepLink('https://themes/apply?theme=test')).toThrow(/Invalid scheme/);
   });
 
   it('throws when the theme query parameter is missing', () => {
-    expect(() =>
-      parseDeepLink('agentskin://themes/apply?app=traework'),
-    ).toThrow(/Missing required 'theme'/);
+    expect(() => parseDeepLink('agentskin:///themes/apply?app=traework')).toThrow(
+      /Missing required 'theme'/,
+    );
   });
 });
 
@@ -315,7 +302,7 @@ describe('ThemeDistribution class facade', () => {
 
   it('parseDeepLink delegates to the standalone function', () => {
     const result = ThemeDistribution.parseDeepLink(
-      'agentskin://themes/apply?theme=facade&app=doubao',
+      'agentskin:///themes/apply?theme=facade&app=doubao',
     );
 
     expect(result.themeId).toBe('facade');
@@ -325,9 +312,7 @@ describe('ThemeDistribution class facade', () => {
   it('generateDeepLink delegates to the standalone function', () => {
     const link = ThemeDistribution.generateDeepLink('facade-theme', 'zcode');
 
-    expect(link).toBe(
-      'agentskin://themes/apply?theme=facade-theme&app=zcode',
-    );
+    expect(link).toBe('agentskin:///themes/apply?theme=facade-theme&app=zcode');
   });
 });
 

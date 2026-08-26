@@ -22,10 +22,10 @@ import {
  */
 function createTmpBundle(files: Record<string, string> = {}): string {
   const dir = mkdtempSync(join(tmpdir(), 'bundle-sig-test-'));
-    writeFileSync(
-      join(dir, 'manifest.json'),
-      JSON.stringify({ name: 'test-bundle', version: '1.0.0' }, null, 2),
-    );
+  writeFileSync(
+    join(dir, 'manifest.json'),
+    JSON.stringify({ name: 'test-bundle', version: '1.0.0' }, null, 2),
+  );
   for (const [name, content] of Object.entries(files)) {
     const fullPath = join(dir, name);
     mkdirSync(join(fullPath, '..'), { recursive: true });

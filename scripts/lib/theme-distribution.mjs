@@ -219,7 +219,11 @@ function extractMetadata(parsed) {
 /**
  * Generate an `agentskin://` deep link for applying a theme.
  *
- * Format: `agentskin://themes/apply?theme=<themeId>&app=<agent>`
+ * Format: `agentskin:///themes/apply?theme=<themeId>&app=<agent>`
+ *
+ * Uses the empty-authority form (`:///...`) so that `themes/apply` stays in
+ * the URL path rather than being parsed as the authority (host). This aligns
+ * with how custom-scheme deep links such as `itms-apps:///app/id123` work.
  *
  * The `agent` parameter is optional. When omitted, the link applies the
  * theme to the currently active agent.
@@ -230,18 +234,18 @@ function extractMetadata(parsed) {
  *
  * @example
  * generateDeepLink('midnight-dessert-feast');
- * // → 'agentskin://themes/apply?theme=midnight-dessert-feast'
+ * // → 'agentskin:///themes/apply?theme=midnight-dessert-feast'
  *
  * @example
  * generateDeepLink('midnight-dessert-feast', 'traework');
- * // → 'agentskin://themes/apply?theme=midnight-dessert-feast&app=traework'
+ * // → 'agentskin:///themes/apply?theme=midnight-dessert-feast&app=traework'
  */
 export function generateDeepLink(themeId, agent) {
   const params = new URLSearchParams({ theme: themeId });
   if (agent) {
     params.set('app', agent);
   }
-  return `${DEEP_LINK_SCHEME}://${DEEP_LINK_ACTION_APPLY}?${params.toString()}`;
+  return `${DEEP_LINK_SCHEME}:///${DEEP_LINK_ACTION_APPLY}?${params.toString()}`;
 }
 
 /**
@@ -290,6 +294,7 @@ export function parseDeepLink(url) {
  * an object-oriented interface. All methods are available as static
  * members for convenience.
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: deliberate facade pattern — the class groups related distribution operations behind a unified OOP interface while keeping the same logic available as standalone functions.
 export class ThemeDistribution {
   /**
    * Generate a distribution manifest for a bundle.

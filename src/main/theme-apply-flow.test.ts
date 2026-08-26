@@ -346,7 +346,7 @@ describe('applyThemeFlow — baseline seeding + light probe (RFC §4.5/§4.6)', 
     const { background } = (await fastApplyThemeFlow(APPLY_REQUEST, deps))!;
     await background;
 
-    expect(deps.probeThemeLiveOnPort).toHaveBeenCalledWith(FAST_PORT);
+    expect(deps.probeThemeLiveOnPort).toHaveBeenCalledWith(FAST_PORT, FAST_AGENT);
     expect(deps.baselineInvalidate).toHaveBeenCalledWith(FAST_AGENT);
   });
 });

@@ -179,6 +179,9 @@ describe('targetKeyFor', () => {
   it('prefers id and falls back to ws url', () => {
     expect(targetKeyFor('abc', 'ws://x')).toBe('abc');
     expect(targetKeyFor(null, 'ws://x')).toBe('ws://x');
-    expect(targetKeyFor(undefined, null)).toBe('unknown-target');
+    // When both id and ws url are absent, a monotonic counter guarantees
+    // each unknown target gets a unique key (avoids silent session collapse).
+    const key = targetKeyFor(undefined, null);
+    expect(key).toMatch(/^unknown-\d+$/);
   });
 });

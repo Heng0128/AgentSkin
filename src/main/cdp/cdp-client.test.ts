@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PerformanceRecorder } from '../services/performance';
 import { type CdpSession, connectCdp, connectEventCdp, type EventCdpSession } from './cdp-client';
 
 // ---------------------------------------------------------------------------
@@ -751,5 +752,90 @@ describe('connectEventCdp', () => {
     await expect(p1).resolves.toEqual({ n: 10 });
     await expect(p2).resolves.toEqual({ n: 20 });
     expect(events).toEqual([{ t: 'new' }]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// connectEventCdp — error path records timing step (RFC §4.9)
+// ---------------------------------------------------------------------------
+
+describe('connectEventCdp — error path records timing step', () => {
+  it('calls recordNamedStep with step "connectEventCdp" when connection fails', async () => {
+    const spy = vi.spyOn(PerformanceRecorder, 'recordNamedStep');
+    try {
+      const promise = connectEventCdp('ws://localhost/x');
+      await Promise.resolve();
+      currentFake!.triggerError();
+      await expect(promise).rejects.toThrow('CDP connection failed');
+
+      // Verify the error-path .catch() branch recorded the step with the
+      // correct name ('connectEventCdp') and success=false.
+      expect(spy).toHaveBeenCalledWith(
+        undefined,
+        'connectEventCdp',
+        expect.any(Number),
+        false,
+        expect.any(String),
+      );
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('calls recordNamedStep with step "connectEventCdp" on connect timeout', async () => {
+    vi.useFakeTimers();
+    const spy = vi.spyOn(PerformanceRecorder, 'recordNamedStep');
+    try {
+      const promise = connectEventCdp('ws://localhost/x', 1000);
+      await Promise.resolve();
+      const assertion = expect(promise).rejects.toThrow('CDP connect timeout');
+      await vi.advanceTimersByTimeAsync(1001);
+      await assertion;
+
+      // Timeout path must also record the step (success=false by default).
+      expect(spy).toHaveBeenCalledWith(
+        undefined,
+        'connectEventCdp',
+        expect.any(Number),
+        false,
+        expect.any(String),
+      );
+    } finally {
+      vi.useRealTimers();
+      spy.mockRestore();
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// pending Map — ghost response (id not in pending)
+// ---------------------------------------------------------------------------
+
+describe('pending Map ghost response', () => {
+  it('silently ignores a response whose id is not in the pending map', async () => {
+    const session = await connectAndOpen();
+    // No command was sent — id 42 does not exist in pending. Must not throw.
+    currentFake!.serverSend(JSON.stringify({ id: 42, result: 'ghost' }));
+    await Promise.resolve();
+
+    // Session remains usable after the ghost response.
+    const p = session.send('Test.method');
+    await Promise.resolve();
+    currentFake!.serverSend(JSON.stringify({ id: 1, result: 'ok' }));
+    await expect(p).resolves.toBe('ok');
+  });
+
+  it('does not corrupt the pending map when a ghost response arrives between real commands', async () => {
+    const session = await connectAndOpen();
+    const p1 = session.send('Method.one');
+    await Promise.resolve();
+
+    // Ghost response for a non-existent id — must not affect p1.
+    currentFake!.serverSend(JSON.stringify({ id: 999, result: 'phantom' }));
+    await Promise.resolve();
+
+    // The real response still resolves correctly.
+    currentFake!.serverSend(JSON.stringify({ id: 1, result: 'real' }));
+    await expect(p1).resolves.toBe('real');
   });
 });

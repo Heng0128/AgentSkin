@@ -10,10 +10,7 @@
 //   - Edge cases: empty engine, unknown session, state reversion, idempotency
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  AgentStateEngine,
-  AGENT_STATES,
-} from '../../scripts/lib/agent-state-engine.mjs';
+import { AGENT_STATES, AgentStateEngine } from '../../scripts/lib/agent-state-engine.mjs';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -29,14 +26,7 @@ function createEngine(): AgentStateEngine {
 
 describe('AGENT_STATES', () => {
   it('contains exactly six states in correct order', () => {
-    expect(AGENT_STATES).toEqual([
-      'idle',
-      'thinking',
-      'working',
-      'error',
-      'completed',
-      'sleeping',
-    ]);
+    expect(AGENT_STATES).toEqual(['idle', 'thinking', 'working', 'error', 'completed', 'sleeping']);
   });
 
   it('is frozen (immutable)', () => {
@@ -127,9 +117,7 @@ describe('updateState', () => {
     const before = engine.getSession(id)!.lastUpdate;
 
     // Advance time enough to be detectable
-    const result = vi
-      .spyOn(Date, 'now')
-      .mockReturnValueOnce(before + 100);
+    const result = vi.spyOn(Date, 'now').mockReturnValueOnce(before + 100);
 
     engine.updateState(id, 'thinking');
     expect(engine.getSession(id)!.lastUpdate).toBe(before + 100);
