@@ -649,9 +649,10 @@ export async function ensureCdpReady(
       progress: 25,
     });
     // RFC §4.9: standalone 'spawnAgent' timing step for the active apply trace.
-    PerformanceRecorder.recordNamedStep('spawnAgent', performance.now() - spawnT0);
+    PerformanceRecorder.recordNamedStep(undefined, 'spawnAgent', performance.now() - spawnT0);
   } catch (error) {
     PerformanceRecorder.recordNamedStep(
+      undefined,
       'spawnAgent',
       performance.now() - spawnT0,
       false,

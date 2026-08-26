@@ -96,10 +96,11 @@ export interface ThemeApplyTrace {
   themeId?: string;
   /** High-resolution start timestamp in milliseconds. */
   startedAt: number;
-  /** Wall-clock ISO 8601 timestamp when the trace was finalized. Used by the
-   *  Diagnostics UI for display (the monotonic `startedAt` cannot be converted
-   *  to a human-readable calendar date). */
-  finishedAt: string;
+  /** Wall-clock timestamp (epoch ms) when the trace was finalized. Derived
+   *  from the monotonic `startedAt` plus measured `duration` so both share the
+   *  same clock source (no separate `Date.now()` call). Used by the
+   *  Diagnostics UI for display. */
+  finishedAt: number;
   /** Total elapsed time for the entire apply in milliseconds. */
   duration: number;
   /** True if the apply completed end-to-end without an unhandled error. */

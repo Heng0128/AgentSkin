@@ -556,7 +556,7 @@ export interface AgentSkinApi {
       id: string;
       agentId: string;
       themeId?: string;
-      finishedAt: string;
+      finishedAt: number;
       duration: number;
       success: boolean;
       steps: Array<{ name: string; duration: number; success: boolean; error?: string }>;

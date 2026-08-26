@@ -45,7 +45,7 @@ interface PerfTrace {
   id: string;
   agentId: string;
   themeId?: string;
-  finishedAt: string;
+  finishedAt: number;
   duration: number;
   success: boolean;
   steps: PerfStep[];
@@ -68,12 +68,6 @@ interface PerfHistory {
 
 const POLL_MS = 5_000;
 const HISTORY_COUNT = 10;
-
-/** Safe Date parse — returns null for invalid timestamps. */
-function parseDate(iso: string): Date | null {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
 
 export function PerformancePanel({ t }: { t: UiMessages }) {
   const [data, setData] = useState<PerfHistory | null>(null);
@@ -330,11 +324,13 @@ function PerAgentCard({
 function TraceRow({ trace, t }: { trace: PerfTrace; t: UiMessages }) {
   const locale = useShellStore((s) => s.locale);
   const dateLocale = locale === 'en' ? enUS : zhCN;
-  const date = parseDate(trace.finishedAt);
-  const timeLabel = date ? format(date, 'HH:mm:ss', { locale: dateLocale }) : '—';
-  const fullDate = date
+  const date = new Date(trace.finishedAt);
+  const timeLabel = Number.isFinite(date.getTime())
+    ? format(date, 'HH:mm:ss', { locale: dateLocale })
+    : '—';
+  const fullDate = Number.isFinite(date.getTime())
     ? format(date, 'yyyy-MM-dd HH:mm:ss', { locale: dateLocale })
-    : trace.finishedAt;
+    : String(trace.finishedAt);
   const agentName = APP_META[trace.agentId as keyof typeof APP_META]?.name ?? trace.agentId;
 
   return (

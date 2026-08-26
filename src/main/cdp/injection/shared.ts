@@ -150,7 +150,7 @@ export async function waitForTheme(
   while (performance.now() - start < timeoutMs) {
     const verification = await verifyTheme(session);
     if (verification && isThemeFullyApplied(verification)) {
-      PerformanceRecorder.recordNamedStep('waitForTheme', performance.now() - t0);
+      PerformanceRecorder.recordNamedStep(undefined, 'waitForTheme', performance.now() - t0);
       return verification;
     }
     await delay(intervalMs);
@@ -159,6 +159,7 @@ export async function waitForTheme(
   // Final attempt after timeout
   const verification = await verifyTheme(session);
   PerformanceRecorder.recordNamedStep(
+    undefined,
     'waitForTheme',
     performance.now() - t0,
     verification !== null,

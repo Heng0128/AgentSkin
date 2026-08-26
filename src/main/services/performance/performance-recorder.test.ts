@@ -1,57 +1,79 @@
 // SPDX-License-Identifier: MPL-2.0
 
 /**
- * performance-recorder 并发回归测试（2026-08-17 修复）
+ * performance-recorder 并发回归测试（RC2-A 更新）
  *
- * 背景：PerformanceRecorder 曾假定"apply 全局串行"（模块头注释原话），
- * `start()` 遇已有 trace 直接 throw —— 在多 Agent 并发 apply（MAX_CONCURRENCY=6）
- * 下，后发起的 5 个 apply 在 fastApplyThemeFlow 的 `PerformanceRecorder.start()`
- * 处抛错 → IPC → UI 弹"操作失败"，表现为"一键注入只有第一个生效、并发被取消"。
+ * 背景：PerformanceRecorder 曾使用单迹模型（static active），并发 apply
+ * 时返回 ShadowTrace。RC2-A 改为 per-agent Map，每个 agent 可有独立 trace。
  *
- * 修复：start() 遇忙返回 no-op 影子 trace，观测层永不打断核心行为。
+ * 新行为：
+ *   - start() 始终返回 ApplyTraceBuilder（不再有 ShadowTrace）
+ *   - 同 agent 并发 start() 返回未注册的 builder（release 为 no-op）
+ *   - 不同 agent 并发 start() 各自获得独立注册的 builder
+ *   - getActive(agentId) 返回指定 agent 的 trace
+ *   - release(agentId, builder) 仅当 builder 是已注册的才释放
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ApplyTraceBuilder, PerformanceRecorder } from './performance-recorder';
 
-describe('PerformanceRecorder.start 并发语义（回归：不得抛错）', () => {
+describe('PerformanceRecorder.start — per-agent 并发语义', () => {
   beforeEach(() => {
     PerformanceRecorder.reset();
   });
 
-  it('首个 start 返回真实 builder', () => {
+  it('首个 start 返回真实 builder 并注册到 map', () => {
     const trace = PerformanceRecorder.start('traework', 'sakura-noir');
     expect(trace).toBeInstanceOf(ApplyTraceBuilder);
-    expect(PerformanceRecorder.getActive()).not.toBeNull();
+    expect(PerformanceRecorder.getActive('traework')).toBe(trace);
   });
 
-  it('第二个并发 start（不同 agent）返回影子 trace 且不抛错', async () => {
-    PerformanceRecorder.start('traework', 'sakura-noir');
-    const shadow = PerformanceRecorder.start('codex', 'sakura-noir');
+  it('不同 agent 并发 start 各自获得独立注册的 builder', async () => {
+    const first = PerformanceRecorder.start('traework', 'sakura-noir');
+    const second = PerformanceRecorder.start('codex', 'sakura-noir');
 
-    // 不再 throw；影子 trace 可正常使用
-    expect(shadow.traceId.startsWith('shadow-')).toBe(true);
+    // 两个都是真实 builder，各自注册
+    expect(first).toBeInstanceOf(ApplyTraceBuilder);
+    expect(second).toBeInstanceOf(ApplyTraceBuilder);
+    expect(PerformanceRecorder.getActive('traework')).toBe(first);
+    expect(PerformanceRecorder.getActive('codex')).toBe(second);
 
-    // step 必须照常执行回调（apply 行为零影响）
+    // step 正常执行
     let called = false;
-    await shadow.step('resolveTheme', async () => {
+    await second.step('resolveTheme', async () => {
       called = true;
     });
     expect(called).toBe(true);
 
-    // finish 返回合法 ThemeApplyTrace，且不释放真实 trace
-    const result = shadow.finish();
-    expect(result.steps[0].name).toBe('shadowed-concurrent-apply');
-    expect(PerformanceRecorder.getActive()).not.toBeNull(); // 真实 trace 仍在
+    // finish 返回合法 ThemeApplyTrace
+    const result = second.finish();
+    expect(result.agentId).toBe('codex');
+    expect(PerformanceRecorder.getActive('codex')).toBeNull();
+    // 第一个 agent 的 trace 不受影响
+    expect(PerformanceRecorder.getActive('traework')).toBe(first);
+  });
+
+  it('同 agent 并发 start 返回未注册的 builder（release 为 no-op）', () => {
+    const first = PerformanceRecorder.start('traework', 'sakura-noir');
+    const second = PerformanceRecorder.start('traework', 'other-theme');
+
+    // 第二个 builder 未注册
+    expect(PerformanceRecorder.getActive('traework')).toBe(first);
+    expect(second).not.toBe(first);
+
+    // 第二个 builder 的 finish 不会释放第一个
+    second.finish();
+    expect(PerformanceRecorder.getActive('traework')).toBe(first);
   });
 
   it('真实 trace finish 释放后，新 start 重新获得真实 builder', () => {
     const first = PerformanceRecorder.start('traework');
     first.finish();
-    expect(PerformanceRecorder.getActive()).toBeNull();
+    expect(PerformanceRecorder.getActive('traework')).toBeNull();
 
-    const second = PerformanceRecorder.start('codex');
+    const second = PerformanceRecorder.start('traework');
     expect(second).toBeInstanceOf(ApplyTraceBuilder);
+    expect(PerformanceRecorder.getActive('traework')).toBe(second);
   });
 });
 
@@ -61,8 +83,8 @@ describe('ApplyTraceBuilder.step — 成功/失败计时', () => {
   });
 
   afterEach(() => {
-    // Defensive: ensure singleton is released even if a test throws before finish().
-    PerformanceRecorder.release();
+    // Defensive: ensure all traces are released even if a test throws.
+    PerformanceRecorder.reset();
   });
 
   it('成功 step 记录 success=true 且 duration >= 0', async () => {
@@ -102,10 +124,10 @@ describe('ApplyTraceBuilder.finish — 终结化守卫', () => {
   });
 
   afterEach(() => {
-    PerformanceRecorder.release();
+    PerformanceRecorder.reset();
   });
 
-  it('finish 返回合法 ThemeApplyTrace 并释放 singleton', () => {
+  it('finish 返回合法 ThemeApplyTrace 并释放 agent slot', () => {
     const builder = PerformanceRecorder.start('traework', 'sakura-noir');
     builder.appendStep('connectCdp', 120);
     const trace = builder.finish();
@@ -113,7 +135,17 @@ describe('ApplyTraceBuilder.finish — 终结化守卫', () => {
     expect(trace.agentId).toBe('traework');
     expect(trace.themeId).toBe('sakura-noir');
     expect(trace.steps).toHaveLength(1);
-    expect(PerformanceRecorder.getActive()).toBeNull();
+    expect(PerformanceRecorder.getActive('traework')).toBeNull();
+  });
+
+  it('finishedAt 与 duration 使用统一时钟源', () => {
+    const builder = PerformanceRecorder.start('traework');
+    const trace = builder.finish();
+    // finishedAt 是 number（epoch ms），duration 是 number
+    expect(typeof trace.finishedAt).toBe('number');
+    expect(typeof trace.duration).toBe('number');
+    expect(trace.finishedAt).toBeGreaterThan(0);
+    expect(trace.duration).toBeGreaterThanOrEqual(0);
   });
 
   it('重复 finish 抛出', () => {
@@ -129,7 +161,7 @@ describe('ApplyTraceBuilder.addSubStep / appendStep', () => {
   });
 
   afterEach(() => {
-    PerformanceRecorder.release();
+    PerformanceRecorder.reset();
   });
 
   it('appendStep 添加顶层 step 并在 finish 后保留', () => {

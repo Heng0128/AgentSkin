@@ -24,7 +24,7 @@ function makeTrace(overrides: Partial<ThemeApplyTrace> = {}): ThemeApplyTrace {
     agentId: 'agent-a',
     themeId: 'theme-1',
     startedAt: 1_700_000_000_000,
-    finishedAt: new Date('2024-06-15T10:00:00.000Z').toISOString(),
+    finishedAt: new Date('2024-06-15T10:00:00.000Z').getTime(),
     duration: 100,
     success: true,
     steps: [{ name: 'resolveTheme', startedAt: 1_700_000_000_000, duration: 50, success: true }],

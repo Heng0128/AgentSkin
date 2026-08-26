@@ -11,18 +11,23 @@
  * ## Timing source
  *
  * Uses `process.hrtime.bigint()` for monotonic sub-millisecond precision,
- * converted to milliseconds for the public API.
+ * converted to milliseconds for the public API. Both `startedAt` and
+ * `finishedAt` are derived from the same monotonic clock, and `duration`
+ * equals `finishedAt - startedAt` exactly — no wall-clock `Date` is used.
  *
- * ## Single-trace model
+ * ## Per-agent trace map
  *
- * Only one REAL trace is active at a time (a telemetry simplification). The
- * orchestrator deliberately supports per-agent CONCURRENT applies
- * (MAX_CONCURRENCY=6, per-agent dedup — see agent-engine-service), so a second
- * concurrent apply calling `start()` while one trace is in-flight must NOT
- * throw (that would break core injection for the sake of observability).
- * Instead `start()` returns a **shadow trace** (no-op): the apply proceeds
- * untraced, and the singleton invariant is untouched. Deep-layer
- * `recordNamedStep` calls keep landing in the real trace only.
+ * Each agent may have at most one in-flight trace at a time. Concurrent
+ * applies to DIFFERENT agents each get their own real trace; a concurrent
+ * apply to the SAME agent (should not happen due to the per-agent dedup
+ * lock in `agent-engine-service`, but defended here) receives an isolated
+ * builder that is NOT registered in the map — its `release()` is a no-op
+ * so it never disturbs the real trace. Deep-layer `recordNamedStep` calls
+ * land in the currently registered trace for the matching agent.
+ *
+ * The legacy `ShadowTrace` class has been eliminated: a registered
+ * `ApplyTraceBuilder` is always returned, and per-agent dedup is handled
+ * by the map lookup.
  *
  * ## Error behavior
  *
@@ -83,10 +88,11 @@ export type AddSubStepFn = (
  */
 export class ApplyTraceBuilder {
   public readonly traceId: string;
-  private readonly agentId: string;
+  public readonly agentId: string;
   private readonly themeId?: string;
   private readonly device: DeviceInfo;
   private readonly startedAt: number;
+  private readonly wallClockStart: number;
   private readonly steps: PerformanceStep[] = [];
   /** Sub-steps keyed by parent step name; assembled during {@link finish}. */
   private readonly pendingSubSteps: Map<string, PerformanceStep[]> = new Map();
@@ -99,6 +105,7 @@ export class ApplyTraceBuilder {
     this.themeId = themeId;
     this.device = device;
     this.startedAt = nowMs();
+    this.wallClockStart = Date.now();
   }
 
   /**
@@ -207,8 +214,9 @@ export class ApplyTraceBuilder {
   /**
    * Append a standalone top-level step (not a child of another step) with a
    * pre-measured duration. Used by deep CDP layers (`connectCdp`,
-   * `waitForTheme`, subprocess spawn) that record timing outside a `step()`
-   * callback but still want to land inside the active apply trace.
+   * `connectEventCdp`, `waitForTheme`, subprocess spawn) that record timing
+   * outside a `step()` callback but still want to land inside the active
+   * apply trace.
    *
    * Unlike sub-steps, this produces a first-class row in the trace's `steps`
    * list (not a `children[]` on a parent). It is a no-op concern-wise so
@@ -238,7 +246,7 @@ export class ApplyTraceBuilder {
    * appear immediately after their parent in the flat `steps` list.
    *
    * Must be called exactly once. Returns the immutable {@link ThemeApplyTrace}
-   * and releases the singleton so a new trace can be started.
+   * and releases the per-agent slot so a new trace can be started.
    */
   finish(): ThemeApplyTrace {
     if (this.finalized) {
@@ -246,11 +254,11 @@ export class ApplyTraceBuilder {
     }
     this.finalized = true;
 
-    // Determine end-of-life: singleton is released first so a concurrent
-    // start() call can begin immediately after finalization.
-    PerformanceRecorder.release();
+    // Release this agent's slot only if this builder is the registered one.
+    PerformanceRecorder.release(this.agentId, this);
 
-    const totalDuration = nowMs() - this.startedAt;
+    const finishedAt = nowMs();
+    const totalDuration = finishedAt - this.startedAt;
     const success = !this.error;
 
     // Build final flat-step list, interleaving children after their parent.
@@ -272,7 +280,7 @@ export class ApplyTraceBuilder {
       agentId: this.agentId,
       themeId: this.themeId,
       startedAt: this.startedAt,
-      finishedAt: new Date().toISOString(),
+      finishedAt: this.wallClockStart + totalDuration,
       duration: totalDuration,
       success,
       steps: orderedSteps,
@@ -283,92 +291,15 @@ export class ApplyTraceBuilder {
 }
 
 // ---------------------------------------------------------------------------
-// ShadowTrace (concurrent-apply fallback)
-// ---------------------------------------------------------------------------
-
-/**
- * No-op trace returned by {@link PerformanceRecorder.start} when a real trace
- * is already in-flight (concurrent apply to another agent).
- *
- * Structural subset of `ApplyTraceBuilder`'s public surface used by
- * `theme-apply-flow`: `step` (both arities), `finish`, `traceId`.
- * - Does NOT register itself as the singleton `active` trace;
- * - Does NOT call `PerformanceRecorder.release()` (must not disturb the real trace);
- * - `finish()` returns a minimal valid {@link ThemeApplyTrace} so
- *   `performanceLogger.log(...)` keeps working unchanged.
- */
-class ShadowTrace {
-  public readonly traceId: string;
-  private readonly agentId: string;
-  private readonly themeId?: string;
-  private readonly startedAt: number;
-  private finalized = false;
-
-  constructor(agentId: string, themeId?: string) {
-    this.traceId = `shadow-${agentId}`;
-    this.agentId = agentId;
-    this.themeId = themeId;
-    this.startedAt = nowMs();
-  }
-
-  async step<T>(
-    _name: string,
-    fn: ((addSubStep: AddSubStepFn) => Promise<T>) | (() => Promise<T>),
-  ): Promise<T> {
-    // Run the callback untouched (no timing, no recording) so apply behavior
-    // is bit-identical to the traced path.
-    if (fn.length > 0) {
-      return await (fn as (addSubStep: AddSubStepFn) => Promise<T>)(() => {});
-    }
-    return await (fn as () => Promise<T>)();
-  }
-
-  addSubStep(): void {
-    // no-op
-  }
-
-  appendStep(): void {
-    // no-op
-  }
-
-  finish(): ThemeApplyTrace {
-    if (this.finalized) {
-      throw new Error(`Shadow trace "${this.traceId}" has already been finalized.`);
-    }
-    this.finalized = true;
-    const trace: ThemeApplyTrace = {
-      id: this.traceId,
-      agentId: this.agentId,
-      startedAt: this.startedAt,
-      finishedAt: new Date().toISOString(),
-      duration: 0,
-      success: true,
-      steps: [
-        {
-          name: 'shadowed-concurrent-apply',
-          startedAt: this.startedAt,
-          duration: 0,
-          success: true,
-          // 并发 apply 时观测层让位：本 apply 未单独计时（见模块头注释）
-        },
-      ],
-      device: collectDeviceInfo(),
-    };
-    if (this.themeId !== undefined) trace.themeId = this.themeId;
-    return trace;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// PerformanceRecorder (static singleton)
+// PerformanceRecorder (static per-agent map)
 // ---------------------------------------------------------------------------
 
 /**
  * Static entry point for creating theme-apply traces. Maintains a monotonically
- * increasing sequence counter and ensures only one trace is in-flight at a time.
+ * increasing sequence counter and a per-agent map of in-flight traces.
  *
  * Intentionally a static-only class: it doubles as a module namespace and keeps
- * the in-flight trace invariant in one obvious place. Consumers call
+ * the per-agent trace invariant in one obvious place. Consumers call
  * `PerformanceRecorder.start(...)` / `.finishTrace(...)` without instantiation.
  */
 // biome-ignore lint/complexity/noStaticOnlyClass: deliberate static singleton (see above)
@@ -376,64 +307,87 @@ export class PerformanceRecorder {
   /** Monotonically increasing sequence for id generation. */
   private static sequence = 0;
 
-  /** Currently active trace, or null when idle. */
-  private static active: ApplyTraceBuilder | null = null;
+  /** Per-agent in-flight traces. Keyed by agentId. */
+  private static traces: Map<string, ApplyTraceBuilder> = new Map();
 
   /**
    * Begin a new theme-apply trace.
    *
-   * When a trace is already in-flight (concurrent apply to another agent),
-   * returns a **shadow no-op trace** instead of throwing — observability must
-   * never break the core injection path. See module docblock "Single-trace model".
+   * When a trace is already in-flight for the same agent (concurrent apply),
+   * returns an isolated builder that is NOT registered in the map — its
+   * `release()` is a no-op so it never disturbs the real trace. This preserves
+   * the invariant that observability never breaks the core injection path.
    *
    * @param agentId  Target agent id.
    * @param themeId  Theme id (optional; omit for restore-to-default).
    */
-  static start(agentId: string, themeId?: string): ApplyTraceBuilder | ShadowTrace {
-    if (PerformanceRecorder.active) {
-      return new ShadowTrace(agentId, themeId);
-    }
+  static start(agentId: string, themeId?: string): ApplyTraceBuilder {
+    const registered = PerformanceRecorder.traces.get(agentId);
     PerformanceRecorder.sequence += 1;
     const id = formatId(PerformanceRecorder.sequence);
     const device = collectDeviceInfo();
     const builder = new ApplyTraceBuilder(id, agentId, device, themeId);
-    PerformanceRecorder.active = builder;
+    // Only register if no trace is currently in-flight for this agent.
+    if (!registered) {
+      PerformanceRecorder.traces.set(agentId, builder);
+    }
     return builder;
   }
 
-  /** Release the active trace (called internally by `finish()`). */
-  static release(): void {
-    PerformanceRecorder.active = null;
+  /**
+   * Release an agent's trace slot. Only removes the entry if it points to
+   * `builder` — this prevents an isolated (unregistered) builder from
+   * accidentally removing the real trace.
+   */
+  static release(agentId: string, builder: ApplyTraceBuilder): void {
+    if (PerformanceRecorder.traces.get(agentId) === builder) {
+      PerformanceRecorder.traces.delete(agentId);
+    }
   }
 
   /**
-   * Returns the currently active trace builder, or null when idle.
+   * Returns the currently registered trace builder for an agent, or null.
    * Primarily useful for tests and diagnostics.
    */
-  static getActive(): ApplyTraceBuilder | null {
-    return PerformanceRecorder.active;
+  static getActive(agentId?: string): ApplyTraceBuilder | null {
+    if (agentId) {
+      return PerformanceRecorder.traces.get(agentId) ?? null;
+    }
+    // Backward compat: return the first registered trace.
+    const first = PerformanceRecorder.traces.values().next();
+    return first.done ? null : first.value;
   }
 
   /**
    * Record a standalone named step into the active trace (RFC §4.9). Intended
-   * for deep layers — `connectCdp`, `waitForTheme`, subprocess spawn — that
-   * measure their own duration and cannot be wrapped by a `step()` callback
-   * up in the apply orchestrator. No-op when no trace is in-flight.
+   * for deep layers — `connectCdp`, `connectEventCdp`, `waitForTheme`,
+   * subprocess spawn — that measure their own duration and cannot be wrapped
+   * by a `step()` callback up in the apply orchestrator. No-op when no trace
+   * is in-flight for the given agent.
    *
-   * @param name     Step name (e.g. 'connectCdp', 'waitForTheme', 'spawnAgent').
+   * @param agentId  Target agent id (optional; uses first registered trace).
+   * @param name     Step name (e.g. 'connectCdp', 'connectEventCdp', 'waitForTheme', 'spawnAgent').
    * @param duration Measured elapsed time in milliseconds.
    * @param success  Whether the operation completed successfully.
    * @param error    Error message when `success` is false.
    */
-  static recordNamedStep(name: string, duration: number, success = true, error?: string): void {
-    const builder = PerformanceRecorder.active;
+  static recordNamedStep(
+    agentId: string | undefined,
+    name: string,
+    duration: number,
+    success = true,
+    error?: string,
+  ): void {
+    const builder = agentId
+      ? (PerformanceRecorder.traces.get(agentId) ?? null)
+      : PerformanceRecorder.getActive();
     if (!builder) return;
     builder.appendStep(name, duration, success, error);
   }
 
-  /** Reset sequence counter and clear active trace. Intended for test teardown. */
+  /** Reset sequence counter and clear all traces. Intended for test teardown. */
   static reset(): void {
     PerformanceRecorder.sequence = 0;
-    PerformanceRecorder.active = null;
+    PerformanceRecorder.traces.clear();
   }
 }
