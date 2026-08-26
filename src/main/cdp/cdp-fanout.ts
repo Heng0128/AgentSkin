@@ -55,7 +55,7 @@ import {
   hostClassFor,
   WALLPAPER_PUNCH_GLOBAL,
 } from '../../shared/injection-constants';
-import { isThemeFullyApplied } from '../../shared/injection-runtime';
+import { isThemeFullyApplyVerdict } from '../../shared/injection-runtime';
 import { IpcChannel } from '../../shared/ipc-channels';
 import type { AgentId } from '../../shared/types';
 import { checkThemeHealth } from '../theme-health-check';

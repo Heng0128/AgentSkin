@@ -80,7 +80,7 @@ function renderInspector() {
       iframeRef={{ current: null }}
       pickedPath={null}
       onClearPicked={() => {}}
-      resolution="desktop"
+      resolution="1920x1080"
       onResolutionChange={() => {}}
       showDeviceFrame={false}
       onToggleDeviceFrame={() => {}}

@@ -10,7 +10,7 @@
 import { AppMark } from '@/components/AppMark';
 
 import type { UiMessages } from '@shared/i18n';
-import { AGENT_META } from '@shared/types';
+import { AGENT_META, type AgentId } from '@shared/types';
 import { AGENT_BRAND_COLORS, AGENT_TOKEN_COUNTS, getStrategyKey } from './agent-profile-utils';
 
 export function AgentProfileSummary({ t, newAgent }: { t: UiMessages; newAgent: string | null }) {
@@ -23,7 +23,7 @@ export function AgentProfileSummary({ t, newAgent }: { t: UiMessages; newAgent: 
       <div className="flex items-center justify-between">
         <span className="text-micro text-muted-foreground">{t.studioProfileSummary}</span>
         <span className="text-micro text-muted-foreground tabular-nums font-mono">
-          {AGENT_META[newAgent]?.displayName ?? newAgent}
+          {AGENT_META[newAgent as AgentId]?.displayName ?? newAgent}
         </span>
       </div>
       <div className="flex items-center gap-2">
