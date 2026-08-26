@@ -32,7 +32,9 @@ for (let i = 0; i < args.length; i++) {
 }
 
 if (!imagePath) {
-  console.error('Usage: node scripts/extract-theme-from-image.mjs <image.bmp> [--pretty] [--out <file>]');
+  console.error(
+    'Usage: node scripts/extract-theme-from-image.mjs <image.bmp> [--pretty] [--out <file>]',
+  );
   console.error('');
   console.error('Options:');
   console.error('  --pretty   Pretty-print JSON output');

@@ -120,16 +120,16 @@ export function rgbToOklch(r, g, b) {
  */
 export function oklchToHex(l, c, h) {
   const hRad = (h * Math.PI) / 180;
-  let a = c * Math.cos(hRad);
-  let b = c * Math.sin(hRad);
+  const a = c * Math.cos(hRad);
+  const b = c * Math.sin(hRad);
 
   const l_ = l + 0.3963377774 * a + 0.2158037573 * b;
   const m_ = l - 0.1055613458 * a - 0.0638541728 * b;
   const s_ = l - 0.0894841775 * a - 1.291485548 * b;
 
-  let x = D65_X * l_ * l_ * l_;
-  let y = D65_Y * m_ * m_ * m_;
-  let z = D65_Z * s_ * s_ * s_;
+  const x = D65_X * l_ * l_ * l_;
+  const y = D65_Y * m_ * m_ * m_;
+  const z = D65_Z * s_ * s_ * s_;
 
   let lr = 3.2404542 * x - 1.5371385 * y - 0.4985314 * z;
   let lg = -0.969266 * x + 1.8760108 * y + 0.041556 * z;
@@ -143,15 +143,9 @@ export function oklchToHex(l, c, h) {
   const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
   return (
     '#' +
-    clamp(linearToSrgbFloat(lr))
-      .toString(16)
-      .padStart(2, '0') +
-    clamp(linearToSrgbFloat(lg))
-      .toString(16)
-      .padStart(2, '0') +
-    clamp(linearToSrgbFloat(lb))
-      .toString(16)
-      .padStart(2, '0')
+    clamp(linearToSrgbFloat(lr)).toString(16).padStart(2, '0') +
+    clamp(linearToSrgbFloat(lg)).toString(16).padStart(2, '0') +
+    clamp(linearToSrgbFloat(lb)).toString(16).padStart(2, '0')
   );
 }
 
@@ -344,7 +338,9 @@ export function assembleTokens(hist, dominant, mode) {
   // --- Accent ---
   // Primary dominant color, at mid-high lightness for good contrast on bg
   const accentC = Math.max(0.12, primary.avgC * 0.8);
-  const accentL = dark ? Math.min(0.72, Math.max(0.5, primary.avgL + 0.1)) : Math.max(0.4, Math.min(0.55, primary.avgL));
+  const accentL = dark
+    ? Math.min(0.72, Math.max(0.5, primary.avgL + 0.1))
+    : Math.max(0.4, Math.min(0.55, primary.avgL));
   const accentHex = oklchToHex(accentL, accentC, primary.avgH);
 
   // --- Text ---
@@ -356,7 +352,7 @@ export function assembleTokens(hist, dominant, mode) {
   const [textR, textG, textB] = hexToRgb(textHex);
 
   // WCAG: ensure text/bg ≥ 4.5
-  let crText = contrastRatioRgb(textR, textG, textB, bgR, bgG, bgB);
+  const crText = contrastRatioRgb(textR, textG, textB, bgR, bgG, bgB);
   if (crText < 4.5) {
     const adjustedL = dark ? Math.min(0.98, textL + 0.08) : Math.max(0.04, textL - 0.08);
     textHex = oklchToHex(adjustedL, textC, textH);
@@ -395,7 +391,9 @@ export function assembleTokens(hist, dominant, mode) {
   const textMutedHex = oklchToHex(textMutedL, textC, primary.avgH);
 
   // --- Text-inverse ---
-  const textInverseHex = dark ? oklchToHex(0.1, 0.02, primary.avgH) : oklchToHex(0.95, 0.02, primary.avgH);
+  const textInverseHex = dark
+    ? oklchToHex(0.1, 0.02, primary.avgH)
+    : oklchToHex(0.95, 0.02, primary.avgH);
 
   // --- Focus-ring ---
   const focusRingHex = oklchToHex(accentL, accentC * 1.1, primary.avgH);
@@ -437,7 +435,7 @@ export function enforceWcag(tokens, mode) {
   const [accentR, accentG, accentB] = hexToRgb(tokens.accent);
 
   // Text / bg ≥ 4.5
-  let [textR, textG, textB] = hexToRgb(tokens.text);
+  const [textR, textG, textB] = hexToRgb(tokens.text);
   if (contrastRatioRgb(textR, textG, textB, bgR, bgG, bgB) < 4.5) {
     tokens.text = dark ? '#ffffff' : '#000000';
   }

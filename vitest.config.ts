@@ -39,6 +39,7 @@ export default defineConfig({
             'src/main/**/*.test.ts',
             'src/shared/**/*.test.ts',
             'src/compiler/**/*.test.ts',
+            'tests/main/**/*.test.ts',
           ],
           // 30s timeout: compiler tests include sandbox child-process execution
           // which may exceed 15s on slower machines.
