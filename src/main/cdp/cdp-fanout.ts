@@ -579,8 +579,15 @@ export async function hardeningPass(
       deps.log(`[hardening] ${appId}: ${target.type} injection failed: ${toMessage(error)}`);
     } finally {
       if (handle.pooled) {
-        // 归还引用计数；pool 拥有生命周期，不可 close
-        releaseSession(deps.sessions, appId, targetKeyFor(target.id, target.webSocketDebuggerUrl));
+        // firstSession 所有权转移：不归还在这里，由 health-check 的 finally 统一释放。
+        // 若在此处归还，health-check finally 会 release 第二次 → 双释放。
+        if (session !== firstSession) {
+          releaseSession(
+            deps.sessions,
+            appId,
+            targetKeyFor(target.id, target.webSocketDebuggerUrl),
+          );
+        }
       } else if (session !== firstSession) {
         try {
           session.close();
