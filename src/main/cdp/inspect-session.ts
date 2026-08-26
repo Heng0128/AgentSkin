@@ -15,8 +15,15 @@
  */
 
 import type { AgentId, InspectedNode } from '../../shared/types';
-import { connectEventCdp } from './cdp-client';
+import { connectEventCdp, type EventCdpSession } from './cdp-client';
 import { captureNodeCascade } from './node-cascade';
+import {
+  acquireSession,
+  type CdpSessionPool,
+  releaseSession,
+  type SessionHandle,
+  targetKeyFor,
+} from './session-pool';
 
 function highlightConfig() {
   return {
@@ -60,6 +67,13 @@ export interface StartInspectOptions {
   webSocketDebuggerUrl: string;
   onPick: (node: InspectedNode) => void;
   onError?: (message: string) => void;
+  /**
+   * Optional session pool. When provided, the inspect session is acquired from
+   * the pool (reusing an existing connection to the same target) and released
+   * back on `stop()`. Without a pool a one-shot connect-then-close session is
+   * used (backwards-compatible path for callers that don't pass one).
+   */
+  pool?: CdpSessionPool;
 }
 
 /**
@@ -68,11 +82,35 @@ export interface StartInspectOptions {
  * invokes `onPick`. Returns a controller whose `stop()` exits inspect mode.
  */
 export async function startInspect(opts: StartInspectOptions): Promise<InspectController> {
-  const session = await connectEventCdp(opts.webSocketDebuggerUrl);
+  const targetKey = targetKeyFor(null, opts.webSocketDebuggerUrl);
+  const handle: SessionHandle = await acquireSession(opts.pool, opts.agentId, targetKey, () =>
+    connectEventCdp(opts.webSocketDebuggerUrl),
+  );
+  // The pool stores CdpSession, but our open callback created an
+  // EventCdpSession — cast so we can subscribe to CDP events (event
+  // delegation: the pooled socket is shared, events are dispatched here).
+  const session = handle.session as EventCdpSession | null;
+  if (!session) {
+    throw new Error('CDP connect failed: no session available');
+  }
+
+  // Release-or-close helper: pooled sessions are released back to the pool;
+  // one-shot sessions are closed. Used by both the error path and stop().
+  const releaseOrClose = (): void => {
+    if (handle.pooled) {
+      releaseSession(opts.pool, opts.agentId, targetKey);
+    } else {
+      try {
+        session.close();
+      } catch {
+        /* already closed */
+      }
+    }
+  };
 
   // Race the CDP domain-enable sequence against an 8s timeout so a
   // half-open WebSocket cannot hang the main process indefinitely. On
-  // timeout we close the session and let the error propagate to the caller.
+  // timeout we release the session and let the error propagate to the caller.
   const enablePromise = async (): Promise<void> => {
     await session.send('DOM.enable');
     await session.send('CSS.enable');
@@ -97,7 +135,7 @@ export async function startInspect(opts: StartInspectOptions): Promise<InspectCo
     await Promise.race([enablePromise(), timeoutPromise<void>()]);
   } catch (error) {
     if (enableTimeout) clearTimeout(enableTimeout);
-    session.close();
+    releaseOrClose();
     throw error;
   }
   if (enableTimeout) clearTimeout(enableTimeout);
@@ -132,7 +170,7 @@ export async function startInspect(opts: StartInspectOptions): Promise<InspectCo
   let stopped = false;
   return {
     async stop() {
-      if (stopped) return; // idempotent: never double-disable / double-close
+      if (stopped) return; // idempotent: never double-disable / double-release
       stopped = true;
       if (enableTimeout) clearTimeout(enableTimeout);
       try {
@@ -146,7 +184,7 @@ export async function startInspect(opts: StartInspectOptions): Promise<InspectCo
         /* ignore */
       }
       session.off('Overlay.inspectNodeRequested', pickHandler);
-      session.close();
+      releaseOrClose();
     },
   };
 }
