@@ -46,19 +46,26 @@ function makeMockSession(
   };
 }
 
-/** A verification JSON string that verifyTheme() returns from evaluate. */
+/**
+ * A verification JSON string that verifyTheme() returns from evaluate.
+ * Includes `layers` so isThemeFullyApplyVerdict() returns 'full' (RC4-A).
+ */
 const VERIFY_SUCCESS = JSON.stringify({
   accent: '#0ff',
   agentskinArt: 'url(blob:abc)',
+  artResolved: true,
   heroBlobActive: true,
   adoptedSheetCount: 1,
+  layers: { palette: 1, tokens: 45, cosmetic: 12 },
 });
 
 const VERIFY_NO_HERO = JSON.stringify({
   accent: '#0ff',
   agentskinArt: '',
+  artResolved: false,
   heroBlobActive: false,
   adoptedSheetCount: 1,
+  layers: { palette: 1, tokens: 45, cosmetic: 12 },
 });
 
 /**

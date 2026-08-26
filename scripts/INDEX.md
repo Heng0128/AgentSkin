@@ -23,7 +23,6 @@
 | `check-native-defect-consistency.mjs` | 验证原生硬编码视觉缺陷修正规则一致性（C8）：adapter 内嵌副本必须覆盖共享注册表 `native-defect-fixes.mjs` |
 | `check-specificity-budget.mjs` | 验证 CSS 特异性预算（λ P0-1）：模拟生成 6 适配器 CSS 并对照 `src/compiler/specificity.ts` 中的 profile |
 | `check-themes.mjs` | 验证 14-token 主题契约（C2）：每个主题包必须包含完整的 14 个设计 token |
-| `check-variable-bridge.mjs` | 验证变量桥接契约（C10）：bridge 无循环依赖、目标变量在 CSS 中被引用、agentskin token 可解析 |
 | `check-i18n.mjs` | 验证 i18n 完整性：中英 key 对齐、空翻译检测、孤儿 key 检测 |
 | `check-selector-fragility.mjs` | 选择器健壮性 lint（B3）：检测 theme/engine CSS 中的脆弱选择器（位置伪类、深层子链、生成类名、区域属性选择器、过长选择器），warn-only |
 | `runtime-check-all.mjs` | 运行时质量门禁（CDP 注入后采样计算样式）：对比度、水平溢出、关键选择器命中 |

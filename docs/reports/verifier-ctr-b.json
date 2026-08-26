@@ -1,0 +1,47 @@
+{
+  "verifier": "Verifier-CTR",
+  "timestamp": "2026-08-26T12:35:00+08:00",
+  "passed": true,
+  "summary": "All three verification dimensions passed. Type definitions are consistent across production and test code. Store boundaries show only expected UI-to-UI cross-store references (no new main/UI cross-layer violations). All interface contracts (connectEventCdp, acquireSession, isThemeFullyApplyVerdict, PerformanceRecorder) are uniformly consumed across callers.",
+  "checks": [
+    {
+      "dimension": "public type consistency",
+      "passed": true,
+      "findings": [],
+      "details": {
+        "shared_types_barrel": "src/shared/types.ts re-exports from src/shared/types/index.ts — barrel intact, no drift",
+        "theme_apply_verdict": "ThemeApplyVerdict ('full'|'partial'|'failed') defined in src/shared/injection-runtime.ts line 56. Correctly imported by: src/main/cdp/injection/shared.ts (line 18), src/main/cdp/reload-watchdog.ts (line 36), src/main/cdp/cdp-fanout.ts (line 58). All import the type and the isThemeFullyApplyVerdict function — no mismatches.",
+        "deprecated_isThemeFullyApplied": "Boolean wrapper isThemeFullyApplied still exported (deprecated, line 106) for backward compat. No live callers remain outside its own definition. engine-strategy.ts and engine-strategy.test.ts reference it in comments only.",
+        "performance_trace_types": "PerformanceStep, DeviceInfo, IpcTimeoutEvent, ThemeApplyTrace defined in src/main/services/performance/types.ts. PerformanceRecorder (performance-recorder.ts) and performance-logger.ts both import from './types' — no external type duplication. index.ts barrel re-exports all three modules cleanly.",
+        "theme_verification": "ThemeVerification interface in src/main/cdp/injection/types.ts (lines 14-49) aligns with VERIFY_THEME_BODY evaluate expression (shared.ts lines 53-90). Fields: accent, agentskinArt, heroBlobActive, artResolved, adoptedSheetCount, layers, assets, assetsActive — all mapped.",
+        "wait_for_theme_result": "WaitForThemeResult interface (shared.ts lines 134-145) returned by waitForTheme. Fields: applied (boolean), verdict (ThemeApplyVerdict), verification (ThemeVerification|null). Consumed by: engine-strategy.ts (destructures { verification, applied }), cdp-fanout.test.ts (verifies verdict)."
+      }
+    },
+    {
+      "dimension": "Store boundary",
+      "passed": true,
+      "findings": [],
+      "details": {
+        "cross_store_imports": "6 cross-store imports found, all within src/ui/stores/ (UI-to-UI only, no main/UI cross-layer): agentStore→statusStore, environmentStore→themeStore, settingsStore→statusStore, installFlowStore→themeStore, themeStore→statusStore, wallpaperStore→themeStore",
+        "no_new_cross_layer": "No store-to-main or main-to-store imports detected. The import-guard.ts store is self-contained via Zustand create() with no external store dependencies.",
+        "cdp_performance_boundary": "cdp-client.ts and injection/shared.ts import PerformanceRecorder from services/performance (main→main direction, correct). performance-recorder.ts has zero imports from cdp/ modules — clean separation. The performance module is a pure observation layer that CDP modules write into.",
+        "adapter_boundary": "No adapter module imports from stores/. Adapters are consumed via the deps-slice pattern (CdpFanoutDeps, ReloadWatchdogDeps) injected by AgentEngineService — no direct store access."
+      }
+    },
+    {
+      "dimension": "interface contract consistency",
+      "passed": true,
+      "findings": [],
+      "details": {
+        "connectEventCdp_signature": "connectEventCdp(webSocketDebuggerUrl: string, openTimeoutMs = 5000, commandTimeoutMs = 8000): Promise<EventCdpSession>. All callers pass compatible arguments: inspect-session.ts line 87 (1 arg), reload-watchdog.ts line 132 (1 arg), renderer-guardian.ts line 151 (1 arg). Callers rely on default timeout values — no signature drift.",
+        "connectEventCdp_return_type": "All callers that need on/off cast the pooled CdpSession to EventCdpSession (reload-watchdog.ts line 141, inspect-session.ts line 92). This is the expected pattern since the pool returns CdpSession but the open callback creates EventCdpSession — documented in code comments.",
+        "acquire_session_signature": "acquireSession(pool, appId, targetKey, open, epoch?): Promise<SessionHandle>. Wrapper in session-pool.ts lines 91-104. All callers use acquireSession(pool, appId, targetKey, () => connectXxx(...)) pattern: cdp-fanout.ts lines 229/476/832, reload-watchdog.ts line 131, inspect-session.ts line 86, apply-baseline.ts line 305. Consistent.",
+        "release_session_signature": "releaseSession(pool, appId, targetKey): void. All callers invoke inside finally blocks when handle.pooled=true: cdp-fanout.ts lines 277/602/857, reload-watchdog.ts lines 147/243, inspect-session.ts line 101, apply-baseline.ts lines 258/282. No missed releases on happy or error paths.",
+        "isThemeFullyApplyVerdict_usage": "Three-tier verdict function used in: cdp-fanout.ts (lines 511-513 watchdog gate), reload-watchdog.ts (line 194 reverify), injection/shared.ts (line 182 waitForTheme). All pass { requireHero } opts when applicable. Consistent semantics: 'full'=skip, 'partial'/'failed'=re-inject.",
+        "performance_recorder_recordNamedStep": "recordNamedStep(agentId, name, duration, success?, error?) called by: cdp-client.ts (connectCdp/connectEventCdp success+error paths), injection/shared.ts (waitForTheme). Step names: 'connectCdp', 'connectEventCdp', 'waitForTheme' — all string literals consistent across calls.",
+        "test_contract_alignment": "cdp-client.test.ts verifies 3-arg signatures and recordNamedStep naming. cdp-fanout.test.ts mocks connectEventCdp and verifies call args. reload-watchdog.test.ts mocks connectEventCdp and verifies call counts. renderer-guardian.test.ts mocks connectEventCdp. engine-strategy.test.ts uses VERIFY_FULL/VERIFY_PARTIAL JSON that matches ThemeVerification shape. All alignments confirmed."
+      }
+    }
+  ],
+  "notes": []
+}
