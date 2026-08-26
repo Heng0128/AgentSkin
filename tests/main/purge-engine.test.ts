@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 //
+// @vitest-environment happy-dom
+//
 // # purge-engine.test.ts — unit tests for the Zero-Residual Cleanup Engine.
 //
 // Validates the four public exports:
@@ -412,7 +414,9 @@ describe('contractFromManifest', () => {
   });
 
   afterEach(() => {
-    rmSync(tempDir, { recursive: true, force: true });
+    if (tempDir) {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 
   it('reads a manifest.json and generates a valid contract', () => {
