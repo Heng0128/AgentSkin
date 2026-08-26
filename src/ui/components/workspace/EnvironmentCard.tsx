@@ -221,25 +221,22 @@ export function EnvironmentCard({
                   <MoreVertical className="size-4 text-muted-foreground" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-32">
-                  {onRename && env.presetId && (
-                    <DropdownMenuItem onClick={() => onRename(env.presetId)}>
+                  {onRename && presetId && (
+                    <DropdownMenuItem onClick={() => onRename(presetId)}>
                       <Edit className="size-4" />
                       {t.environmentRename}
                     </DropdownMenuItem>
                   )}
-                  {onDuplicate && env.presetId && (
-                    <DropdownMenuItem onClick={() => onDuplicate(env.presetId)}>
+                  {onDuplicate && presetId && (
+                    <DropdownMenuItem onClick={() => onDuplicate(presetId)}>
                       <Copy className="size-4" />
                       {t.environmentDuplicate}
                     </DropdownMenuItem>
                   )}
-                  {onDelete && env.presetId && (
+                  {onDelete && presetId && (
                     <>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => onDelete(env.presetId)}
-                      >
+                      <DropdownMenuItem variant="destructive" onClick={() => onDelete(presetId)}>
                         <Trash2 className="size-4" />
                         {t.environmentDelete}
                       </DropdownMenuItem>
