@@ -205,7 +205,7 @@ export function PreviewWindow({
               sandbox="allow-scripts allow-same-origin"
               onLoad={() => {
                 pushOverrides();
-                onIframeReady?.(iframeRef.current!);
+                if (iframeRef.current) onIframeReady?.(iframeRef.current);
               }}
               className="pw__iframe"
               style={{ transform: `scale(${win.scale})`, transformOrigin: 'top left' }}

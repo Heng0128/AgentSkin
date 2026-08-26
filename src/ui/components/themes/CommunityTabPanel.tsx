@@ -71,7 +71,7 @@ export function CommunityTabPanel() {
       if (!result.success && result.error) {
         setInstallErrors((prev) => {
           const next = new Map(prev);
-          next.set(themeId, { error: result.error!, retryCount: retryCount + 1 });
+          next.set(themeId, { error: result.error ?? '', retryCount: retryCount + 1 });
           return next;
         });
       } else if (result.success) {
