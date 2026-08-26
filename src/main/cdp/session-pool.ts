@@ -115,12 +115,20 @@ export function releaseSession(
   pool?.release(appId, targetKey);
 }
 
+/**
+ * Monotonic counter for targets that expose neither `id` nor
+ * `webSocketDebuggerUrl`. Without uniqueness, every such target would collapse
+ * onto the same `'unknown-target'` key and the pool would treat distinct
+ * targets as one — silently dropping sessions.
+ */
+let unknownTargetCounter = 0;
+
 /** Per-target key for a CDP target (id preferred, WS URL as fallback). */
 export function targetKeyFor(
   id: string | null | undefined,
   webSocketDebuggerUrl: string | null | undefined,
 ): string {
-  return id || webSocketDebuggerUrl || 'unknown-target';
+  return id || webSocketDebuggerUrl || `unknown-${++unknownTargetCounter}`;
 }
 
 /**
@@ -129,12 +137,22 @@ export function targetKeyFor(
 export class CdpSessionPool {
   private readonly pools = new Map<AgentId, Map<string, PooledEntry>>();
   private idleScanTimer: ReturnType<typeof setInterval> | null = null;
+  /**
+   * Retired-session safety valve (RC1-B): a second scanner that force-discards
+   * sessions which have been retired for longer than RETIRE_GRACE_MS — even if
+   * a stale reference still holds refCount > 0. Without this, a caller that
+   * forgets to release (or a crashed in-flight op) can pin a retired session
+   * indefinitely, leaking the socket.
+   */
+  private retiredScanTimer: ReturnType<typeof setInterval> | null = null;
   /** Per-key promise chain — serializes concurrent acquire() for the same target. */
   private readonly acquireLocks = new Map<string, Promise<CdpSession | null>>();
 
   constructor() {
     // Start idle scanner for reclaiming unused sessions
     this.startIdleScanner();
+    // Start retired-session safety valve (force-discard over-age retirees)
+    this.startRetiredScanner();
   }
 
   private startIdleScanner(): void {
@@ -167,6 +185,40 @@ export class CdpSessionPool {
         }
         // Idle timeout → close
         if (now - entry.lastUsedAt > IDLE_TTL_MS) {
+          this.discard(appId, targetKey, entry);
+        }
+      }
+      // Clean up empty per-agent maps
+      if (byTarget.size === 0) {
+        this.pools.delete(appId);
+      }
+    }
+  }
+
+  /** Start the retired-session safety valve (force-discard over-age retirees). */
+  private startRetiredScanner(): void {
+    if (this.retiredScanTimer) return;
+    this.retiredScanTimer = setInterval(() => {
+      this.scanRetiredEntries();
+    }, IDLE_SCAN_INTERVAL_MS);
+  }
+
+  /**
+   * Force-discard retired sessions that have exceeded RETIRE_GRACE_MS, even if
+   * a stale reference still holds refCount > 0. This is the safety valve that
+   * prevents retired sessions from leaking sockets when a caller forgets to
+   * release or an in-flight op crashes without cleanup.
+   */
+  private scanRetiredEntries(): void {
+    const now = Date.now();
+    for (const [appId, byTarget] of this.pools) {
+      for (const [targetKey, entry] of [...byTarget]) {
+        if (entry.retired && now - entry.retiredAt > RETIRE_GRACE_MS) {
+          mainWarn(
+            'SessionPool',
+            `retired session exceeded grace (${RETIRE_GRACE_MS}m ` +
+              `refCount=${entry.refCount}): ${appId}/${targetKey} — force-discarding`,
+          );
           this.discard(appId, targetKey, entry);
         }
       }
@@ -237,27 +289,21 @@ export class CdpSessionPool {
         return existing.session;
       }
     }
-    const session = await open();
-    if (!session) return null;
-    // Capacity guard: refuse to pool a brand-new target type once the
-    // per-agent cap is reached, falling back to a one-shot connect (caller
-    // path) instead of growing the pool without bound. The normal
-    // steady-state (targets are naturally < 20) is unaffected.
-    if (!existing && byTarget.size >= MAX_SESSIONS_PER_AGENT) {
+    // Capacity guard前置 (RC1-B): refuse to open a brand-new session when the
+    // per-agent cap is already reached — avoids a wasted handshake (~200ms)
+    // just to close it again. The normal steady-state (targets are naturally
+    // < 20) is unaffected. Checked BEFORE open() so we never create a socket
+    // we intend to discard.
+    if (byTarget.size >= MAX_SESSIONS_PER_AGENT) {
       mainWarn(
         'SessionPool',
         `per-agent session cap (${MAX_SESSIONS_PER_AGENT}) reached for ${appId}; ` +
-          `not pooling target ${targetKey}, closing the freshly-opened session to avoid leak`,
+          `not pooling target ${targetKey}`,
       );
-      // Close the session we just opened — we're refusing to pool it, so the
-      // caller gets a one-shot connect (null handle) and we must not leak the socket.
-      try {
-        session.close();
-      } catch {
-        /* already closed */
-      }
       return null;
     }
+    const session = await open();
+    if (!session) return null;
     const entry: PooledEntry = {
       session,
       lastUsedAt: Date.now(),
@@ -346,6 +392,10 @@ export class CdpSessionPool {
     if (this.idleScanTimer !== null) {
       clearInterval(this.idleScanTimer);
       this.idleScanTimer = null;
+    }
+    if (this.retiredScanTimer !== null) {
+      clearInterval(this.retiredScanTimer);
+      this.retiredScanTimer = null;
     }
   }
 
