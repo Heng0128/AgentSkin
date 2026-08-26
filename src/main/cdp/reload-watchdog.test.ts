@@ -140,11 +140,15 @@ describe('detachReloadWatchdog', () => {
 
 describe('reverifyAfterNavigation (Page.loadEventFired)', () => {
   it('does NOT re-inject when the engine sheets are already present', async () => {
+    // RC4-A: verification must include all 3 required layers for the verdict
+    // to be 'full' — otherwise the graded watchdog treats it as 'partial' and
+    // re-injects. This reflects the real-world state where all layers coexist.
     vi.mocked(verifyTheme).mockResolvedValue({
       accent: '#f00',
       agentskinArt: '',
       heroBlobActive: false,
       adoptedSheetCount: 3,
+      layers: { palette: 1, tokens: 45, cosmetic: 12 },
     });
     const { session, handlers } = makeEventSession();
     vi.mocked(connectEventCdp).mockResolvedValue(session);
