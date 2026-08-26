@@ -87,7 +87,7 @@ export function DockTabExport({ t }: { t: UiMessages }) {
                 <p className="break-all text-[10px] text-foreground">{exportState.dir}</p>
                 <Button
                   size="sm"
-                  onClick={() => api.showInFolder(exportState.dir!)}
+                  onClick={() => exportState.dir && api.showInFolder(exportState.dir)}
                   className="mt-1"
                 >
                   <FolderOpen className="size-2.5" />

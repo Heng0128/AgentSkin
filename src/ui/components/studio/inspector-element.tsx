@@ -138,7 +138,12 @@ export function InspectorElement({ iframeRef, pickedPath, onClose }: InspectorEl
     let disposed = false;
     const read = () => {
       if (disposed) return;
-      const d = readElementDetails(iframe.contentDocument!, pickedPath);
+      const doc = iframe.contentDocument;
+      if (!doc) {
+        setDetails(null);
+        return;
+      }
+      const d = readElementDetails(doc, pickedPath);
       if (!disposed) setDetails(d);
     };
 
